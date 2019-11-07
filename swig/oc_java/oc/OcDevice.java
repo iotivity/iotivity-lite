@@ -108,6 +108,10 @@ public class OcDevice {
         OCMain.deviceBindResourceType(deviceIndex, rt);
     }
 
+    public void resetDevice() {
+        OCMain.resetDevice(deviceIndex);
+    }
+
     int getDeviceIndex() {
         return deviceIndex;
     }

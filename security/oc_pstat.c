@@ -40,7 +40,7 @@
 #include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_sec_pstat_t *pstat;
-#else /* OC_DYNAMIC_ALLOCATION */
+#else  /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
@@ -398,7 +398,7 @@ oc_sec_is_operational(size_t device)
 void
 oc_sec_pstat_default(size_t device)
 {
-  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
+  oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
   oc_pstat_handle_state(&ps, device, true, false);
   oc_sec_dump_pstat(device);
 }
@@ -589,10 +589,16 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 bool
 oc_pstat_reset_device(size_t device, bool self_reset)
 {
-  oc_sec_pstat_t ps = {.s = OC_DOS_RESET };
+  oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
   bool ret = oc_pstat_handle_state(&ps, device, false, self_reset);
   oc_sec_dump_pstat(device);
   return ret;
+}
+
+void
+oc_reset_device(size_t device)
+{
+  oc_pstat_reset_device(device, true);
 }
 
 void
