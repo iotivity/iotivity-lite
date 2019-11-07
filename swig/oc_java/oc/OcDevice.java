@@ -55,6 +55,10 @@ public class OcDevice {
         OCIntrospection.setIntrospectionData(deviceIndex, IDD);
     }
 
+    public void setImmutableDeviceId(OCUuid piid) {
+        OCMain.setImmutableDeviceIdentifier(deviceIndex, piid);
+    }
+
     public void addResource(OcResource resource) {
         if (resource != null) {
             if (resource instanceof OcCollection) {
@@ -110,6 +114,14 @@ public class OcDevice {
 
     public void resetDevice() {
         OCMain.resetDevice(deviceIndex);
+    }
+
+    public int initConnectivity(OcDevice device) {
+        return OCConnectivity.init(deviceIndex);
+    }
+
+    public void shutdownConnectivity(OcDevice device) {
+        OCConnectivity.shutdown(deviceIndex);
     }
 
     int getDeviceIndex() {
