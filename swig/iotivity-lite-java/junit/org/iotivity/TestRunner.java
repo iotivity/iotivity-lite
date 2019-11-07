@@ -1,8 +1,5 @@
 package org.iotivity;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.internal.TextListener;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -12,9 +9,12 @@ public class TestRunner {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new TextListener(System.out));
         Result result = junit.run(
+                OCCredTest.class,
+                OCEndpointTest.class,
                 OCMainTest.class,
                 OCRepresentationTest.class,
-                OCUuidTest.class);
+                OCOwnershipTransferMethodsTest.class,
+                OCRepresentationTest.class);
         if (result.getFailureCount() > 0) {
           System.out.println("Test failed.");
           System.exit(1);
