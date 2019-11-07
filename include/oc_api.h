@@ -102,6 +102,8 @@ void oc_set_con_res_announced(bool announce);
 
 void oc_reset();
 
+void oc_reset_device(size_t device);
+
 /** Server side */
 /**
   @defgroup doc_module_tag_server_side Server side
