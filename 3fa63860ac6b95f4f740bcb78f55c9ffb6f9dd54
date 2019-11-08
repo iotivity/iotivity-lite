@@ -216,6 +216,30 @@
     },
     {
       "key": {
+        "uuid": "8446077f_d28bdbd3",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-08T20:05:33Z",
+      "side": 1,
+      "message": "oh I think changing the oc_rep_start_links_array to oc_rep_start_root_array would make a lot of since. It does feel a little hacky using the links_array as you already pointed out.",
+      "parentUuid": "3ce79810_3a51738e",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd2f1cd9_200c524b",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
