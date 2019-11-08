@@ -240,6 +240,30 @@
     },
     {
       "key": {
+        "uuid": "b9db83d2_5f058a9d",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-08T23:10:10Z",
+      "side": 1,
+      "message": "\u003e The only thing I could find that destinguised a root object array and root object populated \n\u003e with objects was the empty rep-\u003ename.\n\nNo, I think this might also be the case for objects in a non root-level array of objects.\n\n\u003e Is there any other way to tell if the root object is an array object? \n\nThe sure way to know is when the first oc_rep_t * (the head/root) handed to you is an OC_REP_OBJECT.\n\nUsually when you\u0027re walking through an oc_rep_t and encounter an object array, you see a special marker oc_rep_t of type OC_REP_OBJECT_ARRAY whose value.object_array points to the first OC_REP_OBJECT in that array; that oc_rep_t\u0027s value.object takes you through the series of properties it contains.\n\nIt\u0027s just that when oc_parse_rep() construct\u0027s oc_rep_ts, it does not add an OC_REP_OBJECT_ARRAY marker for the root-level array, and instead directly gives you the first OC_REP_OBJECT in that array\n\n\u003e oh I think changing the oc_rep_start_links_array to oc_rep_start_root_array would make a lot \n\u003e of since. It does feel a little hacky using the links_array as you already pointed out.\n\nYes, that would be something to do.",
+      "parentUuid": "8446077f_d28bdbd3",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd2f1cd9_200c524b",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
