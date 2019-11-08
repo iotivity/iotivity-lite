@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "298a2ad6_3a813f27",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-08T20:02:20Z",
+      "side": 1,
+      "message": "Dynamic memory section removed.",
+      "parentUuid": "65d2e265_b0857977",
+      "range": {
+        "startLine": 671,
+        "startChar": 0,
+        "endLine": 685,
+        "endChar": 31
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bdeb835d_e6fa3fca",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
@@ -168,6 +192,30 @@
     },
     {
       "key": {
+        "uuid": "3ce79810_3a51738e",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-08T20:02:20Z",
+      "side": 1,
+      "message": "Thanks Kishen I referenced the client_collection_linux sample and built a unit test that creates a root object array.\n\nThe only thing I could find that destinguised a root object array and root object populated with objects was the empty rep-\u003ename.\n\nIs there any other way to tell if the root object is an array object? If so feel free to leave a comment on the commit.",
+      "parentUuid": "4eef1c60_0aefd0aa",
+      "range": {
+        "startLine": 729,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 36
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd2f1cd9_200c524b",
         "filename": "api/oc_rep.c",
         "patchSetId": 10
@@ -223,6 +271,48 @@
       "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a189b7a9_a5d3fda9",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-08T20:02:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd2f1cd9_200c524b",
+      "range": {
+        "startLine": 980,
+        "startChar": 61,
+        "endLine": 980,
+        "endChar": 67
+      },
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c40fae50_bfab9e2e",
+        "filename": "api/oc_rep.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-08T20:02:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d40fd8e4_18192b16",
+      "revId": "3fa63860ac6b95f4f740bcb78f55c9ffb6f9dd54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
