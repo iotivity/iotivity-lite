@@ -195,11 +195,10 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
-      <Message>Copying dependency files into project.</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
@@ -236,11 +235,10 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
-xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
-      <Message>Copying dependency files into project.</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
@@ -283,249 +281,6 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\swig\swig_interfaces\iotivity.swg" />
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_api.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_buffer_settings.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_clock.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_collection.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_core_res.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_endpoint.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_introspection.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_obt.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_pki.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_rep.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cloud.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cred.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-    </CustomBuild>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </None>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_storage.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_uuid.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_session_events.i">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building SWIG %(Identity) interface</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building SWIG %(Identity) interface</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
