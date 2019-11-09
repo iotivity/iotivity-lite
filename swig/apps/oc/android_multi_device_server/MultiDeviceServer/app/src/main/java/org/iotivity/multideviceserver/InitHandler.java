@@ -20,10 +20,12 @@ public class InitHandler implements OCMainInitHandler {
     private OcDevice lightDevice;
     private OcDevice refrigeratorDevice;
     private OcDevice thermostatDevice;
+    private OcDevice televisionDevice;
 
     private Light light;
     private Refrigerator refrigerator;
     private Thermostat thermostat;
+    private Television television;
 
     public InitHandler(ServerActivity activity, OcPlatform ocPlatform) {
         this.activity = activity;
@@ -39,14 +41,17 @@ public class InitHandler implements OCMainInitHandler {
             lightDevice = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
             refrigeratorDevice = new OcDevice("/oic/d", "oic.d.refrigerator", "Refrigerator", "ocf.1.0.0", "ocf.res.1.0.0");
             thermostatDevice = new OcDevice("/oic/d", "oic.d.thermostat", "Thermostat", "ocf.1.0.0", "ocf.res.1.0.0");
+            televisionDevice = new OcDevice("/oic/d", "oic.d.tv", "Television", "ocf.1.0.0", "ocf.res.1.0.0");
 
             ret |= ocPlatform.addDevice(lightDevice);
             ret |= ocPlatform.addDevice(refrigeratorDevice);
             ret |= ocPlatform.addDevice(thermostatDevice);
+            ret |= ocPlatform.addDevice(televisionDevice);
 
             light = new Light(lightDevice.getName());
             refrigerator = new Refrigerator(refrigeratorDevice.getName());
             thermostat = new Thermostat(thermostatDevice.getName());
+            television = new Television(televisionDevice.getName());
 
         } else {
             Log.e(TAG, "Error in platformInit, return value = " + ret);
@@ -70,6 +75,9 @@ public class InitHandler implements OCMainInitHandler {
 
         String[] thermostatResourceTypes = new String[]{"oic.r.temperature"};
         int[] thermostatInterfaceMasks = new int[]{OCInterfaceMask.A, OCInterfaceMask.S};
+
+        String[] televisionResourceTypes = new String[]{"oic.r.media.input"};
+        int[] televisionInterfaceMasks = new int[]{OCInterfaceMask.RW};
 
         if (lightDevice != null) {
             OcResource lightResource = new OcResource(lightDevice, "light", "/a/light", lightResourceTypes, lightInterfaceMasks);
@@ -106,6 +114,18 @@ public class InitHandler implements OCMainInitHandler {
             thermostatResource.setPostRequestHandler(new PostThermostatRequestHandler(activity, thermostat));
             thermostatDevice.addResource(thermostatResource);
         }
+
+        if (televisionDevice != null) {
+            OcResource televisionResource = new OcResource(televisionDevice, "television", "/a/television", televisionResourceTypes, televisionInterfaceMasks);
+            televisionResource.setDefaultInterfaceMask(OCInterfaceMask.RW);
+            televisionResource.setDiscoverable(true);
+            televisionResource.setObservable(true);
+            televisionResource.setPeriodicObservable(1);
+            televisionResource.setGetRequestHandler(new GetTelevisionRequestHandler(activity, this.television));
+            televisionResource.setPutRequestHandler(new PutTelevisionRequestHandler(activity, this.television));
+            televisionResource.setPostRequestHandler(new PostTelevisionRequestHandler(activity, this.television));
+            televisionDevice.addResource(televisionResource);
+        }
     }
 
     @Override
@@ -114,5 +134,6 @@ public class InitHandler implements OCMainInitHandler {
         Log.d(TAG, "Light DeviceId = " + ((lightDevice != null) ? OCUuidUtil.uuidToString(lightDevice.getId()) : "null"));
         Log.d(TAG, "Refrigerator DeviceId = " + ((refrigeratorDevice != null) ? OCUuidUtil.uuidToString(refrigeratorDevice.getId()) : "null"));
         Log.d(TAG, "Thermostat DeviceId = " + ((thermostatDevice != null) ? OCUuidUtil.uuidToString(thermostatDevice.getId()) : "null"));
+        Log.d(TAG, "Television DeviceId = " + ((televisionDevice != null) ? OCUuidUtil.uuidToString(televisionDevice.getId()) : "null"));
     }
 }
