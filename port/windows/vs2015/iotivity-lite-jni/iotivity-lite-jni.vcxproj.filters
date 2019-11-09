@@ -49,9 +49,6 @@
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cred_wrap.c">
       <Filter>c_wrap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_connectivity_wrap.c">
-      <Filter>c_wrap</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -63,64 +60,6 @@
     <Filter Include="c_wrap">
       <UniqueIdentifier>{db6d0648-4b1b-44f6-9e0d-e448a0a71512}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\..\..\swig\swig_interfaces\iotivity.swg">
-      <Filter>swig_interfaces</Filter>
-    </None>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_ri.i">
-      <Filter>swig_interfaces</Filter>
-    </None>
-    <None Include="..\..\..\..\swig\swig_interfaces\oc_connectivity.i">
-      <Filter>swig_interfaces</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_api.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_buffer_settings.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_clock.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_collection.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_core_res.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_endpoint.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_introspection.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_obt.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_pki.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_rep.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_storage.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_uuid.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cloud.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_session_events.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_cred.i">
-      <Filter>swig_interfaces</Filter>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h">

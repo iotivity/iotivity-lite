@@ -120,15 +120,11 @@ can find the jni.h header files.
 Build the JNI shared library:
 
 Navigate to `<iotivity-lite>/port/windows/vs2015` open the Visual Studio solution
-`IoTivity-Lite.sln` file in Visual Studio.
+`IoTivity-lite-Java.sln` file in Visual Studio.
 
 Select the desired build options: Release/Debug, x86/x64.  Note the x86/x64 must match the
 architecture of the Java VM installed on the system.  In the Solution Explorer right click
-on the `iotivity-lite-jni` project.  Select the `Rebuild` option (even on the first build).
-
-**Important:** The first time the `iotivity-lite-jni` project is built the `Rebuild` option must be
-used. There is a known issue that the project does not properly detect that the order the *_wrap.c
-files are generated when using the `build` option.
+on the `iotivity-lite-jni` project.  Select the `Build` option.
 
 This will build
   - `IoTivity-lite.lib`
@@ -137,7 +133,7 @@ This will build
 
 On success the Output window should show:
 
-    ========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+    ========== Build: 3 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
 
 Build `iotivity-lite.jar` file from `<iotivity-lite>/swig/java_lang` run:
 

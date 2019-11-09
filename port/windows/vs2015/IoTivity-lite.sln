@@ -9,11 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleClient", "SimpleClien
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleServer", "SimpleServer.vcxproj", "{49A279BB-F431-4310-BEA2-CEDAC797D9E1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "iotivity-lite-jni", "iotivity-lite-jni\iotivity-lite-jni.vcxproj", "{F4920803-255A-4BC5-BB70-84BE6D12AADE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1866D7A4-FC11-46CA-9377-3BAA69D4BF58} = {1866D7A4-FC11-46CA-9377-3BAA69D4BF58}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "onboarding_tool", "onboarding_tool\onboarding_tool.vcxproj", "{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1866D7A4-FC11-46CA-9377-3BAA69D4BF58} = {1866D7A4-FC11-46CA-9377-3BAA69D4BF58}
@@ -54,14 +49,6 @@ Global
 		{49A279BB-F431-4310-BEA2-CEDAC797D9E1}.Release|x64.Build.0 = Release|x64
 		{49A279BB-F431-4310-BEA2-CEDAC797D9E1}.Release|x86.ActiveCfg = Release|Win32
 		{49A279BB-F431-4310-BEA2-CEDAC797D9E1}.Release|x86.Build.0 = Release|Win32
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Debug|x64.ActiveCfg = Debug|x64
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Debug|x64.Build.0 = Debug|x64
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Debug|x86.ActiveCfg = Debug|Win32
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Debug|x86.Build.0 = Debug|Win32
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Release|x64.ActiveCfg = Release|x64
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Release|x64.Build.0 = Release|x64
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Release|x86.ActiveCfg = Release|Win32
-		{F4920803-255A-4BC5-BB70-84BE6D12AADE}.Release|x86.Build.0 = Release|Win32
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Debug|x64.ActiveCfg = Debug|x64
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Debug|x64.Build.0 = Debug|x64
 		{BDE6DBE0-D29F-421F-AD2B-25E44070B5F0}.Debug|x86.ActiveCfg = Debug|Win32
