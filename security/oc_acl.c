@@ -325,6 +325,10 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   bool is_public = ((resource->properties & OC_SECURE) == 0);
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  if ( OC_DOS_TIMEOUT == pstat->s && !(MULTICAST & endpoint->flags) ) {
+    return false;
+  }
+
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
     return false;
   }

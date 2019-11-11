@@ -251,6 +251,7 @@ oc_main_init(const oc_handler_t *handler)
     OC_DBG("oc_main_init(): loading ECDSA keypair");
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
+    oc_sec_doxm_start_timer(device);
   }
 #endif
 
