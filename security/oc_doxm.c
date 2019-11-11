@@ -59,6 +59,46 @@ oc_sec_doxm_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+static oc_event_callback_retval_t
+rfotm_timeout_cb(void *data)
+{
+  size_t *device = (size_t*)data;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(*device);
+  if (OC_DOS_RFOTM != pstat->s || 4 == pstat->om /*|| !nil_uuid(doxm[*device].devowneruuid)*/)
+  {
+    doxm[*device].rfotm_timeout = 0;
+    return OC_EVENT_DONE;
+  }
+  if (0 < doxm[*device].rfotm_timeout) {
+    (doxm[*device].rfotm_timeout)--;
+    return OC_EVENT_CONTINUE;
+  } else {
+    if ( oc_wait_device(*device) ) {
+      OC_ERR("oc_doxm: transition to OC_DOS_RFOTM state failed");
+    }
+    return OC_EVENT_DONE;
+  }
+}
+
+
+void
+oc_sec_doxm_start_timeout(size_t device)
+{
+  size_t *ctx;
+#ifdef OC_DYNAMIC_ALLOCATION
+  ctx = (size_t *)calloc(oc_core_get_num_devices(), sizeof(size_t));
+  if (!ctx) {
+    oc_abort("Insufficient memory");
+  }
+  *ctx = device;
+#else
+  static size_t ctx_arr[OC_MAX_NUM_DEVICES];
+  ctx_arr[device] = device;
+  *ctx = &ctx_arr[device];
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_set_delayed_callback(ctx, rfotm_timeout_cb, 1);
+}
+
 static void
 evaluate_supported_oxms(size_t device)
 {
@@ -92,6 +132,7 @@ oc_sec_doxm_default(size_t device)
   oc_device_info_t *d = oc_core_get_device_info(device);
   oc_gen_uuid(&doxm[device].deviceuuid);
   memcpy(d->di.id, doxm[device].deviceuuid.id, 16);
+  doxm[device].rfotm_timeout = 1800;
   oc_sec_dump_doxm(device);
 }
 
@@ -106,6 +147,7 @@ oc_sec_encode_doxm(size_t device, bool to_storage)
   if (!to_storage) {
     evaluate_supported_oxms(device);
     oc_rep_set_int_array(root, oxms, doxm[device].oxms, doxm[device].num_oxms);
+    oc_rep_set_int(root, rfotm-timeout, doxm[device].rfotm_timeout);
   }
   /* oxmsel */
   oc_rep_set_int(root, oxmsel, doxm[device].oxmsel);

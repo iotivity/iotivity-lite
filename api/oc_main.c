@@ -241,6 +241,7 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_sp(device);
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
+    oc_sec_doxm_start_timeout(device);
   }
 #endif
 
