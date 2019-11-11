@@ -370,16 +370,13 @@ oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
 
 #ifdef OC_IPV4
 static oc_client_cb_t *
-oc_do_ipv4_discovery(const char *query, oc_discovery_handler_t handler,
+oc_do_ipv4_discovery(const char *query, oc_client_handler_t handler,
                      void *user_data)
 {
-  oc_client_handler_t client_handler;
-  client_handler.discovery = handler;
-
   oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", &mcast4, OC_GET, query, client_handler, LOW_QOS, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", &mcast4, OC_GET, query,
+                                             handler, LOW_QOS, user_data);
 
   if (cb) {
     cb->discovery = true;
@@ -503,7 +500,7 @@ oc_do_ip_multicast(const char *uri, const char *query,
 
 static bool
 dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
-                      oc_discovery_handler_t handler, oc_endpoint_t *endpoint,
+                      oc_client_handler_t handler, oc_endpoint_t *endpoint,
                       void *user_data)
 {
   if (!endpoint) {
@@ -511,11 +508,8 @@ dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
     return false;
   }
 
-  oc_client_handler_t client_handler;
-  client_handler.discovery = handler;
-
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", endpoint, OC_GET, query, client_handler, LOW_QOS, user_data);
+    "/oic/res", endpoint, OC_GET, query, handler, LOW_QOS, user_data);
 
   if (cb) {
     cb->discovery = true;
@@ -545,27 +539,39 @@ exit:
 
 static bool
 multi_scope_ipv6_discovery(oc_client_cb_t *cb4, uint8_t scope,
-                           const char *query, oc_discovery_handler_t handler,
+                           const char *query, oc_client_handler_t handler,
                            void *user_data)
 {
   oc_make_ipv6_endpoint(mcast, IPV6 | DISCOVERY, 5683, 0xff, scope, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58);
   mcast.addr.ipv6.scope = 0;
-
   return dispatch_ip_discovery(cb4, query, handler, &mcast, user_data);
+}
+
+bool
+oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                    void *user_data)
+{
+  oc_client_handler_t handlers;
+  handlers.discovery_all = handler;
+  handlers.discovery = NULL;
+  return multi_scope_ipv6_discovery(NULL, 0x05, NULL, handlers, user_data);
 }
 
 bool
 oc_do_site_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
                                 void *user_data)
 {
+  oc_client_handler_t handlers;
+  handlers.discovery = handler;
+  handlers.discovery_all = NULL;
   oc_string_t uri_query;
   memset(&uri_query, 0, sizeof(oc_string_t));
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "rt=", rt);
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x05, oc_string(uri_query),
-                                           handler, user_data);
+                                           handlers, user_data);
   if (oc_string_len(uri_query) > 0) {
     oc_free_string(&uri_query);
   }
@@ -573,16 +579,29 @@ oc_do_site_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
 }
 
 bool
+oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                     void *user_data)
+{
+  oc_client_handler_t handlers;
+  handlers.discovery_all = handler;
+  handlers.discovery = NULL;
+  return multi_scope_ipv6_discovery(NULL, 0x03, NULL, handlers, user_data);
+}
+
+bool
 oc_do_realm_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
                                  void *user_data)
 {
+  oc_client_handler_t handlers;
+  handlers.discovery = handler;
+  handlers.discovery_all = NULL;
   oc_string_t uri_query;
   memset(&uri_query, 0, sizeof(oc_string_t));
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "rt=", rt);
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x03, oc_string(uri_query),
-                                           handler, user_data);
+                                           handlers, user_data);
   if (oc_string_len(uri_query) > 0) {
     oc_free_string(&uri_query);
   }
@@ -593,6 +612,9 @@ bool
 oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                    void *user_data)
 {
+  oc_client_handler_t handlers;
+  handlers.discovery = handler;
+  handlers.discovery_all = NULL;
   oc_string_t uri_query;
   memset(&uri_query, 0, sizeof(oc_string_t));
   if (rt && strlen(rt) > 0) {
@@ -600,11 +622,10 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
   }
   oc_client_cb_t *cb4 = NULL;
 #ifdef OC_IPV4
-  cb4 = oc_do_ipv4_discovery(oc_string(uri_query), handler, user_data);
+  cb4 = oc_do_ipv4_discovery(oc_string(uri_query), handlers, user_data);
 #endif
-
   bool status = multi_scope_ipv6_discovery(cb4, 0x02, oc_string(uri_query),
-                                           handler, user_data);
+                                           handlers, user_data);
   if (oc_string_len(uri_query) > 0) {
     oc_free_string(&uri_query);
   }
@@ -612,15 +633,41 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 }
 
 bool
+oc_do_ip_discovery_all(oc_discovery_all_handler_t handler, void *user_data)
+{
+  oc_client_cb_t *cb4 = NULL;
+  oc_client_handler_t handlers;
+  handlers.discovery_all = handler;
+  handlers.discovery = NULL;
+#ifdef OC_IPV4
+  cb4 = oc_do_ipv4_discovery(NULL, handlers, user_data);
+#endif
+  return multi_scope_ipv6_discovery(cb4, 0x02, NULL, handlers, user_data);
+}
+
+bool
+oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
+                                   oc_endpoint_t *endpoint, void *user_data)
+{
+  oc_client_handler_t handlers;
+  handlers.discovery_all = handler;
+  handlers.discovery = NULL;
+  return dispatch_ip_discovery(NULL, NULL, handlers, endpoint, user_data);
+}
+
+bool
 oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
                                oc_endpoint_t *endpoint, void *user_data)
 {
+  oc_client_handler_t handlers;
+  handlers.discovery = handler;
+  handlers.discovery_all = NULL;
   oc_string_t uri_query;
   memset(&uri_query, 0, sizeof(oc_string_t));
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "rt=", rt);
   }
-  bool status = dispatch_ip_discovery(NULL, oc_string(uri_query), handler,
+  bool status = dispatch_ip_discovery(NULL, oc_string(uri_query), handlers,
                                       endpoint, user_data);
   if (oc_string_len(uri_query) > 0) {
     oc_free_string(&uri_query);
