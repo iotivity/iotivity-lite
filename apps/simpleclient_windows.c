@@ -204,7 +204,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     char *t = oc_string_array_get_item(types, i);
     PRINT("\n\nDISCOVERED RES %s\n\n\n", t);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
-      light_server = endpoint;
+      oc_endpoint_list_copy(&light_server, endpoint);
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
@@ -221,7 +221,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       return OC_STOP_DISCOVERY;
     }
   }
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -254,10 +253,10 @@ main(void)
 
   signal(SIGINT, handle_signal);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = 0,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = 0,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
@@ -276,8 +275,8 @@ main(void)
     } else {
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
-          SleepConditionVariableCS(&cv, &cs,
-              (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
