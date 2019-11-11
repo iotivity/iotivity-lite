@@ -1629,8 +1629,8 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)iface_mask;
   (void)bm;
   (void)types;
+  (void)endpoint;
   PRINT("anchor %s, uri : %s\n", anchor, uri);
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 

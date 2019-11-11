@@ -127,7 +127,6 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       return OC_STOP_DISCOVERY;
     }
   }
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -141,8 +140,8 @@ ot_state_changed(uint32_t flags, void *context)
   }
 
   if ((flags & OT_CHANGED_THREAD_ROLE) &&
-    otThreadGetDeviceRole(ot_instance) >= OT_DEVICE_ROLE_CHILD &&
-    !got_discovery_response) {
+      otThreadGetDeviceRole(ot_instance) >= OT_DEVICE_ROLE_CHILD &&
+      !got_discovery_response) {
     oc_do_ip_discovery("oic.r.light", &discovery, NULL);
   }
 }
@@ -153,8 +152,8 @@ signal_event_loop(void)
   ocInstanceSignal();
 }
 
-static
-int start_thread(void)
+static int
+start_thread(void)
 {
   if (!otThreadGetAutoStart(ot_instance)) {
     if (otIp6SetEnabled(ot_instance, true) != OT_ERROR_NONE) {
@@ -170,7 +169,7 @@ int start_thread(void)
       return -1;
     }
 
-    if(otThreadSetAutoStart(ot_instance, true) != OT_ERROR_NONE) {
+    if (otThreadSetAutoStart(ot_instance, true) != OT_ERROR_NONE) {
       OC_ERR("Can't set thread autostart\n");
       return -1;
     }
@@ -199,8 +198,9 @@ main(int argc, char *argv[])
 
   // init iotivity
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop =
+                                          signal_event_loop };
 
   ocInstanceInit(&handler);
 
