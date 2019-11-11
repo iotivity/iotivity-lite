@@ -563,6 +563,32 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   return -1;
 }
 
+void
+oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src)
+{
+  if (dst && src) {
+    memcpy(dst, src, sizeof(oc_endpoint_t));
+    dst->next = NULL;
+  }
+}
+
+void
+oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src)
+{
+  if (dst && src) {
+    oc_endpoint_t *ep = oc_new_endpoint();
+    *dst = ep;
+    while (src && ep) {
+      oc_endpoint_copy(ep, src);
+      src = src->next;
+      if (src) {
+        ep->next = oc_new_endpoint();
+        ep = ep->next;
+      }
+    }
+  }
+}
+
 #ifdef OC_CLIENT
 void
 oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
