@@ -1319,8 +1319,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
   if (payload_len) {
     if (cb->discovery) {
-      if (oc_ri_process_discovery_payload(payload, payload_len,
-                                          cb->handler.discovery, endpoint,
+      if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
+                                          endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         uint16_t mid = cb->mid;
         cb->ref_count = 0;
