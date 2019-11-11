@@ -46,9 +46,11 @@ typedef struct
   oc_uuid_t deviceuuid;
   oc_uuid_t devowneruuid;
   oc_uuid_t rowneruuid;
+  int rfotm_timeout;
 } oc_sec_doxm_t;
 
 void oc_sec_doxm_init(void);
+void oc_sec_doxm_start_timeout(size_t device);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_doxm(size_t device, bool to_storage);
