@@ -76,7 +76,7 @@ dispatch_coap_request(void)
 
   if (payload_size > 0) {
 #ifdef OC_SPEC_VER_OIC
-    if (client_cb->endpoint->version == OIC_VER_1_1_0) {
+    if (client_cb->endpoint.version == OIC_VER_1_1_0) {
       coap_set_header_content_format(request, APPLICATION_CBOR);
     } else
 #endif /* OC_SPEC_VER_OIC */
@@ -128,7 +128,7 @@ prepare_coap_request(oc_client_cb_t *cb)
     type = COAP_TYPE_CON;
   }
 
-  transaction = coap_new_transaction(cb->mid, cb->endpoint);
+  transaction = coap_new_transaction(cb->mid, &cb->endpoint);
 
   if (!transaction) {
     return false;
@@ -139,7 +139,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 #else  /* !OC_BLOCK_WISE */
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
-      oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, cb->endpoint,
+      oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
       OC_ERR("request_buffer is NULL");
@@ -153,7 +153,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_TCP
-  if (cb->endpoint->flags & TCP) {
+  if (cb->endpoint.flags & TCP) {
     coap_tcp_init_message(request, cb->method);
   } else
 #endif /* OC_TCP */
@@ -162,7 +162,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   }
 
 #ifdef OC_SPEC_VER_OIC
-  if (cb->endpoint->version == OIC_VER_1_1_0) {
+  if (cb->endpoint.version == OIC_VER_1_1_0) {
     coap_set_header_accept(request, APPLICATION_CBOR);
   } else
 #endif /* OC_SPEC_VER_OIC */
@@ -338,7 +338,7 @@ oc_remove_ping_handler(void *data)
 
   oc_client_response_t timeout_response;
   timeout_response.code = OC_PING_TIMEOUT;
-  timeout_response.endpoint = cb->endpoint;
+  timeout_response.endpoint = &cb->endpoint;
   timeout_response.user_data = cb->user_data;
   cb->handler.response(&timeout_response);
 
