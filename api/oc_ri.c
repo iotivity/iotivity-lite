@@ -982,8 +982,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
             while (links) {
               if (links->resource &&
                   links->resource->properties & OC_OBSERVABLE) {
-                if (!oc_sec_check_acl(OC_GET, links->resource,
-                                      endpoint)) {
+                if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
                   set_observe_option = false;
                   break;
                 }
@@ -1320,8 +1319,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
   if (payload_len) {
     if (cb->discovery) {
-      if (oc_ri_process_discovery_payload(payload, payload_len,
-                                          cb->handler.discovery, endpoint,
+      if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
+                                          endpoint,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         uint16_t mid = cb->mid;
         cb->ref_count = 0;

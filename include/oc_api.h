@@ -487,12 +487,21 @@ bool oc_do_site_local_ipv6_discovery(const char *rt,
                                      oc_discovery_handler_t handler,
                                      void *user_data);
 
+bool oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                         void *user_data);
+
 bool oc_do_realm_local_ipv6_discovery(const char *rt,
                                       oc_discovery_handler_t handler,
                                       void *user_data);
 
+bool oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                          void *user_data);
+
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
+
+bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
+                            void *user_data);
 
 /**
   @brief  Discover resources in specific endpoint.
@@ -505,6 +514,10 @@ bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 bool oc_do_ip_discovery_at_endpoint(const char *rt,
                                     oc_discovery_handler_t handler,
                                     oc_endpoint_t *endpoint, void *user_data);
+
+bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
+                                        oc_endpoint_t *endpoint,
+                                        void *user_data);
 
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
