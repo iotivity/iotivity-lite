@@ -181,13 +181,13 @@ struct oc_resource_s
   oc_request_handler_t put_handler;
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
+  oc_properties_cb_t get_properties;
+  oc_properties_cb_t set_properties;
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
-  oc_properties_cb_t get_properties;
-  oc_properties_cb_t set_properties;
 };
 
 typedef enum {
