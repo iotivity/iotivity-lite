@@ -82,10 +82,69 @@ typedef struct
   void (*signal_event_loop)(void);
 
 #ifdef OC_SERVER
+  /**
+   * Resource registration callback.
+   *
+   * Callback is invoked after the device initialization callback.
+   *
+   * Use this callback to add resources to the devices added during the device
+   * initialization.  This where the properties and callbacks associated with
+   * the resources are typically done.
+   *
+   * Note: Callback is only invoked when OC_SERVER macro is defined.
+   *
+   * Example:
+   * ```
+   * static void register_resources(void)
+   * {
+   *   oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+   *   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
+   *   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
+   *   oc_resource_set_default_interface(bswitch, OC_IF_A);
+   *   oc_resource_set_discoverable(bswitch, true);
+   *   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
+   *   oc_resource_set_request_handler(bswitch, OC_PUT, put_switch, NULL);
+   *   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+   *   oc_add_resource(bswitch);
+   * }
+   * ```
+   *
+   * @see init
+   * @see oc_new_resource
+   * @see oc_resource_bind_resource_interface
+   * @see oc_resource_set_default_interface
+   * @see oc_resource_bind_resource_type
+   * @see oc_resource_make_public
+   * @see oc_resource_set_discoverable
+   * @see oc_resource_set_observable
+   * @see oc_resource_set_periodic_observable
+   * @see oc_resource_set_properties_cbs
+   * @see oc_resource_set_request_handler
+   * @see oc_add_resource
+   */
   void (*register_resources)(void);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
+  /**
+   * Callback invoked when the stack is ready to issue discovery requests.
+   *
+   * Callback is invoked after the device initialization callback.
+   *
+   * Example:
+   * ```
+   * static void issue_requests(void)
+   * {
+   *   oc_do_ip_discovery("oic.r.switch.binary", &discovery, NULL);
+   * }
+   * ```
+   *
+   * @see init
+   * @see oc_do_ip_discovery
+   * @see oc_do_ip_discovery_at_endpoint
+   * @see oc_do_site_local_ipv6_discovery
+   * @see oc_do_realm_local_ipv6_discovery
+   */
   void (*requests_entry)(void);
 #endif /* OC_CLIENT */
 } oc_handler_t;
