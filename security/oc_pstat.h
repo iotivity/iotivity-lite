@@ -29,7 +29,8 @@ typedef enum {
   OC_DOS_RFOTM,
   OC_DOS_RFPRO,
   OC_DOS_RFNOP,
-  OC_DOS_SRESET
+  OC_DOS_SRESET,
+  OC_DOS_RFOTMW
 } oc_dostype_t;
 
 typedef enum {
@@ -64,6 +65,8 @@ void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
 bool oc_pstat_reset_device(size_t device, bool self_reset);
 
 void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
+
+bool oc_inactive_device(size_t device);
 
 #ifdef __cplusplus
 }
