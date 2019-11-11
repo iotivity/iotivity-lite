@@ -1159,7 +1159,7 @@ notify_client_cb_503(oc_client_cb_t *cb)
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.client_cb = cb;
-  client_response.endpoint = cb->endpoint;
+  client_response.endpoint = &cb->endpoint;
   client_response.observe_option = -1;
   client_response.payload = 0;
   client_response.user_data = cb->user_data;
@@ -1195,7 +1195,7 @@ oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
   while (cb != NULL) {
     next = cb->next;
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
-        oc_endpoint_compare(cb->endpoint, endpoint) == 0) {
+        oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
       cb->ref_count = 1;
       notify_client_cb_503(cb);
       cb = (oc_client_cb_t *)oc_list_head(client_cbs);
@@ -1390,7 +1390,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         if (dup_cb != cb && dup_cb->observe_seq != -1 &&
             oc_string_len(dup_cb->uri) == uri_len &&
             strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
-            oc_endpoint_compare(dup_cb->endpoint, endpoint) == 0) {
+            oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
           OC_DBG("Freeing cb %s, token 0x%02X%02X", oc_string(dup_cb->uri),
                  dup_cb->token[0], dup_cb->token[1]);
           oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
@@ -1414,7 +1414,8 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
   while (cb != NULL) {
     if (oc_string_len(cb->uri) == strlen(uri) &&
         strncmp(oc_string(cb->uri), uri, strlen(uri)) == 0 &&
-        cb->endpoint == endpoint && cb->method == method)
+        oc_endpoint_compare(&cb->endpoint, endpoint) == 0 &&
+        cb->method == method)
       return cb;
 
     cb = cb->next;
@@ -1462,7 +1463,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   cb->discovery = false;
   cb->timestamp = oc_clock_time();
   cb->observe_seq = -1;
-  cb->endpoint = endpoint;
+  oc_endpoint_copy(&cb->endpoint, endpoint);
   if (query && strlen(query) > 0) {
     oc_new_string(&cb->query, query, strlen(query));
   }
