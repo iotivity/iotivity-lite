@@ -710,9 +710,11 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                            (links->next ? true : false), user_data)
              : handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
                        eps_list, bm, user_data)) == OC_STOP_DISCOVERY) {
+      oc_free_server_endpoints(eps_list);
       ret = OC_STOP_DISCOVERY;
       goto done;
     }
+    oc_free_server_endpoints(eps_list);
     links = links->next;
   }
 
