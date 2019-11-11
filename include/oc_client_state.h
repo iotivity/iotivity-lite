@@ -71,7 +71,7 @@ typedef struct oc_client_cb_t
   struct oc_client_cb_t *next;
   oc_string_t uri;
   oc_string_t query;
-  oc_endpoint_t *endpoint;
+  oc_endpoint_t endpoint;
   oc_client_handler_t handler;
   void *user_data;
   int32_t observe_seq;
