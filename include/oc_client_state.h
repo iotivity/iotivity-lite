@@ -49,21 +49,26 @@ typedef enum {
   OC_CONTINUE_DISCOVERY
 } oc_discovery_flags_t;
 
+typedef oc_discovery_flags_t (*oc_discovery_all_handler_t)(
+  const char *, const char *, oc_string_array_t, oc_interface_mask_t,
+  oc_endpoint_t *, oc_resource_properties_t, bool, void *);
+
 typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
   const char *, const char *, oc_string_array_t, oc_interface_mask_t,
   oc_endpoint_t *, oc_resource_properties_t, void *);
 
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
 
-typedef union oc_client_handler_s
+typedef struct oc_client_handler_t
 {
   oc_response_handler_t response;
   oc_discovery_handler_t discovery;
+  oc_discovery_all_handler_t discovery_all;
 } oc_client_handler_t;
 
-typedef struct oc_client_cb_s
+typedef struct oc_client_cb_t
 {
-  struct oc_client_cb_s *next;
+  struct oc_client_cb_t *next;
   oc_string_t uri;
   oc_string_t query;
   oc_endpoint_t *endpoint;
@@ -108,7 +113,7 @@ void oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint);
 void oc_ri_free_client_cbs_by_mid(uint16_t mid);
 
 oc_discovery_flags_t oc_ri_process_discovery_payload(
-  uint8_t *payload, int len, oc_discovery_handler_t handler,
+  uint8_t *payload, int len, oc_client_handler_t handler,
   oc_endpoint_t *endpoint, void *user_data);
 
 #ifdef __cplusplus
