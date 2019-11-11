@@ -59,6 +59,48 @@ oc_sec_doxm_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+static oc_event_callback_retval_t
+rfotm_timeout_cb(void *data)
+{
+  oc_event_callback_retval_t res = OC_EVENT_DONE;
+  size_t *device = (size_t*)data;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(*device);
+  if (OC_DOS_RFOTM != pstat->s || 4 == pstat->om /*|| !nil_uuid(doxm[*device].devowneruuid)*/)
+  {
+    doxm[*device].rfotm_timeout = 0;
+  } else if (0 < doxm[*device].rfotm_timeout) {
+    (doxm[*device].rfotm_timeout)--;
+    res = OC_EVENT_CONTINUE;
+  } else {
+    if ( !oc_wait_device(*device) ) {
+      OC_ERR("oc_doxm: transition to RFOTMW state failed");
+    }
+  }
+  oc_sec_dump_doxm(*device);
+  return res;
+}
+
+
+void
+oc_sec_doxm_start_timeout(size_t device)
+{
+  size_t *ctx;
+#ifdef OC_DYNAMIC_ALLOCATION
+  ctx = (size_t *)calloc(oc_core_get_num_devices(), sizeof(size_t));
+  if (!ctx) {
+    oc_abort("Insufficient memory");
+  }
+  *ctx = device;
+#else
+  static size_t ctx_arr[OC_MAX_NUM_DEVICES];
+  ctx_arr[device] = device;
+  *ctx = &ctx_arr[device];
+#endif /* OC_DYNAMIC_ALLOCATION */
+  if (0 < doxm[device].rfotm_timeout) {
+    oc_set_delayed_callback(ctx, rfotm_timeout_cb, 1);
+  }
+}
+
 static void
 evaluate_supported_oxms(size_t device)
 {
@@ -92,6 +134,7 @@ oc_sec_doxm_default(size_t device)
   oc_device_info_t *d = oc_core_get_device_info(device);
   oc_gen_uuid(&doxm[device].deviceuuid);
   memcpy(d->di.id, doxm[device].deviceuuid.id, 16);
+  doxm[device].rfotm_timeout = 1800;
   oc_sec_dump_doxm(device);
 }
 
@@ -122,6 +165,8 @@ oc_sec_encode_doxm(size_t device, bool to_storage)
   /* rowneruuid */
   oc_uuid_to_str(&doxm[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
+  /* rfotm-timeout */
+  oc_rep_set_int(root, rfotm-timeout, doxm[device].rfotm_timeout);
   oc_rep_end_root_object();
 }
 
@@ -205,6 +250,11 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
         }
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(t->name), "sct", 3) == 0) {
+      } else if (len == 13 &&
+                 memcmp(oc_string(t->name), "rfotm-timeout", 13) == 0) {
+          if (!from_storage) {
+            OC_ERR("oc_doxm: Can't change read only rfotm-timeout property");
+          }
       } else {
         OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
@@ -273,6 +323,9 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(rep->name), "sct", 3) == 0) {
         doxm[device].sct = (int)rep->value.integer;
+      } else if (len == 13 &&
+                 memcmp(oc_string(rep->name), "rfotm-timeout", 13) == 0) {
+        doxm[device].rfotm_timeout= (int)rep->value.integer;
       }
       break;
     /* deviceuuid, devowneruuid and rowneruuid */

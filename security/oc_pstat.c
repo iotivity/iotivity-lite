@@ -98,6 +98,9 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
   case OC_DOS_SRESET:
     OC_DBG("oc_pstat: dos is SRESET");
     break;
+  case OC_DOS_RFOTMW:
+    OC_DBG("oc_pstat: dos is RFOTMW");
+    break;
   }
 }
 #endif /* OC_DEBUG */
@@ -126,6 +129,9 @@ valid_transition(size_t device, oc_dostype_t state)
     if (state == OC_DOS_RFOTM || state == OC_DOS_RFNOP)
       return false;
     break;
+  case OC_DOS_RFOTMW:
+    return false;
+    //break;
   }
   return true;
 }
@@ -368,6 +374,21 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
     ps->p = false;
   } break;
+  case OC_DOS_RFOTMW: {
+    ps->p = false;
+    ps->s = OC_DOS_RFOTMW;
+    ps->cm = 0;
+    ps->tm = 0;
+    if (doxm->owned || !nil_uuid(&doxm->devowneruuid)) {
+#ifdef OC_DEBUG
+      if (!nil_uuid(&doxm->devowneruuid)) {
+        OC_ERR("non-Nil doxm:devowneruuid in RFOTM");
+      }
+      OC_ERR("ERROR in RFOTMW\n");
+#endif /* OC_DEBUG */
+      goto pstat_state_error;
+    }
+  } break;
   default:
     return false;
     break;
@@ -609,4 +630,14 @@ oc_reset()
     oc_pstat_reset_device(device, true);
   }
 }
+
+bool
+oc_wait_device(size_t device)
+{
+    oc_sec_pstat_t ps = { .s = OC_DOS_RFOTMW };
+    bool ret =oc_pstat_handle_state(&ps, device, false, false);
+    oc_sec_dump_pstat(device);
+    return ret;
+}
+
 #endif /* OC_SECURITY */
