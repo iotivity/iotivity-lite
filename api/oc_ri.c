@@ -54,7 +54,10 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_pstat.h"
+#include "security/oc_roles.h"
 #include "security/oc_tls.h"
+#include "security/oc_audit.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -609,6 +612,40 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   return supported;
 }
 
+
+#ifdef OC_SECURITY
+static void
+oc_ri_audit_log(oc_method_t method, oc_resource_t *resource, oc_endpoint_t *endpoint)
+{
+  static const size_t LINE_WIDTH = 80;
+  char aux_arr[6][LINE_WIDTH];
+  memset(aux_arr, 0, sizeof(aux_arr));
+  char* aux[] = {aux_arr[0], aux_arr[1], aux_arr[2], aux_arr[3], aux_arr[4], aux_arr[5]};
+  size_t idx = 1;
+  SNPRINTFipaddr(aux[0], LINE_WIDTH, *endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (peer) {
+    oc_uuid_to_str(&peer->uuid, aux[idx++], LINE_WIDTH);
+  }
+  memcpy(aux[idx++], oc_string(resource->uri), oc_string_len(resource->uri));
+  static const char *method_str_val[] = { "UNKNOWN", "RETRIEVE", "UPDATE", "UPDATE", "DELETE" };
+  snprintf(aux[idx++], LINE_WIDTH, "attempt to %s the resource", method_str_val[method]);
+  static const char *state_str_val[] = { "RESET", "RFOTM", "RFPRO", "RFNOP", "SRESET" };
+  int state = oc_sec_get_pstat(endpoint->device)->s;
+  snprintf(aux[idx++], LINE_WIDTH, "device is in %s", state_str_val[state]);
+  snprintf(aux[idx++], LINE_WIDTH, "No roles asserted");
+#ifdef OC_PKI
+  if (peer) {
+    size_t pos = 0;
+    for (oc_sec_cred_t *rc = oc_sec_get_roles(peer); rc && pos < LINE_WIDTH; rc = rc->next) {
+      pos += snprintf(aux[idx-1]+pos, LINE_WIDTH-pos-1, "%s ", oc_string(rc->role.role));
+    }
+  }
+#endif /* OC_PKI */
+  oc_audit_log("AC-1", "Access Denied", 0x01, 2, (const char **)aux, idx);
+}
+#endif /* OC_SECURITY */
+
 #ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response,
@@ -806,6 +843,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         !does_interface_support_method(iface_mask, method)) {
       forbidden = true;
       bad_request = true;
+#ifdef OC_SECURITY
+      oc_audit_log("COMM-1", "Operation not supported", 0x40, 2, NULL, 0);
+#endif
     }
   }
 
@@ -852,6 +892,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
+      oc_ri_audit_log(method, cur_resource, endpoint);
     } else
 #endif /* OC_SECURITY */
     {
