@@ -203,6 +203,15 @@ void oc_delete_link(oc_link_t *link);
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 
 /**
+  @brief Adds a link parameter with specified key and value.
+  @param link Link to which to add a link parameter. Must not be NULL.
+  @param key Key to identify the link parameter. Must not be NULL.
+  @param value Link parameter value. Must not be NULL.
+*/
+void oc_link_add_link_param(oc_link_t *link, const char *key,
+                            const char *value);
+
+/**
   @brief Adds the link to the collection.
   @param collection Collection to add the link to. Must not be NULL.
   @param link Link to add to the collection. The link is not copied.

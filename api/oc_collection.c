@@ -160,7 +160,22 @@ oc_collection_get_links(oc_resource_t *collection)
 void
 oc_link_add_rel(oc_link_t *link, const char *rel)
 {
-  oc_string_array_add_item(link->rel, rel);
+  if (link) {
+    oc_string_array_add_item(link->rel, rel);
+  }
+}
+
+void
+oc_link_add_link_param(oc_link_t *link, const char *key, const char *value)
+{
+  if (link) {
+    oc_link_params_t *p = oc_memb_alloc(&oc_params_s);
+    if (p) {
+      oc_new_string(&p->key, key, strlen(key));
+      oc_new_string(&p->value, value, strlen(value));
+      oc_list_add(link->params, p);
+    }
+  }
 }
 
 oc_collection_t *

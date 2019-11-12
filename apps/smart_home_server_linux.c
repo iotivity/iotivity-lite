@@ -527,6 +527,8 @@ register_resources(void)
 #endif /* OC_COLLECTIONS_IF_CREATE */
   oc_link_t *l1 = oc_new_link(bswitch);
   oc_collection_add_link(col, l1);
+  /* Add a defined or custom link parameter to this link */
+  oc_link_add_link_param(l1, "name", "platform_switch");
 
   /* Add self-link to the Collection */
   oc_link_t *l2 = oc_new_link(col);
