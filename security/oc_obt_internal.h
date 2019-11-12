@@ -29,9 +29,7 @@ extern "C"
 {
 #endif
 
-#define DISCOVERY_CB_PERIOD (5)
-/* Worst case timeout for all onboarding/provisioning sequences */
-#define OBT_CB_TIMEOUT (15)
+#define DISCOVERY_CB_PERIOD (60)
 
 /* Used for tracking owned/unowned devices in oc_obt's internal caches */
 typedef struct oc_device_t
