@@ -342,6 +342,12 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
     oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
     if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
+        oc_string_len(resource->uri) == 12 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/ael", 12) == 0) {
+      OC_DBG("oc_acl: peer's UUID matches ael's rowneruuid");
+      return true;
+    }
+    if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
         oc_string_len(resource->uri) == 13 &&
         memcmp(oc_string(resource->uri), "/oic/sec/acl2", 13) == 0) {
       OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
