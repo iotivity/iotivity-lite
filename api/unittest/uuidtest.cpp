@@ -20,6 +20,7 @@
 
 #include <cstdlib>
 #include "gtest/gtest.h"
+#include "port/oc_random.h"
 
 #include "oc_uuid.h"
 
@@ -32,4 +33,89 @@ TEST(UUIDGeneration, StrToUUIDTest_P)
     oc_uuid_t uuidTemp = uuid;
     oc_str_to_uuid(UUID, &uuid);
     EXPECT_NE(uuid.id, uuidTemp.id);
+}
+/*
+ * The version 4 UUID is meant for generating UUIDs from truly-random or
+ * pseudo-random numbers.
+ *
+ * The algorithm is as follows:
+ *
+ * o  Set the two most significant bits (bits 6 and 7) of the
+ *    clock_seq_hi_and_reserved to zero and one, respectively.
+ *
+ * o  Set the four most significant bits (bits 12 through 15) of the
+ *    time_hi_and_version field to the 4-bit version number from
+ *    Section 4.1.3.
+ *
+ * o  Set all the other bits to randomly (or pseudo-randomly) chosen
+ *    values.
+ *
+ */
+TEST(UUIDGeneration, generate_type4) {
+  // Type 4 uuid uses iotivities psudo random number generator.
+  oc_random_init();
+  oc_uuid_t uuid;
+  oc_gen_uuid(&uuid);
+  // `clock_seq_hi_and_reserved` is the 8th byte bit 7 is zero per spec
+  EXPECT_EQ(0, (uuid.id[8] & 0x80));
+  // `clock_seq_hi_and_reserved` is the 8th byte bit 6 is one per spec
+  EXPECT_EQ(0x40, (uuid.id[8] & 0x40));
+  // `time_hi_version` is the 6th and 7th bytes bits 15 through 12 should
+  // be set to 0 1 0 0 (0x40) per spec
+  EXPECT_EQ(0x40, (uuid.id[6] & 0x40));
+
+  char uuid_str[OC_UUID_LEN];
+  oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+  EXPECT_EQ('-', uuid_str[8]);
+  EXPECT_EQ('-', uuid_str[13]);
+  EXPECT_EQ('4', uuid_str[14]); // For Version 4 UUIDs this will always be a 4
+  EXPECT_EQ('-', uuid_str[18]);
+  EXPECT_EQ('-', uuid_str[23]);
+  oc_random_destroy();
+}
+
+TEST(UUIDGeneration, wildcard_uuid) {
+  oc_uuid_t uuid;
+  oc_str_to_uuid("*", &uuid);
+  EXPECT_EQ('*', uuid.id[0]);
+  for (size_t i = 1; i < 16; i++) {
+    EXPECT_EQ(0, uuid.id[i]);
+  }
+
+  char uuid_str[OC_UUID_LEN];
+  oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+  EXPECT_STREQ("*", uuid_str);
+
+    //2a135b8e-3317-4c66-ad0a-9a5866853f10
+    oc_str_to_uuid("2a135b8e-3317-4c66-ad0a-9a5866853f10", &uuid);
+    EXPECT_EQ('*', uuid.id[0]);
+    EXPECT_EQ(0x13, uuid.id[1]);
+    EXPECT_EQ(0x5b, uuid.id[2]);
+    EXPECT_EQ(0x8e, uuid.id[3]);
+    EXPECT_EQ(0x33, uuid.id[4]);
+    EXPECT_EQ(0x17, uuid.id[5]);
+    EXPECT_EQ(0x4c, uuid.id[6]);
+    EXPECT_EQ(0x66, uuid.id[7]);
+    EXPECT_EQ(0xad, uuid.id[8]);
+    EXPECT_EQ(0x0a, uuid.id[9]);
+    EXPECT_EQ(0x9a, uuid.id[10]);
+    EXPECT_EQ(0x58, uuid.id[11]);
+    EXPECT_EQ(0x66, uuid.id[12]);
+    EXPECT_EQ(0x85, uuid.id[13]);
+    EXPECT_EQ(0x3f, uuid.id[14]);
+    EXPECT_EQ(0x10, uuid.id[15]);
+
+    oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+    EXPECT_STREQ("2a135b8e-3317-4c66-ad0a-9a5866853f10", uuid_str);
+
+    // by chance the following invalid uuid will result in a wildcard '*' uuid
+    //2a000000-0000-0000-0000-000000000000
+    oc_str_to_uuid("2a000000-0000-0000-0000-000000000000", &uuid);
+    EXPECT_EQ('*', uuid.id[0]);
+    for (size_t i = 1; i < 16; i++) {
+      EXPECT_EQ(0, uuid.id[i]);
+    }
+
+    oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+    EXPECT_STREQ("*", uuid_str);
 }

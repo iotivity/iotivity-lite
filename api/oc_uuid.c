@@ -84,7 +84,12 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
   int i, j = 0;
   if (buflen < OC_UUID_LEN || !uuid)
     return;
-  if (uuid->id[0] == '*') {
+  if (uuid->id[0] == '*' && uuid->id[1] == 0 && uuid->id[2] == 0 &&
+      uuid->id[3] == 0 && uuid->id[4] == 0 && uuid->id[5] == 0 &&
+      uuid->id[6] == 0 && uuid->id[7] == 0 && uuid->id[8] == 0 &&
+      uuid->id[9] == 0 && uuid->id[10] == 0 && uuid->id[11] == 0 &&
+      uuid->id[12] == 0 && uuid->id[13] == 0 && uuid->id[14] == 0 &&
+      uuid->id[15] == 0) {
     memset(buffer, 0, buflen);
     buffer[0] = '*';
     buffer[1] = '\0';
