@@ -144,6 +144,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
                          const cloud_conf_update_t *data)
 {
   cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   if (data->auth_provider && data->auth_provider_len) {
