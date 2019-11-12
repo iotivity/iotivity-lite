@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dbedf03f_50f3aab2",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-11-12T13:02:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cd1bafed_a8409eeb",
+      "range": {
+        "startLine": 506,
+        "startChar": 15,
+        "endLine": 506,
+        "endChar": 24
+      },
+      "revId": "a16b9728cc0270c3f9567863eb0e21a39199b518",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ee35b39_aa461108",
         "filename": "security/oc_tls.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-11-12T12:33:26Z",
       "side": 1,
       "message": "This can be done in SNPRINTFipaddr",
+      "range": {
+        "startLine": 508,
+        "startChar": 2,
+        "endLine": 508,
+        "endChar": 32
+      },
+      "revId": "a16b9728cc0270c3f9567863eb0e21a39199b518",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf769d19_efa1d40d",
+        "filename": "security/oc_tls.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 14410
+      },
+      "writtenOn": "2019-11-12T13:02:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ee35b39_aa461108",
       "range": {
         "startLine": 508,
         "startChar": 2,
