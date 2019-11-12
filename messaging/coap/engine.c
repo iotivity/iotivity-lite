@@ -56,6 +56,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#include "security/oc_audit.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
@@ -656,6 +657,20 @@ coap_receive(oc_message_t *msg)
       }
 #endif /* OC_CLIENT */
     }
+  } else {
+    OC_ERR("Unexpected CoAP command");
+#ifdef OC_SECURITY
+    const size_t totalsz = IPADDR_BUFF_SIZE + msg->length + 1;
+    char *buff = (char *)malloc(totalsz);
+    if (buff) {
+      memset(buff, 0, totalsz);
+      char *aux[] = {&buff[0], &buff[IPADDR_BUFF_SIZE]};
+      SNPRINTFipaddr(aux[0], IPADDR_BUFF_SIZE, msg->endpoint);
+      SNPRINTFbytes(aux[1], msg->length, msg->data, msg->length);
+      oc_audit_log("COMM-1", "Unexpected CoAP command", 0x40, 2, (const char **)aux, 2);
+      free(buff);
+    }
+#endif
   }
 
 init_reset_message:
