@@ -159,9 +159,10 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
     out_of_range = true;
   }
 
-  if (!out_of_range && t != -1 && ((units == C && t < min_C && t > max_C) ||
-                                   (units == F && t < min_F && t > max_F) ||
-                                   (units == K && t < min_K && t > max_K))) {
+  if (!out_of_range && t != -1 &&
+      ((units == C && t < min_C && t > max_C) ||
+       (units == F && t < min_F && t > max_F) ||
+       (units == K && t < min_K && t > max_K))) {
     out_of_range = true;
   }
 
@@ -314,7 +315,6 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                       void *data)
 {
   oc_switch_t *cswitch = (oc_switch_t *)data;
-  oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(resource);
@@ -325,7 +325,6 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   default:
     break;
   }
-  oc_rep_end_root_object();
 }
 
 void
@@ -375,7 +374,9 @@ void
 get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
+  oc_rep_start_root_object();
   get_switch_properties(request->resource, iface_mask, user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
@@ -430,7 +431,64 @@ free_switch_instance(oc_resource_t *resource)
 }
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
-/* */
+
+/* Setting custom Collection-level properties */
+int64_t battery_level = 94;
+bool
+set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  (void)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_INT:
+      if (oc_string_len(rep->name) == 2 &&
+          memcmp(oc_string(rep->name), "bl", 2) == 0) {
+        battery_level = rep->value.integer;
+      }
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+void
+get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                        void *data)
+{
+  (void)resource;
+  (void)data;
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_rep_set_int(root, x.org.openconnectivity.bl, battery_level);
+    break;
+  default:
+    break;
+  }
+}
+
+static void
+get_platform(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
+  oc_rep_start_root_object();
+  get_platform_properties(request->resource, iface_mask, user_data);
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+static void
+post_platform(oc_request_t *request, oc_interface_mask_t iface_mask,
+              void *user_data)
+{
+  (void)iface_mask;
+  set_platform_properties(request->resource, request->request_payload,
+                          user_data);
+  oc_send_response(request, OC_STATUS_OK);
+}
 
 static void
 register_resources(void)
@@ -467,8 +525,22 @@ register_resources(void)
   oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
                                 free_switch_instance);
 #endif /* OC_COLLECTIONS_IF_CREATE */
-  oc_link_t *l2 = oc_new_link(bswitch);
+  oc_link_t *l1 = oc_new_link(bswitch);
+  oc_collection_add_link(col, l1);
+  /* Add a defined or custom link parameter to this link */
+  oc_link_add_link_param(l1, "name", "platform_switch");
+
+  /* Add self-link to the Collection */
+  oc_link_t *l2 = oc_new_link(col);
   oc_collection_add_link(col, l2);
+
+  /* The following enables batch RETRIEVEs/UPDATEs to Collection properties */
+  oc_resource_set_request_handler(col, OC_GET, get_platform, NULL);
+  oc_resource_set_request_handler(col, OC_POST, post_platform, NULL);
+  /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
+   */
+  oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
+                                 set_platform_properties, NULL);
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
 }
@@ -608,10 +680,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
