@@ -251,9 +251,7 @@ cloud_register(void *data)
     ctx->retry_count++;
     if (!is_retry_over(ctx)) {
       bool cannotConnect = true;
-      if (oc_string(ctx->store.ci_server) &&
-          oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-            0 &&
+      if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_register(
             ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
@@ -361,8 +359,7 @@ cloud_login(void *data)
     ctx->retry_count++;
     if (!is_retry_over(ctx)) {
       bool cannotConnect = true;
-      if (oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-            0 &&
+      if (conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token), ctx->device,
                              cloud_login_handler, ctx)) {
@@ -488,8 +485,7 @@ refresh_token(void *data)
   ctx->retry_refresh_token_count++;
   if (!is_refresh_token_retry_over(ctx)) {
     bool cannotConnect = true;
-    if (oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-          0 &&
+    if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_refresh_access_token(
           ctx->cloud_ep, oc_string(ctx->store.uid),
           oc_string(ctx->store.refresh_token), ctx->device,
