@@ -24,8 +24,7 @@
 #include "oc_session_events.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -126,6 +125,12 @@ int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
 int oc_cloud_add_resource(oc_resource_t *resource);
 void oc_cloud_delete_resource(oc_resource_t *resource);
 int oc_cloud_publish_resources(size_t device);
+
+int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
+                                     const char *server,
+                                     const char *access_token,
+                                     const char *server_id,
+                                     const char *auth_provider);
 
 #ifdef __cplusplus
 }
