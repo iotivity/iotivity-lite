@@ -535,8 +535,7 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
   Msg.lpBuffers = &WSABuf;
   Msg.dwBufferCount = 1;
 
-  union
-  {
+  union {
 #pragma warning(suppress : 4116)
     char in[WSA_CMSG_SPACE(sizeof(struct in_pktinfo))];
 #pragma warning(suppress : 4116)
@@ -587,14 +586,7 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
             memcpy(endpoint->addr_local.ipv4.address,
                    &pktinfo->ipi_addr.S_un.S_addr, 4);
           } else {
-            oc_endpoint_t *dst =
-              oc_connectivity_get_endpoints(endpoint->device);
-            while (dst->interface_index != endpoint->interface_index ||
-                   !(dst->flags & IPV4)) {
-              dst = dst->next;
-            }
-            memcpy(endpoint->addr_local.ipv4.address, dst->addr.ipv4.address,
-                   4);
+            memset(endpoint->addr_local.ipv4.address, 0, 4);
           }
           return (int)NumberOfBytes;
         } break;
@@ -607,20 +599,7 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
             memcpy(endpoint->addr_local.ipv6.address, pktinfo->ipi6_addr.u.Byte,
                    16);
           } else {
-            /* For a multicast receiving socket, check the incoming interface
-             * index and save that interface's highest scoped address in the
-             * endpoint's addr_local attribute. This would be used as the source
-             * address of a multicast response.
-             */
-            oc_endpoint_t *dst =
-              oc_connectivity_get_endpoints(endpoint->device);
-
-            while (dst->interface_index != endpoint->interface_index ||
-                   !(dst->flags & IPV6)) {
-              dst = dst->next;
-            }
-            memcpy(endpoint->addr_local.ipv6.address, dst->addr.ipv6.address,
-                   16);
+            memset(endpoint->addr_local.ipv6.address, 0, 16);
           }
           return (int)NumberOfBytes;
         } break;
@@ -955,8 +934,7 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 
   LPWSACMSGHDR MsgHdr = NULL;
 
-  union
-  {
+  union {
 #pragma warning(suppress : 4116)
     char in[WSA_CMSG_SPACE(sizeof(struct in_pktinfo))];
 #pragma warning(suppress : 4116)

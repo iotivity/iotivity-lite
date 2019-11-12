@@ -713,22 +713,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
         memcpy(endpoint->addr_local.ipv6.address, pktinfo->ipi6_addr.s6_addr,
                16);
       } else {
-        /* For a multicast receiving socket, check the incoming interface
-               * index and save that interface's highest scoped address in the
-               * endpoint's addr_local attribute. This would be used as the
-         * source
-               * address of a multicast response.
-               */
-        oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst != NULL &&
-               (dst->interface_index != endpoint->interface_index ||
-                !(dst->flags & IPV6))) {
-          dst = dst->next;
-        }
-        if (dst == NULL) {
-          return -1;
-        }
-        memcpy(endpoint->addr_local.ipv6.address, dst->addr.ipv6.address, 16);
+        memset(endpoint->addr_local.ipv6.address, 0, 16);
       }
       break;
     }
@@ -747,16 +732,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       if (!multicast) {
         memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
       } else {
-        oc_endpoint_t *dst = oc_connectivity_get_endpoints(endpoint->device);
-        while (dst != NULL &&
-               (dst->interface_index != endpoint->interface_index ||
-                !(dst->flags & IPV4))) {
-          dst = dst->next;
-        }
-        if (dst == NULL) {
-          return -1;
-        }
-        memcpy(endpoint->addr_local.ipv4.address, dst->addr.ipv4.address, 4);
+        memset(endpoint->addr_local.ipv4.address, 0, 4);
       }
       break;
     }
