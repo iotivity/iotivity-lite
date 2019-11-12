@@ -29,7 +29,7 @@
 void
 oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
-  if (str[0] == '*') {
+  if (str[0] == '*' && strlen(str) == 1) {
     memset(uuid->id, 0, 16);
     uuid->id[0] = '*';
     return;
@@ -85,10 +85,13 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
   if (buflen < OC_UUID_LEN || !uuid)
     return;
   if (uuid->id[0] == '*') {
-    memset(buffer, 0, buflen);
-    buffer[0] = '*';
-    buffer[1] = '\0';
-    return;
+    uint8_t zeros[15] = { 0 };
+    if (memcmp(&uuid->id[1], zeros, 15) == 0) {
+      memset(buffer, 0, buflen);
+      buffer[0] = '*';
+      buffer[1] = '\0';
+      return;
+    }
   }
   for (i = 0; i < 16; i++) {
     switch (i) {
