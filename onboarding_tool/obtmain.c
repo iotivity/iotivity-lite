@@ -300,7 +300,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, unowned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
 }
 
 static void
@@ -318,7 +318,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, owned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
 }
 
 static void
@@ -1702,9 +1702,9 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_storage_config("./onboarding_tool_creds");
   oc_set_factory_presets_cb(factory_presets_cb, NULL);

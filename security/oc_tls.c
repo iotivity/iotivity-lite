@@ -364,6 +364,7 @@ oc_tls_inactive(void *data)
       return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    mbedtls_ssl_close_notify(&peer->ssl_ctx);
     oc_tls_free_peer(peer, true);
   }
   OC_DBG("oc_tls: Terminating DTLS inactivity callback");
@@ -1319,6 +1320,7 @@ oc_tls_close_connection(oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    mbedtls_ssl_close_notify(&peer->ssl_ctx);
     oc_tls_free_peer(peer, false);
   }
 }
@@ -1712,6 +1714,7 @@ read_application_data(oc_tls_peer_t *peer)
         }
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             (peer->endpoint.flags & TCP) == 0) {
+          mbedtls_ssl_close_notify(&peer->ssl_ctx);
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
         oc_tls_free_peer(peer, false);
