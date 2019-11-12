@@ -55,9 +55,10 @@ cloud_response(oc_cloud_context_t *ctx)
 {
   oc_rep_start_root_object();
   oc_process_baseline_interface(ctx->cloud_conf);
-  oc_rep_set_text_string(root, apn, (oc_string(ctx->store.auth_provider) != NULL
-                                       ? oc_string(ctx->store.auth_provider)
-                                       : ""));
+  oc_rep_set_text_string(root, apn,
+                         (oc_string(ctx->store.auth_provider) != NULL
+                            ? oc_string(ctx->store.auth_provider)
+                            : ""));
   oc_rep_set_text_string(
     root, cis,
     (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
@@ -166,6 +167,9 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   cloud_response(ctx);
   oc_send_response(request,
                    changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST);
+  if (changed) {
+    cloud_store_dump_async(&ctx->store);
+  }
 }
 
 void
