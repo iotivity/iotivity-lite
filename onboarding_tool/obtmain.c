@@ -122,6 +122,7 @@ display_menu(void)
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
+      fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
 
