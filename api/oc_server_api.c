@@ -406,14 +406,20 @@ oc_send_separate_response(oc_separate_response_t *handle,
 #ifdef OC_TCP
         if (!(cur->endpoint.flags & TCP) &&
             response_buffer.response_length > cur->block2_size) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
         if (response_buffer.response_length > cur->block2_size) {
 #endif /* !OC_TCP */
           response_state = oc_blockwise_find_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
-            goto next_separate_request;
+            if (response_state->payload_size ==
+                response_state->next_block_offset) {
+              oc_blockwise_free_response_buffer(response_state);
+              response_state = NULL;
+            } else {
+              goto next_separate_request;
+            }
           }
           response_state = oc_blockwise_alloc_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
