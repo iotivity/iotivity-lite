@@ -25,6 +25,7 @@
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
 #include "oc_collection.h"
+#include "oc_easysetup_enrollee.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
@@ -115,7 +116,7 @@ oc_core_shutdown(void)
     for (i = 0; i < 1 + (OCF_D * device_count); ++i) {
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #if defined(OC_WIFI_EASYSETUP)
-      if (j == OCF_ES) {
+      if (j == OCF_WES) {
         // Skip
       } else
 #endif /* OC_WIFI_EASYSETUP */
@@ -321,7 +322,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   size_t i, base = new_num - OCF_D;
   for (i = base; i < new_num; i++) {
 #if defined(OC_WIFI_EASYSETUP) && defined(OC_COLLECTIONS) && defined(OC_SERVER)
-    if (i == (base + OCF_ES - 1)) {
+    if (i == (base + OCF_WES - 1)) {
       // Skip.
     } else
 #endif /* OC_WIFI_EASYSETUP && OC_COLLECTIONS && OC_SERVER */
@@ -387,26 +388,11 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
-  /* TODO: Change code below with calls into WES/EES modules to create
-   * the Collection and conf/devconf resources and add them as links.
-   * The code below is for illustrative purposes only
-   */
 #if defined(OC_WIFI_EASYSETUP) && defined(OC_COLLECTIONS) && defined(OC_SERVER)
-  oc_core_populate_collection(OCF_ES, device_count, "/EasySetupResURI",
-                              OC_DISCOVERABLE | OC_SECURE, 2, "oic.r.easysetup",
-                              "oic.wk.col");
-  /* You can obtain a handle to the Collection as below. Use it to
-     add links.
-  */
-  oc_collection_t *es_coll =
-    (oc_collection_t *)oc_core_get_resource_by_index(OCF_ES, device_count);
-  (void)es_coll;
+  oc_create_wifi_easysetup_resource(device_count);
 #endif /* OC_WIFI_EASYSETUP && OC_COLLECTIONS && OC_SERVER */
 #if defined(OC_ESIM_EASYSETUP) && defined(OC_COLLECTIONS) && defined(OC_SERVER)
-  oc_core_populate_collection(OCF_EES, device_count, "/EsimEasySetupResURI",
-                              OC_DISCOVERABLE | OC_SECURE, 2,
-                              "oic.r.esimeasysetup", "oic.wk.col");
+  oc_create_esim_easysetup_resource(device_count);
 #endif /* OC_ESIM_EASYSETUP && OC_COLLECTIONS && OC_SERVER */
 
   oc_device_info[device_count].data = data;
@@ -632,7 +618,6 @@ oc_core_is_DCR(oc_resource_t *resource, size_t device)
   return false;
 }
 
-// TODO: Need to add WES/EES resources here.
 oc_resource_t *
 oc_core_get_resource_by_uri(const char *uri, size_t device)
 {
@@ -670,6 +655,18 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
     type = OCF_COAPCLOUDCONF;
   }
 #endif /* OC_CLOUD */
+#ifdef OC_WIFI_EASYSETUP
+  else if ((strlen(uri) - skip) == 15 &&
+           memcmp(uri + skip, "EasySetupResURI", 15) == 0) {
+    type = OCF_WES;
+  }
+#endif /* OC_WIFI_EASYSETUP */
+#ifdef OC_ESIM_EASYSETUP
+  else if ((strlen(uri) - skip) == 19 &&
+           memcmp(uri + skip, "EsimEasySetupResURI", 19) == 0) {
+    type = OCF_EES;
+  }
+#endif /* OC_ESIM_EASYSETUP */
 #ifdef OC_SECURITY
   else if ((strlen(uri) - skip) == 12) {
     if (memcmp(uri + skip, "oic/sec/doxm", 12) == 0) {
