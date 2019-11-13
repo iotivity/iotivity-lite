@@ -102,6 +102,7 @@ CFLAGS+=-I${tinyara_dir}/include/
 CFLAGS+=-I${topdir}
 CFLAGS+=-I${topdir}/include/
 CFLAGS+=-I.
+CFLAGS+=-I${topdir}/api/easysetup/
 
 ifeq ($(IPV4),1)
 	CFLAGS += -DOC_IPV4
