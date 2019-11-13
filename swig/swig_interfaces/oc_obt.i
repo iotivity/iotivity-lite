@@ -302,7 +302,7 @@ int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callbac
 %ignore oc_obt_discover_all_resources;
 %rename (discoverAllResources) jni_obt_discover_all_resources;
 %inline %{
-int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler, jni_callback_data *jcb)
+int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_all_handler_t handler, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
