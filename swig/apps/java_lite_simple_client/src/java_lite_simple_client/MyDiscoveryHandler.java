@@ -93,7 +93,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
         for (String type: types) {
             if(type.equals("oic.r.switch.binary")) {
-                Light.serverEndpoint = endpoint;
+                Light.serverEndpoint = OCEndpointUtil.listCopy(endpoint);
                 Light.serverUri = uri;
                 System.out.println("\tResource " + Light.serverUri + " hosted at endpoint(s):");
                 OCEndpoint ep = endpoint;
@@ -111,7 +111,6 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OCMain.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }

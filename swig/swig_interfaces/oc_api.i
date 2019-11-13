@@ -485,6 +485,7 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
    */
   public";
 %rename(getConResAnnounced) oc_get_con_res_announced;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_set_con_res_announced "/**
    * Sets whether the oic.wk.con res is announced.
@@ -527,6 +528,7 @@ void jni_reset_device(size_t device) {
 %rename(resourceBindResourceType) oc_resource_bind_resource_type;
 %rename(deviceBindResourceType) oc_device_bind_resource_type;
 %rename(processBaselineInterface) oc_process_baseline_interface;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_new_collection "/**
    * Creates a new empty collection.
@@ -554,6 +556,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(newCollection) oc_new_collection;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_delete_collection "/**
    * Deletes the specified collection.
@@ -573,6 +576,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(deleteCollection) oc_delete_collection;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_new_link "/**
    * Creates a new link for collections with the specified resource.
@@ -588,6 +592,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(newLink) oc_new_link;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_delete_link "/**
    * Deletes the link.
@@ -600,15 +605,28 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(deleteLink) oc_delete_link;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_link_add_rel "/**
    * Adds a relation to the link.
    *
-   * @param link Link to add the relation to. Must not be NULL
-   * @param rel Relation to add. Must not be NULL
+   * @param link Link to add the relation to. Must not be null
+   * @param rel Relation to add. Must not be null
    */
   public";
 %rename(linkAddRelation) oc_link_add_rel;
+
+// DOCUMENTATION workaround
+%javamethodmodifiers oc_link_add_link_param "/**
+   * Adds a link parameter with specified key and value.
+   *
+   * @param link Link to which to add a link parameter. Must not be null.
+   * @param key Key to identify the link parameter. Must not be null.
+   * @param value Link parameter value. Must not be null.
+   */
+  public";
+%rename(linkAddLinkParameter) oc_link_add_link_param;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_add_link "/**
    * Adds the link to the collection.
@@ -627,6 +645,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(collectionAddLink) oc_collection_add_link;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_remove_link "/**
    * Removes a link from the collection.
@@ -640,6 +659,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(collectionRemoveLink) oc_collection_remove_link;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_get_links "/**
    * Returns the list of links belonging to this collection.
@@ -653,6 +673,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(collectionGetLinks) oc_collection_get_links;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_add_collection "/**
    * Adds a collection to the list of collections.
@@ -671,6 +692,7 @@ void jni_reset_device(size_t device) {
    */
   public";
 %rename(addCollection) oc_add_collection;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_get_collections "/**
    * Gets all known collections.
@@ -1094,7 +1116,66 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 %rename(notifyObservers) oc_notify_observers;
 
 // client side
+%{
+oc_discovery_flags_t
+jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
+                                  oc_string_array_t types,
+                                  oc_interface_mask_t interfaces,
+                                  oc_endpoint_t *endpoint,
+                                  oc_resource_properties_t bm, void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
 
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  jstring janchor = JCALL1(NewStringUTF, (data->jenv), anchor);
+  jstring juri = JCALL1(NewStringUTF, (data->jenv), uri);
+  jobjectArray jtypes =
+    JCALL3(NewObjectArray, (data->jenv),
+           (jsize)oc_string_array_get_allocated_size(types),
+           JCALL1(FindClass, (data->jenv), "java/lang/String"), 0);
+  for (jsize i = 0; i < (jsize)oc_string_array_get_allocated_size(types); i++) {
+    jstring str =
+      JCALL1(NewStringUTF, (data->jenv), oc_string_array_get_item(types, i));
+    JCALL3(SetObjectArrayElement, (data->jenv), jtypes, i, str);
+  }
+  jint jinterfaceMask = (jint)interfaces;
+
+  // create java endpoint
+  assert(cls_OCEndpoint);
+  const jmethodID mid_OCEndpoint_init =
+    JCALL3(GetMethodID, (data->jenv), cls_OCEndpoint, "<init>", "(JZ)V");
+  assert(mid_OCEndpoint_init);
+  jobject jendpoint = JCALL4(NewObject, (data->jenv), cls_OCEndpoint,
+                             mid_OCEndpoint_init, (jlong)endpoint, false);
+
+  jint jresourcePropertiesMask = (jint)bm;
+  assert(cls_OCDiscoveryHandler);
+  const jmethodID mid_handler =
+    JCALL3(GetMethodID, (data->jenv), cls_OCDiscoveryHandler, "handler",
+           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILorg/"
+           "iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
+  assert(mid_handler);
+  jobject jDiscoveryFlag =
+    JCALL8(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, janchor,
+           juri, jtypes, jinterfaceMask, jendpoint, jresourcePropertiesMask);
+  jclass cls_DiscoveryFlags =
+    JCALL1(GetObjectClass, (data->jenv), jDiscoveryFlag);
+  assert(cls_DiscoveryFlags);
+  const jmethodID mid_OCDiscoveryFlags_swigValue =
+    JCALL3(GetMethodID, (data->jenv), cls_DiscoveryFlags, "swigValue", "()I");
+  assert(mid_OCDiscoveryFlags_swigValue);
+  jint return_value = JCALL2(CallIntMethod, (data->jenv), jDiscoveryFlag,
+                             mid_OCDiscoveryFlags_swigValue);
+
+  release_jni_env(getEnvResult);
+
+  return (oc_discovery_flags_t)return_value;
+}
+%}
 /*
  * Code and typemaps for mapping the oc_do_ip_discovery and oc_do_ip_discovery_at_endpoint to the
  * java OCDiscoveryHandler
@@ -1114,6 +1195,25 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
   $2 = user_data;
 }
 
+/*
+ * Code and typemaps for mapping the oc_do_ip_discovery and oc_do_ip_discovery_at_endpoint to the
+ * java OCDiscoveryHandler
+ */
+%typemap(jni)    oc_discovery_all_handler_t handler "jobject";
+%typemap(jtype)  oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
+%typemap(jstype) oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
+%typemap(javain) oc_discovery_all_handler_t handler "$javainput";
+%typemap(in,numinputs=1) (oc_discovery_all_handler_t handler, jni_callback_data *jcb) {
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  // TODO figure out the lifetime of the oc_discovery_all_handler_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_oc_discovery_all_handler_callback;
+  $2 = user_data;
+}
+
 %ignore oc_do_site_local_ipv6_discovery;
 %rename(doSiteLocalIPv6Discovery) jni_do_site_local_ipv6_discovery;
 %inline %{
@@ -1125,6 +1225,22 @@ bool jni_do_site_local_ipv6_discovery(const char *rt,
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   bool return_value = oc_do_site_local_ipv6_discovery(rt, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_site_local_ipv6_discovery_all;
+%rename(doSiteLocalIPv6DiscoveryAll) jni_do_site_local_ipv6_discovery_all;
+%inline %{
+bool jni_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                          jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_site_local_ipv6_discovery_all(handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
@@ -1148,6 +1264,22 @@ bool jni_do_realm_local_ipv6_discovery(const char *rt,
 }
 %}
 
+%ignore oc_do_realm_local_ipv6_discovery_all;
+%rename(doRealmLocalIPv6DiscoveryAll) jni_do_realm_local_ipv6_discovery_all;
+%inline %{
+bool jni_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                           jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_realm_local_ipv6_discovery_all(handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
 %ignore oc_do_ip_discovery;
 %rename(doIPDiscovery) jni_oc_do_ip_discovery;
 %inline %{
@@ -1157,6 +1289,21 @@ bool jni_oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler, jni_
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   bool return_value = oc_do_ip_discovery(rt, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_ip_discovery_all;
+%rename(doIPDiscoveryAll) jni_oc_do_ip_discovery_all;
+%inline %{
+bool jni_oc_do_ip_discovery_all(oc_discovery_all_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_ip_discovery_all(handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
@@ -1186,6 +1333,22 @@ bool jni_oc_do_ip_discovery_at_endpoint(const char *rt,
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   bool return_value = oc_do_ip_discovery_at_endpoint(rt, handler, endpoint, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+
+%ignore oc_do_ip_discovery_all_at_endpoint;
+%rename(doIPDiscoveryAllAtEndpoint) jni_oc_do_ip_discovery_all_at_endpoint;
+%inline %{
+bool jni_oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler, jni_callback_data *jcb,
+                                            oc_endpoint_t *endpoint)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_do_ip_discovery_all_at_endpoint(handler, endpoint, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
@@ -1626,8 +1789,14 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %ignore oc_client_handler_t;
 %ignore oc_response_handler_t;
 %ignore oc_discovery_handler_t;
-%rename (OCClientCallback) oc_client_cb_s;
-%ignore handler; /*part of the oc_client_cb_s */
+%ignore oc_discovery_all_handler_t;
+%rename (OCClientCallback) oc_client_cb_t;
+%ignore oc_client_cb_t::handler; /*part of the oc_client_cb_t */
+%ignore oc_client_cb_t::user_data;
+%rename(observeSeq) oc_client_cb_t::observe_seq;
+%rename(tokenLen) oc_client_cb_t::token_len;
+%rename(stopMulticastReceive) oc_client_cb_t::stop_multicast_receive;
+%rename(refCount) oc_client_cb_t::ref_count;
 %ignore oc_ri_invoke_client_cb;
 %ignore oc_ri_alloc_client_cb;
 %ignore oc_ri_get_client_cb;
