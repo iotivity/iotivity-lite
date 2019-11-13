@@ -52,6 +52,7 @@ SRC=$(wildcard ${topdir}/messaging/coap/*.c ${topdir}/api/*.c ${portdir}/*.c)
 HEADERS = $(wildcard ${topdir}/include/*.h)
 HEADERS += ${portdir}/oc_config.h
 
+
 HEADERS_COAP = $(wildcard ${topdir}/messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ${topdir}/util/*.h)
 HEADERS_UTIL_PT = $(wildcard ${topdir}/util/pt/*.h)
@@ -93,7 +94,7 @@ endif
 	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
 endif
 
-CFLAGS+=-I${topdir}/include/ -I${topdir}
+CFLAGS+=-I${topdir}/include/ -I${topdir} -I${topdir}/api/easysetup/
 CFLAGS+=-I.
 
 ifeq ($(IPV4),1)
