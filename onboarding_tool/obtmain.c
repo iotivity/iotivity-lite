@@ -1623,7 +1623,7 @@ factory_presets_cb(size_t device, void *data)
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, void *user_data)
+                   oc_resource_properties_t bm, bool more, void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
@@ -1631,6 +1631,10 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)types;
   (void)endpoint;
   PRINT("anchor %s, uri : %s\n", anchor, uri);
+  if (!more) {
+    PRINT("----End of discovery response---\n");
+    return OC_STOP_DISCOVERY;
+  }
   return OC_CONTINUE_DISCOVERY;
 }
 
