@@ -1,6 +1,7 @@
 package java_oc_channel_change_client;
 
 import org.iotivity.OCEndpoint;
+import org.iotivity.OCEndpointUtil;
 
 public class OcfServerResource {
 
@@ -24,7 +25,7 @@ public class OcfServerResource {
     }
 
     public void setServerEndpoint(OCEndpoint serverEndpoint) {
-        this.serverEndpoint = serverEndpoint;
+        this.serverEndpoint = OCEndpointUtil.listCopy(serverEndpoint);
     }
 
     public String getServerUri() {

@@ -37,7 +37,6 @@ public class DiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
             }
         }
-        OcUtils.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_STOP_DISCOVERY;
     }
 }

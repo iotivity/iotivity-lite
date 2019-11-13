@@ -31,7 +31,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
             } else if (type.equals("oic.r.temperature")) {
                 Thermostat.serverUri = uri;
-                Thermostat.serverEndpoint = endpoints;
+                Thermostat.serverEndpoint = OCEndpointUtil.listCopy(endpoints);
 
                 System.out.println("Temperature resource " + uri + " hosted in device " + anchor + " at endpoints:");
                 OCEndpoint ep = endpoints;
@@ -44,7 +44,6 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
             }
         }
-        OCMain.freeServerEndpoints(endpoints);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }

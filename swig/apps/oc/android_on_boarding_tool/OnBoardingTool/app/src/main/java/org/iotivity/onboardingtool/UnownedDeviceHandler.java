@@ -30,6 +30,6 @@ public class UnownedDeviceHandler implements OCObtDiscoveryHandler {
             endpoints = endpoints.getNext();
         }
 
-        OcUtils.doGet("/oic/d", ep, null, new GetDeviceNameHandler(activity, false), OCQos.LOW_QOS);
+        OcUtils.doGet("/oic/d", ep, null, new GetDeviceNameHandler(activity, false), OCQos.HIGH_QOS);
     }
 }

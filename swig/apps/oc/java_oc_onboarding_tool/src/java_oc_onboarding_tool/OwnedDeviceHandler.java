@@ -16,6 +16,6 @@ public class OwnedDeviceHandler implements OCObtDiscoveryHandler {
             endpoints = endpoints.getNext();
         }
 
-        OcUtils.doGet("/oic/d", ep, null, new GetOwnedDeviceNameHandler(), OCQos.LOW_QOS);
+        OcUtils.doGet("/oic/d", ep, null, new GetOwnedDeviceNameHandler(), OCQos.HIGH_QOS);
     }
 }
