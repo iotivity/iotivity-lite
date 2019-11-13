@@ -36,7 +36,7 @@ public class OcObt {
         return OCObt.discoverOwnedDevicesSiteLocalIPv6(ownedDeviceHandler);
     }
 
-    public int discoverAllResources(OCUuid uuid, OCDiscoveryHandler discoverHandler) {
+    public int discoverAllResources(OCUuid uuid, OCDiscoveryAllHandler discoverHandler) {
         return OCObt.discoverAllResources(uuid, discoverHandler);
     }
     public int performJustWorksOtm(OCUuid uuid, OCObtDeviceStatusHandler otmJustWorksHandler) {

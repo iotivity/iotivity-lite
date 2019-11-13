@@ -313,4 +313,22 @@ int jni_cloud_publish_resources(size_t device)
 }
 %}
 
+%ignore oc_cloud_provision_conf_resource;
+%rename(provisionConfResource) jni_cloud_provision_conf_resource;
+%inline %{
+int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
+                                      const char *server,
+                                      const char *accessToken,
+                                      const char *serverId,
+                                      const char *authProvider)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_provision_conf_resource(ctx, server, accessToken, serverId, authProvider);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  return -1;
+#endif /* !OC_CLOUD */
+}
+%}
+
 %include "oc_cloud.h"
