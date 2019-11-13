@@ -12,6 +12,8 @@ public class OCRepresentationTest {
         assertNotNull(rep);
         rep.setType(OCType.OC_REP_INT);
         assertEquals(OCType.OC_REP_INT, rep.getType());
+        assertEquals("{0}", OCRep.toJSON(rep, false));
+        assertEquals("{\n  0\n}\n", OCRep.toJSON(rep, true));
     }
 
     @Test
@@ -37,7 +39,13 @@ public class OCRepresentationTest {
         assertEquals("three", r.getName());
         r = r.getNext();
         assertNull(r);
-    }
+        assertEquals("{\"one\":null,\"two\":null,\"three\":null}", OCRep.toJSON(rep1, false));
+        assertEquals("{\n" +
+                     "  \"one\" : null,\n" +
+                     "  \"two\" : null,\n" +
+                     "  \"three\" : null\n" +
+                     "}\n", OCRep.toJSON(rep1, true));
+}
 
     @Test
     public void testName() {
@@ -45,6 +53,8 @@ public class OCRepresentationTest {
         assertNotNull(rep);
         rep.setName("Sam");
         assertEquals("Sam", rep.getName());
+        assertEquals("{\"Sam\":null}", OCRep.toJSON(rep, false));
+        assertEquals("{\n  \"Sam\" : null\n}\n", OCRep.toJSON(rep, true));
     }
 
     @Test
@@ -55,6 +65,8 @@ public class OCRepresentationTest {
         v.setString("happy dog");
         rep.setValue(v);
         assertEquals("happy dog", rep.getValue().getString());
+        assertEquals("{null}", OCRep.toJSON(rep, false));
+        assertEquals("{\n  null\n}\n", OCRep.toJSON(rep, true));
     }
 
     @Test
@@ -142,6 +154,30 @@ public class OCRepresentationTest {
         rep = rep.getNext();
         assertNotNull(rep);
 
+        assertEquals("{\"flips\":[false,false,true,false,false],"
+                + "\"math_constants\":[3.141593,2.718280,1.414214,1.618033],"
+                + "\"lorem_ipsum\":[\"Lorem\",\"ipsum\",\"dolor\",\"sit\",\"amet\",\"consectetur\",\"adipiscing\""
+                + ",\"elit.\",\"Sed\",\"nec\",\"feugiat\",\"odio.\",\"Donec.\"]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"flips\" : [false, false, true, false, false],\n"
+                + "  \"math_constants\" : [3.141593, 2.718280, 1.414214, 1.618033],\n"
+                + "  \"lorem_ipsum\" : [\n"
+                + "    \"Lorem\",\n"
+                + "    \"ipsum\",\n"
+                + "    \"dolor\",\n"
+                + "    \"sit\",\n"
+                + "    \"amet\",\n"
+                + "    \"consectetur\",\n"
+                + "    \"adipiscing\",\n"
+                + "    \"elit.\",\n"
+                + "    \"Sed\",\n"
+                + "    \"nec\",\n"
+                + "    \"feugiat\",\n"
+                + "    \"odio.\",\n"
+                + "    \"Donec.\"\n"
+                + "  ]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         //OCArray to boolean array
         assertEquals(OCType.OC_REP_BOOL_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("flips"));
@@ -200,6 +236,13 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"a\":1,\"b\":false,\"c\":\"three\"}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"a\" : 1,\n"
+                + "  \"b\" : false,\n"
+                + "  \"c\" : \"three\"\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         OCValue v = new OCValue();
         assertNotNull(v);
@@ -302,6 +345,26 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"space_2001\":[{\"name\":\"Dave Bowman\",\"job\":\"astronaut\"},"
+                + "{\"name\":\"Frank Poole\",\"job\":\"astronaut\"},"
+                + "{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"space_2001\" : [\n"
+                + "    {\n"
+                + "      \"name\" : \"Dave Bowman\",\n"
+                + "      \"job\" : \"astronaut\"\n"
+                + "    },\n"
+                + "    {\n"
+                + "      \"name\" : \"Frank Poole\",\n"
+                + "      \"job\" : \"astronaut\"\n"
+                + "    },\n"
+                + "    {\n"
+                + "      \"name\" : \"Hal 9000\",\n"
+                + "      \"job\" : \"AI computer\"\n"
+                + "    }]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         System.out.println(rep.getType());
         System.out.println(rep.getName());
         OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
@@ -378,6 +441,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        assertEquals("{\"ultimat_answer\":42}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"ultimat_answer\" : 42\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         Long outValue = OCRep.getLong(rep, "ultimat_answer");
         assertNotNull(outValue);
         assertEquals(42, outValue.longValue());
@@ -401,6 +469,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        assertEquals("{\"true_flag\":true}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"true_flag\" : true\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         Boolean outValue = OCRep.getBoolean(rep, "true_flag");
         assertNotNull(outValue);
         assertEquals(true, outValue.booleanValue());
@@ -422,6 +495,11 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"pi\":3.140000}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"pi\" : 3.140000\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         Double outValue = OCRep.getDouble(rep, "pi");
         assertNotNull(outValue);
@@ -447,6 +525,12 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"hello\":\"world\",\"empty\":\"\"}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"hello\" : \"world\",\n"
+                + "  \"empty\" : \"\"\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         String outValue = OCRep.getString(rep, "hello");
         assertNotNull(outValue);
@@ -475,6 +559,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        assertEquals("{\"flips\":[false,false,true,false,false]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"flips\" : [false, false, true, false, false]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         boolean outValue[] = OCRep.getBooleanArray(rep, "flips");
         assertNotNull(outValue);
         assertEquals(barray.length, outValue.length);
@@ -498,6 +587,11 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        assertEquals("{\"math_constants\":[3.141593,2.718280,1.414214,1.618033]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"math_constants\" : [3.141593, 2.718280, 1.414214, 1.618033]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+        
         double outValue[] = OCRep.getDoubleArray(rep, "math_constants");
         assertNotNull(outValue);
         assertEquals(mathConstants.length, outValue.length);
@@ -520,6 +614,11 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         long outValue[] = OCRep.getLongArray(rep, "fibonacci");
         assertNotNull(outValue);
@@ -560,6 +659,18 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        // note: toJSON defaults to base64 encoding for all byte-arrays
+        assertEquals("{\"barray\":[\"AQECAwQFBg==\",\"AQECAwUIEyE0VYk=\","
+                + "\"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\"AAD/AAA=\"]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"barray\" : [\n"
+                + "    \"AQECAwQFBg==\",\n"
+                + "    \"AQECAwUIEyE0VYk=\",\n"
+                + "    \"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\n"
+                + "    \"AAD/AAA=\"\n"
+                + "  ]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         byte outValue[][] = OCRep.getByteStringArray(rep, "barray");
         assertNotNull(outValue);
         assertEquals(4, outValue.length);
@@ -592,6 +703,26 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
+        assertEquals("{\"lorem_ipsum\":[\"Lorem\",\"ipsum\",\"dolor\",\"sit\",\"amet\",\"consectetur\",\"adipiscing\","
+                + "\"elit.\",\"Sed\",\"nec\",\"feugiat\",\"odio.\",\"Donec.\"]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"lorem_ipsum\" : [\n"
+                + "    \"Lorem\",\n"
+                + "    \"ipsum\",\n"
+                + "    \"dolor\",\n"
+                + "    \"sit\",\n"
+                + "    \"amet\",\n"
+                + "    \"consectetur\",\n"
+                + "    \"adipiscing\",\n"
+                + "    \"elit.\",\n"
+                + "    \"Sed\",\n"
+                + "    \"nec\",\n"
+                + "    \"feugiat\",\n"
+                + "    \"odio.\",\n"
+                + "    \"Donec.\"\n"
+                + "  ]\n"
+                + "}\n", OCRep.toJSON(rep, true));
+
         String outValue[] = OCRep.getStringArray(rep, "lorem_ipsum");
         assertNotNull(outValue);
         assertEquals(lorem_ipsum.length, outValue.length);
@@ -614,6 +745,12 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        // note toJSON uses base64 encoding for all byte arrays.
+        assertEquals("{\"fib_bytes\":\"AQECAwUIEyE0VYk=\"}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"fib_bytes\" : \"AQECAwUIEyE0VYk=\"\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         byte outValue[] = OCRep.getByteString(rep, "fib_bytes");
         assertNotNull(outValue);
@@ -652,6 +789,15 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"my_object\" : {\n"
+                + "    \"a\" : 1,\n"
+                + "    \"b\" : false,\n"
+                + "    \"c\" : \"three\"\n"
+                + "  }\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         OCRepresentation myObjectOut = OCRep.getObject(rep, "my_object");
         assertNotNull(myObjectOut);
@@ -728,6 +874,25 @@ public class OCRepresentationTest {
 
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
+
+        assertEquals("{\"space_2001\":[{\"name\":\"Dave Bowman\",\"job\":\"astronaut\"},"
+                + "{\"name\":\"Frank Poole\",\"job\":\"astronaut\"},"
+                + "{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}", OCRep.toJSON(rep, false));
+        assertEquals("{\n"
+                + "  \"space_2001\" : [\n"
+                + "    {\n"
+                + "      \"name\" : \"Dave Bowman\",\n"
+                + "      \"job\" : \"astronaut\"\n"
+                + "    },\n"
+                + "    {\n"
+                + "      \"name\" : \"Frank Poole\",\n"
+                + "      \"job\" : \"astronaut\"\n"
+                + "    },\n"
+                + "    {\n"
+                + "      \"name\" : \"Hal 9000\",\n"
+                + "      \"job\" : \"AI computer\"\n"
+                + "    }]\n"
+                + "}\n", OCRep.toJSON(rep, true));
 
         OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);

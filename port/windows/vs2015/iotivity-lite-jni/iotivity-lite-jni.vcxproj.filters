@@ -54,9 +54,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="swig_interfaces">
-      <UniqueIdentifier>{f9f94ac9-6616-4a3d-bd91-fafd5cd421c0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="c_wrap">
       <UniqueIdentifier>{db6d0648-4b1b-44f6-9e0d-e448a0a71512}</UniqueIdentifier>
     </Filter>

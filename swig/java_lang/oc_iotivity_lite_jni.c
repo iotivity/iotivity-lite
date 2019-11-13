@@ -19,6 +19,7 @@
 #include "port/oc_storage.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <jni.h>
 
 #define JNI_CURRENT_VERSION JNI_VERSION_1_6
 
@@ -96,6 +97,13 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     assert(ocDiscoveryHandlerClass);
     cls_OCDiscoveryHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocDiscoveryHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocDiscoveryHandlerClass);
+
+    jclass ocDiscoveryAllHandlerClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCDiscoveryAllHandler");
+    assert(ocDiscoveryAllHandlerClass);
+    cls_OCDiscoveryAllHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocDiscoveryAllHandlerClass));
+    JCALL1(DeleteLocalRef, jenv, ocDiscoveryAllHandlerClass);
 
     jclass ocEndpointClass = JCALL1(FindClass, jenv, "org/iotivity/OCEndpoint");
     assert(ocEndpointClass);
@@ -435,11 +443,12 @@ release_jni_env(jint getEnvResult)
 }
 
 oc_discovery_flags_t
-jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
-                                  oc_string_array_t types,
-                                  oc_interface_mask_t interfaces,
-                                  oc_endpoint_t *endpoint,
-                                  oc_resource_properties_t bm, void *user_data)
+jni_oc_discovery_all_handler_callback(const char *anchor, const char *uri,
+                                      oc_string_array_t types,
+                                      oc_interface_mask_t interfaces,
+                                      oc_endpoint_t *endpoint,
+                                      oc_resource_properties_t bm, bool more,
+                                      void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
@@ -470,15 +479,15 @@ jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
                              mid_OCEndpoint_init, (jlong)endpoint, false);
 
   jint jresourcePropertiesMask = (jint)bm;
-  assert(cls_OCDiscoveryHandler);
+  assert(cls_OCDiscoveryAllHandler);
   const jmethodID mid_handler =
-    JCALL3(GetMethodID, (data->jenv), cls_OCDiscoveryHandler, "handler",
-           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;ILorg/"
-           "iotivity/OCEndpoint;I)Lorg/iotivity/OCDiscoveryFlags;");
+    JCALL3(GetMethodID, (data->jenv), cls_OCDiscoveryAllHandler, "handler",
+           "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;"
+           "ILOCEndpoint;IZ)Lorg/iotivity/OCDiscoveryFlags;");
   assert(mid_handler);
-  jobject jDiscoveryFlag =
-    JCALL8(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, janchor,
-           juri, jtypes, jinterfaceMask, jendpoint, jresourcePropertiesMask);
+  jobject jDiscoveryFlag = JCALL9(
+    CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler, janchor, juri,
+    jtypes, jinterfaceMask, jendpoint, jresourcePropertiesMask, (jboolean)more);
   jclass cls_DiscoveryFlags =
     JCALL1(GetObjectClass, (data->jenv), jDiscoveryFlag);
   assert(cls_DiscoveryFlags);
