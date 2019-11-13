@@ -125,6 +125,7 @@ jclass cls_OCClientResponse;
 jclass cls_OCCloudContext;
 jclass cls_OCConWriteHandler;
 jclass cls_OCDiscoveryHandler;
+jclass cls_OCDiscoveryAllHandler;
 jclass cls_OCFactoryPresetsHandler;
 jclass cls_OCGetPropertiesHandler;
 jclass cls_OCInitPlatformHandler;
@@ -189,11 +190,12 @@ JNIEnv *get_jni_env(jint *getEnvResult);
 void release_jni_env(jint getEnvResult);
 
 /*
- * oc_discovery_handler responsible for calling the java OCDiscoveryHandler
+ * oc_discovery_all_handler responsible for calling the java
+ * OCDiscoveryAllHandler
  */
-oc_discovery_flags_t jni_oc_discovery_handler_callback(
+oc_discovery_flags_t jni_oc_discovery_all_handler_callback(
   const char *anchor, const char *uri, oc_string_array_t types,
   oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-  oc_resource_properties_t bm, void *user_data);
+  oc_resource_properties_t bm, bool more, void *user_data);
 
 #endif /* OC_IOTIVITY_LITE_H */

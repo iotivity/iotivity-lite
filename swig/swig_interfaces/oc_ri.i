@@ -52,6 +52,8 @@
 %ignore oc_resource_s::put_handler;
 %ignore oc_resource_s::post_handler;
 %ignore oc_resource_s::delete_handler;
+%ignore oc_resource_s::get_properties;
+%ignore oc_resource_s::set_properties;
 %rename("%(lowercamelcase)s") num_observers;
 %immutable oc_resource_s::num_observers;
 %rename("%(lowercamelcase)s") num_links;

@@ -164,5 +164,30 @@ oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *u
 %rename(compare) oc_endpoint_compare;
 %rename(compareAddress) oc_endpoint_compare_address;
 %rename(setLocalAddress) oc_endpoint_set_local_address;
+
+%ignore oc_endpoint_copy;
+%newobject jni_endpoint_copy;
+%rename (copy) jni_endpoint_copy;
+%inline %{
+oc_endpoint_t *jni_endpoint_copy(oc_endpoint_t *source)
+{
+  oc_endpoint_t *destination = oc_new_endpoint();
+  oc_endpoint_copy(destination, source);
+  return destination;
+}
+%}
+
+%ignore oc_endpoint_list_copy;
+%newobject jni_endpoint_list_copy;
+%rename (listCopy) jni_endpoint_list_copy;
+%inline %{
+oc_endpoint_t *jni_endpoint_list_copy(oc_endpoint_t *source)
+{
+  oc_endpoint_t *destination = oc_new_endpoint();
+  oc_endpoint_list_copy(&destination, source);
+  return destination;
+}
+%}
+
 %include "oc_endpoint.h"
 /*******************End oc_endpoint.h***********************/
