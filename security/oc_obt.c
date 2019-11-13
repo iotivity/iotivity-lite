@@ -662,8 +662,8 @@ oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 /* Resource discovery */
 
 int
-oc_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler,
-                              void *data)
+oc_obt_discover_all_resources(oc_uuid_t *uuid,
+                              oc_discovery_all_handler_t handler, void *data)
 {
   oc_endpoint_t *ep = NULL;
   oc_device_t *device = get_device_handle(uuid, oc_devices);
@@ -681,7 +681,7 @@ oc_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler,
     return -1;
   }
 
-  if (oc_do_ip_discovery_at_endpoint(NULL, handler, ep, data)) {
+  if (oc_do_ip_discovery_all_at_endpoint(handler, ep, data)) {
     return 0;
   }
 
