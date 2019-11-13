@@ -1842,5 +1842,21 @@ const oc_string_array_t * ocArrayToStringArray(oc_array_t *array, size_t *oc_arr
 }
 %}
 
+%newobject jni_rep_to_json;
+%ignore oc_rep_to_json;
+%rename(toJSON) jni_rep_to_json;
+%inline %{
+char *jni_rep_to_json(oc_rep_t *rep, bool prettyPrint)
+{
+  char *json;
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, prettyPrint);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, prettyPrint);
+  return json;
+}
+%}
+
+
 %include "oc_rep.h"
 /*******************End oc_rep.h****************************/
