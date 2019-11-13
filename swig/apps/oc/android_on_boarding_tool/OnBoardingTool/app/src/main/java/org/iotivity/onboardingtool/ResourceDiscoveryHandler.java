@@ -10,7 +10,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.iotivity.OCDiscoveryFlags;
-import org.iotivity.OCDiscoveryHandler;
+import org.iotivity.OCDiscoveryAllHandler;
 import org.iotivity.OCEndpoint;
 import org.iotivity.OCMain;
 import org.iotivity.OCUuidUtil;
@@ -18,7 +18,7 @@ import org.iotivity.oc.OcUtils;
 
 import java.util.ArrayList;
 
-public class ResourceDiscoveryHandler implements OCDiscoveryHandler {
+public class ResourceDiscoveryHandler implements OCDiscoveryAllHandler {
 
     private static final String TAG = ResourceDiscoveryHandler.class.getSimpleName();
 
@@ -31,7 +31,8 @@ public class ResourceDiscoveryHandler implements OCDiscoveryHandler {
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints, int resourcePropertiesMask) {
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints,
+            int resourcePropertiesMask, boolean more) {
         synchronized (resourceAdapter) {
             resourceAdapter.setNotifyOnChange(false);
             resourceAdapter.add(anchor + uri);
@@ -45,7 +46,10 @@ public class ResourceDiscoveryHandler implements OCDiscoveryHandler {
         });
 
         Log.d(TAG, "anchor: " + anchor + ", uri: " + uri);
-        OcUtils.freeServerEndpoints(endpoints);
+        if(!more) {
+            log.d(TAG, "----End of discovery response---");
+            return OCDiscoveryFlags.OC_STOP_DISCOVERY;
+        }
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }

@@ -27,6 +27,8 @@ typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::put_handler;
 %ignore oc_collection_s::post_handler;
 %ignore oc_collection_s::delete_handler;
+%ignore oc_collection_s::get_properties;
+%ignore oc_collection_s::set_properties;
 %rename (numLinks) oc_collection_s::num_links;
 %ignore oc_collection_s::OC_LIST_STRUCT(mandatory_rts);
 // TODO convert to array of strings.

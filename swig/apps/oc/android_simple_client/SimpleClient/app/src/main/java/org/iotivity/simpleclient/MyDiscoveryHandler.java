@@ -3,6 +3,7 @@ package org.iotivity.simpleclient;
 import org.iotivity.OCDiscoveryFlags;
 import org.iotivity.OCDiscoveryHandler;
 import org.iotivity.OCEndpoint;
+import org.iotivity.OCEndpointUtil;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCQos;
 import org.iotivity.OCResourcePropertiesMask;
@@ -97,7 +98,7 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
         for (String type : types) {
             if (type.equals("oic.r.switch.binary")) {
                 light = new Light();
-                light.serverEndpoint = endpoint;
+                light.serverEndpoint = OCEndpointUtil.listCopy(endpoint);
                 light.serverUri = uri;
                 activity.msg("\tResource " + light.serverUri + " hosted at endpoint(s):");
                 OCEndpoint ep = endpoint;
@@ -116,7 +117,6 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                 return OCDiscoveryFlags.OC_STOP_DISCOVERY;
             }
         }
-        OcUtils.freeServerEndpoints(endpoint);
         return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
     }
 }
