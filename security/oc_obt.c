@@ -357,17 +357,9 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
   oc_memb_free(&oc_otm_ctx_m, o);
 }
 
-oc_event_callback_retval_t
-oc_obt_otm_request_timeout_cb(void *data)
-{
-  free_otm_state(data, -1, 0);
-  return OC_EVENT_DONE;
-}
-
 void
 oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t otm)
 {
-  oc_remove_delayed_callback(ctx, oc_obt_otm_request_timeout_cb);
   free_otm_state(ctx, status, otm);
 }
 
@@ -670,8 +662,8 @@ oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 /* Resource discovery */
 
 int
-oc_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler,
-                              void *data)
+oc_obt_discover_all_resources(oc_uuid_t *uuid,
+                              oc_discovery_all_handler_t handler, void *data)
 {
   oc_endpoint_t *ep = NULL;
   oc_device_t *device = get_device_handle(uuid, oc_devices);
@@ -689,7 +681,7 @@ oc_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_handler_t handler,
     return -1;
   }
 
-  if (oc_do_ip_discovery_at_endpoint(NULL, handler, ep, data)) {
+  if (oc_do_ip_discovery_all_at_endpoint(handler, ep, data)) {
     return 0;
   }
 
@@ -802,13 +794,6 @@ free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
   oc_memb_free(&oc_hard_reset_ctx_m, ctx);
 }
 
-static oc_event_callback_retval_t
-hard_reset_timeout_cb(void *data)
-{
-  free_hard_reset_ctx(data, -1);
-  return OC_EVENT_DONE;
-}
-
 static void
 hard_reset_cb(int status, void *data)
 {
@@ -817,7 +802,6 @@ hard_reset_cb(int status, void *data)
     return;
   }
   d->switch_dos = NULL;
-  oc_remove_delayed_callback(data, hard_reset_timeout_cb);
   free_hard_reset_ctx(data, status);
 }
 
@@ -851,7 +835,6 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
   }
 
   oc_list_add(oc_hard_reset_ctx_l, d);
-  oc_set_delayed_callback(d, hard_reset_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
 }
@@ -885,17 +868,9 @@ free_credprov_state(oc_credprov_ctx_t *p, int status)
   oc_memb_free(&oc_credprov_ctx_m, p);
 }
 
-static oc_event_callback_retval_t
-credprov_request_timeout_cb(void *data)
-{
-  free_credprov_state(data, -1);
-  return OC_EVENT_DONE;
-}
-
 static void
 free_credprov_ctx(oc_credprov_ctx_t *ctx, int status)
 {
-  oc_remove_delayed_callback(ctx, credprov_request_timeout_cb);
   free_credprov_state(ctx, status);
 }
 
@@ -1106,7 +1081,6 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
   }
 
   oc_list_add(oc_credprov_ctx_l, p);
-  oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
 }
@@ -1483,7 +1457,6 @@ oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS, p)) {
     oc_list_add(oc_credprov_ctx_l, p);
-    oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }
 
@@ -1531,7 +1504,6 @@ oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS, p)) {
     oc_list_add(oc_credprov_ctx_l, p);
-    oc_set_delayed_callback(p, credprov_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }
 
@@ -1739,17 +1711,9 @@ free_acl2prov_state(oc_acl2prov_ctx_t *request, int status)
   oc_memb_free(&oc_acl2prov_ctx_m, request);
 }
 
-static oc_event_callback_retval_t
-acl2prov_timeout_cb(void *data)
-{
-  free_acl2prov_state(data, -1);
-  return OC_EVENT_DONE;
-}
-
 static void
 free_acl2prov_ctx(oc_acl2prov_ctx_t *r, int status)
 {
-  oc_remove_delayed_callback(r, acl2prov_timeout_cb);
   free_acl2prov_state(r, status);
 }
 
@@ -1917,7 +1881,6 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
   }
 
   oc_list_add(oc_acl2prov_ctx_l, r);
-  oc_set_delayed_callback(r, acl2prov_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
 }
@@ -2117,19 +2080,6 @@ error_decode_cred:
   return false;
 }
 
-oc_event_callback_retval_t
-credret_timeout_cb(void *data)
-{
-  oc_credret_ctx_t *ctx = (oc_credret_ctx_t *)data;
-  if (!is_item_in_list(oc_credret_ctx_l, ctx)) {
-    return OC_EVENT_DONE;
-  }
-  ctx->cb(NULL, ctx->data);
-  oc_list_remove(oc_credret_ctx_l, ctx);
-  oc_memb_free(&oc_credret_ctx_m, ctx);
-  return OC_EVENT_DONE;
-}
-
 static void
 cred_rsrc(oc_client_response_t *data)
 {
@@ -2137,7 +2087,6 @@ cred_rsrc(oc_client_response_t *data)
   if (!is_item_in_list(oc_credret_ctx_l, ctx)) {
     return;
   }
-  oc_remove_delayed_callback(ctx, credret_timeout_cb);
   oc_list_remove(oc_credret_ctx_l, ctx);
   oc_sec_creds_t *creds = (oc_sec_creds_t *)oc_memb_alloc(&oc_creds_m);
   if (creds) {
@@ -2184,7 +2133,6 @@ oc_obt_retrieve_creds(oc_uuid_t *uuid, oc_obt_creds_cb_t cb, void *data)
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/cred", ep, NULL, &cred_rsrc, HIGH_QOS, r)) {
     oc_list_add(oc_credret_ctx_l, r);
-    oc_set_delayed_callback(r, credret_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }
 
@@ -2212,17 +2160,9 @@ free_creddel_state(oc_creddel_ctx_t *p, int status)
   oc_memb_free(&oc_creddel_ctx_m, p);
 }
 
-static oc_event_callback_retval_t
-creddel_request_timeout_cb(void *data)
-{
-  free_creddel_state(data, -1);
-  return OC_EVENT_DONE;
-}
-
 static void
 free_creddel_ctx(oc_creddel_ctx_t *ctx, int status)
 {
-  oc_remove_delayed_callback(ctx, creddel_request_timeout_cb);
   free_creddel_state(ctx, status);
 }
 
@@ -2317,7 +2257,6 @@ oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid, oc_obt_status_cb_t cb,
   }
 
   oc_list_add(oc_creddel_ctx_l, p);
-  oc_set_delayed_callback(p, creddel_request_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
 }
@@ -2468,19 +2407,6 @@ oc_obt_free_acl(oc_sec_acl_t *acl)
   oc_memb_free(&oc_acl_m, acl);
 }
 
-oc_event_callback_retval_t
-aclret_timeout_cb(void *data)
-{
-  oc_aclret_ctx_t *ctx = (oc_aclret_ctx_t *)data;
-  if (!is_item_in_list(oc_aclret_ctx_l, ctx)) {
-    return OC_EVENT_DONE;
-  }
-  ctx->cb(NULL, ctx->data);
-  oc_list_remove(oc_aclret_ctx_l, ctx);
-  oc_memb_free(&oc_aclret_ctx_m, ctx);
-  return OC_EVENT_DONE;
-}
-
 static void
 acl2_rsrc(oc_client_response_t *data)
 {
@@ -2488,7 +2414,6 @@ acl2_rsrc(oc_client_response_t *data)
   if (!is_item_in_list(oc_aclret_ctx_l, ctx)) {
     return;
   }
-  oc_remove_delayed_callback(ctx, aclret_timeout_cb);
   oc_list_remove(oc_aclret_ctx_l, ctx);
   oc_sec_acl_t *acl = (oc_sec_acl_t *)oc_memb_alloc(&oc_acl_m);
   if (acl) {
@@ -2534,7 +2459,6 @@ oc_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data)
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/acl2", ep, NULL, &acl2_rsrc, HIGH_QOS, r)) {
     oc_list_add(oc_aclret_ctx_l, r);
-    oc_set_delayed_callback(r, aclret_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }
 
@@ -2562,17 +2486,9 @@ free_acedel_state(oc_acedel_ctx_t *p, int status)
   oc_memb_free(&oc_acedel_ctx_m, p);
 }
 
-static oc_event_callback_retval_t
-acedel_request_timeout_cb(void *data)
-{
-  free_acedel_state(data, -1);
-  return OC_EVENT_DONE;
-}
-
 static void
 free_acedel_ctx(oc_acedel_ctx_t *ctx, int status)
 {
-  oc_remove_delayed_callback(ctx, acedel_request_timeout_cb);
   free_acedel_state(ctx, status);
 }
 
@@ -2667,7 +2583,6 @@ oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid, oc_obt_status_cb_t cb,
   }
 
   oc_list_add(oc_acedel_ctx_l, p);
-  oc_set_delayed_callback(p, acedel_request_timeout_cb, OBT_CB_TIMEOUT);
 
   return 0;
 }

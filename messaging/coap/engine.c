@@ -274,6 +274,15 @@ coap_receive(oc_message_t *msg)
             href, href_len, &msg->endpoint, message->code, message->uri_query,
             message->uri_query_len, OC_BLOCKWISE_SERVER);
 
+          if (request_buffer && request_buffer->payload_size ==
+                                  request_buffer->next_block_offset) {
+            if ((request_buffer->next_block_offset - incoming_block_len) !=
+                block1_offset) {
+              oc_blockwise_free_request_buffer(request_buffer);
+              request_buffer = NULL;
+            }
+          }
+
           if (!request_buffer && block1_num == 0) {
             OC_DBG("creating new block-wise request buffer");
             request_buffer = oc_blockwise_alloc_request_buffer(
@@ -307,7 +316,6 @@ coap_receive(oc_message_t *msg)
                                        block1_size);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
-                request_buffer->ref_count = 0;
                 goto request_handler;
               }
             }
@@ -325,6 +333,13 @@ coap_receive(oc_message_t *msg)
           response_buffer = oc_blockwise_find_response_buffer(
             href, href_len, &msg->endpoint, message->code, message->uri_query,
             message->uri_query_len, OC_BLOCKWISE_SERVER);
+
+          if (response_buffer && (response_buffer->next_block_offset -
+                                  block2_offset) > block2_size) {
+            oc_blockwise_free_response_buffer(response_buffer);
+            response_buffer = NULL;
+          }
+
           if (response_buffer) {
             OC_DBG("continuing ongoing block-wise transfer");
             uint32_t payload_size = 0;
@@ -342,7 +357,6 @@ coap_receive(oc_message_t *msg)
                 (oc_blockwise_response_state_t *)response_buffer;
               coap_set_header_etag(response, response_state->etag,
                                    COAP_ETAG_LEN);
-              response_buffer->ref_count = more;
               goto send_message;
             } else {
               OC_ERR("could not dispatch block");
@@ -409,6 +423,13 @@ coap_receive(oc_message_t *msg)
               }
               request_buffer->payload_size = incoming_block_len;
               request_buffer->ref_count = 0;
+            }
+            response_buffer = oc_blockwise_find_response_buffer(
+              href, href_len, &msg->endpoint, message->code, message->uri_query,
+              message->uri_query_len, OC_BLOCKWISE_SERVER);
+            if (response_buffer) {
+              oc_blockwise_free_response_buffer(response_buffer);
+              response_buffer = NULL;
             }
             goto request_handler;
           } else {

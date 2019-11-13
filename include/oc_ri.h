@@ -148,8 +148,7 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
 
 typedef struct oc_properties_cb_t
 {
-  union
-  {
+  union {
     oc_set_properties_cb_t set_props;
     oc_get_properties_cb_t get_props;
   } cb;
@@ -170,13 +169,13 @@ struct oc_resource_s
   oc_request_handler_t put_handler;
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
+  oc_properties_cb_t get_properties;
+  oc_properties_cb_t set_properties;
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
-  oc_properties_cb_t get_properties;
-  oc_properties_cb_t set_properties;
 };
 
 typedef struct oc_link_s oc_link_t;

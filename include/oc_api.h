@@ -42,16 +42,109 @@ extern "C"
 {
 #endif
 
+/**
+ * Call back handlers that are invoked in response to oc_main_init()
+ *
+ * @see oc_main_init
+ */
 typedef struct
 {
+  /**
+   * Device initialization callback that is invoked to initialize the platform
+   * and device(s).
+   *
+   * At a minimum the platform should be initialized and at least one device
+   * added.
+   *
+   *  - oc_init_platform()
+   *  - oc_add_device()
+   *
+   * Multiple devices can be added by making multiple calls to oc_add_device().
+   *
+   * Other actions may be taken in the init handler
+   *  - The immutable device identifier can be set `piid`
+   *    (a.k.a Protocol Independent ID) oc_set_immutable_device_identifier()
+   *  - Set introspection data oc_set_introspection_data()
+   *  - Set up an interrupt handler oc_activate_interrupt_handler()
+   *  - Initialize application specific variables
+   *
+   * @return
+   *  - 0 to indicate success initializing the application
+   *  - value less than zero to indicate failure initializing the application
+   *
+   * @see oc_activate_interrupt_handler
+   * @see oc_add_device
+   * @see oc_init_platform
+   * @see oc_set_immutable_device_identifier
+   * @see oc_set_introspection_data
+   */
   int (*init)(void);
   void (*signal_event_loop)(void);
 
 #ifdef OC_SERVER
+  /**
+   * Resource registration callback.
+   *
+   * Callback is invoked after the device initialization callback.
+   *
+   * Use this callback to add resources to the devices added during the device
+   * initialization.  This where the properties and callbacks associated with
+   * the resources are typically done.
+   *
+   * Note: Callback is only invoked when OC_SERVER macro is defined.
+   *
+   * Example:
+   * ```
+   * static void register_resources(void)
+   * {
+   *   oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+   *   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
+   *   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
+   *   oc_resource_set_default_interface(bswitch, OC_IF_A);
+   *   oc_resource_set_discoverable(bswitch, true);
+   *   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
+   *   oc_resource_set_request_handler(bswitch, OC_PUT, put_switch, NULL);
+   *   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+   *   oc_add_resource(bswitch);
+   * }
+   * ```
+   *
+   * @see init
+   * @see oc_new_resource
+   * @see oc_resource_bind_resource_interface
+   * @see oc_resource_set_default_interface
+   * @see oc_resource_bind_resource_type
+   * @see oc_resource_make_public
+   * @see oc_resource_set_discoverable
+   * @see oc_resource_set_observable
+   * @see oc_resource_set_periodic_observable
+   * @see oc_resource_set_properties_cbs
+   * @see oc_resource_set_request_handler
+   * @see oc_add_resource
+   */
   void (*register_resources)(void);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
+  /**
+   * Callback invoked when the stack is ready to issue discovery requests.
+   *
+   * Callback is invoked after the device initialization callback.
+   *
+   * Example:
+   * ```
+   * static void issue_requests(void)
+   * {
+   *   oc_do_ip_discovery("oic.r.switch.binary", &discovery, NULL);
+   * }
+   * ```
+   *
+   * @see init
+   * @see oc_do_ip_discovery
+   * @see oc_do_ip_discovery_at_endpoint
+   * @see oc_do_site_local_ipv6_discovery
+   * @see oc_do_realm_local_ipv6_discovery
+   */
   void (*requests_entry)(void);
 #endif /* OC_CLIENT */
 } oc_handler_t;
@@ -59,6 +152,35 @@ typedef struct
 typedef void (*oc_init_platform_cb_t)(void *data);
 typedef void (*oc_add_device_cb_t)(void *data);
 
+/**
+ * Register and call handler functions responsible for controlling the
+ * IoTivity-lite stack.
+ *
+ * This will initialize the IoTivity-lite stack.
+ *
+ * Before initializing the stack, a few setup functions may need to be called
+ * before calling oc_main_init those functions are:
+ *
+ * - oc_set_con_res_announced()
+ * - oc_set_factory_presets_cb()
+ * - oc_set_max_app_data_size()
+ * - oc_set_random_pin_callback()
+ * - oc_storage_config()
+ *
+ * Not all of the listed functions must be called before calling oc_main_init.
+ *
+ * @param handler struct containing pointers callback handler functions
+ *                responsible for controlling the IoTivity-lite application
+ * @return
+ *  - `0` if stack has been initialized successfully
+ *  - a negative number if there is an error in stack initialization
+ *
+ * @see oc_set_con_res_announced
+ * @see oc_set_factory_presets_cb
+ * @see oc_set_max_app_data_size
+ * @see oc_set_random_pin_callback
+ * @see oc_storage_config
+ */
 int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
 void oc_main_shutdown(void);
@@ -144,10 +266,6 @@ void oc_process_baseline_interface(oc_resource_t *resource);
    bind with this resource (e.g. by invoking
    \c oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)). Must
    be 1 or higher.
-  @param num_supported_rts number of resource types in links included in the
-   collection
-  @param num_mandatory_rts number of mandatory resource types if any in links
-   included in the collection
   @param device The internal device that should carry this collection.
    This is typically 0.
   @return A pointer to the new collection (actually oc_collection_t*)
@@ -201,6 +319,15 @@ void oc_delete_link(oc_link_t *link);
   @param rel Relation to add. Must not be NULL.
 */
 void oc_link_add_rel(oc_link_t *link, const char *rel);
+
+/**
+  @brief Adds a link parameter with specified key and value.
+  @param link Link to which to add a link parameter. Must not be NULL.
+  @param key Key to identify the link parameter. Must not be NULL.
+  @param value Link parameter value. Must not be NULL.
+*/
+void oc_link_add_link_param(oc_link_t *link, const char *key,
+                            const char *value);
 
 /**
   @brief Adds the link to the collection.
@@ -369,12 +496,21 @@ bool oc_do_site_local_ipv6_discovery(const char *rt,
                                      oc_discovery_handler_t handler,
                                      void *user_data);
 
+bool oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                         void *user_data);
+
 bool oc_do_realm_local_ipv6_discovery(const char *rt,
                                       oc_discovery_handler_t handler,
                                       void *user_data);
 
+bool oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
+                                          void *user_data);
+
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
+
+bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
+                            void *user_data);
 
 /**
   @brief  Discover resources in specific endpoint.
@@ -387,6 +523,10 @@ bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 bool oc_do_ip_discovery_at_endpoint(const char *rt,
                                     oc_discovery_handler_t handler,
                                     oc_endpoint_t *endpoint, void *user_data);
+
+bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
+                                        oc_endpoint_t *endpoint,
+                                        void *user_data);
 
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);

@@ -68,6 +68,17 @@ free_api_param(cloud_api_param_t *p)
 }
 
 int
+conv_cloud_endpoint(oc_cloud_context_t *ctx)
+{
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+  if (memcmp(&ep, ctx->cloud_ep, sizeof(oc_endpoint_t)) == 0) {
+    return oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
+  }
+  return 0;
+}
+
+int
 oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
   if (!ctx || !cb) {
@@ -88,9 +99,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     if (ctx->store.status == OC_CLOUD_INITIALIZED) {
       OC_DBG("try register\n");
       bool cannotConnect = true;
-      if (oc_string(ctx->store.ci_server) &&
-          oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-            0 &&
+      if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_register(
             ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
@@ -131,8 +140,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     if (ctx->store.status & OC_CLOUD_REGISTERED) {
       OC_DBG("try login");
       bool cannotConnect = true;
-      if (oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-            0 &&
+      if (conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token), ctx->device,
                              oc_cloud_login_handler, p)) {
@@ -198,8 +206,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
     OC_DBG("try logout");
     bool cannotConnect = true;
-    if (oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-          0 &&
+    if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_logout(ctx->cloud_ep, oc_string(ctx->store.uid),
                             oc_string(ctx->store.access_token), 0,
                             cloud_logout_internal, p)) {
@@ -259,9 +266,7 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
     OC_DBG("try deregister");
     bool cannotConnect = true;
-    if (oc_string(ctx->store.ci_server) &&
-        oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-          0 &&
+    if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_deregister(ctx->cloud_ep, oc_string(ctx->store.uid),
                                 oc_string(ctx->store.access_token), 0,
                                 cloud_deregistered_internal, p)) {
@@ -296,8 +301,7 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
     OC_DBG("try refresh token\n");
     bool cannotConnect = true;
-    if (oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL) ==
-          0 &&
+    if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_refresh_access_token(
           ctx->cloud_ep, oc_string(ctx->store.uid),
           oc_string(ctx->store.refresh_token), ctx->device,

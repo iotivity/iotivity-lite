@@ -313,7 +313,12 @@ coap_notify_collection_observers(oc_resource_t *resource,
         oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, NULL, 0,
         OC_BLOCKWISE_SERVER);
       if (response_state) {
-        continue;
+        if (response_state->payload_size == response_state->next_block_offset) {
+          oc_blockwise_free_response_buffer(response_state);
+          response_state = NULL;
+        } else {
+          continue;
+        }
       }
       response_state = oc_blockwise_alloc_response_buffer(
         oc_string(obs->resource->uri) + 1,
@@ -344,7 +349,7 @@ coap_notify_collection_observers(oc_resource_t *resource,
 #ifdef OC_TCP
       if (!(obs->endpoint.flags & TCP) &&
           obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-#else /* OC_TCP */
+#else  /* OC_TCP */
       if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
         OC_DBG("coap_notify_collections: forcing CON notification to check for "
@@ -479,8 +484,7 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
   while (obs != NULL) {
     if (obs->endpoint.device == device &&
-        (reset ||
-         !oc_sec_check_acl(OC_GET, obs->resource, &obs->endpoint))) {
+        (reset || !oc_sec_check_acl(OC_GET, obs->resource, &obs->endpoint))) {
       coap_observer_t *o = obs;
       coap_packet_t notification[1];
 #ifdef OC_TCP
@@ -637,7 +641,13 @@ coap_notify_observers(oc_resource_t *resource,
               oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
               NULL, 0, OC_BLOCKWISE_SERVER);
             if (response_state) {
-              continue;
+              if (response_state->payload_size ==
+                  response_state->next_block_offset) {
+                oc_blockwise_free_response_buffer(response_state);
+                response_state = NULL;
+              } else {
+                continue;
+              }
             }
             response_state = oc_blockwise_alloc_response_buffer(
               oc_string(obs->resource->uri) + 1,

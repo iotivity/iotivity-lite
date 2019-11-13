@@ -167,6 +167,9 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   cloud_response(ctx);
   oc_send_response(request,
                    changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST);
+  if (changed) {
+    cloud_store_dump_async(&ctx->store);
+  }
 }
 
 void

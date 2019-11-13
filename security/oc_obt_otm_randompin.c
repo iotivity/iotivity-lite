@@ -613,7 +613,6 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
     oc_rep_set_int(root, om, 4);
     oc_rep_end_root_object();
     if (oc_do_post()) {
-      oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
       return 0;
     }
   }
@@ -730,7 +729,6 @@ oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
    */
   oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/doxm", ep, NULL, &obt_rrdp_2, HIGH_QOS, o)) {
-    oc_set_delayed_callback(o, oc_obt_otm_request_timeout_cb, OBT_CB_TIMEOUT);
     return 0;
   }
 

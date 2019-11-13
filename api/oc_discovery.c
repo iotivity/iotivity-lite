@@ -522,9 +522,15 @@ oc_create_discovery_resource(int resource_idx, size_t device)
 #ifdef OC_CLIENT
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
-                                oc_discovery_handler_t handler,
+                                oc_client_handler_t client_handler,
                                 oc_endpoint_t *endpoint, void *user_data)
 {
+  oc_discovery_handler_t handler = client_handler.discovery;
+  oc_discovery_all_handler_t all_handler = client_handler.discovery_all;
+  bool all = false;
+  if (all_handler) {
+    all = true;
+  }
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
   oc_string_t *uri = NULL;
   oc_string_t *anchor = NULL;
@@ -699,11 +705,16 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     }
 
     if (eps_list &&
-        handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
-                eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
+        (all ? all_handler(oc_string(*anchor), oc_string(*uri), *types,
+                           iface_mask, eps_list, bm,
+                           (links->next ? true : false), user_data)
+             : handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
+                       eps_list, bm, user_data)) == OC_STOP_DISCOVERY) {
+      oc_free_server_endpoints(eps_list);
       ret = OC_STOP_DISCOVERY;
       goto done;
     }
+    oc_free_server_endpoints(eps_list);
     links = links->next;
   }
 
