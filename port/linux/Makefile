@@ -2,6 +2,7 @@ CC = gcc
 SED = sed
 INSTALL = install
 OS = linux
+DEBUG = 1
 ROOT_DIR = ../..
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
@@ -111,7 +112,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux euicc_easysetup_enrollee wifi_easysetup_enrollee
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
@@ -136,6 +137,21 @@ ifeq ($(CLOUD),1)
 endif
 
 OBT = onboarding_tool
+
+# Easy Setup
+SRC_ES=$(wildcard ../../api/easysetup/*.c)
+CFLAGS += -I../../api/easysetup -I../../port -I../../include
+CFLAGS += -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP -DOC_SERVER
+# For WiFi,DHCP Dbus interface on Ubuntu
+DBUS_GLIB := $(shell dpkg -S libdbus-glib-1-dev >/dev/null 2>&1 || (echo "Your command failed with $$?"))
+ifeq (,${DBUS_GLIB})
+CFLAGS += -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -lgio-2.0 -lgobject-2.0 -lglib-2.0
+CFLAGS += -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -ldbus-glib-1 -ldbus-1
+CFLAGS += -DLIB_DBUS_GLIB
+else
+$(info ERROR - DBUS_GLIB package not found)
+endif
+OBJ_ES=$(addprefix obj/easysetup/,$(notdir $(SRC_ES:.c=.o)))
 
 ifeq ($(DEBUG),1)
 	EXTRA_CFLAGS += -DOC_DEBUG -g -O0
@@ -182,8 +198,6 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
-
-
 CFLAGS += $(EXTRA_CFLAGS)
 CXXFLAGS += $(EXTRA_CFLAGS)
 
@@ -195,10 +209,11 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 		   libiotivity-lite-server.so libiotivity-lite-client.so \
-		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a
+		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a \
+		   libiotivity-lite-easysetup.a libiotivity-lite-easysetup.so
 
 PC = iotivity-lite-client.pc iotivity-lite-server.pc \
-     iotivity-lite-client-server.pc
+     iotivity-lite-client-server.pc iotivity-lite-easysetup.pc
 
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC)
 
@@ -267,6 +282,11 @@ obj/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+obj/easysetup/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP
+
+
 obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
@@ -275,20 +295,26 @@ obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
 
-libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-easysetup.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
-libiotivity-lite-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
+libiotivity-lite-easysetup.so: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES) $(LIBS)
 
-libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
-libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
+libiotivity-lite-server.so: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS) $(OBJ_ES)
 
-libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+
+libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_ES)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS) $(OBJ_ES)
+
+libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(OBJ_ES)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(OBJ_ES)
 
 libiotivity-lite-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
@@ -300,6 +326,14 @@ server: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_linux.c
 client: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+
+euicc_easysetup_enrollee: libiotivity-lite-easysetup.a $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c
+	@mkdir -p $@_creds
+	${CC} -o $@ $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c libiotivity-lite-easysetup.a ${CFLAGS} ${LIBS}
+
+wifi_easysetup_enrollee: libiotivity-lite-easysetup.a $(ROOT_DIR)/apps/wifi_easysetup_enrollee.c
+	@mkdir -p $@_creds
+	${CC} -o $@ $(ROOT_DIR)/apps/wifi_easysetup_enrollee.c libiotivity-lite-easysetup.a ${CFLAGS} ${LIBS}
 
 smart_lock: libiotivity-lite-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
@@ -398,6 +432,15 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
 
+iotivity-lite-easysetup.pc: iotivity-lite-easysetup.pc.in
+	$(SED) > $@ < $< \
+		-e 's,@prefix@,$(prefix),' \
+		-e 's,@exec_prefix@,$(exec_prefix),' \
+		-e 's,@libdir@,$(libdir),' \
+		-e 's,@includedir@,$(includedir),' \
+		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
@@ -417,7 +460,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES) $(OBJ_ES)
 	rm -rf pki_certs
 
 cleanall: clean
