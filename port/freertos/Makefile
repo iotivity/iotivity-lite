@@ -93,7 +93,7 @@ endif
 	VPATH += ${topdir}/security/:${topdir}/deps/mbedtls/library:
 endif
 
-CFLAGS+=-I${topdir}/include/ -I${topdir}
+CFLAGS+=-I${topdir}/include/ -I${topdir} -I${topdir}/api/easysetup/
 CFLAGS+=-I.
 
 ifeq ($(IPV4),1)
