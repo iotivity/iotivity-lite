@@ -16,6 +16,24 @@
       "revId": "e02895164834adc7ff38a720fe5c8dec40bf4701",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5637bbc4_79011372",
+        "filename": "swig/java_lang/oc_iotivity_lite_jni.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-14T17:31:25Z",
+      "side": 1,
+      "message": "This is the new callback the original callback was moved into oc_api.i.  This callback (unlike most other callbacks) needs to be callable from two generated wrapper code files oc_obt_wrap.c and oc_api_wrap.c.\n\nThe OCObt.discoverAllResources funtion parameter was changed so it now takes OCDiscoveryAllHandler callback instead of the OCDiscoveryHandler. Which is why this was change to the discovery_all_handler_callback.",
+      "parentUuid": "b3f2b2e3_ea4c7b3b",
+      "revId": "e02895164834adc7ff38a720fe5c8dec40bf4701",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
