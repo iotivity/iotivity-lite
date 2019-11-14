@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02abad44_f9cfc6aa",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-11-14T04:28:58Z",
+      "side": 1,
+      "message": "This is a part of another change (from Kishen)",
+      "revId": "3dc6215d9f70931edc8d0d99792f4f25fb6ed1de",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d359b9ed_50f31adb",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-11-14T04:28:58Z",
+      "side": 1,
+      "message": "This is a part of another change (from Kishen)",
+      "revId": "3dc6215d9f70931edc8d0d99792f4f25fb6ed1de",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfaffe64_b9221981",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-11-14T04:28:58Z",
+      "side": 1,
+      "message": "This is a part of another change (from Kishen)",
+      "revId": "3dc6215d9f70931edc8d0d99792f4f25fb6ed1de",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49e27171_1cd1a39e",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 14169
+      },
+      "writtenOn": "2019-11-14T04:28:58Z",
+      "side": 1,
+      "message": "This is a part of another change (from Kishen)",
+      "revId": "3dc6215d9f70931edc8d0d99792f4f25fb6ed1de",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
