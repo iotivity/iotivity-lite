@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8012eb4_1c523da1",
+        "filename": "api/oc_ri.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-11-15T09:08:49Z",
+      "side": 1,
+      "message": "Pls move it into a standalone function",
+      "range": {
+        "startLine": 862,
+        "startChar": 2,
+        "endLine": 878,
+        "endChar": 60
+      },
+      "revId": "4ca2b18cfd13a77fe0809fd7ce6a754b1744d2a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b665a8af_c789d076",
+        "filename": "messaging/coap/engine.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 13971
+      },
+      "writtenOn": "2019-11-15T09:08:49Z",
+      "side": 1,
+      "message": "Pls move it into a standalone function",
+      "range": {
+        "startLine": 704,
+        "startChar": 1,
+        "endLine": 714,
+        "endChar": 41
+      },
+      "revId": "4ca2b18cfd13a77fe0809fd7ce6a754b1744d2a3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    }
+  ]
+}
