@@ -16,6 +16,24 @@
       "revId": "bc31ccbe87f31a82d86d785a4389643aaee84750",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed8ac510_88a2dbc3",
+        "filename": "swig/apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/java/org/iotivity/onboardingtool/ResourceDiscoveryHandler.java",
+        "patchSetId": 8
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-18T17:51:31Z",
+      "side": 1,
+      "message": "Thanks,  like I said in my email I edited this on windows and got the capitalization wrong.",
+      "parentUuid": "ee542e2b_ad35f8c0",
+      "revId": "bc31ccbe87f31a82d86d785a4389643aaee84750",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
