@@ -1452,6 +1452,12 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
+  int prefer = 2;
+  if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
+    return -1;
+  }
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
            sizeof(dev->server)) == -1) {
     OC_ERR("binding server socket %d", errno);
@@ -1481,6 +1487,11 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
+  if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
+    return -1;
+  }
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
            sizeof(dev->mcast)) == -1) {
     OC_ERR("binding mcast socket %d", errno);
@@ -1496,6 +1507,11 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
       -1) {
     OC_ERR("setting reuseaddr option %d", errno);
+    return -1;
+  }
+  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
     return -1;
   }
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
