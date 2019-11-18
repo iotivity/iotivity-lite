@@ -407,6 +407,16 @@ coap_receive(oc_message_t *msg)
 #endif /* !OC_TCP */
             if (incoming_block_len > 0) {
               OC_DBG("creating request buffer");
+              request_buffer = oc_blockwise_find_request_buffer(
+                href, href_len, &msg->endpoint, message->code,
+                message->uri_query, message->uri_query_len,
+                OC_BLOCKWISE_SERVER);
+
+              if (request_buffer) {
+                oc_blockwise_free_request_buffer(request_buffer);
+                request_buffer = NULL;
+              }
+
               request_buffer = oc_blockwise_alloc_request_buffer(
                 href, href_len, &msg->endpoint, message->code,
                 OC_BLOCKWISE_SERVER);
@@ -746,7 +756,7 @@ send_message:
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_scrub_buffers();
+  oc_blockwise_scrub_buffers(false);
 #endif /* OC_BLOCK_WISE */
 
   return coap_status_code;
