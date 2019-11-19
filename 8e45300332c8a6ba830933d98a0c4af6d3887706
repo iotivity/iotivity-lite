@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "106cb79d_9c41180c",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T22:14:39Z",
+      "side": 1,
+      "message": "Can get rid of this?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 13
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "028754f6_4f75d51d",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T22:14:39Z",
+      "side": 1,
+      "message": "Can we ensure that the endpoint to which we issue this request is unsecure (coap://)?",
+      "range": {
+        "startLine": 61,
+        "startChar": 20,
+        "endLine": 61,
+        "endChar": 42
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f52c883_aa40dd2a",
+        "filename": "swig/oc_java/oc/OcRemoteDevice.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T22:14:39Z",
+      "side": 1,
+      "message": "Would it be possible to rename this to OcDevice and change the name of a different SWIG type with that name?",
+      "range": {
+        "startLine": 9,
+        "startChar": 13,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcd66951_07c88dfd",
+        "filename": "swig/oc_java/oc/OcRemoteDevice.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T22:14:39Z",
+      "side": 1,
+      "message": "Do we need this? As each resource would have its own set of secure(+unsecure) endpoints, can\u0027t we simply use those to issue requests?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 91
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d063d12_d3a3e331",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T22:14:39Z",
+      "side": 1,
+      "message": "Would it be possible to rename this to OcResource and modify the name of the corresponding SWIG type? Just a thought...",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 29
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
