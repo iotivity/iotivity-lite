@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "917ddd2e_d956c7e4",
+        "filename": "swig/apps/java_cloud_certification_tests/src/java_cloud_certification_tests/CloudCertTestsMain.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T00:44:58Z",
+      "side": 1,
+      "message": "i think these should all be \u0027private\u0027 not \u0027public\u0027 since the scanner should not be referenced from outside this class.",
+      "revId": "def38d41fe737ba5e4a7cf509cc3af18822978c1",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
