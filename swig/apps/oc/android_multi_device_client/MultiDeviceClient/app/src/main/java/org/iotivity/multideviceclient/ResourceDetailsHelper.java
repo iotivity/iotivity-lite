@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCResourcePropertiesMask;
+import org.iotivity.oc.OcRemoteResource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,55 +14,55 @@ public class ResourceDetailsHelper {
 
     private static final String TAG = ResourceDetailsHelper.class.getSimpleName();
 
-    static public void buildResourceDetails(OcfResourceInfo resourceInfo, ArrayList<HashMap<String, String>> resourceDetailsList) {
-        if (resourceInfo != null) {
+    static public void buildResourceDetails(OcRemoteResource resource, ArrayList<HashMap<String, String>> resourceDetailsList) {
+        if (resource != null) {
             HashMap<String, String> item = new HashMap<>();
 
-            String line = "Types: " + Arrays.toString(resourceInfo.getTypes());
+            String line = "Types: " + Arrays.toString(resource.getTypes());
             item.put("line1", line);
             Log.d(TAG, line);
 
             StringBuilder interfaces = new StringBuilder();
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.BASELINE) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.BASELINE) > 0) {
                 interfaces.append("BASELINE");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.LL) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.LL) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("LL");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.B) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.B) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("B");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.R) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.R) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("R");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.RW) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.RW) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("RW");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.A) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.A) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("A");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.S) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.S) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
                 interfaces.append("S");
             }
-            if ((resourceInfo.getInterfaceMask() & OCInterfaceMask.CREATE) > 0) {
+            if ((resource.getInterfaceMask() & OCInterfaceMask.CREATE) > 0) {
                 if (interfaces.length() > 0) {
                     interfaces.append(" | ");
                 }
@@ -72,22 +73,22 @@ public class ResourceDetailsHelper {
             Log.d(TAG, line);
 
             StringBuilder resourceProperties = new StringBuilder();
-            if ((resourceInfo.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_DISCOVERABLE) > 0) {
+            if ((resource.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_DISCOVERABLE) > 0) {
                 resourceProperties.append("DISCOVERABLE");
             }
-            if ((resourceInfo.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_OBSERVABLE) > 0) {
+            if ((resource.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_OBSERVABLE) > 0) {
                 if (resourceProperties.length() > 0) {
                     resourceProperties.append(" | ");
                 }
                 resourceProperties.append("OBSERVABLE");
             }
-            if ((resourceInfo.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_SECURE) > 0) {
+            if ((resource.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_SECURE) > 0) {
                 if (resourceProperties.length() > 0) {
                     resourceProperties.append(" | ");
                 }
                 resourceProperties.append("SECURE");
             }
-            if ((resourceInfo.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_PERIODIC) > 0) {
+            if ((resource.getResourcePropertiesMask() & OCResourcePropertiesMask.OC_PERIODIC) > 0) {
                 if (resourceProperties.length() > 0) {
                     resourceProperties.append(" | ");
                 }
@@ -98,7 +99,7 @@ public class ResourceDetailsHelper {
             Log.d(TAG, line);
 
             StringBuilder endPoints = new StringBuilder();
-            for (String endpoint : resourceInfo.getEndpoints()) {
+            for (String endpoint : resource.getEndpoints()) {
                 if (endPoints.length() > 0) {
                     endPoints.append("\n");
                 }
