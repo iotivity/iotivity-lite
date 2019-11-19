@@ -17,6 +17,8 @@ import android.widget.Toast;
 
 import org.iotivity.OCUuidUtil;
 import org.iotivity.oc.OcPlatform;
+import org.iotivity.oc.OcRemoteDevice;
+import org.iotivity.oc.OcRemoteResource;
 import org.iotivity.oc.OcUtils;
 
 import java.util.ArrayList;
@@ -30,12 +32,12 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
     private ListView listView;
 
     private AdapterView.OnItemClickListener resourceItemClickListener;
-    private ArrayAdapter<OcfResourceInfo> resourceArrayAdapter;
+    private ArrayAdapter<OcRemoteResource> resourceArrayAdapter;
 
     private AdapterView.OnItemClickListener deviceItemClickListener;
-    private ArrayAdapter<OcfDeviceInfo> deviceArrayAdapter;
+    private ArrayAdapter<OcRemoteDevice> deviceArrayAdapter;
 
-    ArrayList<OcfDeviceInfo> deviceList = new ArrayList<>();
+    ArrayList<OcRemoteDevice> deviceList = new ArrayList<>();
     private final Object arrayAdapterSync = new Object();
 
     private OcPlatform ocPlatform;
@@ -48,10 +50,10 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
         resourceItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                OcfResourceInfo resourceInfo = resourceArrayAdapter.getItem((int) id);
-                if (resourceInfo != null) {
+                OcRemoteResource resource = resourceArrayAdapter.getItem((int) id);
+                if (resource != null) {
                     AlertDialog.Builder resourceDialogBuilder = new AlertDialog.Builder(MultiDeviceClientActivity.this);
-                    resourceDialogBuilder.setTitle(resourceInfo.getAnchor() + resourceInfo.getUri());
+                    resourceDialogBuilder.setTitle(resource.getAnchor() + resource.getUri());
 
                     ListView resourceDetailsListView = new ListView(MultiDeviceClientActivity.this);
                     final ArrayList<HashMap<String, String>> resourceDetailsList = new ArrayList<>();
@@ -62,7 +64,7 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
                     resourceDetailsListView.setAdapter(resourceDetailsAdapter);
                     resourceDialogBuilder.setView(resourceDetailsListView);
 
-                    ResourceDetailsHelper.buildResourceDetails(resourceInfo, resourceDetailsList);
+                    ResourceDetailsHelper.buildResourceDetails(resource, resourceDetailsList);
 
                     Dialog resourceDialog = resourceDialogBuilder.create();
                     resourceDialog.show();
@@ -76,22 +78,22 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
         deviceItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                OcfDeviceInfo deviceInfo = deviceArrayAdapter.getItem((int) id);
-                if (deviceInfo != null) {
+                OcRemoteDevice device = deviceArrayAdapter.getItem((int) id);
+                if (device != null) {
                     AlertDialog.Builder discoverResourcesDialogBuilder = new AlertDialog.Builder(MultiDeviceClientActivity.this);
                     discoverResourcesDialogBuilder.setTitle(R.string.discoveredResources);
 
                     ListView resourceListView = new ListView(MultiDeviceClientActivity.this);
-                    final ArrayList<OcfResourceInfo> resourceArrayList = new ArrayList<>();
+                    final ArrayList<OcRemoteResource> resourceArrayList = new ArrayList<>();
                     resourceArrayAdapter = new ArrayAdapter(MultiDeviceClientActivity.this, android.R.layout.simple_list_item_1, android.R.id.text1, resourceArrayList) {
                         @Override
                         public View getView(int position, View convertView, ViewGroup parent) {
                             View view = super.getView(position, convertView, parent);
                             TextView text1 = (TextView) view.findViewById(android.R.id.text1);
 
-                            OcfResourceInfo resourceInfo = resourceArrayAdapter.getItem(position);
-                            if (resourceInfo != null) {
-                                text1.setText(resourceInfo.getAnchor() + resourceInfo.getUri());
+                            OcRemoteResource resource = resourceArrayAdapter.getItem(position);
+                            if (resource != null) {
+                                text1.setText(resource.getAnchor() + resource.getUri());
                             }
                             return view;
                         }
@@ -101,8 +103,8 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
                     discoverResourcesDialogBuilder.setView(resourceListView);
 
                     resourceArrayAdapter.setNotifyOnChange(false);
-                    for (OcfResourceInfo resourceInfo : deviceInfo.getResourceInfos()) {
-                        resourceArrayAdapter.add(resourceInfo);
+                    for (OcRemoteResource resource : device.getResources()) {
+                        resourceArrayAdapter.add(resource);
                     }
                     resourceArrayAdapter.setNotifyOnChange(true);
 
@@ -127,7 +129,7 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
 
                 new Thread(new Runnable() {
                     public void run() {
-                        if (!OcUtils.doIPMulticast("/oic/d", null, new GetDeviceHandler(MultiDeviceClientActivity.this))) {
+                        if (!OcUtils.discoverAllDevices(new DiscoverAllHandler(MultiDeviceClientActivity.this))) {
                             final String msg = "Failed to discover devices";
                             Log.d(TAG, msg);
                             runOnUiThread(new Runnable() {
@@ -148,10 +150,10 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
                 TextView text1 = (TextView) view.findViewById(android.R.id.text1);
                 TextView text2 = (TextView) view.findViewById(android.R.id.text2);
 
-                OcfDeviceInfo deviceInfo = deviceArrayAdapter.getItem(position);
-                if (deviceInfo != null) {
-                    text1.setText(OCUuidUtil.uuidToString(deviceInfo.getUuid()));
-                    text2.setText("\t" + deviceInfo.getName());
+                OcRemoteDevice device = deviceArrayAdapter.getItem(position);
+                if (device != null) {
+                    text1.setText(OCUuidUtil.uuidToString(device.getDeviceId()));
+                    text2.setText("\t" + device.getName());
                 }
                 return view;
             }
@@ -176,10 +178,10 @@ public class MultiDeviceClientActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void addDevice(OcfDeviceInfo deviceInfo) {
+    public void addDevice(OcRemoteDevice device) {
         synchronized (arrayAdapterSync) {
             deviceArrayAdapter.setNotifyOnChange(false);
-            deviceArrayAdapter.add(deviceInfo);
+            deviceArrayAdapter.add(device);
             deviceArrayAdapter.setNotifyOnChange(true);
         }
 
