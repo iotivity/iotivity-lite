@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "2e101071_a3bfcae1",
+        "filename": "swig/oc_java/oc/OcDiscoverAllHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T23:22:29Z",
+      "side": 1,
+      "message": "My point is \"DiscoverAllHandler\" has a different connotation, doesn\u0027t it? For e.g., it sounds more similar to OCDiscoveryAllHandler without the \u0027y\u0027. \n\nSo, I was thinking it would be good to use a different name, one that is suggestive of of the fact that it returns \"discovered devices\", which is more than just the lower level \"discovery all\" function.",
+      "parentUuid": "0a9d6658_a5d5e931",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 38
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "106cb79d_9c41180c",
         "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
         "patchSetId": 2
@@ -214,6 +238,30 @@
     },
     {
       "key": {
+        "uuid": "d62f11ea_79e659e8",
+        "filename": "swig/oc_java/oc/OcRemoteDevice.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T23:22:29Z",
+      "side": 1,
+      "message": "I understand. But I was only wondering if the Client API looked nicer with OcDevice instead of OcRemoteDevice...",
+      "parentUuid": "2fe45ed5_eec61fc4",
+      "range": {
+        "startLine": 9,
+        "startChar": 13,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bcd66951_07c88dfd",
         "filename": "swig/oc_java/oc/OcRemoteDevice.java",
         "patchSetId": 2
@@ -296,6 +344,30 @@
       "side": 1,
       "message": "swig/oc_java/oc already has OcResource for the server resource",
       "parentUuid": "6d063d12_d3a3e331",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 29
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c611ffa4_2433c28f",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T23:22:29Z",
+      "side": 1,
+      "message": "I understand. But I was only wondering if the Client API looked nicer with OcResource instead of OcRemoteResource...",
+      "parentUuid": "14f9169b_af09d022",
       "range": {
         "startLine": 7,
         "startChar": 13,
