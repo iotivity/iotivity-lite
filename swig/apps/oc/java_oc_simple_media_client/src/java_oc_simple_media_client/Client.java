@@ -32,6 +32,14 @@ public class Client {
         }
     };
 
+    public static int getIntUserInput() {
+        while(!scanner.hasNextInt()) {
+            System.out.println("Invalid input. Integer expected.");
+            scanner.nextLine();
+        }
+        return scanner.nextInt();
+    }
+
     static private void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
@@ -82,7 +90,7 @@ public class Client {
         mediaResourcesMenu.append("\n\nSelect resource: ");
         System.out.print(mediaResourcesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -123,7 +131,7 @@ public class Client {
         mediaControlResourcesMenu.append("\n\nSelect resource: ");
         System.out.print(mediaControlResourcesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -155,7 +163,7 @@ public class Client {
         selectActionMenu.append("\n\nSelect action: ");
         System.out.print(selectActionMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -175,7 +183,7 @@ public class Client {
         String[] params = new String[] { "", "", "", "" };
 
         System.out.print("Set media action? [0-No, 1-Yes]: ");
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput == 1) {
             int i = 0;
             StringBuilder selectActionMenu = new StringBuilder();
@@ -188,7 +196,7 @@ public class Client {
             selectActionMenu.append("\n\nSelect action: ");
             System.out.print(selectActionMenu);
 
-            userInput = scanner.nextInt();
+            userInput = getIntUserInput();
             if (userInput < 0 || userInput >= i) {
                 System.out.println("ERROR: Invalid selection");
                 scanner.nextLine();
@@ -199,15 +207,15 @@ public class Client {
         }
 
         System.out.print("Set play state? [0-No, 1-Yes]: ");
-        userInput = scanner.nextInt();
+        userInput = getIntUserInput();
         if (userInput == 1) {
             System.out.print("Enter play state [0-False, 1-True]: ");
-            userInput = scanner.nextInt();
+            userInput = getIntUserInput();
             params[1] = "playstate=" + ((userInput == 1) ? "true" : "false");
         }
 
         System.out.print("Set media speed? [0-No, 1-Yes]: ");
-        userInput = scanner.nextInt();
+        userInput = getIntUserInput();
         if (userInput == 1) {
             StringBuilder inputMsgSuffix = new StringBuilder();
             if (params[0].contains("fastforward")) {
@@ -240,7 +248,7 @@ public class Client {
         }
 
         System.out.print("Set media location? [0-No, 1-Yes]: ");
-        userInput = scanner.nextInt();
+        userInput = getIntUserInput();
         if (userInput == 1) {
             StringBuilder inputMsgSuffix = new StringBuilder();
             if (params[0].contains("stepforward")) {
@@ -359,7 +367,7 @@ public class Client {
             }
             int userInput = 0;
             try {
-                userInput = scanner.nextInt();
+                userInput = getIntUserInput();
             } catch (InputMismatchException e) {
                 System.out.println("Invalid Input.");
                 scanner.nextLine();

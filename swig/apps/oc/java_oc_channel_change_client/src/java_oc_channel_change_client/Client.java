@@ -29,6 +29,14 @@ public class Client {
         }
     };
 
+    public static int getIntUserInput() {
+        while(!scanner.hasNextInt()) {
+            System.out.println("Invalid input. Integer expected.");
+            scanner.nextLine();
+        }
+        return scanner.nextInt();
+    }
+
     static private void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
@@ -82,7 +90,7 @@ public class Client {
         channelChangeResourcesMenu.append("\n\nSelect resource: ");
         System.out.print(channelChangeResourcesMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -114,7 +122,7 @@ public class Client {
         selectActionMenu.append("\n\nSelect action: ");
         System.out.print(selectActionMenu);
 
-        int userInput = scanner.nextInt();
+        int userInput = getIntUserInput();
         if (userInput < 0 || userInput >= i) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -134,7 +142,7 @@ public class Client {
         System.out.print("Enter Channel Id: ");
         int channelId = 0;
         try {
-            channelId = scanner.nextInt();
+            channelId = getIntUserInput();
         } catch (InputMismatchException e) {
             System.out.println("ERROR: Invalid selection");
             scanner.nextLine();
@@ -219,7 +227,7 @@ public class Client {
             }
             int userInput = 0;
             try {
-                userInput = scanner.nextInt();
+                userInput = getIntUserInput();
             } catch (InputMismatchException e) {
                 System.out.println("Invalid Input.");
                 scanner.nextLine();
