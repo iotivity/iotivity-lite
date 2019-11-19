@@ -137,4 +137,8 @@ public class OcUtils {
     public static void freeServerEndpoints(OCEndpoint endpoint) {
         OCMain.freeServerEndpoints(endpoint);
     }
+
+    public static boolean discoverAllDevices(OcDeviceDiscoveryHandler deviceDiscoveryHandler) {
+        return OcUtils.doIPMulticast("/oic/d", null, new OcGetRemoteDeviceHandler(deviceDiscoveryHandler));
+    }
 }
