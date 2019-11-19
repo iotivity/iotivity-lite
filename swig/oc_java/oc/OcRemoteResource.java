@@ -1,18 +1,21 @@
-package org.iotivity.multideviceclient;
+package org.iotivity.oc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class OcfResourceInfo {
+import org.iotivity.*;
+
+public class OcRemoteResource {
 
     private String anchor;
     private String uri;
     private String[] types;
     private int interfaceMask;
     private int resourcePropertiesMask;
-    private List<String> endpoints = new ArrayList<>();
+    private List<OCEndpoint> endpoints = Collections.synchronizedList(new ArrayList<OCEndpoint>());
 
-    OcfResourceInfo(String anchor, String uri, String[] types, int interfaceMask, int resourcePropertiesMask) {
+    OcRemoteResource(String anchor, String uri, String[] types, int interfaceMask, int resourcePropertiesMask) {
         this.anchor = anchor;
         this.uri = uri;
         this.types = types;
@@ -40,11 +43,11 @@ public class OcfResourceInfo {
         return resourcePropertiesMask;
     }
 
-    public String[] getEndpoints() {
-        return endpoints.toArray(new String[0]);
+    public OCEndpoint[] getEndpoints() {
+        return endpoints.toArray(new OCEndpoint[0]);
     }
 
-    public void addEndpoint(String endpoint) {
+    public void addEndpoint(OCEndpoint endpoint) {
         if (endpoint != null) {
             endpoints.add(endpoint);
         }
@@ -58,7 +61,10 @@ public class OcfResourceInfo {
     }
 
     public boolean equals(Object obj) {
-        OcfResourceInfo other = (OcfResourceInfo) obj;
+        if (obj == null) {
+            return false;
+        }
+        OcRemoteResource other = (OcRemoteResource) obj;
         return (anchor.equals(other.anchor) && uri.equals(other.uri));
     }
 }
