@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0a9d6658_a5d5e931",
+        "filename": "swig/oc_java/oc/OcDiscoverAllHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "I didn\u0027t see a need for both OcDiscoverAllHandler and OcDeviceDiscoveryHandler... I\u0027m not sure what the distinction would be",
+      "parentUuid": "f84c438c_0a8e3cb2",
+      "range": {
+        "startLine": 3,
+        "startChar": 17,
+        "endLine": 3,
+        "endChar": 38
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "106cb79d_9c41180c",
         "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37f0485f_2a5aadb6",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "106cb79d_9c41180c",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 13
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "19205e78_f5f02223",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "028754f6_4f75d51d",
+      "range": {
+        "startLine": 61,
+        "startChar": 20,
+        "endLine": 61,
+        "endChar": 42
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f52c883_aa40dd2a",
         "filename": "swig/oc_java/oc/OcRemoteDevice.java",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2019-11-19T22:14:39Z",
       "side": 1,
       "message": "Would it be possible to rename this to OcDevice and change the name of a different SWIG type with that name?",
+      "range": {
+        "startLine": 9,
+        "startChar": 13,
+        "endLine": 9,
+        "endChar": 27
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fe45ed5_eec61fc4",
+        "filename": "swig/oc_java/oc/OcRemoteDevice.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "swig/oc_java/oc already has OcDevice for the server device",
+      "parentUuid": "5f52c883_aa40dd2a",
       "range": {
         "startLine": 9,
         "startChar": 13,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "8ca792a2_0a980acc",
+        "filename": "swig/oc_java/oc/OcRemoteDevice.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcd66951_07c88dfd",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 91
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d063d12_d3a3e331",
         "filename": "swig/oc_java/oc/OcRemoteResource.java",
         "patchSetId": 2
@@ -128,6 +248,30 @@
       "writtenOn": "2019-11-19T22:14:39Z",
       "side": 1,
       "message": "Would it be possible to rename this to OcResource and modify the name of the corresponding SWIG type? Just a thought...",
+      "range": {
+        "startLine": 7,
+        "startChar": 13,
+        "endLine": 7,
+        "endChar": 29
+      },
+      "revId": "8e45300332c8a6ba830933d98a0c4af6d3887706",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14f9169b_af09d022",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-19T23:04:04Z",
+      "side": 1,
+      "message": "swig/oc_java/oc already has OcResource for the server resource",
+      "parentUuid": "6d063d12_d3a3e331",
       "range": {
         "startLine": 7,
         "startChar": 13,
