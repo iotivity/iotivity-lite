@@ -27,6 +27,14 @@ public class CloudCertTestsMain {
         }
     };
 
+    private static int getIntUserInput() {
+        while(!scanner.hasNextInt()) {
+            System.out.println("Invalid input. Integer expected.");
+            scanner.nextLine();
+        }
+        return scanner.nextInt();
+    }
+
     public static void displayMenu() {
         StringBuilder menu = new StringBuilder();
         menu.append("\n################################################\n");
@@ -161,7 +169,7 @@ public class CloudCertTestsMain {
             displayMenu();
             int userInput = 0;
             try {
-                userInput = scanner.nextInt();
+                userInput = getIntUserInput();
             } catch (InputMismatchException e) {
                 System.out.println("Invalid Input.");
                 userInput = 0;
