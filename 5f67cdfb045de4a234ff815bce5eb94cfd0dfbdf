@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f362f3d6_409811a8",
+        "filename": "swig/apps/oc/android_multi_device_client/MultiDeviceClient/app/src/main/java/org/iotivity/multideviceclient/ResourceDiscoveryAllHandler.java",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-19T07:20:24Z",
+      "side": 1,
+      "message": "The primary benefit of the discoveryAll API is being able to use this as a target point for dspatching devices back to the application. In its absence, applications would want to wait \u0027n\u0027 seconds to \"discover all resources\", as OTGC does. Anyhow, this benefit will be realized after we add that top-level API.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 59
+      },
+      "revId": "5f67cdfb045de4a234ff815bce5eb94cfd0dfbdf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
