@@ -16,6 +16,24 @@
       "revId": "3aedc8aa63331a5b2dde652a56e0447da7b554bf",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d384c1b_6bb25974",
+        "filename": "swig/iotivity-lite-java/junit/org/iotivity/OCEndpointTest.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-20T23:34:55Z",
+      "side": 1,
+      "message": "No not really.  This is an example of unit test behavior that may not fit with user behavior.  Unit test does very rapid creation and destruction of endpoints.  In that type of situation it makes since to manually free the C code when its no longer needed and not depend on the GC.",
+      "parentUuid": "1ce9473a_d0633166",
+      "revId": "3aedc8aa63331a5b2dde652a56e0447da7b554bf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
