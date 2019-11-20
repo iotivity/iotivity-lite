@@ -33,9 +33,36 @@ typedef enum { C = 100, F, K } units_t;
 units_t temp_units = C;
 static bool switch_state;
 const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
+
+static pthread_t toggle_switch_thread;
+oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
+
+oc_define_interrupt_handler(toggle_switch)
+{
+  if (bswitch) {
+    oc_notify_observers(bswitch);
+  }
+}
+
+static void *
+toggle_switch_resource(void *data)
+{
+  (void)data;
+  while (quit != 1) {
+    getchar();
+    if (quit != 1) {
+      PRINT("\nSwitch toggled\n");
+      switch_state = !switch_state;
+      oc_signal_interrupt_handler(toggle_switch);
+    }
+  }
+  return NULL;
+}
+
 static int
 app_init(void)
 {
+  oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
@@ -471,50 +498,31 @@ get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
 }
 
 static void
-get_platform(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *user_data)
-{
-  oc_rep_start_root_object();
-  get_platform_properties(request->resource, iface_mask, user_data);
-  oc_rep_end_root_object();
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
-post_platform(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *user_data)
-{
-  (void)iface_mask;
-  set_platform_properties(request->resource, request->request_payload,
-                          user_data);
-  oc_send_response(request, OC_STATUS_OK);
-}
-
-static void
 register_resources(void)
 {
-  oc_resource_t *temp = oc_new_resource(NULL, "/temp", 1, 0);
-  oc_resource_bind_resource_type(temp, "oic.r.temperature");
-  oc_resource_bind_resource_interface(temp, OC_IF_A);
-  oc_resource_bind_resource_interface(temp, OC_IF_S);
-  oc_resource_set_default_interface(temp, OC_IF_A);
-  oc_resource_set_discoverable(temp, true);
-  oc_resource_set_periodic_observable(temp, 1);
-  oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
-  oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
-  oc_add_resource(temp);
+  temp_resource = oc_new_resource(NULL, "/temp", 1, 0);
+  oc_resource_bind_resource_type(temp_resource, "oic.r.temperature");
+  oc_resource_bind_resource_interface(temp_resource, OC_IF_A);
+  oc_resource_bind_resource_interface(temp_resource, OC_IF_S);
+  oc_resource_set_default_interface(temp_resource, OC_IF_A);
+  oc_resource_set_discoverable(temp_resource, true);
+  oc_resource_set_periodic_observable(temp_resource, 1);
+  oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
+  oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
+  oc_add_resource(temp_resource);
 
-  oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+  bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
   oc_resource_set_default_interface(bswitch, OC_IF_A);
+  oc_resource_set_observable(bswitch, true);
   oc_resource_set_discoverable(bswitch, true);
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
   oc_add_resource(bswitch);
 
 #ifdef OC_COLLECTIONS
-  oc_resource_t *col = oc_new_collection(NULL, "/platform", 1, 0);
+  col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
@@ -528,15 +536,8 @@ register_resources(void)
   oc_link_t *l1 = oc_new_link(bswitch);
   oc_collection_add_link(col, l1);
   /* Add a defined or custom link parameter to this link */
-  oc_link_add_link_param(l1, "name", "platform_switch");
+  oc_link_add_link_param(l1, "x.org.openconnectivity.name", "platform_switch");
 
-  /* Add self-link to the Collection */
-  oc_link_t *l2 = oc_new_link(col);
-  oc_collection_add_link(col, l2);
-
-  /* The following enables batch RETRIEVEs/UPDATEs to Collection properties */
-  oc_resource_set_request_handler(col, OC_GET, get_platform, NULL);
-  oc_resource_set_request_handler(col, OC_POST, post_platform, NULL);
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
@@ -698,6 +699,11 @@ main(void)
   oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif /* OC_SECURITY */
 
+  if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
+                     NULL) != 0) {
+    return -1;
+  }
+
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
@@ -716,6 +722,9 @@ main(void)
   }
 
   oc_main_shutdown();
+
+  PRINT("\nPress any key to exit...\n");
+  pthread_join(toggle_switch_thread, NULL);
 
   return 0;
 }
