@@ -55,7 +55,7 @@ typedef struct oc_tls_peer_t
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
 #ifdef OC_PKI
-  uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
+  oc_string_t public_key;
 #endif /* OC_PKI */
 } oc_tls_peer_t;
 
