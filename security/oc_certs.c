@@ -791,7 +791,7 @@ oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
     oc_new_string(subject_DN, DN, ret);
 
     ret = mbedtls_pk_write_pubkey_der((mbedtls_pk_context *)&c.pk, public_key,
-                                      OC_KEYPAIR_PUBKEY_SIZE);
+                                      OC_ECDSA_PUBKEY_SIZE);
     if (ret < 0) {
       OC_ERR("unable to read public key from CSR %d", ret);
     }
@@ -838,7 +838,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   mbedtls_pk_init(&pk);
 
   int ret =
-    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_KEYPAIR_PUBKEY_SIZE);
+    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_ECDSA_PUBKEY_SIZE);
   if (ret != 0) {
     OC_ERR("could not parse public key for device %zd", device);
     goto generate_csr_error;

@@ -77,14 +77,14 @@ oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device)
     if (rep->type == OC_REP_BYTE_STRING) {
       if (oc_string_len(rep->name) == 10 &&
           memcmp("public_key", oc_string(rep->name), 10) == 0) {
-        if (oc_string_len(rep->value.string) != OC_KEYPAIR_PUBKEY_SIZE) {
+        if (oc_string_len(rep->value.string) != OC_ECDSA_PUBKEY_SIZE) {
           return false;
         }
         memcpy(kp->public_key, oc_cast(rep->value.string, uint8_t),
-               OC_KEYPAIR_PUBKEY_SIZE);
+               OC_ECDSA_PUBKEY_SIZE);
       } else if (oc_string_len(rep->name) == 11 &&
                  memcmp("private_key", oc_string(rep->name), 11) == 0) {
-        if (oc_string_len(rep->value.string) > OC_KEYPAIR_PRIVKEY_SIZE) {
+        if (oc_string_len(rep->value.string) > OC_ECDSA_PRIVKEY_SIZE) {
           return false;
         }
         memcpy(kp->private_key, oc_cast(rep->value.string, uint8_t),
@@ -108,7 +108,7 @@ oc_sec_encode_ecdsa_keypair(size_t device)
 
   oc_rep_start_root_object();
   oc_rep_set_byte_string(root, public_key, kp->public_key,
-                         OC_KEYPAIR_PUBKEY_SIZE);
+                         OC_ECDSA_PUBKEY_SIZE);
   oc_rep_set_byte_string(root, private_key, kp->private_key,
                          kp->private_key_size);
   oc_rep_end_root_object();
@@ -196,8 +196,8 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
 
   size_t public_key_size = 0;
   if (oc_generate_ecdsa_keypair(
-        kp->public_key, OC_KEYPAIR_PUBKEY_SIZE, &public_key_size,
-        kp->private_key, OC_KEYPAIR_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
+        kp->public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size, kp->private_key,
+        OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
     oc_memb_free(&oc_keypairs_s, kp);
     return -1;
   }
