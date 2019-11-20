@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e9bc64d_132e1c3b",
+        "filename": "swig/apps/oc/android_simple_client/SimpleClient/app/src/main/java/org/iotivity/simpleclient/MyDiscoveryHandler.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-20T18:34:16Z",
+      "side": 1,
+      "message": "OCEndpoint[] endpoints",
+      "range": {
+        "startLine": 30,
+        "startChar": 36,
+        "endLine": 30,
+        "endChar": 58
+      },
+      "revId": "831de716c8e6bd2124b06c0ffbf27965483aedf3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab406181_64f3701a",
+        "filename": "swig/iotivity-lite-java/junit/org/iotivity/OCOwnershipTransferMethodsTest.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-20T18:34:16Z",
+      "side": 1,
+      "message": "be nice to clean this WS",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 12
+      },
+      "revId": "831de716c8e6bd2124b06c0ffbf27965483aedf3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
