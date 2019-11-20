@@ -22,6 +22,30 @@
       "revId": "082a17c1ea189ffed3e4c6f479311bbef183eb90",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da58613a_c42d734c",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-20T18:45:11Z",
+      "side": 0,
+      "message": "Unintentional... now added back in patch set 9",
+      "parentUuid": "9b9603e0_d347ec13",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 5
+      },
+      "revId": "082a17c1ea189ffed3e4c6f479311bbef183eb90",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
