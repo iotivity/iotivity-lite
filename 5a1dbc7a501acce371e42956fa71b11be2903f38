@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed456d34_8b9d2d25",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 6
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-20T03:42:28Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we do a free_server_endpoints on each endpoint in this array inside a\n\nprotected void finalize throws Throwable{}",
+      "range": {
+        "startLine": 16,
+        "startChar": 29,
+        "endLine": 16,
+        "endChar": 38
+      },
+      "revId": "5a1dbc7a501acce371e42956fa71b11be2903f38",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
