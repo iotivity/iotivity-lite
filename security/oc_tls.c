@@ -139,7 +139,7 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-static const int default_priority[8] = {
+static const int default_priority[6] = {
 #else  /* OC_PKI */
 static const int default_priority[2] = {
 #endif /* !OC_PKI */
@@ -149,8 +149,6 @@ static const int default_priority[2] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
@@ -166,7 +164,7 @@ static const int anon_ecdh_priority[2] = {
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
-static const int otm_priority[9] = {
+static const int otm_priority[7] = {
 #else  /* OC_PKI */
 static const int otm_priority[3] = {
 #endif /* !OC_PKI */
@@ -177,8 +175,6 @@ static const int otm_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
@@ -191,14 +187,11 @@ static const int cloud_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 0
 };
 
-static const int cert_priority[7] = {
+static const int cert_priority[5] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-  0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM, 0
 };
 #endif /* OC_PKI */
 #endif /* OC_CLIENT */
