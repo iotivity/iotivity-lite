@@ -93,6 +93,30 @@
       "revId": "bb9be930ab2accabe790cdfa6e0a0a4c8c59ffdf",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fab6362d_1580a81c",
+        "filename": "swig/oc_java/oc/OcGetRemoteResourcesHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-20T02:02:39Z",
+      "side": 1,
+      "message": "Thanks, Larry. That makes sense.\n\nI am thinking that it might be good for the immediate future to store the deep copied OCEndpoint list into OcRemoteResource and have OCRemoteResource free them from its destructor. At least that method closely reflects the current state of things.\n\nWe can revisit this later based on an analysis of the WIP OCEndpoint handling stuff. I think it would be good to hold off on merging that feature into master until that analysis/testing/etc. is complete and we have high confidence.",
+      "parentUuid": "adcb8f98_3a2b450e",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 62
+      },
+      "revId": "bb9be930ab2accabe790cdfa6e0a0a4c8c59ffdf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
