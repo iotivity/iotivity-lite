@@ -37,7 +37,7 @@ int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
                                     size_t output_buffer_len);
 
 int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
-                                uint8_t *public_key);
+                                oc_string_t *public_key);
 
 int oc_certs_validate_root_cert(const mbedtls_x509_crt *root_cert);
 
@@ -53,7 +53,7 @@ int oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
 int oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len);
 
 int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
-                              uint8_t *public_key);
+                              oc_string_t *public_key);
 
 int oc_certs_parse_role_certificate(const unsigned char *role_certificate,
                                     size_t cert_size, oc_sec_cred_t *role_cred,
