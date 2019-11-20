@@ -1199,7 +1199,13 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
                                  transport_type);
 
 #ifdef OC_PKI
-      mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      if (ciphers != cloud_priority) {
+#endif /* OC_CLOUD && OC_CLIENT */
+        mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      }
+#endif /* OC_CLOUD && OC_CLIENT */
 #endif /* OC_PKI */
 
       oc_tls_set_ciphersuites(&peer->ssl_conf, endpoint);
@@ -1682,6 +1688,19 @@ read_application_data(oc_tls_peer_t *peer)
              peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
 #ifdef OC_CLIENT
+#if defined(OC_CLOUD) && defined(OC_PKI)
+      if (!peer->ssl_conf.f_vrfy) {
+        const mbedtls_x509_crt *cert =
+          mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
+        oc_string_t uuid;
+        if (oc_certs_parse_CN_for_UUID(cert, &uuid) < 0) {
+          peer->uuid.id[0] = '*';
+        } else {
+          oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+          oc_free_string(&uuid);
+        }
+      }
+#endif /* OC_CLOUD && OC_PKI */
 #ifdef OC_PKI
       if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
