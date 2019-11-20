@@ -2684,6 +2684,11 @@ oc_obt_shutdown(void)
     oc_memb_free(&oc_devices_s, device);
     device = (oc_device_t *)oc_list_pop(oc_devices);
   }
+  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+  while (cb) {
+    free_discovery_cb(cb);
+    cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+  }
 }
 
 #endif /* OC_SECURITY */
