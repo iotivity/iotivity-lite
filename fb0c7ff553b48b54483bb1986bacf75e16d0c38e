@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be79836a_b1b0864a",
+        "filename": "swig/oc_java/oc/OcUtils.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-20T18:34:16Z",
+      "side": 0,
+      "message": "do we want something like this.\npublic static void freeServerEndpoint(OCEndpoint[] endpoints)",
+      "range": {
+        "startLine": 129,
+        "startChar": 23,
+        "endLine": 129,
+        "endChar": 65
+      },
+      "revId": "fb0c7ff553b48b54483bb1986bacf75e16d0c38e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
