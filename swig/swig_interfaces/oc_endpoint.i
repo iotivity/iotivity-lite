@@ -24,16 +24,93 @@
 %}
 
 /*******************Begin oc_endpoint.h*********************/
+%javaexception("OCEndpointParseException") oc_endpoint_t(oc_string_t *endpoint_str) {
+  if (!jarg1) {
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
+    return $null;
+  }
+  $action
+  if(!result) {
+    OC_DBG("JNI: String can not be parsed.");
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+  }
+}
+%newobject copy;
+
 %extend oc_endpoint_t {
   oc_endpoint_t() {
     OC_DBG("JNI: %s\n", __func__);
     return oc_new_endpoint();
   }
 
+  // Due to bug in oc_string_to_endpoint we must pass in uri even though we are not using the uri
+  oc_endpoint_t(oc_string_t *endpoint_str) {
+    OC_DBG("JNI: %s\n", __func__);
+    oc_endpoint_t *ep = oc_new_endpoint();
+    oc_string_t uri;
+    memset(&uri, 0, sizeof(oc_string_t));
+    if(oc_string_to_endpoint(endpoint_str, ep, &uri) < 0) {
+      OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
+      oc_free_endpoint(ep);
+      oc_free_string(&uri);
+      return NULL;
+    }
+    oc_free_string(&uri);
+    return ep;
+  }
+
   ~oc_endpoint_t() {
    OC_DBG("JNI: %s\n", __func__);
    oc_free_endpoint($self);
    $self = NULL;
+  }
+
+  void setDi(oc_uuid_t *di) {
+    oc_endpoint_set_di($self, di);
+  }
+
+  oc_string_t toString() {
+    oc_string_t ep;
+    memset(&ep, 0, sizeof(oc_string_t));
+    int r = oc_endpoint_to_string($self, &ep);
+    if(r < 0) {
+      oc_free_string(&ep);
+      return ep;
+    }
+    return ep;
+  }
+
+  jboolean isIPv6LinkLocal() {
+    return (oc_ipv6_endpoint_is_link_local($self) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  jboolean compare(const oc_endpoint_t *ep2) {
+    return (oc_endpoint_compare($self, ep2) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  jboolean compareAddress(const oc_endpoint_t *ep2) {
+    return (oc_endpoint_compare_address($self, ep2) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  void setLocalAddress(int interfaceIndex) {
+    oc_endpoint_set_local_address($self, interfaceIndex);
+  }
+
+  oc_endpoint_t *copy()
+  {
+    oc_endpoint_t *destination = oc_new_endpoint();
+    oc_endpoint_copy(destination, $self);
+    return destination;
   }
 }
 %rename(OCEndpoint) oc_endpoint_t;
