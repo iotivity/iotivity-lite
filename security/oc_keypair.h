@@ -26,15 +26,15 @@ extern "C"
 {
 #endif
 
-#define OC_KEYPAIR_PUBKEY_SIZE (91)
-#define OC_KEYPAIR_PRIVKEY_SIZE (200)
+#define OC_ECDSA_PUBKEY_SIZE (91)
+#define OC_ECDSA_PRIVKEY_SIZE (200)
 
 typedef struct oc_ecdsa_keypair_t
 {
   struct oc_ecdsa_keypair_t *next;
   size_t device;
-  uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
-  uint8_t private_key[OC_KEYPAIR_PRIVKEY_SIZE];
+  uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
+  uint8_t private_key[OC_ECDSA_PRIVKEY_SIZE];
   size_t private_key_size;
 } oc_ecdsa_keypair_t;
 
