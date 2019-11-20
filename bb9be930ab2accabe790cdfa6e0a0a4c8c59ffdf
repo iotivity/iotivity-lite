@@ -117,6 +117,30 @@
       "revId": "bb9be930ab2accabe790cdfa6e0a0a4c8c59ffdf",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7166385_460c6fad",
+        "filename": "swig/oc_java/oc/OcGetRemoteResourcesHandler.java",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-20T03:17:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fab6362d_1580a81c",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 62
+      },
+      "revId": "bb9be930ab2accabe790cdfa6e0a0a4c8c59ffdf",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
