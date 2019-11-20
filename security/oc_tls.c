@@ -283,6 +283,9 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
     oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->recv_q);
   }
+#ifdef OC_PKI
+  oc_free_string(&peer->public_key);
+#endif /* OC_PKI */
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
   oc_memb_free(&tls_peers_s, peer);
@@ -1064,7 +1067,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       oc_free_string(&uuid);
     }
 
-    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+    if (oc_certs_extract_public_key(crt, &peer->public_key) < 0) {
       OC_ERR("unable to extract public key from cert");
       return -1;
     }
