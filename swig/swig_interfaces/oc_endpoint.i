@@ -147,6 +147,7 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 }
 /* TODO figure out a clean way to return the uri param not as an array value */
 %ignore oc_string_to_endpoint;
+%newobject jni_string_to_endpoint;
 %rename(stringToEndpoint) jni_string_to_endpoint;
 %inline %{
 oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
