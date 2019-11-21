@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54e8a18e_e62d0b3d",
+        "filename": "swig/oc_java/oc/OcRemoteResource.java",
+        "patchSetId": 11
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-21T22:06:05Z",
+      "side": 1,
+      "message": "I am now wondering if this is necessary. It seems like as if OCEndpoint\u0027s destructor already does an oc_free_endpoint(). Can you look into this?",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 0
+      },
+      "revId": "3fb64f3f1721dce4e929b08f762eb3ced2389388",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
