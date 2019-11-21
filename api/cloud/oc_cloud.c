@@ -167,6 +167,8 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->cps = OC_CPS_READYTOREGISTER;
 
+  cloud_store_dump_async(&ctx->store);
+
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
   }
