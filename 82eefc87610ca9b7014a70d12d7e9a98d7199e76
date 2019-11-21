@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8f1daf7f_01486516",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-21T21:45:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afa2a379_a943fb96",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 75
+      },
+      "revId": "82eefc87610ca9b7014a70d12d7e9a98d7199e76",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7089e71f_7e4d4e70",
         "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "82eefc87610ca9b7014a70d12d7e9a98d7199e76",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bb131e6_d8b531f8",
+        "filename": "swig/oc_java/oc/OcGetRemoteDeviceHandler.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-21T21:45:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7089e71f_7e4d4e70",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 73
+      },
+      "revId": "82eefc87610ca9b7014a70d12d7e9a98d7199e76",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
