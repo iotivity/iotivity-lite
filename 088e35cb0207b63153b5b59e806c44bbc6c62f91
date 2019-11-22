@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "246b5040_701de27f",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-22T21:33:44Z",
+      "side": 1,
+      "message": "You should be running oc_main_shutdown() from the event loop thread. Why did you move it here?",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 23
+      },
+      "revId": "088e35cb0207b63153b5b59e806c44bbc6c62f91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
