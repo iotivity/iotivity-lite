@@ -22,6 +22,30 @@
       "revId": "088e35cb0207b63153b5b59e806c44bbc6c62f91",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f271060_1c8eee94",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-22T21:48:11Z",
+      "side": 1,
+      "message": "I generally try to have the wrapper code actually call the function in question.  Once we know the thread has stopped I didn\u0027t see any issue moving the shutdown call here. I will move it back to the even loop thread.",
+      "parentUuid": "246b5040_701de27f",
+      "range": {
+        "startLine": 243,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 23
+      },
+      "revId": "088e35cb0207b63153b5b59e806c44bbc6c62f91",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
