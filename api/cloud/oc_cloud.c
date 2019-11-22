@@ -167,6 +167,8 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->cps = OC_CPS_READYTOREGISTER;
 
+  cloud_store_dump_async(&ctx->store);
+
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
   }
@@ -350,6 +352,7 @@ oc_cloud_shutdown(void)
       cloud_store_deinit(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
+      oc_list_remove(cloud_context_list, ctx);
       oc_memb_free(&cloud_context_pool, ctx);
       OC_DBG("cloud_shutdown for %d", (int)device);
     }

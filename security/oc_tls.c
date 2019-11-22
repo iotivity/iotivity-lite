@@ -139,7 +139,7 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-static const int default_priority[8] = {
+static const int default_priority[6] = {
 #else  /* OC_PKI */
 static const int default_priority[2] = {
 #endif /* !OC_PKI */
@@ -149,8 +149,6 @@ static const int default_priority[2] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
@@ -166,7 +164,7 @@ static const int anon_ecdh_priority[2] = {
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
-static const int otm_priority[9] = {
+static const int otm_priority[7] = {
 #else  /* OC_PKI */
 static const int otm_priority[3] = {
 #endif /* !OC_PKI */
@@ -177,28 +175,29 @@ static const int otm_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
-
-static const int cloud_priority[3] = {
+#ifdef OC_CLOUD
+static const int cloud_priority[7] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+  0
 };
+#endif /* OC_CLOUD */
 
-static const int cert_priority[7] = {
+static const int cert_priority[5] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-  0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM, 0
 };
 #endif /* OC_PKI */
 #endif /* OC_CLIENT */
@@ -283,6 +282,9 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
     oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->recv_q);
   }
+#ifdef OC_PKI
+  oc_free_string(&peer->public_key);
+#endif /* OC_PKI */
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
   oc_memb_free(&tls_peers_s, peer);
@@ -895,12 +897,14 @@ oc_tls_select_cert_ciphersuite(void)
   ciphers = (int *)cert_priority;
 }
 
+#ifdef OC_CLOUD
 void
 oc_tls_select_cloud_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting cloud ciphersuite priority");
   ciphers = (int *)cloud_priority;
 }
+#endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 
 void
@@ -1064,7 +1068,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       oc_free_string(&uuid);
     }
 
-    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+    if (oc_certs_extract_public_key(crt, &peer->public_key) < 0) {
       OC_ERR("unable to extract public key from cert");
       return -1;
     }
@@ -1195,7 +1199,13 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
                                  transport_type);
 
 #ifdef OC_PKI
-      mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      if (ciphers != cloud_priority) {
+#endif /* OC_CLOUD && OC_CLIENT */
+        mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      }
+#endif /* OC_CLOUD && OC_CLIENT */
 #endif /* OC_PKI */
 
       oc_tls_set_ciphersuites(&peer->ssl_conf, endpoint);
@@ -1678,6 +1688,19 @@ read_application_data(oc_tls_peer_t *peer)
              peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
 #ifdef OC_CLIENT
+#if defined(OC_CLOUD) && defined(OC_PKI)
+      if (!peer->ssl_conf.f_vrfy) {
+        const mbedtls_x509_crt *cert =
+          mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
+        oc_string_t uuid;
+        if (oc_certs_parse_CN_for_UUID(cert, &uuid) < 0) {
+          peer->uuid.id[0] = '*';
+        } else {
+          oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+          oc_free_string(&uuid);
+        }
+      }
+#endif /* OC_CLOUD && OC_PKI */
 #ifdef OC_PKI
       if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
