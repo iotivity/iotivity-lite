@@ -1484,7 +1484,7 @@ oc_ri_shutdown(void)
   free_all_client_cbs();
 #endif /* OC_CLIENT */
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_scrub_buffers();
+  oc_blockwise_scrub_buffers(true);
 #endif /* OC_BLOCK_WISE */
 
   while (oc_main_poll() != 0)

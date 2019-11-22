@@ -827,6 +827,7 @@ oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
         }
       }
       num_char_printed = snprintf(buf, buf_size, "]");
+      OC_JSON_UPDATE_BUFFER_AND_TOTAL;
       break;
     }
     case OC_REP_BYTE_STRING_ARRAY: {

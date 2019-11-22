@@ -740,7 +740,7 @@ TEST(TestRep, OCRepSetGetBoolArray)
   json_size = oc_rep_to_json(rep, NULL, 0, false);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false}";
+  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false]}";
   EXPECT_STREQ(non_pretty_json, json);
   free(json);
   json = NULL;
@@ -748,7 +748,7 @@ TEST(TestRep, OCRepSetGetBoolArray)
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, true);
   const char pretty_json[] = "{\n"
-                             "  \"flip\" : [false, false, true, false, false\n"
+                             "  \"flip\" : [false, false, true, false, false]\n"
                              "}\n";
   EXPECT_STREQ(pretty_json, json);
   free(json);
@@ -808,7 +808,7 @@ TEST(TestRep, OCRepAddGetBoolArray)
   json_size = oc_rep_to_json(rep, NULL, 0, false);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false}";
+  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false]}";
   EXPECT_STREQ(non_pretty_json, json);
   free(json);
   json = NULL;
@@ -816,7 +816,7 @@ TEST(TestRep, OCRepAddGetBoolArray)
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, true);
   const char pretty_json[] = "{\n"
-                             "  \"flip\" : [false, false, true, false, false\n"
+                             "  \"flip\" : [false, false, true, false, false]\n"
                              "}\n";
   EXPECT_STREQ(pretty_json, json);
   free(json);
