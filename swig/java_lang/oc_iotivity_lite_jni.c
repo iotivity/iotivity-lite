@@ -370,6 +370,18 @@ jni_list_remove(jni_callback_data *item)
   OC_DBG("JNI: - unlock %s\n", __func__);
 }
 
+void
+jni_list_clear()
+{
+  while (jni_list_get_head()) {
+    jni_callback_data *item = jni_list_get_head();
+    JCALL1(DeleteGlobalRef, item->jenv, item->jcb_obj);
+    jni_list_remove(item);
+    free(item);
+    item = NULL;
+  }
+}
+
 jni_callback_data *
 jni_list_get_item_by_java_callback(jobject callback)
 {
