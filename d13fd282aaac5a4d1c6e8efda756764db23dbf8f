@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3180355_d6b8918e",
+        "filename": "swig/swig_interfaces/oc_connectivity.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-22T00:53:08Z",
+      "side": 1,
+      "message": "We probably need \"jni_xxx\" versions of these functions to add mutex locking around the oc_connectivity_xxx() calls.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 43
+      },
+      "revId": "d13fd282aaac5a4d1c6e8efda756764db23dbf8f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
