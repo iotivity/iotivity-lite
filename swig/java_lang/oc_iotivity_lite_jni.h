@@ -179,6 +179,7 @@ typedef struct jni_callback_data_s {
 jni_callback_data * jni_list_get_head();
 void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
+void jni_list_clear();
 jni_callback_data *jni_list_get_item_by_java_callback(jobject callback);
 jni_callback_data *jni_list_get_item_by_callback_valid(
   jni_callback_valid_t cb_valid);

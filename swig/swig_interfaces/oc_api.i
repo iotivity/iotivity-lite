@@ -238,8 +238,12 @@ int jni_main_init(const oc_handler_t *handler)
      * poll wait loop which call oc_main_shutdown once the jni_quit value is seen
      */
     jni_signal_event_loop();
-    // TODO do we need to join this thread and the jni_pool_event_thread?
-    // TODO empty the jni_callback list on shutdown.
+#if defined(_WIN32)
+    WaitForSingleObject(jni_poll_event_thread, INFINITE);
+#elif defined(__linux__)
+    pthread_join(jni_poll_event_thread, NULL);
+#endif
+    jni_list_clear();
   }
 %}
 
