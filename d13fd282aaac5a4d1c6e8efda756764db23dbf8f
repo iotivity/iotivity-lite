@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "70d2b97b_2a0f01fa",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-22T19:56:54Z",
+      "side": 1,
+      "message": "Since we are only using 2 threads and we actually call the oc_main_shutdown from the other thread once jni_quit \u003d 1 I kind of inadvertently did the same thing that a thread join would have done without actually joining the threads.\n\nI will still update the code to join this thread and the jni_pool_event_thread but don\u0027t think that will be required for merging the code with master.\n\nI will work on both of these TODO items.  Let me know if you feel these are blocking items for the merge with master.",
+      "parentUuid": "a27a194f_09603088",
+      "range": {
+        "startLine": 241,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 52
+      },
+      "revId": "d13fd282aaac5a4d1c6e8efda756764db23dbf8f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3180355_d6b8918e",
         "filename": "swig/swig_interfaces/oc_connectivity.i",
         "patchSetId": 8
