@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "17810633_0b5982e0",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-22T20:32:41Z",
+      "side": 1,
+      "message": "\u003e Since we are only using 2 threads and we actually call the oc_main_shutdown from \n\u003e the other thread once jni_quit \u003d 1 I kind of inadvertently did the same thing \n\u003e that a thread join would have done without actually joining the threads.\n\nWell, oc_main_shutdown() (not thread safe) needs to be called on the event loop thread anyway, and that clears all stack allocated resources. So, yes, once\nyou set jni_quit and singal the event thread (to wake it up if asleep), the thread\nwill terminate. \n\nBut that is not a reason to not join the thread. jni_poll_event_thread is (not \ndetached) a joinable thread and pthread_join() releases some resources bound to\nthe thread. So my point is that calling pthread_join() is not an option; it is\nmandatory.\n\nOf course, once the thread is joined, you can (and should) safely clear any other \nresources allocated in the JNI layer (e.g. callbacks).\n\n\u003e I will work on both of these TODO items. \n\nThanks!\n\n\u003e Let me know if you feel these are blocking items for the merge with master.\n\nI mean, we can go ahead with the merge. But these loose ends should be tied in the\nnear future anyway.",
+      "parentUuid": "70d2b97b_2a0f01fa",
+      "range": {
+        "startLine": 241,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 52
+      },
+      "revId": "d13fd282aaac5a4d1c6e8efda756764db23dbf8f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3180355_d6b8918e",
         "filename": "swig/swig_interfaces/oc_connectivity.i",
         "patchSetId": 8
