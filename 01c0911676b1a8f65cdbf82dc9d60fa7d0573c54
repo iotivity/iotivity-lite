@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb460f50_3c0c70c6",
+        "filename": "swig/java_lang/oc_iotivity_lite_jni.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-22T23:51:27Z",
+      "side": 1,
+      "message": "Isn\u0027t this already being done inside jni_list_remove()?\n\nAnyway, it seems like even a single DeleteGlobalRef in this sequence causes the app to crash \nduring shutdown on Android.",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 55
+      },
+      "revId": "01c0911676b1a8f65cdbf82dc9d60fa7d0573c54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
