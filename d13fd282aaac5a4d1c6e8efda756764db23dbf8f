@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a27a194f_09603088",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 8
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-22T17:30:20Z",
+      "side": 1,
+      "message": "Firstly, frequent shutdown/init of the stack can most definitely be expected depending on how the Android app is written, and prompted by the user switching out \nof the app an switching back in later.\n\nFollowing the shutdown/init, responses to any previously open requests would be\nrejected by the C layer and not propagate up, so no issues there. The shutdown sequences in C try to clear everything. Sample app runs through valgrind verify \nthat there are no \"reachable blocks\" when the app exits.\n\nBut with an uncleared jni callbacks list, there\u0027s a possibility of holding onto\ndangling references through the list when the app is pulled back up later.\nI\u0027m not sure how the Android runtime handles memory when apps go into standby - I\u0027m sure it knows of all allocations that had occurred through the app. So, it would\nbe good to add a \"jni_list_clear()\" to oc_iotivity_lite_jni.c and invoke that right\nafter joining the jni_poll_event_thread which follows the event loop signalling on\na shutdown.",
+      "parentUuid": "196ce200_19bec187",
+      "range": {
+        "startLine": 241,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 52
+      },
+      "revId": "d13fd282aaac5a4d1c6e8efda756764db23dbf8f",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3180355_d6b8918e",
         "filename": "swig/swig_interfaces/oc_connectivity.i",
         "patchSetId": 8
