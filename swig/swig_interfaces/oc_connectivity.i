@@ -20,13 +20,39 @@
 %}
 
 %{
+#include "oc_iotivity_lite_jni.h"
 #include "port/oc_connectivity.h"
 %}
 
 %ignore oc_message_s;
 %ignore oc_send_buffer;
-%rename(init) oc_connectivity_init;
-%rename(shutdown) oc_connectivity_shutdown;
+%ignore oc_connectivity_init;
+%rename(init) jni_connectivity_init;
+%inline %{
+int jni_connectivity_init(size_t device)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_connectivity_init(device);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+}
+%}
+%ignore oc_connectivity_shutdown;
+%rename(shutdown) jni_connectivity_shutdown;
+%inline %{
+void jni_connectivity_shutdown(size_t device)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  oc_connectivity_shutdown(device);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+}
+%}
 %ignore oc_send_discovery_request;
 %ignore oc_connectivity_end_session;
 %ignore oc_dns_lookup;
