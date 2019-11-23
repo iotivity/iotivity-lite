@@ -22,6 +22,30 @@
       "revId": "01c0911676b1a8f65cdbf82dc9d60fa7d0573c54",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dd3b489_2abaea49",
+        "filename": "swig/java_lang/oc_iotivity_lite_jni.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-11-23T00:07:35Z",
+      "side": 1,
+      "message": "You are correct this is being done in the jni_list_remove.\n\nNot sure why it would be failing on Android I will look into it.",
+      "parentUuid": "cb460f50_3c0c70c6",
+      "range": {
+        "startLine": 378,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 55
+      },
+      "revId": "01c0911676b1a8f65cdbf82dc9d60fa7d0573c54",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
