@@ -1,0 +1,7 @@
+Verified+1: IoTivity Jenkins <jenkins-daemon@iotivity.org>
+Code-Review+2: Kishen Maloor <kishen.maloor@intel.com>
+Submitted-by: George Nash <george.nash@intel.com>
+Submitted-at: Mon, 25 Nov 2019 21:50:20 +0000
+Reviewed-on: https://gerrit.iotivity.org/gerrit/c/iotivity-lite/+/29966
+Project: iotivity-lite
+Branch: refs/heads/swig
