@@ -73,6 +73,29 @@
     },
     {
       "key": {
+        "uuid": "974f906b_9e528d6f",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-25T20:42:56Z",
+      "side": 1,
+      "message": "Regarding my comment here on the other commit, I was just considering other things that could\u0027ve gone wrong in the initialization callback (note that an implementation may choose to do other things besides init platform/device and factor the success/failure of those other functions into the return value from the initialization callback) thus resulting in a negative return value.\n\nIn the initialization code in api/oc_main.c, you\u0027ll see it calling oc_main_shutdown() (to clear up anything that was properly initialized until that point) when the initialization callback returns \u003c 0.\n\nIt was in that vein that I was thinking that a reset of state here was warranted.",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
@@ -108,6 +131,30 @@
       "side": 1,
       "message": "I\u0027m not sure that is the right thing to do... I\u0027ll look into it.  I can log an error if ret \u003c 0.",
       "parentUuid": "87480064_276eb131",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a02136ac_303adff1",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-25T20:42:56Z",
+      "side": 1,
+      "message": "But isn\u0027t it wrong to update the index counter and map here while ignoring the return value from addDevice()?",
+      "parentUuid": "211e522f_60887ed0",
       "range": {
         "startLine": 60,
         "startChar": 0,
