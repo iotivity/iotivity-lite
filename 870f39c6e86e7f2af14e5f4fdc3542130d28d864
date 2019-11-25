@@ -164,6 +164,30 @@
       "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1adaf451_112f7f30",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-25T20:48:39Z",
+      "side": 1,
+      "message": "only if it\u0027s guaranteed the device index never increments when ret \u003c 0.",
+      "parentUuid": "a02136ac_303adff1",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
