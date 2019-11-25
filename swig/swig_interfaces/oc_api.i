@@ -243,6 +243,7 @@ int jni_main_init(const oc_handler_t *handler)
 #elif defined(__linux__)
     pthread_join(jni_poll_event_thread, NULL);
 #endif
+    jni_list_clear();
   }
 %}
 
