@@ -22,6 +22,30 @@
       "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47d54b66_498e0f6a",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-25T03:29:28Z",
+      "side": 1,
+      "message": "See https://gerrit.iotivity.org/gerrit/c/iotivity-lite/+/29967 on swig branch",
+      "parentUuid": "089f896c_c4760b2f",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 0
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
