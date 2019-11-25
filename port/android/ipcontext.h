@@ -38,7 +38,8 @@ typedef enum {
 } adapter_receive_state_t;
 
 #ifdef OC_TCP
-typedef struct tcp_context_t {
+typedef struct tcp_context_t
+{
   struct sockaddr_storage server;
   int server_sock;
   uint16_t port;
