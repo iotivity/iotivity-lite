@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44c2e38e_f04dd22a",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-25T04:46:57Z",
+      "side": 1,
+      "message": "I am wondering if perhaps you should add that reset logic in this block as well?",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "0384867da98c1e435ba6ed83c75385c27170bc3a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
