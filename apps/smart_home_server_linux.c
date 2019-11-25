@@ -530,6 +530,7 @@ register_resources(void)
   oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
 
 #ifdef OC_COLLECTIONS_IF_CREATE
+  oc_resource_bind_resource_interface(col, OC_IF_CREATE);
   oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
                                 free_switch_instance);
 #endif /* OC_COLLECTIONS_IF_CREATE */

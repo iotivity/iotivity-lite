@@ -208,9 +208,6 @@ oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
   oc_collection_t *collection = oc_collection_alloc();
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
-#ifdef OC_COLLECTIONS_IF_CREATE
-    collection->interfaces |= OC_IF_CREATE;
-#endif /* OC_COLLECTIONS_IF_CREATE */
     collection->default_interface = OC_IF_LL;
     oc_populate_resource_object((oc_resource_t *)collection, name, uri,
                                 num_resource_types, device);
