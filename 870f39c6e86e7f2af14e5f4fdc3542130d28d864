@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "8088fbde_ddecf2ee",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-25T21:01:27Z",
+      "side": 1,
+      "message": "Does my comment above make sense?",
+      "parentUuid": "974f906b_9e528d6f",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
@@ -179,6 +203,30 @@
       "side": 1,
       "message": "only if it\u0027s guaranteed the device index never increments when ret \u003c 0.",
       "parentUuid": "a02136ac_303adff1",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f96300b_fd5d0ed9",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-25T21:01:27Z",
+      "side": 1,
+      "message": "Hmm.. It actually does not increment the device index until the very end of that function in the success path. I think there are 4 spots in core_add_device() where failures are caught, and only the first of those returns a NULL; the other 3 currently \"abort\", which would likely crash the JVM. \n\nI am thinking it may be a better idea to return NULL instead so that addDevice() would gracefully return a \u003c 0 value. So, there is some minor cleanup in order on that front in api/oc_core_res.c.\n\nBut over here, it may be good to settle on that semantic, i.e. do not increment/store anything unless it was a success. What do you think?",
+      "parentUuid": "1adaf451_112f7f30",
       "range": {
         "startLine": 60,
         "startChar": 0,
