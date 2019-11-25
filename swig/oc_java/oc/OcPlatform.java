@@ -26,6 +26,8 @@ public class OcPlatform {
 
     public void systemShutdown() {
         OCMain.mainShutdown();
+        deviceIndex.set(0);
+        deviceIndexLookup.clear();
     }
 
     public void systemInit(OCMainInitHandler mainInitHandler) {
