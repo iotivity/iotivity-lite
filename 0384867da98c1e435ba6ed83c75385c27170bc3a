@@ -22,6 +22,30 @@
       "revId": "0384867da98c1e435ba6ed83c75385c27170bc3a",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0facb539_79697163",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-25T15:58:24Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s necessary... at this point the deviceIndex is zero and the deviceIndexLookup is empty. Besides, the JVM will terminate. Right?",
+      "parentUuid": "44c2e38e_f04dd22a",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 41
+      },
+      "revId": "0384867da98c1e435ba6ed83c75385c27170bc3a",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
     }
   ]
 }
