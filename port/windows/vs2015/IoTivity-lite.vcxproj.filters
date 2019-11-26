@@ -382,6 +382,27 @@
     <ClCompile Include="..\..\..\api\c-timestamp\timestamp_valid.c">
       <Filter>Core\c-timestamp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_apis.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_manager.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_rd.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\rd_client.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\security\oc_obt_certs.c">
       <Filter>Security</Filter>
     </ClCompile>
@@ -636,6 +657,18 @@
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_cloud.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\rd_client.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\security\oc_obt_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
@@ -701,5 +734,16 @@
     <Filter Include="Core\c-timestamp">
       <UniqueIdentifier>{d83c9727-1931-4e51-9774-da03809c6325}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\cloud">
+      <UniqueIdentifier>{37aa79ab-54ab-451b-bdd5-43626b0b51df}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\security\oc_pstat.c.diff">
+      <Filter>Core</Filter>
+    </None>
+    <None Include="..\..\..\security\oc_tls.c.diff">
+      <Filter>Core</Filter>
+    </None>
   </ItemGroup>
 </Project>
