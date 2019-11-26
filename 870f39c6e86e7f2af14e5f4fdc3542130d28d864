@@ -168,6 +168,30 @@
     },
     {
       "key": {
+        "uuid": "3a79ef8e_3c7c64f4",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-26T16:54:24Z",
+      "side": 1,
+      "message": "That\u0027s my understanding",
+      "parentUuid": "56426448_689cb410",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
@@ -323,6 +347,30 @@
       "side": 1,
       "message": "Yes. But since the current semantic is to \"accumulate\" errors in the initialization callback, we might not want to change that.",
       "parentUuid": "293bb737_fddeec7e",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8d882f0_28bf9971",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-26T16:54:24Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "4e6405ef_93ecf439",
       "range": {
         "startLine": 60,
         "startChar": 0,
