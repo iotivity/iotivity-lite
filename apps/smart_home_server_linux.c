@@ -65,7 +65,7 @@ app_init(void)
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.1.0",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
   if (err >= 0) {
