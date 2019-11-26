@@ -192,6 +192,30 @@
     },
     {
       "key": {
+        "uuid": "7c21358d_d6a3f214",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-26T17:07:52Z",
+      "side": 1,
+      "message": "Okay, thanks, and in that case we\u0027ll leave this as it is for now.",
+      "parentUuid": "3a79ef8e_3c7c64f4",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
