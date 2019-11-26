@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 // define application specific values.
-static const char *spec_version = "ocf.2.0.5";
+static const char *spec_version = "ocf.2.1.0";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *device_rt = "oic.d.switch";
@@ -560,10 +560,10 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_storage_config("./cloud_tests_creds");
 
