@@ -65,7 +65,7 @@ app_init(void)
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.1.0",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
   if (err >= 0) {
@@ -509,6 +509,8 @@ register_resources(void)
   oc_resource_set_periodic_observable(temp_resource, 1);
   oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
+  oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
+  oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
   oc_add_resource(temp_resource);
 
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
@@ -519,6 +521,9 @@ register_resources(void)
   oc_resource_set_discoverable(bswitch, true);
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+  oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
+  oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
+  oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
 
 #ifdef OC_COLLECTIONS
@@ -530,6 +535,7 @@ register_resources(void)
   oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
 
 #ifdef OC_COLLECTIONS_IF_CREATE
+  oc_resource_bind_resource_interface(col, OC_IF_CREATE);
   oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
                                 free_switch_instance);
 #endif /* OC_COLLECTIONS_IF_CREATE */

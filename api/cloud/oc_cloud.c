@@ -352,6 +352,7 @@ oc_cloud_shutdown(void)
       cloud_store_deinit(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
+      oc_list_remove(cloud_context_list, ctx);
       oc_memb_free(&cloud_context_pool, ctx);
       OC_DBG("cloud_shutdown for %d", (int)device);
     }
