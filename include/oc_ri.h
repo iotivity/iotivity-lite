@@ -23,6 +23,7 @@
 #include "oc_endpoint.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"
+#include "oc_enums.h"
 #include "util/oc_etimer.h"
 
 #ifdef __cplusplus
@@ -171,6 +172,9 @@ struct oc_resource_s
   oc_request_handler_t delete_handler;
   oc_properties_cb_t get_properties;
   oc_properties_cb_t set_properties;
+  double tag_pos_rel[3];
+  oc_pos_description_t tag_pos_desc;
+  oc_enum_t tag_func_desc;
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
