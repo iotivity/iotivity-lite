@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "a9cb8bcc_0fe54ac1",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-26T16:28:15Z",
+      "side": 1,
+      "message": "Only if the System.exit() is removed",
+      "parentUuid": "8088fbde_ddecf2ee",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
@@ -227,6 +251,30 @@
       "side": 1,
       "message": "Hmm.. It actually does not increment the device index until the very end of that function in the success path. I think there are 4 spots in core_add_device() where failures are caught, and only the first of those returns a NULL; the other 3 currently \"abort\", which would likely crash the JVM. \n\nI am thinking it may be a better idea to return NULL instead so that addDevice() would gracefully return a \u003c 0 value. So, there is some minor cleanup in order on that front in api/oc_core_res.c.\n\nBut over here, it may be good to settle on that semantic, i.e. do not increment/store anything unless it was a success. What do you think?",
       "parentUuid": "1adaf451_112f7f30",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "293bb737_fddeec7e",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-11-26T16:28:15Z",
+      "side": 1,
+      "message": "If the oc_add_device returned the new deviceIndex, the java layer would not need its own increment().",
+      "parentUuid": "2f96300b_fd5d0ed9",
       "range": {
         "startLine": 60,
         "startChar": 0,
