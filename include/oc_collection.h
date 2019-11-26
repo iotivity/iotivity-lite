@@ -65,6 +65,9 @@ struct oc_collection_s
   oc_request_handler_t delete_handler;
   oc_properties_cb_t get_properties;
   oc_properties_cb_t set_properties;
+  double tag_pos_rel[3];
+  oc_pos_description_t tag_pos_desc;
+  oc_enum_t tag_pos_func;
   uint8_t num_observers;
   uint8_t num_links;
   OC_LIST_STRUCT(mandatory_rts);
