@@ -807,6 +807,10 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           }
           pay = pay->next;
         }
+        if (oc_string_len(*href) == 0) {
+          ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+          goto processed_request;
+        }
       process_request:
         link = oc_list_head(collection->links);
         while (link != NULL) {
@@ -883,10 +887,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 }
               }
 
-              if (method_not_found ||
-                  (href && oc_string_len(*href) > 0 &&
-                   response_buffer.code >=
-                     oc_status_code(OC_STATUS_BAD_REQUEST))) {
+              if (method_not_found || response_buffer.code >=
+                                        oc_status_code(OC_STATUS_BAD_REQUEST)) {
                 ecode = response_buffer.code;
                 memcpy(&links_array, &prev_link, sizeof(CborEncoder));
                 goto next;
