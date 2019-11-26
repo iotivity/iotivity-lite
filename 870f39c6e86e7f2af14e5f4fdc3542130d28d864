@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "56426448_689cb410",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-26T16:40:10Z",
+      "side": 1,
+      "message": "Okay, got it. So, System.exit() completely kills the app instance? So, if one were to immediately relaunch the app, it would (by virtue of having been fully killed) start with a clean slate?",
+      "parentUuid": "a9cb8bcc_0fe54ac1",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 41
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87480064_276eb131",
         "filename": "swig/oc_java/oc/OcPlatform.java",
         "patchSetId": 9
@@ -275,6 +299,30 @@
       "side": 1,
       "message": "If the oc_add_device returned the new deviceIndex, the java layer would not need its own increment().",
       "parentUuid": "2f96300b_fd5d0ed9",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 71
+      },
+      "revId": "870f39c6e86e7f2af14e5f4fdc3542130d28d864",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e6405ef_93ecf439",
+        "filename": "swig/oc_java/oc/OcPlatform.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 21
+      },
+      "writtenOn": "2019-11-26T16:40:10Z",
+      "side": 1,
+      "message": "Yes. But since the current semantic is to \"accumulate\" errors in the initialization callback, we might not want to change that.",
+      "parentUuid": "293bb737_fddeec7e",
       "range": {
         "startLine": 60,
         "startChar": 0,
