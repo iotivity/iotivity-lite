@@ -154,5 +154,21 @@ TEST(OCEndpoints, StringToEndpoint)
       oc_free_string(&s);
       oc_free_string(&uri);
     }
+
+    // test dns lookup when uri is NULL
+    const char *spu3[4] = { "coap://10.211.55.3:56789/a/light",
+                           "coaps+tcp://10.211.55.3/a/light",
+                           "coap://openconnectivity.org/alpha",
+                           "coaps://openconnectivity.org:3456/alpha" };
+    for (int i = 0; i < 4; i++) {
+      oc_string_t s;
+      oc_new_string(&s, spu3[i], strlen(spu[i]));
+      oc_endpoint_t ep;
+      memset(&ep, 0, sizeof(oc_endpoint_t));
+      int ret = oc_string_to_endpoint(&s, &ep, NULL);
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+    }
 #endif
+
+
 }

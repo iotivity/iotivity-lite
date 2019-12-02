@@ -383,8 +383,8 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 
   /* Extract a uri path if requested and available */
   const char *u = NULL;
+  u = memchr(address, '/', len);
   if (uri) {
-    u = memchr(address, '/', len);
     if (u) {
       oc_new_string(uri, u, (len - (u - address)));
     }
