@@ -22,6 +22,30 @@
       "revId": "fb0c7ff553b48b54483bb1986bacf75e16d0c38e",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa724afc_88cf6eb7",
+        "filename": "swig/oc_java/oc/OcUtils.java",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-03T20:06:45Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "be79836a_b1b0864a",
+      "range": {
+        "startLine": 129,
+        "startChar": 23,
+        "endLine": 129,
+        "endChar": 65
+      },
+      "revId": "fb0c7ff553b48b54483bb1986bacf75e16d0c38e",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
