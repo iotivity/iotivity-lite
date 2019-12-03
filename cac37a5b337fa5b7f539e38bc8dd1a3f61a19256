@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cbb6e4b_5fd90e41",
+        "filename": "swig/swig_interfaces/oc_api.i",
+        "patchSetId": 13
+      },
+      "lineNbr": 1652,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-03T20:01:30Z",
+      "side": 1,
+      "message": "I am really strongly considering no longer exposing the freeServerEndpoints.  This relies on the first element of the array being a linked list so it can be passed to the oc_free_server_endpoints function.  We have no clear way to know that the endpoints will always remain a linked list.\n\nin java a for loop can be created to free the endpoints using the freeEndpoint function instead of using the free server endpoints.",
+      "range": {
+        "startLine": 1652,
+        "startChar": 0,
+        "endLine": 1652,
+        "endChar": 55
+      },
+      "revId": "cac37a5b337fa5b7f539e38bc8dd1a3f61a19256",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
