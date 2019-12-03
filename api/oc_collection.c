@@ -887,9 +887,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 }
               }
 
-              if (method_not_found || response_buffer.code >=
-                                        oc_status_code(OC_STATUS_BAD_REQUEST)) {
-                ecode = response_buffer.code;
+              if (method_not_found) {
+                ecode = oc_status_code(OC_STATUS_METHOD_NOT_ALLOWED);
                 memcpy(&links_array, &prev_link, sizeof(CborEncoder));
                 goto next;
               } else {
