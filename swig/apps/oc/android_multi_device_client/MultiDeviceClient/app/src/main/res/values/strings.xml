@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Multi-Device Client</string>
+    <string name="discoverDevices">Discover Devices</string>
+    <string name="discoveredResources">Discovered Resources</string>
+</resources>

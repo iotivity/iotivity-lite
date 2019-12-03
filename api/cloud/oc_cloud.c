@@ -108,6 +108,7 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
   (void)status;
   (void)data;
   cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
@@ -309,6 +310,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   cloud_manager_stop(ctx);
   cloud_store_initialize(&ctx->store);
   cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_manager = false;
   return 0;
 }
