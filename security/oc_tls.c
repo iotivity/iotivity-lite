@@ -547,10 +547,12 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     } else {
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
       oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
-      if (ps->s == OC_DOS_RFOTM
-          && doxm->oxmsel == OC_OXMTYPE_RDP
-          && identity_len == 16
-          && memcmp(identity, "oic.sec.doxm.rdp", 16)== 0) {
+      if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+        if (identity_len != 16 ||
+            memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
+          OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
+          return -1;
+        }
         OC_DBG("oc_tls: deriving PPSK for PIN OTM");
         memcpy(peer->uuid.id, identity, 16);
 
