@@ -206,7 +206,7 @@ typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
 void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
-  @brief Returns whether the oic.wk.con res is announed.
+  @brief Returns whether the oic.wk.con res is announced.
   @return true if announced (default) or false if not
   @see oc_set_con_res_announced
   @see oc_set_con_write_cb

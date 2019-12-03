@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_uuid_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_api_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_buffer_settings_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_clock_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_collection_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_core_res_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_endpoint_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_obt_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_pki_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_rep_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_storage_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_introspection_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cloud_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_session_events_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cred_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="c_wrap">
+      <UniqueIdentifier>{db6d0648-4b1b-44f6-9e0d-e448a0a71512}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h">
+      <Filter>c_wrap</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

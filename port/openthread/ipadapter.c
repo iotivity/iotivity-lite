@@ -107,7 +107,7 @@ oc_connectivity_get_endpoints(size_t device)
     // Populate the contents of the endpoint.
     ep->flags = IPV6;
     memcpy(ep->addr.ipv6.address, address->mAddress.mFields.m8,
-            OT_IP6_ADDRESS_SIZE);
+           OT_IP6_ADDRESS_SIZE);
     ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
     ep->device = 0;
 
