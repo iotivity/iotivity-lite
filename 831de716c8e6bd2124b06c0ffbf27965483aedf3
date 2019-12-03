@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f13fe0c5_deccf509",
+        "filename": "swig/apps/oc/android_simple_client/SimpleClient/app/src/main/java/org/iotivity/simpleclient/MyDiscoveryHandler.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-03T19:56:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e9bc64d_132e1c3b",
+      "range": {
+        "startLine": 30,
+        "startChar": 36,
+        "endLine": 30,
+        "endChar": 58
+      },
+      "revId": "831de716c8e6bd2124b06c0ffbf27965483aedf3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab406181_64f3701a",
         "filename": "swig/iotivity-lite-java/junit/org/iotivity/OCOwnershipTransferMethodsTest.java",
         "patchSetId": 9
@@ -45,6 +69,30 @@
       "revId": "831de716c8e6bd2124b06c0ffbf27965483aedf3",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e054c717_662a2aa4",
+        "filename": "swig/iotivity-lite-java/junit/org/iotivity/OCOwnershipTransferMethodsTest.java",
+        "patchSetId": 9
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-03T19:56:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab406181_64f3701a",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 12
+      },
+      "revId": "831de716c8e6bd2124b06c0ffbf27965483aedf3",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
