@@ -172,21 +172,25 @@ static const int anon_ecdh_priority[2] = {
 };
 #endif /* OC_CLIENT */
 
-#ifdef OC_PKI
-static const int otm_priority[7] = {
-#else  /* OC_PKI */
-static const int otm_priority[3] = {
-#endif /* !OC_PKI */
+static const int jw_otm_priority[3] = {
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+
+static const int pin_otm_priority[2] = {
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+
 #ifdef OC_PKI
+static const int cert_otm_priority[6] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-#endif /* OC_PKI */
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
   0
 };
+#endif /* OC_PKI */
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
@@ -976,7 +980,26 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
     OC_DBG(
       "oc_tls_set_ciphersuites: server selecting OTM ciphersuite priority");
-    ciphers = (int *)otm_priority;
+    oc_sec_doxm_t *d = oc_sec_get_doxm(endpoint->device);
+    switch (d->oxmsel) {
+    case OC_OXMTYPE_JW:
+      OC_DBG("oc_tls: selected JW OTM priority");
+      ciphers = (int *)jw_otm_priority;
+      break;
+    case OC_OXMTYPE_RDP:
+      OC_DBG("oc_tls: selected PIN OTM priority");
+      ciphers = (int *)pin_otm_priority;
+      break;
+#ifdef OC_PKI
+    case OC_OXMTYPE_MFG_CERT:
+      OC_DBG("oc_tls: selected cert OTM priority");
+      ciphers = (int *)cert_otm_priority;
+      break;
+#endif /* OC_PKI */
+    default:
+      ciphers = (int *)default_priority;
+      break;
+    }
   } else if (!ciphers) {
     OC_DBG(
       "oc_tls_set_ciphersuites: server selecting default ciphersuite priority");
@@ -1165,7 +1188,9 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
 #ifdef OC_CLIENT
   if (role == MBEDTLS_SSL_IS_CLIENT && use_pin_obt_psk_identity) {
     use_pin_obt_psk_identity = false;
-    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, (const unsigned char *)"oic.sec.doxm.rdp", 16) != 0) {
+    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1,
+                             (const unsigned char *)"oic.sec.doxm.rdp",
+                             16) != 0) {
       return -1;
     }
   } else
