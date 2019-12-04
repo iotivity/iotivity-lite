@@ -448,6 +448,15 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_enums.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_resource_factory.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_swupdate.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -710,6 +719,15 @@
     </ClInclude>
     <ClInclude Include="..\mutex.h">
       <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_resource_factory.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_swupdate_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_enums.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
