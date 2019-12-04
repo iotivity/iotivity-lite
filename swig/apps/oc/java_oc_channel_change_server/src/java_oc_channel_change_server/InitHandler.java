@@ -34,7 +34,7 @@ public class InitHandler implements OCMainInitHandler {
 
         int ret = platform.platformInit("Intel");
         if (ret >= 0) {
-            device = new OcDevice("/oic/d", "oic.d.media.server", "ChannelChangeServer", "ocf.2.1.0", "ocf.res.1.0.0");
+            device = new OcDevice("/oic/d", "oic.d.media.server", "ChannelChangeServer", "ocf.2.5.0", "ocf.res.1.3.0,ocf.sh.1.3.0");
             ret |= platform.addDevice(device);
         }
 

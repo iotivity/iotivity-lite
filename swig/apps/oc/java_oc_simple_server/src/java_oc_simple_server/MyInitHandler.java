@@ -37,7 +37,7 @@ public class MyInitHandler implements OCMainInitHandler {
 
         int ret = platform.platformInit("Intel");
         if (ret >= 0) {
-            device = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.2.1.0", "ocf.res.1.0.0");
+            device = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.2.5.0", "ocf.res.1.3.0,ocf.sh.1.3.0");
             ret |= platform.addDevice(device);
         }
 

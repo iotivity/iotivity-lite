@@ -8,7 +8,7 @@ public class ObtInitHandler implements OCMainInitHandler {
     public int initialize() {
         System.out.println("inside ObtInitHandler.initilize()");
         int ret = OCMain.initPlatform("OCF");
-        ret |= OCMain.addDevice("/oic/d", "oic.d.dots", "OBT", "ocf.2.1.0", "ocf.res.1.0.0,ocf.sh.1.0.0");
+        ret |= OCMain.addDevice("/oic/d", "oic.d.dots", "OBT", "ocf.2.5.0", "ocf.res.1.3.0,ocf.sh.1.3.0");
         OCMain.deviceBindResourceType(0, "oic.d.ams");
         OCMain.deviceBindResourceType(0, "oic.d.cms");
         return ret;
