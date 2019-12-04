@@ -93,8 +93,8 @@ ifeq ($(TCP),1)
 endif
 
 SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_connectivity \
-		oc_core_res oc_cred oc_endpoint oc_introspection oc_obt oc_pki oc_rep \
-		oc_session_events oc_storage oc_uuid
+		oc_core_res oc_cred oc_endpoint oc_enums oc_introspection oc_obt oc_pki \
+		oc_rep oc_session_events oc_storage oc_uuid
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
