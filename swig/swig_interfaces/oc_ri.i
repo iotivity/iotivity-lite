@@ -54,6 +54,12 @@
 %ignore oc_resource_s::delete_handler;
 %ignore oc_resource_s::get_properties;
 %ignore oc_resource_s::set_properties;
+%rename(tagPositionRelative) oc_resource_s::tag_pos_rel;
+%immutable oc_resource_s::tag_pos_rel;
+%rename(tagPositionDescription) oc_resource_s::tag_pos_desc;
+%immutable oc_resource_s::tag_pos_desc;
+%rename(tagFunctionDescription) oc_resource_s::tag_func_desc;
+%immutable oc_resource_s::tag_func_desc;
 %rename("%(lowercamelcase)s") num_observers;
 %immutable oc_resource_s::num_observers;
 %rename("%(lowercamelcase)s") num_links;
