@@ -38,7 +38,7 @@ public class InitHandler implements OCMainInitHandler {
         int ret = ocPlatform.platformInit("Intel");
         if (ret >= 0) {
             // Create the devices and add them to the platform
-            lightDevice = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0", "ocf.res.1.0.0");
+            lightDevice = new OcDevice("/oic/d", "oic.d.light", "Lamp", "ocf.2.1.0", "ocf.res.1.0.0");
             refrigeratorDevice = new OcDevice("/oic/d", "oic.d.refrigerator", "Refrigerator", "ocf.1.0.0", "ocf.res.1.0.0");
             thermostatDevice = new OcDevice("/oic/d", "oic.d.thermostat", "Thermostat", "ocf.1.0.0", "ocf.res.1.0.0");
             televisionDevice = new OcDevice("/oic/d", "oic.d.tv", "Television", "ocf.1.0.0", "ocf.res.1.0.0");
