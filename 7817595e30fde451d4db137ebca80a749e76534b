@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "5ad489d1_473f5c1c",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-12-11T22:46:46Z",
+      "side": 1,
+      "message": "random",
+      "parentUuid": "f9845a3c_b6d9205c",
+      "range": {
+        "startLine": 52,
+        "startChar": 68,
+        "endLine": 52,
+        "endChar": 72
+      },
+      "revId": "7817595e30fde451d4db137ebca80a749e76534b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "21a9de78_e22e6674",
         "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
         "patchSetId": 1
@@ -56,6 +80,24 @@
       "revId": "7817595e30fde451d4db137ebca80a749e76534b",
       "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8dec6cf_c5c45933",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 3653
+      },
+      "writtenOn": "2019-12-11T22:46:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21a9de78_e22e6674",
+      "revId": "7817595e30fde451d4db137ebca80a749e76534b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": false
     }
   ]
 }
