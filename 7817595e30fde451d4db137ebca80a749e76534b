@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8480cca3_c3d121f1",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-11T22:30:22Z",
+      "side": 1,
+      "message": "looks like your validatePURL is even better than the C version of the validate code.",
+      "revId": "7817595e30fde451d4db137ebca80a749e76534b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9845a3c_b6d9205c",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-11T22:30:22Z",
+      "side": 1,
+      "message": "where is the 10.0 version from?",
+      "range": {
+        "startLine": 52,
+        "startChar": 68,
+        "endLine": 52,
+        "endChar": 72
+      },
+      "revId": "7817595e30fde451d4db137ebca80a749e76534b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21a9de78_e22e6674",
+        "filename": "swig/apps/java_lite_simple_server/src/java_lite_simple_server/MyInitHandler.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 4407
+      },
+      "writtenOn": "2019-12-11T22:30:22Z",
+      "side": 1,
+      "message": "Would it make since to place this in its own class instead of doing it inline.  This would be more consistent with how we have done things with all of the samples.",
+      "revId": "7817595e30fde451d4db137ebca80a749e76534b",
+      "serverId": "c6509b8a-a471-4ec1-8e5f-9aed2654acb5",
+      "unresolved": true
+    }
+  ]
+}
