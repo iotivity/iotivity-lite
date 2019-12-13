@@ -1621,46 +1621,7 @@ void jni_stop_multicast(oc_client_response_t *response) {
 }
 %}
 
-%typemap(jni)    oc_endpoint_t *endpoints "jobject";
-%typemap(jtype)  oc_endpoint_t *endpoints "OCEndpoint[]";
-%typemap(jstype) oc_endpoint_t *endpoints "OCEndpoint[]";
-%typemap(javain) oc_endpoint_t *endpoints "$javainput";
-%typemap(in) oc_endpoint_t *endpoints {
-  jsize len = JCALL1(GetArrayLength, jenv, $input);
-  if(len < 1) return;
-  jobject jendpoint = JCALL2(GetObjectArrayElement, jenv, $input, 0);
-  assert(cls_OCEndpoint);
-  const jmethodID mid_OCEndpoint_getCptr =
-    JCALL3(GetStaticMethodID, jenv, cls_OCEndpoint, "getCPtr", "(Lorg/iotivity/OCEndpoint;)J");
-  jlong endpoints = JCALL3(CallStaticLongMethod, jenv, cls_OCEndpoint, mid_OCEndpoint_getCptr, jendpoint);
-  $1 = *(oc_endpoint_t **)&endpoints;
-}
 %ignore oc_free_server_endpoints;
-// DOCUMENTATION workaround
-%javamethodmodifiers jni_free_server_endpoints "/**
-   * Free all native resources associated with a list of OCEndpoints.
-   * <p>
-   * <strong>Note</strong>: This function will free the native resource.  This function is only to
-   * be used in very rare situations that the Java GC does not keep up with the creation of
-   * endpoints. The native resource is allocated in the C heap and may exceed the JVM memory limits
-   * before the GC collects the endpoints in question. This can be used to manually free the
-   * memory from the C heap.
-   *
-   * @param endpoints an array of OCEndpoints obtained from discovery
-   */
-  public";
-%rename(freeServerEndpoints) jni_free_server_endpoints;
-%inline %{
-void jni_free_server_endpoints(oc_endpoint_t *endpoints) {
-  OC_DBG("JNI: - lock %s\n", __func__);
-  jni_mutex_lock(jni_sync_lock);
-  oc_free_server_endpoints(endpoints);
-  endpoints = NULL;
-  jni_mutex_unlock(jni_sync_lock);
-  OC_DBG("JNI: - unlock %s\n", __func__);
-}
-%}
-
 %rename(closeSession) oc_close_session;
 %rename(OCRole) oc_role_t;
 %nodefaultctor oc_role_t;
