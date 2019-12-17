@@ -163,6 +163,7 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
         strcmp(ci_server, value)) {
       cloud_close_endpoint(ctx->cloud_ep);
       memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+      ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
     }
     cloud_set_string(&ctx->store.ci_server, value, size);
   }
