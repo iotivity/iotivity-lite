@@ -258,6 +258,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->p = false;
   } break;
   case OC_DOS_RFNOP: {
+#ifdef OC_SERVER
+    coap_remove_observers_on_dos_change(device, false);
+#endif /* OC_SERVER */
     ps->p = true;
     ps->cm = 0;
     ps->tm = 0;
@@ -310,9 +313,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       goto pstat_state_error;
     }
     ps->p = false;
-#ifdef OC_SERVER
-    coap_remove_observers_on_dos_change(device, false);
-#endif /* OC_SERVER */
   } break;
   case OC_DOS_SRESET: {
     ps->p = true;
