@@ -196,6 +196,7 @@ endif
 
 ifeq ($(SWUPDATE),1)
 	EXTRA_CFLAGS += -DOC_SOFTWARE_UPDATE
+	export SWUPDATE
 endif
 
 ifneq ($(SECURE),0)

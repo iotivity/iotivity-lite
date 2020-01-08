@@ -81,78 +81,102 @@ void jni_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
 %{
 int jni_validate_purl(const char *url)
 {
-   OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: %s\n", __func__);
+  jint getEnvResult = 0;
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
+  assert(jenv);
+
   assert(cls_OCSoftwareUpdateHandler);
   const jmethodID mid_validate_purl = JCALL3(GetMethodID,
-                                       (jni_swupdate_callback_data.jenv),
+                                       jenv,
                                        cls_OCSoftwareUpdateHandler,
                                        "validatePURL",
                                        "(Ljava/lang/String;)I");
   assert(mid_validate_purl);
-  jstring jurl = JCALL1(NewStringUTF, (jni_swupdate_callback_data.jenv), (const char *)url);
-  jint return_value = JCALL3(CallIntMethod, (jni_swupdate_callback_data.jenv),
+  jstring jurl = JCALL1(NewStringUTF, jenv, (const char *)url);
+  jint return_value = JCALL3(CallIntMethod, jenv,
                              jni_swupdate_callback_data.jcb_obj,
                              mid_validate_purl,
                              jurl);
+
+  release_jni_env(getEnvResult);
   return (int) return_value;
 }
 
 int jni_check_new_version(size_t device, const char *url, const char *version)
 {
   OC_DBG("JNI: %s\n", __func__);
+  jint getEnvResult = 0;
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
+  assert(jenv);
+
   assert(cls_OCSoftwareUpdateHandler);
   const jmethodID mid_check_new_version = JCALL3(GetMethodID,
-                                       (jni_swupdate_callback_data.jenv),
+                                       jenv,
                                        cls_OCSoftwareUpdateHandler,
                                        "checkNewVersion",
                                        "(JLjava/lang/String;Ljava/lang/String;)I");
   assert(mid_check_new_version);
-  jstring jurl = JCALL1(NewStringUTF, (jni_swupdate_callback_data.jenv), url);
-  jstring jversion = JCALL1(NewStringUTF, (jni_swupdate_callback_data.jenv), version);
-  jint return_value = JCALL5(CallIntMethod, (jni_swupdate_callback_data.jenv),
+  jstring jurl = JCALL1(NewStringUTF, jenv, url);
+  jstring jversion = JCALL1(NewStringUTF, jenv, version);
+  jint return_value = JCALL5(CallIntMethod, jenv,
                              jni_swupdate_callback_data.jcb_obj,
                              mid_check_new_version,
                              (jlong) device,
                              jurl,
                              jversion);
+
+  release_jni_env(getEnvResult);
   return (int) return_value;
 }
 
 int jni_download_update(size_t device, const char *url)
 {
   OC_DBG("JNI: %s\n", __func__);
+  jint getEnvResult = 0;
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
+  assert(jenv);
+
   assert(cls_OCSoftwareUpdateHandler);
   const jmethodID mid_download_update = JCALL3(GetMethodID,
-                                       (jni_swupdate_callback_data.jenv),
+                                       jenv,
                                        cls_OCSoftwareUpdateHandler,
                                        "downloadUpdate",
                                        "(JLjava/lang/String;)I");
   assert(mid_download_update);
-  jstring jurl = JCALL1(NewStringUTF, (jni_swupdate_callback_data.jenv), url);
-  jint return_value = JCALL4(CallIntMethod, (jni_swupdate_callback_data.jenv),
+  jstring jurl = JCALL1(NewStringUTF, jenv, url);
+  jint return_value = JCALL4(CallIntMethod, jenv,
                              jni_swupdate_callback_data.jcb_obj,
                              mid_download_update,
                              (jlong) device,
                              jurl);
+
+  release_jni_env(getEnvResult);
   return (int) return_value;
 }
 
 int jni_perform_upgrade(size_t device, const char *url)
 {
   OC_DBG("JNI: %s\n", __func__);
+  jint getEnvResult = 0;
+  JNIEnv *jenv = get_jni_env(&getEnvResult);
+  assert(jenv);
+
   assert(cls_OCSoftwareUpdateHandler);
   const jmethodID mid_perform_upgrade = JCALL3(GetMethodID,
-                                       (jni_swupdate_callback_data.jenv),
+                                       jenv,
                                        cls_OCSoftwareUpdateHandler,
                                        "performUpgrade",
                                        "(JLjava/lang/String;)I");
   assert(mid_perform_upgrade);
-  jstring jurl = JCALL1(NewStringUTF, (jni_swupdate_callback_data.jenv), url);
-  jint return_value = JCALL4(CallIntMethod, (jni_swupdate_callback_data.jenv),
+  jstring jurl = JCALL1(NewStringUTF, jenv, url);
+  jint return_value = JCALL4(CallIntMethod, jenv,
                              jni_swupdate_callback_data.jcb_obj,
                              mid_perform_upgrade,
                              (jlong) device,
                              jurl);
+
+  release_jni_env(getEnvResult);
   return (int) return_value;
 }
 
@@ -183,7 +207,7 @@ static oc_swupdate_cb_t jni_swupdate_handler = {
 void jni_swupdate_set_impl(const oc_swupdate_cb_t *swupdateImpl)
 {
 #ifdef OC_SOFTWARE_UPDATE
-  jni_swupdate_set_impl(swupdate_impl);
+  oc_swupdate_set_impl(swupdateImpl);
 #endif
 }
 %}
