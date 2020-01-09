@@ -150,6 +150,32 @@ typedef struct
 } oc_handler_t;
 
 typedef void (*oc_init_platform_cb_t)(void *data);
+/**
+ * Callback invoked during oc_add_device(). The purpose is to add any additional
+ * device properties that are not supplied to oc_add_device() function call.
+ *
+ * Example:
+ * ```
+ * static void set_device_custom_property(void *data)
+ * {
+ *   (void)data;
+ *   oc_set_custom_device_property(purpose, "desk lamp");
+ * }
+ *
+ * static int app_init(void)
+ * {
+ *   int ret = oc_init_platform("My Platform", NULL, NULL);
+ *   ret |= oc_add_device("/oic/d", "oic.d.light", "My light", "ocf.1.0.0",
+ *                        "ocf.res.1.0.0", set_device_custom_property, NULL);
+ *   return ret;
+ * }
+ * ```
+ *
+ * @param data context pointer that comes from the oc_add_device() function
+ *
+ * @see oc_add_device
+ * @see oc_set_custom_device_property
+ */
 typedef void (*oc_add_device_cb_t)(void *data);
 
 /**
@@ -183,11 +209,62 @@ typedef void (*oc_add_device_cb_t)(void *data);
  */
 int oc_main_init(const oc_handler_t *handler);
 oc_clock_time_t oc_main_poll(void);
+
+/**
+ * Shutdown and free all stack related resources
+ */
 void oc_main_shutdown(void);
 
 typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
 void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
 
+/**
+ * Add an ocf device to the the stack.
+ *
+ * This function is typically called from as part of the stack initialization
+ * process inside the `init` callback handler.
+ *
+ * The `oc_add_device` function may be called as many times as needed.
+ * Each call will add a new device to the stack with its own port address.
+ * Each device is automatically assigned a number starting with zero and
+ * incremented by one each time the function is called. This number is not
+ * returned therefore it is important to know the order devices are added.
+ *
+ * Example:
+ * ```
+ * //app_init is an instance of the `init` callback handler.
+ * static int app_init(void)
+ * {
+ *   int ret = oc_init_platform("Refrigerator", NULL, NULL);
+ *   ret |= oc_add_device("/oic/d", "oic.d.refrigeration", "My fridge",
+ *                        "ocf.2.0.5", "ocf.res.1.0.0,ocf.sh.1.0.0",
+ *                        NULL, NULL);
+ *   ret |= oc_add_device("/oic/d", "oic.d.thermostat", "My thermostat",
+ *                        "ocf.2.0.5", "ocf.res.1.0.0,ocf.sh.1.0.0",
+ *                        NULL, NULL);
+ *   return ret;
+ * }
+ * ```
+ *
+ * @param uri the The device URI.  The wellknown default URI "/oic/d" is hosted
+ *            by every server. Used to device specific information.
+ * @param rt the resource type
+ * @param name the user readable name of the device
+ * @param spec_version The version of the OCF Server.  This is the "icv" device
+ *                     property
+ * @param data_model_version Spec version of the resource and device
+ * specifications to which this device data model is implemtned. This is the
+ * "dmv" device property
+ * @param add_device_cb callback function that will be invoked once device has
+ *                      been added
+ * @param data context pointer that is passed to the oc_add_device_cb_t
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see init
+ */
 int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
