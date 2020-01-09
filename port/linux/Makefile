@@ -122,9 +122,9 @@ ifeq ($(MNT),1)
 	EXTRA_CFLAGS += -DOC_MNT
 endif
 
-#ifeq ($(SWUPDATE),1)
-#	SAMPLES += smart_home_server_with_mock_swupdate
-#endif
+ifeq ($(SWUPDATE),1)
+	SAMPLES += smart_home_server_with_mock_swupdate
+endif
 
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
