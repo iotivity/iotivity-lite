@@ -316,10 +316,13 @@ coap_receive(oc_message_t *msg)
                 goto send_message;
               } else {
                 OC_DBG("received all blocks for payload");
+                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                      response->mid);
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
+                request_buffer->ref_count = 0;
                 goto request_handler;
               }
             }
@@ -355,12 +358,17 @@ coap_receive(oc_message_t *msg)
                               response_buffer->payload_size)
                                ? 1
                                : 0;
+              if (more == 0) {
+                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                      response->mid);
+              }
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);
               oc_blockwise_response_state_t *response_state =
                 (oc_blockwise_response_state_t *)response_buffer;
               coap_set_header_etag(response, response_state->etag,
                                    COAP_ETAG_LEN);
+              response_buffer->ref_count = more;
               goto send_message;
             } else {
               OC_ERR("could not dispatch block");
