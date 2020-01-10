@@ -130,6 +130,13 @@ oc_delete_link(oc_link_t *link)
   }
 }
 
+static oc_event_callback_retval_t
+links_list_notify_collection(void *data)
+{
+  coap_notify_links_list(data);
+  return OC_EVENT_DONE;
+}
+
 void
 oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
 {
@@ -138,6 +145,7 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
+  oc_set_delayed_callback(collection, links_list_notify_collection, 0);
 }
 
 void
@@ -146,6 +154,7 @@ oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
   if (collection && link) {
     oc_collection_t *c = (oc_collection_t *)collection;
     oc_list_remove(c->links, link);
+    oc_set_delayed_callback(collection, links_list_notify_collection, 0);
   }
 }
 
@@ -377,7 +386,7 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
 }
 
 static oc_event_callback_retval_t
-notify_collection_for_link(void *data)
+batch_notify_collection_for_link(void *data)
 {
   coap_notify_observers(data, NULL, NULL);
   return OC_EVENT_DONE;
@@ -839,7 +848,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                     response_buffer.code <
                       oc_status_code(OC_STATUS_BAD_REQUEST)) {
                   oc_set_delayed_callback(link->resource,
-                                          notify_collection_for_link, 0);
+                                          batch_notify_collection_for_link, 0);
                 }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
