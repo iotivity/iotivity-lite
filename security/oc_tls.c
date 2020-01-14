@@ -795,6 +795,9 @@ oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
     oc_list_remove(ca_certs, cert);
     oc_memb_free(&ca_certs_s, cert);
   }
+  mbedtls_x509_crt_free(&trust_anchors);
+  mbedtls_x509_crt_init(&trust_anchors);
+  oc_tls_refresh_trust_anchors();
 }
 
 static int
