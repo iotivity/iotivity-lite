@@ -42,9 +42,9 @@
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
+#include "security/oc_sp.h"
 #ifdef OC_PKI
 #include "security/oc_keypair.h"
-#include "security/oc_sp.h"
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
@@ -237,8 +237,8 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_doxm(device);
     oc_sec_load_cred(device);
     oc_sec_load_acl(device);
-#ifdef OC_PKI
     oc_sec_load_sp(device);
+#ifdef OC_PKI
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
   }
@@ -293,8 +293,8 @@ oc_main_shutdown(void)
   oc_sec_cred_free();
   oc_sec_doxm_free();
   oc_sec_pstat_free();
-#ifdef OC_PKI
   oc_sec_sp_free();
+#ifdef OC_PKI
   oc_free_ecdsa_keypairs();
 #endif /* OC_PKI */
   oc_tls_shutdown();

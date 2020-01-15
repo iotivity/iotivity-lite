@@ -283,7 +283,7 @@ coap_notify_collection_observers(oc_resource_t *resource,
   /* iterate over observers */
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    if (obs->resource != resource && obs->iface_mask != iface_mask) {
+    if (obs->resource != resource || obs->iface_mask != iface_mask) {
       continue;
     }
 

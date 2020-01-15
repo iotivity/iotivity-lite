@@ -1,7 +1,0 @@
-1) Set CONTIKI path in the Makefile.
-
-2) Perform the build:
-make SERVER=1 <additional options you normally pass; eg. TARGET=...)
-This selects the apps/server_contiki sample.
-Specify CLIENT=1 instead to select the apps/client_contiki sample.
-Add DEBUG=1 to include debug output from IoTivity-Lite.
