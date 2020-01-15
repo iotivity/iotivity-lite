@@ -164,7 +164,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_RES, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_D, device_index),
