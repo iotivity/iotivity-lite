@@ -597,13 +597,13 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
     } else if (memcmp(uri + skip, "oic/sec/cred", 12) == 0) {
       type = OCF_SEC_CRED;
     }
+  } else if ((strlen(uri) - skip) == 10 &&
+             memcmp(uri + skip, "oic/sec/sp", 10) == 0) {
+    type = OCF_SEC_SP;
   }
 #ifdef OC_PKI
-  else if ((strlen(uri) - skip) == 10 &&
-           memcmp(uri + skip, "oic/sec/sp", 10) == 0) {
-    type = OCF_SEC_SP;
-  } else if ((strlen(uri) - skip) == 11 &&
-             memcmp(uri + skip, "oic/sec/csr", 11) == 0) {
+  else if ((strlen(uri) - skip) == 11 &&
+           memcmp(uri + skip, "oic/sec/csr", 11) == 0) {
     type = OCF_SEC_CSR;
   } else if ((strlen(uri) - skip) == 13 &&
              memcmp(uri + skip, "oic/sec/roles", 13) == 0) {

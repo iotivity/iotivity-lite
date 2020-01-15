@@ -156,8 +156,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
 #ifdef OC_PKI
     oc_sec_free_roles_for_device(device);
-    oc_sec_sp_default(device);
 #endif /* OC_PKI */
+    oc_sec_sp_default(device);
 #ifdef OC_SERVER
 #ifdef OC_CLIENT
 #ifdef OC_CLOUD
