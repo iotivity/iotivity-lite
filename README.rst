@@ -32,7 +32,7 @@ Contents
 IoTivity-Lite Architecture
 ---------------------------------
 
-.. image:: IoTivityLite-Arch.png
+.. image:: Architecture.png
    :scale: 100%
    :alt: IoTivity-Lite Architecture
    :align: center

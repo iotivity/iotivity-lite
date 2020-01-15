@@ -132,7 +132,6 @@ oc_sec_load_pstat(size_t device)
   }
 }
 
-#ifdef OC_PKI
 void
 oc_sec_load_sp(size_t device)
 {
@@ -205,6 +204,7 @@ oc_sec_dump_sp(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+#ifdef OC_PKI
 void
 oc_sec_load_ecdsa_keypair(size_t device)
 {
