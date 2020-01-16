@@ -149,7 +149,43 @@ typedef struct
 #endif /* OC_CLIENT */
 } oc_handler_t;
 
+/**
+ * Callback invoked during oc_init_platform(). The purpose is to add any
+ * additional platform properties that are not supplied to oc_init_platform()
+ * function call.
+ *
+ * Example:
+ * ```
+ * static void set_additional_platform_properties(void *data)
+ * {
+ *   (void)data;
+ *   // Manufactures Details Link
+ *   oc_set_custom_platform_property(mnml,
+ * "http://www.example.com/manufacture");
+ *   // Model Number
+ *   oc_set_custom_platform_property(mnmo, "Model No1");
+ *   // Date of Manufacture
+ *   oc_set_custom_platform_property(mndt,"2020/01/17");
+ *   //Serial Number
+ *   oc_set_custom_platform_property(mnsel, "1234567890");
+ * }
+ *
+ * static int app_init(void)
+ * {
+ *   int ret = oc_init_platform("My Platform",
+ * set_additional_platform_properties, NULL); ret |= oc_add_device("/oic/d",
+ * "oic.d.light", "My light", "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL); return
+ * ret;
+ * }
+ * ```
+ *
+ * @param data context pointer that comes from the oc_add_device() function
+ *
+ * @see oc_add_device
+ * @see oc_set_custom_device_property
+ */
 typedef void (*oc_init_platform_cb_t)(void *data);
+
 /**
  * Callback invoked during oc_add_device(). The purpose is to add any additional
  * device properties that are not supplied to oc_add_device() function call.
@@ -171,7 +207,8 @@ typedef void (*oc_init_platform_cb_t)(void *data);
  * }
  * ```
  *
- * @param data context pointer that comes from the oc_add_device() function
+ * @param[in] data context pointer that comes from the oc_init_platform()
+ * function
  *
  * @see oc_add_device
  * @see oc_set_custom_device_property
@@ -195,8 +232,8 @@ typedef void (*oc_add_device_cb_t)(void *data);
  *
  * Not all of the listed functions must be called before calling oc_main_init.
  *
- * @param handler struct containing pointers callback handler functions
- *                responsible for controlling the IoTivity-lite application
+ * @param[in] handler struct containing pointers callback handler functions
+ *                    responsible for controlling the IoTivity-lite application
  * @return
  *  - `0` if stack has been initialized successfully
  *  - a negative number if there is an error in stack initialization
@@ -221,8 +258,8 @@ void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
 /**
  * Add an ocf device to the the stack.
  *
- * This function is typically called from as part of the stack initialization
- * process inside the `init` callback handler.
+ * This function is typically called as part of the stack initialization
+ * process from inside the `init` callback handler.
  *
  * The `oc_add_device` function may be called as many times as needed.
  * Each call will add a new device to the stack with its own port address.
@@ -255,8 +292,9 @@ void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
  * @param data_model_version Spec version of the resource and device
  * specifications to which this device data model is implemtned. This is the
  * "dmv" device property
- * @param add_device_cb callback function that will be invoked once device has
- *                      been added
+ * @param add_device_cb callback function invoked during oc_add_device(). The
+ *                      purpose is to add additional device properties that are
+ *                      not supplied to oc_add_device() function call.
  * @param data context pointer that is passed to the oc_add_device_cb_t
  *
  * @return
@@ -269,12 +307,57 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
 
+/**
+ * Set custom device property
+ *
+ * The purpose is to add additional device properties that are not supplied to
+ * oc_add_device() function call. This function will likely only be used inside
+ * the oc_add_device_cb_t().
+ *
+ * @param[in] prop the name of the custom property being added to the device
+ * @param[in] value the value of the custom property being added to the device
+ *
+ * @see oc_add_device_cb_t for example code using this function
+ * @see oc_add_device
+ */
 #define oc_set_custom_device_property(prop, value)                             \
   oc_rep_set_text_string(root, prop, value)
 
+/**
+ * Initialize the platform.
+ *
+ * This function is typically called as part of the stack initialization
+ * process from inside the `init` callback handler.
+ *
+ * @param[in] mfg_name the name of the platform manufacture
+ * @param[in] init_platform_cb callback function invoked during
+ * oc_init_platform(). The purpose is to add additional device properties that
+ * are not supplied to oc_init_platform() function call.
+ * @param data context pointer that is passed to the oc_init_platform_cb_t
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see init
+ * @see oc_init_platform_cb_t
+ */
 int oc_init_platform(const char *mfg_name,
                      oc_init_platform_cb_t init_platform_cb, void *data);
 
+/**
+ * Set custom platform property.
+ *
+ * The purpose is to add additional platfrom properties that are not supplied to
+ * oc_init_platform() function call. This function will likely only be used
+ * inside the oc_init_platform_cb_t().
+ *
+ * @param[in] prop the name of the custom property being added to the platform
+ * @param[in] value the value of the custom property being added to the platform
+ *
+ * @see oc_init_platform_cb_t for example code using this function
+ * @see oc_init_platform
+ */
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
