@@ -1,0 +1,102 @@
+{
+    "swagger":"2.0",
+    "info":{
+        "title":"Air Purifier",
+        "version":"1.0"
+    },
+    "schemes":[
+        "http"
+    ],
+    "consumes":[
+        "application/json"
+    ],
+    "produces":[
+        "application/json"
+    ],
+    "paths":{
+        "/binaryswitch":{
+            "get":{
+                "parameters":[
+                    {"$ref": "#/parameters/interface"}
+                ],
+                "responses":{
+                    "200":{
+                        "description":"",
+                        "schema":{
+                            "$ref": "#/definitions/BinarySwitch"
+                        }
+                    }
+                }
+            },
+
+            "post": {
+                "description": "",
+                "parameters": [
+                    {"$ref": "#/parameters/interface"},
+                    {"name": "body",
+                    "in": "body",
+                    "required": true,
+                    "schema": { "$ref": "#/definitions/BinarySwitch" }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                    "description" : "",
+                    "schema": { "$ref": "#/definitions/BinarySwitch" }
+                    }
+                }
+            }
+        }             
+    },
+    "definitions":{
+        "BinarySwitch": {
+            "type": "object",
+            "properties": {
+                "rt" : {
+                    "description": "Resource Type",
+                    "items": {
+                    "maxLength": 64,
+                    "type": "string",
+                    "enum": ["oic.r.switch.binary"]
+                    },
+                "default": ["oic.r.switch.binary"],
+                "minItems": 1,
+                "uniqueItems": true,
+                "readOnly": true,
+                "type": "array"
+                },
+                "if" : {
+                    "description": "The OCF Interface set supported by this Resource",
+                    "items": {
+                    "enum": [
+                    "oic.if.baseline",
+                    "oic.if.a"
+                    ],
+                    "type": "string"
+                    },
+                    "minItems": 2,
+                    "uniqueItems": true,
+                    "readOnly": true,
+                    "type": "array"
+                },
+                "value": {
+                    "description": "the status of the switch",
+                    "type": "boolean"
+                }
+            },
+            "required": ["value"]       
+        }
+    },
+    "parameters":{
+        "interface":{
+            "enum":[
+                "oic.if.baseline",
+                "oic.if.a"
+            ],
+            "in":"query",
+            "name":"if",
+            "type":"string"
+        }
+    }
+    
+}
