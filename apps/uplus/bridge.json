@@ -1,0 +1,114 @@
+{
+    "swagger":"2.0",
+    "info":{
+        "title":"Bridge Server",
+        "version":"1.0"
+    },
+    "schemes":[
+        "http"
+    ],
+    "consumes":[
+        "application/json"
+    ],
+    "produces":[
+        "application/json"
+    ],
+    "paths":{
+        "/vodlist":{
+            "get":{
+                "parameters":[
+                    {"$ref": "#/parameters/interface"}
+                ],
+                "responses":{
+                    "200":{
+                        "description":"",
+                        "schema":{
+                            "$ref": "#/definitions/vodlist"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions":{
+        "vodentry" : {
+            "description": "Information for a VOD created by the Bridge",
+            "type": "object",
+            "properties": {
+                "n": {
+                    "type":"string",
+                    "description":"Friendly name of the resource",
+                    "readOnly":true
+                },
+                "di" : {
+                    "description": "The UUID formatted identity of the Resource owner\nFormat pattern according to IETF RFC 4122.",
+                    "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0--9]{12}$",
+                    "type": "string"
+                    
+                },
+                "econame": {
+                "description": "Ecosystem Name of the Bridged Device which is exposed by this VOD",
+                "type": "string",
+                "enum": [ "BLE", "oneM2M", "UPlus", "Zigbee", "Z-Wave" ],
+                "readOnly": true
+                } 
+            },
+            "required": ["n", "di", "econame"]
+            },
+        "vodlist": {
+            "type": "object",
+            "properties": {
+                "rt" : {
+                    "description": "Resource Type",
+                    "items": {
+                    "maxLength": 64,
+                    "type": "string",
+                    "enum": ["oic.r.vodlist"]
+                    },
+                "default": ["oic.r.vodlist"],
+                "minItems": 1,
+                "uniqueItems": true,
+                "readOnly": true,
+                "type": "array"
+                },
+                "if" : {
+                    "description": "The OCF Interface set supported by this Resource",
+                    "items": {
+                    "enum": [
+                    "oic.if.baseline",
+                    "oic.if.r"
+                    ],
+                    "type": "string"
+                    },
+                    "minItems": 2,
+                    "uniqueItems": true,
+                    "readOnly": true,
+                    "type": "array"
+                },
+                "vods": {
+                    "description": "Array of information per VOD created by the Bridge",
+                    "type": "array",
+                    "minItems": 0,
+                    "uniqueItems": true,
+                    "readOnly": true,
+                    "items": {
+                    "$ref": "#/definitions/vodentry"
+                    }
+                }
+            },
+            "required": ["vods"]       
+        }
+    },
+    "parameters":{
+        "interface":{
+            "enum":[
+                "oic.if.baseline",
+                "oic.if.r"
+            ],
+            "in":"query",
+            "name":"if",
+            "type":"string"
+        }
+    }
+    
+}
