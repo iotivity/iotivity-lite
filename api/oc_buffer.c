@@ -144,10 +144,17 @@ oc_send_message(oc_message_t *message)
 
 #ifdef OC_SECURITY
 void
-oc_close_all_tls_sessions(size_t device)
+oc_close_all_tls_sessions_for_device(size_t device)
 {
   oc_process_post(&message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
                   (oc_process_data_t)device);
+}
+
+void
+oc_close_all_tls_sessions(void)
+{
+  oc_process_poll(&(oc_tls_handler));
+  _oc_signal_event_loop();
 }
 #endif /* OC_SECURITY */
 

@@ -780,7 +780,7 @@ send_message:
 
 #ifdef OC_SECURITY
   if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
-    oc_close_all_tls_sessions(msg->endpoint.device);
+    oc_close_all_tls_sessions_for_device(msg->endpoint.device);
   }
 #endif /* OC_SECURITY */
 
