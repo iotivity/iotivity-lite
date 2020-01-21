@@ -316,10 +316,15 @@ coap_receive(oc_message_t *msg)
                 goto send_message;
               } else {
                 OC_DBG("received all blocks for payload");
+                unsigned int cf = 0;
+                int cf_was_set = coap_get_header_content_format(response, &cf);
                 coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
                                       response->mid);
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
+                if (cf_was_set) {
+                  coap_set_header_content_format(response, cf);
+                }
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
                 request_buffer->ref_count = 0;
@@ -359,8 +364,13 @@ coap_receive(oc_message_t *msg)
                                ? 1
                                : 0;
               if (more == 0) {
+                unsigned int cf = 0;
+                int cf_was_set = coap_get_header_content_format(response, &cf);
                 coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
                                       response->mid);
+                if (cf_was_set) {
+                  coap_set_header_content_format(response, cf);
+                }
               }
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);

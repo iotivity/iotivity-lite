@@ -1268,7 +1268,7 @@ coap_set_token(void *packet, const uint8_t *token, size_t token_len)
 
   return coap_pkt->token_len;
 }
-#ifdef OC_CLIENT
+
 int
 coap_get_header_content_format(void *packet, unsigned int *format)
 {
@@ -1280,7 +1280,7 @@ coap_get_header_content_format(void *packet, unsigned int *format)
   *format = coap_pkt->content_format;
   return 1;
 }
-#endif
+
 int
 coap_set_header_content_format(void *packet, unsigned int format)
 {
