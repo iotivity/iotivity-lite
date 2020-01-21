@@ -316,15 +316,17 @@ coap_receive(oc_message_t *msg)
                 goto send_message;
               } else {
                 OC_DBG("received all blocks for payload");
-                unsigned int cf = 0;
-                int cf_was_set = coap_get_header_content_format(response, &cf);
+                if (message->type == COAP_TYPE_CON) {
+                  coap_send_empty_ack(message->mid, &msg->endpoint);
+                }
                 coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
-                                      response->mid);
+                                      coap_get_mid());
+                transaction->mid = response->mid;
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
-                if (cf_was_set) {
-                  coap_set_header_content_format(response, cf);
-                }
+                coap_set_header_content_format(response,
+                                               APPLICATION_VND_OCF_CBOR);
+                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
                 request_buffer->ref_count = 0;
@@ -336,12 +338,6 @@ coap_receive(oc_message_t *msg)
           goto init_reset_message;
         } else if (block2) {
           OC_DBG("processing block2 option");
-          unsigned int accept = 0;
-          if (coap_get_header_accept(message, &accept) == 1) {
-            coap_set_header_content_format(response, accept);
-          } else {
-            coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
-          }
           response_buffer = oc_blockwise_find_response_buffer(
             href, href_len, &msg->endpoint, message->code, message->uri_query,
             message->uri_query_len, OC_BLOCKWISE_SERVER);
@@ -364,14 +360,16 @@ coap_receive(oc_message_t *msg)
                                ? 1
                                : 0;
               if (more == 0) {
-                unsigned int cf = 0;
-                int cf_was_set = coap_get_header_content_format(response, &cf);
-                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
-                                      response->mid);
-                if (cf_was_set) {
-                  coap_set_header_content_format(response, cf);
+                if (message->type == COAP_TYPE_CON) {
+                  coap_send_empty_ack(message->mid, &msg->endpoint);
                 }
+                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                      coap_get_mid());
+                transaction->mid = response->mid;
+                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
               }
+              coap_set_header_content_format(response,
+                                             APPLICATION_VND_OCF_CBOR);
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);
               oc_blockwise_response_state_t *response_state =
