@@ -324,8 +324,6 @@ coap_receive(oc_message_t *msg)
                 transaction->mid = response->mid;
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
-                coap_set_header_content_format(response,
-                                               APPLICATION_VND_OCF_CBOR);
                 coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
