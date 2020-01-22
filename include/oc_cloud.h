@@ -17,6 +17,9 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+/**
+ * @file
+ */
 #ifndef OC_CLOUD_H
 #define OC_CLOUD_H
 
