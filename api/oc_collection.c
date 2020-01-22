@@ -875,7 +875,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         }
       } break;
       default:
-        break;
+        ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+        goto processed_request;
       }
       rep = rep->next;
     }
