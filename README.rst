@@ -307,7 +307,7 @@ discover each other and run without difficulty.
 Send Feedback
 -------------------------------------------------
 Questions
-`IoTivity-Lite Developer Mailing List <https://iotivity-dev@lists.iotivity.org>`_
+`IoTivity-Lite Developer Mailing List <https://iotivity.groups.io/g/iotivity-dev>`_
 
 Bugs
-`Jira bug reporting website <https://jira.iotivity.org/projects/LITE>`_
+`Gitlab issues <https://gitlab.iotivity.org/iotivity/iotivity-lite/issues>`_
