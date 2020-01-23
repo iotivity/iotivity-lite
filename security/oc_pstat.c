@@ -99,8 +99,8 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
   case OC_DOS_SRESET:
     OC_DBG("oc_pstat: dos is SRESET");
     break;
-  case OC_DOS_TIMEOUT:
-    OC_DBG("oc_pstat: dos is TIMEOUT");
+  case OC_DOS_INACTIVE:
+    OC_DBG("oc_pstat: dos is INACTIVE");
     break;
   }
 }
@@ -130,7 +130,7 @@ valid_transition(size_t device, oc_dostype_t state)
     if (state == OC_DOS_RFOTM || state == OC_DOS_RFNOP)
       return false;
     break;
-  case OC_DOS_TIMEOUT:
+  case OC_DOS_INACTIVE:
     return false;
   }
   return true;
@@ -372,17 +372,17 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
     ps->p = false;
   } break;
-  case OC_DOS_TIMEOUT: {
+  case OC_DOS_INACTIVE: {
     ps->p = false;
-    ps->s = OC_DOS_TIMEOUT;
+    ps->s = OC_DOS_INACTIVE;
     ps->cm = 0;
     ps->tm = 0;
     if (doxm->owned || !nil_uuid(&doxm->devowneruuid)) {
 #ifdef OC_DEBUG
       if (!nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("non-Nil doxm:devowneruuid in TIMEOUT");
+        OC_ERR("non-Nil doxm:devowneruuid in INACTIVE");
       }
-      OC_ERR("ERROR in TIMEOUT\n");
+      OC_ERR("ERROR in INACTIVE\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }
@@ -641,7 +641,7 @@ oc_reset()
 bool
 oc_inactive_device(size_t device)
 {
-    oc_sec_pstat_t ps = { .s = OC_DOS_TIMEOUT };
+    oc_sec_pstat_t ps = { .s = OC_DOS_INACTIVE };
     bool ret =oc_pstat_handle_state(&ps, device, false, false);
     oc_sec_dump_pstat(device);
     return ret;

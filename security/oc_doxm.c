@@ -92,7 +92,7 @@ timer_cb(void *data)
     res = OC_EVENT_CONTINUE;
   } else {
       if ( !oc_inactive_device(*device) ) {
-        OC_ERR("oc_doxm: transition to TIMEOUT state failed");
+        OC_ERR("oc_doxm: transition to INACTIVE state failed");
       }
 #ifdef OC_DYNAMIC_ALLOCATION
       free(device);

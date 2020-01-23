@@ -29,7 +29,7 @@ typedef enum {
   OC_DOS_RFPRO,
   OC_DOS_RFNOP,
   OC_DOS_SRESET,
-  OC_DOS_TIMEOUT
+  OC_DOS_INACTIVE
 } oc_dostype_t;
 
 typedef enum {
