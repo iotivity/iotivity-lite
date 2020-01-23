@@ -233,12 +233,18 @@ oc_main_init(const oc_handler_t *handler)
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_load_unique_ids(device);
+    OC_DBG("oc_main_init(): loading pstat");
     oc_sec_load_pstat(device);
+    OC_DBG("oc_main_init(): loading doxm");
     oc_sec_load_doxm(device);
+    OC_DBG("oc_main_init(): loading cred");
     oc_sec_load_cred(device);
+    OC_DBG("oc_main_init(): loading acl");
     oc_sec_load_acl(device);
+    OC_DBG("oc_main_init(): loading sp");
     oc_sec_load_sp(device);
 #ifdef OC_PKI
+    OC_DBG("oc_main_init(): loading ECDSA keypair");
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
   }
