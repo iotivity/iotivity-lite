@@ -218,7 +218,9 @@
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />
     <ClInclude Include="..\..\..\api\oc_mnt.h" />
+    <ClInclude Include="..\..\..\api\oc_resource_factory.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_swupdate_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_acl.h" />
@@ -235,6 +237,7 @@
     <ClInclude Include="..\..\..\include\oc_cred.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
     <ClInclude Include="..\..\..\include\oc_endpoint.h" />
+    <ClInclude Include="..\..\..\include\oc_enums.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
     <ClInclude Include="..\..\..\include\oc_introspection.h" />
     <ClInclude Include="..\..\..\include\oc_network_events.h" />
@@ -317,15 +320,18 @@
     <ClCompile Include="..\..\..\api\oc_core_res.c" />
     <ClCompile Include="..\..\..\api\oc_discovery.c" />
     <ClCompile Include="..\..\..\api\oc_endpoint.c" />
+    <ClCompile Include="..\..\..\api\oc_enums.c" />
     <ClCompile Include="..\..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
     <ClCompile Include="..\..\..\api\oc_main.c" />
     <ClCompile Include="..\..\..\api\oc_mnt.c" />
     <ClCompile Include="..\..\..\api\oc_network_events.c" />
     <ClCompile Include="..\..\..\api\oc_rep.c" />
+    <ClCompile Include="..\..\..\api\oc_resource_factory.c" />
     <ClCompile Include="..\..\..\api\oc_ri.c" />
     <ClCompile Include="..\..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\..\api\oc_session_events.c" />
+    <ClCompile Include="..\..\..\api\oc_swupdate.c" />
     <ClCompile Include="..\..\..\api\oc_uuid.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aes.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aesni.c" />
