@@ -454,8 +454,56 @@ int oc_init_platform(const char *mfg_name,
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
+/**
+ * Callback invoked when an onboarding client requests device ownership via the
+ * Random PIN Ownership Transfer Method (OTM).  The purpose of the callback is
+ * to allow the device to display the random PIN to the user onboarding the
+ * device.
+ *
+ * Example:
+ * ```
+ * #ifdef OC_SECURITY
+ * void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+ * {
+ *  (void)data;
+ *  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+ * }
+ * #endif // OC_SECURITY
+ *
+ * int main(void) {
+ *   ...
+ * #ifdef OC_SECURITY
+ *   oc_storage_config("./server_creds");
+ *   oc_set_random_pin_callback(random_pin_cb, NULL);
+ * #endif // OC_SECURITY
+ *   // handler code omitted from example code see oc_main_init
+ *   oc_main_init(&handler)
+ *   ...
+ *   return 0;
+ * }
+ * ```
+ *
+ * @param[in] data context pointer that comes from the oc_init_platform()
+ *                 function
+ *
+ * @see oc_set_random_pin_callback
+ */
 typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
                                    void *data);
+
+/**
+ * Set the random pin callback for Random PIN Ownership Transfer Method (OTM)
+ *
+ * @note This should be set before invoking oc_main_init().
+ *
+ * @param[in] cb callback function invoked when client requests Random PIN OTM
+ * @param[in] data context pointer that is passed to the oc_random_pin_cb_t the
+ *                 context pointer must be a valid pointer as long as the device
+ *                 is in 'Ready For Ownership Transfer Method' (RFOTM) state.
+ *
+ * @see oc_random_pin_cb_t
+ * @see oc_main_init
+ */
 void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
@@ -479,8 +527,37 @@ bool oc_get_con_res_announced(void);
 */
 void oc_set_con_res_announced(bool announce);
 
+/**
+ * Reset all logical devices to the RFOTM state
+ *
+ * All devices will be placed in the 'Ready For Ownership Transfer Mode'
+ * (RFOTM). This is the initial startup state for for all devices that have not
+ * yet been onboarded.  After this call all devices will need to be onboarded
+ * and provisioned again.
+ *
+ * @note The function oc_reset() deals only with security and provisioning it
+ *       does not reset any other device settings.
+ *
+ * @note Use of this function requires building with OC_SECURITY defined.
+ */
 void oc_reset();
 
+/**
+ * Reset logical device to the RFOTM state
+ *
+ * The device will be placed in the 'Ready For Ownership Transfer Mode' (RFOTM).
+ * This is the initial state startup state for for all devices that have not yet
+ * been onboarded.  After this call the device will need to be onboarded and
+ * provisioned again.
+ *
+ * @note The function oc_reset_device() deals only with security and
+ *       provisioning it does not reset any other device settings.
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param[in] device index of the logical device to reset
+ */
 void oc_reset_device(size_t device);
 
 /** Server side */
