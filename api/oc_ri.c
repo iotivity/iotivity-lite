@@ -1229,7 +1229,7 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
   return cb;
 }
 
-static bool
+bool
 oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
 {
   oc_client_cb_t *cb = oc_list_head(client_cbs);
@@ -1316,7 +1316,6 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
-
   if (payload_len) {
     if (cb->discovery) {
       if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
@@ -1401,7 +1400,6 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       }
     }
   }
-
   return true;
 }
 

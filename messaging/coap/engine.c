@@ -702,11 +702,18 @@ coap_receive(oc_message_t *msg)
         if (request_buffer) {
           request_buffer->ref_count = 0;
         }
-        if (response_buffer) {
-          response_buffer->ref_count = 0;
-        }
+
         oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
                                &msg->endpoint);
+        /* Do not free the response buffer in case of a separate response
+         * signal from the server. In this case, the client_cb continues
+         * to live until the response arrives (or it times out).
+         */
+        if (!oc_ri_is_client_cb_valid(client_cb)) {
+          if (response_buffer) {
+            response_buffer->ref_count = 0;
+          }
+        }
         goto send_message;
 #else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
