@@ -252,7 +252,100 @@ oc_clock_time_t oc_main_poll(void);
  */
 void oc_main_shutdown(void);
 
+/**
+ * Callback invoked by the stack initialization to perform any
+ * "factory settings", e.g., this may be used to load a manufacturer
+ * certificate.
+ *
+ * The following example illustrates the method of loading a manufacturer
+ * certificate chain (end-entity certificate, intermediate CA certificate, and
+ * root CA certificate) using oc_pki_xxx APIs.
+ *
+ * Example:
+ * ```
+ * void factory_presets_cb(size_t device, void *data)
+ * {
+ *   (void)device;
+ *   (void)data;
+ * #if defined(OC_SECURITY) && defined(OC_PKI)
+ *   char cert[8192];
+ *   size_t cert_len = 8192;
+ *   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
+ *     PRINT("ERROR: unable to read certificates\n");
+ *     return;
+ *   }
+ *
+ *   char key[4096];
+ *   size_t key_len = 4096;
+ *   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
+ *     PRINT("ERROR: unable to read private key");
+ *     return;
+ *   }
+ *
+ *   int ee_credid = oc_pki_add_mfg_cert(0, (const unsigned char *)cert,
+ * cert_len, (const unsigned char *)key, key_len);
+ *
+ *   if (ee_credid < 0) {
+ *     PRINT("ERROR installing manufacturer EE cert\n");
+ *     return;
+ *   }
+ *
+ *   cert_len = 8192;
+ *   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
+ *     PRINT("ERROR: unable to read certificates\n");
+ *     return;
+ *   }
+ *
+ *   int subca_credid = oc_pki_add_mfg_intermediate_cert(
+ *     0, ee_credid, (const unsigned char *)cert, cert_len);
+ *
+ *   if (subca_credid < 0) {
+ *     PRINT("ERROR installing intermediate CA cert\n");
+ *     return;
+ *   }
+ *
+ *   cert_len = 8192;
+ *   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+ *     PRINT("ERROR: unable to read certificates\n");
+ *     return;
+ *   }
+ *
+ *   int rootca_credid =
+ *     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+ *   if (rootca_credid < 0) {
+ *     PRINT("ERROR installing root cert\n");
+ *     return;
+ *   }
+ *
+ *   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+ * #endif // OC_SECURITY && OC_PKI
+ * }
+ * ```
+ * @param[in] device number of the device
+ * @param[in] data context pointer that comes from the
+ *                 oc_set_factory_presets_cb() function
+ *
+ * @see oc_set_factory_presets_cb
+ * @see oc_pki_add_mfg_cert
+ * @see oc_pki_add_mfg_intermediate_cert
+ * @see oc_pki_add_mfg_trust_anchor
+ * @see oc_pki_set_security_profile
+ */
 typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
+
+/**
+ * Set the factory presets callback.
+ *
+ * The factory presets callback is called by the stack to enable per-device
+ * presets.
+ *
+ * @note oc_set_factory_presets_cb() must be called before oc_main_init().
+ *
+ * @param[in] cb oc_factory_presets_cb_t function pointer to be called
+ * @param[in] data context pointer that is passed to the oc_factory_presets_cb_t
+ *                 the pointer must be a valid point till after oc_main_init()
+ *                 call completes.
+ */
 void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
 
 /**
@@ -333,7 +426,7 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
  * @param[in] init_platform_cb callback function invoked during
  * oc_init_platform(). The purpose is to add additional device properties that
  * are not supplied to oc_init_platform() function call.
- * @param data context pointer that is passed to the oc_init_platform_cb_t
+ * @param[in] data context pointer that is passed to the oc_init_platform_cb_t
  *
  * @return
  *   - `0` on success
@@ -361,29 +454,110 @@ int oc_init_platform(const char *mfg_name,
 #define oc_set_custom_platform_property(prop, value)                           \
   oc_rep_set_text_string(root, prop, value)
 
+/**
+ * Callback invoked when an onboarding client requests device ownership via the
+ * Random PIN Ownership Transfer Method (OTM).  The purpose of the callback is
+ * to allow the device to display the random PIN to the user onboarding the
+ * device.
+ *
+ * Example:
+ * ```
+ * #ifdef OC_SECURITY
+ * void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+ * {
+ *  (void)data;
+ *  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+ * }
+ * #endif // OC_SECURITY
+ *
+ * int main(void) {
+ *   ...
+ * #ifdef OC_SECURITY
+ *   oc_storage_config("./server_creds");
+ *   oc_set_random_pin_callback(random_pin_cb, NULL);
+ * #endif // OC_SECURITY
+ *   // handler code omitted from example code see oc_main_init
+ *   oc_main_init(&handler)
+ *   ...
+ *   return 0;
+ * }
+ * ```
+ *
+ * @param[in] data context pointer that comes from the oc_init_platform()
+ *                 function
+ *
+ * @see oc_set_random_pin_callback
+ */
 typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
                                    void *data);
+
+/**
+ * Set the random pin callback for Random PIN Ownership Transfer Method (OTM)
+ *
+ * @note This should be set before invoking oc_main_init().
+ *
+ * @param[in] cb callback function invoked when client requests Random PIN OTM
+ * @param[in] data context pointer that is passed to the oc_random_pin_cb_t the
+ *                 context pointer must be a valid pointer as long as the device
+ *                 is in 'Ready For Ownership Transfer Method' (RFOTM) state.
+ *
+ * @see oc_random_pin_cb_t
+ * @see oc_main_init
+ */
 void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
-  @brief Returns whether the oic.wk.con res is announced.
-  @return true if announced (default) or false if not
-  @see oc_set_con_res_announced
-  @see oc_set_con_write_cb
-*/
+ * Returns whether the oic.wk.con resource is advertised.
+ *
+ * @return
+ *  - true if advertised (default)
+ *  - false if not
+ *
+ * @see oc_set_con_res_announced
+ * @see oc_set_con_write_cb
+ */
 bool oc_get_con_res_announced(void);
 
 /**
-  @brief Sets whether the oic.wk.con res is announed.
+  @brief Sets whether the oic.wk.con res is announced.
   @note This should be set before invoking \c oc_main_init().
-  @param announce true to announce (default) or false if not
+  @param[in] announce true to announce (default) or false if not
   @see oc_get_con_res_announced
   @see oc_set_con_write_cb
 */
 void oc_set_con_res_announced(bool announce);
 
+/**
+ * Reset all logical devices to the RFOTM state
+ *
+ * All devices will be placed in the 'Ready For Ownership Transfer Mode'
+ * (RFOTM). This is the initial startup state for for all devices that have not
+ * yet been onboarded.  After this call all devices will need to be onboarded
+ * and provisioned again.
+ *
+ * @note The function oc_reset() deals only with security and provisioning it
+ *       does not reset any other device settings.
+ *
+ * @note Use of this function requires building with OC_SECURITY defined.
+ */
 void oc_reset();
 
+/**
+ * Reset logical device to the RFOTM state
+ *
+ * The device will be placed in the 'Ready For Ownership Transfer Mode' (RFOTM).
+ * This is the initial state startup state for for all devices that have not yet
+ * been onboarded.  After this call the device will need to be onboarded and
+ * provisioned again.
+ *
+ * @note The function oc_reset_device() deals only with security and
+ *       provisioning it does not reset any other device settings.
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param[in] device index of the logical device to reset
+ */
 void oc_reset_device(size_t device);
 
 /** Server side */

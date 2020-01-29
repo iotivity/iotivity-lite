@@ -142,9 +142,9 @@ main(void)
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./server_block_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   oc_set_mtu_size(200);
   oc_set_max_app_data_size(2048);
