@@ -89,6 +89,7 @@ void oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di);
 int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);
 int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                           oc_string_t *uri);
+int oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path);
 int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
 int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
 int oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2);

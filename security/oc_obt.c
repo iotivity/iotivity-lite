@@ -14,10 +14,16 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #ifndef OC_DYNAMIC_ALLOCATION
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifndef OC_STORAGE
+#error Preprocessor macro OC_SECURITY is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
+#endif
 
 #include "oc_obt.h"
 #include "oc_core_res.h"
