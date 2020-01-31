@@ -20,8 +20,7 @@
 #include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -54,7 +53,8 @@ void oc_sec_pstat_init(void);
 void oc_sec_pstat_free(void);
 bool oc_sec_is_operational(size_t device);
 bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device);
-void oc_sec_encode_pstat(size_t device);
+void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
+                         bool to_storage);
 oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
 void oc_sec_pstat_default(size_t device);
 void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,

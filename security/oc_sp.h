@@ -21,8 +21,7 @@
 #include "oc_pki.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct
@@ -35,7 +34,8 @@ typedef struct
 void oc_sec_sp_init(void);
 void oc_sec_sp_free(void);
 bool oc_sec_decode_sp(oc_rep_t *rep, size_t device);
-void oc_sec_encode_sp(size_t device);
+void oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask,
+                      bool to_storage);
 oc_sec_sp_t *oc_sec_get_sp(size_t device);
 void oc_sec_sp_default(size_t device);
 void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);

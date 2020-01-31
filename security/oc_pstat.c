@@ -406,15 +406,18 @@ oc_sec_pstat_default(size_t device)
 }
 
 void
-oc_sec_encode_pstat(size_t device)
+oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
+                    bool to_storage)
 {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
 #endif /* OC_DEBUG */
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+  }
   oc_rep_set_object(root, dos);
   oc_rep_set_boolean(dos, p, pstat[device].p);
   oc_rep_set_int(dos, s, pstat[device].s);
@@ -563,8 +566,9 @@ get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
-    oc_sec_encode_pstat(request->resource->device);
+    oc_sec_encode_pstat(request->resource->device, iface_mask, false);
     oc_send_response(request, OC_STATUS_OK);
   } break;
   default:

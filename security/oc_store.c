@@ -190,7 +190,7 @@ oc_sec_dump_sp(size_t device)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_sp(device);
+  oc_sec_encode_sp(device, 0, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded sp size %d", size);
@@ -376,7 +376,7 @@ oc_sec_dump_pstat(size_t device)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_pstat(device);
+  oc_sec_encode_pstat(device, 0, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded pstat size %d", size);
@@ -402,7 +402,7 @@ oc_sec_dump_cred(size_t device)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_cred(true, device);
+  oc_sec_encode_cred(true, device, 0, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d", size);
@@ -429,7 +429,7 @@ oc_sec_dump_doxm(size_t device)
 
   /* doxm */
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_doxm(device, true);
+  oc_sec_encode_doxm(device, 0, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded doxm size %d", size);
@@ -455,7 +455,7 @@ oc_sec_dump_acl(size_t device)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
-  oc_sec_encode_acl(device);
+  oc_sec_encode_acl(device, 0, true);
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d", size);

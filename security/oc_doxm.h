@@ -26,8 +26,7 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum oc_sec_doxmtype_t {
@@ -51,7 +50,8 @@ typedef struct
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
-void oc_sec_encode_doxm(size_t device, bool to_storage);
+void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
+                        bool to_storage);
 oc_sec_doxm_t *oc_sec_get_doxm(size_t device);
 void oc_sec_doxm_default(size_t device);
 void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,

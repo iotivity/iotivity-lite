@@ -474,12 +474,15 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 }
 
 bool
-oc_sec_encode_acl(size_t device)
+oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
+                  bool to_storage)
 {
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+  }
   oc_rep_set_array(root, aclist2);
   oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
 
@@ -1118,9 +1121,8 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)iface_mask;
   (void)data;
-  if (oc_sec_encode_acl(request->resource->device)) {
+  if (oc_sec_encode_acl(request->resource->device, iface_mask, false)) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);

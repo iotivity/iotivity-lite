@@ -674,12 +674,15 @@ oc_cred_read_encoding(oc_sec_encoding_t encoding)
 
 #ifdef OC_PKI
 static void
-oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
+oc_sec_encode_roles(oc_tls_peer_t *client, size_t device,
+                    oc_interface_mask_t iface_mask)
 {
   oc_sec_cred_t *cr = oc_sec_get_roles(client);
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_ROLES, device));
+  if (iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_ROLES, device));
+  }
   oc_rep_set_array(root, roles);
   while (cr != NULL) {
     oc_rep_object_array_start_item(roles);
@@ -719,13 +722,16 @@ oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
 #endif /* OC_PKI */
 
 void
-oc_sec_encode_cred(bool persist, size_t device)
+oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
+                   bool to_storage)
 {
   oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_CRED, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_CRED, device));
+  }
   oc_rep_set_array(root, creds);
   while (cr != NULL) {
     oc_rep_object_array_start_item(creds);
@@ -1098,7 +1104,6 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 void
 get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)iface_mask;
   (void)data;
   bool roles_resource = false;
 #ifdef OC_PKI
@@ -1109,12 +1114,12 @@ get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 #endif /* OC_PKI */
   if (!roles_resource) {
-    oc_sec_encode_cred(false, request->resource->device);
+    oc_sec_encode_cred(false, request->resource->device, iface_mask, false);
   }
 #ifdef OC_PKI
   else {
     client = oc_tls_get_peer(request->origin);
-    oc_sec_encode_roles(client, request->resource->device);
+    oc_sec_encode_roles(client, request->resource->device, iface_mask);
   }
 #endif /* OC_PKI */
   oc_send_response(request, OC_STATUS_OK);
