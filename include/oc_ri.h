@@ -105,14 +105,14 @@ typedef enum {
 #endif /* OC_SOFTWARE_UPDATE */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #ifdef OC_WIFI_EASYSETUP
-  OCF_ES,
-  OCF_ES_WIFI,
-  OCF_ES_DEVICE,
+  OCF_WES,
+  OCF_WES_WIFI,
+  OCF_WES_DEVICE,
 #endif /* OC_WIFI_EASYSETUP */
 #ifdef OC_ESIM_EASYSETUP
   OCF_EES,
   OCF_EES_RSP,
-  OCF_EES_RSP_CAP,
+  OCF_EES_RSPCAP,
 #endif /* OC_ESM_EASYSETUP */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 #ifdef OC_SECURITY
