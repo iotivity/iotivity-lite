@@ -94,7 +94,9 @@ int coap_notify_collection_observers(oc_resource_t *resource,
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           oc_endpoint_t *endpoint);
-int coap_notify_links_list(oc_collection_t *collection);
+int coap_notify_collection_links_list(oc_collection_t *collection);
+int coap_notify_collection_batch(oc_collection_t *collection);
+int coap_notify_collection_baseline(oc_collection_t *collection);
 
 #ifdef OC_BLOCK_WISE
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,

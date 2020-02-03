@@ -968,38 +968,29 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         }
 #if defined(OC_COLLECTIONS)
         if (resource_is_collection) {
-          /* The implementation currently permits observations of collections
-           * via
-           * only the batch interface.
-           */
-          if (iface_mask != OC_IF_B && iface_mask != OC_IF_LL &&
-              iface_mask != OC_IF_CREATE) {
-            set_observe_option = false;
-          } else {
-            oc_collection_t *collection = (oc_collection_t *)cur_resource;
-            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+          oc_collection_t *collection = (oc_collection_t *)cur_resource;
+          oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
 #ifdef OC_SECURITY
-            while (links) {
-              if (links->resource &&
-                  links->resource->properties & OC_OBSERVABLE) {
-                if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
-                  set_observe_option = false;
-                  break;
-                }
+          while (links) {
+            if (links->resource &&
+                links->resource->properties & OC_OBSERVABLE) {
+              if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
+                set_observe_option = false;
+                break;
               }
-              links = links->next;
             }
+            links = links->next;
+          }
 #endif /* OC_SECURITY */
-            if (set_observe_option) {
-              if (iface_mask == OC_IF_B) {
-                links = (oc_link_t *)oc_list_head(collection->links);
-                while (links) {
-                  if (links->resource &&
-                      links->resource->properties & OC_PERIODIC) {
-                    add_periodic_observe_callback(links->resource);
-                  }
-                  links = links->next;
+          if (set_observe_option) {
+            if (iface_mask == OC_IF_B) {
+              links = (oc_link_t *)oc_list_head(collection->links);
+              while (links) {
+                if (links->resource &&
+                    links->resource->properties & OC_PERIODIC) {
+                  add_periodic_observe_callback(links->resource);
                 }
+                links = links->next;
               }
             }
           }
@@ -1388,6 +1379,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
       while (dup_cb != NULL) {
         if (dup_cb != cb && dup_cb->observe_seq != -1 &&
+            dup_cb->token_len == cb->token_len &&
+            memcmp(dup_cb->token, cb->token, cb->token_len) == 0 &&
             oc_string_len(dup_cb->uri) == uri_len &&
             strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
             oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
