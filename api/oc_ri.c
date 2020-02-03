@@ -1343,6 +1343,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   } else {
     if (pkt->type == COAP_TYPE_ACK && pkt->code == 0) {
       separate = true;
+      cb->separate = 1;
     } else if (!cb->discovery) {
       oc_response_handler_t handler =
         (oc_response_handler_t)cb->handler.response;

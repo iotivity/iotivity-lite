@@ -150,6 +150,10 @@ coap_receive(oc_message_t *msg)
   oc_blockwise_state_t *request_buffer = NULL, *response_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
+#ifdef OC_CLIENT
+  oc_client_cb_t *client_cb = 0;
+#endif /* OC_CLIENT */
+
 #ifdef OC_TCP
   if (msg->endpoint.flags & TCP) {
     coap_status_code =
@@ -544,7 +548,6 @@ coap_receive(oc_message_t *msg)
       uint16_t response_mid = coap_get_mid();
       bool error_response = false;
 #endif /* OC_BLOCK_WISE */
-      oc_client_cb_t *client_cb = 0;
       if (message->type != COAP_TYPE_RST) {
         client_cb =
           oc_ri_find_client_cb_by_token(message->token, message->token_len);
@@ -574,6 +577,10 @@ coap_receive(oc_message_t *msg)
           &msg->endpoint, client_cb);
       } else {
         request_buffer = oc_blockwise_find_request_buffer_by_mid(message->mid);
+        if (!request_buffer) {
+          request_buffer = oc_blockwise_find_request_buffer_by_token(
+            message->token, message->token_len);
+        }
       }
       if (!error_response && request_buffer &&
           (block1 || message->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
@@ -654,6 +661,10 @@ coap_receive(oc_message_t *msg)
       } else {
         response_buffer =
           oc_blockwise_find_response_buffer_by_mid(message->mid);
+        if (!response_buffer) {
+          response_buffer = oc_blockwise_find_response_buffer_by_token(
+            message->token, message->token_len);
+        }
       }
       if (!error_response && response_buffer) {
         OC_DBG("got response buffer for uri %s",
@@ -709,11 +720,12 @@ coap_receive(oc_message_t *msg)
          * signal from the server. In this case, the client_cb continues
          * to live until the response arrives (or it times out).
          */
-        if (!oc_ri_is_client_cb_valid(client_cb)) {
+        if (client_cb->separate == 0) {
           if (response_buffer) {
             response_buffer->ref_count = 0;
           }
         }
+        client_cb->separate = 0;
         goto send_message;
 #else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
@@ -765,6 +777,16 @@ send_message:
               i += sizeof(r);
             }
             response->token_len = (uint8_t)i;
+            if (request_buffer) {
+              memcpy(request_buffer->token, response->token,
+                     response->token_len);
+              request_buffer->token_len = response->token_len;
+            }
+            if (response_buffer) {
+              memcpy(response_buffer->token, response->token,
+                     response->token_len);
+              response_buffer->token_len = response->token_len;
+            }
           } else {
             coap_set_token(response, message->token, message->token_len);
           }
