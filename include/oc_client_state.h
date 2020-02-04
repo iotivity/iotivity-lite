@@ -85,6 +85,7 @@ typedef struct oc_client_cb_t
   bool multicast;
   bool stop_multicast_receive;
   uint8_t ref_count;
+  uint8_t separate;
 } oc_client_cb_t;
 
 #ifdef OC_BLOCK_WISE

@@ -131,9 +131,24 @@ oc_delete_link(oc_link_t *link)
 }
 
 static oc_event_callback_retval_t
+batch_notify_collection(void *data)
+{
+  coap_notify_collection_batch(data);
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+baseline_notify_collection(void *data)
+{
+  coap_notify_collection_baseline(data);
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
 links_list_notify_collection(void *data)
 {
-  coap_notify_links_list(data);
+  coap_notify_collection_links_list(data);
+  oc_set_delayed_callback(data, baseline_notify_collection, 0);
   return OC_EVENT_DONE;
 }
 
@@ -383,13 +398,6 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
   }
 
   return collection;
-}
-
-static oc_event_callback_retval_t
-batch_notify_collection_for_link(void *data)
-{
-  coap_notify_observers(data, NULL, NULL);
-  return OC_EVENT_DONE;
 }
 
 bool
@@ -904,8 +912,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if ((method == OC_PUT || method == OC_POST) &&
                     response_buffer.code <
                       oc_status_code(OC_STATUS_BAD_REQUEST)) {
-                  oc_set_delayed_callback(link->resource,
-                                          batch_notify_collection_for_link, 0);
                 }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
@@ -974,8 +980,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
   if ((method == OC_PUT || method == OC_POST) &&
       code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-    coap_notify_collection_observers(
-      request->resource, request->response->response_buffer, iface_mask);
+    if (iface_mask == OC_IF_CREATE) {
+      coap_notify_collection_observers(
+        request->resource, request->response->response_buffer, iface_mask);
+    } else if (iface_mask == OC_IF_B) {
+      oc_set_delayed_callback(request->resource, batch_notify_collection, 0);
+    }
   }
 
   return true;

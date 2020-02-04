@@ -52,6 +52,8 @@ typedef struct oc_blockwise_state_s
 #endif /* !OC_DYNAMIC_ALLOCATION */
   oc_string_t uri_query;
 #ifdef OC_CLIENT
+  uint8_t token[COAP_TOKEN_LEN];
+  uint8_t token_len;
   uint16_t mid;
   void *client_cb;
 #endif /* OC_CLIENT */
@@ -75,6 +77,12 @@ typedef struct oc_blockwise_response_state_s
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_mid(uint16_t mid);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(uint16_t mid);
+
+oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_token(
+  uint8_t *token, uint8_t token_len);
+
+oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_token(
+  uint8_t *token, uint8_t token_len);
 
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
