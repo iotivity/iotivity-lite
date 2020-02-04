@@ -20,6 +20,7 @@
 #include "api/oc_main.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
+#include "oc_ael.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
@@ -150,6 +151,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
+    oc_sec_ael_default(device);
     if (!from_storage && oc_get_con_res_announced()) {
       oc_device_info_t *di = oc_core_get_device_info(device);
       oc_free_string(&di->name);

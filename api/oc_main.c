@@ -43,6 +43,7 @@
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
 #include "security/oc_sp.h"
+#include "security/oc_ael.h"
 #ifdef OC_PKI
 #include "security/oc_keypair.h"
 #endif /* OC_PKI */
@@ -243,6 +244,8 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_acl(device);
     OC_DBG("oc_main_init(): loading sp");
     oc_sec_load_sp(device);
+    OC_DBG("oc_main_init(): loading ael");
+    oc_sec_load_ael(device);
 #ifdef OC_PKI
     OC_DBG("oc_main_init(): loading ECDSA keypair");
     oc_sec_load_ecdsa_keypair(device);
@@ -299,6 +302,7 @@ oc_main_shutdown(void)
   oc_sec_cred_free();
   oc_sec_doxm_free();
   oc_sec_pstat_free();
+  oc_sec_ael_free();
   oc_sec_sp_free();
 #ifdef OC_PKI
   oc_free_ecdsa_keypairs();

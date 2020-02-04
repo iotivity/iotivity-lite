@@ -206,6 +206,10 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
                       request, oc_string(anchor), links, device_index))
     matches++;
 
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_AEL, device_index),
+                      request, oc_string(anchor), links, device_index))
+    matches++;
+
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
                       request, oc_string(anchor), links, device_index))
     matches++;
@@ -432,6 +436,10 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
     matches++;
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), request,
+        oc_rep_array(links)))
+    matches++;
+  if (filter_oic_1_1_resource(
+        oc_core_get_resource_by_index(OCF_SEC_AEL, device_num), request,
         oc_rep_array(links)))
     matches++;
 

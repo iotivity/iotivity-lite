@@ -52,6 +52,7 @@
 #include "oc_roles.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
+#include "oc_audit.h"
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -516,6 +517,16 @@ oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
   return ret;
 }
 
+static void
+oc_tls_audit_log(const char *aeid, const char *message, uint8_t category, uint8_t priority,
+           oc_tls_peer_t *peer)
+{
+  char buff[IPADDR_BUFF_SIZE];
+  SNPRINTFipaddr(buff, IPADDR_BUFF_SIZE, peer->endpoint);
+  char *aux[] = {buff};
+  oc_audit_log(aeid, message, category, priority, (const char **)aux, 1);
+}
+
 static int
 get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
            size_t identity_len)
@@ -575,6 +586,8 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     }
   }
   OC_ERR("oc_tls: could not find peer credential");
+  oc_tls_audit_log("AUTH-1", "DLTS handshake error, could not find peer credential",
+                   0x08, 1, peer);
   return -1;
 }
 
@@ -1072,6 +1085,8 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       if (oc_certs_validate_non_end_entity_cert(
             crt, false, ps->s == OC_DOS_RFOTM, depth) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
+        oc_tls_audit_log("AUTH-1", "DLTS handshake error, failed to verify root or intermediate cert",
+                         0x08, 1, peer);
         return -1;
       }
     } else {
@@ -1091,6 +1106,8 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     }
   } else if (oc_certs_validate_end_entity_cert(crt) < 0) {
     OC_ERR("failed to verify end entity cert");
+    oc_tls_audit_log("AUTH-1", "DLTS handshake error, failed to verify end entity cert",
+                     0x08, 1, peer);
     return -1;
   }
 
