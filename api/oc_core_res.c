@@ -45,7 +45,7 @@ static oc_device_info_t oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 static oc_platform_info_t oc_platform_info;
 
-static bool announce_con_res = true;
+static bool announce_con_res = false;
 static size_t device_count = 0;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
@@ -323,9 +323,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
-#ifndef OC_SECURITY
   oc_gen_uuid(&oc_device_info[device_count].piid);
-#endif /* !OC_SECURITY */
 
   oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
   oc_new_string(&oc_device_info[device_count].icv, spec_version,

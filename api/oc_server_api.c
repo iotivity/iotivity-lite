@@ -90,6 +90,9 @@ oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid)
   if (piid && device < oc_core_get_num_devices()) {
     oc_device_info_t *info = oc_core_get_device_info(device);
     if (info) {
+#ifdef OC_SECURITY
+      oc_sec_load_unique_ids(device);
+#endif /* OC_SECURITY */
       memcpy(info->piid.id, piid->id, sizeof(oc_uuid_t));
 #ifdef OC_SECURITY
       oc_sec_dump_unique_ids(device);
