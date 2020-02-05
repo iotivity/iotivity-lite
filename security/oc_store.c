@@ -522,7 +522,10 @@ oc_sec_load_unique_ids(size_t device)
       }
     }
     oc_free_rep(p);
+  } else {
+    oc_sec_dump_unique_ids(device);
   }
+
 #ifdef OC_DYNAMIC_ALLOCATION
   free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */

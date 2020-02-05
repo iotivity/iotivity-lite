@@ -1159,6 +1159,13 @@ notify_client_cb_503(oc_client_cb_t *cb)
   oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
   handler(&client_response);
 
+#ifdef OC_TCP
+  if ((oc_string_len(cb->uri) == 5 &&
+       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
+    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
+  }
+#endif /* OC_TCP */
+
   free_client_cb(cb);
 }
 
