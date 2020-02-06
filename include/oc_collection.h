@@ -63,6 +63,8 @@ struct oc_collection_s
   oc_request_handler_t put_handler;
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
+  oc_properties_cb_t get_properties;
+  oc_properties_cb_t set_properties;
   uint8_t num_observers;
   uint8_t num_links;
   OC_LIST_STRUCT(mandatory_rts);

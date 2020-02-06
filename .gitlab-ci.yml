@@ -1,0 +1,10 @@
+---
+image: gcc
+
+build:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+  script:
+    - cd port/linux
+    - make

@@ -31,9 +31,9 @@ OC_LIST(oc_blockwise_requests);
 OC_LIST(oc_blockwise_responses);
 
 static oc_blockwise_state_t *
-oc_blockwise_init_buffer(struct oc_memb *pool, const char *href, size_t href_len,
-                         oc_endpoint_t *endpoint, oc_method_t method,
-                         oc_blockwise_role_t role)
+oc_blockwise_init_buffer(struct oc_memb *pool, const char *href,
+                         size_t href_len, oc_endpoint_t *endpoint,
+                         oc_method_t method, oc_blockwise_role_t role)
 {
   if (href_len == 0)
     return NULL;
@@ -184,12 +184,12 @@ oc_blockwise_scrub_buffers_for_client_cb(void *cb)
 #endif /* OC_CLIENT */
 
 void
-oc_blockwise_scrub_buffers()
+oc_blockwise_scrub_buffers(bool all)
 {
   oc_blockwise_state_t *buffer = oc_list_head(oc_blockwise_requests), *next;
   while (buffer != NULL) {
     next = buffer->next;
-    if (buffer->ref_count == 0) {
+    if (buffer->ref_count == 0 || all) {
       oc_blockwise_free_request_buffer(buffer);
     }
     buffer = next;
@@ -198,7 +198,7 @@ oc_blockwise_scrub_buffers()
   buffer = oc_list_head(oc_blockwise_responses);
   while (buffer != NULL) {
     next = buffer->next;
-    if (buffer->ref_count == 0) {
+    if (buffer->ref_count == 0 || all) {
       oc_blockwise_free_response_buffer(buffer);
     }
     buffer = next;
@@ -206,6 +206,35 @@ oc_blockwise_scrub_buffers()
 }
 
 #ifdef OC_CLIENT
+static oc_blockwise_state_t *
+oc_blockwise_find_buffer_by_token(oc_list_t list, uint8_t *token,
+                                  uint8_t token_len)
+{
+  oc_blockwise_state_t *buffer = oc_list_head(list);
+  while (buffer) {
+    if (token_len > 0 && buffer->role == OC_BLOCKWISE_CLIENT &&
+        buffer->token_len == token_len &&
+        memcmp(buffer->token, token, token_len) == 0)
+      break;
+    buffer = buffer->next;
+  }
+  return buffer;
+}
+
+oc_blockwise_state_t *
+oc_blockwise_find_request_buffer_by_token(uint8_t *token, uint8_t token_len)
+{
+  return oc_blockwise_find_buffer_by_token(oc_blockwise_requests, token,
+                                           token_len);
+}
+
+oc_blockwise_state_t *
+oc_blockwise_find_response_buffer_by_token(uint8_t *token, uint8_t token_len)
+{
+  return oc_blockwise_find_buffer_by_token(oc_blockwise_responses, token,
+                                           token_len);
+}
+
 static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid)
 {
@@ -328,8 +357,9 @@ oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 {
   if (incoming_block_offset >= (unsigned)OC_MAX_APP_DATA_SIZE ||
       incoming_block_size > (OC_MAX_APP_DATA_SIZE - incoming_block_offset) ||
-      incoming_block_offset > buffer->next_block_offset)
+      incoming_block_offset > buffer->next_block_offset) {
     return false;
+  }
 
   if (buffer->next_block_offset == incoming_block_offset) {
     memcpy(&buffer->buffer[buffer->next_block_offset], incoming_block,

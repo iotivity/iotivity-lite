@@ -129,7 +129,8 @@ send_ping(uint16_t timeout_seconds)
 
 #ifdef OC_TCP
   if (target_ep.flags & TCP) {
-    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler, NULL)) {
+    if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler,
+                      NULL)) {
       printf("oc_send_ping failed\n");
     }
   } else
@@ -270,7 +271,6 @@ discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
   }
 
 exit:
-  oc_free_server_endpoints(endpoint);
   return ret;
 }
 
@@ -390,12 +390,13 @@ main(void)
   set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop =
+                                          signal_event_loop };
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./client_multithread_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
     printf("pthread_mutex_init failed!\n");
@@ -421,8 +422,8 @@ main(void)
     goto exit;
   }
 
-  custom_func_s first_func = {.func = find_first_endpoint };
-  custom_func_s same_func = {.func = find_same_endpoint };
+  custom_func_s first_func = { .func = find_first_endpoint };
+  custom_func_s same_func = { .func = find_same_endpoint };
 
   int key;
   while (quit != 1) {

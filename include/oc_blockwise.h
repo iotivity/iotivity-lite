@@ -52,6 +52,8 @@ typedef struct oc_blockwise_state_s
 #endif /* !OC_DYNAMIC_ALLOCATION */
   oc_string_t uri_query;
 #ifdef OC_CLIENT
+  uint8_t token[COAP_TOKEN_LEN];
+  uint8_t token_len;
   uint16_t mid;
   void *client_cb;
 #endif /* OC_CLIENT */
@@ -76,6 +78,12 @@ oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_mid(uint16_t mid);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(uint16_t mid);
 
+oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_token(
+  uint8_t *token, uint8_t token_len);
+
+oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_token(
+  uint8_t *token, uint8_t token_len);
+
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
 
@@ -83,20 +91,22 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
   oc_endpoint_t *endpoint, void *client_cb);
 
 oc_blockwise_state_t *oc_blockwise_find_request_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  const char *query, size_t query_len, oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, const char *query, size_t query_len,
+  oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_find_response_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  const char *query, size_t query_len, oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, const char *query, size_t query_len,
+  oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, oc_blockwise_role_t role);
 
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint, oc_method_t method,
-  oc_blockwise_role_t role);
+  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  oc_method_t method, oc_blockwise_role_t role);
 
 void oc_blockwise_free_request_buffer(oc_blockwise_state_t *buffer);
 
@@ -112,7 +122,7 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
                                const uint8_t *incoming_block,
                                uint32_t incoming_block_size);
 
-void oc_blockwise_scrub_buffers(void);
+void oc_blockwise_scrub_buffers(bool all);
 
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
 

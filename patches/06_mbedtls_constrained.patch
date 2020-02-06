@@ -1,18 +1,8 @@
-From fab6a1dd40001636d9b367062ad7f6ffa71c1129 Mon Sep 17 00:00:00 2001
-From: Kishen Maloor <kishen.maloor@intel.com>
-Date: Sat, 12 Oct 2019 15:41:55 +0300
-Subject: [PATCH] ocf constrained
-
----
- include/mbedtls/config.h | 3344 ++--------------------------------------------
- library/entropy_poll.c   |   24 +-
- 2 files changed, 122 insertions(+), 3246 deletions(-)
-
 diff --git a/include/mbedtls/config.h b/include/mbedtls/config.h
-index 654f972..774aef4 100644
+index 654f9725e..fd6446b38 100644
 --- a/include/mbedtls/config.h
 +++ b/include/mbedtls/config.h
-@@ -1,3294 +1,150 @@
+@@ -1,3294 +1,154 @@
 -/**
 - * \file config.h
 - *
@@ -1641,7 +1631,7 @@ index 654f972..774aef4 100644
 - * Comment this macro to disable support for server name indication in SSL
 - */
 -#define MBEDTLS_SSL_SERVER_NAME_INDICATION
--
+ 
 -/**
 - * \def MBEDTLS_SSL_TRUNCATED_HMAC
 - *
@@ -1745,7 +1735,7 @@ index 654f972..774aef4 100644
 - * Comment to skip keyUsage checking for both CA and leaf certificates.
 - */
 -#define MBEDTLS_X509_CHECK_KEY_USAGE
- 
+-
 -/**
 - * \def MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 - *
@@ -3158,8 +3148,6 @@ index 654f972..774aef4 100644
 -/* SSL Cache options */
 -//#define MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT       86400 /**< 1 day  */
 -//#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
--
--/* SSL options */
 +#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 +#define MBEDTLS_ECP_C
 +#define MBEDTLS_BIGNUM_C
@@ -3170,6 +3158,9 @@ index 654f972..774aef4 100644
 +#define MBEDTLS_RSA_C
 +#define MBEDTLS_PKCS1_V15
 +#define MBEDTLS_X509_CRT_PARSE_C
+ 
+-/* SSL options */
++#define MBEDTLS_X509_USE_C
  
 -/** \def MBEDTLS_SSL_MAX_CONTENT_LEN
 - *
@@ -3196,7 +3187,10 @@ index 654f972..774aef4 100644
 - * incoming and outgoing I/O buffers.
 - */
 -//#define MBEDTLS_SSL_MAX_CONTENT_LEN             16384
-+#define MBEDTLS_X509_USE_C
++#define MBEDTLS_ASN1_PARSE_C
++#define MBEDTLS_OID_C
++#define MBEDTLS_PK_PARSE_C
++#define MBEDTLS_PK_C
  
 -/** \def MBEDTLS_SSL_IN_CONTENT_LEN
 - *
@@ -3222,10 +3216,7 @@ index 654f972..774aef4 100644
 - * independently of the outgoing I/O buffer.
 - */
 -//#define MBEDTLS_SSL_IN_CONTENT_LEN              16384
-+#define MBEDTLS_ASN1_PARSE_C
-+#define MBEDTLS_OID_C
-+#define MBEDTLS_PK_PARSE_C
-+#define MBEDTLS_PK_C
++#define MBEDTLS_CIPHER_MODE_CBC
  
 -/** \def MBEDTLS_SSL_OUT_CONTENT_LEN
 - *
@@ -3250,7 +3241,7 @@ index 654f972..774aef4 100644
 - * independently of the incoming I/O buffer.
 - */
 -//#define MBEDTLS_SSL_OUT_CONTENT_LEN             16384
-+#define MBEDTLS_CIPHER_MODE_CBC
++#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
  
 -/** \def MBEDTLS_SSL_DTLS_MAX_BUFFERING
 - *
@@ -3268,11 +3259,6 @@ index 654f972..774aef4 100644
 - *
 - */
 -//#define MBEDTLS_SSL_DTLS_MAX_BUFFERING             32768
-+#define MBEDTLS_SSL_SRV_RESPECT_CLIENT_PREFERENCE
- 
--//#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
--//#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
--//#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
 +#define MBEDTLS_SSL_EXTENDED_MASTER_SECRET
 +#define MBEDTLS_SSL_ALL_ALERT_MESSAGES
 +#define MBEDTLS_PKCS5_C
@@ -3280,6 +3266,11 @@ index 654f972..774aef4 100644
 +#define MBEDTLS_ECDSA_C
 +#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 +#define MBEDTLS_CCM_C
+ 
+-//#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
+-//#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
+-//#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
++#define MBEDTLS_GCM_C
  
 -/**
 - * Complete list of ciphersuites to use, in order of preference.
@@ -3294,13 +3285,15 @@ index 654f972..774aef4 100644
 - * The value below is only an example, not the default.
 - */
 -//#define MBEDTLS_SSL_CIPHERSUITES MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-+#define MBEDTLS_GCM_C
++#define MBEDTLS_ECP_C
++#define MBEDTLS_ASN1_WRITE_C
  
 -/* X509 options */
 -//#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */
 -//#define MBEDTLS_X509_MAX_FILE_PATH_LEN     512 /**< Maximum length of a path/filename string in bytes including the null terminator character ('\0'). */
-+#define MBEDTLS_ECP_C
-+#define MBEDTLS_ASN1_WRITE_C
++#define MBEDTLS_PEM_PARSE_C
++#define MBEDTLS_BASE64_C
++#define MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
  
 -/**
 - * Allow SHA-1 in the default TLS configuration for certificate signing.
@@ -3315,9 +3308,8 @@ index 654f972..774aef4 100644
 - *
 - */
 -// #define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES
-+#define MBEDTLS_PEM_PARSE_C
-+#define MBEDTLS_BASE64_C
-+#define MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
++#define MBEDTLS_PK_WRITE_C //extract public key
++#define MBEDTLS_PEM_WRITE_C
  
 -/**
 - * Allow SHA-1 in the default TLS configuration for TLS 1.2 handshake
@@ -3335,8 +3327,9 @@ index 654f972..774aef4 100644
 - *
 - */
 -#define MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_KEY_EXCHANGE
-+#define MBEDTLS_PK_WRITE_C //extract public key
-+#define MBEDTLS_PEM_WRITE_C
++#ifdef OC_CLOUD
++#define MBEDTLS_SHA512_C
++#endif /* OC_CLOUD */
 +//
 +#define MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
 +#define MBEDTLS_X509_CSR_PARSE_C
@@ -3408,7 +3401,7 @@ index 654f972..774aef4 100644
  
  #endif /* MBEDTLS_CONFIG_H */
 diff --git a/library/entropy_poll.c b/library/entropy_poll.c
-index 2792bcb..3034287 100644
+index 4556f88a5..aab657d3a 100644
 --- a/library/entropy_poll.c
 +++ b/library/entropy_poll.c
 @@ -50,12 +50,32 @@
@@ -3446,6 +3439,3 @@ index 2792bcb..3034287 100644
  
  #if !defined(_WIN32_WINNT)
  #define _WIN32_WINNT 0x0400
--- 
-1.9.1
-

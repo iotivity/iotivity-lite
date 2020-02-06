@@ -365,7 +365,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "oic.wk.col", 10) == 0) {
-      lights_server = endpoint;
+      oc_endpoint_list_copy(&lights_server, endpoint);
 
       strncpy(lights, uri, uri_len);
       lights[uri_len] = '\0';
@@ -386,7 +386,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       return OC_STOP_DISCOVERY;
     }
   }
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -422,15 +421,15 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./client_collections_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
   if (init < 0)

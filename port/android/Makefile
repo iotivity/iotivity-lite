@@ -15,6 +15,25 @@
 # It is expected that higher versions then API 24 should work without any
 # further modifications.
 #
+# Download NDK: https://developer.android.com/ndk/downloads/index.html
+# Unzip downloaded package.
+# Choose architecture and API level.
+# cd <NDK>/build/tools
+# ./make_standalone_toolchain.py --arch <architecture> --api <level> --install-dir <path>
+# For example: ./make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
+# This makefile uses then the NDK in <install-dir>.
+# For further setup see: https://developer.android.com/ndk/guides/standalone_toolchain.html
+#
+# Either set ANDROID_API and ANDROID_BASE in this makefile
+# or invoke like this: make NDK_HOME=/opt/android-ndk ANDROID_API=23
+#
+# Example Usage:  make IPV4=1 DEBUG=1
+#
+# The default JAVA=1 build is recomended for Android builds. Its is possible to
+# only build and run native code. There may be write access problems when using
+# SECURITY=1 and a native only build. The following instructions are intended
+# for native only builds.
+#
 # Testing compilations on non-rooted Android phones:
 # - Enable USB debugging on your phone.
 # - Install ADB or Android Studio
@@ -38,31 +57,21 @@
 #       (ie. simpleserver will not be discovered). But the clients
 #       should work.
 #
-# Download NDK: https://developer.android.com/ndk/downloads/index.html
-# Unzip downloaded package.
-# Choose architecture and API level.
-# cd <NDK>/build/tools
-# ./make_standalone_toolchain.py --arch <architecture> --api <level> --install-dir <path>
-# For example: ./make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
-# This makefile uses then the NDK in <install-dir>.
-# For further setup see: https://developer.android.com/ndk/guides/standalone_toolchain.html
-#
-# Either set ANDROID_API and ANDROID_BASE in this makefile
-# or invoke like this: make NDK_HOME=/opt/android-ndk ANDROID_API=24
 
 # Location of the installation directory and the API level.
-ANDROID_API := 23
+export OS=android
+export ANDROID_API := 23
 ifeq (${NDK_HOME},)
-ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
+export ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
 else
-ANDROID_BASE := "${NDK_HOME}"
+export ANDROID_BASE := "${NDK_HOME}"
 endif
 # Compiler prefix
 ANDROID_HOST := arm-linux-androideabi-
 
 BIN_BASE := ${ANDROID_BASE}/bin/${ANDROID_HOST}
 ifeq ($(origin CC),default)
-CC := ${BIN_BASE}gcc
+export CC := ${BIN_BASE}gcc
 endif
 ifeq ($(origin AR),default)
 AR := ${BIN_BASE}ar
@@ -71,28 +80,36 @@ RM ?= rm
 MKDIR ?= mkdir
 
 DYNAMIC ?= 1
-SECURE ?= 1
-PKI ?= 1
-
+export SECURE ?= 1
+export PKI ?= 1
+IPV4 ?= 1
+export TCP ?= 1
+export CLOUD ?= 1
+# unlike other IoTivity-lite builds Android assumes we want to build Java by
+# default. It also assumes the use of OC_IDD_API is used by default.
+JAVA ?= 1
+export IDD ?= 1
 
 ROOT_DIR = ../..
+SWIG_DIR = $(ROOT_DIR)/swig
 OBJDIR ?= ./${ANDROID_HOST}obj
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 
 DTLS= \
-	aes.c		aesni.c		arc4.c		asn1parse.c	asn1write.c	base64.c	\
+	aes.c		aesni.c		arc4.c		asn1parse.c	asn1write.c	base64.c		\
 	bignum.c	blowfish.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
-	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
-	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
-	gcm.c		havege.c	hmac_drbg.c	md.c		md2.c		md4.c		\
-	md5.c		md_wrap.c	oid.c		padlock.c	\
-	pem.c		pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	\
-	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
-	sha512.c	threading.c	timing.c	version.c	version_features.c		\
-	xtea.c  	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
-	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c			\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c	rsa_internal.c	\
-	x509write_csr.c			x509write_crt.c			x509_create.c	x509_csr.c	platform_util.c
+	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c			\
+	ecjpake.c	ecp.c		ecp_curves.c			entropy.c	entropy_poll.c	\
+	error.c		gcm.c		havege.c	hmac_drbg.c	md.c		md2.c			\
+	md4.c		md5.c		md_wrap.c	oid.c		padlock.c	pem.c			\
+	pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	pkwrite.c		\
+	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	sha512.c		\
+	threading.c	timing.c	version.c	version_features.c		xtea.c			\
+	pkcs11.c 	x509.c 		x509_crt.c	debug.c		net_sockets.c				\
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c				\
+	ssl_srv.c	ssl_ticket.c			ssl_tls.c	rsa_internal.c				\
+	x509write_csr.c			x509write_crt.c			x509_create.c				\
+	x509_csr.c	platform_util.c
 
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
@@ -132,9 +149,12 @@ OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
 LIBS?= -lm -llog
 
-SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
+# Skip building the native samples if JAVA=1
+ifneq ($(JAVA), 1)
+	NATIVE_SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
 	  smart_lock server_multithread_linux client_multithread_linux
+endif
 
 ifeq ($(CLOUD),1)
 	CFLAGS += -DOC_CLOUD
@@ -145,24 +165,43 @@ endif
 
 OBT = onboarding_tool
 
+ifeq ($(CLOUD),1)
+	CFLAGS += -DOC_CLOUD
+	TCP=1
+	IPV4=1
+	#NATIVE_SAMPLES += cloud_linux cloud_tests
+endif
+
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g -O0
+	CFLAGS += -g -O0
+	EXTRA_CFLAGS += -DOC_DEBUG
+ifeq ($(DEBUG_TLS),1)
+	EXTRA_CFLAGS += -DOC_DEBUG_TLS
+endif
 else
 	CFLAGS += -Wl,--gc-sections
 endif
 
 ifeq ($(PKI),1)
-	CFLAGS += -DOC_PKI
+	EXTRA_CFLAGS += -DOC_PKI
 endif
 
 ifeq ($(DYNAMIC),1)
-	CFLAGS += -DOC_DYNAMIC_ALLOCATION
+	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
+endif
+
+ifeq ($(IDD), 1)
+	EXTRA_CFLAGS += -DOC_IDD_API
+endif
+
+ifeq ($(SWUPDATE),1)
+	EXTRA_CFLAGS += -DOC_SOFTWARE_UPDATE
 endif
 
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c \
-	oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c \
-	oc_csr.c oc_roles.c)
+		oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c \
+		oc_csr.c oc_roles.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -171,7 +210,10 @@ ifeq ($(DYNAMIC),1)
 		../../security/oc_obt_otm_randompin.c \
 		../../security/oc_obt_otm_cert.c \
 		../../security/oc_obt_certs.c
-	SAMPLES += ${OBT}
+# skip building the native onboarding tool if JAVA=1
+ifneq ($(JAVA),1)
+	NATIVE_SAMPLES += ${OBT}
+endif
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 endif
@@ -180,17 +222,23 @@ endif
 endif
 
 ifeq ($(IPV4),1)
-	CFLAGS += -DOC_IPV4
+	EXTRA_CFLAGS += -DOC_IPV4
 endif
 
 ifeq ($(TCP),1)
-	CFLAGS += -DOC_TCP
+	EXTRA_CFLAGS += -DOC_TCP
 endif
+
+CFLAGS += $(EXTRA_CFLAGS)
 
 CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 		    libiotivity-lite-client-server.a
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES)
+ifeq ($(JAVA), 1)
+	SWIG = swig
+endif
+
+all: $(CONSTRAINED_LIBS) $(NATIVE_SAMPLES) $(SWIG)
 
 .PHONY: clean
 
@@ -279,6 +327,9 @@ server_multithread_linux: libiotivity-lite-server.a
 client_multithread_linux: libiotivity-lite-client.a
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+swig: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	${MAKE} -C ${SWIG_DIR}
+
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
 ${MBEDTLS_DIR}/.git:
@@ -299,6 +350,7 @@ endif
 
 clean:
 	$(RM) -rf ${OBJDIR} $(CONSTRAINED_LIBS)
+	${MAKE} -C ${SWIG_DIR} clean
 
 cleanall: clean
 	$(RM) -rf ${all} $(SAMPLES) $(OBT) $(MBEDTLS_PATCH_FILE)

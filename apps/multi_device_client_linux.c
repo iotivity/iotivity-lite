@@ -291,7 +291,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     if (strlen(t) == 19 && strncmp(t, "oic.r.refrigeration", 19) == 0) {
       strncpy(fridge_1, uri, uri_len);
       fridge_1[uri_len] = '\0';
-      fridge_server = endpoint;
+      oc_endpoint_list_copy(&fridge_server, endpoint);
 
       PRINT("Resource %s hosted in device %s at endpoints:\n", fridge_1,
             anchor);
@@ -307,7 +307,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     } else if (strlen(t) == 17 && strncmp(t, "oic.r.temperature", 17) == 0) {
       strncpy(temp_1, uri, uri_len);
       temp_1[uri_len] = '\0';
-      temp_server = endpoint;
+      oc_endpoint_list_copy(&temp_server, endpoint);
 
       PRINT("Resource %s hosted in device %s at endpoints:\n", temp_1, anchor);
       oc_endpoint_t *ep = endpoint;
@@ -321,7 +321,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       return OC_CONTINUE_DISCOVERY;
     }
   }
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -342,15 +341,15 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./multi_device_client_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
   if (init < 0)

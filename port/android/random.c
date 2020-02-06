@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+
 #include "port/oc_random.h"
 #include <assert.h>
 #include <errno.h>

@@ -28,8 +28,7 @@
 #include "oc_cloud.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct cloud_conf_update_t
@@ -54,6 +53,7 @@ typedef struct cloud_api_param_t
 
 cloud_api_param_t *alloc_api_param(void);
 void free_api_param(cloud_api_param_t *p);
+int conv_cloud_endpoint(oc_cloud_context_t *ctx);
 
 int oc_cloud_init(void);
 void oc_cloud_shutdown(void);

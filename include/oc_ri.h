@@ -69,7 +69,7 @@ typedef struct oc_separate_response_s oc_separate_response_t;
 
 typedef struct oc_response_buffer_s oc_response_buffer_t;
 
-typedef struct
+typedef struct oc_response_t
 {
   oc_separate_response_t *separate_response;
   oc_response_buffer_t *response_buffer;
@@ -108,8 +108,8 @@ typedef enum {
   OCF_SEC_PSTAT,
   OCF_SEC_ACL,
   OCF_SEC_CRED,
-#ifdef OC_PKI
   OCF_SEC_SP,
+#ifdef OC_PKI
   OCF_SEC_CSR,
   OCF_SEC_ROLES,
 #endif /* OC_PKI */
@@ -123,7 +123,7 @@ typedef enum {
 
 typedef struct oc_resource_s oc_resource_t;
 
-typedef struct
+typedef struct oc_request_t
 {
   oc_endpoint_t *origin;
   oc_resource_t *resource;
@@ -148,8 +148,7 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
 
 typedef struct oc_properties_cb_t
 {
-  union
-  {
+  union {
     oc_set_properties_cb_t set_props;
     oc_get_properties_cb_t get_props;
   } cb;
@@ -170,13 +169,13 @@ struct oc_resource_s
   oc_request_handler_t put_handler;
   oc_request_handler_t post_handler;
   oc_request_handler_t delete_handler;
+  oc_properties_cb_t get_properties;
+  oc_properties_cb_t set_properties;
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
-  oc_properties_cb_t get_properties;
-  oc_properties_cb_t set_properties;
 };
 
 typedef struct oc_link_s oc_link_t;

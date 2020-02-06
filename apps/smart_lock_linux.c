@@ -337,7 +337,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 
   oc_smartlock_t *l = (oc_smartlock_t *)oc_memb_alloc(&smartlocks_m);
   if (l) {
-    l->endpoint = endpoint;
+    oc_endpoint_list_copy(&l->endpoint, endpoint);
     int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
@@ -349,7 +349,6 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 
     return OC_CONTINUE_DISCOVERY;
   }
-  oc_free_server_endpoints(endpoint);
   return OC_STOP_DISCOVERY;
 }
 
@@ -365,7 +364,6 @@ null_discovery(const char *di, const char *uri, oc_string_array_t types,
   (void)types;
   (void)endpoint;
   (void)bm;
-  oc_free_server_endpoints(endpoint);
 
   return OC_STOP_DISCOVERY;
 }
@@ -410,14 +408,16 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./smart_lock_creds");
+#endif /* OC_STORAGE */
+#ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
-#endif /* OC_SECURITY */
+#endif
 
   oc_set_con_res_announced(false);
   init = oc_main_init(&handler);

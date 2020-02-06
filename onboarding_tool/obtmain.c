@@ -122,6 +122,7 @@ display_menu(void)
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
+      fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
 
@@ -299,7 +300,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, unowned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
 }
 
 static void
@@ -317,7 +318,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
     eps = eps->next;
   }
 
-  oc_do_get("/oic/d", ep, NULL, &get_device, LOW_QOS, owned_devices);
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
 }
 
 static void
@@ -1622,14 +1623,18 @@ factory_presets_cb(size_t device, void *data)
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, void *user_data)
+                   oc_resource_properties_t bm, bool more, void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
   (void)bm;
   (void)types;
+  (void)endpoint;
   PRINT("anchor %s, uri : %s\n", anchor, uri);
-  oc_free_server_endpoints(endpoint);
+  if (!more) {
+    PRINT("----End of discovery response---\n");
+    return OC_STOP_DISCOVERY;
+  }
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -1701,11 +1706,13 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
+#ifdef OC_STORAGE
   oc_storage_config("./onboarding_tool_creds");
+#endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);

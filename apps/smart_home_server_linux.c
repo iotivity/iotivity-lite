@@ -33,9 +33,36 @@ typedef enum { C = 100, F, K } units_t;
 units_t temp_units = C;
 static bool switch_state;
 const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
+
+static pthread_t toggle_switch_thread;
+oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
+
+oc_define_interrupt_handler(toggle_switch)
+{
+  if (bswitch) {
+    oc_notify_observers(bswitch);
+  }
+}
+
+static void *
+toggle_switch_resource(void *data)
+{
+  (void)data;
+  while (quit != 1) {
+    getchar();
+    if (quit != 1) {
+      PRINT("\nSwitch toggled\n");
+      switch_state = !switch_state;
+      oc_signal_interrupt_handler(toggle_switch);
+    }
+  }
+  return NULL;
+}
+
 static int
 app_init(void)
 {
+  oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
@@ -159,9 +186,10 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
     out_of_range = true;
   }
 
-  if (!out_of_range && t != -1 && ((units == C && t < min_C && t > max_C) ||
-                                   (units == F && t < min_F && t > max_F) ||
-                                   (units == K && t < min_K && t > max_K))) {
+  if (!out_of_range && t != -1 &&
+      ((units == C && t < min_C && t > max_C) ||
+       (units == F && t < min_F && t > max_F) ||
+       (units == K && t < min_K && t > max_K))) {
     out_of_range = true;
   }
 
@@ -314,7 +342,6 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                       void *data)
 {
   oc_switch_t *cswitch = (oc_switch_t *)data;
-  oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(resource);
@@ -325,7 +352,6 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   default:
     break;
   }
-  oc_rep_end_root_object();
 }
 
 void
@@ -375,7 +401,9 @@ void
 get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
+  oc_rep_start_root_object();
   get_switch_properties(request->resource, iface_mask, user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
@@ -430,33 +458,71 @@ free_switch_instance(oc_resource_t *resource)
 }
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
-/* */
+
+/* Setting custom Collection-level properties */
+int64_t battery_level = 94;
+bool
+set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  (void)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_INT:
+      if (oc_string_len(rep->name) == 2 &&
+          memcmp(oc_string(rep->name), "bl", 2) == 0) {
+        battery_level = rep->value.integer;
+      }
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+void
+get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                        void *data)
+{
+  (void)resource;
+  (void)data;
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_rep_set_int(root, x.org.openconnectivity.bl, battery_level);
+    break;
+  default:
+    break;
+  }
+}
 
 static void
 register_resources(void)
 {
-  oc_resource_t *temp = oc_new_resource(NULL, "/temp", 1, 0);
-  oc_resource_bind_resource_type(temp, "oic.r.temperature");
-  oc_resource_bind_resource_interface(temp, OC_IF_A);
-  oc_resource_bind_resource_interface(temp, OC_IF_S);
-  oc_resource_set_default_interface(temp, OC_IF_A);
-  oc_resource_set_discoverable(temp, true);
-  oc_resource_set_periodic_observable(temp, 1);
-  oc_resource_set_request_handler(temp, OC_GET, get_temp, NULL);
-  oc_resource_set_request_handler(temp, OC_POST, post_temp, NULL);
-  oc_add_resource(temp);
+  temp_resource = oc_new_resource(NULL, "/temp", 1, 0);
+  oc_resource_bind_resource_type(temp_resource, "oic.r.temperature");
+  oc_resource_bind_resource_interface(temp_resource, OC_IF_A);
+  oc_resource_bind_resource_interface(temp_resource, OC_IF_S);
+  oc_resource_set_default_interface(temp_resource, OC_IF_A);
+  oc_resource_set_discoverable(temp_resource, true);
+  oc_resource_set_periodic_observable(temp_resource, 1);
+  oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
+  oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
+  oc_add_resource(temp_resource);
 
-  oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+  bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
   oc_resource_set_default_interface(bswitch, OC_IF_A);
+  oc_resource_set_observable(bswitch, true);
   oc_resource_set_discoverable(bswitch, true);
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
   oc_add_resource(bswitch);
 
 #ifdef OC_COLLECTIONS
-  oc_resource_t *col = oc_new_collection(NULL, "/platform", 1, 0);
+  col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
@@ -464,11 +530,19 @@ register_resources(void)
   oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
 
 #ifdef OC_COLLECTIONS_IF_CREATE
+  oc_resource_bind_resource_interface(col, OC_IF_CREATE);
   oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
                                 free_switch_instance);
 #endif /* OC_COLLECTIONS_IF_CREATE */
-  oc_link_t *l2 = oc_new_link(bswitch);
-  oc_collection_add_link(col, l2);
+  oc_link_t *l1 = oc_new_link(bswitch);
+  oc_collection_add_link(col, l1);
+  /* Add a defined or custom link parameter to this link */
+  oc_link_add_link_param(l1, "x.org.openconnectivity.name", "platform_switch");
+
+  /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
+   */
+  oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
+                                 set_platform_properties, NULL);
   oc_add_collection(col);
 #endif /* OC_COLLECTIONS */
 }
@@ -608,23 +682,28 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif /* OC_SECURITY */
+
+  if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
+                     NULL) != 0) {
+    return -1;
+  }
 
   init = oc_main_init(&handler);
   if (init < 0)
@@ -644,6 +723,9 @@ main(void)
   }
 
   oc_main_shutdown();
+
+  PRINT("\nPress any key to exit...\n");
+  pthread_join(toggle_switch_thread, NULL);
 
   return 0;
 }

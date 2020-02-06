@@ -15,7 +15,6 @@
 */
 
 #ifdef OC_SECURITY
-#ifdef OC_PKI
 #include "oc_sp.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -229,7 +228,4 @@ post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-#else  /* OC_PKI */
-typedef int dummy_declaration;
-#endif /* !OC_PKI */
 #endif /* OC_SECURITY */

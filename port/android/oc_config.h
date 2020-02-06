@@ -11,10 +11,13 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
-
+#define OC_SPEC_VER_OIC
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
+
+/* Maximum wait time for select function */
+#define SELECT_TIMEOUT_SEC (1)
 
 /* Add support for passing network up/down events to the app */
 #define OC_NETWORK_MONITOR
@@ -85,6 +88,20 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_SESSION_EVENT_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+/* library features that require persistent storage */
+#ifdef OC_SECURITY
+#define OC_STORAGE
+#endif
+#ifdef OC_IDD_API
+#define OC_STORAGE
+#endif
+#ifdef OC_CLOUD
+#define OC_STORAGE
+#endif
+#ifdef OC_SOFTWARE_UPDATE
+#define OC_STORAGE
+#endif
 
 #ifdef __cplusplus
 }

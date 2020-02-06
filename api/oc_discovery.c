@@ -31,7 +31,7 @@
 
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
-                const char *anchor, CborEncoder *links)
+                const char *anchor, CborEncoder *links, size_t device_index)
 {
   if (!oc_filter_resource_by_rt(resource, request)) {
     return false;
@@ -72,7 +72,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
 
   // eps
   oc_rep_set_array(link, eps);
-  oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
+  oc_endpoint_t *eps = oc_connectivity_get_endpoints(device_index);
   while (eps != NULL) {
     /*  If this resource has been explicitly tagged as SECURE on the
      *  application layer, skip all coap:// endpoints, and only include
@@ -119,64 +119,64 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   oc_concat_strings(&anchor, "ocf://", uuid);
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_P, 0), request,
-                      oc_string(anchor), links))
+                      oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_D, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
-        request, oc_string(anchor), links))
+        request, oc_string(anchor), links, device_index))
     matches++;
 
   if (oc_get_con_res_announced() &&
       filter_resource(oc_core_get_resource_by_index(OCF_CON, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 #ifdef OC_MNT
   if (filter_resource(oc_core_get_resource_by_index(OCF_MNT, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_MNT */
 #ifdef OC_SOFTWARE_UPDATE
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index), request,
-        oc_string(anchor), links))
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_SECURITY
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_index), request,
-        oc_string(anchor), links))
+        oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_ACL, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
+    matches++;
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SP, device_index),
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
 #ifdef OC_PKI
-  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SP, device_index),
-                      request, oc_string(anchor), links))
-    matches++;
-
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CSR, device_index),
-                      request, oc_string(anchor), links))
+                      request, oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
-        oc_string(anchor), links))
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
@@ -184,7 +184,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index), request,
-        oc_string(anchor), links))
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
@@ -195,7 +195,8 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
         !(resource->properties & OC_DISCOVERABLE))
       continue;
 
-    if (filter_resource(resource, request, oc_string(anchor), links))
+    if (filter_resource(resource, request, oc_string(anchor), links,
+                        device_index))
       matches++;
   }
 
@@ -207,7 +208,7 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
       continue;
 
     if (filter_resource((oc_resource_t *)collection, request, oc_string(anchor),
-                        links))
+                        links, device_index))
       matches++;
   }
 #endif /* OC_COLLECTIONS */
@@ -389,11 +390,11 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
         oc_rep_array(links)))
     matches++;
 
-#ifdef OC_PKI
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_SEC_SP, device_num), request,
         oc_rep_array(links)))
     matches++;
+#ifdef OC_PKI
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_SEC_CSR, device_num), request,
         oc_rep_array(links)))
@@ -522,9 +523,15 @@ oc_create_discovery_resource(int resource_idx, size_t device)
 #ifdef OC_CLIENT
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
-                                oc_discovery_handler_t handler,
+                                oc_client_handler_t client_handler,
                                 oc_endpoint_t *endpoint, void *user_data)
 {
+  oc_discovery_handler_t handler = client_handler.discovery;
+  oc_discovery_all_handler_t all_handler = client_handler.discovery_all;
+  bool all = false;
+  if (all_handler) {
+    all = true;
+  }
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
   oc_string_t *uri = NULL;
   oc_string_t *anchor = NULL;
@@ -699,11 +706,16 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     }
 
     if (eps_list &&
-        handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
-                eps_list, bm, user_data) == OC_STOP_DISCOVERY) {
+        (all ? all_handler(oc_string(*anchor), oc_string(*uri), *types,
+                           iface_mask, eps_list, bm,
+                           (links->next ? true : false), user_data)
+             : handler(oc_string(*anchor), oc_string(*uri), *types, iface_mask,
+                       eps_list, bm, user_data)) == OC_STOP_DISCOVERY) {
+      oc_free_server_endpoints(eps_list);
       ret = OC_STOP_DISCOVERY;
       goto done;
     }
+    oc_free_server_endpoints(eps_list);
     links = links->next;
   }
 

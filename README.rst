@@ -32,7 +32,7 @@ Contents
 IoTivity-Lite Architecture
 ---------------------------------
 
-.. image:: IoTivityLite-Arch.png
+.. image:: Architecture.png
    :scale: 100%
    :alt: IoTivity-Lite Architecture
    :align: center
@@ -145,6 +145,10 @@ apps/*
 service/*
   contains OCF services
 
+swig/*
+  contains instructions and code to build Java language bindings using
+  the SWIG tool.
+
 Setup source tree
 -----------------
 
@@ -216,3 +220,94 @@ This needs to be present in one of the include paths.
 
 Pre-populated (sample) configurations for the sample applications for all
 targets are present in ``port/<OS>/oc_config.h``.
+
+Onboarding and Provisioning
+----------------------------
+Runing the onboarding tool
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At this time there are three versions of the onboarding tool.  The command line C version, the
+command line Java version, and the GUI Android version. Both command line versions are identical.
+It does not matter which version of the onboarding tool is used.
+
+The C version of the onboarding tool can be found in ``<iotivity-lite>/port/linux`` see Linux build
+instructions.
+
+A Java version of the onboarding-tool can be found in
+``<iotivity-lite>/swig/apps/java_onboarding_tool``
+
+The following instructions assume the onboarding tool has been built and can run.
+
+Simple Step-by-Step guide for onboarding and provisioning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This guide assumes you are starting one discoverable device at a time. Multiple devices can be
+discovered and onboarded at the same time however it becomes the responsibility of the user to
+figure out which UUID belongs to which device.
+
+Once you have successfully onboarded the samples the first time using the following step-by-step
+options feel free to RESET the devices and play around with different provisioning options.
+
+The below steps use the command line version of the onboarding tool. The steps for the Android
+onboarding tool is very similar but are not described here.
+
+(Step 1) Onboard and Provision the Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are multiple methods to onboard and provision server and client samples.  Below is given one
+of the many possible ways the this could be done.
+
+ - start the server sample
+ - start onboarding tool it will print a menu with many option
+ - Type ``1`` **Enter** to ``Discover un-owned devices``
+ - Type ``8`` **Enter** to *Take ownership of device*
+
+   + Type ``0`` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+
+ - Type ``4`` **Enter** to ``Discover owned devices`` the device you just took ownership of should be
+   listed.
+ - Type ``13`` **Enter** to ``Provision ACE2``. There are many ways to properly provision the device.
+   This will give instruction for using wildcard provisioning.
+
+   + Type ``0`` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+   + Type ``1`` **Enter** for an ``auth-crypt`` ACE
+   + Type ``1`` **Enter** in response to ``Enter number of resources in this ACE:``
+   + Type ``0`` **Enter** in response to ``Have resource href? [0-No, 1-Yes]:``
+   + Type ``1`` **Enter** in response to ``Set wildcard resource? [0-No, 1-Yes]:``
+   + Type ``2`` **Enter** to select the ``All discoverable resources`` option
+   + Type ``0`` **Enter** in response to ``Enter number of resource types [0-None]:``
+   + Type ``0`` **Enter** in response to ``Enter number of interfaces [0-None]``
+   + Type ``0`` **Enter** for CREATE, ``1`` **Enter** for RETRIEVE, ``1`` **Enter** for UPDATE, 
+     ``0`` **Enter** for DELETE, and ``1`` **Enter** for NOTIFY.
+   + ``Successfully issued request to provision ACE`` should be printed on the screen upon success
+
+(Step 2) Onboard the client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ - start the client sample
+ - Type ``1`` **Enter** to ``Discover un-owned devices``
+ - Type ``8`` **Enter** to *Take ownership of device*
+
+   + Type ``0`` **Enter**. If you have multiple unowned devices you will have to select the correct
+     device from the list.
+
+  - Type ``2`` **Enter** to ``Discover owned devices`` the server and client should be listed
+
+(Step 3) Pair Server and Client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  - Start the client and server samples
+  - Type ``12`` **Enter** to ``Provision pair-wise credentials``
+  - Type ``0`` **Enter** ``1`` **Enter** to pair the client and server. If you have multiple owned
+    devices you will have to select the correct devices from the list.
+
+(Step 4) Restart and Test
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The samples should be onboarded and provisioned. Restart the server and then the client they should
+discover each other and run without difficulty.
+
+Send Feedback
+-------------------------------------------------
+Questions
+`IoTivity-Lite Developer Mailing List <https://iotivity.groups.io/g/iotivity-dev>`_
+
+Bugs
+`Gitlab issues <https://gitlab.iotivity.org/iotivity/iotivity-lite/issues>`_

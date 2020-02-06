@@ -73,7 +73,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 16 && strncmp(t, "oic.r.tempsensor", 16) == 0) {
-      temp_sensor = endpoint;
+      oc_endpoint_list_copy(&temp_sensor, endpoint);
       strncpy(temp_1, uri, uri_len);
       temp_1[uri_len] = '\0';
 
@@ -91,7 +91,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       return OC_STOP_DISCOVERY;
     }
   }
-  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -136,15 +135,15 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./temp_sensor_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   int init = oc_main_init(&handler);
 
