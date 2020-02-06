@@ -109,6 +109,7 @@ typedef enum {
   OCF_SEC_PSTAT,
   OCF_SEC_ACL,
   OCF_SEC_CRED,
+  OCF_SEC_SDI,
   OCF_SEC_SP,
 #ifdef OC_PKI
   OCF_SEC_CSR,

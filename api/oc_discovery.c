@@ -36,6 +36,10 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 
+#ifdef OC_SECURITY
+#include "security/oc_sdi.h"
+#endif
+
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
@@ -224,6 +228,11 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
         oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_PKI */
+
+  if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SDI, device_index),
+                      request, oc_string(anchor), links, device_index))
+    matches++;
+
 #endif /* OC_SECURITY */
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
@@ -667,6 +676,16 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     memcpy(&root_map, &props_map, sizeof(CborEncoder));
     oc_process_baseline_interface(
       oc_core_get_resource_by_index(OCF_RES, device));
+#ifdef OC_SECURITY
+    oc_sec_sdi_t * s = oc_sec_get_sdi(device);
+    if(!s->priv)
+    {
+      char uuid[37];
+      oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
+      oc_rep_set_text_string(root, sduuid, uuid);
+      oc_rep_set_text_string(root, sdname, oc_string(s->name));
+    }
+#endif
     oc_rep_set_array(root, links);
     matches += process_device_resources(oc_rep_array(links), request, device);
     oc_rep_close_array(root, links);

@@ -326,6 +326,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
+    OC_DBG("oc_acl: not DCR and RFNOP");
     return false;
   }
 
@@ -726,6 +727,12 @@ oc_sec_ace_clear_bootstrap_aces(size_t device)
     }
     if (__anon_clear) {
       oc_ace_free_resources(device, &__anon_clear, "/oic/sec/csr");
+    }
+    if (__anon_clear) {
+      int aceid = __anon_clear->aceid;
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sdi");
+      oc_sec_ace_update_res(OC_SUBJECT_CONN, &subject,
+          aceid, 2, "/oic/sec/sdi", -1, device);
     }
   } while (__anon_clear);
 }

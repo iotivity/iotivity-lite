@@ -165,6 +165,10 @@ obt_jw_13(oc_client_response_t *data)
     oc_rep_set_text_string(resources, href, "/oic/res");
     oc_rep_object_array_end_item(resources);
 
+    oc_rep_object_array_start_item(resources);
+    oc_rep_set_text_string(resources, href, "/oic/sec/sdi");
+    oc_rep_object_array_end_item(resources);
+
     oc_rep_close_array(aclist2, resources);
 
     oc_rep_set_uint(aclist2, permission, 0x02);
@@ -275,6 +279,42 @@ err_obt_jw_10:
 }
 
 static void
+obt_jw_9_1(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_jw_9_1");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_obt_jw_9_1;
+  }
+
+  oc_device_info_t * me = oc_core_get_device_info(0);
+  char my_uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&me->di, my_uuid, OC_UUID_LEN);
+
+  /**  9_1) post sdi
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_jw_10, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, uuid, my_uuid);
+    oc_rep_set_text_string(root, name, oc_string(me->name));
+    oc_rep_set_boolean(root, priv, false);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_obt_jw_9_1:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
+}
+
+static void
 obt_jw_9(oc_client_response_t *data)
 {
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
@@ -321,7 +361,7 @@ obt_jw_9(oc_client_response_t *data)
 
   /**  9) post cred rowneruuid, cred
    */
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_10, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_9_1, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);

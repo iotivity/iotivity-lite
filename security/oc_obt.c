@@ -36,6 +36,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
+#include "security/oc_sdi.h"
 #include <stdlib.h>
 
 OC_MEMB(oc_discovery_s, oc_discovery_cb_t, 1);
@@ -2617,12 +2618,14 @@ oc_obt_init(void)
   OC_DBG("oc_obt:OBT init");
   if (!oc_sec_is_operational(0)) {
     OC_DBG("oc_obt: performing self-onboarding");
+    oc_device_info_t * self = oc_core_get_device_info(0);
     oc_uuid_t *uuid = oc_core_get_device_id(0);
 
     oc_sec_acl_t *acl = oc_sec_get_acl(0);
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(0);
     oc_sec_creds_t *creds = oc_sec_get_creds(0);
     oc_sec_pstat_t *ps = oc_sec_get_pstat(0);
+    oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
 
     memcpy(acl->rowneruuid.id, uuid->id, 16);
 
@@ -2641,10 +2644,15 @@ oc_obt_init(void)
 
     oc_sec_ace_clear_bootstrap_aces(0);
 
+    memcpy(sdi->uuid.id, uuid->id, 16);
+    oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
+    sdi->priv = false;
+
     oc_sec_dump_pstat(0);
     oc_sec_dump_doxm(0);
     oc_sec_dump_cred(0);
     oc_sec_dump_acl(0);
+    oc_sec_dump_sdi(0);
 
 #ifdef OC_PKI
     uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
