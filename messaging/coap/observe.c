@@ -153,6 +153,32 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 /*---------------------------------------------------------------------------*/
 /*- Removal -----------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+static const char *
+get_iface_query(oc_interface_mask_t iface_mask)
+{
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    return "if=oic.if.baseline";
+  case OC_IF_LL:
+    return "if=oic.if.ll";
+  case OC_IF_B:
+    return "if=oic.if.b";
+  case OC_IF_R:
+    return "if=oic.if.r";
+  case OC_IF_RW:
+    return "if=oic.if.rw";
+  case OC_IF_A:
+    return "if=oic.if.a";
+  case OC_IF_S:
+    return "if=oic.if.s";
+  case OC_IF_CREATE:
+    return "if=oic.if.create";
+  default:
+    break;
+  }
+  return NULL;
+}
+
 void
 coap_remove_observer(coap_observer_t *o)
 {
@@ -160,9 +186,11 @@ coap_remove_observer(coap_observer_t *o)
          o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
+  const char *query = get_iface_query(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
-    &o->endpoint, OC_GET, NULL, 0, OC_BLOCKWISE_SERVER);
+    &o->endpoint, OC_GET, query, (query) ? strlen(query) : 0,
+    OC_BLOCKWISE_SERVER);
   if (response_state) {
     response_state->ref_count = 0;
   }
@@ -285,10 +313,15 @@ coap_notify_collection_observers(oc_resource_t *resource,
   /* iterate over observers */
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    if (obs->resource != resource || obs->iface_mask != iface_mask) {
+    if (obs->resource != resource) {
       continue;
     }
-    OC_DBG("coap_notify_collections: notifying observer");
+    if (obs->iface_mask != iface_mask) {
+      if ((obs->iface_mask | iface_mask) != OC_IF_LL) {
+        continue;
+      }
+    }
+    OC_DBG("coap_notify_collection_observers: notifying observer");
     coap_transaction_t *transaction = NULL;
     coap_packet_t notification[1];
 
@@ -309,10 +342,11 @@ coap_notify_collection_observers(oc_resource_t *resource,
     if (response_buf->response_length > obs->block2_size) {
 #endif /* !OC_TCP */
       notification->type = COAP_TYPE_CON;
+      const char *query = get_iface_query(obs->iface_mask);
       response_state = oc_blockwise_find_response_buffer(
         oc_string(obs->resource->uri) + 1,
-        oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, NULL, 0,
-        OC_BLOCKWISE_SERVER);
+        oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, query,
+        (query) ? strlen(query) : 0, OC_BLOCKWISE_SERVER);
       if (response_state) {
         if (response_state->payload_size == response_state->next_block_offset) {
           oc_blockwise_free_response_buffer(response_state);
@@ -330,6 +364,9 @@ coap_notify_collection_observers(oc_resource_t *resource,
         goto leave_notify_collections;
       }
 
+      if (query) {
+        oc_new_string(&response_state->uri_query, query, strlen(query));
+      }
       memcpy(response_state->buffer, response_buf->buffer,
              response_buf->response_length);
       response_state->payload_size = response_buf->response_length;

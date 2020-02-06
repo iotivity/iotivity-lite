@@ -682,7 +682,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj.origin = endpoint;
 
   /* Initialize OCF interface selector. */
-  oc_interface_mask_t iface_mask = 0;
+  oc_interface_mask_t iface_query = 0, iface_mask = 0;
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
@@ -701,7 +701,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int if_len =
       oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
-      iface_mask |= oc_ri_get_interface_mask(iface, (size_t)if_len);
+      iface_query |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
   }
 
@@ -792,6 +792,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
+    iface_mask = iface_query;
     if (iface_mask == 0)
       iface_mask = cur_resource->default_interface;
 
@@ -949,10 +950,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (observe == 0) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint, iface_mask) >= 0) {
+                                 endpoint, iface_query) >= 0) {
 #else  /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint,
-                                 iface_mask) >= 0) {
+                                 iface_query) >= 0) {
 #endif /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
@@ -983,7 +984,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
           }
 #endif /* OC_SECURITY */
           if (set_observe_option) {
-            if (iface_mask == OC_IF_B) {
+            if (iface_query == OC_IF_B) {
               links = (oc_link_t *)oc_list_head(collection->links);
               while (links) {
                 if (links->resource &&
@@ -1011,10 +1012,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       else if (observe == 1) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint, iface_mask) > 0) {
+                                 endpoint, iface_query) > 0) {
 #else  /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint,
-                                 iface_mask) > 0) {
+                                 iface_query) > 0) {
 #endif /* !OC_BLOCK_WISE */
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
