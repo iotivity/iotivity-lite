@@ -720,12 +720,15 @@ coap_receive(oc_message_t *msg)
          * signal from the server. In this case, the client_cb continues
          * to live until the response arrives (or it times out).
          */
-        if (client_cb->separate == 0) {
-          if (response_buffer) {
-            response_buffer->ref_count = 0;
+        if (oc_ri_is_client_cb_valid(client_cb)) {
+          if (client_cb->separate == 0) {
+            if (response_buffer) {
+              response_buffer->ref_count = 0;
+            }
+          } else {
+            client_cb->separate = 0;
           }
         }
-        client_cb->separate = 0;
         goto send_message;
 #else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
