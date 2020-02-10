@@ -26,6 +26,7 @@
 #include "security/oc_doxm.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_sdi.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
 
@@ -291,9 +292,9 @@ obt_jw_9_1(oc_client_response_t *data)
     goto err_obt_jw_9_1;
   }
 
-  oc_device_info_t * me = oc_core_get_device_info(0);
-  char my_uuid[OC_UUID_LEN];
-  oc_uuid_to_str(&me->di, my_uuid, OC_UUID_LEN);
+  oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
+  char sdi_uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&sdi->uuid, sdi_uuid, OC_UUID_LEN);
 
   /**  9_1) post sdi
    */
@@ -301,9 +302,9 @@ obt_jw_9_1(oc_client_response_t *data)
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_jw_10, HIGH_QOS, o)) {
     oc_rep_start_root_object();
-    oc_rep_set_text_string(root, uuid, my_uuid);
-    oc_rep_set_text_string(root, name, oc_string(me->name));
-    oc_rep_set_boolean(root, priv, false);
+    oc_rep_set_text_string(root, uuid, sdi_uuid);
+    oc_rep_set_text_string(root, name, oc_string(sdi->name));
+    oc_rep_set_boolean(root, priv, sdi->priv);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       return;

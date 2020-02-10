@@ -125,7 +125,7 @@ int oc_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data);
 void oc_obt_free_acl(oc_sec_acl_t *acl);
 int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
-
+void oc_obt_set_sd_info(char * name, bool priv);
 #ifdef __cplusplus
 }
 #endif

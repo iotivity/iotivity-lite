@@ -191,6 +191,10 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
                               const uint8_t *issuer_private_key,
                               const size_t issuer_private_key_size,
                               oc_string_t *role_cert);
+
+void oc_obt_generate_uuid_from_pk(const uint8_t *public_key,
+                             const size_t public_key_size,
+                             oc_uuid_t *uuid);
 #ifdef __cplusplus
 }
 #endif

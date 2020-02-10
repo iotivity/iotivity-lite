@@ -2611,6 +2611,16 @@ oc_obt_delete_own_cred_by_credid(int credid)
   return -1;
 }
 
+void
+oc_obt_set_sd_info(char * name, bool priv)
+{
+  oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
+  oc_free_string(&sdi->name);
+  oc_new_string(&sdi->name, name, strlen(name));
+  sdi->priv = priv;
+  oc_sec_dump_sdi(0);
+}
+
 /* OBT initialization and shutdown */
 int
 oc_obt_init(void)
@@ -2644,7 +2654,7 @@ oc_obt_init(void)
 
     oc_sec_ace_clear_bootstrap_aces(0);
 
-    memcpy(sdi->uuid.id, uuid->id, 16);
+    oc_gen_uuid(&sdi->uuid);
     oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
     sdi->priv = false;
 
@@ -2669,6 +2679,8 @@ oc_obt_init(void)
         root_subject, public_key, OC_ECDSA_PUBKEY_SIZE, private_key,
         private_key_size);
       if (root_cert_credid > 0) {
+        oc_obt_generate_uuid_from_pk(public_key, public_key_size, &sdi->uuid);
+        oc_sec_dump_sdi(0);
         oc_obt_dump_state();
         OC_DBG("oc_obt: successfully returning from obt_init()");
         return 0;

@@ -106,6 +106,7 @@ display_menu(void)
   PRINT("[22] Provision identity certificate\n");
   PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
+  PRINT("[24] Set security domain info\n");
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -1579,6 +1580,17 @@ install_trust_anchor(void)
 }
 #endif /* OC_PKI */
 
+static void set_sd_info()
+{
+  char name[64] = {0};
+  int priv = 0;
+  PRINT("\n\nEnter security domain name: ");
+  SCANF("%63s", name);
+  PRINT("\n\nChoose security domain priv[0-No, 1-Yes]: ");
+  SCANF("%d", &priv);
+  oc_obt_set_sd_info(name, priv);
+}
+
 void
 factory_presets_cb(size_t device, void *data)
 {
@@ -1706,7 +1718,8 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = { .init = app_init,
+  static const oc_handler_t handler =
+  { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
@@ -1812,6 +1825,11 @@ main(void)
     case 23:
       provision_role_cert();
       break;
+#endif
+    case 24:
+      set_sd_info();
+      break;
+#ifdef OC_PKI
     case 96:
       install_trust_anchor();
       break;
