@@ -17,6 +17,8 @@
 #include "oc_bridge.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_log.h"
+#include "security/oc_store.h"
 
 static void
 get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -76,4 +78,55 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
     return -1;
   }
   return 0;
+}
+
+void
+load_virtual_device_security(size_t device)
+{
+#ifdef OC_SECURITY
+  oc_sec_load_unique_ids(device);
+  OC_DBG("oc_main_init(): loading pstat");
+  oc_sec_load_pstat(device);
+  OC_DBG("oc_main_init(): loading doxm");
+  oc_sec_load_doxm(device);
+  OC_DBG("oc_main_init(): loading cred");
+  oc_sec_load_cred(device);
+  OC_DBG("oc_main_init(): loading acl");
+  oc_sec_load_acl(device);
+  OC_DBG("oc_main_init(): loading sp");
+  oc_sec_load_sp(device);
+#ifdef OC_PKI
+    OC_DBG("oc_main_init(): loading ECDSA keypair");
+    oc_sec_load_ecdsa_keypair(device);
+#endif /* OC_PKI */
+#endif /* OC_SECURITY */
+}
+
+/*
+ * TODO must figure out a way to index each device. Just calling oc_add_device
+ * will create a new index device.
+ *
+ * I am leaning toward using a map similar to this
+ * {
+ *   {"vid":"virtual_device_id-1", "index":1},
+ *   {"vid":"virtual_device_id-2", "index":2}
+ * }
+ */
+int
+oc_bridge_add_virtual_device(const char *virtual_device_id, const char *uri,
+                             const char *rt, const char *name,
+                             const char *spec_version,
+                             const char *data_model_version,
+                             oc_add_device_cb_t add_device_cb, void *data)
+{
+  int ret_value = oc_add_device(uri, rt, name, spec_version, data_model_version,
+                                add_device_cb, data);
+  if (ret_value < 0) {
+    return ret_value;
+  }
+  oc_device_bind_resource_type(oc_core_get_num_devices() - 1, "oic.d.virtual");
+
+  load_virtual_device_security(oc_core_get_num_devices() - 1);
+
+  return ret_value;
 }
