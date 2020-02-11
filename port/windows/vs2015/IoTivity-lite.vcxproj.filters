@@ -448,6 +448,9 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_bridge.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -710,6 +713,9 @@
     </ClInclude>
     <ClInclude Include="..\mutex.h">
       <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_bridge.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
