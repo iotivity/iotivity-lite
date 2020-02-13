@@ -567,6 +567,11 @@ oc_create_wifi_easysetup_resource(size_t device)
   dev_cxt->wifi.data.supported_enctype[5] = TKIP_AES;
 #endif  // OC_SPEC_VER_OIC
 
+  // Add Self link to WES resource
+  oc_link_t *self = oc_new_link((oc_resource_t *)dev_cxt->wes.handle);
+  oc_collection_add_link((oc_resource_t *)dev_cxt->wes.handle, self);
+  oc_add_collection((oc_resource_t *)dev_cxt->wes.handle);
+
   oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->wes.handle, get_wes_properties, NULL,
                                  set_wes_properties, NULL);
 
@@ -1056,6 +1061,11 @@ oc_create_esim_easysetup_resource(size_t device)
 
   dev_cxt->ees.handle =
     (oc_collection_t *)oc_core_get_resource_by_index(OCF_EES, device);
+
+  // Add Self link to EES resource
+  oc_link_t *self = oc_new_link((oc_resource_t *)dev_cxt->ees.handle);
+  oc_collection_add_link((oc_resource_t *)dev_cxt->ees.handle, self);
+  oc_add_collection((oc_resource_t *)dev_cxt->ees.handle);
 
   oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->ees.handle, get_ees_properties, NULL,
                                  set_ees_properties, NULL);
