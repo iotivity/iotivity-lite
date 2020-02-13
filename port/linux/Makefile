@@ -111,8 +111,11 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient \
+          client_collections_linux server_collections_linux server_block_linux \
+          client_block_linux smart_home_server_linux multi_device_server \
+          multi_device_client smart_lock server_multithread_linux \
+          client_multithread_linux dummy_bridge
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
@@ -377,6 +380,10 @@ server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_mult
 client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+dummy_bridge: libiotivity-lite-server.a $(ROOT_DIR)/apps/dummy_bridge.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/dummy_bridge.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \
