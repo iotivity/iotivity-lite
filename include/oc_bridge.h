@@ -22,7 +22,7 @@
 #define OC_BRIDGE_H
 
 #include "oc_uuid.h"
-#include "oc_list.h"
+#include "util/oc_list.h"
 #include "oc_helpers.h"
 #include "oc_api.h"
 
@@ -40,9 +40,6 @@ typedef struct oc_vods_t
   char di[OC_UUID_LEN];
   oc_string_t econame;
 } oc_vods_t;
-
-// Perhaps internal list may want this to be public for clients
-OC_LIST(oc_vods_list_t);
 
 /**
  * Add an oic.d.bridge device.

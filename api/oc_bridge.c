@@ -17,8 +17,10 @@
 #include "oc_bridge.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_log.h"
+#include "port/oc_log.h"
 #include "security/oc_store.h"
+
+OC_LIST(oc_vods_list_t);
 
 static void
 get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -29,6 +31,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+    /* fall through */
   case OC_IF_R:
     oc_rep_set_array(root, vods);
     oc_vods_t *vods_list = (oc_vods_t *)oc_list_head(oc_vods_list_t);
@@ -83,6 +86,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
 void
 load_virtual_device_security(size_t device)
 {
+  (void)device;
 #ifdef OC_SECURITY
   oc_sec_load_unique_ids(device);
   OC_DBG("oc_main_init(): loading pstat");
@@ -119,6 +123,7 @@ oc_bridge_add_virtual_device(const char *virtual_device_id, const char *uri,
                              const char *data_model_version,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
+  (void)virtual_device_id;
   int ret_value = oc_add_device(uri, rt, name, spec_version, data_model_version,
                                 add_device_cb, data);
   if (ret_value < 0) {
