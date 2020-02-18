@@ -101,16 +101,15 @@ supplicant_get_wireless_interface(char **ctrl_ifname) {
   DIR *dir = opendir(WIRELESS_CTRL_INTF_PATH);
   if (dir) {
     while ((dent = readdir (dir)) != NULL) {
-     if (dent->d_name[0] == 'w' && dent->d_name[1] == 'l') {
-       *ctrl_ifname = strdup(dent->d_name);
-       OC_DBG("Wireless interface: %s", *ctrl_ifname);
-       closedir(dir);
-       return 0;
-     }
+      if (dent->d_name[0] == 'w' && dent->d_name[1] == 'l') {
+        *ctrl_ifname = strdup(dent->d_name);
+        OC_DBG("Wireless interface: %s", *ctrl_ifname);
+        closedir(dir);
+        return 0;
+      }
     }
     closedir(dir);
   }
-
   return -ENOENT;
 }
 
@@ -159,7 +158,6 @@ supplicant_get_interface(GDBusConnection *connection, char *ctrl_ifname, char **
      OC_ERR("error while sending get interface method call %d\n", ret);
      return -1;
   }
-
   g_variant_get(reply, "(&o)", iface);
   OC_DBG("WPA supplicant active interface:%s", *iface);
   return 0;
@@ -181,7 +179,6 @@ supplicant_remove_interface(GDBusConnection *connection, char *iface) {
      OC_ERR("error while sending remove interface method call %d\n", ret);
      return -1;
   }
-
   return 0;
 }
 
@@ -202,7 +199,6 @@ supplicant_set_interface(GDBusConnection *connection, char *iface, int ap_scan) 
     OC_ERR("error while updating ap_scan mode of the interface %d\n", ret);
     return -1;
   }
-
   return 0;
 }
 
@@ -224,10 +220,8 @@ supplicant_get_apscan(GDBusConnection *connection, char *iface, int *ap_scan) {
     OC_ERR("error while fetching ap_scan mode of the interface %d\n", ret);
     return -1;
   }
-
   g_variant_get(reply, "(v)", &iter);
   g_variant_get(iter, "u", ap_scan);
-
   return 0;
 }
 
@@ -291,7 +285,6 @@ supplicant_remove_network(GDBusConnection *connection, char *iface) {
     OC_ERR("error while removing network %d\n", ret);
     return -1;
   }
-
   return 0;
 }
 
@@ -310,10 +303,9 @@ supplicant_select_network(GDBusConnection *connection, char *iface) {
                                            g_variant_new_tuple(&parameter, 1),
                                            &reply);
    if (ret) {
-    OC_ERR("error while sending select network method call: %d\n", ret);
-    return -1;
+     OC_ERR("error while sending select network method call: %d\n", ret);
+     return -1;
    }
-
    return 0;
 }
 
@@ -334,7 +326,6 @@ supplicant_enable_network(GDBusConnection *connection) {
       OC_ERR("error while enabling the network %d\n", ret);
       return -1;
     }
-
     return 0;
 }
 
@@ -350,7 +341,6 @@ supplicant_configure_interface(GDBusConnection *connection, char **iface, int mo
     OC_ERR("unable to fetch wireless interface name %d\n", ret);
     return -1;
   }
-
   ret = supplicant_get_interface(connection, ctrl_ifname, &temp_interface);
   if (ret) {
     OC_ERR("unable to send get interface method call %d\n", ret);
@@ -382,7 +372,6 @@ supplicant_configure_interface(GDBusConnection *connection, char **iface, int mo
       return -1;
     }
   }
-
   return 0;
 }
 
@@ -399,46 +388,50 @@ wifi_execute_command(const char *file_path, char *const args[], char *const envs
            return -1;
     case 0:
            if (execve(file_path, args, envs) == -1) {
-	     OC_ERR("failed to execute command (%s)", strerror(errno));
-	     exit(1);
+	           OC_ERR("failed to execute command (%s)", strerror(errno));
+	           exit(1);
              return -1;
-	   }
+	         }
            break;
     default:
            if (waitpid(pid, &rv, 0) == -1)
-           OC_ERR("wait pid (%u) rv (%d)", pid, rv);
+             OC_ERR("wait pid (%u) rv (%d)", pid, rv);
            break;
   }
-
   return pid;
 }
 
 int
 wifi_start_station(void)
-{ 
+{
   if (!g_connection) {
     g_autoptr(GError) error = NULL;
     g_connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
     if (error) {
-        OC_ERR("failed to get gdbus connection %s\n", error->message);
-        return -1;
+      OC_ERR("failed to get gdbus connection %s\n", error->message);
+      return -1;
     }
   }
-
-  supplicant_configure_interface(g_connection, &g_iface, 1);
+  if (supplicant_configure_interface(g_connection, &g_iface, 1) == -1) {
+    OC_ERR("failed to configure network while starting station mode\n");
+    return -1;
+  }
   return 0;
 }
 
 int
 wifi_stop_station(void)
 {
-  supplicant_remove_network(g_connection, g_iface);
+  if (supplicant_remove_network(g_connection, g_iface) == -1) {
+    OC_ERR("failed to remove network while stopping station\n");
+    return -1;
+  }
   return 0;
 }
 
 int
 wifi_start_softap(char *ssid_key, char *psk)
-{ 
+{
   struct wpa_ssid *ssid = (struct wpa_ssid *)malloc(sizeof(struct wpa_ssid));
   int ret;
   char *iface;
@@ -446,31 +439,42 @@ wifi_start_softap(char *ssid_key, char *psk)
     g_autoptr(GError) error = NULL;
     g_connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
     if (error) {
-        OC_ERR("failed to get gdbus connection %s\n", error->message);
-        return -1;
+      OC_ERR("failed to get gdbus connection %s\n", error->message);
+      return -1;
     }
   }
+  if (supplicant_configure_interface(g_connection, &iface, 2) == -1) {
+    OC_ERR("failed to configure network while starting softAP mode\n");
+    return -1;
+  }
 
-  supplicant_configure_interface(g_connection, &iface, 2);
   snprintf(ssid->ssid, MAX_LEN_SSID, "%s", ssid_key);
   snprintf(ssid->psk, MAX_LEN_PSK, "%s", psk);
   ssid->mode = WPAS_MODE_AP;
   ssid->key_mgmt = "WPA-PSK";
 
-  ret = supplicant_add_network(g_connection, iface, ssid);
-  if (ret) {
-    OC_ERR("error while adding SoftAP network: %d\n", ret);
+  if (supplicant_add_network(g_connection, iface, ssid) == -1) {
+    OC_ERR("failed to add network in SoftAP mode\n");
     return -1;
   }
-  supplicant_select_network(g_connection, iface);
-  supplicant_enable_network(g_connection);
+  if (supplicant_select_network(g_connection, iface) == -1) {
+    OC_ERR("failed to select network in SoftAP mode\n");
+    return -1;
+  }
+  if (supplicant_enable_network(g_connection) == -1) {
+    OC_ERR("failed to enable network in SoftAP mode\n");
+    return -1;
+  }
   return 0;
 }
 
 int
 wifi_stop_softap()
 {
-  supplicant_remove_network(g_connection, g_iface);
+  if (supplicant_remove_network(g_connection, g_iface) == -1) {
+    OC_ERR("failed to remove network while stopping softAP\n");
+    return -1;
+  }
   return 0;
 }
 
@@ -483,14 +487,18 @@ wifi_join(char *ssid_key, char *password)
   snprintf(ssid->psk, MAX_LEN_PSK, "%s", password);
   ssid->mode = WPAS_MODE_INFRA;
   ssid->key_mgmt = "WPA-PSK";
-  ret = supplicant_add_network(g_connection, g_iface, ssid);
-  if (ret) {
-    OC_ERR("error while joining network: %d\n", ret);
+  if (supplicant_add_network(g_connection, g_iface, ssid) == -1) {
+    OC_ERR("failed to add network while joining AP\n");
     return -1;
   }
-
-  supplicant_select_network(g_connection, g_iface);
-  supplicant_enable_network(g_connection);
+  if (supplicant_select_network(g_connection, g_iface) == -1) {
+    OC_ERR("failed to select network while joining AP\n");
+    return -1;
+  }
+  if (supplicant_enable_network(g_connection) == -1) {
+    OC_ERR("failed to enable network while joining AP\n");
+    return -1;
+  }
   return 0;
 }
 
@@ -503,14 +511,13 @@ int wifi_process_status(char *process_name)
   DIR *dir = opendir(PID_DIRECTORY);
   if (dir) {
     while ((dent = readdir (dir)) != NULL) {
-     pidfile = strdup(dent->d_name);
-     if (!strncmp(pidfile, process_name, strlen(process_name))) {
-       return 0;
-     }
+      pidfile = strdup(dent->d_name);
+      if (!strncmp(pidfile, process_name, strlen(process_name))) {
+        return 0;
+      }
     }
     closedir(dir);
   }
-
   return -ENOENT;
 }
 
@@ -518,19 +525,17 @@ int
 wifi_start_dhcp_client()
 {
   FILE *fp = NULL;
-  int ret;
   char buf[DHCLIENT_CONF_LEN] = "";
   char hostname[150];
   char *const args[] = {"/sbin/dhclient", "-cf", "/etc/dhclient.conf", NULL};
   char *const envs[] = { NULL };
 
-  ret = wifi_process_status("dhclient");
-  if (!ret) {
+  if (!wifi_process_status("dhclient")) {
     OC_DBG("DHclient is already running");
     return 0;
   } else {
-     OC_ERR("unable to fetch the status of DHclient process %d", ret);
-     return -1;
+      OC_ERR("unable to fetch the status of DHclient process");
+      return -1;
   }
 
   if (remove(DHCLIENT_LEASES_FILE) < 0)
@@ -559,7 +564,6 @@ wifi_start_dhcp_client()
 int
 wifi_stop_dhcp_client()
 {
-  int ret;
   if(dhclient_pid == 0) {
     OC_ERR("DHCP client is not running\n");
     return -1;
@@ -568,9 +572,7 @@ wifi_stop_dhcp_client()
   kill(dhclient_pid, SIGTERM);
   waitpid(dhclient_pid, NULL, 0);
   dhclient_pid = 0;
-
-  ret = remove(DHCLIENT_CONF_FILE);
-  if(ret < 0){
+  if(remove(DHCLIENT_CONF_FILE) < 0){
     OC_ERR("error in removing configuration file\n");
     return -1;
   }
@@ -580,32 +582,26 @@ wifi_stop_dhcp_client()
 int
 wifi_start_dhcp_server()
 {
-  int ret;
   char *ctrl_ifname;
   char *const args_dns[] = {"/usr/sbin/dnsmasq", "-p0", "-F192.168.0.20,192.168.0.30", "-O3,192.168.0.1", NULL};
   char *const envs[] = { NULL };
 
-  ret = supplicant_get_wireless_interface(&ctrl_ifname);
-  if (ret) {
-    OC_ERR("unable to fetch the wireless interface %d\n", ret);
+  if (supplicant_get_wireless_interface(&ctrl_ifname)) {
+    OC_ERR("unable to fetch the wireless interface\n");
     return -1;
   }
   /* Assigning IP address to the DHCP server host */
   char *const args_ip_flush[] = {"/sbin/ip", "addr", "flush", "dev", ctrl_ifname, NULL};
   char *const args_ip[] = {"/sbin/ip", "addr", "add", "192.168.0.20/24", "dev", ctrl_ifname, NULL};
-  
-  ret = wifi_execute_command(args_ip_flush[0], &args_ip_flush[0], envs);
-  if (ret < 0) {
-    OC_ERR("unable to flush already assigned IP address %d\n", ret);
+
+  if (wifi_execute_command(args_ip_flush[0], &args_ip_flush[0], envs) < 0) {
+    OC_ERR("unable to flush already assigned IP address\n");
     return -1;
   }
-
-  ret = wifi_execute_command(args_ip[0], &args_ip[0], envs);
-  if (ret < 0) {
-    OC_ERR("unable to assign IP address to the host %d\n", ret);
+  if (wifi_execute_command(args_ip[0], &args_ip[0], envs) < 0) {
+    OC_ERR("unable to assign IP address to the host\n");
     return -1;
   }
-
   if (remove(DNSMASQ_LEASES_FILE) < 0)
     OC_ERR("failed to remove %s", DNSMASQ_LEASES_FILE);
 
