@@ -433,7 +433,6 @@ int
 wifi_start_softap(char *ssid_key, char *psk)
 {
   struct wpa_ssid *ssid = (struct wpa_ssid *)malloc(sizeof(struct wpa_ssid));
-  int ret;
   char *iface;
   if (!g_connection) {
     g_autoptr(GError) error = NULL;
@@ -481,7 +480,6 @@ wifi_stop_softap()
 int
 wifi_join(char *ssid_key, char *password)
 {
-  int ret;
   struct wpa_ssid *ssid = (struct wpa_ssid *)malloc(sizeof(struct wpa_ssid));
   snprintf(ssid->ssid, MAX_LEN_SSID, "%s", ssid_key);
   snprintf(ssid->psk, MAX_LEN_PSK, "%s", password);
