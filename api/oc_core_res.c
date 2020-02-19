@@ -658,11 +658,27 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
            memcmp(uri + skip, "EasySetupResURI", 15) == 0) {
     type = OCF_WES;
   }
+  else if ((strlen(uri) - skip) == 14 &&
+           memcmp(uri + skip, "WiFiConfResURI", 14) == 0) {
+    type = OCF_WES_WIFI;
+  }
+  else if ((strlen(uri) - skip) == 13 &&
+           memcmp(uri + skip, "DevConfResURI", 13) == 0) {
+    type = OCF_WES_DEVICE;
+  }
 #endif /* OC_WIFI_EASYSETUP */
 #ifdef OC_ESIM_EASYSETUP
   else if ((strlen(uri) - skip) == 19 &&
            memcmp(uri + skip, "EsimEasySetupResURI", 19) == 0) {
     type = OCF_EES;
+  }
+  else if ((strlen(uri) - skip) == 13 &&
+           memcmp(uri + skip, "RSPConfResURI", 13) == 0) {
+    type = OCF_EES_RSP;
+  }
+  else if ((strlen(uri) - skip) == 23 &&
+           memcmp(uri + skip, "RSPCapabilityConfResURI", 23) == 0) {
+    type = OCF_EES_RSPCAP;
   }
 #endif /* OC_ESIM_EASYSETUP */
 #ifdef OC_SECURITY
