@@ -24,7 +24,7 @@
 #include "oc_discovery.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
-
+#include "api/oc_main.h"
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
@@ -358,6 +358,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   device_count++;
+
+#ifdef OC_SECURITY
+  oc_main_init_svrs(device_count - 1);
+#endif /* OC_SECURITY */
 
   return &oc_device_info[device_count - 1];
 }

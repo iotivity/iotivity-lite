@@ -30,13 +30,12 @@ extern "C"
 {
 #endif
 
-void oc_sec_acl_init(void);
+void oc_sec_acl_init(size_t device);
 void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
 void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device);
 bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device);
-void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
               void *data);
 void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);

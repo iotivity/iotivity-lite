@@ -48,7 +48,7 @@ typedef struct
   oc_uuid_t rowneruuid;
 } oc_sec_doxm_t;
 
-void oc_sec_doxm_init(void);
+void oc_sec_doxm_init(size_t device);
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_doxm(size_t device, bool to_storage);

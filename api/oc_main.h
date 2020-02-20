@@ -20,7 +20,8 @@
 #include "oc_api.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef struct oc_factory_presets_t
@@ -38,6 +39,8 @@ typedef struct oc_random_pin_t
 } oc_random_pin_t;
 
 bool oc_main_initialized(void);
+
+void oc_main_init_svrs(size_t device);
 
 #ifdef __cplusplus
 }

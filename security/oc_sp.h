@@ -32,7 +32,7 @@ typedef struct
   int credid;
 } oc_sec_sp_t;
 
-void oc_sec_sp_init(void);
+void oc_sec_sp_init(size_t device);
 void oc_sec_sp_free(void);
 bool oc_sec_decode_sp(oc_rep_t *rep, size_t device);
 void oc_sec_encode_sp(size_t device);

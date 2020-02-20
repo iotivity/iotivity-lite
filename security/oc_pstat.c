@@ -55,14 +55,16 @@ oc_sec_pstat_free(void)
 }
 
 void
-oc_sec_pstat_init(void)
+oc_sec_pstat_init(size_t device)
 {
+  (void)device;
 #ifdef OC_DYNAMIC_ALLOCATION
-  pstat =
-    (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
+  pstat = (oc_sec_pstat_t *)realloc(pstat, oc_core_get_num_devices() *
+                                             sizeof(oc_sec_pstat_t));
   if (!pstat) {
     oc_abort("Insufficient memory");
   }
+  memset(&pstat[device], 0, sizeof(oc_sec_pstat_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

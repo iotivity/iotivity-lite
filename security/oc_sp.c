@@ -47,25 +47,25 @@ oc_pki_set_security_profile(size_t device, oc_sp_types_t supported_profiles,
 }
 
 void
-oc_sec_sp_init(void)
+oc_sec_sp_init(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  sp = (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
+  sp =
+    (oc_sec_sp_t *)realloc(sp, oc_core_get_num_devices() * sizeof(oc_sec_sp_t));
   if (!sp) {
     oc_abort("Insufficient memory");
   }
-  sp_mfg_default =
-    (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
+  memset(&sp[device], 0, sizeof(oc_sec_sp_t));
+  sp_mfg_default = (oc_sec_sp_t *)realloc(
+    sp_mfg_default, oc_core_get_num_devices() * sizeof(oc_sec_sp_t));
   if (!sp_mfg_default) {
     oc_abort("Insufficient memory");
   }
+  memset(&sp_mfg_default[device], 0, sizeof(oc_sec_sp_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
-    sp_mfg_default[device].current_profile = OC_SP_BASELINE;
-    sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
-    sp_mfg_default[device].credid = -1;
-  }
+  sp_mfg_default[device].current_profile = OC_SP_BASELINE;
+  sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
+  sp_mfg_default[device].credid = -1;
 }
 
 void

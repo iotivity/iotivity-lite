@@ -57,18 +57,23 @@ oc_sec_get_creds(size_t device)
 }
 
 void
-oc_sec_cred_init(void)
+oc_sec_cred_init(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  devices =
-    (oc_sec_creds_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_creds_t));
+  devices = (oc_sec_creds_t *)realloc(devices, oc_core_get_num_devices() *
+                                                 sizeof(oc_sec_creds_t));
   if (!devices) {
     oc_abort("Insufficient memory");
   }
+  memset(&devices[device], 0, sizeof(oc_sec_creds_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
-    OC_LIST_STRUCT_INIT(&devices[i], creds);
+  size_t i = 0;
+  OC_LIST_STRUCT_INIT(&devices[device], creds);
+  while (i < oc_core_get_num_devices()) {
+    if (i != device) {
+      OC_LIST_STRUCT_REINIT(&devices[i], creds);
+    }
+    i++;
   }
 }
 
@@ -389,7 +394,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
 
   if (!subjectuuid) {
     if (credusage != OC_CREDUSAGE_ROLE_CERT) {
-      return -1;
+      goto add_new_cred_error;
     } else {
       subject.id[0] = '*';
     }
@@ -439,6 +444,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                    publicdata_size) == 0))
 #endif /* OC_PKI */
       ) {
+#ifdef OC_PKI
+        if (oc_string_len(public_key) > 0) {
+          oc_free_string(&public_key);
+        }
+#endif /* OC_PKI */
         return credid;
       } else {
         oc_sec_remove_cred_by_credid(credid, device);
@@ -470,6 +480,9 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                 publicdata_size == oc_string_len(cred->publicdata.data) &&
                 memcmp(publicdata, oc_string(cred->publicdata.data),
                        publicdata_size) == 0) {
+              if (oc_string_len(public_key) > 0) {
+                oc_free_string(&public_key);
+              }
               return cred->credid;
             }
           }
@@ -486,6 +499,9 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       if ((oc_string_len(roles->publicdata.data) == publicdata_size) &&
           memcmp(oc_string(roles->publicdata.data), publicdata,
                  publicdata_size) == 0) {
+        if (oc_string_len(public_key) > 0) {
+          oc_free_string(&public_key);
+        }
         return roles->credid;
       }
       roles = roles->next;

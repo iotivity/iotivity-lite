@@ -52,18 +52,23 @@ OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
 OC_MEMB(res_l, oc_ace_res_t, OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES);
 
 void
-oc_sec_acl_init(void)
+oc_sec_acl_init(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  aclist =
-    (oc_sec_acl_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_acl_t));
+  aclist = (oc_sec_acl_t *)realloc(aclist, oc_core_get_num_devices() *
+                                             sizeof(oc_sec_acl_t));
   if (!aclist) {
     oc_abort("Insufficient memory");
   }
+  memset(&aclist[device], 0, sizeof(oc_sec_acl_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
-    OC_LIST_STRUCT_INIT(&aclist[i], subjects);
+  size_t i = 0;
+  OC_LIST_STRUCT_INIT(&aclist[device], subjects);
+  while (i < oc_core_get_num_devices()) {
+    if (i != device) {
+      OC_LIST_STRUCT_REINIT(&aclist[i], subjects);
+    }
+    i++;
   }
 }
 

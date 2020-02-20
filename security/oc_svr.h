@@ -17,12 +17,14 @@
 #ifndef OC_SVR_H
 #define OC_SVR_H
 
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-void oc_sec_create_svr(void);
+void oc_sec_create_svr(size_t device);
 
 #ifdef __cplusplus
 }

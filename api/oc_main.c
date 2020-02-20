@@ -178,6 +178,34 @@ oc_shutdown_all_devices(void)
   oc_core_shutdown();
 }
 
+#ifdef OC_SECURITY
+void
+oc_main_init_svrs(size_t device)
+{
+  oc_sec_doxm_init(device);
+  oc_sec_pstat_init(device);
+  oc_sec_cred_init(device);
+  oc_sec_acl_init(device);
+  oc_sec_sp_init(device);
+  oc_sec_create_svr(device);
+  oc_sec_load_unique_ids(device);
+  OC_DBG("oc_main_init(): loading pstat");
+  oc_sec_load_pstat(device);
+  OC_DBG("oc_main_init(): loading doxm");
+  oc_sec_load_doxm(device);
+  OC_DBG("oc_main_init(): loading cred");
+  oc_sec_load_cred(device);
+  OC_DBG("oc_main_init(): loading acl");
+  oc_sec_load_acl(device);
+  OC_DBG("oc_main_init(): loading sp");
+  oc_sec_load_sp(device);
+#ifdef OC_PKI
+  OC_DBG("oc_main_init(): loading ECDSA keypair");
+  oc_sec_load_ecdsa_keypair(device);
+#endif /* OC_PKI */
+}
+#endif /* OC_SECURITY */
+
 int
 oc_main_init(const oc_handler_t *handler)
 {
@@ -196,13 +224,6 @@ oc_main_init(const oc_handler_t *handler)
   oc_core_init();
   oc_network_event_handler_mutex_init();
 
-  ret = app_callbacks->init();
-  if (ret < 0) {
-    oc_ri_shutdown();
-    oc_shutdown_all_devices();
-    goto err;
-  }
-
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
   if (ret < 0) {
@@ -212,9 +233,12 @@ oc_main_init(const oc_handler_t *handler)
   }
 #endif /* OC_SECURITY */
 
-#ifdef OC_SECURITY
-  oc_sec_create_svr();
-#endif
+  ret = app_callbacks->init();
+  if (ret < 0) {
+    oc_ri_shutdown();
+    oc_shutdown_all_devices();
+    goto err;
+  }
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_cloud_init();
@@ -227,27 +251,6 @@ oc_main_init(const oc_handler_t *handler)
 #ifdef OC_SERVER
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
-#endif
-
-#ifdef OC_SECURITY
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_load_unique_ids(device);
-    OC_DBG("oc_main_init(): loading pstat");
-    oc_sec_load_pstat(device);
-    OC_DBG("oc_main_init(): loading doxm");
-    oc_sec_load_doxm(device);
-    OC_DBG("oc_main_init(): loading cred");
-    oc_sec_load_cred(device);
-    OC_DBG("oc_main_init(): loading acl");
-    oc_sec_load_acl(device);
-    OC_DBG("oc_main_init(): loading sp");
-    oc_sec_load_sp(device);
-#ifdef OC_PKI
-    OC_DBG("oc_main_init(): loading ECDSA keypair");
-    oc_sec_load_ecdsa_keypair(device);
-#endif /* OC_PKI */
-  }
 #endif
 
   OC_DBG("oc_main: stack initialized");

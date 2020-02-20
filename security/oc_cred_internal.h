@@ -40,7 +40,7 @@ int oc_sec_add_new_cred(size_t device, bool roles_resource,
                         const char *role, const char *authority);
 
 void oc_sec_cred_default(size_t device);
-void oc_sec_cred_init(void);
+void oc_sec_cred_init(size_t device);
 void oc_sec_cred_free(void);
 void oc_sec_encode_cred(bool persist, size_t device);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,

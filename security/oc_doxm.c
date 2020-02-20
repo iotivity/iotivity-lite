@@ -33,7 +33,7 @@
 #include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_sec_doxm_t *doxm;
-#else /* OC_DYNAMIC_ALLOCATION */
+#else  /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
@@ -48,14 +48,16 @@ oc_sec_doxm_free(void)
 }
 
 void
-oc_sec_doxm_init(void)
+oc_sec_doxm_init(size_t device)
 {
+  (void)device;
 #ifdef OC_DYNAMIC_ALLOCATION
-  doxm =
-    (oc_sec_doxm_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_doxm_t));
+  doxm = (oc_sec_doxm_t *)realloc(doxm, oc_core_get_num_devices() *
+                                          sizeof(oc_sec_doxm_t));
   if (!doxm) {
     oc_abort("Insufficient memory");
   }
+  memset(&doxm[device], 0, sizeof(oc_sec_doxm_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
