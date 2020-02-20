@@ -74,10 +74,10 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data)
     oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
   }
 
-  PRINT("Last Error Rason : %s\n", oc_string(ees_prov_data->last_err_reason));
+  PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
   PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
   PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  PRINT("End User Conformation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
+  PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
   if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
     (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
   {
@@ -135,16 +135,16 @@ ees_wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
       return;
   }
   PRINT("SSID : %s\n", oc_string(wifi_prov_data->ssid));
-  PRINT("Password : %s\n", oc_string(wifi_prov_data->pwd));
-  PRINT("AuthType : %d\n", wifi_prov_data->authtype);
-  PRINT("EncType : %d\n", wifi_prov_data->enctype);
+  PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
+  PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
+  PRINT("EncType : %d\n", wifi_prov_data->enc_type);
 
   //1  Stop DHCP Server
   wifi_stop_dhcp_server();
   //1 Start WiFi Station
   wifi_start_station();
   //1 Join WiFi AP with ssid, authtype and pwd
-  wifi_join(NULL, NULL);
+  wifi_join(oc_string(wifi_prov_data->ssid), oc_string(wifi_prov_data->cred));
   //1 Start DHCP client
   wifi_start_dhcp_client();
 }
@@ -270,16 +270,16 @@ ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
       return;
   }
   PRINT("SSID : %s\n", oc_string(wifi_prov_data->ssid));
-  PRINT("Password : %s\n", oc_string(wifi_prov_data->pwd));
-  PRINT("AuthType : %d\n", wifi_prov_data->authtype);
-  PRINT("EncType : %d\n", wifi_prov_data->enctype);
+  PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
+  PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
+  PRINT("EncType : %d\n", wifi_prov_data->enc_type);
 
   //1  Stop DHCP Server
   wifi_stop_dhcp_server();
   //1 Start WiFi Station
   wifi_start_station();
   //1 Join WiFi AP with ssid, authtype and pwd
-  wifi_join(NULL, NULL);
+  wifi_join(oc_string(wifi_prov_data->ssid), oc_string(wifi_prov_data->cred));
   //1 Start DHCP client
   wifi_start_dhcp_client();
 }

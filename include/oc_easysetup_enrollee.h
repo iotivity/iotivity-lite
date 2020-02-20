@@ -319,11 +319,10 @@ typedef enum {
  */
 typedef struct
 {
-  oc_es_connect_type_t connect[NUM_CONNECT_TYPE]; /**< Connection type(s) sent by Mediator. */
-  int num_request;       /**< Size of connect array. */
-  oc_wes_enrollee_state_t state;
-  oc_wes_error_code_t last_err_code;
-  void *userdata;         /**< Vender Specific data. */
+    oc_es_connect_type_t connect_request[NUM_CONNECT_TYPE];
+    int num_request;
+    oc_wes_enrollee_state_t state;
+    oc_wes_error_code_t last_err_code;
 } oc_wes_data_t;
 
 /**
@@ -332,11 +331,17 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t ssid;       /**< SSID of the Enroller. */
-  oc_string_t pwd;        /**< Passphrase of the Enroller. */
-  wifi_authtype authtype; /**< Auth Type of the Enroller. */
-  wifi_enctype enctype;   /**< Encryption Type of the Enroller. */
-  void *userdata;         /**< Vender Specific data. */
+    oc_string_t ssid;
+    oc_string_t cred;
+    wifi_authtype auth_type;
+    wifi_enctype enc_type;
+    wifi_mode supported_mode[NUM_WIFIMODE];
+    uint8_t num_mode;
+    wifi_freq supported_freq;
+    wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
+    uint8_t num_supported_authtype;
+    wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
+    uint8_t num_supported_enctype;
 } oc_wes_wifi_data_t;
 
 /**
@@ -345,8 +350,7 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t device_name; /**< Device friendly name. */
-  void *userdata; /**< Vender Specific data. */
+    oc_string_t dev_name;
 } oc_wes_device_data_t;
 
 /**
@@ -409,12 +413,11 @@ typedef enum {
  */
 typedef struct
 {
-  oc_string_t rsp_status;
-  oc_string_t last_err_reason;
-  oc_string_t last_err_code;
-  oc_string_t last_err_desc;
-  oc_string_t end_user_conf;
-  void *userdata; /**< Vender Specific data. */
+    oc_string_t rsp_status;
+    oc_string_t last_err_reason;
+    oc_string_t last_err_code;
+    oc_string_t last_err_desc;
+    oc_string_t end_user_conf;
 } oc_ees_data_t;
 
 /**
@@ -423,11 +426,10 @@ typedef struct
  */
 typedef struct
 {
-  oc_string_t activation_code;  /**< Activation code for eSIM profile. */
-  oc_string_t profile_metadata;
-  oc_string_t confirm_code;
-  bool confirm_code_required;
-  void *userdata; /**< Vender Specific data. */
+    oc_string_t activation_code;
+    oc_string_t profile_metadata;
+    oc_string_t confirm_code;
+    bool confirm_code_required;
 } oc_ees_rsp_data_t;
 
 /**
@@ -436,9 +438,8 @@ typedef struct
  */
  typedef struct
 {
-  oc_string_t euicc_info;
-  oc_string_t device_info;
-  void *userdata; /**< Vender Specific data. */
+    oc_string_t euicc_info;
+    oc_string_t device_info;
 } oc_ees_rspcap_data_t;
 
 /**

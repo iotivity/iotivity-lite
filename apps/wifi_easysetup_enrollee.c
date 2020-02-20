@@ -56,7 +56,7 @@ device_prov_cb1(oc_wes_device_data_t *device_prov_data)
       PRINT("device_prov_data is NULL\n");
       return;
   }
-  PRINT("Device Name: %s\n", oc_string(device_prov_data->device_name));
+  PRINT("Device Name: %s\n", oc_string(device_prov_data->dev_name));
 }
 
 static void
@@ -68,9 +68,9 @@ wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
       return;
   }
   PRINT("SSID : %s\n", oc_string(wifi_prov_data->ssid));
-  PRINT("Password : %s\n", oc_string(wifi_prov_data->pwd));
-  PRINT("AuthType : %d\n", wifi_prov_data->authtype);
-  PRINT("EncType : %d\n", wifi_prov_data->enctype);
+  PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
+  PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
+  PRINT("EncType : %d\n", wifi_prov_data->enc_type);
 
   //1  Stop DHCP Server
   wifi_stop_dhcp_server();
@@ -127,7 +127,7 @@ device_prov_cb2(oc_wes_device_data_t *device_prov_data)
       PRINT("device_prov_data is NULL\n");
       return;
   }
-  PRINT("Device Name: %s\n", oc_string(device_prov_data->device_name));
+  PRINT("Device Name: %s\n", oc_string(device_prov_data->dev_name));
 }
 
 static void
@@ -139,9 +139,9 @@ wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
       return;
   }
   PRINT("SSID : %s\n", oc_string(wifi_prov_data->ssid));
-  PRINT("Password : %s\n", oc_string(wifi_prov_data->pwd));
-  PRINT("AuthType : %d\n", wifi_prov_data->authtype);
-  PRINT("EncType : %d\n", wifi_prov_data->enctype);
+  PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
+  PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
+  PRINT("EncType : %d\n", wifi_prov_data->enc_type);
   //1  Stop DHCP Server
   wifi_stop_dhcp_server();
   //1 Start WiFi Station

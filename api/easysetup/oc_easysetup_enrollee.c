@@ -31,13 +31,7 @@
 typedef struct
 {
   oc_collection_t *handle;
-  struct
-  {
-    oc_es_connect_type_t connect_request[NUM_CONNECT_TYPE];
-    int num_request;
-    oc_wes_enrollee_state_t state;
-    oc_wes_error_code_t last_err_code;
-  } data;
+  oc_wes_data_t data;
   oc_wes_prov_cb_t prov_cb;
 } oc_wes_resource_t;
 
@@ -46,20 +40,7 @@ typedef struct
 typedef struct
 {
   oc_resource_t *handle;
-  struct
-  {
-    oc_string_t ssid;
-    oc_string_t cred;
-    wifi_authtype auth_type;
-    wifi_enctype enc_type;
-    wifi_mode supported_mode[NUM_WIFIMODE];
-    uint8_t num_mode;
-    wifi_freq supported_freq;
-    wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
-    uint8_t num_supported_authtype;
-    wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
-    uint8_t num_supported_enctype;
-  } data;
+  oc_wes_wifi_data_t data;
   oc_wes_wifi_prov_cb_t prov_cb;
 } oc_wes_wifi_conf_resource_t;
 
@@ -68,10 +49,7 @@ typedef struct
 typedef struct
 {
   oc_resource_t *handle;
-  struct
-  {
-    oc_string_t dev_name;
-  } data;
+  oc_wes_device_data_t data;
   oc_wes_dev_prov_cb_t prov_cb;
 } oc_wes_dev_conf_resource_t;
 
@@ -274,7 +252,6 @@ static void
 update_wifi_conf_resource(oc_request_t *request)
 {
   bool res_changed = false;
-  oc_wes_wifi_data_t wifi_cb_data;
   oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
   OC_DBG("update_wifi_conf_resource\n");
 
@@ -329,12 +306,9 @@ update_wifi_conf_resource(oc_request_t *request)
 #endif  // OC_SPEC_VER_OIC
   }
 
-  memcpy(&wifi_cb_data, &dev_cxt->wifi.data, sizeof(oc_wes_wifi_data_t));
-  wifi_cb_data.userdata = NULL;
-
   if (res_changed && dev_cxt->wifi.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->wifi.prov_cb(&wifi_cb_data);
+    dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data));
     // Notify observers about data change
     oc_notify_observers(dev_cxt->wifi.handle);
   }
@@ -391,7 +365,6 @@ update_devconf_resource(oc_request_t *request)
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  oc_wes_device_data_t dev_cb_data;
   oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
   OC_DBG("update_devconf_resource\n");
 
@@ -401,12 +374,9 @@ update_devconf_resource(oc_request_t *request)
     res_changed = true;
   }
 
-  memcpy(&dev_cb_data, &dev_cxt->device.data, sizeof(oc_wes_device_data_t));
-  dev_cb_data.userdata = NULL;
-
   if (res_changed && dev_cxt->device.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->device.prov_cb(&dev_cb_data);
+    dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data));
     // Notify observers about data change
     oc_notify_observers(dev_cxt->device.handle);
   }
@@ -456,10 +426,10 @@ bool
 set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)data;
+  bool res_changed = false;
   int64_t int_val = 0;
   int64_t *connect_req;
   size_t connect_req_size;
-  oc_wes_data_t cb_data;
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(wes->device);
   OC_DBG("set_wes_properties\n");
@@ -478,6 +448,7 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
                 connect_req[i] == OC_ES_CONNECT_COAPCLOUD) {
               dev_cxt->wes.data.connect_request[dev_cxt->wes.data.num_request++] =
                 connect_req[i];
+              res_changed = true;
             }
           }
         }
@@ -485,9 +456,11 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
       case OC_REP_INT:
 	  if (oc_rep_get_int(rep, OC_RSRVD_WES_PROVSTATUS, &int_val)) {
 	    dev_cxt->wes.data.state = int_val;
+          res_changed = true;
 	  }
 	  if (oc_rep_get_int(rep, OC_RSRVD_WES_LAST_ERRORCODE, &int_val)) {
 	    dev_cxt->wes.data.last_err_code = int_val;
+          res_changed = true;
 	  }
         break;
       default:
@@ -497,10 +470,8 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   }
 
   // Trigger application callback
-  if (dev_cxt->wes.prov_cb) {
-    memcpy(&cb_data, &dev_cxt->wes.data, sizeof(oc_wes_data_t));
-    cb_data.userdata = NULL;
-    dev_cxt->wes.prov_cb(&cb_data);
+  if (res_changed && dev_cxt->wes.prov_cb) {
+    dev_cxt->wes.prov_cb((oc_wes_data_t *) &(dev_cxt->wes.data));
   }
   oc_notify_observers((oc_resource_t *)dev_cxt->wes.handle);
   return true;
@@ -670,15 +641,7 @@ oc_delete_wifi_easysetup_resource(size_t device)
 typedef struct
 {
   oc_collection_t *handle;
-  // This structure is synced with oc_es_connect_request
-  struct
-  {
-    oc_string_t rsp_status;
-    oc_string_t last_err_reason;
-    oc_string_t last_err_code;
-    oc_string_t last_err_desc;
-    oc_string_t end_user_conf;
-  } data;
+  oc_ees_data_t data;
   oc_ees_prov_cb_t prov_cb;
 } oc_ees_resource_t;
 
@@ -687,13 +650,7 @@ typedef struct
 typedef struct
 {
   oc_resource_t *handle;
-  struct
-  {
-    oc_string_t activation_code;
-    oc_string_t profile_metadata;
-    oc_string_t confirm_code;
-    bool confirm_code_required;
-  } data;
+  oc_ees_rsp_data_t data;
   oc_ees_rsp_prov_cb_t prov_cb;
 } oc_ees_rsp_conf_resource_t;
 
@@ -702,11 +659,7 @@ typedef struct
 typedef struct
 {
   oc_resource_t *handle;
-  struct
-  {
-    oc_string_t euicc_info;
-    oc_string_t device_info;
-  } data;
+  oc_ees_rspcap_data_t data;
   oc_ees_rspcap_prov_cb_t prov_cb;
 } oc_ees_rspcap_conf_resource_t;
 
@@ -845,7 +798,6 @@ update_rspconf_resource(oc_request_t *request)
   size_t str_len = 0;
   bool ccr = true;
   bool res_changed = false;
-  oc_ees_rsp_data_t rsp_cb_data;
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
   OC_DBG("update_rspconf_resource\n");
 
@@ -869,12 +821,9 @@ update_rspconf_resource(oc_request_t *request)
     res_changed = true;
   }
 
-  memcpy(&rsp_cb_data, &dev_cxt->rsp.data, sizeof(oc_ees_rsp_data_t));
-  rsp_cb_data.userdata = NULL;
-
   if(res_changed && dev_cxt->rsp.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->rsp.prov_cb(&rsp_cb_data);
+    dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *) &(dev_cxt->rsp.data));
     //Notify observers about data change
     oc_notify_observers(dev_cxt->rsp.handle);
   }
@@ -933,7 +882,6 @@ update_rspcapconf_resource(oc_request_t *request)
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  oc_ees_rspcap_data_t rspcap_cb_data;
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
 
   OC_DBG("update_rspcapconf_resource\n");
@@ -949,12 +897,9 @@ update_rspcapconf_resource(oc_request_t *request)
     res_changed = true;
   }
 
-  memcpy(&rspcap_cb_data, &dev_cxt->rsp_cap.data, sizeof(oc_ees_rspcap_data_t));
-  rspcap_cb_data.userdata = NULL;
-
   if(res_changed && dev_cxt->rsp_cap.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->rsp_cap.prov_cb(&rspcap_cb_data);
+    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *) &(dev_cxt->rsp_cap.data));
     // Notify observers about data change
     oc_notify_observers(dev_cxt->rsp_cap.handle);
   }
@@ -1008,9 +953,9 @@ bool
 set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)data;
+  bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  oc_ees_data_t cb_data;
   oc_collection_t *ees = (oc_collection_t *)resource;
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
 
@@ -1022,22 +967,27 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
           es_new_string(&(dev_cxt->ees.data.rsp_status), str_val);
+          res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
             &str_val, &str_len)) {
           es_new_string(&(dev_cxt->ees.data.last_err_reason), str_val);
+          res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORCODE,
             &str_val, &str_len)) {
           es_new_string(&(dev_cxt->ees.data.last_err_code), str_val);
+          res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORRDESCRIPTION,
             &str_val, &str_len)) {
           es_new_string(&(dev_cxt->ees.data.last_err_desc), str_val);
+          res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ENDUSERCONFIRMATION,
             &str_val, &str_len)) {
           es_new_string(&(dev_cxt->ees.data.end_user_conf), str_val);
+          res_changed = true;
         }
         break;
       default:
@@ -1046,10 +996,8 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
     rep = rep->next;
   }
 
-  if (dev_cxt->ees.prov_cb) {
-    memcpy(&cb_data, &dev_cxt->ees.data, sizeof(oc_ees_data_t));
-    cb_data.userdata = NULL;
-    dev_cxt->ees.prov_cb(&cb_data);
+  if (res_changed && dev_cxt->ees.prov_cb) {
+    dev_cxt->ees.prov_cb((oc_ees_data_t *) &(dev_cxt->ees.data));
   }
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return true;
