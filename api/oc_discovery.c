@@ -188,6 +188,30 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
     matches++;
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
+#if defined(OC_SERVER) && defined(OC_WIFI_EASYSETUP)
+  if (filter_resource(oc_core_get_resource_by_index(OCF_WES, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+  if (filter_resource(oc_core_get_resource_by_index(OCF_WES_WIFI, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+  if (filter_resource(oc_core_get_resource_by_index(OCF_WES_DEVICE, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+#endif /* OC_SERVER && OC_WIFI_EASYSETUP */
+
+#if defined(OC_SERVER) && defined(OC_ESIM_EASYSETUP)
+  if (filter_resource(oc_core_get_resource_by_index(OCF_EES, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+  if (filter_resource(oc_core_get_resource_by_index(OCF_EES_RSP, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+  if (filter_resource(oc_core_get_resource_by_index(OCF_EES_RSPCAP, device_index), request,
+        oc_string(anchor), links))
+    matches++;
+#endif /* OC_SERVER && OC_WIFI_EASYSETUP */
+
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {

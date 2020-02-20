@@ -164,11 +164,11 @@ typedef enum {
 #define OC_RSRVD_WES_URI_DEVCONF "/DevConfResURI"
 
 #define OC_RSRVD_EES_RES_TYPE_ESIMEASYSETUP "oic.r.esimeasysetup"
-#define OC_RSRVD_EES_URI_ESIMEASYSETUP "/EsimEasySetupResURI"
+#define OC_RSRVD_EES_URI_ESIMEASYSETUP "/eSIMEasySetupResURI"
 #define OC_RSRVD_EES_RES_TYPE_RSPCONF "oic.r.rspconf"
 #define OC_RSRVD_EES_URI_RSPCONF "/RSPConfResURI"
-#define OC_RSRVD_EES_RES_TYPE_RSPCAPCONF "oic.r.rspcapabilityconf"
-#define OC_RSRVD_EES_URI_RSPCAPCONF "/RSPCapabilityConfResURI"
+#define OC_RSRVD_EES_RES_TYPE_RSPCAP "oic.r.rspcapability"
+#define OC_RSRVD_EES_URI_RSPCAP "/RSPCapabilityResURI"
 
 #ifdef __cplusplus
 }

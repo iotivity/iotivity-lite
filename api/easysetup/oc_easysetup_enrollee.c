@@ -439,7 +439,7 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   OC_DBG("get_wes_properties\n");
 
   oc_rep_start_root_object();
-
+  oc_process_baseline_interface((oc_resource_t *)dev_cxt->wes.handle);
   switch (iface_mask) {
   case OC_IF_BASELINE:
   case OC_IF_LL:
@@ -988,7 +988,7 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   OC_DBG("get_ees_properties\n");
 
   oc_rep_start_root_object();
-
+  oc_process_baseline_interface((oc_resource_t *)dev_cxt->ees.handle);
   switch (iface_mask) {
   case OC_IF_BASELINE:
   case OC_IF_LL:
@@ -1151,7 +1151,7 @@ oc_create_esim_easysetup_resource(size_t device)
   oc_core_populate_resource(
     OCF_EES_RSPCAP,
     device,
-    OC_RSRVD_EES_URI_RSPCAPCONF,
+    OC_RSRVD_EES_URI_RSPCAP,
     OC_IF_R | OC_IF_BASELINE,
     OC_IF_BASELINE,
     OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
@@ -1160,7 +1160,7 @@ oc_create_esim_easysetup_resource(size_t device)
     rspcapconf_post_handler,
     0,
     1,
-    OC_RSRVD_EES_RES_TYPE_RSPCAPCONF);
+    OC_RSRVD_EES_RES_TYPE_RSPCAP);
 
   dev_cxt->rsp_cap.handle = oc_core_get_resource_by_index(OCF_EES_RSPCAP, device);
   oc_link_t *l2 = oc_new_link(dev_cxt->rsp_cap.handle);

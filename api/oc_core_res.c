@@ -669,15 +669,15 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
 #endif /* OC_WIFI_EASYSETUP */
 #ifdef OC_ESIM_EASYSETUP
   else if ((strlen(uri) - skip) == 19 &&
-           memcmp(uri + skip, "EsimEasySetupResURI", 19) == 0) {
+           memcmp(uri + skip, "eSIMEasySetupResURI", 19) == 0) {
     type = OCF_EES;
   }
   else if ((strlen(uri) - skip) == 13 &&
            memcmp(uri + skip, "RSPConfResURI", 13) == 0) {
     type = OCF_EES_RSP;
   }
-  else if ((strlen(uri) - skip) == 23 &&
-           memcmp(uri + skip, "RSPCapabilityConfResURI", 23) == 0) {
+  else if ((strlen(uri) - skip) == 19 &&
+           memcmp(uri + skip, "RSPCapabilityResURI", 19) == 0) {
     type = OCF_EES_RSPCAP;
   }
 #endif /* OC_ESIM_EASYSETUP */
