@@ -83,29 +83,6 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   return 0;
 }
 
-void
-load_virtual_device_security(size_t device)
-{
-  (void)device;
-#ifdef OC_SECURITY
-  oc_sec_load_unique_ids(device);
-  OC_DBG("oc_main_init(): loading pstat");
-  oc_sec_load_pstat(device);
-  OC_DBG("oc_main_init(): loading doxm");
-  oc_sec_load_doxm(device);
-  OC_DBG("oc_main_init(): loading cred");
-  oc_sec_load_cred(device);
-  OC_DBG("oc_main_init(): loading acl");
-  oc_sec_load_acl(device);
-  OC_DBG("oc_main_init(): loading sp");
-  oc_sec_load_sp(device);
-#ifdef OC_PKI
-    OC_DBG("oc_main_init(): loading ECDSA keypair");
-    oc_sec_load_ecdsa_keypair(device);
-#endif /* OC_PKI */
-#endif /* OC_SECURITY */
-}
-
 /*
  * TODO must figure out a way to index each device. Just calling oc_add_device
  * will create a new index device.
@@ -130,8 +107,5 @@ oc_bridge_add_virtual_device(const char *virtual_device_id, const char *uri,
     return ret_value;
   }
   oc_device_bind_resource_type(oc_core_get_num_devices() - 1, "oic.d.virtual");
-
-  load_virtual_device_security(oc_core_get_num_devices() - 1);
-
   return ret_value;
 }

@@ -63,15 +63,21 @@ struct virtual_light_t
   const char eco_system[32];
   bool on;
   bool discovered;
+  bool added_to_bridge;
 };
 
 #define VOD_COUNT 5
 struct virtual_light_t virtual_lights[VOD_COUNT] = {
-  { "Light 1", "1b32e152-3756-4fb6-b3f2-d8db7aafe39f", "ABC", true, false },
-  { "Light 2", "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC", true, false },
-  { "Light 3", "686ef93d-36e0-47fc-8316-fbd7045e850a", "ABC", true, false },
-  { "Light 4", "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ", true, false },
-  { "Light 5", "e2f0109f-ef7d-496a-9676-d3d87b38e52f", "XYZ", true, false }
+  { "Light 1", "1b32e152-3756-4fb6-b3f2-d8db7aafe39f", "ABC", true, false,
+    false },
+  { "Light 2", "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC", true, false,
+    false },
+  { "Light 3", "686ef93d-36e0-47fc-8316-fbd7045e850a", "ABC", true, false,
+    false },
+  { "Light 4", "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ", true, false,
+    false },
+  { "Light 5", "e2f0109f-ef7d-496a-9676-d3d87b38e52f", "XYZ", true, false,
+    false }
 };
 
 static int
@@ -116,7 +122,7 @@ void
 poll_for_discovered_devices()
 {
   for (size_t i = 0; i < VOD_COUNT; i++) {
-    if (virtual_lights[i].discovered) {
+    if (virtual_lights[i].discovered && !virtual_lights[i].added_to_bridge) {
       char uri[20];
       snprintf(uri, 20, "/bridge/light/%zu", i);
       uri[19] = '\0';
@@ -126,6 +132,7 @@ poll_for_discovered_devices()
       oc_bridge_add_virtual_device(virtual_lights[i].uuid, uri, "oic.d.light",
                                    virtual_lights[i].device_name, "ocf.1.0.0",
                                    "ocf.res.1.0.0", NULL, NULL);
+      virtual_lights[i].added_to_bridge = true;
       // app_mutex_unlock(app_sync_lock);
     }
   }
@@ -153,7 +160,6 @@ ocf_event_thread(LPVOID lpParam)
   }
 
   oc_main_shutdown();
-  oc_obt_shutdown();
   return TRUE;
 }
 #elif defined(__linux__)
