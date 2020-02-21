@@ -1,10 +1,44 @@
 ---
 image: gcc
 
-build:
+Linux_Secured:
   stage: build
   before_script:
     - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
   script:
     - cd port/linux
-    - make
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
+Linux_Secured_Test:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
+  script:
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
+Linux_Unsecured:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
+  script:
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
+Linux_Unsecured_Test:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
+  script:
+    - cd port/linux
+    - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
+
