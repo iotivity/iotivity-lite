@@ -69,27 +69,33 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data)
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-  if(!strncmp(oc_string(ees_prov_data->rsp_status), EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
-    oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
+  if(oc_string(ees_prov_data->rsp_status)) {
+    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
+    if(!strncmp(oc_string(ees_prov_data->rsp_status), EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
+      oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
+    }
   }
 
-  PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
-  PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
-  PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
-  if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
-  {
-    oc_ees_set_state(0, EES_PS_CONFIRM_RECEIVED);
+  if(oc_string(ees_prov_data->last_err_reason))
+    PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
+  if(oc_string(ees_prov_data->last_err_code))
+    PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
+  if(oc_string(ees_prov_data->last_err_desc))
+    PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
+  if(oc_string(ees_prov_data->end_user_conf)) {
+    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
+    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
+    {
+      oc_ees_set_state(0, EES_PS_CONFIRM_RECEIVED);
+    }
+    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT))) ||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
+    {
+      oc_ees_set_state(0, EES_PS_ERROR);
+    }
   }
-  if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT))) ||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
-  {
-    oc_ees_set_state(0, EES_PS_ERROR);
-  }
-
 }
 
 static void
@@ -200,30 +206,37 @@ ees_profile_download_cb2(int status)
 static void
 ees_prov_cb2(oc_ees_data_t *ees_prov_data)
 {
-  PRINT("ees_prov_cb2 triggered\n");
+  PRINT("ees_prov_cb1\n");
   if (ees_prov_data == NULL) {
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-  if(!strncmp(oc_string(ees_prov_data->rsp_status),EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
-    oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
-  }
-  PRINT("Last Error Rason : %s\n", oc_string(ees_prov_data->last_err_reason));
-  PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
-  PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  PRINT("End User Conformation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
-  if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
-  {
-    oc_ees_set_state(1, EES_PS_CONFIRM_RECEIVED);
+  if(oc_string(ees_prov_data->rsp_status)) {
+    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
+    if(!strncmp(oc_string(ees_prov_data->rsp_status), EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
+      oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
+    }
   }
 
-  if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT)))||
-    (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
-  {
-    oc_ees_set_state(1, EES_PS_ERROR);
+  if(oc_string(ees_prov_data->last_err_reason))
+    PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
+  if(oc_string(ees_prov_data->last_err_code))
+    PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
+  if(oc_string(ees_prov_data->last_err_desc))
+    PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
+  if(oc_string(ees_prov_data->end_user_conf)) {
+    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
+    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
+    {
+      oc_ees_set_state(1, EES_PS_CONFIRM_RECEIVED);
+    }
+    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT))) ||
+      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
+    {
+      oc_ees_set_state(1, EES_PS_ERROR);
+    }
   }
 }
 

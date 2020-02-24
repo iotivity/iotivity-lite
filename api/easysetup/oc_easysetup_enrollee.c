@@ -186,7 +186,7 @@ construct_response_of_wificonf(oc_request_t *request)
 
 #ifdef OC_SPEC_VER_OIC
   // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-  es_rep_set_int(root, swf, (int)dev_cxt->wifi.data.supported_freq);
+  oc_rep_set_int(root, swf, (int)dev_cxt->wifi.data.supported_freq);
 #else
   // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
   oc_rep_set_array(root, swf);
@@ -206,17 +206,17 @@ construct_response_of_wificonf(oc_request_t *request)
   oc_rep_close_array(root, swf);
 #endif  // OC_SPEC_VER_OIC
 
-  es_rep_set_text_string(root, tnn, oc_string(dev_cxt->wifi.data.ssid));
-  es_rep_set_text_string(root, cd, oc_string(dev_cxt->wifi.data.cred));
+  oc_rep_set_text_string(root, tnn, oc_string(dev_cxt->wifi.data.ssid));
+  oc_rep_set_text_string(root, cd, oc_string(dev_cxt->wifi.data.cred));
 
 #ifdef OC_SPEC_VER_OIC
   // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-  es_rep_set_int(root, wat, (int)dev_cxt->wifi.data.auth_type);
-  es_rep_set_int(root, wet, (int)dev_cxt->wifi.data.enc_type);
+  oc_rep_set_int(root, wat, (int)dev_cxt->wifi.data.auth_type);
+  oc_rep_set_int(root, wet, (int)dev_cxt->wifi.data.enc_type);
 #else
   // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-  es_rep_set_text_string(root, wat, wifi_authtype_enum_tostring(dev_cxt->wifi.data.auth_type));
-  es_rep_set_text_string(root, wet, wifi_enctype_enum_tostring(dev_cxt->wifi.data.enc_type));
+  oc_rep_set_text_string(root, wat, wifi_authtype_enum_tostring(dev_cxt->wifi.data.auth_type));
+  oc_rep_set_text_string(root, wet, wifi_enctype_enum_tostring(dev_cxt->wifi.data.enc_type));
 
   // new properties in OCF 1.3 - swat and swet.
   oc_rep_set_array(root, swat);
@@ -338,7 +338,7 @@ construct_response_of_devconf(oc_request_t *request)
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(dev_cxt->device.handle);
-  es_rep_set_text_string(root, dn, oc_string(dev_cxt->device.data.dev_name));
+  oc_rep_set_text_string(root, dn, oc_string(dev_cxt->device.data.dev_name));
 
   oc_rep_end_root_object();
 }
@@ -409,12 +409,12 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   OC_DBG("get_wes_properties\n");
 
   oc_rep_start_root_object();
-  oc_process_baseline_interface((oc_resource_t *)dev_cxt->wes.handle);
+
   switch (iface_mask) {
   case OC_IF_BASELINE:
   case OC_IF_LL:
-    es_rep_set_int(root, ps, dev_cxt->wes.data.state);
-    es_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
+    oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
+    oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
     break;
   default:
     break;
@@ -768,10 +768,10 @@ construct_response_of_rspconf(oc_request_t *request)
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(dev_cxt->rsp.handle);
-  es_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
-  es_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
-  es_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
-  es_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
+  oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
+  oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
+  oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
+  oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
   oc_rep_end_root_object();
 }
 
@@ -823,7 +823,7 @@ update_rspconf_resource(oc_request_t *request)
 
   if(res_changed && dev_cxt->rsp.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *) &(dev_cxt->rsp.data));
+    dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *)&(dev_cxt->rsp.data));
     //Notify observers about data change
     oc_notify_observers(dev_cxt->rsp.handle);
   }
@@ -854,8 +854,8 @@ construct_response_of_rspcapconf(oc_request_t *request)
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(dev_cxt->rsp_cap.handle);
-  es_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
-  es_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
+  oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
+  oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
 
   oc_rep_end_root_object();
 }
@@ -899,7 +899,7 @@ update_rspcapconf_resource(oc_request_t *request)
 
   if(res_changed && dev_cxt->rsp_cap.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *) &(dev_cxt->rsp_cap.data));
+    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data));
     // Notify observers about data change
     oc_notify_observers(dev_cxt->rsp_cap.handle);
   }
@@ -932,21 +932,19 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
 
   OC_DBG("get_ees_properties\n");
 
-  oc_rep_start_root_object();
-  oc_process_baseline_interface((oc_resource_t *)dev_cxt->ees.handle);
+
   switch (iface_mask) {
   case OC_IF_BASELINE:
   case OC_IF_LL:
-    es_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
-    es_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
-    es_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
-    es_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
-    es_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
+    oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
+    oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
+    oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
+    oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
+    oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
     break;
   default:
     break;
   }
-  oc_rep_end_root_object();
 }
 
 bool
@@ -997,7 +995,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   }
 
   if (res_changed && dev_cxt->ees.prov_cb) {
-    dev_cxt->ees.prov_cb((oc_ees_data_t *) &(dev_cxt->ees.data));
+    dev_cxt->ees.prov_cb((oc_ees_data_t *)&(dev_cxt->ees.data));
   }
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return true;
@@ -1007,9 +1005,9 @@ static void
 ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
+  (void)user_data;
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
-    get_ees_properties(request->resource, interface, user_data);
-    oc_send_response(request, OC_STATUS_OK);
+    oc_handle_collection_request(OC_GET, request, interface, NULL);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
