@@ -451,6 +451,9 @@
     <ClCompile Include="..\..\..\api\oc_bridge.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_vod_map.c">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -716,6 +719,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_bridge.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_vod_map.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

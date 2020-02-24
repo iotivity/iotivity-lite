@@ -263,7 +263,7 @@ main(void)
                                           register_resources };
 
 #ifdef OC_STORAGE
-  oc_storage_config("./dummy_bridge_creds");
+  oc_storage_config("./dummy_bridge_creds/");
 #endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
@@ -281,6 +281,8 @@ main(void)
     return -1;
   }
 #endif
+
+#include "api\oc_vod_map.h"
 
   int c;
   while (quit != 1) {

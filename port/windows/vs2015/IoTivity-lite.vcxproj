@@ -219,6 +219,7 @@
     <ClInclude Include="..\..\..\api\oc_main.h" />
     <ClInclude Include="..\..\..\api\oc_mnt.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_vod_map.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_acl.h" />
@@ -329,6 +330,7 @@
     <ClCompile Include="..\..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\..\api\oc_session_events.c" />
     <ClCompile Include="..\..\..\api\oc_uuid.c" />
+    <ClCompile Include="..\..\..\api\oc_vod_map.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aes.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aesni.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\arc4.c" />
