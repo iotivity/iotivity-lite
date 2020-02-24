@@ -2679,8 +2679,6 @@ oc_obt_init(void)
         root_subject, public_key, OC_ECDSA_PUBKEY_SIZE, private_key,
         private_key_size);
       if (root_cert_credid > 0) {
-        oc_obt_generate_uuid_from_pk(public_key, public_key_size, &sdi->uuid);
-        oc_sec_dump_sdi(0);
         oc_obt_dump_state();
         OC_DBG("oc_obt: successfully returning from obt_init()");
         return 0;

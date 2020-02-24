@@ -608,33 +608,6 @@ exit:
   return ret;
 }
 
-void
-oc_obt_generate_uuid_from_pk(const uint8_t *public_key,
-                             const size_t public_key_size,
-                             oc_uuid_t *uuid)
-{
-  unsigned char sha256sum[32] = {0};
-  mbedtls_sha256_ret(public_key, public_key_size, sha256sum, 0);
-  memcpy(uuid->id, sha256sum, 16);
-
-  /*  From RFC 4122
-      Set the two most significant bits of the
-      clock_seq_hi_and_reserved (8th octect) to
-      zero and one, respectively.
-  */
-  uuid->id[8] &= 0x3f;
-  uuid->id[8] |= 0x40;
-
-  /*  From RFC 4122
-      Set the four most significant bits of the
-      time_hi_and_version field (6th octect) to the
-      4-bit version number from (0 1 0 0 => type 4)
-      Section 4.1.3.
-  */
-  uuid->id[6] &= 0x0f;
-  uuid->id[6] |= 0x40;
-}
-
 #else  /* OC_PKI */
 typedef int dummy_declaration;
 #endif /* !OC_PKI */
