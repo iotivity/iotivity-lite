@@ -481,8 +481,9 @@ static void
 wes_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
+  (void)user_data;
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
-    get_wes_properties(request->resource, interface, user_data);
+    oc_handle_collection_request(OC_GET, request, interface, NULL);
     oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -494,9 +495,9 @@ static void
 wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
+  (void)user_data;
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
-    set_wes_properties(request->resource, request->request_payload,
-                          user_data);
+    oc_handle_collection_request(OC_POST, request, interface, NULL);
     oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -719,7 +720,6 @@ oc_ees_set_state(size_t device, char *es_status)
   //OC_DBG("oc_ees_set_state %s\n", es_status);
 
   es_new_string(&(dev_cxt->ees.data.rsp_status), es_status);
-
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return OC_ES_OK;
 }
@@ -1008,6 +1008,7 @@ ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
   (void)user_data;
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
     oc_handle_collection_request(OC_GET, request, interface, NULL);
+    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -1018,9 +1019,9 @@ static void
 ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
+  (void)user_data;
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
-    set_ees_properties(request->resource, request->request_payload,
-                          user_data);
+    oc_handle_collection_request(OC_POST, request, interface, NULL);
     oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
