@@ -238,7 +238,7 @@ static void
 wificonf_get_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
-  OC_DBG("wificonf_get_handler\n");
+  OC_DBG("wificonf_get_handler %d\n", interface);
   if (interface == OC_IF_BASELINE) {
     construct_response_of_wificonf(request);
     oc_send_response(request, OC_STATUS_OK);
@@ -318,11 +318,10 @@ static void
 wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
-  OC_DBG("wificonf_post_handler\n");
+  OC_DBG("wificonf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     update_wifi_conf_resource(request);
-    construct_response_of_wificonf(request);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -348,7 +347,7 @@ devconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
   (void)user_data;
-  OC_DBG("devconf_get_handler\n");
+  OC_DBG("devconf_get_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_devconf(request);
@@ -387,11 +386,10 @@ devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
   (void)user_data;
-  OC_DBG("devconf_post_handler\n");
+  OC_DBG("devconf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     update_devconf_resource(request);
-    construct_response_of_devconf(request);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -400,18 +398,19 @@ devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-get_wes_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *data)
 {
   (void)data;
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(wes->device);
-  OC_DBG("get_wes_properties\n");
+  OC_DBG("get_wes_properties %d\n", interface);
 
   oc_rep_start_root_object();
 
-  switch (iface_mask) {
+  switch (interface) {
   case OC_IF_BASELINE:
+  case OC_IF_B:
   case OC_IF_LL:
     oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
     oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
@@ -482,9 +481,9 @@ wes_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
   (void)user_data;
+  OC_DBG("wes_get_handler : %d", interface);
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
     oc_handle_collection_request(OC_GET, request, interface, NULL);
-    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -496,9 +495,9 @@ wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
   (void)user_data;
+  OC_DBG("wes_post_handler : %d", interface);
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
     oc_handle_collection_request(OC_POST, request, interface, NULL);
-    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -780,7 +779,7 @@ rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspconf_get_handler\n");
+  OC_DBG("rspconf_get_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_rspconf(request);
@@ -834,11 +833,10 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspconf_post_handler\n");
+  OC_DBG("rspconf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     update_rspconf_resource(request);
-    construct_response_of_rspconf(request);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -865,7 +863,7 @@ rspcapconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspcapconf_get_handler\n");
+  OC_DBG("rspcapconf_get_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     construct_response_of_rspcapconf(request);
@@ -910,11 +908,10 @@ rspcapconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 	void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspcapconf_post_handler\n");
+  OC_DBG("rspcapconf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
     update_rspcapconf_resource(request);
-    construct_response_of_rspcapconf(request);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -923,18 +920,18 @@ rspcapconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-get_ees_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *data)
 {
   (void)data;
   oc_collection_t *ees = (oc_collection_t *)resource;
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
 
-  OC_DBG("get_ees_properties\n");
+  OC_DBG("get_ees_properties %d\n", interface);
 
-
-  switch (iface_mask) {
+  switch (interface) {
   case OC_IF_BASELINE:
+  case OC_IF_B:
   case OC_IF_LL:
     oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
     oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
@@ -1006,9 +1003,9 @@ ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
   (void)user_data;
+  OC_DBG("ees_get_handler : %d", interface);
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
     oc_handle_collection_request(OC_GET, request, interface, NULL);
-    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -1020,9 +1017,9 @@ ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
   (void)user_data;
+  OC_DBG("ees_post_handler : %d", interface);
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
     oc_handle_collection_request(OC_POST, request, interface, NULL);
-    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
