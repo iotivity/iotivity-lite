@@ -16,6 +16,7 @@
 
 #include "oc_vod_map.h"
 #include "oc_rep.h"
+#include "oc_core_res.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_storage.h"
 
@@ -104,7 +105,6 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
 {
   // TODO use the from_storage param or drop it from the map_decode
   (void)from_storage;
-  oc_rep_t *t = rep;
   size_t len = 0;
 
   while (rep != NULL) {
