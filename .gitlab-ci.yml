@@ -11,6 +11,7 @@ Linux_Secured:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1
+
 Linux_Secured_Test:
   stage: build
   before_script:
@@ -21,6 +22,7 @@ Linux_Secured_Test:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
+
 Linux_Unsecured:
   stage: build
   before_script:
@@ -31,6 +33,7 @@ Linux_Unsecured:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0
+
 Linux_Unsecured_Test:
   stage: build
   before_script:
@@ -41,6 +44,7 @@ Linux_Unsecured_Test:
   script:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
+
 Android_build:
     stage: build
     image: openjdk:8-jdk
@@ -63,3 +67,11 @@ Android_build:
     script:
       - cd port/android
       - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
+
+run_doxygen:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf doxygen
+  script:
+    - cd tools
+    - ./build_doc.sh

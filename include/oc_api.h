@@ -22,7 +22,7 @@
 /**
   \mainpage IoTivity-Lite API
 
-  The file \link oc_api.h\endlink is the main entry for all
+  The file \link oc_api.h \endlink is the main entry for all
   server and client related OCF functions.
 */
 
