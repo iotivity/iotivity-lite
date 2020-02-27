@@ -33,6 +33,25 @@
 /* Random PIN OTM */
 
 static void
+obt_rdp_14(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_rdp_14");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+    return;
+  }
+
+  /**  14) <close DTLS>
+   */
+  oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_RDP);
+}
+
+static void
 obt_rdp_13(oc_client_response_t *data)
 {
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
@@ -42,13 +61,26 @@ obt_rdp_13(oc_client_response_t *data)
   OC_DBG("In obt_rdp_13");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-    return;
+    goto err_obt_rdp_13;
   }
 
-  /**  13) <close DTLS>
+  /**  13) post pstat s=rfnop
    */
-  oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_RDP);
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    oc_rep_set_object(root, dos);
+    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
+    oc_rep_close_object(root, dos);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+err_obt_rdp_13:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
 static void
@@ -64,43 +96,11 @@ obt_rdp_12(oc_client_response_t *data)
     goto err_obt_rdp_12;
   }
 
-  /**  12) post pstat s=rfnop
+  /**  12) post acl2 with ACEs for res, p, d, csr, sp
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_13, HIGH_QOS, o)) {
-    oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, OC_DOS_RFNOP);
-    oc_rep_close_object(root, dos);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
-  }
-
-err_obt_rdp_12:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-}
-
-static void
-obt_rdp_11(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_rdp_11");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_rdp_11;
-  }
-
-  /**  11) post acl2 with ACEs for res, p, d, csr, sp
-   */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_12, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_13, HIGH_QOS, o)) {
     char uuid[OC_UUID_LEN];
     oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -185,6 +185,31 @@ obt_rdp_11(oc_client_response_t *data)
     }
   }
 
+err_obt_rdp_12:
+  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
+}
+
+static void
+obt_rdp_11(oc_client_response_t *data)
+{
+  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
+    return;
+  }
+
+  OC_DBG("In obt_rdp_11");
+  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_obt_rdp_11;
+  }
+
+  /**  11) delete acl2
+   */
+  oc_device_t *device = o->device;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_rdp_12, HIGH_QOS, o)) {
+    return;
+  }
+
 err_obt_rdp_11:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
@@ -202,12 +227,21 @@ obt_rdp_10(oc_client_response_t *data)
     goto err_obt_rdp_10;
   }
 
-  /**  10) delete acl2
+  /**  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
-    return;
+  oc_tls_close_connection(ep);
+  oc_tls_select_psk_ciphersuite();
+  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
+    oc_rep_start_root_object();
+    oc_rep_set_object(root, dos);
+    oc_rep_set_int(dos, s, OC_DOS_RFPRO);
+    oc_rep_close_object(root, dos);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
   }
 
 err_obt_rdp_10:
@@ -227,17 +261,15 @@ obt_rdp_9(oc_client_response_t *data)
     goto err_obt_rdp_9;
   }
 
-  /**  9) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  oc_sec_dump_cred(0);
+
+  /**  9) post doxm owned = true
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_tls_close_connection(ep);
-  oc_tls_select_psk_ciphersuite();
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_10, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_10, HIGH_QOS, o)) {
     oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, OC_DOS_RFPRO);
-    oc_rep_close_object(root, dos);
+    oc_rep_set_boolean(root, owned, true);
     oc_rep_end_root_object();
     if (oc_do_post()) {
       return;
@@ -255,53 +287,21 @@ obt_rdp_8(oc_client_response_t *data)
     return;
   }
 
-  oc_sec_dump_cred(0);
-
   OC_DBG("In obt_rdp_8");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_obt_rdp_8;
   }
 
-  /**  8) post doxm owned = true
-   */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_9, HIGH_QOS, o)) {
-    oc_rep_start_root_object();
-    oc_rep_set_boolean(root, owned, true);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
-  }
-
-err_obt_rdp_8:
-  oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
-}
-
-static void
-obt_rdp_7_1(oc_client_response_t *data)
-{
-  if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
-    return;
-  }
-
-  OC_DBG("In obt_rdp_7_1");
-  oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_rdp_7_1;
-  }
-
   oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
   char sdi_uuid[OC_UUID_LEN];
   oc_uuid_to_str(&sdi->uuid, sdi_uuid, OC_UUID_LEN);
 
-  /**  7_1) post sdi
+  /**  8) post sdi
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_rdp_8, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_rdp_9, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, uuid, sdi_uuid);
     oc_rep_set_text_string(root, name, oc_string(sdi->name));
@@ -312,7 +312,7 @@ obt_rdp_7_1(oc_client_response_t *data)
     }
   }
 
-err_obt_rdp_7_1:
+err_obt_rdp_8:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
@@ -363,7 +363,7 @@ obt_rdp_7(oc_client_response_t *data)
 
   /**  7) post cred rowneruuid, cred
    */
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_rdp_7_1, HIGH_QOS, o)) {
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_rdp_8, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
@@ -591,12 +591,13 @@ err_obt_rdp_2:
   5) post acl rowneruuid
   6) post pstat rowneruuid
   7) post cred rowneruuid, cred
-  8) post doxm owned = true
-  9) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
-  10) delete acl2
-  11) post acl2 with ACEs for res, p, d, csr, sp
-  12) post pstat s=rfnop
-  13) <close DTLS>
+  8) post sdi
+  9) post doxm owned = true
+  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  11) delete acl2
+  12) post acl2 with ACEs for res, p, d, csr, sp
+  13) post pstat s=rfnop
+  14) <close DTLS>
 */
 int
 oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
