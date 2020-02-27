@@ -468,7 +468,7 @@ coap_receive(oc_message_t *msg)
               href, href_len, &msg->endpoint, message->code, message->uri_query,
               message->uri_query_len, OC_BLOCKWISE_SERVER);
             if (response_buffer) {
-              if (msg->endpoint.flags & MULTICAST &&
+              if ((msg->endpoint.flags & MULTICAST) &&
                   response_buffer->next_block_offset <
                     response_buffer->payload_size) {
                 OC_DBG("Dropping duplicate block-wise transfer request due to "

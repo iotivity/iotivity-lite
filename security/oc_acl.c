@@ -32,8 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
-
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 static oc_sec_acl_t *aclist;
@@ -455,13 +453,13 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (permission != 0) {
     switch (method) {
     case OC_GET:
-      if (permission & OC_PERM_RETRIEVE || permission & OC_PERM_NOTIFY) {
+      if ((permission & OC_PERM_RETRIEVE) || (permission & OC_PERM_NOTIFY)) {
         return true;
       }
       break;
     case OC_PUT:
     case OC_POST:
-      if (permission & OC_PERM_CREATE || permission & OC_PERM_UPDATE) {
+      if ((permission & OC_PERM_CREATE) || (permission & OC_PERM_UPDATE)) {
         return true;
       }
       break;

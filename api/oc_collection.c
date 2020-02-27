@@ -627,7 +627,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
              * interface through which this request arrived. This is achieved
              * by checking if the interface index matches.
              */
-            if ((link->resource->properties & OC_SECURE &&
+            if (((link->resource->properties & OC_SECURE) &&
                  !(eps->flags & SECURED)) ||
                 (request->origin && request->origin->interface_index != -1 &&
                  request->origin->interface_index != eps->interface_index)) {
@@ -701,7 +701,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
            * interface through which this request arrived. This is achieved by
            * checking if the interface index matches.
            */
-          if ((link->resource->properties & OC_SECURE &&
+          if (((link->resource->properties & OC_SECURE) &&
                !(eps->flags & SECURED)) ||
               (request->origin && request->origin->interface_index != -1 &&
                request->origin->interface_index != eps->interface_index)) {
