@@ -282,8 +282,6 @@ main(void)
   }
 #endif
 
-#include "api\oc_vod_map.h"
-
   int c;
   while (quit != 1) {
     display_menu();
