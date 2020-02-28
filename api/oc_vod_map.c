@@ -56,7 +56,8 @@ oc_vod_map_free()
  * returns index of the vod or 0 if not found
  */
 size_t
-oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size, char *econame)
+oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size,
+                        const char *econame)
 {
   oc_vod_t *v = oc_list_head(vod_list.vods);
   while (v != NULL) {
@@ -76,7 +77,7 @@ oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size, char *econame)
  * return index of just added vod
  */
 size_t
-oc_vod_map_add_id(uint8_t *vod_id, size_t vod_id_size, char *econame)
+oc_vod_map_add_id(uint8_t *vod_id, size_t vod_id_size, const char *econame)
 {
   size_t v_index = oc_vod_map_get_id_index(vod_id, vod_id_size, econame);
 

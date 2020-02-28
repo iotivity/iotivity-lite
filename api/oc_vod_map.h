@@ -22,6 +22,9 @@
 #ifndef OC_VOD_MAP_H
 #define OC_VOD_MAP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
 {
   "vods" : [
@@ -61,7 +64,7 @@ void oc_vod_map_free();
  * returns index of the vod or 0 if not found
  */
 size_t oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size,
-                               char *econame);
+                               const char *econame);
 
 /*
  * add the vod_id to the the oc_vod_list_t
@@ -69,7 +72,8 @@ size_t oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size,
  * write updated vod_map file
  * return index of just added vod
  */
-size_t oc_vod_map_add_id(uint8_t *vod_id, size_t vod_id_size, char *econame);
+size_t oc_vod_map_add_id(uint8_t *vod_id, size_t vod_id_size,
+                         const char *econame);
 
 /*
  * NOT NEEDED IN HEADER FILE REMOVE ONCE IMPLEMENTED
@@ -95,5 +99,9 @@ void oc_vod_map_encode();
  * reference oc_sec_dump_acl(size_t device) in oc_store.c
  */
 void oc_vod_map_dump();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OC_VOD_MAP_H
