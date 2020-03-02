@@ -36,7 +36,9 @@ echo "***********************************************************************"
 echo "RUNNING clang-format tool against committed code"
 echo "***********************************************************************"
 
-filelist=`git diff --name-only HEAD HEAD~1`
+# Obtain a list of Added (A), Copied (C), Modified (M) and Renamed (R) files
+# This will prevent running the script on deleted files.
+filelist=`git diff --diff-filter=ACMR --name-only HEAD~1 HEAD`
 
 for f in $filelist; do
   if isC $f; then
