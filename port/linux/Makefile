@@ -207,10 +207,13 @@ CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 PC = iotivity-lite-client.pc iotivity-lite-server.pc \
      iotivity-lite-client-server.pc
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(SWIG)
+all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(UNIT_TESTS) $(SWIG)
 
-test: $(UNIT_TESTS)
-	for test in $^ ; do ./$${test} ; done
+test: all
+	LD_LIBRARY_PATH=./ ./apitest
+	LD_LIBRARY_PATH=./ ./messagingtest
+	LD_LIBRARY_PATH=./ ./platformtest
+	LD_LIBRARY_PATH=./ ./securitytest
 
 .PHONY: test clean
 
@@ -428,7 +431,8 @@ endif
 
 clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
-	rm -rf pki_certs
+	rm -rf $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
+	rm -rf pki_certs smart_home_server_linux_IDD.cbor
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) *.o

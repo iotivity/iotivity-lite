@@ -40,16 +40,12 @@ class TestCoreResource: public testing::Test
         virtual void SetUp()
         {
             oc_core_init();
-#ifndef OC_SECURITY
             oc_random_init();
-#endif /* !OC_SECURITY */
         }
         virtual void TearDown()
         {
             oc_core_shutdown();
-#ifndef OC_SECURITY
             oc_random_destroy();
-#endif /* !OC_SECURITY */
         }
 };
 
