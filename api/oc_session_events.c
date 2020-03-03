@@ -150,6 +150,10 @@ oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
       oc_tls_remove_peer(endpoint);
     }
 #endif /* OC_SECURITY */
+#ifdef OC_SERVER
+    /* remove all observations for the endpoint */
+    coap_remove_observer_by_client(endpoint);
+#endif /* OC_SERVER */
   }
 #ifdef OC_SESSION_EVENTS
   handle_session_event_callback(endpoint, state);
