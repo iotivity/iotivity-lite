@@ -52,6 +52,15 @@ public class TestRunner {
           System.out.println("OCOwnershipTransferMethodsTest tests finished SUCCESSFULLY.");
         }
 
+        System.out.println("Running OCRandom tests.");
+        result = junit.run(OCRandomTest.class);
+        if (result.getFailureCount() > 0) {
+          System.out.println("OCRandomTest Tests FAILED.");
+          exit_status = 1;
+        } else {
+          System.out.println("OCRandomTest tests finished SUCCESSFULLY.");
+        }
+
         System.out.println("Running OCRepresentationTest tests.");
         result = junit.run(OCRepresentationTest.class);
         if (result.getFailureCount() > 0) {

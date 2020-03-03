@@ -8,6 +8,8 @@ public class OCUuidTest {
 
     @Test
     public void generateAndConvert() {
+        // must call OCRandom.init to initialize the random number for generateUuid
+        OCRandom.init();
         OCUuid testUuid = OCUuidUtil.generateUuid();
         assertNotNull(testUuid);
         String uuid_out = OCUuidUtil.uuidToString(testUuid);
@@ -18,6 +20,8 @@ public class OCUuidTest {
         // OC_UUID_LEN is one character longer than length for the '\0' nul terminating
         // character in C
         assertEquals(OCUuidUtil.OC_UUID_LEN-1, uuid_out.length());
+        // Restore random number to un-initialized state for other tests
+        OCRandom.destroy();
     }
     
     @Test
