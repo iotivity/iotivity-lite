@@ -646,6 +646,7 @@ main(void)
       break;
     case 8:
       handle_signal(0);
+      break;
     default:
       break;
     }

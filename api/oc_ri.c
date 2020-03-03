@@ -347,7 +347,7 @@ oc_ri_add_resource(oc_resource_t *resource)
       !resource->post_handler.cb && !resource->delete_handler.cb)
     valid = false;
 
-  if (resource->properties & OC_PERIODIC &&
+  if ((resource->properties & OC_PERIODIC) &&
       resource->observe_period_seconds == 0)
     valid = false;
 
@@ -974,7 +974,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifdef OC_SECURITY
           while (links) {
             if (links->resource &&
-                links->resource->properties & OC_OBSERVABLE) {
+                (links->resource->properties & OC_OBSERVABLE)) {
               if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
                 set_observe_option = false;
                 break;
@@ -988,7 +988,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
               links = (oc_link_t *)oc_list_head(collection->links);
               while (links) {
                 if (links->resource &&
-                    links->resource->properties & OC_PERIODIC) {
+                    (links->resource->properties & OC_PERIODIC)) {
                   add_periodic_observe_callback(links->resource);
                 }
                 links = links->next;

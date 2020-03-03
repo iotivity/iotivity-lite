@@ -98,7 +98,7 @@ TEST_F(TestCoapSignal, coap_send_ping_message_N)
 TEST_F(TestCoapSignal, coap_send_pong_message_P)
 {
     uint8_t token[4] = {0x01, 0x02, 0x03, 0x04};
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, PING_7_02);
     coap_set_token(packet, token, 4);
     coap_signal_set_custody(packet, 1);
@@ -147,7 +147,7 @@ TEST_F(TestCoapSignal, coap_send_abort_message_N)
 
 TEST_F(TestCoapSignal, coap_check_signal_message_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     ASSERT_NO_THROW(coap_tcp_init_message(packet, CSM_7_01));
 
     int ret = coap_check_signal_message(packet);
@@ -157,7 +157,7 @@ TEST_F(TestCoapSignal, coap_check_signal_message_P)
 
 TEST_F(TestCoapSignal, coap_check_signal_message_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     ASSERT_NO_THROW(coap_tcp_init_message(packet, COAP_GET));
 
     int ret = coap_check_signal_message(packet);
@@ -172,7 +172,7 @@ TEST_F(TestCoapSignal, coap_check_signal_message_N)
  */
 TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     uint32_t answer = 1152;
     coap_tcp_init_message(packet, CSM_7_01);
     coap_signal_set_max_msg_size(packet, answer);
@@ -193,7 +193,7 @@ TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint32_t size = 0;
     int isFailure = coap_signal_get_max_msg_size(packet, &size);
@@ -210,7 +210,7 @@ TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, CSM_7_01);
 
     uint32_t size = 1152;
@@ -232,7 +232,7 @@ TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint32_t size = 1152;
     int isFailure = coap_signal_set_max_msg_size(packet, size);
@@ -249,7 +249,7 @@ TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_N)
  */
 TEST_F(TestCoapSignal, SignalGetBertTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     uint8_t blockwise_transfer = 1;
     coap_tcp_init_message(packet, CSM_7_01);
     coap_signal_set_blockwise_transfer(packet, blockwise_transfer);
@@ -270,7 +270,7 @@ TEST_F(TestCoapSignal, SignalGetBertTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetBertTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint8_t flag = 0;
     int isFailure = coap_signal_get_blockwise_transfer(packet, &flag);
@@ -287,7 +287,7 @@ TEST_F(TestCoapSignal, SignalGetBertTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetBertTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, CSM_7_01);
 
     uint8_t blockwise_transfer = 1;
@@ -309,7 +309,7 @@ TEST_F(TestCoapSignal, SignalSetBertTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetBertTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint8_t blockwise_transfer = 1;
     int isFailure = coap_signal_set_blockwise_transfer(packet, blockwise_transfer);
@@ -326,7 +326,7 @@ TEST_F(TestCoapSignal, SignalSetBertTest_N)
  */
 TEST_F(TestCoapSignal, SignalGetCustodyTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     uint8_t custody = 1;
     coap_tcp_init_message(packet, PING_7_02);
     coap_signal_set_custody(packet, custody);
@@ -347,7 +347,7 @@ TEST_F(TestCoapSignal, SignalGetCustodyTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetCustodyTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint8_t flag = 0;
     int isFailure = coap_signal_get_custody(packet, &flag);
@@ -364,7 +364,7 @@ TEST_F(TestCoapSignal, SignalGetCustodyTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetCustodyTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, PING_7_02);
 
     uint8_t custody = 1;
@@ -386,7 +386,7 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetCustodyTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint8_t custody = 1;
     int isFailure = coap_signal_set_custody(packet, custody);
@@ -403,7 +403,7 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_N)
  */
 TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     const char *addr = "coap+tcp://127.0.0.1:5683";
     size_t addr_len = strlen(addr) + 1;
     coap_tcp_init_message(packet, RELEASE_7_04);
@@ -425,7 +425,7 @@ TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetAltAddrTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     size_t isFailure = coap_signal_get_alt_addr(packet, NULL);
 
@@ -441,7 +441,7 @@ TEST_F(TestCoapSignal, SignalGetAltAddrTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetAltAddrTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, RELEASE_7_04);
 
     const char *addr = "coap+tcp://127.0.0.1:5683";
@@ -465,7 +465,7 @@ TEST_F(TestCoapSignal, SignalSetAltAddrTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetAltAddrTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     size_t isFailure = coap_signal_set_alt_addr(packet, NULL, 0);
 
@@ -481,7 +481,7 @@ TEST_F(TestCoapSignal, SignalSetAltAddrTest_N)
  */
 TEST_F(TestCoapSignal, SignalGetHoldOffTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, RELEASE_7_04);
     uint32_t time_seconds = 10;
     coap_signal_set_hold_off(packet, time_seconds);
@@ -502,7 +502,7 @@ TEST_F(TestCoapSignal, SignalGetHoldOffTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetHoldOffTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint32_t time_seconds;
     size_t isFailure = coap_signal_get_hold_off(packet, &time_seconds);
@@ -519,7 +519,7 @@ TEST_F(TestCoapSignal, SignalGetHoldOffTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetHoldOffTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, RELEASE_7_04);
 
     uint32_t time_seconds = 10;
@@ -541,7 +541,7 @@ TEST_F(TestCoapSignal, SignalSetHoldOffTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetHoldOffTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint32_t time_seconds = 10;
     size_t isFailure = coap_signal_set_hold_off(packet, time_seconds);
@@ -558,7 +558,7 @@ TEST_F(TestCoapSignal, SignalSetHoldOffTest_N)
  */
 TEST_F(TestCoapSignal, SignalGetBadCsmTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, ABORT_7_05);
     uint16_t opt = 10;
     coap_signal_set_bad_csm(packet, opt);
@@ -579,7 +579,7 @@ TEST_F(TestCoapSignal, SignalGetBadCsmTest_P)
  */
 TEST_F(TestCoapSignal, SignalGetBadCsmTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint16_t opt;
     size_t isFailure = coap_signal_get_bad_csm(packet, &opt);
@@ -596,7 +596,7 @@ TEST_F(TestCoapSignal, SignalGetBadCsmTest_N)
  */
 TEST_F(TestCoapSignal, SignalSetBadCsmTest_P)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, ABORT_7_05);
 
     uint16_t opt = 10;
@@ -618,7 +618,7 @@ TEST_F(TestCoapSignal, SignalSetBadCsmTest_P)
  */
 TEST_F(TestCoapSignal, SignalSetBadCsmTest_N)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
 
     uint16_t opt = 10;
     size_t isFailure = coap_signal_set_bad_csm(packet, opt);
@@ -628,7 +628,7 @@ TEST_F(TestCoapSignal, SignalSetBadCsmTest_N)
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, CSM_7_01);
 
     uint32_t size = 1152;
@@ -649,7 +649,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_PING)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, PING_7_02);
     coap_signal_set_custody(packet, 1);
 
@@ -666,7 +666,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PING)
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_PONG)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, PONG_7_03);
     coap_signal_set_custody(packet, 1);
 
@@ -683,7 +683,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PONG)
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, RELEASE_7_04);
 
     const char *addr = "coap+tcp://127.0.0.1:5683";
@@ -707,7 +707,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
 {
-    coap_packet_t packet[1];
+    coap_packet_t packet[1] = {{0,}};
     coap_tcp_init_message(packet, ABORT_7_05);
 
     uint16_t bad_csm_opt = 10;
