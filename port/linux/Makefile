@@ -12,6 +12,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
@@ -111,7 +112,7 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux \
+SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
 	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
 
 ifeq ($(CREATE),1)
@@ -259,6 +260,9 @@ copy_pki_certs:
 	@mkdir -p pki_certs
 	@cp ../../apps/pki_certs/*.pem pki_certs/
 
+copy_idd_files:
+	@cp ../../apps/smart_home_server_linux_IDD.cbor .
+
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
@@ -331,6 +335,10 @@ simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
+introspectionclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/introspectionclient.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/introspectionclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
 client_collections_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_collections_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_collections_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
@@ -345,7 +353,7 @@ client_block_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_block_linu
 server_block_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
-smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs
+smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_linux.c copy_pki_certs copy_idd_files
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_home_server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
