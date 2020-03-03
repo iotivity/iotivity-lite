@@ -14,6 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Usage instructions
+#------------------------------------------------------------------------------
+# This script is specifically designed to be run by the CI build. It can be run
+# locally by copying this file to top directory of the iotivity-lite project.
+# The `_clang-format` file must also be copied to the top directory of the
+# iotivity-lite project.
+#
+#    cp tools/_clang-format _clang-format
+#    cp tools/whitespace_commit_checker.sh whitespace_commit_checker.sh
+#    ./whitespace_commit_checker.sh
+#
+# This only checks C/C++ files committed as in the last code commit.
+# See tools/README if for instructions on how to run clang-format on more code
+#------------------------------------------------------------------------------
+
 # function to check for C/C++ file based on suffix
 function isC() {
   if [[ ($1 == *.c) || ($1 == *.C) || ($1 == *.cc) ]]; then
