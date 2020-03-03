@@ -22,7 +22,7 @@
 /**
   \mainpage IoTivity-Lite API
 
-  The file \link oc_api.h\endlink is the main entry for all
+  The file \link oc_api.h \endlink is the main entry for all
   server and client related OCF functions.
 */
 
@@ -560,20 +560,159 @@ void oc_reset();
  */
 void oc_reset_device(size_t device);
 
-/** Server side */
+/* Server side */
 /**
   @defgroup doc_module_tag_server_side Server side
   Optional group of functions OCF server support.
   @{
 */
+/**
+ * Allocate and populate a new oc_resource_t.
+ *
+ * Resources are the primary interface between code and real world devices.
+ *
+ * Each resource has a Uniform Resource Identifier (URI) that identifies it.
+ * All resources **must** specify one or more Resource Types to be considered a
+ * valid resource. The number of Resource Types is specified by the
+ * `num_resource_types` the actual Resource Types are added later using the
+ * oc_resource_bind_resource_type() function.
+ *
+ * The resource is populated with a default interface OC_IF_BASELINE.
+ *
+ * Many properties associated with a resource are set or modified after the
+ * new resource has been created.
+ *
+ * The resource is not added to the device till oc_add_resource() is called.
+ *
+ * Example:
+ * ```
+ * static void register_resources(void)
+ * {
+ *   oc_resource_t *bswitch = oc_new_resource("light switch", "/switch", 1, 0);
+ *   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
+ *   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
+ *   oc_resource_set_default_interface(bswitch, OC_IF_A);
+ *   oc_resource_set_observable(bswitch, true);
+ *   oc_resource_set_discoverable(bswitch, true);
+ *   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
+ *   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+ *   oc_resource_set_request_handler(bswitch, OC_PUT, put_switch, NULL);
+ *   oc_add_resource(bswitch);
+ * }
+ * ```
+ *
+ * @param[in] name the name of the new resource this will set the property `n`
+ * @param[in] uri the Uniform Resource Identifier for the resource
+ * @param[in] num_resource_types the number of Resource Types that will be
+ *                               added/bound to the resource
+ * @param[in] device index of the logical device the resource will be added to
+ *
+ * @see oc_resource_bind_resource_interface
+ * @see oc_resource_set_default_interface
+ * @see oc_resource_bind_resource_type
+ * @see oc_process_baseline_interface
+ * @see oc_resource_set_discoverable
+ * @see oc_resource_set_periodic_observable
+ * @see oc_resource_set_request_handler
+ */
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
+
+/**
+ * Add the supported interface(s) to the resource.
+ *
+ * Resource interfaces specify how the code is able to interact with the
+ * resource
+ *
+ * The `iface_mask` is bitwise OR of the following interfaces:
+ *  - `OC_IF_BASELINE` ("oic.if.baseline") baseline interface allow GET,
+ *                      PUT/POST, and notify/observe operations.
+ *  - `OC_IF_LL` ("oic.if.ll") The links list interface is a specifically
+ *               designed to provide a list of links pointing to other
+ * resources. Links list interfaces allow GET, and notify/observe operations.
+ *  - `OC_IF_B` ("oic.if.b") batch interface. The batch interface is used to
+ *              interact with a collection of resources at the same time.
+ *  - `OC_IF_R` ("oic.if.r") a read-only interface.  A read-only interface
+ * allows GET, and notify/observe operations.
+ *  - `OC_IF_RW` ("oir.if.rw") a read-write interface.  A read-write interface
+ *                allows GET, PUT/POST, and notify/observe operations.
+ *  - `OC_IF_A` ("oic.if.a") an actuator interface. An actuator interface allows
+ *              GET, PUT/POST, and notify/observe operations.
+ *  - `OC_IF_S` ("oic.if.s") a sensor interface.  A sensor interface allows GET,
+ *              and notify/observe operations.
+ *  - `OC_IC_CREATE` ("oic.if.create") used to create new resources in a
+ *                   collection.
+ *
+ * The read-write and actuator interfaces are very similar and sometimes hard to
+ * differentiate when one should be used over another.  In general an actuator
+ * interface is used when it modifies the real world value. e.g. turn on light,
+ * increase temperature, open vent.
+ *
+ * The read-only and sensor are also very similar in general a sensor value is
+ * read directly or indirectly from a real world sensor.
+ *
+ * @param[in] resource the resource that the interface(s) will be added to
+ * @param[in] iface_mask a bitwise ORed list of all interfaces supported by the
+ *                       resource.
+ * @see oc_interface_mask_t
+ * @see oc_resource_set_default_interface
+ */
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
                                          oc_interface_mask_t iface_mask);
+
+/**
+ * Select the default interface.
+ *
+ * The default interface must be one of the resources specified in the
+ * oc_resource_bind_resource_interface() function.
+ *
+ * If a request to the resource comes in and the interface is not specified
+ * then the default interface will be used to service the request.
+ *
+ * If the default interface is not set then the OC_IF_BASELINE will be used
+ * by the stack.
+ *
+ * @param[in] resource the resource that the default interface will be set on
+ * @param[in] iface_mask a single interface that will will be used as the
+ *                       default interface
+ */
 void oc_resource_set_default_interface(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
+/**
+ * Add a Resource Type "rt" property to the resource.
+ *
+ * All resources require at least one Resource Type. The number of Resource
+ * Types the resource contains is declared when the resource it created using
+ * oc_new_resource() function.
+ *
+ * Resource Types use a dot "." naming scheme e.g. `oic.r.switch.binary`.
+ * Resource Types starting with `oic` are reserved for a OCF defined Resource
+ * Types.  Developers are strongly encouraged to try and use an OCF defined
+ * Resource Type vs. creating their own. A repository of OCR defined resources
+ * can be found on oneiota.org.
+ *
+ * Multi-value "rt" Resource means a resource with multiple Resource Types. i.e.
+ * oc_resource_bind_resource_type is called multiple times for a single
+ * resource. When using a Mulit-value Resource the different resources
+ * properties must not conflict.
+ *
+ * @param[in] resource the resource that the Resource Type will be set on
+ * @param[in] type the Resource Type to add to the Resource Type "rt" property
+ *
+ * @see oc_new_resource
+ * @see oc_device_bind_resource_type
+ */
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
+/**
+ * Add a Resource Type "rt" property to the an /oic/d resource.
+ *
+ * This function can be used to bind a new Resource Type to a logical device's
+ * /oic/d resource.
+ *
+ * @param[in] device index of a logical device
+ * @param[in] type the Resource type to add to the Resource Type "rt" property
+ */
 void oc_device_bind_resource_type(size_t device, const char *type);
 
 void oc_resource_tag_pos_desc(oc_resource_t *resource,
@@ -584,6 +723,38 @@ void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
 
 void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
 
+/**
+ * Helper function used when responding to a GET request to add Common
+ * Properties to a GET response.
+ *
+ * This add Common Properties name ("n"), Interface ("if"), and Resource Type
+ * ("rt") to a GET response.
+ *
+ * Example:
+ * ```
+ * bool bswitch_state = false;
+ *
+ * void get_bswitch(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+ *                  void *data)
+ * {
+ *   oc_rep_start_root_object();
+ *   switch (iface_mask) {
+ *   case OC_IF_BASELINE:
+ *     oc_process_baseline_interface(resource);
+ *   // fall through
+ *   case OC_IF_A:
+ *     oc_rep_set_boolean(root, value, bswitch_state);
+ *     break;
+ *   default:
+ *     break;
+ *   }
+ *   oc_rep_end_root_object();
+ *   oc_send_response(request, OC_STATUS_OK);
+ * }
+ * ```
+ * @param[in] resource the resource the baseline Common Properties will be read
+ *            from to respond to the GET request
+ */
 void oc_process_baseline_interface(oc_resource_t *resource);
 
 /**
@@ -744,22 +915,132 @@ bool oc_collections_add_rt_factory(const char *rt,
 #endif    /* OC_COLLECTIONS_IF_CREATE */
 /** @} */ // end of doc_module_tag_collections
 
+/**
+ * Expose unsecured coap:// endpoints (in addition to secured coaps://
+ * endpoints) for this resource in /oic/res.
+ *
+ * @note While the resource may advertise unsecured endpoints, the resource
+ *       shall remain inaccessible until the hosting device is configured with
+ *       an anon-clear Access Control Entry (ACE).
+ *
+ * @param[in] resource the resource to make public
+ *
+ * @see oc_new_resource
+ */
 void oc_resource_make_public(oc_resource_t *resource);
 
+/**
+ * Specify if a resource can be found using OCF discover mechanisms.
+ *
+ * @param[in] resource to specify as discoverable or non-discoverable
+ * @param[in] state if true the resource will be discoverable if false the
+ *                  resource will be non-discoverable
+ *
+ * @see oc_new_resource for example code using this function
+ */
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
+
+/**
+ * Specify that a resource should notify clients when a property has been
+ * modified.
+ *
+ * @note this function can be used to make a periodic observable resource
+ *       unobservable.
+ *
+ * @param[in] resource the resource to specify the observability
+ * @param[in] state true to make resource observable, false to make resource
+ *                  unobservable
+ *
+ * @see oc_new_resource to see example code using this function
+ * @see oc_resource_set_periodic_observable
+ */
 void oc_resource_set_observable(oc_resource_t *resource, bool state);
+
+/**
+ * The resource will periodically notify observing clients of is property
+ * values.
+ *
+ * The oc_resource_set_observable() function can be used to turn off a periodic
+ * observable resource.
+ *
+ * Setting a `seconds` frequency of zero `0` is invalid and will result in an
+ * invalid resource.
+ *
+ * @param[in] resource the resource to specify the periodic observability
+ * @param[in] seconds the frequency in seconds that the resource will send out
+ *                    an notification of is property values.
+ */
 void oc_resource_set_periodic_observable(oc_resource_t *resource,
                                          uint16_t seconds);
+
+/**
+ * Specify a request_callback for GET, PUT, POST, and DELETE methods
+ *
+ * All resources must provide at least one request handler to be a valid
+ * resource.
+ *
+ * method types:
+ * - `OC_GET` the `oc_request_callback_t` is responsible for returning the
+ * current value of all of the resource properties.
+ * - `OC_PUT` the `oc_request_callback_t` is responsible for updating one or
+ * more of the resource properties.
+ * - `OC_POST` the `oc_request_callback_t` is responsible for updating one or
+ * more of the resource properties. The callback may also be responsible for
+ *         creating new resources.
+ * - `OC_DELETE` the `oc_request_callback_t` is responsible for deleting a
+ * resource
+ *
+ * @note Some methods may never by invoked based on the resources Interface as
+ *       well as the provisioning permissions of the client.
+ *
+ * @param[in] resource the resource the callback handler will be registered to
+ * @param[in] method specify if type method the callback is responsible for
+ *                   handling
+ * @param[in] callback the callback handler that will be invoked when a the
+ *                     method is called on the resource.
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_request_callback_t. The pointer must remain valid as
+ *                      long as the resource exists.
+ *
+ * @see oc_new_resource to see example code using this function
+ */
 void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
                                      void *user_data);
+
 void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_get_properties_cb_t get_properties,
                                     void *get_propr_user_data,
                                     oc_set_properties_cb_t set_properties,
                                     void *set_props_user_data);
+
+/**
+ * Add a resource to the IoTivity stack.
+ *
+ * The resource will be validated then added to the stack.
+ *
+ * @param[in] resource the resource to add to the stack
+ *
+ * @return
+ *  - true: the resource was successfully added to the stack.
+ *  - false: the resource can not be added to the stack.
+ */
 bool oc_add_resource(oc_resource_t *resource);
+
+/**
+ * Remove a resource from the IoTivity stack and delete the resource.
+ *
+ * Any resource observers will automatically be removed.
+ *
+ * This will free the memory associated with the resource.
+ *
+ * @param[in] resource the resource to delete
+ *
+ * @return
+ *  - true: when the resource has been deleted and memory freed.
+ *  - false: there was an issue deleting the resource.
+ */
 bool oc_delete_resource(oc_resource_t *resource);
 
 /**
