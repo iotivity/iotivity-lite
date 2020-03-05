@@ -24,14 +24,15 @@
 #include "port/oc_log.h"
 
 void
-oc_audit_log(const char *aeid, const char *message, uint8_t category, uint8_t priority,
-             const char **aux, size_t aux_len)
+oc_audit_log(const char *aeid, const char *message, uint8_t category,
+             uint8_t priority, const char **aux, size_t aux_len)
 {
   bool ret = oc_sec_ael_add(category, priority, aeid, message, aux, aux_len);
 #ifndef DEBUG
   (void)ret;
 #else
-  OC_DBG("audit_log: %s %s %u %u; status = %d", aeid, message, category, priority, ret);
+  OC_DBG("audit_log: %s %s %u %u; status = %d", aeid, message, category,
+         priority, ret);
 #endif
 }
 

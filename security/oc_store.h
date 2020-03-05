@@ -19,8 +19,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void oc_sec_load_pstat(size_t device);

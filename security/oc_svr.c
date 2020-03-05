@@ -56,10 +56,9 @@ oc_sec_create_svr(void)
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
                               post_cred, delete_cred, 1, "oic.r.cred");
-    oc_core_populate_resource(OCF_SEC_AEL, i, "/oic/sec/ael",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE, get_ael, 0, post_ael, 0, 1,
-                              "oic.r.ael");
+    oc_core_populate_resource(
+      OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
 
     oc_core_populate_resource(
       OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,

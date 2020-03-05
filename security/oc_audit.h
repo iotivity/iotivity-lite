@@ -21,12 +21,11 @@
 #include "oc_config.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-void oc_audit_log(const char *aeid, const char *message, uint8_t category, uint8_t priority,
-                  const char **aux, size_t aux_len);
+void oc_audit_log(const char *aeid, const char *message, uint8_t category,
+                  uint8_t priority, const char **aux, size_t aux_len);
 
 #ifdef __cplusplus
 }

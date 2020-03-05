@@ -22,15 +22,15 @@
 #include <strings.h>
 #endif
 
-#include "oc_api.h"
 #include "oc_ael.h"
+#include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
-#include "oc_clock_util.h"
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
 #include "port/oc_assert.h"
+#include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -41,28 +41,34 @@ static oc_sec_ael_t *ael = NULL;
 
 static void oc_sec_ael_reset(void);
 
-static bool oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
-                                 const char *aeid, const char *message, const char **aux, size_t aux_len,
-                                 bool write_to_storage);
+static bool oc_sec_ael_add_event(uint8_t category, uint8_t priority,
+                                 oc_clock_time_t timestamp, const char *aeid,
+                                 const char *message, const char **aux,
+                                 size_t aux_len, bool write_to_storage);
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static size_t oc_sec_ael_calc_event_size(const char *aeid, const char *message, const char **aux_info, size_t aux_size,
-                                         size_t *aeid_sz, size_t *message_sz, size_t *aux_info_sz, size_t **aux_sz);
+static size_t oc_sec_ael_calc_event_size(const char *aeid, const char *message,
+                                         const char **aux_info, size_t aux_size,
+                                         size_t *aeid_sz, size_t *message_sz,
+                                         size_t *aux_info_sz, size_t **aux_sz);
 
-static oc_sec_ael_event_t *oc_sec_ael_create_event(uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
-                                                   const char *aeid, const char *message, const char** aux_info, size_t aux_size,
-                                                   size_t event_sz, size_t aeid_sz, size_t message_sz, size_t aux_info_sz, size_t *aux_sz);
-static inline void oc_sec_ael_free_event(oc_sec_ael_event_t *event)
+static oc_sec_ael_event_t *oc_sec_ael_create_event(
+  uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
+  const char *aeid, const char *message, const char **aux_info, size_t aux_size,
+  size_t event_sz, size_t aeid_sz, size_t message_sz, size_t aux_info_sz,
+  size_t *aux_sz);
+static inline void
+oc_sec_ael_free_event(oc_sec_ael_event_t *event)
 {
   free(event);
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-static inline size_t oc_sec_ael_max_space(void)
+static inline size_t
+oc_sec_ael_max_space(void)
 {
   size_t res = OC_SEC_AEL_MAX_SIZE;
-  switch (ael->unit)
-  {
+  switch (ael->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
     res = ael->maxsize;
     break;
@@ -72,11 +78,11 @@ static inline size_t oc_sec_ael_max_space(void)
   }
   return res;
 }
-static inline size_t oc_sec_ael_used_space(void)
+static inline size_t
+oc_sec_ael_used_space(void)
 {
   size_t res = 0;
-  switch (ael->unit)
-  {
+  switch (ael->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
     res = ael->events.size;
     break;
@@ -87,11 +93,11 @@ static inline size_t oc_sec_ael_used_space(void)
   return res;
 }
 
-static const char* oc_sec_ael_unit_string(void)
+static const char *
+oc_sec_ael_unit_string(void)
 {
-  static const char* ael_unit_string[] = {"Byte", "Kbyte"};
-  switch (ael->unit)
-  {
+  static const char *ael_unit_string[] = { "Byte", "Kbyte" };
+  switch (ael->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
   case OC_SEC_AEL_UNIT_KBYTE:
     return ael_unit_string[ael->unit];
@@ -109,9 +115,9 @@ oc_sec_ael_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   if (ael) {
-      for (oc_sec_ael_event_t* e = ael->events.tail; e; e = e->next) {
-        oc_sec_ael_free_event(e);
-      }
+    for (oc_sec_ael_event_t *e = ael->events.tail; e; e = e->next) {
+      oc_sec_ael_free_event(e);
+    }
     free(ael);
     ael = NULL;
   }
@@ -129,8 +135,8 @@ bool
 oc_sec_ael_add(uint8_t category, uint8_t priority, const char *aeid,
                const char *message, const char **aux, size_t aux_len)
 {
-  return oc_sec_ael_add_event(category, priority, oc_clock_time(),
-                                aeid, message, aux, aux_len, true);
+  return oc_sec_ael_add_event(category, priority, oc_clock_time(), aeid,
+                              message, aux, aux_len, true);
 }
 
 void
@@ -153,8 +159,7 @@ get_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 void
-post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
-               void *data)
+post_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
@@ -182,7 +187,8 @@ post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 bool
-oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
+oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
+                  bool to_storage)
 {
   char tmpstr[64];
   oc_rep_start_root_object();
@@ -268,20 +274,26 @@ oc_sec_ael_decode(oc_rep_t *rep, bool from_storage)
     switch (rep->type) {
     /* categoryfilter, priorityfilter, maxspace, unit */
     case OC_REP_INT:
-      if (len == 14 && memcmp(oc_string(rep->name), "categoryfilter", 14) == 0) {
+      if (len == 14 &&
+          memcmp(oc_string(rep->name), "categoryfilter", 14) == 0) {
         ael->categoryfilter = (uint8_t)rep->value.integer;
-      } else if (len == 14 && memcmp(oc_string(rep->name), "priorityfilter", 14) == 0) {
+      } else if (len == 14 &&
+                 memcmp(oc_string(rep->name), "priorityfilter", 14) == 0) {
         ael->priorityfilter = (uint8_t)rep->value.integer;
-      } else if (from_storage && len == 8 && memcmp(oc_string(rep->name), "maxspace", 8) == 0) {
+      } else if (from_storage && len == 8 &&
+                 memcmp(oc_string(rep->name), "maxspace", 8) == 0) {
         ael->maxsize = (size_t)rep->value.integer;
-      } else if (from_storage && len == 4 && memcmp(oc_string(rep->name), "unit", 4) == 0) {
+      } else if (from_storage && len == 4 &&
+                 memcmp(oc_string(rep->name), "unit", 4) == 0) {
         ael->unit = (oc_sec_ael_unit_t)rep->value.integer;
       }
       break;
     /* events */
     case OC_REP_OBJECT_ARRAY:
-      if (from_storage && len == 6 && memcmp(oc_string(rep->name), "events", 6) == 0) {
-        for (oc_rep_t *event = rep->value.object_array; event; event = event->next) {
+      if (from_storage && len == 6 &&
+          memcmp(oc_string(rep->name), "events", 6) == 0) {
+        for (oc_rep_t *event = rep->value.object_array; event;
+             event = event->next) {
           uint8_t category = 0;
           uint8_t priority = 0;
           oc_clock_time_t timestamp = 0;
@@ -296,9 +308,11 @@ oc_sec_ael_decode(oc_rep_t *rep, bool from_storage)
             case OC_REP_INT:
               if (l == 8 && memcmp(oc_string(r->name), "category", 8) == 0) {
                 category = (uint8_t)r->value.integer;
-              } else if (l == 8 && memcmp(oc_string(r->name), "priority", 8) == 0) {
+              } else if (l == 8 &&
+                         memcmp(oc_string(r->name), "priority", 8) == 0) {
                 priority = (uint8_t)r->value.integer;
-              } else if (l == 9 && memcmp(oc_string(r->name), "timestamp", 9) == 0) {
+              } else if (l == 9 &&
+                         memcmp(oc_string(r->name), "timestamp", 9) == 0) {
                 timestamp = (oc_clock_time_t)r->value.integer;
               }
               break;
@@ -306,23 +320,26 @@ oc_sec_ael_decode(oc_rep_t *rep, bool from_storage)
             case OC_REP_STRING:
               if (l == 4 && memcmp(oc_string(r->name), "aeid", 4) == 0) {
                 aeid = oc_string(r->value.string);
-              } else if (l == 7 && memcmp(oc_string(r->name), "message", 7) == 0) {
+              } else if (l == 7 &&
+                         memcmp(oc_string(r->name), "message", 7) == 0) {
                 message = oc_string(r->value.string);
               }
               break;
             /* auxiliaryinfo */
             case OC_REP_STRING_ARRAY:
 #ifdef OC_DYNAMIC_ALLOCATION
-              if (l == 13 && memcmp(oc_string(r->name), "auxiliaryinfo", 13) == 0) {
+              if (l == 13 &&
+                  memcmp(oc_string(r->name), "auxiliaryinfo", 13) == 0) {
                 aux_sz = oc_string_array_get_allocated_size(r->value.array);
-                if ((aux_sz != 0) && ((aux = (char**)malloc(aux_sz * sizeof(char*))) != NULL)) {
+                if ((aux_sz != 0) && ((aux = (char **)malloc(
+                                         aux_sz * sizeof(char *))) != NULL)) {
                   for (size_t i = 0; i < aux_sz; i++) {
                     aux[i] = oc_string_array_get_item(r->value.array, i);
                   }
                 }
               }
 #else /* OC_DYNAMIC_ALLOCATION */
-              #pragma message ("Not implemented!")
+#pragma message("Not implemented!")
               OC_ERR("Not implemented!");
 #endif /* OC_DYNAMIC_ALLOCATION */
               break;
@@ -355,7 +372,7 @@ oc_sec_ael_reset(void)
   if (!(ael = (oc_sec_ael_t *)calloc(1, sizeof(oc_sec_ael_t)))) {
     oc_abort("oc_ael: Out of memory");
   }
-#else /* OC_DYNAMIC_ALLOCATION */
+#else  /* OC_DYNAMIC_ALLOCATION */
   ael = &s_ael;
 #endif /* OC_DYNAMIC_ALLOCATION */
   ael->categoryfilter = OC_SEC_AEL_CATEGORYFILTER_DEFAULT;
@@ -367,8 +384,9 @@ oc_sec_ael_reset(void)
 }
 
 static bool
-oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
-                     const char *aeid, const char *message, const char **aux, size_t aux_len,
+oc_sec_ael_add_event(uint8_t category, uint8_t priority,
+                     oc_clock_time_t timestamp, const char *aeid,
+                     const char *message, const char **aux, size_t aux_len,
                      bool write_to_storage)
 {
   bool res = false;
@@ -384,8 +402,8 @@ oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timesta
   size_t message_sz = 0;
   size_t aux_info_sz = 0;
   size_t *aux_sz = NULL;
-  size_t event_sz = oc_sec_ael_calc_event_size(aeid, message, aux, aux_len,
-                                               &aeid_sz, &message_sz, &aux_info_sz, &aux_sz);
+  size_t event_sz = oc_sec_ael_calc_event_size(
+    aeid, message, aux, aux_len, &aeid_sz, &message_sz, &aux_info_sz, &aux_sz);
   // check size
   if (event_sz > ael->maxsize) {
     OC_ERR("event size exceeds available size!");
@@ -402,8 +420,9 @@ oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timesta
       ael->events.head = NULL;
     }
     // create/add event
-    oc_sec_ael_event_t *e = oc_sec_ael_create_event(category, priority, timestamp, aeid, message, aux, aux_len,
-                                                    event_sz, aeid_sz, message_sz, aux_info_sz, aux_sz);
+    oc_sec_ael_event_t *e = oc_sec_ael_create_event(
+      category, priority, timestamp, aeid, message, aux, aux_len, event_sz,
+      aeid_sz, message_sz, aux_info_sz, aux_sz);
     if (!e) {
       OC_ERR("Can't create event!");
     } else {
@@ -425,7 +444,7 @@ oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timesta
     free(aux_sz);
   }
 #else /* OC_DYNAMIC_ALLOCATION */
-  #pragma message ("Not implemented!")
+#pragma message("Not implemented!")
   (void)category;
   (void)priority;
   (void)timestamp;
@@ -442,8 +461,10 @@ oc_sec_ael_add_event(uint8_t category, uint8_t priority, oc_clock_time_t timesta
 
 #ifdef OC_DYNAMIC_ALLOCATION
 static size_t
-oc_sec_ael_calc_event_size(const char *aeid, const char *message, const char **aux_info, size_t aux_size,
-                           size_t *aeid_sz, size_t *message_sz, size_t *aux_info_sz, size_t **aux_sz)
+oc_sec_ael_calc_event_size(const char *aeid, const char *message,
+                           const char **aux_info, size_t aux_size,
+                           size_t *aeid_sz, size_t *message_sz,
+                           size_t *aux_info_sz, size_t **aux_sz)
 {
   size_t res = sizeof(oc_sec_ael_event_t);
 
@@ -461,8 +482,8 @@ oc_sec_ael_calc_event_size(const char *aeid, const char *message, const char **a
   }
   size_t *tmp_arr = NULL;
   if (aux_info && aux_size != 0 &&
-          ((tmp_arr = malloc(aux_size * sizeof(char*))) != NULL)) {
-    *aux_info_sz = (aux_size * sizeof(char*));
+      ((tmp_arr = malloc(aux_size * sizeof(char *))) != NULL)) {
+    *aux_info_sz = (aux_size * sizeof(char *));
     res += *aux_info_sz;
     for (size_t i = 0; i < aux_size; i++) {
       tmp_arr[i] = (strlen(aux_info[i]) + 1);
@@ -478,9 +499,11 @@ oc_sec_ael_calc_event_size(const char *aeid, const char *message, const char **a
 }
 
 static oc_sec_ael_event_t *
-oc_sec_ael_create_event(uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
-                        const char *aeid, const char *message, const char** aux_info, size_t aux_size,
-                        size_t event_sz, size_t aeid_sz, size_t message_sz, size_t aux_info_sz, size_t *aux_sz)
+oc_sec_ael_create_event(uint8_t category, uint8_t priority,
+                        oc_clock_time_t timestamp, const char *aeid,
+                        const char *message, const char **aux_info,
+                        size_t aux_size, size_t event_sz, size_t aeid_sz,
+                        size_t message_sz, size_t aux_info_sz, size_t *aux_sz)
 {
   // allocate memory
   oc_sec_ael_event_t *res = (oc_sec_ael_event_t *)malloc(event_sz);
@@ -490,36 +513,36 @@ oc_sec_ael_create_event(uint8_t category, uint8_t priority, oc_clock_time_t time
   }
 
   // copying values
-  uint8_t* p = ((uint8_t*)res + sizeof(oc_sec_ael_event_t));
+  uint8_t *p = ((uint8_t *)res + sizeof(oc_sec_ael_event_t));
 
   res->size = event_sz;
   res->category = category;
   res->priority = priority;
   res->timestamp = timestamp;
   if (aeid_sz != 0) {
-    res->aeid = (char*)p;
+    res->aeid = (char *)p;
     strncpy(res->aeid, aeid, aeid_sz - 1);
-    res->aeid[aeid_sz-1] = '\0';
-    p+=aeid_sz;
+    res->aeid[aeid_sz - 1] = '\0';
+    p += aeid_sz;
   } else {
-    res->aeid= NULL;
+    res->aeid = NULL;
   }
   if (message_sz != 0) {
-    res->message = (char*)p;
+    res->message = (char *)p;
     strncpy(res->message, message, message_sz - 1);
-    res->message[message_sz-1] = '\0';
-    p+=message_sz;
+    res->message[message_sz - 1] = '\0';
+    p += message_sz;
   } else {
     res->message = NULL;
   }
   if (aux_info_sz != 0 && aux_sz) {
-    res->aux_info = (char**)p;
-    p+=aux_info_sz;
+    res->aux_info = (char **)p;
+    p += aux_info_sz;
     for (size_t i = 0; i < aux_size; i++) {
-      res->aux_info[i] = (char*)p;
+      res->aux_info[i] = (char *)p;
       strncpy(res->aux_info[i], aux_info[i], aux_sz[i] - 1);
-      res->aux_info[i][aux_sz[i]-1] = '\0';
-      p+=aux_sz[i];
+      res->aux_info[i][aux_sz[i] - 1] = '\0';
+      p += aux_sz[i];
     }
     res->aux_size = aux_size;
   } else {
