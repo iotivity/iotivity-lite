@@ -28,7 +28,6 @@ public class GetSwitch implements OCRequestHandler {
         }
         case OCInterfaceMask.A: {
             OCRep.setBoolean(root, "value", binarySwitch.getValue());
-            OCRep.setTextString(root, "name", binarySwitch.getName());
             break;
         }
         default:

@@ -34,7 +34,7 @@ public class PostSwitch implements OCRequestHandler {
                 System.out.println("value: " + rep.getValue().getString());
                 break;
             default:
-                System.out.println("NOT YET HANDLED VALUE");
+                System.out.println("UNEXPECTED TYPE");
                 OCMain.sendResponse(request, OCStatus.OC_STATUS_BAD_REQUEST);
             }
             System.out.println("-----------------------------------------------------");
@@ -43,7 +43,6 @@ public class PostSwitch implements OCRequestHandler {
 
         CborEncoder root = OCRep.beginRootObject();
         OCRep.setBoolean(root, "value", binarySwitch.getValue());
-        OCRep.setTextString(root, "name", binarySwitch.getName());
         OCRep.endRootObject();
 
         OCMain.sendResponse(request, OCStatus.OC_STATUS_CHANGED);
