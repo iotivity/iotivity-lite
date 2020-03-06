@@ -1,11 +1,16 @@
+Code formatting tools
+--------------------------------------------------------------------------------
+
 The `pre-commit` and `check-style` tools use `clang-format` to fix the code style.
 
-For Linux clang-format is part of clang and can be installed using your package manager
+For Linux clang-format is part of clang and can be installed using your package
+manager.
+
 For Windows clang-format can be downloaded from http://llvm.org/builds/
 
-In order to use the tools copy the file "_clang-format" to the project's root directory.
-This file contains the description of the IoTivity-lite code style and will be used by
-clang-format.
+In order to use the tools copy the file "_clang-format" to the project's root
+directory.  This file contains the description of the IoTivity-lite code style
+and will be used by clang-format.
 
     # from project root directory run
     cp tools/_clang-format _clang-format
@@ -17,26 +22,47 @@ if using older version of clang-format version 5.0 or older use
 
 The clang-format tool can invoked directly for individual files.
 
-    # from project root directory run
+    # from project root directory runf
     clang-format -style=file -i <*.c or *.h file>
 
-The check-style tool can fix the code style of all the project's *.c and *.h files
-or only print the changes. If no parameter is given the files are automatically fixed,
-to only print the changes the option "-p" should be given.
+The check-style tool can fix the code style of all the project's *.c and *.h
+files or only print the changes. If no parameter is given the files are
+automatically fixed, to only print the changes the option "-p" should be given.
 
     # to print the changes run
     python tools/check-style -p
     # to automatically fix the the files run
     python tools/check-style
 
-The pre-commit tool is a git hook that fix the code style of the commmit
+The pre-commit file is a git hook that fix the code style of the commmit
 automatically.  To use this tool copy this file to <project-root-dir>/.git/hooks/
 
     # from project root directory
     cp tools/pre-commit .git/hooks/pre-commit
 
+The whitespace_commit_checker.sh script will check only the files in the last
+commit. It is designed for continuous integration builds. It can be run locally
+if desired. Like the _clang-format file it must be placed in the root directory.
+
+    # from project root directory run
+    cp tools/whitespace_commit_checker.sh whitespace_commit_checker.sh
+    ./whitespace_commit_checker.sh
+
+Documentation tools for the C APIs
+--------------------------------------------------------------------------------
+
 Invoke doxygen doygen.ini to create the Doxygen API documentation.
-Afterwards you find the start page by loading html/index.html.
+Afterwards you find the start page by loading tools/html/index.html.
 
     # from project root directory
     cd tools & doxygen doxygen.ini
+    # a file Doxygen.log will be created open it in an editor to view
+    # error documentation
+
+The build_doc.sh script will run doxygen if there were any documentation issues
+the Doxygen.log will be printed to the console.
+
+    #from project root directory
+    cd tools & ./build_doc
+
+    

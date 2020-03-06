@@ -347,7 +347,7 @@ oc_ri_add_resource(oc_resource_t *resource)
       !resource->post_handler.cb && !resource->delete_handler.cb)
     valid = false;
 
-  if (resource->properties & OC_PERIODIC &&
+  if ((resource->properties & OC_PERIODIC) &&
       resource->observe_period_seconds == 0)
     valid = false;
 
@@ -682,7 +682,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj.origin = endpoint;
 
   /* Initialize OCF interface selector. */
-  oc_interface_mask_t iface_mask = 0;
+  oc_interface_mask_t iface_query = 0, iface_mask = 0;
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path;
@@ -701,7 +701,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     int if_len =
       oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {
-      iface_mask |= oc_ri_get_interface_mask(iface, (size_t)if_len);
+      iface_query |= oc_ri_get_interface_mask(iface, (size_t)if_len);
     }
   }
 
@@ -792,6 +792,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
+    iface_mask = iface_query;
     if (iface_mask == 0)
       iface_mask = cur_resource->default_interface;
 
@@ -949,10 +950,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       if (observe == 0) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint, iface_mask) >= 0) {
+                                 endpoint, iface_query) >= 0) {
 #else  /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint,
-                                 iface_mask) >= 0) {
+                                 iface_query) >= 0) {
 #endif /* !OC_BLOCK_WISE */
           /* If the resource is marked as periodic observable it means
            * it must be polled internally for updates (which would lead to
@@ -968,38 +969,29 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         }
 #if defined(OC_COLLECTIONS)
         if (resource_is_collection) {
-          /* The implementation currently permits observations of collections
-           * via
-           * only the batch interface.
-           */
-          if (iface_mask != OC_IF_B && iface_mask != OC_IF_LL &&
-              iface_mask != OC_IF_CREATE) {
-            set_observe_option = false;
-          } else {
-            oc_collection_t *collection = (oc_collection_t *)cur_resource;
-            oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+          oc_collection_t *collection = (oc_collection_t *)cur_resource;
+          oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
 #ifdef OC_SECURITY
-            while (links) {
-              if (links->resource &&
-                  links->resource->properties & OC_OBSERVABLE) {
-                if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
-                  set_observe_option = false;
-                  break;
-                }
+          while (links) {
+            if (links->resource &&
+                (links->resource->properties & OC_OBSERVABLE)) {
+              if (!oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
+                set_observe_option = false;
+                break;
               }
-              links = links->next;
             }
+            links = links->next;
+          }
 #endif /* OC_SECURITY */
-            if (set_observe_option) {
-              if (iface_mask == OC_IF_B) {
-                links = (oc_link_t *)oc_list_head(collection->links);
-                while (links) {
-                  if (links->resource &&
-                      links->resource->properties & OC_PERIODIC) {
-                    add_periodic_observe_callback(links->resource);
-                  }
-                  links = links->next;
+          if (set_observe_option) {
+            if (iface_query == OC_IF_B) {
+              links = (oc_link_t *)oc_list_head(collection->links);
+              while (links) {
+                if (links->resource &&
+                    (links->resource->properties & OC_PERIODIC)) {
+                  add_periodic_observe_callback(links->resource);
                 }
+                links = links->next;
               }
             }
           }
@@ -1020,10 +1012,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       else if (observe == 1) {
 #ifdef OC_BLOCK_WISE
         if (coap_observe_handler(request, response, cur_resource, block2_size,
-                                 endpoint, iface_mask) > 0) {
+                                 endpoint, iface_query) > 0) {
 #else  /* OC_BLOCK_WISE */
         if (coap_observe_handler(request, response, cur_resource, endpoint,
-                                 iface_mask) > 0) {
+                                 iface_query) > 0) {
 #endif /* !OC_BLOCK_WISE */
           if (cur_resource->properties & OC_PERIODIC) {
             remove_periodic_observe_callback(cur_resource);
@@ -1168,6 +1160,13 @@ notify_client_cb_503(oc_client_cb_t *cb)
   oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
   handler(&client_response);
 
+#ifdef OC_TCP
+  if ((oc_string_len(cb->uri) == 5 &&
+       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
+    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
+  }
+#endif /* OC_TCP */
+
   free_client_cb(cb);
 }
 
@@ -1229,7 +1228,7 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
   return cb;
 }
 
-static bool
+bool
 oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
 {
   oc_client_cb_t *cb = oc_list_head(client_cbs);
@@ -1316,7 +1315,6 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
-
   if (payload_len) {
     if (cb->discovery) {
       if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
@@ -1344,6 +1342,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   } else {
     if (pkt->type == COAP_TYPE_ACK && pkt->code == 0) {
       separate = true;
+      cb->separate = 1;
     } else if (!cb->discovery) {
       oc_response_handler_t handler =
         (oc_response_handler_t)cb->handler.response;
@@ -1388,6 +1387,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
       while (dup_cb != NULL) {
         if (dup_cb != cb && dup_cb->observe_seq != -1 &&
+            dup_cb->token_len == cb->token_len &&
+            memcmp(dup_cb->token, cb->token, cb->token_len) == 0 &&
             oc_string_len(dup_cb->uri) == uri_len &&
             strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
             oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
@@ -1401,7 +1402,6 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       }
     }
   }
-
   return true;
 }
 

@@ -366,7 +366,9 @@ oc_tls_inactive(void *data)
       return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    if ((peer->endpoint.flags & TCP) == 0) {
+      mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    }
     oc_tls_free_peer(peer, true);
   }
   OC_DBG("oc_tls: Terminating DTLS inactivity callback");
@@ -795,6 +797,9 @@ oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
     oc_list_remove(ca_certs, cert);
     oc_memb_free(&ca_certs_s, cert);
   }
+  mbedtls_x509_crt_free(&trust_anchors);
+  mbedtls_x509_crt_init(&trust_anchors);
+  oc_tls_refresh_trust_anchors();
 }
 
 static int
@@ -1243,20 +1248,6 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 }
 
 void
-oc_tls_close_all_connections(size_t device)
-{
-  OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
-  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
-  while (p != NULL) {
-    next = p->next;
-    if (p->endpoint.device == device) {
-      oc_tls_close_connection(&p->endpoint);
-    }
-    p = next;
-  }
-}
-
-void
 oc_tls_shutdown(void)
 {
   oc_tls_peer_t *p = oc_list_pop(tls_peers);
@@ -1330,7 +1321,9 @@ oc_tls_close_connection(oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    if ((peer->endpoint.flags & TCP) == 0) {
+      mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    }
     oc_tls_free_peer(peer, false);
   }
 }
@@ -1771,15 +1764,35 @@ oc_tls_recv_message(oc_message_t *message)
 }
 
 static void
-close_all_active_tls_sessions(size_t device)
+close_all_tls_sessions_for_device(size_t device)
 {
-  oc_tls_close_all_connections(device);
+  OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
+  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
+  while (p != NULL) {
+    next = p->next;
+    if (p->endpoint.device == device) {
+      oc_tls_close_connection(&p->endpoint);
+    }
+    p = next;
+  }
+}
+
+static void
+close_all_tls_sessions(void)
+{
+  OC_DBG("oc_tls: closing all open (D)TLS sessions on all devices");
+  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
+  while (p != NULL) {
+    next = p->next;
+    oc_tls_close_connection(&p->endpoint);
+    p = next;
+  }
 }
 
 OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 {
+  OC_PROCESS_POLLHANDLER(close_all_tls_sessions());
   OC_PROCESS_BEGIN();
-
   while (1) {
     OC_PROCESS_YIELD();
 
@@ -1805,7 +1818,7 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 #endif /* OC_CLIENT */
     else if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
       size_t device = (size_t)data;
-      close_all_active_tls_sessions(device);
+      close_all_tls_sessions_for_device(device);
     }
   }
 

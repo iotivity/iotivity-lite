@@ -76,8 +76,9 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
     return;
   }
 
-  if (oc_string_len(buffer->uri_query))
+  if (oc_string_len(buffer->uri_query) > 0) {
     oc_free_string(&buffer->uri_query);
+  }
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -207,6 +208,35 @@ oc_blockwise_scrub_buffers(bool all)
 
 #ifdef OC_CLIENT
 static oc_blockwise_state_t *
+oc_blockwise_find_buffer_by_token(oc_list_t list, uint8_t *token,
+                                  uint8_t token_len)
+{
+  oc_blockwise_state_t *buffer = oc_list_head(list);
+  while (buffer) {
+    if (token_len > 0 && buffer->role == OC_BLOCKWISE_CLIENT &&
+        buffer->token_len == token_len &&
+        memcmp(buffer->token, token, token_len) == 0)
+      break;
+    buffer = buffer->next;
+  }
+  return buffer;
+}
+
+oc_blockwise_state_t *
+oc_blockwise_find_request_buffer_by_token(uint8_t *token, uint8_t token_len)
+{
+  return oc_blockwise_find_buffer_by_token(oc_blockwise_requests, token,
+                                           token_len);
+}
+
+oc_blockwise_state_t *
+oc_blockwise_find_response_buffer_by_token(uint8_t *token, uint8_t token_len)
+{
+  return oc_blockwise_find_buffer_by_token(oc_blockwise_responses, token,
+                                           token_len);
+}
+
+static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid)
 {
   oc_blockwise_state_t *buffer = oc_list_head(list);
@@ -328,8 +358,9 @@ oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 {
   if (incoming_block_offset >= (unsigned)OC_MAX_APP_DATA_SIZE ||
       incoming_block_size > (OC_MAX_APP_DATA_SIZE - incoming_block_offset) ||
-      incoming_block_offset > buffer->next_block_offset)
+      incoming_block_offset > buffer->next_block_offset) {
     return false;
+  }
 
   if (buffer->next_block_offset == incoming_block_offset) {
     memcpy(&buffer->buffer[buffer->next_block_offset], incoming_block,

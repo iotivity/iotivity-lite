@@ -14,10 +14,16 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #ifndef OC_DYNAMIC_ALLOCATION
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifndef OC_STORAGE
+#error Preprocessor macro OC_SECURITY is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
+#endif
 
 #include "oc_obt.h"
 #include "oc_core_res.h"
@@ -2656,9 +2662,11 @@ oc_obt_init(void)
         private_key_size);
       if (root_cert_credid > 0) {
         oc_obt_dump_state();
+        OC_DBG("oc_obt: successfully returning from obt_init()");
         return 0;
       }
     }
+    OC_DBG("oc_obt: returning from oc_obt() with errors");
     return -1;
 #endif /* OC_PKI */
   } else {
@@ -2666,6 +2674,7 @@ oc_obt_init(void)
     oc_obt_load_state();
 #endif /* OC_PKI */
   }
+  OC_DBG("oc_obt: successfully returning from obt_init()");
   return 0;
 }
 

@@ -21,6 +21,10 @@
 #include <signal.h>
 #include <stdio.h>
 
+#if defined(OC_IDD_API)
+#include "oc_introspection.h"
+#endif
+
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
@@ -67,6 +71,35 @@ app_init(void)
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+  PRINT("\tSwitch device added.\n");
+#if defined(OC_IDD_API)
+  FILE *fp;
+  uint8_t *buffer;
+  size_t buffer_size;
+  const char introspection_error[] =
+    "\tERROR Could not read smart_home_server_linux_IDD.cbor\n"
+    "\tIntrospection data not set for device.\n";
+  fp = fopen("./smart_home_server_linux_IDD.cbor", "rb");
+  if (fp) {
+    fseek(fp, 0, SEEK_END);
+    buffer_size = ftell(fp);
+    rewind(fp);
+
+    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+    fclose(fp);
+
+    if (fread_ret == 1) {
+      oc_set_introspection_data(0, buffer, buffer_size);
+      PRINT("\tIntrospection data set for device.\n");
+    } else {
+      PRINT("%s", introspection_error);
+    }
+    free(buffer);
+  } else {
+    PRINT("%s", introspection_error);
+  }
+#endif
 
   if (err >= 0) {
     oc_uuid_t my_uuid;
@@ -510,7 +543,7 @@ register_resources(void)
   oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
   oc_add_resource(temp_resource);
-
+  PRINT("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
@@ -520,7 +553,7 @@ register_resources(void)
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
   oc_add_resource(bswitch);
-
+  PRINT("\tSwitch resource added.\n");
 #ifdef OC_COLLECTIONS
   col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
@@ -544,6 +577,7 @@ register_resources(void)
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
   oc_add_collection(col);
+  PRINT("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
 }
 
@@ -689,11 +723,12 @@ main(void)
 
   oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
-  oc_set_max_app_data_size(16384);
+  // max app data size set to 13k large enough to hold full IDD
+  oc_set_max_app_data_size(13312);
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
@@ -705,10 +740,12 @@ main(void)
     return -1;
   }
 
+  PRINT("Initializing Smart Home Server.\n");
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
-
+  PRINT("Waiting for Client...\n");
+  PRINT("Hit 'Enter' at any time to toggle switch resource\n");
   while (quit != 1) {
     next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);

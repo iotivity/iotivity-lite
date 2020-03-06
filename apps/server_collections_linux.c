@@ -284,6 +284,7 @@ register_resources(void)
 #if defined(OC_COLLECTIONS)
   oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
+  oc_resource_bind_resource_interface(col, OC_IF_CREATE);
   oc_resource_set_discoverable(col, true);
 
   oc_link_t *l1 = oc_new_link(res1);
@@ -331,16 +332,16 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./server_collections_linux_creds");
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
   if (init < 0)

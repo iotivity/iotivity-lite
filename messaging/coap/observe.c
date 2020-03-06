@@ -83,7 +83,7 @@ OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
 /*---------------------------------------------------------------------------*/
 static int
 coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
-                                   int uri_len)
+                                   int uri_len, oc_interface_mask_t iface_mask)
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
@@ -92,7 +92,8 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
     next = obs->next;
     if (((oc_endpoint_compare(&obs->endpoint, endpoint) == 0)) &&
         (oc_string_len(obs->url) == (size_t)uri_len &&
-         memcmp(oc_string(obs->url), uri, uri_len) == 0)) {
+         memcmp(oc_string(obs->url), uri, uri_len) == 0) &&
+        obs->iface_mask == iface_mask) {
       obs->resource->num_observers--;
       oc_list_remove(observers_list, obs);
       oc_memb_free(&observers_memb, obs);
@@ -116,7 +117,8 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 #endif /* !OC_BLOCK_WISE */
 {
   /* Remove existing observe relationship, if any. */
-  int dup = coap_remove_observer_handle_by_uri(endpoint, uri, (int)uri_len);
+  int dup =
+    coap_remove_observer_handle_by_uri(endpoint, uri, (int)uri_len, iface_mask);
 
   coap_observer_t *o = oc_memb_alloc(&observers_memb);
 
@@ -151,6 +153,32 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
 /*---------------------------------------------------------------------------*/
 /*- Removal -----------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+static const char *
+get_iface_query(oc_interface_mask_t iface_mask)
+{
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    return "if=oic.if.baseline";
+  case OC_IF_LL:
+    return "if=oic.if.ll";
+  case OC_IF_B:
+    return "if=oic.if.b";
+  case OC_IF_R:
+    return "if=oic.if.r";
+  case OC_IF_RW:
+    return "if=oic.if.rw";
+  case OC_IF_A:
+    return "if=oic.if.a";
+  case OC_IF_S:
+    return "if=oic.if.s";
+  case OC_IF_CREATE:
+    return "if=oic.if.create";
+  default:
+    break;
+  }
+  return NULL;
+}
+
 void
 coap_remove_observer(coap_observer_t *o)
 {
@@ -158,9 +186,11 @@ coap_remove_observer(coap_observer_t *o)
          o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
+  const char *query = get_iface_query(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
-    &o->endpoint, OC_GET, NULL, 0, OC_BLOCKWISE_SERVER);
+    &o->endpoint, OC_GET, query, (query) ? strlen(query) : 0,
+    OC_BLOCKWISE_SERVER);
   if (response_state) {
     response_state->ref_count = 0;
   }
@@ -283,11 +313,15 @@ coap_notify_collection_observers(oc_resource_t *resource,
   /* iterate over observers */
   for (obs = (coap_observer_t *)oc_list_head(observers_list); obs;
        obs = obs->next) {
-    if (obs->resource != resource && obs->iface_mask != iface_mask) {
+    if (obs->resource != resource) {
       continue;
     }
-
-    OC_DBG("coap_notify_collections: notifying observer");
+    if (obs->iface_mask != iface_mask) {
+      if ((obs->iface_mask | iface_mask) != OC_IF_LL) {
+        continue;
+      }
+    }
+    OC_DBG("coap_notify_collection_observers: notifying observer");
     coap_transaction_t *transaction = NULL;
     coap_packet_t notification[1];
 
@@ -308,10 +342,11 @@ coap_notify_collection_observers(oc_resource_t *resource,
     if (response_buf->response_length > obs->block2_size) {
 #endif /* !OC_TCP */
       notification->type = COAP_TYPE_CON;
+      const char *query = get_iface_query(obs->iface_mask);
       response_state = oc_blockwise_find_response_buffer(
         oc_string(obs->resource->uri) + 1,
-        oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, NULL, 0,
-        OC_BLOCKWISE_SERVER);
+        oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET, query,
+        (query) ? strlen(query) : 0, OC_BLOCKWISE_SERVER);
       if (response_state) {
         if (response_state->payload_size == response_state->next_block_offset) {
           oc_blockwise_free_response_buffer(response_state);
@@ -329,6 +364,9 @@ coap_notify_collection_observers(oc_resource_t *resource,
         goto leave_notify_collections;
       }
 
+      if (query) {
+        oc_new_string(&response_state->uri_query, query, strlen(query));
+      }
       memcpy(response_state->buffer, response_buf->buffer,
              response_buf->response_length);
       response_state->payload_size = response_buf->response_length;
@@ -389,18 +427,89 @@ leave_notify_collections:
 }
 
 int
-coap_notify_links_list(oc_collection_t *collection)
+coap_notify_collection_baseline(oc_collection_t *collection)
 {
 #ifndef OC_DYNAMIC_ALLOCATION
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buffer) {
-    OC_WRN("coap_notify_collections: out of memory allocating buffer");
+    OC_WRN("coap_notify_collection_baseline: out of memory allocating buffer");
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
+  oc_request_t request = { 0 };
+  oc_response_t response = { 0 };
+  response.separate_response = 0;
+  oc_response_buffer_t response_buffer;
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response.response_buffer = &response_buffer;
+  request.response = &response;
+  request.request_payload = NULL;
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
 
+  request.resource = (oc_resource_t *)collection;
+
+  oc_handle_collection_request(OC_GET, &request, OC_IF_BASELINE, NULL);
+  coap_notify_collection_observers(request.resource, &response_buffer,
+                                   OC_IF_BASELINE);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (buffer)
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  return 0;
+}
+
+int
+coap_notify_collection_batch(oc_collection_t *collection)
+{
+#ifndef OC_DYNAMIC_ALLOCATION
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    OC_WRN("coap_notify_collection_batch: out of memory allocating buffer");
+    return -1;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_request_t request = { 0 };
+  oc_response_t response = { 0 };
+  response.separate_response = 0;
+  oc_response_buffer_t response_buffer;
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response.response_buffer = &response_buffer;
+  request.response = &response;
+  request.request_payload = NULL;
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+
+  request.resource = (oc_resource_t *)collection;
+
+  oc_handle_collection_request(OC_GET, &request, OC_IF_B, NULL);
+  coap_notify_collection_observers(request.resource, &response_buffer, OC_IF_B);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (buffer)
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  return 0;
+}
+
+int
+coap_notify_collection_links_list(oc_collection_t *collection)
+{
+#ifndef OC_DYNAMIC_ALLOCATION
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+  if (!buffer) {
+    OC_WRN(
+      "coap_notify_collection_links_list: out of memory allocating buffer");
+    return -1;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   oc_request_t request = { 0 };
   oc_response_t response = { 0 };
   response.separate_response = 0;
@@ -415,7 +524,6 @@ coap_notify_links_list(oc_collection_t *collection)
   request.resource = (oc_resource_t *)collection;
 
   oc_handle_collection_request(OC_GET, &request, OC_IF_LL, NULL);
-
   coap_notify_collection_observers(request.resource, &response_buffer,
                                    OC_IF_LL);
 
@@ -457,8 +565,8 @@ coap_notify_collections(oc_resource_t *resource)
   for (collection = oc_get_next_collection_with_link(resource, NULL);
        collection != NULL && collection->num_observers > 0;
        collection = oc_get_next_collection_with_link(resource, collection)) {
-    OC_DBG(
-      "coap_notify_collections: Issue GET request to collection for resource");
+    OC_DBG("coap_notify_collections: Issue GET request to collection for "
+           "resource");
 
     request.resource = (oc_resource_t *)collection;
 
@@ -585,33 +693,34 @@ coap_notify_observers(oc_resource_t *resource,
         continue;
       } // obs->resource != resource || endpoint != obs->endpoint
 
-      if (response.separate_response != NULL &&
-          response_buf->code == oc_status_code(OC_STATUS_OK)) {
-        coap_packet_t req[1];
+      if (response.separate_response != NULL) {
+        if (response_buf->code == oc_status_code(OC_STATUS_OK)) {
+          coap_packet_t req[1];
 #ifdef OC_TCP
-        if (obs->endpoint.flags & TCP) {
-          coap_tcp_init_message(req, COAP_GET);
-        } else
+          if (obs->endpoint.flags & TCP) {
+            coap_tcp_init_message(req, COAP_GET);
+          } else
 #endif /* OC_TCP */
-        {
-          coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
-        }
-        memcpy(req->token, obs->token, obs->token_len);
-        req->token_len = obs->token_len;
+          {
+            coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
+          }
+          memcpy(req->token, obs->token, obs->token_len);
+          req->token_len = obs->token_len;
 
-        coap_set_header_uri_path(req, oc_string(resource->uri),
-                                 oc_string_len(resource->uri));
+          coap_set_header_uri_path(req, oc_string(resource->uri),
+                                   oc_string_len(resource->uri));
 
-        OC_DBG(
-          "coap_notify_observers: Creating separate response for notification");
+          OC_DBG("coap_notify_observers: Creating separate response for "
+                 "notification");
 #ifdef OC_BLOCK_WISE
-        if (coap_separate_accept(req, response.separate_response,
-                                 &obs->endpoint, 0, obs->block2_size) == 1)
+          if (coap_separate_accept(req, response.separate_response,
+                                   &obs->endpoint, 0, obs->block2_size) == 1)
 #else  /* OC_BLOCK_WISE */
-        if (coap_separate_accept(req, response.separate_response,
-                                 &obs->endpoint, 0) == 1)
+          if (coap_separate_accept(req, response.separate_response,
+                                   &obs->endpoint, 0) == 1)
 #endif /* !OC_BLOCK_WISE */
-          response.separate_response->active = 1;
+            response.separate_response->active = 1;
+        }
       } // separate response
       else {
         OC_DBG("coap_notify_observers: notifying observer");

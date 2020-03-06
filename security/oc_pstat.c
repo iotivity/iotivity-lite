@@ -156,8 +156,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
 #ifdef OC_PKI
     oc_sec_free_roles_for_device(device);
-    oc_sec_sp_default(device);
 #endif /* OC_PKI */
+    oc_sec_sp_default(device);
 #ifdef OC_SERVER
 #ifdef OC_CLIENT
 #ifdef OC_CLOUD
@@ -192,7 +192,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
       if (self_reset) {
-        oc_tls_close_all_connections(device);
+        oc_close_all_tls_sessions_for_device(device);
       }
       memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
       OC_DBG("oc_pstat: invoking the factory presets callback");

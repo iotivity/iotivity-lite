@@ -102,20 +102,26 @@ check_if_duplicate(uint16_t mid, uint8_t device)
 }
 
 static void
-coap_send_empty_ack(uint16_t mid, oc_endpoint_t *endpoint)
+coap_send_empty_response(coap_message_type_t type, uint16_t mid,
+                         const uint8_t *token, size_t token_len, uint8_t code,
+                         oc_endpoint_t *endpoint)
 {
-  coap_packet_t ack[1];
-  coap_udp_init_message(ack, COAP_TYPE_ACK, 0, mid);
-  oc_message_t *ack_message = oc_internal_allocate_outgoing_message();
-  if (ack_message) {
-    memcpy(&ack_message->endpoint, endpoint, sizeof(*endpoint));
-    size_t len = coap_serialize_message(ack, ack_message->data);
-    if (len > 0) {
-      ack_message->length = len;
-      coap_send_message(ack_message);
+  OC_DBG("CoAP send empty message: mid=%u, code=%u", mid, code);
+  coap_packet_t msg[1]; // empty response
+  coap_udp_init_message(msg, type, code, mid);
+  oc_message_t *message = oc_internal_allocate_outgoing_message();
+  if (message) {
+    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
+    if (token && token_len > 0) {
+      coap_set_token(msg, token, token_len);
     }
-    if (ack_message->ref_count == 0) {
-      oc_message_unref(ack_message);
+    size_t len = coap_serialize_message(msg, message->data);
+    if (len > 0) {
+      message->length = len;
+      coap_send_message(message);
+    }
+    if (message->ref_count == 0) {
+      oc_message_unref(message);
     }
   }
 }
@@ -149,6 +155,10 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *request_buffer = NULL, *response_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
+
+#ifdef OC_CLIENT
+  oc_client_cb_t *client_cb = 0;
+#endif /* OC_CLIENT */
 
 #ifdef OC_TCP
   if (msg->endpoint.flags & TCP) {
@@ -236,7 +246,8 @@ coap_receive(oc_message_t *msg)
       OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
       OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
 #endif
-
+      const char *href;
+      size_t href_len = coap_get_header_uri_path(message, &href);
 #ifdef OC_TCP
       if (msg->endpoint.flags & TCP) {
         coap_tcp_init_message(response, CONTENT_2_05);
@@ -253,18 +264,21 @@ coap_receive(oc_message_t *msg)
           history[idx] = message->mid;
           history_dev[idx] = (uint8_t)msg->endpoint.device;
           idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
-          coap_udp_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
-                                coap_get_mid());
+          if (href_len == 7 && memcmp(href, "oic/res", 7) == 0) {
+            coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                  coap_get_mid());
+          } else {
+            coap_udp_init_message(response, COAP_TYPE_NON, CONTENT_2_05,
+                                  coap_get_mid());
+          }
         }
       }
 
       /* create transaction for response */
-      transaction = coap_new_transaction(message->mid, &msg->endpoint);
+      transaction = coap_new_transaction(response->mid, &msg->endpoint);
 
       if (transaction) {
 #ifdef OC_BLOCK_WISE
-        const char *href;
-        size_t href_len = coap_get_header_uri_path(message, &href);
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
           (uint32_t)coap_get_payload(message, &incoming_block);
@@ -312,10 +326,19 @@ coap_receive(oc_message_t *msg)
                 goto send_message;
               } else {
                 OC_DBG("received all blocks for payload");
+                if (message->type == COAP_TYPE_CON) {
+                  coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0,
+                                           0, &msg->endpoint);
+                }
+                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                      coap_get_mid());
+                transaction->mid = response->mid;
                 coap_set_header_block1(response, block1_num, block1_more,
                                        block1_size);
+                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
+                request_buffer->ref_count = 0;
                 goto request_handler;
               }
             }
@@ -324,12 +347,6 @@ coap_receive(oc_message_t *msg)
           goto init_reset_message;
         } else if (block2) {
           OC_DBG("processing block2 option");
-          unsigned int accept = 0;
-          if (coap_get_header_accept(message, &accept) == 1) {
-            coap_set_header_content_format(response, accept);
-          } else {
-            coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
-          }
           response_buffer = oc_blockwise_find_response_buffer(
             href, href_len, &msg->endpoint, message->code, message->uri_query,
             message->uri_query_len, OC_BLOCKWISE_SERVER);
@@ -351,12 +368,25 @@ coap_receive(oc_message_t *msg)
                               response_buffer->payload_size)
                                ? 1
                                : 0;
+              if (more == 0) {
+                if (message->type == COAP_TYPE_CON) {
+                  coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0,
+                                           0, &msg->endpoint);
+                }
+                coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
+                                      coap_get_mid());
+                transaction->mid = response->mid;
+                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
+              }
+              coap_set_header_content_format(response,
+                                             APPLICATION_VND_OCF_CBOR);
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);
               oc_blockwise_response_state_t *response_state =
                 (oc_blockwise_response_state_t *)response_buffer;
               coap_set_header_etag(response, response_state->etag,
                                    COAP_ETAG_LEN);
+              response_buffer->ref_count = more;
               goto send_message;
             } else {
               OC_ERR("could not dispatch block");
@@ -438,8 +468,17 @@ coap_receive(oc_message_t *msg)
               href, href_len, &msg->endpoint, message->code, message->uri_query,
               message->uri_query_len, OC_BLOCKWISE_SERVER);
             if (response_buffer) {
-              oc_blockwise_free_response_buffer(response_buffer);
-              response_buffer = NULL;
+              if ((msg->endpoint.flags & MULTICAST) &&
+                  response_buffer->next_block_offset <
+                    response_buffer->payload_size) {
+                OC_DBG("Dropping duplicate block-wise transfer request due to "
+                       "repeated multicast");
+                coap_status_code = CLEAR_TRANSACTION;
+                goto send_message;
+              } else {
+                oc_blockwise_free_response_buffer(response_buffer);
+                response_buffer = NULL;
+              }
             }
             goto request_handler;
           } else {
@@ -517,7 +556,6 @@ coap_receive(oc_message_t *msg)
       uint16_t response_mid = coap_get_mid();
       bool error_response = false;
 #endif /* OC_BLOCK_WISE */
-      oc_client_cb_t *client_cb = 0;
       if (message->type != COAP_TYPE_RST) {
         client_cb =
           oc_ri_find_client_cb_by_token(message->token, message->token_len);
@@ -531,7 +569,8 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_CLIENT */
 
       if (message->type == COAP_TYPE_CON) {
-        coap_send_empty_ack(message->mid, &msg->endpoint);
+        coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0, 0,
+                                 &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
       } else if (message->type == COAP_TYPE_RST) {
 #ifdef OC_SERVER
@@ -547,6 +586,10 @@ coap_receive(oc_message_t *msg)
           &msg->endpoint, client_cb);
       } else {
         request_buffer = oc_blockwise_find_request_buffer_by_mid(message->mid);
+        if (!request_buffer) {
+          request_buffer = oc_blockwise_find_request_buffer_by_token(
+            message->token, message->token_len);
+        }
       }
       if (!error_response && request_buffer &&
           (block1 || message->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
@@ -627,6 +670,10 @@ coap_receive(oc_message_t *msg)
       } else {
         response_buffer =
           oc_blockwise_find_response_buffer_by_mid(message->mid);
+        if (!response_buffer) {
+          response_buffer = oc_blockwise_find_response_buffer_by_token(
+            message->token, message->token_len);
+        }
       }
       if (!error_response && response_buffer) {
         OC_DBG("got response buffer for uri %s",
@@ -675,11 +722,22 @@ coap_receive(oc_message_t *msg)
         if (request_buffer) {
           request_buffer->ref_count = 0;
         }
-        if (response_buffer) {
-          response_buffer->ref_count = 0;
-        }
+
         oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
                                &msg->endpoint);
+        /* Do not free the response buffer in case of a separate response
+         * signal from the server. In this case, the client_cb continues
+         * to live until the response arrives (or it times out).
+         */
+        if (oc_ri_is_client_cb_valid(client_cb)) {
+          if (client_cb->separate == 0) {
+            if (response_buffer) {
+              response_buffer->ref_count = 0;
+            }
+          } else {
+            client_cb->separate = 0;
+          }
+        }
         goto send_message;
 #else  /* OC_BLOCK_WISE */
         oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
@@ -687,6 +745,19 @@ coap_receive(oc_message_t *msg)
       }
 #endif /* OC_CLIENT */
     }
+  } else {
+    OC_ERR("Unexpected CoAP command");
+    if (msg->endpoint.flags & TCP) {
+      coap_send_empty_response(COAP_TYPE_NON, 0, message->token,
+                               message->token_len, coap_status_code,
+                               &msg->endpoint);
+    } else {
+      coap_send_empty_response(message->type == COAP_TYPE_CON ? COAP_TYPE_ACK
+                                                              : COAP_TYPE_NON,
+                               message->mid, message->token, message->token_len,
+                               coap_status_code, &msg->endpoint);
+    }
+    return coap_status_code;
   }
 
 init_reset_message:
@@ -708,35 +779,40 @@ init_reset_message:
 #endif /* OC_BLOCK_WISE */
 
 send_message:
-  if (coap_status_code == COAP_NO_ERROR
-#ifdef OC_SECURITY
-      || coap_status_code == CLOSE_ALL_TLS_SESSIONS
-#endif /* OC_SECURITY */
-  ) {
-    if (transaction) {
-      if (response->type != COAP_TYPE_RST && message->token_len) {
-        if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
+  if (coap_status_code == CLEAR_TRANSACTION) {
+    coap_clear_transaction(transaction);
+  } else if (transaction) {
+    if (response->type != COAP_TYPE_RST && message->token_len) {
+      if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
+        coap_set_token(response, message->token, message->token_len);
+      }
+#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
+      else {
+        oc_blockwise_response_state_t *b =
+          (oc_blockwise_response_state_t *)response_buffer;
+        if (b && b->observe_seq != -1) {
+          int i = 0;
+          uint32_t r;
+          while (i < COAP_TOKEN_LEN) {
+            r = oc_random_value();
+            memcpy(response->token + i, &r, sizeof(r));
+            i += sizeof(r);
+          }
+          response->token_len = (uint8_t)i;
+          if (request_buffer) {
+            memcpy(request_buffer->token, response->token, response->token_len);
+            request_buffer->token_len = response->token_len;
+          }
+          if (response_buffer) {
+            memcpy(response_buffer->token, response->token,
+                   response->token_len);
+            response_buffer->token_len = response->token_len;
+          }
+        } else {
           coap_set_token(response, message->token, message->token_len);
         }
-#if defined(OC_CLIENT) && defined(OC_BLOCK_WISE)
-        else {
-          oc_blockwise_response_state_t *b =
-            (oc_blockwise_response_state_t *)response_buffer;
-          if (b && b->observe_seq != -1) {
-            int i = 0;
-            uint32_t r;
-            while (i < COAP_TOKEN_LEN) {
-              r = oc_random_value();
-              memcpy(response->token + i, &r, sizeof(r));
-              i += sizeof(r);
-            }
-            response->token_len = (uint8_t)i;
-          } else {
-            coap_set_token(response, message->token, message->token_len);
-          }
-        }
-#endif /* OC_CLIENT && OC_BLOCK_WISE */
       }
+#endif /* OC_CLIENT && OC_BLOCK_WISE */
       transaction->message->length =
         coap_serialize_message(response, transaction->message->data);
       if (transaction->message->length > 0) {
@@ -745,13 +821,11 @@ send_message:
         coap_clear_transaction(transaction);
       }
     }
-  } else if (coap_status_code == CLEAR_TRANSACTION) {
-    coap_clear_transaction(transaction);
   }
 
 #ifdef OC_SECURITY
   if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
-    oc_close_all_tls_sessions(msg->endpoint.device);
+    oc_close_all_tls_sessions_for_device(msg->endpoint.device);
   }
 #endif /* OC_SECURITY */
 

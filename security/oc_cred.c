@@ -84,9 +84,9 @@ oc_sec_get_cred_by_credid(int credid, size_t device)
   return NULL;
 }
 
-static bool
-unique_credid(int credid, bool roles_resource, oc_tls_peer_t *client,
-              size_t device)
+static oc_sec_cred_t *
+is_existing_cred(int credid, bool roles_resource, oc_tls_peer_t *client,
+                 size_t device)
 {
   oc_sec_cred_t *cred = NULL;
   (void)client;
@@ -100,11 +100,12 @@ unique_credid(int credid, bool roles_resource, oc_tls_peer_t *client,
   }
 #endif /* OC_PKI */
   while (cred != NULL) {
-    if (cred->credid == credid)
-      return false;
+    if (cred->credid == credid) {
+      break;
+    }
     cred = cred->next;
   }
-  return true;
+  return cred;
 }
 
 #if defined(OC_CLIENT) && defined(OC_PKI)
@@ -144,7 +145,7 @@ get_new_credid(bool roles_resource, oc_tls_peer_t *client, size_t device)
   int credid;
   do {
     credid = oc_random_value() >> 1;
-  } while (!unique_credid(credid, roles_resource, client, device));
+  } while (is_existing_cred(credid, roles_resource, client, device));
   return credid;
 }
 
@@ -421,10 +422,27 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   }
 #endif /* OC_PKI */
 
-  if (!unique_credid(credid, roles_resource, client, device)) {
+  oc_sec_cred_t *existing =
+    is_existing_cred(credid, roles_resource, client, device);
+  if (existing) {
     if (!roles_resource) {
       /* remove duplicate cred, if one exists.  */
-      oc_sec_remove_cred_by_credid(credid, device);
+      if ((existing->credtype == credtype) &&
+          memcmp(&existing->subjectuuid, &subject, sizeof(oc_uuid_t)) == 0 &&
+          ((oc_string_len(existing->privatedata.data) == privatedata_size) &&
+           (memcmp(oc_string(existing->privatedata.data), privatedata,
+                   privatedata_size) == 0))
+#ifdef OC_PKI
+          && (existing->credusage == credusage) &&
+          ((oc_string_len(existing->publicdata.data) == publicdata_size) &&
+           (memcmp(oc_string(existing->publicdata.data), publicdata,
+                   publicdata_size) == 0))
+#endif /* OC_PKI */
+      ) {
+        return credid;
+      } else {
+        oc_sec_remove_cred_by_credid(credid, device);
+      }
     }
 #ifdef OC_PKI
     else {

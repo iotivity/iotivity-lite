@@ -582,6 +582,8 @@ public class OCEndpointTest {
 
     @Test
     public void test_throw_exception_on_setDi_when_endpoint_null() {
+        // must call OCRandom.init to initialize the random number for generateUuid
+        OCRandom.init();
         try {
             OCUuid testUuid = OCUuidUtil.generateUuid();
             OCEndpointUtil.setDi(null, testUuid);
@@ -590,6 +592,8 @@ public class OCEndpointTest {
             assertEquals( e.getClass(), NullPointerException.class);
             assertEquals(e.getMessage(), "OCEndpoint cannot be null.");
         }
+        // Restore random number to un-initialized state for other tests
+        OCRandom.destroy();
     }
 
     @Test

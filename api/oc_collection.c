@@ -130,6 +130,28 @@ oc_delete_link(oc_link_t *link)
   }
 }
 
+static oc_event_callback_retval_t
+batch_notify_collection(void *data)
+{
+  coap_notify_collection_batch(data);
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+baseline_notify_collection(void *data)
+{
+  coap_notify_collection_baseline(data);
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+links_list_notify_collection(void *data)
+{
+  coap_notify_collection_links_list(data);
+  oc_set_delayed_callback(data, baseline_notify_collection, 0);
+  return OC_EVENT_DONE;
+}
+
 void
 oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
 {
@@ -138,6 +160,7 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
+  oc_set_delayed_callback(collection, links_list_notify_collection, 0);
 }
 
 void
@@ -146,6 +169,7 @@ oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
   if (collection && link) {
     oc_collection_t *c = (oc_collection_t *)collection;
     oc_list_remove(c->links, link);
+    oc_set_delayed_callback(collection, links_list_notify_collection, 0);
   }
 }
 
@@ -376,13 +400,6 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
   return collection;
 }
 
-static oc_event_callback_retval_t
-notify_collection_for_link(void *data)
-{
-  coap_notify_observers(data, NULL, NULL);
-  return OC_EVENT_DONE;
-}
-
 bool
 oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t iface_mask,
@@ -610,7 +627,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
              * interface through which this request arrived. This is achieved
              * by checking if the interface index matches.
              */
-            if ((link->resource->properties & OC_SECURE &&
+            if (((link->resource->properties & OC_SECURE) &&
                  !(eps->flags & SECURED)) ||
                 (request->origin && request->origin->interface_index != -1 &&
                  request->origin->interface_index != eps->interface_index)) {
@@ -684,7 +701,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
            * interface through which this request arrived. This is achieved by
            * checking if the interface index matches.
            */
-          if ((link->resource->properties & OC_SECURE &&
+          if (((link->resource->properties & OC_SECURE) &&
                !(eps->flags & SECURED)) ||
               (request->origin && request->origin->interface_index != -1 &&
                request->origin->interface_index != eps->interface_index)) {
@@ -838,8 +855,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if ((method == OC_PUT || method == OC_POST) &&
                     response_buffer.code <
                       oc_status_code(OC_STATUS_BAD_REQUEST)) {
-                  oc_set_delayed_callback(link->resource,
-                                          notify_collection_for_link, 0);
                 }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
@@ -866,7 +881,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         }
       } break;
       default:
-        break;
+        ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+        goto processed_request;
       }
       rep = rep->next;
     }
@@ -907,8 +923,12 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
   if ((method == OC_PUT || method == OC_POST) &&
       code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-    coap_notify_collection_observers(
-      request->resource, request->response->response_buffer, iface_mask);
+    if (iface_mask == OC_IF_CREATE) {
+      coap_notify_collection_observers(
+        request->resource, request->response->response_buffer, iface_mask);
+    } else if (iface_mask == OC_IF_B) {
+      oc_set_delayed_callback(request->resource, batch_notify_collection, 0);
+    }
   }
 
   return true;
