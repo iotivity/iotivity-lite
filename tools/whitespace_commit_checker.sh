@@ -45,6 +45,7 @@ function isC() {
 # from this script returns failure. The diff command should return failure
 # every time the output from clang-format is different than the input file.
 failures=0
+fail_filelist=""
 trap 'failures=$((failures+1))' ERR
 
 echo "***********************************************************************"
@@ -62,6 +63,9 @@ for f in $filelist; do
     # the '-' at the end of the diff will cause the diff command to use the
     # output from clang-format as part of the diff input.
     clang-format -style=file ${f} | diff -u --color=auto ${f} -
+    if [ $? -ne 0 ]; then
+      fail_filelist+="${f} "
+    fi
   fi
 done
 
@@ -75,18 +79,16 @@ else
   # just print all of the C/C++ files. Even if the user runs a command on a file
   # that does not need to be change it will leave the file unchanged.
   echo "***********************************************************************"
-  echo "Found $failures file(s) with BAD formating!"
+  echo "Found $failures file(s) with BAD formatting!"
   echo ""
-  echo "Please update the files formating."
+  echo "Please update the files formatting."
   echo ""
   echo "This can be done automatically by running the following commands from"
   echo "the top directory of iotivity-lite project"
   echo ""
   echo "    cp tools/_clang-format _clang-format"
-  for f in $filelist; do
-    if isC $f; then
+  for f in $fail_filelist; do
       echo "    clang-format -style=file -i ${f}"
-    fi
   done
   echo ""
   echo "The format tool can be added to git's pre-commit hook using the"
