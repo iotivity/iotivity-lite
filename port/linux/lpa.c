@@ -110,18 +110,20 @@ lpa_read_device_info(char *di_response)
 }
 char g_activation_code[] = "1$SMDP.GSMA.COM$04386-AGYFT-A74Y8-3F815$1.3.6.1.4.1.31746$1";
 // activation_code : Input
-int lpa_write_activation_code(char *activation_code, ees_download_cb_t cbk)
+void lpa_write_activation_code(char *activation_code, int cc_exists, ees_download_cb_t cbk)
 {
   (void)activation_code;
-  if(!strncmp(g_activation_code, activation_code, strlen(activation_code))) {
-     // Activaiton code matched, return success
+
+  if(strncmp(g_activation_code, activation_code, strlen(activation_code))) {
+     // Activaiton code did not match, return error
      // Initiate Profile DOwbload from SMDP+
-     (*cbk)(0); // Success
-    return 1;
+    (*cbk)(1); // Failure
   }
-  // Use CtxParamsForCommonAuthentication Request to get signed by eUICC
-  (*cbk)(0); // Failure
-  return 0;
+  //Activation code matches, check if user confirmation is done
+  else if (cc_exists)
+  // Initiate Profile DOwbload from SMDP+
+  (*cbk)(0); // Success
+
 }
 
 int  lpa_install_profile(ees_install_cb_t cbk)

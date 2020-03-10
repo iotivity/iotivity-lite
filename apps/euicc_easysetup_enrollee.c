@@ -101,20 +101,23 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data)
 static void
 rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data)
 {
-  int ret = 0;
+
   PRINT("rsp_prov_cb1\n");
   if (rsp_prov_data == NULL) {
       PRINT("rsp_prov_data is NULL\n");
       return;
   }
-  //Wite Access code to LPA
-  ret = lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), &ees_profile_download_cb1);
-  if(ret) {
-    PRINT("Activaiton code written to LPA. Success\n");
-  } else {
-    oc_ees_set_state(0, EES_PS_ERROR);
-  }
+  //Write Access code to LPA
+  int cc_exists = 0;
+  if (oc_string(rsp_prov_data->confirm_code))
+        cc_exists = 1;
+  lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), cc_exists, &ees_profile_download_cb1);
+
+
+
+  if(oc_string(rsp_prov_data->profile_metadata))
   PRINT("Profile Meta Data : %s\n", oc_string(rsp_prov_data->profile_metadata));
+  if(oc_string(rsp_prov_data->confirm_code))
   PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
   PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 }
@@ -243,20 +246,20 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data)
 static void
 rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data)
 {
-  int ret = 0;
-  PRINT("rsp_prov_cb2 triggered\n");
+  PRINT("rsp_prov_cb2\n");
   if (rsp_prov_data == NULL) {
       PRINT("rsp_prov_data is NULL\n");
       return;
   }
-  //Wite Access code to LPA
-  ret = lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), &ees_profile_download_cb2);
-  if(ret) {
-    PRINT("Activaiton code written to LPA. Success\n");
-  } else {
-    oc_ees_set_state(1, EES_PS_ERROR);
-  }
+  //Write Access code to LPA
+  int cc_exists = 0;
+  if (oc_string(rsp_prov_data->confirm_code))
+        cc_exists = 1;
+  lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), cc_exists, &ees_profile_download_cb2);
+
+  if(oc_string(rsp_prov_data->profile_metadata))
   PRINT("Profile Meta Data : %s\n", oc_string(rsp_prov_data->profile_metadata));
+  if(oc_string(rsp_prov_data->confirm_code))
   PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
   PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 }
@@ -264,7 +267,7 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data)
 static void
 rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data)
 {
-  PRINT("rspcap_prov_cb2 triggered\n");
+  PRINT("rspcap_prov_cb2\n");
   if (rspcap_prov_data == NULL) {
       PRINT("rspcap_prov_data is NULL\n");
       return;
@@ -277,7 +280,7 @@ rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data)
 static void
 ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
 {
-  PRINT("wifi_prov_cb1 triggered\n");
+  PRINT("ees_wifi_prov_cb2 triggered\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
       return;
@@ -478,6 +481,7 @@ main(void)
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     oc_delete_esim_easysetup_resource(dev_index);
   }
+  wifi_stop_dhcp_server();
   oc_main_shutdown();
 
   PRINT("euicc_easysetup_enrollee : Exit\n");

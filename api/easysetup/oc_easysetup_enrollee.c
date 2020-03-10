@@ -89,11 +89,9 @@ oc_wes_set_device_info(size_t device, oc_wes_device_info_t *device_info)
   }
 
   dev_cxt->wifi.data.num_mode = modeIdx;
-  oc_notify_observers(dev_cxt->wifi.handle);
 
   es_new_string(&(dev_cxt->device.data.dev_name),
                oc_string((device_info->Device).device_name));
-  oc_notify_observers(dev_cxt->device.handle);
   return OC_ES_OK;
 }
 
@@ -109,7 +107,6 @@ oc_wes_set_error_code(size_t device, oc_wes_error_code_t err_code)
   }
 
   dev_cxt->wes.data.last_err_code = err_code;
-  oc_notify_observers((oc_resource_t *)dev_cxt->wes.handle);
   return OC_ES_OK;
 }
 
@@ -125,7 +122,6 @@ oc_wes_set_state(size_t device, oc_wes_enrollee_state_t es_state)
   }
 
   dev_cxt->wes.data.state = es_state;
-  oc_notify_observers((oc_resource_t *)dev_cxt->wes.handle);
   return OC_ES_OK;
 }
 
@@ -309,8 +305,6 @@ update_wifi_conf_resource(oc_request_t *request)
   if (res_changed && dev_cxt->wifi.prov_cb) {
     // Trigger provisioning callback
     dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data));
-    // Notify observers about data change
-    oc_notify_observers(dev_cxt->wifi.handle);
   }
 }
 
@@ -376,8 +370,6 @@ update_devconf_resource(oc_request_t *request)
   if (res_changed && dev_cxt->device.prov_cb) {
     // Trigger provisioning callback
     dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data));
-    // Notify observers about data change
-    oc_notify_observers(dev_cxt->device.handle);
   }
 }
 
@@ -472,7 +464,6 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   if (res_changed && dev_cxt->wes.prov_cb) {
     dev_cxt->wes.prov_cb((oc_wes_data_t *) &(dev_cxt->wes.data));
   }
-  oc_notify_observers((oc_resource_t *)dev_cxt->wes.handle);
   return true;
 }
 
@@ -687,13 +678,9 @@ oc_es_result_t
 oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
-  //OC_DBG("oc_ees_set_device_info %s\n", device_info);
 
   es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info);
   es_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info);
-
-  // Nofity euicc, device details to Mediator. Upon receving these details, Mediator will read eUICC Info and device info from Enrollee
-  oc_notify_observers(dev_cxt->rsp_cap.handle);
 
   return OC_ES_OK;
 }
@@ -702,10 +689,8 @@ oc_es_result_t
 oc_ees_set_error_code(size_t device, char *err_code)
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
-  //OC_DBG("oc_ees_set_error_code %s\n", err_code);
 
   es_new_string(&(dev_cxt->ees.data.last_err_code), err_code);
-  oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
 
   return OC_ES_OK;
 }
@@ -716,7 +701,6 @@ oc_es_result_t
 oc_ees_set_state(size_t device, char *es_status)
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
-  //OC_DBG("oc_ees_set_state %s\n", es_status);
 
   es_new_string(&(dev_cxt->ees.data.rsp_status), es_status);
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
@@ -727,7 +711,6 @@ oc_string_t
 oc_ees_get_state(size_t device)
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
-  //OC_DBG("oc_ees_get_state %d\n", dev_cxt->ees.data.rsp_status);
 
   return dev_cxt->ees.data.rsp_status;
 }
@@ -736,7 +719,6 @@ oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees
 	oc_ees_rsp_prov_cb_t rsp_prov_cb, oc_ees_rspcap_prov_cb_t rspcap_prov_cb)
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
-  //OC_DBG("oc_ees_set_resource_callbacks\n");
 
   dev_cxt->ees.prov_cb = ees_prov_cb;
   dev_cxt->rsp.prov_cb = rsp_prov_cb;
@@ -750,8 +732,6 @@ oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_
 {
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
 
-  //OC_DBG("oc_ees_set_userdata_callbacks\n");
-
   dev_cxt->read_cb = readcb;
   dev_cxt->write_cb = writecb;
   dev_cxt->free_cb = freecb;
@@ -759,30 +739,90 @@ oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_
   return OC_ES_OK;
 }
 
-static void
-construct_response_of_rspconf(oc_request_t *request)
-{
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
-  OC_DBG("construct_response_of_rspconf\n");
 
-  oc_rep_start_root_object();
-  oc_process_baseline_interface(dev_cxt->rsp.handle);
-  oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
-  oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
-  oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
-  oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
-  oc_rep_end_root_object();
+static void
+set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
+{
+  (void)data;
+  bool res_changed = false;
+  char *str_val = NULL;
+  size_t str_len = 0;
+  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+
+  OC_DBG("update_rspcap_resource\n");
+
+  while (rep != NULL) {
+    switch (rep->type) {
+      case OC_REP_STRING:
+        if (oc_rep_get_string(rep, OC_RSRVD_EES_EUICCINFO,
+            &str_val, &str_len)) {
+           es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), str_val);
+          res_changed = true;
+        }
+        if (oc_rep_get_string(rep, OC_RSRVD_EES_DEVICEINFO,
+            &str_val, &str_len)) {
+          es_new_string(&(dev_cxt->rsp_cap.data.device_info), str_val);
+          res_changed = true;
+        }
+        break;
+      default:
+        break;
+    }
+    rep = rep->next;
+  }
+
+  if (res_changed && dev_cxt->rsp_cap.prov_cb) {
+    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data));
+  }
 }
 
 static void
-rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
+rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
+	void *user_data)
+{
+  (void)user_data;
+  OC_DBG("rspcap_post_handler %d\n", interface);
+
+  if (interface == OC_IF_BASELINE) {
+    set_rspcap_properties((oc_resource_t *)request->resource, request->request_payload, user_data);
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+static void
+get_rspcap_properties(oc_resource_t *resource, oc_interface_mask_t interface,
+                void *user_data)
+{
+  (void)user_data;
+  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+
+  OC_DBG("get_rspcap_properties\n");
+
+  switch (interface) {
+  case OC_IF_BASELINE:
+  case OC_IF_R:
+          oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
+          oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
+    break;
+  default:
+    break;
+  }
+}
+
+static void
+rspcap_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspconf_get_handler %d\n", interface);
+  OC_DBG("rspcap_get_handler %d\n", interface);
 
-  if (interface == OC_IF_BASELINE) {
-    construct_response_of_rspconf(request);
+  if (interface == OC_IF_BASELINE || interface == OC_IF_R) {
+    oc_rep_start_root_object();
+    get_rspcap_properties((oc_resource_t *)request->resource, interface, user_data);
+    oc_rep_end_root_object();
     oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -791,40 +831,50 @@ rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-update_rspconf_resource(oc_request_t *request)
+set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
 {
+  (void)data;
+  bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
   bool ccr = true;
-  bool res_changed = false;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
-  OC_DBG("update_rspconf_resource\n");
+  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
 
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_EES_ACTIVATIONCODE, &str_val,
-                        &str_len)) {
-    es_new_string(&(dev_cxt->rsp.data.activation_code), str_val);
-    res_changed = true;
-  }
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_EES_PROFMETADATA, &str_val,
-                        &str_len)) {
-    es_new_string(&(dev_cxt->rsp.data.profile_metadata), str_val);
-    res_changed = true;
-  }
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_EES_CONFIRMATIONCODE, &str_val,
-                        &str_len)) {
-    es_new_string(&(dev_cxt->rsp.data.confirm_code), str_val);
-    res_changed = true;
-  }
-  if (oc_rep_get_bool(request->request_payload, OC_RSRVD_EES_CONFIRMATIONCODEREQUIRED, &ccr)) {
-    dev_cxt->rsp.data.confirm_code_required = ccr;
-    res_changed = true;
+  OC_DBG("set_rspconf_properties\n");
+
+  while (rep != NULL) {
+    switch (rep->type) {
+      case OC_REP_STRING:
+        if (oc_rep_get_string(rep, OC_RSRVD_EES_ACTIVATIONCODE,
+            &str_val, &str_len)) {
+          es_new_string(&(dev_cxt->rsp.data.activation_code), str_val);
+          res_changed = true;
+        }
+        if (oc_rep_get_string(rep, OC_RSRVD_EES_PROFMETADATA,
+            &str_val, &str_len)) {
+          es_new_string(&(dev_cxt->rsp.data.profile_metadata), str_val);
+          res_changed = true;
+        }
+        if (oc_rep_get_string(rep, OC_RSRVD_EES_CONFIRMATIONCODE,
+            &str_val, &str_len)) {
+          es_new_string(&(dev_cxt->rsp.data.confirm_code), str_val);
+          res_changed = true;
+        }
+        break;
+      case OC_REP_BOOL:
+        if (oc_rep_get_bool(rep, OC_RSRVD_EES_CONFIRMATIONCODEREQUIRED, &ccr)) {
+          dev_cxt->rsp.data.confirm_code_required = ccr;
+          res_changed = true;
+        }
+        break;
+      default:
+        break;
+    }
+    rep = rep->next;
   }
 
-  if(res_changed && dev_cxt->rsp.prov_cb) {
-    // Trigger provisioning callback
+  if (res_changed && dev_cxt->rsp.prov_cb) {
     dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *)&(dev_cxt->rsp.data));
-    //Notify observers about data change
-    oc_notify_observers(dev_cxt->rsp.handle);
   }
 }
 
@@ -835,8 +885,9 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
   (void)user_data;
   OC_DBG("rspconf_post_handler %d\n", interface);
 
-  if (interface == OC_IF_BASELINE) {
-    update_rspconf_resource(request);
+  if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
+    set_rspconf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                            user_data);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -845,28 +896,39 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-construct_response_of_rspcapconf(oc_request_t *request)
+get_rspconf_properties(oc_resource_t *resource, oc_interface_mask_t interface,
+            void *user_data)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
-  OC_DBG("construct_response_of_rspcapconf\n");
 
-  oc_rep_start_root_object();
-  oc_process_baseline_interface(dev_cxt->rsp_cap.handle);
-  oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
-  oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
+  (void)user_data;
+  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
 
-  oc_rep_end_root_object();
+  OC_DBG("get_rspconf_properties\n");
+
+  switch (interface) {
+  case OC_IF_BASELINE:
+  case OC_IF_RW:
+          oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
+          oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
+          oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
+          oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
+    break;
+  default:
+    break;
+  }
 }
 
 static void
-rspcapconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
+rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
   (void)user_data;
-  OC_DBG("rspcapconf_get_handler %d\n", interface);
+  OC_DBG("rspconf_get_handler\n");
 
-  if (interface == OC_IF_BASELINE) {
-    construct_response_of_rspcapconf(request);
+  if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
+    oc_rep_start_root_object();
+    get_rspconf_properties((oc_resource_t *)request->resource, interface, user_data);
+    oc_rep_end_root_object();
     oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -874,75 +936,6 @@ rspcapconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
   }
 }
 
-static void
-update_rspcapconf_resource(oc_request_t *request)
-{
-  bool res_changed = false;
-  char *str_val = NULL;
-  size_t str_len = 0;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(request->origin->device);
-
-  OC_DBG("update_rspcapconf_resource\n");
-
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_EES_EUICCINFO, &str_val,
-                        &str_len)) {
-    es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), str_val);
-    res_changed = true;
-  }
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_EES_DEVICEINFO, &str_val,
-                        &str_len)) {
-    es_new_string(&(dev_cxt->rsp_cap.data.device_info), str_val);
-    res_changed = true;
-  }
-
-  if(res_changed && dev_cxt->rsp_cap.prov_cb) {
-    // Trigger provisioning callback
-    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data));
-    // Notify observers about data change
-    oc_notify_observers(dev_cxt->rsp_cap.handle);
-  }
-}
-
-static void
-rspcapconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-	void *user_data)
-{
-  (void)user_data;
-  OC_DBG("rspcapconf_post_handler %d\n", interface);
-
-  if (interface == OC_IF_BASELINE) {
-    update_rspcapconf_resource(request);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
-}
-
-void
-get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
-                        void *data)
-{
-  (void)data;
-  oc_collection_t *ees = (oc_collection_t *)resource;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
-
-  OC_DBG("get_ees_properties %d\n", interface);
-
-  switch (interface) {
-  case OC_IF_BASELINE:
-  case OC_IF_B:
-  case OC_IF_LL:
-    oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
-    oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
-    oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
-    oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
-    oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
-    break;
-  default:
-    break;
-  }
-}
 
 bool
 set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
@@ -955,7 +948,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
 
   OC_DBG("set_ees_properties\n");
-
+  // Handle all the ees custom props
   while (rep != NULL) {
     switch (rep->type) {
       case OC_REP_STRING:
@@ -994,22 +987,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   if (res_changed && dev_cxt->ees.prov_cb) {
     dev_cxt->ees.prov_cb((oc_ees_data_t *)&(dev_cxt->ees.data));
   }
-  oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return true;
-}
-
-static void
-ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
-             void *user_data)
-{
-  (void)user_data;
-  OC_DBG("ees_get_handler : %d", interface);
-  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
-    oc_handle_collection_request(OC_GET, request, interface, NULL);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
 }
 
 static void
@@ -1017,9 +995,53 @@ ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
   (void)user_data;
-  OC_DBG("ees_post_handler : %d", interface);
+  OC_DBG("ees_post_handler\n");
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
-    oc_handle_collection_request(OC_POST, request, interface, NULL);
+    set_ees_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                      user_data);
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+void
+get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
+                        void *data)
+{
+  (void)data;
+  oc_collection_t *ees = (oc_collection_t *)resource;
+  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
+
+  OC_DBG("get_ees_properties\n");
+
+  switch (interface) {
+  case OC_IF_BASELINE:
+  case OC_IF_B:
+  case OC_IF_LL:
+    oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
+    oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
+    oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
+    oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
+    oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
+    break;
+  default:
+    break;
+  }
+}
+
+static void
+ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
+             void *user_data)
+{
+  (void)user_data;
+
+  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
+    oc_rep_start_root_object();
+    get_ees_properties((oc_resource_t *)request->resource, interface, user_data);
+    oc_rep_end_root_object();
+    oc_send_response(request, OC_STATUS_OK);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -1099,9 +1121,9 @@ oc_create_esim_easysetup_resource(size_t device)
     OC_IF_R | OC_IF_BASELINE,
     OC_IF_BASELINE,
     OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
-    rspcapconf_get_handler,
+    rspcap_get_handler,
     0,
-    rspcapconf_post_handler,
+    rspcap_post_handler,
     0,
     1,
     OC_RSRVD_EES_RES_TYPE_RSPCAP);
