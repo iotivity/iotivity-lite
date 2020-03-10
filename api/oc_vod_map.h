@@ -53,6 +53,7 @@ typedef struct oc_vod_t
 /*
  * open vod_map file from creds directory and populate
  * oc_vod_list_t
+ * initilize this from the add_bridge
  */
 void oc_vod_map_init();
 
@@ -63,7 +64,7 @@ void oc_vod_map_free();
 /*
  * returns index of the vod or 0 if not found
  */
-size_t oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size,
+size_t oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
                                const char *econame);
 
 /*
@@ -72,7 +73,7 @@ size_t oc_vod_map_get_id_index(uint8_t *vod_id, size_t vod_id_size,
  * write updated vod_map file
  * return index of just added vod
  */
-size_t oc_vod_map_add_id(uint8_t *vod_id, size_t vod_id_size,
+size_t oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
                          const char *econame);
 
 /*

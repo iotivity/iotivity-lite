@@ -16,7 +16,9 @@
 
 #include "oc_bridge.h"
 #include "oc_api.h"
-#include "oc_core_res.h"
+//#include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "oc_vod_map.h"
 #include "port/oc_log.h"
 #include "security/oc_store.h"
 
@@ -36,9 +38,11 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_rep_set_array(root, vods);
     oc_vods_t *vods_list = (oc_vods_t *)oc_list_head(oc_vods_list_t);
     while (vods_list) {
-      // bridge and vod should be owned before they are added to the
-      // oc_vods_list_t adding to the oc_vods_list_t likely needs to be
-      // done based on security the doxm code.
+      /*
+       * bridge and vod should be owned before they are added to the
+       * oc_vods_list_t adding to the oc_vods_list_t likely needs to be
+       * done based on security the doxm code.
+       */
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vods_list->name));
       oc_rep_set_text_string(vods, di, vods_list->di);
@@ -80,32 +84,30 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   if (!oc_add_resource(bridge_res)) {
     return -1;
   }
+  oc_vod_map_init();
   return 0;
 }
 
-/*
- * TODO must figure out a way to index each device. Just calling oc_add_device
- * will create a new index device.
- *
- * I am leaning toward using a map similar to this
- * {
- *   {"vid":"virtual_device_id-1", "index":1},
- *   {"vid":"virtual_device_id-2", "index":2}
- * }
- */
 int
-oc_bridge_add_virtual_device(const char *virtual_device_id, const char *uri,
-                             const char *rt, const char *name,
+oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
+                             size_t virtual_device_id_size, const char *econame,
+                             const char *uri, const char *rt, const char *name,
                              const char *spec_version,
                              const char *data_model_version,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
   (void)virtual_device_id;
-  int ret_value = oc_add_device(uri, rt, name, spec_version, data_model_version,
-                                add_device_cb, data);
-  if (ret_value < 0) {
-    return ret_value;
+
+  size_t vd_index =
+    oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
+
+  oc_device_info_t *device = oc_core_add_new_device_at_index(
+    uri, rt, name, spec_version, data_model_version, vd_index, add_device_cb,
+    data);
+  if (!device) {
+    return -1;
   }
+
   oc_device_bind_resource_type(oc_core_get_num_devices() - 1, "oic.d.virtual");
-  return ret_value;
+  return 0;
 }

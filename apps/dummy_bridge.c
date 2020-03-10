@@ -128,12 +128,15 @@ poll_for_discovered_devices()
       uri[19] = '\0';
       PRINT("Adding %s to bridge with %s URI\n", virtual_lights[i].device_name,
             uri);
-      // app_mutex_lock(app_sync_lock);
-      oc_bridge_add_virtual_device(virtual_lights[i].uuid, uri, "oic.d.light",
-                                   virtual_lights[i].device_name, "ocf.1.0.0",
-                                   "ocf.res.1.0.0", NULL, NULL);
+      app_mutex_lock(app_sync_lock);
+
+      oc_bridge_add_virtual_device((uint8_t *)virtual_lights[i].uuid,
+                                   strlen(virtual_lights[i].uuid),
+                                   virtual_lights[i].eco_system, uri,
+                                   "oic.d.light", virtual_lights[i].device_name,
+                                   "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+      app_mutex_unlock(app_sync_lock);
       virtual_lights[i].added_to_bridge = true;
-      // app_mutex_unlock(app_sync_lock);
     }
   }
 }
@@ -191,7 +194,8 @@ ocf_event_thread(void *data)
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\n");
+  PRINT("\n\n");
+  PRINT("################################################\n");
   PRINT("Dummy Bridge\n");
   PRINT("################################################\n");
   PRINT("[0] Display this menu\n");

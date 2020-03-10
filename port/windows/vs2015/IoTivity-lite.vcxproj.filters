@@ -723,6 +723,9 @@
     <ClInclude Include="..\..\..\api\oc_vod_map.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_core_res_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">

@@ -214,6 +214,7 @@
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
     <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
+    <ClInclude Include="..\..\..\api\oc_core_res_internal.h" />
     <ClInclude Include="..\..\..\api\oc_events.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />

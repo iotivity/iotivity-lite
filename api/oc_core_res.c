@@ -15,6 +15,7 @@
  */
 
 #include "oc_core_res.h"
+#include "oc_core_res_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
 #ifdef OC_MNT
@@ -364,6 +365,146 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #endif /* OC_SECURITY */
 
   return &oc_device_info[device_count - 1];
+}
+
+oc_device_info_t *
+oc_core_add_new_device_at_index(const char *uri, const char *rt,
+                                const char *name, const char *spec_version,
+                                const char *data_model_version, size_t index,
+                                oc_core_add_device_cb_t add_device_cb,
+                                void *data)
+{
+  (void)data;
+  /*
+   * rather than calling oc_core_add_new_device from
+   * oc_core_add_new_device_at_index maybe oc_core_add_new_device should call
+   * this code so we don't have so much repeated code.
+   */
+  /*
+  if (index == device_count) {
+      return oc_core_add_new_device(uri, rt, name, spec_version,
+  data_model_version, add_device_cb, data);
+  }
+  */
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  if (device_count == OC_MAX_NUM_DEVICES) {
+    OC_ERR("device limit reached");
+    return NULL;
+  }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+
+  /*
+   * if index > device_count realloc core_resources and oc_device_info to size
+   * of index. if index < device_count check if core_resources and
+   * oc_device_info is populated? if populated return null for error; else
+   * populate core_resources and oc_device_info with new device information.
+   */
+
+  if (index >= device_count) {
+    size_t new_num = 1 + OCF_D * (index + 1);
+    core_resources =
+      (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
+
+    if (!core_resources) {
+      oc_abort("Insufficient memory");
+    }
+
+    /* zero initilize the freshly allocated memory */
+    for (size_t i = device_count; i < index; i++) {
+      oc_resource_t *device =
+        &core_resources[new_num - (OCF_D * (i - device_count + 1))];
+      memset(device, 0, OCF_D * sizeof(oc_resource_t));
+    }
+    oc_device_info = (oc_device_info_t *)realloc(
+      oc_device_info, (index + 1) * sizeof(oc_device_info_t));
+
+    if (!oc_device_info) {
+      oc_abort("Insufficient memory");
+    }
+
+    /* zero initilize the freshly allocated memory */
+    for (size_t i = device_count; i < index; i++) {
+      memset(&oc_device_info[i], 0, sizeof(oc_device_info_t));
+    }
+  }
+  if (index < device_count) {
+    /*
+     * TODO check if existing values equals passed in values
+     * if device info equals passed in values return oc_device_info_t
+     * else just return NULL we are not replacing the device with new device
+     * info. (other option is to replace the device with the new device info? it
+     * seems an odd action.)
+     */
+
+    // check that oc_device_info at index is NOT NULL
+    if (oc_string(oc_device_info[index].name)) {
+      return NULL;
+    }
+
+    if (oc_string(oc_device_info[index].icv)) {
+      return NULL;
+    }
+
+    if (oc_string(oc_device_info[index].dmv)) {
+      return NULL;
+    }
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  /* fill in the device info at index. */
+  oc_gen_uuid(&oc_device_info[index].di);
+
+  /* Construct device resource */
+  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
+    oc_core_populate_resource(OCF_D, index, uri, OC_IF_R | OC_IF_BASELINE,
+                              OC_IF_R, OC_DISCOVERABLE, oc_core_device_handler,
+                              0, 0, 0, 1, rt);
+  } else {
+    oc_core_populate_resource(OCF_D, index, uri, OC_IF_R | OC_IF_BASELINE,
+                              OC_IF_R, OC_DISCOVERABLE, oc_core_device_handler,
+                              0, 0, 0, 2, rt, "oic.wk.d");
+  }
+
+  oc_gen_uuid(&oc_device_info[index].piid);
+
+  oc_new_string(&oc_device_info[index].name, name, strlen(name));
+  oc_new_string(&oc_device_info[index].icv, spec_version, strlen(spec_version));
+  oc_new_string(&oc_device_info[index].dmv, data_model_version,
+                strlen(data_model_version));
+  oc_device_info[index].add_device_cb = add_device_cb;
+
+  if (oc_get_con_res_announced()) {
+    /* Construct oic.wk.con resource for this device. */
+    oc_core_populate_resource(
+      OCF_CON, index, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
+      oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
+  }
+
+  oc_create_discovery_resource(OCF_RES, index);
+
+  oc_create_introspection_resource(index);
+
+#ifdef OC_MNT
+  oc_create_maintenance_resource(index);
+#endif /* OC_MNT */
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  oc_create_cloudconf_resource(index);
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+  oc_device_info[index].data = data;
+
+  if (oc_connectivity_init(index) < 0) {
+    oc_abort("error initializing connectivity for device");
+  }
+
+  // device_count++;
+  device_count = index + 1;
+
+#ifdef OC_SECURITY
+  oc_main_init_svrs(index);
+#endif /* OC_SECURITY */
+  return &oc_device_info[index];
 }
 
 static void

@@ -99,7 +99,9 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  *
  * @see init
  */
-int oc_bridge_add_virtual_device(const char *virtual_device_id, const char *uri,
+int oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
+                                 size_t virtual_device_id_size,
+                                 const char *econame, const char *uri,
                                  const char *rt, const char *name,
                                  const char *spec_version,
                                  const char *data_model_version,
