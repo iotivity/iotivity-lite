@@ -42,9 +42,7 @@
 
 #define PID_DIRECTORY "/var/run"
 
-#define DNSMASQ_CONF_LEN 1024
 #define DNSMASQ_LEASES_FILE "/var/lib/misc/dnsmasq.leases"
-#define DNSMASQ_CONF_FILE "/etc/dnsmasq.conf"
 
 #define DHCLIENT_CONF_LEN 1024
 #define DHCLIENT_LEASES_FILE "/var/lib/dhcp/dhclient.leases"
@@ -388,10 +386,10 @@ wifi_execute_command(const char *file_path, char *const args[], char *const envs
            return -1;
     case 0:
            if (execve(file_path, args, envs) == -1) {
-	           OC_ERR("failed to execute command (%s)", strerror(errno));
-	           exit(1);
+	     OC_ERR("failed to execute command (%s)", strerror(errno));
+	     exit(1);
              return -1;
-	         }
+           }
            break;
     default:
            if (waitpid(pid, &rv, 0) == -1)
@@ -501,22 +499,18 @@ wifi_join(char *ssid_key, char *password)
 }
 
 static
-int wifi_process_status(char *process_name)
+int wifi_fetch_pid(char *process_name)
 {
-  char *pidfile = NULL;
-  struct dirent *dent;
+  int max_pid_len = 32768;
+  char line[max_pid_len];
+  char command[100];
 
-  DIR *dir = opendir(PID_DIRECTORY);
-  if (dir) {
-    while ((dent = readdir (dir)) != NULL) {
-      pidfile = strdup(dent->d_name);
-      if (!strncmp(pidfile, process_name, strlen(process_name))) {
-        return 0;
-      }
-    }
-    closedir(dir);
-  }
-  return -ENOENT;
+  snprintf(command, sizeof(command), "pidof %s", process_name);
+  FILE *proc = popen(command, "r");
+  fgets(line, max_pid_len, proc);
+  pid_t pid = strtoul(line, NULL, 10);
+  pclose(proc);
+  return pid;
 }
 
 int
@@ -528,12 +522,9 @@ wifi_start_dhcp_client()
   char *const args[] = {"/sbin/dhclient", "-cf", "/etc/dhclient.conf", NULL};
   char *const envs[] = { NULL };
 
-  if (!wifi_process_status("dhclient")) {
+  if (wifi_fetch_pid("dhclient")) {
     OC_DBG("DHclient is already running");
     return 0;
-  } else {
-      OC_ERR("unable to fetch the status of DHclient process");
-      return -1;
   }
 
   if (remove(DHCLIENT_LEASES_FILE) < 0)
@@ -556,6 +547,7 @@ wifi_start_dhcp_client()
     OC_ERR("failed to start Dhclient %d\n", dhclient_pid);
     return -1;
   }
+  dhclient_pid = wifi_fetch_pid("dhclient");
   return 0;
 }
 
@@ -600,6 +592,11 @@ wifi_start_dhcp_server()
     OC_ERR("unable to assign IP address to the host\n");
     return -1;
   }
+
+  if (wifi_fetch_pid("dnsmasq")) {
+    OC_DBG("Dnsmasq is already running");
+    return 0;
+  }
   if (remove(DNSMASQ_LEASES_FILE) < 0)
     OC_ERR("failed to remove %s", DNSMASQ_LEASES_FILE);
 
@@ -608,6 +605,7 @@ wifi_start_dhcp_server()
     OC_ERR("failed to start DHCP server %d\n", dnsmasq_pid);
     return -1;
   }
+  dnsmasq_pid = wifi_fetch_pid("dnsmasq");
   return 0;
 }
 
