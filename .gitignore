@@ -72,6 +72,7 @@ port/openthread/output
 *.gcno
 .clang-format
 _clang-format
+whitespace_commit_checker.sh
 port/linux/platformtest
 port/linux/storage_test
 port/linux/apitest

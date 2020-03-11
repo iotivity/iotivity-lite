@@ -131,7 +131,7 @@ check_new_ip_interfaces(void)
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
-        interface->ifa_flags & IFF_LOOPBACK) {
+        (interface->ifa_flags & IFF_LOOPBACK)) {
       continue;
     }
     /* Obtain interface index for this address */
@@ -341,7 +341,7 @@ configure_mcast_socket(int mcast_sock, int sa_family)
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
-        interface->ifa_flags & IFF_LOOPBACK) {
+        (interface->ifa_flags & IFF_LOOPBACK)) {
       continue;
     }
     /* Ignore interfaces not belonging to the address family under consideration
@@ -692,7 +692,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 
   int ret = recvmsg(sock, &msg, 0);
 
-  if (ret < 0 || msg.msg_flags & MSG_TRUNC || msg.msg_flags & MSG_CTRUNC) {
+  if (ret < 0 || (msg.msg_flags & MSG_TRUNC) || (msg.msg_flags & MSG_CTRUNC)) {
     OC_ERR("recvmsg returned with an error: %d", errno);
     return -1;
   }
@@ -929,6 +929,7 @@ network_event_thread(void *data)
     }
   }
   pthread_exit(NULL);
+  return NULL;
 }
 
 int
@@ -1111,7 +1112,7 @@ oc_send_discovery_request(oc_message_t *message)
              (interface->ifa_name ? interface->ifa_name : "<none>"));
       continue;
     }
-    if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
+    if ((message->endpoint.flags & IPV6) && interface->ifa_addr &&
         interface->ifa_addr->sa_family == AF_INET6) {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
       if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
