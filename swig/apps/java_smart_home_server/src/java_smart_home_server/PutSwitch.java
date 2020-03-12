@@ -1,4 +1,4 @@
-package smart_home_server;
+package java_smart_home_server;
 
 import org.iotivity.OCRequest;
 import org.iotivity.OCRequestHandler;
