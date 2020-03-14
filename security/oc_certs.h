@@ -23,8 +23,7 @@
 #include "security/oc_cred_internal.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 int oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
@@ -39,9 +38,8 @@ int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
 int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
                                 oc_string_t *public_key);
 
-int oc_certs_validate_root_cert(const mbedtls_x509_crt *root_cert);
-
-int oc_certs_validate_intermediate_cert(const mbedtls_x509_crt *int_cert);
+int oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
+                                          bool is_root, bool is_otm, int depth);
 
 int oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *ee_cert);
 

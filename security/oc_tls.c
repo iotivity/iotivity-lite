@@ -1023,18 +1023,21 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   OC_DBG("verifying certificate at depth %d", depth);
   if (depth > 0) {
-    if (oc_certs_validate_root_cert(crt) < 0) {
-      if (oc_certs_validate_intermediate_cert(crt) < 0) {
+    /* For D2D handshakes involving identity certificates:
+     * Find a trusted root that matches the peer's root and store it
+     * as context accompanying the identity certificate. This is queried
+     * after validating the end-entity certificate to authorize the
+     * the peer per the OCF Specification. */
+    oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    if (oc_certs_validate_non_end_entity_cert(crt, true, ps->s == OC_DOS_RFOTM,
+                                              depth) < 0) {
+      if (oc_certs_validate_non_end_entity_cert(
+            crt, false, ps->s == OC_DOS_RFOTM, depth) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
         return -1;
       }
     } else {
-      /* For D2D handshakes involving identity certificates:
-       * Find a trusted root that matches the peer's root and store it
-       * as context accompanying the identity certificate. This is queried
-       * after validating the end-entity certificate to authorize the
-       * the peer per the OCF Specification. */
-      oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
         while (ca_cert) {
