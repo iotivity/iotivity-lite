@@ -26,27 +26,23 @@
 extern "C" {
 #endif
 
-typedef struct oc_sec_ael_event_def oc_sec_ael_event_t;
-
-struct oc_sec_ael_event_def
+typedef struct oc_sec_ael_aux_info_t
 {
+  struct oc_sec_ael_aux_info_t *next;
+  oc_string_t aux_info;
+} oc_sec_ael_aux_info_t;
+
+typedef struct oc_sec_ael_event_t
+{
+  struct oc_sec_ael_event_t *next;
   size_t size;
   uint8_t category;
   uint8_t priority;
   oc_clock_time_t timestamp;
-  char *aeid;
-  char *message;
-  char **aux_info;
-  size_t aux_size;
-  oc_sec_ael_event_t* next;
-};
-
-typedef struct
-{
-  size_t size;
-  oc_sec_ael_event_t* head;
-  oc_sec_ael_event_t* tail;
-} oc_sec_ael_events_t;
+  oc_string_t aeid;
+  oc_string_t message;
+  OC_LIST_STRUCT(aux_info);
+} oc_sec_ael_event_t;
 
 typedef enum {
   OC_SEC_AEL_CATEGORYFILTER_ACCESS_CONTROL = 0x01,
@@ -69,9 +65,10 @@ typedef enum {
   OC_SEC_AEL_PRIORITYFILTER_DEFAULT = OC_SEC_AEL_PRIORITYFILTER_DEBUG,
 } oc_sec_ael_priorityfilter_t;
 
-#define OC_SEC_AEL_MAX_SIZE (1024 * 2)  // 2K
-                                        // (due to buffer limitations used in file I/O operations (8K)
-                                        // and CBOR format redundancy)
+#define OC_SEC_AEL_MAX_SIZE                                                    \
+  (1024 * 2) // 2K
+             // (due to buffer limitations used in file I/O operations (8K)
+             // and CBOR format redundancy)
 
 typedef enum {
   OC_SEC_AEL_UNIT_BYTE = 0,
@@ -79,13 +76,14 @@ typedef enum {
   OC_SEC_AEL_UNIT_DEFAULT = OC_SEC_AEL_UNIT_BYTE,
 } oc_sec_ael_unit_t;
 
-typedef struct
+typedef struct oc_sec_ael_t
 {
   uint8_t categoryfilter;
   uint8_t priorityfilter;
   size_t maxsize;
   oc_sec_ael_unit_t unit;
-  oc_sec_ael_events_t events;
+  size_t events_size;
+  OC_LIST_STRUCT(events);
 } oc_sec_ael_t;
 
 void oc_sec_ael_init(void);
@@ -93,15 +91,17 @@ void oc_sec_ael_free(void);
 
 void oc_sec_ael_default(size_t device);
 
-bool oc_sec_ael_add(uint8_t category, uint8_t priority, const char *aeid,
-                    const char *message, const char **aux, size_t aux_len);
+bool oc_sec_ael_add(size_t device, uint8_t category, uint8_t priority,
+                    const char *aeid, const char *message, const char **aux,
+                    size_t aux_len);
 
 void get_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
-               void *data);
+              void *data);
 
-bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask, bool to_storage);
-bool oc_sec_ael_decode(oc_rep_t *rep, bool from_storage);
+bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
+                       bool to_storage);
+bool oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage);
 
 #ifdef __cplusplus
 }

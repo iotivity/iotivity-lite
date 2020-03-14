@@ -524,7 +524,8 @@ oc_tls_audit_log(const char *aeid, const char *message, uint8_t category,
   char buff[IPADDR_BUFF_SIZE];
   SNPRINTFipaddr(buff, IPADDR_BUFF_SIZE, peer->endpoint);
   char *aux[] = { buff };
-  oc_audit_log(aeid, message, category, priority, (const char **)aux, 1);
+  oc_audit_log(peer->endpoint.device, aeid, message, category, priority,
+               (const char **)aux, 1);
 }
 
 static int

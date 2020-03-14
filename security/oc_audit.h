@@ -24,8 +24,9 @@
 extern "C" {
 #endif
 
-void oc_audit_log(const char *aeid, const char *message, uint8_t category,
-                  uint8_t priority, const char **aux, size_t aux_len);
+void oc_audit_log(size_t device, const char *aeid, const char *message,
+                  uint8_t category, uint8_t priority, const char **aux,
+                  size_t aux_len);
 
 #ifdef __cplusplus
 }

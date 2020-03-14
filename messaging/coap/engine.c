@@ -128,25 +128,6 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
 }
 
 #ifdef OC_SECURITY
-static char *
-hexdump(const uint8_t *data, size_t length)
-{
-  char *res = NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (data && length != 0) {
-    size_t size = length * 3 + 1;
-    if ((res = (char *)malloc(size)) != NULL) {
-      memset(res, 0, size);
-      SNPRINTFbytes(res, size - 1, data, length);
-    }
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  (void)data;
-  (void)length;
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return res;
-}
-
 static void
 coap_audit_log(oc_message_t *msg)
 {
@@ -160,16 +141,16 @@ coap_audit_log(oc_message_t *msg)
   }
   // oc_string_array item length cannot exceed 128 bytes
   // hexdump format "XX:XX:..." : each byte is represented by 3 symbols
-  char *buff2 =
-    hexdump((const uint8_t *)msg->data, msg->length < 42 ? msg->length : 42);
-  char *aux[] = { ipaddr, buff1, buff2 };
-  oc_audit_log("COMM-1", "Unexpected CoAP command", 0x40, 2, (const char **)aux,
-               (!buff2) ? 2 : 3);
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (buff2) {
-    free(buff2);
+  char buff2[128];
+  size_t length = (msg->length < 42) ? msg->length : 42;
+  if (length > 0) {
+    size_t size = length * 3 + 1;
+    memset(buff2, 0, 128);
+    SNPRINTFbytes(buff2, size - 1, msg->data, length);
   }
-#endif /* OC_DYNAMIC_ALLOCATION */
+  char *aux[] = { ipaddr, buff1, buff2 };
+  oc_audit_log(msg->endpoint.device, "COMM-1", "Unexpected CoAP command", 0x40,
+               2, (const char **)aux, (length == 0) ? 2 : 3);
 }
 #endif /* OC_SECURITY */
 

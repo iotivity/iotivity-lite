@@ -627,7 +627,7 @@ oc_sec_load_ael(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
-    oc_sec_ael_decode(rep, true);
+    oc_sec_ael_decode(device, rep, true);
     oc_free_rep(rep);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
