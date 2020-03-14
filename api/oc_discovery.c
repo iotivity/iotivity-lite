@@ -545,11 +545,11 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
     response_buffer.code = 0;
     response_buffer.response_length = 0;
 
-#ifdef OC_SERVER
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
     if (oc_check_if_collection(resource)) {
       oc_handle_collection_request(OC_GET, &rest_request, OC_IF_LL, NULL);
     } else
-#endif /* OC_SERVER */
+#endif /* OC_SERVER && OC_COLLECTIONS */
     {
       resource->get_handler.cb(&rest_request, resource->default_interface,
                                resource->get_handler.user_data);

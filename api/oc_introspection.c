@@ -42,7 +42,7 @@ gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
     snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%zd", name, device_index);
   idd_tag_len =
     (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
-  idd_tag[idd_tag_len] = '\0';
+  idd_tag[idd_tag_len - 1] = '\0';
 }
 
 void

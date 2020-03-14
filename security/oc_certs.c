@@ -31,6 +31,7 @@
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
+#define MBEDTLS_ULIMITED_PATHLEN 0
 
 int
 oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
@@ -448,29 +449,36 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert)
 }
 
 int
-oc_certs_validate_root_cert(const mbedtls_x509_crt *cert)
+oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
+                                      bool is_root, bool is_otm, int depth)
 {
-  OC_DBG("attempting to validate root cert");
+  OC_DBG("attempting to validate %s cert", is_root ? "root" : "intermediate");
   /* Validate common X.509v1 fields */
   if (validate_x509v1_fields(cert) < 0) {
     return -1;
   }
 
-  /* Issuer SHALL match the Subject field
-   * Subject SHALL match the Issuer field
-   */
-  if ((cert->issuer_raw.len != cert->subject_raw.len) ||
-      memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) !=
-        0) {
-    OC_WRN("certificate is not a root CA");
+  /* Root certificates (and ONLY Root certificates) shall be self-issued */
+  bool is_self_issued =
+    (cert->issuer_raw.len == cert->subject_raw.len) ||
+    memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) == 0;
+  if (is_root && !is_self_issued) {
+    OC_WRN("certificate is not a valid root CA");
+    return -1;
+  }
+  if (!is_root && is_self_issued) {
+    OC_WRN("certificate is not a valid intermediate CA");
     return -1;
   }
 
   /* keyCertSign (5) & cRLSign (6) bits SHALL be enabled */
   /* Digital Signature bit may optionally be enabled */
-  unsigned int optional_key_usage = MBEDTLS_X509_KU_DIGITAL_SIGNATURE;
+  unsigned int optional_key_usage =
+    is_otm ? MBEDTLS_X509_KU_DIGITAL_SIGNATURE
+           : MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_CRL_SIGN;
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
+    is_otm ? MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN
+           : MBEDTLS_X509_KU_KEY_CERT_SIGN;
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -480,56 +488,24 @@ oc_certs_validate_root_cert(const mbedtls_x509_crt *cert)
     return -1;
   }
 
-  /* cA = TRUE and pathLenConstraint = not present (unlimited) */
-  if (cert->ca_istrue == 0 || cert->max_pathlen != 0) {
-    OC_WRN("CA=True and/or path len constraints not met");
+  /* cA = TRUE */
+  if (cert->ca_istrue == 0) {
+    OC_WRN("CA=True constraint is not met");
     return -1;
   }
 
-  return 0;
-}
-
-int
-oc_certs_validate_intermediate_cert(const mbedtls_x509_crt *cert)
-{
-  OC_DBG("attempting to validate intermediate cert");
-  /* Validate common X.509v1 fields */
-  if (validate_x509v1_fields(cert) < 0) {
+  /* pathLenConstraint should be at least as long as the signed chain, note that
+   * mbedtls max_pathlen = real pathlen + 1 */
+  if (cert->max_pathlen != MBEDTLS_ULIMITED_PATHLEN &&
+      cert->max_pathlen < depth) {
+    OC_WRN("certificate pathLen is not sufficient: %d < %d", cert->max_pathlen,
+           depth);
     return -1;
   }
 
-  if (cert->max_pathlen == 0) {
-    OC_WRN("certificate is not an intermediate CA");
-    return -1;
-  }
-
-  /* Issuer SHALL NOT match the Subject field
-   * Subject SHALL NOT match the Issuer field
-   */
-  if ((cert->issuer_raw.len == cert->subject_raw.len) ||
-      memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) ==
-        0) {
-    OC_WRN("certificate is not an intermediate CA");
-    return -1;
-  }
-
-  /* keyCertSign (5) & cRLSign (6) bits SHALL be enabled */
-  /* Digital Signature bit may optionally be enabled */
-  unsigned int optional_key_usage = MBEDTLS_X509_KU_DIGITAL_SIGNATURE;
-  unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
-  if ((cert->key_usage & key_usage) != key_usage) {
-    OC_WRN("key_usage constraints not met");
-    return -1;
-  }
-  if ((cert->key_usage & ~(optional_key_usage | key_usage)) != 0) {
-    OC_WRN("key_usage sets additional bits");
-    return -1;
-  }
-
-  /* cA = TRUE and pathLenConstraint = 0  (can only sign end-entity certs) */
-  if (cert->ca_istrue == 0 || cert->max_pathlen > 1) {
-    OC_WRN("CA=True and/or path len constraints not met");
+  /* pathLenConstraint = 0 for OTM chains (can only sign end-entity certs) */
+  if (is_otm && !is_root && cert->max_pathlen != 1) {
+    OC_WRN("only 3-tiered chains are allowed for OTM certificates");
     return -1;
   }
 

@@ -645,6 +645,7 @@ coap_notify_observers(oc_resource_t *resource,
   }
 #endif /* OC_SECURITY */
 
+  bool resource_is_collection = false;
   coap_observer_t *obs = NULL;
   if (resource->num_observers > 0) {
 #ifdef OC_BLOCK_WISE
@@ -675,8 +676,21 @@ coap_notify_observers(oc_resource_t *resource,
       request.response = &response;
       request.request_payload = NULL;
       oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-      resource->get_handler.cb(&request, resource->default_interface,
-                               resource->get_handler.user_data);
+#ifdef OC_COLLECTIONS
+      if (oc_check_if_collection(resource)) {
+        resource_is_collection = true;
+        if (resource->get_handler.cb) {
+          resource->get_handler.cb(&request, OC_IF_BASELINE,
+                                   resource->get_handler.user_data);
+        } else {
+          response_buffer.code = OC_IGNORE;
+        }
+      } else
+#endif /* OC_COLLECTIONS */
+      {
+        resource->get_handler.cb(&request, resource->default_interface,
+                                 resource->get_handler.user_data);
+      }
       response_buf = &response_buffer;
       if (response_buf->code == OC_IGNORE) {
         OC_DBG("coap_notify_observers: Resource ignored request");
@@ -692,7 +706,10 @@ coap_notify_observers(oc_resource_t *resource,
         obs = obs->next;
         continue;
       } // obs->resource != resource || endpoint != obs->endpoint
-
+      if (resource_is_collection && obs->iface_mask != OC_IF_BASELINE) {
+        obs = obs->next;
+        continue;
+      }
       if (response.separate_response != NULL) {
         if (response_buf->code == oc_status_code(OC_STATUS_OK)) {
           coap_packet_t req[1];
