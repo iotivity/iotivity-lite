@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F4920803-255A-4BC5-BB70-84BE6D12AADE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>iotivitylitejni</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>iotivity-lite-jni</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\util;$(SolutionDir)..\..\..\port;$(SolutionDir)..\..\..\port\windows;$(JAVA_HOME)\include;$(JAVA_HOME)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;IoTivity-lite.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PreBuildEvent>
+      <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+      <Message>Copying dependency files into project.</Message>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Clean SWIG output</Message>
+      <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
+      <TreatOutputAsContent>
+      </TreatOutputAsContent>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /s /y /d /q $(TargetPath) $(SolutionDir)..\..\..\swig\iotivity-lite-java\libs</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\util;$(SolutionDir)..\..\..\port;$(SolutionDir)..\..\..\port\windows;$(JAVA_HOME)\include;$(JAVA_HOME)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;IoTivity-lite.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PreBuildEvent>
+      <Command>xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.h $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\java_lang\*.c $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity
+xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc</Command>
+      <Message>Copying dependency files into project.</Message>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
+      <Message>Clean SWIG output</Message>
+      <TreatOutputAsContent>
+      </TreatOutputAsContent>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /s /y /d /q $(TargetPath) $(SolutionDir)..\..\..\swig\iotivity-lite-java\libs</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\util;$(SolutionDir)..\..\..\port;$(SolutionDir)..\..\..\port\windows;$(JAVA_HOME)\include;$(JAVA_HOME)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;IoTivity-lite.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
+      <Message>Clean SWIG output</Message>
+      <TreatOutputAsContent>
+      </TreatOutputAsContent>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /s /y /d /q $(TargetPath) $(SolutionDir)..\..\..\swig\iotivity-lite-java\libs</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\..;$(SolutionDir)..\..\..\include;$(SolutionDir)..\..\..\util;$(SolutionDir)..\..\..\port;$(SolutionDir)..\..\..\port\windows;$(JAVA_HOME)\include;$(JAVA_HOME)\include\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;Iphlpapi.lib;IoTivity-lite.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Command>del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.h
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\jni\*.c
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\*.java
+del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</Command>
+      <Message>Clean SWIG output</Message>
+      <TreatOutputAsContent>
+      </TreatOutputAsContent>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /s /y /d /q $(TargetPath) $(SolutionDir)..\..\..\swig\iotivity-lite-java\libs</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IoTivity-lite.vcxproj">
+      <Project>{1866d7a4-fc11-46ca-9377-3baa69d4bf58}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_api_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_buffer_settings_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_clock_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cloud_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_collection_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_connectivity_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_core_res_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_cred_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_endpoint_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_introspection_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_obt_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_pki_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_random_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_rep_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_session_events_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_storage_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_uuid_wrap.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_iotivity_lite_jni.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

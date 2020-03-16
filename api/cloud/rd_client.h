@@ -30,8 +30,7 @@
 #include "oc_collection.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /** Resource Directory URI used to Discover RD and Publish resources.*/

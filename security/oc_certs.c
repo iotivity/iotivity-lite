@@ -31,6 +31,7 @@
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
+#define MBEDTLS_ULIMITED_PATHLEN 0
 
 int
 oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
@@ -68,15 +69,26 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
 }
 
 int
-oc_certs_extract_public_key(const mbedtls_x509_crt *cert, uint8_t *public_key)
+oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
+                            oc_string_t *public_key)
 {
+#define RSA_PUB_DER_MAX_BYTES (38 + 2 * MBEDTLS_MPI_MAX_SIZE)
+#define ECP_PUB_DER_MAX_BYTES (30 + 2 * MBEDTLS_ECP_MAX_BYTES)
+  size_t key_size;
+  if (mbedtls_pk_get_type((mbedtls_pk_context *)&cert->pk) ==
+      MBEDTLS_PK_ECKEY) {
+    key_size = ECP_PUB_DER_MAX_BYTES;
+  } else {
+    key_size = RSA_PUB_DER_MAX_BYTES;
+  }
+  oc_alloc_string(public_key, key_size);
   return mbedtls_pk_write_pubkey_der((mbedtls_pk_context *)&cert->pk,
-                                     public_key, OC_KEYPAIR_PUBKEY_SIZE);
+                                     oc_cast(*public_key, uint8_t), key_size);
 }
 
 int
 oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
-                          uint8_t *public_key)
+                          oc_string_t *public_key)
 {
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
@@ -163,7 +175,7 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
                         directoryName->val.len);
         }
         /* Look for an Organizational Unit (OU) component in the directoryName
-           */
+         */
         else if ((directoryName->oid.len ==
                   MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_ORG_UNIT)) &&
                  (memcmp(directoryName->oid.p, MBEDTLS_OID_AT_ORG_UNIT,
@@ -437,29 +449,36 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert)
 }
 
 int
-oc_certs_validate_root_cert(const mbedtls_x509_crt *cert)
+oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
+                                      bool is_root, bool is_otm, int depth)
 {
-  OC_DBG("attempting to validate root cert");
+  OC_DBG("attempting to validate %s cert", is_root ? "root" : "intermediate");
   /* Validate common X.509v1 fields */
   if (validate_x509v1_fields(cert) < 0) {
     return -1;
   }
 
-  /* Issuer SHALL match the Subject field
-   * Subject SHALL match the Issuer field
-   */
-  if ((cert->issuer_raw.len != cert->subject_raw.len) ||
-      memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) !=
-        0) {
-    OC_WRN("certificate is not a root CA");
+  /* Root certificates (and ONLY Root certificates) shall be self-issued */
+  bool is_self_issued =
+    (cert->issuer_raw.len == cert->subject_raw.len) ||
+    memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) == 0;
+  if (is_root && !is_self_issued) {
+    OC_WRN("certificate is not a valid root CA");
+    return -1;
+  }
+  if (!is_root && is_self_issued) {
+    OC_WRN("certificate is not a valid intermediate CA");
     return -1;
   }
 
   /* keyCertSign (5) & cRLSign (6) bits SHALL be enabled */
   /* Digital Signature bit may optionally be enabled */
-  unsigned int optional_key_usage = MBEDTLS_X509_KU_DIGITAL_SIGNATURE;
+  unsigned int optional_key_usage =
+    is_otm ? MBEDTLS_X509_KU_DIGITAL_SIGNATURE
+           : MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_CRL_SIGN;
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
+    is_otm ? MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN
+           : MBEDTLS_X509_KU_KEY_CERT_SIGN;
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -469,56 +488,24 @@ oc_certs_validate_root_cert(const mbedtls_x509_crt *cert)
     return -1;
   }
 
-  /* cA = TRUE and pathLenConstraint = not present (unlimited) */
-  if (cert->ca_istrue == 0 || cert->max_pathlen != 0) {
-    OC_WRN("CA=True and/or path len constraints not met");
+  /* cA = TRUE */
+  if (cert->ca_istrue == 0) {
+    OC_WRN("CA=True constraint is not met");
     return -1;
   }
 
-  return 0;
-}
-
-int
-oc_certs_validate_intermediate_cert(const mbedtls_x509_crt *cert)
-{
-  OC_DBG("attempting to validate intermediate cert");
-  /* Validate common X.509v1 fields */
-  if (validate_x509v1_fields(cert) < 0) {
+  /* pathLenConstraint should be at least as long as the signed chain, note that
+   * mbedtls max_pathlen = real pathlen + 1 */
+  if (cert->max_pathlen != MBEDTLS_ULIMITED_PATHLEN &&
+      cert->max_pathlen < depth) {
+    OC_WRN("certificate pathLen is not sufficient: %d < %d", cert->max_pathlen,
+           depth);
     return -1;
   }
 
-  if (cert->max_pathlen == 0) {
-    OC_WRN("certificate is not an intermediate CA");
-    return -1;
-  }
-
-  /* Issuer SHALL NOT match the Subject field
-   * Subject SHALL NOT match the Issuer field
-   */
-  if ((cert->issuer_raw.len == cert->subject_raw.len) ||
-      memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) ==
-        0) {
-    OC_WRN("certificate is not an intermediate CA");
-    return -1;
-  }
-
-  /* keyCertSign (5) & cRLSign (6) bits SHALL be enabled */
-  /* Digital Signature bit may optionally be enabled */
-  unsigned int optional_key_usage = MBEDTLS_X509_KU_DIGITAL_SIGNATURE;
-  unsigned int key_usage =
-    (MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN);
-  if ((cert->key_usage & key_usage) != key_usage) {
-    OC_WRN("key_usage constraints not met");
-    return -1;
-  }
-  if ((cert->key_usage & ~(optional_key_usage | key_usage)) != 0) {
-    OC_WRN("key_usage sets additional bits");
-    return -1;
-  }
-
-  /* cA = TRUE and pathLenConstraint = 0  (can only sign end-entity certs) */
-  if (cert->ca_istrue == 0 || cert->max_pathlen > 1) {
-    OC_WRN("CA=True and/or path len constraints not met");
+  /* pathLenConstraint = 0 for OTM chains (can only sign end-entity certs) */
+  if (is_otm && !is_root && cert->max_pathlen != 1) {
+    OC_WRN("only 3-tiered chains are allowed for OTM certificates");
     return -1;
   }
 
@@ -780,7 +767,7 @@ oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
     oc_new_string(subject_DN, DN, ret);
 
     ret = mbedtls_pk_write_pubkey_der((mbedtls_pk_context *)&c.pk, public_key,
-                                      OC_KEYPAIR_PUBKEY_SIZE);
+                                      OC_ECDSA_PUBKEY_SIZE);
     if (ret < 0) {
       OC_ERR("unable to read public key from CSR %d", ret);
     }
@@ -827,7 +814,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   mbedtls_pk_init(&pk);
 
   int ret =
-    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_KEYPAIR_PUBKEY_SIZE);
+    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_ECDSA_PUBKEY_SIZE);
   if (ret != 0) {
     OC_ERR("could not parse public key for device %zd", device);
     goto generate_csr_error;

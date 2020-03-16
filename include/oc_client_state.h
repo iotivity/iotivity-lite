@@ -85,6 +85,7 @@ typedef struct oc_client_cb_t
   bool multicast;
   bool stop_multicast_receive;
   uint8_t ref_count;
+  uint8_t separate;
 } oc_client_cb_t;
 
 #ifdef OC_BLOCK_WISE
@@ -103,7 +104,7 @@ oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
 
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                                     oc_method_t method);
-
+bool oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb);
 oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
                                               uint8_t token_len);
 

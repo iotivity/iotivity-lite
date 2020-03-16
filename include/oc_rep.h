@@ -1265,7 +1265,7 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  *     if ( true == oc_rep_get_object_array(rep, "space_2001", &space_2001_out))
  * {
  *         while (space_2001_out != NULL) {
- *             vhar * str_out = NULL;
+ *             char * str_out = NULL;
  *             size_t str_out_size = 0;
  *             if (oc_rep_get_string(space_2001_out->value.object,
  *                                   "name",

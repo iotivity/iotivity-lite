@@ -14,10 +14,16 @@
 // limitations under the License.
 */
 
+#include "oc_config.h"
 #ifdef OC_SECURITY
 #ifndef OC_DYNAMIC_ALLOCATION
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"
 #endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifndef OC_STORAGE
+#error Preprocessor macro OC_SECURITY is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
+#endif
 
 #include "oc_obt.h"
 #include "oc_core_res.h"
@@ -82,7 +88,7 @@ OC_LIST(oc_cache);
 /* Public/Private key-pair for the local domain's root of trust */
 #ifdef OC_PKI
 const char *root_subject = "C=US, O=OCF, CN=IoTivity-Lite OBT Root";
-uint8_t private_key[OC_KEYPAIR_PRIVKEY_SIZE];
+uint8_t private_key[OC_ECDSA_PRIVKEY_SIZE];
 size_t private_key_size;
 int root_cert_credid;
 #endif /* OC_PKI */
@@ -1221,7 +1227,7 @@ device_CSR(oc_client_response_t *data)
   oc_string_t subject, cert;
   memset(&subject, 0, sizeof(oc_string_t));
   memset(&cert, 0, sizeof(oc_string_t));
-  uint8_t pub_key[OC_KEYPAIR_PUBKEY_SIZE];
+  uint8_t pub_key[OC_ECDSA_PUBKEY_SIZE];
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_device_CSR;
@@ -1258,13 +1264,13 @@ device_CSR(oc_client_response_t *data)
     /**  5) generate identity cert
      */
     ret = oc_obt_generate_identity_cert(oc_string(subject), pub_key,
-                                        OC_KEYPAIR_PUBKEY_SIZE, root_subject,
+                                        OC_ECDSA_PUBKEY_SIZE, root_subject,
                                         private_key, private_key_size, &cert);
   } else {
     /**  5) generate role cert
      */
     ret = oc_obt_generate_role_cert(p->roles, oc_string(subject), pub_key,
-                                    OC_KEYPAIR_PUBKEY_SIZE, root_subject,
+                                    OC_ECDSA_PUBKEY_SIZE, root_subject,
                                     private_key, private_key_size, &cert);
   }
   if (ret < 0) {
@@ -2641,24 +2647,26 @@ oc_obt_init(void)
     oc_sec_dump_acl(0);
 
 #ifdef OC_PKI
-    uint8_t public_key[OC_KEYPAIR_PUBKEY_SIZE];
+    uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
     size_t public_key_size = 0;
     if (oc_generate_ecdsa_keypair(
-          public_key, OC_KEYPAIR_PUBKEY_SIZE, &public_key_size, private_key,
-          OC_KEYPAIR_PRIVKEY_SIZE, &private_key_size) < 0) {
+          public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size, private_key,
+          OC_ECDSA_PRIVKEY_SIZE, &private_key_size) < 0) {
       OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
              "certificate");
-    } else if (public_key_size != OC_KEYPAIR_PUBKEY_SIZE) {
+    } else if (public_key_size != OC_ECDSA_PUBKEY_SIZE) {
       OC_ERR("oc_obt: invalid ECDSA keypair for local domain root certificate");
     } else {
       root_cert_credid = oc_obt_generate_self_signed_root_cert(
-        root_subject, public_key, OC_KEYPAIR_PUBKEY_SIZE, private_key,
+        root_subject, public_key, OC_ECDSA_PUBKEY_SIZE, private_key,
         private_key_size);
       if (root_cert_credid > 0) {
         oc_obt_dump_state();
+        OC_DBG("oc_obt: successfully returning from obt_init()");
         return 0;
       }
     }
+    OC_DBG("oc_obt: returning from oc_obt() with errors");
     return -1;
 #endif /* OC_PKI */
   } else {
@@ -2666,6 +2674,7 @@ oc_obt_init(void)
     oc_obt_load_state();
 #endif /* OC_PKI */
   }
+  OC_DBG("oc_obt: successfully returning from obt_init()");
   return 0;
 }
 
@@ -2683,6 +2692,11 @@ oc_obt_shutdown(void)
     oc_free_server_endpoints(device->endpoint);
     oc_memb_free(&oc_devices_s, device);
     device = (oc_device_t *)oc_list_pop(oc_devices);
+  }
+  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+  while (cb) {
+    free_discovery_cb(cb);
+    cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
   }
 }
 

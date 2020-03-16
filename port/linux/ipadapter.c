@@ -124,7 +124,7 @@ check_new_ip_interfaces(void)
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
-        interface->ifa_flags & IFF_LOOPBACK) {
+        (interface->ifa_flags & IFF_LOOPBACK)) {
       continue;
     }
     /* Obtain interface index for this address */
@@ -331,7 +331,7 @@ configure_mcast_socket(int mcast_sock, int sa_family)
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
-        interface->ifa_flags & IFF_LOOPBACK) {
+        (interface->ifa_flags & IFF_LOOPBACK)) {
       continue;
     }
     /* Ignore interfaces not belonging to the address family under consideration
@@ -645,6 +645,9 @@ process_interface_change_event(void)
   }
 
   if (if_state_changed) {
+#ifdef OC_SECURITY
+    oc_close_all_tls_sessions();
+#endif /* OC_SECURITY */
     for (i = 0; i < num_devices; i++) {
       ip_context_t *dev = get_ip_context_for_device(i);
       oc_network_event_handler_mutex_lock();
@@ -681,7 +684,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 
   int ret = recvmsg(sock, &msg, 0);
 
-  if (ret < 0 || msg.msg_flags & MSG_TRUNC || msg.msg_flags & MSG_CTRUNC) {
+  if (ret < 0 || (msg.msg_flags & MSG_TRUNC) || (msg.msg_flags & MSG_CTRUNC)) {
     OC_ERR("recvmsg returned with an error: %d", errno);
     return -1;
   }
@@ -927,6 +930,7 @@ network_event_thread(void *data)
     }
   }
   pthread_exit(NULL);
+  return NULL;
 }
 
 static int
@@ -1101,9 +1105,10 @@ oc_send_discovery_request(oc_message_t *message)
   IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
   for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!(interface->ifa_flags & IFF_UP) || interface->ifa_flags & IFF_LOOPBACK)
+    if (!(interface->ifa_flags & IFF_UP) ||
+        (interface->ifa_flags & IFF_LOOPBACK))
       continue;
-    if (message->endpoint.flags & IPV6 && interface->ifa_addr &&
+    if ((message->endpoint.flags & IPV6) && interface->ifa_addr &&
         interface->ifa_addr->sa_family == AF_INET6) {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
       if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
@@ -1452,6 +1457,14 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
+#ifdef IPV6_ADDR_PREFERENCES
+  int prefer = 2;
+  if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
+    return -1;
+  }
+#endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
            sizeof(dev->server)) == -1) {
     OC_ERR("binding server socket %d", errno);
@@ -1481,6 +1494,13 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
+#ifdef IPV6_ADDR_PREFERENCES
+  if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
+    return -1;
+  }
+#endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
            sizeof(dev->mcast)) == -1) {
     OC_ERR("binding mcast socket %d", errno);
@@ -1498,6 +1518,13 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
+#ifdef IPV6_ADDR_PREFERENCES
+  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
+                 sizeof(prefer)) == -1) {
+    OC_ERR("setting src addr preference %d", errno);
+    return -1;
+  }
+#endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
            sizeof(dev->secure)) == -1) {
     OC_ERR("binding IPv6 secure socket %d", errno);

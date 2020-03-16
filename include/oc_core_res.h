@@ -23,8 +23,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef void (*oc_core_init_platform_cb_t)(void *data);
@@ -38,7 +37,7 @@ typedef struct oc_platform_info_t
   void *data;
 } oc_platform_info_t;
 
-typedef struct
+typedef struct oc_device_info_t
 {
   oc_uuid_t di;
   oc_uuid_t piid;

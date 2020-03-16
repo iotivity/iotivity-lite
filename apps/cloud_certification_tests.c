@@ -560,12 +560,14 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
+#ifdef OC_STORAGE
   oc_storage_config("./cloud_tests_creds");
+#endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
     printf("pthread_mutex_init failed!\n");
@@ -644,6 +646,7 @@ main(void)
       break;
     case 8:
       handle_signal(0);
+      break;
     default:
       break;
     }

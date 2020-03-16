@@ -412,10 +412,12 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   oc_storage_config("./smart_lock_creds");
+#endif /* OC_STORAGE */
+#ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
-#endif /* OC_SECURITY */
+#endif
 
   oc_set_con_res_announced(false);
   init = oc_main_init(&handler);

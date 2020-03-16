@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-    #include "port/oc_storage.h"
+#include "port/oc_storage.h"
 }
 
 #ifdef OC_SECURITY
@@ -32,50 +32,47 @@ static const char *file_name = "storage_store";
 static uint8_t buf[100];
 #endif /* OC_SECURITY */
 
-class TestStorage: public testing::Test
-{
-    protected:
-        virtual void SetUp()
-        {
-        }
+class TestStorage : public testing::Test {
+protected:
+  virtual void SetUp() {}
 
-        virtual void TearDown()
-        {
-        }
+  virtual void TearDown() {}
 };
 
 #ifdef OC_SECURITY
 TEST_F(TestStorage, oc_storage_config_fail_with_length_over)
 {
-    int ret = oc_storage_config("./storage_test_long_size_fail_storage_test_long_size_fail_storage_test_long_size_fail");
-    EXPECT_NE(0, ret);
+  int ret = oc_storage_config("./"
+                              "storage_test_long_size_fail_storage_test_long_"
+                              "size_fail_storage_test_long_size_fail");
+  EXPECT_NE(0, ret);
 }
 
 TEST_F(TestStorage, oc_storage_read_fail)
 {
-    int ret = oc_storage_read(file_name, buf, 100);
-    EXPECT_NE(0, ret);
+  int ret = oc_storage_read(file_name, buf, 100);
+  EXPECT_NE(0, ret);
 }
 
 TEST_F(TestStorage, oc_storage_write_fail)
 {
-    int ret = oc_storage_write(file_name, buf, 100);
-    EXPECT_NE(0, ret);
+  int ret = oc_storage_write(file_name, buf, 100);
+  EXPECT_NE(0, ret);
 }
 
 TEST_F(TestStorage, oc_storage_config)
 {
-    int ret = oc_storage_config(path);
-    EXPECT_EQ(0, ret);
+  int ret = oc_storage_config(path);
+  EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestStorage, oc_storage_write)
 {
-    uint8_t str[100] = "storage";
-    int ret = oc_storage_write(file_name, str, strlen((char *)str));
-    EXPECT_LE(0, ret);
-    ret = oc_storage_read(file_name, buf, 100);
-    EXPECT_LE(0, ret);
-    EXPECT_STREQ(str, buf);
+  uint8_t str[100] = "storage";
+  int ret = oc_storage_write(file_name, str, strlen((char *)str));
+  EXPECT_LE(0, ret);
+  ret = oc_storage_read(file_name, buf, 100);
+  EXPECT_LE(0, ret);
+  EXPECT_STREQ((const char *)str, (const char *)buf);
 }
 #endif /* OC_SECURITY */

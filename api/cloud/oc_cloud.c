@@ -108,6 +108,8 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
   (void)status;
   (void)data;
   cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
@@ -151,6 +153,7 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
 
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
 
@@ -167,6 +170,8 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->cps = OC_CPS_READYTOREGISTER;
 
+  cloud_store_dump_async(&ctx->store);
+
   if (ctx->cloud_manager) {
     cloud_reconnect(ctx);
   }
@@ -180,6 +185,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
 {
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
   if (data->auth_provider && data->auth_provider_len) {
@@ -307,6 +313,8 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   cloud_manager_stop(ctx);
   cloud_store_initialize(&ctx->store);
   cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_manager = false;
   return 0;
 }
@@ -350,6 +358,7 @@ oc_cloud_shutdown(void)
       cloud_store_deinit(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
+      oc_list_remove(cloud_context_list, ctx);
       oc_memb_free(&cloud_context_pool, ctx);
       OC_DBG("cloud_shutdown for %d", (int)device);
     }

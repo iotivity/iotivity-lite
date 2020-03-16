@@ -139,7 +139,7 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
-static const int default_priority[8] = {
+static const int default_priority[6] = {
 #else  /* OC_PKI */
 static const int default_priority[2] = {
 #endif /* !OC_PKI */
@@ -149,8 +149,6 @@ static const int default_priority[2] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
@@ -166,7 +164,7 @@ static const int anon_ecdh_priority[2] = {
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
-static const int otm_priority[9] = {
+static const int otm_priority[7] = {
 #else  /* OC_PKI */
 static const int otm_priority[3] = {
 #endif /* !OC_PKI */
@@ -177,28 +175,29 @@ static const int otm_priority[3] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 #endif /* OC_PKI */
   0
 };
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
-
-static const int cloud_priority[3] = {
+#ifdef OC_CLOUD
+static const int cloud_priority[7] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+  0
 };
+#endif /* OC_CLOUD */
 
-static const int cert_priority[7] = {
+static const int cert_priority[5] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-  0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM, 0
 };
 #endif /* OC_PKI */
 #endif /* OC_CLIENT */
@@ -283,6 +282,9 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
     oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->recv_q);
   }
+#ifdef OC_PKI
+  oc_free_string(&peer->public_key);
+#endif /* OC_PKI */
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
   oc_memb_free(&tls_peers_s, peer);
@@ -364,7 +366,9 @@ oc_tls_inactive(void *data)
       return OC_EVENT_CONTINUE;
     }
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    if ((peer->endpoint.flags & TCP) == 0) {
+      mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    }
     oc_tls_free_peer(peer, true);
   }
   OC_DBG("oc_tls: Terminating DTLS inactivity callback");
@@ -793,6 +797,9 @@ oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
     oc_list_remove(ca_certs, cert);
     oc_memb_free(&ca_certs_s, cert);
   }
+  mbedtls_x509_crt_free(&trust_anchors);
+  mbedtls_x509_crt_init(&trust_anchors);
+  oc_tls_refresh_trust_anchors();
 }
 
 static int
@@ -895,12 +902,14 @@ oc_tls_select_cert_ciphersuite(void)
   ciphers = (int *)cert_priority;
 }
 
+#ifdef OC_CLOUD
 void
 oc_tls_select_cloud_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting cloud ciphersuite priority");
   ciphers = (int *)cloud_priority;
 }
+#endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 
 void
@@ -1014,18 +1023,21 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   OC_DBG("verifying certificate at depth %d", depth);
   if (depth > 0) {
-    if (oc_certs_validate_root_cert(crt) < 0) {
-      if (oc_certs_validate_intermediate_cert(crt) < 0) {
+    /* For D2D handshakes involving identity certificates:
+     * Find a trusted root that matches the peer's root and store it
+     * as context accompanying the identity certificate. This is queried
+     * after validating the end-entity certificate to authorize the
+     * the peer per the OCF Specification. */
+    oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    if (oc_certs_validate_non_end_entity_cert(crt, true, ps->s == OC_DOS_RFOTM,
+                                              depth) < 0) {
+      if (oc_certs_validate_non_end_entity_cert(
+            crt, false, ps->s == OC_DOS_RFOTM, depth) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
         return -1;
       }
     } else {
-      /* For D2D handshakes involving identity certificates:
-       * Find a trusted root that matches the peer's root and store it
-       * as context accompanying the identity certificate. This is queried
-       * after validating the end-entity certificate to authorize the
-       * the peer per the OCF Specification. */
-      oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
         while (ca_cert) {
@@ -1064,7 +1076,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       oc_free_string(&uuid);
     }
 
-    if (oc_certs_extract_public_key(crt, peer->public_key) < 0) {
+    if (oc_certs_extract_public_key(crt, &peer->public_key) < 0) {
       OC_ERR("unable to extract public key from cert");
       return -1;
     }
@@ -1195,7 +1207,13 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
                                  transport_type);
 
 #ifdef OC_PKI
-      mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      if (ciphers != cloud_priority) {
+#endif /* OC_CLOUD && OC_CLIENT */
+        mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+      }
+#endif /* OC_CLOUD && OC_CLIENT */
 #endif /* OC_PKI */
 
       oc_tls_set_ciphersuites(&peer->ssl_conf, endpoint);
@@ -1230,20 +1248,6 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
     }
   }
   return peer;
-}
-
-void
-oc_tls_close_all_connections(size_t device)
-{
-  OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
-  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
-  while (p != NULL) {
-    next = p->next;
-    if (p->endpoint.device == device) {
-      oc_tls_close_connection(&p->endpoint);
-    }
-    p = next;
-  }
 }
 
 void
@@ -1320,7 +1324,9 @@ oc_tls_close_connection(oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    if ((peer->endpoint.flags & TCP) == 0) {
+      mbedtls_ssl_close_notify(&peer->ssl_ctx);
+    }
     oc_tls_free_peer(peer, false);
   }
 }
@@ -1678,6 +1684,19 @@ read_application_data(oc_tls_peer_t *peer)
              peer->ssl_ctx.session->ciphersuite);
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
 #ifdef OC_CLIENT
+#if defined(OC_CLOUD) && defined(OC_PKI)
+      if (!peer->ssl_conf.f_vrfy) {
+        const mbedtls_x509_crt *cert =
+          mbedtls_ssl_get_peer_cert(&peer->ssl_ctx);
+        oc_string_t uuid;
+        if (oc_certs_parse_CN_for_UUID(cert, &uuid) < 0) {
+          peer->uuid.id[0] = '*';
+        } else {
+          oc_str_to_uuid(oc_string(uuid), &peer->uuid);
+          oc_free_string(&uuid);
+        }
+      }
+#endif /* OC_CLOUD && OC_PKI */
 #ifdef OC_PKI
       if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
@@ -1748,15 +1767,35 @@ oc_tls_recv_message(oc_message_t *message)
 }
 
 static void
-close_all_active_tls_sessions(size_t device)
+close_all_tls_sessions_for_device(size_t device)
 {
-  oc_tls_close_all_connections(device);
+  OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
+  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
+  while (p != NULL) {
+    next = p->next;
+    if (p->endpoint.device == device) {
+      oc_tls_close_connection(&p->endpoint);
+    }
+    p = next;
+  }
+}
+
+static void
+close_all_tls_sessions(void)
+{
+  OC_DBG("oc_tls: closing all open (D)TLS sessions on all devices");
+  oc_tls_peer_t *p = oc_list_head(tls_peers), *next;
+  while (p != NULL) {
+    next = p->next;
+    oc_tls_close_connection(&p->endpoint);
+    p = next;
+  }
 }
 
 OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 {
+  OC_PROCESS_POLLHANDLER(close_all_tls_sessions());
   OC_PROCESS_BEGIN();
-
   while (1) {
     OC_PROCESS_YIELD();
 
@@ -1782,7 +1821,7 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 #endif /* OC_CLIENT */
     else if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
       size_t device = (size_t)data;
-      close_all_active_tls_sessions(device);
+      close_all_tls_sessions_for_device(device);
     }
   }
 

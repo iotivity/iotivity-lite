@@ -21,42 +21,19 @@
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_rep.h"
+#include "oc_config.h"
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#ifndef OC_STORAGE
+#error Preprocessor macro OC_CLOUD is defined but OC_STORAGE is not defined \
+check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
+#endif
+
 #define CLOUD_STORE_NAME "cloud"
 
 #define CLOUD_TAG_MAX (32)
-
-#ifndef OC_SECURITY
-// dummy storage
-int
-oc_storage_config(const char *store)
-{
-  (void)store;
-  return 0;
-}
-
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  (void)buf;
-  (void)size;
-  return -1;
-}
-
-long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
-{
-  (void)store;
-  (void)buf;
-  (void)size;
-  return -1;
-}
-
-#endif
 
 static int cloud_store_load_internal(const char *store_name,
                                      oc_cloud_store_t *store);
