@@ -189,20 +189,22 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #if defined(OC_SERVER) && defined(OC_WIFI_EASYSETUP)
-  if (filter_resource(oc_core_get_resource_by_index(OCF_WES_WIFI, device_index), request,
-        oc_string(anchor), links))
+  if (filter_resource(oc_core_get_resource_by_index(OCF_WES_WIFI, device_index),
+                      request, oc_string(anchor), links, device_index))
     matches++;
-  if (filter_resource(oc_core_get_resource_by_index(OCF_WES_DEVICE, device_index), request,
-        oc_string(anchor), links))
+  if (filter_resource(
+        oc_core_get_resource_by_index(OCF_WES_DEVICE, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_SERVER && OC_WIFI_EASYSETUP */
 
 #if defined(OC_SERVER) && defined(OC_ESIM_EASYSETUP)
-  if (filter_resource(oc_core_get_resource_by_index(OCF_EES_RSP, device_index), request,
-        oc_string(anchor), links))
+  if (filter_resource(oc_core_get_resource_by_index(OCF_EES_RSP, device_index),
+                      request, oc_string(anchor), links, device_index))
     matches++;
-  if (filter_resource(oc_core_get_resource_by_index(OCF_EES_RSPCAP, device_index), request,
-        oc_string(anchor), links))
+  if (filter_resource(
+        oc_core_get_resource_by_index(OCF_EES_RSPCAP, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_SERVER && OC_WIFI_EASYSETUP */
 
