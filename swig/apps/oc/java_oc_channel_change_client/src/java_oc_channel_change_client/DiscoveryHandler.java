@@ -14,7 +14,7 @@ public class DiscoveryHandler implements OCDiscoveryHandler {
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
             int resourcePropertiesMask) {
         // System.out.println("DiscoveryHandler");
         // System.out.println("\tanchor: " + anchor);
@@ -29,7 +29,7 @@ public class DiscoveryHandler implements OCDiscoveryHandler {
             }
 
             if (serverResource != null) {
-                serverResource.setServerEndpoint(endpoints[0]);
+                serverResource.setServerEndpoint(endpoint);
                 serverResource.setServerUri(uri);
                 serverResources.add(serverResource);
                 return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;

@@ -31,7 +31,7 @@ public class ResourceDiscoveryHandler implements OCDiscoveryAllHandler {
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints,
             int resourcePropertiesMask, boolean more) {
         synchronized (resourceAdapter) {
             resourceAdapter.setNotifyOnChange(false);

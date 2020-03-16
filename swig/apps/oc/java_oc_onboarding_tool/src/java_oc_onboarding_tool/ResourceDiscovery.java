@@ -8,7 +8,7 @@ import org.iotivity.OCMain;
 public class ResourceDiscovery implements OCDiscoveryAllHandler {
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints,
             int resourcePropertiesMask, boolean more) {
         System.out.println("anchor " + anchor + ", uri : " + uri);
         if(!more) {

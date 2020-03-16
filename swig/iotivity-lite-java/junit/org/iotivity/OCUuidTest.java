@@ -15,8 +15,6 @@ public class OCUuidTest {
         String uuid_out = OCUuidUtil.uuidToString(testUuid);
         assertEquals('-', uuid_out.charAt(8));
         assertEquals('-', uuid_out.charAt(13));
-        // generateUuid always generates type 4 uuid.
-        assertEquals('4', uuid_out.charAt(14));
         assertEquals('-', uuid_out.charAt(18));
         assertEquals('-', uuid_out.charAt(23));
         // OC_UUID_LEN is one character longer than length for the '\0' nul terminating

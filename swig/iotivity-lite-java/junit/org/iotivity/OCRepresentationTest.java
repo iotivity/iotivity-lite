@@ -2,6 +2,7 @@ package org.iotivity;
 
 import static org.junit.Assert.*;
 
+import org.iotivity.OCRepresentation.*;
 import org.junit.Test;
 
 public class OCRepresentationTest {

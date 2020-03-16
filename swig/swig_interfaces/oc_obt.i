@@ -121,19 +121,11 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
 
   assert(cls_OCObtDiscoveryHandler);
   const jmethodID mid_handler = JCALL3(GetMethodID,
-    (data->jenv),
-    cls_OCObtDiscoveryHandler,
-    "handler",
-    "(Lorg/iotivity/OCUuid;[Lorg/iotivity/OCEndpoint;)V");
+        (data->jenv),
+        cls_OCObtDiscoveryHandler,
+        "handler",
+        "(Lorg/iotivity/OCUuid;Lorg/iotivity/OCEndpoint;)V");
   assert(mid_handler);
-
-    assert(cls_OCEndpoint);
-  const jmethodID mid_OCEndpoint_init = JCALL3(GetMethodID,
-    (data->jenv),
-    cls_OCEndpoint,
-    "<init>",
-    "(JZ)V");
-  assert(mid_OCEndpoint_init);
 
   jobject juuid = NULL;
   if (uuid) {
@@ -148,55 +140,23 @@ static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user
     juuid = JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)new_uuid, true);
   }
 
-  // convert the endpoint linked list to an OCEndpoint array
-  // get the number of elements in the endpoint linked list
-  oc_endpoint_t *eps_copy;
-  oc_endpoint_list_copy(&eps_copy, eps);
-  size_t ep_size = oc_list_length(&eps_copy);
+  jobject jeps = NULL;
+  if (eps) {
+    assert(cls_OCEndpoint);
+    const jmethodID mid_OCEndpoint_init = JCALL3(GetMethodID,
+                                                 (data->jenv),
+                                                 cls_OCEndpoint,
+                                                 "<init>",
+                                                 "(JZ)V");
+  assert(mid_OCEndpoint_init);
 
-  // creat java array of eps_size;
-  jobjectArray jendpoints = JCALL3(NewObjectArray,
-                                   (data->jenv),
-                                   (jsize)ep_size,
-                                   cls_OCEndpoint,
-                                   0);
-
-  //oc_endpoint_t *ep = eps_copy;
-  //ep_size = 0;
-  //if (ep != NULL) {
-  //  do {
-  //    jobject jendpoint = JCALL4(NewObject,
-  //                               (data->jenv),
-  //                               cls_OCEndpoint,
-  //                               mid_OCEndpoint_init,
-  //                               (jlong)ep,
-  //                               true);
-  //    JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size, jendpoint);
-  //    oc_endpoint_t *last_ep = ep;
-  //    ep = ep->next;
-  //    ep_size++;
-  //    last_ep->next = NULL;
-  //  } while(ep != NULL);
-  //}
-
-  oc_endpoint_t *ep;
-  for (ep = eps_copy, ep_size = 0; ep != NULL; ep = ep->next, ++ep_size)
-  {
-    jobject jendpoint = JCALL4(NewObject,
-                               (data->jenv),
-                               cls_OCEndpoint,
-                               mid_OCEndpoint_init,
-                               (jlong)ep,
-                               true);
-    JCALL3(SetObjectArrayElement, (data->jenv), jendpoints, (jsize)ep_size, jendpoint);
+  jeps = JCALL4(NewObject, (data->jenv), cls_OCEndpoint, mid_OCEndpoint_init, (jlong)eps, false);
   }
-
-  JCALL4(CallVoidMethod,
-        (data->jenv),
-        data->jcb_obj,
-        mid_handler,
-        juuid,
-        jendpoints);
+  JCALL4(CallVoidMethod, (data->jenv),
+         data->jcb_obj,
+         mid_handler,
+         juuid,
+         jeps);
 
   release_jni_env(getEnvResult);
 }

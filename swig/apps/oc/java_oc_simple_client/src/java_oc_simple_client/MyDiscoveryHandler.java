@@ -8,7 +8,7 @@ import org.iotivity.oc.*;
 public class MyDiscoveryHandler implements OCDiscoveryHandler {
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoint,
             int resourcePropertiesMask) {
         System.out.println("DiscoveryHandler");
         System.out.println("\tanchor: " + anchor);
@@ -91,16 +91,18 @@ public class MyDiscoveryHandler implements OCDiscoveryHandler {
                     server = new OcfServer();
                 }
 
-                server.setServerEndpoint(endpoints[0]);
+                server.setServerEndpoint(endpoint);
                 server.setServerUri(uri);
                 msg.append("\tResource " + server.getServerUri() + " hosted at endpoint(s):\n");
-                for (OCEndpoint ep : endpoints ) {
+                OCEndpoint ep = endpoint;
+                while (ep != null) {
                     String endpointStr = OcUtils.endpointToString(ep);
                     msg.append("\t\tendpoint: " + endpointStr + "\n");
                     msg.append("\t\t\tendpoint.device " + ep.getDevice() + "\n");
                     msg.append("\t\t\tendpoint.flags " + ep.getFlags() + "\n");
                     msg.append("\t\t\tendpoint.interfaceIndex " + ep.getInterfaceIndex() + "\n");
                     msg.append("\t\t\tendpoint.version " + ep.getVersion().toString() + "\n");
+                    ep = ep.getNext();
                 }
                 System.out.print(msg);
 

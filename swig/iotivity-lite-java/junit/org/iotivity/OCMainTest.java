@@ -1,7 +1,10 @@
 package org.iotivity;
 
 import static org.junit.Assert.*;
+
 import java.util.List;
+
+import org.junit.Test;
 
 public class OCMainTest {
     //@Test TODO find a way to setQuery using framework not a direct call to setQuery.

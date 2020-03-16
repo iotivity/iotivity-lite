@@ -13,13 +13,15 @@ public class OcGetRemoteResourcesHandler implements OCDiscoveryAllHandler {
     }
 
     @Override
-    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint[] endpoints,
+    public OCDiscoveryFlags handler(String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints,
             int resourcePropertiesMask, boolean more) {
 
         OcRemoteResource resource = new OcRemoteResource(anchor, uri, types, interfaceMask, resourcePropertiesMask);
 
-        for (OCEndpoint ep : endpoints) {
-            resource.addEndpoint(ep);
+        OCEndpoint ep = endpoints;
+        while (ep != null) {
+            resource.addEndpoint(OCEndpointUtil.copy(ep));
+            ep = ep.getNext();
         }
 
         device.addResource(resource);

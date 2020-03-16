@@ -7,12 +7,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class OCOwnershipTransferMethodsTest {
-
+    
     // wait times chosen arbitrarily they can be adjusted if needed.
     private final int WAIT_TIME_SHORT = 3;
     private final int WAIT_TIME_MED = 10;
     // private final int WAIT_TIME_LONG = 30;
-
+    
     private static CountDownLatch requestEntryExecuted;
     private static OCMainInitHandler init = new OCMainInitHandler() {
         @Override
@@ -40,7 +40,7 @@ public class OCOwnershipTransferMethodsTest {
     @Before
     public void setup() {
         String creds_path = "./otm_test_creds/";
-
+        
         // Make sure the creds directory exists
         java.io.File directory = new java.io.File(creds_path);
         if (!directory.exists()) {
@@ -52,19 +52,20 @@ public class OCOwnershipTransferMethodsTest {
                 file.delete();
             }
         }
-
+        
         assertEquals(0,  OCStorage.storageConfig(directory.getPath()));
 
         requestEntryExecuted = new CountDownLatch(1);
         assertTrue(OCMain.mainInit(init) >= 0);
     }
-
+    
     @After
     public void teardown() {
         OCMain.mainShutdown();
         OCObt.shutdown();
     }
-
+    
+    
     /*
      * 1. Discover unowned devices
      * 1a. verify server is unowned
@@ -80,7 +81,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverUnownedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverUnownedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverUnownedDevicesHandlerExecuted.countDown();
                     }
@@ -96,11 +97,11 @@ public class OCOwnershipTransferMethodsTest {
                 }
             }));
             assertTrue(justWorksOtmHandlerExecuted.await(WAIT_TIME_MED, TimeUnit.SECONDS));
-
+            
             CountDownLatch discoverOwnedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverOwnedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverOwnedDevicesHandlerExecuted.countDown();
                     }
@@ -121,7 +122,7 @@ public class OCOwnershipTransferMethodsTest {
             this.pin = pin;
         }
     }
-
+    
     /*
      * 1. Discover unowned devices
      * 1a. verify server is unowned
@@ -138,7 +139,7 @@ public class OCOwnershipTransferMethodsTest {
             CountDownLatch discoverUnownedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverUnownedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverUnownedDevicesHandlerExecuted.countDown();
                     }
@@ -148,10 +149,10 @@ public class OCOwnershipTransferMethodsTest {
 
             RandomPinHandler testRandomPinHandler = new RandomPinHandler();
             OCMain.setRandomPinHandler(testRandomPinHandler);
-
+            
             CountDownLatch requestRandomPinExecuted = new CountDownLatch(1);
             OCObt.requestRandomPin(OCCoreRes.getDeviceId(1), new OCObtDeviceStatusHandler() {
-
+                
                 @Override
                 public void handler(OCUuid uuid, int status) {
                     assertEquals(OCCoreRes.getDeviceId(1), uuid);
@@ -169,11 +170,11 @@ public class OCOwnershipTransferMethodsTest {
                 }
             }));
             assertTrue(randomPinOtmHandlerExecuted.await(WAIT_TIME_MED, TimeUnit.SECONDS));
-
+            
             CountDownLatch discoverOwnedDevicesHandlerExecuted = new CountDownLatch(1);
             assertEquals(0 , OCObt.discoverOwnedDevices(new OCObtDiscoveryHandler() {
                 @Override
-                public void handler(OCUuid uuid, OCEndpoint[] endpoints) {
+                public void handler(OCUuid uuid, OCEndpoint endpoints) {
                     if (uuid.equals(OCCoreRes.getDeviceId(1))) {
                         discoverOwnedDevicesHandlerExecuted.countDown();
                     }

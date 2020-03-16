@@ -114,7 +114,6 @@
   }
 }
 %rename(OCEndpoint) oc_endpoint_t;
-%ignore oc_endpoint_t::next;
 // must use the oc_endpoint_set_di function to set di.
 %immutable oc_endpoint_t::di;
 // transport flags are pulled from hand generated class as `int` not `enum`
@@ -131,23 +130,8 @@
 %rename(OCFVersion) ocf_version_t;
 %rename(interfaceIndex) interface_index;
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
-// new and free endpoint are exposed using the %extend oc_endpoint_t above.
-%ignore oc_new_endpoint;
-
+%rename(newEndpoint) oc_new_endpoint;
 %ignore oc_free_endpoint;
-// DOCUMENTATION workaround
-%javamethodmodifiers jni_free_endpoint "/**
-   * Free all native resources associated with an OCEndpoint.
-   * <p>
-   * <strong>Note</strong>: This function will free the native resource.  This function is only to
-   * be used in very rare situations that the Java GC does not keep up with the creation of
-   * endpoints. The native resource is allocated in the C heap and may exceed the JVM memory
-   * limits before the GC collects the endpoints in question. This can be used to manually free the
-   * memory from the C heap.
-   *
-   * @param endpoint an OCEndpoints to free its native resources
-   */
-  public";
 %rename(freeEndpoint) jni_free_endpoint;
 %inline %{
 void jni_free_endpoint(oc_endpoint_t *endpoint) {

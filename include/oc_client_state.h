@@ -28,13 +28,12 @@
 #endif /* OC_BLOCK_WISE */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 
-typedef struct oc_client_response_t
+typedef struct
 {
   oc_rep_t *payload;
   oc_endpoint_t *endpoint;
