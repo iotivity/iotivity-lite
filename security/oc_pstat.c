@@ -25,6 +25,7 @@
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_roles.h"
+#include "oc_sdi.h"
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
@@ -150,6 +151,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
+    oc_sec_sdi_default(device);
     if (!from_storage && oc_get_con_res_announced()) {
       oc_device_info_t *di = oc_core_get_device_info(device);
       oc_free_string(&di->name);

@@ -64,9 +64,10 @@ oc_sec_sdi_default(size_t device)
 {
   if (!sdi) return;
 
-  sdi[device].priv = true;
+  sdi[device].priv = false;
   memset(&(sdi[device].uuid), 0, sizeof(oc_uuid_t));
-
+  oc_free_string(&sdi[device].name);
+  oc_new_string(&sdi[device].name, "", 0);
   oc_sec_dump_sdi(device);
 }
 
