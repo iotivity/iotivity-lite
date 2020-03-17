@@ -78,7 +78,12 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * this function returns the oc_bridge_get_virtual_device_index() using the
  * vitual_device_id can be used to get the logical device index number.
  *
- * @param virtual_device_id an string that identifies the virtual device.
+ * @param virtual_device_id a unique identifyer that identifies the virtual
+ *                          device this could be a UUID, serial number or other
+ *                          means of to uniquely identify the device
+ * @param virtual_device_id_size size in bytes of the virtual_device_id param
+ * @param econame ecosystem name of the bridged device which is exposed by this
+ *                virtual device
  * @param uri the The device URI.  The wellknown default URI "/oic/d" is hosted
  *            by every server. Used to device specific information.
  * @param rt the resource type
@@ -86,8 +91,8 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * @param spec_version The version of the OCF Server.  This is the "icv" device
  *                     property
  * @param data_model_version Spec version of the resource and device
- * specifications to which this device data model is implemtned. This is the
- * "dmv" device property
+ *                           specifications to which this device data model is
+ *                           implemtned. This is the "dmv" device property
  * @param add_device_cb callback function invoked during oc_add_device(). The
  *                      purpose is to add additional device properties that are
  *                      not supplied to oc_add_device() function call.
