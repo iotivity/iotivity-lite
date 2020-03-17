@@ -279,11 +279,38 @@ oc_set_con_res_announced(bool announce)
   announce_con_res = announce;
 }
 
+/*
+ * *GEO*
+ * TODO remove this debug inspection code before
+ * iotivity/ocfbridging code is merged with master
+ */
+void
+dump_core_resources()
+{
+  size_t num_resources = 1 + device_count * OCF_D;
+  for (size_t r = 0; r < num_resources; r++) {
+    printf("D[%zd] - R[%zd] %s : %s \n", core_resources[r].device, r,
+           oc_string(core_resources[r].name), oc_string(core_resources[r].uri));
+  }
+}
+
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
+  /*
+   * *GEO*
+   * Calling oc_core_add_new_device_at_index using the current device_count
+   * as the index should 100% replace oc_core_add_new_device in all instances
+   * leaving the old code in place below while testing.  The code bellow
+   * should removed when testing has been completed before
+   * iotivity/ocfbridging code is merged with master
+   */
+  return oc_core_add_new_device_at_index(uri, rt, name, spec_version,
+                                         data_model_version, device_count,
+                                         add_device_cb, data);
+
   (void)data;
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
@@ -363,7 +390,6 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #ifdef OC_SECURITY
   oc_main_init_svrs(device_count - 1);
 #endif /* OC_SECURITY */
-
   return &oc_device_info[device_count - 1];
 }
 
@@ -375,18 +401,10 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
                                 void *data)
 {
   (void)data;
-  /*
-   * rather than calling oc_core_add_new_device from
-   * oc_core_add_new_device_at_index maybe oc_core_add_new_device should call
-   * this code so we don't have so much repeated code.
-   */
-  /*
-  if (index == device_count) {
-      return oc_core_add_new_device(uri, rt, name, spec_version,
-  data_model_version, add_device_cb, data);
-  }
-  */
 
+  // TODO *GEO* removed commented out debug code before merging
+  // printf("DUMP BEFORE ADD AT INDEX\n");
+  // dump_core_resources();
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
     OC_ERR("device limit reached");
@@ -395,12 +413,11 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
 #else  /* !OC_DYNAMIC_ALLOCATION */
 
   /*
-   * if index > device_count realloc core_resources and oc_device_info to size
+   * if index >= device_count realloc core_resources and oc_device_info to size
    * of index. if index < device_count check if core_resources and
    * oc_device_info is populated? if populated return null for error; else
    * populate core_resources and oc_device_info with new device information.
    */
-
   if (index >= device_count) {
     size_t new_num = 1 + OCF_D * (index + 1);
     core_resources =
@@ -411,7 +428,7 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
     }
 
     /* zero initilize the freshly allocated memory */
-    for (size_t i = device_count; i < index; i++) {
+    for (size_t i = device_count; i < (index + 1); i++) {
       oc_resource_t *device =
         &core_resources[new_num - (OCF_D * (i - device_count + 1))];
       memset(device, 0, OCF_D * sizeof(oc_resource_t));
@@ -424,7 +441,7 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
     }
 
     /* zero initilize the freshly allocated memory */
-    for (size_t i = device_count; i < index; i++) {
+    for (size_t i = device_count; i < (index + 1); i++) {
       memset(&oc_device_info[i], 0, sizeof(oc_device_info_t));
     }
   }
@@ -436,7 +453,6 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
      * info. (other option is to replace the device with the new device info? it
      * seems an odd action.)
      */
-
     // check that oc_device_info at index is NOT NULL
     if (oc_string(oc_device_info[index].name)) {
       return NULL;
@@ -498,12 +514,16 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
     oc_abort("error initializing connectivity for device");
   }
 
-  // device_count++;
-  device_count = index + 1;
+  if (index >= device_count) {
+    device_count = index + 1;
+  }
 
 #ifdef OC_SECURITY
   oc_main_init_svrs(index);
 #endif /* OC_SECURITY */
+  // TODO *GEO* removed commented out debug code before merging
+  // printf("DUMP AFTER ADD DEVICE AT INDEX\n");
+  // dump_core_resources();
   return &oc_device_info[index];
 }
 
