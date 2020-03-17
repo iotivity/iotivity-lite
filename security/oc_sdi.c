@@ -38,7 +38,6 @@ oc_sec_sdi_init(void)
     oc_abort("Insufficient memory");
   }
 #endif
-
 }
 
 void
@@ -46,7 +45,9 @@ oc_sec_sdi_free(void)
 {
   size_t device;
 
-  if (!sdi) return;
+  if (!sdi) {
+    return;
+  }
 
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_free_string(&(sdi[device].name));
@@ -62,7 +63,9 @@ oc_sec_sdi_free(void)
 void
 oc_sec_sdi_default(size_t device)
 {
-  if (!sdi) return;
+  if (!sdi) {
+    return;
+  }
 
   sdi[device].priv = false;
   memset(&(sdi[device].uuid), 0, sizeof(oc_uuid_t));
@@ -75,15 +78,14 @@ bool
 oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
 {
   bool suc = false;
-  oc_sec_sdi_t * s = oc_sec_get_sdi(device);
+  oc_sec_sdi_t *s = oc_sec_get_sdi(device);
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
 
   while (rep != NULL) {
     size_t len = oc_string_len(rep->name);
     switch (rep->type) {
     case OC_REP_STRING:
-      if (len == 4 &&
-          memcmp("uuid", oc_string(rep->name), 4) == 0) {
+      if (len == 4 && memcmp("uuid", oc_string(rep->name), 4) == 0) {
 
         if (!from_storage && ps->s != OC_DOS_RFOTM) {
           OC_ERR("oc_sdi: Can set uuid property only in RFOTM");
@@ -92,11 +94,10 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
 
         oc_str_to_uuid(oc_string(rep->value.string), &s->uuid);
         suc = true;
-      }else if(len == 4 &&
-          memcmp("name", oc_string(rep->name), 4) == 0) {
+      } else if (len == 4 && memcmp("name", oc_string(rep->name), 4) == 0) {
 
-        if (!from_storage && ps->s != OC_DOS_RFOTM
-            && ps->s != OC_DOS_RFPRO && ps->s != OC_DOS_SRESET) {
+        if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_RFPRO &&
+            ps->s != OC_DOS_SRESET) {
           OC_ERR("oc_sdi: Can't set name property in pstate %d", ps->s);
           return false;
         }
@@ -105,15 +106,15 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
         oc_new_string(&s->name, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         suc = true;
-      }else {
+      } else {
         OC_ERR("oc_sdi: Unknown property %s", oc_string(rep->name));
       }
       break;
     case OC_REP_BOOL:
       if (len == 4 && memcmp(oc_string(rep->name), "priv", 4) == 0) {
 
-        if (!from_storage && ps->s != OC_DOS_RFOTM
-            && ps->s != OC_DOS_RFPRO && ps->s != OC_DOS_SRESET) {
+        if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_RFPRO &&
+            ps->s != OC_DOS_SRESET) {
           OC_ERR("oc_sdi: Can't set priv property in pstate %d", ps->s);
           return false;
         }
@@ -125,9 +126,7 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
       }
       break;
     default:
-      {
-        OC_ERR("oc_sdi: Unknown type, property %s", oc_string(rep->name));
-      }
+      OC_ERR("oc_sdi: Unknown type, property %s", oc_string(rep->name));
       break;
     }
     rep = rep->next;
@@ -139,11 +138,13 @@ void
 oc_sec_encode_sdi(size_t device, bool to_storage)
 {
   char uuid[37];
-  oc_sec_sdi_t * s = oc_sec_get_sdi(device);
+  oc_sec_sdi_t *s = oc_sec_get_sdi(device);
 
   oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
 
-  if(to_storage) oc_rep_start_root_object();
+  if (to_storage) {
+    oc_rep_start_root_object();
+  }
 
   oc_rep_set_text_string(root, uuid, uuid);
 
@@ -151,7 +152,9 @@ oc_sec_encode_sdi(size_t device, bool to_storage)
 
   oc_rep_set_boolean(root, priv, s->priv);
 
-  if(to_storage) oc_rep_end_root_object();
+  if (to_storage) {
+    oc_rep_end_root_object();
+  }
 }
 
 oc_sec_sdi_t *
