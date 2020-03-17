@@ -108,6 +108,6 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     return -1;
   }
 
-  oc_device_bind_resource_type(oc_core_get_num_devices() - 1, "oic.d.virtual");
+  oc_device_bind_resource_type(vd_index, "oic.d.virtual");
   return 0;
 }

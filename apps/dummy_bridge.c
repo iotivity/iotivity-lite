@@ -115,24 +115,21 @@ handle_signal(int signal)
 }
 
 /*
- * TODO place this in a thread loop that can be
- * When a device is discovered it will be add to the bridge as a virtual_device
+ * TODO place this in a thread loop
+ * When a device is discovered it will be added to
+ * the bridge as a virtual_device
  */
 void
 poll_for_discovered_devices()
 {
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered && !virtual_lights[i].added_to_bridge) {
-      char uri[20];
-      snprintf(uri, 20, "/bridge/light/%zu", i);
-      uri[19] = '\0';
-      PRINT("Adding %s to bridge with %s URI\n", virtual_lights[i].device_name,
-            uri);
+      PRINT("Adding %s to bridge\n", virtual_lights[i].device_name);
       app_mutex_lock(app_sync_lock);
 
       oc_bridge_add_virtual_device((uint8_t *)virtual_lights[i].uuid,
                                    strlen(virtual_lights[i].uuid),
-                                   virtual_lights[i].eco_system, uri,
+                                   virtual_lights[i].eco_system, "/oic/d",
                                    "oic.d.light", virtual_lights[i].device_name,
                                    "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
       app_mutex_unlock(app_sync_lock);
