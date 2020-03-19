@@ -263,3 +263,16 @@ oc_vod_map_dump()
   free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+void
+oc_vod_map_get_econame(oc_string_t *econame, size_t device_index)
+{
+  oc_vod_t *v = oc_list_head(vod_list.vods);
+  while (v != NULL) {
+    if (v->index == device_index) {
+      *econame = v->econame;
+      return;
+    }
+    v = v->next;
+  }
+}

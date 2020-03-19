@@ -16,13 +16,64 @@
 
 #include "oc_bridge.h"
 #include "oc_api.h"
-//#include "oc_core_res.h"
+#include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_vod_map.h"
 #include "port/oc_log.h"
 #include "security/oc_store.h"
+#include "security/oc_doxm.h"
 
 OC_LIST(oc_vods_list_t);
+static oc_resource_t *bridge_res;
+
+// using for debugging
+// TODO remove before final commit
+void
+dump_vods_list()
+{
+  oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
+  size_t count = 0;
+  while (vod_item) {
+    char di_str[OC_UUID_LEN];
+    oc_uuid_to_str(vod_item->di, di_str, OC_UUID_LEN);
+    printf("[%zd] name: %s, di: %sm econame %s\n", count++,
+           oc_string(vod_item->name), di_str, oc_string(vod_item->econame));
+    vod_item = vod_item->next;
+  }
+}
+
+void
+add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
+                                const char *econame)
+{
+  oc_vods_t *vod = (oc_vods_t *)malloc(sizeof(oc_vods_t));
+  oc_new_string(&vod->name, name, strlen(name));
+  vod->di = di;
+  oc_new_string(&vod->econame, econame, strlen(econame));
+  oc_list_add(oc_vods_list_t, vod);
+  // *GEO* remove before merge
+  dump_vods_list();
+}
+
+void
+remove_virtual_device_from_vods_list(const oc_uuid_t *di)
+{
+  oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
+  char di_str[OC_UUID_LEN];
+  oc_uuid_to_str(di, di_str, OC_UUID_LEN);
+  while (vod_item) {
+    if (memcmp(vod_item->di, di_str, OC_UUID_LEN - 1) == 0) {
+      oc_list_remove(oc_vods_list_t, vod_item);
+      oc_free_string(&vod_item->name);
+      oc_free_string(&vod_item->econame);
+      free(vod_item);
+      break;
+    }
+    vod_item = vod_item->next;
+  }
+  // *GEO* remove before merge
+  dump_vods_list();
+}
 
 static void
 get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -36,6 +87,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     /* fall through */
   case OC_IF_R:
     oc_rep_set_array(root, vods);
+    char di_str[OC_UUID_LEN];
     oc_vods_t *vods_list = (oc_vods_t *)oc_list_head(oc_vods_list_t);
     while (vods_list) {
       /*
@@ -45,7 +97,8 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
        */
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vods_list->name));
-      oc_rep_set_text_string(vods, di, vods_list->di);
+      oc_uuid_to_str(vods_list->di, di_str, OC_UUID_LEN);
+      oc_rep_set_text_string(vods, di, di_str);
       oc_rep_set_text_string(vods, econame, oc_string(vods_list->econame));
       oc_rep_object_array_end_item(vods);
       vods_list = vods_list->next;
@@ -57,6 +110,28 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
+}
+
+void
+doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
+                   void *user_data)
+{
+  if (doxm->owned) {
+    oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+    for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
+      if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
+          0) {
+        oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+        oc_string_t econame;
+        oc_vod_map_get_econame(&econame, device_index);
+        add_virtual_device_to_vods_list(oc_string(device_info->name),
+                                        &doxm->deviceuuid, oc_string(econame));
+      }
+    }
+  } else {
+    remove_virtual_device_from_vods_list(&doxm->deviceuuid);
+  }
+  oc_notify_observers(bridge_res);
 }
 
 int
@@ -72,8 +147,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
 
   size_t bridge_device_index = oc_core_get_num_devices() - 1;
 
-  oc_resource_t *bridge_res =
-    oc_new_resource(name, "/bridge/vodlist", 1, bridge_device_index);
+  bridge_res = oc_new_resource(name, "/bridge/vodlist", 1, bridge_device_index);
   oc_resource_bind_resource_type(bridge_res, "oic.r.vodlist");
   oc_resource_bind_resource_interface(bridge_res, OC_IF_R);
   oc_resource_set_default_interface(bridge_res, OC_IF_R);
@@ -85,6 +159,10 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
     return -1;
   }
   oc_vod_map_init();
+
+  // register oc_doxm_owned_changed_cb
+  oc_sec_doxm_add_owned_changed_cb(&doxm_owned_changed, NULL);
+
   return 0;
 }
 
@@ -109,5 +187,15 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   }
 
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
+
+  // Get doxm of the just added device.
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(vd_index);
+  // if owned then add it to the oc_vods_t list
+  printf("doxm->owned: %s\n", (doxm->owned) ? "true" : "false");
+  if (doxm->owned) {
+    add_virtual_device_to_vods_list(name, &doxm->deviceuuid, econame);
+    // notify observers of the bridge device.
+    oc_notify_observers(bridge_res);
+  }
   return 0;
 }

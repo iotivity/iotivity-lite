@@ -37,12 +37,28 @@ static oc_sec_doxm_t *doxm;
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+typedef struct oc_doxm_owned_cb
+{
+  struct oc_doxm_owned_cb *next;
+  oc_sec_doxm_owned_cb_t cb;
+  void *user_data;
+} oc_doxm_owned_cb;
+
+OC_LIST(oc_doxm_owned_cb_list_t);
+
 void
 oc_sec_doxm_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   if (doxm) {
     free(doxm);
+  }
+
+  oc_doxm_owned_cb *doxm_cb_item =
+    (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    free(doxm_cb_item);
+    doxm_cb_item = doxm_cb_item->next;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -167,6 +183,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
+  bool owned_changed = false;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -262,6 +279,9 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     /* owned */
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(rep->name), "owned", 5) == 0) {
+        if (doxm[device].owned != rep->value.boolean) {
+          owned_changed = true;
+        }
         doxm[device].owned = rep->value.boolean;
       }
       break;
@@ -297,6 +317,15 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     }
     rep = rep->next;
   }
+
+  if (owned_changed == true) {
+    oc_doxm_owned_cb *doxm_cb_item =
+      (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+    while (doxm_cb_item) {
+      (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
+      doxm_cb_item = doxm_cb_item->next;
+    }
+  }
   return true;
 }
 
@@ -314,4 +343,37 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
+void
+oc_sec_doxm_add_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_doxm_owned_cb *doxm_cb_item =
+    (oc_doxm_owned_cb *)malloc(sizeof(oc_doxm_owned_cb));
+  if (!doxm_cb_item) {
+    oc_abort("Insufficient memory");
+  }
+  doxm_cb_item->cb = cb;
+  doxm_cb_item->user_data = user_data;
+  oc_list_add(oc_doxm_owned_cb_list_t, doxm_cb_item);
+#endif // OC_DYNAMIC_ALLOCATION
+  // TODO ADD non-dynamic memory solution
+}
+
+void
+oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_doxm_owned_cb *doxm_cb_item =
+    (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    if (cb == doxm_cb_item->cb && user_data == doxm_cb_item->user_data) {
+      oc_list_remove(oc_doxm_owned_cb_list_t, doxm_cb_item);
+      free(doxm_cb_item);
+      break;
+    }
+    doxm_cb_item = doxm_cb_item->next;
+  }
+#endif // OC_DYNAMIC_ALLOCATION
+  // TODO ADD non-dynamic memory solution
+}
 #endif /* OC_SECURITY */

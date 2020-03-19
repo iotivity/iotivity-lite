@@ -59,6 +59,27 @@ void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
 void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 
+/**
+ * Callback invoked when the "owned" property of the doxm is changed
+ *
+ * @param doxm the doxm that the owned property just changed
+ * @param device index of the logical device the doxm belongs to
+ * @param user_data context pointer
+ */
+typedef void (*oc_sec_doxm_owned_cb_t)(const oc_sec_doxm_t *doxm,
+                                       size_t device_index, void *user_data);
+/**
+ * Add callback that is invoked when the doxm "owned" property is changed
+ *
+ * @param cb callback funtion that will be invoked
+ * @param user_data context pointer passed to the oc_sec_doxm_owned_cb_t
+ * callback the pointer must remain valid till callback is removed.
+ */
+void oc_sec_doxm_add_owned_changed_cb(oc_sec_doxm_owned_cb_t cb,
+                                      void *user_data);
+void oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb,
+                                         void *user_data);
+
 #ifdef __cplusplus
 }
 #endif

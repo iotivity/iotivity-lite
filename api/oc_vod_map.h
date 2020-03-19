@@ -101,6 +101,11 @@ void oc_vod_map_encode();
  */
 void oc_vod_map_dump();
 
+/*
+ * Walk the vodmap and return the econame at the given index
+ */
+void oc_vod_map_get_econame(oc_string_t *econame, size_t device_index);
+
 #ifdef __cplusplus
 }
 #endif

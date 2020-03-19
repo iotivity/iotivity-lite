@@ -37,7 +37,7 @@ typedef struct oc_vods_t
 {
   struct oc_vods_t *next;
   oc_string_t name;
-  char di[OC_UUID_LEN];
+  const oc_uuid_t *di;
   oc_string_t econame;
 } oc_vods_t;
 
