@@ -365,8 +365,8 @@ public class OCRepresentationTest {
                 + "    }]\n"
                 + "}\n", OCRep.toJSON(rep, true));
 
-        System.out.println(rep.getType());
-        System.out.println(rep.getName());
+        assertEquals(OCType.OC_REP_OBJECT_ARRAY, rep.getType());
+        assertEquals("space_2001", rep.getName());
         OCRepresentation space2001Out = OCRep.getObjectArray(rep, "space_2001");
         assertNotNull(space2001Out);
 
