@@ -20,28 +20,14 @@
 #include "oc_core_res_internal.h"
 #include "oc_vod_map.h"
 #include "port/oc_log.h"
+
+#ifdef OC_SECURITY
 #include "security/oc_store.h"
 #include "security/oc_doxm.h"
+#endif // OC_SECURITY
 
 OC_LIST(oc_vods_list_t);
 static oc_resource_t *bridge_res;
-
-// using for debugging
-// TODO remove before final commit
-void
-dump_vods_list()
-{
-  oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
-  size_t count = 0;
-  while (vod_item) {
-    char di_str[OC_UUID_LEN];
-    oc_uuid_to_str(vod_item->di, di_str, OC_UUID_LEN);
-    printf("[%zd] name: %s, di: %sm econame %s\n", count++,
-           oc_string(vod_item->name), di_str, oc_string(vod_item->econame));
-    vod_item = vod_item->next;
-  }
-  printf("\n");
-}
 
 void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
@@ -52,9 +38,6 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   vod->di = di;
   oc_new_string(&vod->econame, econame, strlen(econame));
   oc_list_add(oc_vods_list_t, vod);
-  // *GEO* remove before merge
-  printf("Add vods list\n");
-  dump_vods_list();
 }
 
 void
@@ -71,9 +54,6 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
     }
     vod_item = vod_item->next;
   }
-  // *GEO* remove before merge
-  printf("Remove vods list\n");
-  dump_vods_list();
 }
 
 static void
@@ -113,6 +93,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
+#ifdef OC_SECURITY
 void
 doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
                    void *user_data)
@@ -135,6 +116,7 @@ doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
   }
   oc_notify_observers(bridge_res);
 }
+#endif // OC_SECURITY
 
 int
 oc_bridge_add_bridge_device(const char *name, const char *spec_version,
@@ -162,9 +144,9 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   }
   oc_vod_map_init();
 
-  // register oc_doxm_owned_changed_cb
+#ifdef OC_SECURITY
   oc_sec_doxm_add_owned_changed_cb(&doxm_owned_changed, NULL);
-
+#endif // OC_SECURITY
   return 0;
 }
 
@@ -190,14 +172,12 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
 
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
 
-  // Get doxm of the just added device.
+#ifdef OC_SECURITY
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(vd_index);
-  // if owned then add it to the oc_vods_t list
-  printf("doxm->owned: %s\n", (doxm->owned) ? "true" : "false");
   if (doxm->owned) {
     add_virtual_device_to_vods_list(name, &doxm->deviceuuid, econame);
-    // notify observers of the bridge device.
     oc_notify_observers(bridge_res);
   }
+#endif // OC_SECURITY
   return 0;
 }
