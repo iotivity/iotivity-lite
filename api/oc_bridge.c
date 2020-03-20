@@ -117,6 +117,7 @@ void
 doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
                    void *user_data)
 {
+  (void)user_data;
   if (doxm->owned) {
     oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
     for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
