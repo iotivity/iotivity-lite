@@ -40,6 +40,7 @@ dump_vods_list()
            oc_string(vod_item->name), di_str, oc_string(vod_item->econame));
     vod_item = vod_item->next;
   }
+  printf("\n");
 }
 
 void
@@ -52,6 +53,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   oc_new_string(&vod->econame, econame, strlen(econame));
   oc_list_add(oc_vods_list_t, vod);
   // *GEO* remove before merge
+  printf("Add vods list\n");
   dump_vods_list();
 }
 
@@ -59,10 +61,8 @@ void
 remove_virtual_device_from_vods_list(const oc_uuid_t *di)
 {
   oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
-  char di_str[OC_UUID_LEN];
-  oc_uuid_to_str(di, di_str, OC_UUID_LEN);
   while (vod_item) {
-    if (memcmp(vod_item->di, di_str, OC_UUID_LEN - 1) == 0) {
+    if (memcmp(vod_item->di, di, 16) == 0) {
       oc_list_remove(oc_vods_list_t, vod_item);
       oc_free_string(&vod_item->name);
       oc_free_string(&vod_item->econame);
@@ -72,6 +72,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
     vod_item = vod_item->next;
   }
   // *GEO* remove before merge
+  printf("Remove vods list\n");
   dump_vods_list();
 }
 

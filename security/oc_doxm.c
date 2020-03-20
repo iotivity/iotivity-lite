@@ -97,6 +97,17 @@ evaluate_supported_oxms(size_t device)
 void
 oc_sec_doxm_default(size_t device)
 {
+  // invoke the device owned changed cb before the di is reset
+  if (doxm[device].owned) {
+    doxm[device].owned = false;
+    oc_doxm_owned_cb *doxm_cb_item =
+      (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+    while (doxm_cb_item) {
+      (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
+      doxm_cb_item = doxm_cb_item->next;
+    }
+  }
+
   doxm[device].oxmsel = 0;
 #ifdef OC_PKI
   doxm[device].sct = 9;
