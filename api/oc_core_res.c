@@ -279,118 +279,14 @@ oc_set_con_res_announced(bool announce)
   announce_con_res = announce;
 }
 
-/*
- * *GEO*
- * TODO remove this debug inspection code before
- * iotivity/ocfbridging code is merged with master
- */
-void
-dump_core_resources()
-{
-  size_t num_resources = 1 + device_count * OCF_D;
-  for (size_t r = 0; r < num_resources; r++) {
-    printf("D[%zd] - R[%zd] %s : %s \n", core_resources[r].device, r,
-           oc_string(core_resources[r].name), oc_string(core_resources[r].uri));
-  }
-}
-
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
-  /*
-   * *GEO*
-   * Calling oc_core_add_new_device_at_index using the current device_count
-   * as the index should 100% replace oc_core_add_new_device in all instances
-   * leaving the old code in place below while testing.  The code bellow
-   * should removed when testing has been completed before
-   * iotivity/ocfbridging code is merged with master
-   */
   return oc_core_add_new_device_at_index(uri, rt, name, spec_version,
                                          data_model_version, device_count,
                                          add_device_cb, data);
-
-  (void)data;
-#ifndef OC_DYNAMIC_ALLOCATION
-  if (device_count == OC_MAX_NUM_DEVICES) {
-    OC_ERR("device limit reached");
-    return NULL;
-  }
-#else /* !OC_DYNAMIC_ALLOCATION */
-  size_t new_num = 1 + OCF_D * (device_count + 1);
-  core_resources =
-    (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
-
-  if (!core_resources) {
-    oc_abort("Insufficient memory");
-  }
-  oc_resource_t *device = &core_resources[new_num - OCF_D];
-  memset(device, 0, OCF_D * sizeof(oc_resource_t));
-
-  oc_device_info = (oc_device_info_t *)realloc(
-    oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
-
-  if (!oc_device_info) {
-    oc_abort("Insufficient memory");
-  }
-  memset(&oc_device_info[device_count], 0, sizeof(oc_device_info_t));
-
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-  oc_gen_uuid(&oc_device_info[device_count].di);
-
-  /* Construct device resource */
-  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
-    oc_core_populate_resource(
-      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
-  } else {
-    oc_core_populate_resource(
-      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
-  }
-
-  oc_gen_uuid(&oc_device_info[device_count].piid);
-
-  oc_new_string(&oc_device_info[device_count].name, name, strlen(name));
-  oc_new_string(&oc_device_info[device_count].icv, spec_version,
-                strlen(spec_version));
-  oc_new_string(&oc_device_info[device_count].dmv, data_model_version,
-                strlen(data_model_version));
-  oc_device_info[device_count].add_device_cb = add_device_cb;
-
-  if (oc_get_con_res_announced()) {
-    /* Construct oic.wk.con resource for this device. */
-    oc_core_populate_resource(
-      OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE,
-      OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
-      oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
-  }
-
-  oc_create_discovery_resource(OCF_RES, device_count);
-
-  oc_create_introspection_resource(device_count);
-
-#ifdef OC_MNT
-  oc_create_maintenance_resource(device_count);
-#endif /* OC_MNT */
-#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  oc_create_cloudconf_resource(device_count);
-#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
-  oc_device_info[device_count].data = data;
-
-  if (oc_connectivity_init(device_count) < 0) {
-    oc_abort("error initializing connectivity for device");
-  }
-
-  device_count++;
-
-#ifdef OC_SECURITY
-  oc_main_init_svrs(device_count - 1);
-#endif /* OC_SECURITY */
-  return &oc_device_info[device_count - 1];
 }
 
 oc_device_info_t *
@@ -402,9 +298,6 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
 {
   (void)data;
 
-  // TODO *GEO* removed commented out debug code before merging
-  // printf("DUMP BEFORE ADD AT INDEX\n");
-  // dump_core_resources();
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
     OC_ERR("device limit reached");
@@ -446,24 +339,30 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
     }
   }
   if (index < device_count) {
+    /* Check if the device is already populated.*/
+    bool device_info_populated =
+      oc_string(oc_device_info[index].name) != NULL ||
+      oc_string(oc_device_info[index].icv) != NULL ||
+      oc_string(oc_device_info[index].dmv) != NULL;
     /*
-     * TODO check if existing values equals passed in values
-     * if device info equals passed in values return oc_device_info_t
-     * else just return NULL we are not replacing the device with new device
-     * info. (other option is to replace the device with the new device info? it
-     * seems an odd action.)
+     * if device is already populated check if passed in values are the same as
+     * populated device if values are the same return the already populated
+     * device. else return NULL
      */
-    // check that oc_device_info at index is NOT NULL
-    if (oc_string(oc_device_info[index].name)) {
-      return NULL;
-    }
-
-    if (oc_string(oc_device_info[index].icv)) {
-      return NULL;
-    }
-
-    if (oc_string(oc_device_info[index].dmv)) {
-      return NULL;
+    if (device_info_populated) {
+      if (strncmp(oc_string(oc_device_info[index].name), name,
+                  oc_device_info[index].name.size) != 0) {
+        return NULL;
+      }
+      if (strncmp(oc_string(oc_device_info[index].icv), spec_version,
+                  oc_device_info[index].icv.size) != 0) {
+        return NULL;
+      }
+      if (strncmp(oc_string(oc_device_info[index].dmv), data_model_version,
+                  oc_device_info[index].dmv.size) != 0) {
+        return NULL;
+      }
+      return &oc_device_info[index];
     }
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -521,9 +420,6 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
 #ifdef OC_SECURITY
   oc_main_init_svrs(index);
 #endif /* OC_SECURITY */
-  // TODO *GEO* removed commented out debug code before merging
-  // printf("DUMP AFTER ADD DEVICE AT INDEX\n");
-  // dump_core_resources();
   return &oc_device_info[index];
 }
 
