@@ -6,8 +6,7 @@
 #include <time.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef uint64_t oc_clock_time_t;
@@ -93,6 +92,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Maximum number of callbacks for connection of session */
 #define OC_MAX_SESSION_EVENT_CBS (2)
+
+/* Maximum number of callbacks for the doxm owned handler */
+#define OC_MAX_DOXM_OWNED_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 

@@ -71,11 +71,6 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     char di_str[OC_UUID_LEN];
     oc_vods_t *vods_list = (oc_vods_t *)oc_list_head(oc_vods_list_t);
     while (vods_list) {
-      /*
-       * bridge and vod should be owned before they are added to the
-       * oc_vods_list_t adding to the oc_vods_list_t likely needs to be
-       * done based on security the doxm code.
-       */
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vods_list->name));
       oc_uuid_to_str(vods_list->di, di_str, OC_UUID_LEN);

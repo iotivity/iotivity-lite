@@ -37,14 +37,15 @@ static oc_sec_doxm_t *doxm;
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-typedef struct oc_doxm_owned_cb
+typedef struct oc_doxm_owned_cb_s
 {
-  struct oc_doxm_owned_cb *next;
+  struct oc_doxm_owned_cb_s *next;
   oc_sec_doxm_owned_cb_t cb;
   void *user_data;
-} oc_doxm_owned_cb;
+} oc_doxm_owned_cb_t;
 
 OC_LIST(oc_doxm_owned_cb_list_t);
+OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
 
 void
 oc_sec_doxm_free(void)
@@ -54,11 +55,13 @@ oc_sec_doxm_free(void)
     free(doxm);
   }
 
-  oc_doxm_owned_cb *doxm_cb_item =
-    (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+  oc_doxm_owned_cb_t *next;
   while (doxm_cb_item) {
-    free(doxm_cb_item);
-    doxm_cb_item = doxm_cb_item->next;
+    next = doxm_cb_item->next;
+    oc_memb_free(&oc_doxm_owned_cb_s, doxm_cb_item);
+    doxm_cb_item = next;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -100,8 +103,8 @@ oc_sec_doxm_default(size_t device)
   // invoke the device owned changed cb before the di is reset
   if (doxm[device].owned) {
     doxm[device].owned = false;
-    oc_doxm_owned_cb *doxm_cb_item =
-      (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+    oc_doxm_owned_cb_t *doxm_cb_item =
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
       (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
       doxm_cb_item = doxm_cb_item->next;
@@ -330,8 +333,8 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
   }
 
   if (owned_changed == true) {
-    oc_doxm_owned_cb *doxm_cb_item =
-      (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+    oc_doxm_owned_cb_t *doxm_cb_item =
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
       (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
       doxm_cb_item = doxm_cb_item->next;
@@ -357,25 +360,20 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 oc_sec_doxm_add_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_doxm_owned_cb *doxm_cb_item =
-    (oc_doxm_owned_cb *)malloc(sizeof(oc_doxm_owned_cb));
-  if (!doxm_cb_item) {
+  oc_doxm_owned_cb_t *new_doxm_cb = oc_memb_alloc(&oc_doxm_owned_cb_s);
+  if (!new_doxm_cb) {
     oc_abort("Insufficient memory");
   }
-  doxm_cb_item->cb = cb;
-  doxm_cb_item->user_data = user_data;
-  oc_list_add(oc_doxm_owned_cb_list_t, doxm_cb_item);
-#endif // OC_DYNAMIC_ALLOCATION
-  // TODO ADD non-dynamic memory solution
+  new_doxm_cb->cb = cb;
+  new_doxm_cb->user_data = user_data;
+  oc_list_add(oc_doxm_owned_cb_list_t, new_doxm_cb);
 }
 
 void
 oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_doxm_owned_cb *doxm_cb_item =
-    (oc_doxm_owned_cb *)oc_list_head(oc_doxm_owned_cb_list_t);
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
   while (doxm_cb_item) {
     if (cb == doxm_cb_item->cb && user_data == doxm_cb_item->user_data) {
       oc_list_remove(oc_doxm_owned_cb_list_t, doxm_cb_item);
@@ -384,7 +382,5 @@ oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
     }
     doxm_cb_item = doxm_cb_item->next;
   }
-#endif // OC_DYNAMIC_ALLOCATION
-  // TODO ADD non-dynamic memory solution
 }
 #endif /* OC_SECURITY */
