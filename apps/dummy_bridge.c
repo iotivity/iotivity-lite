@@ -173,7 +173,7 @@ ocf_event_thread(void *data)
     next_event = oc_main_poll();
     app_mutex_unlock(app_sync_lock);
 
-    app_mutex_lock(app_sync_lock);
+    app_mutex_lock(mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
@@ -181,7 +181,7 @@ ocf_event_thread(void *data)
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
-    app_mutex_unlock(app_sync_lock);
+    app_mutex_unlock(mutex);
   }
   oc_main_shutdown();
   return NULL;
