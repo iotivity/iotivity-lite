@@ -38,8 +38,7 @@
 #include "port/oc_storage.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -559,6 +558,54 @@ void oc_reset();
  * @param[in] device index of the logical device to reset
  */
 void oc_reset_device(size_t device);
+
+/**
+ * Callback invoked when the "owned" property of the doxm is changed
+ *
+ * @param device_uuid the UUID of the device that change ownership
+ * @param device_index of the logical device that changed ownership
+ * @param owned if true the device has been claimed by an onboarding tool
+ * @param user_data context pointer
+ */
+typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
+                                         size_t device_index, bool owned,
+                                         void *user_data);
+/**
+ * Add callback that is invoked when the doxm "owned" property is changed
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param cb callback function that will be invoked
+ * @param user_data context pointer passed to the oc_ownership_status_cb_t
+ * callback the pointer must remain valid till callback is removed.
+ */
+void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
+
+/**
+ * Remove the ownership changed callback
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param cb callback function to remove
+ * @param user_data the context pointer used when the callback was added
+ */
+void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
+                                   void *user_data);
+
+/**
+ * Get the ownership status of the logical device this is the value of the
+ * doxm "owned" property
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param device_index the index of the logical device
+ *
+ * @return true if the device is owned by an onboarding tool
+ */
+bool oc_is_owned_device(size_t device_index);
 
 /* Server side */
 /**
