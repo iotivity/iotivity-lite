@@ -23,7 +23,6 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_store.h"
-#include "security/oc_doxm.h"
 #endif // OC_SECURITY
 
 OC_LIST(oc_vods_list_t);
@@ -90,11 +89,11 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #ifdef OC_SECURITY
 void
-doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
-                   void *user_data)
+doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
+                   bool owned, void *user_data)
 {
   (void)user_data;
-  if (doxm->owned) {
+  if (owned) {
     oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
     for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
       if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
@@ -103,11 +102,11 @@ doxm_owned_changed(const oc_sec_doxm_t *doxm, size_t device_index,
         oc_string_t econame;
         oc_vod_map_get_econame(&econame, device_index);
         add_virtual_device_to_vods_list(oc_string(device_info->name),
-                                        &doxm->deviceuuid, oc_string(econame));
+                                        device_uuid, oc_string(econame));
       }
     }
   } else {
-    remove_virtual_device_from_vods_list(&doxm->deviceuuid);
+    remove_virtual_device_from_vods_list(device_uuid);
   }
   oc_notify_observers(bridge_res);
 }
@@ -140,7 +139,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   oc_vod_map_init();
 
 #ifdef OC_SECURITY
-  oc_sec_doxm_add_owned_changed_cb(&doxm_owned_changed, NULL);
+  oc_add_ownership_changed_cb(&doxm_owned_changed, NULL);
 #endif // OC_SECURITY
   return 0;
 }
@@ -168,9 +167,9 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
 
 #ifdef OC_SECURITY
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(vd_index);
-  if (doxm->owned) {
-    add_virtual_device_to_vods_list(name, &doxm->deviceuuid, econame);
+  if (oc_is_device_owned(vd_index)) {
+    add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
+                                    econame);
     oc_notify_observers(bridge_res);
   }
 #endif // OC_SECURITY

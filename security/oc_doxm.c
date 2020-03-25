@@ -40,7 +40,7 @@ static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 typedef struct oc_doxm_owned_cb_s
 {
   struct oc_doxm_owned_cb_s *next;
-  oc_sec_doxm_owned_cb_t cb;
+  oc_ownership_changed_cb_t cb;
   void *user_data;
 } oc_doxm_owned_cb_t;
 
@@ -100,13 +100,13 @@ evaluate_supported_oxms(size_t device)
 void
 oc_sec_doxm_default(size_t device)
 {
-  // invoke the device owned changed cb before the di is reset
+  // invoke the device owned changed cb before the deviceuuid is reset
   if (doxm[device].owned) {
-    doxm[device].owned = false;
     oc_doxm_owned_cb_t *doxm_cb_item =
       (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
-      (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
+      (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, false,
+                         doxm_cb_item->user_data);
       doxm_cb_item = doxm_cb_item->next;
     }
   }
@@ -336,7 +336,8 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     oc_doxm_owned_cb_t *doxm_cb_item =
       (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
-      (doxm_cb_item->cb)(&doxm[device], device, doxm_cb_item->user_data);
+      (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
+                         doxm_cb_item->user_data);
       doxm_cb_item = doxm_cb_item->next;
     }
   }
@@ -358,7 +359,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 void
-oc_sec_doxm_add_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
+oc_add_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
 {
   oc_doxm_owned_cb_t *new_doxm_cb = oc_memb_alloc(&oc_doxm_owned_cb_s);
   if (!new_doxm_cb) {
@@ -370,7 +371,7 @@ oc_sec_doxm_add_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
 }
 
 void
-oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
+oc_remove_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
 {
   oc_doxm_owned_cb_t *doxm_cb_item =
     (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
@@ -382,5 +383,11 @@ oc_sec_doxm_remove_owned_changed_cb(oc_sec_doxm_owned_cb_t cb, void *user_data)
     }
     doxm_cb_item = doxm_cb_item->next;
   }
+}
+
+bool
+oc_is_device_owned(size_t device_index)
+{
+  return doxm[device_index].owned;
 }
 #endif /* OC_SECURITY */
