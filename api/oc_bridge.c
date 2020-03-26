@@ -144,7 +144,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   return 0;
 }
 
-int
+size_t
 oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              size_t virtual_device_id_size, const char *econame,
                              const char *uri, const char *rt, const char *name,
@@ -161,7 +161,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     uri, rt, name, spec_version, data_model_version, vd_index, add_device_cb,
     data);
   if (!device) {
-    return -1;
+    return 0;
   }
 
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
@@ -173,5 +173,14 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     oc_notify_observers(bridge_res);
   }
 #endif // OC_SECURITY
-  return 0;
+  return vd_index;
+}
+
+size_t
+oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
+                                   size_t virtual_device_id_size,
+                                   const char *econame)
+{
+  return oc_vod_map_get_id_index(virtual_device_id, virtual_device_id_size,
+                                 econame);
 }

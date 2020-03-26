@@ -70,13 +70,17 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * device. This will typically be called in responce to the non-ocf devices
  * discovery mechanism.
  *
- * The `oc_bridge_add_virtual_device` function may be called as many times as
+ * The `oc_bridge_add_virtual_device()` function may be called as many times as
  * needed.  Each call will add a new device to the stack with its own port
- * address. Each device is automatically assigned a number. Unlike
- * oc_add_device() this number is not simply incremented by one but assigned a
- * number based on avalibility and past virtual devices that were added.  After
- * this function returns the oc_bridge_get_virtual_device_index() using the
- * vitual_device_id can be used to get the logical device index number.
+ * address. Each device is automatically assigned a device index number. Unlike
+ * the `oc_add_device()` function this number is not incremented by one but
+ * assigned an index number based on avalibility.  The index assigned to the
+ * virtual device will be returned from the function call. The function
+ * `oc_bridge_get_virtual_device_index()` can also be used to get the logical
+ * device index number after this function call.
+ *
+ * The function `oc_bridge_add_bridge_device()` must be called before this
+ * function.
  *
  * @param virtual_device_id a unique identifyer that identifies the virtual
  *                          device this could be a UUID, serial number or other
@@ -99,19 +103,39 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * @param data context pointer that is passed to the oc_add_device_cb_t
  *
  * @return
- *   - `0` on success
- *   - `-1` on failure
+ *   - the logical index of the virtual device on success
+ *   - `0` on failure since a bridge device is required to add virtual devices
+           a zero index cannot be assigned to a virtual device.
+ *
+ * @note device index is cast from size_t to int and may lose information.
+ *       The `oc_bridge_add_virtual_device()` function can be used to get
+ *       the non-cast device index.
  *
  * @see init
  */
-int oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
-                                 size_t virtual_device_id_size,
-                                 const char *econame, const char *uri,
-                                 const char *rt, const char *name,
-                                 const char *spec_version,
-                                 const char *data_model_version,
-                                 oc_add_device_cb_t add_device_cb, void *data);
+size_t oc_bridge_add_virtual_device(
+  const uint8_t *virtual_device_id, size_t virtual_device_id_size,
+  const char *econame, const char *uri, const char *rt, const char *name,
+  const char *spec_version, const char *data_model_version,
+  oc_add_device_cb_t add_device_cb, void *data);
 
+/**
+ * Get the logical device index for the virtual device
+ *
+ * @param virtual_device_id a unique identifyer that identifies the virtual
+ *                          device this could be a UUID, serial number or other
+ *                          means of to uniquely identify the device
+ * @param virtual_device_id_size size in bytes of the virtual_device_id param
+ * @param econame ecosystem name of the bridged virtual device
+ *
+ * @return
+ *   - the logical index of the virtual device on success
+ *   - `0` on failure since a bridge device is required to add virtual devices
+           a zero index cannot be assigned to a virtual device.
+ */
+size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
+                                          size_t virtual_device_id_size,
+                                          const char *econame);
 #ifdef __cplusplus
 }
 #endif
