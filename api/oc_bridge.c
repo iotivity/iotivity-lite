@@ -139,7 +139,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   oc_vod_map_init();
 
 #ifdef OC_SECURITY
-  oc_add_ownership_changed_cb(&doxm_owned_changed, NULL);
+  oc_add_ownership_status_cb(&doxm_owned_changed, NULL);
 #endif // OC_SECURITY
   return 0;
 }
@@ -167,7 +167,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
 
 #ifdef OC_SECURITY
-  if (oc_is_device_owned(vd_index)) {
+  if (oc_is_owned_device(vd_index)) {
     add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
                                     econame);
     oc_notify_observers(bridge_res);

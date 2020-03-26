@@ -567,9 +567,9 @@ void oc_reset_device(size_t device);
  * @param owned if true the device has been claimed by an onboarding tool
  * @param user_data context pointer
  */
-typedef void (*oc_ownership_changed_cb_t)(const oc_uuid_t *device_uuid,
-                                          size_t device_index, bool owned,
-                                          void *user_data);
+typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
+                                         size_t device_index, bool owned,
+                                         void *user_data);
 /**
  * Add callback that is invoked when the doxm "owned" property is changed
  *
@@ -577,10 +577,10 @@ typedef void (*oc_ownership_changed_cb_t)(const oc_uuid_t *device_uuid,
  *       defined.
  *
  * @param cb callback function that will be invoked
- * @param user_data context pointer passed to the oc_ownership_changed_cb_t
+ * @param user_data context pointer passed to the oc_ownership_status_cb_t
  * callback the pointer must remain valid till callback is removed.
  */
-void oc_add_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data);
+void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
 
 /**
  * Remove the ownership changed callback
@@ -591,8 +591,8 @@ void oc_add_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data);
  * @param cb callback function to remove
  * @param user_data the context pointer used when the callback was added
  */
-void oc_remove_ownership_changed_cb(oc_ownership_changed_cb_t cb,
-                                    void *user_data);
+void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
+                                   void *user_data);
 
 /**
  * Get the ownership status of the logical device this is the value of the
@@ -605,7 +605,7 @@ void oc_remove_ownership_changed_cb(oc_ownership_changed_cb_t cb,
  *
  * @return true if the device is owned by an onboarding tool
  */
-bool oc_is_device_owned(size_t device_index);
+bool oc_is_owned_device(size_t device_index);
 
 /* Server side */
 /**

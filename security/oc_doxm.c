@@ -40,7 +40,7 @@ static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 typedef struct oc_doxm_owned_cb_s
 {
   struct oc_doxm_owned_cb_s *next;
-  oc_ownership_changed_cb_t cb;
+  oc_ownership_status_cb_t cb;
   void *user_data;
 } oc_doxm_owned_cb_t;
 
@@ -359,7 +359,7 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 void
-oc_add_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
+oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 {
   oc_doxm_owned_cb_t *new_doxm_cb = oc_memb_alloc(&oc_doxm_owned_cb_s);
   if (!new_doxm_cb) {
@@ -371,7 +371,7 @@ oc_add_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
 }
 
 void
-oc_remove_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
+oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 {
   oc_doxm_owned_cb_t *doxm_cb_item =
     (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
@@ -386,7 +386,7 @@ oc_remove_ownership_changed_cb(oc_ownership_changed_cb_t cb, void *user_data)
 }
 
 bool
-oc_is_device_owned(size_t device_index)
+oc_is_owned_device(size_t device_index)
 {
   return doxm[device_index].owned;
 }
