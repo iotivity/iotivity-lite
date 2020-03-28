@@ -160,6 +160,7 @@ oc_sec_ael_default(size_t device)
   a->priorityfilter = OC_SEC_AEL_PRIORITYFILTER_DEFAULT;
   a->maxsize = OC_SEC_AEL_MAX_SIZE;
   a->unit = OC_SEC_AEL_UNIT_DEFAULT;
+  a->events_size = 0;
   oc_sec_dump_ael(device);
 }
 
