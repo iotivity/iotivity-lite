@@ -87,7 +87,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;OC_PKI;WIN32;_DEBUG;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;_DEBUG</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\;..\..\..\..\;..\..\..\..\include;..\..\..\..\security</AdditionalIncludeDirectories>
     </ClCompile>
@@ -112,7 +112,7 @@ xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;OC_PKI;_DEBUG;OC_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;_DEBUG</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\;..\..\..\..\;..\..\..\..\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -138,7 +138,7 @@ xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;OC_PKI;WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;NDEBUG</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\;..\..\..\..\;..\..\..\..\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -166,7 +166,7 @@ xcopy /s /y /d $(SolutionDir)..\..\..\apps\pki_certs\rootca*.pem $(SolutionDir)\
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CONSOLE;_CRT_SECURE_NO_WARNINGS;__OC_RANDOM;OC_CLIENT;OC_SERVER;OC_IPV4;OC_SECURITY;OC_DYNAMIC_ALLOCATION;OC_PKI;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;NDEBUG</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\;..\..\..\..\;..\..\..\..\include</AdditionalIncludeDirectories>
     </ClCompile>
