@@ -84,7 +84,7 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  *
  * @param virtual_device_id a unique identifyer that identifies the virtual
  *                          device this could be a UUID, serial number or other
- *                          means of to uniquely identify the device
+ *                          means of uniquely identifying the device
  * @param virtual_device_id_size size in bytes of the virtual_device_id param
  * @param econame ecosystem name of the bridged device which is exposed by this
  *                virtual device
@@ -124,7 +124,7 @@ size_t oc_bridge_add_virtual_device(
  *
  * @param virtual_device_id a unique identifyer that identifies the virtual
  *                          device this could be a UUID, serial number or other
- *                          means of to uniquely identify the device
+ *                          means of uniquely identifying the device
  * @param virtual_device_id_size size in bytes of the virtual_device_id param
  * @param econame ecosystem name of the bridged virtual device
  *
