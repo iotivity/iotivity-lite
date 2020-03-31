@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
 #include <pthread.h>
@@ -69,7 +70,7 @@ app_init(void)
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.5.0",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.1.1",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   PRINT("\tSwitch device added.\n");
 #if defined(OC_IDD_API)
@@ -711,6 +712,15 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 int
 main(void)
 {
@@ -749,6 +759,7 @@ main(void)
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+  display_device_uuid();
   PRINT("Waiting for Client...\n");
   PRINT("Hit 'Enter' at any time to toggle switch resource\n");
   while (quit != 1) {
