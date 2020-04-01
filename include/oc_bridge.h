@@ -30,16 +30,14 @@
 extern "C" {
 #endif
 
-/**
- * Perhaps internal struct may want this to be public for clients
- */
-typedef struct oc_vods_t
+typedef struct oc_virtual_device_t
 {
-  struct oc_vods_t *next;
-  oc_string_t name;
-  const oc_uuid_t *di;
+  struct oc_virtual_device_t *next;
+  uint8_t *v_id;
+  size_t v_id_size;
   oc_string_t econame;
-} oc_vods_t;
+  size_t index;
+} oc_virtual_device_t;
 
 /**
  * Add an oic.d.bridge device.
@@ -136,6 +134,19 @@ size_t oc_bridge_add_virtual_device(
 size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
                                           size_t virtual_device_id_size,
                                           const char *econame);
+
+/**
+ * Use the device index of the virtual device to look up the virtual device
+ * info.
+ *
+ * @param virtual_device_index the logical index of the virtual device
+ *
+ * @return
+ *    - a pointer to the oc_virtual_device_t upon success
+ *    - NULL if no virtual device was found using the provided index
+ */
+oc_virtual_device_t *oc_bridge_get_virtual_device_info(
+  size_t virtual_device_index);
 #ifdef __cplusplus
 }
 #endif

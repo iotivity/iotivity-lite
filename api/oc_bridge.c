@@ -25,6 +25,18 @@
 #include "security/oc_store.h"
 #endif // OC_SECURITY
 
+/*
+ * internal struct that holds the values that build the oic.r.vodlist
+ * properties.
+ */
+typedef struct oc_vods_t
+{
+  struct oc_vods_t *next;
+  oc_string_t name;
+  const oc_uuid_t *di;
+  oc_string_t econame;
+} oc_vods_t;
+
 OC_LIST(oc_vods_list_t);
 static oc_resource_t *bridge_res;
 
@@ -68,15 +80,15 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   case OC_IF_R:
     oc_rep_set_array(root, vods);
     char di_str[OC_UUID_LEN];
-    oc_vods_t *vods_list = (oc_vods_t *)oc_list_head(oc_vods_list_t);
-    while (vods_list) {
+    oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
+    while (vod_item) {
       oc_rep_object_array_begin_item(vods);
-      oc_rep_set_text_string(vods, n, oc_string(vods_list->name));
-      oc_uuid_to_str(vods_list->di, di_str, OC_UUID_LEN);
+      oc_rep_set_text_string(vods, n, oc_string(vod_item->name));
+      oc_uuid_to_str(vod_item->di, di_str, OC_UUID_LEN);
       oc_rep_set_text_string(vods, di, di_str);
-      oc_rep_set_text_string(vods, econame, oc_string(vods_list->econame));
+      oc_rep_set_text_string(vods, econame, oc_string(vod_item->econame));
       oc_rep_object_array_end_item(vods);
-      vods_list = vods_list->next;
+      vod_item = vod_item->next;
     }
     oc_rep_close_array(root, vods);
     break;
@@ -183,4 +195,10 @@ oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
 {
   return oc_vod_map_get_id_index(virtual_device_id, virtual_device_id_size,
                                  econame);
+}
+
+oc_virtual_device_t *
+oc_bridge_get_virtual_device_info(size_t virtual_device_index)
+{
+  return oc_vod_map_get_virtual_device(virtual_device_index);
 }

@@ -15,6 +15,7 @@
 */
 
 #include "oc_rep.h"
+#include "oc_bridge.h"
 #include "util/oc_list.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -40,15 +41,6 @@ typedef struct oc_vod_list_t
   OC_LIST_STRUCT(vods);
   size_t next_index;
 } oc_vod_list_t;
-
-typedef struct oc_vod_t
-{
-  struct oc_vod_t *next;
-  uint8_t *vod_id;
-  size_t vod_id_size;
-  oc_string_t econame;
-  size_t index;
-} oc_vod_t;
 
 /*
  * open vod_map file from creds directory and populate
@@ -106,6 +98,7 @@ void oc_vod_map_dump();
  */
 void oc_vod_map_get_econame(oc_string_t *econame, size_t device_index);
 
+oc_virtual_device_t *oc_vod_map_get_virtual_device(size_t device_index);
 #ifdef __cplusplus
 }
 #endif

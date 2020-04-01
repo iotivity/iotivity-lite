@@ -41,10 +41,10 @@ oc_vod_map_init()
 void
 oc_vod_map_free()
 {
-  oc_vod_t *v = oc_list_head(vod_list.vods);
-  oc_vod_t *v_to_free;
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+  oc_virtual_device_t *v_to_free;
   while (v != NULL) {
-    free(v->vod_id);
+    free(v->v_id);
     oc_free_string(&v->econame);
     v_to_free = v;
     v = v->next;
@@ -59,9 +59,9 @@ size_t
 oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
                         const char *econame)
 {
-  oc_vod_t *v = oc_list_head(vod_list.vods);
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
   while (v != NULL) {
-    if (memcmp(vod_id, v->vod_id, vod_id_size) == 0 &&
+    if (memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
         memcmp(econame, oc_string(v->econame), strlen(econame)) == 0) {
       return v->index;
     }
@@ -85,10 +85,11 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
   if (v_index != 0) {
     return v_index;
   }
-  oc_vod_t *vod = (oc_vod_t *)malloc(sizeof(oc_vod_t));
-  vod->vod_id = (uint8_t *)malloc(vod_id_size * sizeof(uint8_t));
-  memcpy(vod->vod_id, vod_id, vod_id_size);
-  vod->vod_id_size = vod_id_size;
+  oc_virtual_device_t *vod =
+    (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
+  vod->v_id = (uint8_t *)malloc(vod_id_size * sizeof(uint8_t));
+  memcpy(vod->v_id, vod_id, vod_id_size);
+  vod->v_id_size = vod_id_size;
   oc_new_string(&vod->econame, econame, strlen(econame));
   vod->index = vod_list.next_index;
   oc_list_add(vod_list.vods, vod);
@@ -124,16 +125,17 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
         return false;
       }
       while (NULL != v) {
-        oc_vod_t *vod = (oc_vod_t *)malloc(sizeof(oc_vod_t));
+        oc_virtual_device_t *vod =
+          (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
         char *v_id = NULL;
         if (!oc_rep_get_byte_string(v->value.object, "vod_id", &v_id,
-                                    &vod->vod_id_size)) {
+                                    &vod->v_id_size)) {
           OC_DBG("oc_vod_map: decode 'vod_id' not found.");
           return false;
         }
         if (NULL != v_id) {
-          vod->vod_id = (uint8_t *)malloc(vod->vod_id_size * sizeof(uint8_t));
-          memcpy(vod->vod_id, v_id, vod->vod_id_size);
+          vod->v_id = (uint8_t *)malloc(vod->v_id_size * sizeof(uint8_t));
+          memcpy(vod->v_id, v_id, vod->v_id_size);
         } else {
           OC_DBG("oc_vod_map: decode failed to find 'vod_id'");
           return false;
@@ -219,13 +221,13 @@ oc_vod_map_encode()
 {
   oc_rep_begin_root_object();
   oc_rep_set_int(root, next_index, vod_list.next_index);
-  oc_vod_t *v = oc_list_head(vod_list.vods);
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
 
   oc_rep_open_array(root, vods);
   // oc_rep_object_array_begin_item(vods);
   while (v != NULL) {
     oc_rep_object_array_begin_item(vods);
-    oc_rep_set_byte_string(vods, vod_id, v->vod_id, v->vod_id_size);
+    oc_rep_set_byte_string(vods, vod_id, v->v_id, v->v_id_size);
     oc_rep_set_text_string(vods, econame, oc_string(v->econame));
     oc_rep_set_int(vods, index, v->index);
     oc_rep_object_array_end_item(vods);
@@ -267,7 +269,7 @@ oc_vod_map_dump()
 void
 oc_vod_map_get_econame(oc_string_t *econame, size_t device_index)
 {
-  oc_vod_t *v = oc_list_head(vod_list.vods);
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
   while (v != NULL) {
     if (v->index == device_index) {
       *econame = v->econame;
@@ -275,4 +277,17 @@ oc_vod_map_get_econame(oc_string_t *econame, size_t device_index)
     }
     v = v->next;
   }
+}
+
+oc_virtual_device_t *
+oc_vod_map_get_virtual_device(size_t device_index)
+{
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+  while (v != NULL) {
+    if (v->index == device_index) {
+      return v;
+    }
+    v = v->next;
+  }
+  return NULL;
 }
