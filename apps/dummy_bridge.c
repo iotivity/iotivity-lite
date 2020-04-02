@@ -56,7 +56,7 @@ int quit = 0;
 
 static bool discover_vitual_devices = true;
 
-struct virtual_light_t
+typedef struct virtual_light_t
 {
   const char device_name[32];
   const char uuid[UUID_LEN];
@@ -64,17 +64,17 @@ struct virtual_light_t
   bool on;
   bool discovered;
   bool added_to_bridge;
-};
+} virtual_light_t;
 
 #define VOD_COUNT 5
 struct virtual_light_t virtual_lights[VOD_COUNT] = {
   { "Light 1", "1b32e152-3756-4fb6-b3f2-d8db7aafe39f", "ABC", true, false,
     false },
-  { "Light 2", "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC", true, false,
+  { "Light 2", "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC", false, false,
     false },
   { "Light 3", "686ef93d-36e0-47fc-8316-fbd7045e850a", "ABC", true, false,
     false },
-  { "Light 4", "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ", true, false,
+  { "Light 4", "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ", false, false,
     false },
   { "Light 5", "e2f0109f-ef7d-496a-9676-d3d87b38e52f", "XYZ", true, false,
     false }
@@ -114,6 +114,85 @@ handle_signal(int signal)
   quit = 1;
 }
 
+static void
+get_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+                  void *user_data)
+{
+  virtual_light_t *light = (virtual_light_t *)user_data;
+
+  // uint8_t *virtual_device_id;
+  // size_t id_size;
+  // oc_string_t econame;
+  // oc_bridge_get_virtual_device_info(&virtual_device_id, &id_size, &econame,
+  // request->resource->device);
+  // oc_bridge_get_virtual_device_info(oc_virtual_device_info_t *virtual_device,
+  // &econame, request->resource->device);
+
+  // user virtual_device_id to lookup actual virtual device information.
+  // use actual virtual device info.
+
+  oc_status_t resp = OC_STATUS_OK;
+  oc_rep_start_root_object();
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(request->resource);
+  case OC_IF_A:
+
+  case OC_IF_RW:
+    oc_rep_set_boolean(root, value, light->on);
+    break;
+  default:
+    resp = OC_STATUS_BAD_REQUEST;
+    break;
+  }
+  oc_rep_end_root_object();
+  oc_send_response(request, resp);
+}
+
+static void
+post_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+                   void *user_data)
+{
+  (void)iface_mask;
+  virtual_light_t *light = (virtual_light_t *)user_data;
+  oc_status_t resp = OC_STATUS_CHANGED;
+  PRINT("POST_BinarySwitch\n");
+  oc_rep_t *rep = request->request_payload;
+  if (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      oc_rep_get_bool(rep, "value", &light->on);
+      break;
+    default:
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
+      break;
+    }
+  }
+  oc_send_response(request, OC_STATUS_CHANGED);
+}
+
+static void
+put_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+                  void *user_data)
+{
+  post_binary_switch(request, iface_mask, user_data);
+}
+
+void
+register_binaryswitch_resource(const char *name, const char *uri,
+                               size_t device_index, void *user_data)
+{
+  oc_resource_t *r = oc_new_resource(name, uri, 1, device_index);
+  oc_resource_bind_resource_type(r, "oic.r.switch.binary");
+  oc_resource_bind_resource_interface(r, OC_IF_A);
+  oc_resource_set_default_interface(r, OC_IF_A);
+  oc_resource_set_discoverable(r, true);
+  oc_resource_set_request_handler(r, OC_GET, get_binary_switch, user_data);
+  oc_resource_set_request_handler(r, OC_POST, post_binary_switch, user_data);
+  oc_resource_set_request_handler(r, OC_PUT, put_binary_switch, user_data);
+  oc_add_resource(r);
+}
+
 /*
  * TODO place this in a thread loop
  * When a device is discovered it will be added to
@@ -122,16 +201,24 @@ handle_signal(int signal)
 void
 poll_for_discovered_devices()
 {
+  size_t virtual_device_index;
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered && !virtual_lights[i].added_to_bridge) {
       PRINT("Adding %s to bridge\n", virtual_lights[i].device_name);
       app_mutex_lock(app_sync_lock);
 
-      oc_bridge_add_virtual_device((uint8_t *)virtual_lights[i].uuid,
-                                   strlen(virtual_lights[i].uuid),
-                                   virtual_lights[i].eco_system, "/oic/d",
-                                   "oic.d.light", virtual_lights[i].device_name,
-                                   "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+      virtual_device_index = oc_bridge_add_virtual_device(
+        (uint8_t *)virtual_lights[i].uuid, strlen(virtual_lights[i].uuid),
+        virtual_lights[i].eco_system, "/oic/d", "oic.d.light",
+        virtual_lights[i].device_name, "ocf.1.0.0", "ocf.res.1.0.0", NULL,
+        NULL);
+      if (virtual_device_index != 0) {
+        register_binaryswitch_resource(
+          virtual_lights[i].device_name, "/bridge/light/switch",
+          virtual_device_index, &virtual_lights[i]);
+        // IDD could be added here.
+      }
+
       app_mutex_unlock(app_sync_lock);
       virtual_lights[i].added_to_bridge = true;
     }
@@ -189,9 +276,36 @@ ocf_event_thread(void *data)
 #endif
 
 static void
+display_ascii_lights()
+{
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    PRINT(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    PRINT(" %s ", (virtual_lights[i].on) ? "(*)" : "(~)");
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    PRINT(" %s ", (virtual_lights[i].on) ? " # " : " # ");
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    if (virtual_lights[i].discovered) {
+      PRINT(" %s ", (virtual_lights[i].on) ? "ON " : "OFF");
+    } else {
+      PRINT(" N/A ");
+    }
+  }
+  PRINT("\n");
+}
+
+static void
 display_menu(void)
 {
   PRINT("\n\n");
+  display_ascii_lights();
   PRINT("################################################\n");
   PRINT("Dummy Bridge\n");
   PRINT("################################################\n");
