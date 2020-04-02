@@ -18,6 +18,7 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_pki.h"
 #include <signal.h>
 #include <inttypes.h>
 
@@ -141,7 +142,10 @@ static const char *device_rt = "oic.d.cloudDevice";
 static const char *device_name = "Cloud Device";
 
 static const char *manufacturer = "ocfcloud.com";
-
+static const char *cis = "coap+tcp://127.0.0.1:5683";
+static const char *auth_code = "test";
+static const char *sid = "00000000-0000-0000-0000-000000000001";
+static const char *apn = "test";
 oc_resource_t *res1;
 oc_resource_t *res2;
 
@@ -284,9 +288,67 @@ register_resources(void)
   oc_add_resource(res2);
 }
 
-int
-main(void)
+void
+factory_presets_cb(size_t device, void *data)
 {
+  (void)device;
+  (void)data;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  // This installs the root CA certificate for the
+  // https://portal.try.plgd.cloud/ OCF Cloud
+  const char *cloud_ca =
+    "-----BEGIN CERTIFICATE-----\r\n"
+    "MIIBhDCCASmgAwIBAgIQdAMxveYP9Nb48xe9kRm3ajAKBggqhkjOPQQDAjAxMS8w\r\n"
+    "LQYDVQQDEyZPQ0YgQ2xvdWQgUHJpdmF0ZSBDZXJ0aWZpY2F0ZXMgUm9vdCBDQTAe\r\n"
+    "Fw0xOTExMDYxMjAzNTJaFw0yOTExMDMxMjAzNTJaMDExLzAtBgNVBAMTJk9DRiBD\r\n"
+    "bG91ZCBQcml2YXRlIENlcnRpZmljYXRlcyBSb290IENBMFkwEwYHKoZIzj0CAQYI\r\n"
+    "KoZIzj0DAQcDQgAEaNJi86t5QlZiLcJ7uRMNlcwIpmFiJf9MOqyz2GGnGVBypU6H\r\n"
+    "lwZHY2/l5juO/O4EH2s9h3HfcR+nUG2/tFzFEaMjMCEwDgYDVR0PAQH/BAQDAgEG\r\n"
+    "MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDSQAwRgIhAM7gFe39UJPIjIDE\r\n"
+    "KrtyPSIGAk0OAO8txhow1BAGV486AiEAqszg1fTfOHdE/pfs8/9ZP5gEVVkexRHZ\r\n"
+    "JCYVaa2Spbg=\r\n"
+    "-----END CERTIFICATE-----\r\n";
+  int rootca_credid = oc_pki_add_trust_anchor(
+    0, (const unsigned char *)cloud_ca, strlen(cloud_ca));
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+#endif /* OC_SECURITY && OC_PKI */
+}
+
+int
+main(int argc, char *argv[])
+{
+  PRINT("Default parameters: device_name: %s, auth_code: %s, cis: %s, sid: %s, "
+        "apn: %s\n",
+        device_name, auth_code, cis, sid, apn);
+  if (argc == 1) {
+    PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
+          "<apn>\n"
+          "Using the default values\n");
+  }
+  if (argc > 1) {
+    device_name = argv[1];
+    PRINT("device_name: %s\n", argv[1]);
+  }
+  if (argc > 2) {
+    auth_code = argv[2];
+    PRINT("auth_code: %s\n", argv[2]);
+  }
+  if (argc > 3) {
+    cis = argv[3];
+    PRINT("cis : %s\n", argv[3]);
+  }
+  if (argc > 4) {
+    sid = argv[4];
+    PRINT("sid: %s\n", argv[4]);
+  }
+  if (argc > 5) {
+    apn = argv[5];
+    PRINT("apn: %s\n", argv[5]);
+  }
+
   int ret = init();
   if (ret < 0) {
     return ret;
@@ -299,6 +361,7 @@ main(void)
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
   ret = oc_main_init(&handler);
   if (ret < 0)
@@ -307,6 +370,7 @@ main(void)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
   }
 
   run();
