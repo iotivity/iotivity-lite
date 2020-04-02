@@ -318,6 +318,25 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   return -1;
 }
 
+int
+oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+                            oc_discovery_all_handler_t handler, void *user_data)
+{
+  if (!ctx) {
+    return -1;
+  }
+
+  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+    return -1;
+  }
+
+  if (oc_do_ip_discovery_all_at_endpoint(handler, ctx->cloud_ep, user_data)) {
+    return 0;
+  }
+
+  return -1;
+}
+
 /* Internal APIs for accessing the OCF Cloud */
 bool
 cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
