@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include "oc_pki.h"
 #include "oc_introspection.h"
@@ -505,6 +506,15 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 int
 main(void)
 {
@@ -535,6 +545,8 @@ main(void)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+
+  display_device_uuid();
 
   int c;
   while (quit != 1) {
