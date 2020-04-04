@@ -112,6 +112,9 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
+CFLAGS_UPNP=-I/usr/include/gupnp-1.0/libgupnp/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ -I/usr/include/gssdp-1.0/ -I/usr/include/libsoup-2.4/ -I/usr/include/libxml2/
+LIBS_UPNP= -lglib-2.0 -lgobject-2.0 -lgssdp-1.0 -lgupnp-1.0
+
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient \
           client_collections_linux server_collections_linux server_block_linux \
           client_block_linux smart_home_server_linux multi_device_server \
@@ -128,6 +131,10 @@ endif
 
 ifeq ($(SWUPDATE),1)
 	SAMPLES += smart_home_server_with_mock_swupdate
+endif
+
+ifeq ($(UPNP_BRIDGE),1)
+	SAMPLES += upnp_bridge
 endif
 
 ifeq ($(CLOUD),1)
@@ -404,6 +411,10 @@ client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_mult
 dummy_bridge: libiotivity-lite-server.a $(ROOT_DIR)/apps/dummy_bridge.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/dummy_bridge.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+upnp_bridge: libiotivity-lite-server.a $(ROOT_DIR)/apps/upnp_bridge.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/upnp_bridge.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${CFLAGS_UPNP} ${LIBS} ${LIBS_UPNP}
 
 iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \
