@@ -119,7 +119,7 @@ SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient \
           client_collections_linux server_collections_linux server_block_linux \
           client_block_linux smart_home_server_linux multi_device_server \
           multi_device_client smart_lock server_multithread_linux \
-          client_multithread_linux dummy_bridge introspectionclient
+          client_multithread_linux dummy_bridge introspectionclient upnp_bridge
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
