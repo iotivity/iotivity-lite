@@ -740,7 +740,7 @@ main(void)
   oc_set_con_res_announced(false);
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
-
+  oc_set_mtu_size(1232);
 #ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
 #endif /* OC_STORAGE */

@@ -1312,6 +1312,8 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
         oc_tls_free_peer(peer, false);
         return NULL;
       }
+      /* Fix maximum size of outgoing encrypted application payloads */
+      mbedtls_ssl_set_mtu(&peer->ssl_ctx, OC_PDU_SIZE);
 
       mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
 
