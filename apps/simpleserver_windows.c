@@ -148,10 +148,10 @@ main(void)
 
   signal(SIGINT, handle_signal);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources,
-                                       .requests_entry = 0 };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = register_resources,
+                                        .requests_entry = 0 };
 
   oc_clock_time_t next_event;
 
@@ -171,7 +171,7 @@ main(void)
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(&cv, &cs,
-              (DWORD)((next_event-now) * 1000 / OC_CLOCK_SECOND));
+          (DWORD)((next_event-now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
