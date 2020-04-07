@@ -94,24 +94,24 @@ bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
 
 
 /**
-* set the latency (lat) property in eps
-* this is implemented globally for the stack
-* default behaviour is that if nothing is set the 
-* lat property will not be in the output document.
-* setting the value on 0 will cause that the lat property will not be framed
-*
-* @param[in] latency the latency in seconds
-*/
+ * set the latency (lat) property in eps
+ * this is implemented globally for the stack
+ * default behaviour is that if nothing is set the 
+ * lat property will not be in the output document.
+ * setting the value on 0 will cause that the lat property will not be framed
+ *
+ * @param[in] latency the latency in seconds
+ */
 void oc_set_res_latency(int latency);
 
 
 /**
-* retrieves the latency (lat) property in eps
-* this is implemented globally for the stack
-*
-* @return
-*  - the latency in seconds
-*/
+ * retrieves the latency (lat) property in eps
+ * this is implemented globally for the stack
+ *
+ * @return
+ *  - the latency in seconds
+ */
 int oc_get_res_latency(void);
 
 #ifdef __cplusplus
