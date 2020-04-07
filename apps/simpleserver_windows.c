@@ -142,6 +142,10 @@ main(void)
 
   int init;
 
+ /* set the latency to 240 seconds*/
+ /* if no latency is needed then remove the next line */
+  oc_set_res_latency(240);
+
   signal(SIGINT, handle_signal);
 
   static const oc_handler_t handler = {.init = app_init,
