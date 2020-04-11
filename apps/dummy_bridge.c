@@ -55,6 +55,7 @@ int quit = 0;
 #define UUID_LEN 37
 
 static bool discover_vitual_devices = true;
+static bool display_ascii_ui = false;
 
 typedef struct virtual_light_t
 {
@@ -79,6 +80,87 @@ struct virtual_light_t virtual_lights[VOD_COUNT] = {
   { "Light 5", "e2f0109f-ef7d-496a-9676-d3d87b38e52f", "XYZ", true, false,
     false }
 };
+
+#if defined(_WIN32)
+HANDLE hConsole;
+CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+WORD saved_attributes;
+
+#define C_RESET                                                                \
+  do {                                                                         \
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);                                \
+    SetConsoleTextAttribute(hConsole, saved_attributes);                       \
+  } while (false)
+#define C_YELLOW                                                               \
+  do {                                                                         \
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);                                \
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);                        \
+    saved_attributes = consoleInfo.wAttributes;                                \
+    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED |      \
+                                        FOREGROUND_INTENSITY);                 \
+  } while (false)
+
+#elif defined(__linux__)
+#define C_RESET PRINT("\033[1;33")
+#define C_YELLOW PRINT("\033[0")
+#endif
+
+static void
+print_ascii_lights_ui()
+{
+  PRINT("\n");
+
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    if (virtual_lights[i].discovered) {
+      if (virtual_lights[i].on) {
+        C_YELLOW;
+      }
+      PRINT(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
+      if (virtual_lights[i].on) {
+        C_RESET;
+      }
+    } else {
+      PRINT("   ");
+    }
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    if (virtual_lights[i].discovered) {
+      if (virtual_lights[i].on) {
+        C_YELLOW;
+      }
+      PRINT(" %s ", (virtual_lights[i].on) ? "(*)" : "(~)");
+      if (virtual_lights[i].on) {
+        C_RESET;
+      }
+    } else {
+      PRINT("   ");
+    }
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    if (virtual_lights[i].discovered) {
+      if (virtual_lights[i].on) {
+        C_YELLOW;
+      }
+      PRINT(" %s ", (virtual_lights[i].on) ? " # " : " # ");
+      if (virtual_lights[i].on) {
+        C_RESET;
+      }
+    } else {
+      PRINT("   ");
+    }
+  }
+  PRINT("\n");
+  for (size_t i = 0; i < VOD_COUNT; i++) {
+    if (virtual_lights[i].discovered) {
+      PRINT(" %s ", (virtual_lights[i].on) ? "ON " : "OFF");
+    } else {
+      PRINT(" N/A ");
+    }
+  }
+  PRINT("\n");
+}
 
 static int
 app_init(void)
@@ -167,6 +249,9 @@ post_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
       break;
     }
+  }
+  if (display_ascii_ui) {
+    print_ascii_lights_ui();
   }
   oc_send_response(request, OC_STATUS_CHANGED);
 }
@@ -276,36 +361,12 @@ ocf_event_thread(void *data)
 #endif
 
 static void
-display_ascii_lights()
-{
-  PRINT("\n");
-  for (size_t i = 0; i < VOD_COUNT; i++) {
-    PRINT(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
-  }
-  PRINT("\n");
-  for (size_t i = 0; i < VOD_COUNT; i++) {
-    PRINT(" %s ", (virtual_lights[i].on) ? "(*)" : "(~)");
-  }
-  PRINT("\n");
-  for (size_t i = 0; i < VOD_COUNT; i++) {
-    PRINT(" %s ", (virtual_lights[i].on) ? " # " : " # ");
-  }
-  PRINT("\n");
-  for (size_t i = 0; i < VOD_COUNT; i++) {
-    if (virtual_lights[i].discovered) {
-      PRINT(" %s ", (virtual_lights[i].on) ? "ON " : "OFF");
-    } else {
-      PRINT(" N/A ");
-    }
-  }
-  PRINT("\n");
-}
-
-static void
 display_menu(void)
 {
   PRINT("\n\n");
-  display_ascii_lights();
+  if (display_ascii_ui) {
+    print_ascii_lights_ui();
+  }
   PRINT("################################################\n");
   PRINT("Dummy Bridge\n");
   PRINT("################################################\n");
@@ -319,6 +380,9 @@ display_menu(void)
   PRINT("-----------------------------------------------\n");
   PRINT("[6] Display summary of dummy bridge.\n");
   PRINT("[7] Start/Stop virtual device discovery.\n");
+  PRINT("[8] Enable/Disable ASCII light bulb UI.\n");
+  PRINT("    A representation of the bridged lights\n");
+  PRINT("    using ASCII art.\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -425,6 +489,9 @@ main(void)
       break;
     case 7:
       discover_vitual_devices = !discover_vitual_devices;
+      break;
+    case 8:
+      display_ascii_ui = !display_ascii_ui;
       break;
     case 99:
       handle_signal(0);
