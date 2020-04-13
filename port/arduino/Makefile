@@ -51,6 +51,10 @@ CORE_HEADERS +=$(addprefix -I$(ROOT_DIR)/, . messaging/coap util util/pt include
 LIB_HEADERS  +=-I$(ARDUINO_DIR)/libraries/SdFat/src/FatLib
 CXXFLAGS += $(DEPS_HEADERS) $(CORE_HEADERS) $(LIB_HEADERS) -Iadapter -Iapps/include
 
+ifeq ($(NO_MAIN),1)
+	CXXFLAGS += -DNO_MAIN
+endif
+
 ifeq ($(SECURE),1)
 	CXXFLAGS	+=$(addprefix -I$(ROOT_DIR)/deps/mbedtls/, include include/mbedtls)
 	CXXFLAGS	+= -DOC_SECURITY

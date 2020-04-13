@@ -122,9 +122,9 @@ build_application()
 	  make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 -f Makefile clean
   else
    if [ $UPLOAD -eq 1 ]; then
-      make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 XMEM=$XMEM VERBOSE=$VERBOSE -f Makefile upload
+      make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 NO_MAIN=1 XMEM=$XMEM VERBOSE=$VERBOSE -f Makefile upload
    else
-      make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 XMEM=$XMEM VERBOSE=$VERBOSE -f Makefile
+      make ARCH=$ARCH APP=$APP DYNAMIC=1 SECURE=$SECURE IPV4=1 NO_MAIN=1 XMEM=$XMEM VERBOSE=$VERBOSE -f Makefile
    fi
   fi
 	sleep 3
