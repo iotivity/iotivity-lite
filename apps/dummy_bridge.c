@@ -101,8 +101,8 @@ WORD saved_attributes;
   } while (false)
 
 #elif defined(__linux__)
-#define C_RESET PRINT("\033[1;33")
-#define C_YELLOW PRINT("\033[0")
+#define C_RESET PRINT("\x1B[0m")
+#define C_YELLOW PRINT("\x1B[1;33m")
 #endif
 
 static void
@@ -218,8 +218,8 @@ get_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+    /* fall through */
   case OC_IF_A:
-
   case OC_IF_RW:
     oc_rep_set_boolean(root, value, light->on);
     break;
@@ -237,7 +237,6 @@ post_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   virtual_light_t *light = (virtual_light_t *)user_data;
-  oc_status_t resp = OC_STATUS_CHANGED;
   PRINT("POST_BinarySwitch\n");
   oc_rep_t *rep = request->request_payload;
   if (rep != NULL) {
