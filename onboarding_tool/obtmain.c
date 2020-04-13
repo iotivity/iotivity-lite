@@ -1689,6 +1689,15 @@ discover_resources(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
+void
+display_device_uuid()
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 int
 main(void)
 {
@@ -1731,6 +1740,8 @@ main(void)
     return -1;
   }
 #endif
+
+  display_device_uuid();
 
   int c;
   while (quit != 1) {
