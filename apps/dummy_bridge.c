@@ -52,6 +52,19 @@ static struct timespec ts;
 
 int quit = 0;
 
+/*
+ * There are two ways that GET/POST/PUT calls can get the information about a
+ * virtual device. The information can be passed to the GET/PUT/POST callback
+ * via the user_data context pointer, or the device index can be used to obtain
+ * the virtual device information and that information can then be used to look
+ * up the virtual device.
+ *
+ * Both methods are shown in this sample if USE_VIRTUAL_DEVICE_LOOKUP is `1`
+ * then the device index will be used to obtain the virtual device info. If it
+ * is `0` then the information will be sent via the user_data context pointer.
+ */
+#define USE_VIRTUAL_DEVICE_LOOKUP 1
+
 #define UUID_LEN 37
 
 static bool discover_vitual_devices = true;
@@ -196,36 +209,52 @@ handle_signal(int signal)
   quit = 1;
 }
 
+virtual_light_t *
+lookup_virtual_light(size_t device_index)
+{
+  oc_virtual_device_t *virtual_device_info =
+    oc_bridge_get_virtual_device_info(device_index);
+  for (size_t i = 0; i < VOD_COUNT; ++i) {
+    if (strncmp(virtual_lights[i].eco_system,
+                oc_string(virtual_device_info->econame), 32) == 0) {
+      if (memcmp(virtual_lights[i].uuid, virtual_device_info->v_id,
+                 virtual_device_info->v_id_size) == 0) {
+        return &virtual_lights[i];
+      }
+    }
+  }
+  return NULL;
+}
+
 static void
 get_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
                   void *user_data)
 {
-  virtual_light_t *light = (virtual_light_t *)user_data;
-
-  // uint8_t *virtual_device_id;
-  // size_t id_size;
-  // oc_string_t econame;
-  // oc_bridge_get_virtual_device_info(&virtual_device_id, &id_size, &econame,
-  // request->resource->device);
-  // oc_bridge_get_virtual_device_info(oc_virtual_device_info_t *virtual_device,
-  // &econame, request->resource->device);
-
-  // user virtual_device_id to lookup actual virtual device information.
-  // use actual virtual device info.
+  (void)user_data;
+  virtual_light_t *light = NULL;
+#if USE_VIRTUAL_DEVICE_LOOKUP
+  light = lookup_virtual_light(request->resource->device);
+#else
+  light = (virtual_light_t *)user_data;
+#endif
 
   oc_status_t resp = OC_STATUS_OK;
   oc_rep_start_root_object();
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-    /* fall through */
-  case OC_IF_A:
-  case OC_IF_RW:
-    oc_rep_set_boolean(root, value, light->on);
-    break;
-  default:
+  if (light) {
+    switch (iface_mask) {
+    case OC_IF_BASELINE:
+      oc_process_baseline_interface(request->resource);
+      /* fall through */
+    case OC_IF_A:
+    case OC_IF_RW:
+      oc_rep_set_boolean(root, value, light->on);
+      break;
+    default:
+      resp = OC_STATUS_BAD_REQUEST;
+      break;
+    }
+  } else {
     resp = OC_STATUS_BAD_REQUEST;
-    break;
   }
   oc_rep_end_root_object();
   oc_send_response(request, resp);
@@ -236,23 +265,33 @@ post_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
                    void *user_data)
 {
   (void)iface_mask;
-  virtual_light_t *light = (virtual_light_t *)user_data;
+  (void)user_data;
+  virtual_light_t *light = NULL;
+#if USE_VIRTUAL_DEVICE_LOOKUP
+  light = lookup_virtual_light(request->resource->device);
+#else
+  light = (virtual_light_t *)user_data;
+#endif
   PRINT("POST_BinarySwitch\n");
-  oc_rep_t *rep = request->request_payload;
-  if (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_BOOL:
-      oc_rep_get_bool(rep, "value", &light->on);
-      break;
-    default:
-      oc_send_response(request, OC_STATUS_BAD_REQUEST);
-      break;
+  if (light) {
+    oc_rep_t *rep = request->request_payload;
+    if (rep != NULL) {
+      switch (rep->type) {
+      case OC_REP_BOOL:
+        oc_rep_get_bool(rep, "value", &light->on);
+        break;
+      default:
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        break;
+      }
     }
+    if (display_ascii_ui) {
+      print_ascii_lights_ui();
+    }
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  if (display_ascii_ui) {
-    print_ascii_lights_ui();
-  }
-  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
@@ -297,9 +336,15 @@ poll_for_discovered_devices()
         virtual_lights[i].device_name, "ocf.1.0.0", "ocf.res.1.0.0", NULL,
         NULL);
       if (virtual_device_index != 0) {
+#if USE_VIRTUAL_DEVICE_LOOKUP
+        register_binaryswitch_resource(virtual_lights[i].device_name,
+                                       "/bridge/light/switch",
+                                       virtual_device_index, NULL);
+#else
         register_binaryswitch_resource(
           virtual_lights[i].device_name, "/bridge/light/switch",
           virtual_device_index, &virtual_lights[i]);
+#endif
         // IDD could be added here.
       }
 
@@ -415,6 +460,8 @@ display_summary(void)
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
+      while ((c = getchar()) != EOF && c != '\n')                              \
+        ;                                                                      \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
