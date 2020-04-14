@@ -1,0 +1,1084 @@
+{
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/platform?if=oic.if.ll": {
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/slinks"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-update"
+          }
+        ],
+        "description": ""
+      }
+    },
+    "/bridge/light/switch": {
+      "post": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BinarySwitch"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-a"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/BinarySwitch"
+            },
+            "in": "body",
+            "required": true,
+            "name": "body"
+          }
+        ],
+        "description": ""
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/BinarySwitch"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-a"
+          }
+        ],
+        "description": ""
+      }
+    },
+    "/platform?if=oic.if.b": {
+      "post": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/sbatch-retrieve"
+            },
+            "description": ""
+          },
+          "403": {
+            "schema": {
+              "$ref": "#/definitions/sbatch-retrieve"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-update"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/sbatch-update"
+            },
+            "in": "body",
+            "required": true,
+            "name": "body"
+          }
+        ],
+        "description": ""
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/sbatch-retrieve"
+            },
+            "description": ""
+          },
+          "404": {
+            "schema": {
+              "$ref": "#/definitions/sbatch-retrieve"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-update"
+          }
+        ],
+        "description": ""
+      }
+    },
+    "/oic/p": {
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Platform"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-r"
+          }
+        ],
+        "description": ""
+      }
+    },
+    "/oic/mnt": {
+      "post": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/mnt"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-rw"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/mnt-update"
+            },
+            "in": "body",
+            "required": true,
+            "name": "body"
+          }
+        ],
+        "description": ""
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/mnt"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-rw"
+          }
+        ],
+        "description": ""
+      }
+    },
+    "/platform?if=oic.if.baseline": {
+      "post": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/sbaseline"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-update"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/sbaseline-update"
+            },
+            "in": "body",
+            "required": true,
+            "name": "body"
+          }
+        ],
+        "description": ""
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/sbaseline"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-update"
+          }
+        ],
+        "description": ""
+      }
+    }
+  },
+  "definitions": {
+    "sbatch-update": {
+      "minItems": 1,
+      "items": {
+        "required": [
+          "href",
+          "rep"
+        ],
+        "properties": {
+          "href": {
+            "format": "uri",
+            "type": "string",
+            "maxLength": 256,
+            "description": ""
+          },
+          "rep": {
+            "type": "object",
+            "anyOf": [
+              {
+                "$ref": "#/definitions/BinarySwitch"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "additionalProperties": true,
+        "description": ""
+      },
+      "type": "array",
+      "title": "Collection Batch Update Format"
+    },
+      "BinarySwitch": {
+        "properties": {
+          "rt": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.r.switch.binary"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "default": [
+              "oic.r.switch.binary"
+            ],
+            "type": "array"
+          },
+          "if": {
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "oic.if.a",
+                "oic.if.baseline"
+              ],
+              "type": "string"
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          },
+          "value": {
+            "type": "boolean",
+            "description": ""
+          },
+          "tag-pos-desc": {
+            "description": "Descriptive relative position of the Resource",
+            "type": "string",
+            "enum": [
+              "unknown",
+              "top",
+              "bottom",
+              "left",
+              "right",
+              "centre",
+              "topleft",
+              "bottomleft",
+              "centreleft",
+              "centreright",
+              "bottomright",
+              "topright",
+              "topcentre",
+              "bottomcentre"
+            ],
+            "readOnly": true
+          },
+          "tag-func-desc": {
+            "readOnly": true,
+            "type": "string",
+            "description": ""
+          },
+          "tag-pos-rel": {
+            "type": "array",
+            "readOnly": true,
+            "description": "Relative position; against a known [0,0,0] point.",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": -1,
+              "maximum": 1
+            }
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      },
+      "sbaseline-update": {
+        "additionalProperties": true
+      },
+      "sbaseline": {
+        "properties": {
+          "rt": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.wk.col"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "default": [
+              "oic.wk.col"
+            ],
+            "type": "array"
+          },
+          "rts-m": {
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          },
+          "links": {
+            "items": {
+              "properties": {
+                "tag-pos-desc": {
+                  "description": "Descriptive relative position of the Resource",
+                  "type": "string",
+                  "enum": [
+                    "unknown",
+                    "top",
+                    "bottom",
+                    "left",
+                    "right",
+                    "centre",
+                    "topleft",
+                    "bottomleft",
+                    "centreleft",
+                    "centreright",
+                    "bottomright",
+                    "topright",
+                    "topcentre",
+                    "bottomcentre"
+                  ],
+                  "readOnly": true
+                },
+                "anchor": {
+                  "format": "uri",
+                  "type": "string",
+                  "maxLength": 256,
+                  "description": ""
+                },
+                "p": {
+                  "properties": {
+                    "bm": {
+                      "type": "integer",
+                      "description": ""
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "bm"
+                  ],
+                  "description": ""
+                },
+                "tag-pos-rel": {
+                  "minItems": 3,
+                  "items": {
+                    "minimum": -1,
+                    "maximum": 1,
+                    "type": "number"
+                  },
+                  "description": "",
+                  "readOnly": true,
+                  "maxItems": 3,
+                  "type": "array"
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 64,
+                  "description": ""
+                },
+                "tag-func-desc": {
+                  "readOnly": true,
+                  "type": "string",
+                  "description": ""
+                },
+                "if": {
+                  "minItems": 1,
+                  "items": {
+                    "enum": [
+                      "oic.if.baseline",
+                      "oic.if.ll",
+                      "oic.if.b",
+                      "oic.if.rw",
+                      "oic.if.r",
+                      "oic.if.a",
+                      "oic.if.s"
+                    ],
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "description": "",
+                  "uniqueItems": true,
+                  "readOnly": true,
+                  "type": "array"
+                },
+                "rel": {
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "type": "array",
+                  "default": [
+                    "hosts"
+                  ],
+                  "description": ""
+                },
+                "type": {
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "type": "array",
+                  "default": "application/vnd.ocf+cbor",
+                  "description": ""
+                },
+                "rt": {
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "description": "",
+                  "uniqueItems": true,
+                  "readOnly": true,
+                  "type": "array"
+                },
+                "href": {
+                  "format": "uri",
+                  "type": "string",
+                  "maxLength": 256,
+                  "description": ""
+                },
+                "eps": {
+                  "items": {
+                    "properties": {
+                      "ep": {
+                        "format": "uri",
+                        "type": "string",
+                        "description": ""
+                      },
+                      "pri": {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": ""
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "description": ""
+                },
+                "di": {
+                  "type": "string",
+                  "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+                  "description": ""
+                },
+                "ins": {
+                  "type": "integer",
+                  "description": ""
+                }
+              },
+              "required": [
+                "href",
+                "rt",
+                "if"
+              ],
+              "type": "object"
+            },
+            "type": "array",
+            "description": ""
+          },
+          "rts": {
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          },
+          "if": {
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "oic.if.ll",
+                "oic.if.create",
+                "oic.if.b",
+                "oic.if.baseline"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "maxItems": 4,
+            "type": "array"
+          },
+          "x.org.openconnectivity.bl": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "rt",
+          "if",
+          "links"
+        ]
+      },
+      "Platform": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "if": {
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "oic.if.r",
+                "oic.if.baseline"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          },
+          "n": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnmn": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnnct": {
+            "minItems": 1,
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "description": ""
+            },
+            "readOnly": true,
+            "type": "array",
+            "description": ""
+          },
+          "mnml": {
+            "format": "uri",
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 256,
+            "description": ""
+          },
+          "mnsel": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnpv": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnfv": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "rt": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.wk.p"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "default": [
+              "oic.wk.p"
+            ],
+            "type": "array"
+          },
+          "mnos": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnhw": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "vid": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnmo": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mndt": {
+            "readOnly": true,
+            "type": "string",
+            "pattern": "^([0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|2[0-9]|1[0-9]|0[1-9])$",
+            "description": ""
+          },
+          "pi": {
+            "readOnly": true,
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": ""
+          },
+          "st": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string",
+            "description": ""
+          },
+          "mnsl": {
+            "format": "uri",
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 256,
+            "description": ""
+          }
+        },
+        "required": [
+          "pi",
+          "mnmn"
+        ],
+        "type": "object"
+      },
+      "slinks": {
+        "items": {
+          "properties": {
+            "tag-pos-desc": {
+              "description": "Descriptive relative position of the Resource",
+              "type": "string",
+              "enum": [
+                "unknown",
+                "top",
+                "bottom",
+                "left",
+                "right",
+                "centre",
+                "topleft",
+                "bottomleft",
+                "centreleft",
+                "centreright",
+                "bottomright",
+                "topright",
+                "topcentre",
+                "bottomcentre"
+              ],
+              "readOnly": true
+            },
+            "anchor": {
+              "format": "uri",
+              "type": "string",
+              "maxLength": 256,
+              "description": ""
+            },
+            "p": {
+              "properties": {
+                "bm": {
+                  "type": "integer",
+                  "description": ""
+                }
+              },
+              "type": "object",
+              "required": [
+                "bm"
+              ],
+              "description": ""
+            },
+            "tag-pos-rel": {
+              "minItems": 3,
+              "items": {
+                "minimum": -1,
+                "maximum": 1,
+                "type": "number"
+              },
+              "description": "",
+              "readOnly": true,
+              "maxItems": 3,
+              "type": "array"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 64,
+              "description": ""
+            },
+            "tag-func-desc": {
+              "readOnly": true,
+              "type": "string",
+              "description": ""
+            },
+            "if": {
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "oic.if.baseline",
+                  "oic.if.ll",
+                  "oic.if.b",
+                  "oic.if.rw",
+                  "oic.if.r",
+                  "oic.if.a",
+                  "oic.if.s"
+                ],
+                "type": "string",
+                "maxLength": 64
+              },
+              "description": "",
+              "uniqueItems": true,
+              "readOnly": true,
+              "type": "array"
+            },
+            "rel": {
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "type": "array",
+              "default": [
+                "hosts"
+              ],
+              "description": ""
+            },
+            "type": {
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "type": "array",
+              "default": "application/vnd.ocf+cbor",
+              "description": ""
+            },
+            "rt": {
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "description": "",
+              "uniqueItems": true,
+              "readOnly": true,
+              "type": "array"
+            },
+            "href": {
+              "format": "uri",
+              "type": "string",
+              "maxLength": 256,
+              "description": ""
+            },
+            "eps": {
+              "items": {
+                "properties": {
+                  "ep": {
+                    "format": "uri",
+                    "type": "string",
+                    "description": ""
+                  },
+                  "pri": {
+                    "minimum": 1,
+                    "type": "integer",
+                    "description": ""
+                  }
+                },
+                "type": "object"
+              },
+              "type": "array",
+              "description": ""
+            },
+            "di": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+              "description": ""
+            },
+            "ins": {
+              "type": "integer",
+              "description": ""
+            }
+          },
+          "required": [
+            "href",
+            "rt",
+            "if"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "mnt": {
+        "anyOf": [
+          {
+            "required": [
+              "fr"
+            ]
+          },
+          {
+            "required": [
+              "rb"
+            ]
+          },
+          {
+            "required": [
+              "err"
+            ]
+          }
+        ],
+        "properties": {
+          "err": {
+            "type": "integer",
+            "minimum": 399,
+            "readOnly": true,
+            "maximum": 599,
+            "description": ""
+          },
+          "rt": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.wk.mnt"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "default": [
+              "oic.wk.mnt"
+            ],
+            "type": "array"
+          },
+          "id": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "n": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "rb": {
+            "type": "boolean",
+            "description": ""
+          },
+          "fr": {
+            "type": "boolean",
+            "description": ""
+          },
+          "if": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.if.rw",
+                "oic.if.baseline"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "mnt-update": {
+        "anyOf": [
+          {
+            "required": [
+              "fr"
+            ]
+          },
+          {
+            "required": [
+              "rb"
+            ]
+          }
+        ],
+        "properties": {
+          "rb": {
+            "type": "boolean",
+            "description": ""
+          },
+          "n": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "fr": {
+            "type": "boolean",
+            "description": ""
+          }
+        },
+        "type": "object"
+      },
+      "sbatch-retrieve": {
+        "minItems": 1,
+        "items": {
+          "properties": {
+            "href": {
+              "format": "uri",
+              "type": "string",
+              "maxLength": 256,
+              "description": ""
+            },
+            "rep": {
+              "type": "object",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/BinarySwitch"
+                }
+              ]
+            }
+          },
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "href",
+            "rep"
+          ]
+        },
+        "type": "array"
+      }
+    },
+  "info": {
+    "version": "20190215",
+    "title": "serverlite24521",
+    "termsOfService": "https://openconnectivityfoundation.github.io/core/DISCLAIMER.md",
+    "license": {
+      "x-copyright": "copyright 2016-2017, 2019 Open Connectivity Foundation, Inc. All rights reserved.",
+      "url": "https://github.com/openconnectivityfoundation/core/blob/e28a9e0a92e17042ba3e83661e4c0fbce8bdc4ba/LICENSE.md",
+      "name": "OCF Data Model License"
+    }
+  },
+  "parameters": {
+    "interface-a": {
+      "enum": [
+        "oic.if.a",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    },
+    "interface-update": {
+      "enum": [
+        "oic.if.ll",
+        "oic.if.create",
+        "oic.if.b",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    },
+    "interface-r": {
+      "enum": [
+        "oic.if.r",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    },
+    "interface-rw": {
+      "enum": [
+        "oic.if.rw",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    },
+    "platforminterface-all": {
+      "enum": [
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    }
+  },
+  "produces": [
+    "application/json"
+  ]
+}
