@@ -374,11 +374,11 @@ multi_device_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/multi_device_cli
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_server: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_server.c
+cloud_server: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_server.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_server.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
-cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c
+cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_client.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
