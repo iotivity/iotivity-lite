@@ -1203,8 +1203,12 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
                              ? MBEDTLS_SSL_TRANSPORT_STREAM
                              : MBEDTLS_SSL_TRANSPORT_DATAGRAM;
 
-      oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
-                                 transport_type);
+      if (oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
+                                     transport_type) < 0) {
+        OC_ERR("oc_tls: error in tls_populate_ssl_config");
+        oc_tls_free_peer(peer, false);
+        return NULL;
+      }
 
 #ifdef OC_PKI
 #if defined(OC_CLOUD) && defined(OC_CLIENT)
@@ -1222,7 +1226,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 
       if (err != 0) {
         OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
-        oc_memb_free(&tls_peers_s, peer);
+        oc_tls_free_peer(peer, false);
         return NULL;
       }
 
@@ -1232,7 +1236,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
           mbedtls_ssl_set_client_transport_id(
             &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
             sizeof(endpoint->addr)) != 0) {
-        oc_memb_free(&tls_peers_s, peer);
+        oc_tls_free_peer(peer, false);
         return NULL;
       }
       oc_list_add(tls_peers, peer);
