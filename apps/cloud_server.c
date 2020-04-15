@@ -142,10 +142,18 @@ static const char *device_rt = "oic.d.cloudDevice";
 static const char *device_name = "Cloud Device";
 
 static const char *manufacturer = "ocfcloud.com";
+
+#ifdef OC_SECURITY
+static const char *cis;
+static const char *auth_code;
+static const char *sid;
+static const char *apn;
+#else  /* OC_SECURITY */
 static const char *cis = "coap+tcp://127.0.0.1:5683";
 static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "test";
+#endif /* OC_SECURITY */
 oc_resource_t *res1;
 oc_resource_t *res2;
 
@@ -370,7 +378,9 @@ main(int argc, char *argv[])
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
 
   run();

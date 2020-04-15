@@ -54,10 +54,17 @@ static const char *device_name = "CloudDevice";
 
 static const char *manufacturer = "ocfcloud.com";
 
+#ifdef OC_SECURITY
+static const char *cis;
+static const char *auth_code;
+static const char *sid;
+static const char *apn;
+#else  /* OC_SECURITY */
 static const char *cis = "coap+tcp://127.0.0.1:5683";
 static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "test";
+#endif /* OC_SECURITY */
 
 #define SCANF(...)                                                             \
   do {                                                                         \
@@ -334,7 +341,9 @@ ocf_event_thread(LPVOID lpParam)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -376,7 +385,9 @@ ocf_event_thread(void *data)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -402,9 +413,6 @@ ocf_event_thread(void *data)
 int
 main(int argc, char *argv[])
 {
-  PRINT("Default parameters: device_name: %s, auth_code: %s, cis: %s, sid: %s, "
-        "apn: %s\n",
-        device_name, auth_code, cis, sid, apn);
   if (argc == 1) {
     PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
           "<apn>\n"
@@ -430,6 +438,10 @@ main(int argc, char *argv[])
     apn = argv[5];
     PRINT("apn: %s\n", argv[5]);
   }
+
+  PRINT("device_name: %s, auth_code: %s, cis: %s, sid: %s, "
+        "apn: %s\n",
+        device_name, auth_code, cis, sid, apn);
 
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);
