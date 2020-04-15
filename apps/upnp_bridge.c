@@ -57,6 +57,7 @@ static struct timespec ts;
 
 int quit = 0;
 GMainLoop *s_main_loop = NULL;
+GHashTable *s_resource_lookup = NULL;
 
 static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data) {
     GUPnPServiceProxy *proxy = (GUPnPServiceProxy*) user_data;
@@ -223,6 +224,7 @@ static void put_dimming(oc_request_t *request, oc_interface_mask_t iface_mask, v
 }
 
 void register_binary_switch_resource(const char *name, const char *uri, size_t device_index, void *user_data) {
+    // user_data is the service proxy
     oc_resource_t *res = oc_new_resource(name, uri, 1, device_index);
     oc_resource_bind_resource_type(res, "oic.r.switch.binary");
     oc_resource_bind_resource_interface(res, OC_IF_A);
@@ -233,9 +235,11 @@ void register_binary_switch_resource(const char *name, const char *uri, size_t d
     oc_resource_set_request_handler(res, OC_POST, post_switch, user_data);
     oc_resource_set_request_handler(res, OC_PUT, put_switch, user_data);
     oc_add_resource(res);
+    g_hash_table_insert(s_resource_lookup, user_data, res); // add to resource lookup
 }
 
 void register_light_dimming_resource(const char *name, const char *uri, size_t device_index, void *user_data) {
+    // user_data is the service proxy
     oc_resource_t *res = oc_new_resource(name, uri, 1, device_index);
     oc_resource_bind_resource_type(res, "oic.r.light.dimming");
     oc_resource_bind_resource_interface(res, OC_IF_A);
@@ -246,18 +250,24 @@ void register_light_dimming_resource(const char *name, const char *uri, size_t d
     oc_resource_set_request_handler(res, OC_POST, post_dimming, user_data);
     oc_resource_set_request_handler(res, OC_PUT, put_dimming, user_data);
     oc_add_resource(res);
+    g_hash_table_insert(s_resource_lookup, user_data, res); // add to resource lookup
 }
 
-// Callback: timeout callback to end discovery loop
-static gboolean timeout_callback(gpointer user_data) {
-    PRINT("End of discovery callback\n");
-    if (user_data) {
-        GMainLoop *main_loop = (GMainLoop*) user_data;
-        g_main_loop_quit(main_loop);
-    } else {
-        PRINT("Waiting for Client... Use Control-C to exit\n");
+void unregister_resource(oc_resource_t *resource) {
+    if (resource) {
+        // No way to really unregister resources, just hide them
+        oc_resource_set_discoverable(resource, false);
+        oc_resource_set_observable(resource, false);
     }
-    return FALSE;
+}
+
+// Callback: rescan for devices and services
+static gboolean rescan_callback(gpointer user_data) {
+    if (user_data) {
+        GUPnPControlPoint *control_point = (GUPnPControlPoint *) user_data;
+        gssdp_resource_browser_rescan(GSSDP_RESOURCE_BROWSER(control_point));
+    }
+    return TRUE;
 }
 
 // Callback: a device has been discovered
@@ -282,7 +292,7 @@ static void device_proxy_available(GUPnPControlPoint *control_point, GUPnPDevice
         PRINT("Adding %s, %s to bridge... ", udn + 5, device_name);
         app_mutex_lock(app_sync_lock);
         size_t vd_index = oc_bridge_add_virtual_device((uint8_t*) udn + 5, strlen(udn) - 5, "upnp", "/oic/d",
-                "oic.d.light", device_name, "ocf.2.1.0", "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+                "oic.d.light", device_name, "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
         app_mutex_unlock(app_sync_lock);
         PRINT("Virtual device index: %d\n", vd_index);
 
@@ -362,9 +372,51 @@ static void service_proxy_available(GUPnPControlPoint *control_point, GUPnPServi
     }
 }
 
+// Callback: a previously discovered device is no longer available
+static void device_proxy_unavailable(GUPnPControlPoint *control_point, GUPnPDeviceProxy *proxy, gpointer user_data) {
+
+    GUPnPDeviceInfo *device_info = GUPNP_DEVICE_INFO(proxy);
+    const char *udn = gupnp_device_info_get_udn(device_info);
+
+    (void) control_point;
+    (void) user_data;
+
+    // See if virtual device exists for this uuid
+    // Note: UPnP udn starts with 'uuid:' (uuid starts on the 6th char)
+    app_mutex_lock(app_sync_lock);
+    size_t vd_index = oc_bridge_get_virtual_device_index((uint8_t*) udn + 5, strlen(udn) - 5, "upnp");
+    app_mutex_unlock(app_sync_lock);
+
+    if (vd_index > 0) {
+        char *device_name = gupnp_device_info_get_friendly_name(device_info);
+        PRINT("\nTODO: Tell the bridge to remove %s, %s from the vods list... ", udn + 5, device_name);
+        // TODO: remove from bridge's vods list
+        PRINT("Virtual device index: %d\n", vd_index);
+        g_free(device_name);
+    }
+}
+
+// Callback: a previously discovered service is no longer available
+static void service_proxy_unavailable(GUPnPControlPoint *control_point, GUPnPServiceProxy *proxy, gpointer user_data) {
+
+    GUPnPServiceInfo *service_info = GUPNP_SERVICE_INFO(proxy);
+    const char *udn = gupnp_service_info_get_udn(service_info);
+
+    (void) control_point;
+    (void) user_data;
+
+    // Lookup resource, if it exists unregister resource
+    gpointer resource = g_hash_table_lookup(s_resource_lookup, proxy);
+    if (resource) {
+        const char *service_type = gupnp_service_info_get_service_type(service_info);
+        PRINT("\nUnregister %s, %s\n", udn, service_type);
+        unregister_resource((oc_resource_t*) resource);
+    }
+}
+
 static int app_init(void) {
     int ret = oc_init_platform("Desktop PC", NULL, NULL);
-    ret |= oc_bridge_add_bridge_device("UPnP Bridge", "ocf.2.1.0", "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+    ret |= oc_bridge_add_bridge_device("UPnP Bridge", "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
     return ret;
 }
 
@@ -391,9 +443,7 @@ void handle_signal(int signal) {
 }
 
 #if defined(_WIN32)
-DWORD WINAPI
-ocf_event_thread(LPVOID lpParam)
-{
+DWORD WINAPI ocf_event_thread(LPVOID lpParam) {
     oc_clock_time_t next_event;
     while (quit != 1) {
         app_mutex_lock(app_sync_lock);
@@ -455,19 +505,25 @@ static void display_menu(void) {
 }
 
 void discover_devices(void) {
+    // Create a hash table for resource lookup
+    s_resource_lookup = g_hash_table_new(NULL, NULL);
+
     // Create a control point for all devices and services
     GUPnPContext *context = gupnp_context_new(NULL, NULL, 0, NULL);
     GUPnPControlPoint *control_point_ssdp_all = gupnp_control_point_new(context, "ssdp:all");
 
     g_signal_connect(control_point_ssdp_all, "device-proxy-available", G_CALLBACK(device_proxy_available), NULL);
     g_signal_connect(control_point_ssdp_all, "service-proxy-available", G_CALLBACK(service_proxy_available), NULL);
+    g_signal_connect(control_point_ssdp_all, "device-proxy-unavailable", G_CALLBACK(device_proxy_unavailable), NULL);
+    g_signal_connect(control_point_ssdp_all, "service-proxy-unavailable", G_CALLBACK(service_proxy_unavailable), NULL);
 
     // Tell the Control Point to start searching
     gssdp_resource_browser_set_active(GSSDP_RESOURCE_BROWSER(control_point_ssdp_all), TRUE);
 
-    // Enter the main loop. This will start the search and result in callbacks to proxy_available() functions
+    // Enter the main loop. This will start the search and result in callbacks to proxy_available() and proxy_unavailable() functions
     s_main_loop = g_main_loop_new(NULL, 0);
-    g_timeout_add_seconds(5, timeout_callback, NULL);
+    g_timeout_add_seconds(5, rescan_callback, control_point_ssdp_all); // rescan every 5 seconds
+    PRINT("\nWaiting for Client... Use Control-C to exit\n");
     g_main_loop_run(s_main_loop); // terminated with Control-C
 
     // Clean up
