@@ -64,7 +64,7 @@ extern "C"
 
 enum
 {
-#ifdef OC_TCP //TODO: need to check about tls packet.
+#ifdef OC_TCP // TODO: need to check about tls packet.
   OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
 #else /* OC_TCP */
 #ifdef OC_SECURITY
@@ -123,7 +123,11 @@ void oc_send_discovery_request(oc_message_t *message);
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 #ifdef OC_DNS_LOOKUP
-int oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags);
+int oc_dns_lookup(const char *domain, oc_string_t *addr,
+                  enum transport_flags flags);
+#ifdef OC_DNS_CACHE
+void oc_dns_clear_cache(void);
+#endif /* OC_DNS_CACHE */
 #endif /* OC_DNS_LOOKUP */
 
 oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
