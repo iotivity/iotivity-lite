@@ -18,6 +18,7 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_pki.h"
 #include <signal.h>
 #include <inttypes.h>
 
@@ -142,6 +143,17 @@ static const char *device_name = "Cloud Device";
 
 static const char *manufacturer = "ocfcloud.com";
 
+#ifdef OC_SECURITY
+static const char *cis;
+static const char *auth_code;
+static const char *sid;
+static const char *apn;
+#else  /* OC_SECURITY */
+static const char *cis = "coap+tcp://127.0.0.1:5683";
+static const char *auth_code = "test";
+static const char *sid = "00000000-0000-0000-0000-000000000001";
+static const char *apn = "test";
+#endif /* OC_SECURITY */
 oc_resource_t *res1;
 oc_resource_t *res2;
 
@@ -284,9 +296,102 @@ register_resources(void)
   oc_add_resource(res2);
 }
 
-int
-main(void)
+#if defined(OC_SECURITY) && defined(OC_PKI)
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
+  FILE *fp = fopen(file_path, "r");
+  if (fp == NULL) {
+    PRINT("ERROR: unable to read PEM\n");
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  long pem_len = ftell(fp);
+  if (pem_len < 0) {
+    PRINT("ERROR: could not obtain length of file\n");
+    fclose(fp);
+    return -1;
+  }
+  if (pem_len > (long)*buffer_len) {
+    PRINT("ERROR: buffer provided too small\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+  buffer[pem_len] = '\0';
+  *buffer_len = (size_t)pem_len;
+  return 0;
+}
+#endif /* OC_SECURITY && OC_PKI */
+
+void
+factory_presets_cb(size_t device, void *data)
+{
+  (void)device;
+  (void)data;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  unsigned char cloud_ca[4096];
+  size_t cert_len = 4096;
+  if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int rootca_credid =
+    oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+#endif /* OC_SECURITY && OC_PKI */
+}
+
+int
+main(int argc, char *argv[])
+{
+  PRINT("Default parameters: device_name: %s, auth_code: %s, cis: %s, sid: %s, "
+        "apn: %s\n",
+        device_name, auth_code, cis, sid, apn);
+  if (argc == 1) {
+    PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
+          "<apn>\n"
+          "Using the default values\n");
+  }
+  if (argc > 1) {
+    device_name = argv[1];
+    PRINT("device_name: %s\n", argv[1]);
+  }
+  if (argc > 2) {
+    auth_code = argv[2];
+    PRINT("auth_code: %s\n", argv[2]);
+  }
+  if (argc > 3) {
+    cis = argv[3];
+    PRINT("cis : %s\n", argv[3]);
+  }
+  if (argc > 4) {
+    sid = argv[4];
+    PRINT("sid: %s\n", argv[4]);
+  }
+  if (argc > 5) {
+    apn = argv[5];
+    PRINT("apn: %s\n", argv[5]);
+  }
+
   int ret = init();
   if (ret < 0) {
     return ret;
@@ -299,6 +404,7 @@ main(void)
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
   ret = oc_main_init(&handler);
   if (ret < 0)
@@ -307,6 +413,9 @@ main(void)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
 
   run();

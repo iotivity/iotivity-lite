@@ -632,7 +632,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     fclose(fp);
     return -1;
   }
-  if (pem_len > (long)*buffer_len) {
+  if (pem_len >= (long)*buffer_len) {
     PRINT("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
@@ -648,6 +648,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     return -1;
   }
   fclose(fp);
+  buffer[pem_len] = '\0';
   *buffer_len = (size_t)pem_len;
   return 0;
 }
@@ -686,7 +687,6 @@ factory_presets_cb(size_t device, void *data)
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
-
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
     0, ee_credid, (const unsigned char *)cert, cert_len);
 

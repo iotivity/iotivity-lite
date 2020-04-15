@@ -55,11 +55,49 @@
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
 %rename(newEndpoint) oc_new_endpoint;
 %ignore oc_free_endpoint;
-%rename(freeEndpoint) jni_free_endpoint;
+// tell swig to use our JNI code not to generate its own.
+%native (freeEndpoint) void freeEndpoint(oc_endpoint_t *endpoint);
 %inline %{
 void jni_free_endpoint(oc_endpoint_t *endpoint) {
   oc_free_endpoint(endpoint);
   endpoint = NULL;
+}
+%}
+%{
+/*
+ * Hand rolled JNI code. Is here to prevent double freeing of memory.
+ * If `freeEndpoint` is called then the developer is explicitly taking ownership
+ * of the `OCEndpoint`.  If `swigCMemOwn` is `true` it must be changed to false
+ * to prevent the Java GC from trying to free the same block of memory a second
+ * time.
+ *
+ * Since this is freeing memory we also set the swigCPtr to null to instantly
+ * cause code failures should the developer try and use the Java OCEndpoint that
+ * they just freed. In JUnit value of the `swigCPtr` can be checked to verify the
+ * operation of this code. We can not check `swigCMemOwn` directly because it is
+ * a private member variable with not get method to access it.
+ */
+SWIGEXPORT void JNICALL Java_org_iotivity_OCEndpointUtilJNI_freeEndpoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_endpoint_t *arg1 = NULL;
+
+  (void) jcls;
+  jboolean jswigCMemOwn = false;
+  jfieldID swigCMemOwn_fid = (*jenv)->GetFieldID(jenv, cls_OCEndpoint, "swigCMemOwn", "Z");
+  if (swigCMemOwn_fid != 0) {
+    jswigCMemOwn = (*jenv)->GetBooleanField(jenv, jarg1_, swigCMemOwn_fid);
+    if (jswigCMemOwn) {
+      (*jenv)->SetBooleanField(jenv, jarg1_, swigCMemOwn_fid, false);
+    }
+  }
+
+  arg1 = (oc_endpoint_t *)jarg1;
+  jni_free_endpoint(arg1);
+
+  jfieldID swigCPtr_fid = (*jenv)->GetFieldID(jenv, cls_OCEndpoint, "swigCPtr", "J");
+  if (swigCPtr_fid != 0) {
+    (*jenv)->SetLongField(jenv, jarg1_, swigCPtr_fid, 0);
+  }
 }
 %}
 %ignore oc_endpoint_set_di;
