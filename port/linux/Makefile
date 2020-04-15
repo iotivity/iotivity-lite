@@ -320,9 +320,9 @@ smart_lock: libiotivity-lite-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-client_certification_tests: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_certification_tests.c copy_idd_files
+client_certification_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/client_certification_tests.c copy_idd_files
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_certification_tests.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/client_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
 
 temp_sensor: libiotivity-lite-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux.c
 	@mkdir -p $@_creds

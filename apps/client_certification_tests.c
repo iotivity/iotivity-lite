@@ -537,7 +537,7 @@ main(void)
 #ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif
-
+  oc_set_max_app_data_size(32768);
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
