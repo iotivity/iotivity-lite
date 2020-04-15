@@ -1660,6 +1660,59 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 #endif /* OC_TCP */
 
 #ifdef OC_DNS_LOOKUP
+#ifdef OC_DNS_CACHE
+typedef struct oc_dns_cache_t
+{
+  struct oc_dns_cache_t *next;
+  oc_string_t domain;
+  union dev_addr addr;
+} oc_dns_cache_t;
+
+OC_MEMB(dns_s, oc_dns_cache_t, 1);
+OC_LIST(dns_cache);
+
+static oc_dns_cache_t *
+oc_dns_lookup_cache(const char *domain)
+{
+  if (oc_list_length(dns_cache) == 0) {
+    return NULL;
+  }
+  oc_dns_cache_t *c = (oc_dns_cache_t *)oc_list_head(dns_cache);
+  while (c) {
+    if (strlen(domain) == oc_string_len(c->domain) &&
+        memcmp(domain, oc_string(c->domain), oc_string_len(c->domain)) == 0) {
+      return c;
+    }
+    c = c->next;
+  }
+  return NULL;
+}
+
+static int
+oc_dns_cache_domain(const char *domain, union dev_addr *addr)
+{
+  oc_dns_cache_t *c = (oc_dns_cache_t *)oc_memb_alloc(&dns_s);
+  if (c) {
+    oc_new_string(&c->domain, domain, strlen(domain));
+    memcpy(&c->addr, addr, sizeof(union dev_addr));
+    oc_list_add(dns_cache, c);
+    return 0;
+  }
+  return -1;
+}
+
+void
+oc_dns_clear_cache(void)
+{
+  oc_dns_cache_t *c = (oc_dns_cache_t *)oc_list_pop(dns_cache);
+  while (c) {
+    oc_free_string(&c->domain);
+    oc_memb_free(&dns_s, c);
+    c = (oc_dns_cache_t *)oc_list_pop(dns_cache);
+  }
+}
+#endif /* OC_DNS_CACHE */
+
 int
 oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 {
@@ -1667,20 +1720,55 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     OC_ERR("Error of input parameters");
     return -1;
   }
+  int ret = -1;
+  union dev_addr a;
 
-  struct addrinfo hints, *result = NULL;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = (flags & IPV6) ? AF_INET6 : AF_INET;
-  hints.ai_socktype = (flags & TCP) ? SOCK_STREAM : SOCK_DGRAM;
-  int ret = getaddrinfo(domain, NULL, &hints, &result);
+#ifdef OC_DNS_CACHE
+  oc_dns_cache_t *c = oc_dns_lookup_cache(domain);
+
+  if (!c) {
+#endif /* OC_DNS_CACHE */
+    memset(&a, 0, sizeof(union dev_addr));
+
+    struct addrinfo hints, *result = NULL;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = (flags & IPV6) ? AF_INET6 : AF_INET;
+    hints.ai_socktype = (flags & TCP) ? SOCK_STREAM : SOCK_DGRAM;
+    ret = getaddrinfo(domain, NULL, &hints, &result);
+
+    if (ret == 0) {
+      if (flags & IPV6) {
+        struct sockaddr_in6 *r = (struct sockaddr_in6 *)result->ai_addr;
+        memcpy(a.ipv6.address, r->sin6_addr.s6_addr,
+               sizeof(r->sin6_addr.s6_addr));
+        a.ipv6.port = ntohs(r->sin6_port);
+        a.ipv6.scope = r->sin6_scope_id;
+      }
+#ifdef OC_IPV4
+      else {
+        struct sockaddr_in *r = (struct sockaddr_in *)result->ai_addr;
+        memcpy(a.ipv4.address, &r->sin_addr.s_addr, sizeof(r->sin_addr.s_addr));
+        a.ipv4.port = ntohs(r->sin_port);
+      }
+#endif /* OC_IPV4 */
+#ifdef OC_DNS_CACHE
+      oc_dns_cache_domain(domain, &a);
+#endif /* OC_DNS_CACHE */
+    }
+    freeaddrinfo(result);
+#ifdef OC_DNS_CACHE
+  } else {
+    ret = 0;
+    memcpy(&a, &c->addr, sizeof(union dev_addr));
+  }
+#endif /* OC_DNS_CACHE */
 
   if (ret == 0) {
     char address[INET6_ADDRSTRLEN + 2] = { 0 };
     const char *dest = NULL;
     if (flags & IPV6) {
-      struct sockaddr_in6 *s_addr = (struct sockaddr_in6 *)result->ai_addr;
       address[0] = '[';
-      dest = inet_ntop(AF_INET6, (void *)&s_addr->sin6_addr, address + 1,
+      dest = inet_ntop(AF_INET6, (void *)a.ipv6.address, address + 1,
                        INET6_ADDRSTRLEN);
       size_t addr_len = strlen(address);
       address[addr_len] = ']';
@@ -1688,9 +1776,8 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     }
 #ifdef OC_IPV4
     else {
-      struct sockaddr_in *s_addr = (struct sockaddr_in *)result->ai_addr;
       dest =
-        inet_ntop(AF_INET, (void *)&s_addr->sin_addr, address, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, (void *)a.ipv4.address, address, INET_ADDRSTRLEN);
     }
 #endif /* OC_IPV4 */
     if (dest) {
@@ -1701,7 +1788,6 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     }
   }
 
-  freeaddrinfo(result);
   return ret;
 }
 #endif /* OC_DNS_LOOKUP */
