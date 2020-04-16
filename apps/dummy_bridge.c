@@ -220,8 +220,8 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("Desktop PC", NULL, NULL);
-  ret |= oc_bridge_add_bridge_device("Dummy Bridge", "ocf.1.0.0",
-                                     "ocf.res.1.0.0", NULL, NULL);
+  ret |= oc_bridge_add_bridge_device("Dummy Bridge", "ocf.2.0.0",
+                                     "ocf.res.1.0.0, ocf.sh.1.0.0", NULL, NULL);
   return ret;
 }
 
@@ -375,8 +375,8 @@ poll_for_discovered_devices()
       virtual_device_index = oc_bridge_add_virtual_device(
         (uint8_t *)virtual_lights[i].uuid, OC_UUID_LEN,
         virtual_lights[i].eco_system, "/oic/d", "oic.d.light",
-        virtual_lights[i].device_name, "ocf.1.0.0", "ocf.res.1.0.0", NULL,
-        NULL);
+        virtual_lights[i].device_name, "ocf.2.0.0",
+        "ocf.res.1.0.0, ocf.sh.1.0.0", NULL, NULL);
       if (virtual_device_index != 0) {
 #if USE_VIRTUAL_DEVICE_LOOKUP
         register_binaryswitch_resource(virtual_lights[i].device_name,
