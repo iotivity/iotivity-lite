@@ -38,7 +38,9 @@ static const char *device_name = "OCFTestServer";
 static const char *manufacturer = "OCF";
 
 static pthread_t event_thread;
+#ifdef OC_CLOUD
 static pthread_mutex_t cloud_sync_lock;
+#endif /* OC_CLOUD */
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
@@ -75,6 +77,7 @@ display_menu(void)
   PRINT("-----------------------------------------------\n");
   PRINT("[1] Toggle switch resource\n");
   PRINT("-----------------------------------------------\n");
+#ifdef OC_CLOUD
   PRINT("Cloud\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[10] Cloud Register\n");
@@ -85,12 +88,14 @@ display_menu(void)
   PRINT("[15] Publish Resources\n");
   PRINT("[16] Send Ping\n");
   PRINT("-----------------------------------------------\n");
+#endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
 
+#ifdef OC_CLOUD
 static void
 cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                        void *data)
@@ -345,6 +350,7 @@ cloud_send_ping(void)
 
   PRINT("\nERROR issuing Ping request\n");
 }
+#endif /* OC_CLOUD */
 
 oc_define_interrupt_handler(toggle_switch)
 {
@@ -1082,6 +1088,7 @@ main(void)
     case 1:
       toggle_switch_resource();
       break;
+#ifdef OC_CLOUD
     case 10:
       cloud_register();
       break;
@@ -1103,6 +1110,7 @@ main(void)
     case 16:
       cloud_send_ping();
       break;
+#endif /* OC_CLOUD */
     case 99:
       handle_signal(0);
       break;
