@@ -21,7 +21,7 @@ It can be installed on Ubuntu Linux using the following command.
 
 ### Get IoTivity-Lite
 Checkout IoTivity-lite git project run the following command to get a anonymous copy of
-iotivity-lite.  Checkout the SWIG branch.
+iotivity-lite.
 
     git clone https://gitlab.iotivity.org/iotivity/iotivity-lite.git
 

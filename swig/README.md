@@ -47,7 +47,7 @@ Instructions for Linux
 - A local copy of IoTivity-lite
 
 Checkout IoTivity-Lite git project run the following command to get a anonymous copy of
-iotivity-lite.  Checkout the SWIG branch.
+iotivity-lite.
 
     git clone https://gitlab.iotivity.org/iotivity/iotivity-lite.git
 
