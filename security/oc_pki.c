@@ -46,6 +46,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   mbedtls_x509_crt int_ca;
   mbedtls_x509_crt_init(&int_ca);
   if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
     return -1;
   }
   if (cert[cert_size - 1] != '\0') {
@@ -54,7 +55,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
 
   ret = mbedtls_x509_crt_parse(&int_ca, (const unsigned char *)cert, c_size);
   if (ret < 0) {
-    OC_ERR("could not parse intermediate cert %d", ret);
+    OC_ERR("could not parse intermediate cert: %d", ret);
     return -1;
   }
   OC_DBG("parsed intermediate CA cert");
@@ -68,7 +69,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
     oc_string_len(c->publicdata.data) + 1);
   if (ret < 0) {
     OC_ERR("could not parse existing identity cert that chains to this "
-           "intermediate cert %d",
+           "intermediate cert: %d",
            ret);
     mbedtls_x509_crt_free(&int_ca);
     return -1;
@@ -137,6 +138,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   mbedtls_pk_init(&pkey);
 
   if (oc_certs_is_PEM(cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
     return -1;
   }
   if (cert[cert_size - 1] != '\0') {
@@ -268,6 +270,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   /* Parse root cert */
   if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
     return -1;
   }
   if (cert[cert_size - 1] != '\0') {
@@ -275,6 +278,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
   }
   int ret = mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert, c_size);
   if (ret < 0) {
+    OC_ERR("could not parse the provided trust anchor: %d", ret);
     return -1;
   }
   OC_DBG("parsed the provided trust anchor");
@@ -291,7 +295,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
       &cert2, (const unsigned char *)oc_string(c->publicdata.data),
       oc_string_len(c->publicdata.data) + 1);
     if (ret < 0) {
-      OC_ERR("could not parse stored certificate %d", ret);
+      OC_ERR("could not parse stored certificate: %d", ret);
       mbedtls_x509_crt_free(&cert2);
       continue;
     }
