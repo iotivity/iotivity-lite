@@ -284,9 +284,16 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
-  return oc_core_add_new_device_at_index(uri, rt, name, spec_version,
-                                         data_model_version, device_count,
-                                         add_device_cb, data);
+  oc_device_info_t *device_info = oc_core_add_new_device_at_index(
+    uri, rt, name, spec_version, data_model_version, device_count,
+    add_device_cb, data);
+  // The call to oc_core_add_new_device_at_index causes the device_count to
+  // increase by 1 so must call connectivity_init for device_count - 1
+  if (oc_connectivity_init(device_count - 1) < 0) {
+    oc_abort("error initializing connectivity for device");
+  }
+
+  return device_info;
 }
 
 oc_device_info_t *
@@ -408,10 +415,6 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
   oc_device_info[index].data = data;
-
-  if (oc_connectivity_init(index) < 0) {
-    oc_abort("error initializing connectivity for device");
-  }
 
   if (index >= device_count) {
     device_count = index + 1;

@@ -19,6 +19,22 @@
 #include "oc_core_res.h"
 #include <stdint.h>
 
+/**
+ * Add new device resource to the stack. This initilizes all the stack related
+ * resources that a specified by the OCF specification.
+ *
+ * If the stack is built with OC_SECURITY this will read the existing security
+ * settings for the device. If no settings are found they will be initilized.
+ *
+ * Unlike oc_core_add_new_device() the network connection is not initilized by
+ * calling this function.  This is purposly done since the primary use of this
+ * function is to add virtual devices.  Virtual devices should not initilize a
+ * the network connection unless the bridge device they belong to is onboarded.
+ *
+ * @see oc_core_add_new_device
+ * @see oc_connectivity_init
+ * @see oc_connectivity_shutdown
+ */
 oc_device_info_t *oc_core_add_new_device_at_index(
   const char *uri, const char *rt, const char *name, const char *spec_version,
   const char *data_model_version, size_t index,

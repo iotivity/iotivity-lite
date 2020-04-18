@@ -1057,6 +1057,9 @@ oc_send_buffer(oc_message_t *message)
   SOCKET send_sock = INVALID_SOCKET;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+  if (!dev) {
+    return -1;
+  }
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
     return oc_tcp_send_buffer(dev, message, &receiver);
