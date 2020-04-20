@@ -655,6 +655,8 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
    * supports CREATE, RETRIEVE and UPDATE.
    */
   case OC_IF_A:
+  case OC_IF_STARTUP:
+  case OC_IF_STARTUP_REVERT:
     break;
   }
   return supported;
