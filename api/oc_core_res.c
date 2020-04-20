@@ -144,6 +144,12 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   if (iface_mask & OC_IF_CREATE) {
     oc_rep_add_text_string(if, "oic.if.create");
   }
+  if (iface_mask & OC_IF_STARTUP) {
+    oc_rep_add_text_string(if, "oic.if.startup");
+  }
+  if (iface_mask & OC_IF_STARTUP_REVERT) {
+    oc_rep_add_text_string(if, "oic.if.startup.revert");
+  }
   if (iface_mask & OC_IF_B) {
     oc_rep_add_text_string(if, "oic.if.b");
   }

@@ -111,7 +111,9 @@ typedef enum {
   OC_IF_RW = 1 << 5,
   OC_IF_A = 1 << 6,
   OC_IF_S = 1 << 7,
-  OC_IF_CREATE = 1 << 8
+  OC_IF_CREATE = 1 << 8,
+  OC_IF_STARTUP = 1 << 9,
+  OC_IF_STARTUP_REVERT = 1 << 10
 } oc_interface_mask_t;
 
 typedef enum {
