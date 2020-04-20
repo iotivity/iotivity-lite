@@ -620,6 +620,10 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_S;
   if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
     iface_mask |= OC_IF_CREATE;
+  if (14 == if_len && strncmp(iface, "oic.if.startup", if_len) == 0)
+    iface_mask |= OC_IF_STARTUP;
+  if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0)
+    iface_mask |= OC_IF_STARTUP_REVERT;
   return iface_mask;
 }
 
