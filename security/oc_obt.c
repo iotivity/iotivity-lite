@@ -375,8 +375,10 @@ static oc_event_callback_retval_t
 free_discovery_cb(void *data)
 {
   oc_discovery_cb_t *c = (oc_discovery_cb_t *)data;
-  oc_list_remove(oc_discovery_cbs, c);
-  oc_memb_free(&oc_discovery_s, c);
+  if (is_item_in_list(oc_discovery_cbs, c)) {
+    oc_list_remove(oc_discovery_cbs, c);
+    oc_memb_free(&oc_discovery_s, c);
+  }
   return OC_EVENT_DONE;
 }
 
@@ -2699,10 +2701,10 @@ oc_obt_shutdown(void)
     oc_memb_free(&oc_devices_s, device);
     device = (oc_device_t *)oc_list_pop(oc_devices);
   }
-  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_head(oc_discovery_cbs);
   while (cb) {
     free_discovery_cb(cb);
-    cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+    cb = (oc_discovery_cb_t *)oc_list_head(oc_discovery_cbs);
   }
 }
 
