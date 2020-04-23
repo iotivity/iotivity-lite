@@ -26,6 +26,8 @@
 #endif
 #include <signal.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #if defined(_WIN32)
 static HANDLE event_thread;
@@ -466,6 +468,19 @@ display_summary(void)
     }                                                                          \
   } while (0)
 
+bool
+directoryFound(const char *path)
+{
+  struct stat info;
+  if (stat(path, &info) != 0) {
+    return false;
+  }
+  if (info.st_mode & S_IFDIR) {
+    return true;
+  }
+  return false;
+}
+
 int
 main(void)
 {
@@ -488,6 +503,10 @@ main(void)
                                           register_resources };
 
 #ifdef OC_STORAGE
+  if (!directoryFound("dummy_bridge_creds")) {
+    printf("Creating dummy_bridge_creds directory for persistant storage.");
+    mkdir("dummy_bridge_creds", 0755);
+  }
   oc_storage_config("./dummy_bridge_creds/");
 #endif /* OC_STORAGE */
 
