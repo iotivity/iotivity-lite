@@ -1,5 +1,5 @@
 ---
-image: gcc
+image: gcc:9.3.0
 
 Linux_Secured_Test:
   variables:
