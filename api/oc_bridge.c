@@ -245,8 +245,6 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              const char *data_model_version,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
-  (void)virtual_device_id;
-
   size_t vd_index =
     oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
 
@@ -293,6 +291,25 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   }
 #endif // OC_SECURITY
   return vd_index;
+}
+
+int
+oc_bridge_remove_virtual_device(size_t device_index)
+{
+  /*
+   * Check if the device index is a virtual device if so remove the device
+   * from the vods_list (oic.r.vodslist) and shutdown the oc_connectivity.
+   */
+  oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
+    if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
+        0) {
+      remove_virtual_device_from_vods_list(oc_core_get_device_id(device_index));
+      oc_connectivity_shutdown(device_index);
+      return 0;
+    }
+  }
+  return -1;
 }
 
 size_t

@@ -1590,6 +1590,9 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    return;
+  }
   dev->terminate = TRUE;
   /* signal WSASelectEvent() in the thread to leave */
   WSASetEvent(dev->event_server_handle);
