@@ -253,11 +253,11 @@ void register_light_dimming_resource(const char *name, const char *uri, size_t d
     g_hash_table_insert(s_resource_lookup, user_data, res); // add to resource lookup
 }
 
-void unregister_resource(oc_resource_t *resource) {
+void remove_resource(oc_resource_t *resource) {
     if (resource) {
-        // No way to really unregister resources, just hide them
         oc_resource_set_discoverable(resource, false);
         oc_resource_set_observable(resource, false);
+        oc_delete_resource(resource);
     }
 }
 
@@ -389,9 +389,7 @@ static void device_proxy_unavailable(GUPnPControlPoint *control_point, GUPnPDevi
 
     if (vd_index > 0) {
         char *device_name = gupnp_device_info_get_friendly_name(device_info);
-        PRINT("\nTODO: Tell the bridge to remove %s, %s from the vods list... ", udn + 5, device_name);
-        // TODO: remove from bridge's vods list
-        PRINT("Virtual device index: %d\n", vd_index);
+        PRINT("\nUnavailable: Virtual device index: %d, %s, %s\n", vd_index, udn + 5, device_name);
         g_free(device_name);
     }
 }
@@ -405,12 +403,13 @@ static void service_proxy_unavailable(GUPnPControlPoint *control_point, GUPnPSer
     (void) control_point;
     (void) user_data;
 
-    // Lookup resource, if it exists unregister resource
+    // Lookup resource, if it exists remove resource
     gpointer resource = g_hash_table_lookup(s_resource_lookup, proxy);
     if (resource) {
         const char *service_type = gupnp_service_info_get_service_type(service_info);
-        PRINT("\nUnregister %s, %s\n", udn, service_type);
-        unregister_resource((oc_resource_t*) resource);
+        PRINT("\nRemoved %s, %s\n", udn, service_type);
+        remove_resource((oc_resource_t*) resource);
+        g_hash_table_remove(s_resource_lookup, proxy);
     }
 }
 
@@ -522,7 +521,7 @@ void discover_devices(void) {
 
     // Enter the main loop. This will start the search and result in callbacks to proxy_available() and proxy_unavailable() functions
     s_main_loop = g_main_loop_new(NULL, 0);
-    g_timeout_add_seconds(5, rescan_callback, control_point_ssdp_all); // rescan every 5 seconds
+    g_timeout_add_seconds(2, rescan_callback, control_point_ssdp_all); // rescan every 2 seconds
     PRINT("\nWaiting for Client... Use Control-C to exit\n");
     g_main_loop_run(s_main_loop); // terminated with Control-C
 
@@ -530,6 +529,7 @@ void discover_devices(void) {
     g_object_unref(control_point_ssdp_all);
     g_object_unref(context);
     s_main_loop = NULL;
+    g_hash_table_unref(s_resource_lookup);
 }
 
 void display_summary(void) {
