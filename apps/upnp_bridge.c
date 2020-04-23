@@ -389,7 +389,11 @@ static void device_proxy_unavailable(GUPnPControlPoint *control_point, GUPnPDevi
 
     if (vd_index > 0) {
         char *device_name = gupnp_device_info_get_friendly_name(device_info);
-        PRINT("\nUnavailable: Virtual device index: %d, %s, %s\n", vd_index, udn + 5, device_name);
+        if (oc_bridge_remove_virtual_device(vd_index) == 0) {
+            PRINT("\nRemoved virtual device: %d, %s, %s\n", vd_index, udn + 5, device_name);
+        } else {
+            PRINT("\nFailed to remove virtual device: %d, %s, %s\n", vd_index, udn + 5, device_name);
+        }
         g_free(device_name);
     }
 }
