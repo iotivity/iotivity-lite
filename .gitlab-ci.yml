@@ -32,10 +32,13 @@ Android_build:
     GIT_SUBMODULE_STRATEGY: normal
   stage: build
   image: gitlab.iotivity.org:5050/iotivity/iotivity-lite
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin 
   script:
     - cd port/android
     - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
-
+after_script:
+    - docker logout
 .whitespace_and_doxygen:
   variables:
     GIT_SUBMODULE_STRATEGY: none
