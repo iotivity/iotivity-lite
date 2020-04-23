@@ -21,6 +21,7 @@
 #include "port/oc_storage.h"
 
 static oc_vod_list_t vod_list;
+static size_t reset_index;
 
 #define SVR_TAG_MAX (32)
 /*
@@ -31,7 +32,7 @@ void
 oc_vod_map_init()
 {
   OC_LIST_STRUCT_INIT(&vod_list, vods);
-  vod_list.next_index = oc_core_get_num_devices();
+  reset_index = vod_list.next_index = oc_core_get_num_devices();
   oc_vod_map_load();
 }
 
@@ -48,8 +49,21 @@ oc_vod_map_free()
     oc_free_string(&v->econame);
     v_to_free = v;
     v = v->next;
+    oc_list_remove(vod_list.vods, v_to_free);
     free(v_to_free);
+    v_to_free = NULL;
   }
+}
+
+/*
+ * Reset the vod map as if no VODs had been discovered.
+ */
+void
+oc_vod_map_reset()
+{
+  oc_vod_map_free();
+  vod_list.next_index = reset_index;
+  oc_vod_map_dump();
 }
 
 /*
