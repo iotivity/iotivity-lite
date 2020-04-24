@@ -16,6 +16,7 @@
 
 #include "oc_api.h"
 #include "oc_bridge.h"
+#include "oc_core_res.h"
 #include "port/oc_clock.h"
 #if defined(_WIN32)
 #include <windows.h>
@@ -135,7 +136,7 @@ print_ascii_lights_ui()
         C_RESET;
       }
     } else {
-      PRINT("   ");
+      PRINT("     ");
     }
   }
   PRINT("\n");
@@ -149,7 +150,7 @@ print_ascii_lights_ui()
         C_RESET;
       }
     } else {
-      PRINT("   ");
+      PRINT("     ");
     }
   }
   PRINT("\n");
@@ -163,7 +164,7 @@ print_ascii_lights_ui()
         C_RESET;
       }
     } else {
-      PRINT("   ");
+      PRINT("     ");
     }
   }
   PRINT("\n");
@@ -333,7 +334,7 @@ poll_for_discovered_devices()
       app_mutex_lock(app_sync_lock);
 
       virtual_device_index = oc_bridge_add_virtual_device(
-        (uint8_t *)virtual_lights[i].uuid, strlen(virtual_lights[i].uuid),
+        (uint8_t *)virtual_lights[i].uuid, OC_UUID_LEN,
         virtual_lights[i].eco_system, "/oic/d", "oic.d.light",
         virtual_lights[i].device_name, "ocf.1.0.0", "ocf.res.1.0.0", NULL,
         NULL);
@@ -347,6 +348,10 @@ poll_for_discovered_devices()
           virtual_lights[i].device_name, "/bridge/light/switch",
           virtual_device_index, &virtual_lights[i]);
 #endif
+        // the immutable_device_identifier ("piid")
+        oc_uuid_t piid;
+        oc_str_to_uuid(virtual_lights[i].uuid, &piid);
+        oc_set_immutable_device_identifier(virtual_device_index, &piid);
         // IDD could be added here.
       }
 
@@ -409,7 +414,7 @@ ocf_event_thread(void *data)
 static void
 display_menu(void)
 {
-  PRINT("\n\n");
+  PRINT("\n");
   if (display_ascii_ui) {
     print_ascii_lights_ui();
   }
@@ -423,26 +428,54 @@ display_menu(void)
   PRINT("[3] Simulate discovery of 'Light 3'\n");
   PRINT("[4] Simulate discovery of 'Light 4'\n");
   PRINT("[5] Simulate discovery of 'Light 5'\n");
+  PRINT("   Select simulate discovery of any device again\n");
+  PRINT("   to simulate that device being disconnected.\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[6] Display summary of dummy bridge.\n");
   PRINT("[7] Start/Stop virtual device discovery.\n");
   PRINT("[8] Enable/Disable ASCII light bulb UI.\n");
   PRINT("    A representation of the bridged lights\n");
   PRINT("    using ASCII art.\n");
+  PRINT("[9] Reset Device\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  PRINT("Select option: \n");
+}
+
+void
+disconnect_light(unsigned int index)
+{
+  virtual_lights[index].discovered = false;
+  virtual_lights[index].added_to_bridge = false;
+  size_t device = oc_bridge_get_virtual_device_index(
+    (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
+    virtual_lights[index].eco_system);
+  if (device != 0) {
+    if (oc_bridge_remove_virtual_device(device) == 0) {
+      PRINT("%s removed from the bridge\n", virtual_lights[index].device_name);
+    } else {
+      PRINT("FAILED to remove %s from the bridge\n",
+            virtual_lights[index].device_name);
+    }
+  } else {
+    PRINT("FAILED to find virtual light to remove.");
+  }
 }
 
 void
 discover_light(unsigned int index)
 {
   virtual_lights[index].discovered = !virtual_lights[index].discovered;
-
+  // virtual_lights[index].discovered = true;
   // TODO Move the poll code into its own thread.
-  if (discover_vitual_devices) {
+
+  if (virtual_lights[index].discovered && discover_vitual_devices) {
     poll_for_discovered_devices();
+  } else {
+    if (!virtual_lights[index].discovered) {
+      disconnect_light(index);
+    }
   }
 }
 
@@ -450,10 +483,27 @@ void
 display_summary(void)
 {
   for (size_t i = 0; i < VOD_COUNT; i++) {
-    PRINT("%s, %s, %s, %s, %s\n\n", virtual_lights[i].device_name,
-          virtual_lights[i].uuid, virtual_lights[i].eco_system,
-          (virtual_lights[i].on ? "ON" : "OFF"),
+    char di_str[OC_UUID_LEN] = "\0";
+    if (virtual_lights[i].added_to_bridge) {
+      size_t device = oc_bridge_get_virtual_device_index(
+        (uint8_t *)virtual_lights[i].uuid, OC_UUID_LEN,
+        virtual_lights[i].eco_system);
+      if (device != 0) {
+        oc_uuid_t *id = oc_core_get_device_id(device);
+        oc_uuid_to_str(id, di_str, OC_UUID_LEN);
+      } else {
+        strcpy(di_str, "ERROR FETCHING");
+      }
+    }
+
+    PRINT("%s:\n", virtual_lights[i].device_name);
+    PRINT("\tVirtual Device ID :%s\n", virtual_lights[i].uuid);
+    PRINT("\teconame: %s\n", virtual_lights[i].eco_system);
+    PRINT("\tlight switch is: %s\n", (virtual_lights[i].on ? "ON" : "OFF"));
+    PRINT("\tAdded to bridge: %s\n",
           (virtual_lights[i].discovered ? "discovered" : "not discovered"));
+    PRINT("\tOCF Device ID: %s\n",
+          (virtual_lights[i].added_to_bridge ? di_str : "N/A"));
   }
   PRINT((discover_vitual_devices) ? "ACTIVELY DISCOVERING DEVICES\n"
                                   : "NOT DISCOVERING DEVICES\n");
@@ -467,6 +517,60 @@ display_summary(void)
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
+
+void
+reset_light(unsigned int index)
+{
+  (void)index;
+#ifdef OC_SECURITY
+  size_t device_index = oc_bridge_get_virtual_device_index(
+    (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
+    virtual_lights[index].eco_system);
+  if (device_index != 0) {
+    oc_reset_device(device_index);
+  }
+#endif /* OC_SECURITY */
+}
+void
+reset_device()
+{
+  PRINT("################################################\n");
+  PRINT("[0] Reset Bridge\n");
+  PRINT("    Reseting the Bridge will reset all Virtual\n");
+  PRINT("    Devices exposed by the Bridge.\n");
+  PRINT("-----------------------------------------------\n");
+  PRINT("[1] Reset 'Light 1'\n");
+  PRINT("[2] Reset 'Light 2'\n");
+  PRINT("[3] Reset 'Light 3'\n");
+  PRINT("[4] Reset 'Light 4'\n");
+  PRINT("[5] Reset 'Light 5'\n");
+  PRINT("################################################\n");
+  PRINT("Select option: \n");
+  int c = 1000;
+  SCANF("%d", &c);
+  switch (c) {
+  case 0:
+    oc_reset_device(0u);
+    break;
+  case 1:
+    reset_light(0u);
+    break;
+  case 2:
+    reset_light(1u);
+    break;
+  case 3:
+    reset_light(2u);
+    break;
+  case 4:
+    reset_light(3u);
+    break;
+  case 5:
+    reset_light(4u);
+    break;
+  default:
+    break;
+  }
+}
 
 bool
 directoryFound(const char *path)
@@ -505,7 +609,11 @@ main(void)
 #ifdef OC_STORAGE
   if (!directoryFound("dummy_bridge_creds")) {
     printf("Creating dummy_bridge_creds directory for persistant storage.");
+#ifdef WIN32
+    CreateDirectory("dummy_bridge_creds", NULL);
+#else
     mkdir("dummy_bridge_creds", 0755);
+#endif
   }
   oc_storage_config("./dummy_bridge_creds/");
 #endif /* OC_STORAGE */
@@ -557,6 +665,9 @@ main(void)
       break;
     case 8:
       display_ascii_ui = !display_ascii_ui;
+      break;
+    case 9:
+      reset_device();
       break;
     case 99:
       handle_signal(0);
