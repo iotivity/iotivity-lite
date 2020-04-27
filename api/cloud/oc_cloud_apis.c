@@ -408,25 +408,32 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
-  oc_string_t d;
-  (void)device;
+  oc_string_t at_uid;
   oc_string_t at;
   oc_concat_strings(&at, "accesstoken=", access_token);
   oc_string_t u_id;
   oc_concat_strings(&u_id, "&uid=", uid);
-  oc_concat_strings(&d, oc_string(at), oc_string(u_id));
+  oc_concat_strings(&at_uid, oc_string(at), oc_string(u_id));
 
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
+  oc_string_t di;
+  oc_concat_strings(&di, "&di=", uuid);
+  oc_string_t at_uid_di;
+  oc_concat_strings(&at_uid_di, oc_string(at_uid), oc_string(di));
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
   }
 #endif /* OC_SECURITY */
 
-  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(d), handler,
-                        HIGH_QOS, user_data);
-  oc_free_string(&d);
+  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(at_uid_di),
+                        handler, HIGH_QOS, user_data);
+  oc_free_string(&at_uid);
   oc_free_string(&at);
   oc_free_string(&u_id);
+  oc_free_string(&di);
+  oc_free_string(&at_uid_di);
   return s;
 }
 

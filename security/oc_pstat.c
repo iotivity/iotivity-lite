@@ -146,6 +146,13 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->tm = 2;
     ps->om = 3;
     ps->sm = 4;
+#ifdef OC_SERVER
+#ifdef OC_CLIENT
+#ifdef OC_CLOUD
+    oc_cloud_reset_context(device);
+#endif /* OC_CLOUD */
+#endif /* OC_CLIENT */
+#endif /* OC_SERVER */
     memset(ps->rowneruuid.id, 0, 16);
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
@@ -158,13 +165,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_free_roles_for_device(device);
 #endif /* OC_PKI */
     oc_sec_sp_default(device);
-#ifdef OC_SERVER
-#ifdef OC_CLIENT
-#ifdef OC_CLOUD
-    oc_cloud_reset_context(device);
-#endif /* OC_CLOUD */
-#endif /* OC_CLIENT */
-#endif /* OC_SERVER */
 #ifdef OC_SERVER
 #if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
     oc_rt_factory_free_created_resources(device);
