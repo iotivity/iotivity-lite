@@ -232,13 +232,10 @@ cloud_deregistered_internal(oc_client_response_t *data)
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-    ctx->store.status |= OC_CLOUD_FAILURE;
+    ctx->store.status = OC_CLOUD_DEREGISTERED;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
     ctx->store.status |= OC_CLOUD_FAILURE;
-  } else {
-    ctx->store.status = OC_CLOUD_DEREGISTERED;
   }
 
   ctx->store.cps = OC_CPS_READYTOREGISTER;
@@ -249,6 +246,8 @@ cloud_deregistered_internal(oc_client_response_t *data)
   free_api_param(p);
 
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
+
+  cloud_store_dump_async(&ctx->store);
 }
 
 int
