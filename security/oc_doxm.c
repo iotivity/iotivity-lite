@@ -51,6 +51,12 @@ void
 oc_sec_doxm_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    free(doxm_cb_item);
+    doxm_cb_item = (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  }
   if (doxm) {
     free(doxm);
   }
