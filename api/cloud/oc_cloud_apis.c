@@ -361,7 +361,9 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
@@ -415,7 +417,9 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
   oc_concat_strings(&d, oc_string(at), oc_string(u_id));
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(d), handler,
@@ -444,7 +448,9 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
@@ -503,7 +509,9 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
