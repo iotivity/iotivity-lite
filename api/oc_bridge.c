@@ -41,6 +41,24 @@ typedef struct oc_vods_t
 OC_LIST(oc_vods_list_t);
 static oc_resource_t *bridge_res;
 
+#define OC_PRINT_VODSLIST                                                      \
+  OC_DBG("\"vods\": [");                                                       \
+  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);       \
+  while (print_vod_item) {                                                     \
+    OC_DBG("  {");                                                             \
+    OC_DBG("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
+    char di_uuid[OC_UUID_LEN];                                                 \
+    oc_uuid_to_str(print_vod_item->di, di_uuid, OC_UUID_LEN);                  \
+    OC_DBG("    \"di\": \"%s\"", di_uuid);                                     \
+    OC_DBG("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
+    if (print_vod_item->next) {                                                \
+      OC_DBG("  },");                                                          \
+    } else {                                                                   \
+      OC_DBG("  }");                                                           \
+    }                                                                          \
+    print_vod_item = print_vod_item->next;                                     \
+  }
+
 void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
                                 const char *econame)
@@ -50,6 +68,8 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   vod->di = di;
   oc_new_string(&vod->econame, econame, strlen(econame));
   oc_list_add(oc_vods_list_t, vod);
+  OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodslist", name, econame);
+  OC_PRINT_VODSLIST;
 }
 
 void
@@ -68,6 +88,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
     }
     vod_item = vod_item->next;
   }
+  OC_PRINT_VODSLIST;
 }
 
 static void

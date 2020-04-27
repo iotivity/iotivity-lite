@@ -436,7 +436,9 @@ display_menu(void)
   PRINT("[8] Enable/Disable ASCII light bulb UI.\n");
   PRINT("    A representation of the bridged lights\n");
   PRINT("    using ASCII art.\n");
+#ifdef OC_SECURITY
   PRINT("[9] Reset Device\n");
+#endif /* OC_SECURITY */
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -518,19 +520,19 @@ display_summary(void)
     }                                                                          \
   } while (0)
 
+#ifdef OC_SECURITY
 void
 reset_light(unsigned int index)
 {
   (void)index;
-#ifdef OC_SECURITY
   size_t device_index = oc_bridge_get_virtual_device_index(
     (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
     virtual_lights[index].eco_system);
   if (device_index != 0) {
     oc_reset_device(device_index);
   }
-#endif /* OC_SECURITY */
 }
+
 void
 reset_device()
 {
@@ -571,6 +573,7 @@ reset_device()
     break;
   }
 }
+#endif /* OC_SECURITY */
 
 bool
 directoryFound(const char *path)
@@ -666,9 +669,11 @@ main(void)
     case 8:
       display_ascii_ui = !display_ascii_ui;
       break;
+#ifdef OC_SECURITY
     case 9:
       reset_device();
       break;
+#endif /* OC_SECURITY */
     case 99:
       handle_signal(0);
       break;
