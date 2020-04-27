@@ -1199,25 +1199,6 @@ jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
   $2 = user_data;
 }
 
-/*
- * Code and typemaps for mapping the oc_do_ip_discovery and oc_do_ip_discovery_at_endpoint to the
- * java OCDiscoveryHandler
- */
-%typemap(jni)    oc_discovery_all_handler_t handler "jobject";
-%typemap(jtype)  oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
-%typemap(jstype) oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
-%typemap(javain) oc_discovery_all_handler_t handler "$javainput";
-%typemap(in,numinputs=1) (oc_discovery_all_handler_t handler, jni_callback_data *jcb) {
-  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
-  user_data->jenv = jenv;
-  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  // TODO figure out the lifetime of the oc_discovery_all_handler_t
-  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
-  jni_list_add(user_data);
-  $1 = jni_oc_discovery_all_handler_callback;
-  $2 = user_data;
-}
-
 %ignore oc_do_site_local_ipv6_discovery;
 %rename(doSiteLocalIPv6Discovery) jni_do_site_local_ipv6_discovery;
 %inline %{
