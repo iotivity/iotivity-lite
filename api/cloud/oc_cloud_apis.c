@@ -231,7 +231,8 @@ cloud_deregistered_internal(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
+  if (data->code < OC_STATUS_BAD_REQUEST ||
+      data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
     ctx->store.status = OC_CLOUD_DEREGISTERED;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
