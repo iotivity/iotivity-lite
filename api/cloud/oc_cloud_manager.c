@@ -195,6 +195,8 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   ctx->store.status |= OC_CLOUD_REGISTERED;
   ctx->store.cps = OC_CPS_REGISTERED;
 
+  oc_notify_observers(ctx->cloud_conf);
+
   return 0;
 
 error:
