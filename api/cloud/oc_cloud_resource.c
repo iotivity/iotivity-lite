@@ -66,7 +66,7 @@ cloud_response(oc_cloud_context_t *ctx)
     root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
   oc_rep_set_int(root, clec, (int)ctx->last_error);
 
-  const char *cps = cps_to_str(ctx->cps);
+  const char *cps = cps_to_str(ctx->store.cps);
   if (cps) {
     oc_rep_set_text_string(root, cps, cps);
   }
@@ -145,7 +145,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   OC_DBG("POST request received");
   (void)interface;
 
-  switch (ctx->cps) {
+  switch (ctx->store.cps) {
   case OC_CPS_UNINITIALIZED:
   case OC_CPS_READYTOREGISTER:
   case OC_CPS_FAILED:

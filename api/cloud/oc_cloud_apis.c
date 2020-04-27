@@ -109,7 +109,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
             ctx->device, oc_cloud_register_handler, p)) {
         cannotConnect = false;
-        ctx->cps = OC_CPS_REGISTERING;
+        ctx->store.cps = OC_CPS_REGISTERING;
       }
       if (cannotConnect) {
         cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -241,7 +241,7 @@ cloud_deregistered_internal(oc_client_response_t *data)
     ctx->store.status = OC_CLOUD_DEREGISTERED;
   }
 
-  ctx->cps = OC_CPS_READYTOREGISTER;
+  ctx->store.cps = OC_CPS_READYTOREGISTER;
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
