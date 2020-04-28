@@ -573,6 +573,13 @@ typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
 /**
  * Add callback that is invoked when the doxm "owned" property is changed
  *
+ * If oc_add_ownership_status_cb is called before oc_main_init or inside
+ * one of the , the oc_handler_t callback funtions the oc_ownership_status_cb_t
+ * will be invoked when the stack is initilized giving the startup ownership
+ * value. If oc_add_ownership_status_cb is called after oc_main_init the
+ * oc_add_ownership_status_cb will not be invoked for the startup ownership
+ * value.
+ *
  * @note Use of this function requires building the stack with OC_SECURITY
  *       defined.
  *
@@ -597,6 +604,9 @@ void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
 /**
  * Get the ownership status of the logical device this is the value of the
  * doxm "owned" property
+ *
+ * If oc_is_owned_device is called before oc_main_init has completed it will
+ * always return false because stack security has not been intialized.
  *
  * @note Use of this function requires building the stack with OC_SECURITY
  *       defined.
