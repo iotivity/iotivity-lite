@@ -381,6 +381,9 @@ oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 bool
 oc_is_owned_device(size_t device_index)
 {
-  return doxm[device_index].owned;
+  if (doxm) {
+    return doxm[device_index].owned;
+  }
+  return false;
 }
 #endif /* OC_SECURITY */
