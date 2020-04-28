@@ -329,9 +329,10 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     oc_doxm_owned_cb_t *doxm_cb_item =
       (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
-      (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
-                         doxm_cb_item->user_data);
+      oc_doxm_owned_cb_t *invokee = doxm_cb_item;
       doxm_cb_item = doxm_cb_item->next;
+      (invokee->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
+                    invokee->user_data);
     }
   }
   return true;
