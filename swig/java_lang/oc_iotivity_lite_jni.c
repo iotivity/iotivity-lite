@@ -128,7 +128,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     cls_OCInitPlatformHandler = (jclass)(JCALL1(NewGlobalRef, jenv, ocInitPlatformHandlerClass));
     JCALL1(DeleteLocalRef, jenv, ocInitPlatformHandlerClass);
 
-    jclass ocQueryValueClass = JCALL1(FindClass, jenv, "org/iotivity/OCQueryValue");
+    jclass ocOwnershipStatusHandler =
+      JCALL1(FindClass, jenv, "org/iotivity/OCOwnershipStatusHandler");
+    assert(ocOwnershipStatusHandler);
+    cls_OCOwnershipStatusHandler =
+      (jclass)(JCALL1(NewGlobalRef, jenv, ocOwnershipStatusHandler));
+    JCALL1(DeleteLocalRef, jenv, ocOwnershipStatusHandler);
+
+    jclass ocQueryValueClass =
+      JCALL1(FindClass, jenv, "org/iotivity/OCQueryValue");
     assert(ocQueryValueClass);
     cls_OCQueryValue = (jclass)(JCALL1(NewGlobalRef, jenv, ocQueryValueClass));
     JCALL1(DeleteLocalRef, jenv, ocQueryValueClass);

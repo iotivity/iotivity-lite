@@ -129,6 +129,7 @@ jclass cls_OCDiscoveryAllHandler;
 jclass cls_OCFactoryPresetsHandler;
 jclass cls_OCGetPropertiesHandler;
 jclass cls_OCInitPlatformHandler;
+jclass cls_OCOwnershipStatusHandler;
 jclass cls_OCQueryValue;
 jclass cls_OCRandomPinHandler;
 jclass cls_OCRepresentation;
