@@ -28,7 +28,7 @@
 #include "util/oc_list.h"
 #include <jni.h>
 
-#if defined (_WIN32)
+#if defined(_WIN32)
 HANDLE jni_poll_event_thread;
 CRITICAL_SECTION jni_sync_lock;
 CONDITION_VARIABLE jni_cv;
@@ -170,14 +170,15 @@ jclass cls_OCSecurityAcl;
  * passed back upto the java callback class. Serving the same
  * function as the C void *user_data pointer.
  */
-typedef struct jni_callback_data_s {
+typedef struct jni_callback_data_s
+{
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
   jni_callback_valid_t cb_valid;
 } jni_callback_data;
 
-jni_callback_data * jni_list_get_head();
+jni_callback_data *jni_list_get_head();
 void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
 void jni_list_clear();
