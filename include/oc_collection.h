@@ -38,6 +38,7 @@ struct oc_link_s
 {
   struct oc_link_s *next;
   oc_resource_t *resource;
+  oc_interface_mask_t interfaces;
   int64_t ins;
   oc_string_array_t rel;
   OC_LIST_STRUCT(params);
