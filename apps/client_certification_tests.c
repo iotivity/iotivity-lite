@@ -150,6 +150,7 @@ display_menu(void)
   PRINT("[41] Discover using realm local\n");
   PRINT("[11] Discover un-owned devices\n");
   PRINT("[12] Just-Works Ownership Transfer Method\n");
+  PRINT("[13] POST cloud configuration UDP\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -199,6 +200,19 @@ perform_upgrade(size_t device, const char *url)
   return 0;
 }
 #endif /* OC_SOFTWARE_UPDATE */
+static resource_t *
+get_discovered_resource_by_uri(char *uri)
+{
+  resource_t *resource = (resource_t *)oc_list_head(resources);
+  while (resource != NULL) {
+    if (strcmp(resource->uri, uri) == 0) {
+      return resource;
+    }
+    resource = resource->next;
+  }
+
+  return NULL;
+}
 
 static void
 show_discovered_resources(resource_t **res)
@@ -785,6 +799,47 @@ otm_just_works(void)
   pthread_mutex_unlock(&app_sync_lock);
 }
 
+static void
+post_cloud_configuration_resource(bool tcp)
+{
+  pthread_mutex_lock(&app_sync_lock);
+  if (oc_list_length(resources) > 0) {
+    resource_t *cloudconf_resource =
+      get_discovered_resource_by_uri("/CoAPCloudConf");
+    if (cloudconf_resource) {
+      char cis_value[1000];
+      char sid_value[1000];
+      PRINT("Provide cis value:\n");
+      SCANF("%s", &cis_value);
+      PRINT("Provide sid value:\n");
+      SCANF("%s", &sid_value);
+      oc_endpoint_t *ep = cloudconf_resource->endpoint;
+      while (ep && (tcp && !(ep->flags & TCP))) {
+        ep = ep->next;
+      }
+      if (oc_init_post(cloudconf_resource->uri, ep, NULL, &POST_handler,
+                       HIGH_QOS, NULL)) {
+        oc_rep_start_root_object();
+        oc_rep_set_text_string(root, cis, cis_value);
+        oc_rep_set_text_string(root, sid, sid_value);
+        oc_rep_set_text_string(root, at, "");
+        oc_rep_end_root_object();
+        if (!oc_do_post()) {
+          PRINT("\nERROR: Could not issue POST request\n");
+        }
+      } else {
+        PRINT("\nERROR: Could not initialize POST request\n");
+      }
+    } else {
+      PRINT("\nERROR: No /CoAPCloudConf resource found\n");
+    }
+  } else {
+    PRINT("\nERROR: No known resources... Please try discovery...\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+
 void
 display_device_uuid(void)
 {
@@ -894,6 +949,9 @@ main(void)
       break;
     case 12:
       otm_just_works();
+      break;
+    case 13:
+      post_cloud_configuration_resource(false);
       break;
     case 99:
       handle_signal(0);
