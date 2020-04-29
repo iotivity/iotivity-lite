@@ -57,7 +57,7 @@
 %ignore oc_free_endpoint;
 // tell swig to use our JNI code not to generate its own.
 %native (freeEndpoint) void freeEndpoint(oc_endpoint_t *endpoint);
-%inline %{
+%{
 void jni_free_endpoint(oc_endpoint_t *endpoint) {
   oc_free_endpoint(endpoint);
   endpoint = NULL;
@@ -199,6 +199,63 @@ oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *u
   return ep;
 }
 %}
+
+%javaexception("OCEndpointParseException") jni_string_to_endpoint_a {
+  if (!jarg1) {
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
+    return $null;
+  }
+  $action
+  if(!result) {
+    OC_DBG("JNI: String can not be parsed.");
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+  }
+}
+%newobject jni_string_to_endpoint_a;
+%rename(stringToEndpoint) jni_string_to_endpoint_a;
+%inline %{
+oc_endpoint_t * jni_string_to_endpoint_a(oc_string_t *endpoint_str) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_string_t uri;
+  oc_endpoint_t *ep = oc_new_endpoint();
+  if(oc_string_to_endpoint(endpoint_str, ep, &uri) < 0) {
+    OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
+    oc_free_endpoint(ep);
+    return NULL;
+  }
+  return ep;
+}
+%}
+
+%ignore oc_endpoint_string_parse_path;
+%newobject jni_endpoint_string_parse_path;
+%rename (endpointStringParsePath) jni_endpoint_string_parse_path;
+%inline %{
+/*
+ * Convert the input parameter to a return parameter
+ */
+char *jni_endpoint_string_parse_path(oc_string_t *endpoint_str)
+{
+  oc_string_t path;
+  if (oc_endpoint_string_parse_path(endpoint_str, &path) == 0 ){
+    char * ret_path = (char *)malloc((path.size) * sizeof(char));
+    strcpy(ret_path, oc_string(path));
+    return ret_path;
+  }
+  return NULL;
+}
+%}
+
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(compare) oc_endpoint_compare;
 %rename(compareAddress) oc_endpoint_compare_address;
