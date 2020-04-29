@@ -17,6 +17,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_swupdate.h"
+#include "oc_obt.h"
 #include "port/oc_clock.h"
 #include "oc_pki.h"
 #include "oc_introspection.h"
@@ -33,6 +34,20 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
+
+typedef struct device_handle_t
+{
+  struct device_handle_t *next;
+  oc_uuid_t uuid;
+  char device_name[64];
+} device_handle_t;
+
+#define MAX_NUM_DEVICES (50)
+
+/* Pool of device handles */
+OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
+/* List of known un-owned devices */
+OC_LIST(unowned_devices);
 
 typedef struct resource_t
 {
@@ -133,6 +148,9 @@ display_menu(void)
 #endif /* OC_TCP */
   PRINT("[40] Discover using site local\n");
   PRINT("[41] Discover using realm local\n");
+  PRINT("[11] Discover un-owned devices\n");
+  PRINT("[12] Just-Works Ownership Transfer Method\n");
+  PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
@@ -627,6 +645,146 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+/* App utility functions */
+static device_handle_t *
+is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_head(list);
+  while (device != NULL) {
+    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+      return device;
+    }
+    device = device->next;
+  }
+  return NULL;
+}
+
+static bool
+add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
+{
+  device_handle_t *device = is_device_in_list(uuid, list);
+
+  if (!device) {
+    device = oc_memb_alloc(&device_handles);
+    if (!device) {
+      return false;
+    }
+    memcpy(device->uuid.id, uuid->id, 16);
+    oc_list_add(list, device);
+  }
+
+  if (device_name) {
+    size_t len = strlen(device_name);
+    len = (len > 63) ? 63 : len;
+    strncpy(device->device_name, device_name, len);
+    device->device_name[len] = '\0';
+  } else {
+    device->device_name[0] = '\0';
+  }
+  return true;
+}
+
+/* App invocations of oc_obt APIs */
+static void
+get_device(oc_client_response_t *data)
+{
+  oc_rep_t *rep = data->payload;
+  char *di = NULL, *n = NULL;
+  size_t di_len = 0, n_len = 0;
+
+  if (oc_rep_get_string(rep, "di", &di, &di_len)) {
+    oc_uuid_t uuid;
+    oc_str_to_uuid(di, &uuid);
+    if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
+      n = NULL;
+      n_len = 0;
+    }
+
+    add_device_to_list(&uuid, n, data->user_data);
+  }
+}
+
+static void
+unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+  oc_endpoint_t *ep = eps;
+
+  PRINT("\nDiscovered unowned device: %s at:\n", di);
+  while (eps != NULL) {
+    PRINTipaddr(*eps);
+    PRINT("\n");
+    eps = eps->next;
+  }
+
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
+}
+
+static void
+otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)status;
+  (void)data;
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+  oc_memb_free(&device_handles, device);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
+  } else {
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
+static void
+otm_just_works(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  pthread_mutex_lock(&app_sync_lock);
+
+  int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
+                                          devices[c]);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
+  } else {
+    PRINT("\nERROR issuing request to perform ownership transfer\n");
+  }
+
+  pthread_mutex_unlock(&app_sync_lock);
+}
+
 void
 display_device_uuid(void)
 {
@@ -726,11 +884,17 @@ main(void)
       break;
 #endif /* OC_TCP */
     case 40:
-        discover_site_local_resources();
-        break;
+      discover_site_local_resources();
+      break;
     case 41:
-        discover_realm_local_resources();
-        break;
+      discover_realm_local_resources();
+      break;
+    case 11:
+      oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+      break;
+    case 12:
+      otm_just_works();
+      break;
     case 99:
       handle_signal(0);
       break;
@@ -741,5 +905,12 @@ main(void)
 
   pthread_join(event_thread, NULL);
   free_all_resources();
+
+  device_handle_t *device = (device_handle_t *)oc_list_pop(unowned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(unowned_devices);
+  }
+
   return 0;
 }
