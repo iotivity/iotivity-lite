@@ -57,13 +57,16 @@ const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
 oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
 
 #define SCANF(...)                                                             \
-  char line[256];                                                              \
-  while (fgets(line, sizeof(line), stdin) == 0 || line[0] == '\n') {}          \
-  do {                                                                         \
-    if (sscanf(line, __VA_ARGS__) != 1) {                                      \
-      PRINT("ERROR Invalid input\n");                                          \
+  {                                                                            \
+    char line[256];                                                            \
+    while (fgets(line, sizeof(line), stdin) == 0 || line[0] == '\n') {         \
     }                                                                          \
-  } while (0);
+    do {                                                                       \
+      if (sscanf(line, __VA_ARGS__) != 1) {                                    \
+        PRINT("ERROR Invalid input\n");                                        \
+      }                                                                        \
+    } while (0);                                                               \
+  }
 
 static void
 display_menu(void)
