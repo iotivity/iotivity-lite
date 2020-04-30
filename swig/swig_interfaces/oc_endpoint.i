@@ -226,9 +226,8 @@ oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *u
 %inline %{
 oc_endpoint_t * jni_string_to_endpoint_a(oc_string_t *endpoint_str) {
   OC_DBG("JNI: %s\n", __func__);
-  oc_string_t uri;
   oc_endpoint_t *ep = oc_new_endpoint();
-  if(oc_string_to_endpoint(endpoint_str, ep, &uri) < 0) {
+  if(oc_string_to_endpoint(endpoint_str, ep, NULL) < 0) {
     OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
     oc_free_endpoint(ep);
     return NULL;
