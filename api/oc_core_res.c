@@ -274,13 +274,13 @@ oc_get_con_res_announced(void)
 }
 
 void
-oc_set_res_latency(int latency)
+oc_core_set_latency(int latency)
 {
   res_latency = latency;
 }
 
 int
-oc_get_res_latency(void)
+oc_core_get_latency(void)
 {
   return res_latency;
 }
