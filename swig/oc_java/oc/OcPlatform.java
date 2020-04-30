@@ -59,7 +59,9 @@ public class OcPlatform {
             ret = OCMain.addDevice(device.getUri(), device.getRt(), device.getName(), device.getSpecVersion(),
                     device.getDataModelVersion());
 
-            deviceIndex.getAndIncrement(); // get ready for next device
+            if (ret >= 0) {
+                deviceIndex.getAndIncrement(); // get ready for next device
+            }
         }
 
         return ret;

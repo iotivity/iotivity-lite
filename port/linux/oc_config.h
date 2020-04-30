@@ -6,8 +6,7 @@
 #include <time.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef uint64_t oc_clock_time_t;

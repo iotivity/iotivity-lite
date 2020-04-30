@@ -64,10 +64,12 @@ encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
   oc_rep_set_text_string(*object, auth_provider,
                          oc_string(store->auth_provider));
   oc_rep_set_text_string(*object, uid, oc_string(store->uid));
+  oc_rep_set_text_string(*object, sid, oc_string(store->sid));
   oc_rep_set_text_string(*object, access_token, oc_string(store->access_token));
   oc_rep_set_text_string(*object, refresh_token,
                          oc_string(store->refresh_token));
   oc_rep_set_int(*object, status, store->status);
+  oc_rep_set_int(*object, cps, store->cps);
 }
 
 static void
@@ -145,6 +147,9 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
       if (len == 9 && memcmp(oc_string(t->name), "ci_server", 9) == 0) {
         cloud_set_string(&store->ci_server, oc_string(t->value.string),
                          oc_string_len(t->value.string));
+      } else if (len == 3 && memcmp(oc_string(t->name), "sid", 3) == 0) {
+        cloud_set_string(&store->sid, oc_string(t->value.string),
+                         oc_string_len(t->value.string));
       } else if (len == 13 &&
                  memcmp(oc_string(t->name), "auth_provider", 13) == 0) {
         cloud_set_string(&store->auth_provider, oc_string(t->value.string),
@@ -168,6 +173,8 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
         store->status = (uint8_t)t->value.integer;
+      } else if (len == 3 && memcmp(oc_string(t->name), "cps", 3) == 0) {
+        store->cps = (uint8_t)t->value.integer;
       } else {
         OC_ERR("[CLOUD_STORE] Unknown property %s", oc_string(t->name));
         return -1;

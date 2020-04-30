@@ -492,6 +492,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     return -1;
   }
   fclose(fp);
+  buffer[pem_len] = '\0';
   *buffer_len = (size_t)pem_len;
   return 0;
 }

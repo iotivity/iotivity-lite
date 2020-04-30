@@ -15,6 +15,7 @@ public class MyInitHandler implements OCMainInitHandler {
         Counter.count = 0;
 
         OCMain.setRandomPinHandler(new RandomPinHandler());
+        OCSoftwareUpdate.setImpl(new MySoftwareUpdateHandler());
         return ret;
     }
 
