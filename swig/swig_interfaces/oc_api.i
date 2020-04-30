@@ -1786,6 +1786,7 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %ignore oc_ri_alloc_client_cb;
 %ignore oc_ri_get_client_cb;
 %ignore oc_ri_find_client_cb_by_token;
+%ignore oc_ri_is_client_cb_valid;
 %ignore oc_ri_find_client_cb_by_mid;
 %ignore oc_ri_remove_client_cb_by_mid;
 %ignore oc_ri_free_client_cbs_by_endpoint;
