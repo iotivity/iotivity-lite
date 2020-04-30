@@ -160,8 +160,6 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
 
 
 %apply oc_string_t *INPUT { oc_string_t *endpoint_str };
-%apply oc_string_t *OUTPUT { oc_string_t *uri };
-
 %javaexception("OCEndpointParseException") jni_string_to_endpoint {
   if (!jarg1) {
     jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
@@ -183,48 +181,10 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCEndpointUtilJNI_toString(JNIEnv *
     oc_free_string(&exception_message);
   }
 }
-/* TODO figure out a clean way to return the uri param not as an array value */
-%ignore oc_string_to_endpoint;
 %newobject jni_string_to_endpoint;
 %rename(stringToEndpoint) jni_string_to_endpoint;
 %inline %{
-oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *uri) {
-  OC_DBG("JNI: %s\n", __func__);
-  oc_endpoint_t *ep = oc_new_endpoint();
-  if(oc_string_to_endpoint(endpoint_str, ep, uri) < 0) {
-    OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
-    oc_free_endpoint(ep);
-    return NULL;
-  }
-  return ep;
-}
-%}
-
-%javaexception("OCEndpointParseException") jni_string_to_endpoint_a {
-  if (!jarg1) {
-    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
-    assert(cls_OCEndpointParseException);
-    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
-    return $null;
-  }
-  $action
-  if(!result) {
-    OC_DBG("JNI: String can not be parsed.");
-    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
-    assert(cls_OCEndpointParseException);
-    oc_string_t exception_message_part1;
-    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
-    oc_string_t exception_message;
-    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
-    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
-    oc_free_string(&exception_message_part1);
-    oc_free_string(&exception_message);
-  }
-}
-%newobject jni_string_to_endpoint_a;
-%rename(stringToEndpoint) jni_string_to_endpoint_a;
-%inline %{
-oc_endpoint_t * jni_string_to_endpoint_a(oc_string_t *endpoint_str) {
+oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str) {
   OC_DBG("JNI: %s\n", __func__);
   oc_endpoint_t *ep = oc_new_endpoint();
   if(oc_string_to_endpoint(endpoint_str, ep, NULL) < 0) {
