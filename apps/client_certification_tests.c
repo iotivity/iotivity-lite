@@ -148,8 +148,10 @@ display_menu(void)
 #endif /* OC_TCP */
   PRINT("[40] Discover using site local\n");
   PRINT("[41] Discover using realm local\n");
+#ifdef OC_SECURITY
   PRINT("[11] Discover un-owned devices\n");
   PRINT("[12] Just-Works Ownership Transfer Method\n");
+#endif /* OC_SECURITY */
   PRINT("[13] POST cloud configuration UDP\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
@@ -660,6 +662,7 @@ factory_presets_cb(size_t device, void *data)
 }
 
 /* App utility functions */
+#ifdef OC_SECURITY
 static device_handle_t *
 is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 {
@@ -798,6 +801,7 @@ otm_just_works(void)
 
   pthread_mutex_unlock(&app_sync_lock);
 }
+#endif /* OC_SECURITY */
 
 static void
 post_cloud_configuration_resource(bool tcp)
@@ -930,9 +934,11 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
+#ifdef OC_SECURITY
     case 10:
       post_resource(false, true);
       break;
+#endif /* OC_SECURITY */
 #ifdef OC_TCP
     case 20:
       cloud_send_ping();
@@ -944,12 +950,14 @@ main(void)
     case 41:
       discover_realm_local_resources();
       break;
+#ifdef OC_SECURITY
     case 11:
       oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
       break;
     case 12:
       otm_just_works();
       break;
+#endif /* OC_SECURITY */
     case 13:
       post_cloud_configuration_resource(false);
       break;
