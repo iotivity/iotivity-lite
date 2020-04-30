@@ -29,8 +29,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -62,8 +61,7 @@ extern "C"
 #define OC_BLOCK_SIZE (OC_MAX_APP_DATA_SIZE)
 #endif /* !OC_BLOCK_WISE_SET_MTU */
 
-enum
-{
+enum {
 #ifdef OC_TCP // TODO: need to check about tls packet.
   OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
 #else /* OC_TCP */
@@ -80,8 +78,7 @@ enum
 #endif
 #include "oc_buffer_settings.h"
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 #ifdef OC_TCP
 #define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)

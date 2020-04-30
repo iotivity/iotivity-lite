@@ -199,6 +199,13 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     (jclass)(JCALL1(NewGlobalRef, jenv, ocSetPropertiesHandlerClass));
   JCALL1(DeleteLocalRef, jenv, ocSetPropertiesHandlerClass);
 
+  jclass ocSoftwareUpdateHandlerClass =
+    JCALL1(FindClass, jenv, "org/iotivity/OCSoftwareUpdateHandler");
+  assert(ocSoftwareUpdateHandlerClass);
+  cls_OCSoftwareUpdateHandler =
+    (jclass)(JCALL1(NewGlobalRef, jenv, ocSoftwareUpdateHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocSoftwareUpdateHandlerClass);
+
   jclass ocTriggerHandlerClass =
     JCALL1(FindClass, jenv, "org/iotivity/OCTriggerHandler");
   assert(ocTriggerHandlerClass);

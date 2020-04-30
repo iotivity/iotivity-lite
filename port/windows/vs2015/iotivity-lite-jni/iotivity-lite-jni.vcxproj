@@ -279,6 +279,7 @@ del $(SolutionDir)..\..\..\swig\iotivity-lite-java\src\org\iotivity\oc\*.java</C
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_rep_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_session_events_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_storage_wrap.c" />
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_swupdate_wrap.c" />
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_uuid_wrap.c" />
   </ItemGroup>
   <ItemGroup>
