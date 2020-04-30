@@ -389,7 +389,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
 
   if (!subjectuuid) {
     if (credusage != OC_CREDUSAGE_ROLE_CERT) {
-      return -1;
+      goto add_new_cred_error;
     } else {
       subject.id[0] = '*';
     }
@@ -439,6 +439,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                    publicdata_size) == 0))
 #endif /* OC_PKI */
       ) {
+#ifdef OC_PKI
+        if (oc_string_len(public_key) > 0) {
+          oc_free_string(&public_key);
+        }
+#endif /* OC_PKI */
         return credid;
       } else {
         oc_sec_remove_cred_by_credid(credid, device);
@@ -470,6 +475,9 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                 publicdata_size == oc_string_len(cred->publicdata.data) &&
                 memcmp(publicdata, oc_string(cred->publicdata.data),
                        publicdata_size) == 0) {
+              if (oc_string_len(public_key) > 0) {
+                oc_free_string(&public_key);
+              }
               return cred->credid;
             }
           }
@@ -486,6 +494,9 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       if ((oc_string_len(roles->publicdata.data) == publicdata_size) &&
           memcmp(oc_string(roles->publicdata.data), publicdata,
                  publicdata_size) == 0) {
+        if (oc_string_len(public_key) > 0) {
+          oc_free_string(&public_key);
+        }
         return roles->credid;
       }
       roles = roles->next;
@@ -1075,12 +1086,14 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             oc_sec_cred_t *cr = oc_sec_get_cred_by_credid(credid, device);
             if (cr) {
               cr->owner_cred = owner_cred;
-            }
-            /* Obtain a handle to the owner credential entry where that applies
-             */
-            if (credtype == OC_CREDTYPE_PSK && privatedata_size == 0 && owner) {
-              *owner = cr;
-              (*owner)->owner_cred = true;
+              /* Obtain a handle to the owner credential entry where that
+               * applies
+               */
+              if (credtype == OC_CREDTYPE_PSK && privatedata_size == 0 &&
+                  owner) {
+                *owner = cr;
+                (*owner)->owner_cred = true;
+              }
             }
           }
           creds_array = creds_array->next;

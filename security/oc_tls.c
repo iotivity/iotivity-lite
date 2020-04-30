@@ -139,7 +139,11 @@ static int *ciphers = NULL;
 #ifdef OC_PKI
 static int selected_mfg_cred = -1;
 static int selected_id_cred = -1;
+#ifdef OC_CLOUD
+static const int default_priority[12] = {
+#else  /* OC_CLOUD */
 static const int default_priority[6] = {
+#endif /* !OC_CLOUD */
 #else  /* OC_PKI */
 static const int default_priority[2] = {
 #endif /* !OC_PKI */
@@ -149,6 +153,14 @@ static const int default_priority[2] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
+#ifdef OC_CLOUD
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+  MBEDTLS_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+#endif /* OC_CLOUD */
 #endif /* OC_PKI */
   0
 };
@@ -1023,18 +1035,21 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   OC_DBG("verifying certificate at depth %d", depth);
   if (depth > 0) {
-    if (oc_certs_validate_root_cert(crt) < 0) {
-      if (oc_certs_validate_intermediate_cert(crt) < 0) {
+    /* For D2D handshakes involving identity certificates:
+     * Find a trusted root that matches the peer's root and store it
+     * as context accompanying the identity certificate. This is queried
+     * after validating the end-entity certificate to authorize the
+     * the peer per the OCF Specification. */
+    oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    if (oc_certs_validate_non_end_entity_cert(crt, true, ps->s == OC_DOS_RFOTM,
+                                              depth) < 0) {
+      if (oc_certs_validate_non_end_entity_cert(
+            crt, false, ps->s == OC_DOS_RFOTM, depth) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
         return -1;
       }
     } else {
-      /* For D2D handshakes involving identity certificates:
-       * Find a trusted root that matches the peer's root and store it
-       * as context accompanying the identity certificate. This is queried
-       * after validating the end-entity certificate to authorize the
-       * the peer per the OCF Specification. */
-      oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
         while (ca_cert) {
@@ -1200,8 +1215,12 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
                              ? MBEDTLS_SSL_TRANSPORT_STREAM
                              : MBEDTLS_SSL_TRANSPORT_DATAGRAM;
 
-      oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
-                                 transport_type);
+      if (oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
+                                     transport_type) < 0) {
+        OC_ERR("oc_tls: error in tls_populate_ssl_config");
+        oc_tls_free_peer(peer, false);
+        return NULL;
+      }
 
 #ifdef OC_PKI
 #if defined(OC_CLOUD) && defined(OC_CLIENT)
@@ -1219,7 +1238,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 
       if (err != 0) {
         OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
-        oc_memb_free(&tls_peers_s, peer);
+        oc_tls_free_peer(peer, false);
         return NULL;
       }
 
@@ -1229,7 +1248,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
           mbedtls_ssl_set_client_transport_id(
             &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
             sizeof(endpoint->addr)) != 0) {
-        oc_memb_free(&tls_peers_s, peer);
+        oc_tls_free_peer(peer, false);
         return NULL;
       }
       oc_list_add(tls_peers, peer);

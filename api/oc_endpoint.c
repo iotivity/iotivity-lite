@@ -557,7 +557,7 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 }
 
 int
-oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
+oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
   if (!ep1 || !ep2)
     return -1;

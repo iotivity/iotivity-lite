@@ -31,7 +31,7 @@ Due to licensing changes the output is no longer tested against Oracle Java.
 
 Currently SWIG version 3.0 is recommended.  SWIG version 4.0 came out during the  development of the
 Java language bindings.  Users are welcome to use a newer version as long as they are aware it has
-not been tested.
+not been as extensively tested.
 
 Instructions for Android
 -------------------------------------------------
@@ -47,24 +47,17 @@ Instructions for Linux
 - A local copy of IoTivity-lite
 
 Checkout IoTivity-Lite git project run the following command to get a anonymous copy of
-iotivity-lite.  Checkout the SWIG branch.
+iotivity-lite.
 
-    git clone https://gerrit.iotivity.org/gerrit/iotivity-lite
+    git clone https://gitlab.iotivity.org/iotivity/iotivity-lite.git
 
 If you are behind a proxy setup the git proxy settings before running the above commands
 
     git config --global http.proxy http://<username>:<password>@<proxy-server-url>:<port>
 
 Since this is an anonymous download you will not be able to push any changes up to the project.
-IoTivity is managed by the Linux Foundation.  If you are planning on contributing back to
-IoTivity you will need to have a [Linux Foundation ID](https://identity.linuxfoundation.org/).
-The Linux Foundation ID can then be used to log into the Gerrit server for IoTivity-Lite.
-[gerrit.iotivity.org](https://gerrit.iotivity.org/gerrit/#/admin/projects/iotivity-lite)
-
-Follow the instructions [here](https://wiki.iotivity.org/how_to_use_gerrit) to gain push access
-to the project.
-
-
+If you are planning on contributing back to IoTivity you will need to make a gitlab account and
+request developer access to the iotivity-lite project.
 
 ### Build Java language bindings
 Navigate to `<iotivity-lite>/port/linux`
@@ -113,8 +106,8 @@ Instructions for Windows
    been tested in newer versions of Visual Studio and have been found to work.  Visual studio IDE
    Community edition and Visual Studio Code should work but have not personally been tested.
 
-Set JAVA_HOME environment variable to point to the Java Development kit. This is required so Make
-can find the jni.h header files.
+Set JAVA_HOME environment variable to point to the Java Development kit. This is required so the
+build can find the jni.h header files.
 
 ### Build Java language bindings
 Build the JNI shared library:
@@ -345,7 +338,7 @@ If JAVA_HOME is not found add it to your environment variables.
 Send Feedback
 -------------------------------------------------
 Questions
-[IoTivity-Lite Developer Mailing List](https://iotivity-dev@lists.iotivity.org)
+[IoTivity-Lite Developer Mailing List](https://iotivity.groups.io/g/iotivity-dev)
 
 Bugs
-[Jira bug reporting website](https://jira.iotivity.org/projects/LITE)
+[IoTivity-lite gitlab issues](https://gitlab.iotivity.org/iotivity/iotivity-lite/issues)

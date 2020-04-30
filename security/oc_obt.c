@@ -375,8 +375,10 @@ static oc_event_callback_retval_t
 free_discovery_cb(void *data)
 {
   oc_discovery_cb_t *c = (oc_discovery_cb_t *)data;
-  oc_list_remove(oc_discovery_cbs, c);
-  oc_memb_free(&oc_discovery_s, c);
+  if (is_item_in_list(oc_discovery_cbs, c)) {
+    oc_list_remove(oc_discovery_cbs, c);
+    oc_memb_free(&oc_discovery_s, c);
+  }
   return OC_EVENT_DONE;
 }
 
@@ -2094,19 +2096,22 @@ cred_rsrc(oc_client_response_t *data)
     return;
   }
   oc_list_remove(oc_credret_ctx_l, ctx);
-  oc_sec_creds_t *creds = (oc_sec_creds_t *)oc_memb_alloc(&oc_creds_m);
-  if (creds) {
-    OC_LIST_STRUCT_INIT(creds, creds);
-    if (decode_cred(data->payload, creds)) {
-      OC_DBG("oc_obt:decoded /oic/sec/cred payload");
-    } else {
-      OC_DBG("oc_obt:error decoding /oic/sec/cred payload");
-    }
-    if (oc_list_length(creds->creds) > 0) {
-      ctx->cb(creds, ctx->data);
-    } else {
-      oc_memb_free(&oc_creds_m, creds);
-      creds = NULL;
+  oc_sec_creds_t *creds = NULL;
+  if (data->code < OC_STATUS_BAD_REQUEST) {
+    creds = (oc_sec_creds_t *)oc_memb_alloc(&oc_creds_m);
+    if (creds) {
+      OC_LIST_STRUCT_INIT(creds, creds);
+      if (decode_cred(data->payload, creds)) {
+        OC_DBG("oc_obt:decoded /oic/sec/cred payload");
+      } else {
+        OC_DBG("oc_obt:error decoding /oic/sec/cred payload");
+      }
+      if (oc_list_length(creds->creds) > 0) {
+        ctx->cb(creds, ctx->data);
+      } else {
+        oc_memb_free(&oc_creds_m, creds);
+        creds = NULL;
+      }
     }
   }
   if (!creds) {
@@ -2421,18 +2426,21 @@ acl2_rsrc(oc_client_response_t *data)
     return;
   }
   oc_list_remove(oc_aclret_ctx_l, ctx);
-  oc_sec_acl_t *acl = (oc_sec_acl_t *)oc_memb_alloc(&oc_acl_m);
-  if (acl) {
-    if (decode_acl(data->payload, acl)) {
-      OC_DBG("oc_obt:decoded /oic/sec/acl2 payload");
-    } else {
-      OC_DBG("oc_obt:error decoding /oic/sec/acl2 payload");
-    }
-    if (oc_list_length(acl->subjects) > 0) {
-      ctx->cb(acl, ctx->data);
-    } else {
-      oc_memb_free(&oc_acl_m, acl);
-      acl = NULL;
+  oc_sec_acl_t *acl = NULL;
+  if (data->code < OC_STATUS_BAD_REQUEST) {
+    acl = (oc_sec_acl_t *)oc_memb_alloc(&oc_acl_m);
+    if (acl) {
+      if (decode_acl(data->payload, acl)) {
+        OC_DBG("oc_obt:decoded /oic/sec/acl2 payload");
+      } else {
+        OC_DBG("oc_obt:error decoding /oic/sec/acl2 payload");
+      }
+      if (oc_list_length(acl->subjects) > 0) {
+        ctx->cb(acl, ctx->data);
+      } else {
+        oc_memb_free(&oc_acl_m, acl);
+        acl = NULL;
+      }
     }
   }
   if (!acl) {
@@ -2693,10 +2701,10 @@ oc_obt_shutdown(void)
     oc_memb_free(&oc_devices_s, device);
     device = (oc_device_t *)oc_list_pop(oc_devices);
   }
-  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+  oc_discovery_cb_t *cb = (oc_discovery_cb_t *)oc_list_head(oc_discovery_cbs);
   while (cb) {
     free_discovery_cb(cb);
-    cb = (oc_discovery_cb_t *)oc_list_pop(oc_discovery_cbs);
+    cb = (oc_discovery_cb_t *)oc_list_head(oc_discovery_cbs);
   }
 }
 

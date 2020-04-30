@@ -24,6 +24,7 @@
 #define OC_CLOUD_H
 
 #include "oc_ri.h"
+#include "oc_client_state.h"
 #include "oc_session_events.h"
 
 #ifdef __cplusplus
@@ -61,6 +62,7 @@ typedef struct oc_cloud_store_t
   oc_string_t refresh_token;
   oc_string_t sid;
   uint8_t status;
+  oc_cps_t cps;
   size_t device;
 } oc_cloud_store_t;
 
@@ -103,8 +105,6 @@ typedef struct oc_cloud_context_t
   oc_link_t *rd_delete_resources;
   bool rd_delete_all;
 
-  oc_cps_t cps;
-
   oc_resource_t *cloud_conf;
 
   bool cloud_manager;
@@ -128,6 +128,9 @@ int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
 int oc_cloud_add_resource(oc_resource_t *resource);
 void oc_cloud_delete_resource(oc_resource_t *resource);
 int oc_cloud_publish_resources(size_t device);
+int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+                                oc_discovery_all_handler_t handler,
+                                void *user_data);
 
 int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,

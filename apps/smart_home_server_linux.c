@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
 #include <pthread.h>
@@ -626,7 +627,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     fclose(fp);
     return -1;
   }
-  if (pem_len > (long)*buffer_len) {
+  if (pem_len >= (long)*buffer_len) {
     PRINT("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
@@ -642,6 +643,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     return -1;
   }
   fclose(fp);
+  buffer[pem_len] = '\0';
   *buffer_len = (size_t)pem_len;
   return 0;
 }
@@ -680,7 +682,6 @@ factory_presets_cb(size_t device, void *data)
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
-
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
@@ -704,6 +705,15 @@ factory_presets_cb(size_t device, void *data)
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
+}
+
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
 }
 
 int
@@ -744,6 +754,7 @@ main(void)
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
+  display_device_uuid();
   PRINT("Waiting for Client...\n");
   PRINT("Hit 'Enter' at any time to toggle switch resource\n");
   while (quit != 1) {

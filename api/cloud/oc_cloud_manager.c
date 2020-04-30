@@ -146,8 +146,6 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 
   oc_rep_t *payload = data->payload;
 
-  ctx->store.status = 0;
-
   char *value = NULL;
   size_t size = 0;
 
@@ -195,12 +193,14 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   cloud_set_last_error(ctx, CLOUD_OK);
 
   ctx->store.status |= OC_CLOUD_REGISTERED;
-  ctx->cps = OC_CPS_REGISTERED;
+  ctx->store.cps = OC_CPS_REGISTERED;
+
+  oc_notify_observers(ctx->cloud_conf);
 
   return 0;
 
 error:
-  ctx->cps = OC_CPS_FAILED;
+  ctx->store.cps = OC_CPS_FAILED;
   ctx->store.status |= OC_CLOUD_FAILURE;
   if (ctx->last_error == 0) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
@@ -259,7 +259,7 @@ cloud_register(void *data)
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
             ctx->device, cloud_register_handler, data)) {
         cannotConnect = false;
-        ctx->cps = OC_CPS_REGISTERING;
+        ctx->store.cps = OC_CPS_REGISTERING;
       }
       if (cannotConnect) {
         cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -297,7 +297,7 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   return 0;
 
 error:
-  ctx->cps = OC_CPS_FAILED;
+  ctx->store.cps = OC_CPS_FAILED;
   ctx->store.status |= OC_CLOUD_FAILURE;
   if (ctx->last_error == 0) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
@@ -430,7 +430,7 @@ error:
   if (ctx->last_error == 0) {
     cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
   }
-  ctx->cps = OC_CPS_FAILED;
+  ctx->store.cps = OC_CPS_FAILED;
   ctx->store.status |= OC_CLOUD_FAILURE;
   return -1;
 }

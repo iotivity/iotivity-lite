@@ -2,6 +2,7 @@
 %module OCCloud
 
 %include "enums.swg"
+%javaconst(1);
 %include "iotivity.swg"
 %include "stdint.i"
 
@@ -92,7 +93,13 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 
 // oc_cloud_status is a bitmask exposed through OCCloudStatusMask.java as ints
 %ignore oc_cloud_status_t;
-%ignore oc_cps_t;
+%rename (OCCloudPrivisoningStatus) oc_cps_t;
+%rename (UNINITIALIZED) OC_CPS_UNINITIALIZED;
+%rename (READYTOREGISTER) OC_CPS_READYTOREGISTER;
+%rename (REGISTERING) OC_CPS_REGISTERING;
+%rename (REGISTERED) OC_CPS_REGISTERED;
+%rename (FAILED) OC_CPS_FAILED;
+
 %rename (OCCloudStore) oc_cloud_store_t;
 %rename (OCCloudError) oc_cloud_error_t;
 %rename (OCCloudContext) oc_cloud_context_t;
@@ -306,6 +313,29 @@ int jni_cloud_publish_resources(size_t device)
 {
 #ifdef OC_CLOUD
   return oc_cloud_publish_resources(device);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  return -1;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_discover_resources;
+%rename (discoverResources) jni_cloud_discover_resources;
+
+%inline %{
+int jni_cloud_discover_resources( oc_cloud_context_t *ctx,
+                                  oc_discovery_all_handler_t handler,
+                                  jni_callback_data *jcb)
+{
+#ifdef OC_CLOUD
+  OC_DBG("JNI: %s\n", __func__);
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_cloud_discover_resources(ctx, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   return -1;
