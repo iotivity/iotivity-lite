@@ -432,6 +432,8 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
         OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
         oc_etimer_restart(&event_cb->timer);
         OC_PROCESS_CONTEXT_END(&timed_callback_events);
+        event_cb = oc_list_head(list);
+        continue;
       }
     }
 
