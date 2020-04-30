@@ -16,41 +16,6 @@
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 */
 
-/* Application Design
- *
- * support functions:
- * app_init
- *  initializes the oic/p and oic/d values.
- * register_resources
- *  function that registers all endpoints, e.g. sets the RETRIEVE/UPDATE
- * handlers for each end point
- *
- * main
- *  starts the stack, with the registered resources.
- *
- * Each resource has:
- *  global property variables (per resource path) for:
- *    the property name
- *       naming convention: g_<path>_RESOURCE_PROPERTY_NAME_<propertyname>
- *    the actual value of the property, which is typed from the json data type
- *      naming convention: g_<path>_<propertyname>
- *  global resource variables (per path) for:
- *    the path in a variable:
- *      naming convention: g_<path>_RESOURCE_ENDPOINT
- *    array of interfaces, where by the first will be set as default interface
- *      naming convention g_<path>_RESOURCE_INTERFACE
- *
- *  handlers for the implemented methods (get/post)
- *   get_<path>
- *     function that is being called when a RETRIEVE is called on <path>
- *     set the global variables in the output
- *   post_<path>
- *     function that is being called when a UPDATE is called on <path>
- *     checks the input data
- *     if input data is correct
- *       updates the global variables
- *
- */
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_ri.h"
@@ -75,42 +40,30 @@ static CRITICAL_SECTION cs;   /* event loop variable */
 #define MAX_STRING 30         /* max size of the strings. */
 #define MAX_PAYLOAD_STRING 65 /* max size strings in the payload */
 #define MAX_ARRAY 10          /* max size of the array */
-/* Note: Magic numbers are derived from the resource definition, either from the
- * example or the definition.*/
 
 volatile int quit = 0; /* stop variable, used by handle_signal */
 
 /* global property variables for path: "/binaryswitch" */
-static char g_binaryswitch_RESOURCE_PROPERTY_NAME_value[] =
-  "value"; /* the name for the attribute */
+static char g_binaryswitch_RESOURCE_PROPERTY_NAME_value[] = "value";
 bool g_binaryswitch_value = false;
-  /* current value of property "value" The status of the switch. */ /* registration
-                                                                       data
-                                                                       variables
-                                                                       for the
-                                                                       resources
-                                                                     */
-
-/* global resource variables for path: /binaryswitch */
 static char g_binaryswitch_RESOURCE_INTERFACE[][MAX_STRING] = {
   "oic.if.a", "oic.if.baseline"
-}; /* interface if (as an array) */
+};
 int g_binaryswitch_nr_resource_interfaces = 2;
 
 /* global property variables for path: "/audio" */
-bool g_audio_mute = false; /* current value of property "mute" */
-int g_audio_volume = 50;   /* current value of property "volume" */
+bool g_audio_mute = false;
+int g_audio_volume = 50;
 
 /* global resource variables for path: /audio */
-static char g_audio_RESOURCE_INTERFACE[][MAX_STRING] = {
-  "oic.if.a", "oic.if.baseline"
-}; /* interface if (as an array) */
+static char g_audio_RESOURCE_INTERFACE[][MAX_STRING] = { "oic.if.a",
+                                                         "oic.if.baseline" };
 int g_audio_nr_resource_interfaces = 2;
 
 /* global resource variables for path: /scenemember1 */
 static char g_scenemember_RESOURCE_INTERFACE[][MAX_STRING] = {
   "oic.if.baseline"
-}; /* interface if (as an array) */
+};
 int g_scenemember_nr_resource_interfaces = 1;
 static oc_string_array_t scenemem_link_param_if;
 static oc_string_array_t scenemem_link_param_rt;
@@ -125,7 +78,7 @@ static oc_string_array_t scenecol_link_param_rt;
 /* global resource variables for path: /ruleaction */
 static char g_ruleaction_RESOURCE_INTERFACE[][MAX_STRING] = {
   "oic.if.rw", "oic.if.baseline"
-}; /* interface if (as an array) */
+};
 int g_ruleaction_nr_resource_interfaces = 2;
 
 /* global property variables for path: /ruleexpression */
@@ -137,7 +90,7 @@ static bool actionenable = false;
 /* global resource variables for path: /ruleexpression */
 static char g_ruleexpression_RESOURCE_INTERFACE[][MAX_STRING] = {
   "oic.if.rw", "oic.if.baseline"
-}; /* interface if (as an array) */
+};
 int g_ruleexpression_nr_resource_interfaces = 2;
 
 /* Resource pointers needed for providing notifications when rules execute
