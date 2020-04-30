@@ -136,3 +136,10 @@ oc_gen_uuid(oc_uuid_t *uuid)
   uuid->id[6] &= 0x0f;
   uuid->id[6] |= 0x40;
 }
+
+bool
+oc_uuid_is_nil(const oc_uuid_t *uuid)
+{
+  oc_uuid_t nil_uuid = { { 0 } };
+  return (memcmp(uuid, &nil_uuid, 16) == 0);
+}

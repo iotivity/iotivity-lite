@@ -25,10 +25,10 @@
 #define OC_UUID_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -102,6 +102,17 @@ void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
  * @param[out] uuid the randomly generated UUID
  */
 void oc_gen_uuid(oc_uuid_t *uuid);
+
+/**
+ * Check if a UUID is nil e.g. all zeros
+ *
+ * @param uuid the uuid to check if is nil
+ *
+ * @return
+ *    - true if UUID is nil
+ *    - false otherwise
+ */
+bool oc_uuid_is_nil(const oc_uuid_t *uuid);
 
 #ifdef __cplusplus
 }
