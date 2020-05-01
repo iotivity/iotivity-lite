@@ -33,6 +33,13 @@ public class Server {
             System.exit(init_ret);
         }
 
+        if (OCMain.isOwnedDevice(0)) {
+            System.out.println("Sever is already owned");
+        } else {
+            System.out.println("Sever is currently Un-owned");
+        }
+        OCMain.addOwnershipStatusHandler(new OwnershipStatusHandler());
+
         try {
             Thread.sleep(Long.MAX_VALUE);
         } catch (InterruptedException e) {

@@ -509,16 +509,17 @@ oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
   const char *address = NULL;
 
   address = strstr(oc_string(*endpoint_str), "://");
-  if(!address) {
+  if (!address) {
     return -1;
   }
   // 3 is string length of "://"
   address += 3;
 
-  size_t len = oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+  size_t len =
+    oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
 
   // the smallest possible address is '0' anything smaller is invalid.
-  if(len < 1) {
+  if (len < 1) {
     return -1;
   }
   /* Extract a uri path if available */
@@ -556,7 +557,7 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 }
 
 int
-oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2)
+oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
   if (!ep1 || !ep2)
     return -1;

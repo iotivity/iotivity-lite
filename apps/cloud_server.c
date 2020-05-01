@@ -134,12 +134,12 @@ run(void)
 #endif
 
 // define application specific values.
-static const char *spec_version = "ocf.1.0.0";
-static const char *data_model_version = "ocf.res.1.0.0";
+static const char *spec_version = "ocf.2.0.5";
+static const char *data_model_version = "ocf.res.1.3.0";
 
 static const char *resource_rt = "core.light";
 static const char *device_rt = "oic.d.cloudDevice";
-static const char *device_name = "Cloud Device";
+static const char *device_name = "CloudServer";
 
 static const char *manufacturer = "ocfcloud.com";
 
@@ -363,13 +363,15 @@ factory_presets_cb(size_t device, void *data)
 int
 main(int argc, char *argv[])
 {
-  PRINT("Default parameters: device_name: %s, auth_code: %s, cis: %s, sid: %s, "
-        "apn: %s\n",
-        device_name, auth_code, cis, sid, apn);
   if (argc == 1) {
-    PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn>\n"
-          "Using the default values\n");
+    PRINT("./cloud_server <device-name-without-spaces> <auth-code> <cis> <sid> "
+          "<apn>\n");
+#ifndef OC_SECURITY
+    PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
+          "sid: %s, "
+          "apn: %s\n",
+          device_name, auth_code, cis, sid, apn);
+#endif /* !OC_SECURITY */
   }
   if (argc > 1) {
     device_name = argv[1];

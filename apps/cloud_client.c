@@ -46,11 +46,11 @@ display_menu(void)
 }
 
 // define application specific values.
-static const char *spec_version = "ocf.2.5.0";
+static const char *spec_version = "ocf.2.0.5";
 static const char *data_model_version = "ocf.res.1.3.0";
 
 static const char *device_rt = "oic.d.cloudDevice";
-static const char *device_name = "CloudDevice";
+static const char *device_name = "CloudClient";
 
 static const char *manufacturer = "ocfcloud.com";
 
@@ -450,8 +450,13 @@ main(int argc, char *argv[])
 {
   if (argc == 1) {
     PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn>\n"
-          "Using the default values\n");
+          "<apn>\n");
+#ifndef OC_SECURITY
+    PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
+          "sid: %s, "
+          "apn: %s\n",
+          device_name, auth_code, cis, sid, apn);
+#endif /* !OC_SECURITY */
   }
   if (argc > 1) {
     device_name = argv[1];
@@ -473,10 +478,6 @@ main(int argc, char *argv[])
     apn = argv[5];
     PRINT("apn: %s\n", argv[5]);
   }
-
-  PRINT("device_name: %s, auth_code: %s, cis: %s, sid: %s, "
-        "apn: %s\n",
-        device_name, auth_code, cis, sid, apn);
 
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);

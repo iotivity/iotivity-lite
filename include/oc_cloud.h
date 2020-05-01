@@ -62,6 +62,7 @@ typedef struct oc_cloud_store_t
   oc_string_t refresh_token;
   oc_string_t sid;
   uint8_t status;
+  oc_cps_t cps;
   size_t device;
 } oc_cloud_store_t;
 
@@ -103,8 +104,6 @@ typedef struct oc_cloud_context_t
   oc_link_t *rd_published_resources;
   oc_link_t *rd_delete_resources;
   bool rd_delete_all;
-
-  oc_cps_t cps;
 
   oc_resource_t *cloud_conf;
 

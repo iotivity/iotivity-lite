@@ -58,6 +58,9 @@
     <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_random_wrap.c">
       <Filter>c_wrap</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\swig\iotivity-lite-java\jni\oc_swupdate_wrap.c">
+      <Filter>c_wrap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
