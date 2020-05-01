@@ -1092,12 +1092,14 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             oc_sec_cred_t *cr = oc_sec_get_cred_by_credid(credid, device);
             if (cr) {
               cr->owner_cred = owner_cred;
-            }
-            /* Obtain a handle to the owner credential entry where that applies
-             */
-            if (credtype == OC_CREDTYPE_PSK && privatedata_size == 0 && owner) {
-              *owner = cr;
-              (*owner)->owner_cred = true;
+              /* Obtain a handle to the owner credential entry where that
+               * applies
+               */
+              if (credtype == OC_CREDTYPE_PSK && privatedata_size == 0 &&
+                  owner) {
+                *owner = cr;
+                (*owner)->owner_cred = true;
+              }
             }
           }
           creds_array = creds_array->next;

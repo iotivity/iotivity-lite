@@ -52,17 +52,13 @@ Android_build:
     - cd port/android
     - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
 
-whitespace_and_doxygen:
+doxygen:
   variables:
     GIT_SUBMODULE_STRATEGY: none
   stage: build
   before_script:
-    - apt update && apt -y install make autoconf doxygen clang-format
+    - apt update && apt -y install doxygen
   script:
-    - clang-format --version
     - doxygen --version
-    - cp tools/_clang-format _clang-format
-    - cp tools/whitespace_commit_checker.sh whitespace_commit_checker.sh
-    - ./whitespace_commit_checker.sh
     - cd tools
     - ./build_doc.sh

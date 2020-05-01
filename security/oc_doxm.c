@@ -37,10 +37,26 @@ static oc_sec_doxm_t *doxm;
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+typedef struct oc_doxm_owned_cb_s
+{
+  struct oc_doxm_owned_cb_s *next;
+  oc_ownership_status_cb_t cb;
+  void *user_data;
+} oc_doxm_owned_cb_t;
+
+OC_LIST(oc_doxm_owned_cb_list_t);
+OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
+
 void
 oc_sec_doxm_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    free(doxm_cb_item);
+    doxm_cb_item = (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  }
   if (doxm) {
     free(doxm);
   }
@@ -79,6 +95,17 @@ evaluate_supported_oxms(size_t device)
 void
 oc_sec_doxm_default(size_t device)
 {
+  // invoke the device owned changed cb before the deviceuuid is reset
+  if (doxm[device].owned) {
+    oc_doxm_owned_cb_t *doxm_cb_item =
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+    while (doxm_cb_item) {
+      (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, false,
+                         doxm_cb_item->user_data);
+      doxm_cb_item = doxm_cb_item->next;
+    }
+  }
+
   doxm[device].oxmsel = 0;
 #ifdef OC_PKI
   doxm[device].sct = 9;
@@ -169,6 +196,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
+  bool owned_changed = false;
 
   while (t != NULL) {
     len = oc_string_len(t->name);
@@ -265,6 +293,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(rep->name), "owned", 5) == 0) {
         doxm[device].owned = rep->value.boolean;
+        owned_changed = true;
       }
       break;
     /* oxmsel and sct */
@@ -299,6 +328,17 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     }
     rep = rep->next;
   }
+
+  if (owned_changed == true) {
+    oc_doxm_owned_cb_t *doxm_cb_item =
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+    while (doxm_cb_item) {
+      oc_doxm_owned_cb_t *invokee = doxm_cb_item;
+      doxm_cb_item = doxm_cb_item->next;
+      (invokee->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
+                    invokee->user_data);
+    }
+  }
   return true;
 }
 
@@ -316,4 +356,39 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
+void
+oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
+{
+  oc_doxm_owned_cb_t *new_doxm_cb = oc_memb_alloc(&oc_doxm_owned_cb_s);
+  if (!new_doxm_cb) {
+    oc_abort("Insufficient memory");
+  }
+  new_doxm_cb->cb = cb;
+  new_doxm_cb->user_data = user_data;
+  oc_list_add(oc_doxm_owned_cb_list_t, new_doxm_cb);
+}
+
+void
+oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
+{
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    if (cb == doxm_cb_item->cb && user_data == doxm_cb_item->user_data) {
+      oc_list_remove(oc_doxm_owned_cb_list_t, doxm_cb_item);
+      free(doxm_cb_item);
+      break;
+    }
+    doxm_cb_item = doxm_cb_item->next;
+  }
+}
+
+bool
+oc_is_owned_device(size_t device_index)
+{
+  if (doxm) {
+    return doxm[device_index].owned;
+  }
+  return false;
+}
 #endif /* OC_SECURITY */
