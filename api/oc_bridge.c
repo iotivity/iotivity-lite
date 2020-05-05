@@ -34,7 +34,7 @@ typedef struct oc_vods_t
 {
   struct oc_vods_t *next;
   oc_string_t name;
-  const oc_uuid_t *di;
+  oc_uuid_t di;
   oc_string_t econame;
 } oc_vods_t;
 
@@ -48,7 +48,7 @@ static oc_resource_t *bridge_res;
     OC_DBG("  {");                                                             \
     OC_DBG("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
     char di_uuid[OC_UUID_LEN];                                                 \
-    oc_uuid_to_str(print_vod_item->di, di_uuid, OC_UUID_LEN);                  \
+    oc_uuid_to_str(&print_vod_item->di, di_uuid, OC_UUID_LEN);                 \
     OC_DBG("    \"di\": \"%s\"", di_uuid);                                     \
     OC_DBG("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
     if (print_vod_item->next) {                                                \
@@ -65,7 +65,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
 {
   oc_vods_t *vod = (oc_vods_t *)malloc(sizeof(oc_vods_t));
   oc_new_string(&vod->name, name, strlen(name));
-  vod->di = di;
+  oc_uuid_copy(&vod->di, di);
   oc_new_string(&vod->econame, econame, strlen(econame));
   oc_list_add(oc_vods_list_t, vod);
   OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodslist", name, econame);
@@ -77,7 +77,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
 {
   oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
   while (vod_item) {
-    if (memcmp(vod_item->di, di, 16) == 0) {
+    if (memcmp(&vod_item->di, di, 16) == 0) {
       oc_list_remove(oc_vods_list_t, vod_item);
       OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodslist",
              oc_string(vod_item->name), oc_string(vod_item->econame));
@@ -108,7 +108,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     while (vod_item) {
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vod_item->name));
-      oc_uuid_to_str(vod_item->di, di_str, OC_UUID_LEN);
+      oc_uuid_to_str(&vod_item->di, di_str, OC_UUID_LEN);
       oc_rep_set_text_string(vods, di, di_str);
       oc_rep_set_text_string(vods, econame, oc_string(vod_item->econame));
       oc_rep_object_array_end_item(vods);
