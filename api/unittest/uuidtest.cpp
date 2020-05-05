@@ -28,11 +28,15 @@
 
 TEST(UUIDGeneration, StrToUUIDTest_P)
 {
-  oc_uuid_t uuid;
-  memset(&uuid, 0, sizeof(oc_uuid_t));
-  oc_uuid_t uuidTemp = uuid;
-  oc_str_to_uuid(UUID, &uuid);
-  EXPECT_NE(uuid.id, uuidTemp.id);
+  const char *uuid_without_dash = "12345678123412341234123456789012";
+  const char *uuid_with_dash = "12345678-1234-1234-1234-123456789012";
+  oc_uuid_t uuid = { { 0 } };
+  oc_uuid_t uuidTemp = { { 0 } };
+  oc_str_to_uuid(uuid_without_dash, &uuid);
+  EXPECT_FALSE(oc_uuid_is_equal_to(&uuid, &uuidTemp));
+  char uuid_str[OC_UUID_LEN];
+  oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+  EXPECT_STREQ(uuid_str, uuid_with_dash);
 }
 
 TEST(UUIDGeneration, WildcardStrToUUID)
@@ -105,7 +109,8 @@ TEST(UUIDGeneration, NonWildcardUUID)
  * o  Set all the other bits to randomly (or pseudo-randomly) chosen
  *    values.
  */
-TEST(UUIDGeneration, GenerateType4UUID) {
+TEST(UUIDGeneration, GenerateType4UUID)
+{
   // Type 4 uuid uses iotivities psudo random number generator.
   oc_random_init();
   oc_uuid_t uuid;
@@ -125,5 +130,28 @@ TEST(UUIDGeneration, GenerateType4UUID) {
   EXPECT_EQ('4', uuid_str[14]); // For Version 4 UUIDs this will always be a 4
   EXPECT_EQ('-', uuid_str[18]);
   EXPECT_EQ('-', uuid_str[23]);
+  oc_random_destroy();
+}
+
+TEST(UUIDGeneration, is_nil)
+{
+  oc_random_init();
+  oc_uuid_t uuid = { { 0 } };
+  EXPECT_TRUE(oc_uuid_is_nil(&uuid));
+  oc_gen_uuid(&uuid);
+  EXPECT_FALSE(oc_uuid_is_nil(&uuid));
+  oc_random_destroy();
+}
+
+TEST(UUIDGeneration, is_equal)
+{
+  oc_random_init();
+  oc_uuid_t uuid1;
+  oc_gen_uuid(&uuid1);
+  oc_uuid_t uuid2;
+  oc_gen_uuid(&uuid2);
+  EXPECT_FALSE(oc_uuid_is_equal_to(&uuid1, &uuid2));
+  oc_uuid_copy(&uuid2, &uuid1);
+  EXPECT_TRUE(oc_uuid_is_equal_to(&uuid1, &uuid2));
   oc_random_destroy();
 }
