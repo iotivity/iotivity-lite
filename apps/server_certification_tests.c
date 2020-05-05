@@ -982,6 +982,7 @@ factory_presets_cb(size_t device, void *data)
     return;
   }
 
+  memset(cert, 0, cert_len * sizeof(char));
   cert_len = 8192;
   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
@@ -996,6 +997,7 @@ factory_presets_cb(size_t device, void *data)
     return;
   }
 
+  memset(cert, 0, cert_len * sizeof(char));
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
@@ -1009,7 +1011,9 @@ factory_presets_cb(size_t device, void *data)
     return;
   }
 
-  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+  oc_pki_set_security_profile(
+    0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE, OC_SP_BASELINE,
+    ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 
