@@ -74,31 +74,6 @@ size_t oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
                          const char *econame);
 
 /*
- * NOT NEEDED IN HEADER FILE REMOVE ONCE IMPLEMENTED
- */
-bool oc_vod_map_decode(oc_rep_t *rep, bool from_storage);
-
-/*
- * load vod_map file and pass bytes to decode to populate oc_vod_list_t
- *
- * reference oc_sec_load_acl(size_t device) in oc_store.c
- */
-void oc_vod_map_load();
-
-/*
- * responsible for encoding the oc_vod_list_t to cbor
- * function will be used by dump_vod_map()
- */
-void oc_vod_map_encode();
-/*
- * convert the oc_vod_list_t to cbor
- * dump cbor bytes to vod_map file
- *
- * reference oc_sec_dump_acl(size_t device) in oc_store.c
- */
-void oc_vod_map_dump();
-
-/*
  * Walk the vodmap and return the econame at the given index
  */
 void oc_vod_map_get_econame(oc_string_t *econame, size_t device_index);
