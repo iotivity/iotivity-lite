@@ -146,6 +146,9 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
        */
       for (size_t device = device_index + 1; device < oc_core_get_num_devices();
            ++device) {
+        if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
+          continue;
+        }
         if (!oc_is_owned_device(device)) {
           oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
           for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);

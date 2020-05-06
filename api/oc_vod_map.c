@@ -42,16 +42,18 @@ oc_vod_map_init()
 void
 oc_vod_map_free()
 {
-  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
-  oc_virtual_device_t *v_to_free;
-  while (v != NULL) {
-    free(v->v_id);
-    oc_free_string(&v->econame);
-    v_to_free = v;
-    v = v->next;
-    oc_list_remove(vod_list.vods, v_to_free);
-    free(v_to_free);
-    v_to_free = NULL;
+  if (vod_list.vods) {
+    oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+    oc_virtual_device_t *v_to_free;
+    while (v != NULL) {
+      free(v->v_id);
+      oc_free_string(&v->econame);
+      v_to_free = v;
+      v = v->next;
+      oc_list_remove(vod_list.vods, v_to_free);
+      free(v_to_free);
+      v_to_free = NULL;
+    }
   }
 }
 
@@ -75,8 +77,10 @@ oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
 {
   oc_virtual_device_t *v = oc_list_head(vod_list.vods);
   while (v != NULL) {
-    if (memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
-        memcmp(econame, oc_string(v->econame), strlen(econame)) == 0) {
+    if (v->v_id_size == vod_id_size &&
+        memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
+        (v->econame.size - 1) == strlen(econame) &&
+        memcmp(econame, oc_string(v->econame), v->econame.size) == 0) {
       return v->index;
     }
     v = v->next;
