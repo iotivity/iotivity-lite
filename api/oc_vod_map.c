@@ -24,105 +24,9 @@ static oc_vod_list_t vod_list;
 static size_t reset_index;
 
 #define SVR_TAG_MAX (32)
-/*
- * open vod_map file from creds directory and populate
- * oc_vod_list_t
- */
-void
-oc_vod_map_init()
-{
-  OC_LIST_STRUCT_INIT(&vod_list, vods);
-  reset_index = vod_list.next_index = oc_core_get_num_devices();
-  oc_vod_map_load();
-}
 
-/*
- * release the resouces.
- */
-void
-oc_vod_map_free()
-{
-  if (vod_list.vods) {
-    oc_virtual_device_t *v = oc_list_head(vod_list.vods);
-    oc_virtual_device_t *v_to_free;
-    while (v != NULL) {
-      free(v->v_id);
-      oc_free_string(&v->econame);
-      v_to_free = v;
-      v = v->next;
-      oc_list_remove(vod_list.vods, v_to_free);
-      free(v_to_free);
-      v_to_free = NULL;
-    }
-  }
-}
 
-/*
- * Reset the vod map as if no VODs had been discovered.
- */
-void
-oc_vod_map_reset()
-{
-  oc_vod_map_free();
-  vod_list.next_index = reset_index;
-  oc_vod_map_dump();
-}
-
-/*
- * returns index of the vod or 0 if not found
- */
-size_t
-oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
-                        const char *econame)
-{
-  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
-  while (v != NULL) {
-    if (v->v_id_size == vod_id_size &&
-        memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
-        (v->econame.size - 1) == strlen(econame) &&
-        memcmp(econame, oc_string(v->econame), oc_string_len(v->econame)) ==
-          0) {
-      return v->index;
-    }
-    v = v->next;
-  }
-  return 0;
-}
-
-/*
- * add the vod_id to the the oc_vod_list_t
- * update next_index
- * write updated vod_map file
- * return index of just added vod
- */
-size_t
-oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
-                  const char *econame)
-{
-  size_t v_index = oc_vod_map_get_id_index(vod_id, vod_id_size, econame);
-
-  if (v_index != 0) {
-    return v_index;
-  }
-  oc_virtual_device_t *vod =
-    (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
-  vod->v_id = (uint8_t *)malloc(vod_id_size * sizeof(uint8_t));
-  memcpy(vod->v_id, vod_id, vod_id_size);
-  vod->v_id_size = vod_id_size;
-  oc_new_string(&vod->econame, econame, strlen(econame));
-  vod->index = vod_list.next_index;
-  oc_list_add(vod_list.vods, vod);
-  /*
-   * At this point in time just increment index.  If a way to remove a device
-   * is implemented consider a way to discover holes in device numbers and
-   * reuse those numbers.
-   */
-  vod_list.next_index++;
-  oc_vod_map_dump();
-  return vod->index;
-}
-
-bool
+static bool
 oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
 {
   // TODO use the from_storage param or drop it from the map_decode
@@ -193,7 +97,7 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
  *
  * reference oc_sec_load_acl(size_t device) in oc_store.c
  */
-void
+static void
 oc_vod_map_load()
 {
   long ret = 0;
@@ -235,7 +139,7 @@ oc_vod_map_load()
  * responsible for encoding the oc_vod_list_t to cbor
  * function will be used by dump_vod_map()
  */
-void
+static void
 oc_vod_map_encode()
 {
   oc_rep_begin_root_object();
@@ -255,13 +159,14 @@ oc_vod_map_encode()
   oc_rep_close_array(root, vods);
   oc_rep_end_root_object();
 }
+
 /*
  * convert the oc_vod_list_t to cbor
  * dump cbor bytes to vod_map file
  *
  * reference oc_sec_dump_acl(size_t device) in oc_store.c
  */
-void
+static void
 oc_vod_map_dump()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -283,6 +188,103 @@ oc_vod_map_dump()
 #ifdef OC_DYNAMIC_ALLOCATION
   free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+/*
+ * open vod_map file from creds directory and populate
+ * oc_vod_list_t
+ */
+void
+oc_vod_map_init()
+{
+  OC_LIST_STRUCT_INIT(&vod_list, vods);
+  reset_index = vod_list.next_index = oc_core_get_num_devices();
+  oc_vod_map_load();
+}
+
+/*
+ * release the resouces.
+ */
+void
+oc_vod_map_free()
+{
+  if (vod_list.vods) {
+    oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+    oc_virtual_device_t *v_to_free;
+    while (v != NULL) {
+      free(v->v_id);
+      oc_free_string(&v->econame);
+      v_to_free = v;
+      v = v->next;
+      oc_list_remove(vod_list.vods, v_to_free);
+      free(v_to_free);
+      v_to_free = NULL;
+    }
+  }
+}
+
+/*
+ * Reset the vod map as if no VODs had been discovered.
+ */
+void
+oc_vod_map_reset()
+{
+  oc_vod_map_free();
+  vod_list.next_index = reset_index;
+  oc_vod_map_dump();
+}
+
+/*
+ * returns index of the vod or 0 if not found
+ */
+size_t
+oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
+                        const char *econame)
+{
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+  while (v != NULL) {
+    if (v->v_id_size == vod_id_size &&
+        memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
+        (v->econame.size - 1) == strlen(econame) &&
+        memcmp(econame, oc_string(v->econame), v->econame.size) == 0) {
+      return v->index;
+    }
+    v = v->next;
+  }
+  return 0;
+}
+
+/*
+ * add the vod_id to the the oc_vod_list_t
+ * update next_index
+ * write updated vod_map file
+ * return index of just added vod
+ */
+size_t
+oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
+                  const char *econame)
+{
+  size_t v_index = oc_vod_map_get_id_index(vod_id, vod_id_size, econame);
+
+  if (v_index != 0) {
+    return v_index;
+  }
+  oc_virtual_device_t *vod =
+    (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
+  vod->v_id = (uint8_t *)malloc(vod_id_size * sizeof(uint8_t));
+  memcpy(vod->v_id, vod_id, vod_id_size);
+  vod->v_id_size = vod_id_size;
+  oc_new_string(&vod->econame, econame, strlen(econame));
+  vod->index = vod_list.next_index;
+  oc_list_add(vod_list.vods, vod);
+  /*
+   * At this point in time just increment index.  If a way to remove a device
+   * is implemented consider a way to discover holes in device numbers and
+   * reuse those numbers.
+   */
+  vod_list.next_index++;
+  oc_vod_map_dump();
+  return vod->index;
 }
 
 void
