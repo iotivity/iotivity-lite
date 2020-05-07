@@ -289,8 +289,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     add_device_cb, data);
   // The call to oc_core_add_new_device_at_index causes the device_count to
   // increase by 1 so must call connectivity_init for device_count - 1
-  if (oc_connectivity_init(device_count - 1) < 0) {
-    oc_abort("error initializing connectivity for device");
+  if (device_info) {
+    if (oc_connectivity_init(device_count - 1) < 0) {
+      oc_abort("error initializing connectivity for device");
+    }
   }
 
   return device_info;
