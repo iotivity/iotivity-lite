@@ -24,19 +24,13 @@
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 
-#define UUID "12345678123412341234123456789012"
-
 TEST(UUIDGeneration, StrToUUIDTest_P)
 {
   const char *uuid_without_dash = "12345678123412341234123456789012";
-  const char *uuid_with_dash = "12345678-1234-1234-1234-123456789012";
   oc_uuid_t uuid = { { 0 } };
-  oc_uuid_t uuidTemp = { { 0 } };
   oc_str_to_uuid(uuid_without_dash, &uuid);
-  EXPECT_FALSE(oc_uuid_is_equal_to(&uuid, &uuidTemp));
-  char uuid_str[OC_UUID_LEN];
-  oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
-  EXPECT_STREQ(uuid_str, uuid_with_dash);
+  // oc_str_to_uuid can only parse full uuids without dashes will fail */
+  EXPECT_TRUE(oc_uuid_is_nil(&uuid));
 }
 
 TEST(UUIDGeneration, WildcardStrToUUID)

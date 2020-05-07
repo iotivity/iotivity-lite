@@ -31,20 +31,20 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
   size_t s_len = strlen(str);
   if (str[0] == '*' && s_len == 1) {
-    memset(uuid->id, 0, 16);
+    memset(uuid->id, 0, sizeof(oc_uuid_t));
     uuid->id[0] = '*';
     return;
   }
 
-  /* parse uuid's with (len == 36) and without (len == 32) '-' characters */
-  if (s_len != OC_UUID_LEN - 1 && s_len != 32) {
+  /* parse uuid's with 36 characters only */
+  if (s_len != OC_UUID_LEN - 1) {
+    memset(uuid, 0, sizeof(oc_uuid_t));
     return;
   }
-  size_t i;
-  int j = 0, k = 1;
+  int i, j = 0, k = 1;
   uint8_t c = 0;
 
-  for (i = 0; i < s_len; i++) {
+  for (i = 0; i < 36; i++) {
     if (str[i] == '-')
       continue;
     else if (isalpha((int)str[i])) {
@@ -148,7 +148,7 @@ bool
 oc_uuid_is_nil(const oc_uuid_t *uuid)
 {
   oc_uuid_t nil_uuid = { { 0 } };
-  return (memcmp(uuid, &nil_uuid, 16) == 0);
+  return (memcmp(uuid, &nil_uuid, sizeof(oc_uuid_t)) == 0);
 }
 
 bool
@@ -157,11 +157,11 @@ oc_uuid_is_equal_to(const oc_uuid_t *lhs, const oc_uuid_t *rhs)
   if (!lhs || !rhs) {
     return false;
   }
-  return (memcmp(lhs, rhs, 16) == 0);
+  return (memcmp(lhs, rhs, sizeof(oc_uuid_t)) == 0);
 }
 
 void
 oc_uuid_copy(oc_uuid_t *dest, const oc_uuid_t *src)
 {
-  memcpy(dest, src, 16);
+  memcpy(dest, src, sizeof(oc_uuid_t));
 }
