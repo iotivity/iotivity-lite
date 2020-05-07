@@ -80,7 +80,8 @@ oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
     if (v->v_id_size == vod_id_size &&
         memcmp(vod_id, v->v_id, vod_id_size) == 0 &&
         (v->econame.size - 1) == strlen(econame) &&
-        memcmp(econame, oc_string(v->econame), v->econame.size) == 0) {
+        memcmp(econame, oc_string(v->econame), oc_string_len(v->econame)) ==
+          0) {
       return v->index;
     }
     v = v->next;
