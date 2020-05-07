@@ -44,9 +44,9 @@ public:
 protected:
   virtual void SetUp()
   {
-    mkdir("vod_map_test_dir", S_IRWXU | S_IRWXG | S_IRWXG /* 0777 permissions*/ );
 #ifdef OC_STORAGE
-  oc_storage_config("./vod_map_test_dir/");
+    mkdir("vod_map_test_dir", S_IRWXU | S_IRWXG | S_IRWXG /* 0777 permissions*/ );
+    oc_storage_config("./vod_map_test_dir/");
 #endif /* OC_STORAGE */
 
   }
@@ -95,6 +95,184 @@ TEST_F(VodMapTest, vod_map_add_id) {
   EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
   EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
   EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  oc_vod_map_free();
+}
+
+
+TEST_F(VodMapTest, vod_map_remove_id) {
+  oc_vod_map_init();
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+
+  // The vod map code actually expects the zero device to always be a bridge or
+  // other device for that reason we are inserting a dummy device at index zero
+  // this will be dumped into the output map file but shouldn't effect the
+  // test results.
+  const char * dummy = "dummy";
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)dummy, strlen(dummy), dummy), 0);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+
+  oc_vod_map_remove_id(1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+
+  oc_vod_map_free();
+
+  // by freeing the vod map and calling oc_vod_map_init again the code is using
+  // the same code path it would take if the process were shut down and had
+  // to load the vod map from oc_storage.
+  oc_vod_map_init();
+  // tv[0] and tv[1] were dumped to file so should be loaded as part of the init
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  // tv[2] should not be found since it was not added above.
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  
+  oc_vod_map_reset();
+  
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+  
+  oc_vod_map_free();
+
+  // test intermittent removal of vod_ids
+
+  oc_vod_map_init();
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 0);
+
+
+
+  // The vod map code actually expects the zero device to always be a bridge or
+  // other device for that reason we are inserting a dummy device at index zero
+  // this will be dumped into the output map file but shouldn't effect the
+  // test results.
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)dummy, strlen(dummy), dummy), 0);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  oc_vod_map_remove_id(2);
+  oc_vod_map_remove_id(4);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  oc_vod_map_free();
+
+  // by freeing the vod map and calling oc_vod_map_init again the code is using
+  // the same code path it would take if the process were shut down and had
+  // to load the vod map from oc_storage.
+  oc_vod_map_init();
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 4);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  oc_vod_map_reset();
+  oc_vod_map_free();
+
+  // test consecutive removal of vod_ids
+
+  oc_vod_map_init();
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 0);
+
+
+
+  // The vod map code actually expects the zero device to always be a bridge or
+  // other device for that reason we are inserting a dummy device at index zero
+  // this will be dumped into the output map file but shouldn't effect the
+  // test results.
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)dummy, strlen(dummy), dummy), 0);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  oc_vod_map_remove_id(2);
+  oc_vod_map_remove_id(4);
+  oc_vod_map_remove_id(3);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  oc_vod_map_free();
+  // by freeing the vod map and calling oc_vod_map_init again the code is using
+  // the same code path it would take if the process were shut down and had
+  // to load the vod map from oc_storage.
+  oc_vod_map_init();
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_add_id((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 4);
+
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 4);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 2);
+  EXPECT_EQ(oc_vod_map_get_id_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
+
   oc_vod_map_free();
 }
 
