@@ -276,15 +276,52 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
   vod->v_id_size = vod_id_size;
   oc_new_string(&vod->econame, econame, strlen(econame));
   vod->index = vod_list.next_index;
-  oc_list_add(vod_list.vods, vod);
-  /*
-   * At this point in time just increment index.  If a way to remove a device
-   * is implemented consider a way to discover holes in device numbers and
-   * reuse those numbers.
-   */
-  vod_list.next_index++;
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+  if (v == NULL) {
+    oc_list_add(vod_list.vods, vod);
+    vod_list.next_index++;
+  }
+  while (v != NULL) {
+    if (v->index == (vod_list.next_index - 1)) {
+      oc_list_insert(vod_list.vods, v, vod);
+      vod_list.next_index++;
+      // continue walking the vods list till an open next_index is found
+      while (v != NULL) {
+        if (v->next != NULL && v->next->index == vod_list.next_index) {
+          vod_list.next_index++;
+        }
+        v = v->next;
+      }
+      break;
+    }
+    v = v->next;
+  }
   oc_vod_map_dump();
   return vod->index;
+}
+
+void
+oc_vod_map_remove_id(size_t device_index)
+{
+  oc_virtual_device_t *v = oc_list_head(vod_list.vods);
+  while (v != NULL) {
+    if (v->index == device_index) {
+      free(v->v_id);
+      oc_free_string(&v->econame);
+      oc_virtual_device_t *v_to_free = v;
+      oc_list_remove(vod_list.vods, v);
+      if (device_index < vod_list.next_index) {
+        vod_list.next_index = device_index;
+      }
+      // v = v->next;
+      // oc_list_remove(vod_list.vods, v_to_free);
+      free(v_to_free);
+      v_to_free = NULL;
+      break;
+    }
+    v = v->next;
+  }
+  oc_vod_map_dump();
 }
 
 void

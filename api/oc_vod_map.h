@@ -74,6 +74,14 @@ size_t oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
                          const char *econame);
 
 /*
+ * Remove the vod_id at the given device index
+ * This will update the next_index so freed indexes
+ * can be reused.  The virtual device associated
+ * with this index should
+ */
+void oc_vod_map_remove_id(size_t device_index);
+
+/*
  * Walk the vodmap and return the econame at the given index
  */
 void oc_vod_map_get_econame(oc_string_t *econame, size_t device_index);
