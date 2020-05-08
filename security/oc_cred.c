@@ -202,7 +202,7 @@ oc_sec_remove_cred_by_credid(int credid, size_t device)
   return false;
 }
 
-static void
+void
 oc_sec_clear_creds(size_t device)
 {
   oc_device_info_t *device_info = oc_core_get_device_info(device);

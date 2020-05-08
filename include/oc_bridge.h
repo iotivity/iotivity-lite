@@ -124,9 +124,9 @@ size_t oc_bridge_add_virtual_device(
  * This will shutdown network connectivity for the device and will update
  * the vodslist resource found on the bridge.
  *
- * Any any persistant settings will remain unchanged.  If the virtual device
- * has already been onboarded and permission settings have been modified when
- * the device is added again using `oc_bridge_add_virtual_device` those
+ * Any any persistant settings will remain unchanged.  If the virtual device has
+ * already been onboarded and permission settings have been modified when the
+ * device is added again using `oc_bridge_add_virtual_device` those
  * persistant settings will still be in place.
  *
  * @param device_index the index of the virtual device
@@ -137,6 +137,21 @@ size_t oc_bridge_add_virtual_device(
  */
 int oc_bridge_remove_virtual_device(size_t device_index);
 
+/**
+ * This will remove the virtual device and free memory associated with that
+ * device.
+ *
+ * Delete virtual device will remove all persistant settings. If the virtual
+ * device is added again the onboarding and device permissions will need to be
+ * setup as if the device were a new device.
+ *
+ * @param device_index index of teh virtual device
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
+int oc_bridge_delete_virtual_device(size_t device_index);
 /**
  * Get the logical device index for the virtual device
  *

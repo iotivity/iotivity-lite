@@ -438,6 +438,7 @@ display_menu(void)
   PRINT("    using ASCII art.\n");
 #ifdef OC_SECURITY
   PRINT("[9] Reset Device\n");
+  PRINT("[10] Delete Device\n");
 #endif /* OC_SECURITY */
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
@@ -530,6 +531,8 @@ reset_light(unsigned int index)
     virtual_lights[index].eco_system);
   if (device_index != 0) {
     oc_reset_device(device_index);
+    virtual_lights[index].discovered = false;
+    virtual_lights[index].added_to_bridge = false;
   }
 }
 
@@ -574,6 +577,51 @@ reset_device()
   }
 }
 #endif /* OC_SECURITY */
+
+void
+delete_light(unsigned int index)
+{
+  size_t device_index = oc_bridge_get_virtual_device_index(
+    (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
+    virtual_lights[index].eco_system);
+  if (device_index != 0) {
+    oc_bridge_delete_virtual_device(device_index);
+  }
+}
+
+void
+delete_device()
+{
+  PRINT("################################################\n");
+  PRINT("[1] Delete 'Light 1'\n");
+  PRINT("[2] Delete 'Light 2'\n");
+  PRINT("[3] Delete 'Light 3'\n");
+  PRINT("[4] Delete 'Light 4'\n");
+  PRINT("[5] Delete 'Light 5'\n");
+  PRINT("################################################\n");
+  PRINT("Select option: \n");
+  int c = 1000;
+  SCANF("%d", &c);
+  switch (c) {
+  case 1:
+    delete_light(0u);
+    break;
+  case 2:
+    delete_light(1u);
+    break;
+  case 3:
+    delete_light(2u);
+    break;
+  case 4:
+    delete_light(3u);
+    break;
+  case 5:
+    delete_light(4u);
+    break;
+  default:
+    break;
+  }
+}
 
 bool
 directoryFound(const char *path)
@@ -674,6 +722,9 @@ main(void)
       reset_device();
       break;
 #endif /* OC_SECURITY */
+    case 10:
+      delete_device();
+      break;
     case 99:
       handle_signal(0);
       break;

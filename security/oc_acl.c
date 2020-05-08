@@ -760,7 +760,7 @@ oc_acl_remove_ace(int aceid, size_t device)
   return removed;
 }
 
-static void
+void
 oc_sec_clear_acl(size_t device)
 {
   oc_device_info_t *device_info = oc_core_get_device_info(device);

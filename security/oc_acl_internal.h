@@ -31,6 +31,7 @@ extern "C"
 #endif
 
 void oc_sec_acl_init(size_t device);
+void oc_sec_clear_acl(size_t device);
 void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
 void oc_sec_acl_default(size_t device);
