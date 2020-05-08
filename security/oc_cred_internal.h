@@ -39,6 +39,7 @@ int oc_sec_add_new_cred(size_t device, bool roles_resource,
                         size_t publicdata_size, const uint8_t *publicdata,
                         const char *role, const char *authority);
 
+void oc_sec_clear_creds(size_t device);
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(size_t device);
 void oc_sec_cred_free(void);

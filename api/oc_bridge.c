@@ -59,6 +59,19 @@ static oc_resource_t *bridge_res;
     print_vod_item = print_vod_item->next;                                     \
   }
 
+static bool
+oc_bridge_is_virtual_device(size_t device_index)
+{
+  oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); ++i) {
+    if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
+        0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
                                 const char *econame)
@@ -150,17 +163,12 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
           continue;
         }
         if (!oc_is_owned_device(device)) {
-          oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
-          for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
-               i++) {
-            if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
-                        14) == 0) {
-              if (oc_connectivity_init(device) < 0) {
-                oc_abort("error initializing connectivity for device");
-              }
-              OC_DBG("oc_bridge: init connectivity for virtual device %zd",
-                     device);
+          if (oc_bridge_is_virtual_device(device)) {
+            if (oc_connectivity_init(device) < 0) {
+              oc_abort("error initializing connectivity for device");
             }
+            OC_DBG("oc_bridge: init connectivity for virtual device %zd",
+                   device);
           }
         }
       }
@@ -176,14 +184,9 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
        */
       for (size_t device = device_index + 1; device < oc_core_get_num_devices();
            ++device) {
-        oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
-        for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
-             i++) {
-          if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
-                      14) == 0) {
-            oc_reset_device(device);
-            oc_connectivity_shutdown(device);
-          }
+        if (oc_bridge_is_virtual_device(device)) {
+          oc_reset_device(device);
+          oc_connectivity_shutdown(device);
         }
       }
       /* TODO: add way to remove virtual device before reseting the vod_map */
@@ -196,23 +199,14 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
   /* Device other than Bridge Device */
   else {
     if (owned) {
-      /*
-       * if the device at device_index is a virtual device
-       * add the device to the vods list
-       */
-      oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
-      for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
-           i++) {
-        if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
-                    14) == 0) {
-          oc_device_info_t *device_info = oc_core_get_device_info(device_index);
-          oc_string_t econame;
-          oc_vod_map_get_econame(&econame, device_index);
-          add_virtual_device_to_vods_list(oc_string(device_info->name),
-                                          device_uuid, oc_string(econame));
-          OC_DBG("oc_bridge: adding %s [%s] to oic.r.vodslist",
-                 oc_string(device_info->name), oc_string(econame));
-        }
+      if (oc_bridge_is_virtual_device(device_index)) {
+        oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+        oc_string_t econame;
+        oc_vod_map_get_econame(&econame, device_index);
+        add_virtual_device_to_vods_list(oc_string(device_info->name),
+                                        device_uuid, oc_string(econame));
+        OC_DBG("oc_bridge: adding %s [%s] to oic.r.vodslist",
+               oc_string(device_info->name), oc_string(econame));
       }
     } else {
       /*
@@ -332,6 +326,17 @@ oc_bridge_remove_virtual_device(size_t device_index)
       oc_connectivity_shutdown(device_index);
       return 0;
     }
+  }
+  return -1;
+}
+
+int
+oc_bridge_delete_virtual_device(size_t device_index)
+{
+  if (oc_bridge_is_virtual_device(device_index)) {
+    oc_core_remove_device_at_index(device_index);
+    oc_vod_map_remove_id(device_index);
+    return 0;
   }
   return -1;
 }

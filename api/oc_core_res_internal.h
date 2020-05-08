@@ -40,4 +40,11 @@ oc_device_info_t *oc_core_add_new_device_at_index(
   const char *data_model_version, size_t index,
   oc_core_add_device_cb_t add_device_cb, void *data);
 
+/**
+ * Only virtual devices are expected to be removed.
+ *
+ * If the memory is part of an array it is set to all zeros and the memory will
+ * still not be freed but will be avalible to be reused.
+ */
+void oc_core_remove_device_at_index(size_t index);
 #endif /* OC_CORE_RES_INTERNAL_H */

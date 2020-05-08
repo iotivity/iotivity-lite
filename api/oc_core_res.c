@@ -30,6 +30,8 @@
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
 #include "security/oc_tls.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_cred_internal.h"
 #endif /* OC_SECURITY */
 
 #include "port/oc_assert.h"
@@ -426,6 +428,24 @@ oc_core_add_new_device_at_index(const char *uri, const char *rt,
   oc_main_init_svrs(index);
 #endif /* OC_SECURITY */
   return &oc_device_info[index];
+}
+
+void
+oc_core_remove_device_at_index(size_t index)
+{
+#ifdef OC_SECURITY
+  oc_reset_device(index);
+  oc_sec_clear_acl(index);
+  oc_sec_clear_creds(index);
+#endif /* OC_SECURITY */
+  for (size_t i = 2 + (OCF_D * (index - 1)); i < 1 + (OCF_D * index); ++i) {
+    oc_resource_t *core_resource = &core_resources[i];
+    oc_ri_free_resource_properties(core_resource);
+    memset(core_resource, 0, sizeof(oc_resource_t));
+  }
+
+  oc_core_free_device_info_properties(&oc_device_info[index]);
+  memset(&oc_device_info[index], 0, sizeof(oc_device_info_t));
 }
 
 static void
