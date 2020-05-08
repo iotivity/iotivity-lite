@@ -54,6 +54,11 @@ units_t temp_units = C;
 static bool switch_state;
 const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
 
+const char *ee_certificate = "pki_certs/certification_tests_ee.pem";
+const char *key_certificate = "pki_certs/certification_tests_key.pem";
+const char *subca_certificate = "pki_certs/certification_tests_subca1.pem";
+const char *rootca_certificate = "pki_certs/certification_tests_rootca1.pem";
+
 oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
 
 #define SCANF(...)                                                             \
@@ -963,14 +968,14 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
   size_t cert_len = 8192;
-  if (read_pem("pki_certs/certification_tests_ee.pem", cert, &cert_len) < 0) {
+  if (read_pem(ee_certificate, cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
-  if (read_pem("pki_certs/certification_tests_key.pem", key, &key_len) < 0) {
+  if (read_pem(key_certificate, key, &key_len) < 0) {
     PRINT("ERROR: unable to read private key");
     return;
   }
@@ -984,7 +989,7 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) < 0) {
+  if (read_pem(subca_certificate, cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -998,7 +1003,7 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) < 0) {
+  if (read_pem(rootca_certificate, cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }

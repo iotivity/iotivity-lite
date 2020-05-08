@@ -522,7 +522,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -536,7 +537,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
