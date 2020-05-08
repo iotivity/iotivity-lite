@@ -1065,7 +1065,7 @@ main(void)
                                         .register_resources =
                                           register_resources };
 
-  oc_set_con_res_announced(false);
+  oc_set_con_res_announced(true);
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
 

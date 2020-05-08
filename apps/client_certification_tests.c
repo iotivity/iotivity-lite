@@ -580,6 +580,7 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
+  oc_set_con_res_announced(true);
 #ifdef OC_STORAGE
   oc_storage_config("./client_certification_tests_creds");
 #endif /* OC_STORAGE */
