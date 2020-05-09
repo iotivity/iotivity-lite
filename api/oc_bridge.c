@@ -20,6 +20,7 @@
 #include "oc_core_res_internal.h"
 #include "oc_vod_map.h"
 #include "port/oc_log.h"
+#include "port/oc_assert.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_store.h"
@@ -33,12 +34,30 @@ typedef struct oc_vods_t
 {
   struct oc_vods_t *next;
   oc_string_t name;
-  const oc_uuid_t *di;
+  oc_uuid_t di;
   oc_string_t econame;
 } oc_vods_t;
 
 OC_LIST(oc_vods_list_t);
 static oc_resource_t *bridge_res;
+
+#define OC_PRINT_VODSLIST                                                      \
+  OC_DBG("\"vods\": [");                                                       \
+  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);       \
+  while (print_vod_item) {                                                     \
+    OC_DBG("  {");                                                             \
+    OC_DBG("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
+    char di_uuid[OC_UUID_LEN];                                                 \
+    oc_uuid_to_str(&print_vod_item->di, di_uuid, OC_UUID_LEN);                 \
+    OC_DBG("    \"di\": \"%s\"", di_uuid);                                     \
+    OC_DBG("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
+    if (print_vod_item->next) {                                                \
+      OC_DBG("  },");                                                          \
+    } else {                                                                   \
+      OC_DBG("  }");                                                           \
+    }                                                                          \
+    print_vod_item = print_vod_item->next;                                     \
+  }
 
 void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
@@ -46,9 +65,11 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
 {
   oc_vods_t *vod = (oc_vods_t *)malloc(sizeof(oc_vods_t));
   oc_new_string(&vod->name, name, strlen(name));
-  vod->di = di;
+  oc_uuid_copy(&vod->di, di);
   oc_new_string(&vod->econame, econame, strlen(econame));
   oc_list_add(oc_vods_list_t, vod);
+  OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodslist", name, econame);
+  OC_PRINT_VODSLIST;
 }
 
 void
@@ -56,8 +77,10 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
 {
   oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
   while (vod_item) {
-    if (memcmp(vod_item->di, di, 16) == 0) {
+    if (memcmp(&vod_item->di, di, 16) == 0) {
       oc_list_remove(oc_vods_list_t, vod_item);
+      OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodslist",
+             oc_string(vod_item->name), oc_string(vod_item->econame));
       oc_free_string(&vod_item->name);
       oc_free_string(&vod_item->econame);
       free(vod_item);
@@ -65,6 +88,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
     }
     vod_item = vod_item->next;
   }
+  OC_PRINT_VODSLIST;
 }
 
 static void
@@ -84,7 +108,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
     while (vod_item) {
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vod_item->name));
-      oc_uuid_to_str(vod_item->di, di_str, OC_UUID_LEN);
+      oc_uuid_to_str(&vod_item->di, di_str, OC_UUID_LEN);
       oc_rep_set_text_string(vods, di, di_str);
       oc_rep_set_text_string(vods, econame, oc_string(vod_item->econame));
       oc_rep_object_array_end_item(vods);
@@ -100,27 +124,108 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 #ifdef OC_SECURITY
+/*
+ * For bridging the doxm_owned_changed callback is responsible for two tasks:
+ * 1. Making sure unowned VODs connect or disconnect from the network based
+ *    on the doxm status of the bridge device
+ * 2. Updating the oic.r.vodslist when ownership status of the virtual devices
+ *    is change
+ */
 void
 doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
                    bool owned, void *user_data)
 {
   (void)user_data;
-  if (owned) {
-    oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
-    for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
-      if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
-          0) {
-        oc_device_info_t *device_info = oc_core_get_device_info(device_index);
-        oc_string_t econame;
-        oc_vod_map_get_econame(&econame, device_index);
-        add_virtual_device_to_vods_list(oc_string(device_info->name),
-                                        device_uuid, oc_string(econame));
+  /* Bridge Device */
+  if (bridge_res->device == device_index) {
+    if (owned) {
+      /*
+       *walk all devices
+       * if device is unowned and a virtual device then call connection_init
+       * assumption all virtual devices have a higher device index than bridge
+       */
+      for (size_t device = device_index + 1; device < oc_core_get_num_devices();
+           ++device) {
+        if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
+          continue;
+        }
+        if (!oc_is_owned_device(device)) {
+          oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
+          for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
+               i++) {
+            if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
+                        14) == 0) {
+              if (oc_connectivity_init(device) < 0) {
+                oc_abort("error initializing connectivity for device");
+              }
+              OC_DBG("oc_bridge: init connectivity for virtual device %zd",
+                     device);
+            }
+          }
+        }
       }
     }
-  } else {
-    remove_virtual_device_from_vods_list(device_uuid);
+    /* Bridge device is unowned */
+    else {
+      /*
+       * Reset all virtual device information.
+       * walk all devices
+       * if device is a virtual device call reset and connection_shutdown
+       * reset the vod_map
+       * assumption all virtual devices have a higher device index than bridge
+       */
+      for (size_t device = device_index + 1; device < oc_core_get_num_devices();
+           ++device) {
+        oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
+        for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
+             i++) {
+          if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
+                      14) == 0) {
+            oc_reset_device(device);
+            oc_connectivity_shutdown(device);
+          }
+        }
+      }
+      /* TODO: add way to remove virtual device before reseting the vod_map */
+      /*
+      oc_vod_map_reset();
+      OC_DBG("oc_bridge: bridge reset, reseting all connected virtual devices");
+      */
+    }
   }
-  oc_notify_observers(bridge_res);
+  /* Device other than Bridge Device */
+  else {
+    if (owned) {
+      /*
+       * if the device at device_index is a virtual device
+       * add the device to the vods list
+       */
+      oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+      for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types);
+           i++) {
+        if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual",
+                    14) == 0) {
+          oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+          oc_string_t econame;
+          oc_vod_map_get_econame(&econame, device_index);
+          add_virtual_device_to_vods_list(oc_string(device_info->name),
+                                          device_uuid, oc_string(econame));
+          OC_DBG("oc_bridge: adding %s [%s] to oic.r.vodslist",
+                 oc_string(device_info->name), oc_string(econame));
+        }
+      }
+    } else {
+      /*
+       * attempt to remove the unowned device from the vods_list if the uuid
+       * does not exist the on the vods list nothing will happen.
+       */
+      remove_virtual_device_from_vods_list(device_uuid);
+    }
+    /* notify any observers that the vodslist has been updated */
+    if (oc_is_owned_device(bridge_res->device)) {
+      oc_notify_observers(bridge_res);
+    }
+  }
 }
 #endif // OC_SECURITY
 
@@ -164,8 +269,6 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              const char *data_model_version,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
-  (void)virtual_device_id;
-
   size_t vd_index =
     oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
 
@@ -175,6 +278,32 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   if (!device) {
     return 0;
   }
+
+  /*
+   * According to the security specification:
+   * An Unowned VOD shall not accept DTLS connection attempts nor TLS connection
+   * attempts nor any other requests, including discovery requests, while the
+   * Bridge (that created that VOD) is Unowned.
+   *
+   * For that reason only init connectivity if the bridge device is owned or
+   * if the virtual device is already owned.
+   *
+   * The `doxm_owned_changed` callback is responsible for calling
+   * oc_connectivity_init and oc_connectivity_shutdown  for virtual devices
+   * when the ownership of the bridge device changes.
+   */
+#ifdef OC_SECURITY
+  if (oc_is_owned_device(bridge_res->device) || oc_is_owned_device(vd_index)) {
+    if (oc_connectivity_init(vd_index) < 0) {
+      oc_abort("error initializing connectivity for device");
+    }
+    OC_DBG("oc_bridge: init connectivity for virtual device %zd", vd_index);
+  }
+#else
+  if (oc_connectivity_init(vd_index) < 0) {
+    oc_abort("error initializing connectivity for device");
+  }
+#endif /* OC_SECURITY */
 
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
 
@@ -186,6 +315,25 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   }
 #endif // OC_SECURITY
   return vd_index;
+}
+
+int
+oc_bridge_remove_virtual_device(size_t device_index)
+{
+  /*
+   * Check if the device index is a virtual device if so remove the device
+   * from the vods_list (oic.r.vodslist) and shutdown the oc_connectivity.
+   */
+  oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); i++) {
+    if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
+        0) {
+      remove_virtual_device_from_vods_list(oc_core_get_device_id(device_index));
+      oc_connectivity_shutdown(device_index);
+      return 0;
+    }
+  }
+  return -1;
 }
 
 size_t

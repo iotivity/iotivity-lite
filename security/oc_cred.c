@@ -205,6 +205,12 @@ oc_sec_remove_cred_by_credid(int credid, size_t device)
 static void
 oc_sec_clear_creds(size_t device)
 {
+  oc_device_info_t *device_info = oc_core_get_device_info(device);
+  // device was never initilized so has no acl to clear
+  if (oc_uuid_is_nil(&device_info->di)) {
+    return;
+  }
+
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
   while (cred != NULL) {
     next = cred->next;

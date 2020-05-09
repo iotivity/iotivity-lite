@@ -53,6 +53,11 @@ void oc_vod_map_init();
  * release all of the memory
  */
 void oc_vod_map_free();
+
+/*
+ * Reset the vod map as if no VODs had been discovered.
+ */
+void oc_vod_map_reset();
 /*
  * returns index of the vod or 0 if not found
  */

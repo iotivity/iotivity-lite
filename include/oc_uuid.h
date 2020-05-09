@@ -25,10 +25,10 @@
 #define OC_UUID_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -102,6 +102,38 @@ void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
  * @param[out] uuid the randomly generated UUID
  */
 void oc_gen_uuid(oc_uuid_t *uuid);
+
+/**
+ * Check if a UUID is nil e.g. all zeros
+ *
+ * @param uuid the uuid to check if is nil
+ *
+ * @return
+ *    - true if UUID is nil
+ *    - false otherwise
+ */
+bool oc_uuid_is_nil(const oc_uuid_t *uuid);
+
+/**
+ * Check if contents of two UUIDs are equal.
+ *
+ * @param[in] lhs first uuid being checked for equality
+ * @param[in] rhs second uuid being checked for eqality
+ *
+ * @return true if the UUIDs are equal false otherwise
+ */
+bool oc_uuid_is_equal_to(const oc_uuid_t *lhs, const oc_uuid_t *rhs);
+
+/**
+ * Make a copy of the oc_uuid_t
+ *
+ * The `dest` must be an allocated oc_uuit_t this function does not allocate
+ * memory
+ *
+ * @param[out] dest the oc_uuid_t being copied to
+ * @param[in]  src the oc_uuid_t being copied
+ */
+void oc_uuid_copy(oc_uuid_t *dest, const oc_uuid_t *src);
 
 #ifdef __cplusplus
 }

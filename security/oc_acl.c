@@ -763,6 +763,12 @@ oc_acl_remove_ace(int aceid, size_t device)
 static void
 oc_sec_clear_acl(size_t device)
 {
+  oc_device_info_t *device_info = oc_core_get_device_info(device);
+  // device was never initilized so has no acl to clear
+  if (oc_uuid_is_nil(&device_info->di)) {
+    return;
+  }
+
   oc_sec_acl_t *acl_d = &aclist[device];
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
   while (ace != NULL) {
