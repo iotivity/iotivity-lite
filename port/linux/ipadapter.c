@@ -1609,6 +1609,9 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
+  if (!dev) {
+    return;
+  }
   dev->terminate = 1;
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
     OC_WRN("cannot wakeup network thread");

@@ -118,6 +118,26 @@ size_t oc_bridge_add_virtual_device(
   oc_add_device_cb_t add_device_cb, void *data);
 
 /**
+ * If the non-ocf device is no longer reachable this can be used to remove
+ * the virtual device from the bridge device.
+ *
+ * This will shutdown network connectivity for the device and will update
+ * the vodslist resource found on the bridge.
+ *
+ * Any any persistant settings will remain unchanged.  If the virtual device
+ * has already been onboarded and permission settings have been modified when
+ * the device is added again using `oc_bridge_add_virtual_device` those
+ * persistant settings will still be in place.
+ *
+ * @param device_index the index of the virtual device
+ *
+ * @return
+ *   - `0` on succes
+ *   - `-1` on failure
+ */
+int oc_bridge_remove_virtual_device(size_t device_index);
+
+/**
  * Get the logical device index for the virtual device
  *
  * @param virtual_device_id a unique identifyer that identifies the virtual

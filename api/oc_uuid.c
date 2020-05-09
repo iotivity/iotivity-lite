@@ -29,9 +29,16 @@
 void
 oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
-  if (str[0] == '*' && strlen(str) == 1) {
-    memset(uuid->id, 0, 16);
+  size_t s_len = strlen(str);
+  if (str[0] == '*' && s_len == 1) {
+    memset(uuid->id, 0, sizeof(oc_uuid_t));
     uuid->id[0] = '*';
+    return;
+  }
+
+  /* parse uuid's with 36 characters only */
+  if (s_len != OC_UUID_LEN - 1) {
+    memset(uuid, 0, sizeof(oc_uuid_t));
     return;
   }
   int i, j = 0, k = 1;
@@ -135,4 +142,26 @@ oc_gen_uuid(oc_uuid_t *uuid)
   */
   uuid->id[6] &= 0x0f;
   uuid->id[6] |= 0x40;
+}
+
+bool
+oc_uuid_is_nil(const oc_uuid_t *uuid)
+{
+  oc_uuid_t nil_uuid = { { 0 } };
+  return (memcmp(uuid, &nil_uuid, sizeof(oc_uuid_t)) == 0);
+}
+
+bool
+oc_uuid_is_equal_to(const oc_uuid_t *lhs, const oc_uuid_t *rhs)
+{
+  if (!lhs || !rhs) {
+    return false;
+  }
+  return (memcmp(lhs, rhs, sizeof(oc_uuid_t)) == 0);
+}
+
+void
+oc_uuid_copy(oc_uuid_t *dest, const oc_uuid_t *src)
+{
+  memcpy(dest, src, sizeof(oc_uuid_t));
 }

@@ -1057,6 +1057,7 @@ oc_send_buffer(oc_message_t *message)
   SOCKET send_sock = INVALID_SOCKET;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
     return oc_tcp_send_buffer(dev, message, &receiver);
@@ -1589,6 +1590,9 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    return;
+  }
   dev->terminate = TRUE;
   /* signal WSASelectEvent() in the thread to leave */
   WSASetEvent(dev->event_server_handle);

@@ -29,6 +29,8 @@
 #include "oc_introspection_internal.h"
 #include "oc_signal_event_loop.h"
 
+#include "oc_vod_map.h"
+
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
 #include "oc_collection.h"
@@ -314,6 +316,8 @@ oc_main_shutdown(void)
 #endif /* OC_SOFTWARE_UPDATE */
 
   oc_shutdown_all_devices();
+
+  oc_vod_map_free();
 
   app_callbacks = NULL;
 
