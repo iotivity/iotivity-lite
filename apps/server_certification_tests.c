@@ -27,6 +27,8 @@
 #include "oc_introspection.h"
 #endif
 
+static const size_t DEVICE = 0;
+
 // define application specific values.
 static const char *spec_version = "ocf.2.1.1";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
@@ -1086,6 +1088,9 @@ main(void)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
+  oc_resource_set_observable(con_resource, false);
 
   display_device_uuid();
 
