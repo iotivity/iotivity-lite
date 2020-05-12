@@ -77,7 +77,7 @@ static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask, vo
     }
 
     oc_status_t response = OC_STATUS_OK;
-    oc_rep_start_root_object();
+    oc_rep_begin_root_object();
     switch (iface_mask) {
     case OC_IF_BASELINE:
         oc_process_baseline_interface(request->resource);
