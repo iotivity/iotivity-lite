@@ -552,6 +552,8 @@ void display_summary(void) {
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
+      while ((c = getchar()) != EOF && c != '\n')                              \
+        ;                                                                      \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
