@@ -26,6 +26,8 @@
 #endif
 #include <signal.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <glib.h>
 #include <gupnp-control-point.h>
@@ -552,9 +554,22 @@ void display_summary(void) {
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
       PRINT("ERROR Invalid input\n");                                          \
+      while ((c = getchar()) != EOF && c != '\n')                              \
+        ;                                                                      \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
+
+bool directoryFound(const char *path) {
+    struct stat info;
+    if (stat(path, &info) != 0) {
+        return false;
+    }
+    if (info.st_mode & S_IFDIR) {
+        return true;
+    }
+    return false;
+}
 
 int main(void) {
     int init;
@@ -574,6 +589,14 @@ int main(void) {
             .register_resources = register_resources };
 
 #ifdef OC_STORAGE
+    if (!directoryFound("upnp_bridge_creds")) {
+        printf("Creating upnp_bridge_creds directory for persistent storage.");
+#ifdef WIN32
+        CreateDirectory("upnp_bridge_creds", NULL);
+#else
+        mkdir("upnp_bridge_creds", 0755);
+#endif
+    }
     oc_storage_config("./upnp_bridge_creds/");
 #endif /* OC_STORAGE */
 
