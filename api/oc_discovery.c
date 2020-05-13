@@ -702,6 +702,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
 done:
   oc_free_rep(p);
+#ifdef OC_DNS_CACHE
+  oc_dns_clear_cache();
+#endif /* OC_DNS_CACHE */
   return ret;
 }
 #endif /* OC_CLIENT */

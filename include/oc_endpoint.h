@@ -23,8 +23,7 @@
 #include "oc_uuid.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
@@ -92,7 +91,8 @@ int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path);
 int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
 int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
-int oc_endpoint_compare_address(oc_endpoint_t *ep1, oc_endpoint_t *ep2);
+int oc_endpoint_compare_address(const oc_endpoint_t *ep1,
+                                const oc_endpoint_t *ep2);
 void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index);
 void oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src);
 void oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src);

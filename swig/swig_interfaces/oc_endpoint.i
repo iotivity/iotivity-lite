@@ -24,16 +24,93 @@
 %}
 
 /*******************Begin oc_endpoint.h*********************/
+%javaexception("OCEndpointParseException") oc_endpoint_t(oc_string_t *endpoint_str) {
+  if (!jarg1) {
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
+    return $null;
+  }
+  $action
+  if(!result) {
+    OC_DBG("JNI: String can not be parsed.");
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+  }
+}
+%newobject copy;
+
 %extend oc_endpoint_t {
   oc_endpoint_t() {
     OC_DBG("JNI: %s\n", __func__);
     return oc_new_endpoint();
   }
 
+  // Due to bug in oc_string_to_endpoint we must pass in uri even though we are not using the uri
+  oc_endpoint_t(oc_string_t *endpoint_str) {
+    OC_DBG("JNI: %s\n", __func__);
+    oc_endpoint_t *ep = oc_new_endpoint();
+    oc_string_t uri;
+    memset(&uri, 0, sizeof(oc_string_t));
+    if(oc_string_to_endpoint(endpoint_str, ep, &uri) < 0) {
+      OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
+      oc_free_endpoint(ep);
+      oc_free_string(&uri);
+      return NULL;
+    }
+    oc_free_string(&uri);
+    return ep;
+  }
+
   ~oc_endpoint_t() {
    OC_DBG("JNI: %s\n", __func__);
    oc_free_endpoint($self);
    $self = NULL;
+  }
+
+  void setDi(oc_uuid_t *di) {
+    oc_endpoint_set_di($self, di);
+  }
+
+  oc_string_t toString() {
+    oc_string_t ep;
+    memset(&ep, 0, sizeof(oc_string_t));
+    int r = oc_endpoint_to_string($self, &ep);
+    if(r < 0) {
+      oc_free_string(&ep);
+      return ep;
+    }
+    return ep;
+  }
+
+  jboolean isIPv6LinkLocal() {
+    return (oc_ipv6_endpoint_is_link_local($self) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  jboolean compare(const oc_endpoint_t *ep2) {
+    return (oc_endpoint_compare($self, ep2) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  jboolean compareAddress(const oc_endpoint_t *ep2) {
+    return (oc_endpoint_compare_address($self, ep2) == 0) ? JNI_TRUE : JNI_FALSE;
+  }
+
+  void setLocalAddress(int interfaceIndex) {
+    oc_endpoint_set_local_address($self, interfaceIndex);
+  }
+
+  oc_endpoint_t *copy()
+  {
+    oc_endpoint_t *destination = oc_new_endpoint();
+    oc_endpoint_copy(destination, $self);
+    return destination;
   }
 }
 %rename(OCEndpoint) oc_endpoint_t;
@@ -55,11 +132,49 @@
 // look into exposing oc_make_ipv4_endpoint and oc_make_ipv6_endpoint
 %rename(newEndpoint) oc_new_endpoint;
 %ignore oc_free_endpoint;
-%rename(freeEndpoint) jni_free_endpoint;
-%inline %{
+// tell swig to use our JNI code not to generate its own.
+%native (freeEndpoint) void freeEndpoint(oc_endpoint_t *endpoint);
+%{
 void jni_free_endpoint(oc_endpoint_t *endpoint) {
   oc_free_endpoint(endpoint);
   endpoint = NULL;
+}
+%}
+%{
+/*
+ * Hand rolled JNI code. Is here to prevent double freeing of memory.
+ * If `freeEndpoint` is called then the developer is explicitly taking ownership
+ * of the `OCEndpoint`.  If `swigCMemOwn` is `true` it must be changed to false
+ * to prevent the Java GC from trying to free the same block of memory a second
+ * time.
+ *
+ * Since this is freeing memory we also set the swigCPtr to null to instantly
+ * cause code failures should the developer try and use the Java OCEndpoint that
+ * they just freed. In JUnit value of the `swigCPtr` can be checked to verify the
+ * operation of this code. We can not check `swigCMemOwn` directly because it is
+ * a private member variable with not get method to access it.
+ */
+SWIGEXPORT void JNICALL Java_org_iotivity_OCEndpointUtilJNI_freeEndpoint(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_endpoint_t *arg1 = NULL;
+
+  (void) jcls;
+  jboolean jswigCMemOwn = false;
+  jfieldID swigCMemOwn_fid = (*jenv)->GetFieldID(jenv, cls_OCEndpoint, "swigCMemOwn", "Z");
+  if (swigCMemOwn_fid != 0) {
+    jswigCMemOwn = (*jenv)->GetBooleanField(jenv, jarg1_, swigCMemOwn_fid);
+    if (jswigCMemOwn) {
+      (*jenv)->SetBooleanField(jenv, jarg1_, swigCMemOwn_fid, false);
+    }
+  }
+
+  arg1 = (oc_endpoint_t *)jarg1;
+  jni_free_endpoint(arg1);
+
+  jfieldID swigCPtr_fid = (*jenv)->GetFieldID(jenv, cls_OCEndpoint, "swigCPtr", "J");
+  if (swigCPtr_fid != 0) {
+    (*jenv)->SetLongField(jenv, jarg1_, swigCPtr_fid, 0);
+  }
 }
 %}
 %ignore oc_endpoint_set_di;
@@ -161,6 +276,62 @@ oc_endpoint_t * jni_string_to_endpoint(oc_string_t *endpoint_str, oc_string_t *u
   return ep;
 }
 %}
+
+%javaexception("OCEndpointParseException") jni_string_to_endpoint_a {
+  if (!jarg1) {
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, "The (null) string cannot be parsed.");
+    return $null;
+  }
+  $action
+  if(!result) {
+    OC_DBG("JNI: String can not be parsed.");
+    jclass cls_OCEndpointParseException = JCALL1(FindClass, jenv, "org/iotivity/OCEndpointParseException");
+    assert(cls_OCEndpointParseException);
+    oc_string_t exception_message_part1;
+    oc_concat_strings(&exception_message_part1, "The \"", oc_string(*arg1));
+    oc_string_t exception_message;
+    oc_concat_strings(&exception_message, oc_string(exception_message_part1), "\" string cannot be parsed.");
+    JCALL2(ThrowNew, jenv, cls_OCEndpointParseException, ((char *)oc_string(exception_message)));
+    oc_free_string(&exception_message_part1);
+    oc_free_string(&exception_message);
+  }
+}
+%newobject jni_string_to_endpoint_a;
+%rename(stringToEndpoint) jni_string_to_endpoint_a;
+%inline %{
+oc_endpoint_t * jni_string_to_endpoint_a(oc_string_t *endpoint_str) {
+  OC_DBG("JNI: %s\n", __func__);
+  oc_endpoint_t *ep = oc_new_endpoint();
+  if(oc_string_to_endpoint(endpoint_str, ep, NULL) < 0) {
+    OC_DBG("JNI: oc_string_to_endpoint failed to parse %s\n", oc_string(*endpoint_str));
+    oc_free_endpoint(ep);
+    return NULL;
+  }
+  return ep;
+}
+%}
+
+%ignore oc_endpoint_string_parse_path;
+%newobject jni_endpoint_string_parse_path;
+%rename (endpointStringParsePath) jni_endpoint_string_parse_path;
+%inline %{
+/*
+ * Convert the input parameter to a return parameter
+ */
+char *jni_endpoint_string_parse_path(oc_string_t *endpoint_str)
+{
+  oc_string_t path;
+  if (oc_endpoint_string_parse_path(endpoint_str, &path) == 0 ){
+    char * ret_path = (char *)malloc((path.size) * sizeof(char));
+    strcpy(ret_path, oc_string(path));
+    return ret_path;
+  }
+  return NULL;
+}
+%}
+
 %rename(ipv6EndpointIsLinkLocal) oc_ipv6_endpoint_is_link_local;
 %rename(compare) oc_endpoint_compare;
 %rename(compareAddress) oc_endpoint_compare_address;

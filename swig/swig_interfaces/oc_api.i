@@ -525,6 +525,137 @@ void jni_reset_device(size_t device) {
 }
 %}
 
+/* Code and typemaps for mapping the ocownership_status_cb to the OCOwnershipHandler */
+%{
+void jni_ownership_status_cb(const oc_uuid_t *device_uuid,
+                             size_t device_index, bool owned,
+                             void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  assert(cls_OCOwnershipStatusHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+        (data->jenv),
+        cls_OCOwnershipStatusHandler,
+        "handler",
+        "(Lorg/iotivity/OCUuid;JZ)V");
+  assert(mid_handler);
+
+  jobject jdevice_uuid  = NULL;
+  if (device_uuid) {
+    assert(cls_OCUuid);
+    const jmethodID mid_OCUuid_init = JCALL3(GetMethodID, (data->jenv), cls_OCUuid, "<init>", "(JZ)V");
+    assert(mid_OCUuid_init);
+
+    /* make copy of uuid that will be owned by Java code */
+    oc_uuid_t *new_uuid = malloc(sizeof(oc_uuid_t));
+    memcpy(new_uuid->id, device_uuid->id, 16);
+
+    jdevice_uuid = JCALL4(NewObject, (data->jenv), cls_OCUuid, mid_OCUuid_init, (jlong)new_uuid, true);
+  }
+
+  JCALL5(CallVoidMethod,
+        (data->jenv),
+        data->jcb_obj,
+        mid_handler,
+        jdevice_uuid,
+        (jlong)device_index,
+        (jboolean)owned);
+
+  release_jni_env(getEnvResult);
+}
+%}
+
+%typemap(jni)    oc_ownership_status_cb_t cb "jobject";
+%typemap(jtype)  oc_ownership_status_cb_t cb "OCOwnershipStatusHandler";
+%typemap(jstype) oc_ownership_status_cb_t cb "OCOwnershipStatusHandler";
+%typemap(javain) oc_ownership_status_cb_t cb "$javainput";
+%typemap(in,numinputs=1) (oc_ownership_status_cb_t cb, jni_callback_data *jcb)
+{
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  // see jni_remove_ownership_status_cb for the deletion of the GlobalRef in the jni_list_remove calls
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_TILL_REMOVE_OWNERSHIP_STATUS;
+  jni_list_add(user_data);
+  $1 = jni_ownership_status_cb;
+  $2 = user_data;
+}
+
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_add_ownership_status_cb "/**
+   * Add handler that is invoked when the doxm 'owned' property is changed
+   *
+   * If OCMain.addOwnershipStatusHandler is called before OCMain.init or inside
+   * one of the OCMainInitHandler callbacks, the OCOwnershipStatusHandler.handler
+   * will be invoked when the stack is initilized giving the startup ownership
+   * value. If called after OCMain.init the OCOwnershipStatusHandler.handler will
+   * not be invoked for the startup ownership value.
+   *
+   * Use of this method requires using the stack with security enabled.
+   *
+   * @param cb OCOwnershipStatusHandler class that will be invoked
+   */
+  public";
+%ignore oc_add_ownership_status_cb;
+%rename (addOwnershipStatusHandler) jni_add_ownership_status_cb;
+%inline %{
+void jni_add_ownership_status_cb(oc_ownership_status_cb_t cb, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#ifdef OC_SECURITY
+  oc_add_ownership_status_cb(cb, jcb);
+#endif
+}
+%}
+
+// DOCUMENTATION workaround
+%javamethodmodifiers jni_remove_ownership_status_cb "/**
+   * Remove the ownership changed handler
+   *
+   * Use of this method requires using the stack with security enabled.
+   *
+   * @param cb OCOwnershipStatusHandler class to remove
+   */
+  public";
+%ignore oc_remove_ownership_status_cb;
+%rename (removeOwnershipStatusHandler) jni_remove_ownership_status_cb;
+%inline %{
+void jni_remove_ownership_status_cb(jobject cb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#ifdef OC_SECURITY
+  jni_callback_data *item = jni_list_get_item_by_java_callback(cb);
+  if (item) {
+    assert(item->cb_valid == OC_CALLBACK_VALID_TILL_REMOVE_OWNERSHIP_STATUS);
+    oc_remove_ownership_status_cb(jni_ownership_status_cb, item);
+  }
+  jni_list_remove(item);
+#endif
+}
+%}
+
+// DOCUMENTATION workaround
+%javamethodmodifiers oc_is_owned_device "/**
+   * Get the ownership status of the logical device, this is the value of the
+   * doxm 'owned' property
+   *
+   * If OCMain.isOwnedDevice is called before OCMain.init has it will
+   * always return false because stack security has not been intialized.
+   *
+   * Use of this method requires using the stack with security enabled.
+   *
+   * @param device_index the index of the logical device
+   *
+   * @return true if the device is owned by an onboarding tool
+   */
+  public";
+%rename (isOwnedDevice) oc_is_owned_device;
+
 // server side
 %rename(newResource) oc_new_resource;
 %rename(resourceBindResourceInterface) oc_resource_bind_resource_interface;
@@ -1199,25 +1330,6 @@ jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
   $2 = user_data;
 }
 
-/*
- * Code and typemaps for mapping the oc_do_ip_discovery and oc_do_ip_discovery_at_endpoint to the
- * java OCDiscoveryHandler
- */
-%typemap(jni)    oc_discovery_all_handler_t handler "jobject";
-%typemap(jtype)  oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
-%typemap(jstype) oc_discovery_all_handler_t handler "OCDiscoveryAllHandler";
-%typemap(javain) oc_discovery_all_handler_t handler "$javainput";
-%typemap(in,numinputs=1) (oc_discovery_all_handler_t handler, jni_callback_data *jcb) {
-  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
-  user_data->jenv = jenv;
-  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  // TODO figure out the lifetime of the oc_discovery_all_handler_t
-  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
-  jni_list_add(user_data);
-  $1 = jni_oc_discovery_all_handler_callback;
-  $2 = user_data;
-}
-
 %ignore oc_do_site_local_ipv6_discovery;
 %rename(doSiteLocalIPv6Discovery) jni_do_site_local_ipv6_discovery;
 %inline %{
@@ -1805,6 +1917,7 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %ignore oc_ri_alloc_client_cb;
 %ignore oc_ri_get_client_cb;
 %ignore oc_ri_find_client_cb_by_token;
+%ignore oc_ri_is_client_cb_valid;
 %ignore oc_ri_find_client_cb_by_mid;
 %ignore oc_ri_remove_client_cb_by_mid;
 %ignore oc_ri_free_client_cbs_by_endpoint;

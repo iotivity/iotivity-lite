@@ -29,8 +29,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -62,9 +61,8 @@ extern "C"
 #define OC_BLOCK_SIZE (OC_MAX_APP_DATA_SIZE)
 #endif /* !OC_BLOCK_WISE_SET_MTU */
 
-enum
-{
-#ifdef OC_TCP //TODO: need to check about tls packet.
+enum {
+#ifdef OC_TCP // TODO: need to check about tls packet.
   OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
 #else /* OC_TCP */
 #ifdef OC_SECURITY
@@ -80,8 +78,7 @@ enum
 #endif
 #include "oc_buffer_settings.h"
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 #ifdef OC_TCP
 #define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
@@ -123,7 +120,11 @@ void oc_send_discovery_request(oc_message_t *message);
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 
 #ifdef OC_DNS_LOOKUP
-int oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags);
+int oc_dns_lookup(const char *domain, oc_string_t *addr,
+                  enum transport_flags flags);
+#ifdef OC_DNS_CACHE
+void oc_dns_clear_cache(void);
+#endif /* OC_DNS_CACHE */
 #endif /* OC_DNS_LOOKUP */
 
 oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
