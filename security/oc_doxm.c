@@ -60,15 +60,6 @@ oc_sec_doxm_free(void)
   if (doxm) {
     free(doxm);
   }
-
-  oc_doxm_owned_cb_t *doxm_cb_item =
-    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
-  oc_doxm_owned_cb_t *next;
-  while (doxm_cb_item) {
-    next = doxm_cb_item->next;
-    oc_memb_free(&oc_doxm_owned_cb_s, doxm_cb_item);
-    doxm_cb_item = next;
-  }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
