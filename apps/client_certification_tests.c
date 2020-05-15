@@ -124,7 +124,11 @@ display_menu(void)
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[10] Exit\n");
+#ifdef OC_CLOUD
+  PRINT("[20] Send ping message\n");
+  PRINT("-----------------------------------------------\n");
+#endif /* OC_CLOUD */
+  PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
@@ -269,6 +273,42 @@ GET_handler(oc_client_response_t *data)
 
   display_menu();
 }
+
+#ifdef OC_CLOUD
+static void
+ping_handler(oc_client_response_t *data)
+{
+  (void)data;
+  PRINT("\nReceived Pong\n");
+}
+
+static void
+cloud_send_ping(void)
+{
+  PRINT("\nEnter receiving endpoint: ");
+  char addr[256];
+  SCANF("%255s", addr);
+  char endpoint_string[267];
+  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  oc_string_t ep_string;
+  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_endpoint_t endpoint;
+  int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
+  oc_free_string(&ep_string);
+  if (ret < 0) {
+    PRINT("\nERROR parsing endpoint string\n");
+    return;
+  }
+  pthread_mutex_lock(&app_sync_lock);
+  if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
+    PRINT("\nSuccessfully issued Ping request\n");
+  } else {
+    PRINT("\nERROR issuing Ping request\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+#endif /* OC_CLOUD */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -643,7 +683,12 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
-    case 10:
+#ifdef OC_CLOUD
+    case 20:
+      cloud_send_ping();
+      break;
+#endif /* OC_CLOUD */
+    case 99:
       handle_signal(0);
       break;
     default:
