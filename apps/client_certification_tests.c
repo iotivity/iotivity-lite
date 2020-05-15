@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static const size_t DEVICE = 0;
+
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
@@ -645,6 +647,9 @@ main(void)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
+  oc_resource_set_observable(con_resource, false);
 
   display_device_uuid();
 
