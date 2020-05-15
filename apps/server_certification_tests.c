@@ -40,9 +40,7 @@ static const char *device_name = "OCFTestServer";
 static const char *manufacturer = "OCF";
 
 static pthread_t event_thread;
-#ifdef OC_CLOUD
 static pthread_mutex_t cloud_sync_lock;
-#endif /* OC_CLOUD */
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
@@ -1029,7 +1027,10 @@ ocf_event_thread(void *data)
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
+    pthread_mutex_lock(&cloud_sync_lock);
     next_event = oc_main_poll();
+    pthread_mutex_unlock(&cloud_sync_lock);
+
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
