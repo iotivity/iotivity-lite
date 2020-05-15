@@ -17,6 +17,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
+#include "oc_swupdate.h"
 #include "port/oc_clock.h"
 #include "rd_client.h"
 #include <pthread.h>
@@ -102,6 +103,50 @@ display_menu(void)
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
+
+#ifdef OC_SOFTWARE_UPDATE
+int
+validate_purl(const char *purl)
+{
+  (void)purl;
+  return 0;
+}
+
+int
+check_new_version(size_t device, const char *url, const char *version)
+{
+  if (!url) {
+    oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
+    return -1;
+  }
+  PRINT("Package url %s\n", url);
+  if (version) {
+    PRINT("Package version: %s\n", version);
+  }
+  oc_swupdate_notify_new_version_available(device, "2.0",
+                                           OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+
+int
+download_update(size_t device, const char *url)
+{
+  (void)url;
+  oc_swupdate_notify_downloaded(device, "2.0", OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+
+int
+perform_upgrade(size_t device, const char *url)
+{
+  (void)url;
+  oc_swupdate_notify_upgrading(device, "2.0", oc_clock_time(),
+                               OC_SWUPDATE_RESULT_SUCCESS);
+
+  oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+#endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_CLOUD
 static void
@@ -1080,6 +1125,15 @@ main(void)
 #ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  static oc_swupdate_cb_t swupdate_impl;
+  swupdate_impl.validate_purl = validate_purl;
+  swupdate_impl.check_new_version = check_new_version;
+  swupdate_impl.download_update = download_update;
+  swupdate_impl.perform_upgrade = perform_upgrade;
+  oc_swupdate_set_impl(&swupdate_impl);
+#endif /* OC_SOFTWARE_UPDATE */
 
   PRINT("Initializing Server.\n");
   int init = oc_main_init(&handler);
