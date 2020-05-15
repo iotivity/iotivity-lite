@@ -53,6 +53,12 @@ static int quit;
 #define USER_ID_KEY "uid"
 #define EXPIRESIN_KEY "expiresin"
 
+static const char *cis;
+static const char *auth_code;
+static const char *sid;
+static const char *apn;
+static const char *deviceid;
+
 static void
 display_menu(void)
 {
@@ -68,9 +74,11 @@ display_menu(void)
   PRINT("[5] Cloud Refresh Token\n");
   PRINT("[6] Publish Resources\n");
   PRINT("[7] Send Ping\n");
+  PRINT("[8] Unpublish switch resource\n");
+  PRINT("[9] Publish switch resource\n");
   PRINT("-----------------------------------------------\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[8] Exit\n");
+  PRINT("[10] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
@@ -86,8 +94,15 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform(manufacturer, NULL, NULL);
-  ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                       data_model_version, NULL, NULL);
+  oc_device_info_t* d = oc_core_add_new_device("/oic/d", device_rt, device_name, spec_version,
+                        data_model_version, NULL, NULL);
+  if (!d) {
+    return 1;
+  }
+  if (deviceid == NULL) {
+    return 0;
+  }
+  oc_str_to_uuid(deviceid, &d->di);
   return ret;
 }
 
@@ -304,6 +319,7 @@ cloud_register(void)
     return;
   }
   pthread_mutex_lock(&app_sync_lock);
+  oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
   int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
@@ -605,8 +621,33 @@ ocf_event_thread(void *data)
 }
 
 int
-main(void)
+main(int argc, char *argv[])
 {
+  if (argc > 1) {
+    device_name = argv[1];
+    PRINT("device_name: %s\n", argv[1]);
+  }
+  if (argc > 2) {
+    auth_code = argv[2];
+    PRINT("auth_code: %s\n", argv[2]);
+  }
+  if (argc > 3) {
+    cis = argv[3];
+    PRINT("cis : %s\n", argv[3]);
+  }
+  if (argc > 4) {
+    sid = argv[4];
+    PRINT("sid: %s\n", argv[4]);
+  }
+  if (argc > 5) {
+    apn = argv[5];
+    PRINT("apn: %s\n", argv[5]);
+  }
+  if (argc > 6) {
+    deviceid = argv[6];
+    PRINT("deviceID: %s\n", argv[6]);
+  }
+
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -646,6 +687,12 @@ main(void)
       cloud_send_ping();
       break;
     case 8:
+      oc_cloud_delete_resource(res1);
+      break;
+    case 9:
+      oc_cloud_add_resource(res1);
+      break;
+    case 10:
       handle_signal(0);
       break;
     default:
