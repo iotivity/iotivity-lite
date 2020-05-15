@@ -1446,10 +1446,10 @@ provision_ace2(void)
       PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
       SCANF("%d", &c);
       if (c == 1) {
-        PRINT("[1]: All NCRs '*' \n[2]: All NCRs with >=1 secured endpoint "
-              "'+'\n[3]: "
-              "All NCRs with >=1 unsecured endpoint '-'\n\nSelect wildcard "
-              "resource: ");
+        PRINT("[1]: All NCRs '*' \n"
+              "[2]: All NCRs with >=1 secured endpoint '+'\n"
+              "[3]: All NCRs with >=1 unsecured endpoint '-'\n"
+              "\nSelect wildcard resource: ");
         SCANF("%d", &c);
         switch (c) {
         case 1:
