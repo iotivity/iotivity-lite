@@ -178,7 +178,7 @@ typedef struct
  * }
  * ```
  *
- * @param data context pointer that comes from the oc_add_device() function
+ * @param[in] data context pointer that comes from the oc_add_device() function
  *
  * @see oc_add_device
  * @see oc_set_custom_device_property
@@ -244,6 +244,7 @@ typedef void (*oc_add_device_cb_t)(void *data);
  * @see oc_storage_config
  */
 int oc_main_init(const oc_handler_t *handler);
+
 oc_clock_time_t oc_main_poll(void);
 
 /**
@@ -375,19 +376,20 @@ void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
  * }
  * ```
  *
- * @param uri the The device URI.  The wellknown default URI "/oic/d" is hosted
- *            by every server. Used to device specific information.
- * @param rt the resource type
- * @param name the user readable name of the device
- * @param spec_version The version of the OCF Server.  This is the "icv" device
- *                     property
- * @param data_model_version Spec version of the resource and device
+ * @param[in] uri the The device URI.  The wellknown default URI "/oic/d"
+ *            is hosted by every server. Used to expose device specific
+ *            information
+ * @param[in] rt the resource type
+ * @param[in] name the user readable name of the device
+ * @param[in] spec_version The version of the OCF Server.  This is the "icv"
+ *                         device property
+ * @param[in] data_model_version Spec version of the resource and device
  * specifications to which this device data model is implemtned. This is the
  * "dmv" device property
- * @param add_device_cb callback function invoked during oc_add_device(). The
- *                      purpose is to add additional device properties that are
- *                      not supplied to oc_add_device() function call.
- * @param data context pointer that is passed to the oc_add_device_cb_t
+ * @param[in] add_device_cb callback function invoked during oc_add_device().
+ * The purpose is to add additional device properties that are not supplied to
+ * oc_add_device() function call.
+ * @param[in] data context pointer that is passed to the oc_add_device_cb_t
  *
  * @return
  *   - `0` on success
@@ -423,8 +425,9 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
  *
  * @param[in] mfg_name the name of the platform manufacture
  * @param[in] init_platform_cb callback function invoked during
- * oc_init_platform(). The purpose is to add additional device properties that
- * are not supplied to oc_init_platform() function call.
+ *                             oc_init_platform(). The purpose is to add
+ *                             additional device properties that are not
+ *                             supplied to oc_init_platform() function call.
  * @param[in] data context pointer that is passed to the oc_init_platform_cb_t
  *
  * @return
@@ -518,12 +521,15 @@ void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 bool oc_get_con_res_announced(void);
 
 /**
-  @brief Sets whether the oic.wk.con res is announced.
-  @note This should be set before invoking \c oc_main_init().
-  @param[in] announce true to announce (default) or false if not
-  @see oc_get_con_res_announced
-  @see oc_set_con_write_cb
-*/
+ * Sets whether the oic.wk.con resource is announced.
+ *
+ * @note This should be set before invoking oc_main_init().
+ *
+ * @param[in] announce true to announce (default) or false if not
+ *
+ * @see oc_get_con_res_announced
+ * @see oc_set_con_write_cb
+ */
 void oc_set_con_res_announced(bool announce);
 
 /**
@@ -562,10 +568,10 @@ void oc_reset_device(size_t device);
 /**
  * Callback invoked when the "owned" property of the doxm is changed
  *
- * @param device_uuid the UUID of the device that change ownership
- * @param device_index of the logical device that changed ownership
- * @param owned if true the device has been claimed by an onboarding tool
- * @param user_data context pointer
+ * @param[in] device_uuid the UUID of the device that change ownership
+ * @param[in] device_index of the logical device that changed ownership
+ * @param[in] owned if true the device has been claimed by an onboarding tool
+ * @param[in] user_data context pointer
  */
 typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
                                          size_t device_index, bool owned,
@@ -583,8 +589,8 @@ typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
  * @note Use of this function requires building the stack with OC_SECURITY
  *       defined.
  *
- * @param cb callback function that will be invoked
- * @param user_data context pointer passed to the oc_ownership_status_cb_t
+ * @param[in] cb callback function that will be invoked
+ * @param[in] user_data context pointer passed to the oc_ownership_status_cb_t
  * callback the pointer must remain valid till callback is removed.
  */
 void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
@@ -595,8 +601,8 @@ void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
  * @note Use of this function requires building the stack with OC_SECURITY
  *       defined.
  *
- * @param cb callback function to remove
- * @param user_data the context pointer used when the callback was added
+ * @param[in] cb callback function to remove
+ * @param[in] user_data the context pointer used when the callback was added
  */
 void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
                                    void *user_data);
@@ -605,13 +611,13 @@ void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
  * Get the ownership status of the logical device this is the value of the
  * doxm "owned" property
  *
- * If oc_is_owned_device is called before oc_main_init has completed it will
- * always return false because stack security has not been intialized.
+ * If oc_is_owned_device() is called before oc_main_init() has completed it will
+ * always return false because stack security has not been initialized.
  *
  * @note Use of this function requires building the stack with OC_SECURITY
  *       defined.
  *
- * @param device_index the index of the logical device
+ * @param[in] device_index the index of the logical device
  *
  * @return true if the device is owned by an onboarding tool
  */
@@ -735,6 +741,7 @@ void oc_resource_bind_resource_interface(oc_resource_t *resource,
  */
 void oc_resource_set_default_interface(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
+
 /**
  * Add a Resource Type "rt" property to the resource.
  *
@@ -745,11 +752,11 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
  * Resource Types use a dot "." naming scheme e.g. `oic.r.switch.binary`.
  * Resource Types starting with `oic` are reserved for a OCF defined Resource
  * Types.  Developers are strongly encouraged to try and use an OCF defined
- * Resource Type vs. creating their own. A repository of OCR defined resources
+ * Resource Type vs. creating their own. A repository of OCF defined resources
  * can be found on oneiota.org.
  *
  * Multi-value "rt" Resource means a resource with multiple Resource Types. i.e.
- * oc_resource_bind_resource_type is called multiple times for a single
+ * oc_resource_bind_resource_type() is called multiple times for a single
  * resource. When using a Mulit-value Resource the different resources
  * properties must not conflict.
  *
@@ -762,10 +769,10 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 /**
- * Add a Resource Type "rt" property to the an /oic/d resource.
+ * Add a Resource Type "rt" property to the an `/oic/d` resource.
  *
  * This function can be used to bind a new Resource Type to a logical device's
- * /oic/d resource.
+ * `/oic/d` resource.
  *
  * @param[in] device index of a logical device
  * @param[in] type the Resource type to add to the Resource Type "rt" property
@@ -801,152 +808,194 @@ void oc_device_bind_resource_type(size_t device, const char *type);
  *   oc_send_response(request, OC_STATUS_OK);
  * }
  * ```
+ *
  * @param[in] resource the resource the baseline Common Properties will be read
  *            from to respond to the GET request
  */
 void oc_process_baseline_interface(oc_resource_t *resource);
 
 /**
-  @defgroup doc_module_tag_collections Collection Support
-  Optional group of functions to support OCF compliant collections.
-  @{
-*/
+ * @defgroup doc_module_tag_collections Collection Support
+ * Optional group of functions to support OCF compliant collections.
+ * @{
+ */
 
 /**
-  @brief Creates a new empty collection.
-
-  The collection is created with interfaces \c OC_IF_BASELINE,
-  \c OC_IF_LL (also default) and \c OC_IF_B. Initially it is neither
-  discoverable nor observable.
-
-  The function only allocates the collection. Use
-  \c oc_add_collection() after the setup of the collection
-  is complete.
-  @param name name of the collection
-  @param uri Unique URI of this collection. Must not be NULL.
-  @param num_resource_types Number of resources the caller will
-   bind with this resource (e.g. by invoking
-   \c oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)). Must
-   be 1 or higher.
-  @param device The internal device that should carry this collection.
-   This is typically 0.
-  @return A pointer to the new collection (actually oc_collection_t*)
-   or NULL if out of memory.
-  @see oc_add_collection
-  @see oc_collection_add_link
-*/
+ * Creates a new empty collection.
+ *
+ * The collection is created with interfaces `OC_IF_BASELINE`,
+ * `OC_IF_LL` (also default) and `OC_IF_B`. Initially it is neither discoverable
+ * nor observable.
+ *
+ * The function only allocates the collection. Use oc_add_collection() after the
+ * setup of the collection is complete.
+ *
+ * @param[in] name name of the collection
+ * @param[in] uri Unique URI of this collection. Must not be NULL.
+ * @param[in] num_resource_types Number of resources the caller will bind with
+                      this resource (e.g. by invoking
+                      `oc_resource_bind_resource_type(col, OIC_WK_COLLECTION)`).
+                      Must be 1 or higher.
+ * @param[in] device The internal device that should carry this collection.
+ *                   This is typically 0.
+ *
+ * @return A pointer to the new collection (actually `oc_collection_t *`)
+ *  or NULL if out of memory.
+ *
+ * @see oc_add_collection
+ * @see oc_collection_add_link
+ */
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
                                  uint8_t num_resource_types, size_t device);
 
 /**
-  @brief Deletes the specified collection.
-
-  The function removes the collection from the internal list of collections
-  and releases all direct resources and links associated with this collection.
-
-  @note The function does not delete the resources set in the links.
-   The caller needs to do this on her/his own in case these are
-   no longer required.
-
-  @param collection The pointer to the collection to delete.
-   If this is NULL, the function does nothing.
-  @see oc_collection_get_links
-  @see oc_delete_link
-*/
+ * Deletes the specified collection.
+ *
+ * The function removes the collection from the internal list of collections
+ * and releases all direct resources and links associated with this collection.
+ *
+ * @note The function does not delete the resources set in the links. The caller
+ *       needs to do this on her/his own in case these are no longer required.
+ *
+ * @param[in,out] collection The pointer to the collection to delete. If this is
+ *                           NULL, the function does nothing
+ *
+ * @see oc_collection_get_links
+ * @see oc_delete_link
+ */
 void oc_delete_collection(oc_resource_t *collection);
 
 /**
-  @brief Creates a new link for collections with the specified resource.
-  @param resource Resource to set in the link. The resource is not copied.
-   Must not be NULL.
-  @return The created link or NULL if out of memory or \c resource is NULL.
-  @see oc_delete_link
-  @see oc_collection_add_link
-  @see oc_new_resource
-*/
+ * Creates a new link for collections with the specified resource.
+ *
+ * @param[in] resource Resource to set in the link. The resource is not copied.
+ *                     Must not be NULL
+ *
+ * @return The created link or NULL if out of memory or resource is NULL.
+ *
+ * @see oc_delete_link
+ * @see oc_collection_add_link
+ * @see oc_new_resource
+ */
 oc_link_t *oc_new_link(oc_resource_t *resource);
 
 /**
-  @brief Deletes the link.
-  @note The function neither removes the resource set on this link
-   nor does it remove it from any collection.
-  @param link The link to delete. The function does nothing, if
-   the parameter is NULL.
-*/
+ * Deletes the link.
+ *
+ * @note The function neither removes the resource set on this link  nor does it
+ *       remove it from any collection.
+ *
+ * @param[in,out] link The link to delete. The function does nothing, if the
+ *                     parameter is NULL
+ */
 void oc_delete_link(oc_link_t *link);
 
 /**
-  @brief Adds a relation to the link.
-  @param link Link to add the relation to. Must not be NULL.
-  @param rel Relation to add. Must not be NULL.
-*/
+ * Adds a relation to the link.
+ *
+ * @param[in,out] link Link to add the relation to. Must not be NULL
+ * @param[in] rel Relation to add. Must not be NULL
+ */
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 
 /**
-  @brief Adds a link parameter with specified key and value.
-  @param link Link to which to add a link parameter. Must not be NULL.
-  @param key Key to identify the link parameter. Must not be NULL.
-  @param value Link parameter value. Must not be NULL.
-*/
+ * Adds a link parameter with specified key and value.
+ *
+ * @param[in,out] link Link to which to add a link parameter. Must not be NULL
+ * @param[in] key Key to identify the link parameter. Must not be NULL
+ * @param[in] value Link parameter value. Must not be NULL
+ */
 void oc_link_add_link_param(oc_link_t *link, const char *key,
                             const char *value);
 
 /**
-  @brief Adds the link to the collection.
-  @param collection Collection to add the link to. Must not be NULL.
-  @param link Link to add to the collection. The link is not copied.
-   Must not be NULL. Must not be added again to this or a different
-   collection or a list corruption will occur. To re-add it, remove
-   the link first.
-  @see oc_new_link
-  @see oc_collection_remove_link
-*/
+ * Adds the link to the collection.
+ *
+ * @param[in,out] collection Collection to add the link to. Must not be NULL
+ * @param[in] link Link to add to the collection. The link is not copied.
+ *                 Must not be NULL. Must not be added again to this or a
+ *                 different collection or a list corruption will occur. To
+ *                 re-add it, remove the link first.
+ *
+ * @see oc_new_link
+ * @see oc_collection_remove_link
+ */
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
 
 /**
-  @brief Removes a link from the collection.
-  @param collection Collection to remove the link from. Does nothing
-   if this is NULL.
-  @param link The link to remove. Does nothing if this is NULL or not
-   part of the collection. The link and its resource are not freed.
-*/
+ * Removes a link from the collection.
+ *
+ * @param[in,out] collection Collection to remove the link from. Does nothing
+ *                           if this is NULL
+ * @param[in] link The link to remove. Does nothing if this is NULL or not
+ *                 part of the collection. The link and its resource are not
+ *                 freed.
+ */
 void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
 
 /**
-  @brief Returns the list of links belonging to this collection.
-  @param collection Collection to get the links from.
-  @return All links of this collection. The links are not copied. Returns
-   NULL if the collection is NULL or contains no links.
-  @see oc_collection_add_link
-*/
+ * Returns the list of links belonging to this collection.
+ *
+ * @param[in] collection Collection to get the links from.
+ *
+ * @return All links of this collection. The links are not copied. Returns
+ *         NULL if the collection is NULL or contains no links.
+ *
+ * @see oc_collection_add_link
+ */
 oc_link_t *oc_collection_get_links(oc_resource_t *collection);
 
 /**
-  @brief Adds a collection to the list of collections.
-
-  If the caller makes the collection discoverable, then it will
-  be included in the collection discovery once it has been added
-  with this function.
-  @param collection Collection to add to the list of collections.
-   Must not be NULL. Must not be added twice or a list corruption
-   will occur. The collection is not copied.
-  @see oc_resource_set_discoverable
-  @see oc_new_collection
-*/
+ * Adds a collection to the list of collections.
+ *
+ * If the caller makes the collection discoverable, then it will be included in
+ * the collection discovery once it has been added with this function.
+ *
+ * @param[in] collection Collection to add to the list of collections. Must not
+ *                       be NULL. Must not be added twice or a list corruption
+ *                       will occur. The collection is not copied.
+ *
+ * @see oc_resource_set_discoverable
+ * @see oc_new_collection
+ */
 void oc_add_collection(oc_resource_t *collection);
 
 /**
-  @brief Gets all known collections.
-  @return All collections that have been added via
-   \c oc_add_collection(). The collections are not copied.
-   Returns NULL if there are no collections. Collections created
-   only via \c oc_new_collection() but not added will not be
-   returned by this function.
-*/
+ * Gets all known collections.
+ *
+ * @return All collections that have been added via oc_add_collection(). The
+ *         collections are not copied. Returns NULL if there are no collections.
+ *         Collections created only via oc_new_collection() but not added will
+ *         not be returned by this function.
+ */
 oc_resource_t *oc_collection_get_collections(void);
 
+/**
+ * Add a supported Resource Type to a collection
+ *
+ * This will become the "rts" property of the collection. The "rts" property is
+ * an array of Resource Types that are supported within an array of Links
+ * exposed by the collection.
+ *
+ * @param[in] collection the collection the the Resource Type will be added to
+ * @param[in] rt the supported Resource Type being added to the collection
+ *
+ * @return true on success
+ */
 bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 
+/**
+ * Add a mandatory Resource Type to a collection
+ *
+ * This will be come the "rts-m" property of the collection. The "rts-m"
+ * property is an array of Resource Types that are mandatory to be exposed with
+ * in an array of Links exposed by the collection.
+ *
+ * @param[in] collection the collection the the Resource Type will be added to
+ * @param[in] rt the mandatory Resource Type being added to the collection
+ *
+ * @return true on success
+ */
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
@@ -1096,7 +1145,7 @@ bool oc_delete_resource(oc_resource_t *resource);
   @brief Callback for change notifications from the oic.wk.con resource.
 
   This callback is invoked to notify a change of one or more properties
-  on the oic.wk.con resource. The \c rep parameter contains all properties,
+  on the oic.wk.con resource. The `rep` parameter contains all properties,
   the function is not invoked for each property.
 
   When the function is invoked, all properties handled by the stack are
@@ -1108,44 +1157,254 @@ bool oc_delete_resource(oc_resource_t *resource);
 
   @note As of now only the attribute "n" is supported.
   @note The callee shall not block for too long as the stack is blocked
-   during the invocation.
+        during the invocation.
 
   @param device_index index of the device to which the change was
-   applied, 0 is the first device
+                      applied, 0 is the first device
   @param rep list of properties and their new values
 */
 typedef void (*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
 
 /**
-  @brief Sets the callback to receive change notifications for
-   the oic.wk.con resource.
-
-  The function can be used to set or unset the callback. Whenever
-  an attribute of the oic.wk.con resource is changed, the callback
-  will be invoked.
-
-  @param callback The callback to register or NULL to unset it.
-   If the function is invoked a second time, then the previously
-   set callback is simply replaced.
-*/
+ * Sets the callback to receive change notifications for
+ * the `oic.wk.con` resource.
+ *
+ * The function can be used to set or unset the callback. Whenever
+ * an attribute of the `oic.wk.con` resource is changed, the callback
+ * will be invoked.
+ *
+ * @param callback The callback to register or NULL to unset it. If the function
+ *                 is invoked a second time, then the previously set callback is
+ *                 simply replaced.
+ */
 void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
+/**
+ * This resets the query iterator to the start of the URI query parameter
+ *
+ * This is used together with oc_iterate_query_get_values() or
+ * oc_iterate_query() to iterate through query parameter of a URI that are part
+ * of an `oc_request_t`
+ */
 void oc_init_query_iterator(void);
+
+/**
+ * Iterate through the URI query parameters and get each key=value pair
+ *
+ * Before calling oc_iterate_query() the first time oc_init_query_iterator()
+ * must be called to reset the query iterator to the first query parameter.
+ *
+ * @note the char pointers returned are pointing to the string location in the
+ *       query string.  Do not rely on a nul terminator to find the end of the
+ *       string since there may be additional query parameters.
+ *
+ * Example:
+ * ```
+ * char *value = NULL;
+ * int value_len = -1;
+ * char *key
+ * oc_init_query_iterator();
+ * while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
+ *   printf("%.*s = %.*s\n", key_len, key, query_value_len, query_value);
+ * }
+ * ```
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ * @param[out] key pointer to the location of the the key of the key=value pair
+ * @param[out] key_len the lenght of the key string
+ * @param[out] value pointer the location of the value string assigned to the
+ *             key=value pair
+ * @param[out] value_len the length of the value string
+ *
+ * @return
+ *   - The position in the query string of the next key=value string pair
+ *   - `-1` if there are no additional query parameters
+ */
 int oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
                      char **value, size_t *value_len);
+
+/**
+ * Iterate though the URI query parameters for a specific key.
+ *
+ * Before calling oc_iterate_query_get_values() the first time
+ * oc_init_query_iterator() must be called to reset the query iterator to the
+ * first query parameter.
+ *
+ * @note The char pointer returned is pointing to the string location in the
+ *       query string. Do not rely on a nul terminator to find the end of the
+ *       string since there may be additional query parameters.
+ *
+ * Example:
+ * ```
+ * bool more_query_params = false;
+ * const char* expected_value = "world"
+ * char *value = NULL;
+ * int value_len = -1;
+ * oc_init_query_iterator();
+ * do {
+ * more_query_params = oc_iterate_query_get_values(request, "hello",
+ *                                                 &value, &value_len);
+ *   if (rt_len > 0) {
+ *     printf("Found %s = %.*s\n", "hello", value_len, value);
+ *   }
+ * } while (more_query_params);
+ * ```
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ * @param[in] key the key being searched for
+ * @param[out] value pointer to the value string for to the key=value pair
+ * @param[out] value_len the length of the value string
+ *
+ * @return True if there are more query parameters to iterate through
+ */
 bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
                                  char **value, int *value_len);
+
+/**
+ * Get a pointer to the start of the value in a URL query parameter key=value
+ * pair.
+ *
+ * @note The char pointer returned is pointing to the string location in the
+ *       query string. Do not rely on a nul terminator to find the end of the
+ *       string since there may be additional query parameters.
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ * @param[in] key the key being searched for
+ * @param[out] value pointer to the value string assigned to the key
+ *
+ * @return
+ *   - The position in the query string of the next key=value string pair
+ *   - `-1` if there are no additional query parameters
+ */
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
 
+/**
+ * Called after the response to a GET, PUT, POST or DELETE call has been
+ * prepared completed
+ *
+ * The function oc_send_response is called at the end of a
+ * oc_request_callback_t to inform the caller about the status of the requested
+ * action.
+ *
+ *
+ * @param[in] request the request being responded to
+ * @param[in] response_code the status of the response
+ *
+ * @see oc_request_callback_t
+ * @see oc_ignore_request
+ * @see oc_indicate_separate_response
+ */
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
+
+/**
+ * Ignore the request
+ *
+ * The GET, PUT, POST or DELETE requests can be ignored. For example a
+ * oc_request_callback_t may only want to respond to multicast requests. Thus
+ * any request that is not over multicast endpoint could be ignored.
+ *
+ * Using `oc_ignore(request)` is preferred over
+ * `oc_send_response(request, OC_IGNORE)` since it does not attempt to fill the
+ * response buffer before sending the response.
+ *
+ * @param[in] request the request being responded to
+ *
+ * @see oc_request_callback_t
+ * @see oc_send_response
+ */
 void oc_ignore_request(oc_request_t *request);
 
+/**
+ * Respond to the oc_request_callback_t as a separate action
+ *
+ * If for some reason the response to the oc_request_callback_t would take a
+ * long time or is not instantly available this function can be used to let the
+ * stack continue to run till the the response can be made.
+ *
+ * Example:
+ * ```
+ * static oc_separate_response_t sep_response;
+ *
+ * static oc_event_callback_retval_t
+ * handle_separate_response(void *data)
+ * {
+ * if (sep_response.active) {
+ *   oc_set_separate_response_buffer(&sep_response);
+ *   printf("Handle separate response for GET handler:\n");
+ *   oc_rep_start_root_object();
+ *   oc_rep_set_boolean(root, value, true);
+ *   oc_rep_set_int(root, dimmingSetting, 75);
+ *   oc_rep_end_root_object();
+ *   oc_send_separate_response(&sep_response, OC_STATUS_OK);
+ * }
+ * return OC_EVENT_DONE;
+ * }
+ *
+ * static void
+ * get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+ *             void *user_data)
+ * {
+ *   printf("GET handler:\n");
+ *   oc_indicate_separate_response(request, &sep_response);
+ *   oc_set_delayed_callback(NULL, &handle_separate_response, 10);
+ * }
+ * ```
+ * @param[in] request the request that will be responded to as a separate
+ *                    response
+ * @param[in] response instance of an internal struct that is used to track the
+ *                     state of the separate response.
+ *
+ * @see oc_set_separate_response_buffer
+ * @see oc_send_separate_response
+ */
 void oc_indicate_separate_response(oc_request_t *request,
                                    oc_separate_response_t *response);
+
+/**
+ * Set the response buffer when ready to handle a separate response
+ *
+ * When the separate response is ready pass in the same `oc_separate_response_t`
+ * that was passed into oc_indicate_separate_response() when delaying the
+ * initial response.
+ *
+ * @param[in] handle instance of the oc_separate_response_t that was passed to
+ *                   the oc_indicate_separate_response() function
+ *
+ * @see oc_indicate_separate_response
+ * @see oc_send_separate_response
+ */
 void oc_set_separate_response_buffer(oc_separate_response_t *handle);
+
+/**
+ * Called to send the separate response to a GET, PUT, POST or DELETE call
+ *
+ * The function oc_send_separate_response is called to inform the caller about
+ * the status of the requested action.
+ *
+ * @param[in] handle instance of the internal struct that was passed to
+                     oc_indicate_separate_response()
+ * @param[in] response_code the status of the response
+ *
+ * @see oc_indicate_separate_response
+ * @see oc_send_separate_response
+ * @see oc_send_response
+ * @see oc_ignore_request
+ */
 void oc_send_separate_response(oc_separate_response_t *handle,
                                oc_status_t response_code);
 
+/**
+ * Notify all observers of a change to a given resource's property
+ *
+ * @note no need to call oc_notify_observers about resource changes that
+ *       result from a PUT, or POST oc_request_callback_t.
+ *
+ * @param[in] resource the oc_resource_t that has a modified property
+ *
+ * @return
+ *  - the number observers notified on success
+ *  - `0` on failure could also mean no registered observers
+ */
 int oc_notify_observers(oc_resource_t *resource);
 
 #ifdef __cplusplus
@@ -1164,38 +1423,154 @@ int oc_notify_observers(oc_resource_t *resource);
 extern "C" {
 #endif
 
+/**
+ * Discover all servers that have a resource type using the site-local scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 site-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] rt the resource type the client is trying to discover
+ * @param[in] handler the oc_discovery_handler_t that will be called once a
+ *                    server containing the resource type is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_site_local_ipv6_discovery(const char *rt,
                                      oc_discovery_handler_t handler,
                                      void *user_data);
 
+/**
+ * Discover all servers using the realm-local scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 site-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] handler the oc_discovery_all_handler_t that will be called once a
+ *                    server is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_all_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
                                          void *user_data);
 
+/**
+ * Discover all servers that have a resource type using the realm-local scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 realm-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] rt the resource type the client is trying to discover
+ * @param[in] handler the oc_discovery_handler_t that will be called once a
+ *                    server containing the resource type is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_realm_local_ipv6_discovery(const char *rt,
                                       oc_discovery_handler_t handler,
                                       void *user_data);
 
+/**
+ * Discover all servers using the realm-local scope
+ *
+ * The discovery request will make a muli-cast request to the IPv6 realm-local
+ * multicast address scope.  The address scope is the domain in which the
+ * multicast discovery packet should be propagated.
+
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] handler the oc_discovery_all_handler_t that will be called once a
+ *                    server is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_all_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
                                           void *user_data);
 
+/**
+ * Discover all servers that have a resource type
+ *
+ * The discovery request will make a muli-cast request to the IPv6 link-local
+ * multicast address scope and over IPv4.
+ *
+ * Multicast discovery over IPv4 will only happen if the stack is built with
+ * the OC_IPV4 build flag.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] rt the resource type the client is trying to discover
+ * @param[in] handler the oc_discovery_handler_t that will be called once a
+ *                    server containing the resource type is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
 
+/**
+ * Discover all servers
+ *
+ * The discovery request will make a muli-cast request to the IPv6 link-local
+ * multicast address scope and over IPv4.
+ *
+ * Multicast discovery over IPv4 will only happen if the stack is built with
+ * the OC_IPV4 build flag.
+ *
+ * Read RFC4291 and RFC7346 for more information about IPv6 Reference Scopes.
+ *
+ * @param[in] handler the oc_discovery_all_handler_t that will be called once a
+ *                    server is discovered
+ * @param[in] user_data context pointer that is passed to the
+ *                      oc_discovery_all_handler_t.
+ *
+ * @return true on success
+ */
 bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
                             void *user_data);
 
 /**
-  @brief  Discover resources in specific endpoint.
-  @param  rt         Resource type query to discover.
-  @param  handler    The callback for discovered resources. Must not be NULL.
-  @param  endpoint   Endpoint at which to discover resources. Must not be NULL.
-  @param  user_data  Callback parameter for user defined value.
-  @return Returns true if it successfully makes and dispatches a coap packet.
-*/
+ * Discover resources in a specific endpoint.
+ *
+ * @param  rt         Resource type query to discover.
+ * @param  handler    The callback for discovered resources. Must not be NULL.
+ * @param  endpoint   Endpoint at which to discover resources. Must not be NULL.
+ * @param  user_data  Callback parameter for user defined value.
+ *
+ * @return Returns true if it successfully makes and dispatches a coap packet.
+ */
 bool oc_do_ip_discovery_at_endpoint(const char *rt,
                                     oc_discovery_handler_t handler,
                                     oc_endpoint_t *endpoint, void *user_data);
 
+/**
+ * Discover all resources in a specific endpoint.
+ *
+ * @param  handler    The callback for discovered resources. Must not be NULL.
+ * @param  endpoint   Endpoint at which to discover resources. Must not be NULL.
+ * @param  user_data  Callback parameter for user defined value.
+ *
+ * @return Returns true if it successfully makes and dispatches a coap packet.
+ */
 bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
                                         oc_endpoint_t *endpoint,
                                         void *user_data);
