@@ -1575,26 +1575,220 @@ bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
                                         oc_endpoint_t *endpoint,
                                         void *user_data);
 
+/**
+ * Issue a GET request to obtain the current value of all properties a resource
+ *
+ * Example:
+ * ```
+ * statuc bool value;
+ *
+ * static void
+ * get_light(oc_client_response_t *data)
+ * {
+ *   PRINT("GET_light:\n");
+ *   oc_rep_t *rep = data->payload;
+ *   while (rep != NULL) {
+ *     PRINT("key %s, value ", oc_string(rep->name));
+ *     switch (rep->type) {
+ *     case OC_REP_BOOL:
+ *       PRINT("%d\n", rep->value.boolean);
+ *       value = rep->value.boolean;
+ *       break;
+ *     default:
+ *       break;
+ *     }
+ *     rep = rep->next;
+ *   }
+ * }
+ * //the server uri and server endpoint obtained from oc_discovery_handler_t
+ * // as a result of an oc_do_ip_discovery call
+ * oc_do_get(server_uri, server_ep, NULL, &get_switch, LOW_QOS, NULL);
+ * ```
+ * @param[in] uri the uri of the server that contains the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] handler function invoked once the client has received the servers
+ *                    response to the GET request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the CoAP GET request
+ */
 bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
+/**
+ * Issue a DELETE request to delete a resource
+ *
+ * @param[in] uri the uri of the server that contains the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] handler function invoked once the client has received the servers
+ *                    response to the DELETE request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the CoAP DELETE request
+ */
 bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
                   oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
+/**
+ * Prepare the stack to issue a PUT request
+ *
+ * After oc_init_put has been called a CoAP message can be built using
+ * `oc_rep_*` functions. Then oc_do_put is called to dispatch the CoAP request.
+ *
+ * Example:
+ * ```
+ *
+ * static void
+ * put_switch(oc_client_response_t *data)
+ * {
+ *   if (data->code == OC_STATUS_CHANGED)
+ *     printf("PUT response: CHANGED\n");
+ *   else
+ *     printf("PUT response code %d\n", data->code);
+ * }
+ *
+ * if (oc_init_put(server_uri, server_ep, NULL, &put_switch, LOW_QOS, NULL)) {
+ *   oc_rep_start_root_object();
+ *   oc_rep_set_boolean(root, value, true);
+ *   oc_rep_end_root_object();
+ *   if (oc_do_put())
+ *     printf("Sent PUT request\n");
+ *   else
+ *     printf("Could not send PUT request\n");
+ * } else
+ *   printf("Could not init PUT request\n");
+ * ```
+ * @param[in] uri the uri of the server that contains the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] handler function invoked once the client has received the servers
+ *                    response to the PUT request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully prepared the CoAP PUT request
+ *
+ * @see oc_do_put
+ * @see oc_init_post
+ */
 bool oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
                  oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
+/**
+ * Dispatch the CoAP PUT request
+ *
+ * Before the PUT request is dispatched it must be initialized using oc_init_put
+ *
+ * @return True if the client successfully dispatched the CoAP request
+ *
+ * @see oc_init_put
+ */
 bool oc_do_put(void);
 
+/**
+ * Prepare the stack to issue a POST request
+ *
+ * After oc_init_post has been called a CoAP message can be built using
+ * `oc_rep_*` functions. Then oc_do_post is called to dispatch the CoAP request.
+ *
+ * Example:
+ * ```
+ *
+ * static void
+ * post_switch(oc_client_response_t *data)
+ * {
+ *   if (data->code == OC_STATUS_CHANGED)
+ *     printf("POST response: CHANGED\n");
+ *   else
+ *     printf("POST response code %d\n", data->code);
+ * }
+ *
+ * if (oc_init_post(server_uri, server_ep, NULL, &put_switch, LOW_QOS, NULL)) {
+ *   oc_rep_start_root_object();
+ *   oc_rep_set_boolean(root, value, true);
+ *   oc_rep_end_root_object();
+ *   if (oc_do_put())
+ *     printf("Sent POST request\n");
+ *   else
+ *     printf("Could not send POST request\n");
+ * } else
+ *   printf("Could not init POST request\n");
+ * ```
+ * @param[in] uri the uri of the server that contains the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] handler function invoked once the client has received the servers
+ *                     response to the POST request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully prepared the CoAP PUT request
+ *
+ * @see oc_do_post
+ * @see oc_init_put
+ */
 bool oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
                   oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
+/**
+ * Dispatch the CoAP POST request
+ *
+ * Before the POST request is dispatched it must be initialized using
+ * oc_init_put
+ *
+ * @return True if the client successfully dispatched the CoAP POST request
+ *
+ * @see oc_init_post
+ */
 bool oc_do_post(void);
 
+/**
+ * Register a an observer that gets notified any time the resource is updated
+ *
+ * The oc_response_handler_t will be invoked every time resource is modified in
+ * response to a PUT or POST request. The server may send out a notification
+ * when some property is changed due to a local change on the server.
+ *
+ * The handler will continue to be invoked till oc_stop_observe() is called
+ *
+ * @param[in] uri the uri of the server that contains the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] handler function invoked once the client has received the servers
+ *                     response to the POST request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the CaAP observer request
+ */
 bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler, oc_qos_t qos,
                    void *user_data);
 
+/**
+ * Stop observing changes to a server resource
+ *
+ * @param[in] uri the uri of the server that contains the resource being
+ *                observed
+ * @param[in] endpoint the endpoint of the server
+ *
+ * @return True if the client successfully dispatched the CaAP stop observer
+ *         request
+ */
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 
 bool oc_do_ip_multicast(const char *uri, const char *query,
@@ -1610,6 +1804,15 @@ bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
 
 void oc_stop_multicast(oc_client_response_t *response);
 
+/**
+ * Free a list of endpoints from the oc_endpoint_t
+ *
+ * note: oc_endpoint_t is a linked list. This will walk the list an free all
+ * endpoints found in the list. Even if the list only consists of a single
+ * endpoint.
+ *
+ * @param[in,out] endpoint the endpoint list to free
+ */
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 void oc_close_session(oc_endpoint_t *endpoint);
@@ -1648,10 +1851,36 @@ bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
   @defgroup doc_module_tag_common_operations Common operations
   @{
 */
+/**
+ * Set the immutable device identifier
+ *
+ * This will set the `piid` device property (a.k.a Protocol Independent ID)
+ *
+ * Unlike device id `di` device property the `piid` will remain the same even
+ * after device resets.
+ *
+ * @param[in] device the logical device index
+ * @param[in] piid the UUID for the immutable device identifier
+ */
 void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
 
+/**
+ * set a callback that is invoked after a set number of seconds
+ *
+ * @param[in] cb_data user defined context pointer that is passed to the
+ *                    oc_trigger_t callback
+ * @param[in] callback the callback invoked after the set number of seconds
+ * @param[in] seconds the number of seconds to wait till the callback is invoked
+ */
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
+
+/**
+ * used to cancel a delayed callback
+ * @param[in] cb_data the user defined context pointer that was passed to the
+ *                   oc_sed_delayed_callback() function
+ * @param[in] callback the delayed callback that is being removed
+ */
 void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 
 /** API for setting handlers for interrupts */
