@@ -2,6 +2,14 @@ package org.iotivity.oc;
 
 import org.iotivity.*;
 
+/**
+ * OcRepresentation provides access to extract values from a CBOR representation.
+ * <p>
+ * An OcRepresenation is typically constructed from the payload of an OCClientResponse in the handler() method of an OCResponseHandler.
+ *
+ * @see OCResponseHandler#handler
+ * @see OCClientResponse#getPayload
+ */
 public class OcRepresentation {
 
     private OCRepresentation nativeRepresentation;
