@@ -438,7 +438,7 @@ oc_core_remove_device_at_index(size_t index)
   oc_sec_clear_acl(index);
   oc_sec_clear_creds(index);
 #endif /* OC_SECURITY */
-  for (size_t i = 2 + (OCF_D * (index - 1)); i < 1 + (OCF_D * index); ++i) {
+  for (size_t i = 1 + (OCF_D * index); i < 1 + (OCF_D * (index + 1)); ++i) {
     oc_resource_t *core_resource = &core_resources[i];
     oc_ri_free_resource_properties(core_resource);
     memset(core_resource, 0, sizeof(oc_resource_t));
