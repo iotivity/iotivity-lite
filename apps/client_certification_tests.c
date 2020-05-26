@@ -501,14 +501,14 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
   size_t cert_len = 8192;
-  if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_ee.pem", cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
-  if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_key.pem", key, &key_len) < 0) {
     PRINT("ERROR: unable to read private key");
     return;
   }
@@ -522,7 +522,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -536,7 +537,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -578,6 +580,7 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
+  oc_set_con_res_announced(true);
 #ifdef OC_STORAGE
   oc_storage_config("./client_certification_tests_creds");
 #endif /* OC_STORAGE */
