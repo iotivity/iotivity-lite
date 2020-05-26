@@ -1315,11 +1315,11 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code);
 void oc_ignore_request(oc_request_t *request);
 
 /**
- * Respond to the oc_request_callback_t as a separate action
+ * Respond to an incoming request asynchronously.
  *
- * If for some reason the response to the oc_request_callback_t would take a
- * long time or is not instantly available this function can be used to let the
- * stack continue to run till the the response can be made.
+ * If for some reason the response to a request would take a
+ * long time or is not immediately available, then this function may be used
+ * defer responding to the request.
  *
  * Example:
  * ```
@@ -1361,10 +1361,10 @@ void oc_indicate_separate_response(oc_request_t *request,
                                    oc_separate_response_t *response);
 
 /**
- * Set the response buffer when ready to handle a separate response
+ * Set a response buffer for holding the response payload.
  *
- * When the separate response is ready pass in the same `oc_separate_response_t`
- * that was passed into oc_indicate_separate_response() when delaying the
+ * When a deferred response is ready, pass in the same `oc_separate_response_t`
+ * that was handed to oc_indicate_separate_response() for delaying the
  * initial response.
  *
  * @param[in] handle instance of the oc_separate_response_t that was passed to
@@ -1376,10 +1376,10 @@ void oc_indicate_separate_response(oc_request_t *request,
 void oc_set_separate_response_buffer(oc_separate_response_t *handle);
 
 /**
- * Called to send the separate response to a GET, PUT, POST or DELETE call
+ * Called to send the deferred response to a GET, PUT, POST or DELETE request.
  *
- * The function oc_send_separate_response is called to inform the caller about
- * the status of the requested action.
+ * The function oc_send_separate_response is called to initiate transfer of the
+ * response.
  *
  * @param[in] handle instance of the internal struct that was passed to
                      oc_indicate_separate_response()
@@ -1604,7 +1604,7 @@ bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
  * // as a result of an oc_do_ip_discovery call
  * oc_do_get(server_uri, server_ep, NULL, &get_switch, LOW_QOS, NULL);
  * ```
- * @param[in] uri the uri of the server that contains the resource
+ * @param[in] uri the uri of the resource
  * @param[in] endpoint the endpoint of the server
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
@@ -1622,7 +1622,7 @@ bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
 /**
  * Issue a DELETE request to delete a resource
  *
- * @param[in] uri the uri of the server that contains the resource
+ * @param[in] uri the uri of the resource
  * @param[in] endpoint the endpoint of the server
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
@@ -1666,7 +1666,7 @@ bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * } else
  *   printf("Could not init PUT request\n");
  * ```
- * @param[in] uri the uri of the server that contains the resource
+ * @param[in] uri the uri of the resource
  * @param[in] endpoint the endpoint of the server
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
@@ -1724,7 +1724,7 @@ bool oc_do_put(void);
  * } else
  *   printf("Could not init POST request\n");
  * ```
- * @param[in] uri the uri of the server that contains the resource
+ * @param[in] uri the uri of the resource
  * @param[in] endpoint the endpoint of the server
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
@@ -1755,15 +1755,14 @@ bool oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool oc_do_post(void);
 
 /**
- * Register a an observer that gets notified any time the resource is updated
+ * Dispatch a GET request with the CoAP Observe option to subscribe for notifications
+ * from a resource.
  *
- * The oc_response_handler_t will be invoked every time resource is modified in
- * response to a PUT or POST request. The server may send out a notification
- * when some property is changed due to a local change on the server.
+ * The oc_response_handler_t will be invoked each time upon receiving a notification.
  *
- * The handler will continue to be invoked till oc_stop_observe() is called
+ * The handler will continue to be invoked till oc_stop_observe() is called.
  *
- * @param[in] uri the uri of the server that contains the resource
+ * @param[in] uri the uri of the resource
  * @param[in] endpoint the endpoint of the server
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
@@ -1780,10 +1779,9 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
                    void *user_data);
 
 /**
- * Stop observing changes to a server resource
+ * Unsubscribe for notifications from a resource.
  *
- * @param[in] uri the uri of the server that contains the resource being
- *                observed
+ * @param[in] uri the uri of the resource being observed
  * @param[in] endpoint the endpoint of the server
  *
  * @return True if the client successfully dispatched the CaAP stop observer
@@ -1865,7 +1863,7 @@ bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
 void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
 
 /**
- * set a callback that is invoked after a set number of seconds
+ * Schedule a callback to be invoked after a set number of seconds.
  *
  * @param[in] cb_data user defined context pointer that is passed to the
  *                    oc_trigger_t callback
