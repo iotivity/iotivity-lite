@@ -342,7 +342,7 @@ typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
  *
  * @param[in] cb oc_factory_presets_cb_t function pointer to be called
  * @param[in] data context pointer that is passed to the oc_factory_presets_cb_t
- *                 the pointer must be a valid point till after oc_main_init()
+ *                 the pointer must be a valid pointer till after oc_main_init()
  *                 call completes.
  */
 void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
