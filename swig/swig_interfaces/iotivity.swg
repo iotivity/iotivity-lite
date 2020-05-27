@@ -315,3 +315,21 @@ $2 = (size_t) JCALL1(GetArrayLength,       jenv, $input);
   $1 = jni_oc_discovery_all_handler_callback;
   $2 = user_data;
 }
+
+/********************************************************************
+ * Code and typemaps for mapping the oc_add_device_cb_t to the
+ * java OCAddDeviceHandler
+ ********************************************************************/
+%typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
+%typemap(jtype)  oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
+%typemap(jstype) oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
+%typemap(javain) oc_add_device_cb_t add_device_cb "$javainput";
+%typemap(in,numinputs=1) (oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  user_data->cb_valid = OC_CALLBACK_VALID_FOR_A_SINGLE_CALL;
+  jni_list_add(user_data);
+  $1 = jni_oc_add_device_callback;
+  $2 = user_data;
+}

@@ -553,3 +553,22 @@ jni_oc_discovery_all_handler_callback(const char *anchor, const char *uri,
 
   return (oc_discovery_flags_t)return_value;
 }
+
+/* Code and typemaps for mapping the oc_add_device to the java
+ * OCAddDeviceHandler */
+void
+jni_oc_add_device_callback(void *user_data)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)user_data;
+
+  assert(cls_OCAddDeviceHandler);
+  const jmethodID mid_handler =
+    JCALL3(GetMethodID, (data->jenv), cls_OCAddDeviceHandler, "handler", "()V");
+  assert(mid_handler);
+  JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+
+  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
+    jni_list_remove(data);
+  }
+}

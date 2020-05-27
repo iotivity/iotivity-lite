@@ -308,40 +308,6 @@ void jni_set_factory_presets_cb(oc_factory_presets_cb_t cb, jni_callback_data *j
 }
 %}
 
-/* Code and typemaps for mapping the oc_add_device to the java OCAddDeviceHandler */
-%{
-void jni_oc_add_device_callback(void *user_data)
-{
-  OC_DBG("JNI: %s\n", __func__);
-  jni_callback_data *data = (jni_callback_data *)user_data;
-
-  assert(cls_OCAddDeviceHandler);
-  const jmethodID mid_handler = JCALL3(GetMethodID,
-                                       (data->jenv),
-                                       cls_OCAddDeviceHandler,
-                                       "handler",
-                                       "()V");
-  assert(mid_handler);
-  JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
-
-  if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
-    jni_list_remove(data);
-  }
-}
-%}
-%typemap(jni)    oc_add_device_cb_t add_device_cb "jobject";
-%typemap(jtype)  oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
-%typemap(jstype) oc_add_device_cb_t add_device_cb "OCAddDeviceHandler";
-%typemap(javain) oc_add_device_cb_t add_device_cb "$javainput";
-%typemap(in,numinputs=1) (oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
-  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
-  user_data->jenv = jenv;
-  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
-  user_data->cb_valid = OC_CALLBACK_VALID_FOR_A_SINGLE_CALL;
-  jni_list_add(user_data);
-  $1 = jni_oc_add_device_callback;
-  $2 = user_data;
-}
 %ignore oc_add_device;
 %rename(addDevice) jni_oc_add_device;
 %inline %{

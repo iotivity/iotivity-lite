@@ -20,17 +20,17 @@
 /* C build flag OC_IDD_API has to be included when building */
 #if defined(SWIGJAVA) 
 
-%typemap(in)     (uint8_t *BYTE, size_t LENGTH) {  
-$1 = (uint8_t*) JCALL2(GetByteArrayElements, jenv, $input, 0); 
-$2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input); 
-} 
-%typemap(jni)    (uint8_t *BYTE, size_t LENGTH) "jbyteArray" 
-%typemap(jtype)  (uint8_t *BYTE, size_t LENGTH) "byte[]" 
-%typemap(jstype) (uint8_t *BYTE, size_t LENGTH) "byte[]" 
-%typemap(javain) (uint8_t *BYTE, size_t LENGTH) "$javainput" 
+%typemap(in)     (uint8_t *BYTE, size_t LENGTH) {
+$1 = (uint8_t*) JCALL2(GetByteArrayElements, jenv, $input, 0);
+$2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input);
+}
+%typemap(jni)    (uint8_t *BYTE, size_t LENGTH) "jbyteArray"
+%typemap(jtype)  (uint8_t *BYTE, size_t LENGTH) "byte[]"
+%typemap(jstype) (uint8_t *BYTE, size_t LENGTH) "byte[]"
+%typemap(javain) (uint8_t *BYTE, size_t LENGTH) "$javainput"
 
 /* Specify signature of method to handle */ 
-%apply (uint8_t *BYTE, size_t LENGTH)   { (uint8_t *IDD, size_t IDD_size) }; 
+%apply (uint8_t *BYTE, size_t LENGTH)   { (uint8_t *IDD, size_t IDD_size) };
 
 #else 
 %apply (uint8_t *BYTE, size_t LENGTH) { (uint8_t *IDD, size_t IDD_size) }; 

@@ -203,4 +203,7 @@ oc_discovery_flags_t jni_oc_discovery_all_handler_callback(
   oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
   oc_resource_properties_t bm, bool more, void *user_data);
 
+/* Code and typemaps for mapping the oc_add_device to the java
+ * OCAddDeviceHandler */
+void jni_oc_add_device_callback(void *user_data);
 #endif /* OC_IOTIVITY_LITE_H */
