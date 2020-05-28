@@ -1543,6 +1543,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     return -1;
   }
   fclose(fp);
+  buffer[pem_len] = '\0';
   *buffer_len = (size_t)pem_len;
   return 0;
 }
@@ -1555,10 +1556,12 @@ install_trust_anchor(void)
   char cert[8192];
   size_t cert_len = 0;
   PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
-
-  while (cert_len < 4 ||
-         (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0)) {
-    int c = getchar();
+  int c;
+  while ((c = getchar()) == '\n' || c == '\r')
+    ;
+  for (; (cert_len < 4 ||
+          (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0));
+       c = getchar()) {
     if (c == EOF) {
       PRINT("ERROR processing input.. aborting\n");
       return;
@@ -1567,11 +1570,13 @@ install_trust_anchor(void)
     cert_len++;
   }
 
-  cert_len -= 4;
-  cert[cert_len - 1] = '\0';
+  while (cert[cert_len - 1] != '-' && cert_len > 1) {
+    cert_len--;
+  }
+  cert[cert_len] = '\0';
 
   int rootca_credid =
-    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, strlen(cert));
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;

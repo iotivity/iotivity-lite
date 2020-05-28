@@ -46,18 +46,25 @@ display_menu(void)
 }
 
 // define application specific values.
-static const char *spec_version = "ocf.2.5.0";
+static const char *spec_version = "ocf.2.0.5";
 static const char *data_model_version = "ocf.res.1.3.0";
 
 static const char *device_rt = "oic.d.cloudDevice";
-static const char *device_name = "CloudDevice";
+static const char *device_name = "CloudClient";
 
 static const char *manufacturer = "ocfcloud.com";
 
+#ifdef OC_SECURITY
+static const char *cis;
+static const char *auth_code;
+static const char *sid;
+static const char *apn;
+#else  /* OC_SECURITY */
 static const char *cis = "coap+tcp://127.0.0.1:5683";
 static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "test";
+#endif /* OC_SECURITY */
 
 #define SCANF(...)                                                             \
   do {                                                                         \
@@ -285,28 +292,63 @@ discover_resources(void)
   signal_event_loop();
 }
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
+  FILE *fp = fopen(file_path, "r");
+  if (fp == NULL) {
+    PRINT("ERROR: unable to read PEM\n");
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  long pem_len = ftell(fp);
+  if (pem_len < 0) {
+    PRINT("ERROR: could not obtain length of file\n");
+    fclose(fp);
+    return -1;
+  }
+  if (pem_len > (long)*buffer_len) {
+    PRINT("ERROR: buffer provided too small\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+    PRINT("ERROR: unable to read PEM\n");
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+  buffer[pem_len] = '\0';
+  *buffer_len = (size_t)pem_len;
+  return 0;
+}
+#endif /* OC_SECURITY && OC_PKI */
+
 void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
-  // This installs the root CA certificate for the
-  // https://portal.try.plgd.cloud/ OCF Cloud
-  const char *cloud_ca =
-    "-----BEGIN CERTIFICATE-----\r\n"
-    "MIIBhDCCASmgAwIBAgIQdAMxveYP9Nb48xe9kRm3ajAKBggqhkjOPQQDAjAxMS8w\r\n"
-    "LQYDVQQDEyZPQ0YgQ2xvdWQgUHJpdmF0ZSBDZXJ0aWZpY2F0ZXMgUm9vdCBDQTAe\r\n"
-    "Fw0xOTExMDYxMjAzNTJaFw0yOTExMDMxMjAzNTJaMDExLzAtBgNVBAMTJk9DRiBD\r\n"
-    "bG91ZCBQcml2YXRlIENlcnRpZmljYXRlcyBSb290IENBMFkwEwYHKoZIzj0CAQYI\r\n"
-    "KoZIzj0DAQcDQgAEaNJi86t5QlZiLcJ7uRMNlcwIpmFiJf9MOqyz2GGnGVBypU6H\r\n"
-    "lwZHY2/l5juO/O4EH2s9h3HfcR+nUG2/tFzFEaMjMCEwDgYDVR0PAQH/BAQDAgEG\r\n"
-    "MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDSQAwRgIhAM7gFe39UJPIjIDE\r\n"
-    "KrtyPSIGAk0OAO8txhow1BAGV486AiEAqszg1fTfOHdE/pfs8/9ZP5gEVVkexRHZ\r\n"
-    "JCYVaa2Spbg=\r\n"
-    "-----END CERTIFICATE-----\r\n";
-  int rootca_credid = oc_pki_add_trust_anchor(
-    0, (const unsigned char *)cloud_ca, strlen(cloud_ca));
+  unsigned char cloud_ca[4096];
+  size_t cert_len = 4096;
+  if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
+    PRINT("ERROR: unable to read certificates\n");
+    return;
+  }
+
+  int rootca_credid =
+    oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -334,7 +376,9 @@ ocf_event_thread(LPVOID lpParam)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -376,7 +420,9 @@ ocf_event_thread(void *data)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    if (cis) {
+      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+    }
   }
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -402,13 +448,15 @@ ocf_event_thread(void *data)
 int
 main(int argc, char *argv[])
 {
-  PRINT("Default parameters: device_name: %s, auth_code: %s, cis: %s, sid: %s, "
-        "apn: %s\n",
-        device_name, auth_code, cis, sid, apn);
   if (argc == 1) {
     PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn>\n"
-          "Using the default values\n");
+          "<apn>\n");
+#ifndef OC_SECURITY
+    PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
+          "sid: %s, "
+          "apn: %s\n",
+          device_name, auth_code, cis, sid, apn);
+#endif /* !OC_SECURITY */
   }
   if (argc > 1) {
     device_name = argv[1];

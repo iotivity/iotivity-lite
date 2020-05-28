@@ -112,6 +112,9 @@ OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
+CFLAGS_UPNP=-I/usr/include/gupnp-1.0/libgupnp/ -I/usr/include/glib-2.0/ -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/ -I/usr/include/gssdp-1.0/ -I/usr/include/libsoup-2.4/ -I/usr/include/libxml2/
+LIBS_UPNP= -lglib-2.0 -lgobject-2.0 -lgssdp-1.0 -lgupnp-1.0
+
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient \
           client_collections_linux server_collections_linux server_block_linux \
           client_block_linux smart_home_server_linux multi_device_server \
@@ -128,6 +131,10 @@ endif
 
 ifeq ($(SWUPDATE),1)
 	SAMPLES += smart_home_server_with_mock_swupdate
+endif
+
+ifeq ($(UPNP_BRIDGE),1)
+	SAMPLES += upnp_bridge
 endif
 
 ifeq ($(CLOUD),1)
@@ -166,6 +173,7 @@ endif
 
 ifeq ($(SWUPDATE),1)
 	EXTRA_CFLAGS += -DOC_SOFTWARE_UPDATE
+	export SWUPDATE
 endif
 
 ifneq ($(SECURE),0)
@@ -323,9 +331,9 @@ smart_lock: libiotivity-lite-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/smart_lock_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
-client_certification_tests: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_certification_tests.c copy_idd_files
+client_certification_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/client_certification_tests.c copy_idd_files
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/client_certification_tests.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/client_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
 
 temp_sensor: libiotivity-lite-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux.c
 	@mkdir -p $@_creds
@@ -377,11 +385,11 @@ multi_device_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/multi_device_cli
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/multi_device_client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-cloud_server: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_server.c
+cloud_server: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_server.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_server.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
-cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c
+cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_client.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
@@ -404,6 +412,10 @@ client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_mult
 dummy_bridge: libiotivity-lite-server.a $(ROOT_DIR)/apps/dummy_bridge.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/dummy_bridge.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+upnp_bridge: libiotivity-lite-server.a $(ROOT_DIR)/apps/upnp_bridge.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/upnp_bridge.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${CFLAGS_UPNP} ${LIBS} ${LIBS_UPNP}
 
 iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \

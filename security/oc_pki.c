@@ -42,18 +42,20 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   }
 
   /* Parse the to-be-added intermediate cert */
-  unsigned char cert_copy[4096];
-  memcpy(cert_copy, cert, cert_size);
+  size_t c_size = cert_size;
   mbedtls_x509_crt int_ca;
   mbedtls_x509_crt_init(&int_ca);
-  if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) == 0) {
-    cert_copy[cert_size] = '\0';
-    cert_size += 1;
+  if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
+    return -1;
   }
-  ret = mbedtls_x509_crt_parse(&int_ca, (const unsigned char *)cert_copy,
-                               cert_size);
+  if (cert[cert_size - 1] != '\0') {
+    c_size += 1;
+  }
+
+  ret = mbedtls_x509_crt_parse(&int_ca, (const unsigned char *)cert, c_size);
   if (ret < 0) {
-    OC_ERR("could not parse intermediate cert %d", ret);
+    OC_ERR("could not parse intermediate cert: %d", ret);
     return -1;
   }
   OC_DBG("parsed intermediate CA cert");
@@ -67,7 +69,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
     oc_string_len(c->publicdata.data) + 1);
   if (ret < 0) {
     OC_ERR("could not parse existing identity cert that chains to this "
-           "intermediate cert %d",
+           "intermediate cert: %d",
            ret);
     mbedtls_x509_crt_free(&int_ca);
     return -1;
@@ -95,20 +97,21 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
    * in the chain, if not return.
    */
   if (oc_certs_is_subject_the_issuer(&int_ca, id_cert) == 0) {
-    id_cert->next = &int_ca;
-
-    char chain[4096];
-    ret = oc_certs_serialize_chain_to_pem(&id_cert_chain, chain, 4096);
-    if (ret > 0) {
-      OC_DBG("adding a new intermediate CA cert to /oic/sec/cred");
-      oc_free_string(&c->publicdata.data);
-      oc_new_string(&c->publicdata.data, chain, ret);
-      oc_sec_dump_cred(device);
-    }
-
-    id_cert->next = NULL;
+    oc_string_t chain = c->publicdata.data;
+    size_t new_publicdata_size = oc_string_len(chain) + c_size;
+    oc_alloc_string(&c->publicdata.data, new_publicdata_size);
+    memcpy(oc_string(c->publicdata.data), oc_string(chain),
+           oc_string_len(chain));
+    memcpy(oc_string(c->publicdata.data) + oc_string_len(chain), cert,
+           cert_size);
+    oc_string(c->publicdata.data)[new_publicdata_size - 1] = '\0';
+    oc_free_string(&chain);
+    OC_DBG("adding a new intermediate CA cert to /oic/sec/cred");
+    oc_sec_dump_cred(device);
+    ret = 1;
   } else {
     OC_ERR("supplied intermediate CA cert is not issuer of identity cert");
+    ret = -1;
   }
 
   mbedtls_x509_crt_free(&int_ca);
@@ -130,25 +133,26 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 {
   OC_DBG("attempting to add an identity certificate chain");
 
+  size_t c_size = cert_size, k_size = key_size;
   mbedtls_pk_context pkey;
   mbedtls_pk_init(&pkey);
-  unsigned char cert_copy[4096];
-  unsigned char key_copy[4096];
-  memcpy(cert_copy, cert, cert_size);
-  memcpy(key_copy, key, key_size);
 
-  if (oc_certs_is_PEM(cert, cert_size) == 0) {
-    cert_copy[cert_size] = '\0';
-    cert_size += 1;
+  if (oc_certs_is_PEM(cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
+    return -1;
+  }
+  if (cert[cert_size - 1] != '\0') {
+    c_size += 1;
   }
   if (oc_certs_is_PEM(key, key_size) == 0) {
-    key_copy[key_size] = '\0';
-    key_size += 1;
+    if (key[key_size - 1] != '\0') {
+      k_size += 1;
+    }
   }
 
   /* Parse identity cert's private key */
-  int ret = mbedtls_pk_parse_key(&pkey, (const unsigned char *)key_copy,
-                                 key_size, NULL, 0);
+  int ret =
+    mbedtls_pk_parse_key(&pkey, (const unsigned char *)key, k_size, NULL, 0);
   if (ret != 0) {
     OC_ERR("could not parse identity cert's private key %d", ret);
     return -1;
@@ -172,8 +176,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   mbedtls_x509_crt_init(&cert1);
 
   /* Parse identity cert chain */
-  ret =
-    mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert_copy, cert_size);
+  ret = mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert, c_size);
   if (ret < 0) {
     OC_ERR("could not parse the provided identity cert");
     return -1;
@@ -220,25 +223,19 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   OC_DBG("adding a new identity cert chain to /oic/sec/cred");
 
-  char chain[4096];
-  ret = oc_certs_serialize_chain_to_pem(&cert1, chain, 4096);
-
   mbedtls_x509_crt_free(&cert1);
 
-  int credid = -1;
-  if (ret > 0) {
-    credid = oc_sec_add_new_cred(
-      device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
-      oc_string(subjectuuid), OC_ENCODING_RAW, private_key_size,
-      privkbuf + (200 - private_key_size), OC_ENCODING_PEM, ret,
-      (const uint8_t *)chain, NULL, NULL);
+  int credid = oc_sec_add_new_cred(
+    device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
+    oc_string(subjectuuid), OC_ENCODING_RAW, private_key_size,
+    privkbuf + (200 - private_key_size), OC_ENCODING_PEM, c_size - 1,
+    (const uint8_t *)cert, NULL, NULL);
 
-    if (credid != -1) {
-      OC_DBG("added new identity cert chain to /oic/sec/cred");
-      oc_sec_dump_cred(device);
-    } else {
-      OC_ERR("could not add identity cert chain to /oic/sec/cred");
-    }
+  if (credid != -1) {
+    OC_DBG("added new identity cert chain to /oic/sec/cred");
+    oc_sec_dump_cred(device);
+  } else {
+    OC_ERR("could not add identity cert chain to /oic/sec/cred");
   }
 
   oc_free_string(&subjectuuid);
@@ -269,18 +266,19 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   mbedtls_x509_crt cert1, cert2;
   mbedtls_x509_crt_init(&cert1);
-
-  unsigned char cert_copy[4096];
-  memcpy(cert_copy, cert, cert_size);
+  size_t c_size = cert_size;
 
   /* Parse root cert */
-  if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) == 0) {
-    cert_copy[cert_size] = '\0';
-    cert_size += 1;
+  if (oc_certs_is_PEM((const unsigned char *)cert, cert_size) != 0) {
+    OC_ERR("provided cert is not in PEM format");
+    return -1;
   }
-  int ret =
-    mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert_copy, cert_size);
+  if (cert[cert_size - 1] != '\0') {
+    c_size += 1;
+  }
+  int ret = mbedtls_x509_crt_parse(&cert1, (const unsigned char *)cert, c_size);
   if (ret < 0) {
+    OC_ERR("could not parse the provided trust anchor: %d", ret);
     return -1;
   }
   OC_DBG("parsed the provided trust anchor");
@@ -297,7 +295,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
       &cert2, (const unsigned char *)oc_string(c->publicdata.data),
       oc_string_len(c->publicdata.data) + 1);
     if (ret < 0) {
-      OC_ERR("could not parse stored certificate %d", ret);
+      OC_ERR("could not parse stored certificate: %d", ret);
       mbedtls_x509_crt_free(&cert2);
       continue;
     }
@@ -321,18 +319,14 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   OC_DBG("adding a new trust anchor entry to /oic/sec/cred");
 
-  char chain[4096];
-  ret = oc_certs_serialize_chain_to_pem(&cert1, chain, 4096);
-  if (ret > 0) {
-    ret = oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT,
-                              credusage, "*", 0, 0, NULL, OC_ENCODING_PEM, ret,
-                              (const uint8_t *)chain, NULL, NULL);
-    if (ret != -1) {
-      OC_DBG("added new trust anchor entry to /oic/sec/cred");
-      oc_sec_dump_cred(device);
-    } else {
-      OC_ERR("could not add trust anchor entry to /oic/sec/cred");
-    }
+  ret = oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT,
+                            credusage, "*", 0, 0, NULL, OC_ENCODING_PEM,
+                            c_size - 1, (const uint8_t *)cert, NULL, NULL);
+  if (ret != -1) {
+    OC_DBG("added new trust anchor entry to /oic/sec/cred");
+    oc_sec_dump_cred(device);
+  } else {
+    OC_ERR("could not add trust anchor entry to /oic/sec/cred");
   }
 
   mbedtls_x509_crt_free(&cert1);

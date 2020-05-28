@@ -21,9 +21,9 @@ It can be installed on Ubuntu Linux using the following command.
 
 ### Get IoTivity-Lite
 Checkout IoTivity-lite git project run the following command to get a anonymous copy of
-iotivity-lite.  Checkout the SWIG branch.
+iotivity-lite.
 
-    git clone https://gerrit.iotivity.org/gerrit/iotivity-lite
+    git clone https://gitlab.iotivity.org/iotivity/iotivity-lite.git
 
 ### Android SDK tools
 Download the [Android SDK command line tools](https://developer.android.com/studio#downloads)
@@ -102,8 +102,8 @@ Building and Running Samples
 -------------------------------------------------
 All samples have the default out of the box behavior of IoTivity-Lite which means they are are not
 onboarded or provisioned.  The default security will prevent the samples from communicating with
-one another till onboarding and provisioning has been completed.  See the following section
-**Onboarding and Provisioning** for instructions on using the onboarding tool that is part of
+one another till onboarding and provisioning has been completed.  See **Onboarding and Provisioning**
+section of the top level README file for instructions on using the onboarding tool that is part of
 iotivity-lite.
 
 A sample server and client can be found in `<iotivity-lite>/swig/apps/<sample>`
@@ -155,9 +155,9 @@ README for step-by-step instructions to onboard and test the samples.
 
 Building Custom Android Applications
 -------------------------------------------------
-These libraries and examples were built with Android API 23.  When creating a new Android project you
-can choose the API level.  In building these examples, the native code libraries were copied to specific
-directories in the project.  The project structure is:
+These libraries and examples were built with Android API 23.  When creating a new Android project a
+different API level may be chosen.  When building these examples, the native code libraries were
+copied to specific directories in the project.  The project structure is:
 
 ```
     project/
@@ -204,7 +204,8 @@ This structure is reflected in the app `build.gradle` file:
     }
 ```
 
-To allow these example applications to work, permissions had to be granted in the `AndroidManifest.xml` file.
+To allow these example applications to work, permissions had to be granted in the 
+`AndroidManifest.xml` file.
 
 ```
     <manifest ...>
@@ -228,7 +229,7 @@ To allow these example applications to work, permissions had to be granted in th
 Send Feedback
 -------------------------------------------------
 Questions
-[IoTivity-Lite Developer Mailing List](https://iotivity-dev@lists.iotivity.org)
+[IoTivity-Lite Developer Mailing List](https://iotivity.groups.io/g/iotivity-dev)
 
 Bugs
-[Jira bug reporting website](https://jira.iotivity.org/projects/LITE)
+[IoTivity-lite gitlab issues](https://gitlab.iotivity.org/iotivity/iotivity-lite/issues)

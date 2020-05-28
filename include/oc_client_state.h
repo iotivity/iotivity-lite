@@ -28,8 +28,7 @@
 #endif /* OC_BLOCK_WISE */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;

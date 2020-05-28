@@ -51,17 +51,14 @@ void
 oc_sec_doxm_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
+  oc_doxm_owned_cb_t *doxm_cb_item =
+    (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  while (doxm_cb_item) {
+    free(doxm_cb_item);
+    doxm_cb_item = (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+  }
   if (doxm) {
     free(doxm);
-  }
-
-  oc_doxm_owned_cb_t *doxm_cb_item =
-    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
-  oc_doxm_owned_cb_t *next;
-  while (doxm_cb_item) {
-    next = doxm_cb_item->next;
-    oc_memb_free(&oc_doxm_owned_cb_s, doxm_cb_item);
-    doxm_cb_item = next;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -297,6 +294,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
           owned_changed = true;
         }
         doxm[device].owned = rep->value.boolean;
+        owned_changed = true;
       }
       break;
     /* oxmsel and sct */
@@ -336,9 +334,10 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     oc_doxm_owned_cb_t *doxm_cb_item =
       (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
-      (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
-                         doxm_cb_item->user_data);
+      oc_doxm_owned_cb_t *invokee = doxm_cb_item;
       doxm_cb_item = doxm_cb_item->next;
+      (invokee->cb)(&doxm[device].deviceuuid, device, doxm[device].owned,
+                    invokee->user_data);
     }
   }
   return true;
@@ -388,6 +387,9 @@ oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 bool
 oc_is_owned_device(size_t device_index)
 {
-  return doxm[device_index].owned;
+  if (doxm) {
+    return doxm[device_index].owned;
+  }
+  return false;
 }
 #endif /* OC_SECURITY */
