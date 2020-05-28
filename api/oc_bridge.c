@@ -273,6 +273,12 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     return 0;
   }
 
+  if (oc_uuid_is_nil(&device->piid)) {
+    oc_gen_uuid(&device->piid);
+#ifdef OC_SECURITY
+    oc_sec_dump_unique_ids(vd_index);
+#endif /* OC_SECURITY */
+  }
   /*
    * According to the security specification:
    * An Unowned VOD shall not accept DTLS connection attempts nor TLS connection
@@ -326,6 +332,8 @@ int
 oc_bridge_delete_virtual_device(size_t device_index)
 {
   if (oc_bridge_is_virtual_device(device_index)) {
+    oc_uuid_t nil_uuid = { { 0 } };
+    oc_set_immutable_device_identifier(device_index, &nil_uuid);
     oc_core_remove_device_at_index(device_index);
     oc_vod_map_remove_id(device_index);
     return 0;

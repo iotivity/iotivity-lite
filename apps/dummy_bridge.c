@@ -586,6 +586,8 @@ delete_light(unsigned int index)
     virtual_lights[index].eco_system);
   if (device_index != 0) {
     oc_bridge_delete_virtual_device(device_index);
+    virtual_lights[index].discovered = false;
+    virtual_lights[index].added_to_bridge = false;
   }
 }
 
