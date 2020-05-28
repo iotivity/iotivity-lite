@@ -54,8 +54,12 @@ typedef struct oc_virtual_device_t
  * @param[in] add_device_cb callback function invoked during oc_add_device().
  *                          The purpose is to add additional device properties
  *                          that are not supplied to
- * oc_bridge_add_bridge_device() function call.
+ *                          oc_bridge_add_bridge_device() function call.
  * @param[in] data context pointer that is passed to the oc_add_device_cb_t
+ *
+ * @return
+ *   `0` on success
+ *   `-1` on failure
  */
 int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
                                 const char *data_model_version,
@@ -94,7 +98,7 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  *                     property
  * @param data_model_version Spec version of the resource and device
  *                           specifications to which this device data model is
- *                           implemtned. This is the "dmv" device property
+ *                           implemented. This is the "dmv" device property
  * @param add_device_cb callback function invoked during oc_add_device(). The
  *                      purpose is to add additional device properties that are
  *                      not supplied to oc_add_device() function call.
@@ -149,7 +153,7 @@ int oc_bridge_remove_virtual_device(size_t device_index);
  * @return
  *   - the logical index of the virtual device on success
  *   - `0` on failure since a bridge device is required to add virtual devices
-           a zero index cannot be assigned to a virtual device.
+ *         a zero index cannot be assigned to a virtual device.
  */
 size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
                                           size_t virtual_device_id_size,
