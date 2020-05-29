@@ -22,7 +22,39 @@
 #include "oc_bridge.h"
 %}
 
+
+%typemap(jstype) uint8_t *v_id "byte[]"
+%typemap(jtype) uint8_t *v_id "byte[]"
+%typemap(jni) uint8_t *v_id "jbyteArray"
+%typemap(javaout) uint8_t *v_id {
+  return $jnicall;
+}
+%typemap(out) uint8_t *v_id {
+  if($1 != NULL) {
+    $result = JCALL1(NewByteArray, jenv, (jsize)arg1->v_id_size);
+    JCALL4(SetByteArrayRegion, jenv, $result, 0, (jsize)arg1->v_id_size, (const jbyte *)$1);
+  } else {
+    $result = NULL;
+  }
+}
+%typemap(javain) int8_t *v_id "$javainput"
+%typemap(in) int8_t *v_id (int8_t *v_id, size_t v_id_size) {
+  jbyte *jid = JCALL2(GetByteArrayElements, jenv, $input, 0);
+  //jsize jid_size = JCALL1(GetArrayLength, jenv, $input);
+  // TODO if jid_size != v_id_size throw exception
+  memcpy(temp, jid, arg1->v_id_size);
+  $1 = temp;
+  JCALL3(ReleaseByteArrayElements, jenv, $input, jid, 0);
+}
+
+%nodefaultctor oc_virtual_device_t;
+%nodefaultdtor oc_virtual_device_t;
 %rename (OCVirtualDevice) oc_virtual_device_t;
+%ignore oc_virtual_device_t::v_id_size;
+%immutable oc_virtual_device_t::v_id;
+%rename (id) oc_virtual_device_t::v_id;
+%immutable oc_virtual_device_t::econame;
+%immutable oc_virtual_device_t::index;
 
 // DOCUMENTATION workaround
 %javamethodmodifiers jni_bridge_add_bridge_device "/**
@@ -144,7 +176,7 @@ size_t jni_bridge_add_virtual_device(
   const uint8_t *virtual_device_id, size_t virtual_device_id_size,
   const char *econame, const char *uri, const char *rt, const char *name,
   const char *spec_version, const char *data_model_version){
-  return oc_bridge_add_virtual_device1(virtual_device_id, virtual_device_id_size,
+  return oc_bridge_add_virtual_device(virtual_device_id, virtual_device_id_size,
                                        econame, uri, rt, name, spec_version,
                                        data_model_version, NULL, NULL);
 
@@ -204,7 +236,7 @@ size_t jni_bridge_add_virtual_device1(
   const char *econame, const char *uri, const char *rt, const char *name,
   const char *spec_version, const char *data_model_version,
   oc_add_device_cb_t add_device_cb,  jni_callback_data *jcb){
-  return oc_bridge_add_virtual_device1(virtual_device_id, virtual_device_id_size,
+  return oc_bridge_add_virtual_device(virtual_device_id, virtual_device_id_size,
                                        econame, uri, rt, name, spec_version,
                                        data_model_version, add_device_cb, jcb);
 
