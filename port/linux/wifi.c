@@ -392,8 +392,9 @@ wifi_execute_command(const char *file_path, char *const args[], char *const envs
            }
            break;
     default:
-           if (waitpid(pid, &rv, 0) == -1)
+           if (waitpid(pid, &rv, 0) == -1) {
              OC_ERR("wait pid (%u) rv (%d)", pid, rv);
+           }
            break;
   }
   return pid;
@@ -507,10 +508,12 @@ int wifi_fetch_pid(char *process_name)
 
   snprintf(command, sizeof(command), "pidof %s", process_name);
   FILE *proc = popen(command, "r");
-  fgets(line, max_pid_len, proc);
-  pid_t pid = strtoul(line, NULL, 10);
-  pclose(proc);
-  return pid;
+  if(fgets(line, max_pid_len, proc)) {
+    pid_t pid = strtoul(line, NULL, 10);
+    pclose(proc);
+    return pid;
+  }
+  return -1;
 }
 
 int
@@ -527,8 +530,9 @@ wifi_start_dhcp_client()
     return 0;
   }
 
-  if (remove(DHCLIENT_LEASES_FILE) < 0)
+  if (remove(DHCLIENT_LEASES_FILE) < 0) {
     OC_ERR("failed to remove %s", DHCLIENT_LEASES_FILE);
+  }
 
   fp = fopen(DHCLIENT_CONF_FILE, "w");
   if (!fp) {
@@ -597,8 +601,9 @@ wifi_start_dhcp_server()
     OC_DBG("Dnsmasq is already running");
     return 0;
   }
-  if (remove(DNSMASQ_LEASES_FILE) < 0)
+  if (remove(DNSMASQ_LEASES_FILE) < 0) {
     OC_ERR("failed to remove %s", DNSMASQ_LEASES_FILE);
+  }
 
   dnsmasq_pid = wifi_execute_command(args_dns[0], &args_dns[0], envs);
   if (dnsmasq_pid < 0) {
