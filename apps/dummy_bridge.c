@@ -30,6 +30,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if defined(OC_IDD_API)
+#include "oc_introspection.h"
+#endif
+
 #if defined(_WIN32)
 static HANDLE event_thread;
 static CRITICAL_SECTION app_sync_lock;
@@ -178,18 +182,53 @@ print_ascii_lights_ui()
   PRINT("\n");
 }
 
+void
+set_idd_from_file(const char *file_name, size_t device)
+{
+#if defined(OC_IDD_API)
+  FILE *fp;
+  uint8_t *buffer;
+  size_t buffer_size;
+  const char introspection_error1[] = "\tERROR Could not read ";
+  const char introspection_error2[] =
+    "\tIntrospection data not set for device.\n";
+  fp = fopen(file_name, "rb");
+  if (fp) {
+    fseek(fp, 0, SEEK_END);
+    buffer_size = ftell(fp);
+    rewind(fp);
+
+    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+    fclose(fp);
+
+    if (fread_ret == 1) {
+      oc_set_introspection_data(device, buffer, buffer_size);
+      PRINT("\tIntrospection data set for device.\n");
+    } else {
+      PRINT("%s %s\n %s", introspection_error1, file_name,
+            introspection_error2);
+    }
+    free(buffer);
+  } else {
+    PRINT("%s %s\n %s", introspection_error1, file_name, introspection_error2);
+  }
+#endif
+}
+
 static int
 app_init(void)
 {
   int ret = oc_init_platform("Desktop PC", NULL, NULL);
-  ret |= oc_bridge_add_bridge_device("Dummy Bridge", "ocf.1.0.0",
-                                     "ocf.res.1.0.0", NULL, NULL);
+  ret |= oc_bridge_add_bridge_device("Dummy Bridge", "ocf.2.0.0",
+                                     "ocf.res.1.0.0, ocf.sh.1.0.0", NULL, NULL);
   return ret;
 }
 
 static void
 register_resources(void)
 {
+  set_idd_from_file("dummy_bridge_bridge_device_IDD.cbor", 0);
 }
 
 static void
@@ -336,8 +375,8 @@ poll_for_discovered_devices()
       virtual_device_index = oc_bridge_add_virtual_device(
         (uint8_t *)virtual_lights[i].uuid, OC_UUID_LEN,
         virtual_lights[i].eco_system, "/oic/d", "oic.d.light",
-        virtual_lights[i].device_name, "ocf.1.0.0", "ocf.res.1.0.0", NULL,
-        NULL);
+        virtual_lights[i].device_name, "ocf.2.0.0",
+        "ocf.res.1.0.0, ocf.sh.1.0.0", NULL, NULL);
       if (virtual_device_index != 0) {
 #if USE_VIRTUAL_DEVICE_LOOKUP
         register_binaryswitch_resource(virtual_lights[i].device_name,
@@ -352,7 +391,9 @@ poll_for_discovered_devices()
         oc_uuid_t piid;
         oc_str_to_uuid(virtual_lights[i].uuid, &piid);
         oc_set_immutable_device_identifier(virtual_device_index, &piid);
-        // IDD could be added here.
+        // Set Introspection Device Data
+        set_idd_from_file("dummy_bridge_virtual_light_IDD.cbor",
+                          virtual_device_index);
       }
 
       app_mutex_unlock(app_sync_lock);
@@ -659,6 +700,9 @@ main(void)
                                         .register_resources =
                                           register_resources };
 
+  oc_set_con_res_announced(false);
+  // max app data size set to 13k large enough to hold full IDD
+  oc_set_max_app_data_size(13312);
 #ifdef OC_STORAGE
   if (!directoryFound("dummy_bridge_creds")) {
     printf("Creating dummy_bridge_creds directory for persistant storage.");
