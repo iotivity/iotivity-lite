@@ -225,8 +225,6 @@ size_t jni_bridge_add_virtual_device(
    *   - the logical index of the virtual device on success<br>
    *   - `0` on failure since a bridge device is required to add virtual devices
    *         a zero index cannot be assigned to a virtual device.
-   *
-   * @see init
    */
   public";
 %rename (addVirtualDevice) jni_bridge_add_virtual_device1;
