@@ -1,24 +1,3 @@
-/*
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
- Copyright 2017-2019 Open Connectivity Foundation
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-*/
-
-/*
- * File for Arduino Due with Wiznet Ethernet board
- */
 #include "Ethernet2.h"
 #include "serial.h"
 #include "oc_api.h"
@@ -46,98 +25,97 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-
-#include "server_devicebuilder.c"
-
-
-#ifdef OC_SECURITY
-void
-random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+static int
+app_init(void)
 {
-  (void)data;
-  PRINT("\n====================\n");
-  PRINT("Random PIN: %.*s\n", (int)pin_len, pin);
-  PRINT("====================\n");
-}
-#endif /* OC_SECURITY */
-
-void
-factory_presets_cb(size_t device, void *data)
-{
-  (void)device;
-  (void)data;
-#if defined(OC_SECURITY) && defined(OC_PKI)
-/* code to include an pki certificate and root trust anchor */
-#include "oc_pki.h"
-#include "pki_certs.h"
-  int credid =
-    oc_pki_add_mfg_cert(0, (const unsigned char *)my_cert, strlen(my_cert), (const unsigned char *)my_key, strlen(my_key));
-  if (credid < 0) {
-    PRINT("ERROR installing manufacturer certificate\n");
-  } else {
-    PRINT("Successfully installed manufacturer certificate\n");
-  }
-
-  if (oc_pki_add_mfg_intermediate_cert(0, credid, (const unsigned char *)int_ca, strlen(int_ca)) < 0) {
-    PRINT("ERROR installing intermediate CA certificate\n");
-  } else {
-    PRINT("Successfully installed intermediate CA certificate\n");
-  }
-
-  if (oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)root_ca, strlen(root_ca)) < 0) {
-    PRINT("ERROR installing root certificate\n");
-  } else {
-    PRINT("Successfully installed root certificate\n");
-  }
-
-  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
-#endif /* OC_SECURITY && OC_PKI */
+  int ret = oc_init_platform("Intel", NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                       "ocf.res.1.0.0", NULL, NULL);
+  return ret;
 }
 
-/**
-* intializes the global variables
-* registers and starts the handler
-*/
-void
-initialize_variables(void)
+static void
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
-  /* initialize global variables for resource "/binaryswitch" */
-  g_binaryswitch_value = false; /* current value of property "value" The status of the switch. */
+  (void)user_data;
+  ++power;
 
-  /* set the flag for NO oic/con resource. */
-  oc_set_con_res_announced(false);
-
-}
-
-// Arduino Ethernet Shield
-uint8_t ConnectToNetwork()
-{
-  // Note: ****Update the MAC address here with your shield's MAC address****
-  uint8_t ETHERNET_MAC[] = {0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9};
-
-#if defined(__SAMD21G18A__)
-  Ethernet.init(5); // CS Pin for MKRZERO
-#endif
-  uint8_t error = Ethernet.begin(ETHERNET_MAC);
-  if (error  == 0)
-  {
-    OC_ERR("Error connecting to Network: %d", error);
-    return -1;
+  OC_DBG("GET_light:\n");
+  oc_rep_start_root_object();
+  switch (interface) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(request->resource);
+  /* fall through */
+  case OC_IF_RW:
+    oc_rep_set_boolean(root, state, state);
+    oc_rep_set_int(root, power, power);
+    oc_rep_set_text_string(root, name, oc_string(name));
+    break;
+  default:
+    break;
   }
-
-  IPAddress ip = Ethernet.localIP();
-  OC_DBG("Connected to Ethernet IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-
-  return 0;
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
-/**
-* main application.
-* intializes the global variables
-* registers and starts the handler
-* handles (in a loop) the next event.
-* An MCU never shuts down.
-*/
+static void
+post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
+  (void)interface;
+  (void)user_data;
+  OC_DBG("POST_light:\n");
+  oc_rep_t *rep = request->request_payload;
+  while (rep != NULL) {
+    OC_DBG(("key: %s "), oc_string(rep->name));
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      state = rep->value.boolean;
+      OC_DBG("value: %d\n", state);
+      break;
+    case OC_REP_INT:
+      power = rep->value.integer;
+      OC_DBG("value: %d\n", power);
+      break;
+    case OC_REP_STRING:
+      oc_free_string(&name);
+      oc_new_string(&name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
+      break;
+    default:
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
+      return;
+      break;
+    }
+    rep = rep->next;
+  }
+  oc_send_response(request, OC_STATUS_CHANGED);
+}
+
+static void
+put_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
+  (void)interface;
+  (void)user_data;
+  post_light(request, interface, user_data);
+}
+
+static void
+register_resources(void)
+{
+  oc_resource_t *res = oc_new_resource("Yann's Light", "/a/light", 2, 0);
+  oc_resource_bind_resource_type(res, "core.light");
+  oc_resource_bind_resource_type(res, "core.brightlight");
+  oc_resource_bind_resource_interface(res, OC_IF_RW);
+  oc_resource_set_default_interface(res, OC_IF_RW);
+  oc_resource_set_discoverable(res, true);
+  oc_resource_set_periodic_observable(res, 1);
+  oc_resource_set_request_handler(res, OC_GET, get_light, NULL);
+  oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
+  oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
+  oc_add_resource(res);
+}
+
 static void
 signal_event_loop(void)
 {
@@ -161,52 +139,66 @@ OC_PROCESS_THREAD(sample_server_process, ev, data)
   OC_DBG("Initializing server for arduino");
 
   while (ev != OC_PROCESS_EVENT_EXIT) {
-    oc_etimer_set(&et, (oc_clock_time_t)next_event);
+ 	oc_etimer_set(&et, (oc_clock_time_t)next_event);
 
-    if (ev == OC_PROCESS_EVENT_INIT) {
-      int init = oc_main_init(&handler);
-      if (init < 0) {
-        OC_DBG("Server Init failed!");
-        return init;
-      }
-
-      OC_DBG("Server process init!");
-    }
-    else if (ev == OC_PROCESS_EVENT_TIMER) {
-      next_event = oc_main_poll();
-      next_event -= oc_clock_time();
-    }
-
+	if(ev == OC_PROCESS_EVENT_INIT){
+		int init = oc_main_init(&handler);
+		if (init < 0){
+			OC_DBG("Server Init failed!");
+			return init;
+		}
+      	OC_DBG("Server process init!");
+	}
+	else if(ev == OC_PROCESS_EVENT_TIMER){
+		next_event = oc_main_poll();
+		next_event -= oc_clock_time();
+	}
     OC_PROCESS_WAIT_EVENT();
   }
  OC_PROCESS_END();
 }
+// Arduino Ethernet Shield
+uint8_t ConnectToNetwork()
+{
+	// Note: ****Update the MAC address here with your shield's MAC address****
+	uint8_t ETHERNET_MAC[] = {0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9};
+#if defined(__SAMD21G18A__)
+  Ethernet.init(5); // CS Pin for MKRZERO
+#endif
+	uint8_t error = Ethernet.begin(ETHERNET_MAC);
+	if (error  == 0)
+	{
+		OC_ERR("Error connecting to Network: %d", error);
+		return -1;
+	}
+  IPAddress ip = Ethernet.localIP();
+  OC_DBG("Connected to Ethernet IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+	return 0;
+}
 
 void setup() {
 #if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
-  Serial.begin(115200);
+	Serial.begin(115200);
 #else
-  Serial.begin(115200);
+	Serial.begin(115200);
 #endif
-
 #if defined(__SAMD21G18A__)
   while (!Serial) {
   }
 #endif
-
-  if (ConnectToNetwork() != 0) {
-    OC_ERR("Unable to connect to network");
-    return;
-  }
+	if (ConnectToNetwork() != 0)
+	{
+		OC_ERR("Unable to connect to network");
+		return;
+	}
 
 #ifdef OC_SECURITY
   oc_storage_config("creds");
 #endif /* OC_SECURITY */
-
-  oc_process_start(&sample_server_process, NULL);
-  delay(200);
+	oc_process_start(&sample_server_process, NULL);
+  	delay(200);
 }
 
 void loop() {
-  oc_process_run();
+	oc_process_run();
 }
