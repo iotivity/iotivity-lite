@@ -669,7 +669,7 @@ typedef struct
 // Global eSIM Enrolee Instance
 oc_esim_enrollee_t g_esim_enrollee[OC_MAX_NUM_DEVICES];
 
-oc_esim_enrollee_t *get_esim_device_context(size_t device)
+oc_esim_enrollee_t *get_device_esim_enrollee(size_t device)
 {
   return &g_esim_enrollee[device];
 }
@@ -677,7 +677,7 @@ oc_esim_enrollee_t *get_esim_device_context(size_t device)
 oc_es_result_t
 oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info);
   es_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info);
@@ -688,7 +688,7 @@ oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
 oc_es_result_t
 oc_ees_set_error_code(size_t device, char *err_code)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   es_new_string(&(dev_cxt->ees.data.last_err_code), err_code);
 
@@ -700,7 +700,7 @@ oc_ees_set_error_code(size_t device, char *err_code)
 oc_es_result_t
 oc_ees_set_state(size_t device, char *es_status)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   es_new_string(&(dev_cxt->ees.data.rsp_status), es_status);
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
@@ -710,7 +710,7 @@ oc_ees_set_state(size_t device, char *es_status)
 oc_string_t
 oc_ees_get_state(size_t device)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   return dev_cxt->ees.data.rsp_status;
 }
@@ -718,7 +718,7 @@ oc_ees_get_state(size_t device)
 oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees_prov_cb,
 	oc_ees_rsp_prov_cb_t rsp_prov_cb, oc_ees_rspcap_prov_cb_t rspcap_prov_cb)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   dev_cxt->ees.prov_cb = ees_prov_cb;
   dev_cxt->rsp.prov_cb = rsp_prov_cb;
@@ -730,7 +730,7 @@ oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees
 oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
 	oc_es_write_userdata_cb_t writecb, oc_es_free_userdata_cb_t freecb)
 {
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   dev_cxt->read_cb = readcb;
   dev_cxt->write_cb = writecb;
@@ -747,7 +747,7 @@ set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("update_rspcap_resource\n");
 
@@ -797,7 +797,7 @@ get_rspcap_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                 void *user_data)
 {
   (void)user_data;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("get_rspcap_properties\n");
 
@@ -838,7 +838,7 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
   char *str_val = NULL;
   size_t str_len = 0;
   bool ccr = true;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("set_rspconf_properties\n");
 
@@ -901,7 +901,7 @@ get_rspconf_properties(oc_resource_t *resource, oc_interface_mask_t interface,
 {
 
   (void)user_data;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(resource->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("get_rspconf_properties\n");
 
@@ -945,7 +945,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   char *str_val = NULL;
   size_t str_len = 0;
   oc_collection_t *ees = (oc_collection_t *)resource;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(ees->device);
 
   OC_DBG("set_ees_properties\n");
   // Handle all the ees custom props
@@ -1012,7 +1012,7 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
 {
   (void)data;
   oc_collection_t *ees = (oc_collection_t *)resource;
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(ees->device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(ees->device);
 
   OC_DBG("get_ees_properties\n");
 
@@ -1057,7 +1057,7 @@ oc_create_esim_easysetup_resource(size_t device)
   assert(device <  OC_MAX_NUM_DEVICES);
 #endif
 
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   // Initiatize EES Resource state
   es_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_NONE);
@@ -1137,7 +1137,7 @@ void
 oc_delete_esim_easysetup_resource(size_t device)
 {
   OC_DBG("oc_delete_esim_easysetup_resource : %d", device);
-  oc_esim_enrollee_t *dev_cxt = get_esim_device_context(device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   // dev_cxt->rsp.handle is freed during core shwtdown
   es_free_string(dev_cxt->rsp.data.activation_code);

@@ -513,6 +513,7 @@ int wifi_fetch_pid(char *process_name)
     pclose(proc);
     return pid;
   }
+  pclose(proc);
   return -1;
 }
 
