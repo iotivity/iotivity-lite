@@ -453,8 +453,13 @@ typedef struct
  * extract the value.
  * @param resource_type Used to distinguish which resource the received property
  * belongs to.
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
+ * application.
+ * The user should know a data structure of passed userdata.
  */
-typedef void (*oc_es_write_userdata_cb_t)(oc_rep_t *payload, char *resource_type);
+typedef void (*oc_es_write_userdata_cb_t)(oc_rep_t *payload, char *resource_type,
+                                    void  *user_data);
 
 /**
  * A function pointer for registering a user-defined function to parse
@@ -471,35 +476,35 @@ typedef void (*oc_es_write_userdata_cb_t)(oc_rep_t *payload, char *resource_type
  * The user should know a data structure of passed userdata.
  */
 typedef void (*oc_es_read_userdata_cb_t)(oc_rep_t *payload, char *resource_type,
-                                    void **user_data);
+                                    void  *user_data);
 
 /**
  * A callback function to clean up user data created in oc_wes_wifi_data_t,
  * oc_wes_device_data_t and es_coap_cloud_conf_data.
  *
- * @param user_data User-specific data free up it's memory.
  * @param resource_type Used to distinguish which resource user data
  * beongs to.
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_es_free_userdata_cb_t)(void *user_data, char *resource_type);
+typedef void (*oc_es_free_userdata_cb_t)(char *resource_type, void *user_data);
 
 /**
  * A function pointer for registering wifi easysetup callback
  * @param payload Represents the data written to wes resource
  */
-typedef void (*oc_wes_prov_cb_t)(oc_wes_data_t *);
+typedef void (*oc_wes_prov_cb_t)(oc_wes_data_t *wes_prov_data);
 
 /**
  * A function pointer for registering wifi callback
  * @param payload Represents the data written to wifi conf resource
  */
-typedef void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *);
+typedef void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *wifi_prov_data);
 
 /**
  * A function pointer for registering device callback
  * @param payload Represents the data written to device conf resource
  */
-typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *);
+typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data);
 
 /**
  * This function populates WiFi EasySetup resources when application call
@@ -611,19 +616,19 @@ oc_wes_enrollee_state_t oc_wes_get_state(size_t device);
  * A function pointer for registering esim easysetup callback
  * @param payload Represents the data written to ees resource
  */
-typedef void (*oc_ees_prov_cb_t)(oc_ees_data_t *);
+typedef void (*oc_ees_prov_cb_t)(oc_ees_data_t *ees_prov_data);
 
 /**
  * A function pointer for registering rsp callback
  * @param payload Represents the data written to rsp conf resource
  */
-typedef void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *);
+typedef void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *rsp_prov_data);
 
 /**
  * A function pointer for registering rsp capability callback
  * @param payload Represents the data written to rspcap conf resource
  */
-typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *);
+typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data);
 
 /**
  * This function populates ESIM EasySetup resources when application call
@@ -756,9 +761,9 @@ typedef struct
 
 typedef struct
 {
-	void (*oc_es_write_userdata_cb_t)(oc_rep_t *, char *);
-	void (*oc_es_read_userdata_cb_t)(oc_rep_t *, char *, void **);
-	void (*oc_es_free_userdata_cb_t)(void *, char *);
+	void (*oc_es_write_userdata_cb_t)(oc_rep_t *, char *, void *);
+	void (*oc_es_read_userdata_cb_t)(oc_rep_t *, char *, void *);
+	void (*oc_es_free_userdata_cb_t)(char *, void *);
 } es_userdata_callbacks_s;
 
 #ifdef __cplusplus

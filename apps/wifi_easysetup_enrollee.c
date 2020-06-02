@@ -83,28 +83,29 @@ wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
 }
 
 static void
-free_userdata_cb1(void* userdata, char* resource_type)
+free_userdata_cb1(char* resource_type, void* user_data)
 {
     (void)resource_type;
-    (void)userdata;
+    (void)user_data;
     PRINT("free_userdata_cb1");
 }
 
 static void
 read_userdata_cb1(oc_rep_t* payload, char* resource_type,
-	void** userdata)
+	void *user_data)
 {
     (void)resource_type;
     (void)payload;
-    (void)userdata;
+    (void)user_data;
     PRINT("read_userdata_cb1");
 }
 
 static void
-write_userdata_cb1(oc_rep_t* payload, char* resource_type)
+write_userdata_cb1(oc_rep_t* payload, char* resource_type, void  *user_data)
 {
     (void)resource_type;
     (void)payload;
+    (void)user_data;
     PRINT("write_userdata_cb1");
 }
 
@@ -153,28 +154,29 @@ wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
 }
 
 static void
-free_userdata_cb2(void* userdata, char* resource_type)
+free_userdata_cb2(char* resource_type, void* user_data)
 {
     (void)resource_type;
-    (void)userdata;
+    (void)user_data;
     PRINT("free_userdata_cb2");
 }
 
 static void
 read_userdata_cb2(oc_rep_t* payload, char* resource_type,
-	void** userdata)
+	void *user_data)
 {
     (void)resource_type;
     (void)payload;
-    (void)userdata;
+    (void)user_data;
     PRINT("read_userdata_cb2");
 }
 
 static void
-write_userdata_cb2(oc_rep_t* payload, char* resource_type)
+write_userdata_cb2(oc_rep_t* payload, char* resource_type, void  *user_data)
 {
     (void)resource_type;
     (void)payload;
+    (void)user_data;
     PRINT("write_userdata_cb2");
 }
 
