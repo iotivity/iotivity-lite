@@ -25,33 +25,6 @@
 extern "C" {
 #endif
 
-#define MEM_ALLOC_CHECK(mem)                                                   \
-  do {                                                                         \
-    if (!mem) {                                                                \
-      OC_ERR("Memory allocation failed!");                                     \
-      goto exit;                                                               \
-    }                                                                          \
-  } while (0)
-
-#define INPUT_PARAM_NULL_CHECK(in)                                             \
-  do {                                                                         \
-    if (!in) {                                                                 \
-      OC_ERR("Invalid input!");                                                \
-      goto exit;                                                               \
-    }                                                                          \
-  } while (0)
-
-#define NULL_CHECK(p, mes)                                                     \
-  do {                                                                         \
-    if (!p) {                                                                  \
-      OC_ERR(mes);                                                             \
-      goto exit;                                                               \
-    }                                                                          \
-  } while (0)
-
-#define RESOURCE_CHECK(r) NULL_CHECK(r, "Failed to create resource!")
-#define RESOURCE_LINK_CHECK(r) NULL_CHECK(r, "Failed to create link!")
-
 #define es_free_string(str)                                                    \
   if (oc_string_len(str) > 0)                                                  \
     oc_free_string(&str);
@@ -137,44 +110,6 @@ const char* wifi_enctype_enum_tostring(wifi_enctype val);
  * @return result as true or false
  */
 bool wifi_enctype_string_toenum(const char *val, wifi_enctype *val_out);
-
-/**
- * convert wifi enc type value to related string representation
- *
- * @param val Enum Type Value as input
- *
- * @return corresponding string representation
- */
-const char* rsp_state_enum_tostring(rsp_state val);
-
-/**
- * convert string representation to Enum value
- *
- * @param val     string representation
- * @param val_out  return the Enum Value in val_out
- *
- * @return result as true or false
- */
-bool rsp_state_string_toenum(const char *val, rsp_state *val_out);
-
-/**
- * convert wifi enc type value to related string representation
- *
- * @param val Enum Type Value as input
- *
- * @return corresponding string representation
- */
-const char* euc_state_enum_tostring(user_confirmation val);
-
-/**
- * convert string representation to Enum value
- *
- * @param val     string representation
- * @param val_out  return the Enum Value in val_out
- *
- * @return result as true or false
- */
-bool euc_state_string_toenum(const char *val, user_confirmation *val_out);
 
 #ifdef __cplusplus
 }

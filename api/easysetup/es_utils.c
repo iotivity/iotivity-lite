@@ -173,35 +173,3 @@ bool wifi_enctype_string_toenum(const char *val, wifi_enctype *val_out)
     lookup_str_toenum(val, WIFIENCTYPE_CONVERT_LOOKUP, (*val_out), result);
     return result;
 }
-
-const char*
-rsp_state_enum_tostring(rsp_state val)
-{
-    char *ret = NULL;
-    lookup_enum_tostr(val, RSP_STATE_LOOKUP, ret);
-    return ret;
-}
-
-bool
-rsp_state_string_toenum(const char *val, rsp_state *val_out)
-{
-    bool result = false;
-    lookup_str_toenum(val, RSP_STATE_LOOKUP, (*val_out), result);
-    return result;
-}
-
-const char*
-euc_state_enum_tostring(user_confirmation val)
-{
-    char *ret = NULL;
-    lookup_enum_tostr(val, USER_CONFIRMATION_LOOKUP, ret);
-    return ret;
-}
-
-bool
-euc_state_string_toenum(const char *val, user_confirmation *val_out)
-{
-    bool result = false;
-    lookup_str_toenum(val, USER_CONFIRMATION_LOOKUP, (*val_out), result);
-    return result;
-}
