@@ -45,13 +45,11 @@
  * This file is part of the Contiki operating system.
  */
 
-
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define COAP_DEFAULT_PORT 5683
@@ -91,7 +89,9 @@ extern "C"
 #define COAP_HEADER_OPTION_DELTA_MASK 0xF0
 #define COAP_HEADER_OPTION_SHORT_LENGTH_MASK 0x0F
 
-#define COAP_TCP_DEFAULT_HEADER_LEN 2 /* | len:0xF0 tkl:0x0F | .... | code | */
+#define COAP_TCP_DEFAULT_HEADER_LEN                                            \
+  2 /* | len:0xF0 tkl:0x0F | .... | code |                                     \
+     */
 #define COAP_TCP_MAX_EXTENDED_LENGTH_LEN 4
 #define COAP_PAYLOAD_MARKER_LEN 1 /* 0xFF */
 
@@ -179,34 +179,6 @@ typedef enum {
   OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER = 2049, /* 2 B */
   OCF_OPTION_CONTENT_FORMAT_VER = 2053         /* 2 B */
 } coap_option_t;
-
-/* CoAP Content-Formats */
-typedef enum {
-  TEXT_PLAIN = 0,
-  TEXT_XML = 1,
-  TEXT_CSV = 2,
-  TEXT_HTML = 3,
-  IMAGE_GIF = 21,
-  IMAGE_JPEG = 22,
-  IMAGE_PNG = 23,
-  IMAGE_TIFF = 24,
-  AUDIO_RAW = 25,
-  VIDEO_RAW = 26,
-  APPLICATION_LINK_FORMAT = 40,
-  APPLICATION_XML = 41,
-  APPLICATION_OCTET_STREAM = 42,
-  APPLICATION_RDF_XML = 43,
-  APPLICATION_SOAP_XML = 44,
-  APPLICATION_ATOM_XML = 45,
-  APPLICATION_XMPP_XML = 46,
-  APPLICATION_EXI = 47,
-  APPLICATION_FASTINFOSET = 48,
-  APPLICATION_SOAP_FASTINFOSET = 49,
-  APPLICATION_JSON = 50,
-  APPLICATION_X_OBIX_BINARY = 51,
-  APPLICATION_CBOR = 60,
-  APPLICATION_VND_OCF_CBOR = 10000
-} coap_content_format_t;
 
 #ifdef __cplusplus
 }

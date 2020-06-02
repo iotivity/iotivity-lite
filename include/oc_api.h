@@ -1296,6 +1296,16 @@ int oc_get_query_value(oc_request_t *request, const char *key, char **value);
  */
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
 
+bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
+                                size_t *size,
+                                oc_content_format_t *content_format);
+void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
+                          size_t size, oc_content_format_t content_format,
+                          oc_status_t response_code);
+bool oc_get_response_payload_raw(oc_client_response_t *response,
+                                 const uint8_t **payload, size_t *size,
+                                 oc_content_format_t *content_format);
+
 /**
  * Ignore the request
  *
@@ -1755,10 +1765,11 @@ bool oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
 bool oc_do_post(void);
 
 /**
- * Dispatch a GET request with the CoAP Observe option to subscribe for notifications
- * from a resource.
+ * Dispatch a GET request with the CoAP Observe option to subscribe for
+ * notifications from a resource.
  *
- * The oc_response_handler_t will be invoked each time upon receiving a notification.
+ * The oc_response_handler_t will be invoked each time upon receiving a
+ * notification.
  *
  * The handler will continue to be invoked till oc_stop_observe() is called.
  *
