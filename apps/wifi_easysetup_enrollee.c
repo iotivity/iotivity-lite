@@ -247,8 +247,9 @@ signal_event_loop(void)
 static void
 register_resources(void)
 {
+  wifi_mode supported_mode[NUM_WIFIMODE] = {WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_EOF };
+  wifi_freq supported_freq = WIFI_5G;
   char *device_name = "TestDevice";
-  oc_wes_device_info_t wes_device_info ={{{WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_EOF },WIFI_5G},{{0}}};
 
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
 
@@ -261,8 +262,7 @@ register_resources(void)
           g_ud_cbks[dev_index].oc_es_write_userdata_cb_t, g_ud_cbks[dev_index].oc_es_free_userdata_cb_t);
 
     // Set Device Info
-    oc_new_string(&wes_device_info.Device.device_name, device_name, strlen(device_name));
-     if (oc_wes_set_device_info(dev_index, &wes_device_info) == OC_ES_ERROR)
+     if (oc_wes_set_device_info(dev_index, supported_mode,supported_freq, device_name) == OC_ES_ERROR)
          PRINT("oc_wes_set_device_info error!\n");
   }
 }

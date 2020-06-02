@@ -25,27 +25,6 @@
 extern "C" {
 #endif
 
-#define es_free_string(str)                                                    \
-  if (oc_string_len(str) > 0)                                                  \
-    oc_free_string(&str);
-
-void
-es_new_string(oc_string_t *des_string, char *src_string)
-{
-  if (!des_string || (!src_string || strlen(src_string) == 0)) {
-    return;
-  }
-
-  if (oc_string_len(*des_string) == 0) {
-    oc_new_string(des_string, src_string, strlen(src_string));
-  } else if (oc_string_len(*des_string) == strlen(src_string)) {
-    strncpy(oc_string(*des_string), src_string, strlen(src_string));
-  } else {
-    oc_free_string(des_string);
-    oc_new_string(des_string, src_string, strlen(src_string));
-  }
-}
-
 /**
  * Some type conversion helpers
  * For all *enum_tostring(...) functions: They take the Enum Type Value as input (val), and return

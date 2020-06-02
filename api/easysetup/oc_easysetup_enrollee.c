@@ -68,24 +68,22 @@ oc_wifi_enrollee_t *get_device_wifi_enrollee(size_t device)
 }
 
 oc_es_result_t
-oc_wes_set_device_info(size_t device, oc_wes_device_info_t *device_info)
+oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
+	wifi_freq supported_freq, char *device_name)
 {
   int modeIdx = 0;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_device_info\n");
 
-  dev_cxt->wifi.data.supported_freq = (device_info->WiFi).supported_freq;
+  dev_cxt->wifi.data.supported_freq = supported_freq;
 
-  while ((device_info->WiFi).supported_mode[modeIdx] != WIFI_EOF) {
-    dev_cxt->wifi.data.supported_mode[modeIdx] =
-      (device_info->WiFi).supported_mode[modeIdx];
+  while (supported_mode[modeIdx] != WIFI_EOF) {
+    dev_cxt->wifi.data.supported_mode[modeIdx] = supported_mode[modeIdx];
     modeIdx++;
   }
-
   dev_cxt->wifi.data.num_mode = modeIdx;
+  oc_new_string(&(dev_cxt->device.data.dev_name), device_name, strlen(device_name));
 
-  es_new_string(&(dev_cxt->device.data.dev_name),
-               oc_string((device_info->Device).device_name));
   return OC_ES_OK;
 }
 
@@ -250,7 +248,7 @@ update_wifi_conf_resource(oc_request_t *request)
     size_t str_len = 0;
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_SSID, &str_val,
                           &str_len)) {
-      es_new_string(&(dev_cxt->wifi.data.ssid), str_val);
+      oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
       res_changed = true;
     }
 
@@ -258,7 +256,7 @@ update_wifi_conf_resource(oc_request_t *request)
     str_len = 0;
     if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_CRED, &str_val,
                           &str_len)) {
-      es_new_string(&(dev_cxt->wifi.data.cred), str_val);
+      oc_new_string(&(dev_cxt->wifi.data.cred), str_val, str_len);
       res_changed = true;
     }
   }
@@ -357,7 +355,7 @@ update_devconf_resource(oc_request_t *request)
 
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_DEVNAME, &str_val,
                         &str_len)) {
-    es_new_string(&(dev_cxt->device.data.dev_name), str_val);
+    oc_new_string(&(dev_cxt->device.data.dev_name), str_val, str_len);
     res_changed = true;
   }
 
@@ -604,12 +602,12 @@ oc_delete_wifi_easysetup_resource(size_t device)
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
 
   // dev_cxt->wifi.handle freed during core shutdown
-  es_free_string(dev_cxt->wifi.data.ssid);
-  es_free_string(dev_cxt->wifi.data.cred);
+  oc_free_string(&dev_cxt->wifi.data.ssid);
+  oc_free_string(&dev_cxt->wifi.data.cred);
   dev_cxt->wifi.prov_cb = NULL;
 
   // dev_cxt->device.handle freed during core shutdown
-  es_free_string(dev_cxt->device.data.dev_name);
+  oc_free_string(&dev_cxt->device.data.dev_name);
   dev_cxt->device.prov_cb = NULL;
 
   if (dev_cxt->wes.handle) {
@@ -667,8 +665,8 @@ oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
-  es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info);
-  es_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info);
+  oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info, strlen(euicc_info));
+  oc_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info, strlen(device_info));
 
   return OC_ES_OK;
 }
@@ -678,7 +676,7 @@ oc_ees_set_error_code(size_t device, char *err_code)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
-  es_new_string(&(dev_cxt->ees.data.last_err_code), err_code);
+  oc_new_string(&(dev_cxt->ees.data.last_err_code), err_code, strlen(err_code));
 
   return OC_ES_OK;
 }
@@ -690,7 +688,7 @@ oc_ees_set_state(size_t device, char *es_status)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
-  es_new_string(&(dev_cxt->ees.data.rsp_status), es_status);
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), es_status, strlen(es_status));
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return OC_ES_OK;
 }
@@ -744,12 +742,12 @@ set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_EUICCINFO,
             &str_val, &str_len)) {
-           es_new_string(&(dev_cxt->rsp_cap.data.euicc_info), str_val);
+           oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_DEVICEINFO,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->rsp_cap.data.device_info), str_val);
+          oc_new_string(&(dev_cxt->rsp_cap.data.device_info), str_val, str_len);
           res_changed = true;
         }
         break;
@@ -835,17 +833,17 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ACTIVATIONCODE,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->rsp.data.activation_code), str_val);
+          oc_new_string(&(dev_cxt->rsp.data.activation_code), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROFMETADATA,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->rsp.data.profile_metadata), str_val);
+          oc_new_string(&(dev_cxt->rsp.data.profile_metadata), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_CONFIRMATIONCODE,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->rsp.data.confirm_code), str_val);
+          oc_new_string(&(dev_cxt->rsp.data.confirm_code), str_val, str_len);
           res_changed = true;
         }
         break;
@@ -942,27 +940,27 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->ees.data.rsp_status), str_val);
+          oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val ,str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->ees.data.last_err_reason), str_val);
+          oc_new_string(&(dev_cxt->ees.data.last_err_reason), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORCODE,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->ees.data.last_err_code), str_val);
+          oc_new_string(&(dev_cxt->ees.data.last_err_code), str_val ,str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORRDESCRIPTION,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->ees.data.last_err_desc), str_val);
+          oc_new_string(&(dev_cxt->ees.data.last_err_desc), str_val ,str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ENDUSERCONFIRMATION,
             &str_val, &str_len)) {
-          es_new_string(&(dev_cxt->ees.data.end_user_conf), str_val);
+          oc_new_string(&(dev_cxt->ees.data.end_user_conf), str_val ,str_len);
           res_changed = true;
         }
         break;
@@ -1048,11 +1046,11 @@ oc_create_esim_easysetup_resource(size_t device)
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   // Initiatize EES Resource state
-  es_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_NONE);
-  es_new_string(&(dev_cxt->ees.data.last_err_reason), EES_PS_NONE);
-  es_new_string(&(dev_cxt->ees.data.last_err_code), EES_PS_NONE);
-  es_new_string(&(dev_cxt->ees.data.last_err_desc), EES_PS_NONE);
-  es_new_string(&(dev_cxt->ees.data.end_user_conf), EES_PS_NONE);
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_NONE, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_PS_NONE, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_PS_NONE, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_PS_NONE, 0);
+  oc_new_string(&(dev_cxt->ees.data.end_user_conf), EES_PS_NONE, 0);
 
   // Esim Easy Setup Resource
   oc_core_populate_collection(
@@ -1128,14 +1126,14 @@ oc_delete_esim_easysetup_resource(size_t device)
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   // dev_cxt->rsp.handle is freed during core shwtdown
-  es_free_string(dev_cxt->rsp.data.activation_code);
-  es_free_string(dev_cxt->rsp.data.profile_metadata);
-  es_free_string(dev_cxt->rsp.data.confirm_code);
+  oc_free_string(&dev_cxt->rsp.data.activation_code);
+  oc_free_string(&dev_cxt->rsp.data.profile_metadata);
+  oc_free_string(&dev_cxt->rsp.data.confirm_code);
   dev_cxt->rsp.prov_cb = NULL;
 
   // dev_cxt->rsp_cap.handle is freed during core shwtdown
-  es_free_string(dev_cxt->rsp_cap.data.euicc_info);
-  es_free_string(dev_cxt->rsp_cap.data.device_info);
+  oc_free_string(&dev_cxt->rsp_cap.data.euicc_info);
+  oc_free_string(&dev_cxt->rsp_cap.data.device_info);
   dev_cxt->rsp_cap.prov_cb = NULL;
 
   // Collection is not freed by default. Free collection here.
@@ -1143,11 +1141,11 @@ oc_delete_esim_easysetup_resource(size_t device)
     oc_delete_collection((oc_resource_t *)dev_cxt->ees.handle);
     dev_cxt->ees.handle = NULL;
   }
-  es_free_string(dev_cxt->ees.data.rsp_status);
-  es_free_string(dev_cxt->ees.data.last_err_reason);
-  es_free_string(dev_cxt->ees.data.last_err_code);
-  es_free_string(dev_cxt->ees.data.last_err_desc);
-  es_free_string(dev_cxt->ees.data.end_user_conf);
+  oc_free_string(&dev_cxt->ees.data.rsp_status);
+  oc_free_string(&dev_cxt->ees.data.last_err_reason);
+  oc_free_string(&dev_cxt->ees.data.last_err_code);
+  oc_free_string(&dev_cxt->ees.data.last_err_desc);
+  oc_free_string(&dev_cxt->ees.data.end_user_conf);
   dev_cxt->ees.prov_cb = NULL;
 }
 

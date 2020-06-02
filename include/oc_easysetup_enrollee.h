@@ -581,7 +581,8 @@ oc_es_result_t oc_wes_set_userdata_callbacks(size_t device, oc_es_read_userdata_
  *
  * @see oc_wes_device_info_t
  */
-oc_es_result_t oc_wes_set_device_info(size_t device, oc_wes_device_info_t *device_info);
+oc_es_result_t oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
+						wifi_freq supported_freq, char *device_name);
 
 /**
  * This function Sets Enrollee's Error Code.
