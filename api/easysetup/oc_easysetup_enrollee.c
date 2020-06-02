@@ -68,7 +68,7 @@ typedef struct
 // Global WiFi Enrolee Instance
 oc_wifi_enrollee_t g_wifi_enrollee[OC_MAX_NUM_DEVICES];
 
-oc_wifi_enrollee_t *get_wifi_device_context(size_t device)
+oc_wifi_enrollee_t *get_device_wifi_enrollee(size_t device)
 {
   return &g_wifi_enrollee[device];
 }
@@ -77,7 +77,7 @@ oc_es_result_t
 oc_wes_set_device_info(size_t device, oc_wes_device_info_t *device_info)
 {
   int modeIdx = 0;
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_device_info\n");
 
   dev_cxt->wifi.data.supported_freq = (device_info->WiFi).supported_freq;
@@ -98,7 +98,7 @@ oc_wes_set_device_info(size_t device, oc_wes_device_info_t *device_info)
 oc_es_result_t
 oc_wes_set_error_code(size_t device, oc_wes_error_code_t err_code)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_error_code %d\n", err_code);
 
   if (err_code < OC_WES_NO_ERROR || err_code > OC_WES_UNKNOWN_ERROR) {
@@ -113,7 +113,7 @@ oc_wes_set_error_code(size_t device, oc_wes_error_code_t err_code)
 oc_es_result_t
 oc_wes_set_state(size_t device, oc_wes_enrollee_state_t es_state)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_state %d\n", es_state);
 
   if (es_state < OC_WES_INIT || es_state >= OC_WES_EOF) {
@@ -128,14 +128,14 @@ oc_wes_set_state(size_t device, oc_wes_enrollee_state_t es_state)
 oc_wes_enrollee_state_t
 oc_wes_get_state(size_t device)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   return dev_cxt->wes.data.state;
 }
 
 oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
 	oc_wes_wifi_prov_cb_t wifi_prov_cb, oc_wes_dev_prov_cb_t dev_prov_cb)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_resource_callbacks\n");
 
   dev_cxt->wes.prov_cb = wes_prov_cb;
@@ -148,7 +148,7 @@ oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes
 oc_es_result_t oc_wes_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
 	oc_es_write_userdata_cb_t writecb, oc_es_free_userdata_cb_t freecb)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_userdata_callbacks\n");
 
   dev_cxt->read_cb = readcb;
@@ -161,7 +161,7 @@ oc_es_result_t oc_wes_set_userdata_callbacks(size_t device, oc_es_read_userdata_
 static void
 construct_response_of_wificonf(oc_request_t *request)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
   OC_DBG("construct_response_of_wificonf\n");
 
   oc_rep_start_root_object();
@@ -248,7 +248,7 @@ static void
 update_wifi_conf_resource(oc_request_t *request)
 {
   bool res_changed = false;
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
   OC_DBG("update_wifi_conf_resource\n");
 
   {
@@ -326,7 +326,7 @@ wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void
 static void
 construct_response_of_devconf(oc_request_t *request)
 {
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
   OC_DBG("construct_response_of_devconf\n");
 
   oc_rep_start_root_object();
@@ -358,7 +358,7 @@ update_devconf_resource(oc_request_t *request)
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(request->origin->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
   OC_DBG("update_devconf_resource\n");
 
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_DEVNAME, &str_val,
@@ -395,7 +395,7 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
 {
   (void)data;
   oc_collection_t *wes = (oc_collection_t *)resource;
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(wes->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
   OC_DBG("get_wes_properties %d\n", interface);
 
   oc_rep_start_root_object();
@@ -422,7 +422,7 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   int64_t *connect_req;
   size_t connect_req_size;
   oc_collection_t *wes = (oc_collection_t *)resource;
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(wes->device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
   OC_DBG("set_wes_properties\n");
 
   while (rep != NULL) {
@@ -504,7 +504,7 @@ oc_create_wifi_easysetup_resource(size_t device)
   assert(device <  OC_MAX_NUM_DEVICES);
 #endif
 
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
 
   dev_cxt->wes.data.state = OC_WES_INIT;
   dev_cxt->wes.data.last_err_code = OC_WES_NO_ERROR;
@@ -607,7 +607,7 @@ void
 oc_delete_wifi_easysetup_resource(size_t device)
 {
   OC_DBG("oc_delete_wifi_easysetup_resource : %d", device);
-  oc_wifi_enrollee_t *dev_cxt = get_wifi_device_context(device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
 
   // dev_cxt->wifi.handle freed during core shutdown
   es_free_string(dev_cxt->wifi.data.ssid);
