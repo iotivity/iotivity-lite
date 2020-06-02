@@ -35,8 +35,6 @@ typedef struct
   oc_wes_prov_cb_t prov_cb;
 } oc_wes_resource_t;
 
-#define es_res_cast(p) (oc_wes_resource_t *)(p)
-
 typedef struct
 {
   oc_resource_t *handle;
@@ -44,16 +42,12 @@ typedef struct
   oc_wes_wifi_prov_cb_t prov_cb;
 } oc_wes_wifi_conf_resource_t;
 
-#define wifi_res_cast(p) (oc_wes_wifi_conf_resource_t *)(p)
-
 typedef struct
 {
   oc_resource_t *handle;
   oc_wes_device_data_t data;
   oc_wes_dev_prov_cb_t prov_cb;
 } oc_wes_dev_conf_resource_t;
-
-#define dev_res_cast(p) (oc_wes_dev_conf_resource_t *)(p)
 
 typedef struct
 {
@@ -636,8 +630,6 @@ typedef struct
   oc_ees_prov_cb_t prov_cb;
 } oc_ees_resource_t;
 
-#define ees_res_cast(p) (oc_ees_resource_t *)(p)
-
 typedef struct
 {
   oc_resource_t *handle;
@@ -645,16 +637,12 @@ typedef struct
   oc_ees_rsp_prov_cb_t prov_cb;
 } oc_ees_rsp_conf_resource_t;
 
-#define rsp_res_cast(p) (oc_ees_rsp_conf_resource_t *)(p)
-
 typedef struct
 {
   oc_resource_t *handle;
   oc_ees_rspcap_data_t data;
   oc_ees_rspcap_prov_cb_t prov_cb;
 } oc_ees_rspcap_conf_resource_t;
-
-#define rspcap_res_cast(p) (oc_ees_rspcap_conf_resource_t *)(p)
 
 typedef struct
 {
