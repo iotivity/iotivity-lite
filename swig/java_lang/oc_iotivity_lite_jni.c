@@ -562,13 +562,19 @@ jni_oc_add_device_callback(void *user_data)
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
 
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
   assert(cls_OCAddDeviceHandler);
   const jmethodID mid_handler =
     JCALL3(GetMethodID, (data->jenv), cls_OCAddDeviceHandler, "handler", "()V");
   assert(mid_handler);
-  JCALL2(CallObjectMethod, (data->jenv), data->jcb_obj, mid_handler);
+  JCALL2(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler);
 
   if (data->cb_valid == OC_CALLBACK_VALID_FOR_A_SINGLE_CALL) {
     jni_list_remove(data);
   }
+
+  release_jni_env(getEnvResult);
 }

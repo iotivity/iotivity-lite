@@ -249,7 +249,7 @@ size_t jni_bridge_add_virtual_device1(
    * This will shutdown network connectivity for the device and will update
    * the vodslist resource found on the bridge.
    * <p>
-   * Any any persistant settings will remain unchanged.  If the virtual device
+   * Any persistant settings will remain unchanged.  If the virtual device
    * has already been onboarded and permission settings have been modified when
    * the device is added again using <tt>OCBridge.addVirtualDevice</tt> those
    * persistant settings will still be in place.
@@ -257,7 +257,7 @@ size_t jni_bridge_add_virtual_device1(
    * @param device_index the index of the virtual device
    *
    * @return
-   *   - `0` on succes<br>
+   *   - `0` on success<br>
    *   - `-1` on failure
    */
   public";
@@ -272,7 +272,7 @@ size_t jni_bridge_add_virtual_device1(
    * device is added again the onboarding and device permissions will need to be
    * setup as if the device were a new device.
    *
-   * @param device_index index of teh virtual device
+   * @param device_index index of the virtual device
    *
    * @return
    *   - `0` on success<br>
