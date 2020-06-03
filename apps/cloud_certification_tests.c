@@ -94,15 +94,14 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform(manufacturer, NULL, NULL);
-  oc_device_info_t* d = oc_core_add_new_device("/oic/d", device_rt, device_name, spec_version,
-                        data_model_version, NULL, NULL);
-  if (!d) {
-    return 1;
+  ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
+                       data_model_version, NULL, NULL);
+  if (ret || !deviceid) {
+    return ret;
   }
-  if (deviceid == NULL) {
-    return 0;
-  }
-  oc_str_to_uuid(deviceid, &d->di);
+
+  oc_device_info_t *info = oc_core_get_device_info(0);
+  oc_str_to_uuid(deviceid, &info->di);
   return ret;
 }
 
