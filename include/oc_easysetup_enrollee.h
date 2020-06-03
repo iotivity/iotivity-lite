@@ -491,20 +491,23 @@ typedef void (*oc_es_free_userdata_cb_t)(char *resource_type, void *user_data);
 /**
  * A function pointer for registering wifi easysetup callback
  * @param payload Represents the data written to wes resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_wes_prov_cb_t)(oc_wes_data_t *wes_prov_data);
+typedef void (*oc_wes_prov_cb_t)(oc_wes_data_t *wes_prov_data, void *user_data);
 
 /**
  * A function pointer for registering wifi callback
  * @param payload Represents the data written to wifi conf resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *wifi_prov_data);
+typedef void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *wifi_prov_data,  void *user_data);
 
 /**
  * A function pointer for registering device callback
  * @param payload Represents the data written to device conf resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data);
+typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data,  void *user_data);
 
 /**
  * This function populates WiFi EasySetup resources when application call
@@ -513,10 +516,13 @@ typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data);
  * resources are populated.
  *
  * @param device	Index of the the device application created
- *
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
+ * application.
+ * The user should know a data structure of passed userdata.
  * @return ::OC_WES_OK on success, some other value upon failure.
  */
-void oc_create_wifi_easysetup_resource(size_t device);
+void oc_create_wifi_easysetup_resource(size_t device, void *user_data);
 
 /**
  * This function performs termination of all WiFi Easy Setup Resources
@@ -561,7 +567,10 @@ oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes
  * @param writecb a callback for putting properties to a response to be sent
  * @param freecb callback to free allocated memory of user data in
  * oc_wes_data_t, oc_wes_wifi_data_t, oc_wes_device_data_t.
- *
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
+ * application.
+ * The user should know a data structure of passed userdata.
  * @return ::OC_WES_OK on success, some other value upon failure.
  *
  * @see oc_es_read_userdata_cb_t
@@ -616,20 +625,23 @@ oc_wes_enrollee_state_t oc_wes_get_state(size_t device);
 /**
  * A function pointer for registering esim easysetup callback
  * @param payload Represents the data written to ees resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_ees_prov_cb_t)(oc_ees_data_t *ees_prov_data);
+typedef void (*oc_ees_prov_cb_t)(oc_ees_data_t *ees_prov_data, void *user_data);
 
 /**
  * A function pointer for registering rsp callback
  * @param payload Represents the data written to rsp conf resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *rsp_prov_data);
+typedef void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *rsp_prov_data, void *user_data);
 
 /**
  * A function pointer for registering rsp capability callback
  * @param payload Represents the data written to rspcap conf resource
+ * @param user_data User-specific data free up it's memory.
  */
-typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data);
+typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data);
 
 /**
  * This function populates ESIM EasySetup resources when application call
@@ -638,10 +650,13 @@ typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data);
  * resources are populated.
  *
  * @param device	Index of the the device application created
- *
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
+ * application.
+ * The user should know a data structure of passed userdata.
  * @return ::OC_EES_OK on success, some other value upon failure.
  */
-void oc_create_esim_easysetup_resource(size_t device);
+void oc_create_esim_easysetup_resource(size_t device, void *user_data);
 
 /**
  * This function performs termination of all ESIM Easy Setup Resources
@@ -686,7 +701,10 @@ void oc_delete_esim_easysetup_resource(size_t device);
  * @param writecb a callback for putting properties to a response to be sent
  * @param freecb callback to free allocated memory of user data in
  * oc_ees_data_t, oc_ees_rsp_data_t and oc_ees_rspcap_data_t.
- *
+ * @param user_data User-specific data you want to deliver to desired users,
+ * i.e.
+ * application.
+ * The user should know a data structure of passed userdata.
  * @return ::OC_EES_OK on success, some other value upon failure.
  *
  * @see oc_es_read_userdata_cb_t
@@ -743,9 +761,9 @@ oc_string_t oc_ees_get_state(size_t device);
  */
 typedef struct
 {
-	void (*oc_wes_prov_cb_t)(oc_wes_data_t *);
-	void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *);
-	void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *);
+	void (*oc_wes_prov_cb_t)(oc_wes_data_t *, void *);
+	void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *, void *);
+	void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *, void *);
 } wes_device_callbacks_s;
 
 /**
@@ -754,10 +772,10 @@ typedef struct
  */
 typedef struct
 {
-	void (*oc_ees_prov_cb_t)(oc_ees_data_t *);
-	void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *);
-	void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *);
-	void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *);
+	void (*oc_ees_prov_cb_t)(oc_ees_data_t *, void *);
+	void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *, void *);
+	void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *, void *);
+	void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *, void *);
 } ees_device_callbacks_s;
 
 typedef struct

@@ -387,10 +387,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 #if defined(OC_WIFI_EASYSETUP) && defined(OC_COLLECTIONS) && defined(OC_SERVER)
-  oc_create_wifi_easysetup_resource(device_count);
+  oc_create_wifi_easysetup_resource(device_count, data);
 #endif /* OC_WIFI_EASYSETUP && OC_COLLECTIONS && OC_SERVER */
 #if defined(OC_ESIM_EASYSETUP) && defined(OC_COLLECTIONS) && defined(OC_SERVER)
-  oc_create_esim_easysetup_resource(device_count);
+  oc_create_esim_easysetup_resource(device_count, data);
 #endif /* OC_ESIM_EASYSETUP && OC_COLLECTIONS && OC_SERVER */
 
   oc_device_info[device_count].data = data;

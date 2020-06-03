@@ -237,7 +237,7 @@ wificonf_get_handler(oc_request_t *request, oc_interface_mask_t interface, void 
 }
 
 static void
-update_wifi_conf_resource(oc_request_t *request)
+update_wifi_conf_resource(oc_request_t *request, void *user_data)
 {
   bool res_changed = false;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
@@ -296,18 +296,17 @@ update_wifi_conf_resource(oc_request_t *request)
 
   if (res_changed && dev_cxt->wifi.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data));
+    dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data), user_data);
   }
 }
 
 static void
 wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
-  (void)user_data;
   OC_DBG("wificonf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
-    update_wifi_conf_resource(request);
+    update_wifi_conf_resource(request, user_data);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -345,7 +344,7 @@ devconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-update_devconf_resource(oc_request_t *request)
+update_devconf_resource(oc_request_t *request, void *user_data)
 {
   bool res_changed = false;
   char *str_val = NULL;
@@ -361,7 +360,7 @@ update_devconf_resource(oc_request_t *request)
 
   if (res_changed && dev_cxt->device.prov_cb) {
     // Trigger provisioning callback
-    dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data));
+    dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data), user_data);
   }
 }
 
@@ -369,11 +368,10 @@ static void
 devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  (void)user_data;
   OC_DBG("devconf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
-    update_devconf_resource(request);
+    update_devconf_resource(request, user_data);
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     OC_ERR("Resource does not support this interface: %d", interface);
@@ -383,9 +381,9 @@ devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 
 void
 get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
-                        void *data)
+                        void *user_data)
 {
-  (void)data;
+  (void)user_data;
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
   OC_DBG("get_wes_properties %d\n", interface);
@@ -406,9 +404,8 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
 }
 
 bool
-set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
-  (void)data;
   bool res_changed = false;
   int64_t int_val = 0;
   int64_t *connect_req;
@@ -454,7 +451,7 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
   // Trigger application callback
   if (res_changed && dev_cxt->wes.prov_cb) {
-    dev_cxt->wes.prov_cb((oc_wes_data_t *) &(dev_cxt->wes.data));
+    dev_cxt->wes.prov_cb((oc_wes_data_t *) &(dev_cxt->wes.data), user_data);
   }
   return true;
 }
@@ -488,7 +485,7 @@ wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-oc_create_wifi_easysetup_resource(size_t device)
+oc_create_wifi_easysetup_resource(size_t device, void *user_data)
 {
   OC_DBG("oc_create_wifi_easysetup_resource : %d", device);
 
@@ -550,11 +547,11 @@ oc_create_wifi_easysetup_resource(size_t device)
 
   //Enables RETRIEVEs/UPDATEs to Collection properties
   oc_resource_set_request_handler((oc_resource_t *)dev_cxt->wes.handle,
-                                OC_GET, wes_get_handler, NULL);
+                                OC_GET, wes_get_handler, user_data);
   oc_resource_set_request_handler((oc_resource_t *)dev_cxt->wes.handle,
-                                OC_POST, wes_post_handler, NULL);
-  oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->wes.handle, get_wes_properties, NULL,
-                                set_wes_properties, NULL);
+                                OC_POST, wes_post_handler, user_data);
+  oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->wes.handle, get_wes_properties, user_data,
+                                set_wes_properties, user_data);
 
   //Wifi Conf Recource
   oc_core_populate_resource(
@@ -727,9 +724,8 @@ oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_
 
 
 static void
-set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
+set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
-  (void)data;
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
@@ -758,7 +754,7 @@ set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
   }
 
   if (res_changed && dev_cxt->rsp_cap.prov_cb) {
-    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data));
+    dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data), user_data);
   }
 }
 
@@ -766,7 +762,6 @@ static void
 rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 	void *user_data)
 {
-  (void)user_data;
   OC_DBG("rspcap_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE) {
@@ -802,7 +797,6 @@ static void
 rspcap_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
-  (void)user_data;
   OC_DBG("rspcap_get_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE || interface == OC_IF_R) {
@@ -817,9 +811,8 @@ rspcap_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
+set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
-  (void)data;
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
@@ -860,7 +853,7 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void* data)
   }
 
   if (res_changed && dev_cxt->rsp.prov_cb) {
-    dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *)&(dev_cxt->rsp.data));
+    dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *)&(dev_cxt->rsp.data), user_data);
   }
 }
 
@@ -868,7 +861,6 @@ static void
 rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  (void)user_data;
   OC_DBG("rspconf_post_handler %d\n", interface);
 
   if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
@@ -908,7 +900,6 @@ static void
 rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
             void *user_data)
 {
-  (void)user_data;
   OC_DBG("rspconf_get_handler\n");
 
   if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
@@ -924,9 +915,8 @@ rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 
 
 bool
-set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
-  (void)data;
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
@@ -971,7 +961,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   }
 
   if (res_changed && dev_cxt->ees.prov_cb) {
-    dev_cxt->ees.prov_cb((oc_ees_data_t *)&(dev_cxt->ees.data));
+    dev_cxt->ees.prov_cb((oc_ees_data_t *)&(dev_cxt->ees.data), user_data);
   }
   return true;
 }
@@ -980,7 +970,6 @@ static void
 ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
-  (void)user_data;
   OC_DBG("ees_post_handler\n");
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
     set_ees_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
@@ -994,9 +983,9 @@ ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 
 void
 get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
-                        void *data)
+                        void *user_data)
 {
-  (void)data;
+  (void)user_data;
   oc_collection_t *ees = (oc_collection_t *)resource;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(ees->device);
 
@@ -1021,8 +1010,6 @@ static void
 ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  (void)user_data;
-
   if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
     oc_rep_start_root_object();
     get_ees_properties((oc_resource_t *)request->resource, interface, user_data);
@@ -1035,7 +1022,7 @@ ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 void
-oc_create_esim_easysetup_resource(size_t device)
+oc_create_esim_easysetup_resource(size_t device, void *user_data)
 {
   OC_DBG("oc_create_esim_easysetup_resource : %d", device);
 
@@ -1072,11 +1059,11 @@ oc_create_esim_easysetup_resource(size_t device)
 
   //Enables RETRIEVEs/UPDATEs to Collection properties
   oc_resource_set_request_handler((oc_resource_t *)dev_cxt->ees.handle,
-                                OC_GET, ees_get_handler, NULL);
+                                OC_GET, ees_get_handler, user_data);
   oc_resource_set_request_handler((oc_resource_t *)dev_cxt->ees.handle,
-                                OC_POST, ees_post_handler, NULL);
-  oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->ees.handle, get_ees_properties, NULL,
-                                set_ees_properties, NULL);
+                                OC_POST, ees_post_handler, user_data);
+  oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->ees.handle, get_ees_properties, user_data,
+                                set_ees_properties, user_data);
 
   //RSP Conf Recource
   oc_core_populate_resource(

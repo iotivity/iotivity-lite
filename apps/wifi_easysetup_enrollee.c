@@ -39,8 +39,9 @@ static bool g_exit = 0;
 
 // Device 1 Callbaks
 static void
-wes_prov_cb1(oc_wes_data_t *wes_prov_data)
+wes_prov_cb1(oc_wes_data_t *wes_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("wes_prov_cb1\n");
   if (wes_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
@@ -49,8 +50,9 @@ wes_prov_cb1(oc_wes_data_t *wes_prov_data)
 }
 
 static void
-device_prov_cb1(oc_wes_device_data_t *device_prov_data)
+device_prov_cb1(oc_wes_device_data_t *device_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("device_prov_cb1\n");
   if (device_prov_data == NULL) {
       PRINT("device_prov_data is NULL\n");
@@ -60,8 +62,9 @@ device_prov_cb1(oc_wes_device_data_t *device_prov_data)
 }
 
 static void
-wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
+wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("wifi_prov_cb1 triggered\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
@@ -83,7 +86,7 @@ wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
 }
 
 static void
-free_userdata_cb1(char* resource_type, void* user_data)
+free_userdata_cb1(char *resource_type, void *user_data)
 {
     (void)resource_type;
     (void)user_data;
@@ -91,7 +94,7 @@ free_userdata_cb1(char* resource_type, void* user_data)
 }
 
 static void
-read_userdata_cb1(oc_rep_t* payload, char* resource_type,
+read_userdata_cb1(oc_rep_t *payload, char *resource_type,
 	void *user_data)
 {
     (void)resource_type;
@@ -101,7 +104,7 @@ read_userdata_cb1(oc_rep_t* payload, char* resource_type,
 }
 
 static void
-write_userdata_cb1(oc_rep_t* payload, char* resource_type, void  *user_data)
+write_userdata_cb1(oc_rep_t *payload, char *resource_type, void  *user_data)
 {
     (void)resource_type;
     (void)payload;
@@ -111,8 +114,9 @@ write_userdata_cb1(oc_rep_t* payload, char* resource_type, void  *user_data)
 
 // Device 2 Callbaks
 static void
-wes_prov_cb2(oc_wes_data_t *wes_prov_data)
+wes_prov_cb2(oc_wes_data_t *wes_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("wes_prov_cb2\n");
   if (wes_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
@@ -121,8 +125,9 @@ wes_prov_cb2(oc_wes_data_t *wes_prov_data)
 }
 
 static void
-device_prov_cb2(oc_wes_device_data_t *device_prov_data)
+device_prov_cb2(oc_wes_device_data_t *device_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("device_prov_cb2\n");
   if (device_prov_data == NULL) {
       PRINT("device_prov_data is NULL\n");
@@ -132,8 +137,9 @@ device_prov_cb2(oc_wes_device_data_t *device_prov_data)
 }
 
 static void
-wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
+wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("wifi_prov_cb2\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
@@ -154,7 +160,7 @@ wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
 }
 
 static void
-free_userdata_cb2(char* resource_type, void* user_data)
+free_userdata_cb2(char *resource_type, void *user_data)
 {
     (void)resource_type;
     (void)user_data;
@@ -162,7 +168,7 @@ free_userdata_cb2(char* resource_type, void* user_data)
 }
 
 static void
-read_userdata_cb2(oc_rep_t* payload, char* resource_type,
+read_userdata_cb2(oc_rep_t *payload, char *resource_type,
 	void *user_data)
 {
     (void)resource_type;
@@ -172,7 +178,7 @@ read_userdata_cb2(oc_rep_t* payload, char* resource_type,
 }
 
 static void
-write_userdata_cb2(oc_rep_t* payload, char* resource_type, void  *user_data)
+write_userdata_cb2(oc_rep_t *payload, char *resource_type, void  *user_data)
 {
     (void)resource_type;
     (void)payload;

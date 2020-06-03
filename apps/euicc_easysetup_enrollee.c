@@ -62,8 +62,9 @@ ees_profile_download_cb1(int status)
 }
 
 static void
-ees_prov_cb1(oc_ees_data_t *ees_prov_data)
+ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("ees_prov_cb1\n");
   if (ees_prov_data == NULL) {
       PRINT("ees_prov_data is NULL\n");
@@ -99,9 +100,9 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data)
 }
 
 static void
-rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data)
+rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
 {
-
+  (void)user_data;
   PRINT("rsp_prov_cb1\n");
   if (rsp_prov_data == NULL) {
       PRINT("rsp_prov_data is NULL\n");
@@ -123,8 +124,9 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data)
 }
 
 static void
-rspcap_prov_cb1(oc_ees_rspcap_data_t *rspcap_prov_data)
+rspcap_prov_cb1(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("rspcap_prov_cb1\n");
   if (rspcap_prov_data == NULL) {
       PRINT("rspcap_prov_data is NULL\n");
@@ -136,8 +138,9 @@ rspcap_prov_cb1(oc_ees_rspcap_data_t *rspcap_prov_data)
 }
 
 static void
-ees_wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data)
+ees_wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("ees_wifi_prov_cb1 triggered\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
@@ -208,8 +211,9 @@ ees_profile_download_cb2(int status)
 }
 
 static void
-ees_prov_cb2(oc_ees_data_t *ees_prov_data)
+ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("ees_prov_cb1\n");
   if (ees_prov_data == NULL) {
       PRINT("ees_prov_data is NULL\n");
@@ -245,8 +249,9 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data)
 }
 
 static void
-rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data)
+rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("rsp_prov_cb2\n");
   if (rsp_prov_data == NULL) {
       PRINT("rsp_prov_data is NULL\n");
@@ -266,8 +271,9 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data)
 }
 
 static void
-rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data)
+rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("rspcap_prov_cb2\n");
   if (rspcap_prov_data == NULL) {
       PRINT("rspcap_prov_data is NULL\n");
@@ -279,8 +285,9 @@ rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data)
 }
 
 static void
-ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data)
+ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
+  (void)user_data;
   PRINT("ees_wifi_prov_cb2 triggered\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
