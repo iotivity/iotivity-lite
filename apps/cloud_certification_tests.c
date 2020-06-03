@@ -340,8 +340,10 @@ cloud_send_ping(void)
 {
   PRINT("\nEnter receiving endpoint: ");
   char addr[256];
+  memset(addr, 0, sizeof(addr));
   SCANF("%255s", addr);
   char endpoint_string[267];
+  memset(endpoint_string, 0, sizeof(addr));
   sprintf(endpoint_string, "coap+tcp://%s", addr);
   oc_string_t ep_string;
   oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
