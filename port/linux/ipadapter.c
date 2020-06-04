@@ -503,6 +503,9 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
 static void
 free_endpoints_list(ip_context_t *dev)
 {
+  if (!dev) {
+    return;
+  }
   oc_endpoint_t *ep = oc_list_pop(dev->eps);
 
   while (ep != NULL) {
@@ -514,6 +517,9 @@ free_endpoints_list(ip_context_t *dev)
 static void
 refresh_endpoints_list(ip_context_t *dev)
 {
+  if (!dev) {
+    return;
+  }
   free_endpoints_list(dev);
 
   get_interface_addresses(dev, AF_INET6, dev->port, false, false);
@@ -612,8 +618,10 @@ process_interface_change_event(void)
             if (ifa->ifa_family == AF_INET) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
-                ret += add_mcast_sock_to_ipv4_mcast_group(
-                  dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+                if (dev) {
+                  ret += add_mcast_sock_to_ipv4_mcast_group(
+                    dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+                }
               }
             } else
 #endif /* OC_IPV4 */
@@ -621,8 +629,10 @@ process_interface_change_event(void)
                   ifa->ifa_scope == RT_SCOPE_LINK) {
               for (i = 0; i < num_devices; i++) {
                 ip_context_t *dev = get_ip_context_for_device(i);
-                ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
-                                                          ifa->ifa_index);
+                if (dev) {
+                  ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
+                                                            ifa->ifa_index);
+                }
               }
             }
           }
