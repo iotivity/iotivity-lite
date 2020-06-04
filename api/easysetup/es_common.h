@@ -157,18 +157,18 @@ typedef enum {
  * Easysetup defined resoruce types and uris.
  */
 #define OC_RSRVD_WES_RES_TYPE_EASYSETUP "oic.r.easysetup"
-#define OC_RSRVD_WES_URI_EASYSETUP "/EasySetupResURI"
+#define OC_RSRVD_WES_URI_EASYSETUP "/easysetup"
 #define OC_RSRVD_WES_RES_TYPE_WIFICONF "oic.r.wificonf"
-#define OC_RSRVD_WES_URI_WIFICONF "/WiFiConfResURI"
+#define OC_RSRVD_WES_URI_WIFICONF "/wificonf"
 #define OC_RSRVD_WES_RES_TYPE_DEVCONF "oic.r.devconf"
-#define OC_RSRVD_WES_URI_DEVCONF "/DevConfResURI"
+#define OC_RSRVD_WES_URI_DEVCONF "/devconf"
 
 #define OC_RSRVD_EES_RES_TYPE_ESIMEASYSETUP "oic.r.esimeasysetup"
-#define OC_RSRVD_EES_URI_ESIMEASYSETUP "/eSIMEasySetupResURI"
+#define OC_RSRVD_EES_URI_ESIMEASYSETUP "/esimeasysetup"
 #define OC_RSRVD_EES_RES_TYPE_RSPCONF "oic.r.rspconf"
-#define OC_RSRVD_EES_URI_RSPCONF "/RSPConfResURI"
+#define OC_RSRVD_EES_URI_RSPCONF "/rspconf"
 #define OC_RSRVD_EES_RES_TYPE_RSPCAP "oic.r.rspcapability"
-#define OC_RSRVD_EES_URI_RSPCAP "/RSPCapabilityResURI"
+#define OC_RSRVD_EES_URI_RSPCAP "/rspcapability"
 
 #ifdef __cplusplus
 }

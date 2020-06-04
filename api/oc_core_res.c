@@ -654,30 +654,30 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   }
 #endif /* OC_CLOUD */
 #ifdef OC_WIFI_EASYSETUP
-  else if ((strlen(uri) - skip) == 15 &&
-           memcmp(uri + skip, "EasySetupResURI", 15) == 0) {
+  else if ((strlen(uri) - skip) == 9 &&
+           memcmp(uri + skip, "easysetup", 9) == 0) {
     type = OCF_WES;
   }
-  else if ((strlen(uri) - skip) == 14 &&
-           memcmp(uri + skip, "WiFiConfResURI", 14) == 0) {
+  else if ((strlen(uri) - skip) == 8 &&
+           memcmp(uri + skip, "wificonf", 8) == 0) {
     type = OCF_WES_WIFI;
   }
-  else if ((strlen(uri) - skip) == 13 &&
-           memcmp(uri + skip, "DevConfResURI", 13) == 0) {
+  else if ((strlen(uri) - skip) == 7 &&
+           memcmp(uri + skip, "devconf", 7) == 0) {
     type = OCF_WES_DEVICE;
   }
 #endif /* OC_WIFI_EASYSETUP */
 #ifdef OC_ESIM_EASYSETUP
-  else if ((strlen(uri) - skip) == 19 &&
-           memcmp(uri + skip, "eSIMEasySetupResURI", 19) == 0) {
+  else if ((strlen(uri) - skip) == 13 &&
+           memcmp(uri + skip, "esimeasysetup", 13) == 0) {
     type = OCF_EES;
   }
-  else if ((strlen(uri) - skip) == 13 &&
-           memcmp(uri + skip, "RSPConfResURI", 13) == 0) {
+  else if ((strlen(uri) - skip) == 7 &&
+           memcmp(uri + skip, "rspconf", 7) == 0) {
     type = OCF_EES_RSP;
   }
-  else if ((strlen(uri) - skip) == 19 &&
-           memcmp(uri + skip, "RSPCapabilityResURI", 19) == 0) {
+  else if ((strlen(uri) - skip) == 13 &&
+           memcmp(uri + skip, "rspcapability", 13) == 0) {
     type = OCF_EES_RSPCAP;
   }
 #endif /* OC_ESIM_EASYSETUP */
