@@ -8,7 +8,6 @@ import org.iotivity.OCCoreRes;
 import org.iotivity.OCInterfaceMask;
 import org.iotivity.OCMain;
 import org.iotivity.OCMethod;
-import org.iotivity.OCObt;
 import org.iotivity.OCResource;
 import org.iotivity.OCStorage;
 import org.iotivity.OCUuid;
@@ -36,7 +35,6 @@ public class DummyBridgeMain {
             quit = true;
             System.out.println("Calling mainShutdown.");
             OCMain.mainShutdown();
-            OCObt.shutdown();
             scanner.close();
             mainThread.interrupt();
         }

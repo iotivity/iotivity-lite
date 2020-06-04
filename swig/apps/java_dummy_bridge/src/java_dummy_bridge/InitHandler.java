@@ -6,7 +6,7 @@ public class InitHandler implements OCMainInitHandler {
 
     @Override
     public int initialize() {
-        System.out.println("inside InitHandler.initilize()");
+        System.out.println("inside InitHandler.initialize()");
         int ret = OCMain.initPlatform("Desktop PC");
         ret |= OCBridge.addBridgeDevice("Dummy Bridge", "ocf.1.0.0", "ocf.res.1.0.0");
         return ret;
@@ -14,11 +14,11 @@ public class InitHandler implements OCMainInitHandler {
 
     @Override
     public void registerResources() {
-        System.out.println("inside ObtInitHandler.registerResources()");
+        System.out.println("inside InitHandler.registerResources()");
     }
 
     @Override
     public void requestEntry() {
-        System.out.println("inside ObtInitHandler.requestEntry()");
+        System.out.println("inside InitHandler.requestEntry()");
     }
 }

@@ -69,7 +69,7 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * Add a virtual ocf device to the the stack.
  *
  * This function is called to add a newly discovered non-ocf device to a bridge
- * device. This will typically be called in responce to the non-ocf devices
+ * device. This will typically be called in response to the non-ocf devices
  * discovery mechanism.
  *
  * The `oc_bridge_add_virtual_device()` function may be called as many times as
@@ -84,7 +84,7 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * The function `oc_bridge_add_bridge_device()` must be called before this
  * function.
  *
- * @param virtual_device_id a unique identifyer that identifies the virtual
+ * @param virtual_device_id a unique identifier that identifies the virtual
  *                          device this could be a UUID, serial number or other
  *                          means of uniquely identifying the device
  * @param virtual_device_id_size size in bytes of the virtual_device_id param
@@ -159,7 +159,7 @@ int oc_bridge_delete_virtual_device(size_t device_index);
 /**
  * Get the logical device index for the virtual device
  *
- * @param virtual_device_id a unique identifyer that identifies the virtual
+ * @param virtual_device_id a unique identifier that identifies the virtual
  *                          device this could be a UUID, serial number or other
  *                          means of uniquely identifying the device
  * @param virtual_device_id_size size in bytes of the virtual_device_id param

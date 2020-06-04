@@ -19,7 +19,7 @@ public class SwitchGetHandler implements OCRequestHandler {
     @Override
     public void handler(OCRequest request, int interfaces) {
         System.out.println("GET LIGHT:");
-        OCStatus responce = OCStatus.OC_STATUS_OK;
+        OCStatus response = OCStatus.OC_STATUS_OK;
         CborEncoder root = OCRep.beginRootObject();
         switch (interfaces) {
         case OCInterfaceMask.BASELINE: {
@@ -32,11 +32,11 @@ public class SwitchGetHandler implements OCRequestHandler {
             break;
         }
         default:
-            responce = OCStatus.OC_STATUS_BAD_REQUEST;
+            response = OCStatus.OC_STATUS_BAD_REQUEST;
             break;
         }
         OCRep.endRootObject();
-        OCMain.sendResponse(request, responce);
+        OCMain.sendResponse(request, response);
     }
     
     private VirtualLight light;

@@ -133,7 +133,7 @@ $2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input);
    * Add a virtual ocf device to the the stack.
    * <p>
    * This function is called to add a newly discovered non-ocf device to a bridge
-   * device. This will typically be called in responce to the non-ocf devices
+   * device. This will typically be called in response to the non-ocf devices
    * discovery mechanism.
    * <p>
    * The <tt>OCBridge.addVirtualDevice()</tt> function may be called as many
@@ -148,7 +148,7 @@ $2 = (size_t)    JCALL1(GetArrayLength,       jenv, $input);
    * The function `OCBridge.addBridgeDevice()` must be called before this
    * function.
    *
-   * @param virtual_device_id a unique identifyer that identifies the virtual
+   * @param virtual_device_id a unique identifier that identifies the virtual
    *                          device this could be a UUID, serial number or other
    *                          means of uniquely identifying the device
    * @param econame ecosystem name of the bridged device which is exposed by this
@@ -188,7 +188,7 @@ size_t jni_bridge_add_virtual_device(
    * Add a virtual ocf device to the the stack.
    * <p>
    * This function is called to add a newly discovered non-ocf device to a bridge
-   * device. This will typically be called in responce to the non-ocf devices
+   * device. This will typically be called in response to the non-ocf devices
    * discovery mechanism.
    * <p>
    * The <tt>OCBridge.addVirtualDevice()</tt> function may be called as many
@@ -203,7 +203,7 @@ size_t jni_bridge_add_virtual_device(
    * The function `OCBridge.addBridgeDevice()` must be called before this
    * function.
    *
-   * @param virtual_device_id a unique identifyer that identifies the virtual
+   * @param virtual_device_id a unique identifier that identifies the virtual
    *                          device this could be a UUID, serial number or other
    *                          means of uniquely identifying the device
    * @param econame ecosystem name of the bridged device which is exposed by this
@@ -285,7 +285,7 @@ size_t jni_bridge_add_virtual_device1(
 %javamethodmodifiers oc_bridge_get_virtual_device_index "/**
    * Get the logical device index for the virtual device
    * <p>
-   * @param virtual_device_id a unique identifyer that identifies the virtual
+   * @param virtual_device_id a unique identifier that identifies the virtual
    *                          device this could be a UUID, serial number or other
    *                          means of uniquely identifying the device
    * @param econame ecosystem name of the bridged virtual device
