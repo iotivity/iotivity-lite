@@ -5,6 +5,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.iotivity.*;
 
+/**
+ * OcCollection is a collection of a device.
+ * <p>
+ * Collections are typically added to a device in the registerResources() method of the platform's initialize handler.
+ *
+ * @see OcPlatform#systemInit
+ * @see OcDevice#addCollection
+ * @see OCMainInitHandler#registerResources
+ * @see OcLink
+ */
 public class OcCollection extends OcResource {
 
     private Map<OcLink, OCLink> linkLookup = new ConcurrentHashMap<>();
@@ -12,6 +22,16 @@ public class OcCollection extends OcResource {
     private String[] supportedRts;
     private String[] mandatoryRts;
 
+    /**
+     * Constructs an OcCollection.
+     * <p>
+     * @param device  the device owning this collection
+     * @param name  the name of this collection
+     * @param uri  the uri of this collection
+     * @param rts  array of the resource types
+     * @param sRts  array of the supported resource types
+     * @param mRts  array of the mandatory resource types
+     */
     public OcCollection(OcDevice device, String name, String uri, String[] rts, String[] sRts, String[] mRts) {
         super();
         if (device == null) {

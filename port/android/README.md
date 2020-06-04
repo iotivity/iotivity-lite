@@ -81,7 +81,10 @@ The Makefile uses then the Android NDK that was installed above.
 
 Either set ANDROID_API and ANDROID_BASE in the Makefile or invoke like this:
 
-    make NDK_HOME=/opt/android-ndk ANDROID_API=23
+    make NDK_HOME=~/android-arm-23 ANDROID_API=23 ANDROID_ABI=armeabi
+
+ANDROID_ABI can be x86_64, arm64_v8a, armeabi
+Make sure to match the toolchain path with the ANDROID_ABI.
 
 Example Usage:
 
@@ -89,7 +92,7 @@ Example Usage:
 
 or
 
-    make NDK_HOME=~/android-arm-23 ANDROID_API=23 IPV4=1 DEBUG=1
+    make NDK_HOME=~/android-x86_64-27 ANDROID_API=27 ANDROID_ABI=x86_64 IPV4=1 DEBUG=1
 
 The Make file will build and copy the library files (*.so and *.jar) into the
 provided samples.

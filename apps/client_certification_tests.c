@@ -16,6 +16,7 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_swupdate.h"
 #include "port/oc_clock.h"
 #include "oc_pki.h"
 #include "oc_introspection.h"
@@ -23,6 +24,8 @@
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
+
+static const size_t DEVICE = 0;
 
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
@@ -123,10 +126,58 @@ display_menu(void)
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[10] Exit\n");
+#ifdef OC_CLOUD
+  PRINT("[20] Send ping message\n");
+  PRINT("-----------------------------------------------\n");
+#endif /* OC_CLOUD */
+  PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
+
+#ifdef OC_SOFTWARE_UPDATE
+int
+validate_purl(const char *purl)
+{
+  (void) purl;
+  return 0;
+}
+
+int
+check_new_version(size_t device, const char *url, const char *version)
+{
+  if (!url) {
+    oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
+    return -1;
+  }
+  PRINT("Package url %s\n", url);
+  if (version) {
+    PRINT("Package version: %s\n", version);
+  }
+  oc_swupdate_notify_new_version_available(device, "2.0",
+                                           OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+
+int
+download_update(size_t device, const char *url)
+{
+  (void)url;
+  oc_swupdate_notify_downloaded(device, "2.0", OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+
+int
+perform_upgrade(size_t device, const char *url)
+{
+  (void)url;
+  oc_swupdate_notify_upgrading(device, "2.0", oc_clock_time(),
+                               OC_SWUPDATE_RESULT_SUCCESS);
+
+  oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_SUCCESS);
+  return 0;
+}
+#endif /* OC_SOFTWARE_UPDATE */
 
 static void
 show_discovered_resources(resource_t **res)
@@ -224,6 +275,42 @@ GET_handler(oc_client_response_t *data)
 
   display_menu();
 }
+
+#ifdef OC_CLOUD
+static void
+ping_handler(oc_client_response_t *data)
+{
+  (void)data;
+  PRINT("\nReceived Pong\n");
+}
+
+static void
+cloud_send_ping(void)
+{
+  PRINT("\nEnter receiving endpoint: ");
+  char addr[256];
+  SCANF("%255s", addr);
+  char endpoint_string[267];
+  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  oc_string_t ep_string;
+  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_endpoint_t endpoint;
+  int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
+  oc_free_string(&ep_string);
+  if (ret < 0) {
+    PRINT("\nERROR parsing endpoint string\n");
+    return;
+  }
+  pthread_mutex_lock(&app_sync_lock);
+  if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
+    PRINT("\nSuccessfully issued Ping request\n");
+  } else {
+    PRINT("\nERROR issuing Ping request\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+#endif /* OC_CLOUD */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -456,14 +543,14 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
   size_t cert_len = 8192;
-  if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_ee.pem", cert, &cert_len) < 0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
-  if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_key.pem", key, &key_len) < 0) {
     PRINT("ERROR: unable to read private key");
     return;
   }
@@ -477,7 +564,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_subca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -491,7 +579,8 @@ factory_presets_cb(size_t device, void *data)
   }
 
   cert_len = 8192;
-  if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
+  if (read_pem("pki_certs/certification_tests_rootca1.pem", cert, &cert_len) <
+      0) {
     PRINT("ERROR: unable to read certificates\n");
     return;
   }
@@ -503,7 +592,9 @@ factory_presets_cb(size_t device, void *data)
     return;
   }
 
-  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+  oc_pki_set_security_profile(
+    0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE, OC_SP_BASELINE,
+    ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 
@@ -531,6 +622,7 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
+  oc_set_con_res_announced(true);
 #ifdef OC_STORAGE
   oc_storage_config("./client_certification_tests_creds");
 #endif /* OC_STORAGE */
@@ -538,6 +630,15 @@ main(void)
 #ifdef OC_SECURITY
   oc_set_random_pin_callback(random_pin_cb, NULL);
 #endif
+#ifdef OC_SOFTWARE_UPDATE
+  static oc_swupdate_cb_t swupdate_impl;
+  swupdate_impl.validate_purl = validate_purl;
+  swupdate_impl.check_new_version = check_new_version;
+  swupdate_impl.download_update = download_update;
+  swupdate_impl.perform_upgrade = perform_upgrade;
+  oc_swupdate_set_impl(&swupdate_impl);
+#endif /* OC_SOFTWARE_UPDATE */
+
   oc_set_max_app_data_size(32768);
   init = oc_main_init(&handler);
   if (init < 0)
@@ -546,6 +647,9 @@ main(void)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
     return -1;
   }
+
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
+  oc_resource_set_observable(con_resource, false);
 
   display_device_uuid();
 
@@ -584,7 +688,12 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
-    case 10:
+#ifdef OC_CLOUD
+    case 20:
+      cloud_send_ping();
+      break;
+#endif /* OC_CLOUD */
+    case 99:
       handle_signal(0);
       break;
     default:

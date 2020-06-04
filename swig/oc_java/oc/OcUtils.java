@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.iotivity.*;
 
+/**
+ * OcUtils is a collection of useful static methods.
+ */
 public class OcUtils {
 
     // never instantiated
@@ -138,6 +141,14 @@ public class OcUtils {
         OCMain.freeServerEndpoints(endpoint);
     }
 
+    /**
+     * Discovers all devices.
+     *
+     * @param deviceDiscoveryHandler  the callback interface
+     * @return true if the discovery request is successful, false otherwise
+     *
+     * @see OcDeviceDiscoveryHandler#discoveredDevice
+     */
     public static boolean discoverAllDevices(OcDeviceDiscoveryHandler deviceDiscoveryHandler) {
         return OcUtils.doIPMulticast("/oic/d", null, new OcGetRemoteDeviceHandler(deviceDiscoveryHandler));
     }

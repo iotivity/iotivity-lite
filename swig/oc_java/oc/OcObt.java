@@ -2,12 +2,23 @@ package org.iotivity.oc;
 
 import org.iotivity.*;
 
+/**
+ * OcObt provides access to all the methods necessary for an On Boarding Tool.
+ */
 public class OcObt {
 
+    /**
+     * Creates and initializes an on boarding tool instance.
+     */
     public OcObt() {
         OCObt.init();
     }
 
+    /**
+     * Ends the lifetime of an on boarding tool instance.
+     * <p>
+     * Once shutdown() is called, this OcObt instance should not be used again.
+     */
     public void shutdown() {
         OCObt.shutdown();
     }
