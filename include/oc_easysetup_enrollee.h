@@ -444,22 +444,31 @@ typedef struct
 
 /**
  * A function pointer for registering wifi easysetup callback
+ *
  * @param payload Represents the data written to wes resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_wes_data_t
  */
 typedef void (*oc_wes_prov_cb_t)(oc_wes_data_t *wes_prov_data, void *user_data);
 
 /**
  * A function pointer for registering wifi callback
+ *
  * @param payload Represents the data written to wifi conf resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_wes_wifi_data_t
  */
 typedef void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *wifi_prov_data,  void *user_data);
 
 /**
  * A function pointer for registering device callback
+ *
  * @param payload Represents the data written to device conf resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_wes_device_data_t
  */
 typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data,  void *user_data);
 
@@ -470,11 +479,8 @@ typedef void (*oc_wes_dev_prov_cb_t)(oc_wes_device_data_t *device_prov_data,  vo
  * resources are populated.
  *
  * @param device	Index of the the device application created
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
+ * @param user_data User-specific data you want to deliver to application
  * The user should know a data structure of passed userdata.
- * @return ::OC_WES_OK on success, some other value upon failure.
  */
 void oc_create_wifi_easysetup_resource(size_t device, void *user_data);
 
@@ -483,28 +489,23 @@ void oc_create_wifi_easysetup_resource(size_t device, void *user_data);
  * populated for device
  *
  * @param device	Index of the the device application created
- *
- * @return ::void
  */
 void oc_delete_wifi_easysetup_resource(size_t device);
 
 /**
- * This function is to set two function pointer to handle user-specific
- * properties in in-comming
- * POST request and to out-going response for GET or POST request.
- * If you register certain functions with this API, you have to handle oc_rep_t
- * structure to
- * set and get properties you want.
+ * This function is to set three function pointers to handle updates on
+ * WiFi Easysetup resources
  *
- * @param readcb a callback for parsing properties from POST request
- * @param writecb a callback for putting properties to a response to be sent
- * @param free_cb callback to free allocated memory of user data in
- * oc_wes_wifi_data_t, oc_wes_device_data_t.
+ * @param device	Index of the the device application created
+ * @param wes_prov_cb a callback for passing wes resource data and user context
+ * @param wifi_prov_cb a callback for passing wificonf resource data and user context
+ * @param dev_prov_cb callback for passing deviceconf resource data and user context
  *
- * @return ::OC_WES_OK on success, some other value upon failure.
+ * @return ::OC_ES_OK on success, some other value upon failure.
  *
- * @see oc_es_read_userdata_cb_t
- * @see oc_es_write_userdata_cb_t
+ * @see oc_wes_prov_cb_t
+ * @see oc_wes_wifi_prov_cb_t
+ * @see oc_wes_dev_prov_cb_t
  */
 oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
 	oc_wes_wifi_prov_cb_t wifi_prov_cb, oc_wes_dev_prov_cb_t dev_prov_cb);
@@ -512,12 +513,15 @@ oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes
 /**
  * This function sets Device information.
  *
- * @param device_info Contains device information composed of WiFiConf
- * Structure & Device Structure
+ * @param device	Index of the the device application created
+ * @param supported_mode[] indicates supported wifi models
+ * @param supported_freq indicates supported wifi frequencies
+ * @param device_name indicates name of the device
  *
- * @return ::OC_WES_OK on success, some other value upon failure.
+ * @return ::OC_ES_OK on success, some other value upon failure.
  *
- * @see oc_wes_device_info_t
+ * @see wifi_mode
+ * @see wifi_freq
  */
 oc_es_result_t oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
 						wifi_freq supported_freq, char *device_name);
@@ -525,8 +529,10 @@ oc_es_result_t oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
 /**
  * This function Sets Enrollee's Error Code.
  *
- * @param wes_err_code Contains Enrollee's error code.
- * @return ::OC_WES_OK on success, some other value upon failure.
+ * @param device	Index of the the device application created
+ * @param err_code Contains Enrollee's error code.
+ *
+ * @return ::OC_ES_OK on success, some other value upon failure.
  *
  * @see oc_wes_error_code_t
  */
@@ -535,8 +541,10 @@ oc_es_result_t oc_wes_set_error_code(size_t device, oc_wes_error_code_t err_code
 /**
  * This function sets WiFi Enrollee's State.
  *
+ * @param device	Index of the the device application created
  * @param es_state   Contains current enrollee's state.
- * @return ::OC_WES_OK on success, some other value upon failure.
+ *
+ * @return ::OC_ES_OK on success, some other value upon failure.
  *
  * @see oc_wes_enrollee_state_t
  */
@@ -545,7 +553,9 @@ oc_es_result_t oc_wes_set_state(size_t device, oc_wes_enrollee_state_t es_state)
 /**
  * This function gets WiFi Enrollee's State.
  *
- * @return ::oc_wes_enrollee_state_t
+ * @param device	Index of the the device application created
+ *
+ * @return wifi enrolee onboarding status
  *
  * @see oc_wes_enrollee_state_t
  */
@@ -553,22 +563,31 @@ oc_wes_enrollee_state_t oc_wes_get_state(size_t device);
 
 /**
  * A function pointer for registering esim easysetup callback
+ *
  * @param payload Represents the data written to ees resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_ees_data_t
  */
 typedef void (*oc_ees_prov_cb_t)(oc_ees_data_t *ees_prov_data, void *user_data);
 
 /**
  * A function pointer for registering rsp callback
+ *
  * @param payload Represents the data written to rsp conf resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_ees_rsp_data_t
  */
 typedef void (*oc_ees_rsp_prov_cb_t)(oc_ees_rsp_data_t *rsp_prov_data, void *user_data);
 
 /**
  * A function pointer for registering rsp capability callback
- * @param payload Represents the data written to rspcap conf resource
+ *
+ * @param payload Represents the data written to rspcapability resource
  * @param user_data User-specific data free up it's memory.
+ *
+ * @see oc_ees_rspcap_data_t
  */
 typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data);
 
@@ -579,11 +598,8 @@ typedef void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *rspcap_prov_data, 
  * resources are populated.
  *
  * @param device	Index of the the device application created
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
+ * @param user_data User-specific data you want to deliver to applicatoin
  * The user should know a data structure of passed userdata.
- * @return ::OC_EES_OK on success, some other value upon failure.
  */
 void oc_create_esim_easysetup_resource(size_t device, void *user_data);
 
@@ -592,28 +608,23 @@ void oc_create_esim_easysetup_resource(size_t device, void *user_data);
  * populated for device
  *
  * @param device	Index of the the device application created
- *
- * @return ::void
  */
 void oc_delete_esim_easysetup_resource(size_t device);
 
 /**
- * This function is to set two function pointer to handle user-specific
- * properties in in-comming
- * POST request and to out-going response for GET or POST request.
- * If you register certain functions with this API, you have to handle oc_rep_t
- * structure to
- * set and get properties you want.
+ * This function is to set three function pointers to handle updates on
+ * eSIM Easysetup resources
  *
- * @param readcb a callback for parsing properties from POST request
- * @param writecb a callback for putting properties to a response to be sent
- * @param free_userdata callback to free allocated memory of user data in
- * oc_wes_data_t, oc_wes_wifi_data_t, oc_wes_device_data_t.
+ * @param device	Index of the the device application created
+ * @param ees_prov_cb a callback for passing ees resource data and user context
+ * @param rsp_prov_cb a callback for passing rspconf resource data and user context
+ * @param rspcap_prov_cb callback for passing rspcapability resource data and user context
  *
- * @return ::OC_EES_OK on success, some other value upon failure.
+ * @return ::OC_ES_OK on success, some other value upon failure.
  *
- * @see oc_es_read_userdata_cb_t
- * @see oc_es_write_userdata_cb_t
+ * @see oc_ees_prov_cb_t
+ * @see oc_ees_rsp_prov_cb_t
+ * @see oc_ees_rspcap_prov_cb_t
  */
  oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees_prov_cb,
 	oc_ees_rsp_prov_cb_t rsp_prov_cb, oc_ees_rspcap_prov_cb_t rspcap_prov_cb);
@@ -621,41 +632,41 @@ void oc_delete_esim_easysetup_resource(size_t device);
 /**
  * This function sets Device information.
  *
+ * @param device	Index of the the device application created
+ * @param euicc_info contains eSIM information as per GSMA EUICCInfo2 data structure
  * @param device_info Contains device information composed of
  * RspCapabilityConf Structure
  *
- * @return ::OC_EES_OK on success, some other value upon failure.
- *
- * @see oc_wes_device_info_t
+ * @return ::OC_ES_OK on success, some other value upon failure.
  */
 oc_es_result_t oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info);
 
 /**
  * This function Sets Enrollee's Error Code.
  *
- * @param ees_err_code Contains Enrollee's error code.
- * @return ::OC_EES_OK on success, some other value upon failure.
+ * @param device	Index of the the device application created
+ * @param err_code Contains Enrollee's error code.
  *
- * @see oc_ees_error_code_t
+ * @return ::OC_ES_OK on success, some other value upon failure.
  */
 oc_es_result_t oc_ees_set_error_code(size_t device, char *err_code);
 
 /**
  * This function sets Esim Enrollee's State.
  *
- * @param es_state   Contains current enrollee's state.
- * @return ::OC_EES_OK on success, some other value upon failure.
+ * @param device	Index of the the device application created
+ * @param es_state  Contains current enrollee's state.
  *
- * @see oc_ees_enrollee_state
+ * @return ::OC_ES_OK on success, some other value upon failure.
  */
 oc_es_result_t oc_ees_set_state(size_t device, char *es_state);
 
 /**
  * This function gets Esim Enrollee's State.
  *
- * @return ::oc_ees_enrollee_state
+ * @param device	Index of the the device application created
  *
- * @see oc_ees_enrollee_state
+ * @return :: string representing esim enrollee status
  */
 oc_string_t oc_ees_get_state(size_t device);
 
