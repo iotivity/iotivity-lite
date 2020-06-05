@@ -26,8 +26,9 @@ public class OcDevice {
     private String name;
     private String specVersion;
     private String dataModelVersion;
+    private OCAddDeviceHandler addDeviceCallback;
 
-    private int deviceIndex; // set by platform in addDevice()
+    private int deviceIndex; // set by platform in addDevice(), or set by bridge in addVirtualDevice()
 
     /**
      * Constructs an OcDevice.
@@ -39,11 +40,26 @@ public class OcDevice {
      * @param dataModelVersion  the data model version of the device
      */
     public OcDevice(String uri, String rt, String name, String specVersion, String dataModelVersion) {
+        this(uri, rt, name, specVersion, dataModelVersion, null);
+    }
+
+    /**
+     * Constructs an OcDevice.
+     * <p>
+     * @param uri  the uri of the device
+     * @param rt  the resource type of the device
+     * @param name  the name of the device
+     * @param specVersion  the spec version of the device
+     * @param dataModelVersion  the data model version of the device
+     * @param addDeviceCallback  the callback invoked after the device is added to the platform
+     */
+    public OcDevice(String uri, String rt, String name, String specVersion, String dataModelVersion, OCAddDeviceHandler addDeviceCallback) {
         this.uri = (uri != null) ? uri : "";
         this.rt = (rt != null) ? rt : "";
         this.name = (name != null) ? name : "";
         this.specVersion = (specVersion != null) ? specVersion : "";
         this.dataModelVersion = (dataModelVersion != null) ? dataModelVersion : "";
+        this.addDeviceCallback = addDeviceCallback;
     }
 
     /**
@@ -89,6 +105,15 @@ public class OcDevice {
      */
     public String getDataModelVersion() {
         return dataModelVersion;
+    }
+
+    /**
+     * Returns the add device callback of this device.
+     * <p>
+     * @return add device callback
+     */
+    public OCAddDeviceHandler getAddDeviceCallback() {
+        return addDeviceCallback;
     }
 
     /**

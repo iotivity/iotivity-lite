@@ -223,7 +223,11 @@ public class DummyBridge {
 
         InitHandler initHandler = new InitHandler(platform);
         platform.systemInit(initHandler);
-        bridge = new OcBridge("Dummy Bridge", "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0");
+        bridge = new OcBridge("Dummy Bridge", "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0", new OCAddDeviceHandler() {
+            public void handler() {
+                System.out.println("inside OcBridge.OCAddDeviceHandler.handler()");
+            }
+        });
 
         while (!quit) {
             displayMenu();

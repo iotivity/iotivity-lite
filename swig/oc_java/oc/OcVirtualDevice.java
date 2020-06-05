@@ -25,7 +25,23 @@ public class OcVirtualDevice extends OcDevice {
      * @param dataModelVersion  the data model version of the virtual device
      */
     public OcVirtualDevice(byte[] virtualDeviceId, String ecoSystemName, String uri, String rt, String name, String specVersion, String dataModelVersion) {
-        super(uri, rt, name, specVersion, dataModelVersion);
+        this(virtualDeviceId, ecoSystemName, uri, rt, name, specVersion, dataModelVersion, null);
+    }
+
+    /**
+     * Constructs an OcVirtualDevice.
+     * <p>
+     * @param virtualDeviceId  the virtual device id of the virtual device
+     * @param ecoSystemName  the eco system name of the virtual device
+     * @param uri  the uri of the virtual device
+     * @param rt  the resource type of the virtual device
+     * @param name  the name of the virtual device
+     * @param specVersion  the spec version of the virtual device
+     * @param dataModelVersion  the data model version of the virtual device
+     * @param addDeviceCallback  the callback invoked after the virtual device is added to the bridge
+     */
+    public OcVirtualDevice(byte[] virtualDeviceId, String ecoSystemName, String uri, String rt, String name, String specVersion, String dataModelVersion, OCAddDeviceHandler addDeviceCallback) {
+        super(uri, rt, name, specVersion, dataModelVersion, addDeviceCallback);
         this.virtualDeviceId = virtualDeviceId;
         this.ecoSystemName = ecoSystemName;
     }

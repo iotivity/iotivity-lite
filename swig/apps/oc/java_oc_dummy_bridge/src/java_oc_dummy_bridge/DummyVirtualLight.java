@@ -12,7 +12,11 @@ public class DummyVirtualLight extends OcVirtualDevice {
     public DummyVirtualLight(String deviceName, String uuid, String ecoSystem,
             boolean on, boolean discovered, boolean addedToBridge) {
         super(uuid.getBytes(), ecoSystem, "/oic/d", "oic.d.light", deviceName,
-                "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0");
+                "ocf.2.0.0", "ocf.res.1.0.0,ocf.sh.1.0.0", new OCAddDeviceHandler() {
+                    public void handler() {
+                        System.out.println("inside DummyVirtualLight.OCAddDeviceHandler.handler()");
+                    }
+                });
         this.uuid = uuid;
         setImmutableDeviceId(OCUuidUtil.stringToUuid(uuid));
         setOn(on);

@@ -24,10 +24,22 @@ public class OcBridge {
      * @param dataModelVersion  the data model version of the bridge
      */
     public OcBridge(String name, String specVersion, String dataModelVersion) {
+        this(name, specVersion, dataModelVersion, null);
+    }
+
+    /**
+     * Constructs an OcBridge.
+     * <p>
+     * @param name  the name of the bridge
+     * @param specVersion  the spec version of the bridge
+     * @param dataModelVersion  the data model version of the bridge
+     * @param bridgeCallback  the callback invoked after the bridge is created
+     */
+    public OcBridge(String name, String specVersion, String dataModelVersion, OCAddDeviceHandler bridgeCallback) {
         this.name = (name != null) ? name : "";
         this.specVersion = (specVersion != null) ? specVersion : "";
         this.dataModelVersion = (dataModelVersion != null) ? dataModelVersion : "";
-        int ret = OCBridge.addBridgeDevice(this.name, this.specVersion, this.dataModelVersion);
+        int ret = OCBridge.addBridgeDevice(this.name, this.specVersion, this.dataModelVersion, bridgeCallback);
         if (ret < 0) {
             System.err.println("Error in OCBridge.addBridgeDevice() in OcBridge.ctor()");
         }
@@ -75,7 +87,7 @@ public class OcBridge {
 
             ret = (int) OCBridge.addVirtualDevice(virtualDevice.getVirtualDeviceId(), virtualDevice.getEcoSystemName(),
                     virtualDevice.getUri(), virtualDevice.getRt(), virtualDevice.getName(),
-                    virtualDevice.getSpecVersion(), virtualDevice.getDataModelVersion());
+                    virtualDevice.getSpecVersion(), virtualDevice.getDataModelVersion(), virtualDevice.getAddDeviceCallback());
 
             if (ret > 0) {
                 // tell the device its index
