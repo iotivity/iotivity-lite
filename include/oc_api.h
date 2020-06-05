@@ -1305,6 +1305,10 @@ void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
 bool oc_get_response_payload_raw(oc_client_response_t *response,
                                  const uint8_t **payload, size_t *size,
                                  oc_content_format_t *content_format);
+void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
+                                size_t msg_len, oc_status_t response_code);
+bool oc_get_diagnostic_message(oc_client_response_t *response, const char **msg,
+                               size_t *size);
 
 /**
  * Ignore the request

@@ -202,6 +202,14 @@ oc_send_response_raw(oc_request_t *request, const uint8_t *payload, size_t size,
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
+void
+oc_send_diagnostic_message(oc_request_t *request, const char *msg,
+                           size_t msg_len, oc_status_t response_code)
+{
+  oc_send_response_raw(request, (const uint8_t *)msg, msg_len, TEXT_PLAIN,
+                       response_code);
+}
+
 static void
 oc_populate_resource_object(oc_resource_t *resource, const char *name,
                             const char *uri, uint8_t num_resource_types,
