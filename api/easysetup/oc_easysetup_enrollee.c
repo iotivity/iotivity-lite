@@ -54,9 +54,6 @@ typedef struct
   oc_wes_resource_t wes;
   oc_wes_wifi_conf_resource_t wifi;
   oc_wes_dev_conf_resource_t device;
-  oc_es_read_userdata_cb_t read_cb;
-  oc_es_write_userdata_cb_t write_cb;
-  oc_es_free_userdata_cb_t free_cb;
 } oc_wifi_enrollee_t;
 
 // Global WiFi Enrolee Instance
@@ -124,7 +121,8 @@ oc_wes_get_state(size_t device)
   return dev_cxt->wes.data.state;
 }
 
-oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
+oc_es_result_t
+oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
 	oc_wes_wifi_prov_cb_t wifi_prov_cb, oc_wes_dev_prov_cb_t dev_prov_cb)
 {
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
@@ -133,19 +131,6 @@ oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes
   dev_cxt->wes.prov_cb = wes_prov_cb;
   dev_cxt->wifi.prov_cb = wifi_prov_cb;
   dev_cxt->device.prov_cb = dev_prov_cb;
-
-  return OC_ES_OK;
-}
-
-oc_es_result_t oc_wes_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
-	oc_es_write_userdata_cb_t writecb, oc_es_free_userdata_cb_t freecb)
-{
-  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
-  OC_DBG("oc_wes_set_userdata_callbacks\n");
-
-  dev_cxt->read_cb = readcb;
-  dev_cxt->write_cb = writecb;
-  dev_cxt->free_cb = freecb;
 
   return OC_ES_OK;
 }
@@ -644,9 +629,6 @@ typedef struct
   oc_ees_resource_t ees;
   oc_ees_rsp_conf_resource_t rsp;
   oc_ees_rspcap_conf_resource_t rsp_cap;
-  oc_es_read_userdata_cb_t read_cb;
-  oc_es_write_userdata_cb_t write_cb;
-  oc_es_free_userdata_cb_t free_cb;
 } oc_esim_enrollee_t;
 
 // Global eSIM Enrolee Instance
@@ -698,7 +680,8 @@ oc_ees_get_state(size_t device)
   return dev_cxt->ees.data.rsp_status;
 }
 
-oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees_prov_cb,
+oc_es_result_t
+oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees_prov_cb,
 	oc_ees_rsp_prov_cb_t rsp_prov_cb, oc_ees_rspcap_prov_cb_t rspcap_prov_cb)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
@@ -709,19 +692,6 @@ oc_es_result_t oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees
 
   return OC_ES_OK;
 }
-
-oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
-	oc_es_write_userdata_cb_t writecb, oc_es_free_userdata_cb_t freecb)
-{
-  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
-
-  dev_cxt->read_cb = readcb;
-  dev_cxt->write_cb = writecb;
-  dev_cxt->free_cb = freecb;
-
-  return OC_ES_OK;
-}
-
 
 static void
 set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)

@@ -85,33 +85,6 @@ wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
   wifi_start_dhcp_client();
 }
 
-static void
-free_userdata_cb1(char *resource_type, void *user_data)
-{
-    (void)resource_type;
-    (void)user_data;
-    PRINT("free_userdata_cb1");
-}
-
-static void
-read_userdata_cb1(oc_rep_t *payload, char *resource_type,
-	void *user_data)
-{
-    (void)resource_type;
-    (void)payload;
-    (void)user_data;
-    PRINT("read_userdata_cb1");
-}
-
-static void
-write_userdata_cb1(oc_rep_t *payload, char *resource_type, void  *user_data)
-{
-    (void)resource_type;
-    (void)payload;
-    (void)user_data;
-    PRINT("write_userdata_cb1");
-}
-
 // Device 2 Callbaks
 static void
 wes_prov_cb2(oc_wes_data_t *wes_prov_data, void *user_data)
@@ -159,33 +132,6 @@ wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
   wifi_start_dhcp_client();
 }
 
-static void
-free_userdata_cb2(char *resource_type, void *user_data)
-{
-    (void)resource_type;
-    (void)user_data;
-    PRINT("free_userdata_cb2");
-}
-
-static void
-read_userdata_cb2(oc_rep_t *payload, char *resource_type,
-	void *user_data)
-{
-    (void)resource_type;
-    (void)payload;
-    (void)user_data;
-    PRINT("read_userdata_cb2");
-}
-
-static void
-write_userdata_cb2(oc_rep_t *payload, char *resource_type, void  *user_data)
-{
-    (void)resource_type;
-    (void)payload;
-    (void)user_data;
-    PRINT("write_userdata_cb2");
-}
-
 // resource proisining callbacks for 2 devices
 wes_device_callbacks_s g_rsc_cbks[] = {
   {
@@ -200,22 +146,11 @@ wes_device_callbacks_s g_rsc_cbks[] = {
   }
 };
 
-// vendor specific callbacks for 2 devices
-es_userdata_callbacks_s g_ud_cbks[] = {
-  {
-    .oc_es_write_userdata_cb_t = &write_userdata_cb1,
-    .oc_es_read_userdata_cb_t = &read_userdata_cb1,
-    .oc_es_free_userdata_cb_t = &free_userdata_cb1
-  },
-  {
-    .oc_es_write_userdata_cb_t = &write_userdata_cb2,
-    .oc_es_read_userdata_cb_t = &read_userdata_cb2,
-    .oc_es_free_userdata_cb_t = &free_userdata_cb2
-  }
-};
 static int
 app_init(void)
 {
+  void *user_data = NULL;
+
   int err = oc_init_platform("Samsung", NULL, NULL);
   if(err) {
     PRINT("oc_init_platform error %d\n", err);
@@ -223,15 +158,17 @@ app_init(void)
   }
 
   // oc_create_wifi_easysetup_resource will be called by IoT Core
+  // user_data passed here will be retunred in resource callbacks,
+  // application shall allocate and free the memory for user_data
   err = oc_add_device("/oic/d", "oic.d.binaryswitch", "Binary Switch", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+                       "ocf.res.1.0.0", NULL, user_data);
   if(err) {
     PRINT("Add oic.d.binaryswitch device error %d\n", err);
     return err;
   }
 /*
   err = oc_add_device("/oic/d", "oic.d.voiceassistant", "Voice Assistant", "ocf.1.0.0",
-                       "ocf.res.1.0.0", NULL, NULL);
+                       "ocf.res.1.0.0", NULL, user_data);
   if(err) {
     PRINT("Add oic.d.voiceassistant device error %d\n", err);
     return err;
@@ -262,10 +199,6 @@ register_resources(void)
     // Set callbacks for Resource operations
     oc_wes_set_resource_callbacks(dev_index, g_rsc_cbks[dev_index].oc_wes_prov_cb_t,
           g_rsc_cbks[dev_index].oc_wes_wifi_prov_cb_t, g_rsc_cbks[dev_index].oc_wes_dev_prov_cb_t);
-
-    // Set callbacks for Vendor Specific Properties
-    oc_ees_set_userdata_callbacks(dev_index, g_ud_cbks[dev_index].oc_es_read_userdata_cb_t,
-          g_ud_cbks[dev_index].oc_es_write_userdata_cb_t, g_ud_cbks[dev_index].oc_es_free_userdata_cb_t);
 
     // Set Device Info
      if (oc_wes_set_device_info(dev_index, supported_mode,supported_freq, device_name) == OC_ES_ERROR)

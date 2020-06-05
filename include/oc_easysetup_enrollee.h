@@ -443,52 +443,6 @@ typedef struct
 } oc_ees_rspcap_data_t;
 
 /**
- * A function pointer for registering a user-defined function to set
- * user-specific properties to a
- * response going back to a client.
- * @param payload Represents a response. You can set a specific value with
- * specific property key
- * to the payload. If a client receives the response and know the property key,
- * then it can
- * extract the value.
- * @param resource_type Used to distinguish which resource the received property
- * belongs to.
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
- * The user should know a data structure of passed userdata.
- */
-typedef void (*oc_es_write_userdata_cb_t)(oc_rep_t *payload, char *resource_type,
-                                    void  *user_data);
-
-/**
- * A function pointer for registering a user-defined function to parse
- * user-specific properties
- * from received POST request.
- * @param payload Represents a received POST request. If you know user-specific
- * property key,
- * then you can extract a corresponding value if it exists.
- * @param resource_type Used to distinguish which resource the received property
- * belongs to
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
- * The user should know a data structure of passed userdata.
- */
-typedef void (*oc_es_read_userdata_cb_t)(oc_rep_t *payload, char *resource_type,
-                                    void  *user_data);
-
-/**
- * A callback function to clean up user data created in oc_wes_wifi_data_t,
- * oc_wes_device_data_t and es_coap_cloud_conf_data.
- *
- * @param resource_type Used to distinguish which resource user data
- * beongs to.
- * @param user_data User-specific data free up it's memory.
- */
-typedef void (*oc_es_free_userdata_cb_t)(char *resource_type, void *user_data);
-
-/**
  * A function pointer for registering wifi easysetup callback
  * @param payload Represents the data written to wes resource
  * @param user_data User-specific data free up it's memory.
@@ -554,31 +508,6 @@ void oc_delete_wifi_easysetup_resource(size_t device);
  */
 oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
 	oc_wes_wifi_prov_cb_t wifi_prov_cb, oc_wes_dev_prov_cb_t dev_prov_cb);
-
-/**
- * This function is to set two function pointer to handle user-specific
- * properties in in-comming
- * POST request and to out-going response for GET or POST request.
- * If you register certain functions with this API, you have to handle oc_rep_t
- * structure to
- * set and get properties you want.
- *
- * @param readcb a callback for parsing properties from POST request
- * @param writecb a callback for putting properties to a response to be sent
- * @param freecb callback to free allocated memory of user data in
- * oc_wes_data_t, oc_wes_wifi_data_t, oc_wes_device_data_t.
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
- * The user should know a data structure of passed userdata.
- * @return ::OC_WES_OK on success, some other value upon failure.
- *
- * @see oc_es_read_userdata_cb_t
- * @see oc_es_write_userdata_cb_t
- */
-oc_es_result_t oc_wes_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
-                                         oc_es_write_userdata_cb_t writecb,
-                                         oc_es_free_userdata_cb_t freecb);
 
 /**
  * This function sets Device information.
@@ -690,31 +619,6 @@ void oc_delete_esim_easysetup_resource(size_t device);
 	oc_ees_rsp_prov_cb_t rsp_prov_cb, oc_ees_rspcap_prov_cb_t rspcap_prov_cb);
 
 /**
- * This function is to set two function pointer to handle user-specific
- * properties in in-comming
- * POST request and to out-going response for GET or POST request.
- * If you register certain functions with this API, you have to handle oc_rep_t
- * structure to
- * set and get properties you want.
- *
- * @param readcb a callback for parsing properties from POST request
- * @param writecb a callback for putting properties to a response to be sent
- * @param freecb callback to free allocated memory of user data in
- * oc_ees_data_t, oc_ees_rsp_data_t and oc_ees_rspcap_data_t.
- * @param user_data User-specific data you want to deliver to desired users,
- * i.e.
- * application.
- * The user should know a data structure of passed userdata.
- * @return ::OC_EES_OK on success, some other value upon failure.
- *
- * @see oc_es_read_userdata_cb_t
- * @see oc_es_write_userdata_cb_t
- */
-oc_es_result_t oc_ees_set_userdata_callbacks(size_t device, oc_es_read_userdata_cb_t readcb,
-                                         oc_es_write_userdata_cb_t writecb,
-                                         oc_es_free_userdata_cb_t freecb);
-
-/**
  * This function sets Device information.
  *
  * @param device_info Contains device information composed of
@@ -777,13 +681,6 @@ typedef struct
 	void (*oc_ees_rspcap_prov_cb_t)(oc_ees_rspcap_data_t *, void *);
 	void (*oc_wes_wifi_prov_cb_t)(oc_wes_wifi_data_t *, void *);
 } ees_device_callbacks_s;
-
-typedef struct
-{
-	void (*oc_es_write_userdata_cb_t)(oc_rep_t *, char *, void *);
-	void (*oc_es_read_userdata_cb_t)(oc_rep_t *, char *, void *);
-	void (*oc_es_free_userdata_cb_t)(char *, void *);
-} es_userdata_callbacks_s;
 
 #ifdef __cplusplus
 }
