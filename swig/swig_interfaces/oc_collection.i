@@ -13,44 +13,42 @@
 
 /*******************Begin oc_collection.h*******************/
 %rename(OCLinkParams) oc_link_params_t;
-typedef struct oc_link_s oc_link_t;
-%rename(OCLink) oc_link_s;
-%ignore oc_link_s::OC_LIST_STRUCT(params);
-%extend oc_link_s {
+%rename(OCLink) oc_link_t;
+%ignore oc_link_t::OC_LIST_STRUCT(params);
+%extend oc_link_t {
   oc_link_params_t *getParamsListHead() {
     return oc_list_head(self->params);
   }
 }
 %rename(OCResourceType) oc_rt_t;
-typedef struct oc_collection_s oc_collection_t;
-%ignore oc_collection_s::get_handler;
-%ignore oc_collection_s::put_handler;
-%ignore oc_collection_s::post_handler;
-%ignore oc_collection_s::delete_handler;
-%ignore oc_collection_s::get_properties;
-%ignore oc_collection_s::set_properties;
-%rename (numLinks) oc_collection_s::num_links;
-%ignore oc_collection_s::OC_LIST_STRUCT(mandatory_rts);
+%ignore oc_collection_t::get_handler;
+%ignore oc_collection_t::put_handler;
+%ignore oc_collection_t::post_handler;
+%ignore oc_collection_t::delete_handler;
+%ignore oc_collection_t::get_properties;
+%ignore oc_collection_t::set_properties;
+%rename (numLinks) oc_collection_t::num_links;
+%ignore oc_collection_t::OC_LIST_STRUCT(mandatory_rts);
 // TODO convert to array of strings.
-%extend oc_collection_s {
+%extend oc_collection_t {
   oc_rt_t *getMandatoryResourceTypesListHead() {
     return oc_list_head(self->mandatory_rts);
   }
 }
-%ignore oc_collection_s::OC_LIST_STRUCT(supported_rts);
+%ignore oc_collection_t::OC_LIST_STRUCT(supported_rts);
 // TODO conver to array of strings
-%extend oc_collection_s {
+%extend oc_collection_t {
   oc_rt_t *getSupportedResourceTypesListHead() {
     return oc_list_head(self->supported_rts);
   }
 }
-%ignore oc_collection_s::OC_LIST_STRUCT(links);
-%extend oc_collection_s {
+%ignore oc_collection_t::OC_LIST_STRUCT(links);
+%extend oc_collection_t {
   oc_link_t *getLinksListHead() {
     return oc_list_head(self->links);
   }
 }
-%rename(OCCollection) oc_collection_s;
+%rename(OCCollection) oc_collection_t;
 %rename(handleCollectionRequest) oc_handle_collection_request;
 %rename(newCollection) oc_collection_alloc;
 %rename(freeCollection) oc_collection_free;
