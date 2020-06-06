@@ -1021,7 +1021,7 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
     OC_ERR("Insufficient memory");
     return;
   }
-  memset(&esim_enrollee[esim_device_count], 0, sizeof(oc_wifi_enrollee_t));
+  memset(&esim_enrollee[esim_device_count], 0, sizeof(oc_esim_enrollee_t));
   esim_device_count++;
   OC_DBG("Esim enrolle devices instantiated : %d", esim_device_count);
 
