@@ -95,8 +95,9 @@ bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
 /**
  * set the latency (lat) property in eps of oic.wk.res resource.
  * The latency is implemented globally e.g. for all the resource instances.
- * The default behaviour is that if nothing is set (e.g. value is 0) the lat property will not be framed in the eps property.
- * Setting the value on 0 will cause that the lat property will not be framed in the eps property.
+ * The default behaviour is that if nothing is set (e.g. value is 0) the lat
+ * property will not be framed in the eps property. Setting the value on 0 will
+ * cause that the lat property will not be framed in the eps property.
  * @param[in] latency the latency in seconds
  */
 void oc_core_set_latency(int latency);
