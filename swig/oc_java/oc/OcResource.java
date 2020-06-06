@@ -5,6 +5,16 @@ import java.util.List;
 
 import org.iotivity.*;
 
+/**
+ * OcResource is a resource of a device.
+ * <p>
+ * Resources are typically added to a device in the registerResources() method of the platform's initialize handler.
+ *
+ * @see OcPlatform#systemInit
+ * @see OcDevice#addResource
+ * @see OCMainInitHandler#registerResources
+ * @see OcLink
+ */
 public class OcResource {
 
     protected String name;
@@ -26,6 +36,17 @@ public class OcResource {
     protected OcResource() {
     }
 
+    /**
+     * Constructs an OcResource.
+     * <p>
+     * @param device  the device owning this resource
+     * @param name  the name of this resource
+     * @param uri  the uri of this resource
+     * @param resourceTypes  array of the resource types
+     * @param interfaceMasks  array of the interface masks
+     *
+     * @see OCInterfaceMask
+     */
     public OcResource(OcDevice device, String name, String uri, String[] resourceTypes, int[] interfaceMasks) {
         if (device == null) {
             throw new IllegalArgumentException("OcDevice cannot be null");

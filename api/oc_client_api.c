@@ -198,6 +198,37 @@ oc_free_server_endpoints(oc_endpoint_t *endpoint)
 }
 
 bool
+oc_get_response_payload_raw(oc_client_response_t *response,
+                            const uint8_t **payload, size_t *size,
+                            oc_content_format_t *content_format)
+{
+  if (!response || !payload || !size || !content_format) {
+    return false;
+  }
+  if (response->_payload && response->_payload_len > 0) {
+    *content_format = response->content_format;
+    *payload = response->_payload;
+    *size = response->_payload_len;
+    return true;
+  }
+  return false;
+}
+
+bool
+oc_get_diagnostic_message(oc_client_response_t *response, const char **msg,
+                          size_t *size)
+{
+  oc_content_format_t cf = 0;
+  if (oc_get_response_payload_raw(response, (const uint8_t **)msg, size, &cf)) {
+    if (cf != TEXT_PLAIN) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+bool
 oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
