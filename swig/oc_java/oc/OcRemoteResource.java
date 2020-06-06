@@ -6,6 +6,14 @@ import java.util.List;
 
 import org.iotivity.*;
 
+/**
+ * OcRemoteResource is a resource of a discovered device.
+ * <p>
+ * Remote resources are discovered using the discovery api call.
+ * The device discovery api will also discover the resources of the remote device.
+ *
+ * @see OcUtils#discoverAllDevices
+ */
 public class OcRemoteResource {
 
     private String anchor;

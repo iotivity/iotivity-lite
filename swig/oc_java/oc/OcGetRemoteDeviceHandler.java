@@ -2,7 +2,7 @@ package org.iotivity.oc;
 
 import org.iotivity.*;
 
-public class OcGetRemoteDeviceHandler implements OCResponseHandler {
+class OcGetRemoteDeviceHandler implements OCResponseHandler {
 
     private static final String N_KEY = "n";
     private static final String DI_KEY = "di";
