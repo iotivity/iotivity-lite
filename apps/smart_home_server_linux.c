@@ -741,6 +741,10 @@ main(void)
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
 
+  /* set the latency to 240 seconds*/
+  /* if no latency is needed then remove the next line */
+  oc_core_set_latency(240);
+
 #ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
 #endif /* OC_STORAGE */

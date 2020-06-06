@@ -115,6 +115,8 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
       oc_rep_set_text_string(eps, ep, oc_string(ep));
       oc_free_string(&ep);
     }
+    if (oc_core_get_latency() > 0)
+      oc_rep_set_uint(eps, lat, oc_core_get_latency());
     oc_rep_object_array_end_item(eps);
   next_eps:
     eps = eps->next;
