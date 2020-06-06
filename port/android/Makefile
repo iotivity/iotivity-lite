@@ -66,8 +66,20 @@ export ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
 else
 export ANDROID_BASE := "${NDK_HOME}"
 endif
+
+ifeq ($(ANDROID_ABI),armeabi)
+export ANDROID_HOST := arm-linux-androideabi-
+endif
+ifeq ($(ANDROID_ABI),x86_64)
+export ANDROID_HOST := x86_64-linux-android-
+endif
+ifeq ($(ANDROID_ABI),arm64-v8a)
+export ANDROID_HOST := aarch64-linux-android-
+endif
+
 # Compiler prefix
-ANDROID_HOST := arm-linux-androideabi-
+
+export ANDROID_HOST ?= arm-linux-androideabi-
 
 BIN_BASE := ${ANDROID_BASE}/bin/${ANDROID_HOST}
 ifeq ($(origin CC),default)

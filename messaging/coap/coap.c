@@ -54,7 +54,7 @@
 #ifdef OC_TCP
 #include "coap_signal.h"
 #endif /* OC_TCP */
-
+#include "oc_ri.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #include "security/oc_audit.h"

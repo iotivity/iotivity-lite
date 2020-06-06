@@ -6,6 +6,14 @@ import java.util.List;
 
 import org.iotivity.*;
 
+/**
+ * OcRemoteDevice is a device that has been discovered.
+ * <p>
+ * Remote devices can be discovered using the discovery api call.
+ *
+ * @see OcUtils#discoverAllDevices
+ * @see OcDeviceDiscoveryHandler#discoveredDevice
+ */
 public class OcRemoteDevice {
 
     private OCUuid di;

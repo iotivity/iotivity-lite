@@ -78,7 +78,7 @@ extern bool oc_ri_invoke_coap_entity_handler(
   void *request, void *response, oc_blockwise_state_t **request_state,
   oc_blockwise_state_t **response_state, uint16_t block2_size,
   oc_endpoint_t *endpoint);
-#else /* OC_BLOCK_WISE */
+#else  /* OC_BLOCK_WISE */
 extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              uint8_t *buffer,
                                              oc_endpoint_t *endpoint);
@@ -524,7 +524,7 @@ coap_receive(oc_message_t *msg)
         if (oc_ri_invoke_coap_entity_handler(message, response, &request_buffer,
                                              &response_buffer, block2_size,
                                              &msg->endpoint)) {
-#else /* OC_BLOCK_WISE */
+#else  /* OC_BLOCK_WISE */
         if (oc_ri_invoke_coap_entity_handler(message, response,
                                              transaction->message->data +
                                                COAP_MAX_HEADER_SIZE,
@@ -703,7 +703,7 @@ coap_receive(oc_message_t *msg)
             message->token, message->token_len);
         }
       }
-      if (!error_response && response_buffer) {
+      if (response_buffer) {
         OC_DBG("got response buffer for uri %s",
                oc_string(response_buffer->href));
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;

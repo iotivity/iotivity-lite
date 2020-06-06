@@ -2,7 +2,7 @@ package org.iotivity.oc;
 
 import org.iotivity.*;
 
-public class OcGetRemoteResourcesHandler implements OCDiscoveryAllHandler {
+class OcGetRemoteResourcesHandler implements OCDiscoveryAllHandler {
 
     private OcRemoteDevice device;
     private OcDeviceDiscoveryHandler deviceDiscoveryHandler;

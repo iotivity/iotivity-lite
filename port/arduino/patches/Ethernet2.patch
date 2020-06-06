@@ -1,0 +1,141 @@
+diff -ru a/Ethernet2/README.md b/Ethernet2/README.md
+--- a/Ethernet2/README.md	2019-01-30 15:20:45.608212141 +0000
++++ b/Ethernet2/README.md	2019-01-08 13:36:15.000000000 +0000
+@@ -1,7 +1,21 @@
+-# Deprecated/Archived Library 
++Ethernet "2" Library for Arduino
++================================
+ 
+-This library is no longer going to be used, since the official Arduino library has been updated and works great https://github.com/arduino-libraries/Ethernet
++This Arduino library is for shields that use the **Wiznet [W5500]** chipset only.
++It does **not** work with other chipsets, such as the original Arduino Ethernet shield which
++uses the Wiznet [W5100] chipset.
+ 
++For more information about this library please visit us at: 
++http://www.arduino.cc/en/Reference/Ethernet
++
++
++W5500 Shields
++-------------
++
++* [Adafruit W5500 Ethernet Shield](https://www.adafruit.com/products/2971)
++* [Arduino Ethernet Shield v2](https://www.arduino.cc/en/Main/ArduinoEthernetShieldV2)
++* [Industruino Ethernet module](https://industruino.com/shop/product/ethernet-expansion-module-10)
++* [Wiznet W5500 Ethernet Shield](http://www.wiznet.co.kr/product-item/w5500-ethernet-shield/)
+ 
+ 
+ License
+diff -ru a/Ethernet2/src/utility/socket.cpp b/Ethernet2/src/utility/socket.cpp
+--- a/Ethernet2/src/utility/socket.cpp	2019-01-30 15:20:45.628212171 +0000
++++ b/Ethernet2/src/utility/socket.cpp	2019-01-30 15:22:28.978362838 +0000
+@@ -254,6 +254,7 @@
+ {
+   uint8_t head[8];
+   uint16_t data_len=0;
++	uint16_t data_copied=0;
+   uint16_t ptr=0;
+ 
+   if ( len > 0 )
+@@ -273,11 +274,6 @@
+       *port = (*port << 8) + head[5];
+       data_len = head[6];
+       data_len = (data_len << 8) + head[7];
+-
+-      w5500.read_data(s, ptr, buf, data_len); // data copy.
+-      ptr += data_len;
+-
+-      w5500.writeSnRX_RD(s, ptr);
+       break;
+ 
+     case SnMR::IPRAW :
+@@ -290,11 +286,6 @@
+       addr[3] = head[3];
+       data_len = head[4];
+       data_len = (data_len << 8) + head[5];
+-
+-      w5500.read_data(s, ptr, buf, data_len); // data copy.
+-      ptr += data_len;
+-
+-      w5500.writeSnRX_RD(s, ptr);
+       break;
+ 
+     case SnMR::MACRAW:
+@@ -302,18 +293,21 @@
+       ptr+=2;
+       data_len = head[0];
+       data_len = (data_len<<8) + head[1] - 2;
+-
+-      w5500.read_data(s, ptr, buf, data_len);
+-      ptr += data_len;
+-      w5500.writeSnRX_RD(s, ptr);
+       break;
+ 
+     default :
+       break;
+     }
++		if (data_len > 0)
++		{
++			data_copied = (data_len <= len) ? data_len : len;// only copy the len bytes, rest of is discarded.
++			w5500.read_data(s, ptr, buf, data_copied); // data copy.
++			ptr += data_len;
++			w5500.writeSnRX_RD(s, ptr);
++		}
+     w5500.execCmdSn(s, Sock_RECV);
+   }
+-  return data_len;
++	return data_copied;
+ }
+ 
+ /**
+diff -ru a/Ethernet2/src/utility/socket.h b/Ethernet2/src/utility/socket.h
+--- a/Ethernet2/src/utility/socket.h	2019-01-30 15:20:45.628212171 +0000
++++ b/Ethernet2/src/utility/socket.h	2019-01-08 13:36:15.000000000 +0000
+@@ -6,7 +6,9 @@
+  
+ #ifndef	_SOCKET_H_
+ #define	_SOCKET_H_
+-
++#ifdef __cplusplus
++extern "C" {
++#endif
+ #include "utility/w5500.h"
+ 
+ extern uint8_t socket(SOCKET s, uint8_t protocol, uint16_t port, uint8_t flag); // Opens a socket(TCP or UDP or IP_RAW mode)
+@@ -43,6 +45,8 @@
+   @return 1 if the datagram was successfully sent, or 0 if there was an error
+ */
+ int sendUDP(SOCKET s);
+-
++#ifdef __cplusplus
++} // extern "C++"
++#endif
+ #endif
+ /* _SOCKET_H_ */
+diff -ru a/Ethernet2/src/utility/w5500.h b/Ethernet2/src/utility/w5500.h
+--- a/Ethernet2/src/utility/w5500.h	2019-01-30 15:20:45.628212171 +0000
++++ b/Ethernet2/src/utility/w5500.h	2019-01-08 13:36:15.000000000 +0000
+@@ -16,12 +16,14 @@
+ 
+ #define MAX_SOCK_NUM 8
+ #include <Arduino.h>
+-#include <SPI.h>
+ 
+-extern uint8_t SPI_CS;
++typedef uint8_t SOCKET;
+ 
+ 
+-typedef uint8_t SOCKET;
++#ifdef __cplusplus
++
++#include <SPI.h>
++extern uint8_t SPI_CS;
+ /*
+ class MR {
+ public:
+@@ -416,5 +418,5 @@
+ void W5500Class::swReset() {
+   writeMR( (readMR() | 0x80) );
+ }
+-
++#endif
+ #endif

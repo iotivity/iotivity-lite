@@ -1539,6 +1539,7 @@ oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
 
   res = oc_obt_ace_new_resource(ace);
   if (!res) {
+    oc_obt_free_ace(ace);
     goto exit_aceprov_role_wc;
   }
 
@@ -1570,6 +1571,7 @@ oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
 
   res = oc_obt_ace_new_resource(ace);
   if (!res) {
+    oc_obt_free_ace(ace);
     goto exit_aceprov_ac_wc;
   }
 
