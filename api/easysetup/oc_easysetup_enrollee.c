@@ -24,8 +24,6 @@
 #include "oc_log.h"
 #include "es_utils.h"
 
-#define OC_MAX_NUM_DEVICES	10
-
 #ifdef OC_WIFI_EASYSETUP
 
 typedef struct
@@ -56,12 +54,14 @@ typedef struct
   oc_wes_dev_conf_resource_t device;
 } oc_wifi_enrollee_t;
 
-// Global WiFi Enrolee Instance
-oc_wifi_enrollee_t g_wifi_enrollee[OC_MAX_NUM_DEVICES];
+//WiFi Enrolee Instance
+static oc_wifi_enrollee_t *wifi_enrollee;
+static int wifi_device_count = 0;
 
-oc_wifi_enrollee_t *get_device_wifi_enrollee(size_t device)
+oc_wifi_enrollee_t
+*get_device_wifi_enrollee(size_t device)
 {
-  return &g_wifi_enrollee[device];
+  return &wifi_enrollee[device];
 }
 
 oc_es_result_t
@@ -474,11 +474,21 @@ oc_create_wifi_easysetup_resource(size_t device, void *user_data)
 {
   OC_DBG("oc_create_wifi_easysetup_resource : %d", device);
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  assert(device <  OC_MAX_NUM_DEVICES);
-#endif
+  wifi_enrollee = (oc_wifi_enrollee_t *)realloc(wifi_enrollee,
+                (wifi_device_count + 1) * sizeof(oc_wifi_enrollee_t));
+  if (!wifi_enrollee) {
+    OC_ERR("Insufficient memory");
+    return;
+  }
+  memset(&wifi_enrollee[wifi_device_count], 0, sizeof(oc_wifi_enrollee_t));
+  wifi_device_count++;
+  OC_DBG("Wifi enrolle devices instantiated : %d", wifi_device_count);
 
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
+  if (!dev_cxt) {
+    OC_ERR("Invalid Pointer");
+    return;
+  }
 
   dev_cxt->wes.data.state = OC_WES_INIT;
   dev_cxt->wes.data.last_err_code = OC_WES_NO_ERROR;
@@ -597,6 +607,13 @@ oc_delete_wifi_easysetup_resource(size_t device)
     dev_cxt->wes.handle = NULL;
   }
   dev_cxt->wes.prov_cb = NULL;
+
+  wifi_device_count--;
+  if(!wifi_device_count) {
+    free(wifi_enrollee);
+    wifi_enrollee = NULL;
+    OC_DBG("All WiFi device instances removed from memory");
+  }
 }
 
 #endif //OC_WIFI_EASYSETUP
@@ -631,12 +648,14 @@ typedef struct
   oc_ees_rspcap_conf_resource_t rsp_cap;
 } oc_esim_enrollee_t;
 
-// Global eSIM Enrolee Instance
-oc_esim_enrollee_t g_esim_enrollee[OC_MAX_NUM_DEVICES];
+// eSIM Enrolee Instance
+static oc_esim_enrollee_t *esim_enrollee;
+static int esim_device_count = 0;
 
-oc_esim_enrollee_t *get_device_esim_enrollee(size_t device)
+oc_esim_enrollee_t
+*get_device_esim_enrollee(size_t device)
 {
-  return &g_esim_enrollee[device];
+  return &esim_enrollee[device];
 }
 
 oc_es_result_t
@@ -996,11 +1015,21 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
 {
   OC_DBG("oc_create_esim_easysetup_resource : %d", device);
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  assert(device <  OC_MAX_NUM_DEVICES);
-#endif
+  esim_enrollee = (oc_esim_enrollee_t *)realloc(esim_enrollee,
+                (esim_device_count + 1) * sizeof(oc_esim_enrollee_t));
+  if (!esim_enrollee) {
+    OC_ERR("Insufficient memory");
+    return;
+  }
+  memset(&esim_enrollee[esim_device_count], 0, sizeof(oc_wifi_enrollee_t));
+  esim_device_count++;
+  OC_DBG("Esim enrolle devices instantiated : %d", esim_device_count);
 
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
+  if (!dev_cxt) {
+    OC_ERR("Invalid Pointer");
+    return;
+  }
 
   // Initiatize EES Resource state
   oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_NONE, 0);
@@ -1104,6 +1133,13 @@ oc_delete_esim_easysetup_resource(size_t device)
   oc_free_string(&dev_cxt->ees.data.last_err_desc);
   oc_free_string(&dev_cxt->ees.data.end_user_conf);
   dev_cxt->ees.prov_cb = NULL;
+
+  esim_device_count--;
+  if(!esim_device_count) {
+    free(esim_enrollee);
+    esim_enrollee = NULL;
+    OC_DBG("All eSIM device instances removed from memory");
+  }
 }
 
 #endif // OC_ESIM_EASYSETUP
