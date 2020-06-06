@@ -447,7 +447,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   }
 
   int response_length = oc_rep_get_encoded_payload_size();
-
+  request->response->content_format = APPLICATION_CBOR;
   if (matches && response_length) {
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
@@ -500,6 +500,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     break;
   }
   int response_length = oc_rep_get_encoded_payload_size();
+  request->response->content_format = APPLICATION_VND_OCF_CBOR;
   if (matches && response_length > 0) {
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
@@ -586,33 +587,12 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
     rep = rep->next;
   }
 
-  oc_rep_t *link = links->value.object;
-
-  while (link != NULL) {
-    switch (link->type) {
-    case OC_REP_STRING: {
-      if (oc_string_len(link->name) == 6 &&
-          memcmp(oc_string(link->name), "anchor", 6) == 0) {
-        anchor = &link->value.string;
-      }
-    } break;
-    default:
-      break;
-    }
-    if (anchor) {
-      break;
-    }
-    link = link->next;
-  }
-
-  oc_uuid_t di;
-  oc_str_to_uuid(oc_string(*anchor) + 6, &di);
-
   while (links != NULL) {
     /* Reset bm in every round as this can be omitted if 0. */
+    oc_uuid_t di;
     oc_resource_properties_t bm = 0;
     oc_endpoint_t *eps_list = NULL;
-    link = links->value.object;
+    oc_rep_t *link = links->value.object;
 
     while (link != NULL) {
       switch (link->type) {
@@ -620,6 +600,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
         if (oc_string_len(link->name) == 6 &&
             memcmp(oc_string(link->name), "anchor", 6) == 0) {
           anchor = &link->value.string;
+          oc_str_to_uuid(oc_string(*anchor) + 6, &di);
         } else if (oc_string_len(link->name) == 4 &&
                    memcmp(oc_string(link->name), "href", 4) == 0) {
           uri = &link->value.string;
@@ -653,8 +634,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                   memcmp(oc_string(ep->name), "ep", 2) == 0) {
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
-                  if (((endpoint->flags & IPV4) && (temp_ep.flags & IPV6)) ||
-                      ((endpoint->flags & IPV6) && (temp_ep.flags & IPV4))) {
+                  if (!(temp_ep.flags & TCP) &&
+                      (((endpoint->flags & IPV4) && (temp_ep.flags & IPV6)) ||
+                       ((endpoint->flags & IPV6) && (temp_ep.flags & IPV4)))) {
                     goto next_ep;
                   }
                   if (eps_cur) {
@@ -721,6 +703,9 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
 
 done:
   oc_free_rep(p);
+#ifdef OC_DNS_CACHE
+  oc_dns_clear_cache();
+#endif /* OC_DNS_CACHE */
   return ret;
 }
 #endif /* OC_CLIENT */

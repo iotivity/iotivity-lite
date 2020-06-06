@@ -28,8 +28,7 @@
 #endif /* OC_BLOCK_WISE */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
@@ -37,9 +36,12 @@ typedef enum { HIGH_QOS = 0, LOW_QOS } oc_qos_t;
 typedef struct
 {
   oc_rep_t *payload;
+  const uint8_t *_payload;
+  size_t _payload_len;
   oc_endpoint_t *endpoint;
   void *client_cb;
   void *user_data;
+  oc_content_format_t content_format;
   oc_status_t code;
   int observe_option;
 } oc_client_response_t;

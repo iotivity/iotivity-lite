@@ -70,12 +70,16 @@ free_api_param(cloud_api_param_t *p)
 int
 conv_cloud_endpoint(oc_cloud_context_t *ctx)
 {
+  int ret = 0;
   oc_endpoint_t ep;
   memset(&ep, 0, sizeof(oc_endpoint_t));
   if (memcmp(&ep, ctx->cloud_ep, sizeof(oc_endpoint_t)) == 0) {
-    return oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
+    ret = oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
+#ifdef OC_DNS_CACHE
+    oc_dns_clear_cache();
+#endif /* OC_DNS_CACHE */
   }
-  return 0;
+  return ret;
 }
 
 int
@@ -105,7 +109,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
             ctx->device, oc_cloud_register_handler, p)) {
         cannotConnect = false;
-        ctx->cps = OC_CPS_REGISTERING;
+        ctx->store.cps = OC_CPS_REGISTERING;
       }
       if (cannotConnect) {
         cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -227,17 +231,15 @@ cloud_deregistered_internal(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-    ctx->store.status |= OC_CLOUD_FAILURE;
+  if (data->code < OC_STATUS_BAD_REQUEST ||
+      data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
+    ctx->store.status = OC_CLOUD_DEREGISTERED;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
     ctx->store.status |= OC_CLOUD_FAILURE;
-  } else {
-    ctx->store.status = OC_CLOUD_DEREGISTERED;
   }
 
-  ctx->cps = OC_CPS_READYTOREGISTER;
+  ctx->store.cps = OC_CPS_READYTOREGISTER;
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
@@ -245,6 +247,8 @@ cloud_deregistered_internal(oc_client_response_t *data)
   free_api_param(p);
 
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
+
+  cloud_store_dump_async(&ctx->store);
 }
 
 int
@@ -318,6 +322,25 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   return -1;
 }
 
+int
+oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+                            oc_discovery_all_handler_t handler, void *user_data)
+{
+  if (!ctx) {
+    return -1;
+  }
+
+  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+    return -1;
+  }
+
+  if (oc_do_ip_discovery_all_at_endpoint(handler, ctx->cloud_ep, user_data)) {
+    return 0;
+  }
+
+  return -1;
+}
+
 /* Internal APIs for accessing the OCF Cloud */
 bool
 cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
@@ -339,7 +362,9 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
@@ -384,23 +409,32 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
     OC_ERR("Error of input parameters");
     return false;
   }
-  oc_string_t d;
-  (void)device;
+  oc_string_t at_uid;
   oc_string_t at;
   oc_concat_strings(&at, "accesstoken=", access_token);
   oc_string_t u_id;
   oc_concat_strings(&u_id, "&uid=", uid);
-  oc_concat_strings(&d, oc_string(at), oc_string(u_id));
+  oc_concat_strings(&at_uid, oc_string(at), oc_string(u_id));
 
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
+  oc_string_t di;
+  oc_concat_strings(&di, "&di=", uuid);
+  oc_string_t at_uid_di;
+  oc_concat_strings(&at_uid_di, oc_string(at_uid), oc_string(di));
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
-  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(d), handler,
-                        HIGH_QOS, user_data);
-  oc_free_string(&d);
+  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(at_uid_di),
+                        handler, HIGH_QOS, user_data);
+  oc_free_string(&at_uid);
   oc_free_string(&at);
   oc_free_string(&u_id);
+  oc_free_string(&di);
+  oc_free_string(&at_uid_di);
   return s;
 }
 
@@ -422,7 +456,9 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
@@ -481,7 +517,9 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  oc_tls_select_cloud_ciphersuite();
+  if (!oc_tls_connected(endpoint)) {
+    oc_tls_select_cloud_ciphersuite();
+  }
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,

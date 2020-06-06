@@ -129,7 +129,7 @@ publish_resources_handler(oc_client_response_t *data)
         if (l) {
           l->ins = instance_id;
           rd_link_remove(&ctx->rd_publish_resources, l);
-          rd_link_add(&ctx->rd_publish_resources, l);
+          rd_link_add(&ctx->rd_published_resources, l);
         }
       }
       link = link->next;

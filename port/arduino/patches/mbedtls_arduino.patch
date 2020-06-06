@@ -1,0 +1,38 @@
+--- a/include/mbedtls/config.h	2019-04-17 14:43:41.986008170 +0200
++++ b/include/mbedtls/config.h	2019-04-17 14:56:46.861187063 +0200
+@@ -50,6 +50,15 @@
+ #define MBEDTLS_SSL_DTLS_ANTI_REPLAY
+ #define MBEDTLS_SSL_DTLS_HELLO_VERIFY
+ 
++/* Save RAM at the expense of speed, see ecp.h */
++#define MBEDTLS_ECP_WINDOW_SIZE        2
++#define MBEDTLS_ECP_FIXED_POINT_OPTIM  0
++
++/* Save RAM by adjusting to our exact needs */
++#define MBEDTLS_ECP_MAX_BITS 384
++#define MBEDTLS_MPI_MAX_SIZE    48 // 384 bits is 48 bytes
++/* Significant speed benefit at the expense of some ROM */
++#define MBEDTLS_ECP_NIST_OPTIM
+ 
+ /* mbed TLS modules */
+ #define MBEDTLS_AES_C
+@@ -62,6 +71,7 @@
+ #define MBEDTLS_SSL_CLI_C
+ #define MBEDTLS_SSL_SRV_C
+ #define MBEDTLS_SSL_TLS_C
++#define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE 0
+ 
+ /* Save RAM at the expense of ROM */
+ #define MBEDTLS_AES_ROM_TABLES
+@@ -69,6 +79,11 @@
+ /* Save some RAM by adjusting to your exact needs */
+ #define MBEDTLS_PSK_MAX_LEN    16 /* 128-bits keys are generally enough */
+ 
++/* Save ROM and a few bytes of RAM by specifying our own ciphersuite list */
++#define MBEDTLS_SSL_CIPHERSUITES                        \
++    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,    \
++    MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
++    
+ /*
+  * You should adjust this to the exact number of sources you're using: default
+  * is the "platform_entropy_poll" source, but you may want to add other ones

@@ -28,7 +28,7 @@
 #include "util/oc_list.h"
 #include <jni.h>
 
-#if defined (_WIN32)
+#if defined(_WIN32)
 HANDLE jni_poll_event_thread;
 CRITICAL_SECTION jni_sync_lock;
 CONDITION_VARIABLE jni_cv;
@@ -63,7 +63,8 @@ typedef enum {
   OC_CALLBACK_VALID_TILL_SET_CON_WRITE_CB,
   OC_CALLBACK_VALID_TILL_DELETE_RESOURCE,
   OC_CALLBACK_VALID_TILL_REMOVE_DELAYED_CALLBACK,
-  OC_CALLBACK_VALID_TILL_CLOUD_MANAGER_STOP
+  OC_CALLBACK_VALID_TILL_CLOUD_MANAGER_STOP,
+  OC_CALLBACK_VALID_TILL_REMOVE_OWNERSHIP_STATUS
 } jni_callback_valid_t;
 
 /*
@@ -129,6 +130,7 @@ jclass cls_OCDiscoveryAllHandler;
 jclass cls_OCFactoryPresetsHandler;
 jclass cls_OCGetPropertiesHandler;
 jclass cls_OCInitPlatformHandler;
+jclass cls_OCOwnershipStatusHandler;
 jclass cls_OCQueryValue;
 jclass cls_OCRandomPinHandler;
 jclass cls_OCRepresentation;
@@ -137,6 +139,7 @@ jclass cls_OCRequestHandler;
 jclass cls_OCResponseHandler;
 jclass cls_OCResource;
 jclass cls_OCSetPropertiesHandler;
+jclass cls_OCSoftwareUpdateHandler;
 jclass cls_OCTriggerHandler;
 
 jclass cls_OCCoreAddDeviceHandler;
@@ -169,14 +172,15 @@ jclass cls_OCSecurityAcl;
  * passed back upto the java callback class. Serving the same
  * function as the C void *user_data pointer.
  */
-typedef struct jni_callback_data_s {
+typedef struct jni_callback_data_s
+{
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
   jni_callback_valid_t cb_valid;
 } jni_callback_data;
 
-jni_callback_data * jni_list_get_head();
+jni_callback_data *jni_list_get_head();
 void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
 void jni_list_clear();

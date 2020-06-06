@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "oc_config.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"

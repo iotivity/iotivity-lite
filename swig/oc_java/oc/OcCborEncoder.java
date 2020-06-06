@@ -2,6 +2,11 @@ package org.iotivity.oc;
 
 import org.iotivity.*;
 
+/**
+ * OcCborEncoder provides methods to encode a CBOR representation.
+ * <p>
+ * All OcCborEncoder constructors are static.  To close the cbor encoder, use done().
+ */
 public class OcCborEncoder {
 
     private boolean isDone;
@@ -26,6 +31,16 @@ public class OcCborEncoder {
         nativeCborEncoder = nativeEncoder;
     }
 
+    /**
+     * Returns a cbor encoder for a root or links array. Must be closed using done().
+     *
+     * @param type  the EncoderType
+     * @return a OcCborEncoder instance
+     *
+     * @see EncoderType#ROOT
+     * @see EncoderType#LINKS_ARRAY
+     * @see OcCborEncoder#done
+     */
     static public OcCborEncoder createOcCborEncoder(EncoderType type) {
         if (type == null) {
             throw new IllegalArgumentException("EncoderType cannot be null");
@@ -48,6 +63,18 @@ public class OcCborEncoder {
         return cborEncoder;
     }
 
+    /**
+     * Returns a cbor encoder for an un-keyed object, array or array item. Must be closed using done().
+     *
+     * @param type  the EncoderType
+     * @param parent  the enclosing cbor encoder
+     * @return a OcCborEncoder instance
+     *
+     * @see EncoderType#OBJECT
+     * @see EncoderType#ARRAY
+     * @see EncoderType#ARRAY_ITEM
+     * @see OcCborEncoder#done
+     */
     static public OcCborEncoder createOcCborEncoder(EncoderType type, OcCborEncoder parent) {
         if (type == null) {
             throw new IllegalArgumentException("EncoderType cannot be null");
@@ -76,6 +103,18 @@ public class OcCborEncoder {
         return cborEncoder;
     }
 
+    /**
+     * Returns a cbor encoder for a keyed object or array. Must be closed using done().
+     *
+     * @param type  the EncoderType
+     * @param parent  the enclosing cbor encoder
+     * @param key  the key of this cbor encoder
+     * @return a OcCborEncoder instance
+     *
+     * @see EncoderType#OBJECT
+     * @see EncoderType#ARRAY
+     * @see OcCborEncoder#done
+     */
     static public OcCborEncoder createOcCborEncoder(EncoderType type, OcCborEncoder parent, String key) {
         if (type == null) {
             throw new IllegalArgumentException("EncoderType cannot be null");
@@ -104,6 +143,11 @@ public class OcCborEncoder {
         return cborEncoder;
     }
 
+    /**
+     * Closes an OcCborEncoder.
+     * <p>
+     * Must be called to properly close the cbor encoder.
+     */
     public void done() {
         if (isDone) {
             throw new UnsupportedOperationException(

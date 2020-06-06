@@ -673,7 +673,7 @@ coap_receive(oc_message_t *msg)
             message->token, message->token_len);
         }
       }
-      if (!error_response && response_buffer) {
+      if (response_buffer) {
         OC_DBG("got response buffer for uri %s",
                oc_string(response_buffer->href));
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;
@@ -750,7 +750,8 @@ coap_receive(oc_message_t *msg)
                                message->token_len, coap_status_code,
                                &msg->endpoint);
     } else {
-      coap_send_empty_response(message->type == COAP_TYPE_CON ? COAP_TYPE_ACK : COAP_TYPE_NON,
+      coap_send_empty_response(message->type == COAP_TYPE_CON ? COAP_TYPE_ACK
+                                                              : COAP_TYPE_NON,
                                message->mid, message->token, message->token_len,
                                coap_status_code, &msg->endpoint);
     }

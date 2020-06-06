@@ -92,9 +92,14 @@ ifeq ($(TCP),1)
 	SWIG_CFLAG += -DOC_TCP
 endif
 
+ifeq ($(SWUPDATE),1)
+	EXTRA_FLAG += -DOC_SOFTWARE_UPDATE
+	SWIG_CFLAG += -DOC_SOFTWARE_UPDATE
+endif
+
 SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_connectivity \
 		oc_core_res oc_cred oc_endpoint oc_introspection oc_obt oc_pki \
-		oc_random oc_rep oc_session_events oc_storage oc_uuid
+		oc_random oc_rep oc_session_events oc_swupdate oc_storage oc_uuid
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
@@ -111,7 +116,7 @@ ifeq ($(OS),linux)
 endif
 ifeq ($(OS),android)
 	EXTRA_HEADER_FILE = -I"$(ANDROID_BASE)/sysroot/usr/include/"
-	PORT_OBJ_DIR = ../port/android/arm-linux-androideabi-obj/
+	PORT_OBJ_DIR = ../port/android/${ANDROID_HOST}obj/
 	SWIG_CFLAG += -D__linux__
 	HEADER_FILE += -I../port/android
 	LDFLAG += -llog
@@ -151,15 +156,15 @@ build_jni_so: $(JNI_SRC)
 
 install_android_libs: build_swig build_jar build_jni_so
 	# copy so and jar files to samples
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/$(ANDROID_ABI)/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_simple_client/SimpleClient/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/$(ANDROID_ABI)/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_simple_server/SimpleServer/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_multi_device_client/MultiDeviceClient/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_multi_device_client/MultiDeviceClient/app/src/main/jniLibs/$(ANDROID_ABI)/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_multi_device_client/MultiDeviceClient/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_multi_device_server/MultiDeviceServer/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_multi_device_server/MultiDeviceServer/app/src/main/jniLibs/$(ANDROID_ABI)/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_multi_device_server/MultiDeviceServer/app/libs/
-	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/
+	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/$(ANDROID_ABI)/
 	cp $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/
 
 %_wrap.c:
@@ -180,19 +185,19 @@ clean:
 	rm -rf $(IOTIVITY_LITE_JAVA_BIN_DIR)
 	rm -rf $(JAVA_LANG_OBJ_DIR)
 	# delete so and jar files copied to samples
-	rm -f apps/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_simple_client/SimpleClient/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/android_simple_client/SimpleClient/app/libs/$(JAR_NAME)
-	rm -f apps/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_simple_server/SimpleServer/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/android_simple_server/SimpleServer/app/libs/$(JAR_NAME)
-	rm -f apps/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/android_on_boarding_tool/OnBoardingTool/app/libs/$(JAR_NAME)
-	rm -f apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_simple_client/SimpleClient/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/oc/android_simple_client/SimpleClient/app/libs/$(JAR_NAME)
-	rm -f apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_simple_server/SimpleServer/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/oc/android_simple_server/SimpleServer/app/libs/$(JAR_NAME)
-	rm -f apps/oc/android_multi_device_client/MultiDeviceClient/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_multi_device_client/MultiDeviceClient/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/oc/android_multi_device_client/MultiDeviceClient/app/libs/$(JAR_NAME)
-	rm -f apps/oc/android_multi_device_server/MultiDeviceServer/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_multi_device_server/MultiDeviceServer/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/oc/android_multi_device_server/MultiDeviceServer/app/libs/$(JAR_NAME)
-	rm -f apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/armeabi/$(JNI_SO_NAME)
+	rm -f apps/oc/android_on_boarding_tool/OnBoardingTool/app/src/main/jniLibs/$(ANDROID_ABI)/$(JNI_SO_NAME)
 	rm -f apps/oc/android_on_boarding_tool/OnBoardingTool/app/libs/$(JAR_NAME)

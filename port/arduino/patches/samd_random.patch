@@ -1,0 +1,22 @@
+--- a/arduino/WMath.h	2019-04-17 17:45:06.369842980 +0200
++++ b/arduino/WMath.h	2019-04-15 22:11:32.803694644 +0200
+@@ -20,14 +20,14 @@
+ #define _WIRING_MATH_
+ 
+ extern long random( long ) ;
+-extern long random( long, long ) ;
+ extern void randomSeed( uint32_t dwSeed ) ;
+ extern long map( long, long, long, long, long ) ;
+-
++#ifdef __cplusplus
+ extern uint16_t makeWord( uint16_t w ) ;
+ extern uint16_t makeWord( uint8_t h, uint8_t l ) ;
+-
++extern long random( long, long ) ;
++#endif
+ #define word(...) makeWord(__VA_ARGS__)
+ 
+ 
+-#endif /* _WIRING_MATH_ */
+\ No newline at end of file
++#endif /* _WIRING_MATH_ */

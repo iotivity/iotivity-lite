@@ -917,7 +917,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       break;
     }
   }
-
+  request->response->content_format = APPLICATION_VND_OCF_CBOR;
   request->response->response_buffer->response_length = (uint16_t)size;
   request->response->response_buffer->code = code;
 
