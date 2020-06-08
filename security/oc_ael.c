@@ -110,19 +110,6 @@ oc_sec_ael_used_space(size_t device)
   return res;
 }
 
-static const char *
-oc_sec_ael_unit_string(size_t device)
-{
-  oc_sec_ael_t *a = &ael[device];
-  static const char *ael_unit_string[] = { "Byte", "Kbyte" };
-  switch (a->unit) {
-  case OC_SEC_AEL_UNIT_BYTE:
-  case OC_SEC_AEL_UNIT_KBYTE:
-    return ael_unit_string[a->unit];
-  }
-  return "";
-}
-
 void
 oc_sec_ael_init(void)
 {
@@ -247,9 +234,7 @@ oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
     oc_rep_set_int(root, usedspace, oc_sec_ael_used_space(device));
   }
   /* unit */
-  if (!to_storage) {
-    oc_rep_set_text_string(root, unit, oc_sec_ael_unit_string(device));
-  } else {
+  if (to_storage) {
     oc_rep_set_int(root, unit, a->unit);
   }
   /* events */
@@ -257,16 +242,6 @@ oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
   for (oc_sec_ael_event_t *e = (oc_sec_ael_event_t *)oc_list_head(a->events); e;
        e = e->next) {
     oc_rep_object_array_start_item(events);
-    /* devicetype & di */
-    if (!to_storage) {
-      oc_device_info_t *devinfo = oc_core_get_device_info(device);
-      if (devinfo) {
-        oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device);
-        oc_rep_set_string_array(events, devicetype, r->types);
-        oc_uuid_to_str(&devinfo->di, tmpstr, OC_UUID_LEN);
-        oc_rep_set_text_string(events, di, tmpstr);
-      }
-    }
     /* category */
     oc_rep_set_int(events, category, e->category);
     /* priority */
