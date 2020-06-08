@@ -58,6 +58,29 @@ extern "C" {
 // Device Conf
 #define OC_RSRVD_WES_DEVNAME "dn"
 
+// WiFI Easy Setup Property Values
+#define WES_WIFI_MODE_A "A"
+#define WES_WIFI_MODE_B "B"
+#define WES_WIFI_MODE_G "G"
+#define WES_WIFI_MODE_N "N"
+#define WES_WIFI_MODE_AC "AC"
+#define WES_WIFI_MODE_AD "AD"
+
+#define WES_WIFI_FREQ_24G "2.4G"
+#define WES_WIFI_FREQ_5G "5G"
+
+#define WES_AUTH_NONE "None"
+#define WES_AUTH_WEP "WEP"
+#define WES_AUTH_WPA_PSK "WPA_PSK"
+#define WES_AUTH_WPA2_PSK "WPA2_PSK"
+
+#define WES_ENCRYPT_NONE "None"
+#define WES_ENCRYPT_WEP_64 "WEP_64"
+#define WES_ENCRYPT_WEP_128 "WEP_128"
+#define WES_ENCRYPT_TKIP "TKIP"
+#define WES_ENCRYPT_AES "AES"
+#define WES_ENCRYPT_TKIP_AES "TKIP_AES"
+
  // Esim Easy Setup
 #define OC_RSRVD_EES_PROVSTATUS "ps"
 #define OC_RSRVD_EES_LASTERRORREASON "ler"
@@ -96,8 +119,7 @@ extern "C" {
 typedef enum {
   WIFI_24G = 0,  // 2.4G
   WIFI_5G,       // 5G
-  WIFI_BOTH,     // 2.4G and 5G
-  WIFI_FREQ_NONE // EOF
+  WIFI_FREQ_MAX = 2
 } wifi_freq;
 
 /**
@@ -110,7 +132,7 @@ typedef enum {
   WIFI_11N,     // 802.11n
   WIFI_11AC,    // 802.11ac
   WIFI_11AD,    // 802.11ad
-  WIFI_EOF = 999
+  WIFI_MODE_MAX = 6
 } wifi_mode;
 
 /**

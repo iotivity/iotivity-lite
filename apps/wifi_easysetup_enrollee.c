@@ -190,8 +190,8 @@ signal_event_loop(void)
 static void
 register_resources(void)
 {
-  wifi_mode supported_mode[NUM_WIFIMODE] = {WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_EOF };
-  wifi_freq supported_freq = WIFI_5G;
+  wifi_mode supported_mode[NUM_WIFIMODE] = {WIFI_11A, WIFI_11B,WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_MODE_MAX};
+  wifi_freq supported_freq[NUM_WIFIFREQ] = {WIFI_24G, WIFI_5G, WIFI_FREQ_MAX};
   char *device_name = "TestDevice";
 
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {

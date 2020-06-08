@@ -333,14 +333,15 @@ typedef struct
 {
     oc_string_t ssid;
     oc_string_t cred;
-    wifi_authtype auth_type;
-    wifi_enctype enc_type;
-    wifi_mode supported_mode[NUM_WIFIMODE];
+    oc_string_t auth_type;
+    oc_string_t enc_type;
+    oc_string_t supported_mode[NUM_WIFIMODE];
     uint8_t num_mode;
-    wifi_freq supported_freq;
-    wifi_authtype supported_authtype[NUM_WIFIAUTHTYPE];
+    oc_string_t supported_freq[NUM_WIFIFREQ];
+    uint8_t num_freq;
+    oc_string_t supported_authtype[NUM_WIFIAUTHTYPE];
     uint8_t num_supported_authtype;
-    wifi_enctype supported_enctype[NUM_WIFIENCTYPE];
+    oc_string_t supported_enctype[NUM_WIFIENCTYPE];
     uint8_t num_supported_enctype;
 } oc_wes_wifi_data_t;
 
@@ -364,8 +365,8 @@ typedef struct
    */
   struct
   {
-    wifi_mode supported_mode[NUM_WIFIMODE];  /**< Supported Wi-Fi modes e.g. 802.11 A / B / G / N etc. */
-    wifi_freq supported_freq;                /**< supported Wi-Fi frequency e.g. 2.4G, 5G etc. */
+    oc_string_t supported_mode[NUM_WIFIMODE];  /**< Supported Wi-Fi modes e.g. 802.11 A / B / G / N etc. */
+    oc_string_t supported_freq[NUM_WIFIFREQ];   /**< supported Wi-Fi frequency e.g. 2.4G, 5G etc. */
   } WiFi;
 
   /**
@@ -524,7 +525,7 @@ oc_es_result_t oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes
  * @see wifi_freq
  */
 oc_es_result_t oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
-						wifi_freq supported_freq, char *device_name);
+						wifi_freq supported_freq[], char *device_name);
 
 /**
  * This function Sets Enrollee's Error Code.

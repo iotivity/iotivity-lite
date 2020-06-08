@@ -22,7 +22,6 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_log.h"
-#include "es_utils.h"
 
 #ifdef OC_WIFI_EASYSETUP
 
@@ -66,19 +65,56 @@ oc_wifi_enrollee_t
 
 oc_es_result_t
 oc_wes_set_device_info(size_t device, wifi_mode supported_mode[],
-	wifi_freq supported_freq, char *device_name)
+	wifi_freq supported_freq[], char *device_name)
 {
-  int modeIdx = 0;
+  int index = 0;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
   OC_DBG("oc_wes_set_device_info\n");
 
-  dev_cxt->wifi.data.supported_freq = supported_freq;
-
-  while (supported_mode[modeIdx] != WIFI_EOF) {
-    dev_cxt->wifi.data.supported_mode[modeIdx] = supported_mode[modeIdx];
-    modeIdx++;
+  while (supported_mode[index] != WIFI_MODE_MAX) {
+    switch(supported_mode[index]) {
+      case WIFI_11A:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_A, 1);
+        break;
+	case WIFI_11B:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_B, 1);
+        break;
+	case WIFI_11G:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_G, 1);
+	  break;
+	case WIFI_11N:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_N, 1);
+	  break;
+	case WIFI_11AC:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_AC, 2);
+	  break;
+	case WIFI_11AD:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_mode[index]), WES_WIFI_MODE_AD, 2);
+	  break;
+	default:
+	  OC_ERR("Wrong Input for wifi mode %d", supported_mode[index]);
+        break;
+    }
+    index++;
   }
-  dev_cxt->wifi.data.num_mode = modeIdx;
+  dev_cxt->wifi.data.num_mode = index;
+
+  index = 0;
+  while (supported_freq[index] != WIFI_FREQ_MAX) {
+    switch(supported_freq[index]) {
+      case WIFI_24G:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_freq[index]), WES_WIFI_FREQ_24G, 4);
+	  break;
+	case WIFI_5G:
+	  oc_new_string(&(dev_cxt->wifi.data.supported_freq[index]), WES_WIFI_FREQ_5G, 2);
+	  break;
+	default:
+	  OC_ERR("Wrong Input for wifi frequency %d", supported_freq[index]);
+        break;
+    }
+    index++;
+  }
+  dev_cxt->wifi.data.num_freq = index;
   oc_new_string(&(dev_cxt->device.data.dev_name), device_name, strlen(device_name));
 
   return OC_ES_OK;
@@ -144,66 +180,40 @@ construct_response_of_wificonf(oc_request_t *request)
   oc_rep_start_root_object();
   oc_process_baseline_interface(dev_cxt->wifi.handle);
 
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
   oc_rep_set_array(root, swmt);
   for (int i = 0; i < dev_cxt->wifi.data.num_mode; i++) {
-#ifdef OC_SPEC_VER_OIC
-  // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-  oc_rep_add_int(swmt, (int)dev_cxt->wifi.data.supported_mode[i]);
-#else
-  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-  oc_rep_add_text_string(swmt, wifi_mode_enum_tostring(dev_cxt->wifi.data.supported_mode[i]));
-#endif  // OC_SPEC_VER_OIC
+    oc_rep_add_text_string(swmt, oc_string(dev_cxt->wifi.data.supported_mode[i]));
   }
-
   oc_rep_close_array(root, swmt);
 
-#ifdef OC_SPEC_VER_OIC
-  // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-  oc_rep_set_int(root, swf, (int)dev_cxt->wifi.data.supported_freq);
-#else
   // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
   oc_rep_set_array(root, swf);
-
-  switch(dev_cxt->wifi.data.supported_freq) {
-     case WIFI_24G:
-     case WIFI_5G :
-       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(dev_cxt->wifi.data.supported_freq));
-       break;
-     case WIFI_BOTH:
-       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(WIFI_24G));
-       oc_rep_add_text_string(swf, wifi_freq_enum_tostring(WIFI_5G));
-       break;
-     case WIFI_FREQ_NONE:
-       break;
+  for (int i = 0; i < dev_cxt->wifi.data.num_freq; i++) {
+    oc_rep_add_text_string(swf, oc_string(dev_cxt->wifi.data.supported_freq[i]));
   }
   oc_rep_close_array(root, swf);
-#endif  // OC_SPEC_VER_OIC
 
   oc_rep_set_text_string(root, tnn, oc_string(dev_cxt->wifi.data.ssid));
   oc_rep_set_text_string(root, cd, oc_string(dev_cxt->wifi.data.cred));
 
-#ifdef OC_SPEC_VER_OIC
-  // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-  oc_rep_set_int(root, wat, (int)dev_cxt->wifi.data.auth_type);
-  oc_rep_set_int(root, wet, (int)dev_cxt->wifi.data.enc_type);
-#else
   // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-  oc_rep_set_text_string(root, wat, wifi_authtype_enum_tostring(dev_cxt->wifi.data.auth_type));
-  oc_rep_set_text_string(root, wet, wifi_enctype_enum_tostring(dev_cxt->wifi.data.enc_type));
+  oc_rep_set_text_string(root, wat, oc_string(dev_cxt->wifi.data.auth_type));
+  oc_rep_set_text_string(root, wet, oc_string(dev_cxt->wifi.data.enc_type));
 
   // new properties in OCF 1.3 - swat and swet.
   oc_rep_set_array(root, swat);
   for (int i = 0; i < dev_cxt->wifi.data.num_supported_authtype; i++) {
-    oc_rep_add_text_string(swat, wifi_mode_enum_tostring(dev_cxt->wifi.data.supported_authtype[i]));
+    oc_rep_add_text_string(swat, oc_string(dev_cxt->wifi.data.supported_authtype[i]));
   }
   oc_rep_close_array(root, swat);
 
   oc_rep_set_array(root, swet);
   for (int i = 0; i < dev_cxt->wifi.data.num_supported_enctype; i++) {
-    oc_rep_add_text_string(swet, wifi_mode_enum_tostring(dev_cxt->wifi.data.supported_enctype[i]));
+    oc_rep_add_text_string(swet, oc_string(dev_cxt->wifi.data.supported_enctype[i]));
   }
   oc_rep_close_array(root, swet);
-#endif  // OC_SPEC_VER_OIC
+
   oc_rep_end_root_object();
 }
 
@@ -228,55 +238,33 @@ update_wifi_conf_resource(oc_request_t *request, void *user_data)
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
   OC_DBG("update_wifi_conf_resource\n");
 
-  {
-    char *str_val = NULL;
-    size_t str_len = 0;
-    if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_SSID, &str_val,
-                          &str_len)) {
-      oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
-      res_changed = true;
-    }
-
-    str_val = NULL;
-    str_len = 0;
-    if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_CRED, &str_val,
-                          &str_len)) {
-      oc_new_string(&(dev_cxt->wifi.data.cred), str_val, str_len);
-      res_changed = true;
-    }
+  char *str_val = NULL;
+  size_t str_len = 0;
+  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_SSID, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
+    res_changed = true;
   }
 
-  {
-#ifdef OC_SPEC_VER_OIC
-    // Follow Easy Setup Resource Model prior to OCF 1.3 spec.
-    int64_t int_val = 0;
-    if (oc_rep_get_int(request->request_payload, OC_RSRVD_WES_AUTHTYPE,
-                       &int_val)) {
-      dev_cxt->wifi.data.auth_type = int_val;
-      res_changed = true;
-    }
+  str_val = NULL;
+  str_len = 0;
+  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_CRED, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.cred), str_val, str_len);
+    res_changed = true;
+  }
 
-    if (oc_rep_get_int(request->request_payload, OC_RSRVD_WES_ENCTYPE,
-                       &int_val)) {
-      dev_cxt->wifi.data.enc_type = int_val;
-      res_changed = true;
-    }
-#else
-    // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-    char *str_val = NULL;
-    size_t str_len = 0;
-    if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_AUTHTYPE, &str_val,
-                          &str_len)) {
-      wifi_authtype_string_toenum(str_val, &dev_cxt->wifi.data.auth_type);
-      res_changed = true;
-    }
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_AUTHTYPE, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.auth_type), str_val, str_len);
+    res_changed = true;
+  }
 
-    if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_ENCTYPE, &str_val,
-                          &str_len)) {
-      wifi_enctype_string_toenum(str_val, &dev_cxt->wifi.data.enc_type);
-      res_changed = true;
-    }
-#endif  // OC_SPEC_VER_OIC
+  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_ENCTYPE, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.enc_type), str_val, str_len);
+    res_changed = true;
   }
 
   if (res_changed && dev_cxt->wifi.prov_cb) {
@@ -369,9 +357,11 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *user_data)
 {
   (void)user_data;
+
+  OC_DBG("get_wes_properties\n");
+
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
-  OC_DBG("get_wes_properties %d\n", interface);
 
   oc_rep_start_root_object();
 
@@ -511,30 +501,32 @@ oc_create_wifi_easysetup_resource(size_t device, void *user_data)
   dev_cxt->wes.handle =
     (oc_collection_t *)oc_core_get_resource_by_index(OCF_WES, device);
 
-  dev_cxt->wifi.data.supported_freq = WIFI_BOTH;
-  dev_cxt->wifi.data.supported_mode[0] = WIFI_11A;
-  dev_cxt->wifi.data.supported_mode[1] = WIFI_11B;
-  dev_cxt->wifi.data.supported_mode[2] = WIFI_11G;
-  dev_cxt->wifi.data.supported_mode[3] = WIFI_11N;
-  dev_cxt->wifi.data.num_mode = 4;
-  dev_cxt->wifi.data.auth_type = NONE_AUTH;
-  dev_cxt->wifi.data.enc_type = NONE_ENC;
+  dev_cxt->wifi.data.num_freq = 2;
+  oc_new_string(&(dev_cxt->wifi.data.supported_freq[0]), WES_WIFI_FREQ_24G, 4);
+  oc_new_string(&(dev_cxt->wifi.data.supported_freq[1]), WES_WIFI_FREQ_5G, 2);
 
-#ifndef OC_SPEC_VER_OIC  // Spec Version is OCF 1.3 or more.
+  dev_cxt->wifi.data.num_mode = 4;
+  oc_new_string(&(dev_cxt->wifi.data.supported_mode[0]), WES_WIFI_MODE_A, 1);
+  oc_new_string(&(dev_cxt->wifi.data.supported_mode[1]), WES_WIFI_MODE_B, 1);
+  oc_new_string(&(dev_cxt->wifi.data.supported_mode[2]), WES_WIFI_MODE_G, 1);
+  oc_new_string(&(dev_cxt->wifi.data.supported_mode[3]), WES_WIFI_MODE_N, 1);
+
+  oc_new_string(&(dev_cxt->wifi.data.auth_type), WES_AUTH_NONE, 4);
+  oc_new_string(&(dev_cxt->wifi.data.enc_type), WES_ENCRYPT_NONE, 4);
+
   dev_cxt->wifi.data.num_supported_authtype = NUM_WIFIAUTHTYPE;
-  dev_cxt->wifi.data.supported_authtype[0] = NONE_AUTH;
-  dev_cxt->wifi.data.supported_authtype[1] = WEP;
-  dev_cxt->wifi.data.supported_authtype[2] = WPA_PSK;
-  dev_cxt->wifi.data.supported_authtype[3] = WPA2_PSK;
+  oc_new_string(&(dev_cxt->wifi.data.supported_authtype[0]), WES_AUTH_NONE, 4);
+  oc_new_string(&(dev_cxt->wifi.data.supported_authtype[1]), WES_AUTH_WEP, 3);
+  oc_new_string(&(dev_cxt->wifi.data.supported_authtype[2]), WES_AUTH_WPA_PSK, 7);
+  oc_new_string(&(dev_cxt->wifi.data.supported_authtype[3]), WES_AUTH_WPA2_PSK, 8);
 
   dev_cxt->wifi.data.num_supported_enctype = NUM_WIFIENCTYPE;
-  dev_cxt->wifi.data.supported_enctype[0] = NONE_ENC;
-  dev_cxt->wifi.data.supported_enctype[1] = WEP_64;
-  dev_cxt->wifi.data.supported_enctype[2] = WEP_128;
-  dev_cxt->wifi.data.supported_enctype[3] = TKIP;
-  dev_cxt->wifi.data.supported_enctype[4] = AES;
-  dev_cxt->wifi.data.supported_enctype[5] = TKIP_AES;
-#endif  // OC_SPEC_VER_OIC
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[0]), WES_ENCRYPT_NONE, 4);
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[1]), WES_ENCRYPT_WEP_64, 6);
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[2]), WES_ENCRYPT_WEP_128, 7);
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[3]), WES_ENCRYPT_TKIP, 4);
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[4]), WES_ENCRYPT_AES, 3);
+  oc_new_string(&(dev_cxt->wifi.data.supported_enctype[5]), WES_ENCRYPT_TKIP_AES, 8);
 
   // Add Self link to WES resource
   oc_link_t *self = oc_new_link((oc_resource_t *)dev_cxt->wes.handle);
@@ -975,10 +967,10 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *user_data)
 {
   (void)user_data;
+   OC_DBG("get_ees_properties\n");
+
   oc_collection_t *ees = (oc_collection_t *)resource;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(ees->device);
-
-  OC_DBG("get_ees_properties\n");
 
   switch (interface) {
   case OC_IF_BASELINE:
