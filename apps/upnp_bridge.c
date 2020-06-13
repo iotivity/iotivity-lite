@@ -83,7 +83,7 @@ static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask, vo
     switch (iface_mask) {
     case OC_IF_BASELINE:
         oc_process_baseline_interface(request->resource);
-        // fall thru intentionally
+        /* fall through */
     case OC_IF_A:
     case OC_IF_RW:
         oc_rep_set_boolean(root, value, switchValue);
@@ -165,7 +165,7 @@ static void get_dimming(oc_request_t *request, oc_interface_mask_t iface_mask, v
     switch (iface_mask) {
     case OC_IF_BASELINE:
         oc_process_baseline_interface(request->resource);
-        // fall thru intentionally
+        /* fall through */
     case OC_IF_A:
     case OC_IF_RW:
         oc_rep_set_int(root, dimmingSetting, dimmingValue);
