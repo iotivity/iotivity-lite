@@ -897,6 +897,15 @@ main(void)
   oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
   oc_resource_set_observable(con_resource, false);
 
+#ifdef OC_CLOUD
+/* 
+   We do not like to expose coapcloudconf resource in this aplication. 
+   For CoapCloudConf resource please see cloud_client, cloud_certification_tests apps
+*/
+  oc_resource_t *cloud_resource = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, DEVICE);
+  oc_resource_set_discoverable(cloud_resource, false);
+#endif /* OC_CLOUD */
+
   display_device_uuid();
 
   int c;
