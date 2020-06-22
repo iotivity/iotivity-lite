@@ -126,10 +126,10 @@ display_menu(void)
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("-----------------------------------------------\n");
-#ifdef OC_CLOUD
+#ifdef OC_TCP
   PRINT("[20] Send ping message\n");
   PRINT("-----------------------------------------------\n");
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
@@ -276,7 +276,7 @@ GET_handler(oc_client_response_t *data)
   display_menu();
 }
 
-#ifdef OC_CLOUD
+#ifdef OC_TCP
 static void
 ping_handler(oc_client_response_t *data)
 {
@@ -310,7 +310,7 @@ cloud_send_ping(void)
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -651,15 +651,6 @@ main(void)
   oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, DEVICE);
   oc_resource_set_observable(con_resource, false);
 
-#ifdef OC_CLOUD
-/* 
-   We do not like to expose coapcloudconf resource in this aplication. 
-   For CoapCloudConf resource please see cloud_client, cloud_certification_tests apps
-*/
-  oc_resource_t *cloud_resource = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, DEVICE);
-  oc_resource_set_discoverable(cloud_resource, false);
-#endif /* OC_CLOUD */
-
   display_device_uuid();
 
   int c;
@@ -697,11 +688,11 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
-#ifdef OC_CLOUD
+#ifdef OC_TCP
     case 20:
       cloud_send_ping();
       break;
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
     case 99:
       handle_signal(0);
       break;
