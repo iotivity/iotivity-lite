@@ -172,10 +172,16 @@ oc_wes_set_resource_callbacks(size_t device, oc_wes_prov_cb_t wes_prov_cb,
 }
 
 static void
-construct_response_of_wificonf(oc_request_t *request)
+wificonf_get_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
+  (void)user_data;
+  OC_DBG("wificonf_get_handler %d\n", interface);
+  if (interface != OC_IF_BASELINE) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-  OC_DBG("construct_response_of_wificonf\n");
 
   oc_rep_start_root_object();
   oc_process_baseline_interface(dev_cxt->wifi.handle);
@@ -215,31 +221,27 @@ construct_response_of_wificonf(oc_request_t *request)
   oc_rep_close_array(root, swet);
 
   oc_rep_end_root_object();
+
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
-wificonf_get_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
-  (void)user_data;
-  OC_DBG("wificonf_get_handler %d\n", interface);
-  if (interface == OC_IF_BASELINE) {
-    construct_response_of_wificonf(request);
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
-}
-
-static void
-update_wifi_conf_resource(oc_request_t *request, void *user_data)
+wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   bool res_changed = false;
-  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-  OC_DBG("update_wifi_conf_resource\n");
-
   char *str_val = NULL;
   size_t str_len = 0;
+
+  OC_DBG("wificonf_post_handler %d\n", interface);
+
+  if (interface != OC_IF_BASELINE) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
+
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_SSID, &str_val,
                         &str_len)) {
     oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
@@ -271,33 +273,8 @@ update_wifi_conf_resource(oc_request_t *request, void *user_data)
     // Trigger provisioning callback
     dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data), user_data);
   }
-}
 
-static void
-wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
-{
-  OC_DBG("wificonf_post_handler %d\n", interface);
-
-  if (interface == OC_IF_BASELINE) {
-    update_wifi_conf_resource(request, user_data);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
-}
-
-static void
-construct_response_of_devconf(oc_request_t *request)
-{
-  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-  OC_DBG("construct_response_of_devconf\n");
-
-  oc_rep_start_root_object();
-  oc_process_baseline_interface(dev_cxt->device.handle);
-  oc_rep_set_text_string(root, dn, oc_string(dev_cxt->device.data.dev_name));
-
-  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
@@ -306,24 +283,37 @@ devconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
   OC_DBG("devconf_get_handler %d\n", interface);
-
-  if (interface == OC_IF_BASELINE) {
-    construct_response_of_devconf(request);
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
+
+  oc_rep_start_root_object();
+  oc_process_baseline_interface(dev_cxt->device.handle);
+  oc_rep_set_text_string(root, dn, oc_string(dev_cxt->device.data.dev_name));
+  oc_rep_end_root_object();
+
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
-update_devconf_resource(oc_request_t *request, void *user_data)
+devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
+             void *user_data)
 {
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
+  OC_DBG("devconf_post_handler %d\n", interface);
+
+  if (interface != OC_IF_BASELINE) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-  OC_DBG("update_devconf_resource\n");
 
   if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_DEVNAME, &str_val,
                         &str_len)) {
@@ -335,21 +325,8 @@ update_devconf_resource(oc_request_t *request, void *user_data)
     // Trigger provisioning callback
     dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data), user_data);
   }
-}
 
-static void
-devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-             void *user_data)
-{
-  OC_DBG("devconf_post_handler %d\n", interface);
-
-  if (interface == OC_IF_BASELINE) {
-    update_devconf_resource(request, user_data);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 void
@@ -357,25 +334,18 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *user_data)
 {
   (void)user_data;
-
   OC_DBG("get_wes_properties\n");
-
+  if (interface != OC_IF_BASELINE) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    return;
+  }
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
 
-  oc_rep_start_root_object();
 
-  switch (interface) {
-  case OC_IF_BASELINE:
-  case OC_IF_B:
-  case OC_IF_LL:
-    oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
-    oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
-    break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
+  oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
+  oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
+
 }
 
 bool
@@ -435,28 +405,33 @@ static void
 wes_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  (void)user_data;
-  OC_DBG("wes_get_handler : %d", interface);
-  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
-    oc_handle_collection_request(OC_GET, request, interface, NULL);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
+    OC_DBG("ees_get_handler");
+    if (interface != OC_IF_BASELINE) {
+      OC_ERR("Resource does not support this interface: %d", interface);
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
+      return;
+    }
+    oc_rep_start_root_object();
+    get_wes_properties((oc_resource_t *)request->resource, interface, user_data);
+    oc_rep_end_root_object();
+    oc_send_response(request, OC_STATUS_OK);
+
 }
 
 static void
 wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
-  (void)user_data;
-  OC_DBG("wes_post_handler : %d", interface);
-  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
-    oc_handle_collection_request(OC_POST, request, interface, NULL);
-  } else {
-    OC_ERR("Resource does not support this interface: %d", interface);
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
-  }
+   OC_DBG("ees_post_handler\n");
+   if (interface != OC_IF_BASELINE) {
+     OC_ERR("Resource does not support this interface: %d", interface);
+     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+     return;
+   }
+   set_wes_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                       user_data);
+   oc_send_response(request, OC_STATUS_CHANGED);
+
 }
 
 void
@@ -744,14 +719,13 @@ rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 	void *user_data)
 {
   OC_DBG("rspcap_post_handler %d\n", interface);
-
-  if (interface == OC_IF_BASELINE) {
-    set_rspcap_properties((oc_resource_t *)request->resource, request->request_payload, user_data);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  set_rspcap_properties((oc_resource_t *)request->resource, request->request_payload, user_data);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
@@ -780,15 +754,15 @@ rspcap_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   OC_DBG("rspcap_get_handler %d\n", interface);
 
-  if (interface == OC_IF_BASELINE || interface == OC_IF_R) {
-    oc_rep_start_root_object();
-    get_rspcap_properties((oc_resource_t *)request->resource, interface, user_data);
-    oc_rep_end_root_object();
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  oc_rep_start_root_object();
+  get_rspcap_properties((oc_resource_t *)request->resource, interface, user_data);
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 static void
@@ -844,14 +818,14 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   OC_DBG("rspconf_post_handler %d\n", interface);
 
-  if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
-    set_rspconf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
-                            user_data);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  set_rspconf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                            user_data);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
@@ -883,17 +857,16 @@ rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 {
   OC_DBG("rspconf_get_handler\n");
 
-  if (interface == OC_IF_BASELINE || interface == OC_IF_RW) {
-    oc_rep_start_root_object();
-    get_rspconf_properties((oc_resource_t *)request->resource, interface, user_data);
-    oc_rep_end_root_object();
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  oc_rep_start_root_object();
+  get_rspconf_properties((oc_resource_t *)request->resource, interface, user_data);
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
-
 
 bool
 set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
@@ -952,14 +925,14 @@ ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
   OC_DBG("ees_post_handler\n");
-  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_B)) {
-    set_ees_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
-                      user_data);
-    oc_send_response(request, OC_STATUS_CHANGED);
-  } else {
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  set_ees_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                      user_data);
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 void
@@ -968,38 +941,34 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
 {
   (void)user_data;
    OC_DBG("get_ees_properties\n");
-
+  if (interface != OC_IF_BASELINE) {
+    OC_ERR("Resource does not support this interface: %d", interface);
+    return;
+  }
   oc_collection_t *ees = (oc_collection_t *)resource;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(ees->device);
 
-  switch (interface) {
-  case OC_IF_BASELINE:
-  case OC_IF_B:
-  case OC_IF_LL:
-    oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
-    oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
-    oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
-    oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
-    oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
-    break;
-  default:
-    break;
-  }
+  oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
+  oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
+  oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
+  oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
+  oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
 }
 
 static void
 ees_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  if ((interface == OC_IF_BASELINE)||(interface == OC_IF_LL) || (interface == OC_IF_B)) {
-    oc_rep_start_root_object();
-    get_ees_properties((oc_resource_t *)request->resource, interface, user_data);
-    oc_rep_end_root_object();
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
+  OC_DBG("ees_get_handler");
+  if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+  oc_rep_start_root_object();
+  get_ees_properties((oc_resource_t *)request->resource, interface, user_data);
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
 }
 
 void
