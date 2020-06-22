@@ -10,6 +10,7 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
+EASYSETUP ?= 1
 export SECURE ?= 1
 export PKI ?= 1
 IDD ?= 1
@@ -113,7 +114,11 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux euicc_easysetup_enrollee wifi_easysetup_enrollee
+	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux
+
+ifeq ($(EASYSETUP),1)
+SAMPLES += euicc_easysetup_enrollee wifi_easysetup_enrollee
+endif
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
@@ -139,7 +144,8 @@ endif
 
 OBT = onboarding_tool
 
-# Easy Setup
+
+ifeq ($(EASYSETUP),1)
 SRC_ES=$(wildcard ../../api/easysetup/*.c)
 CFLAGS += -I../../api/easysetup -I../../port -I../../include
 CFLAGS += -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP -DOC_SERVER -DOC_IPV4
@@ -153,6 +159,7 @@ else
 $(info ERROR - DBUS_GLIB package not found)
 endif
 OBJ_ES=$(addprefix obj/easysetup/,$(notdir $(SRC_ES:.c=.o)))
+endif
 
 ifeq ($(DEBUG),1)
 	EXTRA_CFLAGS += -DOC_DEBUG -g -O0
@@ -218,12 +225,15 @@ SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 
 CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 		   libiotivity-lite-server.so libiotivity-lite-client.so \
-		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a \
-		   libiotivity-lite-easysetup.a libiotivity-lite-easysetup.so
+		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a
+ifeq ($(EASYSETUP),1)
+CONSTRAINED_LIBS += libiotivity-lite-easysetup.a libiotivity-lite-easysetup.so
+endif
 
-PC = iotivity-lite-client.pc iotivity-lite-server.pc \
-     iotivity-lite-client-server.pc iotivity-lite-easysetup.pc
-
+PC = iotivity-lite-client.pc iotivity-lite-server.pc iotivity-lite-client-server.pc
+ifeq ($(EASYSETUP),1)
+PC += iotivity-lite-easysetup.pc
+endif
 all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(UNIT_TESTS) $(SWIG)
 
 test: all
@@ -297,10 +307,11 @@ obj/client_server/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT -DOC_SERVER
 
+ifeq ($(EASYSETUP),1)
 obj/easysetup/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_WIFI_EASYSETUP -DOC_ESIM_EASYSETUP
-
+endif
 
 obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
@@ -310,12 +321,13 @@ obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
 
+ifeq ($(EASYSETUP),1)
 libiotivity-lite-easysetup.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
 libiotivity-lite-easysetup.so: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES) $(LIBS)
-
+endif
 libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER) $(OBJ_ES)
 
@@ -342,6 +354,7 @@ client: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS} ${LIBS}
 
+ifeq ($(EASYSETUP),1)
 euicc_easysetup_enrollee: libiotivity-lite-easysetup.a $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c
 	@mkdir -p $@_creds
 	${CC} -o $@ $(ROOT_DIR)/apps/euicc_easysetup_enrollee.c libiotivity-lite-easysetup.a ${CFLAGS} ${LIBS}
@@ -349,6 +362,7 @@ euicc_easysetup_enrollee: libiotivity-lite-easysetup.a $(ROOT_DIR)/apps/euicc_ea
 wifi_easysetup_enrollee: libiotivity-lite-easysetup.a $(ROOT_DIR)/apps/wifi_easysetup_enrollee.c
 	@mkdir -p $@_creds
 	${CC} -o $@ $(ROOT_DIR)/apps/wifi_easysetup_enrollee.c libiotivity-lite-easysetup.a ${CFLAGS} ${LIBS}
+endif
 
 smart_lock: libiotivity-lite-client.a $(ROOT_DIR)/apps/smart_lock_linux.c
 	@mkdir -p $@_creds
@@ -454,6 +468,7 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
+ifeq ($(EASYSETUP),1)
 iotivity-lite-easysetup.pc: iotivity-lite-easysetup.pc.in
 	$(SED) > $@ < $< \
 		-e 's,@prefix@,$(prefix),' \
@@ -462,6 +477,7 @@ iotivity-lite-easysetup.pc: iotivity-lite-easysetup.pc.in
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
 		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+endif
 
 ifneq ($(SECURE),0)
 MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))

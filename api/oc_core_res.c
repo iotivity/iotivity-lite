@@ -25,7 +25,9 @@
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
 #include "oc_collection.h"
+#if defined(OC_WIFI_EASYSETUP) || defined(OC_ESIM_EASYSETUP)
 #include "oc_easysetup_enrollee.h"
+#endif
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
