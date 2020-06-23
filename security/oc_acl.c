@@ -326,6 +326,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
+    OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
     return false;
   }
 
@@ -729,6 +730,9 @@ oc_sec_ace_clear_bootstrap_aces(size_t device)
     }
     if (__anon_clear) {
       oc_ace_free_resources(device, &__anon_clear, "/oic/sec/csr");
+    }
+    if (__anon_clear) {
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sdi");
     }
   } while (__anon_clear);
 }

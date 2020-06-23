@@ -18,6 +18,7 @@
 
 #include "oc_svr.h"
 #include "oc_acl_internal.h"
+#include "oc_ael.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
@@ -25,9 +26,9 @@
 #include "oc_doxm.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
+#include "oc_sdi.h"
 #include "oc_sp.h"
 #include "port/oc_log.h"
-#include "oc_ael.h"
 
 void
 oc_sec_create_svr(void)
@@ -38,6 +39,7 @@ oc_sec_create_svr(void)
   oc_sec_acl_init();
   oc_sec_ael_init();
   oc_sec_sp_init();
+  oc_sec_sdi_init();
 
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
@@ -64,6 +66,9 @@ oc_sec_create_svr(void)
     oc_core_populate_resource(
       OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
+    oc_core_populate_resource(
+      OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_BASELINE,
+      OC_DISCOVERABLE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
 #ifdef OC_PKI
     oc_core_populate_resource(
       OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,

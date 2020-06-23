@@ -38,6 +38,8 @@ void oc_sec_load_ecdsa_keypair(size_t device);
 void oc_sec_dump_ecdsa_keypair(size_t device);
 void oc_sec_dump_ael(size_t device);
 void oc_sec_load_ael(size_t device);
+void oc_sec_load_sdi(size_t device);
+void oc_sec_dump_sdi(size_t device);
 
 #ifdef __cplusplus
 }
