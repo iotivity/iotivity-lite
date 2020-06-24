@@ -30,8 +30,7 @@
 #include "oc_uuid.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -708,8 +707,8 @@ int oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
  * Build a linked list of roles to provision a role certificate.
  *
  * This function will add a single role (role name and authroity) to a list of
- * rules. If the provided list of roles is empty, it will create a new list with the
- * added role.
+ * rules. If the provided list of roles is empty, it will create a new list with
+ * the added role.
  *
  * Example:
  * ```
@@ -942,7 +941,8 @@ void oc_obt_free_ace(oc_sec_ace_t *ace);
 /**
  * Provision a role ACE for the wildcard "*" resource with RW permissions.
  *
- * This is a helper function to quickly provision a role ACE for wildcard access.
+ * This is a helper function to quickly provision a role ACE for wildcard
+ * access.
  *
  * @param[in] subject the uuid or the device being provisioned
  * @param[in] role the role for the ACE
@@ -1134,7 +1134,7 @@ void oc_obt_free_acl(oc_sec_acl_t *acl);
  */
 int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
-
+void oc_obt_set_sd_info(char *name, bool priv);
 #ifdef __cplusplus
 }
 #endif
