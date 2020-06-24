@@ -744,7 +744,10 @@ main(void)
   /* set the latency to 240 seconds*/
   /* if no latency is needed then remove the next line */
   oc_core_set_latency(240);
-
+  /* set the MTU size to the (minimum IPv6 MTU - size of UDP/IP headers) */
+  /* DTLS handshake messages would be fragmented to fit within this size */
+  /* This enables certificate-based DTLS handshakes over Thread */
+  oc_set_mtu_size(1232);
 #ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
 #endif /* OC_STORAGE */
