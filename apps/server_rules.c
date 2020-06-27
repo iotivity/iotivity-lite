@@ -19,67 +19,41 @@
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_ri.h"
+#include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 
-#ifdef __linux__
 /* linux specific code */
 #include <pthread.h>
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
-#endif
 
-#ifdef WIN32
-/* windows specific code */
-#include <windows.h>
-static CONDITION_VARIABLE cv; /* event loop variable */
-static CRITICAL_SECTION cs;   /* event loop variable */
-#endif
+#define MAX_STRING 65 /* max size of the strings. */
 
-#define MAX_STRING 30         /* max size of the strings. */
-#define MAX_PAYLOAD_STRING 65 /* max size strings in the payload */
-#define MAX_ARRAY 10          /* max size of the array */
+typedef struct scenemappings_t
+{
+  struct scenemappings_t *next;
+  char scene[MAX_STRING];
+  char key[MAX_STRING];
+  char value[MAX_STRING];
+} scenemappings_t;
+OC_MEMB(smap_s, scenemappings_t, 1);
+OC_LIST(smap);
 
 volatile int quit = 0; /* stop variable, used by handle_signal */
 
 /* global property variables for path: "/binaryswitch" */
-static char g_binaryswitch_RESOURCE_PROPERTY_NAME_value[] = "value";
 bool g_binaryswitch_value = false;
-static char g_binaryswitch_RESOURCE_INTERFACE[][MAX_STRING] = {
-  "oic.if.a", "oic.if.baseline"
-};
-int g_binaryswitch_nr_resource_interfaces = 2;
 
 /* global property variables for path: "/audio" */
 bool g_audio_mute = false;
 int g_audio_volume = 50;
 
-/* global resource variables for path: /audio */
-static char g_audio_RESOURCE_INTERFACE[][MAX_STRING] = { "oic.if.a",
-                                                         "oic.if.baseline" };
-int g_audio_nr_resource_interfaces = 2;
-
-/* global resource variables for path: /scenemember1 */
-static char g_scenemember_RESOURCE_INTERFACE[][MAX_STRING] = {
-  "oic.if.baseline"
-};
-int g_scenemember_nr_resource_interfaces = 1;
-static oc_string_array_t scenemem_link_param_if;
-static oc_string_array_t scenemem_link_param_rt;
-
 /* global property variables for path: /ruleaction and /scenecollection */
-static oc_string_t lastscene;
-static oc_string_t ra_lastscene;
+char lastscene[MAX_STRING];
+char ra_lastscene[MAX_STRING];
 static oc_string_array_t scenevalues;
-static oc_string_array_t scenecol_link_param_if;
-static oc_string_array_t scenecol_link_param_rt;
-
-/* global resource variables for path: /ruleaction */
-static char g_ruleaction_RESOURCE_INTERFACE[][MAX_STRING] = {
-  "oic.if.rw", "oic.if.baseline"
-};
-int g_ruleaction_nr_resource_interfaces = 2;
 
 /* global property variables for path: /ruleexpression */
 static oc_string_t rule;
@@ -87,92 +61,43 @@ static bool ruleresult = false;
 static bool ruleenable = false;
 static bool actionenable = false;
 
-/* global resource variables for path: /ruleexpression */
-static char g_ruleexpression_RESOURCE_INTERFACE[][MAX_STRING] = {
-  "oic.if.rw", "oic.if.baseline"
-};
-int g_ruleexpression_nr_resource_interfaces = 2;
-
-/* Resource pointers needed for providing notifications when rules execute
- */
+/* Resource handles */
+/* Used as input to rule */
+oc_resource_t *res_binaryswitch;
+/* Specification of the rule */
 oc_resource_t *res_ruleexpression;
+/* Used in the rule action */
 oc_resource_t *res_audio;
-
-/**
- * function to set up the device.
- *
+/* Collection of Scene Members. Records the "lastscene" following a rule action
  */
-static int
-app_init(void)
-{
-  int ret = oc_init_platform("ocf", NULL, NULL);
-  /* the settings determine the appearance of the device on the network
-     can be OCF1.3.1 or OCF2.0.0 (or even higher)
-     supplied values are for OCF1.3.1 */
-  ret |= oc_add_device("/oic/d", "oic.d.stb", "Set Top Box",
-                       "ocf.2.0.0",                   /* icv value */
-                       "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
-                       NULL, NULL);
-  oc_new_string(&rule, "(switch:value = true)", 21);
-  oc_new_string(&lastscene, "normalaudio", 12);
-  oc_new_string(&ra_lastscene, "loudaudio", 9);
-  oc_new_string_array(&scenevalues, (size_t)2);
-  oc_string_array_add_item(scenevalues, oc_string(lastscene));
-  oc_string_array_add_item(scenevalues, oc_string(ra_lastscene));
-  oc_new_string_array(&scenecol_link_param_if, (size_t)2);
-  oc_string_array_add_item(scenecol_link_param_if, "oic.if.rw");
-  oc_string_array_add_item(scenecol_link_param_if, "oic.if.baseline");
-  oc_new_string_array(&scenecol_link_param_rt, (size_t)1);
-  oc_string_array_add_item(scenecol_link_param_rt, "oic.wk.scenecollection");
-  oc_new_string_array(&scenemem_link_param_if, (size_t)2);
-  oc_string_array_add_item(scenemem_link_param_if, "oic.if.a");
-  oc_string_array_add_item(scenemem_link_param_if, "oic.if.baseline");
-  oc_new_string_array(&scenemem_link_param_rt, (size_t)1);
-  oc_string_array_add_item(scenemem_link_param_rt, "oic.r.audio");
-  return ret;
-}
+oc_resource_t *res_scenecol1;
 
-/**
- * helper function to convert the interface string definition to the constant
- * defintion used by the stack.
- * @param interface the interface string e.g. "oic.if.a"
- * @return the stack constant for the interface
- */
-static int
-convert_if_string(char *interface_name)
-{
-  if (strcmp(interface_name, "oic.if.baseline") == 0)
-    return OC_IF_BASELINE; /* baseline interface */
-  if (strcmp(interface_name, "oic.if.rw") == 0)
-    return OC_IF_RW; /* read write interface */
-  if (strcmp(interface_name, "oic.if.r") == 0)
-    return OC_IF_R; /* read interface */
-  if (strcmp(interface_name, "oic.if.s") == 0)
-    return OC_IF_S; /* sensor interface */
-  if (strcmp(interface_name, "oic.if.a") == 0)
-    return OC_IF_A; /* actuator interface */
-  if (strcmp(interface_name, "oic.if.b") == 0)
-    return OC_IF_B; /* batch interface */
-  if (strcmp(interface_name, "oic.if.ll") == 0)
-    return OC_IF_LL; /* linked list interface */
-  return OC_IF_A;
-}
+static pthread_t toggle_switch_thread;
 
 static void
-invoke_rule_action()
+perform_rule_action()
 {
   /*
    * Set lastscene on the target scenecollection
    */
   if (actionenable) {
-    lastscene = ra_lastscene;
-    g_audio_volume = 60;
-    oc_notify_observers(res_audio);
+    strcpy(lastscene, ra_lastscene);
+    scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
+    while (sm) {
+      if (strcmp(lastscene, ra_lastscene) == 0) {
+        if (strcmp(sm->key, "volume") == 0) {
+          sscanf(sm->value, "%d", &g_audio_volume);
+          oc_notify_observers(res_audio);
+          break;
+        }
+      }
+      sm = sm->next;
+    }
   }
 }
 
 static void
-rule_notify_expression()
+rule_notify_and_eval()
 {
   /*
    * rule expression value has changed
@@ -190,11 +115,77 @@ rule_notify_expression()
     oc_notify_observers(res_ruleexpression);
 
     if (actionenable && ruleresult) {
-      invoke_rule_action();
+      perform_rule_action();
     }
   } else {
     ruleresult = false;
   }
+}
+
+oc_define_interrupt_handler(toggle_switch)
+{
+  if (res_binaryswitch) {
+    oc_notify_observers(res_binaryswitch);
+    rule_notify_and_eval();
+  }
+}
+
+/**
+ * function to set up the device.
+ *
+ */
+static int
+app_init(void)
+{
+  oc_activate_interrupt_handler(toggle_switch);
+  int ret = oc_init_platform("ocf", NULL, NULL);
+  /* the settings determine the appearance of the device on the network
+     can be OCF1.3.1 or OCF2.0.0 (or even higher)
+     supplied values are for OCF1.3.1 */
+  ret |= oc_add_device("/oic/d", "oic.d.stb", "Set Top Box",
+                       "ocf.2.0.0",                   /* icv value */
+                       "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
+                       NULL, NULL);
+  oc_new_string(&rule, "(switch:value = true)", 21);
+  strcpy(lastscene, "normalaudio");
+  strcpy(ra_lastscene, "loudaudio");
+  oc_new_string_array(&scenevalues, (size_t)2);
+  oc_string_array_add_item(scenevalues, lastscene);
+  oc_string_array_add_item(scenevalues, ra_lastscene);
+  scenemappings_t *sm = (scenemappings_t *)oc_memb_alloc(&smap_s);
+  if (sm) {
+    strcpy(sm->scene, "normalaudio");
+    strcpy(sm->key, "volume");
+    sprintf(sm->value, "%f", 40.0);
+    oc_list_add(smap, sm);
+  }
+  sm = (scenemappings_t *)oc_memb_alloc(&smap_s);
+  if (sm) {
+    strcpy(sm->scene, "loudaudio");
+    strcpy(sm->key, "volume");
+    sprintf(sm->value, "%d", 60);
+    oc_list_add(smap, sm);
+  }
+  return ret;
+}
+
+static void *
+toggle_switch_resource(void *data)
+{
+  (void)data;
+  while (quit != 1) {
+    char c = getchar();
+    if (quit != 1) {
+      getchar();
+      if (c == 48) {
+        g_binaryswitch_value = false;
+      } else {
+        g_binaryswitch_value = true;
+      }
+      oc_signal_interrupt_handler(toggle_switch);
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -217,11 +208,7 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   /* TODO: SENSOR add here the code to talk to the HW if one implements a
      sensor. the call to the HW needs to fill in the global variable before it
      returns to this function here. alternative is to have a callback from the
-     hardware that sets the global variables.
-
-     The implementation always return everything that belongs to the resource.
-     this implementation is not optimal, but is functionally correct and will
-     pass CTT1.2.2 */
+     hardware that sets the global variables. */
 
   PRINT("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
@@ -233,8 +220,7 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   case OC_IF_A:
     /* property "value" */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
-    PRINT("   %s : %d\n", g_binaryswitch_RESOURCE_PROPERTY_NAME_value,
-          g_binaryswitch_value); /* not handled value */
+    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
     break;
   default:
     break;
@@ -267,8 +253,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   /* loop over the request document to check if all inputs are ok */
   while (rep != NULL) {
     PRINT("key: (check) %s \n", oc_string(rep->name));
-    if (strcmp(oc_string(rep->name),
-               g_binaryswitch_RESOURCE_PROPERTY_NAME_value) == 0) {
+    if (memcmp(oc_string(rep->name), "value", 5) == 0) {
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
@@ -286,8 +271,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     while (rep != NULL) {
       PRINT("key: (assign) %s \n", oc_string(rep->name));
       /* no error: assign the variables */
-      if (strcmp(oc_string(rep->name),
-                 g_binaryswitch_RESOURCE_PROPERTY_NAME_value) == 0) {
+      if (memcmp(oc_string(rep->name), "value", 5) == 0) {
         /* assign "value" */
         g_binaryswitch_value = rep->value.boolean;
       }
@@ -296,13 +280,11 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     /* set the response */
     PRINT("Set response \n");
     oc_rep_start_root_object();
-    /*oc_process_baseline_interface(request->resource); */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
     oc_rep_end_root_object();
 
-    rule_notify_expression();
-
     oc_send_response(request, OC_STATUS_CHANGED);
+    rule_notify_and_eval();
   } else {
     /* TODO: add error response, if any */
     oc_send_response(request, OC_STATUS_NOT_MODIFIED);
@@ -409,23 +391,22 @@ get_scenemember(oc_request_t *request, oc_interface_mask_t interfaces,
 
     // "link" Property
     oc_rep_set_object(root, link);
-    oc_rep_set_text_string(link, href, "/audio");
-    oc_rep_set_string_array(link, rt, scenemem_link_param_rt);
-    oc_rep_set_string_array(link, if, scenemem_link_param_if);
+    oc_rep_set_text_string(link, href, oc_string(res_audio->uri));
+    oc_rep_set_string_array(link, rt, res_audio->types);
+    oc_core_encode_interfaces_mask(oc_rep_object(link), res_audio->interfaces);
     oc_rep_close_object(root, link);
 
     // SceneMappings array
     oc_rep_set_array(root, SceneMappings);
-    oc_rep_object_array_begin_item(SceneMappings);
-    oc_rep_set_text_string(SceneMappings, scene, "normalaudio");
-    oc_rep_set_text_string(SceneMappings, memberProperty, "volume");
-    oc_rep_set_text_string(SceneMappings, memberValue, "40");
-    oc_rep_object_array_end_item(SceneMappings);
-    oc_rep_object_array_begin_item(SceneMappings);
-    oc_rep_set_text_string(SceneMappings, scene, oc_string(ra_lastscene));
-    oc_rep_set_text_string(SceneMappings, memberProperty, "volume");
-    oc_rep_set_text_string(SceneMappings, memberValue, "60");
-    oc_rep_object_array_end_item(SceneMappings);
+    scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
+    while (sm) {
+      oc_rep_object_array_begin_item(SceneMappings);
+      oc_rep_set_text_string(SceneMappings, scene, sm->scene);
+      oc_rep_set_text_string(SceneMappings, memberProperty, sm->key);
+      oc_rep_set_text_string(SceneMappings, memberValue, sm->value);
+      oc_rep_object_array_end_item(SceneMappings);
+      sm = sm->next;
+    }
     oc_rep_close_array(root, SceneMappings);
 
     break;
@@ -502,7 +483,7 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
         ruleenable = rep->value.boolean;
         /* If the rule has been newly enabled evaluate the rule expression */
         if (ruleenable) {
-          rule_notify_expression();
+          rule_notify_and_eval();
         }
       } else if (oc_string_len(rep->name) == 12 &&
                  memcmp(oc_string(rep->name), "actionenable", 12) == 0) {
@@ -514,7 +495,7 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
         if (!ruleenable && actionenable) {
           ruleresult = rep->value.boolean;
           if (ruleresult) {
-            invoke_rule_action();
+            perform_rule_action();
           }
         } else {
           // Invalid state for setting ruleresult by a client; fail the request
@@ -561,8 +542,9 @@ get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_rep_set_text_string(root, scenevalue, "loudaudio");
     oc_rep_set_object(root, link);
     oc_rep_set_text_string(link, href, "/scenecollection1");
-    oc_rep_set_string_array(link, rt, scenecol_link_param_rt);
-    oc_rep_set_string_array(link, if, scenecol_link_param_if);
+    oc_rep_set_string_array(link, rt, res_scenecol1->types);
+    oc_core_encode_interfaces_mask(oc_rep_object(link),
+                                   res_scenecol1->interfaces);
     oc_rep_close_object(root, link);
     break;
   default:
@@ -612,7 +594,7 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
     case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lastScene", 9) == 0) {
-        lastscene = rep->value.string;
+        strcpy(lastscene, oc_string(rep->value.string));
       }
       break;
     default:
@@ -631,7 +613,7 @@ get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   (void)data;
   switch (iface_mask) {
   case OC_IF_BASELINE:
-    oc_rep_set_text_string(root, lastScene, oc_string(lastscene));
+    oc_rep_set_text_string(root, lastScene, lastscene);
     oc_rep_set_string_array(root, sceneValues, scenevalues);
     break;
   default:
@@ -655,16 +637,10 @@ register_resources(void)
 {
 
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
-  oc_resource_t *res_binaryswitch =
-    oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
-  for (int a = 0; a < g_binaryswitch_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(
-      res_binaryswitch,
-      convert_if_string(g_binaryswitch_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(
-    res_binaryswitch, convert_if_string(g_binaryswitch_RESOURCE_INTERFACE[0]));
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_discoverable(res_binaryswitch, true);
   oc_resource_set_periodic_observable(res_binaryswitch, 1);
   oc_resource_set_request_handler(res_binaryswitch, OC_GET, get_binaryswitch,
@@ -676,12 +652,8 @@ register_resources(void)
   PRINT("Register Resource with local path \"/audio\"\n");
   res_audio = oc_new_resource("Audio", "/audio", 1, 0);
   oc_resource_bind_resource_type(res_audio, "oic.r.audio");
-  for (int a = 0; a < g_audio_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(
-      res_audio, convert_if_string(g_audio_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(
-    res_audio, convert_if_string(g_audio_RESOURCE_INTERFACE[0]));
+  oc_resource_bind_resource_interface(res_audio, OC_IF_A);
+  oc_resource_set_default_interface(res_audio, OC_IF_A);
   oc_resource_set_discoverable(res_audio, true);
   oc_resource_set_periodic_observable(res_audio, 1);
   oc_resource_set_request_handler(res_audio, OC_GET, get_audio, NULL);
@@ -692,37 +664,14 @@ register_resources(void)
   oc_resource_t *res_scenemember1 =
     oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
   oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
-  for (int a = 0; a < g_scenemember_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(
-      res_scenemember1, convert_if_string(g_scenemember_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(
-    res_scenemember1, convert_if_string(g_scenemember_RESOURCE_INTERFACE[0]));
   oc_resource_set_discoverable(res_scenemember1, true);
   oc_resource_set_periodic_observable(res_scenemember1, 1);
   oc_resource_set_request_handler(res_scenemember1, OC_GET, get_scenemember,
                                   NULL);
   oc_add_resource(res_scenemember1);
 
-  /**
-  PRINT("Register Resource with local path \"/scenemember2\"\n");
-  oc_resource_t* res_scenemember2 = oc_new_resource("Scene Member 2",
-  "/scenemember2", 1, 0); oc_resource_bind_resource_type(res_scenemember2,
-  "oic.wk.scenemember"); for (int a = 0; a <
-  g_scenemember_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(res_scenemember2,
-  convert_if_string(g_scenemember_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(res_scenemember2,
-  convert_if_string(g_scenemember_RESOURCE_INTERFACE[0]));
-  oc_resource_set_discoverable(res_scenemember2, true);
-  oc_resource_set_periodic_observable(res_scenemember2, 1);
-  oc_resource_set_request_handler(res_scenemember2, OC_GET, get_scenemember,
-  NULL); oc_add_resource(res_scenemember2);
-  */
-
-  PRINT("Register Resource with local path \"/scenecollection1\"\n");
-  oc_resource_t *res_scenecol1 =
+  PRINT("Register Collection with local path \"/scenecollection1\"\n");
+  res_scenecol1 =
     oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
   oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
   oc_resource_set_discoverable(res_scenecol1, true);
@@ -735,7 +684,7 @@ register_resources(void)
                                  set_scenecol_properties, NULL);
   oc_add_collection(res_scenecol1);
 
-  PRINT("Register Resource with local path \"/scenelist\"\n");
+  PRINT("Register Collection with local path \"/scenelist\"\n");
   oc_resource_t *res_scenelist =
     oc_new_collection("Scene List", "/scenelist", 1, 0);
   oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
@@ -752,14 +701,8 @@ register_resources(void)
   res_ruleexpression =
     oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
   oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
-  for (int a = 0; a < g_ruleexpression_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(
-      res_ruleexpression,
-      convert_if_string(g_ruleexpression_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(
-    res_ruleexpression,
-    convert_if_string(g_ruleexpression_RESOURCE_INTERFACE[0]));
+  oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
+  oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
   oc_resource_set_discoverable(res_ruleexpression, true);
   oc_resource_set_periodic_observable(res_ruleexpression, 1);
   oc_resource_set_request_handler(res_ruleexpression, OC_GET,
@@ -772,12 +715,8 @@ register_resources(void)
   oc_resource_t *res_ruleaction =
     oc_new_resource("Rule Action", "/ruleaction", 1, 0);
   oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
-  for (int a = 0; a < g_ruleaction_nr_resource_interfaces; a++) {
-    oc_resource_bind_resource_interface(
-      res_ruleaction, convert_if_string(g_ruleaction_RESOURCE_INTERFACE[a]));
-  }
-  oc_resource_set_default_interface(
-    res_ruleaction, convert_if_string(g_ruleaction_RESOURCE_INTERFACE[0]));
+  oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
+  oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
   oc_resource_set_discoverable(res_ruleaction, true);
   oc_resource_set_periodic_observable(res_ruleaction, 1);
   oc_resource_set_request_handler(res_ruleaction, OC_GET, get_ruleaction, NULL);
@@ -785,7 +724,7 @@ register_resources(void)
                                   NULL);
   oc_add_resource(res_ruleaction);
 
-  PRINT("Register Resource with local path \"/ruleinputcollection\"\n");
+  PRINT("Register Collection with local path \"/ruleinputcollection\"\n");
   oc_resource_t *res_ruleinputcol =
     oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
   // Remove batch from the set of supported interafaces
@@ -805,7 +744,7 @@ register_resources(void)
 
   oc_add_collection(res_ruleinputcol);
 
-  PRINT("Register Resource with local path \"/ruleactioncollection\"\n");
+  PRINT("Register Collection with local path \"/ruleactioncollection\"\n");
   oc_resource_t *res_ruleactioncol =
     oc_new_collection("Rule Action Collection", "/ruleactioncollection", 1, 0);
   // Remove batch from the set of supported interafaces
@@ -821,7 +760,7 @@ register_resources(void)
 
   oc_add_collection(res_ruleactioncol);
 
-  PRINT("Register Resource with local path \"/rule\"\n");
+  PRINT("Register Collection with local path \"/rule\"\n");
   oc_resource_t *res_rule = oc_new_collection("Rule", "/rule", 1, 0);
   // Remove batch from the set of supported interafaces
   res_rule->interfaces = OC_IF_BASELINE | OC_IF_LL;
@@ -844,18 +783,6 @@ register_resources(void)
   oc_add_collection(res_rule);
 }
 
-#ifdef WIN32
-/**
- * signal the event loop (windows version)
- * wakes up the main function to handle the next callback
- */
-static void
-signal_event_loop(void)
-{
-  WakeConditionVariable(&cv);
-}
-#endif
-#ifdef __linux__
 /**
  * signal the event loop (Linux)
  * wakes up the main function to handle the next callback
@@ -867,7 +794,6 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
-#endif
 
 /**
  * handle Ctrl-C
@@ -893,14 +819,6 @@ main(void)
 {
   int init;
 
-#ifdef WIN32
-  /* windows specific */
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
-  /* install Ctrl-C */
-  signal(SIGINT, handle_signal);
-#endif
-#ifdef __linux__
   /* linux specific */
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -908,7 +826,6 @@ main(void)
   sa.sa_handler = handle_signal;
   /* install Ctrl-C */
   sigaction(SIGINT, &sa, NULL);
-#endif
   /* initialize global variables for resource "/binaryswitch" */
   g_binaryswitch_value =
     false; /* current value of property "value" The status of the switch. */
@@ -930,8 +847,12 @@ main(void)
 
 #ifdef OC_SECURITY
   PRINT("Intialize Secure Resources\n");
-  oc_storage_config("./device_builder_server_creds/");
+  oc_storage_config("./server_rules_creds");
 #endif /* OC_SECURITY */
+  if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
+                     NULL) != 0) {
+    return -1;
+  }
 
   /* start the stack */
   init = oc_main_init(&handler);
@@ -941,23 +862,6 @@ main(void)
   PRINT("OCF server \"Rules Test Server\" running, waiting on incomming "
         "connections.\n");
 
-#ifdef WIN32
-  /* windows specific loop */
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    if (next_event == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
-    } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
-        SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
-  }
-#endif
-
-#ifdef __linux__
   /* linux specific loop */
   while (quit != 1) {
     next_event = oc_main_poll();
@@ -971,13 +875,19 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
-#endif
 
-  /* free up strings */
+  /* free up strings and scenemappings */
   oc_free_string(&rule);
-  oc_free_string(&lastscene);
+  oc_free_string_array(&scenevalues);
+  scenemappings_t *sm = (scenemappings_t *)oc_list_pop(smap);
+  while (sm) {
+    oc_memb_free(&smap_s, sm);
+    sm = (scenemappings_t *)oc_list_pop(smap);
+  }
 
   /* shut down the stack */
   oc_main_shutdown();
+  pthread_join(toggle_switch_thread, NULL);
+
   return 0;
 }

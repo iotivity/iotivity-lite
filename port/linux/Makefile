@@ -113,7 +113,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
@@ -359,6 +359,10 @@ client_block_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_block_linu
 
 server_block_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
+server_rules: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_rules.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/server_rules.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
 server_certification_tests: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_certification_tests.c copy_pki_certs copy_idd_files
 	@mkdir -p $@_creds

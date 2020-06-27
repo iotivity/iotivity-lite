@@ -75,6 +75,9 @@ struct oc_collection_s
   OC_LIST_STRUCT(links);
 };
 
+void oc_link_set_interfaces(oc_link_t *link,
+                            oc_interface_mask_t new_interfaces);
+
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t iface_mask,
                                   oc_resource_t *notify_resource);
