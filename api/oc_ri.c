@@ -142,6 +142,19 @@ oc_ri_get_app_resources(void)
 {
   return oc_list_head(app_resources);
 }
+
+bool
+oc_ri_is_app_resource_valid(oc_resource_t *resource)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+  while (res) {
+    if (res == resource) {
+      return true;
+    }
+    res = res->next;
+  }
+  return false;
+}
 #endif
 
 int
