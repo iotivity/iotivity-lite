@@ -65,7 +65,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.1.1",
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.0",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
 #if defined(OC_IDD_API)
@@ -126,10 +126,10 @@ display_menu(void)
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("-----------------------------------------------\n");
-#ifdef OC_CLOUD
+#ifdef OC_TCP
   PRINT("[20] Send ping message\n");
   PRINT("-----------------------------------------------\n");
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
@@ -276,7 +276,7 @@ GET_handler(oc_client_response_t *data)
   display_menu();
 }
 
-#ifdef OC_CLOUD
+#ifdef OC_TCP
 static void
 ping_handler(oc_client_response_t *data)
 {
@@ -310,7 +310,7 @@ cloud_send_ping(void)
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
 }
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
 
 static void
 get_resource(bool tcp, bool observe)
@@ -688,11 +688,11 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
-#ifdef OC_CLOUD
+#ifdef OC_TCP
     case 20:
       cloud_send_ping();
       break;
-#endif /* OC_CLOUD */
+#endif /* OC_TCP */
     case 99:
       handle_signal(0);
       break;

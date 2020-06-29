@@ -275,6 +275,8 @@ int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
 
 oc_interface_mask_t oc_ri_get_interface_mask(char *iface, size_t if_len);
 
+bool oc_ri_is_app_resource_valid(oc_resource_t *resource);
+
 #ifdef __cplusplus
 }
 #endif

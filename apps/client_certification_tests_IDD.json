@@ -7,6 +7,48 @@
       "application/json"
    ],
    "paths":{
+      "/oc/con": {
+        "get": {
+          "description": "Resource that allows for Device specific information to be configured.\n",
+          "parameters": [
+            {
+              "$ref": "#/parameters/interface-all"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description" : "",
+              "schema": {
+                "$ref": "#/definitions/Configuration"
+              }
+            }
+          }
+        },
+        "post": {
+          "description": "Update the information about the Device\n",
+          "parameters": [
+            {
+              "$ref": "#/parameters/interface-rw"
+            },
+            {
+              "name": "body",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/ConfigurationUpdate"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "",
+              "schema": {
+                "$ref": "#/definitions/ConfigurationUpdate"
+              }
+            }
+          }
+        }
+      },
       "/oic/p":{
          "get":{
             "responses":{
@@ -324,6 +366,57 @@
             }
          },
          "type":"object"
+      },
+      "Configuration": {
+        "properties": {
+          "rt":  {
+            "description": "Resource Type of the Resource",
+            "items": {
+              "enum": ["oic.wk.con"],
+              "type": "string",
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array",
+            "default": ["oic.wk.con"]
+          },
+          "n": {
+              "type": "string",
+              "readOnly": true,
+              "maxLength": 64,
+              "description": ""
+          },
+          "if" : {
+            "description": "The OCF Interfaces supported by this Resource",
+            "items": {
+              "enum": [
+                "oic.if.baseline",
+                "oic.if.rw"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          }
+        },
+        "type" : "object",
+        "required": ["n"]
+      },
+      "ConfigurationUpdate" : {
+        "properties": {
+          "n": {
+            "description": "The human friendly name to be set on the Resource, this is also reflected in the same Property in oic.wk.d",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": ["n"],
+        "type" : "object"
       }
    },
    "info":{

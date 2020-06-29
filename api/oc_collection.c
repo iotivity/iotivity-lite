@@ -100,6 +100,7 @@ oc_new_link(oc_resource_t *resource)
       oc_new_string_array(&link->rel, 3);
       oc_string_array_add_item(link->rel, "hosts");
       link->resource = resource;
+      link->interfaces = resource->interfaces;
       resource->num_links++;
       link->next = 0;
       link->ins = (int64_t)oc_random_value();
@@ -122,7 +123,8 @@ oc_delete_link(oc_link_t *link)
       oc_memb_free(&oc_params_s, p);
       p = (oc_link_params_t *)oc_list_pop(link->params);
     }
-    if (link->resource) {
+    if (oc_ri_is_app_resource_valid(link->resource) ||
+        oc_check_if_collection(link->resource)) {
       link->resource->num_links--;
     }
     oc_free_string_array(&(link->rel));
@@ -200,6 +202,12 @@ oc_link_add_link_param(oc_link_t *link, const char *key, const char *value)
       oc_list_add(link->params, p);
     }
   }
+}
+
+void
+oc_link_set_interfaces(oc_link_t *link, oc_interface_mask_t new_interfaces)
+{
+  link->interfaces = new_interfaces;
 }
 
 oc_collection_t *
@@ -600,7 +608,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
           oc_rep_set_string_array(links, rt, link->resource->types);
           oc_core_encode_interfaces_mask(oc_rep_object(links),
-                                         link->resource->interfaces);
+                                         link->interfaces);
           oc_rep_set_string_array(links, rel, link->rel);
           oc_rep_set_int(links, ins, link->ins);
           oc_link_params_t *p = (oc_link_params_t *)oc_list_head(link->params);
@@ -701,8 +709,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         oc_rep_object_array_start_item(links);
         oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
         oc_rep_set_string_array(links, rt, link->resource->types);
-        oc_core_encode_interfaces_mask(oc_rep_object(links),
-                                       link->resource->interfaces);
+        oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
         oc_rep_set_string_array(links, rel, link->rel);
         oc_rep_set_int(links, ins, link->ins);
         oc_link_params_t *p = (oc_link_params_t *)oc_list_head(link->params);
