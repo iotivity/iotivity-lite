@@ -703,7 +703,7 @@ coap_receive(oc_message_t *msg)
             message->token, message->token_len);
         }
       }
-      if (response_buffer) {
+      if (!error_response && response_buffer) {
         OC_DBG("got response buffer for uri %s",
                oc_string(response_buffer->href));
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;
