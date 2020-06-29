@@ -893,6 +893,8 @@ main(void)
   PRINT("Intialize Secure Resources\n");
   oc_storage_config("./server_rules_creds");
 #endif /* OC_SECURITY */
+  oc_set_max_app_data_size(13312);
+
   if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
                      NULL) != 0) {
     return -1;
