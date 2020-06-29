@@ -903,6 +903,9 @@ main(void)
   if (init < 0)
     return init;
 
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, 0);
+  oc_resource_set_observable(con_resource, false);
+
   display_device_uuid();
   PRINT("OCF server \"Rules Test Server\" running, waiting on incomming "
         "connections.\n");
