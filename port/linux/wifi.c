@@ -600,7 +600,6 @@ wifi_start_dhcp_server()
 
   if (wifi_fetch_pid("dnsmasq")) {
     OC_DBG("Dnsmasq is already running");
-    return 0;
   }
   if (remove(DNSMASQ_LEASES_FILE) < 0) {
     OC_ERR("failed to remove %s", DNSMASQ_LEASES_FILE);

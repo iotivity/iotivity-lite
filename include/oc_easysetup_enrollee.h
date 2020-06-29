@@ -418,7 +418,7 @@ typedef struct
     oc_string_t last_err_reason;
     oc_string_t last_err_code;
     oc_string_t last_err_desc;
-    oc_string_t end_user_conf;
+    oc_string_t end_user_consent;
 } oc_ees_data_t;
 
 /**
@@ -643,6 +643,16 @@ void oc_delete_esim_easysetup_resource(size_t device);
 oc_es_result_t oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info);
 
 /**
+ * This function Sets User Confirmation required for profile dwnload.
+ *
+ * @param device	Index of the the device application created
+ * @param ccr User Confirmation Code required
+ *
+ * @return ::OC_ES_OK on success, some other value upon failure.
+ */
+oc_es_result_t oc_ees_set_confirmation_code_required(size_t device, bool ccr);
+
+/**
  * This function Sets Enrollee's Error Code.
  *
  * @param device	Index of the the device application created
@@ -669,7 +679,7 @@ oc_es_result_t oc_ees_set_state(size_t device, char *es_state);
  *
  * @return :: string representing esim enrollee status
  */
-oc_string_t oc_ees_get_state(size_t device);
+char *oc_ees_get_state(size_t device);
 
 /**
  * A set of functions pointers for callback functions which are called after

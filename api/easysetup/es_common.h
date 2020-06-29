@@ -98,10 +98,8 @@ extern "C" {
 #define OC_RSRVD_EES_DEVICEINFO "deviceinfo"
 
 // Esim Easysetup procedure status
-#define EES_PS_NONE ""
-#define EES_PS_INITIATED "Initiated"
+#define EES_PS_INITIATED ""
 #define EES_PS_USER_CONF_PENDING "User confirmation pending"
-#define EES_PS_CONFIRM_RECEIVED "User confirmation received"
 #define EES_PS_DOWNLOADED "Downloaded"
 #define EES_PS_INSTALLED "Installed"
 #define EES_PS_ERROR "Error"

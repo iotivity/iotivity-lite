@@ -659,12 +659,10 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   else if ((strlen(uri) - skip) == 9 &&
            memcmp(uri + skip, "easysetup", 9) == 0) {
     type = OCF_WES;
-  }
-  else if ((strlen(uri) - skip) == 8 &&
+  } else if ((strlen(uri) - skip) == 8 &&
            memcmp(uri + skip, "wificonf", 8) == 0) {
     type = OCF_WES_WIFI;
-  }
-  else if ((strlen(uri) - skip) == 7 &&
+  } else if ((strlen(uri) - skip) == 7 &&
            memcmp(uri + skip, "devconf", 7) == 0) {
     type = OCF_WES_DEVICE;
   }
@@ -673,12 +671,10 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   else if ((strlen(uri) - skip) == 13 &&
            memcmp(uri + skip, "esimeasysetup", 13) == 0) {
     type = OCF_EES;
-  }
-  else if ((strlen(uri) - skip) == 7 &&
+  } else if ((strlen(uri) - skip) == 7 &&
            memcmp(uri + skip, "rspconf", 7) == 0) {
     type = OCF_EES_RSP;
-  }
-  else if ((strlen(uri) - skip) == 13 &&
+  } else if ((strlen(uri) - skip) == 13 &&
            memcmp(uri + skip, "rspcapability", 13) == 0) {
     type = OCF_EES_RSPCAP;
   }

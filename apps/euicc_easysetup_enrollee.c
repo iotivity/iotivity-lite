@@ -55,7 +55,6 @@ ees_profile_download_cb1(int status)
 {
   if(status == 0) {
     oc_ees_set_state(0, EES_PS_DOWNLOADED);
-    lpa_install_profile(&ees_profile_install_cb1);
   } else {
     oc_ees_set_state(0, EES_PS_ERROR);
   }
@@ -70,31 +69,20 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  if(oc_string(ees_prov_data->rsp_status)) {
-    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-    if(!strncmp(oc_string(ees_prov_data->rsp_status), EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
-      oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
-    }
-  }
-
   if(oc_string(ees_prov_data->last_err_reason))
     PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
   if(oc_string(ees_prov_data->last_err_code))
     PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
   if(oc_string(ees_prov_data->last_err_desc))
     PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  if(oc_string(ees_prov_data->end_user_conf)) {
-    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
-    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
-    {
-      oc_ees_set_state(0, EES_PS_CONFIRM_RECEIVED);
-    }
-    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT))) ||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
-    {
-      oc_ees_set_state(0, EES_PS_ERROR);
+  if(oc_string(ees_prov_data->end_user_consent)) {
+    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_consent));
+  }
+  if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
+    if((!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) ||
+        (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK)))) {
+        lpa_download_profile(&ees_profile_download_cb1);
+        lpa_install_profile(&ees_profile_install_cb1);
     }
   }
 }
@@ -105,22 +93,27 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
   (void)user_data;
   PRINT("rsp_prov_cb1\n");
   if (rsp_prov_data == NULL) {
-      PRINT("rsp_prov_data is NULL\n");
-      return;
+    PRINT("rsp_prov_data is NULL\n");
+    return;
   }
-  //Write Access code to LPA
-  int cc_exists = 0;
-  if (oc_string(rsp_prov_data->confirm_code))
-        cc_exists = 1;
-  lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), cc_exists, &ees_profile_download_cb1);
+  if(!strncmp(oc_ees_get_state(0), EES_PS_INITIATED, strlen(EES_PS_INITIATED)))  {
+    if(oc_string(rsp_prov_data->activation_code)) {
+      PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
+    }
+    if(oc_string(rsp_prov_data->profile_metadata)) {
+      PRINT("Profile Metadata Code : %s\n", rsp_prov_data->profile_metadata);
+    }
+    if(oc_string(rsp_prov_data->profile_metadata)) {
+      PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
+    }
 
-
-
-  if(oc_string(rsp_prov_data->profile_metadata))
-  PRINT("Profile Meta Data : %s\n", oc_string(rsp_prov_data->profile_metadata));
-  if(oc_string(rsp_prov_data->confirm_code))
-  PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
-  PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
+    //Write Access code to LPA
+    lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
+    oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
+  } else if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING))) {
+    if(oc_string(rsp_prov_data->confirm_code))
+      PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
+  }
 }
 
 static void
@@ -177,7 +170,6 @@ ees_profile_download_cb2(int status)
 {
   if(status == 0) {
     oc_ees_set_state(1, EES_PS_DOWNLOADED);
-    lpa_install_profile(&ees_profile_install_cb2);
   } else {
     oc_ees_set_state(1, EES_PS_ERROR);
   }
@@ -187,36 +179,25 @@ static void
 ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
 {
   (void)user_data;
-  PRINT("ees_prov_cb1\n");
+  PRINT("ees_prov_cb2\n");
   if (ees_prov_data == NULL) {
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  if(oc_string(ees_prov_data->rsp_status)) {
-    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-    if(!strncmp(oc_string(ees_prov_data->rsp_status), EES_PS_INITIATED, strlen(EES_PS_INITIATED) )) {
-      oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
-    }
-  }
-
   if(oc_string(ees_prov_data->last_err_reason))
     PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
   if(oc_string(ees_prov_data->last_err_code))
     PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
   if(oc_string(ees_prov_data->last_err_desc))
     PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  if(oc_string(ees_prov_data->end_user_conf)) {
-    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_conf));
-    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK)) )||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) )
-    {
-      oc_ees_set_state(1, EES_PS_CONFIRM_RECEIVED);
-    }
-    if((!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_TIMEOUT, strlen(EES_EUC_TIMEOUT))) ||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_REJECT, strlen(EES_EUC_DOWNLOAD_REJECT))) ||
-      (!strncmp(oc_string(ees_prov_data->end_user_conf), EES_EUC_DOWNLOAD_POSTPONED, strlen(EES_EUC_DOWNLOAD_POSTPONED))))
-    {
-      oc_ees_set_state(1, EES_PS_ERROR);
+  if(oc_string(ees_prov_data->end_user_consent)) {
+    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_consent));
+  }
+  if(!strncmp(oc_ees_get_state(1), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
+    if((!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) ||
+        (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK)))) {
+        lpa_download_profile(&ees_profile_download_cb2);
+        lpa_install_profile(&ees_profile_install_cb2);
     }
   }
 }
@@ -227,20 +208,25 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
   (void)user_data;
   PRINT("rsp_prov_cb2\n");
   if (rsp_prov_data == NULL) {
-      PRINT("rsp_prov_data is NULL\n");
-      return;
+    PRINT("rsp_prov_data is NULL\n");
+    return;
   }
-  //Write Access code to LPA
-  int cc_exists = 0;
-  if (oc_string(rsp_prov_data->confirm_code))
-        cc_exists = 1;
-  lpa_write_activation_code(oc_string(rsp_prov_data->activation_code), cc_exists, &ees_profile_download_cb2);
+  if(!strncmp(oc_ees_get_state(1), EES_PS_INITIATED, strlen(EES_PS_INITIATED)))  {
+    if(oc_string(rsp_prov_data->activation_code)) {
+      PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
+    }
+    if(oc_string(rsp_prov_data->profile_metadata)) {
+      PRINT("Profile Metadata Code : %s\n", rsp_prov_data->profile_metadata);
+    }
+    PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
-  if(oc_string(rsp_prov_data->profile_metadata))
-  PRINT("Profile Meta Data : %s\n", oc_string(rsp_prov_data->profile_metadata));
-  if(oc_string(rsp_prov_data->confirm_code))
-  PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
-  PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
+    //Write Access code to LPA
+    lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
+    oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
+  } else if(!strncmp(oc_ees_get_state(1), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING))) {
+    if(oc_string(rsp_prov_data->confirm_code))
+      PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
+  }
 }
 
 static void
@@ -280,7 +266,6 @@ ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
   //1 Start DHCP client
   wifi_start_dhcp_client();
 }
-
 // resource provisioning callbacks for 2 devices
 ees_device_callbacks_s g_rsc_cbks[] = {
   {
@@ -288,7 +273,8 @@ ees_device_callbacks_s g_rsc_cbks[] = {
     .oc_ees_rsp_prov_cb_t = &rsp_prov_cb1,
     .oc_ees_rspcap_prov_cb_t = &rspcap_prov_cb1,
     .oc_wes_wifi_prov_cb_t = &ees_wifi_prov_cb1,
-  },
+  }
+,
   {
     .oc_ees_prov_cb_t = &ees_prov_cb2,
     .oc_ees_rsp_prov_cb_t = &rsp_prov_cb2,
@@ -355,6 +341,9 @@ register_resources(void)
     // Read Device Info and eUICC Info from LPA
     lpa_read_euicc_info(euicc_info);
     lpa_read_device_info(device_info);
+
+     if (oc_ees_set_confirmation_code_required(dev_index, lpa_is_user_confirmation_required()) == OC_ES_ERROR)
+         PRINT("oc_ees_set_confirmation_code_required error!\n");
 
      if (oc_ees_set_device_info(dev_index, euicc_info, device_info) == OC_ES_ERROR)
          PRINT("oc_es_set_device_info error!\n");

@@ -626,6 +626,14 @@ oc_esim_enrollee_t
 }
 
 oc_es_result_t
+oc_ees_set_confirmation_code_required(size_t device, bool ccr)
+{
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
+  dev_cxt->rsp.data.confirm_code_required = ccr;
+  return OC_ES_OK;
+}
+
+oc_es_result_t
 oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
@@ -658,12 +666,12 @@ oc_ees_set_state(size_t device, char *es_status)
   return OC_ES_OK;
 }
 
-oc_string_t
+char *
 oc_ees_get_state(size_t device)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
-  return dev_cxt->ees.data.rsp_status;
+  return oc_string(dev_cxt->ees.data.rsp_status);
 }
 
 oc_es_result_t
@@ -729,23 +737,14 @@ rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-get_rspcap_properties(oc_resource_t *resource, oc_interface_mask_t interface,
-                void *user_data)
+get_rspcap_properties(oc_resource_t *resource, void *user_data)
 {
   (void)user_data;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("get_rspcap_properties\n");
-
-  switch (interface) {
-  case OC_IF_BASELINE:
-  case OC_IF_R:
-          oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
-          oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
-    break;
-  default:
-    break;
-  }
+  oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
+  oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
 }
 
 static void
@@ -760,7 +759,7 @@ rspcap_get_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
   oc_rep_start_root_object();
-  get_rspcap_properties((oc_resource_t *)request->resource, interface, user_data);
+  get_rspcap_properties((oc_resource_t *)request->resource, user_data);
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
@@ -771,7 +770,6 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
-  bool ccr = true;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("set_rspconf_properties\n");
@@ -795,12 +793,14 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
           res_changed = true;
         }
         break;
+	/*
       case OC_REP_BOOL:
         if (oc_rep_get_bool(rep, OC_RSRVD_EES_CONFIRMATIONCODEREQUIRED, &ccr)) {
           dev_cxt->rsp.data.confirm_code_required = ccr;
           res_changed = true;
         }
         break;
+      */
       default:
         break;
     }
@@ -829,26 +829,16 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-get_rspconf_properties(oc_resource_t *resource, oc_interface_mask_t interface,
-            void *user_data)
+get_rspconf_properties(oc_resource_t *resource, void *user_data)
 {
-
   (void)user_data;
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(resource->device);
 
   OC_DBG("get_rspconf_properties\n");
-
-  switch (interface) {
-  case OC_IF_BASELINE:
-  case OC_IF_RW:
-          oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
-          oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
-          oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
-          oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
-    break;
-  default:
-    break;
-  }
+  oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
+  oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
+  oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
+  oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
 }
 
 static void
@@ -863,7 +853,7 @@ rspconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
   oc_rep_start_root_object();
-  get_rspconf_properties((oc_resource_t *)request->resource, interface, user_data);
+  get_rspconf_properties((oc_resource_t *)request->resource, user_data);
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
@@ -884,7 +874,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
-          oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val ,str_len);
+	  oc_ees_set_state(ees->device, str_val);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
@@ -904,7 +894,7 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ENDUSERCONFIRMATION,
             &str_val, &str_len)) {
-          oc_new_string(&(dev_cxt->ees.data.end_user_conf), str_val ,str_len);
+          oc_new_string(&(dev_cxt->ees.data.end_user_consent), str_val ,str_len);
           res_changed = true;
         }
         break;
@@ -952,7 +942,7 @@ get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
   oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
   oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
   oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
-  oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_conf));
+  oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_consent));
 }
 
 static void
@@ -993,11 +983,11 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
   }
 
   // Initiatize EES Resource state
-  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_NONE, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_PS_NONE, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_PS_NONE, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_PS_NONE, 0);
-  oc_new_string(&(dev_cxt->ees.data.end_user_conf), EES_PS_NONE, 0);
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_INITIATED, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_PS_INITIATED, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_PS_INITIATED, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_PS_INITIATED, 0);
+  oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_PS_INITIATED, 0);
 
   // Esim Easy Setup Resource
   oc_core_populate_collection(
@@ -1044,7 +1034,7 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
   oc_link_t *l1 = oc_new_link(dev_cxt->rsp.handle);
   oc_collection_add_link((oc_resource_t *)dev_cxt->ees.handle, l1);
   // Initialize Confrmation Code Required to True
-  dev_cxt->rsp.data.confirm_code_required = true;
+  //dev_cxt->rsp.data.confirm_code_required = true;
 
   // RSP Capability Conf Resource
   oc_core_populate_resource(
@@ -1092,7 +1082,7 @@ oc_delete_esim_easysetup_resource(size_t device)
   oc_free_string(&dev_cxt->ees.data.last_err_reason);
   oc_free_string(&dev_cxt->ees.data.last_err_code);
   oc_free_string(&dev_cxt->ees.data.last_err_desc);
-  oc_free_string(&dev_cxt->ees.data.end_user_conf);
+  oc_free_string(&dev_cxt->ees.data.end_user_consent);
   dev_cxt->ees.prov_cb = NULL;
 
   esim_device_count--;

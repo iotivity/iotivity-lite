@@ -27,6 +27,11 @@ int lpa_init(int reset)
   return 0;
 }
 
+int lpa_is_user_confirmation_required(void)
+{
+  // User Conformation needed for Downloading eSIM profile
+  return 1;
+}
 /*
 SAMPLE EUICC INFO
 
@@ -109,25 +114,29 @@ lpa_read_device_info(char *di_response)
   return 0;
 }
 char g_activation_code[] = "1$SMDP.GSMA.COM$04386-AGYFT-A74Y8-3F815$1.3.6.1.4.1.31746$1";
+int g_cc_exists = 0;
 // activation_code : Input
-void lpa_write_activation_code(char *activation_code, int cc_exists, ees_download_cb_t cbk)
+void lpa_write_activation_code(char *activation_code)
 {
-  (void)activation_code;
-
+  // Verify Activation code with eUICC, String comparision added just to emulate the case
   if(strncmp(g_activation_code, activation_code, strlen(activation_code))) {
-     // Activaiton code did not match, return error
-     // Initiate Profile DOwbload from SMDP+
-    (*cbk)(1); // Failure
   }
-  //Activation code matches, check if user confirmation is done
-  else if (cc_exists)
-  // Initiate Profile DOwbload from SMDP+
-  (*cbk)(0); // Success
+}
 
+int  lpa_download_profile(ees_download_cb_t cbk)
+{
+  for (int i = 0; i < 10; i++)
+    printf("Downloading......\n");
+
+  (*cbk)(0); // Success
+  return 1;
 }
 
 int  lpa_install_profile(ees_install_cb_t cbk)
 {
+  for (int i = 0; i < 10; i++)
+    printf("Installing......\n");
+
   (*cbk)(0); // Success
   return 1;
 }

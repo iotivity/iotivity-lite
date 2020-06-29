@@ -38,6 +38,8 @@ typedef void (*ees_install_cb_t)(int);
 // Initialize local profie assistant
 int lpa_init(int reset);
 
+int lpa_is_user_confirmation_required(void);
+
 // Use GetEUICCInfo of SGP.22 RSP Technical specification
 // euicc_info : Output
 int lpa_read_euicc_info(char *euicc_info);
@@ -48,7 +50,10 @@ int lpa_read_device_info(char *di_response);
 
 // Use CtxParamsForCommonAuthentication Request to get signed by eUICC
 // activation_code : Input
-void lpa_write_activation_code(char *activation_code, int cc_exists, ees_download_cb_t cbk);
+void lpa_write_activation_code(char *activation_code);
+
+// Download eUICC Profile
+int  lpa_download_profile(ees_download_cb_t cbk);
 
 // Install eUICC profile to eUICC module
 int  lpa_install_profile(ees_install_cb_t cbk);
