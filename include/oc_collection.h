@@ -23,8 +23,7 @@
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct oc_link_params_t
@@ -38,6 +37,7 @@ struct oc_link_s
 {
   struct oc_link_s *next;
   oc_resource_t *resource;
+  oc_interface_mask_t interfaces;
   int64_t ins;
   oc_string_array_t rel;
   OC_LIST_STRUCT(params);
@@ -74,6 +74,9 @@ struct oc_collection_s
   OC_LIST_STRUCT(supported_rts);
   OC_LIST_STRUCT(links);
 };
+
+void oc_link_set_interfaces(oc_link_t *link,
+                            oc_interface_mask_t new_interfaces);
 
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t iface_mask,

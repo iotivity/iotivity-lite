@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 // define application specific values.
-static const char *spec_version = "ocf.2.1.1";
+static const char *spec_version = "ocf.2.2.0";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *device_rt = "oic.d.switch";
