@@ -1,83 +1,41 @@
-Getting Started
----------------
+Introduction
+------------
 
-IoTivity-Lite is a lightweight implementation of the
-`Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards
-for the Internet of Things (IoT).
+IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Core Framework <https://iotivity.org/documentation/ocf-core-framework>`_.
 
-It was designed to build secure and interoperable IoT applications in full
-compliance with the
-`OCF specifications <https://openconnectivity.org/developer/specifications>`_
-with a limited footprint not exceeding the needs of the specifications. The
-stack architecture lends itself to be ported rapidly to any chosen hardware/OS
-environment.
-
-IoT applications may be built for a wide variety of rich and resource-constrained
-devices across the IoT landscape. As a general guideline, it should be feasible
-to deploy applications on class 2 constrained devices (>256KB Flash, >64KB RAM),
-or better.
-
-The project is open-source, and its code is distributed under the
-commercial-friendly Apache v2 license.
-
-Contents
---------
-
-- `IoTivity-Lite Architecture`_
-- `Project directory structure`_
-- `Setup source tree`_
-- `Building sample applications on Linux`_
-- `Framework configuration`_
-
-IoTivity-Lite Architecture
----------------------------------
+The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. The Open Connectivity Foundation (OCF), a group of industry leaders have created a standard specification and certification program to address these challenges.
 
 .. image:: Architecture.png
    :scale: 100%
-   :alt: IoTivity-Lite Architecture
+   :alt: Architecture
    :align: center
 
-IoTivity-Lite's design presents the following features:
+The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
 
-- **OS agnostic core**: This cross-platform core (written in pure C)
-  encompasses the APIs, OCF resource model, protocol, security features,
-  memory management and event loop. The core interacts
-  with lower level platform-specific functionality via a very limited
-  collection of abstract interfaces. Such a decoupling of the common
-  OCF standards related functionality from adaptations to any OS/target
-  facilitates greater ease of long-term maintenance and evolution of
-  the stack through successive releases of the OCF specifications.
+Please review the following resources for more details:
 
-- **Platform abstraction**: These are a collection of abstract interfaces
-  with a small set of hooks to platform-specific features. These interfaces
-  are defined in generic terms and elicit a specific contract from
-  implementations. The core calls into these interfaces to interact with
-  the underlying OS/platform. The simplicity and boundedness of these
-  interface definitions allow them to be rapidly implemented on any chosen
-  OS/target. Such an implementation then constitutes a "port". A number of ports
-  (adaptations) currently exist for immediate use, and the project will
-  continue to expand this set.
+- `OCF Security <https://openconnectivity.org/specs/OCF_Security_Specification_v2.1.2.pdf>`_
+- `Device Commissioning (On-boarding and Provisioning) <https://openconnectivity.org/specs/OCF_Onboarding_Tool_Specification_v2.1.2.pdf>`_
+- `Cloud Connectivity <https://openconnectivity.org/specs/OCF_Device_To_Cloud_Services_Specification_v2.1.2.pdf>`_
+- `Bridging <https://openconnectivity.org/specs/OCF_Bridging_Specification_v2.1.2.pdf>`_
+- `Headless Configuration (Wi-Fi Easy Setup) <https://openconnectivity.org/specs/OCF_Wi-Fi_Easy_Setup_Specification_v2.1.2.pdf>`_
 
-- **Support for static OR dynamic allocation of internal structures**:
-  On environments with a C library that supports heap allocation functions,
-  the stack can be configured at build-time to use dynamic memory allocation
-  to operate without any pre-configured set of memory constraints.
+The IoTivity project was created to bring together the open-source community to accelerate the development of the framework and services required to connect the growing number of IoT devices. The IoTivity project offers device vendors and application developers royalty-free access to `OCF technologies <https://openconnectivity.org/developer/specifications/>`_ under the `Apache 2.0 license <https://iotivity.org/about/apache-license>`_.
 
-  Alternatively, the stack may be configured to statically allocate all
-  internal structures by setting a number of build-time parameters that
-  constrain the number of serviceable connections and requests,
-  payload sizes, memory pool sizes, timeouts etc.  These
-  collectively characterize an acceptable workload for an application.
+IoTivity stack features
+-----------------------
 
-- **Lightweight design and low complexity**: This is achieved through
-  the implementation of functionally cohesive modules, and weak coupling
-  between stack layers.
+- **OS agnostic:** The IoTivity device stack and modules work cross-platform (pure C code) and execute in an event-driven style. The stack interacts with lower level OS/hardware platform-specific functionality through a set of abstract interfaces. This decoupling of the common OCF standards related functionality from platform adaptation code promotes ease of long-term maintenance and evolution of the stack through successive releases of the OCF specifications.
 
-- **Simple C APIs**: The APIs are defined so as to closely align to OCF
-  specification constructs aiding greater ease of understanding. Application
-  code utilizing these APIs are largely cross-platform as a consequence
-  of the design, and can be quickly migrated over to a any other target
-  environment.
+.. image:: Porting.png
+   :scale: 100%
+   :alt: PortingLayer
+   :align: center
+
+- **Porting layer:** The platform abstraction is a set of generically defined interfaces which elicit a specific contract from implementations. The stack utilizes these interfaces to interact with the underlying OS/platform. The simplicity and boundedness of these interface definitions allow them to be rapidly implemented on any chosen OS/target. Such an implementation constitutes a "port".
+- **Optional support for static memory:** On minimal environments lacking heap allocation functions, the stack may be configured to statically allocate all internal structures by setting a number of build-time parameters, which by consequence constrain the allowable workload for an application.
+- **C and Java APIs:** The API structure and naming closely aligns with OCF specification constructs, aiding ease of understanding.
+
 
 Project directory structure
 ---------------------------
@@ -142,84 +100,26 @@ port/<OS>/*
 apps/*
   contains sample OCF applications.
 
-service/*
-  contains OCF services
-
 swig/*
   contains instructions and code to build Java language bindings using
   the SWIG tool.
 
-Setup source tree
------------------
+Build instructions
+------------------
 
 Grab source and dependencies using:
 
 ``git clone --recursive https://github.com/iotivity/iotivity-lite.git``
 
-Building sample applications on Linux
--------------------------------------
+Please check here for build instructions:
 
-The entire build is specified in ``port/linux/Makefile``. The output of the
-build consists of all static and dynamic libraries, and sample application
-binaries which are stored under ``port/linux``.
+- `Linux <https://iotivity.org/documentation/building-iotivity-linux>`_
 
-Run ``make`` for a release mode build without debug output.
+- `Windows <https://iotivity.org/documentation/building-iotivity-windows>`_
 
-Add ``SECURE=0`` to exclude the OCF security layer and mbedTLS. The security
-layer is built by default.
+- `Android <https://iotivity.org/documentation/building-iotivity-android>`_
 
-Add ``DEBUG=1`` for a debug mode build with verbose debug output.
-
-Add ``TCP=1`` to include support for TCP endpoints and CoAP over TCP (RFC 8323).
-
-Add ``IPV4=1`` to include IPv4 support in the build. Excluding ``IPV4=1``
-produces an IPv6-only build.
-
-Add ``CLOUD=1`` to include OCF Cloud in the build. TCP and IPv4
-are included too.
-
-Building sample applications on Windows
----------------------------------------
-
-A Visual Studio project file can be found in
-``port/windows/vs2015/IoTivity-Lite.sln``. Open the solution file in
-Visual Studio 2015 or newer. If the version of Visual Studio is newer a prompt
-should pop up asking if you would like to upgrade the visual studio project
-files. Agree to upgrade the files.
-
-Select the version of the samples you would like to build. Debug/Release,
-x86/x64. From the ``build`` menu select ``Build Solution``.
-
-The samples can be run from Visual Studio by right clicking on the
-``SimpleServer`` or ``SimpleClient`` project from the Solution Explorer and
-select ``Debug`` > ``Start new instance``. Or the binaries can be run from the
-output folder ``port/windows/vs2015/{Debug|Release}/{Win32|x64}/``.
-
-The build options are hard coded into the visual studio project. The project
-defaults to using: dynamic memory allocation, OCF security layer is enabled and
-built, and IPv4 support is included in the build.
-
-To change the build options the properties page for each project must be modified
-Right click on the project select ``Properties`` find 
-``C/C++`` > ``Preprocessor`` > ``Preprocessor Definitions`` find the macro
-associated with the feature you wish to enable or disable. For example to
-disable the OCF security layer find and delete ``OC_SECURITY`` from the 
-``Preprocessor Definitions``. The ``Preprocessor Definitions`` must match for
-all projects for them to build and run. Due to the difficulty keeping all the
-projects matching it is recommended to avoid modifying the
-``Preprocessor Definitions`` unless necessary.
-
-Note: The Linux, Windows, and native Android ports are the only adaptation layers
-that are actively maintained as of this writing.
-
-Framework configuration
------------------------
-
-Build-time configuration options for an application are set in ``oc_config.h``.
-This needs to be present in one of the include paths.
-
-Pre-populated (sample) configurations for the sample applications for all
-targets are present in ``port/<OS>/oc_config.h``.
+- `Java language bindings <https://iotivity.org/java-language-bindings>`_
 
 Onboarding and Provisioning
 ----------------------------
@@ -277,7 +177,7 @@ of the many possible ways the this could be done.
    + Type ``2`` **Enter** to select the ``All discoverable resources`` option
    + Type ``0`` **Enter** in response to ``Enter number of resource types [0-None]:``
    + Type ``0`` **Enter** in response to ``Enter number of interfaces [0-None]``
-   + Type ``0`` **Enter** for CREATE, ``1`` **Enter** for RETRIEVE, ``1`` **Enter** for UPDATE, 
+   + Type ``0`` **Enter** for CREATE, ``1`` **Enter** for RETRIEVE, ``1`` **Enter** for UPDATE,
      ``0`` **Enter** for DELETE, and ``1`` **Enter** for NOTIFY.
    + ``Successfully issued request to provision ACE`` should be printed on the screen upon success
 
