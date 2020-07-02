@@ -1,0 +1,10 @@
+include Makefile
+
+CC = gcc
+
+DPP_OBT = remote_onboarding_tool
+SAMPLES_CREDS += ${DPP_OBT}_creds
+
+${DPP_OBT}: libiotivity-lite-client.a $(ROOT_DIR)/apps/dpp_diplomat/remote_obt.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/dpp_diplomat/remote_obt.c libiotivity-lite-client.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
