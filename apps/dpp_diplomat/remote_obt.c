@@ -30,6 +30,30 @@ app_init(void)
   return ret;
 }
 
+/* TODO: Implement onboarding kick-off.
+ * Takes UUID to filter on when performing discovery as a parameter of the request
+ */
+static void
+post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+  (void)request;
+  (void)iface_mask;
+  (void)user_data;
+}
+
+static void
+register_resources(void)
+{
+  PRINT("Register Resource with local path \"/onboardreq\"\n");
+  oc_resource_t *res_onboard = oc_new_resource(NULL, "/onboardreq", 1, 0);
+  oc_resource_bind_resource_type(res_onboard, "obt.remote");
+  oc_resource_bind_resource_interface(res_onboard, OC_IF_RW);
+  oc_resource_set_default_interface(res_onboard, OC_IF_RW);
+  oc_resource_set_discoverable(res_onboard, true);
+  oc_resource_set_request_handler(res_onboard, OC_POST, post_obt, NULL);
+  oc_add_resource(res_onboard);
+}
+
 static void
 issue_requests(void)
 {
@@ -65,6 +89,7 @@ main(void)
 
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
+                                        .register_resources = register_resources,
                                         .requests_entry = issue_requests };
 #ifdef OC_STORAGE
   oc_storage_config("./remote_onboarding_tool_creds");
