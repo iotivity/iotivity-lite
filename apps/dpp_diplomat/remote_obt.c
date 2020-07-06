@@ -174,12 +174,33 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
 }
 
+static void
+owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+  oc_endpoint_t *ep = eps;
+
+  PRINT("\nDiscovered owned device: %s at:\n", di);
+  while (eps != NULL) {
+    PRINTipaddr(*eps);
+    PRINT("\n");
+    eps = eps->next;
+  }
+
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
+}
+
 /* Locally invoked functions */
 static void
 display_menu(void)
 {
   PRINT("##### Specialized OBT #####\n");
+  PRINT("0. Show menu\n");
   PRINT("1. Discover unowned devices\n");
+  PRINT("2. Discover owned devices\n");
+  PRINT("3. Perform JW OTM\n");
   PRINT("99. Exit\n");
 }
 
@@ -188,6 +209,15 @@ discover_unowned_devices(void)
 {
   pthread_mutex_lock(&app_lock);
   oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+  pthread_mutex_unlock(&app_lock);
+  signal_event_loop();
+}
+
+static void
+discover_owned_devices(void)
+{
+  pthread_mutex_lock(&app_lock);
+  oc_obt_discover_owned_devices(owned_device_cb, NULL);
   pthread_mutex_unlock(&app_lock);
   signal_event_loop();
 }
@@ -283,8 +313,14 @@ main(void)
     display_menu();
     SCANF("%d", &c);
     switch (c) {
+      case 0:
+        display_menu();
+        break;
       case 1:
         discover_unowned_devices();
+        break;
+      case 2:
+        discover_owned_devices();
         break;
       case 99:
         handle_signal(0);
@@ -296,6 +332,20 @@ main(void)
 
   // Block for end of main event thread
   pthread_join(event_thread, NULL);
+
+  OC_DBG("Main event thread done; freeing and exiting\n");
+
+  /* Free all device_handle_t objects allocated by this application */
+  device_handle_t *device = (device_handle_t *)oc_list_pop(owned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(owned_devices);
+  }
+  device = (device_handle_t *)oc_list_pop(unowned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(unowned_devices);
+  }
 
   return 0;
 }
