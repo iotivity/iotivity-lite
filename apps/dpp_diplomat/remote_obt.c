@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define MAX_NUM_DEVICES (50)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
@@ -192,6 +193,23 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
 }
 
+static void
+otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
+    oc_list_add(owned_devices, device);
+  } else {
+    oc_memb_free(&device_handles, device);
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
 /* Locally invoked functions */
 static void
 display_menu(void)
@@ -220,6 +238,51 @@ discover_owned_devices(void)
   oc_obt_discover_owned_devices(owned_device_cb, NULL);
   pthread_mutex_unlock(&app_lock);
   signal_event_loop();
+}
+
+static void
+otm_just_works(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  pthread_mutex_lock(&app_lock);
+
+  int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
+                                          devices[c]);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
+  } else {
+    PRINT("\nERROR issuing request to perform ownership transfer\n");
+  }
+
+  pthread_mutex_unlock(&app_lock);
 }
 
 /* TODO: Implement onboarding kick-off.
@@ -321,6 +384,9 @@ main(void)
         break;
       case 2:
         discover_owned_devices();
+        break;
+      case 3:
+        otm_just_works();
         break;
       case 99:
         handle_signal(0);
