@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 /* Threading variables */
-// static pthread_t event_thread;
+static pthread_t event_thread;
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
@@ -54,6 +54,30 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
     rep = rep->next;
   }
   oc_send_response(request, OC_STATUS_CHANGED);
+}
+
+/* Main event thread */
+static void *
+ocf_event_thread(void *data)
+{
+  (void)data;
+  oc_clock_time_t next_event;
+  while (quit != 1) {
+    next_event = oc_main_poll();
+    pthread_mutex_lock(&mutex);
+    if (next_event == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      pthread_cond_timedwait(&cv, &mutex, &ts);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+  oc_main_shutdown();
+  oc_obt_shutdown();
+
+  return NULL;
 }
 
 static void
@@ -114,23 +138,18 @@ main(void)
   if (init < 0)
     return init;
 
-  oc_clock_time_t next_event;
-
-  /* Main event poll */
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
+    OC_ERR("Failed to create main OCF event thread\n");
+    return -1;
   }
-  oc_main_shutdown();
-  oc_obt_shutdown();
+
+  /* Main interface loop */
+  while (quit != 1) {
+    // TODO
+  }
+
+  // Block for end of main event thread
+  pthread_join(event_thread, NULL);
 
   return 0;
 }
