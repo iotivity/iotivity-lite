@@ -36,9 +36,24 @@ app_init(void)
 static void
 post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-  (void)request;
   (void)iface_mask;
   (void)user_data;
+  OC_DBG("POST_OBT:\n");
+  oc_rep_t *rep = request->request_payload;
+  while (rep != NULL) {
+    OC_DBG("Key: %s \n", oc_string(rep->name));
+    switch (rep->type) {
+      case OC_REP_STRING:
+        OC_DBG("Value: %s \n", oc_string(rep->value.string));
+        break;
+      default:
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        return;
+        break;
+    }
+    rep = rep->next;
+  }
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 static void
