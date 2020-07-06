@@ -3,6 +3,7 @@ include Makefile
 CC = gcc
 
 DPP_OBT = remote_onboarding_tool
+SAMPLES += ${DPP_OBT}
 SAMPLES_CREDS += ${DPP_OBT}_creds
 
 ${DPP_OBT}: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/dpp_diplomat/remote_obt.c
