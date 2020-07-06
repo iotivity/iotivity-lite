@@ -60,7 +60,7 @@ char ra_lastscene[MAX_STRING];
 static oc_string_array_t scenevalues;
 
 /* global property variables for path: /ruleexpression */
-static oc_string_t rule;
+char rule[MAX_STRING];
 static bool ruleresult = false;
 static bool ruleenable = false;
 static bool actionenable = false;
@@ -88,7 +88,7 @@ perform_rule_action()
     strcpy(lastscene, ra_lastscene);
     scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
     while (sm) {
-      if (strcmp(lastscene, ra_lastscene) == 0) {
+      if (strcmp(sm->scene, ra_lastscene) == 0) {
         if (strcmp(sm->key, "volume") == 0) {
           sscanf(sm->value, "%d", &g_audio_volume);
           oc_notify_observers(res_audio);
@@ -150,7 +150,7 @@ app_init(void)
                        "ocf.2.1.1",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
-  oc_new_string(&rule, "(switch:value = true)", 21);
+  strcpy(rule, "(switch:value = true)");
   strcpy(lastscene, "normalaudio");
   strcpy(ra_lastscene, "loudaudio");
   oc_new_string_array(&scenevalues, (size_t)2);
@@ -476,7 +476,7 @@ get_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_rep_set_boolean(root, ruleresult, ruleresult);
     oc_rep_set_boolean(root, ruleenable, ruleenable);
     oc_rep_set_boolean(root, actionenable, actionenable);
-    oc_rep_set_text_string(root, rule, oc_string(rule));
+    oc_rep_set_text_string(root, rule, rule);
     break;
   default:
     break;
@@ -509,6 +509,12 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
   while (rep != NULL) {
     printf("  %s :", oc_string(rep->name));
     switch (rep->type) {
+    case OC_REP_STRING:
+      if (oc_string_len(rep->name) == 4 &&
+          memcmp(oc_string(rep->name), "rule", 4) == 0) {
+        strcpy(rule, oc_string(rep->value.string));
+      }
+      break;
     case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "ruleenable", 10) == 0) {
@@ -571,7 +577,7 @@ get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_process_baseline_interface(request->resource);
   /* fall through */
   case OC_IF_RW:
-    oc_rep_set_text_string(root, scenevalue, "loudaudio");
+    oc_rep_set_text_string(root, scenevalue, ra_lastscene);
     oc_rep_set_object(root, link);
     oc_rep_set_text_string(link, href, "/scenecollection1");
     oc_rep_set_string_array(link, rt, res_scenecol1->types);
@@ -605,10 +611,14 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   PRINT("post_ruleaction:\n");
-  /* TODO: loop over the request document to check if all inputs are ok
-  bool error_state = false;
   oc_rep_t *rep = request->request_payload;
-  */
+  while (rep) {
+    if (rep->type == OC_REP_STRING && oc_string_len(rep->name) == 10 &&
+        memcmp(oc_string(rep->name), "scenevalue", 10) == 0) {
+      strcpy(ra_lastscene, oc_string(rep->value.string));
+    }
+    rep = rep->next;
+  }
 
   oc_send_response(request, OC_STATUS_CHANGED);
 }
@@ -619,6 +629,7 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 bool
 set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
+  PRINT("\n\nUPDATE SCENECOL\n\n");
   (void)resource;
   (void)data;
   while (rep != NULL) {
@@ -671,7 +682,8 @@ register_resources(void)
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
-  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_BASELINE | OC_IF_A);
+  oc_resource_bind_resource_interface(res_binaryswitch,
+                                      OC_IF_BASELINE | OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_discoverable(res_binaryswitch, true);
   oc_resource_set_periodic_observable(res_binaryswitch, 1);
@@ -774,6 +786,7 @@ register_resources(void)
   oc_link_set_interfaces(ric1, OC_IF_BASELINE | OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
+  oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_add_collection(res_ruleinputcol);
 
   PRINT("Register Collection with local path \"/ruleactioncollection\"\n");
@@ -927,7 +940,6 @@ main(void)
   }
 
   /* free up strings and scenemappings */
-  oc_free_string(&rule);
   oc_free_string_array(&scenevalues);
   scenemappings_t *sm = (scenemappings_t *)oc_list_pop(smap);
   while (sm) {
