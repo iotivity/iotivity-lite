@@ -10,11 +10,22 @@
 #include <signal.h>
 #include <stdio.h>
 
-/* Threading variables */
+#define SCANF(...)                                                             \
+  do {                                                                         \
+    if (scanf(__VA_ARGS__) <= 0) {                                             \
+      PRINT("ERROR Invalid input\n");                                          \
+      fflush(stdin);                                                           \
+    }                                                                          \
+  } while (0)
+
+/* Event threading variables */
 static pthread_t event_thread;
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
+
+/* Local Action mutex */
+static pthread_mutex_t app_lock;
 
 /* Logic variables */
 static int quit;
@@ -115,6 +126,31 @@ handle_signal(int signal)
   signal_event_loop();
 }
 
+static void
+display_menu(void)
+{
+  PRINT("##### Specialized OBT #####\n");
+  PRINT("1. Discover unowned devices\n");
+  PRINT("99. Exit\n");
+}
+
+static void
+unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
+  (void)uuid;
+  (void)eps;
+  (void)data;
+}
+
+static void
+discover_unowned_devices(void)
+{
+  pthread_mutex_lock(&app_lock);
+  oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+  pthread_mutex_unlock(&app_lock);
+  signal_event_loop();
+}
+
 int
 main(void)
 {
@@ -144,8 +180,20 @@ main(void)
   }
 
   /* Main interface loop */
+  int c;
   while (quit != 1) {
-    // TODO
+    display_menu();
+    SCANF("%d", &c);
+    switch (c) {
+      case 1:
+        discover_unowned_devices();
+        break;
+      case 99:
+        handle_signal(0);
+        break;
+      default:
+        break;
+    }
   }
 
   // Block for end of main event thread
