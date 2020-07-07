@@ -101,8 +101,13 @@ public class OcPlatform {
             // save the current device index for future lookup
             deviceIndexLookup.put(device, deviceIndex);
 
-            ret = OCMain.addDevice(device.getUri(), device.getRt(), device.getName(), device.getSpecVersion(),
-                    device.getDataModelVersion(), device.getAddDeviceCallback());
+            if (device.getAddDeviceCallback() != null) {
+	        ret = OCMain.addDevice(device.getUri(), device.getRt(), device.getName(), device.getSpecVersion(),
+                      device.getDataModelVersion(), device.getAddDeviceCallback());
+	    } else {
+	        ret = OCMain.addDevice(device.getUri(), device.getRt(), device.getName(), device.getSpecVersion(),
+                      device.getDataModelVersion());
+	    }
 
             if (ret >= 0) {
                 deviceIndex.getAndIncrement(); // get ready for next device
