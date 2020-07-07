@@ -122,7 +122,8 @@ oc_delete_link(oc_link_t *link)
       oc_memb_free(&oc_params_s, p);
       p = (oc_link_params_t *)oc_list_pop(link->params);
     }
-    if (link->resource) {
+    if (oc_ri_is_app_resource_valid(link->resource) ||
+        oc_check_if_collection(link->resource)) {
       link->resource->num_links--;
     }
     oc_free_string_array(&(link->rel));
