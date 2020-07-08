@@ -725,6 +725,7 @@ register_resources(void)
   oc_link_t *sm1 = oc_new_link(res_scenemember1);
   oc_collection_add_link(res_scenecol1, sm1);
 
+  oc_collection_add_mandatory_rt(res_scenecol1, "oic.wk.scenemember");
   oc_collection_add_supported_rt(res_scenecol1, "oic.wk.scenemember");
   oc_resource_set_properties_cbs(res_scenecol1, get_scenecol_properties, NULL,
                                  set_scenecol_properties, NULL);
@@ -739,6 +740,7 @@ register_resources(void)
   oc_link_t *sc1 = oc_new_link(res_scenecol1);
   oc_collection_add_link(res_scenelist, sc1);
 
+  oc_collection_add_mandatory_rt(res_scenelist, "oic.wk.scenecollection");
   oc_collection_add_supported_rt(res_scenelist, "oic.wk.scenecollection");
 
   oc_add_collection(res_scenelist);
@@ -788,6 +790,7 @@ register_resources(void)
   oc_link_set_interfaces(ric1, OC_IF_BASELINE | OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
+  oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_add_collection(res_ruleinputcol);
 
@@ -803,6 +806,7 @@ register_resources(void)
   oc_link_t *rac1 = oc_new_link(res_ruleaction);
   oc_collection_add_link(res_ruleactioncol, rac1);
 
+  oc_collection_add_mandatory_rt(res_ruleactioncol, "oic.r.rule.action");
   oc_collection_add_supported_rt(res_ruleactioncol, "oic.r.rule.action");
 
   oc_add_collection(res_ruleactioncol);
@@ -814,6 +818,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res_rule, "oic.r.rule");
   oc_resource_set_discoverable(res_rule, true);
 
+
   oc_link_t *r1 = oc_new_link(res_ruleexpression);
   oc_collection_add_link(res_rule, r1);
 
@@ -823,8 +828,12 @@ register_resources(void)
   oc_link_t *r3 = oc_new_link(res_ruleactioncol);
   oc_collection_add_link(res_rule, r3);
 
+  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.expression");
+  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.inputcollection");
+  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.actioncollection");
+  
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.expression");
-  oc_collection_add_supported_rt(res_rule, "oic.r.rule.input");
+  oc_collection_add_supported_rt(res_rule, "oic.r.rule.inputcollection");
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.actioncollection");
 
   oc_add_collection(res_rule);
