@@ -190,6 +190,10 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(SELF_OBT),1)
+	EXTRA_CFLAGS += -DOC_SELF_OBT
+endif
+
 ifeq ($(JAVA),1)
 	SWIG = swig
 endif

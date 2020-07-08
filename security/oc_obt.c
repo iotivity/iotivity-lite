@@ -141,6 +141,13 @@ oc_obt_get_owned_device_handle(oc_uuid_t *uuid)
 bool
 oc_obt_is_owned_device(oc_uuid_t *uuid)
 {
+#ifdef OC_SELF_OBT
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  if (memcmp(my_uuid->id, uuid->id, 16) == 0) {
+    PRINT("Discovered self\n");
+    return true;
+  }
+#endif /* OC_SELF_OBT */
   /* Check if we already own this device by querying our creds */
   oc_sec_creds_t *creds = oc_sec_get_creds(0);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
@@ -408,10 +415,12 @@ get_endpoints(oc_client_response_t *data)
     link = link->next;
   }
 
+#ifndef OC_SELF_OBT
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, di.id, 16) == 0) {
     return;
   }
+#endif /* OC_SELF_OBT */
 
   oc_discovery_cb_t *cb = NULL;
   oc_device_t *device = NULL;
@@ -534,10 +543,12 @@ obt_check_owned(oc_client_response_t *data)
     return;
   }
 
+#ifndef OC_SELF_OBT
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
     return;
   }
+#endif /* OC_SELF_OBT */
 
   oc_device_t *device = NULL;
 
@@ -1055,6 +1066,16 @@ int
 oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
 {
+#ifdef OC_SELF_OBT
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  if (memcmp(my_uuid->id, uuid1->id, 16) == 0) {
+    return oc_obt_self_provision_pairwise_credentials(uuid2, cb, data);
+  }
+  else if (memcmp(my_uuid->id, uuid2->id, 16) == 0) {
+    return oc_obt_self_provision_pairwise_credentials(uuid1, cb, data);
+  }
+#endif /* OC_SELF_OBT */
+
   oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
   if (!p) {
     return -1;
@@ -1096,6 +1117,28 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
   return 0;
 }
 /* End of provision pair-wise credentials sequence */
+
+#ifdef OC_SELF_OBT
+// TODO
+int
+oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t cb, void *data)
+{
+  PRINT("In oc_obt_self_provision_pairwise_credentials\n");
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  oc_device_t *self = oc_obt_get_owned_device_handle(my_uuid);
+  if (!device || !self) {
+    return -1;
+  }
+
+  (void)my_uuid;
+  (void)device;
+  (void)cb;
+  (void)data;
+  (void)self;
+  return 0;
+}
+#endif /* OC_SELF_OBT */
 
 #ifdef OC_PKI
 /* Construct list of role ids to encode into a role certificate */
