@@ -1115,13 +1115,6 @@ device_self_prov_RFPRO(int status, void *data)
   p->switch_dos = NULL;
 
   if (status >= 0) {
-    int i;
-    for (i = 0; i < 4; i++) {
-      unsigned int r = oc_random_value();
-      memcpy(&p->key[i * 4], &r, sizeof(r));
-      i += 4;
-    }
-
     char d2uuid[OC_UUID_LEN];
     oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
 
@@ -1210,7 +1203,6 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 /* End of provision pair-wise credentials sequence */
 
 #ifdef OC_SELF_OBT
-// TODO
 int
 oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t cb, void *data)
 {
@@ -1237,6 +1229,32 @@ oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t c
   p->device1 = device;
   p->device2 = self;
 
+  // Generate key and update local cred SVR
+  int i;
+  for (i = 0; i < 4; i++) {
+    unsigned int r = oc_random_value();
+    memcpy(&p->key[i * 4], &r, sizeof(r));
+    i += 4;
+  }
+
+  char suuid[OC_UUID_LEN];
+  oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
+  int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
+                                   OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
+                                   16, p->key, 0, 0, NULL, NULL, NULL);
+
+  if (credid == -1) {
+    return -1;
+  }
+
+  oc_sec_cred_t *oc = oc_sec_get_cred_by_credid(credid, 0);
+  if (oc) {
+    oc->owner_cred = true;
+  }
+
+  oc_sec_dump_cred(0);
+
+  // Now go through the regular POST update for the device's cred resource
   oc_tls_select_psk_ciphersuite();
 
   p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_self_prov_RFPRO, p);
