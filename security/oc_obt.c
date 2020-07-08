@@ -931,6 +931,25 @@ device1_RFNOP(int status, void *data)
   free_credprov_ctx(p, -1);
 }
 
+#ifdef OC_SELF_OBT
+static void
+device_self_prov_RFNOP(int status, void *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    free_credprov_ctx(p, 0);
+  } else {
+    free_credprov_ctx(p, -1);
+  }
+}
+#endif /* OC_SELF_OBT */
+
 static void
 device2_cred(oc_client_response_t *data)
 {
@@ -993,6 +1012,28 @@ device1_cred(oc_client_response_t *data)
 
   free_credprov_ctx(p, -1);
 }
+
+#ifdef OC_SELF_OBT
+static void
+device_self_prov_cred(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    free_credprov_ctx(p, -1);
+    return;
+  }
+
+  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device_self_prov_RFNOP, p);
+  if (!p->switch_dos) {
+    free_credprov_ctx(p, -1);
+  }
+}
+#endif /* OC_SELF_OBT */
 
 static void
 device2_RFPRO(int status, void *data)
@@ -1062,6 +1103,56 @@ device1_RFPRO(int status, void *data)
   }
 }
 
+#ifdef OC_SELF_OBT
+static void
+device_self_prov_RFPRO(int status, void *data)
+{
+  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    int i;
+    for (i = 0; i < 4; i++) {
+      unsigned int r = oc_random_value();
+      memcpy(&p->key[i * 4], &r, sizeof(r));
+      i += 4;
+    }
+
+    char d2uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
+
+    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+
+    if (oc_init_post("/oic/sec/cred", ep, NULL, &device_self_prov_cred, HIGH_QOS, p)) {
+      oc_rep_start_root_object();
+      oc_rep_set_array(root, creds);
+      oc_rep_object_array_start_item(creds);
+
+      oc_rep_set_int(creds, credtype, 1);
+      oc_rep_set_text_string(creds, subjectuuid, d2uuid);
+
+      oc_rep_set_object(creds, privatedata);
+      oc_rep_set_byte_string(privatedata, data, p->key, 16);
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_close_object(creds, privatedata);
+
+      oc_rep_object_array_end_item(creds);
+      oc_rep_close_array(root, creds);
+      oc_rep_end_root_object();
+      if (oc_do_post()) {
+        return;
+      }
+    }
+  }
+
+  free_credprov_state(p, -1);
+}
+#endif /* OC_SELF_OBT */
+
 int
 oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
@@ -1124,6 +1215,16 @@ int
 oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t cb, void *data)
 {
   PRINT("In oc_obt_self_provision_pairwise_credentials\n");
+
+  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
+  if (!p) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid)) {
+    return -1;
+  }
+
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
   oc_device_t *self = oc_obt_get_owned_device_handle(my_uuid);
@@ -1131,11 +1232,21 @@ oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t c
     return -1;
   }
 
-  (void)my_uuid;
-  (void)device;
-  (void)cb;
-  (void)data;
-  (void)self;
+  p->cb.cb = cb;
+  p->cb.data = data;
+  p->device1 = device;
+  p->device2 = self;
+
+  oc_tls_select_psk_ciphersuite();
+
+  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_self_prov_RFPRO, p);
+  if (!p->switch_dos) {
+    oc_memb_free(&oc_credprov_ctx_m, p);
+    return -1;
+  }
+
+  oc_list_add(oc_credprov_ctx_l, p);
+
   return 0;
 }
 #endif /* OC_SELF_OBT */
