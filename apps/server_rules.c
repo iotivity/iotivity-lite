@@ -717,6 +717,8 @@ register_resources(void)
   PRINT("Register Collection with local path \"/scenecollection1\"\n");
   res_scenecol1 =
     oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
+  // Remove batch from the set of supported interafaces
+  res_scenecol1->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
   oc_resource_set_discoverable(res_scenecol1, false);
 
