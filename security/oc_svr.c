@@ -67,7 +67,7 @@ oc_sec_create_svr(void)
       OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
     oc_core_populate_resource(
-      OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_BASELINE,
+      OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_RW,
       OC_DISCOVERABLE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
 #ifdef OC_PKI
     oc_core_populate_resource(
