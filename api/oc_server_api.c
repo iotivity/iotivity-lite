@@ -74,7 +74,7 @@ void
 oc_send_response(oc_request_t *request, oc_status_t response_code)
 {
 #ifdef OC_SPEC_VER_OIC
-  if (request->origin->version == OIC_VER_1_1_0) {
+  if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     request->response->content_format = APPLICATION_CBOR;
   } else
 #endif /* OC_SPEC_VER_OIC */
