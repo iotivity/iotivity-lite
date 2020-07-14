@@ -23,6 +23,10 @@
 #include "port/oc_clock.h"
 #include <signal.h>
 
+#if defined(OC_IDD_API)
+#include "oc_introspection.h"
+#endif
+
 /* linux specific code */
 #include <pthread.h>
 static pthread_mutex_t mutex;
@@ -143,7 +147,7 @@ app_init(void)
      can be OCF1.3.1 or OCF2.0.0 (or even higher)
      supplied values are for OCF1.3.1 */
   ret |= oc_add_device("/oic/d", "oic.d.stb", "Set Top Box",
-                       "ocf.2.0.0",                   /* icv value */
+                       "ocf.2.2.0",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
   oc_new_string(&rule, "(switch:value = true)", 21);
@@ -166,6 +170,34 @@ app_init(void)
     sprintf(sm->value, "%d", 60);
     oc_list_add(smap, sm);
   }
+#if defined(OC_IDD_API)
+  FILE *fp;
+  uint8_t *buffer;
+  size_t buffer_size;
+  const char introspection_error[] =
+    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
+    "\tIntrospection data not set for device.\n";
+  fp = fopen("./server_rules_IDD.cbor", "rb");
+  if (fp) {
+    fseek(fp, 0, SEEK_END);
+    buffer_size = ftell(fp);
+    rewind(fp);
+
+    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+    fclose(fp);
+
+    if (fread_ret == 1) {
+      oc_set_introspection_data(0, buffer, buffer_size);
+      PRINT("\tIntrospection data set for device.\n");
+    } else {
+      PRINT("%s", introspection_error);
+    }
+    free(buffer);
+  } else {
+    PRINT("%s", introspection_error);
+  }
+#endif
   return ret;
 }
 
@@ -639,7 +671,7 @@ register_resources(void)
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
-  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_BASELINE | OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_discoverable(res_binaryswitch, true);
   oc_resource_set_periodic_observable(res_binaryswitch, 1);
@@ -664,7 +696,7 @@ register_resources(void)
   oc_resource_t *res_scenemember1 =
     oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
   oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
-  oc_resource_set_discoverable(res_scenemember1, true);
+  oc_resource_set_discoverable(res_scenemember1, false);
   oc_resource_set_periodic_observable(res_scenemember1, 1);
   oc_resource_set_request_handler(res_scenemember1, OC_GET, get_scenemember,
                                   NULL);
@@ -674,7 +706,7 @@ register_resources(void)
   res_scenecol1 =
     oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
   oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
-  oc_resource_set_discoverable(res_scenecol1, true);
+  oc_resource_set_discoverable(res_scenecol1, false);
 
   oc_link_t *sm1 = oc_new_link(res_scenemember1);
   oc_collection_add_link(res_scenecol1, sm1);
@@ -703,7 +735,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
   oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleexpression, true);
+  oc_resource_set_discoverable(res_ruleexpression, false);
   oc_resource_set_periodic_observable(res_ruleexpression, 1);
   oc_resource_set_request_handler(res_ruleexpression, OC_GET,
                                   get_ruleexpression, NULL);
@@ -717,7 +749,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
   oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleaction, true);
+  oc_resource_set_discoverable(res_ruleaction, false);
   oc_resource_set_periodic_observable(res_ruleaction, 1);
   oc_resource_set_request_handler(res_ruleaction, OC_GET, get_ruleaction, NULL);
   oc_resource_set_request_handler(res_ruleaction, OC_POST, post_ruleaction,
@@ -731,7 +763,7 @@ register_resources(void)
   res_ruleinputcol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleinputcol,
                                  "oic.r.rule.inputcollection");
-  oc_resource_set_discoverable(res_ruleinputcol, true);
+  oc_resource_set_discoverable(res_ruleinputcol, false);
 
   oc_link_t *ric1 = oc_new_link(res_binaryswitch);
   // Replace the default rel array with ["hosts"] with just "ruleinput"
@@ -739,7 +771,7 @@ register_resources(void)
   oc_new_string_array(&ric1->rel, 3);
   oc_link_add_rel(ric1, "ruleinput");
   oc_link_add_link_param(ric1, "anchor", "switch");
-  oc_link_set_interfaces(ric1, OC_IF_A);
+  oc_link_set_interfaces(ric1, OC_IF_BASELINE | OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
   oc_add_collection(res_ruleinputcol);
@@ -751,7 +783,7 @@ register_resources(void)
   res_ruleactioncol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleactioncol,
                                  "oic.r.rule.actioncollection");
-  oc_resource_set_discoverable(res_ruleactioncol, true);
+  oc_resource_set_discoverable(res_ruleactioncol, false);
 
   oc_link_t *rac1 = oc_new_link(res_ruleaction);
   oc_collection_add_link(res_ruleactioncol, rac1);
@@ -808,6 +840,18 @@ handle_signal(int signal)
 }
 
 /**
+ * Display UUID of device
+ */
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
+/**
  * main application.
  * intializes the global variables
  * registers and starts the handler
@@ -849,6 +893,8 @@ main(void)
   PRINT("Intialize Secure Resources\n");
   oc_storage_config("./server_rules_creds");
 #endif /* OC_SECURITY */
+  oc_set_max_app_data_size(13312);
+
   if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
                      NULL) != 0) {
     return -1;
@@ -859,6 +905,10 @@ main(void)
   if (init < 0)
     return init;
 
+  oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, 0);
+  oc_resource_set_observable(con_resource, false);
+
+  display_device_uuid();
   PRINT("OCF server \"Rules Test Server\" running, waiting on incomming "
         "connections.\n");
 
