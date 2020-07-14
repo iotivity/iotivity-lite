@@ -32,6 +32,35 @@ int lpa_is_user_confirmation_required(void)
   // User Conformation needed for Downloading eSIM profile
   return 1;
 }
+
+/*
+ProfileMetadataExample
+
+# ASN.1 notation
+storeMetadataRequet ::= [37] SEQUENCE
+{
+  iccid '89010203040506070809'H,
+  serviceProviderName "ServiceProviderName",
+  profileName "ProfileName",
+  iconType jpg,
+  icon '0000'H,
+  profileClass operational
+}
+
+# ASN.1 DER encoding
+BF25385A0A8901020304050607080991135365727669636550726F76696465724E616D65920B50726F66696C654E616D6593010094020000950102
+*/
+char g_profile_metadata[] = "BF25385A0A8901020304050607080991135365727669636550726F76696465724 \
+E616D65920B50726F66696C654E616D6593010094020000950102";
+
+int
+lpa_read_profile_metadata(char *pm)
+{
+  // provide dummy euicc info for testing
+  strncpy(pm, g_profile_metadata, sizeof(g_profile_metadata));
+  return 0;
+}
+
 /*
 SAMPLE EUICC INFO
 

@@ -35,6 +35,7 @@ extern "C" {
 #define NUM_WIFIENCTYPE 6
 
 // Length defined as per GSMA LS to OCF
+#define PROFILE_METADATA_LEN 2048
 #define EUICC_INFO_LEN 1024
 #define DEVICE_INFO_LEN 128
 

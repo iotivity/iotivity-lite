@@ -635,12 +635,14 @@ void oc_delete_esim_easysetup_resource(size_t device);
  *
  * @param device	Index of the the device application created
  * @param euicc_info contains eSIM information as per GSMA EUICCInfo2 data structure
- * @param device_info Contains device information composed of
+ * @param device_info Contains device information
+ * @param profile_metadata Contains eSIM Profile meatadata
  * RspCapabilityConf Structure
  *
  * @return ::OC_ES_OK on success, some other value upon failure.
  */
-oc_es_result_t oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info);
+oc_es_result_t oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info,
+	char *profile_metadata);
 
 /**
  * This function Sets User Confirmation required for profile dwnload.

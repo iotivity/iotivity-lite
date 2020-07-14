@@ -330,6 +330,7 @@ register_resources(void)
   //Read these values from LPA
   char euicc_info[EUICC_INFO_LEN];
   char device_info[DEVICE_INFO_LEN];
+  char profile_metadata[PROFILE_METADATA_LEN];
 
   PRINT("register_resources\n");
 
@@ -341,12 +342,13 @@ register_resources(void)
     // Read Device Info and eUICC Info from LPA
     lpa_read_euicc_info(euicc_info);
     lpa_read_device_info(device_info);
+    lpa_read_profile_metadata(profile_metadata);
 
-     if (oc_ees_set_confirmation_code_required(dev_index, lpa_is_user_confirmation_required()) == OC_ES_ERROR)
-         PRINT("oc_ees_set_confirmation_code_required error!\n");
+    if (oc_ees_set_confirmation_code_required(dev_index, lpa_is_user_confirmation_required()) == OC_ES_ERROR)
+        PRINT("oc_ees_set_confirmation_code_required error!\n");
 
-     if (oc_ees_set_device_info(dev_index, euicc_info, device_info) == OC_ES_ERROR)
-         PRINT("oc_es_set_device_info error!\n");
+    if (oc_ees_set_device_info(dev_index, euicc_info, device_info, profile_metadata) == OC_ES_ERROR)
+        PRINT("oc_es_set_device_info error!\n");
   }
 }
 

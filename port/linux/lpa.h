@@ -40,6 +40,8 @@ int lpa_init(int reset);
 
 int lpa_is_user_confirmation_required(void);
 
+int lpa_read_profile_metadata(char *pm);
+
 // Use GetEUICCInfo of SGP.22 RSP Technical specification
 // euicc_info : Output
 int lpa_read_euicc_info(char *euicc_info);

@@ -634,12 +634,14 @@ oc_ees_set_confirmation_code_required(size_t device, bool ccr)
 }
 
 oc_es_result_t
-oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info)
+oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info,
+	char *profile_metadata)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
 
   oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info, strlen(euicc_info));
   oc_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info, strlen(device_info));
+  oc_new_string(&(dev_cxt->rsp.data.profile_metadata), profile_metadata, strlen(profile_metadata));
 
   return OC_ES_OK;
 }
@@ -780,11 +782,6 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ACTIVATIONCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp.data.activation_code), str_val, str_len);
-          res_changed = true;
-        }
-        if (oc_rep_get_string(rep, OC_RSRVD_EES_PROFMETADATA,
-            &str_val, &str_len)) {
-          oc_new_string(&(dev_cxt->rsp.data.profile_metadata), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_CONFIRMATIONCODE,
