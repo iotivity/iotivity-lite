@@ -509,12 +509,6 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
   while (rep != NULL) {
     printf("  %s :", oc_string(rep->name));
     switch (rep->type) {
-    case OC_REP_STRING:
-      if (oc_string_len(rep->name) == 4 &&
-          memcmp(oc_string(rep->name), "rule", 4) == 0) {
-        strcpy(rule, oc_string(rep->value.string));
-      }
-      break;
     case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 10 &&
           memcmp(oc_string(rep->name), "ruleenable", 10) == 0) {
@@ -615,7 +609,23 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
   while (rep) {
     if (rep->type == OC_REP_STRING && oc_string_len(rep->name) == 10 &&
         memcmp(oc_string(rep->name), "scenevalue", 10) == 0) {
+      size_t i;
+      bool match = false;
+      for (i = 0; i < oc_string_array_get_allocated_size(scenevalues); i++) {
+        const char *sv = oc_string_array_get_item(scenevalues, i);
+        if (strlen(sv) == oc_string_len(rep->value.string) &&
+            memcmp(sv, oc_string(rep->value.string),
+                   oc_string_len(rep->value.string)) == 0) {
+          match = true;
+          break;
+        }
+      }
+      if (!match) {
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+      }
       strcpy(ra_lastscene, oc_string(rep->value.string));
+    } else {
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
     }
     rep = rep->next;
   }
@@ -629,7 +639,6 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 bool
 set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
-  PRINT("\n\nUPDATE SCENECOL\n\n");
   (void)resource;
   (void)data;
   while (rep != NULL) {
@@ -637,6 +646,20 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
     case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lastScene", 9) == 0) {
+        size_t i;
+        bool match = false;
+        for (i = 0; i < oc_string_array_get_allocated_size(scenevalues); i++) {
+          const char *sv = oc_string_array_get_item(scenevalues, i);
+          if (strlen(sv) == oc_string_len(rep->value.string) &&
+              memcmp(sv, oc_string(rep->value.string),
+                     oc_string_len(rep->value.string)) == 0) {
+            match = true;
+            break;
+          }
+        }
+        if (!match) {
+          return false;
+        }
         strcpy(lastscene, oc_string(rep->value.string));
       }
       break;
@@ -682,8 +705,7 @@ register_resources(void)
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
-  oc_resource_bind_resource_interface(res_binaryswitch,
-                                      OC_IF_BASELINE | OC_IF_A);
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_discoverable(res_binaryswitch, true);
   oc_resource_set_periodic_observable(res_binaryswitch, 1);
@@ -708,7 +730,7 @@ register_resources(void)
   oc_resource_t *res_scenemember1 =
     oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
   oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
-  oc_resource_set_discoverable(res_scenemember1, false);
+  oc_resource_set_discoverable(res_scenemember1, true);
   oc_resource_set_periodic_observable(res_scenemember1, 1);
   oc_resource_set_request_handler(res_scenemember1, OC_GET, get_scenemember,
                                   NULL);
@@ -720,7 +742,7 @@ register_resources(void)
   // Remove batch from the set of supported interafaces
   res_scenecol1->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
-  oc_resource_set_discoverable(res_scenecol1, false);
+  oc_resource_set_discoverable(res_scenecol1, true);
 
   oc_link_t *sm1 = oc_new_link(res_scenemember1);
   oc_collection_add_link(res_scenecol1, sm1);
@@ -736,7 +758,8 @@ register_resources(void)
     oc_new_collection("Scene List", "/scenelist", 1, 0);
   oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
   oc_resource_set_discoverable(res_scenelist, true);
-
+  // Remove batch from the set of supported interafaces
+  res_scenelist->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_link_t *sc1 = oc_new_link(res_scenecol1);
   oc_collection_add_link(res_scenelist, sc1);
 
@@ -751,7 +774,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
   oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleexpression, false);
+  oc_resource_set_discoverable(res_ruleexpression, true);
   oc_resource_set_periodic_observable(res_ruleexpression, 1);
   oc_resource_set_request_handler(res_ruleexpression, OC_GET,
                                   get_ruleexpression, NULL);
@@ -765,7 +788,7 @@ register_resources(void)
   oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
   oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleaction, false);
+  oc_resource_set_discoverable(res_ruleaction, true);
   oc_resource_set_periodic_observable(res_ruleaction, 1);
   oc_resource_set_request_handler(res_ruleaction, OC_GET, get_ruleaction, NULL);
   oc_resource_set_request_handler(res_ruleaction, OC_POST, post_ruleaction,
@@ -779,7 +802,7 @@ register_resources(void)
   res_ruleinputcol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleinputcol,
                                  "oic.r.rule.inputcollection");
-  oc_resource_set_discoverable(res_ruleinputcol, false);
+  oc_resource_set_discoverable(res_ruleinputcol, true);
 
   oc_link_t *ric1 = oc_new_link(res_binaryswitch);
   // Replace the default rel array with ["hosts"] with just "ruleinput"
@@ -787,7 +810,7 @@ register_resources(void)
   oc_new_string_array(&ric1->rel, 3);
   oc_link_add_rel(ric1, "ruleinput");
   oc_link_add_link_param(ric1, "anchor", "switch");
-  oc_link_set_interfaces(ric1, OC_IF_BASELINE | OC_IF_A);
+  oc_link_set_interfaces(ric1, OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
   oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
@@ -801,7 +824,7 @@ register_resources(void)
   res_ruleactioncol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleactioncol,
                                  "oic.r.rule.actioncollection");
-  oc_resource_set_discoverable(res_ruleactioncol, false);
+  oc_resource_set_discoverable(res_ruleactioncol, true);
 
   oc_link_t *rac1 = oc_new_link(res_ruleaction);
   oc_collection_add_link(res_ruleactioncol, rac1);
@@ -818,7 +841,6 @@ register_resources(void)
   oc_resource_bind_resource_type(res_rule, "oic.r.rule");
   oc_resource_set_discoverable(res_rule, true);
 
-
   oc_link_t *r1 = oc_new_link(res_ruleexpression);
   oc_collection_add_link(res_rule, r1);
 
@@ -831,7 +853,7 @@ register_resources(void)
   oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.expression");
   oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.inputcollection");
   oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.actioncollection");
-  
+
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.expression");
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.inputcollection");
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.actioncollection");
