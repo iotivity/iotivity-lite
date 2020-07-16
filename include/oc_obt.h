@@ -939,6 +939,14 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
 int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
 
+#ifdef OC_SELF_OBT
+/**
+ * Provision ACE to OBT itself.
+ */
+int oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
+                              void *data);
+#endif /* OC_SELF_OBT */
+
 /**
  * Free the memory associated with the ACE object.
  *

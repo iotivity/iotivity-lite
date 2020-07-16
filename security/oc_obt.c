@@ -2037,6 +2037,14 @@ int
 oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
                      oc_obt_device_status_cb_t cb, void *data)
 {
+
+#ifdef OC_SELF_OBT
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  if (memcmp(my_uuid->id, uuid->id, 16) == 0) {
+    return oc_obt_self_provision_ace(ace, cb, data);
+  }
+#endif /* OC_SELF_OBT */
+
   oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
   if (!r) {
     return -1;
@@ -2070,6 +2078,45 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
   return 0;
 }
 /* End of provision ACE sequence */
+
+#ifdef OC_SELF_OBT
+int
+oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
+                          void *data)
+{
+  oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
+  if (!r) {
+    return -1;
+  }
+
+  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  oc_device_t *self = oc_obt_get_owned_device_handle(my_uuid);
+  if (!self) {
+    return -1;
+  }
+
+  r->cb.cb = cb;
+  r->cb.data = data;
+  r->ace = ace;
+  r->device = self;
+
+  oc_ace_subject_type_t type = ace->subject_type;
+  oc_ace_subject_t *subject = &ace->subject;
+  int aceid = -1;
+  uint16_t permission = ace->permission;
+
+  oc_ace_res_t *res = oc_list_head(ace->resources);
+  while (res != NULL) {
+    oc_sec_ace_update_res(type, subject, aceid, permission, oc_string(res->href), res->wildcard, 0);
+    res = res->next;
+  }
+
+  oc_sec_dump_acl(0);
+  oc_list_add(oc_acl2prov_ctx_l, r);
+
+  return 0;
+}
+#endif /* OC_SELF_OBT */
 
 /* Retrieving credentials */
 
