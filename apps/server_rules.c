@@ -78,30 +78,38 @@ oc_resource_t *res_scenecol1;
 
 static pthread_t toggle_switch_thread;
 
+static oc_event_callback_retval_t
+set_scene(void *data)
+{
+  (void)data;
+  scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
+  while (sm) {
+    if (strcmp(sm->scene, lastscene) == 0) {
+      if (strcmp(sm->key, "volume") == 0) {
+        sscanf(sm->value, "%d", &g_audio_volume);
+        oc_notify_observers(res_audio);
+        break;
+      }
+    }
+    sm = sm->next;
+  }
+  return OC_EVENT_DONE;
+}
+
 static void
-perform_rule_action()
+perform_rule_action(void)
 {
   /*
    * Set lastscene on the target scenecollection
    */
   if (actionenable) {
     strcpy(lastscene, ra_lastscene);
-    scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
-    while (sm) {
-      if (strcmp(sm->scene, ra_lastscene) == 0) {
-        if (strcmp(sm->key, "volume") == 0) {
-          sscanf(sm->value, "%d", &g_audio_volume);
-          oc_notify_observers(res_audio);
-          break;
-        }
-      }
-      sm = sm->next;
-    }
+    set_scene(NULL);
   }
 }
 
 static void
-rule_notify_and_eval()
+rule_notify_and_eval(void)
 {
   /*
    * rule expression value has changed
@@ -661,6 +669,7 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
           return false;
         }
         strcpy(lastscene, oc_string(rep->value.string));
+        oc_set_delayed_callback(NULL, &set_scene, 0);
       }
       break;
     default:
