@@ -2114,6 +2114,8 @@ oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
   oc_sec_dump_acl(0);
   oc_list_add(oc_acl2prov_ctx_l, r);
 
+  free_acl2prov_ctx(r, 0);
+
   return 0;
 }
 #endif /* OC_SELF_OBT */
