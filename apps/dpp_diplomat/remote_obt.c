@@ -212,6 +212,17 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 static void
+provision_credentials_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned pair-wise credentials\n");
+  } else {
+    PRINT("\nERROR provisioning pair-wise credentials\n");
+  }
+}
+
+static void
 provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
@@ -222,6 +233,7 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
     PRINT("\nSuccessfully provisioned ACE to device %s\n", di);
   } else {
     PRINT("\nERROR provisioning ACE to device %s\n", di);
+    PRINT("\nStatus: %d\n", status);
   }
 }
 
@@ -234,8 +246,19 @@ display_menu(void)
   PRINT("1. Discover unowned devices\n");
   PRINT("2. Discover owned devices\n");
   PRINT("3. Perform JW OTM\n");
-  PRINT("4. Provision ACE2\n");
+  PRINT("4. Provision pairwise credentials\n");
+  PRINT("5. Provision ACE2\n");
+  PRINT("98. Display OBT Info\n");
   PRINT("99. Exit\n");
+}
+
+static void
+display_obt_info(void)
+{
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
+  PRINT("\n### OBT Info ###\n");
+  PRINT("OBT UUID: %s\n\n", di);
 }
 
 static void
@@ -302,6 +325,51 @@ otm_just_works(void)
 }
 
 static void
+provision_credentials(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c1, c2;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device 1: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+  PRINT("Select device 2:");
+  SCANF("%d", &c2);
+  if (c2 < 0 || c2 >= i || c2 == c1) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  pthread_mutex_lock(&app_lock);
+  int ret = oc_obt_provision_pairwise_credentials(
+    &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision credentials\n");
+  } else {
+    PRINT("\nERROR issuing request to provision credentials\n");
+  }
+  pthread_mutex_unlock(&app_lock);
+}
+
+static void
 provision_ace2(void)
 {
   if (oc_list_length(owned_devices) == 0) {
@@ -351,11 +419,13 @@ provision_ace2(void)
     i++;
     device = device->next;
 
+    /*
     if (!device) {
       oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
       PRINT("[%d]: %s - (OBT)\n", i + 3, di);
       i++;
     }
+    */
   }
   PRINT("\nSelect subject: ");
   SCANF("%d", &sub);
@@ -586,7 +656,6 @@ main(void)
     SCANF("%d", &c);
     switch (c) {
       case 0:
-        display_menu();
         break;
       case 1:
         discover_unowned_devices();
@@ -598,7 +667,13 @@ main(void)
         otm_just_works();
         break;
       case 4:
+        provision_credentials();
+        break;
+      case 5:
         provision_ace2();
+        break;
+      case 98:
+        display_obt_info();
         break;
       case 99:
         handle_signal(0);
