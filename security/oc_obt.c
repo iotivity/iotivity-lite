@@ -144,7 +144,6 @@ oc_obt_is_owned_device(oc_uuid_t *uuid)
 #ifdef OC_SELF_OBT
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, uuid->id, 16) == 0) {
-    PRINT("Discovered self\n");
     return true;
   }
 #endif /* OC_SELF_OBT */
@@ -1206,7 +1205,6 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 int
 oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t cb, void *data)
 {
-  PRINT("In oc_obt_self_provision_pairwise_credentials\n");
 
   oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
   if (!p) {
