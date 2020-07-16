@@ -666,7 +666,10 @@ done:
   return res;
 }
 
-static bool
+#ifndef OC_SELF_OBT
+static
+#endif /* OC_SELF_OBT */
+bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       int aceid, uint16_t permission, const char *href,
                       oc_ace_wildcard_t wildcard, size_t device)

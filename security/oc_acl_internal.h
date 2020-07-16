@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+#ifdef OC_SELF_OBT
+bool oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t
+                          *subject, int aceid, uint16_t permission, const char
+                          *href, oc_ace_wildcard_t wildcard, size_t device);
+#endif /* OC_SELF_OBT */
 void oc_sec_acl_init(void);
 void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
