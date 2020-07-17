@@ -4,8 +4,16 @@
 #include <signal.h>
 #include <stdio.h>
 
+#define SCANF(...)                                                             \
+  do {                                                                         \
+    if (scanf(__VA_ARGS__) <= 0) {                                             \
+      PRINT("ERROR Invalid input\n");                                          \
+    }                                                                          \
+  } while (0)
+
 pthread_mutex_t mutex;
 pthread_cond_t cv;
+static pthread_t event_loop_thread;
 struct timespec ts;
 
 int quit = 0;
@@ -72,6 +80,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       return OC_STOP_DISCOVERY;
     }
   }
+  oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -80,6 +89,28 @@ issue_requests(void)
 {
   PRINT("Discovering remote onboarding tool\n");
   oc_do_ip_discovery("obt.remote", &discovery, NULL);
+}
+
+static void
+*ocf_event_thread(void *data)
+{
+  (void)data;
+  oc_clock_time_t next_event;
+  while (quit != 1) {
+    next_event = oc_main_poll();
+
+    pthread_mutex_lock(&mutex);
+    if (next_event == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    }
+    else {
+      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      pthread_cond_timedwait(&cv, &mutex, &ts);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+  return NULL;
 }
 
 
@@ -97,8 +128,6 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
-  oc_clock_time_t next_event;
-
 #ifdef OC_STORAGE
   oc_storage_config("./simpleclient_creds");
 #endif /* OC_STORAGE */
@@ -107,19 +136,21 @@ main(void)
   if (init < 0)
     return init;
 
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  if (pthread_create(&event_loop_thread, NULL, &ocf_event_thread, NULL) != 0) {
+    return -1;
   }
-  oc_free_server_endpoints(obt_server);
+
+  int c;
+  while (quit != 1) {
+    // TODO: Basic client interaction/request
+    SCANF("%d", &c);
+  }
+
+  pthread_join(event_loop_thread, NULL);
+
+  if (obt_server != NULL) {
+    oc_free_server_endpoints(obt_server);
+  }
   oc_main_shutdown();
   return 0;
 }
