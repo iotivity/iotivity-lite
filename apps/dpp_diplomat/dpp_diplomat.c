@@ -14,8 +14,13 @@
 
 pthread_mutex_t mutex;
 pthread_cond_t cv;
+pthread_mutex_t app_lock;
 static pthread_t event_loop_thread;
 struct timespec ts;
+
+#define MAX_URI_LENGTH (30)
+static char obt[MAX_URI_LENGTH];
+static oc_endpoint_t *obt_server;
 
 int quit = 0;
 
@@ -44,10 +49,6 @@ handle_signal(int signal)
   signal_event_loop();
 }
 
-#define MAX_URI_LENGTH (30)
-static char obt[MAX_URI_LENGTH];
-static oc_endpoint_t *obt_server;
-
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
@@ -62,7 +63,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    // TODO: Update to reflect what OBT resource type consists of
     if (strlen(t) == 10 && strncmp(t, "obt.remote", 10) == 0) {
       oc_endpoint_list_copy(&obt_server, endpoint);
       strncpy(obt, uri, uri_len);
@@ -75,8 +75,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
         PRINT("\n");
         ep = ep->next;
       }
-
-      // oc_do_get(a_light, light_server, NULL, &get_light, LOW_QOS, NULL);
 
       return OC_STOP_DISCOVERY;
     }
@@ -98,7 +96,9 @@ static void
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
+    pthread_mutex_lock(&app_lock);
     next_event = oc_main_poll();
+    pthread_mutex_unlock(&app_lock);
 
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
@@ -114,6 +114,55 @@ static void
   return NULL;
 }
 
+static void
+post_obt(oc_client_response_t *data)
+{
+  if (data->code == OC_STATUS_CHANGED)
+    PRINT("POST response: CHANGED\n");
+  else if (data->code == OC_STATUS_NOT_MODIFIED)
+    PRINT("POST response: NOT MODIFIED\n");
+  else if (data->code == OC_STATUS_UNAUTHORIZED)
+    PRINT("POST response: UNAUTHORIZED\n");
+  else
+    PRINT("POST response code %d\n", data->code);
+}
+
+static void
+get_uuid_input(void)
+{
+  if (obt_server == NULL) {
+    PRINT("No remote onboarding tool discovered\n");
+    return;
+  }
+  char uuid_input[OC_UUID_LEN];
+  PRINT("Enter UUID for device to onboard:");
+  SCANF("%36s", uuid_input);
+  PRINT("Attempting to POST onboarding request for device %s\n", uuid_input);
+
+  if (oc_init_post(obt, obt_server, NULL, &post_obt, LOW_QOS, NULL)) {
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, uuid, uuid_input);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      PRINT("Sent POST request for onboarding\n");
+    }
+    else {
+      PRINT("Failed to send POST request for onboarding\n");
+    }
+  }
+  else {
+    PRINT("Failed to initialize POST request for onboarding\n");
+  }
+}
+
+static void
+display_menu(void)
+{
+  PRINT("Simple DPP Diplomat\n");
+  PRINT("[0] Enter UUID for onboarding\n");
+  PRINT("[1] Discover OBT\n");
+  PRINT("[99] Exit\n");
+}
 
 int
 main(void)
@@ -130,7 +179,7 @@ main(void)
                                         .requests_entry = issue_requests };
 
 #ifdef OC_STORAGE
-  oc_storage_config("./simpleclient_creds");
+  oc_storage_config("./dpp_diplomat_creds");
 #endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
@@ -143,8 +192,26 @@ main(void)
 
   int c;
   while (quit != 1) {
-    // TODO: Basic client interaction/request
+    display_menu();
     SCANF("%d", &c);
+
+    switch (c) {
+      case 0:
+        get_uuid_input();
+        break;
+      case 1:
+        pthread_mutex_lock(&app_lock);
+        if (obt_server != NULL)
+          oc_free_server_endpoints(obt_server);
+        oc_do_ip_discovery("obt.remote", &discovery, NULL);
+        pthread_mutex_unlock(&app_lock);
+        break;
+      case 99:
+        handle_signal(0);
+        break;
+      default:
+        break;
+    }
   }
 
   pthread_join(event_loop_thread, NULL);
