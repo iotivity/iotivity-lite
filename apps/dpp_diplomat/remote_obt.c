@@ -54,7 +54,10 @@ ocf_event_thread(void *data)
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
+    pthread_mutex_lock(&app_lock);
     next_event = oc_main_poll();
+    pthread_mutex_unlock(&app_lock);
+
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
@@ -569,11 +572,17 @@ remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)uuid;
   (void)eps;
-  char *provided_uuid = (char *) data;
+  PRINT("In remote_onboard_filter\n");
+  char *provided_uuid = (char *)data;
   PRINT("Received UUID: %s\n", provided_uuid);
+
+  // TODO: Process UUIDs, seeing if one matches the one that was provided in the POST request, initiate onboarding if so
+  // Also consider timeout-based discovery loop
+
+  free(provided_uuid);
 }
 
-/* TODO: Implement onboarding kick-off.
+/* Onboarding kick-off.
  * Takes UUID to filter on when performing discovery as a parameter of the request
  */
 static void
@@ -585,15 +594,16 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "uuid") == 0) {
-      PRINT("Processing UUID for onboarding\n");
-      pthread_mutex_lock(&app_lock);
-      oc_obt_discover_unowned_devices(remote_onboard_filter, oc_string(rep->name));
-      pthread_mutex_unlock(&app_lock);
-      signal_event_loop();
+      char *provided_uuid = (char *)malloc(OC_UUID_LEN * sizeof(char));
+      strncpy(provided_uuid, oc_string(rep->value.string), oc_string_len(rep->value.string));
+      provided_uuid[OC_UUID_LEN] = '\0';
+      // oc_new_string(provided_uuid, oc_string(rep->value.string), oc_string_len(rep->value.string));
+      PRINT("Processing UUID %s for onboarding\n", provided_uuid);
+      oc_obt_discover_unowned_devices(remote_onboard_filter, provided_uuid);// &provided_uuid);
     }
     rep = rep->next;
   }
-  oc_send_response(request, OC_STATUS_CHANGED);
+  oc_send_response(request, OC_STATUS_NOT_MODIFIED);
 }
 
 /* Init and setup functions */
