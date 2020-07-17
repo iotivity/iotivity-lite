@@ -564,6 +564,15 @@ provision_ace2(void)
   }
 }
 
+static void
+remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
+  (void)uuid;
+  (void)eps;
+  char *provided_uuid = (char *) data;
+  PRINT("Received UUID: %s\n", provided_uuid);
+}
+
 /* TODO: Implement onboarding kick-off.
  * Takes UUID to filter on when performing discovery as a parameter of the request
  */
@@ -575,15 +584,12 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   OC_DBG("POST_OBT:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    OC_DBG("Key: %s \n", oc_string(rep->name));
-    switch (rep->type) {
-      case OC_REP_STRING:
-        OC_DBG("Value: %s \n", oc_string(rep->value.string));
-        break;
-      default:
-        oc_send_response(request, OC_STATUS_BAD_REQUEST);
-        return;
-        break;
+    if (strcmp(oc_string(rep->name), "uuid") == 0) {
+      PRINT("Processing UUID for onboarding\n");
+      pthread_mutex_lock(&app_lock);
+      oc_obt_discover_unowned_devices(remote_onboard_filter, oc_string(rep->name));
+      pthread_mutex_unlock(&app_lock);
+      signal_event_loop();
     }
     rep = rep->next;
   }
