@@ -68,6 +68,7 @@ typedef struct oc_otm_ctx_t
   struct oc_otm_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
+  bool sdi;
 } oc_otm_ctx_t;
 
 /* Context to be maintained over dos transition sequence */

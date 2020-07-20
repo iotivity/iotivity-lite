@@ -167,9 +167,11 @@ obt_cert_14(oc_client_response_t *data)
     oc_rep_set_text_string(resources, href, "/oic/res");
     oc_rep_object_array_end_item(resources);
 
-    oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string(resources, href, "/oic/sec/sdi");
-    oc_rep_object_array_end_item(resources);
+    if (o->sdi) {
+      oc_rep_object_array_start_item(resources);
+      oc_rep_set_text_string(resources, href, "/oic/sec/sdi");
+      oc_rep_object_array_end_item(resources);
+    }
 
     oc_rep_close_array(aclist2, resources);
 
@@ -257,8 +259,13 @@ obt_cert_11(oc_client_response_t *data)
 
   OC_DBG("In obt_cert_11");
   oc_otm_ctx_t *o = (oc_otm_ctx_t *)data->user_data;
+  o->sdi = true;
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto err_obt_cert_11;
+    if (data->code != OC_STATUS_NOT_FOUND) {
+      goto err_obt_cert_11;
+    } else {
+      o->sdi = false;
+    }
   }
 
   oc_sec_dump_cred(0);
