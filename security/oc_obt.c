@@ -138,15 +138,35 @@ oc_obt_get_owned_device_handle(oc_uuid_t *uuid)
   return get_device_handle(uuid, oc_devices);
 }
 
+#ifdef OC_SELF_OBT
+oc_device_t *
+oc_obt_get_self_handle()
+{
+  oc_uuid_t *self_uuid = oc_core_get_device_id(0);
+  oc_device_t *device = (oc_device_t *)oc_list_head(oc_devices);
+  while (device != NULL) {
+    if (memcmp(device->uuid.id, self_uuid->id, sizeof(oc_uuid_t)) == 0) {
+      break;
+    }
+    device = device->next;
+  }
+
+  if (!device) {
+    device = oc_memb_alloc(&oc_devices_s);
+    if (!device) {
+      return NULL;
+    }
+    memcpy(device->uuid.id, self_uuid->id, sizeof(oc_uuid_t));
+    oc_list_add(oc_devices, device);
+  }
+
+  return device;
+}
+#endif /* OC_SELF_OBT */
+
 bool
 oc_obt_is_owned_device(oc_uuid_t *uuid)
 {
-#ifdef OC_SELF_OBT
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, uuid->id, 16) == 0) {
-    return true;
-  }
-#endif /* OC_SELF_OBT */
   /* Check if we already own this device by querying our creds */
   oc_sec_creds_t *creds = oc_sec_get_creds(0);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
@@ -414,12 +434,10 @@ get_endpoints(oc_client_response_t *data)
     link = link->next;
   }
 
-#ifndef OC_SELF_OBT
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, di.id, 16) == 0) {
     return;
   }
-#endif /* OC_SELF_OBT */
 
   oc_discovery_cb_t *cb = NULL;
   oc_device_t *device = NULL;
@@ -542,12 +560,10 @@ obt_check_owned(oc_client_response_t *data)
     return;
   }
 
-#ifndef OC_SELF_OBT
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
     return;
   }
-#endif /* OC_SELF_OBT */
 
   oc_device_t *device = NULL;
 
@@ -1149,16 +1165,6 @@ int
 oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
 {
-#ifdef OC_SELF_OBT
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, uuid1->id, 16) == 0) {
-    return oc_obt_self_provision_pairwise_credentials(uuid2, cb, data);
-  }
-  else if (memcmp(my_uuid->id, uuid2->id, 16) == 0) {
-    return oc_obt_self_provision_pairwise_credentials(uuid1, cb, data);
-  }
-#endif /* OC_SELF_OBT */
-
   oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
   if (!p) {
     return -1;
@@ -2036,13 +2042,6 @@ oc_obt_provision_ace(oc_uuid_t *uuid, oc_sec_ace_t *ace,
                      oc_obt_device_status_cb_t cb, void *data)
 {
 
-#ifdef OC_SELF_OBT
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, uuid->id, 16) == 0) {
-    return oc_obt_self_provision_ace(ace, cb, data);
-  }
-#endif /* OC_SELF_OBT */
-
   oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
   if (!r) {
     return -1;
@@ -2088,7 +2087,7 @@ oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
   }
 
   oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  oc_device_t *self = oc_obt_get_owned_device_handle(my_uuid);
+  oc_device_t *self = oc_obt_get_self_handle(my_uuid);
   if (!self) {
     return -1;
   }
