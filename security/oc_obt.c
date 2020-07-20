@@ -140,7 +140,7 @@ oc_obt_get_owned_device_handle(oc_uuid_t *uuid)
 
 #ifdef OC_SELF_OBT
 oc_device_t *
-oc_obt_get_self_handle()
+oc_obt_get_self_handle(void)
 {
   oc_uuid_t *self_uuid = oc_core_get_device_id(0);
   oc_device_t *device = (oc_device_t *)oc_list_head(oc_devices);
@@ -1221,9 +1221,8 @@ oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t c
     return -1;
   }
 
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
-  oc_device_t *self = oc_obt_get_owned_device_handle(my_uuid);
+  oc_device_t *self = oc_obt_get_self_handle();
   if (!device || !self) {
     return -1;
   }
@@ -2086,8 +2085,7 @@ oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
     return -1;
   }
 
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  oc_device_t *self = oc_obt_get_self_handle(my_uuid);
+  oc_device_t *self = oc_obt_get_self_handle();
   if (!self) {
     return -1;
   }
