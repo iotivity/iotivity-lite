@@ -567,19 +567,49 @@ provision_ace2(void)
   }
 }
 
+/* Remote onboarding functions */
+static void
+onboard_device_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
+  } else {
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
+static void
+onboard_device(oc_uuid_t *uuid)
+{
+  int ret = oc_obt_perform_just_works_otm(uuid, onboard_device_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+  } else {
+    PRINT("\nERROR issuing request to perform ownership transfer\n");
+  }
+}
+
 static void
 remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
-  (void)uuid;
   (void)eps;
-  PRINT("In remote_onboard_filter\n");
-  char *provided_uuid = (char *)data;
-  PRINT("Received UUID: %s\n", provided_uuid);
+  oc_uuid_t *provided_uuid = (oc_uuid_t *)data;
 
-  // TODO: Process UUIDs, seeing if one matches the one that was provided in the POST request, initiate onboarding if so
-  // Also consider timeout-based discovery loop
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(provided_uuid, di, OC_UUID_LEN);
+  PRINT("Filtering for UUID: %s\n", di);
 
-  free(provided_uuid);
+  if (memcmp(provided_uuid->id, uuid->id, 16) == 0) {
+    PRINT("Match found\n");
+    onboard_device(provided_uuid);
+  }
+  else {
+    PRINT("Not a match\n");
+  }
 }
 
 /* Onboarding kick-off.
@@ -594,12 +624,10 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "uuid") == 0) {
-      char *provided_uuid = (char *)malloc(OC_UUID_LEN * sizeof(char));
-      strncpy(provided_uuid, oc_string(rep->value.string), oc_string_len(rep->value.string));
-      provided_uuid[OC_UUID_LEN] = '\0';
-      // oc_new_string(provided_uuid, oc_string(rep->value.string), oc_string_len(rep->value.string));
-      PRINT("Processing UUID %s for onboarding\n", provided_uuid);
-      oc_obt_discover_unowned_devices(remote_onboard_filter, provided_uuid);// &provided_uuid);
+      PRINT("Processing UUID %s for onboarding\n", oc_string(rep->value.string));
+      oc_uuid_t *provided_uuid = NULL;
+      oc_str_to_uuid(oc_string(rep->value.string), provided_uuid);
+      oc_obt_discover_unowned_devices(remote_onboard_filter, provided_uuid);
     }
     rep = rep->next;
   }
