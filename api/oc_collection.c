@@ -870,47 +870,54 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               } else
 #endif /* OC_SECURITY */
               {
-                oc_interface_mask_t req_iface =
-                  link->resource->default_interface;
-                if (link->resource == (oc_resource_t *)collection) {
-                  req_iface = OC_IF_BASELINE;
-                }
-                switch (method) {
-                case OC_GET:
-                  if (link->resource->get_handler.cb)
-                    link->resource->get_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->get_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_PUT:
-                  if (link->resource->put_handler.cb)
-                    link->resource->put_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->put_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_POST:
-                  if (link->resource->post_handler.cb)
-                    link->resource->post_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->post_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_DELETE:
-                  if (link->resource->delete_handler.cb)
-                    link->resource->delete_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->delete_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
+                if ((link->resource != (oc_resource_t *)collection) &&
+                    oc_check_if_collection(link->resource)) {
+                  request->resource = link->resource;
+                  oc_handle_collection_request(
+                    method, request, link->resource->default_interface, NULL);
+                  request->resource = (oc_resource_t *)collection;
+                } else {
+                  oc_interface_mask_t req_iface =
+                    link->resource->default_interface;
+                  if (link->resource == (oc_resource_t *)collection) {
+                    req_iface = OC_IF_BASELINE;
+                  }
+                  switch (method) {
+                  case OC_GET:
+                    if (link->resource->get_handler.cb)
+                      link->resource->get_handler.cb(
+                        &rest_request, req_iface,
+                        link->resource->get_handler.user_data);
+                    else
+                      method_not_found = true;
+                    break;
+                  case OC_PUT:
+                    if (link->resource->put_handler.cb)
+                      link->resource->put_handler.cb(
+                        &rest_request, req_iface,
+                        link->resource->put_handler.user_data);
+                    else
+                      method_not_found = true;
+                    break;
+                  case OC_POST:
+                    if (link->resource->post_handler.cb)
+                      link->resource->post_handler.cb(
+                        &rest_request, req_iface,
+                        link->resource->post_handler.user_data);
+                    else
+                      method_not_found = true;
+                    break;
+                  case OC_DELETE:
+                    if (link->resource->delete_handler.cb)
+                      link->resource->delete_handler.cb(
+                        &rest_request, req_iface,
+                        link->resource->delete_handler.user_data);
+                    else
+                      method_not_found = true;
+                    break;
+                  }
                 }
               }
-
               if (method_not_found) {
                 ecode = oc_status_code(OC_STATUS_METHOD_NOT_ALLOWED);
                 memcpy(&links_array, &prev_link, sizeof(CborEncoder));
