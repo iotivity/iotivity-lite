@@ -587,7 +587,6 @@
       "oic.oic-link":{
          "properties":{
             "anchor":{
-               "format":"uri",
                "type":"string",
                "maxLength":256,
                "description":""
