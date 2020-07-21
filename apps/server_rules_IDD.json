@@ -187,7 +187,7 @@
             "description":"",
             "parameters":[
                {
-                  "$ref":"#/parameters/interface-col"
+                  "$ref":"#/parameters/interface-ll"
                }
             ],
             "responses":{
@@ -205,7 +205,7 @@
             "description":"",
             "parameters":[
                {
-                  "$ref":"#/parameters/interface-col"
+                  "$ref":"#/parameters/interface-ll"
                }
             ],
             "responses":{
@@ -529,8 +529,7 @@
                "items":{
                   "enum":[
                      "oic.if.ll",
-                     "oic.if.baseline",
-                     "oic.if.b"
+                     "oic.if.baseline"
                   ],
                   "type":"string",
                   "maxLength":64
@@ -934,16 +933,6 @@
          "enum":[
             "oic.if.rw",
             "oic.if.baseline"
-         ],
-         "type":"string",
-         "in":"query",
-         "name":"if"
-      },
-      "interface-col":{
-         "enum":[
-            "oic.if.ll",
-            "oic.if.baseline",
-            "oic.if.b"
          ],
          "type":"string",
          "in":"query",
