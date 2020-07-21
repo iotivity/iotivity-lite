@@ -819,7 +819,7 @@ register_resources(void)
   oc_new_string_array(&ric1->rel, 3);
   oc_link_add_rel(ric1, "ruleinput");
   oc_link_add_link_param(ric1, "anchor", "switch");
-  oc_link_set_interfaces(ric1, OC_IF_A);
+  oc_link_set_interfaces(ric1, OC_IF_BASELINE | OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
   oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
