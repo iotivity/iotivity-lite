@@ -639,10 +639,10 @@ remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 
   char di[OC_UUID_LEN];
   oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
-  PRINT("Filtering for UUID: %s\n", di);
+  OC_DBG("Remote onboard filter: Filtering for UUID: %s\n", di);
 
   if (memcmp(device_to_find->uuid.id, uuid->id, 16) == 0) {
-    PRINT("Matching device found\n");
+    OC_DBG("Matching device found\n");
     onboard_device(device_to_find);
   }
 }
@@ -657,20 +657,16 @@ do_polling_discovery(void *data)
 
   char di[OC_UUID_LEN];
   oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
-  PRINT("In do_polling_discovery. Provided UUID: %s\n", di);
-
 
   struct timespec discovery_ts;
   int discovery_attempts = 0;
   while (discovery_attempts < 3) {
-    PRINT("Discovery attempt: %d\n", discovery_attempts + 1);
+    OC_DBG("Polling discovery attempt: %d\n", discovery_attempts + 1);
     clock_gettime(CLOCK_REALTIME, &discovery_ts);
     discovery_ts.tv_sec += 5;
 
     pthread_mutex_lock(&app_lock);
-    PRINT("Before discovery call\n");
     oc_obt_discover_unowned_devices(remote_onboard_filter, device_to_find);
-    PRINT("After discovery call\n");
     pthread_mutex_unlock(&app_lock);
     signal_event_loop();
 
@@ -682,7 +678,7 @@ do_polling_discovery(void *data)
     bool found = device_to_find->found;
     pthread_mutex_unlock(&discovery_lock);
     if (found) {
-      PRINT("Device %s was found. Stopping discovery poll\n", di);
+      OC_DBG("Device %s was found. Stopping discovery poll\n", di);
       break;
     }
 
@@ -690,7 +686,6 @@ do_polling_discovery(void *data)
   }
 
   free(device_to_find);
-
   return NULL;
 }
 
@@ -706,7 +701,7 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "uuid") == 0) {
-      PRINT("Processing UUID %s for onboarding\n", oc_string(rep->value.string));
+      OC_DBG("Processing UUID %s for onboarding\n", oc_string(rep->value.string));
 
       remote_ob_ctx *device_to_find = (remote_ob_ctx *)malloc(sizeof(remote_ob_ctx));
       device_to_find->found = false;
@@ -714,8 +709,9 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 
       // Spin up a thread for the discovery routine...
       if (pthread_create(&discovery_thread, NULL, &do_polling_discovery, device_to_find) != 0) {
-        PRINT("Failed to create thread for discovery\n");
+        OC_ERR("Failed to create thread for discovery\n");
         oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+        break;
       }
     }
     rep = rep->next;
