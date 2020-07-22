@@ -12,6 +12,7 @@
 
 #define MAX_NUM_DEVICES (50)
 #define MAX_NUM_RESOURCES (100)
+#define MAX_REMOTE_ONBOARDING (5)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
@@ -28,11 +29,15 @@ typedef struct device_handle_t
   char device_name[64];
 } device_handle_t;
 
-typedef struct remote_ob_ctx
+typedef struct remote_ob_worker
 {
+  bool in_use;
+  pthread_t thread;
+  pthread_mutex_t mutex;
+  pthread_cond_t cv;
   oc_uuid_t uuid;
   bool found;
-} remote_ob_ctx;
+} remote_ob_worker;
 
 /* Pool of device handles */
 OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
@@ -50,10 +55,8 @@ static struct timespec ts;
 /* Local Action mutex */
 static pthread_mutex_t app_lock;
 
-/* Discovery Threading Variables */
-static pthread_t discovery_thread;
-static pthread_mutex_t discovery_lock;
-static pthread_cond_t discovery_cv;
+/* Discovery Thread Pool */
+static remote_ob_worker remote_ob_workers[MAX_REMOTE_ONBOARDING];
 
 /* Logic variables */
 static int quit;
@@ -612,9 +615,9 @@ onboard_device_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 static void
-onboard_device(remote_ob_ctx *device_to_find)
+onboard_device(remote_ob_worker *onboarding_worker)
 {
-  int ret = oc_obt_perform_just_works_otm(&device_to_find->uuid, onboard_device_cb, NULL);
+  int ret = oc_obt_perform_just_works_otm(&onboarding_worker->uuid, onboard_device_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
   } else {
@@ -622,69 +625,65 @@ onboard_device(remote_ob_ctx *device_to_find)
   }
 
   // Update found flag for polling discovery
-  pthread_mutex_lock(&discovery_lock);
-  device_to_find->found = true;
-  pthread_cond_signal(&discovery_cv);
-  pthread_mutex_unlock(&discovery_lock);
+  pthread_mutex_lock(&onboarding_worker->mutex);
+  onboarding_worker->found = true;
+  pthread_cond_signal(&onboarding_worker->cv);
+  pthread_mutex_unlock(&onboarding_worker->mutex);
 }
 
 static void
 remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)eps;
-  remote_ob_ctx *device_to_find = (remote_ob_ctx *)data;
+  remote_ob_worker *onboarding_worker = (remote_ob_worker *)data;
 
-  if (!device_to_find) {
+  if (!onboarding_worker) {
     return;
   }
 
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
+  oc_uuid_to_str(&onboarding_worker->uuid, di, OC_UUID_LEN);
   OC_DBG("Remote onboard filter: Filtering for UUID: %s\n", di);
 
-  if (memcmp(device_to_find->uuid.id, uuid->id, 16) == 0) {
+  if (memcmp(onboarding_worker->uuid.id, uuid->id, 16) == 0) {
     OC_DBG("Matching device found\n");
-    onboard_device(device_to_find);
+    onboard_device(onboarding_worker);
   }
 }
 
 static void *
 do_polling_discovery(void *data)
 {
-  remote_ob_ctx *device_to_find = (remote_ob_ctx *)data;
-
-  if (!device_to_find)
-    return NULL;
+  remote_ob_worker *onboarding_worker = (remote_ob_worker *)data;
 
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
+  oc_uuid_to_str(&onboarding_worker->uuid, di, OC_UUID_LEN);
 
   struct timespec discovery_ts;
   int discovery_attempts = 0;
-  while (discovery_attempts < 3) {
+  while (discovery_attempts < 3 && quit != 1) {
     OC_DBG("Polling discovery attempt: %d\n", discovery_attempts + 1);
     clock_gettime(CLOCK_REALTIME, &discovery_ts);
-    discovery_ts.tv_sec += 5;
+    discovery_ts.tv_sec += 15;
 
-    pthread_mutex_lock(&discovery_lock);
+    pthread_mutex_lock(&onboarding_worker->mutex);
     pthread_mutex_lock(&app_lock);
-    oc_obt_discover_unowned_devices(remote_onboard_filter, device_to_find);
+    oc_obt_discover_unowned_devices(remote_onboard_filter, onboarding_worker);
     pthread_mutex_unlock(&app_lock);
     signal_event_loop();
 
-    pthread_cond_timedwait(&discovery_cv, &discovery_lock, &discovery_ts);
+    pthread_cond_timedwait(&onboarding_worker->cv, &onboarding_worker->mutex, &discovery_ts);
 
-    bool found = device_to_find->found;
-    pthread_mutex_unlock(&discovery_lock);
+    bool found = onboarding_worker->found;
+    pthread_mutex_unlock(&onboarding_worker->mutex);
     if (found) {
       OC_DBG("Device %s was found. Stopping discovery poll\n", di);
       break;
     }
-
     discovery_attempts++;
   }
 
-  free(device_to_find);
+  onboarding_worker->in_use = false;
   return NULL;
 }
 
@@ -696,27 +695,41 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
+  oc_status_t retval = OC_STATUS_NOT_MODIFIED;
   OC_DBG("POST_OBT:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "uuid") == 0) {
       OC_DBG("Processing UUID %s for onboarding\n", oc_string(rep->value.string));
 
-      remote_ob_ctx *device_to_find = (remote_ob_ctx *)malloc(sizeof(remote_ob_ctx));
-      device_to_find->found = false;
-      oc_str_to_uuid(oc_string(rep->value.string), &device_to_find->uuid);
+      int i;
+      for (i = 0; i < MAX_REMOTE_ONBOARDING; i++) {
+        if (!remote_ob_workers[i].in_use) {
+          PRINT("Free worker thread found\n");
+          break;
+        }
+      }
 
-      // Spin up a thread for the discovery routine...
-      // TODO: Refactor this to use a pool of threads instead of a single static one
-      if (pthread_create(&discovery_thread, NULL, &do_polling_discovery, device_to_find) != 0) {
+      if (i >= MAX_REMOTE_ONBOARDING) {
+        PRINT("Max number of remote onboarding threads in use\n");
+        retval = OC_STATUS_INTERNAL_SERVER_ERROR;
+        break;
+      }
+
+      remote_ob_workers[i].in_use = true;
+      remote_ob_workers[i].found = false;
+      oc_str_to_uuid(oc_string(rep->value.string), &remote_ob_workers[i].uuid);
+
+      // Spin up an available thread for the discovery routine...
+      if (pthread_create(&remote_ob_workers[i].thread, NULL, &do_polling_discovery, &remote_ob_workers[i]) != 0) {
         OC_ERR("Failed to create thread for discovery\n");
-        oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+        retval =  OC_STATUS_INTERNAL_SERVER_ERROR;
         break;
       }
     }
     rep = rep->next;
   }
-  oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+  oc_send_response(request, retval);
 }
 
 /* Init and setup functions */
@@ -810,6 +823,12 @@ main(void)
       default:
         break;
     }
+  }
+
+  // Block for any pending onboarding threads
+  for (int i = 0; i < MAX_REMOTE_ONBOARDING; i++) {
+    OC_DBG("Joining onboarding worker thread %d\n", i);
+    pthread_join(remote_ob_workers[i].thread, NULL);
   }
 
   // Block for end of main event thread
