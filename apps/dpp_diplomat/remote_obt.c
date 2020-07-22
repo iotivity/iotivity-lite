@@ -339,31 +339,42 @@ provision_credentials(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1, c2;
 
+  char di[OC_UUID_LEN];
   PRINT("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
+
+  oc_uuid_t *self_uuid = oc_core_get_device_id(0);
+  oc_uuid_to_str(self_uuid, di, OC_UUID_LEN);
+  PRINT("[%d]: %s - (OBT)\n", i, di);
+
   PRINT("\nSelect device 1: ");
   SCANF("%d", &c1);
-  if (c1 < 0 || c1 >= i) {
+  if (c1 < 0 || c1 > i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
   PRINT("Select device 2:");
   SCANF("%d", &c2);
-  if (c2 < 0 || c2 >= i || c2 == c1) {
+  if (c2 < 0 || c2 > i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
 
   pthread_mutex_lock(&app_lock);
-  int ret = oc_obt_provision_pairwise_credentials(
-    &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+  int ret = -1;
+  if (c1 == i)
+    ret = oc_obt_self_provision_pairwise_credentials(&devices[c2]->uuid, provision_credentials_cb, NULL);
+  else if (c2 == i)
+    ret = oc_obt_self_provision_pairwise_credentials(&devices[c1]->uuid, provision_credentials_cb, NULL);
+  else
+    ret = oc_obt_provision_pairwise_credentials(&devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision credentials\n");
   } else {
@@ -387,10 +398,10 @@ provision_ace2(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev, sub;
 
+  char di[OC_UUID_LEN];
   PRINT("\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
@@ -402,12 +413,17 @@ provision_ace2(void)
     return;
   }
 
+  oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
+  PRINT("[%d]: %s - (OBT)\n", i, di);
+
   PRINT("\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
-  if (dev < 0 || dev >= i) {
+  if (dev < 0 || dev > i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
+
+  bool self = (dev == i);
 
   PRINT("\nSubjects:");
   device = (device_handle_t *)oc_list_head(owned_devices);
@@ -422,13 +438,11 @@ provision_ace2(void)
     i++;
     device = device->next;
 
-    /*
     if (!device) {
       oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
       PRINT("[%d]: %s - (OBT)\n", i + 3, di);
       i++;
     }
-    */
   }
   PRINT("\nSelect subject: ");
   SCANF("%d", &sub);
@@ -557,8 +571,13 @@ provision_ace2(void)
   }
 
   pthread_mutex_lock(&app_lock);
-  int ret =
-    oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
+  int ret = -1;
+  if (self) {
+    PRINT("Self is true\n");
+    ret = oc_obt_self_provision_ace(ace, provision_ace2_cb, NULL);
+  } else {
+    ret = oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
+  }
   pthread_mutex_unlock(&app_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision ACE\n");
