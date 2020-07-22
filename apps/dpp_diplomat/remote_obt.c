@@ -664,7 +664,7 @@ do_polling_discovery(void *data)
   while (discovery_attempts < 3 && quit != 1) {
     OC_DBG("Polling discovery attempt: %d\n", discovery_attempts + 1);
     clock_gettime(CLOCK_REALTIME, &discovery_ts);
-    discovery_ts.tv_sec += 15;
+    discovery_ts.tv_sec += 5;
 
     pthread_mutex_lock(&onboarding_worker->mutex);
     pthread_mutex_lock(&app_lock);
