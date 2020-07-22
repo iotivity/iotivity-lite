@@ -49,11 +49,11 @@ static struct timespec ts;
 
 /* Local Action mutex */
 static pthread_mutex_t app_lock;
-static pthread_cond_t app_cv;
 
 /* Discovery Threading Variables */
 static pthread_t discovery_thread;
 static pthread_mutex_t discovery_lock;
+static pthread_cond_t discovery_cv;
 
 /* Logic variables */
 static int quit;
@@ -624,6 +624,7 @@ onboard_device(remote_ob_ctx *device_to_find)
   // Update found flag for polling discovery
   pthread_mutex_lock(&discovery_lock);
   device_to_find->found = true;
+  pthread_cond_signal(&discovery_cv);
   pthread_mutex_unlock(&discovery_lock);
 }
 
@@ -665,16 +666,14 @@ do_polling_discovery(void *data)
     clock_gettime(CLOCK_REALTIME, &discovery_ts);
     discovery_ts.tv_sec += 5;
 
+    pthread_mutex_lock(&discovery_lock);
     pthread_mutex_lock(&app_lock);
     oc_obt_discover_unowned_devices(remote_onboard_filter, device_to_find);
     pthread_mutex_unlock(&app_lock);
     signal_event_loop();
 
-    pthread_mutex_lock(&app_lock);
-    pthread_cond_timedwait(&app_cv, &app_lock, &discovery_ts);
-    pthread_mutex_unlock(&app_lock);
+    pthread_cond_timedwait(&discovery_cv, &discovery_lock, &discovery_ts);
 
-    pthread_mutex_lock(&discovery_lock);
     bool found = device_to_find->found;
     pthread_mutex_unlock(&discovery_lock);
     if (found) {
@@ -708,6 +707,7 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       oc_str_to_uuid(oc_string(rep->value.string), &device_to_find->uuid);
 
       // Spin up a thread for the discovery routine...
+      // TODO: Refactor this to use a pool of threads instead of a single static one
       if (pthread_create(&discovery_thread, NULL, &do_polling_discovery, device_to_find) != 0) {
         OC_ERR("Failed to create thread for discovery\n");
         oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
