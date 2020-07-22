@@ -28,6 +28,12 @@ typedef struct device_handle_t
   char device_name[64];
 } device_handle_t;
 
+typedef struct remote_ob_ctx
+{
+  oc_uuid_t uuid;
+  bool found;
+} remote_ob_ctx;
+
 /* Pool of device handles */
 OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
 /* List of known owned devices */
@@ -43,6 +49,11 @@ static struct timespec ts;
 
 /* Local Action mutex */
 static pthread_mutex_t app_lock;
+static pthread_cond_t app_cv;
+
+/* Discovery Threading Variables */
+static pthread_t discovery_thread;
+static pthread_mutex_t discovery_lock;
 
 /* Logic variables */
 static int quit;
@@ -591,7 +602,6 @@ static void
 onboard_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-
   char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
   if (status >= 0) {
@@ -602,33 +612,86 @@ onboard_device_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 static void
-onboard_device(oc_uuid_t *uuid)
+onboard_device(remote_ob_ctx *device_to_find)
 {
-  int ret = oc_obt_perform_just_works_otm(uuid, onboard_device_cb, NULL);
+  int ret = oc_obt_perform_just_works_otm(&device_to_find->uuid, onboard_device_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform ownership transfer\n");
   } else {
     PRINT("\nERROR issuing request to perform ownership transfer\n");
   }
+
+  // Update found flag for polling discovery
+  pthread_mutex_lock(&discovery_lock);
+  device_to_find->found = true;
+  pthread_mutex_unlock(&discovery_lock);
 }
 
 static void
 remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)eps;
-  oc_uuid_t *provided_uuid = (oc_uuid_t *)data;
+  remote_ob_ctx *device_to_find = (remote_ob_ctx *)data;
+
+  if (!device_to_find) {
+    return;
+  }
 
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(provided_uuid, di, OC_UUID_LEN);
+  oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
   PRINT("Filtering for UUID: %s\n", di);
 
-  if (memcmp(provided_uuid->id, uuid->id, 16) == 0) {
-    PRINT("Match found\n");
-    onboard_device(provided_uuid);
+  if (memcmp(device_to_find->uuid.id, uuid->id, 16) == 0) {
+    PRINT("Matching device found\n");
+    onboard_device(device_to_find);
   }
-  else {
-    PRINT("Not a match\n");
+}
+
+static void *
+do_polling_discovery(void *data)
+{
+  remote_ob_ctx *device_to_find = (remote_ob_ctx *)data;
+
+  if (!device_to_find)
+    return NULL;
+
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(&device_to_find->uuid, di, OC_UUID_LEN);
+  PRINT("In do_polling_discovery. Provided UUID: %s\n", di);
+
+
+  struct timespec discovery_ts;
+  int discovery_attempts = 0;
+  while (discovery_attempts < 3) {
+    PRINT("Discovery attempt: %d\n", discovery_attempts + 1);
+    clock_gettime(CLOCK_REALTIME, &discovery_ts);
+    discovery_ts.tv_sec += 5;
+
+    pthread_mutex_lock(&app_lock);
+    PRINT("Before discovery call\n");
+    oc_obt_discover_unowned_devices(remote_onboard_filter, device_to_find);
+    PRINT("After discovery call\n");
+    pthread_mutex_unlock(&app_lock);
+    signal_event_loop();
+
+    pthread_mutex_lock(&app_lock);
+    pthread_cond_timedwait(&app_cv, &app_lock, &discovery_ts);
+    pthread_mutex_unlock(&app_lock);
+
+    pthread_mutex_lock(&discovery_lock);
+    bool found = device_to_find->found;
+    pthread_mutex_unlock(&discovery_lock);
+    if (found) {
+      PRINT("Device %s was found. Stopping discovery poll\n", di);
+      break;
+    }
+
+    discovery_attempts++;
   }
+
+  free(device_to_find);
+
+  return NULL;
 }
 
 /* Onboarding kick-off.
@@ -644,9 +707,16 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "uuid") == 0) {
       PRINT("Processing UUID %s for onboarding\n", oc_string(rep->value.string));
-      oc_uuid_t *provided_uuid = NULL;
-      oc_str_to_uuid(oc_string(rep->value.string), provided_uuid);
-      oc_obt_discover_unowned_devices(remote_onboard_filter, provided_uuid);
+
+      remote_ob_ctx *device_to_find = (remote_ob_ctx *)malloc(sizeof(remote_ob_ctx));
+      device_to_find->found = false;
+      oc_str_to_uuid(oc_string(rep->value.string), &device_to_find->uuid);
+
+      // Spin up a thread for the discovery routine...
+      if (pthread_create(&discovery_thread, NULL, &do_polling_discovery, device_to_find) != 0) {
+        PRINT("Failed to create thread for discovery\n");
+        oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+      }
     }
     rep = rep->next;
   }
