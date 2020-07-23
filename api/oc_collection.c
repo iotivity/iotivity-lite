@@ -577,23 +577,27 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       oc_rep_start_root_object();
       oc_process_baseline_interface(request->resource);
       /* rts */
-      oc_rep_open_array(root, rts);
-      oc_rt_t *rtt = (oc_rt_t *)oc_list_head(collection->supported_rts);
-      while (rtt) {
-        oc_rep_add_text_string(rts, oc_string(rtt->rt));
-        rtt = rtt->next;
+      if (oc_list_length(collection->supported_rts) > 0) {
+        oc_rep_open_array(root, rts);
+        oc_rt_t *rtt = (oc_rt_t *)oc_list_head(collection->supported_rts);
+        while (rtt) {
+          oc_rep_add_text_string(rts, oc_string(rtt->rt));
+          rtt = rtt->next;
+        }
+        oc_rep_close_array(root, rts);
       }
-      oc_rep_close_array(root, rts);
       /* rts-m */
-      const char *rtsm_key = "rts-m";
-      oc_rep_set_key(oc_rep_object(root), rtsm_key);
-      oc_rep_start_array(oc_rep_object(root), rtsm);
-      oc_rt_t *rtt = (oc_rt_t *)oc_list_head(collection->mandatory_rts);
-      while (rtt) {
-        oc_rep_add_text_string(rtsm, oc_string(rtt->rt));
-        rtt = rtt->next;
+      if (oc_list_length(collection->mandatory_rts) > 0) {
+        const char *rtsm_key = "rts-m";
+        oc_rep_set_key(oc_rep_object(root), rtsm_key);
+        oc_rep_start_array(oc_rep_object(root), rtsm);
+        oc_rt_t *rtt = (oc_rt_t *)oc_list_head(collection->mandatory_rts);
+        while (rtt) {
+          oc_rep_add_text_string(rtsm, oc_string(rtt->rt));
+          rtt = rtt->next;
+        }
+        oc_rep_end_array(oc_rep_object(root), rtsm);
       }
-      oc_rep_end_array(oc_rep_object(root), rtsm);
       oc_rep_set_array(root, links);
       while (link != NULL) {
         if (oc_filter_resource_by_rt(link->resource, request)) {
