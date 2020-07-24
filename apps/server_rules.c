@@ -822,7 +822,7 @@ register_resources(void)
   oc_link_set_interfaces(ric1, OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
-  oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
+  //oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_add_collection(res_ruleinputcol);
 
