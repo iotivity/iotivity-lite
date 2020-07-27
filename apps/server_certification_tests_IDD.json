@@ -493,7 +493,6 @@
                 "readOnly":true
               },
               "anchor":{
-                                "format":"uri",
                 "type":"string",
                 "maxLength":256,
                 "description":""
@@ -932,7 +931,6 @@
             "readOnly":true
           },
           "anchor":{
-                        "format":"uri",
             "type":"string",
             "maxLength":256,
             "description":""
@@ -1258,7 +1256,6 @@
           "readOnly":true
         },
         "anchor":{
-                    "format":"uri",
           "type":"string",
           "maxLength":256,
           "description":""
