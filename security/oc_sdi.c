@@ -50,7 +50,9 @@ oc_sec_sdi_free(void)
   }
 
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_free_string(&(sdi[device].name));
+    if (oc_string_len(sdi[device].name) > 0) {
+      oc_free_string(&(sdi[device].name));
+    }
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -69,8 +71,9 @@ oc_sec_sdi_default(size_t device)
 
   sdi[device].priv = false;
   memset(&(sdi[device].uuid), 0, sizeof(oc_uuid_t));
-  oc_free_string(&sdi[device].name);
-  oc_new_string(&sdi[device].name, "", 0);
+  if (oc_string_len(sdi[device].name) > 0) {
+    oc_free_string(&sdi[device].name);
+  }
   oc_sec_dump_sdi(device);
 }
 
@@ -102,7 +105,9 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
           return false;
         }
 
-        oc_free_string(&s->name);
+        if (oc_string_len(s->name) > 0) {
+          oc_free_string(&s->name);
+        }
         oc_new_string(&s->name, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         suc = true;
