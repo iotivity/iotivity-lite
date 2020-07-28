@@ -1,7 +1,7 @@
 ---
 image: gcc:9.3.0
 
-.Linux_Secured_Test:
+Linux_Secured_Test:
   variables:
     GIT_SUBMODULE_STRATEGY: normal
   stage: build
@@ -14,7 +14,7 @@ image: gcc:9.3.0
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
 
-.Linux_Unsecured_Test:
+Linux_Unsecured_Test:
   variables:
     GIT_SUBMODULE_STRATEGY: normal
   stage: build
@@ -35,7 +35,7 @@ Android_build:
   script:
     - cd port/android
     - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
-.whitespace_and_doxygen:
+whitespace_and_doxygen:
   variables:
     GIT_SUBMODULE_STRATEGY: none
   stage: build
@@ -49,4 +49,3 @@ Android_build:
     - ./whitespace_commit_checker.sh
     - cd tools
     - ./build_doc.sh
-    
