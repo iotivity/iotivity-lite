@@ -33,6 +33,7 @@ Android_build:
   stage: build
   image: gitlab.iotivity.org:5050/iotivity/iotivity-lite
   before_script:
+    - ping -c 4 gitlab.iotivity.org:5050 || true
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin 
   script:
     - cd port/android
