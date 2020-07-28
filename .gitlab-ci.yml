@@ -53,3 +53,4 @@ after_script:
     - ./whitespace_commit_checker.sh
     - cd tools
     - ./build_doc.sh
+    
