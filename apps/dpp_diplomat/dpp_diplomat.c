@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define SCANF(...)                                                             \
   do {                                                                         \
@@ -11,6 +12,8 @@
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
+
+#define FIFOPATH "/tmp/my_fifo"
 
 pthread_mutex_t mutex;
 pthread_cond_t cv;
@@ -156,11 +159,64 @@ get_uuid_input(void)
 }
 
 static void
+poll_for_uuid(void)
+{
+  if (obt_server == NULL) {
+    PRINT("No remote onboarding tool discovered\n");
+    return;
+  }
+
+  if (mkfifo(FIFOPATH, 0666) != 0) {
+    PRINT("Failed to create named pipe for UUID reading. Already in place?\n");
+  }
+  FILE *uuid_pipe = NULL;
+  while (quit != 1) {
+    uuid_pipe = fopen(FIFOPATH, "r");
+    if (!uuid_pipe) {
+      PRINT("Failed to open named pipe for UUID reading\n");
+      break;
+    }
+    char read_buffer[256] = "";
+    size_t read_size = fread(read_buffer, 1, 256, uuid_pipe);
+    PRINT("Read size: %ld\n", read_size);
+    if (read_size != 256 && feof(uuid_pipe)) {
+      PRINT("Reached EOF\n");
+    }
+    PRINT("String read: %s\n", read_buffer);
+
+    // TODO: Any way to sanitize the input and make sure that UUID is well-formed?
+    // POST UUID
+    PRINT("Attempting to POST onboarding request for device %s\n", read_buffer);
+
+    if (oc_init_post(obt, obt_server, NULL, &post_obt, LOW_QOS, NULL)) {
+      oc_rep_start_root_object();
+      oc_rep_set_text_string(root, uuid, read_buffer);
+      oc_rep_end_root_object();
+      if (oc_do_post()) {
+        PRINT("Sent POST request for onboarding\n");
+      }
+      else {
+        PRINT("Failed to send POST request for onboarding\n");
+      }
+    }
+    else {
+      PRINT("Failed to initialize POST request for onboarding\n");
+    }
+
+    if (uuid_pipe && fclose(uuid_pipe) != 0) {
+      PRINT("Failed to close UUID pipe\n");
+    }
+    uuid_pipe = NULL;
+  }
+}
+
+static void
 display_menu(void)
 {
   PRINT("Simple DPP Diplomat\n");
   PRINT("[0] Enter UUID for onboarding\n");
   PRINT("[1] Discover OBT\n");
+  PRINT("[2] Poll for UUID From Pipe\n");
   PRINT("[99] Exit\n");
 }
 
@@ -205,6 +261,9 @@ main(void)
           oc_free_server_endpoints(obt_server);
         oc_do_ip_discovery("obt.remote", &discovery, NULL);
         pthread_mutex_unlock(&app_lock);
+        break;
+      case 2:
+        poll_for_uuid();
         break;
       case 99:
         handle_signal(0);
