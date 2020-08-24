@@ -39,6 +39,7 @@
 #include "api/oc_main.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/observe.h"
+#include "messaging/coap/engine.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
@@ -1795,7 +1796,10 @@ read_application_data(oc_tls_peer_t *peer)
       }
       message->length = ret;
       message->encrypted = 0;
-      oc_recv_message(message);
+      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
+          OC_PROCESS_ERR_FULL) {
+        oc_message_unref(message);
+      }
       OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
