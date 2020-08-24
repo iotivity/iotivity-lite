@@ -687,10 +687,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
+  response_buffer.content_format = 0;
 
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
-  response_obj.content_format = 0;
 
   request_obj.response = &response_obj;
   request_obj.request_payload = NULL;
@@ -1125,8 +1125,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      if (response_obj.content_format > 0) {
-        coap_set_header_content_format(response, response_obj.content_format);
+      if (response_buffer.content_format > 0) {
+        coap_set_header_content_format(response,
+                                       response_buffer.content_format);
       }
     }
 

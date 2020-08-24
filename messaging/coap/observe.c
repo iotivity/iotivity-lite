@@ -823,9 +823,9 @@ coap_notify_observers(oc_resource_t *resource,
           } else {
             coap_set_header_observe(notification, 1);
           }
-          if (response.content_format > 0) {
+          if (response_buf->content_format > 0) {
             coap_set_header_content_format(notification,
-                                           response.content_format);
+                                           response_buf->content_format);
           }
           coap_set_token(notification, obs->token, obs->token_len);
           transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);

@@ -100,7 +100,6 @@ typedef struct oc_response_t
 {
   oc_separate_response_t *separate_response;
   oc_response_buffer_t *response_buffer;
-  oc_content_format_t content_format;
 } oc_response_t;
 
 typedef enum {
