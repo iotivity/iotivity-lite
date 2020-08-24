@@ -370,8 +370,10 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
     break;
   }
 
-  handler->cb = callback;
-  handler->user_data = user_data;
+  if (handler) {
+    handler->cb = callback;
+    handler->user_data = user_data;
+  }
 }
 
 void
@@ -431,7 +433,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
 
   while (cur != NULL) {
     next = cur->next;
-    if (cur->observe > 0) {
+    if (cur->observe < 3) {
       coap_transaction_t *t =
         coap_new_transaction(coap_get_mid(), &cur->endpoint);
       if (t) {
