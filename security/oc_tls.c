@@ -55,6 +55,10 @@
 #include "oc_tls.h"
 #include "oc_audit.h"
 
+#ifdef OC_OSCORE
+#include "oc_oscore.h"
+#endif /* OC_OSCORE */
+
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
 OC_LIST(tls_peers);
@@ -1957,10 +1961,17 @@ read_application_data(oc_tls_peer_t *peer)
       }
       message->length = ret;
       message->encrypted = 0;
+#ifdef OC_OSCORE
+      if (oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT],
+                          message) == OC_PROCESS_ERR_FULL) {
+        oc_message_unref(message);
+      }
+#else  /* OC_OSCORE */
       if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
           OC_PROCESS_ERR_FULL) {
         oc_message_unref(message);
       }
+#endif /* !OC_OSCORE */
       OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
