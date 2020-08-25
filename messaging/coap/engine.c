@@ -304,7 +304,8 @@ coap_receive(oc_message_t *msg)
       }
 
       /* create transaction for response */
-      transaction = coap_new_transaction(response->mid, &msg->endpoint);
+      transaction =
+        coap_new_transaction(response->mid, NULL, 0, &msg->endpoint);
 
       if (transaction) {
 #ifdef OC_BLOCK_WISE
@@ -646,7 +647,8 @@ coap_receive(oc_message_t *msg)
         }
         if (payload) {
           OC_DBG("dispatching next block");
-          transaction = coap_new_transaction(response_mid, &msg->endpoint);
+          transaction =
+            coap_new_transaction(response_mid, NULL, 0, &msg->endpoint);
           if (transaction) {
             coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
                                   response_mid);
@@ -723,7 +725,8 @@ coap_receive(oc_message_t *msg)
           OC_DBG("processing incoming block");
           if (block2 && block2_more) {
             OC_DBG("issuing request for next block");
-            transaction = coap_new_transaction(response_mid, &msg->endpoint);
+            transaction =
+              coap_new_transaction(response_mid, NULL, 0, &msg->endpoint);
             if (transaction) {
               coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
                                     response_mid);
@@ -845,6 +848,10 @@ send_message:
         }
       }
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
+    }
+    if (response->token_len > 0) {
+      memcpy(transaction->token, response->token, response->token_len);
+      transaction->token_len = response->token_len;
     }
     transaction->message->length =
       coap_serialize_message(response, transaction->message->data);
