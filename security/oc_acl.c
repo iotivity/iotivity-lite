@@ -469,6 +469,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
         return true;
       }
       break;
+    default:
+      break;
     }
   }
   return false;
