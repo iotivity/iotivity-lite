@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016, 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@
 #define OC_CLIENT_STATE_H
 
 #include "messaging/coap/constants.h"
+#ifdef OC_OSCORE
+#include "messaging/coap/oscore_constants.h"
+#endif /* OC_OSCORE */
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 #include <stdbool.h>
@@ -88,6 +91,11 @@ typedef struct oc_client_cb_t
   bool stop_multicast_receive;
   uint8_t ref_count;
   uint8_t separate;
+#ifdef OC_OSCORE
+  uint8_t piv[OSCORE_PIV_LEN];
+  uint8_t piv_len;
+  uint64_t notification_num;
+#endif /* OC_OSCORE */
 } oc_client_cb_t;
 
 #ifdef OC_BLOCK_WISE
