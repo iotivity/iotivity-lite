@@ -39,6 +39,7 @@
 #include "api/oc_main.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/observe.h"
+#include "messaging/coap/engine.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
@@ -247,6 +248,35 @@ is_peer_active(oc_tls_peer_t *peer)
 }
 
 static oc_event_callback_retval_t oc_tls_inactive(void *data);
+
+#ifdef OC_CLIENT
+static void
+oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
+{
+  OC_DBG("\noc_tls: removing invalid peer");
+  oc_list_remove(tls_peers, peer);
+
+  oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
+
+  mbedtls_ssl_free(&peer->ssl_ctx);
+  oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->send_q);
+  }
+  message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  }
+#ifdef OC_PKI
+  oc_free_string(&peer->public_key);
+#endif /* OC_PKI */
+  mbedtls_ssl_config_free(&peer->ssl_conf);
+  oc_etimer_stop(&peer->timer.fin_timer);
+  oc_memb_free(&tls_peers_s, peer);
+}
+#endif /* OC_CLIENT */
 
 static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
@@ -1573,8 +1603,23 @@ write_application_data(oc_tls_peer_t *peer)
 static void
 oc_tls_init_connection(oc_message_t *message)
 {
-  oc_tls_peer_t *peer =
-    oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+  if (pstat->s != OC_DOS_RFNOP) {
+    oc_message_unref(message);
+    return;
+  }
+
+  oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
+
+  if (peer && peer->role != MBEDTLS_SSL_IS_CLIENT) {
+    oc_tls_free_invalid_peer(peer);
+    peer = NULL;
+  }
+
+  if (!peer) {
+    peer = oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+  }
+
   if (peer) {
     oc_message_t *duplicate = oc_list_head(peer->send_q);
     while (duplicate != NULL) {
@@ -1757,7 +1802,10 @@ read_application_data(oc_tls_peer_t *peer)
       }
       message->length = ret;
       message->encrypted = 0;
-      oc_recv_message(message);
+      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
+          OC_PROCESS_ERR_FULL) {
+        oc_message_unref(message);
+      }
       OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
@@ -1779,6 +1827,8 @@ oc_tls_recv_message(oc_message_t *message)
     oc_list_add(peer->recv_q, message);
     peer->timestamp = oc_clock_time();
     oc_tls_handler_schedule_read(peer);
+  } else {
+    oc_message_unref(message);
   }
 }
 

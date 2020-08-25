@@ -475,7 +475,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   }
 
   int response_length = oc_rep_get_encoded_payload_size();
-  request->response->content_format = APPLICATION_CBOR;
+  request->response->response_buffer->content_format = APPLICATION_CBOR;
   if (matches && response_length) {
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
@@ -528,7 +528,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     break;
   }
   int response_length = oc_rep_get_encoded_payload_size();
-  request->response->content_format = APPLICATION_VND_OCF_CBOR;
+  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   if (matches && response_length > 0) {
     request->response->response_buffer->response_length =
       (uint16_t)response_length;
