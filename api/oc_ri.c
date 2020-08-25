@@ -58,6 +58,9 @@
 #include "security/oc_roles.h"
 #include "security/oc_tls.h"
 #include "security/oc_audit.h"
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -245,6 +248,9 @@ start_processes(void)
 
 #ifdef OC_SECURITY
   oc_process_start(&oc_tls_handler, NULL);
+#ifdef OC_OSCORE
+  oc_process_start(&oc_oscore_handler, NULL);
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
   oc_process_start(&oc_network_events, NULL);
@@ -265,6 +271,9 @@ stop_processes(void)
   oc_process_exit(&coap_engine);
 
 #ifdef OC_SECURITY
+#ifdef OC_OSCORE
+  oc_process_exit(&oc_oscore_handler);
+#endif /* OC_OSCORE */
   oc_process_exit(&oc_tls_handler);
 #endif /* OC_SECURITY */
 
