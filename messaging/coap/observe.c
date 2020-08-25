@@ -730,10 +730,11 @@ coap_notify_observers(oc_resource_t *resource,
                "notification");
 #ifdef OC_BLOCK_WISE
         if (coap_separate_accept(req, response.separate_response,
-                                 &obs->endpoint, 0, obs->block2_size) == 1)
+                                 &obs->endpoint, obs->obs_counter,
+                                 obs->block2_size) == 1)
 #else  /* OC_BLOCK_WISE */
         if (coap_separate_accept(req, response.separate_response,
-                                 &obs->endpoint, 0) == 1)
+                                 &obs->endpoint, obs->obs_counter) == 1)
 #endif /* !OC_BLOCK_WISE */
           response.separate_response->active = 1;
       } // separate response
@@ -823,9 +824,9 @@ coap_notify_observers(oc_resource_t *resource,
           } else {
             coap_set_header_observe(notification, 1);
           }
-          if (response.content_format > 0) {
+          if (response_buf->content_format > 0) {
             coap_set_header_content_format(notification,
-                                           response.content_format);
+                                           response_buf->content_format);
           }
           coap_set_token(notification, obs->token, obs->token_len);
           transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);

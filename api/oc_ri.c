@@ -275,6 +275,8 @@ stop_processes(void)
 oc_resource_t *
 oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 {
+  if (!uri || uri_len == 0)
+    return NULL;
   int skip = 0;
   if (uri[0] != '/')
     skip = 1;
@@ -729,10 +731,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
+  response_buffer.content_format = 0;
 
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
-  response_obj.content_format = 0;
 
   request_obj.response = &response_obj;
   request_obj.request_payload = NULL;
@@ -747,7 +749,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_interface_mask_t iface_query = 0, iface_mask = 0;
 
   /* Obtain request uri from the CoAP packet. */
-  const char *uri_path;
+  const char *uri_path = NULL;
   size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
   /* Obtain query string from CoAP packet. */
@@ -1172,8 +1174,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      if (response_obj.content_format > 0) {
-        coap_set_header_content_format(response, response_obj.content_format);
+      if (response_buffer.content_format > 0) {
+        coap_set_header_content_format(response,
+                                       response_buffer.content_format);
       }
     }
 
