@@ -247,8 +247,9 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_TCP */
     {
       transaction = coap_get_transaction_by_mid(message->mid);
-      if (transaction)
+      if (transaction) {
         coap_clear_transaction(transaction);
+      }
       transaction = NULL;
     }
 
@@ -844,13 +845,13 @@ send_message:
         }
       }
 #endif /* OC_CLIENT && OC_BLOCK_WISE */
-      transaction->message->length =
-        coap_serialize_message(response, transaction->message->data);
-      if (transaction->message->length > 0) {
-        coap_send_transaction(transaction);
-      } else {
-        coap_clear_transaction(transaction);
-      }
+    }
+    transaction->message->length =
+      coap_serialize_message(response, transaction->message->data);
+    if (transaction->message->length > 0) {
+      coap_send_transaction(transaction);
+    } else {
+      coap_clear_transaction(transaction);
     }
   }
 

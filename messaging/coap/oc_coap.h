@@ -19,10 +19,10 @@
 
 #include "separate.h"
 #include "util/oc_list.h"
+#include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 struct oc_separate_response_s
@@ -42,6 +42,7 @@ struct oc_response_buffer_s
   uint16_t buffer_size;
   uint16_t response_length;
   int code;
+  oc_content_format_t content_format;
 };
 
 #ifdef __cplusplus
