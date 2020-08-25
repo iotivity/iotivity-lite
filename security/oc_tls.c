@@ -1603,6 +1603,12 @@ write_application_data(oc_tls_peer_t *peer)
 static void
 oc_tls_init_connection(oc_message_t *message)
 {
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+  if (pstat->s != OC_DOS_RFNOP) {
+    oc_message_unref(message);
+    return;
+  }
+
   oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
 
   if (peer && peer->role != MBEDTLS_SSL_IS_CLIENT) {
@@ -1821,6 +1827,8 @@ oc_tls_recv_message(oc_message_t *message)
     oc_list_add(peer->recv_q, message);
     peer->timestamp = oc_clock_time();
     oc_tls_handler_schedule_read(peer);
+  } else {
+    oc_message_unref(message);
   }
 }
 
