@@ -128,7 +128,8 @@ prepare_coap_request(oc_client_cb_t *cb)
     type = COAP_TYPE_CON;
   }
 
-  transaction = coap_new_transaction(cb->mid, &cb->endpoint);
+  transaction =
+    coap_new_transaction(cb->mid, cb->token, cb->token_len, &cb->endpoint);
 
   if (!transaction) {
     return false;

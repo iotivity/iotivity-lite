@@ -475,8 +475,8 @@ oc_send_separate_response(oc_separate_response_t *handle,
   while (cur != NULL) {
     next = cur->next;
     if (cur->observe < 3) {
-      coap_transaction_t *t =
-        coap_new_transaction(coap_get_mid(), &cur->endpoint);
+      coap_transaction_t *t = coap_new_transaction(
+        coap_get_mid(), cur->token, cur->token_len, &cur->endpoint);
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);
