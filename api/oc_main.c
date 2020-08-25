@@ -83,7 +83,11 @@ oc_get_factory_presets_cb(void)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
-static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
+#ifdef OC_OSCORE
+static size_t _OC_MTU_SIZE = 1024 + 2 * COAP_MAX_HEADER_SIZE;
+#else  /* OC_OSCORE */
+static size_t _OC_MTU_SIZE = 1024 + COAP_MAX_HEADER_SIZE;
+#endif /* !OC_OSCORE */
 static size_t _OC_MAX_APP_DATA_SIZE = 8192;
 static size_t _OC_BLOCK_SIZE = 1024;
 
@@ -94,7 +98,11 @@ oc_set_mtu_size(size_t mtu_size)
 #ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
     return -1;
+#ifdef OC_OSCORE
+  _OC_MTU_SIZE = mtu_size + COAP_MAX_HEADER_SIZE;
+#else  /* OC_OSCORE */
   _OC_MTU_SIZE = mtu_size;
+#endif /* !OC_OSCORE */
   mtu_size -= COAP_MAX_HEADER_SIZE;
   size_t i;
   for (i = 10; i >= 4 && (mtu_size >> i) == 0; i--)
