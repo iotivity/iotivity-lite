@@ -1368,6 +1368,17 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
 #endif /* !OC_BLOCK_WISE */
 
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+  if (client_response.observe_option > 1) {
+    uint64_t notification_num = 0;
+    oscore_read_piv(endpoint->piv, endpoint->piv_len, &notification_num);
+    if (notification_num < cb->notification_num) {
+      return true;
+    }
+    cb->notification_num = notification_num;
+  }
+#endif /* OC_OSCORE && OC_SECURITY */
+
   bool separate = false;
 
 #ifdef OC_BLOCK_WISE
