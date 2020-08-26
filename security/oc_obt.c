@@ -51,6 +51,11 @@ OC_LIST(oc_switch_dos_ctx_l);
 OC_MEMB(oc_hard_reset_ctx_m, oc_hard_reset_ctx_t, 1);
 OC_LIST(oc_hard_reset_ctx_l);
 
+#ifdef OC_OSCORE
+OC_MEMB(oc_oscoreprov_ctx_m, oc_oscoreprov_ctx_t, 1);
+OC_LIST(oc_oscoreprov_ctx_l);
+#endif /* OC_OSCORE */
+
 OC_MEMB(oc_credprov_ctx_m, oc_credprov_ctx_t, 1);
 OC_LIST(oc_credprov_ctx_l);
 
@@ -848,6 +853,298 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
   return 0;
 }
 /* End of hard RESET sequence */
+
+#ifdef OC_OSCORE
+/* Provision pairwise credentials sequence */
+static void
+free_oscoreprov_state(oc_oscoreprov_ctx_t *p, int status)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, p)) {
+    return;
+  }
+  oc_list_remove(oc_oscoreprov_ctx_l, p);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  oc_tls_close_connection(ep);
+  if (p->device2) {
+    ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
+    oc_tls_close_connection(ep);
+  }
+  p->cb.cb(status, p->cb.data);
+  if (p->switch_dos) {
+    free_switch_dos_state(p->switch_dos);
+    p->switch_dos = NULL;
+  }
+  oc_memb_free(&oc_oscoreprov_ctx_m, p);
+}
+
+static void
+free_oscoreprov_ctx(oc_oscoreprov_ctx_t *ctx, int status)
+{
+  free_oscoreprov_state(ctx, status);
+}
+
+static void
+device2oscore_RFNOP(int status, void *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    free_oscoreprov_ctx(p, 0);
+  } else {
+    free_oscoreprov_ctx(p, -1);
+  }
+}
+
+static void
+device1oscore_RFNOP(int status, void *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    p->switch_dos =
+      switch_dos(p->device2, OC_DOS_RFNOP, device2oscore_RFNOP, p);
+    if (p->switch_dos) {
+      return;
+    }
+  }
+
+  free_oscoreprov_ctx(p, -1);
+}
+
+static void
+device2oscore_cred(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    free_oscoreprov_ctx(p, -1);
+    return;
+  }
+
+  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device1oscore_RFNOP, p);
+  if (!p->switch_dos) {
+    free_oscoreprov_ctx(p, -1);
+  }
+}
+
+static void
+device1oscore_cred(oc_client_response_t *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data->user_data)) {
+    return;
+  }
+
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data->user_data;
+
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    free_oscoreprov_ctx(p, -1);
+    return;
+  }
+
+  char d1uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&p->device1->uuid, d1uuid, OC_UUID_LEN);
+  char hex_str[OSCORE_CTXID_LEN * 2 + 1];
+  size_t hex_str_len;
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
+
+  if (oc_init_post("/oic/sec/cred", ep, NULL, &device2oscore_cred, HIGH_QOS,
+                   p)) {
+    oc_rep_start_root_object();
+    oc_rep_set_array(root, creds);
+    oc_rep_object_array_start_item(creds);
+
+    oc_rep_set_int(creds, credtype, OC_CREDTYPE_OSCORE);
+    oc_rep_set_text_string(creds, subjectuuid, d1uuid);
+
+    oc_rep_set_object(creds, privatedata);
+    oc_rep_set_byte_string(privatedata, data, p->secret,
+                           OSCORE_MASTER_SECRET_LEN);
+    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+    oc_rep_close_object(creds, privatedata);
+
+    oc_rep_set_object(creds, oscore);
+
+    hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+    oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
+                                     &hex_str_len);
+    oc_rep_set_text_string(oscore, senderid, hex_str);
+
+    hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+    oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
+                                     &hex_str_len);
+    oc_rep_set_text_string(oscore, recipientid, hex_str);
+
+    oc_rep_close_object(creds, oscore);
+
+    oc_rep_object_array_end_item(creds);
+    oc_rep_close_array(root, creds);
+    oc_rep_end_root_object();
+    if (oc_do_post()) {
+      return;
+    }
+  }
+
+  free_oscoreprov_ctx(p, -1);
+}
+
+static void
+device2oscore_RFPRO(int status, void *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
+    return;
+  }
+
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
+  p->switch_dos = NULL;
+
+  if (status >= 0) {
+    int i = 0;
+    while (i < OSCORE_CTXID_LEN) {
+      unsigned int r1 = oc_random_value(), r2 = oc_random_value();
+      size_t copy_len = (sizeof(r1) < (unsigned)(OSCORE_CTXID_LEN - i))
+                          ? sizeof(r1)
+                          : (unsigned)OSCORE_CTXID_LEN - i;
+      memcpy(&p->sendid[i], &r1, copy_len);
+      memcpy(&p->recvid[i], &r2, copy_len);
+      i += copy_len;
+    }
+    p->sendid[0] = p->recvid[0] = 0x01;
+
+    i = 0;
+    while (i < OSCORE_MASTER_SECRET_LEN) {
+      unsigned int r = oc_random_value();
+      size_t copy_len = (sizeof(r) < (unsigned)(OSCORE_MASTER_SECRET_LEN - i))
+                          ? sizeof(r)
+                          : (unsigned)OSCORE_MASTER_SECRET_LEN - i;
+      memcpy(&p->secret[i], &r, copy_len);
+      i += copy_len;
+    }
+
+    char d2uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
+    char hex_str[OSCORE_CTXID_LEN * 2 + 1];
+    size_t hex_str_len;
+    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+
+    if (oc_init_post("/oic/sec/cred", ep, NULL, &device1oscore_cred, HIGH_QOS,
+                     p)) {
+      oc_rep_start_root_object();
+      oc_rep_set_array(root, creds);
+      oc_rep_object_array_start_item(creds);
+
+      oc_rep_set_int(creds, credtype, OC_CREDTYPE_OSCORE);
+      oc_rep_set_text_string(creds, subjectuuid, d2uuid);
+
+      oc_rep_set_object(creds, privatedata);
+      oc_rep_set_byte_string(privatedata, data, p->secret,
+                             OSCORE_MASTER_SECRET_LEN);
+      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_close_object(creds, privatedata);
+
+      oc_rep_set_object(creds, oscore);
+
+      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+      oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
+                                       &hex_str_len);
+      oc_rep_set_text_string(oscore, senderid, hex_str);
+
+      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+      oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
+                                       &hex_str_len);
+      oc_rep_set_text_string(oscore, recipientid, hex_str);
+
+      oc_rep_close_object(creds, oscore);
+
+      oc_rep_object_array_end_item(creds);
+      oc_rep_close_array(root, creds);
+      oc_rep_end_root_object();
+      if (oc_do_post()) {
+        return;
+      }
+    }
+  }
+
+  free_oscoreprov_state(p, -1);
+}
+
+static void
+device1oscore_RFPRO(int status, void *data)
+{
+  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
+    return;
+  }
+  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
+
+  p->switch_dos = NULL;
+  if (status >= 0) {
+    p->switch_dos =
+      switch_dos(p->device2, OC_DOS_RFPRO, device2oscore_RFPRO, p);
+    if (!p->switch_dos) {
+      free_oscoreprov_ctx(p, -1);
+    }
+  }
+}
+
+int
+oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
+                                          oc_obt_status_cb_t cb, void *data)
+{
+  oc_oscoreprov_ctx_t *p = oc_memb_alloc(&oc_oscoreprov_ctx_m);
+  if (!p) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid1)) {
+    return -1;
+  }
+
+  if (!oc_obt_is_owned_device(uuid2)) {
+    return -1;
+  }
+
+  oc_device_t *device1 = oc_obt_get_owned_device_handle(uuid1);
+  if (!device1) {
+    return -1;
+  }
+
+  oc_device_t *device2 = oc_obt_get_owned_device_handle(uuid2);
+  if (!device2) {
+    return -1;
+  }
+
+  p->cb.cb = cb;
+  p->cb.data = data;
+  p->device1 = device1;
+  p->device2 = device2;
+
+  oc_tls_select_psk_ciphersuite();
+
+  p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1oscore_RFPRO, p);
+  if (!p->switch_dos) {
+    oc_memb_free(&oc_oscoreprov_ctx_m, p);
+    return -1;
+  }
+
+  oc_list_add(oc_oscoreprov_ctx_l, p);
+
+  return 0;
+}
+/* End of provision pair-wise OSCORE contexts sequence */
+#endif /* OC_OSCORE */
 
 /* Provision pairwise credentials sequence */
 static void
