@@ -52,7 +52,9 @@
 #include "constants.h"
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
-
+#ifdef OC_OSCORE
+#include "oscore.h"
+#endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
 #include "port/oc_connectivity.h"
@@ -150,6 +152,17 @@ typedef struct
   uint32_t hold_off;
   uint16_t bad_csm_opt;
 #endif /* OC_TCP */
+
+#ifdef OC_OSCORE
+  /* OSCORE Option value */
+  uint8_t oscore_flags;
+  uint8_t piv[OSCORE_PIV_LEN];
+  uint8_t piv_len;
+  uint8_t kid_ctx[OSCORE_IDCTX_LEN];
+  uint8_t kid_ctx_len;
+  uint8_t kid[OSCORE_CTXID_LEN];
+  uint8_t kid_len;
+#endif /* OC_OSCORE */
 
   uint32_t payload_len;
   uint8_t *payload;
