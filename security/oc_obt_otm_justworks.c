@@ -228,12 +228,10 @@ obt_jw_12(oc_client_response_t *data)
     goto err_obt_jw_12;
   }
 
-  /**  12) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  /**  12) post pstat s=rfpro
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_tls_close_connection(ep);
-  oc_tls_select_psk_ciphersuite();
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -671,7 +669,7 @@ err_obt_jw_2:
   9) post cred rowneruuid, cred
   10) post sdi
   11) post doxm owned = true
-  12) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  12) post pstat s=rfpro
   13) delete acl2
   14) post acl2 with ACEs for res, p, d, csr, sp
   15) post pstat s=rfnop
