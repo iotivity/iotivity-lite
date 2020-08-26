@@ -1300,6 +1300,20 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   return 0;
 }
 
+int
+oc_tls_num_peers(size_t device)
+{
+  int num_peers = 0;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
+  while (peer) {
+    if (peer->endpoint.device == device) {
+      ++num_peers;
+    }
+    peer = peer->next;
+  }
+  return num_peers;
+}
+
 static oc_tls_peer_t *
 oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
