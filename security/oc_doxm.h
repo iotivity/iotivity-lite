@@ -49,7 +49,8 @@ typedef struct
 
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
-bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device);
+bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc,
+                        size_t device);
 void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);
 oc_sec_doxm_t *oc_sec_get_doxm(size_t device);
