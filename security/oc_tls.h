@@ -28,8 +28,7 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 OC_PROCESS_NAME(oc_tls_handler);
@@ -54,6 +53,7 @@ typedef struct oc_tls_peer_t
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
+  bool doc;
 #ifdef OC_PKI
   oc_string_t public_key;
 #endif /* OC_PKI */

@@ -1305,6 +1305,25 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
+    /* Check if this a Device Ownership Connection (DOC) */
+    bool doc = false;
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+    if (pstat->s == OC_DOS_RFOTM) {
+      if (doxm->oxmsel == 4) {
+        /* Prior to a successful anonymous Update of "oxmsel" in
+         *  "/oic/sec/doxm", all attempts to establish new DTLS connections
+         * shall be rejected.
+         */
+        return NULL;
+      }
+      if (oc_list_length(tls_peers) == 0) {
+        doc = true;
+      } else {
+        /* Allow only a single DOC */
+        return NULL;
+      }
+    }
     peer = oc_memb_alloc(&tls_peers_s);
     if (peer) {
       OC_DBG("oc_tls: Allocating new peer");
@@ -1312,6 +1331,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       OC_LIST_STRUCT_INIT(peer, recv_q);
       OC_LIST_STRUCT_INIT(peer, send_q);
       peer->next = 0;
+      peer->doc = doc;
       peer->role = role;
       memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
       mbedtls_ssl_init(&peer->ssl_ctx);
