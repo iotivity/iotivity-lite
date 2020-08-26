@@ -76,6 +76,7 @@ oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
 oc_tls_peer_t *oc_tls_get_peer(oc_endpoint_t *endpoint);
 bool oc_tls_connected(oc_endpoint_t *endpoint);
 bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
+int oc_tls_num_peers(size_t device);
 
 /* Public APIs for selecting certificate credentials */
 void oc_tls_select_cert_ciphersuite(void);
