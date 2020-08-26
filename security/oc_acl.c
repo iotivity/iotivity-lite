@@ -885,36 +885,6 @@ void
 oc_sec_acl_default(size_t device)
 {
   oc_sec_clear_acl(device);
-  bool success = true;
-  oc_resource_t *resource;
-  int i;
-  oc_ace_subject_t _auth_crypt, _anon_clear;
-  memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-  _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-
-  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
-    resource = oc_core_get_resource_by_index(i, device);
-    if (oc_string_len(resource->uri) <= 0) {
-      continue;
-    }
-    if (i <= OCF_RES || i == OCF_D) {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
-                                       oc_string(resource->uri), 0, device);
-    }
-    if (i >= OCF_SEC_DOXM &&
-#ifdef OC_PKI
-        i < OCF_SEC_ROLES)
-#else  /* OC_PKI */
-        i <= OCF_SEC_SP)
-#endif /* !OC_PKI */
-    {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
-                                       oc_string(resource->uri), -1, device);
-    }
-  }
-  OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
