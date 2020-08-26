@@ -590,6 +590,15 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
   }
   if (peer) {
     OC_DBG("oc_tls: Found peer object");
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    /* To an OBT performing the PIN OTM, a device signals its identity
+     * with the oic.sec.doxm.rdp: prefix.
+     */
+    if (ps->s == OC_DOS_RFNOP && identity_len > 16 &&
+        memcmp(identity, "oic.sec.doxm.rdp:", 17) == 0) {
+      identity += 17;
+      identity_len -= 17;
+    }
     oc_sec_cred_t *cred =
       oc_sec_find_cred((oc_uuid_t *)identity, OC_CREDTYPE_PSK,
                        OC_CREDUSAGE_NULL, peer->endpoint.device);
@@ -606,7 +615,6 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       return 0;
     } else {
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
-      oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
       if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
         if (identity_len != 16 ||
             memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
@@ -1274,7 +1282,20 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   } else
 #endif /* OC_CLIENT */
   {
-    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
+    unsigned char identity_hint[33];
+    size_t identity_hint_len = 33;
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+    if (pstat->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+      memcpy(identity_hint, "oic.sec.doxm.rdp:", 17);
+      memcpy(identity_hint + 17, device_id->id, 16);
+      identity_hint_len = 33;
+    } else {
+      memcpy(identity_hint, device_id->id, 16);
+      identity_hint_len = 16;
+    }
+    if (mbedtls_ssl_conf_psk(conf, identity_hint, 1, identity_hint,
+                             identity_hint_len) != 0) {
       return -1;
     }
   }
