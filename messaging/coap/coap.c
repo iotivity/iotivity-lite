@@ -427,6 +427,15 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
   COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_LOCATION_PATH, location_path,
                                '/', "Location-Path");
 #endif
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+  if (oscore && outer && IS_OPTION(coap_pkt, COAP_OPTION_OSCORE)) {
+    option_length +=
+      coap_serialize_oscore_option(&current_number, coap_pkt, option);
+    if (option) {
+      option = option_array + option_length;
+    }
+  }
+#endif /* OC_OSCORE && OC_SECURITY */
   if (inner) {
     COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_PATH, uri_path, '/',
                                  "Uri-Path");
@@ -655,6 +664,14 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
     }
 #endif /* OC_TCP */
     switch (option_number) {
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+    case COAP_OPTION_OSCORE:
+      if (!outer || !oscore) {
+        return BAD_OPTION_4_02;
+      }
+      coap_parse_oscore_option(coap_pkt, current_option, option_length);
+      break;
+#endif /* OC_OSCORE && OC_SECURITY */
     case COAP_OPTION_CONTENT_FORMAT:
       if (!inner) {
         return BAD_OPTION_4_02;
