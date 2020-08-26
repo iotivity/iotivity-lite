@@ -12,6 +12,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+export OSCORE ?= 1
 IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
@@ -167,7 +168,7 @@ ifeq ($(SWUPDATE),1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c)
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -180,6 +181,10 @@ endif
 	CFLAGS += ${DTLSFLAGS}
 	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
+endif
+
+ifeq ($(OSCORE),1)
+	EXTRA_CFLAGS += -DOC_OSCORE
 endif
 
 ifeq ($(IPV4),1)
