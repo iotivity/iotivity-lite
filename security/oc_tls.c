@@ -261,6 +261,14 @@ is_peer_active(oc_tls_peer_t *peer)
   return false;
 }
 
+static oc_event_callback_retval_t
+reset_in_RFOTM(void *data)
+{
+  size_t device = (size_t)data;
+  oc_pstat_reset_device(device, true);
+  return OC_EVENT_DONE;
+}
+
 static oc_event_callback_retval_t oc_tls_inactive(void *data);
 
 #ifdef OC_CLIENT
@@ -268,7 +276,14 @@ static void
 oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 {
   OC_DBG("\noc_tls: removing invalid peer");
+
   oc_list_remove(tls_peers, peer);
+
+  size_t device = peer->endpoint.device;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  if (pstat->s == OC_DOS_RFOTM) {
+    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+  }
 
   oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
 
@@ -297,6 +312,13 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
   oc_list_remove(tls_peers, peer);
+
+  size_t device = peer->endpoint.device;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  if (pstat->s == OC_DOS_RFOTM) {
+    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+  }
+
 #ifdef OC_SERVER
   /* remove all observations by this peer */
   coap_remove_observer_by_client(&peer->endpoint);
