@@ -1045,6 +1045,8 @@ device1_RFPRO(int status, void *data)
     if (!p->switch_dos) {
       free_credprov_ctx(p, -1);
     }
+  } else {
+    free_credprov_ctx(p, -1);
   }
 }
 
