@@ -1961,6 +1961,7 @@ read_application_data(oc_tls_peer_t *peer)
       }
       message->length = ret;
       message->encrypted = 0;
+      memcpy(message->endpoint.di.id, peer->uuid.id, 16);
 #ifdef OC_OSCORE
       if (oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT],
                           message) == OC_PROCESS_ERR_FULL) {
