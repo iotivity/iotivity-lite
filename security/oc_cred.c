@@ -986,7 +986,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           size_t publicdata_size = 0;
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
-          oc_string_t *sid = NULL, *rid = NULL;
+          const char *sid = NULL, *rid = NULL;
           uint64_t ssn = 0, rwin = 0;
 #endif /* OC_OSCORE */
           bool owner_cred = false;
@@ -1106,7 +1106,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       OC_ERR("oc_cred: invalid oscore/senderid");
                       return false;
                     }
-                    sid = &data->value.string;
+                    sid = oc_string(data->value.string);
                   } else if (data->type == OC_REP_STRING && len == 11 &&
                              memcmp(oc_string(data->name), "recipientid", 11) ==
                                0) {
@@ -1116,7 +1116,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       OC_ERR("oc_cred: invalid oscore/senderid");
                       return false;
                     }
-                    rid = &data->value.string;
+                    rid = oc_string(data->value.string);
                   } else if (data->type == OC_REP_INT && len == 3 &&
                              memcmp(oc_string(data->name), "ssn", 3) == 0) {
                     if (!from_storage) {
@@ -1184,9 +1184,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             oc_sec_cred_t *cr = oc_sec_get_cred_by_credid(credid, device);
             if (cr) {
 #ifdef OC_OSCORE
-              if (sid && rid) {
-                oc_oscore_context_t *oscore_ctx = oc_oscore_add_context(
-                  device, oc_string(*sid), oc_string(*rid), ssn, rwin, cr);
+              if (sid || rid) {
+                oc_oscore_context_t *oscore_ctx =
+                  oc_oscore_add_context(device, sid, rid, ssn, rwin, cr);
                 if (!oscore_ctx) {
                   return false;
                 }
