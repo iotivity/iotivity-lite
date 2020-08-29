@@ -31,7 +31,9 @@ typedef enum oc_sec_credtype_t {
   OC_CREDTYPE_NULL = 0,
   OC_CREDTYPE_PSK = 1,
   OC_CREDTYPE_CERT = 8,
-  OC_CREDTYPE_OSCORE = 64
+  OC_CREDTYPE_OSCORE = 64,
+  OC_CREDTYPE_OSCORE_MCAST_CLIENT = 128,
+  OC_CREDTYPE_OSCORE_MCAST_SERVER = 256
 } oc_sec_credtype_t;
 
 typedef enum oc_sec_credusage_t {

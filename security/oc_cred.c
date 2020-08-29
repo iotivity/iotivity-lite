@@ -794,14 +794,18 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
       char hex_str[OSCORE_CTXID_LEN * 2 + 1];
       size_t hex_str_len;
       oc_rep_set_object(creds, oscore);
-      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-      oc_conv_byte_array_to_hex_string(
-        oscore_ctx->sendid, oscore_ctx->sendid_len, hex_str, &hex_str_len);
-      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-      oc_rep_set_text_string(oscore, senderid, hex_str);
-      oc_conv_byte_array_to_hex_string(
-        oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
-      oc_rep_set_text_string(oscore, recipientid, hex_str);
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
+        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        oc_conv_byte_array_to_hex_string(
+          oscore_ctx->sendid, oscore_ctx->sendid_len, hex_str, &hex_str_len);
+        oc_rep_set_text_string(oscore, senderid, hex_str);
+      }
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
+        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        oc_conv_byte_array_to_hex_string(
+          oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
+        oc_rep_set_text_string(oscore, recipientid, hex_str);
+      }
       oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
       oc_rep_close_object(creds, oscore);
     }
@@ -1155,6 +1159,16 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #ifdef OC_OSCORE
           if (credtype == OC_CREDTYPE_OSCORE &&
               (!sid || !rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+            OC_ERR("oc_cred: invalid oscore credential..rejecting");
+            return false;
+          }
+          if (credtype == OC_CREDTYPE_OSCORE_MCAST_CLIENT &&
+              (!sid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+            OC_ERR("oc_cred: invalid oscore credential..rejecting");
+            return false;
+          }
+          if (credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER &&
+              (!rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
             OC_ERR("oc_cred: invalid oscore credential..rejecting");
             return false;
           }
