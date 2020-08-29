@@ -76,6 +76,8 @@ oc_oscore_context_t *oc_oscore_find_context_by_token_mid(
   size_t device, uint8_t *token, uint8_t token_len, uint16_t mid,
   uint8_t **request_piv, uint8_t *request_piv_len, bool tcp);
 
+oc_oscore_context_t *oc_oscore_find_group_context(void);
+
 #ifdef __cplusplus
 }
 #endif

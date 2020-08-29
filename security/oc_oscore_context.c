@@ -28,6 +28,23 @@ OC_LIST(contexts);
 OC_MEMB(ctx_s, oc_oscore_context_t, 1);
 
 oc_oscore_context_t *
+oc_oscore_find_group_context(void)
+{
+  oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
+
+  while (ctx != NULL) {
+    oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
+
+    if (cred->credtype == OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
+      return ctx;
+    }
+    ctx = ctx->next;
+  }
+
+  return NULL;
+}
+
+oc_oscore_context_t *
 oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx, size_t device,
                               uint8_t *kid, uint8_t kid_len)
 {
@@ -121,7 +138,7 @@ oc_oscore_add_context(size_t device, const char *senderid,
 {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
 
-  if (!ctx || !senderid || !recipientid || !cred_entry) {
+  if (!ctx || (!senderid && !recipientid) || !cred_entry) {
     return NULL;
   }
 
@@ -137,48 +154,56 @@ oc_oscore_add_context(size_t device, const char *senderid,
 
   size_t id_len = OSCORE_CTXID_LEN;
 
-  if (oc_conv_hex_string_to_byte_array(senderid, strlen(senderid), ctx->sendid,
-                                       &id_len) < 0) {
-    goto add_oscore_context_error;
-  }
+  if (senderid) {
+    if (oc_conv_hex_string_to_byte_array(senderid, strlen(senderid),
+                                         ctx->sendid, &id_len) < 0) {
+      goto add_oscore_context_error;
+    }
 
-  ctx->sendid_len = id_len;
+    ctx->sendid_len = id_len;
+  }
 
   id_len = OSCORE_CTXID_LEN;
 
-  if (oc_conv_hex_string_to_byte_array(recipientid, strlen(recipientid),
-                                       ctx->recvid, &id_len) < 0) {
-    goto add_oscore_context_error;
-  }
+  if (recipientid) {
+    if (oc_conv_hex_string_to_byte_array(recipientid, strlen(recipientid),
+                                         ctx->recvid, &id_len) < 0) {
+      goto add_oscore_context_error;
+    }
 
-  ctx->recvid_len = id_len;
+    ctx->recvid_len = id_len;
+  }
 
   oc_sec_cred_t *cred = (oc_sec_cred_t *)cred_entry;
 
   OC_DBG("### Reading OSCORE context ###");
-  OC_DBG("### \t\tderiving Sender key ###");
-  if (oc_oscore_context_derive_param(
-        ctx->sendid, ctx->sendid_len, ctx->idctx, ctx->idctx_len, "Key",
-        oc_cast(cred->privatedata.data, uint8_t),
-        oc_string_len(cred->privatedata.data), NULL, 0, ctx->sendkey,
-        OSCORE_KEY_LEN) < 0) {
-    OC_ERR("*** error deriving Sender key ###");
-    goto add_oscore_context_error;
+  if (senderid) {
+    OC_DBG("### \t\tderiving Sender key ###");
+    if (oc_oscore_context_derive_param(
+          ctx->sendid, ctx->sendid_len, ctx->idctx, ctx->idctx_len, "Key",
+          oc_cast(cred->privatedata.data, uint8_t),
+          oc_string_len(cred->privatedata.data), NULL, 0, ctx->sendkey,
+          OSCORE_KEY_LEN) < 0) {
+      OC_ERR("*** error deriving Sender key ###");
+      goto add_oscore_context_error;
+    }
+
+    OC_DBG("### derived Sender key ###");
   }
 
-  OC_DBG("### derived Sender key ###");
+  if (recipientid) {
+    OC_DBG("### \t\tderiving Recipient key ###");
+    if (oc_oscore_context_derive_param(
+          ctx->recvid, ctx->recvid_len, ctx->idctx, ctx->idctx_len, "Key",
+          oc_cast(cred->privatedata.data, uint8_t),
+          oc_string_len(cred->privatedata.data), NULL, 0, ctx->recvkey,
+          OSCORE_KEY_LEN) < 0) {
+      OC_ERR("*** error deriving Recipient key ###");
+      goto add_oscore_context_error;
+    }
 
-  OC_DBG("### \t\tderiving Recipient key ###");
-  if (oc_oscore_context_derive_param(
-        ctx->recvid, ctx->recvid_len, ctx->idctx, ctx->idctx_len, "Key",
-        oc_cast(cred->privatedata.data, uint8_t),
-        oc_string_len(cred->privatedata.data), NULL, 0, ctx->recvkey,
-        OSCORE_KEY_LEN) < 0) {
-    OC_ERR("*** error deriving Recipient key ###");
-    goto add_oscore_context_error;
+    OC_DBG("### derived Recipient key ###");
   }
-
-  OC_DBG("### derived Recipient key ###");
 
   OC_DBG("### \t\tderiving Common IV ###");
   if (oc_oscore_context_derive_param(NULL, 0, ctx->idctx, ctx->idctx_len, "IV",
