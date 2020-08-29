@@ -94,9 +94,7 @@ coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
         (oc_string_len(obs->url) == (size_t)uri_len &&
          memcmp(oc_string(obs->url), uri, uri_len) == 0) &&
         obs->iface_mask == iface_mask) {
-      obs->resource->num_observers--;
-      oc_list_remove(observers_list, obs);
-      oc_memb_free(&observers_memb, obs);
+      coap_remove_observer(obs);
       removed++;
       break;
     }
