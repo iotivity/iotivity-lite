@@ -579,7 +579,7 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                              void *data);
 
 /**
- * Provision pair-wise 128-bit pre-shared key (PSK) credentials to a Client
+ * Provision pairwise 128-bit pre-shared key (PSK) credentials to a Client
  * and Server so they may establish a secure (D)TLS session.
  *
  * Example:
@@ -588,9 +588,9 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  * provision_credentials_cb(int status, void *data)
  * {
  *   if (status >= 0) {
- *     printf("Successfully provisioned pair-wise credentials\n");
+ *     printf("Successfully provisioned pairwise credentials\n");
  *   } else {
- *     printf("ERROR provisioning pair-wise credentials\n");
+ *     printf("ERROR provisioning pairwise credentials\n");
  *   }
  * }
  *

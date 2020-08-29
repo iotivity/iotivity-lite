@@ -917,7 +917,7 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 /* End of hard RESET sequence */
 
 #ifdef OC_OSCORE
-/* Provision pairwise credentials sequence */
+/* Provision pairwise OSCORE contexts sequence */
 static void
 free_oscoreprov_state(oc_oscoreprov_ctx_t *p, int status)
 {
@@ -1189,7 +1189,7 @@ oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 
   return 0;
 }
-/* End of provision pair-wise OSCORE contexts sequence */
+/* End of provision pairwise OSCORE contexts sequence */
 /* Provision Group OSCORE contexts */
 static void
 free_oscoregroupprov_state(oc_oscoregroupprov_ctx_t *request, int status)
@@ -1607,7 +1607,7 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 
   return 0;
 }
-/* End of provision pair-wise credentials sequence */
+/* End of provision pairwise credentials sequence */
 
 #ifdef OC_PKI
 /* Construct list of role ids to encode into a role certificate */
