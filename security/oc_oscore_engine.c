@@ -350,6 +350,13 @@ oc_oscore_send_message(oc_message_t *msg)
   if (oscore_ctx) {
     OC_DBG("#################################");
     OC_DBG("found OSCORE context corresponding to the peer UUID");
+    /* Is this is an inadvertent response to a secure multicast message */
+    if (msg->endpoint.flags & MULTICAST) {
+      OC_DBG(
+        "### secure multicast requests do not elicit a response, discard ###");
+      oc_message_unref(msg);
+      return 0;
+    }
 
     /* Use sender key for encryption */
     uint8_t *key = oscore_ctx->sendkey;
