@@ -89,8 +89,8 @@ static uint16_t history[OC_REQUEST_HISTORY_SIZE];
 static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t idx;
 
-static bool
-check_if_duplicate(uint16_t mid, uint8_t device)
+bool
+oc_coap_check_if_duplicate(uint16_t mid, uint8_t device)
 {
   size_t i;
   for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
@@ -297,7 +297,8 @@ coap_receive(oc_message_t *msg)
           coap_udp_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
                                 message->mid);
         } else {
-          if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
+          if (oc_coap_check_if_duplicate(message->mid,
+                                         (uint8_t)msg->endpoint.device)) {
             return 0;
           }
           history[idx] = message->mid;

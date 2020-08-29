@@ -106,6 +106,15 @@ oc_oscore_recv_message(oc_message_t *message)
 
     OC_DBG("### parsed OSCORE message ###");
 
+    if (oscore_pkt->transport_type == COAP_TRANSPORT_UDP &&
+        oscore_pkt->code <= OC_FETCH) {
+      if (oc_coap_check_if_duplicate(oscore_pkt->mid,
+                                     message->endpoint.device)) {
+        OC_DBG("dropping duplicate request");
+        goto oscore_recv_error;
+      }
+    }
+
     uint8_t *request_piv = NULL, request_piv_len = 0;
 
     /* If OSCORE packet contains kid... */
@@ -274,7 +283,6 @@ oc_oscore_recv_message(oc_message_t *message)
       OC_PROCESS_ERR_FULL) {
     goto oscore_recv_error;
   }
-
   return 0;
 
 oscore_recv_error:
