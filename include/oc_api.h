@@ -1825,6 +1825,10 @@ bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
 
 void oc_stop_multicast(oc_client_response_t *response);
 
+bool oc_init_multicast_update(const char *uri, const char *query);
+
+bool oc_do_multicast_update(void);
+
 /**
  * Free a list of endpoints from the oc_endpoint_t
  *
