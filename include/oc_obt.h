@@ -621,6 +621,14 @@ int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
                                               oc_uuid_t *uuid2,
                                               oc_obt_status_cb_t cb,
                                               void *data);
+
+int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
+                                                 oc_obt_device_status_cb_t cb,
+                                                 void *data);
+
+int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
+                                                 oc_obt_device_status_cb_t cb,
+                                                 void *data);
 /**
  * Provision identity certificates
  *

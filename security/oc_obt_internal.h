@@ -119,6 +119,18 @@ typedef struct oc_oscoreprov_ctx_t
   uint8_t secret[OSCORE_MASTER_SECRET_LEN];
 } oc_oscoreprov_ctx_t;
 
+/* Context to be maintained over the group OSCORE context provisioning
+ * sequence.
+ */
+typedef struct oc_oscoregroupprov_ctx_t
+{
+  struct oc_oscoregroupprov_ctx_t *next;
+  oc_device_status_cb_t cb;
+  oc_device_t *device;
+  oc_switch_dos_ctx_t *switch_dos;
+  oc_sec_credtype_t type;
+} oc_oscoregroupprov_ctx_t;
+
 /* Context over a RETRIEVE credentials request */
 typedef struct oc_credret_ctx_t
 {
