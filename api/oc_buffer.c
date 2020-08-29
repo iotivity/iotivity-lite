@@ -174,8 +174,19 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         OC_DBG("Inbound network event: encrypted request");
         oc_process_post(&oc_tls_handler, oc_events[UDP_TO_TLS_EVENT], data);
       } else {
+#ifdef OC_OSCORE
+        if (((oc_message_t *)data)->endpoint.flags & MULTICAST) {
+          OC_DBG("Inbound network event: multicast request");
+          oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT],
+                          data);
+        } else {
+          OC_DBG("Inbound network event: decrypted request");
+          oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+        }
+#else  /* OC_OSCORE */
         OC_DBG("Inbound network event: decrypted request");
         oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+#endif /* OC_OSCORE */
       }
 #else  /* OC_SECURITY */
       OC_DBG("Inbound network event: decrypted request");
