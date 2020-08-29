@@ -417,6 +417,20 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
   }
 }
 
+#ifdef OC_OSCORE
+void
+oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)
+{
+  if (resource) {
+    if (supported) {
+      resource->properties |= OC_SECURE_MCAST;
+    } else {
+      resource->properties &= ~OC_SECURE_MCAST;
+    }
+  }
+}
+#endif /* OC_OSCORE */
+
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {

@@ -1121,6 +1121,7 @@ void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_set_properties_cb_t set_properties,
                                     void *set_props_user_data);
 
+void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
 /**
  * Add a resource to the IoTivity stack.
  *

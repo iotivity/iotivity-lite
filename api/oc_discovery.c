@@ -121,6 +121,16 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   next_eps:
     eps = eps->next;
   }
+#ifdef OC_OSCORE
+  if (resource->properties & OC_SECURE_MCAST) {
+    oc_rep_object_array_start_item(eps);
+#ifdef OC_IPV4
+    oc_rep_set_text_string(eps, ep, "coap://224.0.1.187:5683");
+#endif /* OC_IPV4 */
+    oc_rep_set_text_string(eps, ep, "coap://[ff02::158]:5683");
+    oc_rep_object_array_end_item(eps);
+  }
+#endif /* OC_OSCORE */
   oc_rep_close_array(link, eps);
 
   // tag-pos-desc
@@ -669,7 +679,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   } break;
 #ifdef OC_RES_BATCH_SUPPORT
   case OC_IF_B: {
-    if (request->origin->flags & SECURED) {
+    if (request->origin && request->origin->flags & SECURED) {
       CborEncoder encoder;
       oc_rep_start_links_array();
       memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
@@ -845,7 +855,13 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                   memcmp(oc_string(ep->name), "ep", 2) == 0) {
                 if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                     0) {
-                  if (!(temp_ep.flags & TCP) &&
+                  if (!((temp_ep.flags & IPV6) &&
+                        (temp_ep.addr.ipv6.port == 5683)) &&
+#ifdef OC_IPV4
+                      !((temp_ep.flags & IPV4) &&
+                        (temp_ep.addr.ipv4.port == 5683)) &&
+#endif /* OC_IPV4 */
+                      !(temp_ep.flags & TCP) &&
                       (((endpoint->flags & IPV4) && (temp_ep.flags & IPV6)) ||
                        ((endpoint->flags & IPV6) && (temp_ep.flags & IPV4)))) {
                     goto next_ep;

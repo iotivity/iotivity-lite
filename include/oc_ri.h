@@ -37,6 +37,7 @@ typedef enum {
   OC_OBSERVABLE = (1 << 1),
   OC_SECURE = (1 << 4),
   OC_PERIODIC = (1 << 6),
+  OC_SECURE_MCAST = (1 << 8)
 } oc_resource_properties_t;
 
 typedef enum {
