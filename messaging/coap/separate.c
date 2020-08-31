@@ -98,7 +98,8 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
        separate_store != NULL; separate_store = separate_store->next) {
     if (separate_store->token_len == coap_req->token_len &&
         memcmp(separate_store->token, coap_req->token,
-               separate_store->token_len) == 0) {
+               separate_store->token_len) == 0 &&
+        separate_store->observe == observe) {
       break;
     }
   }
@@ -112,8 +113,6 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     }
 
     oc_list_add(separate_response->requests, separate_store);
-
-    memcpy(&separate_store->endpoint, endpoint, sizeof(oc_endpoint_t));
 
     /* store correct response type */
     separate_store->type = COAP_TYPE_NON;
@@ -130,6 +129,8 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     separate_store->block2_size = block2_size;
 #endif /* OC_BLOCK_WISE */
   }
+
+  memcpy(&separate_store->endpoint, endpoint, sizeof(oc_endpoint_t));
 
   separate_store->observe = observe;
 
@@ -178,6 +179,9 @@ coap_separate_resume(void *response, coap_separate_t *separate_store,
   }
   if (separate_store->token_len) {
     coap_set_token(response, separate_store->token, separate_store->token_len);
+  }
+  if (separate_store->observe == 0) {
+    coap_set_header_observe(response, 0);
   }
 }
 /*---------------------------------------------------------------------------*/
