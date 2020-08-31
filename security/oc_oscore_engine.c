@@ -313,13 +313,10 @@ oc_oscore_send_message(oc_message_t *msg)
    *     Else:
    *       Return error
    *   Else: (CoAP message is response)
-   *     If notification response:
-   *       Use context->SSN as partial IV
-   *       Coompute nonce using partial IV and context->sendid
-   *       Copy partial IV into incoming oc_message_t (*msg), if valid
-   *     Else: (non-notification response)
-   *       Compute nonce using request_piv and context->recvid
+   *     Use context->SSN as partial IV
+   *     Coompute nonce using partial IV and context->sendid
    *     Compute AAD using request_piv and context->recvid
+   *     Copy partial IV into incoming oc_message_t (*msg), if valid
    *    Make room for inner options and payload by moving CoAP payload to offset
    *    2 * COAP_MAX_HEADER_SIZE
    *    Store Observe option; if message is a notification, make Observe option
@@ -449,43 +446,25 @@ oc_oscore_send_message(oc_message_t *msg)
       }
       OC_DBG("### protecting outgoing response ###");
       /* Response */
-      /* If notification response */
-      if (IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE) && coap_pkt->observe > 1) {
-        /* Use context->SSN as partial IV */
-        oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-        OC_DBG("---found Observe option; using new Partial IV (SSN)");
-        OC_DBG("---Partial IV:");
-        OC_LOGbytes(piv, piv_len);
+      /* Per OCF specification, all responses must include a new Partial IV */
+      /* Use context->SSN as partial IV */
+      oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
+      OC_DBG("---using SSN as Partial IV: %lu", oscore_ctx->ssn);
+      OC_LOGbytes(piv, piv_len);
 
-        /* Increment SSN */
-        oscore_ctx->ssn++;
+      /* Increment SSN */
+      oscore_ctx->ssn++;
 
-        /* Coompute nonce using partial IV and context->sendid */
-        oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
-                             piv_len, oscore_ctx->commoniv, nonce,
-                             OSCORE_AEAD_NONCE_LEN);
+      /* Coompute nonce using partial IV and context->sendid */
+      oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
+                           piv_len, oscore_ctx->commoniv, nonce,
+                           OSCORE_AEAD_NONCE_LEN);
 
-        OC_DBG(
-          "---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
-        OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+      OC_DBG("---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
+      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
 
-        /* Copy partial IV into incoming oc_message_t (*msg), if valid */
-        if (msg_valid) {
-          memcpy(msg->endpoint.piv, piv, piv_len);
-          msg->endpoint.piv_len = piv_len;
-        }
-      } else {
-        /* Compute nonce using request_piv and context->recvid */
-        OC_DBG("---request_piv:");
-        OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
-
-        oc_oscore_AEAD_nonce(oscore_ctx->recvid, oscore_ctx->recvid_len,
-                             message->endpoint.piv, message->endpoint.piv_len,
-                             oscore_ctx->commoniv, nonce,
-                             OSCORE_AEAD_NONCE_LEN);
-        OC_DBG("---using AEAD nonce from request");
-        OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
-      }
+      OC_DBG("---request_piv");
+      OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
 
       /* Compose AAD using request_piv and context->recvid */
       oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
@@ -493,6 +472,12 @@ oc_oscore_send_message(oc_message_t *msg)
                             AAD, &AAD_len);
       OC_DBG("---composed AAD using request_piv and Recipient ID");
       OC_LOGbytes(AAD, AAD_len);
+
+      /* Copy partial IV into incoming oc_message_t (*msg), if valid */
+      if (msg_valid) {
+        memcpy(msg->endpoint.piv, piv, piv_len);
+        msg->endpoint.piv_len = piv_len;
+      }
     }
 
     /* Move CoAP payload to offset 2*COAP_MAX_HEADER_SIZE to accommodate for
