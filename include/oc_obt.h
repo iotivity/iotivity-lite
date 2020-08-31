@@ -623,10 +623,12 @@ int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
                                               void *data);
 
 int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
+                                                 const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
 
 int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
+                                                 const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
 /**

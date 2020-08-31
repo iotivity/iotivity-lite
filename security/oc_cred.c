@@ -806,6 +806,9 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
           oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
         oc_rep_set_text_string(oscore, recipientid, hex_str);
       }
+      if (cr->credtype != OC_CREDTYPE_OSCORE) {
+        oc_rep_set_text_string(oscore, desc, oc_string(oscore_ctx->desc));
+      }
       oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
       oc_rep_close_object(creds, oscore);
     }
@@ -995,7 +998,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           size_t publicdata_size = 0;
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
-          const char *sid = NULL, *rid = NULL;
+          const char *sid = NULL, *rid = NULL, *desc = NULL;
           uint64_t ssn = 0;
 #endif /* OC_OSCORE */
           bool owner_cred = false;
@@ -1105,7 +1108,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
               else if (len == 6 &&
                        memcmp(oc_string(cred->name), "oscore", 6) == 0) {
                 got_oscore_ctx = true;
-                /* senderid, recipientid, ssn */
+                /* senderid, recipientid, ssn, desc */
                 while (data != NULL) {
                   len = oc_string_len(data->name);
                   if (data->type == OC_REP_STRING && len == 8 &&
@@ -1127,6 +1130,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       return false;
                     }
                     rid = oc_string(data->value.string);
+                  } else if (data->type == OC_REP_STRING && len == 4 &&
+                             memcmp(oc_string(data->name), "desc", 4) == 0) {
+                    desc = oc_string(data->value.string);
                   } else if (data->type == OC_REP_INT && len == 3 &&
                              memcmp(oc_string(data->name), "ssn", 3) == 0) {
                     if (!from_storage) {
@@ -1158,17 +1164,18 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 
 #ifdef OC_OSCORE
           if (credtype == OC_CREDTYPE_OSCORE &&
-              (!sid || !rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+              (!sid || !rid || privatedata_size != OSCORE_MASTER_SECRET_LEN ||
+               desc)) {
             OC_ERR("oc_cred: invalid oscore credential..rejecting");
             return false;
           }
           if (credtype == OC_CREDTYPE_OSCORE_MCAST_CLIENT &&
-              (!sid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+              (!sid || rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
             OC_ERR("oc_cred: invalid oscore credential..rejecting");
             return false;
           }
           if (credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER &&
-              (!rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+              (!rid || sid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
             OC_ERR("oc_cred: invalid oscore credential..rejecting");
             return false;
           }
@@ -1199,7 +1206,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #ifdef OC_OSCORE
               if (sid || rid) {
                 oc_oscore_context_t *oscore_ctx = oc_oscore_add_context(
-                  device, sid, rid, ssn, cr, from_storage);
+                  device, sid, rid, ssn, desc, cr, from_storage);
                 if (!oscore_ctx) {
                   return false;
                 }

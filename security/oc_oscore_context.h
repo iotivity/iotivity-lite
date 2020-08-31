@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include "oc_uuid.h"
 #include "messaging/coap/oscore_constants.h"
+#include "oc_helpers.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,7 @@ typedef struct oc_oscore_context_t
   uint64_t ssn;
   uint8_t idctx[OSCORE_IDCTX_LEN];
   uint8_t idctx_len;
+  oc_string_t desc;
   /* Derived parameters */
   /* 128-bit keys */
   uint8_t sendkey[OSCORE_KEY_LEN];
@@ -62,8 +64,8 @@ void oc_oscore_free_context(oc_oscore_context_t *ctx);
 
 oc_oscore_context_t *oc_oscore_add_context(size_t device, const char *senderid,
                                            const char *recipientid,
-                                           uint64_t ssn, void *cred,
-                                           bool from_storage);
+                                           uint64_t ssn, const char *desc,
+                                           void *cred, bool from_storagw);
 
 oc_oscore_context_t *oc_oscore_find_context_by_UUID(size_t device,
                                                     oc_uuid_t *uuid);

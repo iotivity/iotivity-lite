@@ -1242,7 +1242,7 @@ provision_server_group_oscore_context(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_server_group_oscore_context(
-    &devices[dev]->uuid, provision_group_context_cb, NULL);
+    &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision server group OSCORE "
@@ -1288,7 +1288,7 @@ provision_client_group_oscore_context(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_client_group_oscore_context(
-    &devices[dev]->uuid, provision_group_context_cb, NULL);
+    &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision client group OSCORE "
@@ -1336,7 +1336,7 @@ provision_oscore_contexts(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
-  PRINT("Select device 2:");
+  PRINT("Select device 2: ");
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");
@@ -1393,7 +1393,7 @@ provision_credentials(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
-  PRINT("Select device 2:");
+  PRINT("Select device 2: ");
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");

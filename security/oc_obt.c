@@ -25,8 +25,8 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
-#include "oc_obt.h"
 #include "oc_core_res.h"
+#include "oc_obt.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_certs.h"
 #include "security/oc_cred_internal.h"
@@ -34,9 +34,9 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_keypair.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_sdi.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
-#include "security/oc_sdi.h"
 #include <stdlib.h>
 
 OC_MEMB(oc_discovery_s, oc_discovery_cb_t, 1);
@@ -1203,6 +1203,9 @@ free_oscoregroupprov_state(oc_oscoregroupprov_ctx_t *request, int status)
   if (request->switch_dos) {
     free_switch_dos_state(request->switch_dos);
   }
+  if (oc_string_len(request->desc) > 0) {
+    oc_free_string(&request->desc);
+  }
   request->cb.cb(&request->device->uuid, status, request->cb.data);
   oc_memb_free(&oc_oscoregroupprov_ctx_m, request);
 }
@@ -1291,6 +1294,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
       } else {
         oc_rep_set_text_string(oscore, recipientid, hex_str);
       }
+      oc_rep_set_text_string(oscore, desc, oc_string(p->desc));
       oc_rep_close_object(creds, oscore);
       oc_rep_object_array_end_item(creds);
       oc_rep_close_array(root, creds);
@@ -1305,7 +1309,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
 }
 
 static int
-obt_provision_group_oscore_context(oc_uuid_t *uuid,
+obt_provision_group_oscore_context(oc_uuid_t *uuid, const char *desc,
                                    oc_obt_device_status_cb_t cb,
                                    oc_sec_credtype_t type, void *data)
 {
@@ -1327,6 +1331,9 @@ obt_provision_group_oscore_context(oc_uuid_t *uuid,
   p->cb.data = data;
   p->device = device;
   p->type = type;
+  if (desc) {
+    oc_new_string(&p->desc, desc, strlen(desc));
+  }
 
   oc_tls_select_psk_ciphersuite();
 
@@ -1342,21 +1349,21 @@ obt_provision_group_oscore_context(oc_uuid_t *uuid,
 }
 
 int
-oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
+oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid, const char *desc,
                                              oc_obt_device_status_cb_t cb,
                                              void *data)
 {
   return obt_provision_group_oscore_context(
-    uuid, cb, OC_CREDTYPE_OSCORE_MCAST_CLIENT, data);
+    uuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_CLIENT, data);
 }
 
 int
-oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
+oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid, const char *desc,
                                              oc_obt_device_status_cb_t cb,
                                              void *data)
 {
   return obt_provision_group_oscore_context(
-    uuid, cb, OC_CREDTYPE_OSCORE_MCAST_SERVER, data);
+    uuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_SERVER, data);
 }
 /* End of provision group OSCORE contexts */
 #endif /* OC_OSCORE */

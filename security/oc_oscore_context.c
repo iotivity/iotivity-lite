@@ -126,6 +126,9 @@ void
 oc_oscore_free_context(oc_oscore_context_t *ctx)
 {
   if (ctx) {
+    if (ctx->desc.size > 0) {
+      oc_free_string(&ctx->desc);
+    }
     oc_list_remove(contexts, ctx);
     oc_memb_free(&ctx_s, ctx);
   }
@@ -133,8 +136,8 @@ oc_oscore_free_context(oc_oscore_context_t *ctx)
 
 oc_oscore_context_t *
 oc_oscore_add_context(size_t device, const char *senderid,
-                      const char *recipientid, uint64_t ssn, void *cred_entry,
-                      bool from_storage)
+                      const char *recipientid, uint64_t ssn, const char *desc,
+                      void *cred_entry, bool from_storage)
 {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
 
@@ -151,7 +154,9 @@ oc_oscore_add_context(size_t device, const char *senderid,
     ctx->ssn += OSCORE_SSN_WRITE_FREQ_K + OSCORE_SSN_PAD_F;
   }
   ctx->cred = cred_entry;
-
+  if (desc) {
+    oc_new_string(&ctx->desc, desc, strlen(desc));
+  }
   size_t id_len = OSCORE_CTXID_LEN;
 
   if (senderid) {
