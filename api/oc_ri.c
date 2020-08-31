@@ -58,6 +58,9 @@
 #include "security/oc_roles.h"
 #include "security/oc_tls.h"
 #include "security/oc_audit.h"
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -245,6 +248,9 @@ start_processes(void)
 
 #ifdef OC_SECURITY
   oc_process_start(&oc_tls_handler, NULL);
+#ifdef OC_OSCORE
+  oc_process_start(&oc_oscore_handler, NULL);
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
   oc_process_start(&oc_network_events, NULL);
@@ -265,6 +271,9 @@ stop_processes(void)
   oc_process_exit(&coap_engine);
 
 #ifdef OC_SECURITY
+#ifdef OC_OSCORE
+  oc_process_exit(&oc_oscore_handler);
+#endif /* OC_OSCORE */
   oc_process_exit(&oc_tls_handler);
 #endif /* OC_SECURITY */
 
@@ -1364,6 +1373,17 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #else  /* OC_BLOCK_WISE */
   coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
 #endif /* !OC_BLOCK_WISE */
+
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+  if (client_response.observe_option > 1) {
+    uint64_t notification_num = 0;
+    oscore_read_piv(endpoint->piv, endpoint->piv_len, &notification_num);
+    if (notification_num < cb->notification_num) {
+      return true;
+    }
+    cb->notification_num = notification_num;
+  }
+#endif /* OC_OSCORE && OC_SECURITY */
 
   bool separate = false;
 

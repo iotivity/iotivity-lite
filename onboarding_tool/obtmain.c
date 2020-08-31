@@ -106,7 +106,10 @@ display_menu(void)
   PRINT("[22] Provision identity certificate\n");
   PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
-  PRINT("[24] Set security domain info\n");
+#ifdef OC_OSCORE
+  PRINT("[24] Provision pair-wise OSCORE contexts\n");
+#endif /* OC_OSCORE */
+  PRINT("[25] Set security domain info\n");
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -1186,6 +1189,64 @@ provision_role_wildcard_ace(void)
 }
 #endif /* OC_PKI */
 
+#ifdef OC_OSCORE
+static void
+provision_oscore_contexts_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned pair-wise OSCORE contexts\n");
+  } else {
+    PRINT("\nERROR provisioning pair-wise OSCORE contexts\n");
+  }
+}
+
+static void
+provision_oscore_contexts(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c1, c2;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device 1: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+  PRINT("Select device 2:");
+  SCANF("%d", &c2);
+  if (c2 < 0 || c2 >= i || c2 == c1) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_pairwise_oscore_contexts(
+    &devices[c1]->uuid, &devices[c2]->uuid, provision_oscore_contexts_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision OSCORE contexts\n");
+  } else {
+    PRINT("\nERROR issuing request to provision OSCORE contexts\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+#endif /* OC_OSCORE */
+
 static void
 provision_credentials_cb(int status, void *data)
 {
@@ -1842,7 +1903,12 @@ main(void)
       provision_role_cert();
       break;
 #endif
+#ifdef OC_OSCORE
     case 24:
+      provision_oscore_contexts();
+      break;
+#endif /* OC_OSCORE */
+    case 25:
       set_sd_info();
       break;
 #ifdef OC_PKI

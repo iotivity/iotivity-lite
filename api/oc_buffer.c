@@ -26,6 +26,9 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
 #include "oc_buffer.h"
@@ -190,9 +193,14 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
         if (message->endpoint.flags & SECURED) {
-        OC_DBG("Outbound network event: forwarding to TLS");
-
+#ifdef OC_OSCORE
+        OC_DBG("Outbound network event: forwarding to OSCORE");
+        oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_OSCORE_EVENT],
+                        data);
+      } else
+#else /* OC_OSCORE */
 #ifdef OC_CLIENT
+        OC_DBG("Outbound network event: forwarding to TLS");
         if (!oc_tls_connected(&message->endpoint)) {
           OC_DBG("Posting INIT_TLS_CONN_EVENT");
           oc_process_post(&oc_tls_handler, oc_events[INIT_TLS_CONN_EVENT],
@@ -204,6 +212,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
           oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], data);
         }
       } else
+#endif /* !OC_OSCORE */
 #endif /* OC_SECURITY */
       {
         OC_DBG("Outbound network event: unicast message");

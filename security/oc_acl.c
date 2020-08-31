@@ -330,11 +330,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     return false;
   }
 
-  oc_uuid_t *uuid = NULL;
+  oc_uuid_t *uuid = &endpoint->di;
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer) {
-    uuid = &peer->uuid;
-  }
 
   if (uuid) {
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
@@ -389,7 +386,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       }
     } while (match);
 
-    if (oc_tls_uses_psk_cred(peer)) {
+    if (peer && oc_tls_uses_psk_cred(peer)) {
       oc_sec_cred_t *role_cred = oc_sec_find_cred(
         uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
@@ -399,7 +396,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     }
 #ifdef OC_PKI
     else {
-      oc_sec_cred_t *role_cred = oc_sec_get_roles(peer), *next;
+      oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL, *next;
       while (role_cred) {
         next = role_cred->next;
         if (oc_certs_validate_role_cert(role_cred->ctx) < 0) {
@@ -468,6 +465,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       if (permission & OC_PERM_DELETE) {
         return true;
       }
+      break;
+    default:
       break;
     }
   }
@@ -800,13 +799,7 @@ bool
 oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
                                     size_t device, bool collection)
 {
-  oc_uuid_t *uuid = NULL;
-  oc_tls_peer_t *peer = oc_tls_get_peer(client);
-  if (peer) {
-    uuid = &peer->uuid;
-  } else {
-    return false;
-  }
+  oc_uuid_t *uuid = &client->di;
 
   oc_ace_subject_t subject;
   memset(&subject, 0, sizeof(oc_ace_subject_t));

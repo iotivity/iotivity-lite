@@ -105,7 +105,7 @@ coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
     }
   }
 
-  coap_transaction_t *t = coap_new_transaction(0, endpoint);
+  coap_transaction_t *t = coap_new_transaction(0, token, token_len, endpoint);
   if (!t) {
     return 0;
   }
