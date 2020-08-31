@@ -261,6 +261,14 @@ is_peer_active(oc_tls_peer_t *peer)
   return false;
 }
 
+static oc_event_callback_retval_t
+reset_in_RFOTM(void *data)
+{
+  size_t device = (size_t)data;
+  oc_pstat_reset_device(device, true);
+  return OC_EVENT_DONE;
+}
+
 static oc_event_callback_retval_t oc_tls_inactive(void *data);
 
 #ifdef OC_CLIENT
@@ -268,7 +276,14 @@ static void
 oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 {
   OC_DBG("\noc_tls: removing invalid peer");
+
   oc_list_remove(tls_peers, peer);
+
+  size_t device = peer->endpoint.device;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  if (pstat->s == OC_DOS_RFOTM) {
+    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+  }
 
   oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
 
@@ -297,6 +312,13 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
   oc_list_remove(tls_peers, peer);
+
+  size_t device = peer->endpoint.device;
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  if (pstat->s == OC_DOS_RFOTM) {
+    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+  }
+
 #ifdef OC_SERVER
   /* remove all observations by this peer */
   coap_remove_observer_by_client(&peer->endpoint);
@@ -590,6 +612,15 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
   }
   if (peer) {
     OC_DBG("oc_tls: Found peer object");
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    /* To an OBT performing the PIN OTM, a device signals its identity
+     * with the oic.sec.doxm.rdp: prefix.
+     */
+    if (ps->s == OC_DOS_RFNOP && identity_len > 16 &&
+        memcmp(identity, "oic.sec.doxm.rdp:", 17) == 0) {
+      identity += 17;
+      identity_len -= 17;
+    }
     oc_sec_cred_t *cred =
       oc_sec_find_cred((oc_uuid_t *)identity, OC_CREDTYPE_PSK,
                        OC_CREDUSAGE_NULL, peer->endpoint.device);
@@ -606,7 +637,6 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       return 0;
     } else {
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
-      oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
       if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
         if (identity_len != 16 ||
             memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
@@ -1274,7 +1304,20 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   } else
 #endif /* OC_CLIENT */
   {
-    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
+    unsigned char identity_hint[33];
+    size_t identity_hint_len = 33;
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+    if (pstat->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+      memcpy(identity_hint, "oic.sec.doxm.rdp:", 17);
+      memcpy(identity_hint + 17, device_id->id, 16);
+      identity_hint_len = 33;
+    } else {
+      memcpy(identity_hint, device_id->id, 16);
+      identity_hint_len = 16;
+    }
+    if (mbedtls_ssl_conf_psk(conf, identity_hint, 1, identity_hint,
+                             identity_hint_len) != 0) {
       return -1;
     }
   }
@@ -1300,11 +1343,44 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   return 0;
 }
 
+int
+oc_tls_num_peers(size_t device)
+{
+  int num_peers = 0;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(tls_peers);
+  while (peer) {
+    if (peer->endpoint.device == device) {
+      ++num_peers;
+    }
+    peer = peer->next;
+  }
+  return num_peers;
+}
+
 static oc_tls_peer_t *
 oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (!peer) {
+    /* Check if this a Device Ownership Connection (DOC) */
+    bool doc = false;
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+    if (pstat->s == OC_DOS_RFOTM) {
+      if (doxm->oxmsel == 4) {
+        /* Prior to a successful anonymous Update of "oxmsel" in
+         *  "/oic/sec/doxm", all attempts to establish new DTLS connections
+         * shall be rejected.
+         */
+        return NULL;
+      }
+      if (oc_list_length(tls_peers) == 0) {
+        doc = true;
+      } else {
+        /* Allow only a single DOC */
+        return NULL;
+      }
+    }
     peer = oc_memb_alloc(&tls_peers_s);
     if (peer) {
       OC_DBG("oc_tls: Allocating new peer");
@@ -1312,6 +1388,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       OC_LIST_STRUCT_INIT(peer, recv_q);
       OC_LIST_STRUCT_INIT(peer, send_q);
       peer->next = 0;
+      peer->doc = doc;
       peer->role = role;
       memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
       mbedtls_ssl_init(&peer->ssl_ctx);

@@ -325,13 +325,70 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   bool is_public = ((resource->properties & OC_SECURE) == 0);
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  /* All unicast requests which are not received over the open Device DOC
+   * shall be rejected with an appropriate error message (e.g. forbidden),
+   * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
+   * Resource.
+   */
+  if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
+      oc_tls_num_peers(endpoint->device) == 1) {
+    OC_DBG("oc_sec_check_acl: unencrypted request received while DOC is open - "
+           "acess forbidden");
+    return false;
+  }
+  /* NCRs are accessible only in RFNOP */
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
     OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
     return false;
   }
+  /* All requests received over the DOC which target DCRs shall be granted,
+   * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
+   * Resource.
+   */
+  if (peer && peer->doc && is_DCR) {
+    OC_DBG("oc_sec_check_acl: connection is DOC and request directed to DCR - "
+           "access granted");
+    return true;
+  }
+  /*  Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be
+      granted.
+  */
+  if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
+      ((oc_string_len(resource->uri) == 8 &&
+        memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
+    return true;
+  }
+  /* Requests over unsecured channel prior to DOC */
+  if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
+    /* Anonymous Retrieve and Updates requests to “/oic/sec/doxm” shall be
+       granted.
+    */
+    if (oc_string_len(resource->uri) == 13 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+      OC_DBG("oc_sec_check_acl: RW access granted to /doxm  prior to DOC");
+      return true;
+    }
+    /* All Retrieve requests to the “/oic/sec/pstat” Resource shall be
+       granted.
+    */
+    else if (oc_string_len(resource->uri) == 14 &&
+             memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 &&
+             method == OC_GET) {
+      OC_DBG("oc_sec_check_acl: R access granted to pstat prior to DOC");
+      return true;
+    }
+    /* Reject all other requests */
+    else {
+      return false;
+    }
+  }
 
   oc_uuid_t *uuid = NULL;
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     uuid = &peer->uuid;
   }
@@ -828,36 +885,6 @@ void
 oc_sec_acl_default(size_t device)
 {
   oc_sec_clear_acl(device);
-  bool success = true;
-  oc_resource_t *resource;
-  int i;
-  oc_ace_subject_t _auth_crypt, _anon_clear;
-  memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-  _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-
-  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
-    resource = oc_core_get_resource_by_index(i, device);
-    if (oc_string_len(resource->uri) <= 0) {
-      continue;
-    }
-    if (i <= OCF_RES || i == OCF_D) {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
-                                       oc_string(resource->uri), 0, device);
-    }
-    if (i >= OCF_SEC_DOXM &&
-#ifdef OC_PKI
-        i < OCF_SEC_ROLES)
-#else  /* OC_PKI */
-        i <= OCF_SEC_SP)
-#endif /* !OC_PKI */
-    {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
-                                       oc_string(resource->uri), -1, device);
-    }
-  }
-  OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
