@@ -760,40 +760,6 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
   }
 }
 
-void
-oc_sec_ace_clear_bootstrap_aces(size_t device)
-{
-  oc_ace_subject_t subject;
-  memset(&subject, 0, sizeof(oc_ace_subject_t));
-  subject.conn = OC_CONN_ANON_CLEAR;
-  oc_sec_ace_t *__anon_clear = NULL;
-  do {
-    __anon_clear = oc_sec_acl_find_subject(__anon_clear, OC_SUBJECT_CONN,
-                                           &subject, -1, 14, device);
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl2");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/cred");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/pstat");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/doxm");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sp");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/csr");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sdi");
-    }
-  } while (__anon_clear);
-}
-
 static bool
 oc_acl_remove_ace(int aceid, size_t device)
 {
@@ -1096,6 +1062,21 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
     rep = rep->next;
   }
   return true;
+}
+
+void
+oc_sec_acl_add_bootsrap_acl(size_t device)
+{
+  oc_ace_subject_t _anon_clear;
+  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
+  _anon_clear.conn = OC_CONN_ANON_CLEAR;
+
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/res", 0,
+                        device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/d", 0,
+                        device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/p", 0,
+                        device);
 }
 
 void
