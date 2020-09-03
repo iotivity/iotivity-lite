@@ -186,9 +186,8 @@ static const int anon_ecdh_priority[2] = {
 };
 #endif /* OC_CLIENT */
 
-static const int jw_otm_priority[3] = {
-  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+static const int jw_otm_priority[2] = {
+  MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256, 0
 };
 
 static const int pin_otm_priority[2] = {
@@ -196,13 +195,11 @@ static const int pin_otm_priority[2] = {
 };
 
 #ifdef OC_PKI
-static const int cert_otm_priority[6] = {
+static const int cert_otm_priority[5] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
-  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-  0
+  MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM, 0
 };
 #endif /* OC_PKI */
 
@@ -1095,6 +1092,7 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
       break;
 #endif /* OC_PKI */
     default:
+      OC_DBG("oc_tls: selected default OTM priority");
       ciphers = (int *)default_priority;
       break;
     }
