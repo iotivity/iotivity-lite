@@ -272,6 +272,7 @@
     <ClInclude Include="..\..\..\security\oc_obt_internal.h" />
     <ClInclude Include="..\..\..\security\oc_pstat.h" />
     <ClInclude Include="..\..\..\security\oc_roles.h" />
+    <ClInclude Include="..\..\..\security\oc_sdi.h" />
     <ClInclude Include="..\..\..\security\oc_sp.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr.h" />
@@ -433,6 +434,7 @@
     <ClCompile Include="..\..\..\security\oc_pki.c" />
     <ClCompile Include="..\..\..\security\oc_pstat.c" />
     <ClCompile Include="..\..\..\security\oc_roles.c" />
+    <ClCompile Include="..\..\..\security\oc_sdi.c" />
     <ClCompile Include="..\..\..\security\oc_sp.c" />
     <ClCompile Include="..\..\..\security\oc_store.c" />
     <ClCompile Include="..\..\..\security\oc_svr.c" />
