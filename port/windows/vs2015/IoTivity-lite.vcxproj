@@ -262,6 +262,8 @@
     <ClInclude Include="..\..\..\messaging\coap\separate.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions.h" />
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
+    <ClInclude Include="..\..\..\security\oc_ael.h" />
+    <ClInclude Include="..\..\..\security\oc_audit.h" />
     <ClInclude Include="..\..\..\security\oc_certs.h" />
     <ClInclude Include="..\..\..\security\oc_cred_internal.h" />
     <ClInclude Include="..\..\..\security\oc_csr.h" />
@@ -416,6 +418,8 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_ael.c" />
+    <ClCompile Include="..\..\..\security\oc_audit.c" />
     <ClCompile Include="..\..\..\security\oc_certs.c" />
     <ClCompile Include="..\..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\..\security\oc_csr.c" />
