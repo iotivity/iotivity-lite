@@ -634,7 +634,7 @@ static void
 oc_ri_audit_log(oc_method_t method, oc_resource_t *resource,
                 oc_endpoint_t *endpoint)
 {
-  static const size_t LINE_WIDTH = 80;
+#define LINE_WIDTH 80
   char aux_arr[6][LINE_WIDTH];
   memset(aux_arr, 0, sizeof(aux_arr));
   char *aux[] = { aux_arr[0], aux_arr[1], aux_arr[2],
