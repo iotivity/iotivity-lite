@@ -43,7 +43,7 @@ cd %~dp0..\..\deps\mbedtls || goto error
 @rem -s  : work silently
 @rem -N  : do not reverse the patch if already applied
 @rem -p1 : remove first path component from paths in the patches
-for /r ..\..\patches %%F IN (*.patch) DO (
+for /r ..\..\patches %%F IN (05_mbedtls_ocf-microsoft.patch 06_mbedtls_constrained.patch 08_mbedtls_C99.patch 09-ocf-samsung-psk.patch 10-ocf-samsung-anon.patch) DO (
   "%PATCH_CMD%" -r - -s -N -p1 < %%F || goto error
 )
 @rem VS project can check existence of the file whether to invoke
