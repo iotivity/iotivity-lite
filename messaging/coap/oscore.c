@@ -101,10 +101,11 @@ oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len)
   *piv_len = 0;
   char *p = (char *)&ssn + 8 - OSCORE_PIV_LEN;
   char *end = p + OSCORE_PIV_LEN;
+  while (p != end && *p == 0) {
+    p++;
+  }
   while (p != end) {
-    if (*p != 0) {
-      piv[(*piv_len)++] = *p;
-    }
+    piv[(*piv_len)++] = *p;
     p++;
   }
 
