@@ -19,6 +19,8 @@
 #include "oc_oscore_crypto.h"
 #include "messaging/coap/transactions.h"
 #include "oc_client_state.h"
+#include "oc_store.h"
+#include "oc_api.h"
 #include "oc_rep.h"
 #include "oc_cred.h"
 #include "port/oc_log.h"
@@ -114,8 +116,8 @@ oc_oscore_free_context(oc_oscore_context_t *ctx)
 
 oc_oscore_context_t *
 oc_oscore_add_context(size_t device, const char *senderid,
-                      const char *recipientid, uint64_t ssn, uint64_t rwin,
-                      void *cred_entry)
+                      const char *recipientid, uint64_t ssn, void *cred_entry,
+                      bool from_storage)
 {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
 
@@ -125,7 +127,12 @@ oc_oscore_add_context(size_t device, const char *senderid,
 
   ctx->device = device;
   ctx->ssn = ssn;
-  ctx->rwin[0] = rwin;
+  /* To prevent SSN reuse, bump to higher value that could've been previously
+   * used, accounting for any failed writes to nonvolatile storage.
+   */
+  if (from_storage) {
+    ctx->ssn += OSCORE_SSN_WRITE_FREQ_K + OSCORE_SSN_PAD_F;
+  }
   ctx->cred = cred_entry;
 
   size_t id_len = OSCORE_CTXID_LEN;
