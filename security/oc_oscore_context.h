@@ -62,8 +62,8 @@ void oc_oscore_free_context(oc_oscore_context_t *ctx);
 
 oc_oscore_context_t *oc_oscore_add_context(size_t device, const char *senderid,
                                            const char *recipientid,
-                                           uint64_t ssn, uint64_t rwin,
-                                           void *cred);
+                                           uint64_t ssn, void *cred,
+                                           bool from_storage);
 
 oc_oscore_context_t *oc_oscore_find_context_by_UUID(size_t device,
                                                     oc_uuid_t *uuid);

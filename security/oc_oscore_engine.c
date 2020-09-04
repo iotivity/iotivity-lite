@@ -20,6 +20,8 @@
 #include "oc_oscore_context.h"
 #include "api/oc_events.h"
 #include "util/oc_process.h"
+#include "oc_store.h"
+#include "oc_api.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/transactions.h"
@@ -28,6 +30,14 @@
 #include "mbedtls/ccm.h"
 
 OC_PROCESS(oc_oscore_handler, "OSCORE Process");
+
+static oc_event_callback_retval_t
+dump_cred(void *data)
+{
+  size_t device = (size_t)data;
+  oc_sec_dump_cred(device);
+  return OC_EVENT_DONE;
+}
 
 static bool
 check_if_replayed_request(oc_oscore_context_t *oscore_ctx, uint64_t piv)
@@ -478,6 +488,13 @@ oc_oscore_send_message(oc_message_t *msg)
         memcpy(msg->endpoint.piv, piv, piv_len);
         msg->endpoint.piv_len = piv_len;
       }
+    }
+
+    /* Store current SSN with frequency OSCORE_WRITE_FREQ_K */
+    /* Based on recommendations in RFC 8613, Appendix B.1. to prevent SSN reuse
+     */
+    if (oscore_ctx->ssn % OSCORE_SSN_WRITE_FREQ_K == 0) {
+      oc_set_delayed_callback((void *)message->endpoint.device, dump_cred, 0);
     }
 
     /* Move CoAP payload to offset 2*COAP_MAX_HEADER_SIZE to accommodate for

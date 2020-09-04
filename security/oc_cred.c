@@ -229,7 +229,6 @@ oc_sec_cred_free(void)
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_dump_cred(device);
     oc_sec_clear_creds(device);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -820,9 +819,6 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
         oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
       oc_rep_set_text_string(oscore, recipientid, hex_str);
       oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
-      if (to_storage) {
-        oc_rep_set_int(oscore, rwin, oscore_ctx->rwin[oscore_ctx->rwin_idx]);
-      }
       oc_rep_close_object(creds, oscore);
     }
 #endif /* OC_OSCORE */
@@ -936,6 +932,14 @@ is_valid_oscore_id(const char *id, size_t id_len)
 }
 #endif /* OC_OSCORE */
 
+static oc_event_callback_retval_t
+dump_cred(void *data)
+{
+  size_t device = (size_t)data;
+  oc_sec_dump_cred(device);
+  return OC_EVENT_DONE;
+}
+
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                    bool roles_resource, oc_tls_peer_t *client, size_t device)
@@ -943,6 +947,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
+  bool got_oscore_ctx = false;
 
   if (!roles_resource) {
     while (t != NULL) {
@@ -1003,7 +1008,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
           const char *sid = NULL, *rid = NULL;
-          uint64_t ssn = 0, rwin = 0;
+          uint64_t ssn = 0;
 #endif /* OC_OSCORE */
           bool owner_cred = false;
           bool non_empty = false;
@@ -1111,7 +1116,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
               /* oscore configuration */
               else if (len == 6 &&
                        memcmp(oc_string(cred->name), "oscore", 6) == 0) {
-                /* senderid, recipientid, ssn, rwin */
+                got_oscore_ctx = true;
+                /* senderid, recipientid, ssn */
                 while (data != NULL) {
                   len = oc_string_len(data->name);
                   if (data->type == OC_REP_STRING && len == 8 &&
@@ -1140,13 +1146,6 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                       return false;
                     }
                     ssn = data->value.integer;
-                  } else if (data->type == OC_REP_INT && len == 4 &&
-                             memcmp(oc_string(data->name), "rwin", 4) == 0) {
-                    if (!from_storage) {
-                      OC_ERR("oc_cred: oscore/rwin not an OCF spec'd property");
-                      return false;
-                    }
-                    rwin = data->value.integer;
                   } else {
                     OC_ERR("oc_cred: unexpected property/value type in oscore "
                            "config");
@@ -1201,8 +1200,8 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             if (cr) {
 #ifdef OC_OSCORE
               if (sid || rid) {
-                oc_oscore_context_t *oscore_ctx =
-                  oc_oscore_add_context(device, sid, rid, ssn, rwin, cr);
+                oc_oscore_context_t *oscore_ctx = oc_oscore_add_context(
+                  device, sid, rid, ssn, cr, from_storage);
                 if (!oscore_ctx) {
                   return false;
                 }
@@ -1230,6 +1229,11 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
     }
     rep = rep->next;
   }
+
+  if (from_storage && got_oscore_ctx) {
+    oc_set_delayed_callback((void *)device, dump_cred, 0);
+  }
+
   return true;
 }
 
