@@ -632,11 +632,14 @@ remote_onboard_filter(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   }
 
   char di[OC_UUID_LEN];
+  char received_di[OC_UUID_LEN];
   oc_uuid_to_str(&onboarding_worker->uuid, di, OC_UUID_LEN);
+  oc_uuid_to_str(uuid, received_di, OC_UUID_LEN);
   OC_DBG("Remote onboard filter: Filtering for UUID: %s\n", di);
+  OC_DBG("Discovery found device with UUID: %s\n", received_di);
 
   if (memcmp(onboarding_worker->uuid.id, uuid->id, 16) == 0) {
-    OC_DBG("Matching device found\n");
+    OC_DBG("Matching device found. Onboarding device with UUID %s\n", received_di);
     onboard_device(onboarding_worker);
   }
 }
@@ -695,13 +698,13 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       int i;
       for (i = 0; i < MAX_REMOTE_ONBOARDING; i++) {
         if (!remote_ob_workers[i].in_use) {
-          PRINT("Free worker thread found\n");
+          OC_DBG("Free worker thread found\n");
           break;
         }
       }
 
       if (i >= MAX_REMOTE_ONBOARDING) {
-        PRINT("Max number of remote onboarding threads in use\n");
+        OC_ERR("Max number of remote onboarding threads in use\n");
         retval = OC_STATUS_INTERNAL_SERVER_ERROR;
         break;
       }
