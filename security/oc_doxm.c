@@ -113,6 +113,9 @@ oc_sec_doxm_default(size_t device)
 #else  /* OC_PKI */
   doxm[device].sct = 1;
 #endif /* !OC_PKI */
+#ifdef OC_OSCORE
+  doxm[device].sct |= OC_CREDTYPE_OSCORE;
+#endif /* OC_OSCORE */
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
