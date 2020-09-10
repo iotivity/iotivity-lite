@@ -555,6 +555,11 @@ oc_oscore_send_message(oc_message_t *msg)
     /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
     coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
+    /* If outer code is 2.05, then set the Max-Age option */
+    if (coap_pkt->code == CONTENT_2_05) {
+      coap_set_header_max_age(coap_pkt, 0);
+    }
+
     /* Set the OSCORE option */
     coap_set_header_oscore(coap_pkt, piv, piv_len, kid, kid_len, NULL, 0);
 
