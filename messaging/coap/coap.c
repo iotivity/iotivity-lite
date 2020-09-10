@@ -445,9 +445,9 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
     COAP_SERIALIZE_INT_OPTION(COAP_OPTION_CONTENT_FORMAT, content_format,
                               "Content-Format");
   }
-#if 0
-  COAP_SERIALIZE_INT_OPTION(COAP_OPTION_MAX_AGE, max_age, "Max-Age");
-#endif
+  if (outer) {
+    COAP_SERIALIZE_INT_OPTION(COAP_OPTION_MAX_AGE, max_age, "Max-Age");
+  }
   if (inner) {
     COAP_SERIALIZE_STRING_OPTION(COAP_OPTION_URI_QUERY, uri_query, '&',
                                  "Uri-Query");
@@ -1444,19 +1444,18 @@ coap_set_header_accept(void *packet, unsigned int accept)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-#if 0
-int coap_get_header_max_age(void *packet, uint32_t *age)
+int
+coap_get_header_max_age(void *packet, uint32_t *age)
 {
-  coap_packet_t * const coap_pkt = (coap_packet_t *)packet;
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  if(!IS_OPTION(coap_pkt, COAP_OPTION_MAX_AGE)) {
+  if (!IS_OPTION(coap_pkt, COAP_OPTION_MAX_AGE)) {
     *age = COAP_DEFAULT_MAX_AGE;
   } else {
     *age = coap_pkt->max_age;
   }
   return 1;
 }
-#endif
 int
 coap_set_header_max_age(void *packet, uint32_t age)
 {
