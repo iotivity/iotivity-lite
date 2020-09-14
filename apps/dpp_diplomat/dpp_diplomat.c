@@ -169,6 +169,9 @@ poll_for_uuid(void)
   if (mkfifo(FIFOPATH, 0666) != 0) {
     PRINT("Failed to create named pipe for UUID reading. Already in place?\n");
   }
+
+  PRINT("Polling for UUID from named pipe...\n");
+
   FILE *uuid_pipe = NULL;
   while (quit != 1) {
     uuid_pipe = fopen(FIFOPATH, "r");
@@ -178,9 +181,9 @@ poll_for_uuid(void)
     }
     char read_buffer[256] = "";
     size_t read_size = fread(read_buffer, 1, 256, uuid_pipe);
-    PRINT("Read size: %ld\n", read_size);
+    OC_DBG("Read size: %ld\n", read_size);
     if (read_size != 256 && feof(uuid_pipe)) {
-      PRINT("Reached EOF\n");
+      OC_DBG("Reached EOF\n");
     }
     PRINT("String read: %s\n", read_buffer);
 
