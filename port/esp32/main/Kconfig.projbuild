@@ -1,0 +1,46 @@
+menu "IoTivity Example Configuration"
+
+config WIFI_SSID
+    string "WiFi SSID"
+	default "myssid"
+	help
+		SSID (network name) for the ESP32 to connect to.
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+	default "myssid"
+	help
+		WiFi password (WPA or WPA2) for the ESP32 to match.
+		can be blank if the network has no security set.
+
+config OC_DEBUG
+    bool "OC_DEBUG"
+    help
+        enable or disable IoTivity-constrained debug
+
+config APP_DEBUG
+    bool "APP_DEBUG"
+    help
+        enable or disable application debug
+
+config DYNAMIC
+    bool "DYNAMIC"
+    help
+        enable or disable DYNAMIC
+
+config SECURE
+    bool "SECURE"
+    help
+        enable or disable SECURE
+
+config IPV4
+    bool "IPV4"
+    help
+        enable or disable IPV4
+
+config TCP
+    bool "TCP"
+    help
+        enable or disable TCP
+
+endmenu

@@ -65,6 +65,8 @@ port/contiki/obj_native/
 port/contiki/*.native
 port/contiki/symbols.*
 port/openthread/output
+port/esp32/build/
+port/esp32/sdkconfig
 *.o
 *.cmd
 *.tmp
