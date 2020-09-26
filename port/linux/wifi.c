@@ -528,7 +528,7 @@ wifi_start_dhcp_client()
 
   if (wifi_fetch_pid("dhclient")) {
     OC_DBG("DHclient is already running");
-    return 0;
+    //return 0;
   }
 
   if (remove(DHCLIENT_LEASES_FILE) < 0) {

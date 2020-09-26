@@ -637,7 +637,12 @@ oc_es_result_t
 oc_ees_set_device_info(size_t device, char *euicc_info, char *device_info,
 	char *profile_metadata)
 {
+  OC_DBG("oc_ees_set_device_info\n");
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
+
+  OC_DBG("euicc_info : %s\n", euicc_info);
+  OC_DBG("device_info : %s\n", device_info);
+  OC_DBG("profile_metadata : %s\n", profile_metadata);
 
   oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), euicc_info, strlen(euicc_info));
   oc_new_string(&(dev_cxt->rsp_cap.data.device_info), device_info, strlen(device_info));
