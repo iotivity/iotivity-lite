@@ -613,6 +613,14 @@ void oc_create_esim_easysetup_resource(size_t device, void *user_data);
 void oc_delete_esim_easysetup_resource(size_t device);
 
 /**
+ * This function resets all the properties of all ESIM Easy Setup Resources
+ * populated for device
+ *
+ * @param device	Index of the the device application created
+ */
+void oc_reset_esim_easysetup(size_t device);
+
+/**
  * This function is to set three function pointers to handle updates on
  * eSIM Easysetup resources
  *

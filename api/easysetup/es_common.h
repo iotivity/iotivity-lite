@@ -98,19 +98,23 @@ extern "C" {
 #define OC_RSRVD_EES_EUICCINFO "euiccinfo"
 #define OC_RSRVD_EES_DEVICEINFO "deviceinfo"
 
+#define EES_EMPTY ""
 // Esim Easysetup procedure status
-#define EES_PS_INITIATED ""
+#define EES_PS_UNDEFINED "Undefined"
+#define EES_PS_INITIATED "Initiated"
 #define EES_PS_USER_CONF_PENDING "User confirmation pending"
+#define EES_PS_USER_CONF_RECEIVED "Confirmation received"
 #define EES_PS_DOWNLOADED "Downloaded"
 #define EES_PS_INSTALLED "Installed"
 #define EES_PS_ERROR "Error"
 
 // End user confirmation status
+#define EES_EUC_UNDEFINED "Undefined"
+#define EES_EUC_TIMEOUT "Timeout"
+#define EES_EUC_DOWNLOAD_REJECT "Download Reject"
+#define EES_EUC_DOWNLOAD_POSTPONED "Download Postponed"
 #define EES_EUC_DOWNLOAD_OK "Download OK"
 #define EES_EUC_DOWNLOAD_ENABLE_OK "Download and Enable OK"
-#define EES_EUC_TIMEOUT "Timeout"
-#define EES_EUC_DOWNLOAD_REJECT "Download eject"
-#define EES_EUC_DOWNLOAD_POSTPONED "Download Postponed"
 
 /**
  * @brief  Supported WI-FI frequency like 2.4G and 5G.

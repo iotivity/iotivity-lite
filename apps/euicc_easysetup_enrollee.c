@@ -79,10 +79,14 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
     PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_consent));
   }
   if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
-    if((!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) ||
-        (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK)))) {
+    if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
+    } else if (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) {
+        lpa_download_profile(&ees_profile_download_cb1);
+        lpa_install_profile(&ees_profile_install_cb1);
+    } else {
+        oc_reset_esim_easysetup(0);
     }
   }
 }
@@ -96,7 +100,7 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
     PRINT("rsp_prov_data is NULL\n");
     return;
   }
-  if(!strncmp(oc_ees_get_state(0), EES_PS_INITIATED, strlen(EES_PS_INITIATED)))  {
+  if(!strncmp(oc_ees_get_state(0), EES_EMPTY, strlen(EES_EMPTY)))  {
     if(oc_string(rsp_prov_data->activation_code)) {
       PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
     }
@@ -193,11 +197,16 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
   if(oc_string(ees_prov_data->end_user_consent)) {
     PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_consent));
   }
+
   if(!strncmp(oc_ees_get_state(1), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
-    if((!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) ||
-        (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK)))) {
+    if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
         lpa_download_profile(&ees_profile_download_cb2);
         lpa_install_profile(&ees_profile_install_cb2);
+    } else if (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) {
+        lpa_download_profile(&ees_profile_download_cb2);
+        lpa_install_profile(&ees_profile_install_cb2);
+    } else {
+        oc_reset_esim_easysetup(1);
     }
   }
 }
@@ -211,7 +220,7 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
     PRINT("rsp_prov_data is NULL\n");
     return;
   }
-  if(!strncmp(oc_ees_get_state(1), EES_PS_INITIATED, strlen(EES_PS_INITIATED)))  {
+  if(!strncmp(oc_ees_get_state(1), EES_EMPTY, strlen(EES_EMPTY)))  {
     if(oc_string(rsp_prov_data->activation_code)) {
       PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
     }

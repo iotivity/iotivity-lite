@@ -980,11 +980,11 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
   }
 
   // Initiatize EES Resource state
-  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_INITIATED, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_PS_INITIATED, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_PS_INITIATED, 0);
-  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_PS_INITIATED, 0);
-  oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_PS_INITIATED, 0);
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_UNDEFINED, 9);
+  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_EUC_UNDEFINED, 9);
 
   // Esim Easy Setup Resource
   oc_core_populate_collection(
@@ -1088,6 +1088,34 @@ oc_delete_esim_easysetup_resource(size_t device)
     esim_enrollee = NULL;
     OC_DBG("All eSIM device instances removed from memory");
   }
+}
+
+void
+oc_reset_esim_easysetup(size_t device)
+{
+  OC_DBG("oc_reset_esim_easysetup : %d", device);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
+
+  oc_free_string(&dev_cxt->rsp.data.activation_code);
+  oc_free_string(&dev_cxt->rsp.data.profile_metadata);
+  oc_free_string(&dev_cxt->rsp.data.confirm_code);
+
+  oc_free_string(&dev_cxt->rsp_cap.data.euicc_info);
+  oc_free_string(&dev_cxt->rsp_cap.data.device_info);
+
+  oc_free_string(&dev_cxt->ees.data.rsp_status);
+  oc_free_string(&dev_cxt->ees.data.last_err_reason);
+  oc_free_string(&dev_cxt->ees.data.last_err_code);
+  oc_free_string(&dev_cxt->ees.data.last_err_desc);
+  oc_free_string(&dev_cxt->ees.data.end_user_consent);
+
+  // Initiatize EES Resource state
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_UNDEFINED, 9);
+  oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_EUC_UNDEFINED, 9);
+
 }
 
 #endif // OC_ESIM_EASYSETUP
