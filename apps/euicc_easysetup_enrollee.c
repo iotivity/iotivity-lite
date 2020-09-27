@@ -80,12 +80,16 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
   }
   if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
+        oc_ees_set_state(0, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
     } else if (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) {
+        oc_ees_set_state(0, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
     } else {
+        PRINT("\n\n Resetting \n\n");
+        oc_ees_set_state(0, EES_PS_ERROR);
         oc_reset_esim_easysetup(0);
     }
   }
@@ -102,14 +106,12 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
   }
   if(!strncmp(oc_ees_get_state(0), EES_EMPTY, strlen(EES_EMPTY)))  {
     if(oc_string(rsp_prov_data->activation_code)) {
-      PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
+      PRINT("Actiation Code : %s\n", oc_string(rsp_prov_data->activation_code));
     }
     if(oc_string(rsp_prov_data->profile_metadata)) {
-      PRINT("Profile Metadata Code : %s\n", rsp_prov_data->profile_metadata);
+      PRINT("Profile Metadata Code : %s\n", oc_string(rsp_prov_data->profile_metadata));
     }
-    if(oc_string(rsp_prov_data->profile_metadata)) {
-      PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
-    }
+    PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
     //Write Access code to LPA
     lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
@@ -200,12 +202,15 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
 
   if(!strncmp(oc_ees_get_state(1), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
+        oc_ees_set_state(1, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb2);
         lpa_install_profile(&ees_profile_install_cb2);
     } else if (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) {
+        oc_ees_set_state(1, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb2);
         lpa_install_profile(&ees_profile_install_cb2);
     } else {
+        oc_ees_set_state(1, EES_PS_ERROR);
         oc_reset_esim_easysetup(1);
     }
   }
@@ -222,10 +227,10 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
   }
   if(!strncmp(oc_ees_get_state(1), EES_EMPTY, strlen(EES_EMPTY)))  {
     if(oc_string(rsp_prov_data->activation_code)) {
-      PRINT("Actiation Code : %s\n", rsp_prov_data->activation_code);
+      PRINT("Actiation Code : %s\n", oc_string(rsp_prov_data->activation_code));
     }
     if(oc_string(rsp_prov_data->profile_metadata)) {
-      PRINT("Profile Metadata Code : %s\n", rsp_prov_data->profile_metadata);
+      PRINT("Profile Metadata Code : %s\n", oc_string(rsp_prov_data->profile_metadata));
     }
     PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
