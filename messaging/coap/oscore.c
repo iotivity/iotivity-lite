@@ -45,6 +45,7 @@ oscore_send_error(void *packet, uint8_t code, oc_endpoint_t *endpoint)
     if (oscore_pkt->token_len > 0) {
       coap_set_token(msg, oscore_pkt->token, oscore_pkt->token_len);
     }
+    coap_set_header_max_age(msg, 0);
     size_t len = coap_serialize_message(msg, message->data);
     if (len > 0) {
       message->length = len;
@@ -101,10 +102,11 @@ oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len)
   *piv_len = 0;
   char *p = (char *)&ssn + 8 - OSCORE_PIV_LEN;
   char *end = p + OSCORE_PIV_LEN;
+  while (p != end && *p == 0) {
+    p++;
+  }
   while (p != end) {
-    if (*p != 0) {
-      piv[(*piv_len)++] = *p;
-    }
+    piv[(*piv_len)++] = *p;
     p++;
   }
 

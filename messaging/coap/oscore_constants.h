@@ -35,6 +35,10 @@
 #define OSCORE_INFO_MAX_LEN (128)
 #define OSCORE_AAD_MAX_LEN (128)
 
+/* Preventing SSN reuse, based on recommendations in RFC 8613, Appendix B.1. */
+#define OSCORE_SSN_WRITE_FREQ_K (32)
+#define OSCORE_SSN_PAD_F (OSCORE_SSN_WRITE_FREQ_K * 4)
+
 #define OSCORE_FLAGS_BIT_KID_POSITION 3
 #define OSCORE_FLAGS_BIT_KID_CTX_POSITION 4
 #define OSCORE_FLAGS_PIVLEN_BITMASK 0x07

@@ -20,6 +20,8 @@
 #include "oc_oscore_context.h"
 #include "api/oc_events.h"
 #include "util/oc_process.h"
+#include "oc_store.h"
+#include "oc_api.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/transactions.h"
@@ -28,6 +30,14 @@
 #include "mbedtls/ccm.h"
 
 OC_PROCESS(oc_oscore_handler, "OSCORE Process");
+
+static oc_event_callback_retval_t
+dump_cred(void *data)
+{
+  size_t device = (size_t)data;
+  oc_sec_dump_cred(device);
+  return OC_EVENT_DONE;
+}
 
 static bool
 check_if_replayed_request(oc_oscore_context_t *oscore_ctx, uint64_t piv)
@@ -313,13 +323,10 @@ oc_oscore_send_message(oc_message_t *msg)
    *     Else:
    *       Return error
    *   Else: (CoAP message is response)
-   *     If notification response:
-   *       Use context->SSN as partial IV
-   *       Coompute nonce using partial IV and context->sendid
-   *       Copy partial IV into incoming oc_message_t (*msg), if valid
-   *     Else: (non-notification response)
-   *       Compute nonce using request_piv and context->recvid
+   *     Use context->SSN as partial IV
+   *     Coompute nonce using partial IV and context->sendid
    *     Compute AAD using request_piv and context->recvid
+   *     Copy partial IV into incoming oc_message_t (*msg), if valid
    *    Make room for inner options and payload by moving CoAP payload to offset
    *    2 * COAP_MAX_HEADER_SIZE
    *    Store Observe option; if message is a notification, make Observe option
@@ -449,43 +456,25 @@ oc_oscore_send_message(oc_message_t *msg)
       }
       OC_DBG("### protecting outgoing response ###");
       /* Response */
-      /* If notification response */
-      if (IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE) && coap_pkt->observe > 1) {
-        /* Use context->SSN as partial IV */
-        oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-        OC_DBG("---found Observe option; using new Partial IV (SSN)");
-        OC_DBG("---Partial IV:");
-        OC_LOGbytes(piv, piv_len);
+      /* Per OCF specification, all responses must include a new Partial IV */
+      /* Use context->SSN as partial IV */
+      oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
+      OC_DBG("---using SSN as Partial IV: %lu", oscore_ctx->ssn);
+      OC_LOGbytes(piv, piv_len);
 
-        /* Increment SSN */
-        oscore_ctx->ssn++;
+      /* Increment SSN */
+      oscore_ctx->ssn++;
 
-        /* Coompute nonce using partial IV and context->sendid */
-        oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
-                             piv_len, oscore_ctx->commoniv, nonce,
-                             OSCORE_AEAD_NONCE_LEN);
+      /* Coompute nonce using partial IV and context->sendid */
+      oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
+                           piv_len, oscore_ctx->commoniv, nonce,
+                           OSCORE_AEAD_NONCE_LEN);
 
-        OC_DBG(
-          "---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
-        OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+      OC_DBG("---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
+      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
 
-        /* Copy partial IV into incoming oc_message_t (*msg), if valid */
-        if (msg_valid) {
-          memcpy(msg->endpoint.piv, piv, piv_len);
-          msg->endpoint.piv_len = piv_len;
-        }
-      } else {
-        /* Compute nonce using request_piv and context->recvid */
-        OC_DBG("---request_piv:");
-        OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
-
-        oc_oscore_AEAD_nonce(oscore_ctx->recvid, oscore_ctx->recvid_len,
-                             message->endpoint.piv, message->endpoint.piv_len,
-                             oscore_ctx->commoniv, nonce,
-                             OSCORE_AEAD_NONCE_LEN);
-        OC_DBG("---using AEAD nonce from request");
-        OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
-      }
+      OC_DBG("---request_piv");
+      OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
 
       /* Compose AAD using request_piv and context->recvid */
       oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
@@ -493,6 +482,19 @@ oc_oscore_send_message(oc_message_t *msg)
                             AAD, &AAD_len);
       OC_DBG("---composed AAD using request_piv and Recipient ID");
       OC_LOGbytes(AAD, AAD_len);
+
+      /* Copy partial IV into incoming oc_message_t (*msg), if valid */
+      if (msg_valid) {
+        memcpy(msg->endpoint.piv, piv, piv_len);
+        msg->endpoint.piv_len = piv_len;
+      }
+    }
+
+    /* Store current SSN with frequency OSCORE_WRITE_FREQ_K */
+    /* Based on recommendations in RFC 8613, Appendix B.1. to prevent SSN reuse
+     */
+    if (oscore_ctx->ssn % OSCORE_SSN_WRITE_FREQ_K == 0) {
+      oc_set_delayed_callback((void *)message->endpoint.device, dump_cred, 0);
     }
 
     /* Move CoAP payload to offset 2*COAP_MAX_HEADER_SIZE to accommodate for
@@ -552,6 +554,11 @@ oc_oscore_send_message(oc_message_t *msg)
 
     /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
     coap_pkt->code = oscore_get_outer_code(coap_pkt);
+
+    /* If outer code is 2.05, then set the Max-Age option */
+    if (coap_pkt->code == CONTENT_2_05) {
+      coap_set_header_max_age(coap_pkt, 0);
+    }
 
     /* Set the OSCORE option */
     coap_set_header_oscore(coap_pkt, piv, piv_len, kid, kid_len, NULL, 0);
