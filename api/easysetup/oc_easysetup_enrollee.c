@@ -1096,23 +1096,10 @@ oc_delete_esim_easysetup_resource(size_t device)
 }
 
 void
-oc_reset_esim_easysetup(size_t device)
+oc_ees_reset_resources(size_t device)
 {
-  OC_DBG("oc_reset_esim_easysetup : %d", device);
+  OC_DBG("oc_ees_reset_resources : %d", device);
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
-
-  oc_free_string(&dev_cxt->rsp.data.activation_code);
-  oc_free_string(&dev_cxt->rsp.data.profile_metadata);
-  oc_free_string(&dev_cxt->rsp.data.confirm_code);
-
-  oc_free_string(&dev_cxt->rsp_cap.data.euicc_info);
-  oc_free_string(&dev_cxt->rsp_cap.data.device_info);
-
-  oc_free_string(&dev_cxt->ees.data.rsp_status);
-  oc_free_string(&dev_cxt->ees.data.last_err_reason);
-  oc_free_string(&dev_cxt->ees.data.last_err_code);
-  oc_free_string(&dev_cxt->ees.data.last_err_desc);
-  oc_free_string(&dev_cxt->ees.data.end_user_consent);
 
   // Initiatize EES Resource state
   oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_UNDEFINED, 9);

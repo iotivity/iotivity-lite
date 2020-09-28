@@ -618,7 +618,7 @@ void oc_delete_esim_easysetup_resource(size_t device);
  *
  * @param device	Index of the the device application created
  */
-void oc_reset_esim_easysetup(size_t device);
+void oc_ees_reset_resources(size_t device);
 
 /**
  * This function is to set three function pointers to handle updates on

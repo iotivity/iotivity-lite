@@ -43,8 +43,10 @@ static bool g_exit = 0;
 static void
 ees_profile_install_cb1(int status)
 {
+  PRINT("ees_profile_install_cb1 : status %d\n", status);
   if(status == 0) {
     oc_ees_set_state(0, EES_PS_INSTALLED);
+    oc_ees_reset_resources(0);
   } else {
     oc_ees_set_state(0, EES_PS_ERROR);
   }
@@ -53,6 +55,7 @@ ees_profile_install_cb1(int status)
 static void
 ees_profile_download_cb1(int status)
 {
+  PRINT("ees_profile_download_cb1 : status %d\n", status);
   if(status == 0) {
     oc_ees_set_state(0, EES_PS_DOWNLOADED);
   } else {
@@ -76,7 +79,7 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
   if(oc_string(ees_prov_data->last_err_desc))
     PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
   if(oc_string(ees_prov_data->end_user_consent)) {
-    PRINT("End User Confirmation\n : %s\n", oc_string(ees_prov_data->end_user_consent));
+    PRINT("End User Confirmation : %s\n", oc_string(ees_prov_data->end_user_consent));
   }
   if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
@@ -88,9 +91,8 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
     } else {
-        PRINT("\n\n Resetting \n\n");
         oc_ees_set_state(0, EES_PS_ERROR);
-        oc_reset_esim_easysetup(0);
+        oc_ees_reset_resources(0);
     }
   }
 }
@@ -166,6 +168,7 @@ ees_profile_install_cb2(int status)
 {
   if(status == 0) {
     oc_ees_set_state(1, EES_PS_INSTALLED);
+    oc_ees_reset_resources(1);
   } else {
     oc_ees_set_state(1, EES_PS_ERROR);
   }
@@ -211,7 +214,7 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
         lpa_install_profile(&ees_profile_install_cb2);
     } else {
         oc_ees_set_state(1, EES_PS_ERROR);
-        oc_reset_esim_easysetup(1);
+        oc_ees_reset_resources(1);
     }
   }
 }
