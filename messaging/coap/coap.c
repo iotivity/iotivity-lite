@@ -1270,7 +1270,7 @@ coap_set_token(void *packet, const uint8_t *token, size_t token_len)
 }
 
 int
-coap_get_header_content_format(void *packet, unsigned int *format)
+coap_get_header_content_format(void *packet, oc_content_format_t *format)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
@@ -1282,11 +1282,11 @@ coap_get_header_content_format(void *packet, unsigned int *format)
 }
 
 int
-coap_set_header_content_format(void *packet, unsigned int format)
+coap_set_header_content_format(void *packet, oc_content_format_t format)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->content_format = (uint16_t)format;
+  coap_pkt->content_format = format;
   SET_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT);
   return 1;
 }
