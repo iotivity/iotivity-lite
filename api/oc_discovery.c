@@ -163,6 +163,14 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
     }
   }
 
+  // tag-locn
+  if (resource->tag_locn > 0) {
+    const char *locn = oc_enum_locn_to_str(resource->tag_locn);
+    if (locn) {
+      oc_rep_set_text_string(link, tag-locn, locn);
+    }
+  }
+
   // tag-pos-rel
   double *pos = resource->tag_pos_rel;
   if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {

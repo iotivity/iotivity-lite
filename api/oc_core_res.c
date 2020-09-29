@@ -204,6 +204,12 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
     /* oic.wk.d attribute n shall always be the same value as
     oic.wk.con attribute n. */
     oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
+
+    oc_locn_t oc_locn = oc_core_get_resource_by_index(OCF_D, 0)->tag_locn;
+    if (oc_locn > 0) {
+      oc_rep_set_text_string(root, locn, oc_enum_locn_to_str(oc_locn));
+    }
+
   } break;
   default:
     break;
@@ -253,6 +259,25 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
       changed = true;
       break;
     }
+    if (strcmp(oc_string(rep->name), "locn") == 0) {
+      if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        return;
+      }
+      oc_resource_t *device = oc_core_get_resource_by_index(OCF_D, 0);
+      if (device->tag_locn == 0) {
+        oc_send_response(request, OC_STATUS_BAD_REQUEST);
+        return;
+      }
+
+	  bool oc_defined = false;
+      oc_locn_t oc_locn = oc_str_to_enum_locn(rep->value.string, &oc_defined);
+      if (oc_defined) {
+        oc_resource_tag_locn(device, oc_locn);
+        changed = true;
+      }
+    }
+
     rep = rep->next;
   }
 

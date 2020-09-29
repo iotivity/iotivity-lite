@@ -208,6 +208,7 @@ struct oc_resource_s
   double tag_pos_rel[3];
   oc_pos_description_t tag_pos_desc;
   oc_enum_t tag_func_desc;
+  oc_locn_t tag_locn;
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
