@@ -148,6 +148,7 @@ void lpa_write_activation_code(char *activation_code)
 {
   // Verify Activation code with eUICC, String comparision added just to emulate the case
   if(strncmp(g_activation_code, activation_code, strlen(activation_code))) {
+    printf("Activation Code Verified......\n");
   }
 }
 

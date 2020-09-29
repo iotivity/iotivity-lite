@@ -115,6 +115,7 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
     }
     PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
+    oc_ees_set_state(0, EES_PS_INITIATED);
     //Write Access code to LPA
     lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
     oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
@@ -237,6 +238,7 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
     }
     PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
+    oc_ees_set_state(1, EES_PS_INITIATED);
     //Write Access code to LPA
     lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
     oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
