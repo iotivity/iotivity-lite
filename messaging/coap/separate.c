@@ -190,8 +190,7 @@ coap_separate_clear(oc_separate_response_t *separate_response,
                     coap_separate_t *separate_store)
 {
 #ifdef OC_BLOCK_WISE
-  if (oc_string_len(separate_store->uri) > 0)
-    oc_free_string(&separate_store->uri);
+  oc_free_string(&separate_store->uri);
 #endif /* OC_BLOCK_WISE */
   oc_list_remove(separate_response->requests, separate_store);
   oc_memb_free(&separate_requests, separate_store);
