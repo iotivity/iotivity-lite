@@ -134,9 +134,9 @@ prepare_coap_request(oc_client_cb_t *cb)
     return false;
   }
 
-#ifndef OC_BLOCK_WISE
   oc_rep_new(transaction->message->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
-#else  /* !OC_BLOCK_WISE */
+
+#ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
