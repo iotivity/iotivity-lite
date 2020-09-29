@@ -106,6 +106,7 @@ display_menu(void)
   PRINT("[22] Provision identity certificate\n");
   PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
+  PRINT("[24] Set security domain info\n");
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -130,7 +131,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.0.5",
+  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.1.1",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
   oc_device_bind_resource_type(0, "oic.d.ams");
   oc_device_bind_resource_type(0, "oic.d.cms");
@@ -1584,6 +1585,18 @@ install_trust_anchor(void)
 }
 #endif /* OC_PKI */
 
+static void
+set_sd_info()
+{
+  char name[64] = { 0 };
+  int priv = 0;
+  PRINT("\n\nEnter security domain name: ");
+  SCANF("%63s", name);
+  PRINT("\n\nChoose security domain priv[0-No, 1-Yes]: ");
+  SCANF("%d", &priv);
+  oc_obt_set_sd_info(name, priv);
+}
+
 void
 factory_presets_cb(size_t device, void *data)
 {
@@ -1828,6 +1841,11 @@ main(void)
     case 23:
       provision_role_cert();
       break;
+#endif
+    case 24:
+      set_sd_info();
+      break;
+#ifdef OC_PKI
     case 96:
       install_trust_anchor();
       break;

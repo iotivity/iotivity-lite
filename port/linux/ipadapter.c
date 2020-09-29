@@ -655,9 +655,6 @@ process_interface_change_event(void)
   }
 
   if (if_state_changed) {
-#ifdef OC_SECURITY
-    oc_close_all_tls_sessions();
-#endif /* OC_SECURITY */
     for (i = 0; i < num_devices; i++) {
       ip_context_t *dev = get_ip_context_for_device(i);
       oc_network_event_handler_mutex_lock();
@@ -1060,6 +1057,10 @@ oc_send_buffer(oc_message_t *message)
   int send_sock = -1;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
+  if (!dev) {
+    return -1;
+  }
 
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {

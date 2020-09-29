@@ -36,6 +36,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_pstat.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
+#include "security/oc_sdi.h"
 #include <stdlib.h>
 
 OC_MEMB(oc_discovery_s, oc_discovery_cb_t, 1);
@@ -1045,6 +1046,8 @@ device1_RFPRO(int status, void *data)
     if (!p->switch_dos) {
       free_credprov_ctx(p, -1);
     }
+  } else {
+    free_credprov_ctx(p, -1);
   }
 }
 
@@ -1118,9 +1121,7 @@ oc_obt_free_roleid(oc_role_t *roles)
   while (r) {
     next = r->next;
     oc_free_string(&r->role);
-    if (oc_string_len(r->authority) > 0) {
-      oc_free_string(&r->authority);
-    }
+    oc_free_string(&r->authority);
     oc_memb_free(&oc_roles, r);
     r = next;
   }
@@ -1310,12 +1311,8 @@ device_CSR(oc_client_response_t *data)
     }
   }
 err_device_CSR:
-  if (oc_string_len(subject) > 0) {
-    oc_free_string(&subject);
-  }
-  if (oc_string_len(cert) > 0) {
-    oc_free_string(&cert);
-  }
+  oc_free_string(&subject);
+  oc_free_string(&cert);
   free_credprov_state(p, -1);
 }
 
@@ -1651,9 +1648,7 @@ void
 oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
 {
   if (resource) {
-    if (oc_string_len(resource->href) > 0) {
-      oc_free_string(&resource->href);
-    }
+    oc_free_string(&resource->href);
     oc_new_string(&resource->href, href, strlen(href));
   }
 }
@@ -1680,19 +1675,13 @@ free_ace(oc_sec_ace_t *ace)
   if (ace) {
     oc_ace_res_t *res = (oc_ace_res_t *)oc_list_pop(ace->resources);
     while (res != NULL) {
-      if (oc_string_len(res->href) > 0) {
-        oc_free_string(&res->href);
-      }
+      oc_free_string(&res->href);
       oc_memb_free(&oc_res_m, res);
       res = (oc_ace_res_t *)oc_list_pop(ace->resources);
     }
     if (ace->subject_type == OC_SUBJECT_ROLE) {
-      if (oc_string_len(ace->subject.role.role) > 0) {
-        oc_free_string(&ace->subject.role.role);
-      }
-      if (oc_string_len(ace->subject.role.authority) > 0) {
-        oc_free_string(&ace->subject.role.authority);
-      }
+      oc_free_string(&ace->subject.role.role);
+      oc_free_string(&ace->subject.role.authority);
     }
     oc_memb_free(&oc_aces_m, ace);
   }
@@ -1904,19 +1893,11 @@ oc_obt_free_creds(oc_sec_creds_t *creds)
   oc_sec_cred_t *cred = oc_list_head(creds->creds), *next;
   while (cred != NULL) {
     next = cred->next;
-    if (oc_string_len(cred->role.role) > 0) {
-      oc_free_string(&cred->role.role);
-      if (oc_string_len(cred->role.authority) > 0) {
-        oc_free_string(&cred->role.authority);
-      }
-    }
-    if (oc_string_len(cred->privatedata.data) > 0) {
-      oc_free_string(&cred->privatedata.data);
-    }
+    oc_free_string(&cred->role.role);
+    oc_free_string(&cred->role.authority);
+    oc_free_string(&cred->privatedata.data);
 #ifdef OC_PKI
-    if (oc_string_len(cred->publicdata.data) > 0) {
-      oc_free_string(&cred->publicdata.data);
-    }
+    oc_free_string(&cred->publicdata.data);
 #endif /* OC_PKI */
     oc_memb_free(&oc_cred_m, cred);
     cred = next;
@@ -2620,6 +2601,16 @@ oc_obt_delete_own_cred_by_credid(int credid)
   return -1;
 }
 
+void
+oc_obt_set_sd_info(char *name, bool priv)
+{
+  oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
+  oc_free_string(&sdi->name);
+  oc_new_string(&sdi->name, name, strlen(name));
+  sdi->priv = priv;
+  oc_sec_dump_sdi(0);
+}
+
 /* OBT initialization and shutdown */
 int
 oc_obt_init(void)
@@ -2627,12 +2618,14 @@ oc_obt_init(void)
   OC_DBG("oc_obt:OBT init");
   if (!oc_sec_is_operational(0)) {
     OC_DBG("oc_obt: performing self-onboarding");
+    oc_device_info_t *self = oc_core_get_device_info(0);
     oc_uuid_t *uuid = oc_core_get_device_id(0);
 
     oc_sec_acl_t *acl = oc_sec_get_acl(0);
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(0);
     oc_sec_creds_t *creds = oc_sec_get_creds(0);
     oc_sec_pstat_t *ps = oc_sec_get_pstat(0);
+    oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
 
     memcpy(acl->rowneruuid.id, uuid->id, 16);
 
@@ -2651,10 +2644,16 @@ oc_obt_init(void)
 
     oc_sec_ace_clear_bootstrap_aces(0);
 
+    oc_gen_uuid(&sdi->uuid);
+    oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
+    sdi->priv = false;
+
     oc_sec_dump_pstat(0);
     oc_sec_dump_doxm(0);
     oc_sec_dump_cred(0);
     oc_sec_dump_acl(0);
+    oc_sec_dump_ael(0);
+    oc_sec_dump_sdi(0);
 
 #ifdef OC_PKI
     uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];

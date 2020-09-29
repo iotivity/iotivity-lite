@@ -779,6 +779,14 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  */
 void oc_device_bind_resource_type(size_t device, const char *type);
 
+void oc_resource_tag_pos_desc(oc_resource_t *resource,
+                              oc_pos_description_t pos);
+
+void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
+                             double z);
+
+void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
+
 /**
  * Helper function used when responding to a GET request to add Common
  * Properties to a GET response.

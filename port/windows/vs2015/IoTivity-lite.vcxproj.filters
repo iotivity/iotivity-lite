@@ -454,6 +454,25 @@
     <ClCompile Include="..\..\..\api\oc_vod_map.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_enums.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_resource_factory.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_swupdate.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_ael.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_audit.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_sdi.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+>>>>>>> origin/master
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -726,6 +745,25 @@
     <ClInclude Include="..\..\..\api\oc_core_res_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_resource_factory.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_swupdate_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_enums.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_ael.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_audit.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_sdi.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+>>>>>>> origin/master
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mbedTLS">

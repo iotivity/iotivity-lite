@@ -25,8 +25,7 @@
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Used for tracking owned/unowned devices in oc_obt's internal caches */
@@ -69,6 +68,7 @@ typedef struct oc_otm_ctx_t
   struct oc_otm_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
+  bool sdi;
 } oc_otm_ctx_t;
 
 /* Context to be maintained over dos transition sequence */
@@ -189,6 +189,7 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
                               const uint8_t *issuer_private_key,
                               const size_t issuer_private_key_size,
                               oc_string_t *role_cert);
+
 #ifdef __cplusplus
 }
 #endif

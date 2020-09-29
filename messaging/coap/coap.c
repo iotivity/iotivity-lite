@@ -57,6 +57,7 @@
 #include "oc_ri.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#include "security/oc_audit.h"
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -1154,7 +1155,7 @@ coap_udp_parse_message(void *packet, uint8_t *data, uint16_t data_len)
   coap_status_t ret =
     coap_parse_token_option(packet, data, data_len, current_option);
   if (COAP_NO_ERROR != ret) {
-    OC_DBG("coap_parse_token_option failed!");
+    OC_DBG("coap_parse_token_option failed! %d", ret);
     return ret;
   }
 
@@ -1270,7 +1271,7 @@ coap_set_token(void *packet, const uint8_t *token, size_t token_len)
 }
 
 int
-coap_get_header_content_format(void *packet, unsigned int *format)
+coap_get_header_content_format(void *packet, oc_content_format_t *format)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
@@ -1282,11 +1283,11 @@ coap_get_header_content_format(void *packet, unsigned int *format)
 }
 
 int
-coap_set_header_content_format(void *packet, unsigned int format)
+coap_set_header_content_format(void *packet, oc_content_format_t format)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->content_format = (uint16_t)format;
+  coap_pkt->content_format = format;
   SET_OPTION(coap_pkt, COAP_OPTION_CONTENT_FORMAT);
   return 1;
 }

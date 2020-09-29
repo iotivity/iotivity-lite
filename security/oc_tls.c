@@ -39,6 +39,7 @@
 #include "api/oc_main.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/observe.h"
+#include "messaging/coap/engine.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
@@ -52,6 +53,7 @@
 #include "oc_roles.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
+#include "oc_audit.h"
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -82,6 +84,15 @@ oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data)
   random_pin.cb = cb;
   random_pin.data = data;
 }
+
+#ifdef OC_CLIENT
+static bool use_pin_obt_psk_identity = false;
+void
+oc_tls_use_pin_obt_psk_identity(void)
+{
+  use_pin_obt_psk_identity = true;
+}
+#endif /* OC_CLIENT */
 
 #ifdef OC_PKI
 static bool auto_assert_all_roles = true;
@@ -175,21 +186,25 @@ static const int anon_ecdh_priority[2] = {
 };
 #endif /* OC_CLIENT */
 
-#ifdef OC_PKI
-static const int otm_priority[7] = {
-#else  /* OC_PKI */
-static const int otm_priority[3] = {
-#endif /* !OC_PKI */
+static const int jw_otm_priority[3] = {
   MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256,
-  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+
+static const int pin_otm_priority[2] = {
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256, 0
+};
+
 #ifdef OC_PKI
+static const int cert_otm_priority[6] = {
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_CCM,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8,
   MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_CCM,
-#endif /* OC_PKI */
+  MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
   0
 };
+#endif /* OC_PKI */
 
 #ifdef OC_CLIENT
 #ifdef OC_PKI
@@ -247,6 +262,35 @@ is_peer_active(oc_tls_peer_t *peer)
 }
 
 static oc_event_callback_retval_t oc_tls_inactive(void *data);
+
+#ifdef OC_CLIENT
+static void
+oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
+{
+  OC_DBG("\noc_tls: removing invalid peer");
+  oc_list_remove(tls_peers, peer);
+
+  oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
+
+  mbedtls_ssl_free(&peer->ssl_ctx);
+  oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->send_q);
+  }
+  message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  while (message != NULL) {
+    oc_message_unref(message);
+    message = (oc_message_t *)oc_list_pop(peer->recv_q);
+  }
+#ifdef OC_PKI
+  oc_free_string(&peer->public_key);
+#endif /* OC_PKI */
+  mbedtls_ssl_config_free(&peer->ssl_conf);
+  oc_etimer_stop(&peer->timer.fin_timer);
+  oc_memb_free(&tls_peers_s, peer);
+}
+#endif /* OC_CLIENT */
 
 static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
@@ -515,6 +559,21 @@ oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
   return ret;
 }
 
+static void
+oc_tls_audit_log(const char *aeid, const char *message, uint8_t category,
+                 uint8_t priority, oc_tls_peer_t *peer)
+{
+  char buff[IPADDR_BUFF_SIZE];
+  if (peer) {
+    SNPRINTFipaddr(buff, IPADDR_BUFF_SIZE, peer->endpoint);
+  } else {
+    buff[0] = '\0';
+  }
+  char *aux[] = { buff };
+  oc_audit_log((peer) ? peer->endpoint.device : 0, aeid, message, category,
+               priority, (const char **)aux, 1);
+}
+
 static int
 get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
            size_t identity_len)
@@ -546,10 +605,15 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
     } else {
-      OC_DBG("oc_tls: deriving PPSK for PIN OTM");
       oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
       oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
       if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+        if (identity_len != 16 ||
+            memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
+          OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
+          return -1;
+        }
+        OC_DBG("oc_tls: deriving PPSK for PIN OTM");
         memcpy(peer->uuid.id, identity, 16);
 
         uint8_t key[16];
@@ -569,6 +633,9 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     }
   }
   OC_ERR("oc_tls: could not find peer credential");
+  oc_tls_audit_log("AUTH-1",
+                   "DLTS handshake error, could not find peer credential", 0x08,
+                   1, peer);
   return -1;
 }
 
@@ -981,7 +1048,26 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
     OC_DBG(
       "oc_tls_set_ciphersuites: server selecting OTM ciphersuite priority");
-    ciphers = (int *)otm_priority;
+    oc_sec_doxm_t *d = oc_sec_get_doxm(endpoint->device);
+    switch (d->oxmsel) {
+    case OC_OXMTYPE_JW:
+      OC_DBG("oc_tls: selected JW OTM priority");
+      ciphers = (int *)jw_otm_priority;
+      break;
+    case OC_OXMTYPE_RDP:
+      OC_DBG("oc_tls: selected PIN OTM priority");
+      ciphers = (int *)pin_otm_priority;
+      break;
+#ifdef OC_PKI
+    case OC_OXMTYPE_MFG_CERT:
+      OC_DBG("oc_tls: selected cert OTM priority");
+      ciphers = (int *)cert_otm_priority;
+      break;
+#endif /* OC_PKI */
+    default:
+      ciphers = (int *)default_priority;
+      break;
+    }
   } else if (!ciphers) {
     OC_DBG(
       "oc_tls_set_ciphersuites: server selecting default ciphersuite priority");
@@ -1047,6 +1133,10 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       if (oc_certs_validate_non_end_entity_cert(
             crt, false, ps->s == OC_DOS_RFOTM, depth) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
+        oc_tls_audit_log(
+          "AUTH-1",
+          "DLTS handshake error, failed to verify root or intermediate cert",
+          0x08, 1, peer);
         return -1;
       }
     } else {
@@ -1066,6 +1156,9 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     }
   } else if (oc_certs_validate_end_entity_cert(crt) < 0) {
     OC_ERR("failed to verify end entity cert");
+    oc_tls_audit_log("AUTH-1",
+                     "DLTS handshake error, failed to verify end entity cert",
+                     0x08, 1, peer);
     return -1;
   }
 
@@ -1170,8 +1263,20 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   }
 
   oc_uuid_t *device_id = oc_core_get_device_id(device);
-  if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
-    return -1;
+#ifdef OC_CLIENT
+  if (role == MBEDTLS_SSL_IS_CLIENT && use_pin_obt_psk_identity) {
+    use_pin_obt_psk_identity = false;
+    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1,
+                             (const unsigned char *)"oic.sec.doxm.rdp",
+                             16) != 0) {
+      return -1;
+    }
+  } else
+#endif /* OC_CLIENT */
+  {
+    if (mbedtls_ssl_conf_psk(conf, device_id->id, 1, device_id->id, 16) != 0) {
+      return -1;
+    }
   }
 
 #ifdef OC_DEBUG
@@ -1240,6 +1345,11 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
         OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
         oc_tls_free_peer(peer, false);
         return NULL;
+      }
+      /* Fix maximum size of outgoing encrypted application payloads when sent
+       * over UDP */
+      if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
+        mbedtls_ssl_set_mtu(&peer->ssl_ctx, OC_PDU_SIZE);
       }
 
       mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
@@ -1573,8 +1683,23 @@ write_application_data(oc_tls_peer_t *peer)
 static void
 oc_tls_init_connection(oc_message_t *message)
 {
-  oc_tls_peer_t *peer =
-    oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+  if (pstat->s != OC_DOS_RFNOP) {
+    oc_message_unref(message);
+    return;
+  }
+
+  oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
+
+  if (peer && peer->role != MBEDTLS_SSL_IS_CLIENT) {
+    oc_tls_free_invalid_peer(peer);
+    peer = NULL;
+  }
+
+  if (!peer) {
+    peer = oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+  }
+
   if (peer) {
     oc_message_t *duplicate = oc_list_head(peer->send_q);
     while (duplicate != NULL) {
@@ -1757,7 +1882,10 @@ read_application_data(oc_tls_peer_t *peer)
       }
       message->length = ret;
       message->encrypted = 0;
-      oc_recv_message(message);
+      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
+          OC_PROCESS_ERR_FULL) {
+        oc_message_unref(message);
+      }
       OC_DBG("oc_tls: Decrypted incoming message");
     }
   }
@@ -1779,6 +1907,8 @@ oc_tls_recv_message(oc_message_t *message)
     oc_list_add(peer->recv_q, message);
     peer->timestamp = oc_clock_time();
     oc_tls_handler_schedule_read(peer);
+  } else {
+    oc_message_unref(message);
   }
 }
 

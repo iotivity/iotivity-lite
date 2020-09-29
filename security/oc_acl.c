@@ -331,6 +331,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
+    OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
     return false;
   }
 
@@ -479,12 +480,15 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 }
 
 bool
-oc_sec_encode_acl(size_t device)
+oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
+                  bool to_storage)
 {
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+  }
   oc_rep_set_array(root, aclist2);
   oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
 
@@ -688,9 +692,7 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
     if (href == NULL ||
         (oc_string_len(res->href) == strlen(href) &&
          memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
-      if (oc_string_len(res->href) > 0) {
-        oc_free_string(&res->href);
-      }
+      oc_free_string(&res->href);
       oc_list_remove((*ace)->resources, res);
       oc_memb_free(&res_l, res);
     }
@@ -732,6 +734,9 @@ oc_sec_ace_clear_bootstrap_aces(size_t device)
     if (__anon_clear) {
       oc_ace_free_resources(device, &__anon_clear, "/oic/sec/csr");
     }
+    if (__anon_clear) {
+      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sdi");
+    }
   } while (__anon_clear);
 }
 
@@ -747,9 +752,7 @@ oc_acl_remove_ace(int aceid, size_t device)
       oc_ace_free_resources(device, &ace, NULL);
       if (ace->subject_type == OC_SUBJECT_ROLE) {
         oc_free_string(&ace->subject.role.role);
-        if (oc_string_len(ace->subject.role.authority) > 0) {
-          oc_free_string(&ace->subject.role.authority);
-        }
+        oc_free_string(&ace->subject.role.authority);
       }
       oc_memb_free(&ace_l, ace);
       removed = true;
@@ -775,9 +778,7 @@ oc_sec_clear_acl(size_t device)
     oc_ace_free_resources(device, &ace, NULL);
     if (ace->subject_type == OC_SUBJECT_ROLE) {
       oc_free_string(&ace->subject.role.role);
-      if (oc_string_len(ace->subject.role.authority) > 0) {
-        oc_free_string(&ace->subject.role.authority);
-      }
+      oc_free_string(&ace->subject.role.authority);
     }
     oc_memb_free(&ace_l, ace);
     ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
@@ -1059,9 +1060,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
 
         if (subject_type == OC_SUBJECT_ROLE) {
           oc_free_string(&subject.role.role);
-          if (oc_string_len(subject.role.authority) > 0) {
-            oc_free_string(&subject.role.authority);
-          }
+          oc_free_string(&subject.role.authority);
         }
 
         aclist2 = aclist2->next;
@@ -1129,9 +1128,8 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)iface_mask;
   (void)data;
-  if (oc_sec_encode_acl(request->resource->device)) {
+  if (oc_sec_encode_acl(request->resource->device, iface_mask, false)) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);

@@ -472,15 +472,13 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #else /* OC_IPV4 */
   else {
 #ifdef OC_DNS_LOOKUP
-    if (oc_string_len(ipaddress) > 0)
-      oc_free_string(&ipaddress);
+    oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
     return -1;
   }
 #endif /* !OC_IPV4 */
 #ifdef OC_DNS_LOOKUP
-  if (oc_string_len(ipaddress) > 0)
-    oc_free_string(&ipaddress);
+  oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
   return 0;
 }

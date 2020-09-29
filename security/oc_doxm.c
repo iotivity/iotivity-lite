@@ -125,12 +125,15 @@ oc_sec_doxm_default(size_t device)
 }
 
 void
-oc_sec_encode_doxm(size_t device, bool to_storage)
+oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
+                   bool to_storage)
 {
   char uuid[37];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+  }
   /* oxms */
   if (!to_storage) {
     evaluate_supported_oxms(device);
@@ -165,6 +168,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
@@ -179,7 +183,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         oc_ignore_request(request);
       }
     } else {
-      oc_sec_encode_doxm(device, false);
+      oc_sec_encode_doxm(device, iface_mask, false);
       oc_send_response(request, OC_STATUS_OK);
     }
   } break;
