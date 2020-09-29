@@ -686,9 +686,7 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
     if (href == NULL ||
         (oc_string_len(res->href) == strlen(href) &&
          memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
-      if (oc_string_len(res->href) > 0) {
-        oc_free_string(&res->href);
-      }
+      oc_free_string(&res->href);
       oc_list_remove((*ace)->resources, res);
       oc_memb_free(&res_l, res);
     }
@@ -745,9 +743,7 @@ oc_acl_remove_ace(int aceid, size_t device)
       oc_ace_free_resources(device, &ace, NULL);
       if (ace->subject_type == OC_SUBJECT_ROLE) {
         oc_free_string(&ace->subject.role.role);
-        if (oc_string_len(ace->subject.role.authority) > 0) {
-          oc_free_string(&ace->subject.role.authority);
-        }
+        oc_free_string(&ace->subject.role.authority);
       }
       oc_memb_free(&ace_l, ace);
       removed = true;
@@ -767,9 +763,7 @@ oc_sec_clear_acl(size_t device)
     oc_ace_free_resources(device, &ace, NULL);
     if (ace->subject_type == OC_SUBJECT_ROLE) {
       oc_free_string(&ace->subject.role.role);
-      if (oc_string_len(ace->subject.role.authority) > 0) {
-        oc_free_string(&ace->subject.role.authority);
-      }
+      oc_free_string(&ace->subject.role.authority);
     }
     oc_memb_free(&ace_l, ace);
     ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
@@ -1051,9 +1045,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
 
         if (subject_type == OC_SUBJECT_ROLE) {
           oc_free_string(&subject.role.role);
-          if (oc_string_len(subject.role.authority) > 0) {
-            oc_free_string(&subject.role.authority);
-          }
+          oc_free_string(&subject.role.authority);
         }
 
         aclist2 = aclist2->next;

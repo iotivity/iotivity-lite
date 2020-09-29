@@ -1120,9 +1120,7 @@ oc_obt_free_roleid(oc_role_t *roles)
   while (r) {
     next = r->next;
     oc_free_string(&r->role);
-    if (oc_string_len(r->authority) > 0) {
-      oc_free_string(&r->authority);
-    }
+    oc_free_string(&r->authority);
     oc_memb_free(&oc_roles, r);
     r = next;
   }
@@ -1312,12 +1310,8 @@ device_CSR(oc_client_response_t *data)
     }
   }
 err_device_CSR:
-  if (oc_string_len(subject) > 0) {
-    oc_free_string(&subject);
-  }
-  if (oc_string_len(cert) > 0) {
-    oc_free_string(&cert);
-  }
+  oc_free_string(&subject);
+  oc_free_string(&cert);
   free_credprov_state(p, -1);
 }
 
@@ -1653,9 +1647,7 @@ void
 oc_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
 {
   if (resource) {
-    if (oc_string_len(resource->href) > 0) {
-      oc_free_string(&resource->href);
-    }
+    oc_free_string(&resource->href);
     oc_new_string(&resource->href, href, strlen(href));
   }
 }
@@ -1682,19 +1674,13 @@ free_ace(oc_sec_ace_t *ace)
   if (ace) {
     oc_ace_res_t *res = (oc_ace_res_t *)oc_list_pop(ace->resources);
     while (res != NULL) {
-      if (oc_string_len(res->href) > 0) {
-        oc_free_string(&res->href);
-      }
+      oc_free_string(&res->href);
       oc_memb_free(&oc_res_m, res);
       res = (oc_ace_res_t *)oc_list_pop(ace->resources);
     }
     if (ace->subject_type == OC_SUBJECT_ROLE) {
-      if (oc_string_len(ace->subject.role.role) > 0) {
-        oc_free_string(&ace->subject.role.role);
-      }
-      if (oc_string_len(ace->subject.role.authority) > 0) {
-        oc_free_string(&ace->subject.role.authority);
-      }
+      oc_free_string(&ace->subject.role.role);
+      oc_free_string(&ace->subject.role.authority);
     }
     oc_memb_free(&oc_aces_m, ace);
   }
@@ -1906,19 +1892,11 @@ oc_obt_free_creds(oc_sec_creds_t *creds)
   oc_sec_cred_t *cred = oc_list_head(creds->creds), *next;
   while (cred != NULL) {
     next = cred->next;
-    if (oc_string_len(cred->role.role) > 0) {
-      oc_free_string(&cred->role.role);
-      if (oc_string_len(cred->role.authority) > 0) {
-        oc_free_string(&cred->role.authority);
-      }
-    }
-    if (oc_string_len(cred->privatedata.data) > 0) {
-      oc_free_string(&cred->privatedata.data);
-    }
+    oc_free_string(&cred->role.role);
+    oc_free_string(&cred->role.authority);
+    oc_free_string(&cred->privatedata.data);
 #ifdef OC_PKI
-    if (oc_string_len(cred->publicdata.data) > 0) {
-      oc_free_string(&cred->publicdata.data);
-    }
+    oc_free_string(&cred->publicdata.data);
 #endif /* OC_PKI */
     oc_memb_free(&oc_cred_m, cred);
     cred = next;
