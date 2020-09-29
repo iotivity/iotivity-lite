@@ -76,12 +76,9 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
 
   if (oc_device_info_item) {
-    if (oc_string_len(oc_device_info_item->name))
-      oc_free_string(&(oc_device_info_item->name));
-    if (oc_string_len(oc_device_info_item->icv))
-      oc_free_string(&(oc_device_info_item->icv));
-    if (oc_string_len(oc_device_info_item->dmv))
-      oc_free_string(&(oc_device_info_item->dmv));
+    oc_free_string(&(oc_device_info_item->name));
+    oc_free_string(&(oc_device_info_item->icv));
+    oc_free_string(&(oc_device_info_item->dmv));
   }
 }
 
@@ -89,8 +86,7 @@ void
 oc_core_shutdown(void)
 {
   size_t i;
-  if (oc_string_len(oc_platform_info.mfg_name))
-    oc_free_string(&(oc_platform_info.mfg_name));
+  oc_free_string(&(oc_platform_info.mfg_name));
 
 #ifdef OC_DYNAMIC_ALLOCATION
   if (oc_device_info) {
