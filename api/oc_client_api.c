@@ -603,9 +603,8 @@ oc_do_site_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x05, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -633,9 +632,8 @@ oc_do_realm_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x03, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -657,9 +655,8 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 #endif
   bool status = multi_scope_ipv6_discovery(cb4, 0x02, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -700,9 +697,8 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = dispatch_ip_discovery(NULL, oc_string(uri_query), handlers,
                                       endpoint, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 

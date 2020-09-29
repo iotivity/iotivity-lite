@@ -165,15 +165,9 @@ oc_sec_get_roles(oc_tls_peer_t *client)
 static void
 free_cred_properties(oc_sec_cred_t *cred)
 {
-  if (oc_string_len(cred->role.role) > 0) {
-    oc_free_string(&cred->role.role);
-    if (oc_string_len(cred->role.authority) > 0) {
-      oc_free_string(&cred->role.authority);
-    }
-  }
-  if (oc_string_len(cred->publicdata.data) > 0) {
-    oc_free_string(&cred->publicdata.data);
-  }
+  oc_free_string(&cred->role.role);
+  oc_free_string(&cred->role.authority);
+  oc_free_string(&cred->publicdata.data);
 }
 
 void
