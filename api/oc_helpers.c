@@ -95,11 +95,13 @@ _oc_free_string(
 #endif
   oc_string_t *ocstring)
 {
-  oc_free(
+  if (ocstring && ocstring->size > 0) {
+    oc_free(
 #ifdef OC_MEMORY_TRACE
-    func,
+      func,
 #endif
-    ocstring, BYTE_POOL);
+      ocstring, BYTE_POOL);
+  }
 }
 
 void

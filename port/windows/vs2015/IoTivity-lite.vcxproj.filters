@@ -457,6 +457,15 @@
     <ClCompile Include="..\..\..\api\oc_swupdate.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_ael.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_audit.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_sdi.c">
+      <Filter>Security</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h">
@@ -728,6 +737,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_enums.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_ael.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_audit.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_sdi.h">
+      <Filter>Security</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

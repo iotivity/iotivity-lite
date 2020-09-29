@@ -381,12 +381,8 @@ void
 oc_ri_free_resource_properties(oc_resource_t *resource)
 {
   if (resource) {
-    if (oc_string_len(resource->name) > 0) {
-      oc_free_string(&(resource->name));
-    }
-    if (oc_string_len(resource->uri) > 0) {
-      oc_free_string(&(resource->uri));
-    }
+    oc_free_string(&(resource->name));
+    oc_free_string(&(resource->uri));
     if (oc_string_array_get_allocated_size(resource->types) > 0) {
       oc_free_string_array(&(resource->types));
     }
@@ -634,7 +630,7 @@ static void
 oc_ri_audit_log(oc_method_t method, oc_resource_t *resource,
                 oc_endpoint_t *endpoint)
 {
-  static const size_t LINE_WIDTH = 80;
+#define LINE_WIDTH 80
   char aux_arr[6][LINE_WIDTH];
   memset(aux_arr, 0, sizeof(aux_arr));
   char *aux[] = { aux_arr[0], aux_arr[1], aux_arr[2],
@@ -1202,9 +1198,7 @@ free_client_cb(oc_client_cb_t *cb)
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
   oc_free_string(&cb->uri);
-  if (oc_string_len(cb->query)) {
-    oc_free_string(&cb->query);
-  }
+  oc_free_string(&cb->query);
   oc_memb_free(&client_cbs_s, cb);
 }
 

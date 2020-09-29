@@ -76,9 +76,7 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
     return;
   }
 
-  if (oc_string_len(buffer->uri_query) > 0) {
-    oc_free_string(&buffer->uri_query);
-  }
+  oc_free_string(&buffer->uri_query);
   oc_free_string(&buffer->href);
   oc_list_remove(list, buffer);
 #ifdef OC_DYNAMIC_ALLOCATION
