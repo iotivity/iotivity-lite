@@ -15,13 +15,20 @@ ${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/tinycbor/src/cborencoder.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/tinycbor/src/cborencoder_close_container_checked.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/tinycbor/src/cborparser.c
 
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_resource.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_store.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud.c
+${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/rd_client.c
+
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/random.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/storage.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/clock.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/ipadapter.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/abort.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/debug_print.c
-${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/oc_endpoint.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/vfs_pipe.c
 ${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
 
@@ -72,6 +79,17 @@ if (CONFIG_TCP)
   add_definitions(-DOC_TCP)
 endif()
 
+if (CONFIG_CLOUD)
+  add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_TCP -DOC_IPV4)
+endif()
+
+if (CONFIG_DYNAMIC)
+	add_definitions(-DOC_DYNAMIC_ALLOCATION)
+endif()
+
+#add_definitions(-DOC_CLIENT)
+#add_definitions(-DOC_SERVER)
+
 idf_component_register(
 	SRCS
 		${sources}
@@ -81,5 +99,5 @@ idf_component_register(
 
 set_source_files_properties(${sources}
    PROPERTIES COMPILE_FLAGS
-    "-DOC_SERVER"
+    "-DOC_SERVER -DOC_CLIENT"
 )

@@ -10,7 +10,8 @@
 #ifndef LIGHTBULB_H_
 #define LIGHTBULB_H_
 
-typedef enum {
+typedef enum
+{
     BULB_STATE_OFF = 0,
     BULB_STATE_RED = 1,
     BULB_STATE_GREEN = 2,
@@ -18,7 +19,8 @@ typedef enum {
     BULB_STATE_OTHERS = 4
 } bulb_color_t;
 
-typedef struct bulb_state {
+typedef struct bulb_state
+{
     bool set_on;
     double hue_value;
     double saturation_value;

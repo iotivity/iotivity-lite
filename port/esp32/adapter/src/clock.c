@@ -20,8 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
-void
-oc_clock_init(void)
+void oc_clock_init(void)
 {
 }
 
@@ -30,10 +29,13 @@ oc_clock_time(void)
 {
   oc_clock_time_t time = 0;
   struct timespec t;
-  if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
+  if (clock_gettime(CLOCK_REALTIME, &t) != -1)
+  {
     time = (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
            (oc_clock_time_t)ceil(t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
   }
+  OC_DBG("oc_clock_time (ts.tv_sec = %ld, ts.tv_nsec = %ld) %llu", t.tv_sec, t.tv_nsec, time);
+
   return time;
 }
 
@@ -41,14 +43,15 @@ unsigned long
 oc_clock_seconds(void)
 {
   struct timespec t;
-  if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
+  if (clock_gettime(CLOCK_REALTIME, &t) != -1)
+  {
+    OC_DBG("oc_clock_seconds (ts.tv_sec = %ld, ts.tv_nsec = %ld)", t.tv_sec, t.tv_nsec);
     return t.tv_sec;
   }
   return 0;
 }
 
-void
-oc_clock_wait(oc_clock_time_t t)
+void oc_clock_wait(oc_clock_time_t t)
 {
   usleep(t * 1.e03);
 }

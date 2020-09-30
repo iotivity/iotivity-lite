@@ -134,26 +134,10 @@ add_ip_interface(int target_index)
 static bool
 check_new_ip_interfaces(void)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0)
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
   {
-    OC_ERR("querying interface address");
-    return false;
+    add_ip_interface(esp_netif_get_netif_impl_index(esp_netif));
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next)
-  {
-    /* Ignore interfaces that are down and the loopback interface */
-    if (!(interface->ifa_flags & IFF_UP) ||
-        (interface->ifa_flags & IFF_LOOPBACK))
-    {
-      continue;
-    }
-    /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
-
-    add_ip_interface(if_index);
-  }
-  freeifaddrs(ifs);
   return true;
 }
 
@@ -270,22 +254,14 @@ get_ip_context_for_device(size_t device)
 
 #ifdef OC_IPV4
 static int
-add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
+add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const esp_ip4_addr_t *local,
                                    int interface_index)
 {
   struct ip_mreq imreq = {0};
   int err = 0;
   // Configure source interface
   memset(&imreq, 0, sizeof(struct ip_mreq));
-  tcpip_adapter_ip_info_t ip_info = {0};
-  err = tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
-  if (err != ESP_OK)
-  {
-    OC_ERR("get ip4 ret:%d\n", err);
-    return -1;
-  }
-
-  inet_addr_from_ip4addr(&imreq.imr_interface, &ip_info.ip);
+  inet_addr_from_ip4addr(&imreq.imr_interface, local);
   imreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   OC_DBG("Configured IPV4 Multicast address %s", inet_ntoa(imreq.imr_multiaddr.s_addr));
 
@@ -385,9 +361,13 @@ static int
 configure_mcast_socket(int mcast_sock, int sa_family)
 {
   int ret = 0;
-  for (esp_netif_t *iface = esp_netif_next(NULL); iface; iface = esp_netif_next(iface))
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
   {
-    int netif_index = esp_netif_get_netif_impl_index(iface);
+    if (!esp_netif_is_netif_up(esp_netif))
+    {
+      continue;
+    }
+    int netif_index = esp_netif_get_netif_impl_index(esp_netif);
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6)
     {
@@ -396,7 +376,17 @@ configure_mcast_socket(int mcast_sock, int sa_family)
 #ifdef OC_IPV4
     else if (sa_family == AF_INET)
     {
-      ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, NULL,
+      esp_netif_ip_info_t ip_info;
+      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK)
+      {
+        OC_ERR("esp_netif_get_ip_info at interface_index(%d) returns error", netif_index);
+        continue;
+      }
+      if (ip4_addr_isloopback(&ip_info.ip))
+      {
+        continue;
+      }
+      ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &ip_info.ip,
                                                 netif_index);
     }
 #endif /* OC_IPV4 */
@@ -447,10 +437,10 @@ static void
 get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
                         bool secure, bool tcp)
 {
-  for (esp_netif_t *iface = esp_netif_next(NULL); iface; iface = esp_netif_next(iface))
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
   {
-    oc_endpoint_t ep = { 0 };
-    ep.interface_index = esp_netif_get_netif_impl_index(iface);
+    oc_endpoint_t ep = {0};
+    ep.interface_index = esp_netif_get_netif_impl_index(esp_netif);
 
     if (secure)
     {
@@ -479,10 +469,17 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     if (family == AF_INET)
     {
       esp_netif_ip_info_t ip_info;
-      if (esp_netif_get_ip_info(iface, &ip_info) != ESP_OK) {
+      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK)
+      {
         OC_ERR("esp_netif_get_ip_info at interface_index(%d) returns error", ep.interface_index);
+        return;
+      }
+      if (ip4_addr_isany(&ip_info.ip) || ip4_addr_isloopback(&ip_info.ip))
+      {
+        return;
       }
       memcpy(ep.addr.ipv4.address, &ip_info.ip, 4);
+
       ep.flags |= IPV4;
       oc_endpoint_t *new_ep = oc_memb_alloc(&device_eps);
       if (!new_ep)
@@ -491,7 +488,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
 #ifdef OC_DEBUG
-      PRINT("add ep: %d %d %d %d ", (int) family, (int) port, (int) secure, (int) tcp);
+      PRINT("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure, (int)tcp);
       PRINTipaddr(ep);
       PRINT(" index %d", ep.interface_index);
       PRINT("\n\n");
@@ -504,8 +501,13 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     {
       ep.flags |= IPV6;
       esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
-      int num = esp_netif_get_all_ip6(iface, if_ip6);
-      for (int i=0; i<num; ++i) {
+      int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
+      for (int i = 0; i < num; ++i)
+      {
+        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i]))
+        {
+          continue;
+        }
         memcpy(ep.addr.ipv6.address, &if_ip6[i].addr, 16);
         ep.addr.ipv6.scope = if_ip6[i].zone;
         oc_endpoint_t *new_ep = oc_memb_alloc(&device_eps);
@@ -515,10 +517,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
         }
         memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
 #ifdef OC_DEBUG
-      PRINT("add ep: %d %d %d %d ", (int) family, (int) port, (int) secure, (int) tcp);
-      PRINTipaddr(ep);
-      PRINT(" index %d", ep.interface_index);
-      PRINT("\n\n");
+        PRINT("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure, (int)tcp);
+        PRINTipaddr(ep);
+        PRINT(" index %d", ep.interface_index);
+        PRINT("\n\n");
 #endif /* OC_DEBUG */
         oc_list_add(dev->eps, new_ep);
       }
@@ -571,7 +573,7 @@ refresh_endpoints_list(ip_context_t *dev)
 oc_endpoint_t *
 oc_connectivity_get_endpoints(size_t device)
 {
-  OC_DBG("oc_connectivity_get_endpoints %d", (int) device);
+  OC_DBG("oc_connectivity_get_endpoints %d", (int)device);
   ip_context_t *dev = get_ip_context_for_device(device);
 
   if (!dev)
@@ -595,101 +597,64 @@ oc_connectivity_get_endpoints(size_t device)
  * all logical devices.
  */
 static int
-process_interface_change_event(void)
+process_interface_change_event(int ifa_index, int ifa_family, const void *ifa_ip, oc_interface_event_t event)
 {
-//TODO
-#if 0
-  int ret = 0, i, num_devices = oc_core_get_num_devices();
-  struct nlmsghdr *response = NULL;
-
-  int guess = 512, response_len;
-  do {
-    guess <<= 1;
-    uint8_t dummy[guess];
-    response_len = recv(ifchange_sock, dummy, guess, MSG_PEEK);
-    if (response_len < 0) {
-      OC_ERR("reading payload size from netlink interface");
-      return -1;
-    }
-  } while (response_len == guess);
-
-  uint8_t buffer[response_len];
-  response_len = recv(ifchange_sock, buffer, response_len, 0);
-  if (response_len < 0) {
-    OC_ERR("reading payload from netlink interface");
-    return -1;
-  }
-
-  response = (struct nlmsghdr *)buffer;
-  if (response->nlmsg_type == NLMSG_ERROR) {
-    OC_ERR("caught NLMSG_ERROR in payload from netlink interface");
-    return -1;
-  }
-
-  bool if_state_changed = false;
-
-  while (NLMSG_OK(response, response_len)) {
-    if (response->nlmsg_type == RTM_NEWADDR) {
-      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (ifa) {
+  int num_devices = oc_core_get_num_devices();
+  int ret = 0;
+  if (event == NETWORK_INTERFACE_UP)
+  {
 #ifdef OC_NETWORK_MONITOR
-        if (add_ip_interface(ifa->ifa_index)) {
-          oc_network_interface_event(NETWORK_INTERFACE_UP);
-        }
+    if (add_ip_interface(ifa_index))
+    {
+      oc_network_interface_event(event);
+    }
 #endif /* OC_NETWORK_MONITOR */
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
-        int att_len = IFA_PAYLOAD(response);
-        while (RTA_OK(attr, att_len)) {
-          if (attr->rta_type == IFA_ADDRESS) {
 #ifdef OC_IPV4
-            if (ifa->ifa_family == AF_INET) {
-              for (i = 0; i < num_devices; i++) {
-                ip_context_t *dev = get_ip_context_for_device(i);
-                ret += add_mcast_sock_to_ipv4_mcast_group(
-                  dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
-              }
-            } else
-#endif /* OC_IPV4 */
-              if (ifa->ifa_family == AF_INET6 &&
-                  ifa->ifa_scope == RT_SCOPE_LINK) {
-              for (i = 0; i < num_devices; i++) {
-                ip_context_t *dev = get_ip_context_for_device(i);
-                ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
-                                                          ifa->ifa_index);
-              }
-            }
-          }
-          attr = RTA_NEXT(attr, att_len);
-        }
+    if (ifa_family == AF_INET)
+    {
+      const esp_ip4_addr_t *ip = (const esp_ip4_addr_t *)ifa_ip;
+      for (int i = 0; i < num_devices; i++)
+      {
+        ip_context_t *dev = get_ip_context_for_device(i);
+        ret += add_mcast_sock_to_ipv4_mcast_group(
+            dev->mcast4_sock, ip, ifa_index);
       }
-      if_state_changed = true;
-    } else if (response->nlmsg_type == RTM_DELADDR) {
-      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (ifa) {
-#ifdef OC_NETWORK_MONITOR
-        if (remove_ip_interface(ifa->ifa_index)) {
-          oc_network_interface_event(NETWORK_INTERFACE_DOWN);
-        }
-#endif /* OC_NETWORK_MONITOR */
-      }
-      if_state_changed = true;
     }
-    response = NLMSG_NEXT(response, response_len);
+    else
+#endif /* OC_IPV4 */
+        if (ifa_family == AF_INET6)
+    {
+      const esp_ip6_addr_t *ip = (const esp_ip6_addr_t *)ifa_ip;
+      if (ip6_addr_islinklocal(ip))
+      {
+        for (int i = 0; i < num_devices; i++)
+        {
+          ip_context_t *dev = get_ip_context_for_device(i);
+          ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
+                                                    ifa_index);
+        }
+      }
+    }
+  }
+  else if (event == NETWORK_INTERFACE_DOWN)
+  {
+#ifdef OC_NETWORK_MONITOR
+    if (remove_ip_interface(ifa_index))
+    {
+      oc_network_interface_event(event);
+    }
+#endif /* OC_NETWORK_MONITOR */
   }
 
-  if (if_state_changed) {
-    for (i = 0; i < num_devices; i++) {
-      ip_context_t *dev = get_ip_context_for_device(i);
-      oc_network_event_handler_mutex_lock();
-      refresh_endpoints_list(dev);
-      oc_network_event_handler_mutex_unlock();
-    }
+  for (int i = 0; i < num_devices; i++)
+  {
+    ip_context_t *dev = get_ip_context_for_device(i);
+    oc_network_event_handler_mutex_lock();
+    refresh_endpoints_list(dev);
+    oc_network_event_handler_mutex_unlock();
   }
 
   return ret;
-#endif
-  OC_ERR("process_interface_change_event: not implmemented");
-  return -1;
 }
 
 static int
@@ -952,18 +917,6 @@ network_event_thread(void *data)
 
     for (i = 0; i < n; i++)
     {
-#if 0
-      if (dev->device == 0) {
-        if (FD_ISSET(ifchange_sock, &setfds)) {
-          if (process_interface_change_event() < 0) {
-            OC_WRN("caught errors while handling a network interface change");
-          }
-          FD_CLR(ifchange_sock, &setfds);
-          continue;
-        }
-      }
-#endif
-
       oc_message_t *message = oc_allocate_message();
 
       if (!message)
@@ -1179,59 +1132,54 @@ int oc_send_buffer(oc_message_t *message)
 #ifdef OC_CLIENT
 void oc_send_discovery_request(oc_message_t *message)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0)
-  {
-    OC_ERR("querying interfaces: %d", errno);
-    goto done;
-  }
-
   memset(&message->endpoint.addr_local, 0,
          sizeof(message->endpoint.addr_local));
   message->endpoint.interface_index = 0;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
-#define IN6_IS_ADDR_MC_REALM_LOCAL(addr) \
-  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+#define IN6_IS_ADDR_MC_REALM_LOCAL(ip6) \
+  ip6_addr_ismulticast(ip6) && ((((const uint8_t *)(ip6->addr))[1] & 0x0f) == 0x03)
 
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next)
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
   {
-    if (!(interface->ifa_flags & IFF_UP) ||
-        (interface->ifa_flags & IFF_LOOPBACK))
+    if (!esp_netif_is_netif_up(esp_netif))
       continue;
-    if ((message->endpoint.flags & IPV6) && interface->ifa_addr &&
-        interface->ifa_addr->sa_family == AF_INET6)
+    unsigned int mif = esp_netif_get_netif_impl_index(esp_netif);
+    if (message->endpoint.flags & IPV6)
     {
-      struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
-      if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr))
+      esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
+      int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
+      for (int i = 0; i < num; ++i)
       {
-        unsigned int mif = if_nametoindex(interface->ifa_name);
+        esp_ip6_addr_t *ip6 = &if_ip6[i];
+        if (!ip6_addr_islinklocal(ip6))
+        {
+          continue;
+        }
         if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
                        sizeof(mif)) == -1)
         {
           OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d",
                  errno);
-          goto done;
+          continue;
         }
         message->endpoint.interface_index = mif;
-        if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address))
+        if (ip6_addr_ismulticast_linklocal(ip6))
         {
           message->endpoint.addr.ipv6.scope = mif;
           unsigned int hops = 1;
           setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
                      sizeof(hops));
         }
-        else if (IN6_IS_ADDR_MC_REALM_LOCAL(
-                     message->endpoint.addr.ipv6.address))
+        else if (IN6_IS_ADDR_MC_REALM_LOCAL(ip6))
         {
           unsigned int hops = 255;
           setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
                      sizeof(hops));
           message->endpoint.addr.ipv6.scope = 0;
         }
-        else if (IN6_IS_ADDR_MC_SITELOCAL(
-                     message->endpoint.addr.ipv6.address))
+        else if (ip6_addr_ismulticast_sitelocal(ip6))
         {
           unsigned int hops = 255;
           setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
@@ -1240,28 +1188,31 @@ void oc_send_discovery_request(oc_message_t *message)
         }
         oc_send_buffer(message);
       }
-#ifdef OC_IPV4
     }
-    else if (message->endpoint.flags & IPV4 && interface->ifa_addr &&
-             interface->ifa_addr->sa_family == AF_INET)
+#ifdef OC_IPV4
+    else if (message->endpoint.flags & IPV4)
     {
-      struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
+      esp_netif_ip_info_t ip_info;
+      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK)
+      {
+        OC_ERR("esp_netif_get_ip_info at interface_index(%d) returns error", mif);
+        continue;
+      }
+      if (ip4_addr_isany(&ip_info.ip) || ip4_addr_isloopback(&ip_info.ip))
+      {
+        continue;
+      }
       if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_IF,
-                     &addr->sin_addr, sizeof(addr->sin_addr)) == -1)
+                     &ip_info.ip, sizeof(ip_info.ip)) == -1)
       {
         OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);
-        goto done;
+        continue;
       }
-      message->endpoint.interface_index = if_nametoindex(interface->ifa_name);
+      message->endpoint.interface_index = mif;
       oc_send_buffer(message);
     }
-#else  /* OC_IPV4 */
-    }
-#endif /* !OC_IPV4 */
+#endif /* OC_IPV4 */
   }
-done:
-#undef IN6_IS_ADDR_MC_REALM_LOCAL
-  freeifaddrs(ifs);
 }
 #endif /* OC_CLIENT */
 
@@ -1506,6 +1457,61 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif
 
+/** Event handler for Ethernet events */
+static void disconnect_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
+{
+  OC_DBG("Ethernet/Wifi Link Down");
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
+  {
+    if (!esp_netif_is_netif_up(esp_netif))
+    {
+      process_interface_change_event(esp_netif_get_netif_impl_index(esp_netif), 0, NULL, NETWORK_INTERFACE_DOWN);
+    }
+  }
+}
+
+/** Event handler for IP_EVENT_ETH_GOT_IP */
+static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
+                                 int32_t event_id, void *event_data)
+{
+  ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+  const esp_netif_ip_info_t *ip_info = &event->ip_info;
+  OC_DBG("Got IPv4 Address " IPSTR, IP2STR(&ip_info->ip));
+  if (event->if_index != -1)
+  {
+    process_interface_change_event(event->if_index, AF_INET, &ip_info->ip, NETWORK_INTERFACE_UP);
+  }
+  else if (event->esp_netif != NULL)
+  {
+    process_interface_change_event(esp_netif_get_netif_impl_index(event->esp_netif), AF_INET, &ip_info->ip, NETWORK_INTERFACE_UP);
+  }
+  else
+  {
+    OC_ERR("cannot process event: unknown interface");
+  }
+}
+
+static void got_ip6_event_handler(void *arg, esp_event_base_t event_base,
+                                  int32_t event_id, void *event_data)
+{
+  ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
+  const esp_netif_ip6_info_t *ip_info = &event->ip6_info;
+  OC_DBG("Got IPv6 address " IPV6STR, IPV62STR(ip_info->ip));
+  if (event->if_index != -1)
+  {
+    process_interface_change_event(event->if_index, AF_INET6, &ip_info->ip, NETWORK_INTERFACE_UP);
+  }
+  else if (event->esp_netif != NULL)
+  {
+    process_interface_change_event(esp_netif_get_netif_impl_index(event->esp_netif), AF_INET6, &ip_info->ip, NETWORK_INTERFACE_UP);
+  }
+  else
+  {
+    OC_ERR("cannot process event: unknown interface");
+  }
+}
+
 int oc_connectivity_init(size_t device)
 {
   OC_DBG("Initializing connectivity for device %zd", device);
@@ -1724,24 +1730,6 @@ int oc_connectivity_init(size_t device)
    */
   if (!ifchange_initialized)
   {
-//TODO
-#if 0
-    memset(&ifchange_nl, 0, sizeof(struct sockaddr_nl));
-    ifchange_nl.nl_family = AF_NETLINK;
-    ifchange_nl.nl_groups =
-      RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
-    ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
-    if (ifchange_sock < 0) {
-      OC_ERR("creating netlink socket to monitor network interface changes %d",
-             errno);
-      return -1;
-    }
-    if (bind(ifchange_sock, (struct sockaddr *)&ifchange_nl,
-             sizeof(ifchange_nl)) == -1) {
-      OC_ERR("binding netlink socket %d", errno);
-      return -1;
-    }
-#endif
 #ifdef OC_NETWORK_MONITOR
     if (!check_new_ip_interfaces())
     {
@@ -1758,6 +1746,12 @@ int oc_connectivity_init(size_t device)
     OC_ERR("creating network polling thread");
     return -1;
   }
+
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_GOT_IP6, &got_ip6_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &got_ip_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ETHERNET_EVENT_DISCONNECTED, &disconnect_handler, NULL));
 
   OC_DBG("Successfully initialized connectivity for device %zd", device);
 

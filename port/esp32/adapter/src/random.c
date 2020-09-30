@@ -16,8 +16,7 @@
 #include "port/oc_random.h"
 #include "esp_system.h"
 
-void
-oc_random_init(void)
+void oc_random_init(void)
 {
   //urandom_fd = open("/dev/urandom", O_RDONLY);
 }
@@ -25,13 +24,12 @@ oc_random_init(void)
 unsigned int
 oc_random_value(void)
 {
-    unsigned int rand = 0;
-    rand = (unsigned int)esp_random();
-    return rand;
+  unsigned int rand = 0;
+  rand = (unsigned int)esp_random();
+  return rand;
 }
 
-void
-oc_random_destroy(void)
+void oc_random_destroy(void)
 {
   //close(urandom_fd);
 }

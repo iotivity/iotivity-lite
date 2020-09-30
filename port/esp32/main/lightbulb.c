@@ -26,16 +26,18 @@
 #define PWM_DEPTH (1023)
 #define PWM_TARGET_DUTY 8192
 
-typedef struct rgb {
-    uint8_t r;  // 0-100 %
-    uint8_t g;  // 0-100 %
-    uint8_t b;  // 0-100 %
+typedef struct rgb
+{
+    uint8_t r; // 0-100 %
+    uint8_t g; // 0-100 %
+    uint8_t b; // 0-100 %
 } rgb_t;
 
-typedef struct hsp {
-    uint16_t h;  // 0-360
-    uint16_t s;  // 0-100
-    uint16_t b;  // 0-100
+typedef struct hsp
+{
+    uint16_t h; // 0-360
+    uint16_t s; // 0-100
+    uint16_t b; // 0-100
 } hsp_t;
 
 static hsp_t s_hsb_val;
@@ -67,19 +69,23 @@ static bool lightbulb_set_hsb2rgb(uint16_t h, uint16_t s, uint16_t v, rgb_t *rgb
     bool res = true;
     uint16_t hi, F, P, Q, T;
 
-    if (!rgb) {
+    if (!rgb)
+    {
         return false;
     }
 
-    if (h > 360) {
+    if (h > 360)
+    {
         return false;
     }
 
-    if (s > 100) {
+    if (s > 100)
+    {
         return false;
     }
 
-    if (v > 100) {
+    if (v > 100)
+    {
         return false;
     }
 
@@ -89,7 +95,8 @@ static bool lightbulb_set_hsb2rgb(uint16_t h, uint16_t s, uint16_t v, rgb_t *rgb
     Q = v * (10000 - F * s) / 10000;
     T = v * (10000 - s * (100 - F)) / 10000;
 
-    switch (hi) {
+    switch (hi)
+    {
     case 0:
         rgb->r = v;
         rgb->g = T;
@@ -141,7 +148,8 @@ static bool lightbulb_set_aim_hsv(uint16_t h, uint16_t s, uint16_t v)
     rgb_t rgb_tmp;
     bool ret = lightbulb_set_hsb2rgb(h, s, v, &rgb_tmp);
 
-    if (ret == false) {
+    if (ret == false)
+    {
         ESP_LOGE(TAG, "lightbulb_set_hsb2rgb failed");
         return false;
     }
@@ -177,8 +185,7 @@ void lightbulb_init(void)
         //timer mode,
         .speed_mode = LEDC_HIGH_SPEED_MODE,
         //timer index
-        .timer_num = LEDC_TIMER_0
-    };
+        .timer_num = LEDC_TIMER_0};
     ledc_timer_config(&ledc_timer);
 
     //config the channel
@@ -195,8 +202,7 @@ void lightbulb_init(void)
         .speed_mode = LEDC_HIGH_SPEED_MODE,
         //set LEDC timer source, if different channel use one timer,
         //the frequency and bit_num of these channels should be the same
-        .timer_sel = LEDC_TIMER_0
-    };
+        .timer_sel = LEDC_TIMER_0};
     //set the configuration
     ledc_channel_config(&ledc_channel);
 
@@ -234,10 +240,13 @@ void lightbulb_set_on(void *p)
 
     APP_DBG("lightbulb_set_on : %s", value == true ? "true" : "false");
 
-    if (value == true) {
+    if (value == true)
+    {
         s_hsb_val.b = s_brightness;
         s_on = true;
-    } else {
+    }
+    else
+    {
         s_brightness = s_hsb_val.b;
         s_hsb_val.b = 0;
         s_on = false;
@@ -273,7 +282,8 @@ void lightbulb_set_saturation(void *p)
 
     s_hsb_val.s = value;
 
-    if (true == s_on) {
+    if (true == s_on)
+    {
         lightbulb_update();
     }
 
@@ -291,7 +301,8 @@ void lightbulb_set_hue(void *p)
 
     s_hsb_val.h = value;
 
-    if (true == s_on) {
+    if (true == s_on)
+    {
         lightbulb_update();
     }
 
@@ -310,7 +321,8 @@ void lightbulb_set_brightness(void *p)
     s_hsb_val.b = value;
     s_brightness = s_hsb_val.b;
 
-    if (true == s_on) {
+    if (true == s_on)
+    {
         lightbulb_update();
     }
 
@@ -328,13 +340,16 @@ void lightbulb_set_brightness(void *p)
  * */
 void notify_lightbulb_state(bulb_color_t state, int flash_interval)
 {
-    switch (state) {
-    case BULB_STATE_OFF: {
+    switch (state)
+    {
+    case BULB_STATE_OFF:
+    {
         s_bulb_state.set_on = false;
         break;
     }
 
-    case BULB_STATE_RED: {
+    case BULB_STATE_RED:
+    {
         s_bulb_state.set_on = true;
         s_bulb_state.hue_value = 0;
         s_bulb_state.saturation_value = 100;
@@ -342,7 +357,8 @@ void notify_lightbulb_state(bulb_color_t state, int flash_interval)
         break;
     }
 
-    case BULB_STATE_GREEN: {
+    case BULB_STATE_GREEN:
+    {
         s_bulb_state.set_on = true;
         s_bulb_state.hue_value = 120;
         s_bulb_state.saturation_value = 100;
@@ -350,7 +366,8 @@ void notify_lightbulb_state(bulb_color_t state, int flash_interval)
         break;
     }
 
-    case BULB_STATE_BLUE: {
+    case BULB_STATE_BLUE:
+    {
         s_bulb_state.set_on = true;
         s_bulb_state.hue_value = 240;
         s_bulb_state.saturation_value = 100;
@@ -358,7 +375,8 @@ void notify_lightbulb_state(bulb_color_t state, int flash_interval)
         break;
     }
 
-    case BULB_STATE_OTHERS: {
+    case BULB_STATE_OTHERS:
+    {
         s_bulb_state.set_on = true;
         s_bulb_state.hue_value = rand() % 360;
         s_bulb_state.saturation_value = rand() % 50;
@@ -371,7 +389,7 @@ void notify_lightbulb_state(bulb_color_t state, int flash_interval)
     }
 
     s_bulb_state.flash_interval = flash_interval;
-    ESP_LOGI(TAG, "set on/off state:%d flash interval:%d H:%f S:%f B:%d", \
+    ESP_LOGI(TAG, "set on/off state:%d flash interval:%d H:%f S:%f B:%d",
              s_bulb_state.set_on, s_bulb_state.flash_interval, s_bulb_state.hue_value, s_bulb_state.saturation_value, s_bulb_state.brightness_value);
 }
 
@@ -398,4 +416,3 @@ void set_current_bulb_state(bulb_state_t input_save_bulb_state)
 {
     s_bulb_state = input_save_bulb_state;
 }
-

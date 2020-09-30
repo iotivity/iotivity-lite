@@ -7,10 +7,11 @@
 #include "sdkconfig.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-typedef uint64_t oc_clock_time_t;
+   typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 //#define OC_SPEC_VER_OIC
 /* Security Layer */
@@ -21,7 +22,7 @@ typedef uint64_t oc_clock_time_t;
 #define SELECT_TIMEOUT_SEC (1)
 
 /* Add support for passing network up/down events to the app */
-//#define OC_NETWORK_MONITOR
+#define OC_NETWORK_MONITOR
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
 

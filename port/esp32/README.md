@@ -15,7 +15,6 @@ idf.py -p (PORT) flash monitor
 ```
 
 ## windows
-
  - [install] (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/windows-setup.html)
  - Please select master repository
  - Install CMake

@@ -23,11 +23,12 @@ void lightbulb_damon_task(void *pvParameter)
     lightbulb_init();
     bulb_state_t *esp_bulb_current_state = NULL;
 
-    while (1) {
+    while (1)
+    {
         esp_bulb_current_state = get_current_bulb_state();
-        APP_DBG("[update] on/off:%d interval:%d H:%f S:%f B:%d", \
-                 esp_bulb_current_state->set_on, esp_bulb_current_state->flash_interval, \
-                 esp_bulb_current_state->hue_value, esp_bulb_current_state->saturation_value, esp_bulb_current_state->brightness_value);
+        APP_DBG("[update] on/off:%d interval:%d H:%f S:%f B:%d",
+                esp_bulb_current_state->set_on, esp_bulb_current_state->flash_interval,
+                esp_bulb_current_state->hue_value, esp_bulb_current_state->saturation_value, esp_bulb_current_state->brightness_value);
 
         // set light state to GPIO
         lightbulb_set_hue(&(esp_bulb_current_state->hue_value));
@@ -38,7 +39,8 @@ void lightbulb_damon_task(void *pvParameter)
         vTaskDelay(10 / portTICK_RATE_MS);
 
         // flash or not
-        if (esp_bulb_current_state->flash_interval != 0) {
+        if (esp_bulb_current_state->flash_interval != 0)
+        {
             lightbulb_set_off();
             vTaskDelay(esp_bulb_current_state->flash_interval);
         }

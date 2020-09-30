@@ -80,20 +80,23 @@ void print_message_info(oc_message_t *message)
     printf("ipv4 message info:\n------------------\n");
     printf("message length:%d ref_count:%d\n", message->length, message->ref_count);
     printf("endpoint flags:%d port:%d\naddr:", message->endpoint.flags, message->endpoint.addr.ipv4.port);
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; ++i)
+    {
         printf("%d ", message->endpoint.addr.ipv4.address[i]);
     }
 #else
     printf("ipv6 message info:\n------------------\n");
     printf("message length:%d ref_count:%d\n", message->length, message->ref_count);
     printf("endpoint flags:%d port:%d scope:%d\naddr:", message->endpoint.flags, message->endpoint.addr.ipv6.port, message->endpoint.addr.ipv6.scope);
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < 16; ++i)
+    {
         printf("%d ", message->endpoint.addr.ipv6.address[i]);
     }
 #endif
 
     printf("\nmessage content:\n");
-    for (int i = 0; i < message->length; ++i) {
+    for (int i = 0; i < message->length; ++i)
+    {
         printf("%x ", message->data[i]);
     }
 
@@ -114,29 +117,37 @@ void print_message_info(oc_message_t *message)
  * @return noreturn
  *
  */
-void print_debug(const char* data, const unsigned int len, const char* note, int mode)
+void print_debug(const char *data, const unsigned int len, const char *note, int mode)
 {
 #define BINARY_SHOW 0x10
-#define BYTES_SHOW  0x01
+#define BYTES_SHOW 0x01
     printf("\n********** %s [len:%u] start addr:%p **********\n", note, len, data);
     int i = 0;
-    for (i = 0; i < len; ++i) {
-        if (BINARY_SHOW & mode) {
-            printf("%02x ",data[i]);
-        } else {
-            if(data[i] < 32 || data[i] > 126) { // control || invisible charset
-                if(i > 0 && (data[i-1] >= 33 && data[i-1] <= 126) )
-                        printf(" ");
-                printf("%02x ",data[i]);
-             } else {
+    for (i = 0; i < len; ++i)
+    {
+        if (BINARY_SHOW & mode)
+        {
+            printf("%02x ", data[i]);
+        }
+        else
+        {
+            if (data[i] < 32 || data[i] > 126)
+            { // control || invisible charset
+                if (i > 0 && (data[i - 1] >= 33 && data[i - 1] <= 126))
+                    printf(" ");
+                printf("%02x ", data[i]);
+            }
+            else
+            {
                 printf("%c", data[i]);
-             }
+            }
         }
 
-        if ((BYTES_SHOW & mode) && ((i + 1) % 32 == 0)) {
-                printf("    | %d Bytes\n",i + 1);
+        if ((BYTES_SHOW & mode) && ((i + 1) % 32 == 0))
+        {
+            printf("    | %d Bytes\n", i + 1);
         }
-    }   // end for
+    } // end for
 
     printf("\n---------- %s End ----------\n", note);
 }

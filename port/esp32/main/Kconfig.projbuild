@@ -43,4 +43,9 @@ config TCP
     help
         enable or disable TCP
 
+config CLOUD
+    bool "CLOUD"
+    help
+        enable or disable CLOUD
+
 endmenu
