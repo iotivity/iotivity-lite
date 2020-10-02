@@ -238,7 +238,7 @@ void lightbulb_set_on(void *p)
 {
     bool value = *(bool *)p;
 
-    APP_DBG("lightbulb_set_on : %s", value == true ? "true" : "false");
+    //APP_DBG("lightbulb_set_on : %s", value == true ? "true" : "false");
 
     if (value == true)
     {
@@ -278,7 +278,7 @@ void lightbulb_set_saturation(void *p)
 {
     double value = *(double *)p;
 
-    APP_DBG("lightbulb_set_saturation : %f", value);
+    //APP_DBG("lightbulb_set_saturation : %f", value);
 
     s_hsb_val.s = value;
 
@@ -297,7 +297,7 @@ void lightbulb_set_hue(void *p)
 {
     double value = *(double *)p;
 
-    APP_DBG("lightbulb_set_hue : %f", value);
+    //APP_DBG("lightbulb_set_hue : %f", value);
 
     s_hsb_val.h = value;
 
@@ -316,7 +316,7 @@ void lightbulb_set_brightness(void *p)
 {
     int value = *(int *)p;
 
-    APP_DBG("lightbulb_set_brightness : %d", value);
+    //APP_DBG("lightbulb_set_brightness : %d", value);
 
     s_hsb_val.b = value;
     s_brightness = s_hsb_val.b;

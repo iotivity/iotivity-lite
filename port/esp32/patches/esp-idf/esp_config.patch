@@ -1,0 +1,20 @@
+diff --git a/components/mbedtls/mbedtls b/components/mbedtls/mbedtls
+index 90f46c8b1..f10c5683d 160000
+--- a/components/mbedtls/mbedtls
++++ b/components/mbedtls/mbedtls
+@@ -1 +1 @@
+-Subproject commit 90f46c8b17bc1219a82d4ddf81520d40c5ac5ebf
++Subproject commit f10c5683d1750157d84b2e4dc2fd94cf4bce6cf8
+diff --git a/components/mbedtls/port/include/mbedtls/esp_config.h b/components/mbedtls/port/include/mbedtls/esp_config.h
+index 60826e6c2..adc4437b9 100644
+--- a/components/mbedtls/port/include/mbedtls/esp_config.h
++++ b/components/mbedtls/port/include/mbedtls/esp_config.h
+@@ -2463,6 +2463,8 @@
+ #include MBEDTLS_USER_CONFIG_FILE
+ #endif
+ 
++#define MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
++
+ #include "mbedtls/check_config.h"
+ 
+ #endif /* MBEDTLS_CONFIG_H */

@@ -15,6 +15,8 @@
 */
 
 #include "oc_api.h"
+#include "oc_pki.h"
+#include "oc_core_res.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -51,6 +53,7 @@ static const char *cis = "coap+tcp://try.plgd.cloud:5683";
 static const char *auth_code = "1Ray-0w8s0_2lTg7";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "auth0";
+static const char *device_name = "esp32";
 
 static void
 set_device_custom_property(void *data)
@@ -63,7 +66,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "ocf.1.0.0",
+  ret |= oc_add_device("/oic/d", "oic.d.light", device_name, "ocf.1.0.0",
                        "ocf.res.1.0.0", set_device_custom_property, NULL);
   return ret;
 }
@@ -146,6 +149,7 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_add_resource(res);
+  oc_cloud_add_resource(res);
 }
 
 static void
@@ -264,6 +268,65 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
+void
+factory_presets_cb_new(size_t device, void *data)
+{
+  oc_device_info_t* dev = oc_core_get_device_info(device);
+  oc_free_string(&dev->name);
+  oc_new_string(&dev->name, device_name, strlen(device_name));
+  (void)data;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  PRINT("factory_presets_cb: %d\n", (int) device);
+
+	const char* cert = "-----BEGIN CERTIFICATE-----\n"
+"MIIB9zCCAZygAwIBAgIRAOwIWPAt19w7DswoszkVIEIwCgYIKoZIzj0EAwIwEzER\n"
+"MA8GA1UEChMIVGVzdCBPUkcwHhcNMTkwNTAyMjAwNjQ4WhcNMjkwMzEwMjAwNjQ4\n"
+"WjBHMREwDwYDVQQKEwhUZXN0IE9SRzEyMDAGA1UEAxMpdXVpZDpiNWEyYTQyZS1i\n"
+"Mjg1LTQyZjEtYTM2Yi0wMzRjOGZjOGVmZDUwWTATBgcqhkjOPQIBBggqhkjOPQMB\n"
+"BwNCAAQS4eiM0HNPROaiAknAOW08mpCKDQmpMUkywdcNKoJv1qnEedBhWne7Z0jq\n"
+"zSYQbyqyIVGujnI3K7C63NRbQOXQo4GcMIGZMA4GA1UdDwEB/wQEAwIDiDAzBgNV\n"
+"HSUELDAqBggrBgEFBQcDAQYIKwYBBQUHAwIGCCsGAQUFBwMBBgorBgEEAYLefAEG\n"
+"MAwGA1UdEwEB/wQCMAAwRAYDVR0RBD0wO4IJbG9jYWxob3N0hwQAAAAAhwR/AAAB\n"
+"hxAAAAAAAAAAAAAAAAAAAAAAhxAAAAAAAAAAAAAAAAAAAAABMAoGCCqGSM49BAMC\n"
+"A0kAMEYCIQDuhl6zj6gl2YZbBzh7Th0uu5izdISuU/ESG+vHrEp7xwIhANCA7tSt\n"
+"aBlce+W76mTIhwMFXQfyF3awWIGjOcfTV8pU\n"
+"-----END CERTIFICATE-----\n";
+
+	const char* key = "-----BEGIN EC PRIVATE KEY-----\n"
+"MHcCAQEEIMPeADszZajrkEy4YvACwcbR0pSdlKG+m8ALJ6lj/ykdoAoGCCqGSM49\n"
+"AwEHoUQDQgAEEuHojNBzT0TmogJJwDltPJqQig0JqTFJMsHXDSqCb9apxHnQYVp3\n"
+"u2dI6s0mEG8qsiFRro5yNyuwutzUW0Dl0A==\n"
+"-----END EC PRIVATE KEY-----\n";
+
+	const char* root_ca = "-----BEGIN CERTIFICATE-----\n"
+"MIIBaTCCAQ+gAwIBAgIQR33gIB75I7Vi/QnMnmiWvzAKBggqhkjOPQQDAjATMREw\n"
+"DwYDVQQKEwhUZXN0IE9SRzAeFw0xOTA1MDIyMDA1MTVaFw0yOTAzMTAyMDA1MTVa\n"
+"MBMxETAPBgNVBAoTCFRlc3QgT1JHMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE\n"
+"xbwMaS8jcuibSYJkCmuVHfeV3xfYVyUq8Iroz7YlXaTayspW3K4hVdwIsy/5U+3U\n"
+"vM/vdK5wn2+NrWy45vFAJqNFMEMwDgYDVR0PAQH/BAQDAgEGMBMGA1UdJQQMMAoG\n"
+"CCsGAQUFBwMBMA8GA1UdEwEB/wQFMAMBAf8wCwYDVR0RBAQwAoIAMAoGCCqGSM49\n"
+"BAMCA0gAMEUCIBWkxuHKgLSp6OXDJoztPP7/P5VBZiwLbfjTCVRxBvwWAiEAnzNu\n"
+"6gKPwtKmY0pBxwCo3NNmzNpA6KrEOXE56PkiQYQ=\n"
+"-----END CERTIFICATE-----\n";
+
+  int ee_credid = oc_pki_add_mfg_cert(0, (const unsigned char *)cert, strlen(cert),
+                                      (const unsigned char *)key, strlen(key));
+  if (ee_credid < 0) {
+    PRINT("ERROR installing manufacturer EE cert\n");
+    return;
+  }
+
+  int rootca_credid =
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)root_ca, strlen(root_ca));
+  if (rootca_credid < 0) {
+    PRINT("ERROR installing root cert\n");
+    return;
+  }
+
+  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
+#endif /* OC_SECURITY && OC_PKI */
+}
+
 static void server_main(void *pvParameter)
 {
   int init;
@@ -305,6 +368,7 @@ static void server_main(void *pvParameter)
 
 #ifdef OC_SECURITY
   oc_storage_config("./server_creds");
+  oc_set_factory_presets_cb(factory_presets_cb_new, NULL);
 #endif /* OC_SECURITY */
 
   init = oc_main_init(&handler);
@@ -315,10 +379,12 @@ static void server_main(void *pvParameter)
   if (ctx)
   {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+    /*
     if (cis)
     {
       oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
     }
+    */
   }
 
   while (quit != 1)
@@ -358,12 +424,12 @@ void app_main(void)
 
   initialise_wifi();
 
-  if (xTaskCreate(&server_main, "server_main", 15 * 1024, NULL, 5, NULL) != pdPASS)
+  if (xTaskCreate(&server_main, "server_main", 32 * 1024, NULL, 5, NULL) != pdPASS)
   {
     print_error("task create failed");
   }
 
-  if (xTaskCreate(&lightbulb_damon_task, "lightbulb_damon_task", 8192, NULL, 5, NULL) != pdPASS)
+  if (xTaskCreate(&lightbulb_damon_task, "lightbulb_damon_task", 4096, NULL, 5, NULL) != pdPASS)
   {
     print_error("task create failed");
   }

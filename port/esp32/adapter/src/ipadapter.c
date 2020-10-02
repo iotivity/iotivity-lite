@@ -58,7 +58,7 @@ struct in6_pktinfo
   ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
 
 /* As not defined, just need to define is as something innocuous */
-#define IPV6_PKTINFO IPV6_CHECKSUM
+// #define IPV6_PKTINFO IPV6_CHECKSUM
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -693,7 +693,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   struct cmsghdr *cmsg;
   for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != 0; cmsg = CMSG_NXTHDR(&msg, cmsg))
   {
-    if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO)
+    if (cmsg->cmsg_level == IPPROTO_IPV6 /*&& cmsg->cmsg_type == IPV6_PKTINFO*/)
     {
       if (msg.msg_namelen != sizeof(struct sockaddr_in6))
       {
@@ -983,7 +983,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 
     cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_level = IPPROTO_IPV6;
-    cmsg->cmsg_type = IPV6_PKTINFO;
+    // cmsg->cmsg_type = IPV6_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
 
     pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
@@ -1660,12 +1660,14 @@ int oc_connectivity_init(size_t device)
   }
 
 #ifdef OC_SECURITY
-  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
+/*
+  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_PKTINFO, &on,
                  sizeof(on)) == -1)
   {
     OC_ERR("setting recvpktinfo option %d\n", errno);
     return -1;
   }
+*/
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
       -1)
   {
