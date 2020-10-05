@@ -997,9 +997,8 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
     device,
     OC_RSRVD_EES_URI_ESIMEASYSETUP,
     OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
-    2,
-    OC_RSRVD_EES_RES_TYPE_ESIMEASYSETUP,
-    "oic.wk.col");
+    1,
+    OC_RSRVD_EES_RES_TYPE_ESIMEASYSETUP);
 
   dev_cxt->ees.handle =
     (oc_collection_t *)oc_core_get_resource_by_index(OCF_EES, device);
