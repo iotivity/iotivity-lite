@@ -31,8 +31,9 @@ ESP32
  - after own and onboard lot's of the heap is consumed (just 50KB are free). When the device was rebooted 130KB are free.
  - partition nvs must be resize (extended) because storage store data to nvs
  - when cloud is enabled OC_DYNAMIC_ALLOCATION must be set because OC_COLLECTIONS is not supported without OC_DYNAMIC_ALLOCATION
- - max_app_data_size must be set to 6+KB(otherwise credentials are not stored to the storage) and less then 8KB(otherwise esp aborts(heap is exhausted) during own and onboard)
+ - max_app_data_size must be set to 6+KB(otherwise credentials are not stored to the storage) and less then 8KB(otherwise esp aborts - heap is exhausted during own and onboard)
  - compiler performance optimalization(-O2) must be set otherwise heap is exhausted during own and onboard
+ - set CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN to same same size as max_app_data_size because we want to avoid exhaust heap and more is not used.
 
 # Performance over heap memory
 | Setup | free heap size |
@@ -40,6 +41,6 @@ ESP32
 | SECURE, TCP, IPV4, fresh | 170KB |
 | SECURE, TCP, IPV4, just owned | 89KB |
 | SECURE, TCP, IPV4, owned, rebooted | 162KB |
-| SECURE, TCP, IPV4, just owned, onboarded to the cloud | 53KB / crash for exhausted heap |
-| SECURE, TCP, IPV4, owned, rebooted, onboarded to the cloud | 134KB |
+| SECURE, TCP, IPV4, just owned, onboarded to the cloud | 86KB |
+| SECURE, TCP, IPV4, owned, rebooted, onboarded to the cloud | 145KB |
 
