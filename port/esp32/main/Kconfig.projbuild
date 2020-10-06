@@ -25,31 +25,31 @@ config APP_DEBUG
 
 config DYNAMIC
     bool "DYNAMIC"
-    default true
+    default "y"
     help
         enable or disable DYNAMIC
 
 config SECURE
     bool "SECURE"
-    default true
+    default "y"
     help
         enable or disable SECURE
 
 config IPV4
     bool "IPV4"
-    default true
+    default "y"
     help
         enable or disable IPV4
 
 config TCP
     bool "TCP"
-    default true
+    default "y"
     help
         enable or disable TCP
 
 config CLOUD
     bool "CLOUD"
-    default true
+    default "y"
     help
         enable or disable CLOUD
 
