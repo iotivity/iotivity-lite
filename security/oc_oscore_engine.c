@@ -18,6 +18,7 @@
 #include "oc_oscore.h"
 #include "oc_oscore_crypto.h"
 #include "oc_oscore_context.h"
+#include "oc_pstat.h"
 #include "api/oc_events.h"
 #include "util/oc_process.h"
 #include "oc_store.h"
@@ -148,7 +149,7 @@ oc_oscore_recv_message(oc_message_t *message)
       } else {
         /* OSCORE message is request and lacks kid, return error */
         OC_ERR("***OSCORE protected request lacks kid param***");
-        oscore_send_error(oscore_pkt, UNAUTHORIZED_4_01, &message->endpoint);
+        oscore_send_error(oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
         goto oscore_recv_error;
       }
     }
