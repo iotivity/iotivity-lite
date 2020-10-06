@@ -53,8 +53,6 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/separate.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/transactions.c
 
-	${CMAKE_CURRENT_SOURCE_DIR}/lightbulb.c
-	${CMAKE_CURRENT_SOURCE_DIR}/light_bulb_main.c
 	main.c
 )
 
@@ -96,7 +94,6 @@ endif()
 
 if (CONFIG_SECURE)
 	add_definitions(-DOC_SECURITY -DOC_PKI -DAPP_DEBUG)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
@@ -130,6 +127,8 @@ endif()
 
 #add_definitions(-DOC_CLIENT)
 #add_definitions(-DOC_SERVER)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 
 idf_component_register(
 	SRCS

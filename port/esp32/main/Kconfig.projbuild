@@ -25,27 +25,43 @@ config APP_DEBUG
 
 config DYNAMIC
     bool "DYNAMIC"
+    default true
     help
         enable or disable DYNAMIC
 
 config SECURE
     bool "SECURE"
+    default true
     help
         enable or disable SECURE
 
 config IPV4
     bool "IPV4"
+    default true
     help
         enable or disable IPV4
 
 config TCP
     bool "TCP"
+    default true
     help
         enable or disable TCP
 
 config CLOUD
     bool "CLOUD"
+    default true
     help
         enable or disable CLOUD
+
+config BLINK_GPIO
+    int "Blink GPIO number"
+    range 0 34
+    default 13
+    help
+        GPIO number (IOxx) to blink on and off.
+
+        Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+
+        GPIOs 35-39 are input-only so cannot be used as outputs.
 
 endmenu

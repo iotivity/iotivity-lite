@@ -1741,11 +1741,27 @@ int oc_connectivity_init(size_t device)
 #endif /* OC_NETWORK_MONITOR */
     ifchange_initialized = true;
   }
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr) != 0 ) {
+    OC_ERR("pthread_attr_init");
+    return -1;
+  }
 
-  if (pthread_create(&dev->event_thread, NULL, &network_event_thread, dev) !=
+  if (pthread_attr_setstacksize(&attr, 24000) != 0 ) {
+    OC_ERR("pthread_attr_setstacksize");
+    return -1;
+  }
+
+
+  if (pthread_create(&dev->event_thread, &attr, &network_event_thread, dev) !=
       0)
   {
     OC_ERR("creating network polling thread");
+    return -1;
+  }
+
+  if (pthread_attr_destroy(&attr) != 0 ) {
+    OC_ERR("pthread_attr_destroy");
     return -1;
   }
 

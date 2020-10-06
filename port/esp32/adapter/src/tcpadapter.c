@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "vfs_pipe.h"
+#include "esp_netif.h"
 
 #ifdef OC_TCP
 
@@ -102,8 +103,6 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
 static int
 get_interface_index(int sock)
 {
-  int interface_index = -1;
-
   struct sockaddr_storage addr;
   socklen_t socklen = sizeof(addr);
   if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1)
@@ -111,44 +110,46 @@ get_interface_index(int sock)
     OC_ERR("obtaining socket information %d", errno);
     return -1;
   }
-  OC_ERR("get_interface_index is not implemented");
-  return -1;
-//TODO
-#if 0
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interfaces: %d", errno);
-    return -1;
-  }
-
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!(interface->ifa_flags & IFF_UP) || interface->ifa_flags & IFF_LOOPBACK)
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
+  {
+    if (!esp_netif_is_netif_up(esp_netif))
+    {
       continue;
-    if (addr.ss_family == interface->ifa_addr->sa_family) {
-      if (addr.ss_family == AF_INET6) {
-        struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
-        struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
-        if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
-          interface_index = if_nametoindex(interface->ifa_name);
-          break;
+    }
+    if (addr.ss_family == AF_INET)
+    {
+      esp_netif_ip_info_t ip_info;
+      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK)
+      {
+        continue;
+      }
+      struct sockaddr_in *b = (struct sockaddr_in *)&addr;
+      if (b->sin_addr.s_addr == ip_info.ip.addr)
+      {
+        return esp_netif_get_netif_impl_index(esp_netif);
+      }
+    }
+    if (addr.ss_family == AF_INET6)
+    {
+      struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
+      esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
+      int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
+      for (int i = 0; i < num; ++i)
+      {
+
+        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i]))
+        {
+          continue;
+        }
+        if (memcmp(&if_ip6[i].addr, b->sin6_addr.s6_addr, 16) == 0)
+        {
+          return esp_netif_get_netif_impl_index(esp_netif);
         }
       }
-#ifdef OC_IPV4
-      else if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
-        struct sockaddr_in *b = (struct sockaddr_in *)&addr;
-        if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
-          interface_index = if_nametoindex(interface->ifa_name);
-          break;
-        }
-      }
-#endif /* OC_IPV4 */
     }
   }
-
-  freeifaddrs(ifs);
-  return interface_index;
-#endif
+  OC_ERR("interface not found");
+  return -1;
 }
 
 void oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
@@ -398,6 +399,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   else if (FD_ISSET(dev->tcp.connect_pipe[0], fds))
   {
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
+    OC_DBG("oc_tcp_receive_message select: dev->tcp.connect_pipe[0]: %d", (int)len);
     if (len < 0)
     {
       OC_ERR("read error! %d", errno);
@@ -508,7 +510,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 {
   int flags, n, error;
   socklen_t len;
-  fd_set rset, wset;
+  fd_set wset;
   struct timeval tval;
 
   flags = fcntl(sockfd, F_GETFL, 0);
@@ -536,20 +538,19 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
     goto done; /* connect completed immediately */
   }
 
-  FD_ZERO(&rset);
-  FD_SET(sockfd, &rset);
-  wset = rset;
+  FD_ZERO(&wset);
+  FD_SET(sockfd, &wset);
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0)
+  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0)
   {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
   }
 
-  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset))
+  if (FD_ISSET(sockfd, &wset))
   {
     len = sizeof(error);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
@@ -564,7 +565,6 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 done:
   if (error < 0)
   {
-    close(sockfd); /* just in case */
     errno = error;
     return -1;
   }
@@ -762,7 +762,6 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 
   OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
          dev->device);
-
   return 0;
 }
 #endif /* OC_IPV4 */
@@ -775,7 +774,6 @@ int oc_tcp_connectivity_init(ip_context_t *dev)
   {
     oc_abort("error initializing TCP adapter mutex");
   }
-
   memset(&dev->tcp.server, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)&dev->tcp.server;
   l->sin6_family = AF_INET6;

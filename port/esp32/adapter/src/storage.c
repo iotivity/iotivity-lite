@@ -20,8 +20,9 @@
 #ifdef OC_STORAGE
 #include <errno.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
+#include "nvs_flash.h"
+#include "debug_print.h"
 
 #define STORE_PATH_SIZE 64
 
@@ -35,7 +36,8 @@ int oc_storage_config(const char *store)
   if (store_path_len >= STORE_PATH_SIZE)
     return -ENOENT;
 
-  strncpy(store_path, store, store_path_len);
+  memcpy(store_path, store, store_path_len);
+  store_path[store_path_len] = '\0';
   path_set = true;
 
   return 0;
@@ -43,41 +45,62 @@ int oc_storage_config(const char *store)
 
 long oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
-  FILE *fp = 0;
-  size_t store_len = strlen(store);
-
-  if (!path_set || (1 + store_len + store_path_len >= STORE_PATH_SIZE))
+  APP_DBG("oc_storage_read: %s", store);
+  if (!path_set)
+  {
     return -ENOENT;
-
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  fp = fopen(store_path, "rb");
-  if (!fp)
+  }
+  nvs_handle_t handle;
+  esp_err_t err = nvs_open(store_path, NVS_READONLY, &handle);
+  if (err != ESP_OK)
+  {
+    APP_DBG("oc_storage_read cannot nvs_open %s: %d", store, err);
     return -EINVAL;
+  }
 
-  size = fread(buf, 1, size, fp);
-  fclose(fp);
+  err = nvs_get_blob(handle, store, buf, &size);
+  if (err != ESP_OK)
+  {
+    APP_DBG("oc_storage_read cannot nvs_get_blob  %s: %d", store, err);
+    nvs_close(handle);
+    return -EINVAL;
+  }
+
+  nvs_close(handle);
   return size;
 }
 
 long oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
-  FILE *fp;
-  size_t store_len = strlen(store);
-
-  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+  //APP_DBG("oc_storage_write: %s", store);
+  if (!path_set)
+  {
     return -ENOENT;
-
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  fp = fopen(store_path, "wb");
-  if (!fp)
+  }
+  nvs_handle_t handle;
+  esp_err_t err = nvs_open(store_path, NVS_READWRITE, &handle);
+  if (err != ESP_OK)
+  {
+    APP_DBG("oc_storage_write cannot nvs_open  %s: %d", store, err);
     return -EINVAL;
+  }
 
-  size = fwrite(buf, 1, size, fp);
-  fclose(fp);
+  err = nvs_set_blob(handle, store, buf, size);
+  if (err != ESP_OK)
+  {
+    APP_DBG("oc_storage_write cannot nvs_set_blob  %s: %d", store, err);
+    nvs_close(handle);
+    return -EINVAL;
+  }
+
+  err = nvs_commit(handle);
+  if (err != ESP_OK)
+  {
+    APP_DBG("oc_storage_write cannot nvs_commit  %s: %d", store, err);
+    nvs_close(handle);
+    return -EINVAL;
+  }
+
   return size;
 }
 #endif /* OC_SECURITY */
