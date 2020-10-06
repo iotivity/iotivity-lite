@@ -161,6 +161,14 @@ oc_oscore_recv_message(oc_message_t *message)
       goto oscore_recv_error;
     }
 
+    oc_sec_cred_t *c = (oc_sec_cred_t *)oscore_ctx->cred;
+    if (!(message->endpoint.flags & MULTICAST) &&
+        c->credtype != OC_CREDTYPE_OSCORE) {
+      OC_ERR("***unicast message protected using group OSCORE context; "
+             "silently ignore***");
+      goto oscore_recv_error;
+    }
+
     /* Copy "subjectuuid" of cred with OSCORE context to oc_endpoint_t */
     oc_sec_cred_t *oscore_cred = (oc_sec_cred_t *)oscore_ctx->cred;
     memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id, 16);
@@ -270,6 +278,13 @@ oc_oscore_recv_message(oc_message_t *message)
     }
 
     OC_DBG("### successfully parsed inner message ###");
+
+    if (c->credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER &&
+        coap_pkt->code != OC_POST) {
+      OC_ERR("***non-UPDATE multicast request protected using group OSCORE "
+             "context; silently ignore***");
+      goto oscore_recv_error;
+    }
 
     /* Copy type, version, mid, token, observe fields from OSCORE packet to
      * CoAP Packet */
