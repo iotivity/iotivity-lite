@@ -34,8 +34,9 @@ ESP32
  - max_app_data_size must be set to 6+KB(otherwise credentials are not stored to the storage) and less then 8KB(otherwise esp aborts(heap is exhausted) during own and onboard)
  - compiler performance optimalization(-O2) must be set otherwise heap is exhausted during own and onboard
 
-# Performance
+# Performance over heap memory
 | Setup | free heap size |
+| --------- | ----------- | 
 | SECURE, TCP, IPV4, fresh | 170KB |
 | SECURE, TCP, IPV4, just owned | 89KB |
 | SECURE, TCP, IPV4, owned, rebooted | 162KB |
