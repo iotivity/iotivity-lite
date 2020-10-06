@@ -399,6 +399,12 @@ oc_oscore_send_message(oc_message_t *msg)
         coap_pkt->code == CSM_7_01
 #endif /* OC_TCP */
     ) {
+      oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+      if (pstat->s != OC_DOS_RFNOP) {
+        OC_ERR("### device not in RFNOP; stop further processing ###");
+        goto oscore_send_error;
+      }
+
       OC_DBG("### protecting outgoing request ###");
       /* Request */
       /* Use context->SSN as Partial IV */
