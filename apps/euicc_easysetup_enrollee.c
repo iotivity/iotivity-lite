@@ -18,6 +18,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_config.h"
@@ -46,7 +49,7 @@ ees_profile_install_cb1(int status)
   PRINT("ees_profile_install_cb1 : status %d\n", status);
   if(status == 0) {
     oc_ees_set_state(0, EES_PS_INSTALLED);
-    oc_ees_reset_resources(0);
+    //oc_ees_reset_resources(0);
   } else {
     oc_ees_set_state(0, EES_PS_ERROR);
   }
@@ -92,7 +95,7 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
         lpa_install_profile(&ees_profile_install_cb1);
     } else {
         oc_ees_set_state(0, EES_PS_ERROR);
-        oc_ees_reset_resources(0);
+        //oc_ees_reset_resources(0);
     }
   }
 }
@@ -169,7 +172,7 @@ ees_profile_install_cb2(int status)
 {
   if(status == 0) {
     oc_ees_set_state(1, EES_PS_INSTALLED);
-    oc_ees_reset_resources(1);
+    //oc_ees_reset_resources(1);
   } else {
     oc_ees_set_state(1, EES_PS_ERROR);
   }
@@ -215,7 +218,7 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
         lpa_install_profile(&ees_profile_install_cb2);
     } else {
         oc_ees_set_state(1, EES_PS_ERROR);
-        oc_ees_reset_resources(1);
+        //oc_ees_reset_resources(1);
     }
   }
 }
@@ -379,6 +382,35 @@ handle_signal(int signal)
   g_exit = true;
 }
 
+int delete_directory(const char *path)
+{
+   int r = -1;
+   size_t path_len = strlen(path);
+   DIR *dir = opendir(path);
+   if (dir) {
+      struct dirent *p;
+      r = 0;
+      while (!r && (p=readdir(dir))) {
+          int r2 = -1; char *buf; size_t len;
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))  continue;
+          len = path_len + strlen(p->d_name) + 2;
+          buf = malloc(len);
+          if (buf) {
+             struct stat statbuf;
+             snprintf(buf, len, "%s/%s", path, p->d_name);
+             if (!stat(buf, &statbuf)) {
+                if (S_ISDIR(statbuf.st_mode)) r2 = delete_directory(buf);
+                else r2 = unlink(buf);
+             }
+             free(buf);
+          }
+          r = r2;
+      }
+      closedir(dir);
+   }
+   if (!r) r = rmdir(path);
+   return r;
+}
 void
 main(void)
 {
@@ -396,16 +428,17 @@ main(void)
 
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cond, NULL);
+
   //Create OCF handler
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources =  register_resources };
 
-
   oc_set_mtu_size(MAX_MTU_SIZE);
   oc_set_max_app_data_size(MAX_APP_DATA_SIZE);
 
 #ifdef OC_SECURITY
+  delete_directory("euicc_easysetup_enrollee_creds");
   oc_storage_config("./euicc_easysetup_enrollee_creds");
 #endif
 

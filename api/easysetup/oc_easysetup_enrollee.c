@@ -1094,6 +1094,7 @@ oc_delete_esim_easysetup_resource(size_t device)
   }
 }
 
+#if 0
 void
 oc_ees_reset_resources(size_t device)
 {
@@ -1108,5 +1109,5 @@ oc_ees_reset_resources(size_t device)
   oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_EUC_UNDEFINED, 9);
 
 }
-
+#endif
 #endif // OC_ESIM_EASYSETUP
