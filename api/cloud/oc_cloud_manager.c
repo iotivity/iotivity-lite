@@ -115,6 +115,7 @@ static void
 cloud_start_process(oc_cloud_context_t *ctx)
 {
   ctx->retry_count = 0;
+  ctx->retry_refresh_token_count = 0;
 
   if (ctx->store.status == OC_CLOUD_INITIALIZED) {
     oc_set_delayed_callback(ctx, cloud_register, session_timeout[0]);
@@ -497,7 +498,7 @@ refresh_token(void *data)
     if (cannotConnect) {
       cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     }
-    oc_set_delayed_callback(ctx, cloud_login,
+    oc_set_delayed_callback(ctx, refresh_token,
                             session_timeout[ctx->retry_refresh_token_count]);
   }
 

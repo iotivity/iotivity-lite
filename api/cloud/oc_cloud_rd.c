@@ -251,6 +251,10 @@ void
 cloud_rd_manager_status_changed(oc_cloud_context_t *ctx)
 {
   if (ctx->store.status & OC_CLOUD_LOGGED_IN) {
+    if (ctx->store.status & OC_CLOUD_REFRESHED_TOKEN) {
+      // when refresh occurs we don't want to publish resources.
+      return;
+    }
     publish_published_resources(ctx);
     delete_resources(ctx, false);
     oc_remove_delayed_callback(ctx, publish_published_resources);
