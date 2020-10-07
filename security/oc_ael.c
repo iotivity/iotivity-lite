@@ -122,6 +122,13 @@ oc_sec_ael_init(size_t device)
   memset(&ael[device], 0, sizeof(oc_sec_ael_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
   OC_LIST_STRUCT_INIT(&ael[device], events);
+  size_t i = 0;
+  while (i < oc_core_get_num_devices()) {
+    if (i != device) {
+      OC_LIST_STRUCT_REINIT(&ael[i], events);
+    }
+    i++;
+  }
 }
 
 void
