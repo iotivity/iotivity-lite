@@ -388,6 +388,19 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     }
   }
 
+  if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
+       pstat->s == OC_DOS_SRESET) &&
+      !(endpoint->flags & SECURED)) {
+    /* anonp-clear requests to /oic/sec/doxm while the
+     * dos is RFPRO, RFNOP or SRESET should not be authorized
+     * regardless of the ACL configuration.
+     */
+    if (oc_string_len(resource->uri) == 13 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+      return false;
+    }
+  }
+
   oc_uuid_t *uuid = NULL;
   if (peer) {
     uuid = &peer->uuid;
