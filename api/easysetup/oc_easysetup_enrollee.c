@@ -876,7 +876,8 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
-	  oc_ees_set_state(ees->device, str_val);
+	  //oc_ees_set_state(ees->device, str_val);
+         oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val, str_len);
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
