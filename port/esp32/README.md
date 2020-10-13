@@ -24,7 +24,7 @@ ESP32
 - idf.py menuconfig // set wifi, mbedtls
 - ( cd esp-idf/components/mbedtls/mbedtls && git am ../../../../patches/mbedtls/*.patch )
 - ( cd esp-idf && patch -p1 < ../patches/esp-idf/*.patch )
-- ( cd esp-idf/components/lwip/lwip && patch -p1 < ../patches/lwip/*.patch )
+- ( cd esp-idf/components/lwip/lwip && patch -p1 < ../../../../patches/lwip/*.patch )
 - idf.py build
 - idf.py -p (PORT) flash monitor
 
