@@ -343,7 +343,7 @@ static void server_main(void *pvParameter)
 #ifdef OC_IPV4
   xEventGroupWaitBits(wifi_event_group, IPV4_CONNECTED_BIT | IPV6_CONNECTED_BIT, false, true, portMAX_DELAY);
 #else
-  xEventGroupWaitBits(wifi_event_group, IPV4_CONNECTED_BIT, false, true, portMAX_DELAY);
+  xEventGroupWaitBits(wifi_event_group, IPV6_CONNECTED_BIT, false, true, portMAX_DELAY);
 #endif
 
 #ifdef OC_IPV4

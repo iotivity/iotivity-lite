@@ -30,9 +30,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
-//#include <ifaddrs.h>
-//#include <linux/netlink.h>
-//#include <linux/rtnetlink.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <signal.h>
@@ -49,16 +46,8 @@
 #include "esp_netif.h"
 
 #define ipi_spec_dst ipi_addr
-struct in6_pktinfo
-{
-  struct in6_addr ipi6_addr; /* src/dst IPv6 address */
-  unsigned int ipi6_ifindex; /* send/recv interface index */
-};
 #define IN6_IS_ADDR_V4MAPPED(a) \
   ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
-
-/* As not defined, just need to define is as something innocuous */
-// #define IPV6_PKTINFO IPV6_CHECKSUM
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -693,7 +682,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   struct cmsghdr *cmsg;
   for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != 0; cmsg = CMSG_NXTHDR(&msg, cmsg))
   {
-    if (cmsg->cmsg_level == IPPROTO_IPV6 /*&& cmsg->cmsg_type == IPV6_PKTINFO*/)
+    if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO)
     {
       if (msg.msg_namelen != sizeof(struct sockaddr_in6))
       {
@@ -710,7 +699,6 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       /* Set receiving network interface index */
       struct in6_pktinfo *pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
       endpoint->interface_index = pktinfo->ipi6_ifindex;
-
       /* For a unicast receiving socket, extract the destination address
        * of the UDP packet into the endpoint's addr_local attribute.
        * This would be used to set the source address of a response that
@@ -983,7 +971,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 
     cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_level = IPPROTO_IPV6;
-    // cmsg->cmsg_type = IPV6_PKTINFO;
+    cmsg->cmsg_type = IPV6_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
 
     pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
@@ -1573,14 +1561,12 @@ int oc_connectivity_init(size_t device)
 #endif /* OC_SECURITY */
 
   int on = 1;
-// TODO
-#if 0
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
     return -1;
   }
-#endif
+
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                  sizeof(on)) == -1)
   {
@@ -1630,14 +1616,11 @@ int oc_connectivity_init(size_t device)
     return -1;
   }
 
-// TODO
-#if 0
   if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
     return -1;
   }
-#endif
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
       -1)
   {
@@ -1660,14 +1643,14 @@ int oc_connectivity_init(size_t device)
   }
 
 #ifdef OC_SECURITY
-/*
-  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_PKTINFO, &on,
+
+  if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1)
   {
     OC_ERR("setting recvpktinfo option %d\n", errno);
     return -1;
   }
-*/
+
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
       -1)
   {
@@ -1742,16 +1725,17 @@ int oc_connectivity_init(size_t device)
     ifchange_initialized = true;
   }
   pthread_attr_t attr;
-  if (pthread_attr_init(&attr) != 0 ) {
+  if (pthread_attr_init(&attr) != 0)
+  {
     OC_ERR("pthread_attr_init");
     return -1;
   }
 
-  if (pthread_attr_setstacksize(&attr, 24000) != 0 ) {
+  if (pthread_attr_setstacksize(&attr, 24000) != 0)
+  {
     OC_ERR("pthread_attr_setstacksize");
     return -1;
   }
-
 
   if (pthread_create(&dev->event_thread, &attr, &network_event_thread, dev) !=
       0)
@@ -1760,7 +1744,8 @@ int oc_connectivity_init(size_t device)
     return -1;
   }
 
-  if (pthread_attr_destroy(&attr) != 0 ) {
+  if (pthread_attr_destroy(&attr) != 0)
+  {
     OC_ERR("pthread_attr_destroy");
     return -1;
   }
