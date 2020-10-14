@@ -405,7 +405,7 @@ static void
 wes_get_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-    OC_DBG("ees_get_handler");
+    OC_DBG("wes_get_handler");
     if (interface != OC_IF_BASELINE) {
       OC_ERR("Resource does not support this interface: %d", interface);
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -422,7 +422,7 @@ static void
 wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
               void *user_data)
 {
-   OC_DBG("ees_post_handler\n");
+   OC_DBG("wes_post_handler\n");
    if (interface != OC_IF_BASELINE) {
      OC_ERR("Resource does not support this interface: %d", interface);
      oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -667,7 +667,7 @@ oc_es_result_t
 oc_ees_set_state(size_t device, char *es_status)
 {
   oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
-
+  OC_DBG("oc_ees_set_state : status %s\n", es_status);
   oc_new_string(&(dev_cxt->ees.data.rsp_status), es_status, strlen(es_status));
   oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
   return OC_ES_OK;
@@ -876,8 +876,8 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
       case OC_REP_STRING:
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
-	  //oc_ees_set_state(ees->device, str_val);
-         oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val, str_len);
+          oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val, str_len);
+
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
@@ -1095,7 +1095,6 @@ oc_delete_esim_easysetup_resource(size_t device)
   }
 }
 
-#if 0
 void
 oc_ees_reset_resources(size_t device)
 {
@@ -1110,5 +1109,5 @@ oc_ees_reset_resources(size_t device)
   oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_EUC_UNDEFINED, 9);
 
 }
-#endif
+
 #endif // OC_ESIM_EASYSETUP

@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_config.h"
@@ -42,15 +43,55 @@ static pthread_cond_t cond;
 static struct timespec ts;
 static bool g_exit = 0;
 
+int delete_directory(const char *path)
+{
+   int r = -1;
+   size_t path_len = strlen(path);
+   DIR *dir = opendir(path);
+   if (dir) {
+      struct dirent *p;
+      r = 0;
+      while (!r && (p=readdir(dir))) {
+          int r2 = -1; char *buf; size_t len;
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))  continue;
+          len = path_len + strlen(p->d_name) + 2;
+          buf = malloc(len);
+          if (buf) {
+             struct stat statbuf;
+             snprintf(buf, len, "%s/%s", path, p->d_name);
+             if (!stat(buf, &statbuf)) {
+                if (S_ISDIR(statbuf.st_mode)) r2 = delete_directory(buf);
+                else r2 = unlink(buf);
+             }
+             free(buf);
+          }
+          r = r2;
+      }
+      closedir(dir);
+   }
+   if (!r) r = rmdir(path);
+   return r;
+}
+
+timer_t tid;
+struct sigevent sev;
+struct itimerspec trigger;
+
+void timeout_hlr(union sigval sv)
+{
+   (void)sv;
+   PRINT("Resetting EES properties...\n");
+   oc_ees_reset_resources(0);
+}
 // Device 1 Callbaks
 static void
 ees_profile_install_cb1(int status)
 {
-  PRINT("ees_profile_install_cb1 : status %d\n", status);
   if(status == 0) {
+    PRINT("oc_ees_set_state ==> EES_PS_INSTALLED\n");
     oc_ees_set_state(0, EES_PS_INSTALLED);
-    //oc_ees_reset_resources(0);
   } else {
+    PRINT("oc_ees_set_state ==> EES_PS_ERROR\n");
     oc_ees_set_state(0, EES_PS_ERROR);
   }
 }
@@ -58,10 +99,11 @@ ees_profile_install_cb1(int status)
 static void
 ees_profile_download_cb1(int status)
 {
-  PRINT("ees_profile_download_cb1 : status %d\n", status);
   if(status == 0) {
+    PRINT("oc_ees_set_state ==> EES_PS_DOWNLOADED\n");
     oc_ees_set_state(0, EES_PS_DOWNLOADED);
   } else {
+    PRINT("oc_ees_set_state ==> EES_PS_ERROR\n");
     oc_ees_set_state(0, EES_PS_ERROR);
   }
 }
@@ -75,6 +117,8 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
       PRINT("ees_prov_data is NULL\n");
       return;
   }
+  if(oc_string(ees_prov_data->rsp_status))
+    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
   if(oc_string(ees_prov_data->last_err_reason))
     PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
   if(oc_string(ees_prov_data->last_err_code))
@@ -86,16 +130,22 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
   }
   if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
+        PRINT("oc_ees_set_state ==> EES_PS_USER_CONF_RECEIVED\n");
         oc_ees_set_state(0, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
     } else if (!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_ENABLE_OK, strlen(EES_EUC_DOWNLOAD_ENABLE_OK))) {
+        PRINT("oc_ees_set_state ==> EES_PS_USER_CONF_RECEIVED\n");
         oc_ees_set_state(0, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
+        // Start Timer. On Expiration, reset EES properties
+	timer_settime(tid, 0, &trigger, NULL);
     } else {
+        PRINT("oc_ees_set_state ==> EES_PS_ERROR\n");
         oc_ees_set_state(0, EES_PS_ERROR);
-        //oc_ees_reset_resources(0);
+        // Start Timer. On Expiration, reset EES properties
+	timer_settime(tid, 0, &trigger, NULL);
     }
   }
 }
@@ -112,19 +162,13 @@ rsp_prov_cb1(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
   if(!strncmp(oc_ees_get_state(0), EES_EMPTY, strlen(EES_EMPTY)))  {
     if(oc_string(rsp_prov_data->activation_code)) {
       PRINT("Actiation Code : %s\n", oc_string(rsp_prov_data->activation_code));
+      PRINT("oc_ees_set_state ==> EES_PS_INITIATED\n");
+      oc_ees_set_state(0, EES_PS_INITIATED);
+      //Write Access code to LPA
+      lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
+      PRINT("oc_ees_set_state ==> EES_PS_USER_CONF_PENDING\n");
+      oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
     }
-    if(oc_string(rsp_prov_data->profile_metadata)) {
-      PRINT("Profile Metadata Code : %s\n", oc_string(rsp_prov_data->profile_metadata));
-    }
-    PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
-
-    oc_ees_set_state(0, EES_PS_INITIATED);
-    //Write Access code to LPA
-    lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
-    oc_ees_set_state(0, EES_PS_USER_CONF_PENDING);
-  } else if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING))) {
-    if(oc_string(rsp_prov_data->confirm_code))
-      PRINT("Confirmation Code : %s\n", oc_string(rsp_prov_data->confirm_code));
   }
 }
 
@@ -172,7 +216,6 @@ ees_profile_install_cb2(int status)
 {
   if(status == 0) {
     oc_ees_set_state(1, EES_PS_INSTALLED);
-    //oc_ees_reset_resources(1);
   } else {
     oc_ees_set_state(1, EES_PS_ERROR);
   }
@@ -218,7 +261,6 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
         lpa_install_profile(&ees_profile_install_cb2);
     } else {
         oc_ees_set_state(1, EES_PS_ERROR);
-        //oc_ees_reset_resources(1);
     }
   }
 }
@@ -241,7 +283,6 @@ rsp_prov_cb2(oc_ees_rsp_data_t *rsp_prov_data, void *user_data)
     }
     PRINT("Confirmation Code Required : %d\n", rsp_prov_data->confirm_code_required);
 
-    oc_ees_set_state(1, EES_PS_INITIATED);
     //Write Access code to LPA
     lpa_write_activation_code(oc_string(rsp_prov_data->activation_code));
     oc_ees_set_state(1, EES_PS_USER_CONF_PENDING);
@@ -382,35 +423,6 @@ handle_signal(int signal)
   g_exit = true;
 }
 
-int delete_directory(const char *path)
-{
-   int r = -1;
-   size_t path_len = strlen(path);
-   DIR *dir = opendir(path);
-   if (dir) {
-      struct dirent *p;
-      r = 0;
-      while (!r && (p=readdir(dir))) {
-          int r2 = -1; char *buf; size_t len;
-          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))  continue;
-          len = path_len + strlen(p->d_name) + 2;
-          buf = malloc(len);
-          if (buf) {
-             struct stat statbuf;
-             snprintf(buf, len, "%s/%s", path, p->d_name);
-             if (!stat(buf, &statbuf)) {
-                if (S_ISDIR(statbuf.st_mode)) r2 = delete_directory(buf);
-                else r2 = unlink(buf);
-             }
-             free(buf);
-          }
-          r = r2;
-      }
-      closedir(dir);
-   }
-   if (!r) r = rmdir(path);
-   return r;
-}
 void
 main(void)
 {
@@ -433,6 +445,11 @@ main(void)
   static const oc_handler_t handler = {.init = app_init,
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources =  register_resources };
+
+  sev.sigev_notify = SIGEV_THREAD;
+  sev.sigev_notify_function = &timeout_hlr;
+  timer_create(CLOCK_REALTIME, &sev, &tid);
+  trigger.it_value.tv_sec = 1;
 
   oc_set_mtu_size(MAX_MTU_SIZE);
   oc_set_max_app_data_size(MAX_APP_DATA_SIZE);
@@ -465,6 +482,7 @@ main(void)
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     oc_delete_esim_easysetup_resource(dev_index);
   }
+  timer_delete(tid);
   wifi_stop_dhcp_server();
   oc_main_shutdown();
 
