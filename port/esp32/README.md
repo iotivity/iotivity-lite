@@ -43,5 +43,5 @@ ESP32
 | SECURE, TCP, IPV4, just owned | 117KB |
 | SECURE, TCP, IPV4, owned, rebooted | 159KB |
 | SECURE, TCP, IPV4, just owned, onboarded to the cloud | 83KB |
-| SECURE, TCP, IPV4, owned, rebooted, onboarded to the cloud | 141KB |
+| SECURE, TCP, IPV4, owned, onboarded to the cloud, rebooted | 141KB |
 
