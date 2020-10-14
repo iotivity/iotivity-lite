@@ -39,9 +39,9 @@ ESP32
 # Performance over heap memory
 | Setup | free heap size |
 | --------- | ----------- | 
-| SECURE, TCP, IPV4, fresh | 170KB |
-| SECURE, TCP, IPV4, just owned | 89KB |
-| SECURE, TCP, IPV4, owned, rebooted | 162KB |
-| SECURE, TCP, IPV4, just owned, onboarded to the cloud | 86KB |
-| SECURE, TCP, IPV4, owned, rebooted, onboarded to the cloud | 145KB |
+| SECURE, TCP, IPV4, fresh | 166KB |
+| SECURE, TCP, IPV4, just owned | 117KB |
+| SECURE, TCP, IPV4, owned, rebooted | 159KB |
+| SECURE, TCP, IPV4, just owned, onboarded to the cloud | 83KB |
+| SECURE, TCP, IPV4, owned, rebooted, onboarded to the cloud | 141KB |
 
