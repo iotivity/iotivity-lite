@@ -479,14 +479,12 @@ main(void)
     pthread_mutex_unlock(&mutex);
   }
 
+  timer_delete(tid);
+  oc_main_shutdown();
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     oc_delete_esim_easysetup_resource(dev_index);
   }
-  timer_delete(tid);
   wifi_stop_dhcp_server();
-  oc_main_shutdown();
-
   PRINT("euicc_easysetup_enrollee : Exit\n");
-
   return;
 }

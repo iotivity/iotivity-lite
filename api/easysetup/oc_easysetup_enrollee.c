@@ -1075,11 +1075,7 @@ oc_delete_esim_easysetup_resource(size_t device)
   oc_free_string(&dev_cxt->rsp_cap.data.device_info);
   dev_cxt->rsp_cap.prov_cb = NULL;
 
-  // Collection is not freed by default. Free collection here.
-  if (dev_cxt->ees.handle) {
-    oc_delete_collection((oc_resource_t *)dev_cxt->ees.handle);
-    dev_cxt->ees.handle = NULL;
-  }
+  // dev_cxt->ees.handle is freed during core shwtdown
   oc_free_string(&dev_cxt->ees.data.rsp_status);
   oc_free_string(&dev_cxt->ees.data.last_err_reason);
   oc_free_string(&dev_cxt->ees.data.last_err_code);
