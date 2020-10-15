@@ -795,15 +795,8 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
           res_changed = true;
         }
         break;
-	/*
-      case OC_REP_BOOL:
-        if (oc_rep_get_bool(rep, OC_RSRVD_EES_CONFIRMATIONCODEREQUIRED, &ccr)) {
-          dev_cxt->rsp.data.confirm_code_required = ccr;
-          res_changed = true;
-        }
-        break;
-      */
       default:
+        OC_DBG("Unhandled type\n");
         break;
     }
     rep = rep->next;
@@ -818,7 +811,7 @@ static void
 rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
              void *user_data)
 {
-  OC_DBG("rspconf_post_handler %d\n", interface);
+  OC_DBG("rspconf_post_handler\n");
 
   if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
