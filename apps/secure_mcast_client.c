@@ -59,7 +59,7 @@ app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "Secure multicast client",
-                       "ocf.3.0.0", "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+                       "ocf.2.2.1", "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   return ret;
 }
 

@@ -65,7 +65,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.3.1.0",
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.1",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
 #if defined(OC_IDD_API)
@@ -139,7 +139,7 @@ display_menu(void)
 int
 validate_purl(const char *purl)
 {
-  (void) purl;
+  (void)purl;
   return 0;
 }
 
