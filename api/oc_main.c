@@ -310,6 +310,7 @@ oc_main_shutdown(void)
   oc_ri_shutdown();
 
 #ifdef OC_SECURITY
+  oc_tls_shutdown();
   oc_sec_acl_free();
   oc_sec_cred_free();
   oc_sec_doxm_free();
@@ -320,7 +321,6 @@ oc_main_shutdown(void)
   oc_free_ecdsa_keypairs();
 #endif /* OC_PKI */
   oc_sec_sdi_free();
-  oc_tls_shutdown();
 #endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE
