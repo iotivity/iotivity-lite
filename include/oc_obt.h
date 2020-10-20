@@ -628,6 +628,7 @@ int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
                                                  void *data);
 
 int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
+                                                 oc_uuid_t *subjectuuid,
                                                  const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);

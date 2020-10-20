@@ -127,6 +127,7 @@ typedef struct oc_oscoregroupprov_ctx_t
   struct oc_oscoregroupprov_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
+  oc_uuid_t subjectuuid;
   oc_string_t desc;
   oc_switch_dos_ctx_t *switch_dos;
   oc_sec_credtype_t type;

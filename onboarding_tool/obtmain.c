@@ -1216,7 +1216,7 @@ provision_server_group_oscore_context(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev;
+  int i = 0, dev, subject;
 
   PRINT("\nProvision server group OSCORE context\nMy Devices:\n");
   while (device != NULL) {
@@ -1233,16 +1233,24 @@ provision_server_group_oscore_context(void)
     return;
   }
 
-  PRINT("\n\nSelect device for provisioning: ");
+  PRINT("\n\nSelect Server device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
 
+  PRINT("\n\nSelect Client with secure multicast capability: ");
+  SCANF("%d", &subject);
+  if (subject < 0 || subject >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_server_group_oscore_context(
-    &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
+    &devices[dev]->uuid, &devices[subject]->uuid, NULL,
+    provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision server group OSCORE "

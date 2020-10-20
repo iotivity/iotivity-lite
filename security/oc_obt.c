@@ -1259,11 +1259,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
   p->switch_dos = NULL;
   if (status >= 0) {
     char groupsub[OC_UUID_LEN];
-    oc_uuid_t guuid;
-    memset(&guuid, 0, sizeof(oc_uuid_t));
-    memcpy(guuid.id, groupid, OSCORE_CTXID_LEN);
-    memcpy(guuid.id + OSCORE_CTXID_LEN, groupid, OSCORE_CTXID_LEN);
-    oc_uuid_to_str(&guuid, groupsub, OC_UUID_LEN);
+    oc_uuid_to_str(&p->subjectuuid, groupsub, OC_UUID_LEN);
 
     char hex_str[OSCORE_CTXID_LEN * 2 + 1];
     size_t hex_str_len;
@@ -1309,7 +1305,8 @@ deviceoscoregroup_RFPRO(int status, void *data)
 }
 
 static int
-obt_provision_group_oscore_context(oc_uuid_t *uuid, const char *desc,
+obt_provision_group_oscore_context(oc_uuid_t *uuid, oc_uuid_t *subjectuuid,
+                                   const char *desc,
                                    oc_obt_device_status_cb_t cb,
                                    oc_sec_credtype_t type, void *data)
 {
@@ -1334,6 +1331,7 @@ obt_provision_group_oscore_context(oc_uuid_t *uuid, const char *desc,
   if (desc) {
     oc_new_string(&p->desc, desc, strlen(desc));
   }
+  memcpy(p->subjectuuid.id, subjectuuid->id, 16);
 
   oc_tls_select_psk_ciphersuite();
 
@@ -1353,17 +1351,23 @@ oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid, const char *desc,
                                              oc_obt_device_status_cb_t cb,
                                              void *data)
 {
+  oc_uuid_t subjectuuid;
+  memset(&subjectuuid, 0, sizeof(oc_uuid_t));
+  memcpy(subjectuuid.id, groupid, OSCORE_CTXID_LEN);
+  memcpy(subjectuuid.id + OSCORE_CTXID_LEN, groupid, OSCORE_CTXID_LEN);
   return obt_provision_group_oscore_context(
-    uuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_CLIENT, data);
+    uuid, &subjectuuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_CLIENT, data);
 }
 
 int
-oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid, const char *desc,
+oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
+                                             oc_uuid_t *subjectuuid,
+                                             const char *desc,
                                              oc_obt_device_status_cb_t cb,
                                              void *data)
 {
   return obt_provision_group_oscore_context(
-    uuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_SERVER, data);
+    uuid, subjectuuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_SERVER, data);
 }
 /* End of provision group OSCORE contexts */
 #endif /* OC_OSCORE */
