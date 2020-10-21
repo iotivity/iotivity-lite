@@ -165,7 +165,6 @@ static void sta_start(void *esp_netif, esp_event_base_t event_base,
 static void sta_disconnected(void *esp_netif, esp_event_base_t event_base,
                              int32_t event_id, void *event_data)
 {
-  PRINT("sta_disconnected\n");
   esp_wifi_connect();
   xEventGroupClearBits(wifi_event_group, IPV4_CONNECTED_BIT);
   xEventGroupClearBits(wifi_event_group, IPV6_CONNECTED_BIT);
