@@ -73,16 +73,6 @@ int delete_directory(const char *path)
    return r;
 }
 
-timer_t tid;
-struct sigevent sev;
-struct itimerspec trigger;
-
-void timeout_hlr(union sigval sv)
-{
-   (void)sv;
-   PRINT("Resetting EES properties...\n");
-   oc_ees_reset_resources(0);
-}
 // Device 1 Callbaks
 static void
 ees_profile_install_cb1(int status)
@@ -108,6 +98,13 @@ ees_profile_download_cb1(int status)
   }
 }
 
+oc_event_callback_retval_t reset_callback1(void *data)
+{
+  (void)data;
+  oc_ees_reset_resources(0);
+  return OC_EVENT_DONE;
+}
+
 static void
 ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
 {
@@ -117,17 +114,7 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  if(oc_string(ees_prov_data->rsp_status))
-    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-  if(oc_string(ees_prov_data->last_err_reason))
-    PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
-  if(oc_string(ees_prov_data->last_err_code))
-    PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
-  if(oc_string(ees_prov_data->last_err_desc))
-    PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  if(oc_string(ees_prov_data->end_user_consent)) {
-    PRINT("End User Confirmation : %s\n", oc_string(ees_prov_data->end_user_consent));
-  }
+
   if(!strncmp(oc_ees_get_state(0), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
         PRINT("oc_ees_set_state ==> EES_PS_USER_CONF_RECEIVED\n");
@@ -139,13 +126,11 @@ ees_prov_cb1(oc_ees_data_t *ees_prov_data, void *user_data)
         oc_ees_set_state(0, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb1);
         lpa_install_profile(&ees_profile_install_cb1);
-        // Start Timer. On Expiration, reset EES properties
-	timer_settime(tid, 0, &trigger, NULL);
+		oc_set_delayed_callback(NULL, reset_callback1, 1);
     } else {
         PRINT("oc_ees_set_state ==> EES_PS_ERROR\n");
         oc_ees_set_state(0, EES_PS_ERROR);
-        // Start Timer. On Expiration, reset EES properties
-	timer_settime(tid, 0, &trigger, NULL);
+		oc_set_delayed_callback(NULL, reset_callback1, 1);
     }
   }
 }
@@ -240,6 +225,13 @@ ees_profile_download_cb2(int status)
   }
 }
 
+oc_event_callback_retval_t reset_callback2(void *data)
+{
+  (void)data;
+  oc_ees_reset_resources(1);
+  return OC_EVENT_DONE;
+}
+
 static void
 ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
 {
@@ -249,17 +241,7 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
       PRINT("ees_prov_data is NULL\n");
       return;
   }
-  if(oc_string(ees_prov_data->rsp_status))
-    PRINT("RSP Status : %s\n", oc_string(ees_prov_data->rsp_status));
-  if(oc_string(ees_prov_data->last_err_reason))
-    PRINT("Last Error Reason : %s\n", oc_string(ees_prov_data->last_err_reason));
-  if(oc_string(ees_prov_data->last_err_code))
-    PRINT("Last Error Code : %s\n", oc_string(ees_prov_data->last_err_code));
-  if(oc_string(ees_prov_data->last_err_desc))
-    PRINT("Last Error Description : %s\n", oc_string(ees_prov_data->last_err_desc));
-  if(oc_string(ees_prov_data->end_user_consent)) {
-    PRINT("End User Confirmation : %s\n", oc_string(ees_prov_data->end_user_consent));
-  }
+
   if(!strncmp(oc_ees_get_state(1), EES_PS_USER_CONF_PENDING, strlen(EES_PS_USER_CONF_PENDING)))  {
     if(!strncmp(oc_string(ees_prov_data->end_user_consent), EES_EUC_DOWNLOAD_OK, strlen(EES_EUC_DOWNLOAD_OK))) {
         PRINT("oc_ees_set_state ==> EES_PS_USER_CONF_RECEIVED\n");
@@ -271,13 +253,11 @@ ees_prov_cb2(oc_ees_data_t *ees_prov_data, void *user_data)
         oc_ees_set_state(1, EES_PS_USER_CONF_RECEIVED);
         lpa_download_profile(&ees_profile_download_cb2);
         lpa_install_profile(&ees_profile_install_cb2);
-        // Start Timer. On Expiration, reset EES properties
-	timer_settime(tid, 0, &trigger, NULL);
+		oc_set_delayed_callback(NULL, reset_callback2, 1);
     } else {
         PRINT("oc_ees_set_state ==> EES_PS_ERROR\n");
         oc_ees_set_state(0, EES_PS_ERROR);
-        // Start Timer. On Expiration, reset EES properties
-	timer_settime(tid, 0, &trigger, NULL);
+		oc_set_delayed_callback(NULL, reset_callback2, 1);
     }
   }
 }
@@ -463,11 +443,6 @@ main(void)
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources =  register_resources };
 
-  sev.sigev_notify = SIGEV_THREAD;
-  sev.sigev_notify_function = &timeout_hlr;
-  timer_create(CLOCK_REALTIME, &sev, &tid);
-  trigger.it_value.tv_sec = 1;
-
   oc_set_mtu_size(MAX_MTU_SIZE);
   oc_set_max_app_data_size(MAX_APP_DATA_SIZE);
 
@@ -496,7 +471,6 @@ main(void)
     pthread_mutex_unlock(&mutex);
   }
 
-  timer_delete(tid);
   oc_main_shutdown();
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     oc_delete_esim_easysetup_resource(dev_index);

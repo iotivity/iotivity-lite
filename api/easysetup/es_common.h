@@ -107,6 +107,8 @@ extern "C" {
 #define EES_PS_DOWNLOADED "Downloaded"
 #define EES_PS_INSTALLED "Installed"
 #define EES_PS_ERROR "Error"
+// Length of "User confirmation pending"
+#define EES_MAX_NOTI_LEN 26
 
 // End user confirmation status
 #define EES_EUC_UNDEFINED "Undefined"

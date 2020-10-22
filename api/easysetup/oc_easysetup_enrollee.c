@@ -615,6 +615,12 @@ typedef struct
   oc_ees_rspcap_conf_resource_t rsp_cap;
 } oc_esim_enrollee_t;
 
+typedef struct  {
+	size_t device;
+	char es_status[EES_MAX_NOTI_LEN];
+} oc_observe_noti_t;
+
+
 // eSIM Enrolee Instance
 static oc_esim_enrollee_t *esim_enrollee;
 static int esim_device_count = 0;
@@ -661,15 +667,32 @@ oc_ees_set_error_code(size_t device, char *err_code)
   return OC_ES_OK;
 }
 
+static oc_event_callback_retval_t
+send_async_notification(void *data)
+{
+  oc_observe_noti_t *noti = (oc_observe_noti_t *)data;
+  if(NULL==noti) {
+    OC_ERR("Error : Couldn't sent the notification\n");
+    return OC_EVENT_DONE;
+  }
+  OC_DBG("send_async_notification : device %d, status %s\n", noti->device, noti->es_status);
+  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(noti->device);
+  oc_new_string(&(dev_cxt->ees.data.rsp_status), noti->es_status, strlen(noti->es_status));
+  oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
+  free(noti);
+  return OC_EVENT_DONE;
+}
+
 /* Easy setup states can be reused for WES and EES.
     In case of EES, Operator server plays enroller role */
 oc_es_result_t
 oc_ees_set_state(size_t device, char *es_status)
 {
-  oc_esim_enrollee_t *dev_cxt = get_device_esim_enrollee(device);
-  OC_DBG("oc_ees_set_state : status %s\n", es_status);
-  oc_new_string(&(dev_cxt->ees.data.rsp_status), es_status, strlen(es_status));
-  oc_notify_observers((oc_resource_t *)dev_cxt->ees.handle);
+  oc_observe_noti_t *noti = (oc_observe_noti_t *)calloc(1, sizeof(oc_observe_noti_t));
+  noti->device = device;
+  strncpy(noti->es_status, es_status, strlen(es_status));
+  //Sending Snchronous notifications corrups response buffer. Send Onserver notification under timer context.
+  oc_set_delayed_callback(noti, send_async_notification, 0);
   return OC_ES_OK;
 }
 
