@@ -1349,7 +1349,7 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       /* Fix maximum size of outgoing encrypted application payloads when sent
        * over UDP */
       if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
-        mbedtls_ssl_set_mtu(&peer->ssl_ctx, OC_PDU_SIZE);
+        mbedtls_ssl_set_mtu(&peer->ssl_ctx, (OC_PDU_SIZE > UINT16_MAX ? UINT16_MAX : OC_PDU_SIZE));
       }
 
       mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
