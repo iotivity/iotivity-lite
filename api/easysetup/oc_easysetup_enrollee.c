@@ -733,11 +733,13 @@ set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_EUICCINFO,
             &str_val, &str_len)) {
            oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), str_val, str_len);
+           oc_rep_set_text_string(root, euiccinfo, oc_string(dev_cxt->rsp_cap.data.euicc_info));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_DEVICEINFO,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp_cap.data.device_info), str_val, str_len);
+          oc_rep_set_text_string(root, deviceinfo, oc_string(dev_cxt->rsp_cap.data.device_info));
           res_changed = true;
         }
         break;
@@ -762,7 +764,9 @@ rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
+  oc_rep_start_root_object();
   set_rspcap_properties((oc_resource_t *)request->resource, request->request_payload, user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -810,11 +814,13 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ACTIVATIONCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp.data.activation_code), str_val, str_len);
+          oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_CONFIRMATIONCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp.data.confirm_code), str_val, str_len);
+          oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
           res_changed = true;
         }
         break;
@@ -841,8 +847,10 @@ rspconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
+  oc_rep_start_root_object();
   set_rspconf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
                             user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -893,27 +901,31 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val, str_len);
-
+          oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_reason), str_val, str_len);
+          oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_code), str_val ,str_len);
+          oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORRDESCRIPTION,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_desc), str_val ,str_len);
+          oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ENDUSERCONFIRMATION,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.end_user_consent), str_val ,str_len);
+          oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_consent));
           res_changed = true;
         }
         break;
@@ -939,12 +951,14 @@ ees_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
+  oc_rep_start_root_object();
   set_ees_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
                       user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-void
+static void
 get_ees_properties(oc_resource_t *resource, oc_interface_mask_t interface,
                         void *user_data)
 {
