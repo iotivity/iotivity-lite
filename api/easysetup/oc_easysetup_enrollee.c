@@ -716,7 +716,7 @@ oc_ees_set_resource_callbacks(size_t device, oc_ees_prov_cb_t ees_prov_cb,
 
   return OC_ES_OK;
 }
-
+#if 0
 static void
 set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
@@ -753,12 +753,22 @@ set_rspcap_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
     dev_cxt->rsp_cap.prov_cb((oc_ees_rspcap_data_t *)&(dev_cxt->rsp_cap.data), user_data);
   }
 }
-
+#endif
+/*
+ euiccinfo and deviceinfo are read from enrollee. Client shall not update these values.
+ this function is added just as a placeholder
+*/
 static void
 rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
 	void *user_data)
 {
-  OC_DBG("rspcap_post_handler %d\n", interface);
+#if 1
+  (void)request;
+  (void)interface;
+  (void)user_data;
+  OC_DBG("Warning : Client should not update /rspcapability\n");
+  return;
+#else
   if (interface != OC_IF_BASELINE) {
     OC_ERR("Resource does not support this interface: %d", interface);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -768,6 +778,7 @@ rspcap_post_handler(oc_request_t *request, oc_interface_mask_t interface,
   set_rspcap_properties((oc_resource_t *)request->resource, request->request_payload, user_data);
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
+#endif
 }
 
 static void
