@@ -825,13 +825,11 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ACTIVATIONCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp.data.activation_code), str_val, str_len);
-          oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_CONFIRMATIONCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->rsp.data.confirm_code), str_val, str_len);
-          oc_rep_set_text_string(root, cc, oc_string(dev_cxt->rsp.data.confirm_code));
           res_changed = true;
         }
         break;
@@ -841,6 +839,11 @@ set_rspconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
     }
     rep = rep->next;
   }
+
+  // Add properties to REP to meet schema validation
+  oc_rep_set_text_string(root, ac, oc_string(dev_cxt->rsp.data.activation_code));
+  oc_rep_set_text_string(root, pm, oc_string(dev_cxt->rsp.data.profile_metadata));
+  oc_rep_set_boolean(root, ccr, dev_cxt->rsp.data.confirm_code_required);
 
   if (res_changed && dev_cxt->rsp.prov_cb) {
     dev_cxt->rsp.prov_cb((oc_ees_rsp_data_t *)&(dev_cxt->rsp.data), user_data);
@@ -912,31 +915,26 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
         if (oc_rep_get_string(rep, OC_RSRVD_EES_PROVSTATUS,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.rsp_status), str_val, str_len);
-          oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORREASON,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_reason), str_val, str_len);
-          oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORCODE,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_code), str_val ,str_len);
-          oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_LASTERRORRDESCRIPTION,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.last_err_desc), str_val ,str_len);
-          oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
           res_changed = true;
         }
         if (oc_rep_get_string(rep, OC_RSRVD_EES_ENDUSERCONFIRMATION,
             &str_val, &str_len)) {
           oc_new_string(&(dev_cxt->ees.data.end_user_consent), str_val ,str_len);
-          oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_consent));
           res_changed = true;
         }
         break;
@@ -945,6 +943,13 @@ set_ees_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
     }
     rep = rep->next;
   }
+
+  // Add properties to REP to meet schema validation
+  oc_rep_set_text_string(root, ps, oc_string(dev_cxt->ees.data.rsp_status));
+  oc_rep_set_text_string(root, ler, oc_string(dev_cxt->ees.data.last_err_reason));
+  oc_rep_set_text_string(root, lec, oc_string(dev_cxt->ees.data.last_err_code));
+  oc_rep_set_text_string(root, led, oc_string(dev_cxt->ees.data.last_err_desc));
+  oc_rep_set_text_string(root, euc, oc_string(dev_cxt->ees.data.end_user_consent));
 
   if (res_changed && dev_cxt->ees.prov_cb) {
     dev_cxt->ees.prov_cb((oc_ees_data_t *)&(dev_cxt->ees.data), user_data);
