@@ -57,6 +57,9 @@ typedef struct oc_tls_peer_t
 #ifdef OC_PKI
   oc_string_t public_key;
 #endif /* OC_PKI */
+#ifdef OC_TCP
+  oc_message_t* processed_recv_message;
+#endif
 } oc_tls_peer_t;
 
 int oc_tls_init_context(void);
