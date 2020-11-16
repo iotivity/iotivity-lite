@@ -362,11 +362,6 @@ provision_credentials(void)
     i++;
     device = device->next;
   }
-
-  oc_uuid_t *self_uuid = oc_core_get_device_id(0);
-  oc_uuid_to_str(self_uuid, di, OC_UUID_LEN);
-  PRINT("[%d]: %s - (OBT)\n", i, di);
-
   PRINT("\nSelect device 1: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 > i) {
@@ -375,19 +370,14 @@ provision_credentials(void)
   }
   PRINT("Select device 2:");
   SCANF("%d", &c2);
-  if (c2 < 0 || c2 > i || c2 == c1) {
+  if (c2 < 0 || c2 >= i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
 
   pthread_mutex_lock(&app_lock);
-  int ret = -1;
-  if (c1 == i)
-    ret = oc_obt_self_provision_pairwise_credentials(&devices[c2]->uuid, provision_credentials_cb, NULL);
-  else if (c2 == i)
-    ret = oc_obt_self_provision_pairwise_credentials(&devices[c1]->uuid, provision_credentials_cb, NULL);
-  else
-    ret = oc_obt_provision_pairwise_credentials(&devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+  int ret = oc_obt_provision_pairwise_credentials(&devices[c1]->uuid,
+      &devices[c2]->uuid, provision_credentials_cb, NULL);
 
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision credentials\n");
