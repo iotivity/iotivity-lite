@@ -60,6 +60,8 @@ extern "C" {
 #define OC_RSRVD_WES_DEVNAME "dn"
 
 // WiFI Easy Setup Property Values
+#define WES_EMPTY ""
+#define WES_NONE "None"
 #define WES_WIFI_MODE_A "A"
 #define WES_WIFI_MODE_B "B"
 #define WES_WIFI_MODE_G "G"

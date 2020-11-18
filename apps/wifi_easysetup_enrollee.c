@@ -18,6 +18,9 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "port/oc_clock.h"
@@ -36,6 +39,36 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cond;
 static struct timespec ts;
 static bool g_exit = 0;
+
+int delete_directory(const char *path)
+{
+   int r = -1;
+   size_t path_len = strlen(path);
+   DIR *dir = opendir(path);
+   if (dir) {
+      struct dirent *p;
+      r = 0;
+      while (!r && (p=readdir(dir))) {
+          int r2 = -1; char *buf; size_t len;
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))  continue;
+          len = path_len + strlen(p->d_name) + 2;
+          buf = malloc(len);
+          if (buf) {
+             struct stat statbuf;
+             snprintf(buf, len, "%s/%s", path, p->d_name);
+             if (!stat(buf, &statbuf)) {
+                if (S_ISDIR(statbuf.st_mode)) r2 = delete_directory(buf);
+                else r2 = unlink(buf);
+             }
+             free(buf);
+          }
+          r = r2;
+      }
+      closedir(dir);
+   }
+   if (!r) r = rmdir(path);
+   return r;
+}
 
 // Device 1 Callbaks
 static void
@@ -151,7 +184,7 @@ app_init(void)
 {
   void *user_data = NULL;
 
-  int err = oc_init_platform("Samsung", NULL, NULL);
+  int err = oc_init_platform("SAMSUNG", NULL, NULL);
   if(err) {
     PRINT("oc_init_platform error %d\n", err);
     return err;
@@ -192,7 +225,7 @@ register_resources(void)
 {
   wifi_mode supported_mode[NUM_WIFIMODE] = {WIFI_11A, WIFI_11B,WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_MODE_MAX};
   wifi_freq supported_freq[NUM_WIFIFREQ] = {WIFI_24G, WIFI_5G, WIFI_FREQ_MAX};
-  char *device_name = "TestDevice";
+  char *device_name = "WiFiTestDevice";
 
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
 
@@ -201,7 +234,7 @@ register_resources(void)
           g_rsc_cbks[dev_index].oc_wes_wifi_prov_cb_t, g_rsc_cbks[dev_index].oc_wes_dev_prov_cb_t);
 
     // Set Device Info
-     if (oc_wes_set_device_info(dev_index, supported_mode,supported_freq, device_name) == OC_ES_ERROR)
+     if (oc_wes_set_device_info(dev_index, supported_mode, supported_freq, device_name) == OC_ES_ERROR)
          PRINT("oc_wes_set_device_info error!\n");
   }
 }
@@ -241,6 +274,7 @@ main(void)
   oc_set_max_app_data_size(MAX_APP_DATA_SIZE);
 
 #ifdef OC_SECURITY
+  delete_directory("wifi_easysetup_enrollee_creds");
   oc_storage_config("./wifi_easysetup_enrollee_creds");
 #endif
 
@@ -263,11 +297,12 @@ main(void)
     }
     pthread_mutex_unlock(&mutex);
   }
+  oc_main_shutdown();
 
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     oc_delete_wifi_easysetup_resource(dev_index);
   }
-  oc_main_shutdown();
+  wifi_stop_dhcp_server();
 
   PRINT("wifi_easysetup_enrollee : Exit\n");
 

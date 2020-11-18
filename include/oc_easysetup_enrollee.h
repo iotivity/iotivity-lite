@@ -319,7 +319,7 @@ typedef enum {
  */
 typedef struct
 {
-    oc_es_connect_type_t connect_request[NUM_CONNECT_TYPE];
+    oc_es_connect_type_t connect[NUM_CONNECT_TYPE];
     int num_request;
     oc_wes_enrollee_state_t state;
     oc_wes_error_code_t last_err_code;
@@ -492,6 +492,14 @@ void oc_create_wifi_easysetup_resource(size_t device, void *user_data);
  * @param device	Index of the the device application created
  */
 void oc_delete_wifi_easysetup_resource(size_t device);
+
+/**
+ * This function resets all the properties of all WiFi Easy Setup Resources
+ * populated for device
+ *
+ * @param device	Index of the the device application created
+ */
+void oc_wes_reset_resources(size_t device);
 
 /**
  * This function is to set three function pointers to handle updates on

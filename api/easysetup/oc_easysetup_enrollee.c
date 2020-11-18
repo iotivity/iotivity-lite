@@ -364,14 +364,14 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
       case OC_REP_INT_ARRAY:
         if (oc_rep_get_int_array(rep, OC_RSRVD_WES_CONNECT,
                                  &connect_req, &connect_req_size)) {
-          memset(dev_cxt->wes.data.connect_request, 0, sizeof(dev_cxt->wes.data.connect_request));
+          memset(dev_cxt->wes.data.connect, 0, sizeof(dev_cxt->wes.data.connect));
           dev_cxt->wes.data.num_request = 0;
           size_t i;
 
           for (i = 0; i < NUM_CONNECT_TYPE && i < connect_req_size; ++i) {
             if (connect_req[i] == OC_ES_CONNECT_WIFI ||
                 connect_req[i] == OC_ES_CONNECT_COAPCLOUD) {
-              dev_cxt->wes.data.connect_request[dev_cxt->wes.data.num_request++] =
+              dev_cxt->wes.data.connect[dev_cxt->wes.data.num_request++] =
                 connect_req[i];
               res_changed = true;
             }
@@ -455,12 +455,10 @@ oc_create_wifi_easysetup_resource(size_t device, void *user_data)
     return;
   }
 
+  // Initialize WES resources
   dev_cxt->wes.data.state = OC_WES_INIT;
   dev_cxt->wes.data.last_err_code = OC_WES_NO_ERROR;
-
-  for (int i = 0; i < NUM_CONNECT_TYPE; ++i) {
-    dev_cxt->wes.data.connect_request[i] = OC_ES_CONNECT_NONE;
-  }
+  memset(dev_cxt->wes.data.connect, 0, sizeof(dev_cxt->wes.data.connect));
   dev_cxt->wes.data.num_request = 0;
 
   //Easy Setup Resource
@@ -514,6 +512,12 @@ oc_create_wifi_easysetup_resource(size_t device, void *user_data)
                                 OC_POST, wes_post_handler, user_data);
   oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->wes.handle, get_wes_properties, user_data,
                                 set_wes_properties, user_data);
+
+  // Initialize WiFi Conf resource
+  oc_new_string(&(dev_cxt->wifi.data.ssid), WES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->wifi.data.cred), WES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->wifi.data.auth_type), WES_NONE, 0);
+  oc_new_string(&(dev_cxt->wifi.data.enc_type), WES_NONE, 0);
 
   //Wifi Conf Recource
   oc_core_populate_resource(
@@ -569,10 +573,6 @@ oc_delete_wifi_easysetup_resource(size_t device)
   oc_free_string(&dev_cxt->device.data.dev_name);
   dev_cxt->device.prov_cb = NULL;
 
-  if (dev_cxt->wes.handle) {
-    oc_delete_collection((oc_resource_t *)dev_cxt->wes.handle);
-    dev_cxt->wes.handle = NULL;
-  }
   dev_cxt->wes.prov_cb = NULL;
 
   wifi_device_count--;
@@ -581,6 +581,24 @@ oc_delete_wifi_easysetup_resource(size_t device)
     wifi_enrollee = NULL;
     OC_DBG("All WiFi device instances removed from memory");
   }
+}
+
+void
+oc_wes_reset_resources(size_t device)
+{
+  OC_DBG("oc_wes_reset_resources : %d", device);
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(device);
+
+  // Initialize WES Resource
+  dev_cxt->wes.data.state = OC_WES_INIT;
+  dev_cxt->wes.data.last_err_code = OC_WES_NO_ERROR;
+  memset(dev_cxt->wes.data.connect, 0, sizeof(dev_cxt->wes.data.connect));
+  dev_cxt->wes.data.num_request = 0;
+  // Initialize WiFi Conf resource
+  oc_new_string(&(dev_cxt->wifi.data.ssid), WES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->wifi.data.cred), WES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->wifi.data.auth_type), WES_NONE, 0);
+  oc_new_string(&(dev_cxt->wifi.data.enc_type), WES_NONE, 0);
 }
 
 #endif //OC_WIFI_EASYSETUP
@@ -1031,7 +1049,7 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
     return;
   }
 
-  // Initiatize EES Resource state
+  // Initiatize EES Resource
   oc_new_string(&(dev_cxt->ees.data.rsp_status), EES_PS_UNDEFINED, 9);
   oc_new_string(&(dev_cxt->ees.data.last_err_reason), EES_EMPTY, 0);
   oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_EMPTY, 0);
@@ -1063,6 +1081,11 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
   oc_resource_set_properties_cbs((oc_resource_t *)dev_cxt->ees.handle, get_ees_properties, user_data,
                                 set_ees_properties, user_data);
 
+  // Initialize RSP Conf Resource
+  oc_new_string(&(dev_cxt->rsp.data.activation_code), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp.data.profile_metadata), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp.data.confirm_code), EES_EMPTY, 0);
+
   //RSP Conf Recource
   oc_core_populate_resource(
     OCF_EES_RSP,
@@ -1081,8 +1104,10 @@ oc_create_esim_easysetup_resource(size_t device, void *user_data)
   dev_cxt->rsp.handle = oc_core_get_resource_by_index(OCF_EES_RSP, device);
   oc_link_t *l1 = oc_new_link(dev_cxt->rsp.handle);
   oc_collection_add_link((oc_resource_t *)dev_cxt->ees.handle, l1);
-  // Initialize Confrmation Code Required to True
-  //dev_cxt->rsp.data.confirm_code_required = true;
+
+ // Initialize RSP Capability resource
+  oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp_cap.data.device_info), EES_EMPTY, 0);
 
   // RSP Capability Conf Resource
   oc_core_populate_resource(
@@ -1149,6 +1174,13 @@ oc_ees_reset_resources(size_t device)
   oc_new_string(&(dev_cxt->ees.data.last_err_code), EES_EMPTY, 0);
   oc_new_string(&(dev_cxt->ees.data.last_err_desc), EES_EMPTY, 0);
   oc_new_string(&(dev_cxt->ees.data.end_user_consent), EES_EUC_UNDEFINED, 9);
+  // Initialize RSP Conf Resource
+  oc_new_string(&(dev_cxt->rsp.data.activation_code), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp.data.profile_metadata), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp.data.confirm_code), EES_EMPTY, 0);
+ // Initialize RSP Capability resource
+  oc_new_string(&(dev_cxt->rsp_cap.data.euicc_info), EES_EMPTY, 0);
+  oc_new_string(&(dev_cxt->rsp_cap.data.device_info), EES_EMPTY, 0);
 
 }
 
