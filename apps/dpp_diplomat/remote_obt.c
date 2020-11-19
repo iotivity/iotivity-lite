@@ -577,7 +577,7 @@ provision_ace2(void)
   pthread_mutex_lock(&app_lock);
   int ret = -1;
   if (self) {
-    PRINT("Self is true\n");
+    OC_DBG("Self is true\n");
     ret = oc_obt_self_provision_ace(ace, provision_ace2_cb, NULL);
   } else {
     ret = oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);

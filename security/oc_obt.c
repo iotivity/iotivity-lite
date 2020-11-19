@@ -802,6 +802,36 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
 }
 /* End of switch dos sequence */
 
+#ifdef OC_SELF_OBT
+/* Helper to internally switch dos state*/
+static bool
+oc_obt_self_dos_transition(oc_dostype_t dos_t) {
+  bool retval = false;
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(0);
+
+  if (dos_t == OC_DOS_RFPRO && ps->s == OC_DOS_RFNOP) {
+    OC_DBG("Transitioning OBT from RFNOP to RFPRO\n");
+    ps->isop = false;
+    ps->s = dos_t;
+    retval = true;
+  }
+  else if (dos_t == OC_DOS_RFNOP && ps->s == OC_DOS_RFPRO) {
+    OC_DBG("Transitioning OBT from RFPRO to RFNOP\n");
+    ps->isop = true;
+    ps->s = dos_t;
+    retval = true;
+  }
+
+  if (retval) {
+    oc_sec_dump_pstat(0);
+  }
+
+  return retval;
+}
+#endif
+
+/* End of Internal dos switch */
+
 /* Hard RESET sequence */
 static void
 free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
@@ -1931,6 +1961,11 @@ int
 oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
                           void *data)
 {
+  /* Self-transition to RFPRO */
+  if (!oc_obt_self_dos_transition(OC_DOS_RFPRO)) {
+    return -1;
+  }
+
   oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
   if (!r) {
     return -1;
@@ -1958,6 +1993,12 @@ oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
   }
 
   oc_sec_dump_acl(0);
+
+  /* Self-transition back to RFNOP */
+  if (!oc_obt_self_dos_transition(OC_DOS_RFNOP)) {
+    return -1;
+  }
+
   oc_list_add(oc_acl2prov_ctx_l, r);
 
   free_acl2prov_ctx(r, 0);
