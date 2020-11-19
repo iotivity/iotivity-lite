@@ -802,6 +802,36 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
 }
 /* End of switch dos sequence */
 
+#ifdef OC_SELF_OBT
+/* Helper to internally switch dos state*/
+static bool
+oc_obt_self_dos_transition(oc_dostype_t dos_t) {
+  bool retval = false;
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(0);
+
+  if (dos_t == OC_DOS_RFPRO && ps->s == OC_DOS_RFNOP) {
+    OC_DBG("Transitioning OBT from RFNOP to RFPRO\n");
+    ps->isop = false;
+    ps->s = dos_t;
+    retval = true;
+  }
+  else if (dos_t == OC_DOS_RFNOP && ps->s == OC_DOS_RFPRO) {
+    OC_DBG("Transitioning OBT from RFPRO to RFNOP\n");
+    ps->isop = true;
+    ps->s = dos_t;
+    retval = true;
+  }
+
+  if (retval) {
+    oc_sec_dump_pstat(0);
+  }
+
+  return retval;
+}
+#endif
+
+/* End of Internal dos switch */
+
 /* Hard RESET sequence */
 static void
 free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
@@ -946,25 +976,6 @@ device1_RFNOP(int status, void *data)
   free_credprov_ctx(p, -1);
 }
 
-#ifdef OC_SELF_OBT
-static void
-device_self_prov_RFNOP(int status, void *data)
-{
-  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    free_credprov_ctx(p, 0);
-  } else {
-    free_credprov_ctx(p, -1);
-  }
-}
-#endif /* OC_SELF_OBT */
-
 static void
 device2_cred(oc_client_response_t *data)
 {
@@ -1027,28 +1038,6 @@ device1_cred(oc_client_response_t *data)
 
   free_credprov_ctx(p, -1);
 }
-
-#ifdef OC_SELF_OBT
-static void
-device_self_prov_cred(oc_client_response_t *data)
-{
-  if (!is_item_in_list(oc_credprov_ctx_l, data->user_data)) {
-    return;
-  }
-
-  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
-
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_credprov_ctx(p, -1);
-    return;
-  }
-
-  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device_self_prov_RFNOP, p);
-  if (!p->switch_dos) {
-    free_credprov_ctx(p, -1);
-  }
-}
-#endif /* OC_SELF_OBT */
 
 static void
 device2_RFPRO(int status, void *data)
@@ -1118,49 +1107,6 @@ device1_RFPRO(int status, void *data)
   }
 }
 
-#ifdef OC_SELF_OBT
-static void
-device_self_prov_RFPRO(int status, void *data)
-{
-  if (!is_item_in_list(oc_credprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    char d2uuid[OC_UUID_LEN];
-    oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
-
-    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &device_self_prov_cred, HIGH_QOS, p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
-
-      oc_rep_set_int(creds, credtype, 1);
-      oc_rep_set_text_string(creds, subjectuuid, d2uuid);
-
-      oc_rep_set_object(creds, privatedata);
-      oc_rep_set_byte_string(privatedata, data, p->key, 16);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-      oc_rep_close_object(creds, privatedata);
-
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
-  }
-
-  free_credprov_state(p, -1);
-}
-#endif /* OC_SELF_OBT */
-
 int
 oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                       oc_obt_status_cb_t cb, void *data)
@@ -1206,71 +1152,6 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
   return 0;
 }
 /* End of provision pair-wise credentials sequence */
-
-#ifdef OC_SELF_OBT
-int
-oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid, oc_obt_status_cb_t cb, void *data)
-{
-
-  oc_credprov_ctx_t *p = oc_memb_alloc(&oc_credprov_ctx_m);
-  if (!p) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid)) {
-    return -1;
-  }
-
-  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
-  oc_device_t *self = oc_obt_get_self_handle();
-  if (!device || !self) {
-    return -1;
-  }
-
-  p->cb.cb = cb;
-  p->cb.data = data;
-  p->device1 = device;
-  p->device2 = self;
-
-  // Generate key and update local cred SVR
-  int i;
-  for (i = 0; i < 4; i++) {
-    unsigned int r = oc_random_value();
-    memcpy(&p->key[i * 4], &r, sizeof(r));
-    i += 4;
-  }
-
-  char suuid[OC_UUID_LEN];
-  oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
-  int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
-                                   OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
-                                   16, p->key, 0, 0, NULL, NULL, NULL);
-
-  if (credid == -1) {
-    return -1;
-  }
-
-  oc_sec_cred_t *oc = oc_sec_get_cred_by_credid(credid, 0);
-  if (oc) {
-    oc->owner_cred = true;
-  }
-
-  oc_sec_dump_cred(0);
-
-  // Now go through the regular POST update for the device's cred resource
-  oc_tls_select_psk_ciphersuite();
-
-  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, device_self_prov_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_credprov_ctx_m, p);
-    return -1;
-  }
-
-  oc_list_add(oc_credprov_ctx_l, p);
-
-  return 0;
-}
-#endif /* OC_SELF_OBT */
 
 #ifdef OC_PKI
 /* Construct list of role ids to encode into a role certificate */
@@ -2080,6 +1961,11 @@ int
 oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
                           void *data)
 {
+  /* Self-transition to RFPRO */
+  if (!oc_obt_self_dos_transition(OC_DOS_RFPRO)) {
+    return -1;
+  }
+
   oc_acl2prov_ctx_t *r = (oc_acl2prov_ctx_t *)oc_memb_alloc(&oc_acl2prov_ctx_m);
   if (!r) {
     return -1;
@@ -2107,6 +1993,12 @@ oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
   }
 
   oc_sec_dump_acl(0);
+
+  /* Self-transition back to RFNOP */
+  if (!oc_obt_self_dos_transition(OC_DOS_RFNOP)) {
+    return -1;
+  }
+
   oc_list_add(oc_acl2prov_ctx_l, r);
 
   free_acl2prov_ctx(r, 0);

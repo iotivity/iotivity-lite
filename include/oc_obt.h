@@ -617,13 +617,6 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
-#ifdef OC_SELF_OBT
-/**
- * Provision pairwise credentials between a device and the OBT itself.
- */
-int oc_obt_self_provision_pairwise_credentials(oc_uuid_t *uuid,
-                                          oc_obt_status_cb_t cb, void *data);
-#endif /* OC_SELF_OBT */
 /**
  * Provision identity certificates
  *
