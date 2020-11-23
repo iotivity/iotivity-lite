@@ -513,8 +513,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   int response_length = oc_rep_get_encoded_payload_size();
   request->response->response_buffer->content_format = APPLICATION_CBOR;
   if (matches && response_length) {
-    request->response->response_buffer->response_length =
-      (uint16_t)response_length;
+    request->response->response_buffer->response_length = response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code =
@@ -708,8 +707,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   int response_length = oc_rep_get_encoded_payload_size();
   request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   if (matches && response_length > 0) {
-    request->response->response_buffer->response_length =
-      (uint16_t)response_length;
+    request->response->response_buffer->response_length = response_length;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code =

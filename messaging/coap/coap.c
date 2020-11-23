@@ -1734,7 +1734,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
   } else
 #endif /* OC_TCP */
   {
-    coap_pkt->payload_len = (uint16_t)MIN((unsigned)OC_BLOCK_SIZE, length);
+    coap_pkt->payload_len = (uint32_t)MIN((unsigned)OC_BLOCK_SIZE, length);
   }
 
   return coap_pkt->payload_len;

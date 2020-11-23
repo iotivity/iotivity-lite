@@ -82,8 +82,7 @@ oc_send_response(oc_request_t *request, oc_status_t response_code)
     request->response->response_buffer->content_format =
       APPLICATION_VND_OCF_CBOR;
   }
-  request->response->response_buffer->response_length =
-    (uint16_t)response_length();
+  request->response->response_buffer->response_length = response_length();
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
@@ -240,7 +239,7 @@ oc_send_response_raw(oc_request_t *request, const uint8_t *payload, size_t size,
 {
   request->response->response_buffer->content_format = content_format;
   memcpy(request->response->response_buffer->buffer, payload, size);
-  request->response->response_buffer->response_length = (uint16_t)size;
+  request->response->response_buffer->response_length = size;
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
@@ -465,7 +464,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
 {
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
-  response_buffer.response_length = (uint16_t)response_length();
+  response_buffer.response_length = response_length();
   response_buffer.code = oc_status_code(response_code);
   response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
