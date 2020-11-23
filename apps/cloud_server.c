@@ -154,8 +154,8 @@ static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "test";
 #endif /* OC_SECURITY */
-oc_resource_t *res1;
-oc_resource_t *res2;
+#define NUM_RESOURCES 512
+oc_resource_t *resources[NUM_RESOURCES];
 
 static void
 cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
@@ -207,7 +207,6 @@ struct light_t
 };
 
 struct light_t light1 = { 0 };
-struct light_t light2 = { 0 };
 
 static void
 get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
@@ -273,27 +272,22 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-  res1 = oc_new_resource(NULL, "/light/1", 1, 0);
-  oc_resource_bind_resource_type(res1, resource_rt);
-  oc_resource_bind_resource_interface(res1, OC_IF_RW);
-  oc_resource_set_default_interface(res1, OC_IF_RW);
-  oc_resource_set_discoverable(res1, true);
-  oc_resource_set_observable(res1, true);
-  oc_resource_set_request_handler(res1, OC_GET, get_handler, &light1);
-  oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
-  oc_cloud_add_resource(res1);
-  oc_add_resource(res1);
-
-  res2 = oc_new_resource(NULL, "/light/2", 1, 0);
-  oc_resource_bind_resource_type(res2, resource_rt);
-  oc_resource_bind_resource_interface(res2, OC_IF_RW);
-  oc_resource_set_default_interface(res2, OC_IF_RW);
-  oc_resource_set_discoverable(res2, true);
-  oc_resource_set_observable(res2, true);
-  oc_resource_set_request_handler(res2, OC_GET, get_handler, &light2);
-  oc_resource_set_request_handler(res2, OC_POST, post_handler, &light2);
-  oc_cloud_add_resource(res2);
-  oc_add_resource(res2);
+  for (int i=0; i< NUM_RESOURCES; ++i) {
+    char buf[128];
+    memset(buf, 0, sizeof(buf));
+    sprintf(buf, "/light/%d", i);
+    resources[i] = oc_new_resource(NULL, buf, 1, 0);
+    oc_resource_t* res = resources[i];
+    oc_resource_bind_resource_type(res, resource_rt);
+    oc_resource_bind_resource_interface(res, OC_IF_RW);
+    oc_resource_set_default_interface(res, OC_IF_RW);
+    oc_resource_set_discoverable(res, true);
+    oc_resource_set_observable(res, true);
+    oc_resource_set_request_handler(res, OC_GET, get_handler, &light1);
+    oc_resource_set_request_handler(res, OC_POST, post_handler, &light1);
+    oc_cloud_add_resource(res);
+    oc_add_resource(res);
+  }
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -403,6 +397,7 @@ main(int argc, char *argv[])
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
                                           register_resources };
+  oc_set_max_app_data_size(1024*256);
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
