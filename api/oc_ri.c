@@ -898,13 +898,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                         uri_query_len);
         }
         response_buffer.buffer = (*response_state)->buffer;
-        response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+        response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
       }
     }
   }
 #else  /* OC_BLOCK_WISE */
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
+  response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
   if (cur_resource && !bad_request) {

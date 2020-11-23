@@ -89,7 +89,7 @@ oc_load_sw(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_swupdate_decode(rep, device);
     oc_free_rep(rep);
   }

@@ -75,7 +75,7 @@ oc_sec_load_doxm(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_doxm(rep, true, device);
     oc_free_rep(rep);
   }
@@ -120,7 +120,7 @@ oc_sec_load_pstat(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_pstat(rep, true, device);
     oc_free_rep(rep);
   }
@@ -166,7 +166,7 @@ oc_sec_load_sp(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_sp(rep, device);
     oc_free_rep(rep);
   }
@@ -239,7 +239,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     if (oc_sec_decode_ecdsa_keypair(rep, device)) {
       OC_DBG("successfully read ECDSA keypair for device %zd", device);
     }
@@ -316,7 +316,7 @@ oc_sec_load_cred(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_cred(rep, NULL, true, false, NULL, device);
     oc_free_rep(rep);
   }
@@ -357,7 +357,7 @@ oc_sec_load_acl(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_acl(rep, true, device);
     oc_free_rep(rep);
   }
@@ -628,7 +628,7 @@ oc_sec_load_sdi(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_decode_sdi(rep, true, device);
     oc_free_rep(rep);
   } else {
@@ -670,7 +670,7 @@ oc_sec_load_ael(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_sec_ael_decode(device, rep, true);
     oc_free_rep(rep);
   }
