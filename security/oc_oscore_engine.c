@@ -69,6 +69,8 @@ oc_oscore_recv_message(oc_message_t *message)
    *   Parse OSCORE message
    *   If parse unsuccessful:
    *     Discard message and return error
+   *   If packet is a request and is received over UDP:
+   *     Check if packet is duplicate by mid; if so, discard
    *   If received kid param:
    *     Search for OSCORE context by kid
    *   Else:
@@ -77,6 +79,8 @@ oc_oscore_recv_message(oc_message_t *message)
    *     Else:
    *       OSCORE request lacks kid param; Return error
    *   If OSCORE context is nil, return error
+   *   If unicast message protected using group OSCORE context, silently ignore
+   *   Copy subjectuuid of OSCORE cred entry into oc_message_t->endpoint
    *   Set context->recvkey as the decryption key
    *   If received partial IV:
    *     If message is request:
@@ -92,6 +96,8 @@ oc_oscore_recv_message(oc_message_t *message)
    *     Compose AAD using request_piv and sendid
    *   Decrypt OSCORE payload
    *   Parse inner/protected CoAP options/payload
+   *   If non-UPDATE mcast message protected using OSCORE group context,
+   silently ignore
    *   Copy fields: type, version, mid, token, observe from the OSCORE packet to
    *   CoAP Packet
    *   Serialize full CoAP packet to oc_message
