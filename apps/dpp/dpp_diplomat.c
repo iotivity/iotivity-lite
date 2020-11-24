@@ -66,7 +66,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    if (strlen(t) == 10 && strncmp(t, "obt.remote", 10) == 0) {
+    if (strlen(t) == 10 && strncmp(t, "obt.dpp", 10) == 0) {
       oc_endpoint_list_copy(&obt_server, endpoint);
       strncpy(obt, uri, uri_len);
       obt[uri_len] = '\0';
@@ -89,8 +89,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-  PRINT("Discovering remote onboarding tool\n");
-  oc_do_ip_discovery("obt.remote", &discovery, NULL);
+  PRINT("Discovering dpp onboarding tool\n");
+  oc_do_ip_discovery("obt.dpp", &discovery, NULL);
 }
 
 static void
@@ -134,7 +134,7 @@ static void
 get_uuid_input(void)
 {
   if (obt_server == NULL) {
-    PRINT("No remote onboarding tool discovered\n");
+    PRINT("No dpp onboarding tool discovered\n");
     return;
   }
   char uuid_input[OC_UUID_LEN];
@@ -162,7 +162,7 @@ static void
 poll_for_uuid(void)
 {
   if (obt_server == NULL) {
-    PRINT("No remote onboarding tool discovered\n");
+    PRINT("No dpp onboarding tool discovered\n");
     return;
   }
 
@@ -262,7 +262,7 @@ main(void)
         pthread_mutex_lock(&app_lock);
         if (obt_server != NULL)
           oc_free_server_endpoints(obt_server);
-        oc_do_ip_discovery("obt.remote", &discovery, NULL);
+        oc_do_ip_discovery("obt.dpp", &discovery, NULL);
         pthread_mutex_unlock(&app_lock);
         break;
       case 2:

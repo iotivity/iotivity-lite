@@ -704,7 +704,7 @@ post_obt(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       }
 
       if (i >= MAX_REMOTE_ONBOARDING) {
-        OC_ERR("Max number of remote onboarding threads in use\n");
+        OC_ERR("Max number of dpp onboarding threads in use\n");
         retval = OC_STATUS_INTERNAL_SERVER_ERROR;
         break;
       }
@@ -742,7 +742,7 @@ register_resources(void)
 {
   PRINT("Register Resource with local path \"/onboardreq\"\n");
   oc_resource_t *res_onboard = oc_new_resource(NULL, "/onboardreq", 1, 0);
-  oc_resource_bind_resource_type(res_onboard, "obt.remote");
+  oc_resource_bind_resource_type(res_onboard, "obt.dpp");
   oc_resource_bind_resource_interface(res_onboard, OC_IF_RW);
   oc_resource_set_default_interface(res_onboard, OC_IF_RW);
   oc_resource_set_discoverable(res_onboard, true);
@@ -772,7 +772,7 @@ main(void)
                                         .register_resources = register_resources,
                                         .requests_entry = issue_requests };
 #ifdef OC_STORAGE
-  oc_storage_config("./remote_onboarding_tool_creds");
+  oc_storage_config("./dpp_onboarding_tool_creds");
 #endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);
