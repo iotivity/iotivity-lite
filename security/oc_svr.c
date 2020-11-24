@@ -61,14 +61,14 @@ oc_sec_create_svr(void)
                               post_cred, delete_cred, 1, "oic.r.cred");
     oc_core_populate_resource(
       OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
-      OC_DISCOVERABLE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
+      OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
 
     oc_core_populate_resource(
       OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
     oc_core_populate_resource(
       OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_RW,
-      OC_DISCOVERABLE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
+      OC_DISCOVERABLE | OC_SECURE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
 #ifdef OC_PKI
     oc_core_populate_resource(
       OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,

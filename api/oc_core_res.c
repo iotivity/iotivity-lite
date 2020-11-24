@@ -532,6 +532,7 @@ oc_core_get_resource_by_index(int type, size_t device)
   return &core_resources[OCF_D * device + type];
 }
 
+#ifdef OC_SECURITY
 bool
 oc_core_is_SVR(oc_resource_t *resource, size_t device)
 {
@@ -546,6 +547,7 @@ oc_core_is_SVR(oc_resource_t *resource, size_t device)
 
   return false;
 }
+#endif /* OC_SECURITY */
 
 bool
 oc_core_is_DCR(oc_resource_t *resource, size_t device)

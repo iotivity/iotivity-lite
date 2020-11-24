@@ -37,6 +37,7 @@
 #include "oc_endpoint.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_pstat.h"
 #include "security/oc_sdi.h"
 #endif
 
@@ -51,6 +52,11 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   if (!(resource->properties & OC_DISCOVERABLE)) {
     return false;
   }
+
+#ifdef OC_SECURITY
+  bool owned_for_SVRs = (oc_core_is_SVR(resource, device_index) &&
+                         ((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM));
+#endif /* OC_SECURITY */
 
   oc_rep_start_object(links, link);
 
@@ -99,7 +105,12 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
      *  through which this request arrived. This is achieved by checking if the
      *  interface index matches.
      */
-    if ((resource->properties & OC_SECURE && !(eps->flags & SECURED)) ||
+    if (((resource->properties & OC_SECURE
+#ifdef OC_SECURITY
+          || owned_for_SVRs
+#endif /* OC_SECURITY */
+          ) &&
+         !(eps->flags & SECURED)) ||
         (request->origin && request->origin->interface_index != -1 &&
          request->origin->interface_index != eps->interface_index)) {
       goto next_eps;
