@@ -1,5 +1,6 @@
 /**
- * OCF onboarding tool that can be remotely invoked by an authorized device.
+ * OCF onboarding tool that can be remotely invoked by an authorized (diplomat)
+ * device.
  */
 
 #include "oc_api.h"

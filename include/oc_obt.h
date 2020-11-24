@@ -935,6 +935,51 @@ int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
 #ifdef OC_SELF_OBT
 /**
  * Provision ACE to OBT itself.
+ *
+ * Example:
+ * ```
+ * static void
+ * provision_self_ace2_cb(oc_uuid_t *uuid, int status, void *data)
+ * {
+ *   char di[OC_UUID_LEN];
+ *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+ *   if (status >= 0) {
+ *     printf("Successfully provisioned ACE to device %s\n", di);
+ *   } else {
+ *     printf("ERROR provisioning ACE to device %s\n", di);
+ *   }
+ * }
+ *
+ * oc_sec_ace_t *ace = NULL;
+ * ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+ * oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+ *
+ * if (!res) {
+ *   printf("ERROR: Could not allocate new resource for ACE\n");
+ *   oc_obt_free_ace(ace);
+ *   return;
+ * }
+ * oc_obt_ace_resource_set_wc(res, OC_ACE_WC_ALL);
+ * oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+ *                                OC_PERM_NOTIFY);
+ * int ret = oc_obt_self_provision_ace(ace, provision_self_ace2_cb, NULL);
+ * if (ret >= 0) {
+ *   printf("Successfully issued request to provision ACE\n");
+ * } else {
+ *   printf("ERROR issuing request to provision ACE\n");
+ * }
+ * ```
+ *
+ * @param[in] ace the ACE being self-added to the OBT
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               provisioning
+ * @param[in] data context pointer that is passed to the oc_obt_status_cb_t. The
+ *                 pointer must remain valid till the end of the
+ *                 oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
  */
 int oc_obt_self_provision_ace(oc_sec_ace_t *ace, oc_obt_device_status_cb_t cb,
                               void *data);
