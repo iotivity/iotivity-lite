@@ -2,14 +2,14 @@ include Makefile
 
 CC = gcc
 
-DPP_OBT = remote_onboarding_tool
+DPP_OBT = dpp_onboarding_tool
 SAMPLES += ${DPP_OBT} dpp_diplomat
 SAMPLES_CREDS += ${DPP_OBT}_creds dpp_diplomat_creds
 
-${DPP_OBT}: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/dpp_diplomat/remote_obt.c
+${DPP_OBT}: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/dpp/dpp_obt.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/dpp_diplomat/remote_obt.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
+	${CC} -o $@ ../../apps/dpp/dpp_obt.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
 
-dpp_diplomat: libiotivity-lite-client.a $(ROOT_DIR)/apps/dpp_diplomat/dpp_diplomat.c
+dpp_diplomat: libiotivity-lite-client.a $(ROOT_DIR)/apps/dpp/dpp_diplomat.c
 	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/dpp_diplomat/dpp_diplomat.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+	${CC} -o $@ ../../apps/dpp/dpp_diplomat.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
