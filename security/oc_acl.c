@@ -322,6 +322,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #endif /* OC_DEBUG */
 
   bool is_DCR = oc_core_is_DCR(resource, resource->device);
+  bool is_SVR = oc_core_is_SVR(resource, resource->device);
   bool is_public = ((resource->properties & OC_SECURE) == 0);
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
@@ -391,12 +392,13 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
        pstat->s == OC_DOS_SRESET) &&
       !(endpoint->flags & SECURED)) {
-    /* anonp-clear requests to /oic/sec/doxm while the
+    /* anonp-clear requests to SVRs while the
      * dos is RFPRO, RFNOP or SRESET should not be authorized
      * regardless of the ACL configuration.
      */
-    if (oc_string_len(resource->uri) == 13 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+    if (is_SVR) {
+      OC_DBG("oc_sec_check_acl: anon-clear access to SVRs in RFPRO, RFNOP and "
+             "SRESET is prohibited");
       return false;
     }
   }
@@ -488,7 +490,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #endif /* OC_PKI */
   }
 
-  if (endpoint->flags & SECURED) {
+  /* Access to SVRs via auth-crypt ACEs is prohibited */
+  if (!is_SVR && endpoint->flags & SECURED) {
     oc_ace_subject_t _auth_crypt;
     memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
     _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
@@ -504,20 +507,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     } while (match);
   }
 
-  oc_ace_subject_t _anon_clear;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-  do {
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
-                                    endpoint->device);
-    if (match) {
-      permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
-      OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
-             "connection",
-             permission);
-    }
-  } while (match);
-
+  /* Access to SVRs via anon-clear ACEs is prohibited */
+  if (!is_SVR) {
+    oc_ace_subject_t _anon_clear;
+    memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
+    _anon_clear.conn = OC_CONN_ANON_CLEAR;
+    do {
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1,
+                                      0, endpoint->device);
+      if (match) {
+        permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
+        OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
+               "connection",
+               permission);
+      }
+    } while (match);
+  }
   if (permission != 0) {
     switch (method) {
     case OC_GET:
