@@ -137,6 +137,11 @@ ifeq ($(CLOUD),1)
 	SAMPLES += cloud_client cloud_server cloud_tests
 endif
 
+ifeq ($(DPP),1)
+	SELF_OBT=1
+	SAMPLES += dpp_diplomat dpp_onboarding_tool
+endif
+
 OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
@@ -401,6 +406,14 @@ cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c c
 cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+
+dpp_diplomat: libiotivity-lite-client.a $(ROOT_DIR)/apps/dpp/dpp_diplomat.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/dpp/dpp_diplomat.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+dpp_onboarding_tool: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/dpp/dpp_obt.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/dpp/dpp_obt.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
 
 ${OBT}: libiotivity-lite-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
 	@mkdir -p $@_creds
