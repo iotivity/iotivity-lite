@@ -1827,15 +1827,14 @@ assert_all_roles_internal(oc_client_response_t *data)
 
 static void
 read_application_data_tcp(oc_tls_peer_t *peer){
-  while(true) {
-    // sometimes post notifications doesn't wake so we try to pocess all events in read_q.
-    if (peer->processed_recv_message == NULL) {
-      peer->processed_recv_message = oc_allocate_message();
-      if (peer->processed_recv_message) {
-        peer->processed_recv_message->encrypted = 0;
-        memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
-      }
+  if (peer->processed_recv_message == NULL) {
+    peer->processed_recv_message = oc_allocate_message();
+    if (peer->processed_recv_message) {
+      peer->processed_recv_message->encrypted = 0;
+      memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
     }
+  }
+  while(true) {
     if (peer->processed_recv_message) {
       size_t want_read = 0;
       size_t total_length = 0;
@@ -1843,6 +1842,12 @@ read_application_data_tcp(oc_tls_peer_t *peer){
         want_read = DEFAULT_RECEIVE_SIZE - peer->processed_recv_message->length;
       } else {
         total_length = coap_tcp_get_packet_size(peer->processed_recv_message->data);
+        if (total_length > (size_t)OC_PDU_SIZE) {
+          OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu size(%ld)",
+               total_length, OC_PDU_SIZE);
+          oc_tls_free_peer(peer, false);
+          return;
+        }
         want_read = total_length - peer->processed_recv_message->length;
       }
       OC_DBG("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
