@@ -99,7 +99,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
      *  through which this request arrived. This is achieved by checking if the
      *  interface index matches.
      */
-    if ((resource->properties & OC_SECURE && !(eps->flags & SECURED)) ||
+    if (((resource->properties & OC_SECURE) && !(eps->flags & SECURED)) ||
         (request->origin && request->origin->interface_index != -1 &&
          request->origin->interface_index != eps->interface_index)) {
       goto next_eps;
@@ -661,6 +661,33 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   int matches = 0;
   size_t device = request->resource->device;
 
+  //for dev without SVRs, ignore queries for backward compatibility
+#ifdef OC_SECURITY
+  char *q;
+  int ql = oc_get_query_value(request, "sduuid", &q);
+  if (ql > 0) {
+    oc_sec_sdi_t *s = oc_sec_get_sdi(device);
+    if (s->priv) {
+      oc_ignore_request(request);
+      OC_DBG("private sdi");
+      return;
+    } else {
+      char uuid[OC_UUID_LEN];
+      oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
+      if(ql != (OC_UUID_LEN - 1)) {
+        oc_ignore_request(request);
+        OC_DBG("uuid mismatch: ql %d", ql);
+        return;
+      }
+      if (strncasecmp(q, uuid, OC_UUID_LEN - 1) != 0) {
+        oc_ignore_request(request);
+        OC_DBG("uuid mismatch: %s", uuid);
+        return;
+      }
+    }
+  }
+#endif
+
   switch (iface_mask) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
@@ -689,7 +716,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 #ifdef OC_SECURITY
     oc_sec_sdi_t *s = oc_sec_get_sdi(device);
     if (!s->priv) {
-      char uuid[37];
+      char uuid[OC_UUID_LEN];
       oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
       oc_rep_set_text_string(root, sduuid, uuid);
       oc_rep_set_text_string(root, sdname, oc_string(s->name));
