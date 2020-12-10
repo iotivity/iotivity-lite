@@ -392,7 +392,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
        pstat->s == OC_DOS_SRESET) &&
       !(endpoint->flags & SECURED)) {
-    /* anonp-clear requests to SVRs while the
+    /* anon-clear requests to SVRs while the
      * dos is RFPRO, RFNOP or SRESET should not be authorized
      * regardless of the ACL configuration.
      */
