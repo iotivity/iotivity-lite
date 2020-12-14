@@ -1621,6 +1621,8 @@ oc_connectivity_shutdown(size_t device)
     OC_WRN("cannot wakeup network thread");
   }
 
+  pthread_join(dev->event_thread, NULL);
+
   close(dev->server_sock);
   close(dev->mcast_sock);
 
@@ -1639,8 +1641,6 @@ oc_connectivity_shutdown(size_t device)
 #ifdef OC_TCP
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
-
-  pthread_join(dev->event_thread, NULL);
 
   close(dev->shutdown_pipe[1]);
   close(dev->shutdown_pipe[0]);

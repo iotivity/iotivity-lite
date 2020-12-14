@@ -1,0 +1,71 @@
+diff --git a/src/api/sockets.c b/src/api/sockets.c
+index e807825b..982c7d4d 100644
+--- a/src/api/sockets.c
++++ b/src/api/sockets.c
+@@ -1235,6 +1235,22 @@ lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16
+           msg->msg_flags |= MSG_CTRUNC;
+         }
+ #endif /* LWIP_IPV4 */
++      } else if (IP_IS_V6(&buf->toaddr)) {
++#if LWIP_IPV6
++        if (msg->msg_controllen >= CMSG_SPACE(sizeof(struct in6_pktinfo))) {
++          struct cmsghdr *chdr = CMSG_FIRSTHDR(msg); /* This will always return a header!! */
++          struct in6_pktinfo *pkti = (struct in6_pktinfo *)CMSG_DATA(chdr);
++          chdr->cmsg_level = IPPROTO_IPV6;
++          chdr->cmsg_type = IPV6_PKTINFO;
++          chdr->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
++          pkti->ipi6_ifindex = buf->p->if_idx;
++          inet6_addr_from_ip6addr(&pkti->ipi6_addr, ip_2_ip6(netbuf_destaddr(buf)));
++          msg->msg_controllen = CMSG_SPACE(sizeof(struct in6_pktinfo));
++          wrote_msg = 1;
++        } else {
++          msg->msg_flags |= MSG_CTRUNC;
++        }
++#endif /* LWIP_IPV6 */
+       }
+     }
+ #endif /* LWIP_NETBUF_RECVINFO */
+@@ -3789,6 +3805,16 @@ lwip_setsockopt_impl(int s, int level, int optname, const void *optval, socklen_
+         }
+         break;
+ #endif /* LWIP_IPV6_MLD */
++#if LWIP_NETBUF_RECVINFO
++        case IPV6_RECVPKTINFO:
++          LWIP_SOCKOPT_CHECK_OPTLEN_CONN_PCB_TYPE(sock, optlen, int, NETCONN_UDP);
++          if (*(const int *)optval) {
++            sock->conn->flags |= NETCONN_FLAG_PKTINFO;
++          } else {
++            sock->conn->flags &= ~NETCONN_FLAG_PKTINFO;
++          }
++          break;
++#endif /* LWIP_NETBUF_RECVINFO */
+         default:
+           LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_IPV6, UNIMPL: optname=0x%x, ..)\n",
+                                       s, optname));
+diff --git a/src/include/lwip/sockets.h b/src/include/lwip/sockets.h
+index f342d8a5..925ef4dd 100644
+--- a/src/include/lwip/sockets.h
++++ b/src/include/lwip/sockets.h
+@@ -289,6 +289,8 @@ struct linger {
+  */
+ #define IPV6_CHECKSUM       7  /* RFC3542: calculate and insert the ICMPv6 checksum for raw sockets. */
+ #define IPV6_V6ONLY         27 /* RFC3493: boolean control to restrict AF_INET6 sockets to IPv6 communications only. */
++#define IPV6_RECVPKTINFO    49 /* RFC3542: enables the receiving of ancillary data via setsockopt() */
++#define IPV6_PKTINFO        50 /* RFC3542: ancillary data in recvmsg() received */
+ #endif /* LWIP_IPV6 */
+ 
+ #if LWIP_UDP && LWIP_UDPLITE
+@@ -329,6 +331,13 @@ struct in_pktinfo {
+ };
+ #endif /* LWIP_IPV4 */
+ 
++#if LWIP_IPV6
++struct in6_pktinfo {
++  unsigned int    ipi6_ifindex;  /* Interface index */
++  struct in6_addr ipi6_addr;     /* Destination (from header) address */
++};
++#endif /* LWIP_IPV6 */
++
+ #if LWIP_IPV6_MLD
+ /*
+  * Options and types related to IPv6 multicast membership
