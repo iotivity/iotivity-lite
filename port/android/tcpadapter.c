@@ -695,6 +695,16 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif /* OC_IPV4 */
 
+static int
+set_nonblock_socket(int sockfd) {
+  int flags = fcntl(sockfd, F_GETFL, 0);
+  if (flags < 0) {
+    return -1;
+  }
+
+  return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+}
+
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
 {
@@ -765,6 +775,11 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 
   if (pipe(dev->tcp.connect_pipe) < 0) {
     OC_ERR("Could not initialize connection pipe");
+    return -1;
+  }
+  if (set_nonblock_socket(dev->tcp.connect_pipe[0]) < 0) {
+    OC_ERR("Could not set non-block connect_pipe[0]");
+    return -1;
   }
 
   OC_DBG("=======tcp port info.========");
