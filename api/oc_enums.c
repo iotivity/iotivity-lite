@@ -190,7 +190,7 @@ oc_locn_t
 oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined)
 {
   oc_locn_t locn = OCF_LOCN_UNKNOWN;
-  for (int i = 0; i < (sizeof(oc_locns) / sizeof(char *)); i++) {
+  for (int i = 0; i < (int)(sizeof(oc_locns) / sizeof(char *)); i++) {
     if (strcmp(oc_string(locn_str), oc_locns[i]) == 0) {
       locn = i + 1;
       *oc_defined = true;
