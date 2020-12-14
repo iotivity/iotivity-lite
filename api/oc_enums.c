@@ -16,7 +16,6 @@
 
 #include <stdio.h>
 #include "oc_enums.h"
-#include "oc_log.h"
 
 static const char *pos_desc[] = { "unknown",     "top",         "bottom",
                                   "left",        "right",       "centre",
