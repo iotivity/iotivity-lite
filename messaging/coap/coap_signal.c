@@ -227,7 +227,7 @@ handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint)
       // TODO: max-message-size, blockwise_transfer handling
       return COAP_NO_ERROR;
     } else if (state == CSM_NONE) {
-      coap_send_csm_message(endpoint, OC_PDU_SIZE, 0);
+      coap_send_csm_message(endpoint, OC_MAX_APP_DATA_SIZE, 0);
     }
     oc_tcp_update_csm_state(endpoint, CSM_DONE);
   } else if (coap_pkt->code == PING_7_02) {
