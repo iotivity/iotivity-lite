@@ -121,8 +121,8 @@ struct oc_separate_response_s
 typedef struct oc_response_buffer_s
 {
   uint8_t *buffer;
-  uint16_t buffer_size;
-  uint16_t response_length;
+  size_t buffer_size;
+  size_t response_length;
   int code;
 } oc_response_buffer_t;
 

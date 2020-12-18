@@ -235,7 +235,7 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)size, &rep);
+    oc_parse_rep(buf, (int)size, &rep);
     ret = cloud_store_decode(rep, store);
     oc_rep_set_pool(&rep_objects); // Reset representation pool
     oc_free_rep(rep);

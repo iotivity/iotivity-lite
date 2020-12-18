@@ -1,0 +1,150 @@
+From 5f1aabf14204e531f4ac9597873a862c3f4efcd9 Mon Sep 17 00:00:00 2001
+From: Kishen Maloor <kishen.maloor@intel.com>
+Date: Tue, 15 Oct 2019 14:40:08 +0300
+Subject: [PATCH 3/5] ocf C99
+
+---
+ include/mbedtls/x509_crt.h |  4 ++--
+ library/x509_crt.c         | 34 +++++++++++++++++-----------------
+ library/x509write_crt.c    |  6 +++---
+ 3 files changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/include/mbedtls/x509_crt.h b/include/mbedtls/x509_crt.h
+index 576234699..5141fa7f5 100644
+--- a/include/mbedtls/x509_crt.h
++++ b/include/mbedtls/x509_crt.h
+@@ -85,11 +85,11 @@ typedef enum
+ typedef struct mbedtls_x509_general_name
+ {
+     mbedtls_x509_general_name_choice name_type;
+-    union
++    union name
+     {
+         mbedtls_x509_buf dns_name;
+         mbedtls_x509_name *directory_name;
+-    };
++    } name;
+ } mbedtls_x509_general_name;
+ 
+ typedef struct mbedtls_x509_general_names
+diff --git a/library/x509_crt.c b/library/x509_crt.c
+index 9135c99b1..d214f4b58 100644
+--- a/library/x509_crt.c
++++ b/library/x509_crt.c
+@@ -702,9 +702,9 @@ static int x509_get_subject_alt_name( unsigned char **p,
+         {
+         case ( MBEDTLS_ASN1_CONTEXT_SPECIFIC | 2 ): /* dNSName */
+             general_name.name_type = MBEDTLS_X509_GENERALNAME_DNSNAME;
+-            general_name.dns_name.tag = tag;
+-            general_name.dns_name.p = *p;
+-            general_name.dns_name.len = tag_len;
++            general_name.name.dns_name.tag = tag;
++            general_name.name.dns_name.p = *p;
++            general_name.name.dns_name.len = tag_len;
+             *p += tag_len;
+             break;
+         case ( MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 4 ): /* directoryName */
+@@ -712,10 +712,10 @@ static int x509_get_subject_alt_name( unsigned char **p,
+             if( ( ret = mbedtls_asn1_get_tag( p, end, &name_len,
+                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
+                 return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS + ret );
+-            general_name.directory_name = mbedtls_calloc( 1, sizeof( mbedtls_x509_name ) );
+-            if ( general_name.directory_name == NULL )
++            general_name.name.directory_name = mbedtls_calloc( 1, sizeof( mbedtls_x509_name ) );
++            if ( general_name.name.directory_name == NULL )
+                 return( MBEDTLS_ERR_X509_ALLOC_FAILED );
+-            if( ( ret = mbedtls_x509_get_name( p, *p + name_len, general_name.directory_name ) ) != 0 )
++            if( ( ret = mbedtls_x509_get_name( p, *p + name_len, general_name.name.directory_name ) ) != 0 )
+                 return( MBEDTLS_ERR_X509_INVALID_EXTENSIONS + ret );
+             break;
+         default:
+@@ -1514,7 +1514,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+         switch ( cur->general_name.name_type )
+         {
+         case MBEDTLS_X509_GENERALNAME_DNSNAME:
+-            i = cur->general_name.dns_name.len + sep_len;
++            i = cur->general_name.name.dns_name.len + sep_len;
+ 
+             if( i >= n )
+             {
+@@ -1525,8 +1525,8 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+             n -= i;
+             for( i = 0; i < sep_len; i++ )
+                 *p++ = sep[i];
+-            for( i = 0; i < cur->general_name.dns_name.len; i++ )
+-                *p++ = cur->general_name.dns_name.p[i];
++            for( i = 0; i < cur->general_name.name.dns_name.len; i++ )
++                *p++ = cur->general_name.name.dns_name.p[i];
+ 
+             break;
+ 
+@@ -1544,7 +1544,7 @@ static int x509_info_subject_alt_name( char **buf, size_t *size,
+             for( i = 0; i < LABEL_LEN( x509_directory_name_label ); i++ )
+                 *p++ = x509_directory_name_label[i];
+ 
+-            ret = mbedtls_x509_dn_gets( p, n, cur->general_name.directory_name );
++            ret = mbedtls_x509_dn_gets( p, n, cur->general_name.name.directory_name );
+             if( ret < 0 || ( (size_t) ret ) >= n )
+             {
+                 *p = '\0';
+@@ -2637,13 +2637,13 @@ static void x509_crt_verify_name( const mbedtls_x509_crt *crt,
+ 	    /* Only consider dNSName subject alternative names for this check; ignore other types. */
+ 	    if ( cur->general_name.name_type == MBEDTLS_X509_GENERALNAME_DNSNAME )
+ 	    {
+-	        if ( cur->general_name.dns_name.len == cn_len &&
+-		     x509_memcasecmp( cn, cur->general_name.dns_name.p, cn_len ) == 0 )
++	        if ( cur->general_name.name.dns_name.len == cn_len &&
++		     x509_memcasecmp( cn, cur->general_name.name.dns_name.p, cn_len ) == 0 )
+ 		  break;
+ 
+-	         if ( cur->general_name.dns_name.len > 2 &&
+-		      memcmp( cur->general_name.dns_name.p, "*.", 2 ) == 0 &&
+-		      x509_check_wildcard( cn, &cur->general_name.dns_name ) == 0 )
++	         if ( cur->general_name.name.dns_name.len > 2 &&
++		      memcmp( cur->general_name.name.dns_name.p, "*.", 2 ) == 0 &&
++		      x509_check_wildcard( cn, &cur->general_name.name.dns_name ) == 0 )
+ 	         {
+ 		   break;
+ 		 }
+@@ -2884,7 +2884,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+ #if defined(MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT)
+         if ( cert_cur->subject_alt_names.general_name.name_type == MBEDTLS_X509_GENERALNAME_DIRECTORYNAME )
+         {
+-            name_cur = cert_cur->subject_alt_names.general_name.directory_name;
++            name_cur = cert_cur->subject_alt_names.general_name.name.directory_name;
+             while ( name_cur != NULL )
+             {
+                 name_prv = name_cur;
+@@ -2900,7 +2900,7 @@ void mbedtls_x509_crt_free( mbedtls_x509_crt *crt )
+             san_cur = san_cur->next;
+             if ( san_prv->general_name.name_type == MBEDTLS_X509_GENERALNAME_DIRECTORYNAME )
+             {
+-                name_cur = san_prv->general_name.directory_name;
++                name_cur = san_prv->general_name.name.directory_name;
+                 while ( name_cur != NULL )
+                 {
+                     name_prv = name_cur;
+diff --git a/library/x509write_crt.c b/library/x509write_crt.c
+index 3ac915599..b3569764b 100644
+--- a/library/x509write_crt.c
++++ b/library/x509write_crt.c
+@@ -343,13 +343,13 @@ static int x509write_crt_set_subject_alt_name( unsigned char **c, unsigned char
+     switch ( name->name_type )
+     {
+     case MBEDTLS_X509_GENERALNAME_DNSNAME:
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_raw_buffer( c, buf, name->dns_name.p, name->dns_name.len ) );
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, name->dns_name.len ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_raw_buffer( c, buf, name->name.dns_name.p, name->name.dns_name.len ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, name->name.dns_name.len ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( c, buf, MBEDTLS_ASN1_CONTEXT_SPECIFIC | 2 ) );
+         break;
+ 
+     case MBEDTLS_X509_GENERALNAME_DIRECTORYNAME:
+-        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_names( c, buf, name->directory_name ) );
++        MBEDTLS_ASN1_CHK_ADD( len, mbedtls_x509_write_names( c, buf, name->name.directory_name ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_len( c, buf, len ) );
+         MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_tag( c, buf,
+                                    MBEDTLS_ASN1_CONTEXT_SPECIFIC | MBEDTLS_ASN1_CONSTRUCTED | 4 ) );
+-- 
+2.19.2.windows.1
+

@@ -13,40 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+#include "port/oc_random.h"
+#include "esp_system.h"
 
-#ifndef OC_COAP_H
-#define OC_COAP_H
-
-#include "separate.h"
-#include "util/oc_list.h"
-#include "oc_ri.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct oc_separate_response_s
+void oc_random_init(void)
 {
-  OC_LIST_STRUCT(requests);
-  int active;
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buffer;
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-};
-
-struct oc_response_buffer_s
-{
-  uint8_t *buffer;
-  size_t buffer_size;
-  size_t response_length;
-  int code;
-  oc_content_format_t content_format;
-};
-
-#ifdef __cplusplus
+  //urandom_fd = open("/dev/urandom", O_RDONLY);
 }
-#endif
 
-#endif /* OC_COAP_H */
+unsigned int
+oc_random_value(void)
+{
+  unsigned int rand = 0;
+  rand = (unsigned int)esp_random();
+  return rand;
+}
+
+void oc_random_destroy(void)
+{
+  //close(urandom_fd);
+}

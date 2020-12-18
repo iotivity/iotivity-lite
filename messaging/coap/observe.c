@@ -442,7 +442,7 @@ coap_notify_collection_baseline(oc_collection_t *collection)
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -478,7 +478,7 @@ coap_notify_collection_batch(oc_collection_t *collection)
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -514,7 +514,7 @@ coap_notify_collection_links_list(oc_collection_t *collection)
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -553,7 +553,7 @@ coap_notify_collections(oc_resource_t *resource)
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+  response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -669,7 +669,7 @@ coap_notify_observers(oc_resource_t *resource,
       OC_DBG("coap_notify_observers: Issue GET request to resource %s\n\n",
              oc_string(resource->uri));
       response_buffer.buffer = buffer;
-      response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+      response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
       response.response_buffer = &response_buffer;
       request.resource = resource;
       request.response = &response;
