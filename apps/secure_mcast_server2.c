@@ -48,7 +48,7 @@ retrieve_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_process_baseline_interface(request->resource);
   /* fall through */
   case OC_IF_RW:
-    oc_rep_set_boolean(root, state, light_state);
+    oc_rep_set_boolean(root, value, light_state);
     break;
   default:
     break;
