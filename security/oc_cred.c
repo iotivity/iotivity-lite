@@ -809,7 +809,9 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
       if (cr->credtype != OC_CREDTYPE_OSCORE) {
         oc_rep_set_text_string(oscore, desc, oc_string(oscore_ctx->desc));
       }
-      oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
+        oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
+      }
       oc_rep_close_object(creds, oscore);
     }
 #endif /* OC_OSCORE */
