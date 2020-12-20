@@ -226,12 +226,83 @@ wificonf_get_handler(oc_request_t *request, oc_interface_mask_t interface, void 
 }
 
 static void
-wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+set_wificonf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(resource->device);
 
+  if (oc_rep_get_string(rep, OC_RSRVD_WES_SSID, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
+    res_changed = true;
+  }
+
+  str_val = NULL;
+  str_len = 0;
+  if (oc_rep_get_string(rep, OC_RSRVD_WES_CRED, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.cred), str_val, str_len);
+    res_changed = true;
+  }
+
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  if (oc_rep_get_string(rep, OC_RSRVD_WES_AUTHTYPE, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.auth_type), str_val, str_len);
+    res_changed = true;
+  }
+
+  if (oc_rep_get_string(rep, OC_RSRVD_WES_ENCTYPE, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->wifi.data.enc_type), str_val, str_len);
+    res_changed = true;
+  }
+
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  oc_rep_set_array(root, swmt);
+  for (int i = 0; i < dev_cxt->wifi.data.num_mode; i++) {
+    oc_rep_add_text_string(swmt, oc_string(dev_cxt->wifi.data.supported_mode[i]));
+  }
+  oc_rep_close_array(root, swmt);
+
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  oc_rep_set_array(root, swf);
+  for (int i = 0; i < dev_cxt->wifi.data.num_freq; i++) {
+    oc_rep_add_text_string(swf, oc_string(dev_cxt->wifi.data.supported_freq[i]));
+  }
+  oc_rep_close_array(root, swf);
+
+  oc_rep_set_text_string(root, tnn, oc_string(dev_cxt->wifi.data.ssid));
+  oc_rep_set_text_string(root, cd, oc_string(dev_cxt->wifi.data.cred));
+
+  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
+  oc_rep_set_text_string(root, wat, oc_string(dev_cxt->wifi.data.auth_type));
+  oc_rep_set_text_string(root, wet, oc_string(dev_cxt->wifi.data.enc_type));
+
+  // new properties in OCF 1.3 - swat and swet.
+  oc_rep_set_array(root, swat);
+  for (int i = 0; i < dev_cxt->wifi.data.num_supported_authtype; i++) {
+    oc_rep_add_text_string(swat, oc_string(dev_cxt->wifi.data.supported_authtype[i]));
+  }
+  oc_rep_close_array(root, swat);
+
+  oc_rep_set_array(root, swet);
+  for (int i = 0; i < dev_cxt->wifi.data.num_supported_enctype; i++) {
+    oc_rep_add_text_string(swet, oc_string(dev_cxt->wifi.data.supported_enctype[i]));
+  }
+  oc_rep_close_array(root, swet);
+
+  if (res_changed && dev_cxt->wifi.prov_cb) {
+    // Trigger provisioning callback
+    dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data), user_data);
+  }
+}
+
+static void
+wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
   OC_DBG("wificonf_post_handler %d\n", interface);
 
   if (interface != OC_IF_BASELINE) {
@@ -240,40 +311,10 @@ wificonf_post_handler(oc_request_t *request, oc_interface_mask_t interface, void
     return;
   }
 
-  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_SSID, &str_val,
-                        &str_len)) {
-    oc_new_string(&(dev_cxt->wifi.data.ssid), str_val, str_len);
-    res_changed = true;
-  }
-
-  str_val = NULL;
-  str_len = 0;
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_CRED, &str_val,
-                        &str_len)) {
-    oc_new_string(&(dev_cxt->wifi.data.cred), str_val, str_len);
-    res_changed = true;
-  }
-
-  // Follow Easy Setup Resource Model OCF 1.3 spec onwards.
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_AUTHTYPE, &str_val,
-                        &str_len)) {
-    oc_new_string(&(dev_cxt->wifi.data.auth_type), str_val, str_len);
-    res_changed = true;
-  }
-
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_ENCTYPE, &str_val,
-                        &str_len)) {
-    oc_new_string(&(dev_cxt->wifi.data.enc_type), str_val, str_len);
-    res_changed = true;
-  }
-
-  if (res_changed && dev_cxt->wifi.prov_cb) {
-    // Trigger provisioning callback
-    dev_cxt->wifi.prov_cb((oc_wes_wifi_data_t *)&(dev_cxt->wifi.data), user_data);
-  }
-
+  oc_rep_start_root_object();
+  set_wificonf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                            user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -299,12 +340,31 @@ devconf_get_handler(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
-             void *user_data)
+set_devconf_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
 {
   bool res_changed = false;
   char *str_val = NULL;
   size_t str_len = 0;
+  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(resource->device);
+
+  if (oc_rep_get_string(rep, OC_RSRVD_WES_DEVNAME, &str_val,
+                        &str_len)) {
+    oc_new_string(&(dev_cxt->device.data.dev_name), str_val, str_len);
+    res_changed = true;
+  }
+
+  oc_rep_set_text_string(root, dn, oc_string(dev_cxt->device.data.dev_name));
+
+  if (res_changed && dev_cxt->device.prov_cb) {
+    // Trigger provisioning callback
+    dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data), user_data);
+  }
+}
+
+static void
+devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
+             void *user_data)
+{
   OC_DBG("devconf_post_handler %d\n", interface);
 
   if (interface != OC_IF_BASELINE) {
@@ -313,19 +373,10 @@ devconf_post_handler(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
-  oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(request->origin->device);
-
-  if (oc_rep_get_string(request->request_payload, OC_RSRVD_WES_DEVNAME, &str_val,
-                        &str_len)) {
-    oc_new_string(&(dev_cxt->device.data.dev_name), str_val, str_len);
-    res_changed = true;
-  }
-
-  if (res_changed && dev_cxt->device.prov_cb) {
-    // Trigger provisioning callback
-    dev_cxt->device.prov_cb((oc_wes_device_data_t *) &(dev_cxt->device.data), user_data);
-  }
-
+  oc_rep_start_root_object();
+  set_devconf_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+                       user_data);
+  oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -341,7 +392,6 @@ get_wes_properties(oc_resource_t *resource, oc_interface_mask_t interface,
   }
   oc_collection_t *wes = (oc_collection_t *)resource;
   oc_wifi_enrollee_t *dev_cxt = get_device_wifi_enrollee(wes->device);
-
 
   oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
   oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
@@ -394,6 +444,9 @@ set_wes_properties(oc_resource_t *resource, oc_rep_t *rep, void *user_data)
     rep = rep->next;
   }
 
+  oc_rep_set_int(root, ps, dev_cxt->wes.data.state);
+  oc_rep_set_int(root, lec, dev_cxt->wes.data.last_err_code);
+
   // Trigger application callback
   if (res_changed && dev_cxt->wes.prov_cb) {
     dev_cxt->wes.prov_cb((oc_wes_data_t *) &(dev_cxt->wes.data), user_data);
@@ -428,10 +481,11 @@ wes_post_handler(oc_request_t *request, oc_interface_mask_t interface,
      oc_send_response(request, OC_STATUS_BAD_REQUEST);
      return;
    }
-   set_wes_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
+  oc_rep_start_root_object();
+  set_wes_properties((oc_resource_t *)request->resource, (oc_rep_t *)request->request_payload,
                        user_data);
-   oc_send_response(request, OC_STATUS_CHANGED);
-
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_CHANGED);
 }
 
 void

@@ -176,11 +176,35 @@ rspcap_prov_cb1(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data)
   PRINT("Device Info : %s\n", oc_string(rspcap_prov_data->device_info));
 }
 
+// Device 1 Callbaks
+static void
+ees_wes_prov_cb1(oc_wes_data_t *wes_prov_data, void *user_data)
+{
+  (void)user_data;
+  PRINT("wes_prov_cb1\n");
+  if (wes_prov_data == NULL) {
+      PRINT("wes_prov_data is NULL\n");
+      return;
+  }
+}
+
+static void
+ees_device_prov_cb1(oc_wes_device_data_t *device_prov_data, void *user_data)
+{
+  (void)user_data;
+  PRINT("device_prov_cb1\n");
+  if (device_prov_data == NULL) {
+      PRINT("device_prov_data is NULL\n");
+      return;
+  }
+  PRINT("Device Name: %s\n", oc_string(device_prov_data->dev_name));
+}
+
 static void
 ees_wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
   (void)user_data;
-  PRINT("ees_wifi_prov_cb1 triggered\n");
+  PRINT("wifi_prov_cb1 triggered\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
       return;
@@ -189,15 +213,6 @@ ees_wifi_prov_cb1(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
   PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
   PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
   PRINT("EncType : %d\n", wifi_prov_data->enc_type);
-
-  //1  Stop DHCP Server
-  wifi_stop_dhcp_server();
-  //1 Start WiFi Station
-  wifi_start_station();
-  //1 Join WiFi AP with ssid, authtype and pwd
-  wifi_join(oc_string(wifi_prov_data->ssid), oc_string(wifi_prov_data->cred));
-  //1 Start DHCP client
-  wifi_start_dhcp_client();
 }
 
 // Device 2 Callbacks
@@ -303,11 +318,36 @@ rspcap_prov_cb2(oc_ees_rspcap_data_t *rspcap_prov_data, void *user_data)
   PRINT("Device Info : %s\n", oc_string(rspcap_prov_data->device_info));
 }
 
+
+// Device 2 Callbaks
+static void
+ees_wes_prov_cb2(oc_wes_data_t *wes_prov_data, void *user_data)
+{
+  (void)user_data;
+  PRINT("wes_prov_cb2\n");
+  if (wes_prov_data == NULL) {
+      PRINT("wes_prov_data is NULL\n");
+      return;
+  }
+}
+
+static void
+ees_device_prov_cb2(oc_wes_device_data_t *device_prov_data, void *user_data)
+{
+  (void)user_data;
+  PRINT("device_prov_cb2\n");
+  if (device_prov_data == NULL) {
+      PRINT("device_prov_data is NULL\n");
+      return;
+  }
+  PRINT("Device Name: %s\n", oc_string(device_prov_data->dev_name));
+}
+
 static void
 ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
 {
   (void)user_data;
-  PRINT("ees_wifi_prov_cb2 triggered\n");
+  PRINT("wifi_prov_cb2\n");
   if (wifi_prov_data == NULL) {
       PRINT("wes_prov_data is NULL\n");
       return;
@@ -316,32 +356,37 @@ ees_wifi_prov_cb2(oc_wes_wifi_data_t *wifi_prov_data, void *user_data)
   PRINT("Password : %s\n", oc_string(wifi_prov_data->cred));
   PRINT("AuthType : %d\n", wifi_prov_data->auth_type);
   PRINT("EncType : %d\n", wifi_prov_data->enc_type);
-
-  //1  Stop DHCP Server
-  wifi_stop_dhcp_server();
-  //1 Start WiFi Station
-  wifi_start_station();
-  //1 Join WiFi AP with ssid, authtype and pwd
-  wifi_join(oc_string(wifi_prov_data->ssid), oc_string(wifi_prov_data->cred));
-  //1 Start DHCP client
-  wifi_start_dhcp_client();
 }
+
 // resource provisioning callbacks for 2 devices
-ees_device_callbacks_s g_rsc_cbks[] = {
+ees_device_callbacks_s g_ees_cbks[] = {
   {
     .oc_ees_prov_cb_t = &ees_prov_cb1,
     .oc_ees_rsp_prov_cb_t = &rsp_prov_cb1,
     .oc_ees_rspcap_prov_cb_t = &rspcap_prov_cb1,
-    .oc_wes_wifi_prov_cb_t = &ees_wifi_prov_cb1,
   }
 ,
   {
     .oc_ees_prov_cb_t = &ees_prov_cb2,
     .oc_ees_rsp_prov_cb_t = &rsp_prov_cb2,
     .oc_ees_rspcap_prov_cb_t = &rspcap_prov_cb2,
-    .oc_wes_wifi_prov_cb_t = &ees_wifi_prov_cb2,
   }
 };
+
+// resource proisining callbacks for 2 devices
+wes_device_callbacks_s g_wes_cbks[] = {
+  {
+    .oc_wes_prov_cb_t = &ees_wes_prov_cb1,
+    .oc_wes_wifi_prov_cb_t = &ees_wifi_prov_cb1,
+    .oc_wes_dev_prov_cb_t = &ees_device_prov_cb1,
+  },
+  {
+    .oc_wes_prov_cb_t = &ees_wes_prov_cb2,
+    .oc_wes_wifi_prov_cb_t = &ees_wifi_prov_cb2,
+    .oc_wes_dev_prov_cb_t = &ees_device_prov_cb2,
+  }
+};
+
 
 static int
 app_init(void)
@@ -392,12 +437,21 @@ register_resources(void)
   char device_info[DEVICE_INFO_LEN];
   char profile_metadata[PROFILE_METADATA_LEN];
 
+  wifi_mode supported_mode[NUM_WIFIMODE] = {WIFI_11A, WIFI_11B,WIFI_11G, WIFI_11N, WIFI_11AC, WIFI_MODE_MAX};
+  wifi_freq supported_freq[NUM_WIFIFREQ] = {WIFI_24G, WIFI_5G, WIFI_FREQ_MAX};
+  char *device_name = "WiFiTestDevice";
+
+
   PRINT("register_resources\n");
 
   for(int dev_index = 0; dev_index < g_device_count; ++dev_index) {
     // Set callbacks for Resource operations
-    oc_ees_set_resource_callbacks(dev_index, g_rsc_cbks[dev_index].oc_ees_prov_cb_t,
-          g_rsc_cbks[dev_index].oc_ees_rsp_prov_cb_t, g_rsc_cbks[dev_index].oc_ees_rspcap_prov_cb_t);
+    oc_ees_set_resource_callbacks(dev_index, g_ees_cbks[dev_index].oc_ees_prov_cb_t,
+          g_ees_cbks[dev_index].oc_ees_rsp_prov_cb_t, g_ees_cbks[dev_index].oc_ees_rspcap_prov_cb_t);
+
+	// Set callbacks for Resource operations
+	oc_wes_set_resource_callbacks(dev_index, g_wes_cbks[dev_index].oc_wes_prov_cb_t,
+		  g_wes_cbks[dev_index].oc_wes_wifi_prov_cb_t, g_wes_cbks[dev_index].oc_wes_dev_prov_cb_t);
 
     // Read Device Info and eUICC Info from LPA
     lpa_read_euicc_info(euicc_info);
@@ -409,6 +463,10 @@ register_resources(void)
 
     if (oc_ees_set_device_info(dev_index, euicc_info, device_info, profile_metadata) == OC_ES_ERROR)
         PRINT("oc_es_set_device_info error!\n");
+
+    if (oc_wes_set_device_info(dev_index, supported_mode, supported_freq, device_name) == OC_ES_ERROR)
+		 PRINT("oc_wes_set_device_info error!\n");
+
   }
 }
 
