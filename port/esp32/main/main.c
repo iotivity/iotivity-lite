@@ -68,10 +68,8 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+send_response(oc_request_t *request, oc_interface_mask_t interface, void *user_data, oc_status_t response_code)
 {
-  (void)user_data;
-  PRINT("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface)
   {
@@ -85,7 +83,15 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
     break;
   }
   oc_rep_end_root_object();
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response(request, response_code);
+}
+
+static void
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
+  (void)user_data;
+  PRINT("GET_light:\n");
+  send_response(request, interface, user_data, OC_STATUS_OK);
   PRINT("Light state %d\n", light_state);
 }
 
@@ -117,8 +123,9 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
     }
     rep = rep->next;
   }
-  oc_send_response(request, OC_STATUS_CHANGED);
   light_state = state;
+  send_response(request, interface, user_data, OC_STATUS_CHANGED);
+  PRINT("Light state %d\n", light_state);  
 }
 
 static void
