@@ -1440,7 +1440,9 @@ oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
       /* Fix maximum size of outgoing encrypted application payloads when sent
        * over UDP */
       if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
-        mbedtls_ssl_set_mtu(&peer->ssl_ctx, (OC_PDU_SIZE > UINT16_MAX ? UINT16_MAX : OC_PDU_SIZE));
+        mbedtls_ssl_set_mtu(
+          &peer->ssl_ctx,
+          (OC_PDU_SIZE > UINT16_MAX ? UINT16_MAX : OC_PDU_SIZE));
       }
 
       mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
@@ -1722,11 +1724,11 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
 
 #ifdef OC_TCP
 static int
-ssl_write_tcp(mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len) {
+ssl_write_tcp(mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len)
+{
   size_t length = 0;
   while (length < len) {
-    int ret = mbedtls_ssl_write(ssl, buf + length,
-                                  len - length);
+    int ret = mbedtls_ssl_write(ssl, buf + length, len - length);
     if (ret < 0) {
       if (ret == MBEDTLS_ERR_SSL_WANT_READ &&
           ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
@@ -1905,32 +1907,39 @@ assert_all_roles_internal(oc_client_response_t *data)
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 static void
-read_application_data_tcp(oc_tls_peer_t *peer){
+read_application_data_tcp(oc_tls_peer_t *peer)
+{
   if (peer->processed_recv_message == NULL) {
     peer->processed_recv_message = oc_allocate_message();
     if (peer->processed_recv_message) {
       peer->processed_recv_message->encrypted = 0;
-      memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
+      memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint,
+             sizeof(oc_endpoint_t));
     }
   }
-  while(true) {
+  while (true) {
     if (peer->processed_recv_message) {
       size_t want_read = 0;
       size_t total_length = 0;
       if (peer->processed_recv_message->length < DEFAULT_RECEIVE_SIZE) {
         want_read = DEFAULT_RECEIVE_SIZE - peer->processed_recv_message->length;
       } else {
-        total_length = coap_tcp_get_packet_size(peer->processed_recv_message->data);
+        total_length =
+          coap_tcp_get_packet_size(peer->processed_recv_message->data);
         if (total_length > (size_t)OC_PDU_SIZE) {
-          OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu size(%ld)",
-               total_length, OC_PDU_SIZE);
+          OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu "
+                 "size(%ld)",
+                 total_length, OC_PDU_SIZE);
           oc_tls_free_peer(peer, false);
           return;
         }
         want_read = total_length - peer->processed_recv_message->length;
       }
       OC_DBG("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
-      int ret = mbedtls_ssl_read(&peer->ssl_ctx, peer->processed_recv_message->data+peer->processed_recv_message->length, want_read);
+      int ret = mbedtls_ssl_read(&peer->ssl_ctx,
+                                 peer->processed_recv_message->data +
+                                   peer->processed_recv_message->length,
+                                 want_read);
       OC_DBG("oc_tls_tcp: mbedtls_ssl_read returns: %d", ret);
       if (ret <= 0) {
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
@@ -1945,11 +1954,11 @@ read_application_data_tcp(oc_tls_peer_t *peer){
         } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
           OC_DBG("oc_tls_tcp: Client wants to reconnect");
         } else {
-  #ifdef OC_DEBUG
+#ifdef OC_DEBUG
           char buf[256];
           mbedtls_strerror(ret, buf, 256);
           OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
-  #endif /* OC_DEBUG */
+#endif /* OC_DEBUG */
         }
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             (peer->endpoint.flags & TCP) == 0) {
@@ -1960,10 +1969,13 @@ read_application_data_tcp(oc_tls_peer_t *peer){
         return;
       }
       peer->processed_recv_message->length += ret;
-      if (total_length && peer->processed_recv_message->length == total_length) {
-        OC_DBG("oc_tls_tcp: Decrypted incoming message %d", (int)(total_length));
-        if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], peer->processed_recv_message) ==
-          OC_PROCESS_ERR_FULL) {
+      if (total_length &&
+          peer->processed_recv_message->length == total_length) {
+        OC_DBG("oc_tls_tcp: Decrypted incoming message %d",
+               (int)(total_length));
+        if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT],
+                            peer->processed_recv_message) ==
+            OC_PROCESS_ERR_FULL) {
           oc_message_unref(peer->processed_recv_message);
         }
         peer->processed_recv_message = NULL;
@@ -2056,10 +2068,10 @@ read_application_data(oc_tls_peer_t *peer)
     }
   } else {
 #ifdef OC_TCP
-      if (peer->endpoint.flags & TCP) {
-        read_application_data_tcp(peer);
-        return;
-      }
+    if (peer->endpoint.flags & TCP) {
+      read_application_data_tcp(peer);
+      return;
+    }
 #endif
     oc_message_t *message = oc_allocate_message();
     if (message) {
@@ -2116,14 +2128,14 @@ oc_tls_recv_message(oc_message_t *message)
   oc_tls_peer_t *peer =
     oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER);
 
-    if (peer->endpoint.flags & TCP) {
-      OC_DBG("oc_tls_recv_message_tcp: %d %ld", (int) message->length, peer);
-    }
   if (peer) {
 #ifdef OC_DEBUG
     char u[OC_UUID_LEN];
     oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
     OC_DBG("oc_tls: Received message from device %s", u);
+    if (peer->endpoint.flags & TCP) {
+      OC_DBG("oc_tls_recv_message_tcp: %d %ld", (int)message->length, peer);
+    }
 #endif /* OC_DEBUG */
 
     oc_list_add(peer->recv_q, message);
