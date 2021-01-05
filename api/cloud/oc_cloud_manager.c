@@ -87,7 +87,6 @@ static void
 reconnect(oc_cloud_context_t *ctx)
 {
   oc_set_delayed_callback(ctx, callback_handler, 0);
-  oc_remove_delayed_callback(ctx, refresh_token);
   cloud_reconnect(ctx);
 }
 

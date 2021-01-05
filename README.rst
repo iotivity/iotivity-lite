@@ -1,3 +1,12 @@
+.. image:: https://gitlab.iotivity.org/iotivity/iotivity-lite/badges/master/pipeline.svg
+   :target: https://gitlab.iotivity.org/iotivity/iotivity-lite/-/pipelines
+
+.. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
+   :target: https://github.com/plgd-dev/cloud
+
+.. image:: https://badges.gitter.im/ocfcloud/Lobby.svg
+   :target: https://gitter.im/ocfcloud/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
+
 Introduction
 ------------
 
@@ -125,9 +134,11 @@ Onboarding and Provisioning
 ----------------------------
 Runing the onboarding tool
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-At this time there are three versions of the onboarding tool.  The command line C version, the
+At this time there are four versions of the onboarding tool.  The command line C version, the
 command line Java version, and the GUI Android version. Both command line versions are identical.
 It does not matter which version of the onboarding tool is used.
+
+Fourth version of the onboarding tool is provided by the `plgd/cloud <https://github.com/plgd-dev/cloud>`_ project, reference implementation of the OCF Cloud. This one is available in both `Apple App Store <https://apps.apple.com/us/app/plgd/id1536315811>`_ and `Google Play Store <https://play.google.com/store/apps/details?id=dev.plgd.client>`_.
 
 The C version of the onboarding tool can be found in ``<iotivity-lite>/port/linux`` see Linux build
 instructions.
