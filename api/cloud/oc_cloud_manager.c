@@ -129,6 +129,25 @@ cloud_start_process(oc_cloud_context_t *ctx)
   _oc_signal_event_loop();
 }
 
+static uint16_t
+check_expires_in(int64_t expires_in)
+{
+  if (expires_in <= 0) {
+    return 0;
+  }
+  if (expires_in > 60*60) {
+    // if time is more than 1h then set expires to (expires_in - 10min).
+    expires_in = expires_in - 10*60;
+  } else if (expires_in > 4*60) {
+    // if time is more than 240sec then set expires to (expires_in - 2min).
+    expires_in = expires_in - 2*60;
+  }  else if (expires_in > 20) {
+    // if time is more than 20sec then set expires to (expires_in - 10sec).
+    expires_in = expires_in - 10;
+  }
+  return expires_in > UINT16_MAX ? UINT16_MAX : (uint16_t)expires_in;
+}
+
 static int
 _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
@@ -180,12 +199,10 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   }
 
   int64_t expires_in = 0;
-  if (oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in) && expires_in > 0 &&
-      expires_in <= UINT16_MAX) {
+  oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in);
+  ctx->expires_in = check_expires_in(expires_in);
+  if (ctx->expires_in > 0) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
-    ctx->expires_in = (uint16_t)expires_in;
-  } else {
-    ctx->expires_in = 0;
   }
 
   cloud_store_dump_async(&ctx->store);
@@ -410,12 +427,10 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
-  ctx->expires_in = 0;
-  if (oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in)) {
-    if (expires_in > 0 && expires_in <= UINT16_MAX) {
-      ctx->expires_in = (uint16_t)expires_in;
-      ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
-    }
+  oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in);
+  ctx->expires_in = check_expires_in(expires_in);
+  if (ctx->expires_in > 0) {
+    ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
   }
 
   cloud_store_dump_async(&ctx->store);
