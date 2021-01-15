@@ -1973,6 +1973,8 @@ read_application_data_tcp(oc_tls_peer_t *peer)
           peer->processed_recv_message->length == total_length) {
         OC_DBG("oc_tls_tcp: Decrypted incoming message %d",
                (int)(total_length));
+        peer->processed_recv_message->encrypted = 0;
+        memcpy(peer->processed_recv_message->endpoint.di.id, peer->uuid.id, 16);
         if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT],
                             peer->processed_recv_message) ==
             OC_PROCESS_ERR_FULL) {
