@@ -54,7 +54,8 @@ enum transport_flags {
   IPV6 = 1 << 3,
   TCP = 1 << 4,
   GATT = 1 << 5,
-  MULTICAST = 1 << 6
+  MULTICAST = 1 << 6,
+  ACCEPTED = 1 << 7
 };
 
 typedef struct oc_endpoint_t
