@@ -334,7 +334,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   message->endpoint.device = dev->device;
 
   if (FD_ISSET(dev->tcp.server_sock, fds)) {
-    message->endpoint.flags = IPV6 | TCP;
+    message->endpoint.flags = IPV6 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server_sock, fds, &message->endpoint) <
         0) {
       OC_ERR("accept new session fail");
@@ -343,7 +343,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure_sock, fds)) {
-    message->endpoint.flags = IPV6 | SECURED | TCP;
+    message->endpoint.flags = IPV6 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure_sock, fds, &message->endpoint) <
         0) {
       OC_ERR("accept new session fail");
@@ -353,7 +353,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
   } else if (FD_ISSET(dev->tcp.server4_sock, fds)) {
-    message->endpoint.flags = IPV4 | TCP;
+    message->endpoint.flags = IPV4 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server4_sock, fds,
                            &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
@@ -362,7 +362,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
   } else if (FD_ISSET(dev->tcp.secure4_sock, fds)) {
-    message->endpoint.flags = IPV4 | SECURED | TCP;
+    message->endpoint.flags = IPV4 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure4_sock, fds,
                            &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
@@ -600,6 +600,10 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
 
   size_t bytes_sent = 0;
   if (send_sock < 0) {
+    if (message->endpoint.flags & ACCEPTED) {
+      OC_ERR("connection was closed");
+      goto oc_tcp_send_buffer_done;
+    }
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
         0) {
       OC_ERR("could not initiate new TCP session");
