@@ -61,6 +61,9 @@ typedef uint64_t oc_clock_time_t;
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
 
+/* Add request history for deduplicate UDP/DTLS messages */
+#define OC_REQUEST_HISTORY
+
 /* library features that require persistent storage */
 #ifdef OC_SECURITY
 #define OC_STORAGE

@@ -84,6 +84,7 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
                                              oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
 
+#ifdef OC_REQUEST_HISTORY
 #define OC_REQUEST_HISTORY_SIZE (250)
 static uint16_t history[OC_REQUEST_HISTORY_SIZE];
 static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
@@ -101,6 +102,7 @@ check_if_duplicate(uint16_t mid, uint8_t device)
   }
   return false;
 }
+#endif /* OC_REQUEST_HISTORY */
 
 static void
 coap_send_empty_response(coap_message_type_t type, uint16_t mid,
@@ -287,12 +289,14 @@ coap_receive(oc_message_t *msg)
           coap_udp_init_message(response, COAP_TYPE_ACK, CONTENT_2_05,
                                 message->mid);
         } else {
+#ifdef OC_REQUEST_HISTORY
           if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
             return 0;
           }
           history[idx] = message->mid;
           history_dev[idx] = (uint8_t)msg->endpoint.device;
           idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
+#endif /* OC_REQUEST_HISTORY */
           if (href_len == 7 && memcmp(href, "oic/res", 7) == 0) {
             coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
                                   coap_get_mid());
