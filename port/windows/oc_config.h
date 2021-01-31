@@ -26,6 +26,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_DNS_LOOKUP
 //#define OC_DNS_LOOKUP_IPV6
 
+/* Add request history for deduplicate UDP/DTLS messages */
+#define OC_REQUEST_HISTORY
+
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"
 #endif /* OC_DYNAMIC_ALLOCATION */
