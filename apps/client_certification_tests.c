@@ -125,6 +125,7 @@ display_menu(void)
   PRINT("[7] Stop OBSERVE resource UDP\n");
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
+  PRINT("[10] Multicast UPDATE binary switch\n");
   PRINT("-----------------------------------------------\n");
 #ifdef OC_TCP
   PRINT("[20] Send ping message\n");
@@ -374,7 +375,7 @@ stop_observe_resource(bool tcp)
 }
 
 static void
-post_resource(bool tcp)
+post_resource(bool tcp, bool mcast)
 {
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
@@ -396,8 +397,9 @@ post_resource(bool tcp)
         while (ep && (tcp && !(ep->flags & TCP))) {
           ep = ep->next;
         }
-        if (oc_init_post(res[c]->uri, ep, NULL, &POST_handler, HIGH_QOS,
-                         NULL)) {
+        if ((!mcast && oc_init_post(res[c]->uri, ep, NULL, &POST_handler,
+                                    HIGH_QOS, NULL)) ||
+            (mcast && oc_init_multicast_update(res[c]->uri, NULL))) {
           oc_rep_start_root_object();
           if (s == 0) {
             oc_rep_set_boolean(root, value, true);
@@ -405,7 +407,8 @@ post_resource(bool tcp)
             oc_rep_set_boolean(root, value, false);
           }
           oc_rep_end_root_object();
-          if (!oc_do_post()) {
+          if ((!mcast && !oc_do_post()) ||
+              (mcast && !oc_do_multicast_update())) {
             PRINT("\nERROR: Could not issue POST request\n");
           }
         } else {
@@ -671,10 +674,10 @@ main(void)
       get_resource(true, false);
       break;
     case 4:
-      post_resource(false);
+      post_resource(false, false);
       break;
     case 5:
-      post_resource(true);
+      post_resource(true, false);
       break;
     case 6:
       get_resource(false, true);
@@ -687,6 +690,9 @@ main(void)
       break;
     case 9:
       stop_observe_resource(true);
+      break;
+    case 10:
+      post_resource(false, true);
       break;
 #ifdef OC_TCP
     case 20:

@@ -300,7 +300,8 @@ coap_receive(oc_message_t *msg)
                                 message->mid);
         } else {
 #ifdef OC_REQUEST_HISTORY
-          if (check_if_duplicate(message->mid, (uint8_t)msg->endpoint.device)) {
+          if (oc_coap_check_if_duplicate(message->mid,
+                                         (uint8_t)msg->endpoint.device)) {
             return 0;
           }
           history[idx] = message->mid;
