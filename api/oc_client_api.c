@@ -139,6 +139,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 #ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
+      cb->token, cb->token_len,
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
