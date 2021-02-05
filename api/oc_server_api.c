@@ -472,6 +472,15 @@ oc_send_separate_response(oc_separate_response_t *handle,
   coap_packet_t response[1];
 
   while (cur != NULL) {
+    if (cur->token_len == 0) {
+      cur->token_len = COAP_TOKEN_LEN;
+      uint8_t i = 0;
+      while (i < cur->token_len) {
+        uint32_t r = oc_random_value();
+        memcpy(cur->token + i, &r, sizeof(r));
+        i += sizeof(r);
+      }
+    }
     next = cur->next;
     if (cur->observe < 3) {
       coap_transaction_t *t =
@@ -491,6 +500,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         if (response_buffer.response_length > cur->block2_size) {
 #endif /* !OC_TCP */
           response_state = oc_blockwise_find_response_buffer(
+            cur->token, cur->token_len,
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
@@ -503,6 +513,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
             }
           }
           response_state = oc_blockwise_alloc_response_buffer(
+            cur->token, cur->token_len,
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
             cur->method, OC_BLOCKWISE_SERVER);
           if (!response_state) {

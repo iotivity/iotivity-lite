@@ -888,6 +888,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     if (!(*response_state)) {
       OC_DBG("creating new block-wise response state");
       *response_state = oc_blockwise_alloc_response_buffer(
+        packet->token, packet->token_len,
         uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER);
       if (!(*response_state)) {
         OC_ERR("failure to alloc response state");
