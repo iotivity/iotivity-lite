@@ -36,7 +36,7 @@ signal_event_loop(void)
   WakeConditionVariable(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   signal_event_loop();
@@ -84,7 +84,7 @@ signal_event_loop(void)
   pthread_mutex_unlock(&mutex);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   if (signal == SIGPIPE) {
@@ -207,7 +207,6 @@ struct light_t
 };
 
 struct light_t light1 = { 0 };
-struct light_t light2 = { 0 };
 
 static void
 get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
@@ -283,17 +282,6 @@ register_resources(void)
   oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
   oc_cloud_add_resource(res1);
   oc_add_resource(res1);
-
-  res2 = oc_new_resource(NULL, "/light/2", 1, 0);
-  oc_resource_bind_resource_type(res2, resource_rt);
-  oc_resource_bind_resource_interface(res2, OC_IF_RW);
-  oc_resource_set_default_interface(res2, OC_IF_RW);
-  oc_resource_set_discoverable(res2, true);
-  oc_resource_set_observable(res2, true);
-  oc_resource_set_request_handler(res2, OC_GET, get_handler, &light2);
-  oc_resource_set_request_handler(res2, OC_POST, post_handler, &light2);
-  oc_cloud_add_resource(res2);
-  oc_add_resource(res2);
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -338,7 +326,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
