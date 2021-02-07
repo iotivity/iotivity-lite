@@ -154,8 +154,6 @@ static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "test";
 #endif /* OC_SECURITY */
-oc_resource_t *res1;
-oc_resource_t *res2;
 
 static void
 cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
@@ -270,9 +268,9 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 static void
-register_resources(void)
+register_lights(void)
 {
-  res1 = oc_new_resource(NULL, "/light/1", 1, 0);
+  oc_resource_t *res1 = oc_new_resource(NULL, "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, resource_rt);
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
   oc_resource_set_default_interface(res1, OC_IF_RW);
@@ -282,6 +280,244 @@ register_resources(void)
   oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
   oc_cloud_add_resource(res1);
   oc_add_resource(res1);
+}
+
+#ifdef OC_COLLECTIONS
+
+/* Setting custom Collection-level properties */
+int64_t g_battery_level = 94;
+
+static bool
+set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  (void)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_INT:
+      if (oc_string_len(rep->name) == 2 &&
+          memcmp(oc_string(rep->name), "bl", 2) == 0) {
+        g_battery_level = rep->value.integer;
+      }
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+static void
+get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                        void *data)
+{
+  (void)resource;
+  (void)data;
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_rep_set_int(root, x.org.openconnectivity.bl, g_battery_level);
+    break;
+  default:
+    break;
+  }
+}
+
+/* Resource creation and request handlers for oic.r.switch.binary instances */
+typedef struct oc_switch_t
+{
+  struct oc_switch_t *next;
+  oc_resource_t *resource;
+  bool state;
+} oc_switch_t;
+OC_MEMB(switch_s, oc_switch_t, 1);
+OC_LIST(switches);
+
+static bool
+set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
+  (void)resource;
+  oc_switch_t *cswitch = (oc_switch_t *)data;
+  while (rep != NULL) {
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      cswitch->state = rep->value.boolean;
+      break;
+    default:
+      break;
+    }
+    rep = rep->next;
+  }
+  return true;
+}
+
+static void
+get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                      void *data)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)data;
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(resource);
+  /* fall through */
+  case OC_IF_A:
+    oc_rep_set_boolean(root, value, cswitch->state);
+    break;
+  default:
+    break;
+  }
+}
+
+static void
+post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
+  (void)iface_mask;
+  oc_switch_t *cswitch = (oc_switch_t *)user_data;
+  oc_rep_t *rep = request->request_payload;
+  bool bad_request = false;
+  while (rep) {
+    switch (rep->type) {
+    case OC_REP_BOOL:
+      if (oc_string_len(rep->name) != 5 ||
+          memcmp(oc_string(rep->name), "value", 5) != 0) {
+        bad_request = true;
+      }
+      break;
+    default:
+      if (oc_string_len(rep->name) > 2) {
+        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+          break;
+        }
+      }
+      bad_request = true;
+      break;
+    }
+    rep = rep->next;
+  }
+
+  if (!bad_request) {
+    set_switch_properties(request->resource, request->request_payload, cswitch);
+  }
+
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, value, cswitch->state);
+  oc_rep_end_root_object();
+
+  if (!bad_request) {
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
+static void
+get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
+  oc_rep_start_root_object();
+  get_switch_properties(request->resource, iface_mask, user_data);
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+
+static oc_event_callback_retval_t
+register_to_cloud(void* res)
+{
+  oc_resource_t* r = (oc_resource_t*)res;
+  oc_cloud_add_resource(r);
+  return OC_EVENT_DONE;
+}
+
+static oc_resource_t*
+get_switch_instance(const char *href, oc_string_array_t *types,
+                    oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                    size_t device)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
+  if (cswitch) {
+    cswitch->resource = oc_new_resource(
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
+    if (cswitch->resource) {
+      size_t i;
+      for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
+        const char *rt = oc_string_array_get_item(*types, i);
+        oc_resource_bind_resource_type(cswitch->resource, rt);
+      }
+      oc_resource_bind_resource_interface(cswitch->resource, iface_mask);
+      cswitch->resource->properties = bm;
+      oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
+      oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
+                                      cswitch);
+      oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
+                                      cswitch);
+      oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
+                                     cswitch, set_switch_properties, cswitch);
+      oc_add_resource(cswitch->resource);
+      oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
+
+      oc_list_add(switches, cswitch);
+      return cswitch->resource;
+    } else {
+      oc_memb_free(&switch_s, cswitch);
+    }
+  }
+  return NULL;
+}
+
+static void
+free_switch_instance(oc_resource_t *resource)
+{
+  oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
+  while (cswitch) {
+    if (cswitch->resource == resource) {
+      oc_delete_resource(resource);
+      oc_list_remove(switches, cswitch);
+      oc_memb_free(&switch_s, cswitch);
+      return;
+    }
+    cswitch = cswitch->next;
+  }
+}
+
+#endif /* OC_COLLECTIONS_IF_CREATE */
+
+static void
+register_collection(void)
+{
+  oc_resource_t* col = oc_new_collection(NULL, "/platform", 1, 0);
+  oc_resource_bind_resource_type(col, "oic.wk.col");
+  oc_resource_set_discoverable(col, true);
+  oc_resource_set_observable(col, true);
+
+  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
+  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+#ifdef OC_COLLECTIONS_IF_CREATE
+  oc_resource_bind_resource_interface(col, OC_IF_CREATE);
+  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                free_switch_instance);
+#endif /* OC_COLLECTIONS_IF_CREATE */
+  /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
+   */
+  oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
+                                 set_platform_properties, NULL);
+  oc_add_collection(col);
+  PRINT("\tResources added to collection.\n");
+
+  oc_cloud_add_resource(col);
+  PRINT("\tCollection resource published.\n");
+}
+#endif /* OC_COLLECTIONS */
+
+static void
+register_resources(void)
+{
+  register_lights();
+#ifdef OC_COLLECTIONS
+  register_collection();
+#endif /* OC_COLLECTIONS */
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
