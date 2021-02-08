@@ -18,6 +18,7 @@
 
 #define __USE_GNU
 
+#include "ipadapter.h"
 #include "tcpadapter.h"
 #include "api/oc_session_events_internal.h"
 #include "ipcontext.h"
@@ -689,16 +690,6 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
   return 0;
 }
 #endif /* OC_IPV4 */
-
-static int
-set_nonblock_socket(int sockfd) {
-  int flags = fcntl(sockfd, F_GETFL, 0);
-  if (flags < 0) {
-    return -1;
-  }
-
-  return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
-}
 
 int
 oc_tcp_connectivity_init(ip_context_t *dev)
