@@ -16,6 +16,7 @@
 
 #define _GNU_SOURCE
 #include "ipcontext.h"
+#include "ipadapter.h"
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif
@@ -40,6 +41,7 @@
 #include <sys/select.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -1404,6 +1406,10 @@ oc_connectivity_init(size_t device)
     OC_ERR("shutdown pipe: %d", errno);
     return -1;
   }
+  if (set_nonblock_socket(dev->shutdown_pipe[0]) < 0) {
+    OC_ERR("Could not set non-block shutdown_pipe[0]");
+    return -1;
+  }
 
   memset(&dev->mcast, 0, sizeof(struct sockaddr_storage));
   memset(&dev->server, 0, sizeof(struct sockaddr_storage));
@@ -1792,3 +1798,13 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   return ret;
 }
 #endif /* OC_DNS_LOOKUP */
+
+int
+set_nonblock_socket(int sockfd) {
+  int flags = fcntl(sockfd, F_GETFL, 0);
+  if (flags < 0) {
+    return -1;
+  }
+
+  return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+}
