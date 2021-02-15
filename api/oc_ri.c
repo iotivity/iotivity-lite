@@ -589,6 +589,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_S;
   if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
     iface_mask |= OC_IF_CREATE;
+  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0)
+    iface_mask |= OC_IF_W;
   return iface_mask;
 }
 
@@ -620,6 +622,7 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
    * supports CREATE, RETRIEVE and UPDATE.
    */
   case OC_IF_A:
+  case OC_IF_W:
     break;
   }
   return supported;

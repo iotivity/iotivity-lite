@@ -171,6 +171,8 @@ get_iface_query(oc_interface_mask_t iface_mask)
     return "if=oic.if.s";
   case OC_IF_CREATE:
     return "if=oic.if.create";
+  case OC_IF_W:
+    return "if=oic.if.w";
   default:
     break;
   }
