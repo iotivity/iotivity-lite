@@ -152,7 +152,7 @@ static const char *apn;
 static const char *cis = "coap+tcp://127.0.0.1:5683";
 static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
-static const char *apn = "test";
+static const char *apn = "plgd";
 #endif /* OC_SECURITY */
 
 static void
