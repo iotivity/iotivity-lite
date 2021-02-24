@@ -584,7 +584,8 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   if (!ep1 || !ep2)
     return -1;
 
-  if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
+  if ((ep1->flags & ~(MULTICAST | ACCEPTED)) !=
+        (ep2->flags & ~(MULTICAST | ACCEPTED)) ||
       ep1->device != ep2->device) {
     return -1;
   }
