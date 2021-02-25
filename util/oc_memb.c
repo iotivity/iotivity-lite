@@ -46,11 +46,7 @@ oc_memb_init(struct oc_memb *m)
 {
   if (m->num > 0) {
     memset(m->count, 0, m->num);
-#ifndef OC_DYNAMIC_ALLOCATION
-    memset(m->mem, 0, (unsigned)m->size * (unsigned)m->num);
-#else  /* !OC_DYNAMIC_ALLOCATION */
     memset(m->mem, 0, (unsigned)m->num * sizeof(char *));
-#endif /* OC_DYNAMIC_ALLOCATION */
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -80,14 +76,8 @@ _oc_memb_alloc(
     }
 
     if (i < m->num) {
-#ifdef OC_DYNAMIC_ALLOCATION
-      ptr = calloc(1, m->size);
-      void *slot = (void *)((char *)m->mem + (i * sizeof(void *)));
-      memcpy(slot, &ptr, sizeof(void *));
-#else  /* OC_DYNAMIC_ALLOCATION */
       ptr = (void *)((char *)m->mem + (i * m->size));
       memset(ptr, 0, m->size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
     }
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -132,11 +122,7 @@ _oc_memb_free(
        which the pointer "ptr" points to. */
     ptr2 = (char *)m->mem;
     for (i = 0; i < m->num; ++i) {
-#ifdef OC_DYNAMIC_ALLOCATION
-      if (memcmp(ptr2, &ptr, sizeof(void *)) == 0) {
-#else  /* OC_DYNAMIC_ALLOCATION */
       if (ptr2 == (char *)ptr) {
-#endif /* !OC_DYNAMIC_ALLOCATION */
         /* We've found to block to which "ptr" points so we decrease the
            reference count and return the new value of it. */
         if (m->count[i] > 0) {
@@ -145,18 +131,13 @@ _oc_memb_free(
         }
         break;
       }
-#ifdef OC_DYNAMIC_ALLOCATION
-      ptr2 += sizeof(void *);
-#else  /* OC_DYNAMIC_ALLOCATION */
       ptr2 += m->size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
     }
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (i < m->num) {
-    memset(&ptr2, 0, sizeof(void *));
+  else {
+    free(ptr);
   }
-  free(ptr);
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (m->buffers_avail_cb) {
     m->buffers_avail_cb(oc_memb_numfree(m));
@@ -164,7 +145,8 @@ _oc_memb_free(
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int oc_memb_inmemb(struct oc_memb * m, void *ptr)
+int
+oc_memb_inmemb(struct oc_memb *m, void *ptr)
 {
   return (char *)ptr >= (char *)m->mem &&
          (char *)ptr < (char *)m->mem + (m->num * m->size);
@@ -185,8 +167,9 @@ oc_memb_numfree(struct oc_memb *m)
   return num_free;
 }
 /*---------------------------------------------------------------------------*/
-void oc_memb_set_buffers_avail_cb(struct oc_memb * m,
-                                  oc_memb_buffers_avail_callback_t cb)
+void
+oc_memb_set_buffers_avail_cb(struct oc_memb *m,
+                             oc_memb_buffers_avail_callback_t cb)
 {
   m->buffers_avail_cb = cb;
 }

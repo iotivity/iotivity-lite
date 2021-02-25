@@ -50,8 +50,7 @@
 #include "oc_config.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define CC_CONCAT2(s1, s2) s1##s2
@@ -90,14 +89,13 @@ extern "C"
 #endif
 #include <stdlib.h>
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 #define OC_MEMB(name, structure, num)                                          \
   static struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
-#define OC_MEMB_FIXED(name, structure, num)                                    \
+#define OC_MEMB_STATIC(name, structure, num)                                   \
   static char CC_CONCAT(name, _memb_count)[num];                               \
-  static void *CC_CONCAT(name, _memb_mem)[num];                                \
+  static structure CC_CONCAT(name, _memb_mem)[num];                            \
   static struct oc_memb name = { sizeof(structure), num,                       \
                                  CC_CONCAT(name, _memb_count),                 \
                                  (void *)CC_CONCAT(name, _memb_mem), 0 }

@@ -85,7 +85,7 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif /* !OC_BLOCK_WISE */
 
 #ifdef OC_REQUEST_HISTORY
-#define OC_REQUEST_HISTORY_SIZE (250)
+#define OC_REQUEST_HISTORY_SIZE (25)
 static uint16_t history[OC_REQUEST_HISTORY_SIZE];
 static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t idx;

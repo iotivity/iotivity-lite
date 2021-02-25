@@ -26,8 +26,7 @@
 #include "port/oc_connectivity.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -46,6 +45,9 @@ typedef struct oc_blockwise_state_s
   uint32_t next_block_offset;
   uint8_t ref_count;
 #ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_APP_DATA_BUFFER_POOL
+  void *block;
+#endif /* OC_APP_DATA_BUFFER_POOL */
   uint8_t *buffer;
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];

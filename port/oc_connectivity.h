@@ -109,7 +109,11 @@ struct oc_message_s
   size_t length;
   uint8_t ref_count;
 #ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_INOUT_BUFFER_SIZE
+  uint8_t data[OC_INOUT_BUFFER_SIZE];
+#else  /* OC_INOUT_BUFFER_SIZE */
   uint8_t *data;
+#endif /* !OC_INOUT_BUFFER_SIZE */
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t data[OC_PDU_SIZE];
 #endif /* OC_DYNAMIC_ALLOCATION */

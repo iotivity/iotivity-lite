@@ -85,16 +85,25 @@ oc_get_factory_presets_cb(void)
 #include "oc_buffer_settings.h"
 #ifdef OC_OSCORE
 static size_t _OC_MTU_SIZE = 1024 + 2 * COAP_MAX_HEADER_SIZE;
+#elif OC_INOUT_BUFFER_SIZE
+static size_t _OC_MTU_SIZE = OC_INOUT_BUFFER_SIZE;
 #else  /* OC_OSCORE */
-static size_t _OC_MTU_SIZE = 1024 + COAP_MAX_HEADER_SIZE;
+static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
 #endif /* !OC_OSCORE */
+#ifdef OC_APP_DATA_BUFFER_SIZE
 static size_t _OC_MAX_APP_DATA_SIZE = 8192;
-static size_t _OC_BLOCK_SIZE = 1024;
+#else                                /* OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_MAX_APP_DATA_SIZE = 8192;
+#endif                               /* !OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
 int
 oc_set_mtu_size(size_t mtu_size)
 {
   (void)mtu_size;
+#ifdef OC_INOUT_BUFFER_SIZE
+  return -1;
+#endif /* OC_INOUT_BUFFER_SIZE */
 #ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
     return -1;
@@ -121,6 +130,9 @@ oc_get_mtu_size(void)
 void
 oc_set_max_app_data_size(size_t size)
 {
+#ifdef OC_APP_DATA_BUFFER_SIZE
+  return;
+#endif /* OC_APP_DATA_BUFFER_SIZE */
   _OC_MAX_APP_DATA_SIZE = size;
 #ifndef OC_BLOCK_WISE
   _OC_BLOCK_SIZE = size;
