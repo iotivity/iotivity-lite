@@ -324,6 +324,10 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   bool is_DCR = oc_core_is_DCR(resource, resource->device);
   bool is_SVR = oc_core_is_SVR(resource, resource->device);
   bool is_public = ((resource->properties & OC_SECURE) == 0);
+  bool is_vertical = false;
+  if (!is_DCR) {
+    is_vertical = oc_core_is_vertical_resource(resource, resource->device);
+  }
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
@@ -341,6 +345,12 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   /* NCRs are accessible only in RFNOP */
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
     OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
+    return false;
+  }
+  /* anon-clear access to vertical resources is prohibited */
+  if (is_vertical && !(endpoint->flags & SECURED)) {
+    OC_DBG("oc_sec_check_acl: anon-clear access to vertical resources is "
+           "prohibited");
     return false;
   }
   /* All requests received over the DOC which target DCRs shall be granted,

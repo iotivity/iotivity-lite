@@ -550,6 +550,25 @@ oc_core_is_SVR(oc_resource_t *resource, size_t device)
 #endif /* OC_SECURITY */
 
 bool
+oc_core_is_vertical_resource(oc_resource_t *resource, size_t device)
+{
+  if (resource == &core_resources[0]) {
+    return true;
+  }
+
+  size_t device_resources = OCF_D * device;
+
+  size_t DCRs_end = device_resources + OCF_D, i;
+  for (i = device_resources + 1; i <= DCRs_end; i++) {
+    if (resource == &core_resources[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
 oc_core_is_DCR(oc_resource_t *resource, size_t device)
 {
   if (resource == &core_resources[0]) {
