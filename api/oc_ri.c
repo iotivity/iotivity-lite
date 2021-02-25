@@ -75,7 +75,7 @@ OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 OC_LIST(client_cbs);
-OC_MEMB(client_cbs_s, oc_client_cb_t,  + 1);
+OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
 #endif /* OC_CLIENT */
 
 OC_LIST(timed_callbacks);
