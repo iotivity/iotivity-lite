@@ -50,6 +50,9 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
+#ifdef OC_COLLECTIONS_IF_CREATE
+#include "oc_resource_factory.h"
+#endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
@@ -344,10 +347,29 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
+  /**
+   * Prevent double deallocation: oc_rt_factory_free_created_resource
+   * called below will invoke the delete handler of the resource which will
+   * invoke this function again. We use the list of resources to check
+   * whether the resource exists and when it doesn't we assume that
+   * a deallocation of the resource was already invoked and skip this one.
+   */
+  if (oc_list_remove2(app_resources, resource) == NULL) {
+    return true;
+  }
+
   if (resource->num_observers > 0) {
     coap_remove_observer_by_resource(resource);
   }
-  oc_list_remove(app_resources, resource);
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS) && \
+  defined(OC_COLLECTIONS_IF_CREATE)
+  oc_rt_created_t* rtc = oc_rt_get_factory_create_for_resource(resource);
+  if (rtc != NULL) {
+    oc_rt_factory_free_created_resource(rtc, rtc->rf);
+  }
+#endif
+
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
   return true;
