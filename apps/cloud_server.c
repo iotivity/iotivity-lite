@@ -424,15 +424,6 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static oc_event_callback_retval_t
-delete_from_collection(void* res)
-{
-  oc_resource_t* r = (oc_resource_t*)res;
-  oc_cloud_delete_resource(r);
-  oc_delete_resource(r);
-  return OC_EVENT_DONE;
-}
-
 static void
 delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
@@ -442,7 +433,7 @@ delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)iface_mask;
   oc_switch_t *cswitch = (oc_switch_t *)user_data;
 
-  oc_set_delayed_callback(cswitch->resource, delete_from_collection, 0);
+  oc_delayed_delete_resource(cswitch->resource);
   oc_send_response(request, OC_STATUS_DELETED);
 }
 
