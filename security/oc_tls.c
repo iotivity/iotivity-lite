@@ -1634,6 +1634,9 @@ oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
   if (!peer) {
     return false;
   }
+  if (!peer->ssl_ctx.session) {
+    return false;
+  }
   size_t j;
   for (j = 0; j < 48; j++) {
     if (peer->master_secret[j] != 0) {
@@ -1864,6 +1867,9 @@ bool
 oc_tls_uses_psk_cred(oc_tls_peer_t *peer)
 {
   if (!peer) {
+    return false;
+  }
+  if (!peer->ssl_ctx.session) {
     return false;
   }
   int cipher = peer->ssl_ctx.session->ciphersuite;
