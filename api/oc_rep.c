@@ -54,6 +54,13 @@ oc_rep_get_encoder_buf(void)
   return g_buf;
 }
 
+void oc_rep_encode_raw(const uint8_t* data, size_t len)
+{
+  memcpy(g_buf, data, len);
+  g_encoder.data.ptr = g_buf + len;
+  g_err = CborNoError;
+}
+
 int
 oc_rep_get_encoded_payload_size(void)
 {

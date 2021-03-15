@@ -478,7 +478,11 @@ oc_send_separate_response(oc_separate_response_t *handle,
 {
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
-  response_buffer.response_length = response_length();
+  if (handle->len != 0)
+    response_buffer.response_length = handle->len;
+  else
+    response_buffer.response_length = response_length();
+
   response_buffer.code = oc_status_code(response_code);
   response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
