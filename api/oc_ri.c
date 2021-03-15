@@ -835,13 +835,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
-
-#if defined(OC_BLOCK_WISE)
-    /* Free request_state cause it isn't used any more
-     */
-    oc_blockwise_free_request_buffer(*request_state);
-    *request_state = NULL;
-#endif
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -979,6 +972,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       }
     }
   }
+
+
+#if defined(OC_BLOCK_WISE)
+  oc_blockwise_free_request_buffer(*request_state);
+  *request_state = NULL;
+#endif
 
   if (request_obj.request_payload) {
     /* To the extent that the request payload was parsed, free the
