@@ -142,17 +142,17 @@ display_menu(void)
   PRINT("[9] Stop OBSERVE resource TCP\n");
   PRINT("[10] Multicast UPDATE binary switch\n");
   PRINT("-----------------------------------------------\n");
-#ifdef OC_TCP
-  PRINT("[20] Send ping message\n");
-  PRINT("-----------------------------------------------\n");
-#endif /* OC_TCP */
-  PRINT("[40] Discover using site local\n");
-  PRINT("[41] Discover using realm local\n");
 #ifdef OC_SECURITY
   PRINT("[11] Discover un-owned devices\n");
   PRINT("[12] Just-Works Ownership Transfer Method\n");
 #endif /* OC_SECURITY */
   PRINT("[13] POST cloud configuration UDP\n");
+#ifdef OC_TCP
+  PRINT("[20] Send ping message\n");
+#endif /* OC_TCP */
+  PRINT("-----------------------------------------------\n");
+  PRINT("[40] Discover using site local\n");
+  PRINT("[41] Discover using realm local\n");
   PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
@@ -939,17 +939,6 @@ main(void)
       post_resource(false, true);
       break;
 #endif /* OC_SECURITY */
-#ifdef OC_TCP
-    case 20:
-      cloud_send_ping();
-      break;
-#endif /* OC_TCP */
-    case 40:
-      discover_site_local_resources();
-      break;
-    case 41:
-      discover_realm_local_resources();
-      break;
 #ifdef OC_SECURITY
     case 11:
       oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
@@ -960,6 +949,17 @@ main(void)
 #endif /* OC_SECURITY */
     case 13:
       post_cloud_configuration_resource(false);
+      break;
+#ifdef OC_TCP
+    case 20:
+      cloud_send_ping();
+      break;
+#endif /* OC_TCP */
+    case 40:
+      discover_site_local_resources();
+      break;
+    case 41:
+      discover_realm_local_resources();
       break;
     case 99:
       handle_signal(0);
