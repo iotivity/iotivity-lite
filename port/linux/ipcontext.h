@@ -59,7 +59,6 @@ typedef struct tcp_context_t
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   int connect_pipe[2];
-  pthread_mutex_t mutex;
 } tcp_context_t;
 #endif
 
