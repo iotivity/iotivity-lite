@@ -94,9 +94,14 @@ typedef struct ip_context_t {
   pthread_t event_thread;
   int terminate;
   size_t device;
+  pthread_mutex_t rfds_mutex;
   fd_set rfds;
   int shutdown_pipe[2];
 } ip_context_t;
+
+void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd);
+void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd);
+fd_set ip_context_rfds_fd_copy(ip_context_t* dev);
 
 #ifdef __cplusplus
 }

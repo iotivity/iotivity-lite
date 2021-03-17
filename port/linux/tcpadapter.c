@@ -167,7 +167,7 @@ free_tcp_session(tcp_session_t *session)
     oc_session_end_event(&session->endpoint);
   }
 
-  FD_CLR(session->sock, &session->dev->rfds);
+  ip_context_rfds_fd_clr(session->dev, session->sock);
 
   ssize_t len = 0;
   do {
@@ -248,7 +248,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
     return -1;
   }
 
-  FD_SET(new_socket, &dev->rfds);
+  ip_context_rfds_fd_set(dev, new_socket);
 
   return 0;
 }
@@ -460,7 +460,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 {
   int flags, n, error;
   socklen_t len;
-  fd_set rset, wset;
+  fd_set wset;
   struct timeval tval;
 
   flags = fcntl(sockfd, F_GETFL, 0);
@@ -484,19 +484,18 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
     goto done; /* connect completed immediately */
   }
 
-  FD_ZERO(&rset);
-  FD_SET(sockfd, &rset);
-  wset = rset;
+  FD_ZERO(&wset);
+  FD_SET(sockfd, &wset);
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0) {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
   }
 
-  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset)) {
+  if (FD_ISSET(sockfd, &wset)) {
     len = sizeof(error);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
       return -1; /* Solaris pending error */
@@ -565,7 +564,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
     return -1;
   }
 
-  FD_SET(sock, &dev->rfds);
+  ip_context_rfds_fd_set(dev, sock);
 
   ssize_t len = 0;
   do {
