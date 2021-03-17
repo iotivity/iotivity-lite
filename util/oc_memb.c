@@ -148,8 +148,8 @@ _oc_memb_free(
 int
 oc_memb_inmemb(struct oc_memb *m, void *ptr)
 {
-  return (char *)ptr >= (char *)m->mem &&
-         (char *)ptr < (char *)m->mem + (m->num * m->size);
+  return ( (char *)ptr >= (char *)m->mem ) &&
+         ( (char *)ptr < ((char *)m->mem + (m->num * m->size)) );
 }
 /*---------------------------------------------------------------------------*/
 int
