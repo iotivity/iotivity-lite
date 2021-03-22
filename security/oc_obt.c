@@ -3124,6 +3124,83 @@ oc_obt_delete_own_cred_by_credid(int credid)
   return -1;
 }
 
+
+int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
+  const char* url, const char* at, const char* apn,
+  const char* cis, const char* sid, 
+  oc_response_handler_t cb, void* user_data)
+{
+  oc_device_t* device = oc_obt_get_owned_device_handle(uuid);
+  if (device == NULL)
+  {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+    PRINT("Could not find device from udn %s\n", di);
+    return -1;
+  }
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (ep == NULL) {
+    PRINT("Could not find ep from device \n");
+    return -1;
+  }
+
+  PRINT("at %s \n", at);
+  PRINT("apn %s \n", apn);
+  PRINT("cis %s \n", cis);
+  PRINT("sid %s \n", sid);
+  if (oc_init_post(url, ep, NULL, cb, LOW_QOS, user_data)) {
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, at, at);
+    oc_rep_set_text_string(root, apn, apn);
+    oc_rep_set_text_string(root, cis, cis);
+    oc_rep_set_text_string(root, sid, sid);
+    oc_rep_end_root_object();
+    if (oc_do_post())
+      PRINT("Sent POST request\n");
+    else {
+      PRINT("Could not send POST request\n");
+      return -1;
+    }
+  }
+  else {
+    PRINT("Could not init POST request\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+int oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid,
+  const char* url, oc_response_handler_t cb, void* user_data)
+{
+  // TODO get the URL from the device
+  //char url[200] = "/CoapCloudConfResURI";
+  int err = 0;
+
+  //oc_device_t* device = oc_obt_get_cached_device_handle(uuid);
+  oc_device_t* device = oc_obt_get_owned_device_handle(uuid);
+  if (device == NULL)
+  {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+    PRINT("Could not find device from udn %s\n", di);
+    return -1;
+  }
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (ep == NULL) {
+    PRINT("Could not find ep from device \n");
+    return -1;
+  }
+
+  if (oc_do_get(url, ep, NULL, cb, LOW_QOS, user_data)) {
+    err = -1;
+  }
+
+  return err;
+}
+
 void
 oc_obt_set_sd_info(char *name, bool priv)
 {

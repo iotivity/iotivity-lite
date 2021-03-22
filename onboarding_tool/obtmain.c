@@ -112,6 +112,11 @@ display_menu(void)
   PRINT("[26] Provision Server Group OSCORE context\n");
 #endif /* OC_OSCORE */
   PRINT("[27] Set security domain info\n");
+#ifdef OC_CLOUD
+  PRINT("-----------------------------------------------\n");
+  PRINT("[30] Provision cloud config info\n");
+  PRINT("[31] RETRIEVE cloud config info\n");
+#endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -1774,6 +1779,147 @@ set_sd_info()
   oc_obt_set_sd_info(name, priv);
 }
 
+#ifdef OC_CLOUD
+
+static void
+post_response_cloud_config(oc_client_response_t* data)
+{
+  PRINT("post_response_cloud_config:\n");
+  if (data->code == OC_STATUS_CHANGED)
+    PRINT("POST response: CHANGED\n");
+  else if (data->code == OC_STATUS_CREATED)
+    PRINT("POST response: CREATED\n");
+  else
+    PRINT("POST response code %d\n", data->code);
+
+  if (data->payload != NULL) {
+    print_rep(data->payload, false);
+  }
+}
+
+
+static void
+set_cloud_info(void)
+{
+  char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
+  char cis[64] = "coap+tcp://127.0.0.1:5683";
+  char at[64] = "test";
+  char sid[64] = "00000000-0000-0000-0000-000000000001";
+  char apn[64] = "plgd";
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to configure: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("configuring: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+
+  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  SCANF("%63s", url);
+  PRINT("\nPayload\n");
+  PRINT("\nEnter access token 'at' ('test') :");
+  SCANF("%63s", at);
+  PRINT("\nEnter apn ('plgd'): ");
+  SCANF("%63s", apn);
+  PRINT("\nEnter cis ('coap+tcp://127.0.0.1:5684'):");
+  SCANF("%63s", cis);
+  PRINT("\nEnter sid ('00000000-0000-0000-0000-000000000001'):");
+  SCANF("%63s", sid);
+
+  otb_mutex_lock(app_sync_lock);
+ 
+    oc_obt_update_cloud_conf_device(&device_uuid, url,
+      at, apn, cis, sid,
+      post_response_cloud_config, NULL);
+  
+  otb_mutex_unlock(app_sync_lock);
+}
+
+
+static void
+get_cloud_info(void)
+{
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+  char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to retrieve Cloud config from: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("retrieving: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  SCANF("%63s", url);
+
+  PRINT("\nretrieving data from %s :\n", url);
+
+  otb_mutex_lock(app_sync_lock);
+  oc_obt_retrieve_cloud_conf_device(&device_uuid, url,
+    post_response_cloud_config, NULL);
+  otb_mutex_unlock(app_sync_lock);
+}
+
+#endif /* OC_CLOUD */
+
 void
 factory_presets_cb(size_t device, void *data)
 {
@@ -2033,6 +2179,14 @@ main(void)
     case 27:
       set_sd_info();
       break;
+#ifdef OC_CLOUD
+    case 30:
+      set_cloud_info();
+      break;
+  case 31:
+      get_cloud_info();
+      break;
+#endif /* OC_CLOUD */
 #ifdef OC_PKI
     case 96:
       install_trust_anchor();

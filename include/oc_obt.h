@@ -1150,6 +1150,55 @@ void oc_obt_free_acl(oc_sec_acl_t *acl);
  */
 int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
+
+/**
+ * sets the data (POST) for the oic.r.coapcloudconf resource
+ *
+ * @param[in] uuid the uuid of the remote device
+ * @param[in] url of the resource
+ * @param[in] at Access Token
+ * @param[in] apn Auth Provider Name
+ * @param[in] cis  OCF Cloud interface URL
+ * @param[in] sid  OCF Cloud UUID
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               request
+ * @param[in] user_data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
+int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
+  const char* url, const char* at, const char* apn,
+  const char* cis, const char* sid,
+  oc_response_handler_t cb, void* user_data);
+
+/**
+ * sets the data (POST) for the oic.r.coapcloudconf resource
+ *
+ * @param[in] uuid the uuid of the remote device
+ * @param[in] url of the resource
+ * @param[in] cb callback invoked to indicate the success or failure of the
+ *               request
+ * @param[in] user_data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ *
+ * @return
+ *  - `0` on success
+ *  - `-1` on failure
+ */
+int oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid,
+  const char* url, oc_response_handler_t cb, void* user_data);
+
+/**
+ * sets the secure domain info
+ *
+ * @param[in] name the name of the secure domain
+ * @param[in] priv privacy indicator
+ */
 void oc_obt_set_sd_info(char *name, bool priv);
 #ifdef __cplusplus
 }
