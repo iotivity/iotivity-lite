@@ -34,6 +34,7 @@ struct oc_separate_response_s
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+  size_t len;
 };
 
 struct oc_response_buffer_s
