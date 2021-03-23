@@ -235,10 +235,11 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_start_root_object();
       oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
       oc_rep_end_root_object();
-      /* notify_observers is automatically triggered in
-         oc_ri_invoke_coap_entity_handler() for oic.wk.con,
-         we cannot notify name change of oic.wk.d, as this
-         is not observable */
+
+#ifdef OC_SERVER
+      oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, device);
+      oc_notify_observers(device_resource);
+#endif /* OC_SERVER */
       changed = true;
       break;
     }
@@ -325,11 +326,11 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(
       OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
+      OC_DISCOVERABLE| OC_OBSERVABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
   } else {
     oc_core_populate_resource(
       OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
+      OC_DISCOVERABLE| OC_OBSERVABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
   oc_gen_uuid(&oc_device_info[device_count].piid);
@@ -441,7 +442,7 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 
   /* Populating resource obuject */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_R, OC_DISCOVERABLE, oc_core_platform_handler,
+                            OC_IF_R, OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_platform_handler,
                             0, 0, 0, 1, "oic.wk.p");
 
   oc_gen_uuid(&oc_platform_info.pi);
