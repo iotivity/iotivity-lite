@@ -870,7 +870,7 @@ network_event_thread(void *data)
   int i, n;
 
   while (dev->terminate != 1) {
-    setfds = dev->rfds;
+    setfds = ip_context_rfds_fd_copy(dev);
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
     if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
@@ -1402,6 +1402,10 @@ oc_connectivity_init(size_t device)
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
 
+  if (pthread_mutex_init(&dev->rfds_mutex, NULL) != 0) {
+    oc_abort("error initializing TCP adapter mutex");
+  }
+
   if (pipe(dev->shutdown_pipe) < 0) {
     OC_ERR("shutdown pipe: %d", errno);
     return -1;
@@ -1645,6 +1649,8 @@ oc_connectivity_shutdown(size_t device)
   close(dev->shutdown_pipe[1]);
   close(dev->shutdown_pipe[0]);
 
+  pthread_mutex_destroy(&dev->rfds_mutex);
+
   free_endpoints_list(dev);
 
   oc_list_remove(ip_contexts, dev);
@@ -1807,4 +1813,27 @@ set_nonblock_socket(int sockfd) {
   }
 
   return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+}
+
+void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_SET(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
+}
+
+void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_CLR(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
+}
+
+fd_set ip_context_rfds_fd_copy(ip_context_t* dev)
+{
+  fd_set setfds;
+  pthread_mutex_lock(&dev->rfds_mutex);
+  memcpy(&setfds, &dev->rfds, sizeof(dev->rfds));
+  pthread_mutex_unlock(&dev->rfds_mutex);
+  return setfds;
 }
