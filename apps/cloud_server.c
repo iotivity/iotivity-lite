@@ -18,6 +18,7 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_pki.h"
 #include <signal.h>
 #include <inttypes.h>
@@ -192,6 +193,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 static int
 app_init(void)
 {
+  oc_set_con_res_announced(true);
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
@@ -563,12 +565,20 @@ register_collection(void)
 #endif /* OC_COLLECTIONS */
 
 static void
+register_con()
+{
+  oc_resource_t* con_res = oc_core_get_resource_by_index(OCF_CON, 0);
+  oc_cloud_add_resource(con_res);
+}
+
+static void
 register_resources(void)
 {
   register_lights();
 #ifdef OC_COLLECTIONS
   register_collection();
 #endif /* OC_COLLECTIONS */
+  register_con();
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
