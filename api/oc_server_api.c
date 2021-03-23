@@ -458,7 +458,7 @@ static oc_event_callback_retval_t
 oc_delayed_delete_resource_cb(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
-#ifdef CLOUD
+#ifdef OC_CLOUD
   oc_cloud_delete_resource(resource);
 #endif
   oc_delete_resource(resource);
