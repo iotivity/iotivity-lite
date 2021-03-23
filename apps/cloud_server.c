@@ -288,7 +288,7 @@ register_lights(void)
 int64_t g_battery_level = 94;
 
 static bool
-set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_switches_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
   (void)data;
@@ -309,7 +309,7 @@ set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 }
 
 static void
-get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+get_switches_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                         void *data)
 {
   (void)resource;
@@ -322,6 +322,8 @@ get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
     break;
   }
 }
+
+#ifdef OC_COLLECTIONS_IF_CREATE
 
 /* Resource creation and request handlers for oic.r.switch.binary instances */
 typedef struct oc_switch_t
@@ -422,7 +424,18 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-#ifdef OC_COLLECTIONS_IF_CREATE
+static void
+delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
+  OC_DBG("%s", __func__);
+  (void)request;
+  (void)iface_mask;
+  oc_switch_t *cswitch = (oc_switch_t *)user_data;
+
+  oc_delayed_delete_resource(cswitch->resource);
+  oc_send_response(request, OC_STATUS_DELETED);
+}
 
 /**
  *  Get pointer to the first element that either has no following element
@@ -469,9 +482,9 @@ get_switch_instance(const char *href, oc_string_array_t *types,
     if (prev) {
       cswitch_id = prev->id + 1;
     }
-    const size_t href_size = sizeof("/platform/") + 5; // 5 = max number of digits in uint16_t value
+    const size_t href_size = sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
     char cswitch_href[href_size];
-    snprintf(cswitch_href, sizeof(cswitch_href), "/platform/%u", (unsigned)cswitch_id);
+    snprintf(cswitch_href, sizeof(cswitch_href), "/switches/%u", (unsigned)cswitch_id);
 
     cswitch->resource = oc_new_resource(
       NULL, cswitch_href, oc_string_array_get_allocated_size(*types), device);
@@ -487,13 +500,14 @@ get_switch_instance(const char *href, oc_string_array_t *types,
       oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
       oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
                                       cswitch);
+      oc_resource_set_request_handler(cswitch->resource, OC_DELETE, delete_cswitch,
+                                      cswitch);
       oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
                                       cswitch);
       oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
                                      cswitch, set_switch_properties, cswitch);
       oc_add_resource(cswitch->resource);
       oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
-
       oc_list_insert(switches, prev, cswitch);
       return cswitch->resource;
     } else {
@@ -506,6 +520,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
 static void
 free_switch_instance(oc_resource_t *resource)
 {
+  OC_DBG("%s", __func__);
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
     if (cswitch->resource == resource) {
@@ -523,7 +538,7 @@ free_switch_instance(oc_resource_t *resource)
 static void
 register_collection(void)
 {
-  oc_resource_t* col = oc_new_collection(NULL, "/platform", 1, 0);
+  oc_resource_t* col = oc_new_collection(NULL, "/switches", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
@@ -537,8 +552,8 @@ register_collection(void)
 #endif /* OC_COLLECTIONS_IF_CREATE */
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
-  oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
-                                 set_platform_properties, NULL);
+  oc_resource_set_properties_cbs(col, get_switches_properties, NULL,
+                                 set_switches_properties, NULL);
   oc_add_collection(col);
   PRINT("\tResources added to collection.\n");
 

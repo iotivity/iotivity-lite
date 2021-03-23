@@ -52,6 +52,8 @@ void oc_rt_factory_free_created_resource(oc_rt_created_t *rtc,
 
 void oc_rt_factory_free_created_resources(size_t device);
 
+oc_rt_created_t* oc_rt_get_factory_create_for_resource(oc_resource_t* resource);
+
 void oc_fi_factory_free_all_created_resources(void);
 
 #ifdef __cplusplus

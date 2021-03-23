@@ -137,6 +137,7 @@ void *oc_list_chop(oc_list_t list);
 
 void oc_list_add(oc_list_t list, void *item);
 void oc_list_remove(oc_list_t list, void *item);
+void* oc_list_remove2(oc_list_t list, void *item);
 
 int oc_list_length(oc_list_t list);
 

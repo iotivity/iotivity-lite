@@ -440,6 +440,23 @@ oc_delete_resource(oc_resource_t *resource)
   return oc_ri_delete_resource(resource);
 }
 
+static oc_event_callback_retval_t
+oc_delayed_delete_resource_cb(void *data)
+{
+  oc_resource_t *resource = (oc_resource_t *)data;
+#ifdef CLOUD
+  oc_cloud_delete_resource(resource);
+#endif
+  oc_delete_resource(resource);
+  return OC_EVENT_DONE;
+}
+
+void
+oc_delayed_delete_resource(oc_resource_t *resource)
+{
+  oc_set_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
+}
+
 void
 oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
