@@ -416,20 +416,6 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
   }
 }
 
-#ifdef OC_OSCORE
-void
-oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)
-{
-  if (resource) {
-    if (supported) {
-      resource->properties |= OC_SECURE_MCAST;
-    } else {
-      resource->properties &= ~OC_SECURE_MCAST;
-    }
-  }
-}
-#endif /* OC_OSCORE */
-
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
@@ -505,8 +491,8 @@ oc_send_separate_response(oc_separate_response_t *handle,
   while (cur != NULL) {
     next = cur->next;
     if (cur->observe < 3) {
-      coap_transaction_t *t = coap_new_transaction(
-        coap_get_mid(), cur->token, cur->token_len, &cur->endpoint);
+      coap_transaction_t *t =
+        coap_new_transaction(coap_get_mid(), &cur->endpoint);
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);

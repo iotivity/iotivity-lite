@@ -579,7 +579,7 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                              void *data);
 
 /**
- * Provision pairwise 128-bit pre-shared key (PSK) credentials to a Client
+ * Provision pair-wise 128-bit pre-shared key (PSK) credentials to a Client
  * and Server so they may establish a secure (D)TLS session.
  *
  * Example:
@@ -588,9 +588,9 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  * provision_credentials_cb(int status, void *data)
  * {
  *   if (status >= 0) {
- *     printf("Successfully provisioned pairwise credentials\n");
+ *     printf("Successfully provisioned pair-wise credentials\n");
  *   } else {
- *     printf("ERROR provisioning pairwise credentials\n");
+ *     printf("ERROR provisioning pair-wise credentials\n");
  *   }
  * }
  *
@@ -616,22 +616,6 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  */
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
-
-int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
-                                              oc_uuid_t *uuid2,
-                                              oc_obt_status_cb_t cb,
-                                              void *data);
-
-int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
-                                                 const char *desc,
-                                                 oc_obt_device_status_cb_t cb,
-                                                 void *data);
-
-int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
-                                                 oc_uuid_t *subjectuuid,
-                                                 const char *desc,
-                                                 oc_obt_device_status_cb_t cb,
-                                                 void *data);
 /**
  * Provision identity certificates
  *

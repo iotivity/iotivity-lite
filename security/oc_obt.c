@@ -25,8 +25,8 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
-#include "oc_core_res.h"
 #include "oc_obt.h"
+#include "oc_core_res.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_certs.h"
 #include "security/oc_cred_internal.h"
@@ -34,9 +34,9 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_keypair.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
-#include "security/oc_sdi.h"
 #include "security/oc_store.h"
 #include "security/oc_tls.h"
+#include "security/oc_sdi.h"
 #include <stdlib.h>
 
 OC_MEMB(oc_discovery_s, oc_discovery_cb_t, 1);
@@ -50,14 +50,6 @@ OC_LIST(oc_switch_dos_ctx_l);
 
 OC_MEMB(oc_hard_reset_ctx_m, oc_hard_reset_ctx_t, 1);
 OC_LIST(oc_hard_reset_ctx_l);
-
-#ifdef OC_OSCORE
-OC_MEMB(oc_oscoreprov_ctx_m, oc_oscoreprov_ctx_t, 1);
-OC_LIST(oc_oscoreprov_ctx_l);
-
-OC_MEMB(oc_oscoregroupprov_ctx_m, oc_oscoregroupprov_ctx_t, 1);
-OC_LIST(oc_oscoregroupprov_ctx_l);
-#endif /* OC_OSCORE */
 
 OC_MEMB(oc_credprov_ctx_m, oc_credprov_ctx_t, 1);
 OC_LIST(oc_credprov_ctx_l);
@@ -101,11 +93,6 @@ uint8_t private_key[OC_ECDSA_PRIVKEY_SIZE];
 size_t private_key_size;
 int root_cert_credid;
 #endif /* OC_PKI */
-
-#ifdef OC_OSCORE
-uint8_t groupid[OSCORE_CTXID_LEN];
-uint8_t group_secret[OSCORE_MASTER_SECRET_LEN];
-#endif /* OC_OSCORE */
 
 /* Internal utility functions */
 oc_endpoint_t *
@@ -247,7 +234,7 @@ free_device(void *data)
   return OC_EVENT_DONE;
 }
 
-#if defined(OC_PKI) || defined(OC_OSCORE)
+#ifdef OC_PKI
 static void
 oc_obt_dump_state(void)
 {
@@ -257,15 +244,8 @@ oc_obt_dump_state(void)
 
   oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   oc_rep_start_root_object();
-#ifdef OC_PKI
   oc_rep_set_byte_string(root, private_key, private_key, private_key_size);
   oc_rep_set_int(root, credid, root_cert_credid);
-#endif /* OC_PKI */
-#ifdef OC_OSCORE
-  oc_rep_set_byte_string(root, groupid, groupid, OSCORE_CTXID_LEN);
-  oc_rep_set_byte_string(root, group_secret, group_secret,
-                         OSCORE_MASTER_SECRET_LEN);
-#endif /* OC_OSCORE */
   oc_rep_end_root_object();
 
   int size = oc_rep_get_encoded_payload_size();
@@ -297,7 +277,6 @@ oc_obt_load_state(void)
     if (err == 0) {
       while (rep != NULL) {
         switch (rep->type) {
-#ifdef OC_PKI
         case OC_REP_INT:
           if (oc_string_len(rep->name) == 6 &&
               memcmp(oc_string(rep->name), "credid", 6) == 0) {
@@ -310,17 +289,6 @@ oc_obt_load_state(void)
             private_key_size = oc_string_len(rep->value.string);
             memcpy(private_key, oc_string(rep->value.string), private_key_size);
           }
-#endif /* OC_PKI */
-#ifdef OC_OSCORE
-          else if (oc_string_len(rep->name) == 7 &&
-                   memcmp(oc_string(rep->name), "groupid", 7) == 0) {
-            memcpy(groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
-          } else if (oc_string_len(rep->name) == 12 &&
-                     memcmp(oc_string(rep->name), "group_secret", 12) == 0) {
-            memcpy(group_secret, oc_string(rep->value.string),
-                   OSCORE_MASTER_SECRET_LEN);
-          }
-#endif /* OC_OSCORE */
           break;
         default:
           break;
@@ -332,42 +300,7 @@ oc_obt_load_state(void)
   }
   free(buf);
 }
-#endif /* OC_PKI || OC_OSCORE */
-
-#ifdef OC_OSCORE
-static void
-gen_oscore_secret(uint8_t *secret)
-{
-  int i = 0;
-  while (i < OSCORE_MASTER_SECRET_LEN) {
-    unsigned int r = oc_random_value();
-    size_t copy_len = (sizeof(r) < (unsigned)(OSCORE_MASTER_SECRET_LEN - i))
-                        ? sizeof(r)
-                        : (unsigned)OSCORE_MASTER_SECRET_LEN - i;
-    memcpy(&secret[i], &r, copy_len);
-    i += copy_len;
-  }
-}
-
-static void
-gen_oscore_ctxid(uint8_t *id, bool group)
-{
-  int i = 0;
-  while (i < OSCORE_CTXID_LEN) {
-    unsigned int r1 = oc_random_value(), r2 = oc_random_value();
-    size_t copy_len = (sizeof(r1) < (unsigned)(OSCORE_CTXID_LEN - i))
-                        ? sizeof(r1)
-                        : (unsigned)OSCORE_CTXID_LEN - i;
-    memcpy(&id[i], &r2, copy_len);
-    i += copy_len;
-  }
-  if (group) {
-    id[0] = 0x02;
-  } else {
-    id[0] = 0x01;
-  }
-}
-#endif /* OC_OSCORE */
+#endif /* OC_PKI */
 
 struct list
 {
@@ -916,462 +849,6 @@ oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 }
 /* End of hard RESET sequence */
 
-#ifdef OC_OSCORE
-/* Provision pairwise OSCORE contexts sequence */
-static void
-free_oscoreprov_state(oc_oscoreprov_ctx_t *p, int status)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, p)) {
-    return;
-  }
-  oc_list_remove(oc_oscoreprov_ctx_l, p);
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  oc_tls_close_connection(ep);
-  if (p->device2) {
-    ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
-    oc_tls_close_connection(ep);
-  }
-  p->cb.cb(status, p->cb.data);
-  if (p->switch_dos) {
-    free_switch_dos_state(p->switch_dos);
-    p->switch_dos = NULL;
-  }
-  oc_memb_free(&oc_oscoreprov_ctx_m, p);
-}
-
-static void
-free_oscoreprov_ctx(oc_oscoreprov_ctx_t *ctx, int status)
-{
-  free_oscoreprov_state(ctx, status);
-}
-
-static void
-device2oscore_RFNOP(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    free_oscoreprov_ctx(p, 0);
-  } else {
-    free_oscoreprov_ctx(p, -1);
-  }
-}
-
-static void
-device1oscore_RFNOP(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    p->switch_dos =
-      switch_dos(p->device2, OC_DOS_RFNOP, device2oscore_RFNOP, p);
-    if (p->switch_dos) {
-      return;
-    }
-  }
-
-  free_oscoreprov_ctx(p, -1);
-}
-
-static void
-device2oscore_cred(oc_client_response_t *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data->user_data)) {
-    return;
-  }
-
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data->user_data;
-
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_oscoreprov_ctx(p, -1);
-    return;
-  }
-
-  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device1oscore_RFNOP, p);
-  if (!p->switch_dos) {
-    free_oscoreprov_ctx(p, -1);
-  }
-}
-
-static void
-device1oscore_cred(oc_client_response_t *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data->user_data)) {
-    return;
-  }
-
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data->user_data;
-
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_oscoreprov_ctx(p, -1);
-    return;
-  }
-
-  char d1uuid[OC_UUID_LEN];
-  oc_uuid_to_str(&p->device1->uuid, d1uuid, OC_UUID_LEN);
-  char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-  size_t hex_str_len;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
-
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &device2oscore_cred, HIGH_QOS,
-                   p)) {
-    oc_rep_start_root_object();
-    oc_rep_set_array(root, creds);
-    oc_rep_object_array_start_item(creds);
-
-    oc_rep_set_int(creds, credtype, OC_CREDTYPE_OSCORE);
-    oc_rep_set_text_string(creds, subjectuuid, d1uuid);
-
-    oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, p->secret,
-                           OSCORE_MASTER_SECRET_LEN);
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-    oc_rep_close_object(creds, privatedata);
-
-    oc_rep_set_object(creds, oscore);
-
-    hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-    oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
-                                     &hex_str_len);
-    oc_rep_set_text_string(oscore, senderid, hex_str);
-
-    hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-    oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
-                                     &hex_str_len);
-    oc_rep_set_text_string(oscore, recipientid, hex_str);
-
-    oc_rep_close_object(creds, oscore);
-
-    oc_rep_object_array_end_item(creds);
-    oc_rep_close_array(root, creds);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
-  }
-
-  free_oscoreprov_ctx(p, -1);
-}
-
-static void
-device2oscore_RFPRO(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    gen_oscore_ctxid(p->sendid, false);
-    gen_oscore_ctxid(p->recvid, false);
-    gen_oscore_secret(p->secret);
-
-    char d2uuid[OC_UUID_LEN];
-    oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
-    char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-    size_t hex_str_len;
-    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &device1oscore_cred, HIGH_QOS,
-                     p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
-
-      oc_rep_set_int(creds, credtype, OC_CREDTYPE_OSCORE);
-      oc_rep_set_text_string(creds, subjectuuid, d2uuid);
-
-      oc_rep_set_object(creds, privatedata);
-      oc_rep_set_byte_string(privatedata, data, p->secret,
-                             OSCORE_MASTER_SECRET_LEN);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-      oc_rep_close_object(creds, privatedata);
-
-      oc_rep_set_object(creds, oscore);
-
-      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-      oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
-                                       &hex_str_len);
-      oc_rep_set_text_string(oscore, senderid, hex_str);
-
-      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-      oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
-                                       &hex_str_len);
-      oc_rep_set_text_string(oscore, recipientid, hex_str);
-
-      oc_rep_close_object(creds, oscore);
-
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
-  }
-
-  free_oscoreprov_state(p, -1);
-}
-
-static void
-device1oscore_RFPRO(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoreprov_ctx_l, data)) {
-    return;
-  }
-  oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data;
-
-  p->switch_dos = NULL;
-  if (status >= 0) {
-    p->switch_dos =
-      switch_dos(p->device2, OC_DOS_RFPRO, device2oscore_RFPRO, p);
-    if (!p->switch_dos) {
-      free_oscoreprov_ctx(p, -1);
-    }
-  } else {
-    free_oscoreprov_ctx(p, -1);
-  }
-}
-
-int
-oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
-                                          oc_obt_status_cb_t cb, void *data)
-{
-  oc_oscoreprov_ctx_t *p = oc_memb_alloc(&oc_oscoreprov_ctx_m);
-  if (!p) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid1)) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid2)) {
-    return -1;
-  }
-
-  oc_device_t *device1 = oc_obt_get_owned_device_handle(uuid1);
-  if (!device1) {
-    return -1;
-  }
-
-  oc_device_t *device2 = oc_obt_get_owned_device_handle(uuid2);
-  if (!device2) {
-    return -1;
-  }
-
-  p->cb.cb = cb;
-  p->cb.data = data;
-  p->device1 = device1;
-  p->device2 = device2;
-
-  oc_tls_select_psk_ciphersuite();
-
-  p->switch_dos = switch_dos(device1, OC_DOS_RFPRO, device1oscore_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_oscoreprov_ctx_m, p);
-    return -1;
-  }
-
-  oc_list_add(oc_oscoreprov_ctx_l, p);
-
-  return 0;
-}
-/* End of provision pairwise OSCORE contexts sequence */
-/* Provision Group OSCORE contexts */
-static void
-free_oscoregroupprov_state(oc_oscoregroupprov_ctx_t *request, int status)
-{
-  if (!is_item_in_list(oc_oscoregroupprov_ctx_l, request)) {
-    return;
-  }
-  oc_list_remove(oc_oscoregroupprov_ctx_l, request);
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(request->device->endpoint);
-  oc_tls_close_connection(ep);
-  if (request->switch_dos) {
-    free_switch_dos_state(request->switch_dos);
-  }
-  if (oc_string_len(request->desc) > 0) {
-    oc_free_string(&request->desc);
-  }
-  request->cb.cb(&request->device->uuid, status, request->cb.data);
-  oc_memb_free(&oc_oscoregroupprov_ctx_m, request);
-}
-
-static void
-deviceoscoregroup_RFNOP(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoregroupprov_ctx_l, data)) {
-    return;
-  }
-
-  oc_oscoregroupprov_ctx_t *p = (oc_oscoregroupprov_ctx_t *)data;
-  p->switch_dos = NULL;
-
-  if (status >= 0) {
-    free_oscoregroupprov_state(p, 0);
-  } else {
-    free_oscoregroupprov_state(p, -1);
-  }
-}
-
-static void
-deviceoscoregroup_cred(oc_client_response_t *data)
-{
-  if (!is_item_in_list(oc_oscoregroupprov_ctx_l, data->user_data)) {
-    return;
-  }
-
-  oc_oscoregroupprov_ctx_t *p = (oc_oscoregroupprov_ctx_t *)data->user_data;
-
-  if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_oscoregroupprov_state(p, -1);
-    return;
-  }
-
-  p->switch_dos =
-    switch_dos(p->device, OC_DOS_RFNOP, deviceoscoregroup_RFNOP, p);
-  if (!p->switch_dos) {
-    free_oscoregroupprov_state(p, -1);
-  }
-}
-
-static void
-deviceoscoregroup_RFPRO(int status, void *data)
-{
-  if (!is_item_in_list(oc_oscoregroupprov_ctx_l, data)) {
-    return;
-  }
-  oc_oscoregroupprov_ctx_t *p = (oc_oscoregroupprov_ctx_t *)data;
-
-  p->switch_dos = NULL;
-  if (status >= 0) {
-    char groupsub[OC_UUID_LEN];
-    oc_uuid_to_str(&p->subjectuuid, groupsub, OC_UUID_LEN);
-
-    char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-    size_t hex_str_len;
-    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &deviceoscoregroup_cred,
-                     HIGH_QOS, p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
-
-      oc_rep_set_int(creds, credtype, p->type);
-      oc_rep_set_text_string(creds, subjectuuid, groupsub);
-
-      oc_rep_set_object(creds, privatedata);
-      oc_rep_set_byte_string(privatedata, data, group_secret,
-                             OSCORE_MASTER_SECRET_LEN);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
-      oc_rep_close_object(creds, privatedata);
-
-      oc_rep_set_object(creds, oscore);
-
-      hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
-      oc_conv_byte_array_to_hex_string(groupid, OSCORE_CTXID_LEN, hex_str,
-                                       &hex_str_len);
-      if (p->type == OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
-        oc_rep_set_text_string(oscore, senderid, hex_str);
-      } else {
-        oc_rep_set_text_string(oscore, recipientid, hex_str);
-      }
-      oc_rep_set_text_string(oscore, desc, oc_string(p->desc));
-      oc_rep_close_object(creds, oscore);
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
-  }
-
-  free_oscoregroupprov_state(p, -1);
-}
-
-static int
-obt_provision_group_oscore_context(oc_uuid_t *uuid, oc_uuid_t *subjectuuid,
-                                   const char *desc,
-                                   oc_obt_device_status_cb_t cb,
-                                   oc_sec_credtype_t type, void *data)
-{
-  oc_oscoregroupprov_ctx_t *p = oc_memb_alloc(&oc_oscoregroupprov_ctx_m);
-  if (!p) {
-    return -1;
-  }
-
-  if (!oc_obt_is_owned_device(uuid)) {
-    return -1;
-  }
-
-  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
-  if (!device) {
-    return -1;
-  }
-
-  p->cb.cb = cb;
-  p->cb.data = data;
-  p->device = device;
-  p->type = type;
-  if (desc) {
-    oc_new_string(&p->desc, desc, strlen(desc));
-  }
-  memcpy(p->subjectuuid.id, subjectuuid->id, 16);
-
-  oc_tls_select_psk_ciphersuite();
-
-  p->switch_dos = switch_dos(device, OC_DOS_RFPRO, deviceoscoregroup_RFPRO, p);
-  if (!p->switch_dos) {
-    oc_memb_free(&oc_oscoregroupprov_ctx_m, p);
-    return -1;
-  }
-
-  oc_list_add(oc_oscoregroupprov_ctx_l, p);
-
-  return 0;
-}
-
-int
-oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid, const char *desc,
-                                             oc_obt_device_status_cb_t cb,
-                                             void *data)
-{
-  oc_uuid_t subjectuuid;
-  memset(&subjectuuid, 0, sizeof(oc_uuid_t));
-  memcpy(subjectuuid.id, groupid, OSCORE_CTXID_LEN);
-  memcpy(subjectuuid.id + OSCORE_CTXID_LEN, groupid, OSCORE_CTXID_LEN);
-  return obt_provision_group_oscore_context(
-    uuid, &subjectuuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_CLIENT, data);
-}
-
-int
-oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
-                                             oc_uuid_t *subjectuuid,
-                                             const char *desc,
-                                             oc_obt_device_status_cb_t cb,
-                                             void *data)
-{
-  return obt_provision_group_oscore_context(
-    uuid, subjectuuid, desc, cb, OC_CREDTYPE_OSCORE_MCAST_SERVER, data);
-}
-/* End of provision group OSCORE contexts */
-#endif /* OC_OSCORE */
-
 /* Provision pairwise credentials sequence */
 static void
 free_credprov_state(oc_credprov_ctx_t *p, int status)
@@ -1618,7 +1095,7 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 
   return 0;
 }
-/* End of provision pairwise credentials sequence */
+/* End of provision pair-wise credentials sequence */
 
 #ifdef OC_PKI
 /* Construct list of role ids to encode into a role certificate */
@@ -3165,7 +2642,7 @@ oc_obt_init(void)
     ps->isop = true;
     ps->s = OC_DOS_RFNOP;
 
-    oc_sec_acl_add_bootsrap_acl(0);
+    oc_sec_ace_clear_bootstrap_aces(0);
 
     oc_gen_uuid(&sdi->uuid);
     oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
@@ -3178,12 +2655,6 @@ oc_obt_init(void)
     oc_sec_dump_ael(0);
     oc_sec_dump_sdi(0);
 
-#ifdef OC_OSCORE
-    OC_DBG("oc_obt: generating OSCORE group context id");
-    gen_oscore_ctxid(groupid, true);
-    OC_DBG("oc_obt: generating OSCORE group secret");
-    gen_oscore_secret(group_secret);
-#endif /* OC_OSCORE */
 #ifdef OC_PKI
     uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
     size_t public_key_size = 0;
@@ -3198,23 +2669,21 @@ oc_obt_init(void)
       root_cert_credid = oc_obt_generate_self_signed_root_cert(
         root_subject, public_key, OC_ECDSA_PUBKEY_SIZE, private_key,
         private_key_size);
+      if (root_cert_credid > 0) {
+        oc_obt_dump_state();
+        OC_DBG("oc_obt: successfully returning from obt_init()");
+        return 0;
+      }
     }
+    OC_DBG("oc_obt: returning from oc_obt() with errors");
+    return -1;
 #endif /* OC_PKI */
-#if defined(OC_PKI) || defined(OC_OSCORE)
-#ifdef OC_PKI
-    if (root_cert_credid <= 0) {
-      OC_DBG("oc_obt: returning from oc_obt_init() with errors");
-      return -1;
-    }
-#endif /* OC_PKI */
-    oc_obt_dump_state();
-#endif /* OC_PKI || OC_OSCORE */
   } else {
-#if defined(OC_PKI) || defined(OC_OSCORE)
+#ifdef OC_PKI
     oc_obt_load_state();
-#endif /* OC_PKI || OC_OSCORE */
+#endif /* OC_PKI */
   }
-  OC_DBG("oc_obt: successfully returning from oc_obt_init()");
+  OC_DBG("oc_obt: successfully returning from obt_init()");
   return 0;
 }
 

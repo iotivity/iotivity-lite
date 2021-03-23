@@ -16,8 +16,7 @@ sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setupt
  python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
 
 cd ./iotivity-lite/port/esp32
-git clone https://github.com/espressif/esp-idf.git
-(cd esp-idf && git checkout 457ce080aec9811faee26a1ea5293fff17049fee && git submodule init && git submodule update)
+git clone --recursive https://github.com/espressif/esp-idf.git 
 ./esp-idf/install.sh
 . ./esp-idf/export.sh
 ```
@@ -27,8 +26,7 @@ Jump to the [common steps](#common-steps) below.
 ### MacOS
 ```bash
 cd ./iotivity-lite/port/esp32
-git clone https://github.com/espressif/esp-idf.git
-(cd esp-idf && git checkout 457ce080aec9811faee26a1ea5293fff17049fee && git submodule init && git submodule update)
+git clone --recursive https://github.com/espressif/esp-idf.git 
 ./esp-idf/install.sh
 . ./esp-idf/export.sh
 ```
