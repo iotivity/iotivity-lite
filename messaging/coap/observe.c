@@ -404,7 +404,8 @@ coap_notify_collection_observers(oc_resource_t *resource,
     }
     coap_set_header_content_format(notification, APPLICATION_VND_OCF_CBOR);
     coap_set_token(notification, obs->token, obs->token_len);
-    transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+    transaction = coap_new_transaction(coap_get_mid(), obs->token,
+                                       obs->token_len, &obs->endpoint);
     if (transaction) {
       obs->last_mid = transaction->mid;
       notification->mid = transaction->mid;
@@ -603,8 +604,8 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
                               SERVICE_UNAVAILABLE_5_03, 0);
       }
       coap_set_token(notification, obs->token, obs->token_len);
-      coap_transaction_t *transaction =
-        coap_new_transaction(coap_get_mid(), &obs->endpoint);
+      coap_transaction_t *transaction = coap_new_transaction(
+        coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
       if (transaction) {
         notification->mid = transaction->mid;
         transaction->message->length =
@@ -827,7 +828,8 @@ coap_notify_observers(oc_resource_t *resource,
                                            response_buf->content_format);
           }
           coap_set_token(notification, obs->token, obs->token_len);
-          transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+          transaction = coap_new_transaction(coap_get_mid(), obs->token,
+                                             obs->token_len, &obs->endpoint);
           if (transaction) {
             obs->last_mid = transaction->mid;
             notification->mid = transaction->mid;

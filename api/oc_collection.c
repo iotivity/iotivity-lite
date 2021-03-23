@@ -919,6 +919,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                     else
                       method_not_found = true;
                     break;
+                  default:
+                    break;
                   }
                 }
               }
@@ -989,6 +991,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       break;
     case OC_DELETE:
       code = oc_status_code(OC_STATUS_DELETED);
+      break;
+    default:
       break;
     }
   }

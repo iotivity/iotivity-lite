@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016, 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,9 @@
 #include "constants.h"
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
-
+#ifdef OC_OSCORE
+#include "oscore.h"
+#endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
 #include "port/oc_connectivity.h"
@@ -61,8 +63,7 @@
 #include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifndef MAX
@@ -78,10 +79,7 @@ extern "C"
 #endif
 
 /* bitmap for set options */
-enum
-{
-  OPTION_MAP_SIZE = sizeof(uint8_t) * 8
-};
+enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
 
 #define SET_OPTION(packet, opt)                                                \
   ((packet)->options[opt / OPTION_MAP_SIZE] |= 1 << (opt % OPTION_MAP_SIZE))
@@ -89,10 +87,7 @@ enum
   ((packet)->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE)))
 
 /* enum value for coap transport type  */
-typedef enum {
-  COAP_TRANSPORT_UDP,
-  COAP_TRANSPORT_TCP
-} coap_transport_type_t;
+typedef enum { COAP_TRANSPORT_UDP, COAP_TRANSPORT_TCP } coap_transport_type_t;
 
 /* parsed message struct */
 typedef struct
@@ -148,7 +143,7 @@ typedef struct
   uint8_t if_none_match;
 
 #ifdef OC_TCP
-  // Signal option values
+  /* CoAP over TCP Signal option values */
   uint32_t max_msg_size;
   uint8_t blockwise_transfer;
   uint8_t custody;
@@ -157,6 +152,17 @@ typedef struct
   uint32_t hold_off;
   uint16_t bad_csm_opt;
 #endif /* OC_TCP */
+
+#ifdef OC_OSCORE
+  /* OSCORE Option value */
+  uint8_t oscore_flags;
+  uint8_t piv[OSCORE_PIV_LEN];
+  uint8_t piv_len;
+  uint8_t kid_ctx[OSCORE_IDCTX_LEN];
+  uint8_t kid_ctx_len;
+  uint8_t kid[OSCORE_CTXID_LEN];
+  uint8_t kid_len;
+#endif /* OC_OSCORE */
 
   uint32_t payload_len;
   uint8_t *payload;
@@ -225,11 +231,17 @@ void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
 void coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
-                       uint16_t mid);
+                           uint16_t mid);
 size_t coap_serialize_message(void *packet, uint8_t *buffer);
+size_t coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
+                                     bool outer, bool oscore);
 void coap_send_message(oc_message_t *message);
+coap_status_t coap_oscore_parse_options(void *packet, uint8_t *data,
+                                        uint32_t data_len,
+                                        uint8_t *current_option, bool inner,
+                                        bool outer, bool oscore);
 coap_status_t coap_udp_parse_message(void *request, uint8_t *data,
-                                 uint16_t data_len);
+                                     uint16_t data_len);
 
 int coap_get_query_variable(void *packet, const char *name,
                             const char **output);
@@ -278,7 +290,8 @@ int coap_set_header_uri_host(void *packet, const char *host);
 size_t coap_get_header_uri_path(
   void *packet,
   const char **path); /* in-place string might not be 0-terminated. */
-size_t coap_set_header_uri_path(void *packet, const char *path, size_t path_len);
+size_t coap_set_header_uri_path(void *packet, const char *path,
+                                size_t path_len);
 
 size_t coap_get_header_uri_query(
   void *packet,
@@ -321,6 +334,9 @@ int coap_set_header_size1(void *packet, uint32_t size);
 int coap_get_payload(void *packet, const uint8_t **payload);
 int coap_set_payload(void *packet, const void *payload, size_t length);
 
+size_t coap_set_option_header(unsigned int delta, size_t length,
+                              uint8_t *buffer);
+
 #ifdef OC_TCP
 void coap_tcp_init_message(void *packet, uint8_t code);
 
@@ -328,6 +344,9 @@ size_t coap_tcp_get_packet_size(const uint8_t *data);
 
 coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data,
                                      uint32_t data_len);
+
+void coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
+                                   uint8_t *num_extended_length_bytes);
 #endif /* OC_TCP */
 
 #ifdef __cplusplus

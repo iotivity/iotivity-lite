@@ -322,19 +322,98 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #endif /* OC_DEBUG */
 
   bool is_DCR = oc_core_is_DCR(resource, resource->device);
+  bool is_SVR = oc_core_is_SVR(resource, resource->device);
   bool is_public = ((resource->properties & OC_SECURE) == 0);
+  bool is_vertical = false;
+  if (!is_DCR) {
+    is_vertical = oc_core_is_vertical_resource(resource, resource->device);
+  }
 
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  /* All unicast requests which are not received over the open Device DOC
+   * shall be rejected with an appropriate error message (e.g. forbidden),
+   * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
+   * Resource.
+   */
+  if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
+      oc_tls_num_peers(endpoint->device) == 1) {
+    OC_DBG("oc_sec_check_acl: unencrypted request received while DOC is open - "
+           "acess forbidden");
+    return false;
+  }
+  /* NCRs are accessible only in RFNOP */
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
     OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
     return false;
   }
-
-  oc_uuid_t *uuid = NULL;
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer) {
-    uuid = &peer->uuid;
+  /* anon-clear access to vertical resources is prohibited */
+  if (is_vertical && !(endpoint->flags & SECURED)) {
+    OC_DBG("oc_sec_check_acl: anon-clear access to vertical resources is "
+           "prohibited");
+    return false;
   }
+  /* All requests received over the DOC which target DCRs shall be granted,
+   * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
+   * Resource.
+   */
+  if (peer && peer->doc && is_DCR) {
+    OC_DBG("oc_sec_check_acl: connection is DOC and request directed to DCR - "
+           "access granted");
+    return true;
+  }
+  /*  Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be
+      granted.
+  */
+  if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
+      ((oc_string_len(resource->uri) == 8 &&
+        memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
+    return true;
+  }
+  /* Requests over unsecured channel prior to DOC */
+  if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
+    /* Anonymous Retrieve and Updates requests to “/oic/sec/doxm” shall be
+       granted.
+    */
+    if (oc_string_len(resource->uri) == 13 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+      OC_DBG("oc_sec_check_acl: RW access granted to /doxm  prior to DOC");
+      return true;
+    }
+    /* All Retrieve requests to the “/oic/sec/pstat” Resource shall be
+       granted.
+    */
+    else if (oc_string_len(resource->uri) == 14 &&
+             memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 &&
+             method == OC_GET) {
+      OC_DBG("oc_sec_check_acl: R access granted to pstat prior to DOC");
+      return true;
+    }
+    /* Reject all other requests */
+    else {
+      return false;
+    }
+  }
+
+  if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
+       pstat->s == OC_DOS_SRESET) &&
+      !(endpoint->flags & SECURED)) {
+    /* anon-clear requests to SVRs while the
+     * dos is RFPRO, RFNOP or SRESET should not be authorized
+     * regardless of the ACL configuration.
+     */
+    if (is_SVR) {
+      OC_DBG("oc_sec_check_acl: anon-clear access to SVRs in RFPRO, RFNOP and "
+             "SRESET is prohibited");
+      return false;
+    }
+  }
+
+  oc_uuid_t *uuid = &endpoint->di;
 
   if (uuid) {
     oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
@@ -389,7 +468,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       }
     } while (match);
 
-    if (oc_tls_uses_psk_cred(peer)) {
+    if (peer && oc_tls_uses_psk_cred(peer)) {
       oc_sec_cred_t *role_cred = oc_sec_find_cred(
         uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
@@ -399,7 +478,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     }
 #ifdef OC_PKI
     else {
-      oc_sec_cred_t *role_cred = oc_sec_get_roles(peer), *next;
+      oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL, *next;
       while (role_cred) {
         next = role_cred->next;
         if (oc_certs_validate_role_cert(role_cred->ctx) < 0) {
@@ -421,7 +500,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 #endif /* OC_PKI */
   }
 
-  if (endpoint->flags & SECURED) {
+  /* Access to SVRs via auth-crypt ACEs is prohibited */
+  if (!is_SVR && endpoint->flags & SECURED) {
     oc_ace_subject_t _auth_crypt;
     memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
     _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
@@ -437,20 +517,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     } while (match);
   }
 
-  oc_ace_subject_t _anon_clear;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-  do {
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1, 0,
-                                    endpoint->device);
-    if (match) {
-      permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
-      OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
-             "connection",
-             permission);
-    }
-  } while (match);
-
+  /* Access to SVRs via anon-clear ACEs is prohibited */
+  if (!is_SVR) {
+    oc_ace_subject_t _anon_clear;
+    memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
+    _anon_clear.conn = OC_CONN_ANON_CLEAR;
+    do {
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1,
+                                      0, endpoint->device);
+      if (match) {
+        permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
+        OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
+               "connection",
+               permission);
+      }
+    } while (match);
+  }
   if (permission != 0) {
     switch (method) {
     case OC_GET:
@@ -468,6 +550,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       if (permission & OC_PERM_DELETE) {
         return true;
       }
+      break;
+    default:
       break;
     }
   }
@@ -701,40 +785,6 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
   }
 }
 
-void
-oc_sec_ace_clear_bootstrap_aces(size_t device)
-{
-  oc_ace_subject_t subject;
-  memset(&subject, 0, sizeof(oc_ace_subject_t));
-  subject.conn = OC_CONN_ANON_CLEAR;
-  oc_sec_ace_t *__anon_clear = NULL;
-  do {
-    __anon_clear = oc_sec_acl_find_subject(__anon_clear, OC_SUBJECT_CONN,
-                                           &subject, -1, 14, device);
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/acl2");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/cred");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/pstat");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/doxm");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sp");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/csr");
-    }
-    if (__anon_clear) {
-      oc_ace_free_resources(device, &__anon_clear, "/oic/sec/sdi");
-    }
-  } while (__anon_clear);
-}
-
 static bool
 oc_acl_remove_ace(int aceid, size_t device)
 {
@@ -794,13 +844,7 @@ bool
 oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
                                     size_t device, bool collection)
 {
-  oc_uuid_t *uuid = NULL;
-  oc_tls_peer_t *peer = oc_tls_get_peer(client);
-  if (peer) {
-    uuid = &peer->uuid;
-  } else {
-    return false;
-  }
+  oc_uuid_t *uuid = &client->di;
 
   oc_ace_subject_t subject;
   memset(&subject, 0, sizeof(oc_ace_subject_t));
@@ -822,36 +866,6 @@ void
 oc_sec_acl_default(size_t device)
 {
   oc_sec_clear_acl(device);
-  bool success = true;
-  oc_resource_t *resource;
-  int i;
-  oc_ace_subject_t _auth_crypt, _anon_clear;
-  memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-  _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-
-  for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
-    resource = oc_core_get_resource_by_index(i, device);
-    if (oc_string_len(resource->uri) <= 0) {
-      continue;
-    }
-    if (i <= OCF_RES || i == OCF_D) {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 1, 2,
-                                       oc_string(resource->uri), 0, device);
-    }
-    if (i >= OCF_SEC_DOXM &&
-#ifdef OC_PKI
-        i < OCF_SEC_ROLES)
-#else  /* OC_PKI */
-        i <= OCF_SEC_SP)
-#endif /* !OC_PKI */
-    {
-      success &= oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, 2, 14,
-                                       oc_string(resource->uri), -1, device);
-    }
-  }
-  OC_DBG("ACL for core resources initialized %d", success);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
@@ -1061,6 +1075,21 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
     rep = rep->next;
   }
   return true;
+}
+
+void
+oc_sec_acl_add_bootsrap_acl(size_t device)
+{
+  oc_ace_subject_t _anon_clear;
+  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
+  _anon_clear.conn = OC_CONN_ANON_CLEAR;
+
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/res", 0,
+                        device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/d", 0,
+                        device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/p", 0,
+                        device);
 }
 
 void

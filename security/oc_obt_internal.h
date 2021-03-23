@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017-2019 Intel Corporation
+// Copyright (c) 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #ifndef OC_OBT_INTERNAL_H
 #define OC_OBT_INTERNAL_H
 
+#include "messaging/coap/oscore_constants.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_obt.h"
@@ -102,6 +103,35 @@ typedef struct oc_credprov_ctx_t
   uint8_t key[16];
   oc_role_t *roles;
 } oc_credprov_ctx_t;
+
+/* Context to be maintained over the pair-wise OSCORE context provisioning
+ * sequence
+ */
+typedef struct oc_oscoreprov_ctx_t
+{
+  struct oc_oscoreprov_ctx_t *next;
+  oc_status_cb_t cb;
+  oc_device_t *device1;
+  oc_device_t *device2;
+  oc_switch_dos_ctx_t *switch_dos;
+  uint8_t sendid[OSCORE_CTXID_LEN];
+  uint8_t recvid[OSCORE_CTXID_LEN];
+  uint8_t secret[OSCORE_MASTER_SECRET_LEN];
+} oc_oscoreprov_ctx_t;
+
+/* Context to be maintained over the group OSCORE context provisioning
+ * sequence.
+ */
+typedef struct oc_oscoregroupprov_ctx_t
+{
+  struct oc_oscoregroupprov_ctx_t *next;
+  oc_device_status_cb_t cb;
+  oc_device_t *device;
+  oc_uuid_t subjectuuid;
+  oc_string_t desc;
+  oc_switch_dos_ctx_t *switch_dos;
+  oc_sec_credtype_t type;
+} oc_oscoregroupprov_ctx_t;
 
 /* Context over a RETRIEVE credentials request */
 typedef struct oc_credret_ctx_t

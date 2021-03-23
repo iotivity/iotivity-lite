@@ -257,3 +257,61 @@ oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
   }
   strcpy((char *)oc_string(*ocstring) + len, "");
 }
+
+int
+oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
+                                 char *hex_str, size_t *hex_str_len)
+{
+  if (*hex_str_len < array_len * 2 + 1) {
+    return -1;
+  }
+
+  *hex_str_len = 0;
+
+  size_t i;
+
+  for (i = 0; i < array_len; i++) {
+    snprintf(hex_str + *hex_str_len, 3, "%02x", array[i]);
+    *hex_str_len += 2;
+  }
+
+  hex_str[*hex_str_len++] = '\0';
+
+  return 0;
+}
+
+int
+oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
+                                 uint8_t *array, size_t *array_len)
+{
+  if (hex_str_len < 1) {
+    return -1;
+  }
+
+  size_t a = hex_str_len / 2.0 + 0.5;
+
+  if (*array_len < a) {
+    return -1;
+  }
+
+  *array_len = a;
+  a = 0;
+
+  uint32_t tmp;
+  size_t i, start;
+
+  if (hex_str_len % 2 == 0) {
+    start = 0;
+  } else {
+    start = 1;
+    sscanf(&hex_str[0], "%1x", &tmp);
+    array[a++] = (uint8_t)tmp;
+  }
+
+  for (i = start; i <= hex_str_len - 2; i += 2) {
+    sscanf(&hex_str[i], "%2x", &tmp);
+    array[a++] = (uint8_t)tmp;
+  }
+
+  return 0;
+}

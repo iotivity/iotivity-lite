@@ -155,7 +155,7 @@ app_init(void)
      can be OCF1.3.1 or OCF2.0.0 (or even higher)
      supplied values are for OCF1.3.1 */
   ret |= oc_add_device("/oic/d", "oic.d.stb", "Set Top Box",
-                       "ocf.2.2.0",                   /* icv value */
+                       "ocf.2.2.2",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
   strcpy(rule, "(switch:value = true)");
@@ -822,7 +822,7 @@ register_resources(void)
   oc_link_set_interfaces(ric1, OC_IF_A);
   oc_collection_add_link(res_ruleinputcol, ric1);
 
-  //oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
+  // oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_add_collection(res_ruleinputcol);
 

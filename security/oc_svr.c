@@ -43,38 +43,37 @@ oc_sec_create_svr(void)
 
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
-    oc_core_populate_resource(OCF_SEC_DOXM, i, "/oic/sec/doxm",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
-                              OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1,
-                              "oic.r.doxm");
+    oc_core_populate_resource(
+      OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
     oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
                               post_pstat, 0, 1, "oic.r.pstat");
     oc_core_populate_resource(OCF_SEC_ACL, i, "/oic/sec/acl2",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
                               delete_acl, 1, "oic.r.acl2");
     oc_core_populate_resource(OCF_SEC_CRED, i, "/oic/sec/cred",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
                               post_cred, delete_cred, 1, "oic.r.cred");
     oc_core_populate_resource(
-      OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
-      OC_DISCOVERABLE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
+      OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
 
     oc_core_populate_resource(
-      OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+      OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
     oc_core_populate_resource(
       OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_RW,
-      OC_DISCOVERABLE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
+      OC_DISCOVERABLE | OC_SECURE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
 #ifdef OC_PKI
     oc_core_populate_resource(
-      OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+      OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE | OC_SECURE, get_csr, 0, 0, 0, 1, "oic.r.csr");
     oc_core_populate_resource(OCF_SEC_ROLES, i, "/oic/sec/roles",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_BASELINE,
+                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
                               post_cred, delete_cred, 1, "oic.r.roles");
 #endif /* OC_PKI */

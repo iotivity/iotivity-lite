@@ -63,6 +63,7 @@ OC_PROCESS_NAME(coap_engine);
 void coap_init_engine(void);
 /*---------------------------------------------------------------------------*/
 int coap_receive(oc_message_t *message);
+bool oc_coap_check_if_duplicate(uint16_t mid, uint8_t device);
 
 #ifdef __cplusplus
 }

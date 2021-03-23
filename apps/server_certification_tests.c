@@ -31,7 +31,7 @@
 static const size_t DEVICE = 0;
 
 // define application specific values.
-static const char *spec_version = "ocf.2.2.0";
+static const char *spec_version = "ocf.2.2.2";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *deivce_uri = "/oic/d";
@@ -901,6 +901,9 @@ register_resources(void)
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
+ #ifdef OC_OSCORE
+  oc_resource_set_secure_mcast(temp_resource, true);
+#endif /* OC_OSCORE */
   oc_add_resource(temp_resource);
   PRINT("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);

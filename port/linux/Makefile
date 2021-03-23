@@ -12,6 +12,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+export OSCORE ?= 1
 IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
@@ -113,7 +114,11 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2
+
+ifeq ($(V6DNS),1)
+	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
+endif
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
@@ -167,7 +172,7 @@ ifeq ($(SWUPDATE),1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c)
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -180,6 +185,10 @@ endif
 	CFLAGS += ${DTLSFLAGS}
 	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
+endif
+
+ifeq ($(OSCORE),1)
+	EXTRA_CFLAGS += -DOC_OSCORE
 endif
 
 ifeq ($(IPV4),1)
@@ -336,6 +345,14 @@ simpleserver: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
+secure_mcast_server1: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server1.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_server1.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+secure_mcast_server2: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server2.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_server2.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
 simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
@@ -343,6 +360,10 @@ simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+secure_mcast_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/secure_mcast_client.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_client.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 introspectionclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/introspectionclient.c
 	@mkdir -p $@_creds

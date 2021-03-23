@@ -92,7 +92,7 @@ display_menu(void)
   PRINT("[11] Manufacturer Certificate based Ownership Transfer Method\n");
 #endif /* OC_PKI */
   PRINT("-----------------------------------------------\n");
-  PRINT("[12] Provision pair-wise credentials\n");
+  PRINT("[12] Provision pairwise credentials\n");
   PRINT("[13] Provision ACE2\n");
   PRINT("[14] Provision auth-crypt RW access to NCRs\n");
   PRINT("[15] RETRIEVE /oic/sec/cred\n");
@@ -106,7 +106,12 @@ display_menu(void)
   PRINT("[22] Provision identity certificate\n");
   PRINT("[23] Provision role certificate\n");
 #endif /* OC_PKI */
-  PRINT("[24] Set security domain info\n");
+#ifdef OC_OSCORE
+  PRINT("[24] Provision pairwise OSCORE contexts\n");
+  PRINT("[25] Provision Client Group OSCORE context\n");
+  PRINT("[26] Provision Server Group OSCORE context\n");
+#endif /* OC_OSCORE */
+  PRINT("[27] Set security domain info\n");
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -131,7 +136,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.1.1",
+  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.2",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
   oc_device_bind_resource_type(0, "oic.d.ams");
   oc_device_bind_resource_type(0, "oic.d.cms");
@@ -1186,14 +1191,186 @@ provision_role_wildcard_ace(void)
 }
 #endif /* OC_PKI */
 
+#ifdef OC_OSCORE
+static void
+provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned group OSCORE context to device %s\n", di);
+  } else {
+    PRINT("\nERROR provisioning group OSCORE context to device %s\n", di);
+  }
+}
+
+static void
+provision_server_group_oscore_context(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, dev, subject;
+
+  PRINT("\nProvision server group OSCORE context\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+
+  if (i == 0) {
+    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    return;
+  }
+
+  PRINT("\n\nSelect Server device for provisioning: ");
+  SCANF("%d", &dev);
+  if (dev < 0 || dev >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  PRINT("\n\nSelect Client with secure multicast capability: ");
+  SCANF("%d", &subject);
+  if (subject < 0 || subject >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_server_group_oscore_context(
+    &devices[dev]->uuid, &devices[subject]->uuid, NULL,
+    provision_group_context_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision server group OSCORE "
+          "context\n");
+  } else {
+    PRINT("\nERROR issuing request to provision server group OSCORE context\n");
+  }
+}
+
+static void
+provision_client_group_oscore_context(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, dev;
+
+  PRINT("\nProvision client group OSCORE context\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+
+  if (i == 0) {
+    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    return;
+  }
+
+  PRINT("\n\nSelect device for provisioning: ");
+  SCANF("%d", &dev);
+  if (dev < 0 || dev >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_client_group_oscore_context(
+    &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision client group OSCORE "
+          "context\n");
+  } else {
+    PRINT("\nERROR issuing request to provision client group OSCORE context\n");
+  }
+}
+
+static void
+provision_oscore_contexts_cb(int status, void *data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully provisioned pairwise OSCORE contexts\n");
+  } else {
+    PRINT("\nERROR provisioning pairwise OSCORE contexts\n");
+  }
+}
+
+static void
+provision_oscore_contexts(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c1, c2;
+
+  PRINT("\nProvision pairwise OSCORE contexts\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device 1: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+  PRINT("Select device 2: ");
+  SCANF("%d", &c2);
+  if (c2 < 0 || c2 >= i || c2 == c1) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_provision_pairwise_oscore_contexts(
+    &devices[c1]->uuid, &devices[c2]->uuid, provision_oscore_contexts_cb, NULL);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to provision OSCORE contexts\n");
+  } else {
+    PRINT("\nERROR issuing request to provision OSCORE contexts\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+#endif /* OC_OSCORE */
+
 static void
 provision_credentials_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned pair-wise credentials\n");
+    PRINT("\nSuccessfully provisioned pairwise credentials\n");
   } else {
-    PRINT("\nERROR provisioning pair-wise credentials\n");
+    PRINT("\nERROR provisioning pairwise credentials\n");
   }
 }
 
@@ -1209,7 +1386,7 @@ provision_credentials(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1, c2;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("\nProvision pairwise (PSK) credentials\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
@@ -1224,7 +1401,7 @@ provision_credentials(void)
     PRINT("ERROR: Invalid selection\n");
     return;
   }
-  PRINT("Select device 2:");
+  PRINT("Select device 2: ");
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
     PRINT("ERROR: Invalid selection\n");
@@ -1842,7 +2019,18 @@ main(void)
       provision_role_cert();
       break;
 #endif
+#ifdef OC_OSCORE
     case 24:
+      provision_oscore_contexts();
+      break;
+    case 25:
+      provision_client_group_oscore_context();
+      break;
+    case 26:
+      provision_server_group_oscore_context();
+      break;
+#endif /* OC_OSCORE */
+    case 27:
       set_sd_info();
       break;
 #ifdef OC_PKI

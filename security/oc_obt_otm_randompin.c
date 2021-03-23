@@ -229,12 +229,10 @@ obt_rdp_10(oc_client_response_t *data)
     goto err_obt_rdp_10;
   }
 
-  /**  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  /**  10) post pstat s=rfpro
    */
   oc_device_t *device = o->device;
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_tls_close_connection(ep);
-  oc_tls_select_psk_ciphersuite();
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -600,7 +598,7 @@ err_obt_rdp_2:
   7) post cred rowneruuid, cred
   8) post sdi
   9) post doxm owned = true
-  10) <close DTLS>+<Open-TLS-PSK>+post pstat s=rfpro
+  10) post pstat s=rfpro
   11) delete acl2
   12) post acl2 with ACEs for res, p, d, csr, sp
   13) post pstat s=rfnop
@@ -637,7 +635,11 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
   char subjectuuid[37];
   oc_uuid_to_str(uuid, subjectuuid, 37);
 
-  /* 1) provision PSK cred locally */
+  /* 1) provision PSK cred locally
+   * Note: This is an implementation detail where this provisioning of a local
+   * cred serves as a mechanism to convey the PPSK to the psk callback in
+   * TLS layer.
+   */
 
   int credid = oc_sec_add_new_cred(
     0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, subjectuuid,

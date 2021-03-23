@@ -17,9 +17,10 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_swupdate.h"
-#include "port/oc_clock.h"
-#include "oc_pki.h"
 #include "oc_introspection.h"
+#include "oc_obt.h"
+#include "oc_pki.h"
+#include "port/oc_clock.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -33,6 +34,20 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
+
+typedef struct device_handle_t
+{
+  struct device_handle_t *next;
+  oc_uuid_t uuid;
+  char device_name[64];
+} device_handle_t;
+
+#define MAX_NUM_DEVICES (50)
+
+/* Pool of device handles */
+OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
+/* List of known un-owned devices */
+OC_LIST(unowned_devices);
 
 typedef struct resource_t
 {
@@ -65,7 +80,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.0",
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.2",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
 #if defined(OC_IDD_API)
@@ -125,11 +140,20 @@ display_menu(void)
   PRINT("[7] Stop OBSERVE resource UDP\n");
   PRINT("[8] Start OBSERVE resource TCP\n");
   PRINT("[9] Stop OBSERVE resource TCP\n");
+  PRINT("[10] Multicast UPDATE binary switch\n");
   PRINT("-----------------------------------------------\n");
+#ifdef OC_SECURITY
+  PRINT("[11] Discover un-owned devices\n");
+  PRINT("[12] Just-Works Ownership Transfer Method\n");
+#endif /* OC_SECURITY */
+  PRINT("[13] POST cloud configuration UDP\n");
 #ifdef OC_TCP
   PRINT("[20] Send ping message\n");
-  PRINT("-----------------------------------------------\n");
 #endif /* OC_TCP */
+  PRINT("-----------------------------------------------\n");
+  PRINT("[40] Discover using site local\n");
+  PRINT("[41] Discover using realm local\n");
+  PRINT("-----------------------------------------------\n");
   PRINT("[99] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
@@ -139,7 +163,7 @@ display_menu(void)
 int
 validate_purl(const char *purl)
 {
-  (void) purl;
+  (void)purl;
   return 0;
 }
 
@@ -178,6 +202,19 @@ perform_upgrade(size_t device, const char *url)
   return 0;
 }
 #endif /* OC_SOFTWARE_UPDATE */
+static resource_t *
+get_discovered_resource_by_uri(char *uri)
+{
+  resource_t *resource = (resource_t *)oc_list_head(resources);
+  while (resource != NULL) {
+    if (strcmp(resource->uri, uri) == 0) {
+      return resource;
+    }
+    resource = resource->next;
+  }
+
+  return NULL;
+}
 
 static void
 show_discovered_resources(resource_t **res)
@@ -374,7 +411,7 @@ stop_observe_resource(bool tcp)
 }
 
 static void
-post_resource(bool tcp)
+post_resource(bool tcp, bool mcast)
 {
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
@@ -396,8 +433,9 @@ post_resource(bool tcp)
         while (ep && (tcp && !(ep->flags & TCP))) {
           ep = ep->next;
         }
-        if (oc_init_post(res[c]->uri, ep, NULL, &POST_handler, HIGH_QOS,
-                         NULL)) {
+        if ((!mcast && oc_init_post(res[c]->uri, ep, NULL, &POST_handler,
+                                    HIGH_QOS, NULL)) ||
+            (mcast && oc_init_multicast_update(res[c]->uri, NULL))) {
           oc_rep_start_root_object();
           if (s == 0) {
             oc_rep_set_boolean(root, value, true);
@@ -405,7 +443,8 @@ post_resource(bool tcp)
             oc_rep_set_boolean(root, value, false);
           }
           oc_rep_end_root_object();
-          if (!oc_do_post()) {
+          if ((!mcast && !oc_do_post()) ||
+              (mcast && !oc_do_multicast_update())) {
             PRINT("\nERROR: Could not issue POST request\n");
           }
         } else {
@@ -479,6 +518,30 @@ discover_resources(void)
   pthread_mutex_lock(&app_sync_lock);
   free_all_resources();
   if (!oc_do_ip_discovery_all(&discovery, NULL)) {
+    PRINT("\nERROR: Could not issue discovery request\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+
+static void
+discover_site_local_resources(void)
+{
+  pthread_mutex_lock(&app_sync_lock);
+  free_all_resources();
+  if (!oc_do_site_local_ipv6_discovery_all(&discovery, NULL)) {
+    PRINT("\nERROR: Could not issue discovery request\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+
+static void
+discover_realm_local_resources(void)
+{
+  pthread_mutex_lock(&app_sync_lock);
+  free_all_resources();
+  if (!oc_do_realm_local_ipv6_discovery_all(&discovery, NULL)) {
     PRINT("\nERROR: Could not issue discovery request\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
@@ -598,6 +661,189 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+/* App utility functions */
+#ifdef OC_SECURITY
+static device_handle_t *
+is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_head(list);
+  while (device != NULL) {
+    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+      return device;
+    }
+    device = device->next;
+  }
+  return NULL;
+}
+
+static bool
+add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
+{
+  device_handle_t *device = is_device_in_list(uuid, list);
+
+  if (!device) {
+    device = oc_memb_alloc(&device_handles);
+    if (!device) {
+      return false;
+    }
+    memcpy(device->uuid.id, uuid->id, 16);
+    oc_list_add(list, device);
+  }
+
+  if (device_name) {
+    size_t len = strlen(device_name);
+    len = (len > 63) ? 63 : len;
+    strncpy(device->device_name, device_name, len);
+    device->device_name[len] = '\0';
+  } else {
+    device->device_name[0] = '\0';
+  }
+  return true;
+}
+
+/* App invocations of oc_obt APIs */
+static void
+get_device(oc_client_response_t *data)
+{
+  oc_rep_t *rep = data->payload;
+  char *di = NULL, *n = NULL;
+  size_t di_len = 0, n_len = 0;
+
+  if (oc_rep_get_string(rep, "di", &di, &di_len)) {
+    oc_uuid_t uuid;
+    oc_str_to_uuid(di, &uuid);
+    if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
+      n = NULL;
+      n_len = 0;
+    }
+
+    add_device_to_list(&uuid, n, data->user_data);
+  }
+}
+
+static void
+unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
+  (void)data;
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+  oc_endpoint_t *ep = eps;
+
+  PRINT("\nDiscovered unowned device: %s at:\n", di);
+  while (eps != NULL) {
+    PRINTipaddr(*eps);
+    PRINT("\n");
+    eps = eps->next;
+  }
+
+  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
+}
+
+static void
+otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+{
+  (void)status;
+  (void)data;
+  device_handle_t *device = (device_handle_t *)data;
+  memcpy(device->uuid.id, uuid->id, 16);
+  char di[37];
+  oc_uuid_to_str(uuid, di, 37);
+  oc_memb_free(&device_handles, device);
+
+  if (status >= 0) {
+    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
+  } else {
+    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+  }
+}
+
+static void
+otm_just_works(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("\nPlease Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  pthread_mutex_lock(&app_sync_lock);
+
+  int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
+                                          devices[c]);
+  if (ret >= 0) {
+    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
+  } else {
+    PRINT("\nERROR issuing request to perform ownership transfer\n");
+  }
+
+  pthread_mutex_unlock(&app_sync_lock);
+}
+#endif /* OC_SECURITY */
+
+static void
+post_cloud_configuration_resource(bool tcp)
+{
+  pthread_mutex_lock(&app_sync_lock);
+  if (oc_list_length(resources) > 0) {
+    resource_t *cloudconf_resource =
+      get_discovered_resource_by_uri("/CoAPCloudConf");
+    if (cloudconf_resource) {
+      char cis_value[1000];
+      char sid_value[1000];
+      PRINT("Provide cis value:\n");
+      SCANF("%s", &cis_value);
+      PRINT("Provide sid value:\n");
+      SCANF("%s", &sid_value);
+      oc_endpoint_t *ep = cloudconf_resource->endpoint;
+      while (ep && (tcp && !(ep->flags & TCP))) {
+        ep = ep->next;
+      }
+      if (oc_init_post(cloudconf_resource->uri, ep, NULL, &POST_handler,
+                       HIGH_QOS, NULL)) {
+        oc_rep_start_root_object();
+        oc_rep_set_text_string(root, cis, cis_value);
+        oc_rep_set_text_string(root, sid, sid_value);
+        oc_rep_set_text_string(root, at, "");
+        oc_rep_end_root_object();
+        if (!oc_do_post()) {
+          PRINT("\nERROR: Could not issue POST request\n");
+        }
+      } else {
+        PRINT("\nERROR: Could not initialize POST request\n");
+      }
+    } else {
+      PRINT("\nERROR: No /CoAPCloudConf resource found\n");
+    }
+  } else {
+    PRINT("\nERROR: No known resources... Please try discovery...\n");
+  }
+  pthread_mutex_unlock(&app_sync_lock);
+  signal_event_loop();
+}
+
 void
 display_device_uuid(void)
 {
@@ -671,10 +917,10 @@ main(void)
       get_resource(true, false);
       break;
     case 4:
-      post_resource(false);
+      post_resource(false, false);
       break;
     case 5:
-      post_resource(true);
+      post_resource(true, false);
       break;
     case 6:
       get_resource(false, true);
@@ -688,11 +934,33 @@ main(void)
     case 9:
       stop_observe_resource(true);
       break;
+#ifdef OC_SECURITY
+    case 10:
+      post_resource(false, true);
+      break;
+#endif /* OC_SECURITY */
+#ifdef OC_SECURITY
+    case 11:
+      oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+      break;
+    case 12:
+      otm_just_works();
+      break;
+#endif /* OC_SECURITY */
+    case 13:
+      post_cloud_configuration_resource(false);
+      break;
 #ifdef OC_TCP
     case 20:
       cloud_send_ping();
       break;
 #endif /* OC_TCP */
+    case 40:
+      discover_site_local_resources();
+      break;
+    case 41:
+      discover_realm_local_resources();
+      break;
     case 99:
       handle_signal(0);
       break;
@@ -703,5 +971,12 @@ main(void)
 
   pthread_join(event_thread, NULL);
   free_all_resources();
+
+  device_handle_t *device = (device_handle_t *)oc_list_pop(unowned_devices);
+  while (device) {
+    oc_memb_free(&device_handles, device);
+    device = (device_handle_t *)oc_list_pop(unowned_devices);
+  }
+
   return 0;
 }

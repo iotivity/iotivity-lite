@@ -27,8 +27,7 @@
 #include <string.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
@@ -187,6 +186,14 @@ void _oc_alloc_string_array(
   const char *func,
 #endif
   oc_string_array_t *ocstringarray, size_t size);
+
+/* Conversions between hex encoded strings and byte arrays */
+
+int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
+                                     char *hex_str, size_t *hex_str_len);
+
+int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
+                                     uint8_t *array, size_t *array_len);
 
 #ifdef __cplusplus
 }

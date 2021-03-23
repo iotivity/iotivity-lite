@@ -76,7 +76,7 @@ oc_sec_load_doxm(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (int)ret, &rep);
-    oc_sec_decode_doxm(rep, true, device);
+    oc_sec_decode_doxm(rep, true, false, device);
     oc_free_rep(rep);
   }
 #ifdef OC_DYNAMIC_ALLOCATION

@@ -21,8 +21,7 @@
 #include "util/oc_process.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -37,6 +36,11 @@ typedef enum {
   INTERFACE_DOWN,
   INTERFACE_UP,
   TLS_CLOSE_ALL_SESSIONS,
+#ifdef OC_OSCORE
+  INBOUND_OSCORE_EVENT,
+  OUTBOUND_OSCORE_EVENT,
+  OUTBOUND_GROUP_OSCORE_EVENT,
+#endif /* OC_OSCORE */
 #ifdef OC_SOFTWARE_UPDATE
   SW_UPDATE_NSA,
   SW_UPDATE_DOWNLOADED,

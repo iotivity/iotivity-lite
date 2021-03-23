@@ -91,6 +91,8 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
 bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
 
 bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
+bool oc_core_is_SVR(oc_resource_t *resource, size_t device);
+bool oc_core_is_vertical_resource(oc_resource_t *resource, size_t device);
 
 /**
  * set the latency (lat) property in eps of oic.wk.res resource.
