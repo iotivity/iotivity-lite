@@ -1574,7 +1574,7 @@ oc_ri_shutdown(void)
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all(), *next;
   while (collection != NULL) {
-    next = collection->next;
+    next = (oc_collection_t *)collection->res.next;
     oc_collection_free(collection);
     collection = next;
   }
