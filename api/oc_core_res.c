@@ -213,6 +213,15 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
+#ifdef OC_SERVER
+static oc_event_callback_retval_t
+oc_core_con_notify_observers_delayed(void *data)
+{
+  oc_notify_observers((oc_resource_t*)data);
+  return OC_EVENT_DONE;
+}
+#endif /* OC_SERVER */
+
 static void
 oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
@@ -238,8 +247,9 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #ifdef OC_SERVER
       oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, device);
-      oc_notify_observers(device_resource);
-#endif /* OC_SERVER */
+      oc_set_delayed_callback(device_resource, oc_core_con_notify_observers_delayed, 0);
+#endif
+
       changed = true;
       break;
     }
