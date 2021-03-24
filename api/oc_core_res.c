@@ -345,7 +345,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     /* Construct oic.wk.con resource for this device. */
     oc_core_populate_resource(
       OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE,
-      OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_con_handler_get,
+      OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE, oc_core_con_handler_get,
       oc_core_con_handler_post, oc_core_con_handler_post, 0, 1, "oic.wk.con");
   }
 
