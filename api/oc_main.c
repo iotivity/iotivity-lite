@@ -227,10 +227,6 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_create_svr();
 #endif
 
-#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  oc_cloud_init();
-#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_init();
 #endif /* OC_SOFTWARE_UPDATE */
@@ -264,6 +260,12 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_sdi(device);
   }
 #endif
+
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+// initialize cloud after load pstat
+  oc_cloud_init();
+  OC_DBG("oc_main_init(): loading cloud");
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
   OC_DBG("oc_main: stack initialized");
 
