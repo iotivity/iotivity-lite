@@ -135,6 +135,7 @@ display_menu(void)
   PRINT("-----------------------------------------------\n");
   PRINT("[30] Provision cloud config info\n");
   PRINT("[31] RETRIEVE cloud config info\n");
+  PRINT("[32] Provistion cloud trust anchor\n");
 #endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
@@ -1946,6 +1947,96 @@ get_cloud_info(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
+
+void trustanchorcb(int status, char* data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully installed trust anchor for cloud\n");
+  }
+  else {
+    PRINT("\nERROR installing trust anchor %d\n", status);
+  }
+}
+
+
+static void
+set_cloud_trust_anchor(void)
+{
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+  char sid[64] = "00000000-0000-0000-0000-000000000001";
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to set cloud trust anchor: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("setting trust anchor on: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+
+  PRINT("\nEnter subject ('00000000-0000-0000-0000-000000000001'):");
+  SCANF("%63s", sid);
+
+  char cert[8192];
+  size_t cert_len = 0;
+  PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+  int c;
+  while ((c = getchar()) == '\n' || c == '\r')
+    ;
+  for (; (cert_len < 4 ||
+    (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0));
+    c = getchar()) {
+    if (c == EOF) {
+      PRINT("ERROR processing input.. aborting\n");
+      return;
+    }
+    cert[cert_len] = (char)c;
+    cert_len++;
+  }
+
+  while (cert[cert_len - 1] != '-' && cert_len > 1) {
+    cert_len--;
+  }
+  cert[cert_len] = '\0';
+
+  otb_mutex_lock(app_sync_lock);
+  int retcode = oc_obt_provision_trust_anchor(cert, cert_len, sid, &device_uuid,
+    trustanchorcb, NULL);
+  PRINT("sending message: %d\n", retcode);
+
+  otb_mutex_unlock(app_sync_lock);
+
+}
+
+
 #endif /* OC_CLOUD */
 
 void
@@ -2214,6 +2305,9 @@ main(void)
   case 31:
       get_cloud_info();
       break;
+  case 32:
+    set_cloud_trust_anchor();
+    break;
 #endif /* OC_CLOUD */
 #ifdef OC_PKI
     case 96:
