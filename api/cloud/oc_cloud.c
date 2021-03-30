@@ -26,6 +26,7 @@
 #include "oc_network_monitor.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
 OC_LIST(cloud_context_list);
@@ -135,6 +136,7 @@ oc_cloud_reset_context(size_t device)
 #endif /* OC_SECURITY */
 
   cloud_store_initialize(&ctx->store);
+  cloud_store_dump(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
   ctx->store.cps = 0;
@@ -335,6 +337,16 @@ oc_cloud_init(void)
     ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
     ctx->cloud_ep = oc_new_endpoint();
     cloud_store_load(&ctx->store);
+    ctx->store.status &=
+      ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
+        OC_CLOUD_LOGGED_OUT | OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
+#ifdef OC_SECURITY
+    oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+    if (ps->s == OC_DOS_RFOTM || ps->s == OC_DOS_RESET) {
+      // loaded configuration can have stored old cloud data
+      cloud_store_initialize(&ctx->store);
+    }
+#endif
 
     oc_list_add(cloud_context_list, ctx);
 
