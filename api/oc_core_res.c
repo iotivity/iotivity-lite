@@ -213,14 +213,14 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-#ifdef OC_SERVER
+#if defined(OC_SERVER) && defined(OC_CLOUD)
 static oc_event_callback_retval_t
 oc_core_con_notify_observers_delayed(void *data)
 {
   oc_notify_observers((oc_resource_t*)data);
   return OC_EVENT_DONE;
 }
-#endif /* OC_SERVER */
+#endif /* OC_SERVER && OC_CLOUD */
 
 static void
 oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -245,10 +245,10 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
       oc_rep_end_root_object();
 
-#ifdef OC_SERVER
+#if defined(OC_SERVER) && defined(OC_CLOUD)
       oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, device);
       oc_set_delayed_callback(device_resource, oc_core_con_notify_observers_delayed, 0);
-#endif
+#endif /* OC_SERVER && OC_CLOUD */
 
       changed = true;
       break;
@@ -333,14 +333,18 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_gen_uuid(&oc_device_info[device_count].di);
 
   /* Construct device resource */
+  int properties = OC_DISCOVERABLE;
+#ifdef OC_CLOUD
+  properties |= OC_OBSERVABLE;
+#endif /* OC_CLOUD */
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(
       OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE| OC_OBSERVABLE, oc_core_device_handler, 0, 0, 0, 1, rt);
+      properties, oc_core_device_handler, 0, 0, 0, 1, rt);
   } else {
     oc_core_populate_resource(
       OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      OC_DISCOVERABLE| OC_OBSERVABLE, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
+      properties, oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
   oc_gen_uuid(&oc_device_info[device_count].piid);
@@ -354,6 +358,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
+
     oc_core_populate_resource(
       OCF_CON, device_count, "/" OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE,
       OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE, oc_core_con_handler_get,
@@ -450,9 +455,13 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
     return &oc_platform_info;
   }
 
-  /* Populating resource obuject */
+  /* Populating resource object */
+  int properties = OC_DISCOVERABLE;
+#ifdef OC_CLOUD
+  properties |= OC_OBSERVABLE;
+#endif /* OC_CLOUD */
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_R, OC_DISCOVERABLE | OC_OBSERVABLE, oc_core_platform_handler,
+                            OC_IF_R, properties, oc_core_platform_handler,
                             0, 0, 0, 1, "oic.wk.p");
 
   oc_gen_uuid(&oc_platform_info.pi);
