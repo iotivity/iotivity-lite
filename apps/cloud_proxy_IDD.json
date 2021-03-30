@@ -1,0 +1,248 @@
+{
+  "definitions": {
+    "d01": {
+      "description": "",
+      "properties": {
+        "di": {
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+          "type": "string"
+        },
+        "eps": {
+          "items": {
+            "properties": {
+              "ep": {
+                "description": "",
+                "format": "uri",
+                "type": "string"
+              },
+              "lat": {
+                "description": "",
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "pri": {
+                "description": "",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "href": {
+          "format": "uri",
+          "maxLength": 256,
+          "type": "string"
+        }
+      },
+      "required": [
+        "di",
+        "eps"
+      ],
+      "type": "object"
+    },
+    "d02": {
+      "description": "",
+      "properties": {
+        "d2dserverlist": {
+          "items": {
+            "description": "",
+            "properties": {
+              "di": {
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+                "type": "string"
+              },
+              "eps": {
+                "items": {
+                  "properties": {
+                    "ep": {
+                      "description": "",
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "lat": {
+                      "description": "",
+                      "exclusiveMinimum": true,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "pri": {
+                      "description": "",
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "href": {
+                "format": "uri",
+                "maxLength": 256,
+                "type": "string"
+              }
+            },
+            "required": [
+              "di",
+              "eps"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "id": {
+          "maxLength": 64,
+          "readOnly": true,
+          "type": "string"
+        },
+        "if": {
+          "items": {
+            "enum": [
+              "oic.if.baseline",
+              "oic.if.rw"
+            ],
+            "type": "string"
+          },
+          "minItems": 2,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "n": {
+          "maxLength": 64,
+          "readOnly": true,
+          "type": "string"
+        },
+        "rt": {
+          "default": [
+            "oic.r.d2dserverlist"
+          ],
+          "items": {
+            "enum": [
+              "oic.r.d2dserverlist"
+            ],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "minItems": 1,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "d2dserverlist"
+      ],
+      "type": "object"
+    },
+    "d03": {
+      "properties": {
+        "di": {
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "di"
+      ],
+      "type": "object"
+    }
+  },
+  "info": {
+    "license": {
+      "name": " "
+    },
+    "title": "server_lite_446",
+    "version": " "
+  },
+  "parameters": {
+    "p01": {
+      "enum": [
+        "oic.if.baseline",
+        "oic.if.rw"
+      ],
+      "in": "query",
+      "name": "if",
+      "type": "string"
+    },
+    "p03": {
+      "in": "query",
+      "name": "di",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "type": "string"
+    }
+  },
+  "paths": {
+    "d2dserverlist": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p01"
+          },
+          {
+            "$ref": "#/parameters/p03"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d03"
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p01"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p01"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/d03"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "swagger": "2.0"
+}
