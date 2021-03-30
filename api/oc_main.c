@@ -231,11 +231,6 @@ oc_main_init(const oc_handler_t *handler)
   oc_swupdate_init();
 #endif /* OC_SOFTWARE_UPDATE */
 
-#ifdef OC_SERVER
-  if (app_callbacks->register_resources)
-    app_callbacks->register_resources();
-#endif
-
 #ifdef OC_SECURITY
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
@@ -266,6 +261,12 @@ oc_main_init(const oc_handler_t *handler)
   oc_cloud_init();
   OC_DBG("oc_main_init(): loading cloud");
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#ifdef OC_SERVER
+// initialize after cloud because their can be registered to cloud.
+  if (app_callbacks->register_resources)
+    app_callbacks->register_resources();
+#endif
 
   OC_DBG("oc_main: stack initialized");
 
