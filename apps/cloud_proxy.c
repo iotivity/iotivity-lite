@@ -47,6 +47,14 @@
 *     if input data is correct
 *       updates the global variables
 *
+*
+* PKI SECURITY
+*  to install a certificate use MANUFACTORER_PKI compile option
+*  - requires to have the header file"pki_certs.h"
+*  - this include file can be created with the pki.sh tool in the device builder chain.
+*    the sh script creates a Kyrio test certificate with a limited life time.
+*    products should not have test certificates.
+*    Hence this example is being build without the manufactorer certificate by default.
 */
 /*
  tool_version          : 20200103
@@ -684,6 +692,11 @@ random_pin_cb(const unsigned char* pin, size_t pin_len, void* data)
 #endif /* OC_SECURITY_PIN */
 #endif /* OC_SECURITY */
 
+
+
+
+
+
 void
 factory_presets_cb(size_t device, void* data)
 {
@@ -691,6 +704,7 @@ factory_presets_cb(size_t device, void* data)
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
   /* code to include an pki certificate and root trust anchor */
+#ifdef MANUFACTORER_PKI
 #include "oc_pki.h"
 #include "pki_certs.h"
   int credid =
@@ -717,6 +731,8 @@ factory_presets_cb(size_t device, void* data)
   }
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
+#endif /* MANUFACTORER_PKI */
+
 #else
   PRINT("No PKI certificates installed\n");
 #endif /* OC_SECURITY && OC_PKI */

@@ -331,6 +331,9 @@ typedef struct oc_switch_t
   uint16_t id;
   bool state;
 } oc_switch_t;
+
+
+#ifdef OC_COLLECTIONS_IF_CREATE
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches); // list of switch instances ordered by id
 
@@ -422,7 +425,7 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-#ifdef OC_COLLECTIONS_IF_CREATE
+//#ifdef OC_COLLECTIONS_IF_CREATE
 
 /**
  *  Get pointer to the first element that either has no following element
