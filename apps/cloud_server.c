@@ -335,6 +335,7 @@ typedef struct oc_switch_t
   uint16_t id;
   bool state;
 } oc_switch_t;
+
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches); // list of switch instances ordered by id
 
