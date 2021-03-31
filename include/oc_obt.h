@@ -759,7 +759,7 @@ void oc_obt_free_roleid(oc_role_t *roles);
  *
  * @param certificate the certificate data
  * @param certificate_size the certificate data size
- * @param the subject id (the uuid of the cloud)
+ * @param subject id (the uuid of the cloud)
  * @param uuid the uuid of the device to provision
  * @param cb callback invoked to indicate the success or failure of the
  *           provisioning
