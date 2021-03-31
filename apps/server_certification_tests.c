@@ -480,7 +480,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       u = K;
     } else if (units[0] == 'F') {
       u = F;
-    } else if (units[0] != 'C') {
+    } else if (units[0] == 'C') {
       u = C;
     } else {
       invalid_query = true;
