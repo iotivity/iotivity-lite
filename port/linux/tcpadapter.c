@@ -58,8 +58,13 @@ typedef struct tcp_session
   tcp_csm_state_t csm_state;
 } tcp_session_t;
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 OC_LIST(session_list);
+OC_LIST(free_session_list_async);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
+
+static void
+signal_network_thread(ip_context_t *dev);
 
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
@@ -159,15 +164,27 @@ oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 }
 
 static void
+free_tcp_session_async_locked(tcp_session_t *session)
+{
+  oc_list_remove(session_list, session);
+  oc_list_add(free_session_list_async, session);
+
+  signal_network_thread(session->dev);
+  OC_DBG("signaled network event thread to monitor that the session need to be removed");
+  OC_DBG("free TCP session async");
+}
+
+static void
 free_tcp_session(tcp_session_t *session)
 {
   oc_list_remove(session_list, session);
+  oc_list_remove(free_session_list_async, session);
 
   if (!oc_session_events_is_ongoing()) {
     oc_session_end_event(&session->endpoint);
   }
 
-  FD_CLR(session->sock, &session->dev->rfds);
+  ip_context_rfds_fd_clr(session->dev, session->sock);
 
   ssize_t len = 0;
   do {
@@ -181,6 +198,18 @@ free_tcp_session(tcp_session_t *session)
 
   OC_DBG("freed TCP session");
 }
+
+static void
+process_free_tcp_session_locked()
+{
+  while (true) {
+    tcp_session_t *session = (tcp_session_t *)oc_list_pop(free_session_list_async);
+    if (session == NULL)
+      return;
+    free_tcp_session(session);
+  }
+}
+
 
 static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
@@ -248,7 +277,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
     return -1;
   }
 
-  FD_SET(new_socket, &dev->rfds);
+  ip_context_rfds_fd_set(dev, new_socket);
 
   return 0;
 }
@@ -311,8 +340,8 @@ get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
 adapter_receive_state_t
 oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
-  pthread_mutex_lock(&dev->tcp.mutex);
-
+  pthread_mutex_lock(&mutex);
+  process_free_tcp_session_locked();
 #define ret_with_code(status)                                                  \
   ret = status;                                                                \
   goto oc_tcp_receive_message_done
@@ -426,7 +455,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   ret = ADAPTER_STATUS_RECEIVE;
 
 oc_tcp_receive_message_done:
-  pthread_mutex_unlock(&dev->tcp.mutex);
+  pthread_mutex_unlock(&mutex);
 #undef ret_with_code
   return ret;
 }
@@ -434,12 +463,13 @@ oc_tcp_receive_message_done:
 void
 oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
 {
-  pthread_mutex_lock(&dev->tcp.mutex);
+  (void) dev;
+  pthread_mutex_lock(&mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
   if (session) {
-    free_tcp_session(session);
+    free_tcp_session_async_locked(session);
   }
-  pthread_mutex_unlock(&dev->tcp.mutex);
+  pthread_mutex_unlock(&mutex);
 }
 
 static int
@@ -460,7 +490,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 {
   int flags, n, error;
   socklen_t len;
-  fd_set rset, wset;
+  fd_set wset;
   struct timeval tval;
 
   flags = fcntl(sockfd, F_GETFL, 0);
@@ -484,19 +514,18 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
     goto done; /* connect completed immediately */
   }
 
-  FD_ZERO(&rset);
-  FD_SET(sockfd, &rset);
-  wset = rset;
+  FD_ZERO(&wset);
+  FD_SET(sockfd, &wset);
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0) {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
   }
 
-  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset)) {
+  if (FD_ISSET(sockfd, &wset)) {
     len = sizeof(error);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
       return -1; /* Solaris pending error */
@@ -517,6 +546,16 @@ done:
     }
   }
   return 0;
+}
+
+static void
+signal_network_thread(ip_context_t *dev)
+{
+  ssize_t len = 0;
+  do {
+    uint8_t dummy_value = 0xef;
+    len = write(dev->tcp.connect_pipe[1], &dummy_value, 1);
+  } while (len == -1 && errno == EINTR);
 }
 
 static int
@@ -565,15 +604,10 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
     return -1;
   }
 
-  FD_SET(sock, &dev->rfds);
+  ip_context_rfds_fd_set(dev, sock);
 
-  ssize_t len = 0;
-  do {
-    uint8_t dummy_value = 0xef;
-    len = write(dev->tcp.connect_pipe[1], &dummy_value, 1);
-  } while (len == -1 && errno == EINTR);
-
-  OC_DBG("signaled network event thread to monitor the newly added session\n");
+  signal_network_thread(dev);
+  OC_DBG("signaled network event thread to monitor the newly added session");
 
   return sock;
 }
@@ -582,7 +616,7 @@ int
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const struct sockaddr_storage *receiver)
 {
-  pthread_mutex_lock(&dev->tcp.mutex);
+  pthread_mutex_lock(&mutex);
   int send_sock = get_session_socket(&message->endpoint);
 
   size_t bytes_sent = 0;
@@ -615,7 +649,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
 
   OC_DBG("Sent %zd bytes", bytes_sent);
 oc_tcp_send_buffer_done:
-  pthread_mutex_unlock(&dev->tcp.mutex);
+  pthread_mutex_unlock(&mutex);
 
   if (bytes_sent == 0) {
     return -1;
@@ -695,10 +729,6 @@ int
 oc_tcp_connectivity_init(ip_context_t *dev)
 {
   OC_DBG("Initializing TCP adapter for device %zd", dev->device);
-
-  if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0) {
-    oc_abort("error initializing TCP adapter mutex");
-  }
 
   memset(&dev->tcp.server, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)&dev->tcp.server;
@@ -804,6 +834,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
   close(dev->tcp.connect_pipe[0]);
   close(dev->tcp.connect_pipe[1]);
 
+  pthread_mutex_lock(&mutex);
   tcp_session_t *session = (tcp_session_t *)oc_list_head(session_list), *next;
   while (session != NULL) {
     next = session->next;
@@ -812,8 +843,8 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
     }
     session = next;
   }
-
-  pthread_mutex_destroy(&dev->tcp.mutex);
+  process_free_tcp_session_locked();
+  pthread_mutex_unlock(&mutex);
 
   OC_DBG("oc_tcp_connectivity_shutdown for device %zd", dev->device);
 }
