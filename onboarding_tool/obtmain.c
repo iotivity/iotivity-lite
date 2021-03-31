@@ -1948,7 +1948,7 @@ get_cloud_info(void)
 }
 
 
-void trustanchorcb(int status, char* data)
+void trustanchorcb(int status, void* data)
 {
   (void)data;
   if (status >= 0) {

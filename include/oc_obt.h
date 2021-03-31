@@ -751,6 +751,34 @@ oc_role_t *oc_obt_add_roleid(oc_role_t *roles, const char *role,
  */
 void oc_obt_free_roleid(oc_role_t *roles);
 
+
+
+/**
+ * Provision a trust anchor for an cloud enabled server.
+ *
+ *
+ * @param certificate the certificate data
+ * @param certificate_size the certificate data size
+ * @param the subject id (the uuid of the cloud)
+ * @param uuid the uuid of the device to provision
+ * @param cb callback invoked to indicate the success or failure of the
+ *           provisioning
+ * @param data context pointer that is passed to the oc_obt_status_cb_t. The
+ *             pointer must remain valid till the end of the oc_obt_status_cb_t
+ *             function
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see oc_obt_status_cb_t
+ * @see oc_obt_add_roleid
+ * @see oc_obt_free_roleid
+ */
+int oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, char* subject, oc_uuid_t* uuid,
+  oc_obt_status_cb_t cb, void* data);
+
+
 /* Provision access-control entries (ace2) */
 /**
  * Create a new Access Control Entry (ACE) with device UUID as subject.
