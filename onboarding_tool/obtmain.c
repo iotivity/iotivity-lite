@@ -1831,7 +1831,7 @@ static void
 set_cloud_info(void)
 {
   char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
-  char cis[64] = "coap+tcp://127.0.0.1:5683";
+  char cis[64] = "coaps+tcp://127.0.0.1:5683";
   char at[64] = "test";
   char sid[64] = "00000000-0000-0000-0000-000000000001";
   char apn[64] = "plgd";
@@ -1880,7 +1880,7 @@ set_cloud_info(void)
   SCANF("%63s", at);
   PRINT("\nEnter apn ('plgd'): ");
   SCANF("%63s", apn);
-  PRINT("\nEnter cis ('coap+tcp://127.0.0.1:5684'):");
+  PRINT("\nEnter cis ('coaps+tcp://127.0.0.1:5684'):");
   SCANF("%63s", cis);
   PRINT("\nEnter sid ('00000000-0000-0000-0000-000000000001'):");
   SCANF("%63s", sid);
