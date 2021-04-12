@@ -58,7 +58,7 @@ Linux_Compile_Options:
     - export CCACHE_DISABLE=false
   script:
     - cd port/linux
-    - make TCP=1 IPV4=1 SWUPDATE=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 COLLECTIONS=1
+    - make TCP=1 IPV4=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 COLLECTIONS=1
 
 Android_build:
   variables:

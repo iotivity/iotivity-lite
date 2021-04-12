@@ -124,6 +124,10 @@ ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
 endif
 
+ifeq ($(COLLECTIONS),1)
+	EXTRA_CFLAGS += -DOC_COLLECTIONS
+endif
+
 ifeq ($(MNT),1)
 	EXTRA_CFLAGS += -DOC_MNT
 endif
@@ -131,6 +135,8 @@ endif
 ifeq ($(SWUPDATE),1)
 	SAMPLES += smart_home_server_with_mock_swupdate
 endif
+
+
 
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
