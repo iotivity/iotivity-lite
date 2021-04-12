@@ -51,25 +51,7 @@ typedef struct oc_rt_t
 
 struct oc_collection_s
 {
-  struct oc_collection_s *next;
-  size_t device;
-  oc_string_t name;
-  oc_string_t uri;
-  oc_string_array_t types;
-  oc_interface_mask_t interfaces;
-  oc_interface_mask_t default_interface;
-  oc_resource_properties_t properties;
-  oc_request_handler_t get_handler;
-  oc_request_handler_t put_handler;
-  oc_request_handler_t post_handler;
-  oc_request_handler_t delete_handler;
-  oc_properties_cb_t get_properties;
-  oc_properties_cb_t set_properties;
-  double tag_pos_rel[3];
-  oc_pos_description_t tag_pos_desc;
-  oc_enum_t tag_pos_func;
-  uint8_t num_observers;
-  uint8_t num_links;
+  struct oc_resource_s res;
   OC_LIST_STRUCT(mandatory_rts);
   OC_LIST_STRUCT(supported_rts);
   OC_LIST_STRUCT(links);

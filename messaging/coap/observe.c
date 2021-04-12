@@ -562,7 +562,7 @@ coap_notify_collections(oc_resource_t *resource)
   oc_collection_t *collection = NULL;
 
   for (collection = oc_get_next_collection_with_link(resource, NULL);
-       collection != NULL && collection->num_observers > 0;
+       collection != NULL && collection->res.num_observers > 0;
        collection = oc_get_next_collection_with_link(resource, collection)) {
     OC_DBG("coap_notify_collections: Issue GET request to collection for "
            "resource");

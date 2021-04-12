@@ -292,14 +292,14 @@ oc_resource_t *
 oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
                   size_t device)
 {
-  oc_collection_t *collection = oc_collection_alloc();
+  oc_resource_t *collection = (oc_resource_t *)oc_collection_alloc();
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
     collection->default_interface = OC_IF_LL;
-    oc_populate_resource_object((oc_resource_t *)collection, name, uri,
+    oc_populate_resource_object(collection, name, uri,
                                 num_resource_types, device);
   }
-  return (oc_resource_t *)collection;
+  return collection;
 }
 
 void
@@ -452,6 +452,23 @@ bool
 oc_delete_resource(oc_resource_t *resource)
 {
   return oc_ri_delete_resource(resource);
+}
+
+static oc_event_callback_retval_t
+oc_delayed_delete_resource_cb(void *data)
+{
+  oc_resource_t *resource = (oc_resource_t *)data;
+#ifdef OC_CLOUD
+  oc_cloud_delete_resource(resource);
+#endif
+  oc_delete_resource(resource);
+  return OC_EVENT_DONE;
+}
+
+void
+oc_delayed_delete_resource(oc_resource_t *resource)
+{
+  oc_set_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
 }
 
 void

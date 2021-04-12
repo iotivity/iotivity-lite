@@ -24,17 +24,17 @@ OC_MEMB(rtc_s, oc_rt_created_t, 1);
 OC_LIST(created_res);
 
 void
-gen_random_uri(char *uri)
+gen_random_uri(char *uri, size_t uri_length)
 {
   const char *alpha =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uri[0] = '/';
   size_t i = 1;
-  while (i < 31) {
+  while (i < uri_length-1) {
     unsigned int r = oc_random_value() % strlen(alpha);
     uri[i++] = alpha[r];
   }
-  uri[31] = '\0';
+  uri[uri_length-1] = '\0';
 }
 
 oc_rt_created_t *
@@ -45,7 +45,7 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
                               oc_rt_factory_t *rf, size_t device)
 {
   char href[32];
-  gen_random_uri(href);
+  gen_random_uri(href, sizeof(href));
 
   oc_rt_created_t *rtc = (oc_rt_created_t *)oc_memb_alloc(&rtc_s);
 
@@ -98,6 +98,20 @@ oc_fi_factory_free_all_created_resources(void)
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
     rtc = (oc_rt_created_t *)oc_list_pop(created_res);
   }
+}
+
+oc_rt_created_t*
+oc_rt_get_factory_create_for_resource(oc_resource_t* resource)
+{
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
+  while(rtc) {
+    if (rtc->resource == resource) {
+      return rtc;
+    }
+    rtc = rtc->next;
+  }
+
+  return NULL;
 }
 
 void

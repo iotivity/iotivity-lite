@@ -285,13 +285,13 @@ process_device_resources(CborEncoder *links, oc_request_t *request,
   }
 
 #if defined(OC_COLLECTIONS)
-  oc_collection_t *collection = oc_collection_get_all();
+  oc_resource_t *collection = (oc_resource_t *)oc_collection_get_all();
   for (; collection; collection = collection->next) {
     if (collection->device != device_index ||
         !(collection->properties & OC_DISCOVERABLE))
       continue;
 
-    if (filter_resource((oc_resource_t *)collection, request, oc_string(anchor),
+    if (filter_resource(collection, request, oc_string(anchor),
                         links, device_index))
       matches++;
   }
@@ -443,13 +443,13 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
   }
 
 #if defined(OC_COLLECTIONS)
-  oc_collection_t *collection = oc_collection_get_all();
+  oc_resource_t *collection = (oc_resource_t *)oc_collection_get_all();
   for (; collection; collection = collection->next) {
     if (collection->device != device_num ||
         !(collection->properties & OC_DISCOVERABLE))
       continue;
 
-    if (filter_oic_1_1_resource((oc_resource_t *)collection, request,
+    if (filter_oic_1_1_resource(collection, request,
                                 oc_rep_array(links)))
       matches++;
   }
@@ -656,12 +656,12 @@ process_batch_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
   }
 
 #if defined(OC_COLLECTIONS)
-  oc_collection_t *collection = oc_collection_get_all();
+  oc_resource_t *collection = (oc_resource_t *)oc_collection_get_all();
   for (; collection; collection = collection->next) {
     if (collection->device != device_index)
       continue;
 
-    process_batch_response(links_array, (oc_resource_t *)collection, endpoint);
+    process_batch_response(links_array, collection, endpoint);
   }
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
