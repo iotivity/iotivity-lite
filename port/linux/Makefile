@@ -84,7 +84,10 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
 
-PYTHON=../../python/oc_python.c
+PYTHON_DIR=../../python
+#SRC_PYTHON=../../python/oc_python.c 
+SRC_PYTHON=$(wildcard $(PYTHON_DIR)/*.c)
+#PYTHON=oc_python.c
 
 ifeq ($(PKI),1)
 	CTIMESTAMP=../../api/c-timestamp/timestamp_tm.c
@@ -93,7 +96,6 @@ endif
 CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
 SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
-SRC_PYTHON=${PYTHON}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
@@ -114,7 +116,11 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-OBJ_PYTHON=$(addprefix obj/,$(SRC_PYTHON:.c=.o))
+OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
+
+$(info    OBJ_PYTHON is $(OBJ_PYTHON))
+$(info    SRC_PYTHON is $(SRC_PYTHON))
+
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
@@ -314,6 +320,14 @@ obj/client_server/%.o: %.c
 obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
+
+#obj/python/%.o: %.c
+#	@mkdir -p ${@D}
+#	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
+
+$(OBJ_PYTHON) : $(SRC_PYTHON)
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
 obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
