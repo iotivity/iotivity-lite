@@ -177,6 +177,7 @@ app_init(void)
 }
 
 
+//#ifdef OC_CLIENT
 static void
 issue_requests(void)
 {
@@ -184,6 +185,7 @@ issue_requests(void)
   int retval = oc_obt_init();
   PRINT("obt initialized! %d\n", retval);
 }
+//#endif
 
 
 static void
