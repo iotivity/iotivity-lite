@@ -871,7 +871,7 @@
         "mnmo":{
                     "type":"string",
           "readOnly":true,
-          "maxLength":64,
+          "maxLength":128,
           "description":""
         },
         "mndt":{
