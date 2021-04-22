@@ -944,6 +944,12 @@ register_resources(void)
   oc_add_collection(col);
   PRINT("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
+
+    oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
+    oc_resource_set_observable(device_resource, false);
+    
+    oc_resource_t* platform_resource = oc_core_get_resource_by_index(OCF_P, DEVICE);
+    oc_resource_set_observable(platform_resource, false);
 }
 
 static void
