@@ -262,6 +262,25 @@ cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error)
 }
 
 void
+cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps)
+{
+  if (cps != ctx->store.cps) {
+    ctx->store.cps = cps;
+    oc_notify_observers(ctx->cloud_conf);
+  }
+}
+
+void
+cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps, oc_cloud_error_t error)
+{
+  if ((error != ctx->last_error) || (cps != ctx->store.cps)) {
+    ctx->store.cps = cps;
+    ctx->last_error = error;
+    oc_notify_observers(ctx->cloud_conf);
+  }
+}
+
+void
 cloud_reconnect(oc_cloud_context_t *ctx)
 {
   OC_DBG("[CM] cloud_reconnect\n");

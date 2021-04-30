@@ -73,6 +73,8 @@ void cloud_store_initialize(oc_cloud_store_t *store);
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
+void cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps);
+void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps, oc_cloud_error_t error);
 void cloud_update_by_resource(oc_cloud_context_t *ctx,
                               const cloud_conf_update_t *data);
 void cloud_reconnect(oc_cloud_context_t *ctx);
