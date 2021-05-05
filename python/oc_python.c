@@ -42,6 +42,7 @@ typedef struct device_handle_t
   oc_uuid_t uuid;
   char device_name[64];
 } device_handle_t;
+
 /* Pool of device handles */
 OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
 /* List of known owned devices */
@@ -90,6 +91,9 @@ print_rep(oc_rep_t* rep, bool pretty_print)
   free(json);
 }
 
+void my_python_cb(char myarray[1024]);
+
+
 
 
 static void
@@ -97,77 +101,76 @@ display_menu(void)
 {
 	return;
 	
-  PRINT("\n\n################################################\nOCF 2.x "
+  PRINT("[C]\n\n################################################\nOCF 2.x "
         "Onboarding Tool\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Discover un-owned devices\n");
-  PRINT("[2] Discover un-owned devices in the realm-local IPv6 scope\n");
-  PRINT("[3] Discover un-owned devices in the site-local IPv6 scope\n");
-  PRINT("[4] Discover owned devices\n");
-  PRINT("[5] Discover owned devices in the realm-local IPv6 scope\n");
-  PRINT("[6] Discover owned devices in the site-local IPv6 scope\n");
-  PRINT("[7] Discover all resources on the device\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[8] Just-Works Ownership Transfer Method\n");
-  PRINT("[9] Request Random PIN from device for OTM\n");
-  PRINT("[10] Random PIN Ownership Transfer Method\n");
+  PRINT("[C][0] Display this menu\n");
+  PRINT("[C]-----------------------------------------------\n");
+  PRINT("[C][1] Discover un-owned devices\n");
+  PRINT("[C][2] Discover un-owned devices in the realm-local IPv6 scope\n");
+  PRINT("[C][3] Discover un-owned devices in the site-local IPv6 scope\n");
+  PRINT("[C][4] Discover owned devices\n");
+  PRINT("[C][5] Discover owned devices in the realm-local IPv6 scope\n");
+  PRINT("[C][6] Discover owned devices in the site-local IPv6 scope\n");
+  PRINT("[C][7] Discover all resources on the device\n");
+  PRINT("[C]-----------------------------------------------\n");
+  PRINT("[C][8] Just-Works Ownership Transfer Method\n");
+  PRINT("[C][9] Request Random PIN from device for OTM\n");
+  PRINT("[C][10] Random PIN Ownership Transfer Method\n");
 #ifdef OC_PKI
-  PRINT("[11] Manufacturer Certificate based Ownership Transfer Method\n");
+  PRINT("[C][11] Manufacturer Certificate based Ownership Transfer Method\n");
 #endif /* OC_PKI */
-  PRINT("-----------------------------------------------\n");
-  PRINT("[12] Provision pairwise credentials\n");
-  PRINT("[13] Provision ACE2\n");
-  PRINT("[14] Provision auth-crypt RW access to NCRs\n");
-  PRINT("[15] RETRIEVE /oic/sec/cred\n");
-  PRINT("[16] DELETE cred by credid\n");
-  PRINT("[17] RETRIEVE /oic/sec/acl2\n");
-  PRINT("[18] DELETE ace by aceid\n");
-  PRINT("[19] RETRIEVE own creds\n");
-  PRINT("[20] DELETE own cred by credid\n");
+  PRINT("[C]-----------------------------------------------\n");
+  PRINT("[C][12] Provision pairwise credentials\n");
+  PRINT("[C][13] Provision ACE2\n");
+  PRINT("[C][14] Provision auth-crypt RW access to NCRs\n");
+  PRINT("[C][15] RETRIEVE /oic/sec/cred\n");
+  PRINT("[C][16] DELETE cred by credid\n");
+  PRINT("[C][17] RETRIEVE /oic/sec/acl2\n");
+  PRINT("[C][18] DELETE ace by aceid\n");
+  PRINT("[C][19] RETRIEVE own creds\n");
+  PRINT("[C][20] DELETE own cred by credid\n");
 #ifdef OC_PKI
-  PRINT("[21] Provision role RW access to NCRs\n");
-  PRINT("[22] Provision identity certificate\n");
-  PRINT("[23] Provision role certificate\n");
+  PRINT("[C][21] Provision role RW access to NCRs\n");
+  PRINT("[C][22] Provision identity certificate\n");
+  PRINT("[C][23] Provision role certificate\n");
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
-  PRINT("[24] Provision pairwise OSCORE contexts\n");
-  PRINT("[25] Provision Client Group OSCORE context\n");
-  PRINT("[26] Provision Server Group OSCORE context\n");
+  PRINT("[C][24] Provision pairwise OSCORE contexts\n");
+  PRINT("[C][25] Provision Client Group OSCORE context\n");
+  PRINT("[C][26] Provision Server Group OSCORE context\n");
 #endif /* OC_OSCORE */
-  PRINT("[27] Set security domain info\n");
+  PRINT("[C][27] Set security domain info\n");
 #ifdef OC_CLOUD
-  PRINT("-----------------------------------------------\n");
-  PRINT("[30] Provision cloud config info\n");
-  PRINT("[31] RETRIEVE cloud config info\n");
-  PRINT("[32] Provistion cloud trust anchor\n");
+  PRINT("[C]-----------------------------------------------\n");
+  PRINT("[C][30] Provision cloud config info\n");
+  PRINT("[C][31] RETRIEVE cloud config info\n");
+  PRINT("[C][32] Provistion cloud trust anchor\n");
 #endif /* OC_CLOUD */
-  PRINT("-----------------------------------------------\n");
+  PRINT("[C]-----------------------------------------------\n");
 #ifdef OC_PKI
-  PRINT("[96] Install new manufacturer trust anchor\n");
+  PRINT("[C][96] Install new manufacturer trust anchor\n");
 #endif /* OC_PKI */
-  PRINT("[97] RESET device\n");
-  PRINT("[98] RESET OBT\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[99] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  PRINT("[C][97] RESET device\n");
+  PRINT("[C][98] RESET OBT\n");
+  PRINT("[C]-----------------------------------------------\n");
+  PRINT("[C][99] Exit\n");
+  PRINT("[C]################################################\n");
+  PRINT("[C]\nSelect option: \n");
 }
 
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      PRINT("[C]ERROR Invalid input\n");                                          \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
 
+
 static int
 app_init(void)
 {
-  
-  PRINT("app_init\n");
-
+  //PRINT("[C]app_init\n");
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.2",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
@@ -176,14 +179,13 @@ app_init(void)
   return ret;
 }
 
-
 //#ifdef OC_CLIENT
 static void
 issue_requests(void)
 {
-  PRINT("issue_requests\n");
+  //PRINT("[C]issue_requests\n");
   int retval = oc_obt_init();
-  PRINT("obt initialized! %d\n", retval);
+  PRINT("[C]obt initialized! %d\n", retval);
 }
 //#endif
 
@@ -259,6 +261,7 @@ ocf_event_thread(void *data)
   return NULL;
 }
 #endif
+
 
 /* App utility functions */
 static device_handle_t *
@@ -338,10 +341,10 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_uuid_to_str(uuid, di, 37);
   oc_endpoint_t *ep = eps;
 
-  PRINT("\nDiscovered unowned device: %s at:\n", di);
+  //PRINT("[C]\nDiscovered unowned device: %s at:\n", di);
   while (eps != NULL) {
-    PRINTipaddr(*eps);
-    PRINT("\n");
+    //PRINTipaddr(*eps);
+    //PRINT("[C]\n");
     eps = eps->next;
   }
 
@@ -356,10 +359,10 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_uuid_to_str(uuid, di, 37);
   oc_endpoint_t *ep = eps;
 
-  PRINT("\nDiscovered owned device: %s at:\n", di);
+  //PRINT("[C]\nDiscovered owned device: %s at:\n", di);
   while (eps != NULL) {
-    PRINTipaddr(*eps);
-    PRINT("\n");
+    //PRINTipaddr(*eps);
+    //PRINT("[C]\n");
     eps = eps->next;
   }
 
@@ -369,7 +372,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 void
 discover_owned_devices(int scope)
 {
-  PRINT("discover_owned_devices: scope %d\n", scope);
+  //PRINT("[C]discover_owned_devices: scope %d\n", scope);
   otb_mutex_lock(app_sync_lock);
   if (scope == 0x02) {
     oc_obt_discover_owned_devices(owned_device_cb, NULL);
@@ -385,7 +388,23 @@ discover_owned_devices(int scope)
 void
 discover_unowned_devices(int scope)
 {
-  PRINT("discover_unowned_devices: scope %d\n", scope);
+  //PRINT("[C]discover_unowned_devices: scope %d\n", scope);
+  otb_mutex_lock(app_sync_lock);
+  if (scope == 0x02) {
+    oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+  } else if (scope == 0x03) {
+    oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
+  } else if (scope == 0x05) {
+    oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
+  }
+  otb_mutex_unlock(app_sync_lock);
+  signal_event_loop();
+}
+
+void
+py_discover_unowned_devices(int scope)
+{
+  //PRINT("[C]discover_unowned_devices: scope %d\n", scope);
   otb_mutex_lock(app_sync_lock);
   if (scope == 0x02) {
     oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
@@ -407,10 +426,10 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully performed OTM on device %s\n", di);
+    PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
   } else {
-    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+    PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
   }
 }
@@ -419,7 +438,7 @@ static void
 otm_rdp(void)
 {
   if (oc_list_length(unowned_devices) == 0) {
-    PRINT("\nPlease Re-discover Unowned devices\n");
+    PRINT("[C]\nPlease Re-discover Unowned devices\n");
     return;
   }
 
@@ -427,37 +446,37 @@ otm_rdp(void)
   device_handle_t *devices[MAX_NUM_DEVICES];
   int i = 0, c;
 
-  PRINT("\nUnowned Devices:\n");
+  PRINT("[C]\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
   }
-  PRINT("\n\nSelect device: ");
+  PRINT("[C]\n\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
   unsigned char pin[24];
-  PRINT("\nEnter Random PIN: ");
+  PRINT("[C]\nEnter Random PIN: ");
   SCANF("%10s", pin);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_perform_random_pin_otm(
     &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, devices[c]);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
+    PRINT("[C]\nSuccessfully issued request to perform Random PIN OTM\n");
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
     oc_list_remove(unowned_devices, devices[c]);
   } else {
-    PRINT("\nERROR issuing request to perform Random PIN OTM\n");
+    PRINT("[C]\nERROR issuing request to perform Random PIN OTM\n");
   }
 
   otb_mutex_unlock(app_sync_lock);
@@ -471,9 +490,9 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully requested device %s to generate a Random PIN\n", di);
+    PRINT("[C]\nSuccessfully requested device %s to generate a Random PIN\n", di);
   } else {
-    PRINT("\nERROR requesting device %s to generate a Random PIN\n", di);
+    PRINT("[C]\nERROR requesting device %s to generate a Random PIN\n", di);
   }
 }
 
@@ -481,7 +500,7 @@ static void
 request_random_pin(void)
 {
   if (oc_list_length(unowned_devices) == 0) {
-    PRINT("\nPlease Re-discover Unowned devices\n");
+    PRINT("[C]\nPlease Re-discover Unowned devices\n");
     return;
   }
 
@@ -489,19 +508,19 @@ request_random_pin(void)
   device_handle_t *devices[MAX_NUM_DEVICES];
   int i = 0, c;
 
-  PRINT("\nUnowned Devices:\n");
+  PRINT("[C]\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
   }
-  PRINT("\n\nSelect device: ");
+  PRINT("[C]\n\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -509,9 +528,9 @@ request_random_pin(void)
 
   int ret = oc_obt_request_random_pin(&devices[c]->uuid, random_pin_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to generate a random PIN\n");
+    PRINT("[C]\nSuccessfully issued request to generate a random PIN\n");
   } else {
-    PRINT("\nERROR issuing request to generate random PIN\n");
+    PRINT("[C]\nERROR issuing request to generate random PIN\n");
   }
 
   otb_mutex_unlock(app_sync_lock);
@@ -527,10 +546,10 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully performed OTM on device %s\n", di);
+    PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
   } else {
-    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+    PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
   }
 }
@@ -539,7 +558,7 @@ static void
 otm_cert(void)
 {
   if (oc_list_length(unowned_devices) == 0) {
-    PRINT("\nPlease Re-discover Unowned devices\n");
+    PRINT("[C]\nPlease Re-discover Unowned devices\n");
     return;
   }
 
@@ -547,19 +566,19 @@ otm_cert(void)
   device_handle_t *devices[MAX_NUM_DEVICES];
   int i = 0, c;
 
-  PRINT("\nUnowned Devices:\n");
+  PRINT("[C]\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     devices[i] = device;
     i++;
     device = device->next;
   }
-  PRINT("\n\nSelect device: ");
+  PRINT("[C]\n\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -567,13 +586,13 @@ otm_cert(void)
 
   int ret = oc_obt_perform_cert_otm(&devices[c]->uuid, otm_cert_cb, devices[c]);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    PRINT("[C]\nSuccessfully issued request to perform ownership transfer\n");
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
     oc_list_remove(unowned_devices, devices[c]);
   } else {
-    PRINT("\nERROR issuing request to perform ownership transfer\n");
+    PRINT("[C]\nERROR issuing request to perform ownership transfer\n");
   }
 
   otb_mutex_unlock(app_sync_lock);
@@ -589,39 +608,69 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
+    PRINT("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
     oc_list_add(owned_devices, device);
   } else {
     oc_memb_free(&device_handles, device);
-    PRINT("\nERROR performing ownership transfer on device %s\n", di);
+    PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
   }
 }
 
-static void
-otm_just_works(void)
+// function to list the unowned devices in iotivity (printed in C)
+void py_list_unowned_devices(void)
 {
-  if (oc_list_length(unowned_devices) == 0) {
-    PRINT("\nPlease Re-discover Unowned devices\n");
-    return;
-  }
-
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
-  device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
+  int i = 0;
 
-  PRINT("\nUnowned Devices:\n");
+  PRINT("[C] py_list_unowned_devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
-    devices[i] = device;
+    PRINT("[C] [%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\n\nSelect device: ");
-  SCANF("%d", &c);
-  if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+}
+
+// function to list the owned devices in iotivity (printed in C)
+void py_list_owned_devices(void)
+{
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0;
+
+  PRINT("[C] py_list_owned_devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[C] [%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+}
+
+void py_otm_just_works(char* uuid)
+{
+  //PRINT("[C]py_otm_just_works: %s \n", uuid);
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c=-1;
+
+  //PRINT("[C]\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    //PRINT("[C][%d]: %s - %s [%s]\n", i, di, device->device_name, uuid);
+    devices[i] = device;
+    if (strcmp(uuid, di) == 0) {
+      //PRINT("[C][%d]: Found", i);
+      c = i;
+    }
+    i++;
+    device = device->next;
+  }
+  if (c == -1)
+  {
+    PRINT("[C] ERROR: Invalid uuid\n");
     return;
   }
 
@@ -630,13 +679,59 @@ otm_just_works(void)
   int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
                                           devices[c]);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to perform ownership transfer\n");
+    PRINT("[C] Successfully issued request to perform ownership transfer\n");
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
     oc_list_remove(unowned_devices, devices[c]);
   } else {
-    PRINT("\nERROR issuing request to perform ownership transfer\n");
+    PRINT("[C] ERROR issuing request to perform ownership transfer\n");
+  }
+
+  otb_mutex_unlock(app_sync_lock);
+}
+
+
+static void
+otm_just_works(void)
+{
+  if (oc_list_length(unowned_devices) == 0) {
+    PRINT("[C] Please Re-discover Unowned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  int i = 0, c;
+
+  PRINT("[C]\nUnowned Devices:\n");
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
+    devices[i] = device;
+    i++;
+    device = device->next;
+  }
+  PRINT("[C]\n\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("[C]ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+
+  int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
+                                          devices[c]);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued request to perform ownership transfer\n");
+    /* Having issued an OTM request, remove this item from the unowned device
+     * list
+     */
+    oc_list_remove(unowned_devices, devices[c]);
+  } else {
+    PRINT("[C]\nERROR issuing request to perform ownership transfer\n");
   }
 
   otb_mutex_unlock(app_sync_lock);
@@ -647,61 +742,61 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
 {
   (void)data;
   if (acl) {
-    PRINT("\n/oic/sec/acl2:\n");
+    PRINT("[C]\n/oic/sec/acl2:\n");
     oc_sec_ace_t *ac = oc_list_head(acl->subjects);
-    PRINT("\n################################################\n");
+    PRINT("[C]\n################################################\n");
     while (ac) {
-      PRINT("aceid: %d\n", ac->aceid);
+      PRINT("[C]aceid: %d\n", ac->aceid);
       if (ac->subject_type == OC_SUBJECT_UUID) {
         char uuid[37];
         oc_uuid_to_str(&ac->subject.uuid, uuid, 37);
-        PRINT("subject: %s\n", uuid);
+        PRINT("[C]subject: %s\n", uuid);
       } else if (ac->subject_type == OC_SUBJECT_ROLE) {
-        PRINT("Roleid_role: %s\n", oc_string(ac->subject.role.role));
+        PRINT("[C]Roleid_role: %s\n", oc_string(ac->subject.role.role));
         if (oc_string_len(ac->subject.role.authority) > 0) {
-          PRINT("Roleid_authority: %s\n",
+          PRINT("[C]Roleid_authority: %s\n",
                 oc_string(ac->subject.role.authority));
         }
       } else if (ac->subject_type == OC_SUBJECT_CONN) {
-        PRINT("connection type: ");
+        PRINT("[C]connection type: ");
         if (ac->subject.conn == OC_CONN_AUTH_CRYPT) {
-          PRINT("auth-crypt\n");
+          PRINT("[C]auth-crypt\n");
         } else {
-          PRINT("anon-clear\n");
+          PRINT("[C]anon-clear\n");
         }
       }
-      PRINT("Permissions: ");
+      PRINT("[C]Permissions: ");
       if (ac->permission & OC_PERM_CREATE) {
-        PRINT(" C ");
+        PRINT("[C] C ");
       }
       if (ac->permission & OC_PERM_RETRIEVE) {
-        PRINT(" R ");
+        PRINT("[C] R ");
       }
       if (ac->permission & OC_PERM_UPDATE) {
-        PRINT(" U ");
+        PRINT("[C] U ");
       }
       if (ac->permission & OC_PERM_DELETE) {
-        PRINT(" D ");
+        PRINT("[C] D ");
       }
       if (ac->permission & OC_PERM_NOTIFY) {
-        PRINT(" N ");
+        PRINT("[C] N ");
       }
-      PRINT("\n");
-      PRINT("Resources: ");
+      PRINT("[C]\n");
+      PRINT("[C]Resources: ");
       oc_ace_res_t *res = oc_list_head(ac->resources);
       while (res) {
         if (oc_string_len(res->href) > 0) {
-          PRINT(" %s ", oc_string(res->href));
+          PRINT("[C] %s ", oc_string(res->href));
         } else if (res->wildcard != 0) {
           switch (res->wildcard) {
           case OC_ACE_WC_ALL:
-            PRINT(" * ");
+            PRINT("[C] * ");
             break;
           case OC_ACE_WC_ALL_SECURED:
-            PRINT(" + ");
+            PRINT("[C] + ");
             break;
           case OC_ACE_WC_ALL_PUBLIC:
-            PRINT(" - ");
+            PRINT("[C] - ");
             break;
           default:
             break;
@@ -710,14 +805,14 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
         res = res->next;
       }
       ac = ac->next;
-      PRINT("\n-----\n");
+      PRINT("[C]\n-----\n");
     }
-    PRINT("\n################################################\n");
+    PRINT("[C]\n################################################\n");
 
     /* Freeing the ACL structure */
     oc_obt_free_acl(acl);
   } else {
-    PRINT("\nERROR RETRIEving /oic/sec/acl2\n");
+    PRINT("[C]\nERROR RETRIEving /oic/sec/acl2\n");
   }
 }
 
@@ -725,7 +820,7 @@ static void
 retrieve_acl2_rsrc(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -733,28 +828,28 @@ retrieve_acl2_rsrc(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_retrieve_acl(&devices[c]->uuid, retrieve_acl2_rsrc_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to RETRIEVE /oic/sec/acl2\n");
+    PRINT("[C]\nSuccessfully issued request to RETRIEVE /oic/sec/acl2\n");
   } else {
-    PRINT("\nERROR issuing request to RETRIEVE /oic/sec/acl2\n");
+    PRINT("[C]\nERROR issuing request to RETRIEVE /oic/sec/acl2\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -763,34 +858,34 @@ static void
 display_cred_rsrc(oc_sec_creds_t *creds)
 {
   if (creds) {
-    PRINT("\n/oic/sec/cred:\n");
+    PRINT("[C]\n/oic/sec/cred:\n");
     oc_sec_cred_t *cr = oc_list_head(creds->creds);
-    PRINT("\n################################################\n");
+    PRINT("[C]\n################################################\n");
     while (cr) {
       char uuid[37];
       oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
-      PRINT("credid: %d\n", cr->credid);
-      PRINT("subjectuuid: %s\n", uuid);
-      PRINT("credtype: %s\n", oc_cred_credtype_string(cr->credtype));
+      PRINT("[C]credid: %d\n", cr->credid);
+      PRINT("[C]subjectuuid: %s\n", uuid);
+      PRINT("[C]credtype: %s\n", oc_cred_credtype_string(cr->credtype));
 #ifdef OC_PKI
-      PRINT("credusage: %s\n", oc_cred_read_credusage(cr->credusage));
+      PRINT("[C]credusage: %s\n", oc_cred_read_credusage(cr->credusage));
       if (oc_string_len(cr->publicdata.data) > 0) {
-        PRINT("publicdata_encoding: %s\n",
+        PRINT("[C]publicdata_encoding: %s\n",
               oc_cred_read_encoding(cr->publicdata.encoding));
       }
 #endif /* OC_PKI */
-      PRINT("privatedata_encoding: %s\n",
+      PRINT("[C]privatedata_encoding: %s\n",
             oc_cred_read_encoding(cr->privatedata.encoding));
       if (oc_string_len(cr->role.role) > 0) {
-        PRINT("roleid_role: %s\n", oc_string(cr->role.role));
+        PRINT("[C]roleid_role: %s\n", oc_string(cr->role.role));
       }
       if (oc_string_len(cr->role.authority) > 0) {
-        PRINT("roleid_authority: %s\n", oc_string(cr->role.authority));
+        PRINT("[C]roleid_authority: %s\n", oc_string(cr->role.authority));
       }
-      PRINT("\n-----\n");
+      PRINT("[C]\n-----\n");
       cr = cr->next;
     }
-    PRINT("\n################################################\n");
+    PRINT("[C]\n################################################\n");
   }
 }
 
@@ -803,7 +898,7 @@ retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
     /* Freeing the creds structure */
     oc_obt_free_creds(creds);
   } else {
-    PRINT("\nERROR RETRIEving /oic/sec/cred\n");
+    PRINT("[C]\nERROR RETRIEving /oic/sec/cred\n");
   }
 }
 
@@ -823,7 +918,7 @@ static void
 retrieve_cred_rsrc(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -831,19 +926,19 @@ retrieve_cred_rsrc(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -851,9 +946,9 @@ retrieve_cred_rsrc(void)
   int ret =
     oc_obt_retrieve_creds(&devices[c]->uuid, retrieve_cred_rsrc_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to RETRIEVE /oic/sec/cred\n");
+    PRINT("[C]\nSuccessfully issued request to RETRIEVE /oic/sec/cred\n");
   } else {
-    PRINT("\nERROR issuing request to RETRIEVE /oic/sec/cred\n");
+    PRINT("[C]\nERROR issuing request to RETRIEVE /oic/sec/cred\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -863,9 +958,9 @@ delete_ace_by_aceid_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully DELETEd ace\n");
+    PRINT("[C]\nSuccessfully DELETEd ace\n");
   } else {
-    PRINT("\nERROR DELETing ace\n");
+    PRINT("[C]\nERROR DELETing ace\n");
   }
 }
 
@@ -873,7 +968,7 @@ static void
 delete_ace_by_aceid(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -881,23 +976,23 @@ delete_ace_by_aceid(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
-  PRINT("\nEnter aceid: ");
+  PRINT("[C]\nEnter aceid: ");
   int aceid;
   SCANF("%d", &aceid);
 
@@ -905,9 +1000,9 @@ delete_ace_by_aceid(void)
   int ret = oc_obt_delete_ace_by_aceid(&devices[c]->uuid, aceid,
                                        delete_ace_by_aceid_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to DELETE /oic/sec/acl2\n");
+    PRINT("[C]\nSuccessfully issued request to DELETE /oic/sec/acl2\n");
   } else {
-    PRINT("\nERROR issuing request to DELETE /oic/sec/acl2\n");
+    PRINT("[C]\nERROR issuing request to DELETE /oic/sec/acl2\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -917,25 +1012,25 @@ delete_cred_by_credid_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully DELETEd cred\n");
+    PRINT("[C]\nSuccessfully DELETEd cred\n");
   } else {
-    PRINT("\nERROR DELETing cred\n");
+    PRINT("[C]\nERROR DELETing cred\n");
   }
 }
 
 static void
 delete_own_cred_by_credid(void)
 {
-  PRINT("\nEnter credid: ");
+  PRINT("[C]\nEnter credid: ");
   int credid;
   SCANF("%d", &credid);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_delete_own_cred_by_credid(credid);
   if (ret >= 0) {
-    PRINT("\nSuccessfully DELETED cred\n");
+    PRINT("[C]\nSuccessfully DELETED cred\n");
   } else {
-    PRINT("\nERROR DELETing cred\n");
+    PRINT("[C]\nERROR DELETing cred\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -944,7 +1039,7 @@ static void
 delete_cred_by_credid(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -952,23 +1047,23 @@ delete_cred_by_credid(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
-  PRINT("\nEnter credid: ");
+  PRINT("[C]\nEnter credid: ");
   int credid;
   SCANF("%d", &credid);
 
@@ -976,9 +1071,9 @@ delete_cred_by_credid(void)
   int ret = oc_obt_delete_cred_by_credid(&devices[c]->uuid, credid,
                                          delete_cred_by_credid_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to DELETE /oic/sec/cred\n");
+    PRINT("[C]\nSuccessfully issued request to DELETE /oic/sec/cred\n");
   } else {
-    PRINT("\nERROR issuing request to DELETE /oic/sec/cred\n");
+    PRINT("[C]\nERROR issuing request to DELETE /oic/sec/cred\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -993,37 +1088,165 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   oc_memb_free(&device_handles, data);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully performed hard RESET to device %s\n", di);
+    PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
   } else {
-    PRINT("\nERROR performing hard RESET to device %s\n", di);
+    PRINT("[C]\nERROR performing hard RESET to device %s\n", di);
   }
 }
 
-static void
-reset_device(void)
+int py_get_nr_owned_devices(void)
+{
+   //PRINT("[C]py_get_nr_owned_devices: %d\n", oc_list_length(owned_devices));
+   return (oc_list_length(owned_devices));
+}
+
+char xx_di[OC_UUID_LEN];
+char* get_uuid(int owned, int index)
+{
+  device_handle_t *device = NULL;
+  //PRINT("[C]\tget_uuid [C] %d %d\n", owned, index);
+  if (owned == 1) {
+    device = (device_handle_t *)oc_list_head(owned_devices);
+  }
+  else {
+    device = (device_handle_t *)oc_list_head(unowned_devices);
+  }
+
+  int i = 0;
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, xx_di, OC_UUID_LEN);
+    //PRINT("[C]\tget_uuid [%d]: %s - %s [%d]\n", i, xx_di, device->device_name, index);
+    if (index == i)
+    {
+      return xx_di;
+    }
+    i++;
+    device = device->next;
+  }
+  return " empty ";
+}
+
+char* get_device_name(int owned, int index)
+{
+  device_handle_t *device = NULL;
+  //PRINT("[C]get_device_name [C] %d %d\n", owned, index);
+  if (owned == 1) {
+    device = (device_handle_t *)oc_list_head(owned_devices);
+  }
+  else {
+    device = (device_handle_t *)oc_list_head(unowned_devices);
+  }
+
+  int i = 0;
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    //PRINT("[C]get_device_name [%d]: %s - %s [%d]\n", i, di, device->device_name, index);
+    if (index == i)
+    {
+      return device->device_name;
+    }
+    i++;
+    device = device->next;
+  }
+  return " empty ";
+}
+
+
+char* get_device_name_from_uuid(char* uuid)
+{
+  device_handle_t *device = NULL;
+  //PRINT("[C]get_device_name_from_uuid [C] %s\n", uuid);
+  device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0;
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    //PRINT("[C]get_device_name_from_uuid [%d]: %s - %s [%d]\n", i, di, device->device_name, index);
+    if (strcmp(di, uuid) == 0)
+    {
+      return device->device_name;
+    }
+    i++;
+    device = device->next;
+  }
+
+  device = (device_handle_t *)oc_list_head(unowned_devices);
+  i = 0;
+  while (device != NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    //PRINT("[C]get_device_name_from_uuid [%d]: %s - %s [%d]\n", i, di, device->device_name, index);
+    if (strcmp(di, uuid) == 0)
+    {
+      return device->device_name;
+    }
+    i++;
+    device = device->next;
+  }
+  return " empty ";
+}
+
+int py_get_nr_unowned_devices(void)
+{
+   //PRINT("[C]py_get_nr_unowned_devices: %d\n", oc_list_length(unowned_devices));
+   return (oc_list_length(unowned_devices));
+}
+
+device_handle_t* py_getdevice_from_uuid(char* uuid, int owned)
+{
+  device_handle_t *device = NULL;
+  if (owned == 1) {
+    device = (device_handle_t *)oc_list_head(owned_devices);
+  }
+  else {
+    device = (device_handle_t *)oc_list_head(unowned_devices);
+  }
+
+  int i = 0;
+  while (device != NULL) {
+    //devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    //PRINT("[C]py_getdevice_from_uuid [%d]: %s - %s [%d]\n", i, di, device->device_name, uuid);
+    if (strcmp(di, uuid) == 0)
+    {
+      return device;
+    }
+    i++;
+    device = device->next;
+  }
+  return NULL;
+}
+
+
+void py_reset_device(char* uuid)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
+  int i = 0, c=-1;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s [%s]\n", i, di, device->device_name, uuid);
+    if (strcmp(uuid, di) == 0)
+    {
+      c = i;
+    }
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
-  SCANF("%d", &c);
-  if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+  if (c == -1)
+  {
+    PRINT("[C]ERROR: Invalid uuid\n");
     return;
   }
 
@@ -1031,10 +1254,50 @@ reset_device(void)
   int ret =
     oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, devices[c]);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to perform hard RESET\n");
+    PRINT("[C]\nSuccessfully issued request to perform hard RESET\n");
     oc_list_remove(owned_devices, devices[c]);
   } else {
-    PRINT("\nERROR issuing request to perform hard RESET\n");
+    PRINT("[C]\nERROR issuing request to perform hard RESET\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+reset_device(void)
+{
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *devices[MAX_NUM_DEVICES];
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c;
+
+  PRINT("[C]\nMy Devices:\n");
+  while (device != NULL) {
+    devices[i] = device;
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("[C]\nSelect device: ");
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
+    PRINT("[C]ERROR: Invalid selection\n");
+    return;
+  }
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, devices[c]);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued request to perform hard RESET\n");
+    oc_list_remove(owned_devices, devices[c]);
+  } else {
+    PRINT("[C]\nERROR issuing request to perform hard RESET\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -1045,9 +1308,9 @@ provision_id_cert_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned identity certificate\n");
+    PRINT("[C]\nSuccessfully provisioned identity certificate\n");
   } else {
-    PRINT("\nERROR provisioning identity certificate\n");
+    PRINT("[C]\nERROR provisioning identity certificate\n");
   }
 }
 
@@ -1055,7 +1318,7 @@ static void
 provision_id_cert(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1063,19 +1326,19 @@ provision_id_cert(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1083,9 +1346,9 @@ provision_id_cert(void)
   int ret = oc_obt_provision_identity_certificate(&devices[c]->uuid,
                                                   provision_id_cert_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision identity certificate\n");
+    PRINT("[C]\nSuccessfully issued request to provision identity certificate\n");
   } else {
-    PRINT("\nERROR issuing request to provision identity certificate\n");
+    PRINT("[C]\nERROR issuing request to provision identity certificate\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -1095,9 +1358,9 @@ provision_role_cert_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned role certificate\n");
+    PRINT("[C]\nSuccessfully provisioned role certificate\n");
   } else {
-    PRINT("\nERROR provisioning role certificate\n");
+    PRINT("[C]\nERROR provisioning role certificate\n");
   }
 }
 
@@ -1105,7 +1368,7 @@ static void
 provision_role_cert(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1113,38 +1376,38 @@ provision_role_cert(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
   oc_role_t *roles = NULL;
   do {
     char role[64];
-    PRINT("\nEnter role: ");
+    PRINT("[C]\nEnter role: ");
     SCANF("%63s", role);
-    PRINT("\nAuthority? [0-No, 1-Yes]: ");
+    PRINT("[C]\nAuthority? [0-No, 1-Yes]: ");
     SCANF("%d", &i);
     if (i == 1) {
       char authority[64];
-      PRINT("\nEnter Authority: ");
+      PRINT("[C]\nEnter Authority: ");
       SCANF("%63s", authority);
       roles = oc_obt_add_roleid(roles, role, authority);
     } else {
       roles = oc_obt_add_roleid(roles, role, NULL);
     }
-    PRINT("\nMore Roles? [0-No, 1-Yes]: ");
+    PRINT("[C]\nMore Roles? [0-No, 1-Yes]: ");
     SCANF("%d", &i);
   } while (i == 1);
 
@@ -1152,9 +1415,9 @@ provision_role_cert(void)
   int ret = oc_obt_provision_role_certificate(roles, &devices[c]->uuid,
                                               provision_role_cert_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision role certificate\n");
+    PRINT("[C]\nSuccessfully issued request to provision role certificate\n");
   } else {
-    PRINT("\nERROR issuing request to provision role certificate\n");
+    PRINT("[C]\nERROR issuing request to provision role certificate\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -1167,9 +1430,9 @@ provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned rold * ACE to device %s\n", di);
+    PRINT("[C]\nSuccessfully provisioned rold * ACE to device %s\n", di);
   } else {
-    PRINT("\nERROR provisioning ACE to device %s\n", di);
+    PRINT("[C]\nERROR provisioning ACE to device %s\n", di);
   }
 }
 
@@ -1177,7 +1440,7 @@ static void
 provision_role_wildcard_ace(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1185,37 +1448,37 @@ provision_role_wildcard_ace(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev;
 
-  PRINT("\nProvision role * ACE\nMy Devices:\n");
+  PRINT("[C]\nProvision role * ACE\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    PRINT("[C]\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
-  PRINT("\n\nSelect device for provisioning: ");
+  PRINT("[C]\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
   char role[64], authority[64];
-  PRINT("\nEnter role: ");
+  PRINT("[C]\nEnter role: ");
   SCANF("%63s", role);
   int d;
-  PRINT("\nAuthority? [0-No, 1-Yes]: ");
+  PRINT("[C]\nAuthority? [0-No, 1-Yes]: ");
   SCANF("%d", &d);
   if (d == 1) {
     char authority[64];
-    PRINT("\nEnter Authority: ");
+    PRINT("[C]\nEnter Authority: ");
     SCANF("%63s", authority);
   }
 
@@ -1225,9 +1488,9 @@ provision_role_wildcard_ace(void)
     provision_role_wildcard_ace_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision role * ACE\n");
+    PRINT("[C]\nSuccessfully issued request to provision role * ACE\n");
   } else {
-    PRINT("\nERROR issuing request to provision role * ACE\n");
+    PRINT("[C]\nERROR issuing request to provision role * ACE\n");
   }
 }
 #endif /* OC_PKI */
@@ -1241,9 +1504,9 @@ provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned group OSCORE context to device %s\n", di);
+    PRINT("[C]\nSuccessfully provisioned group OSCORE context to device %s\n", di);
   } else {
-    PRINT("\nERROR provisioning group OSCORE context to device %s\n", di);
+    PRINT("[C]\nERROR provisioning group OSCORE context to device %s\n", di);
   }
 }
 
@@ -1251,7 +1514,7 @@ static void
 provision_server_group_oscore_context(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1259,32 +1522,32 @@ provision_server_group_oscore_context(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev, subject;
 
-  PRINT("\nProvision server group OSCORE context\nMy Devices:\n");
+  PRINT("[C]\nProvision server group OSCORE context\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    PRINT("[C]\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
-  PRINT("\n\nSelect Server device for provisioning: ");
+  PRINT("[C]\n\nSelect Server device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
-  PRINT("\n\nSelect Client with secure multicast capability: ");
+  PRINT("[C]\n\nSelect Client with secure multicast capability: ");
   SCANF("%d", &subject);
   if (subject < 0 || subject >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1294,10 +1557,10 @@ provision_server_group_oscore_context(void)
     provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision server group OSCORE "
+    PRINT("[C]\nSuccessfully issued request to provision server group OSCORE "
           "context\n");
   } else {
-    PRINT("\nERROR issuing request to provision server group OSCORE context\n");
+    PRINT("[C]\nERROR issuing request to provision server group OSCORE context\n");
   }
 }
 
@@ -1305,7 +1568,7 @@ static void
 provision_client_group_oscore_context(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1313,25 +1576,25 @@ provision_client_group_oscore_context(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev;
 
-  PRINT("\nProvision client group OSCORE context\nMy Devices:\n");
+  PRINT("[C]\nProvision client group OSCORE context\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    PRINT("[C]\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
-  PRINT("\n\nSelect device for provisioning: ");
+  PRINT("[C]\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1340,10 +1603,10 @@ provision_client_group_oscore_context(void)
     &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision client group OSCORE "
+    PRINT("[C]\nSuccessfully issued request to provision client group OSCORE "
           "context\n");
   } else {
-    PRINT("\nERROR issuing request to provision client group OSCORE context\n");
+    PRINT("[C]\nERROR issuing request to provision client group OSCORE context\n");
   }
 }
 
@@ -1352,9 +1615,9 @@ provision_oscore_contexts_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned pairwise OSCORE contexts\n");
+    PRINT("[C]\nSuccessfully provisioned pairwise OSCORE contexts\n");
   } else {
-    PRINT("\nERROR provisioning pairwise OSCORE contexts\n");
+    PRINT("[C]\nERROR provisioning pairwise OSCORE contexts\n");
   }
 }
 
@@ -1362,7 +1625,7 @@ static void
 provision_oscore_contexts(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1370,25 +1633,25 @@ provision_oscore_contexts(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1, c2;
 
-  PRINT("\nProvision pairwise OSCORE contexts\nMy Devices:\n");
+  PRINT("[C]\nProvision pairwise OSCORE contexts\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device 1: ");
+  PRINT("[C]\nSelect device 1: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
-  PRINT("Select device 2: ");
+  PRINT("[C]Select device 2: ");
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1396,9 +1659,9 @@ provision_oscore_contexts(void)
   int ret = oc_obt_provision_pairwise_oscore_contexts(
     &devices[c1]->uuid, &devices[c2]->uuid, provision_oscore_contexts_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision OSCORE contexts\n");
+    PRINT("[C]\nSuccessfully issued request to provision OSCORE contexts\n");
   } else {
-    PRINT("\nERROR issuing request to provision OSCORE contexts\n");
+    PRINT("[C]\nERROR issuing request to provision OSCORE contexts\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -1409,9 +1672,9 @@ provision_credentials_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned pairwise credentials\n");
+    PRINT("[C]\nSuccessfully provisioned pairwise credentials\n");
   } else {
-    PRINT("\nERROR provisioning pairwise credentials\n");
+    PRINT("[C]\nERROR provisioning pairwise credentials\n");
   }
 }
 
@@ -1419,7 +1682,7 @@ static void
 provision_credentials(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1427,25 +1690,25 @@ provision_credentials(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1, c2;
 
-  PRINT("\nProvision pairwise (PSK) credentials\nMy Devices:\n");
+  PRINT("[C]\nProvision pairwise (PSK) credentials\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device 1: ");
+  PRINT("[C]\nSelect device 1: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
-  PRINT("Select device 2: ");
+  PRINT("[C]Select device 2: ");
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1453,9 +1716,9 @@ provision_credentials(void)
   int ret = oc_obt_provision_pairwise_credentials(
     &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision credentials\n");
+    PRINT("[C]\nSuccessfully issued request to provision credentials\n");
   } else {
-    PRINT("\nERROR issuing request to provision credentials\n");
+    PRINT("[C]\nERROR issuing request to provision credentials\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -1468,9 +1731,9 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
+    PRINT("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
   } else {
-    PRINT("\nERROR provisioning ACE to device %s\n", di);
+    PRINT("[C]\nERROR provisioning ACE to device %s\n", di);
   }
 }
 
@@ -1478,7 +1741,7 @@ static void
 provision_authcrypt_wildcard_ace(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1486,25 +1749,25 @@ provision_authcrypt_wildcard_ace(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev;
 
-  PRINT("\nProvision auth-crypt * ACE\nMy Devices:\n");
+  PRINT("[C]\nProvision auth-crypt * ACE\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    PRINT("[C]\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
-  PRINT("\n\nSelect device for provisioning: ");
+  PRINT("[C]\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1513,9 +1776,9 @@ provision_authcrypt_wildcard_ace(void)
     &devices[dev]->uuid, provision_authcrypt_wildcard_ace_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision auth-crypt * ACE\n");
+    PRINT("[C]\nSuccessfully issued request to provision auth-crypt * ACE\n");
   } else {
-    PRINT("\nERROR issuing request to provision auth-crypt * ACE\n");
+    PRINT("[C]\nERROR issuing request to provision auth-crypt * ACE\n");
   }
 }
 
@@ -1527,9 +1790,37 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("\nSuccessfully provisioned ACE to device %s\n", di);
+    PRINT("[C]\nSuccessfully provisioned ACE to device %s\n", di);
   } else {
-    PRINT("\nERROR provisioning ACE to device %s\n", di);
+    PRINT("[C]\nERROR provisioning ACE to device %s\n", di);
+  }
+}
+
+void py_provision_ace_cloud_access(char* uuid ) 
+{
+  
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+
+
+  oc_sec_ace_t *ace = NULL;
+  ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+
+  oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_href(res, "/CoapCloudConfResURI");
+  oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+  oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("[C] Successfully issued request to provision ACE\n");
+  } else {
+    PRINT("[C] ERROR issuing request to provision ACE\n");
   }
 }
 
@@ -1537,7 +1828,7 @@ static void
 provision_ace2(void)
 {
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
@@ -1549,53 +1840,53 @@ provision_ace2(void)
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, dev, sub;
 
-  PRINT("\nProvision ACL2\nMy Devices:\n");
+  PRINT("[C]\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
   if (i == 0) {
-    PRINT("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    PRINT("[C]\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
-  PRINT("\n\nSelect device for provisioning: ");
+  PRINT("[C]\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
-  PRINT("\nSubjects:");
+  PRINT("[C]\nSubjects:");
   device = (device_handle_t *)oc_list_head(owned_devices);
-  PRINT("\n[0]: %s\n", conn_types[0]);
-  PRINT("[1]: %s\n", conn_types[1]);
-  PRINT("[2]: Role\n");
-  PRINT("[3]: Cloud\n");
+  PRINT("[C]\n[0]: %s\n", conn_types[0]);
+  PRINT("[C][1]: %s\n", conn_types[1]);
+  PRINT("[C][2]: Role\n");
+  PRINT("[C][3]: Cloud\n");
   i = 0;
   while (device != NULL) {
     //char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i + 4, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i + 4, di, device->device_name);
     i++;
     device = device->next;
 
     if (!device) {
       oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
-      PRINT("[%d]: %s - (OBT)\n", i + 4, di);
+      PRINT("[C][%d]: %s - (OBT)\n", i + 4, di);
       i++;
     }
   }
-  PRINT("\nSelect subject: ");
+  PRINT("[C]\nSelect subject: ");
   SCANF("%d", &sub);
 
   if ((sub > (i + 3)) || (sub < 0)) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1608,14 +1899,14 @@ provision_ace2(void)
   }
   else if (sub == 2) {
     char role[64];
-    PRINT("\nEnter role: ");
+    PRINT("[C]\nEnter role: ");
     SCANF("%63s", role);
     int d;
-    PRINT("\nAuthority? [0-No, 1-Yes]: ");
+    PRINT("[C]\nAuthority? [0-No, 1-Yes]: ");
     SCANF("%d", &d);
     if (d == 1) {
       char authority[64];
-      PRINT("\nEnter Authority: ");
+      PRINT("[C]\nEnter Authority: ");
       SCANF("%63s", authority);
       ace = oc_obt_new_ace_for_role(role, authority);
     }
@@ -1624,7 +1915,7 @@ provision_ace2(void)
     }
   } else  {
     if (sub == 3 ) {   
-      PRINT("\nEnter Cloud sid: ");
+      PRINT("[C]\nEnter Cloud sid: ");
       SCANF("%63s", di);
       oc_uuid_t uuid_di;
       oc_str_to_uuid(di, &uuid_di);
@@ -1637,44 +1928,44 @@ provision_ace2(void)
   } 
 
   if (!ace) {
-    PRINT("\nERROR: Could not create ACE\n");
+    PRINT("[C]\nERROR: Could not create ACE\n");
     return;
   }
 
   while (num_resources <= 0 || num_resources > MAX_NUM_RESOURCES) {
     if (num_resources != 0) {
-      PRINT("\n\nERROR: Enter valid number\n\n");
+      PRINT("[C]\n\nERROR: Enter valid number\n\n");
     }
-    PRINT("\nEnter number of resources in this ACE: ");
+    PRINT("[C]\nEnter number of resources in this ACE: ");
     SCANF("%d", &num_resources);
   }
 
   int c;
-  PRINT("\nResource properties\n");
+  PRINT("[C]\nResource properties\n");
   i = 0;
   while (i < num_resources) {
     oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
 
     if (!res) {
-      PRINT("\nERROR: Could not allocate new resource for ACE\n");
+      PRINT("[C]\nERROR: Could not allocate new resource for ACE\n");
       oc_obt_free_ace(ace);
       return;
     }
 
-    PRINT("Have resource href? [0-No, 1-Yes]: ");
+    PRINT("[C]Have resource href? [0-No, 1-Yes]: ");
     SCANF("%d", &c);
     if (c == 1) {
-      PRINT("Enter resource href (eg. /a/light): ");
+      PRINT("[C]Enter resource href (eg. /a/light): ");
       char href[64];
       SCANF("%63s", href);
 
       oc_obt_ace_resource_set_href(res, href);
       oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
     } else {
-      PRINT("\nSet wildcard resource? [0-No, 1-Yes]: ");
+      PRINT("[C]\nSet wildcard resource? [0-No, 1-Yes]: ");
       SCANF("%d", &c);
       if (c == 1) {
-        PRINT("[1]: All NCRs '*' \n"
+        PRINT("[C][1]: All NCRs '*' \n"
               "[2]: All NCRs with >=1 secured endpoint '+'\n"
               "[3]: All NCRs with >=1 unsecured endpoint '-'\n"
               "\nSelect wildcard resource: ");
@@ -1697,28 +1988,28 @@ provision_ace2(void)
     i++;
   }
 
-  PRINT("\nSet ACE2 permissions\n");
-  PRINT("CREATE [0-No, 1-Yes]: ");
+  PRINT("[C]\nSet ACE2 permissions\n");
+  PRINT("[C]CREATE [0-No, 1-Yes]: ");
   SCANF("%d", &c);
   if (c == 1) {
     oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
   }
-  PRINT("RETRIEVE [0-No, 1-Yes]: ");
+  PRINT("[C]RETRIEVE [0-No, 1-Yes]: ");
   SCANF("%d", &c);
   if (c == 1) {
     oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
   }
-  PRINT("UPDATE [0-No, 1-Yes]: ");
+  PRINT("[C]UPDATE [0-No, 1-Yes]: ");
   SCANF("%d", &c);
   if (c == 1) {
     oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
   }
-  PRINT("DELETE [0-No, 1-Yes]: ");
+  PRINT("[C]DELETE [0-No, 1-Yes]: ");
   SCANF("%d", &c);
   if (c == 1) {
     oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
   }
-  PRINT("NOTIFY [0-No, 1-Yes]: ");
+  PRINT("[C]NOTIFY [0-No, 1-Yes]: ");
   SCANF("%d", &c);
   if (c == 1) {
     oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
@@ -1729,9 +2020,9 @@ provision_ace2(void)
     oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued request to provision ACE\n");
+    PRINT("[C]\nSuccessfully issued request to provision ACE\n");
   } else {
-    PRINT("\nERROR issuing request to provision ACE\n");
+    PRINT("[C]\nERROR issuing request to provision ACE\n");
   }
 }
 
@@ -1741,32 +2032,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    PRINT("[C]ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    PRINT("[C]ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    PRINT("[C]ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len > (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    PRINT("[C]ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    PRINT("[C]ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    PRINT("[C]ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -1783,7 +2074,7 @@ install_trust_anchor(void)
 {
   char cert[8192];
   size_t cert_len = 0;
-  PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+  PRINT("[C]\nPaste certificate here, then hit <ENTER> and type \"done\": ");
   int c;
   while ((c = getchar()) == '\n' || c == '\r')
     ;
@@ -1791,7 +2082,7 @@ install_trust_anchor(void)
           (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0));
        c = getchar()) {
     if (c == EOF) {
-      PRINT("ERROR processing input.. aborting\n");
+      PRINT("[C]ERROR processing input.. aborting\n");
       return;
     }
     cert[cert_len] = (char)c;
@@ -1806,7 +2097,7 @@ install_trust_anchor(void)
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, strlen(cert));
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    PRINT("[C]ERROR installing root cert\n");
     return;
   }
 }
@@ -1817,9 +2108,9 @@ set_sd_info()
 {
   char name[64] = { 0 };
   int priv = 0;
-  PRINT("\n\nEnter security domain name: ");
+  PRINT("[C]\n\nEnter security domain name: ");
   SCANF("%63s", name);
-  PRINT("\n\nChoose security domain priv[0-No, 1-Yes]: ");
+  PRINT("[C]\n\nChoose security domain priv[0-No, 1-Yes]: ");
   SCANF("%d", &priv);
   oc_obt_set_sd_info(name, priv);
 }
@@ -1829,13 +2120,13 @@ set_sd_info()
 static void
 post_response_cloud_config(oc_client_response_t* data)
 {
-  PRINT("post_response_cloud_config:\n");
+  PRINT("[C]post_response_cloud_config:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response: CHANGED\n");
+    PRINT("[C]POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    PRINT("POST response: CREATED\n");
+    PRINT("[C]POST response: CREATED\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    PRINT("[C]POST response code %d\n", data->code);
 
   if (data->payload != NULL) {
     print_rep(data->payload, false);
@@ -1855,24 +2146,24 @@ set_cloud_info(void)
   oc_uuid_t device_uuid;
 
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0, c1;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device to configure: ");
+  PRINT("[C]\nSelect device to configure: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1882,23 +2173,23 @@ set_cloud_info(void)
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
     if (c1 == i) {
-      PRINT("configuring: [%d]: %s - %s\n", i, di, device->device_name);
+      PRINT("[C]configuring: [%d]: %s - %s\n", i, di, device->device_name);
       break;
     }
     i++;
     device = device->next;
   }
 
-  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  PRINT("[C]\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
   SCANF("%63s", url);
-  PRINT("\nPayload\n");
-  PRINT("\nEnter access token 'at' ('test') :");
+  PRINT("[C]\nPayload\n");
+  PRINT("[C]\nEnter access token 'at' ('test') :");
   SCANF("%63s", at);
-  PRINT("\nEnter apn ('plgd'): ");
+  PRINT("[C]\nEnter apn ('plgd'): ");
   SCANF("%63s", apn);
-  PRINT("\nEnter cis ('coaps+tcp://127.0.0.1:5684'):");
+  PRINT("[C]\nEnter cis ('coaps+tcp://127.0.0.1:5684'):");
   SCANF("%63s", cis);
-  PRINT("\nEnter sid ('00000000-0000-0000-0000-000000000001'):");
+  PRINT("[C]\nEnter sid ('00000000-0000-0000-0000-000000000001'):");
   SCANF("%63s", sid);
 
   otb_mutex_lock(app_sync_lock);
@@ -1919,24 +2210,24 @@ get_cloud_info(void)
   char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
 
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
   device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
   int i = 0, c1;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device to retrieve Cloud config from: ");
+  PRINT("[C]\nSelect device to retrieve Cloud config from: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -1946,16 +2237,16 @@ get_cloud_info(void)
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
     if (c1 == i) {
-      PRINT("retrieving: [%d]: %s - %s\n", i, di, device->device_name);
+      PRINT("[C]retrieving: [%d]: %s - %s\n", i, di, device->device_name);
       break;
     }
     i++;
     device = device->next;
   }
-  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  PRINT("[C]\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
   SCANF("%63s", url);
 
-  PRINT("\nretrieving data from %s :\n", url);
+  PRINT("[C]\nretrieving data from %s :\n", url);
 
   otb_mutex_lock(app_sync_lock);
   oc_obt_retrieve_cloud_conf_device(&device_uuid, url,
@@ -1968,10 +2259,10 @@ void trustanchorcb(int status, void* data)
 {
   (void)data;
   if (status >= 0) {
-    PRINT("\nSuccessfully installed trust anchor for cloud\n");
+    PRINT("[C]\nSuccessfully installed trust anchor for cloud\n");
   }
   else {
-    PRINT("\nERROR installing trust anchor %d\n", status);
+    PRINT("[C]\nERROR installing trust anchor %d\n", status);
   }
 }
 
@@ -1984,24 +2275,24 @@ set_cloud_trust_anchor(void)
   char sid[64] = "00000000-0000-0000-0000-000000000001";
 
   if (oc_list_length(owned_devices) == 0) {
-    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
   device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
   int i = 0, c1;
 
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\nSelect device to set cloud trust anchor: ");
+  PRINT("[C]\nSelect device to set cloud trust anchor: ");
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -2011,19 +2302,19 @@ set_cloud_trust_anchor(void)
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
     if (c1 == i) {
-      PRINT("setting trust anchor on: [%d]: %s - %s\n", i, di, device->device_name);
+      PRINT("[C]setting trust anchor on: [%d]: %s - %s\n", i, di, device->device_name);
       break;
     }
     i++;
     device = device->next;
   }
 
-  PRINT("\nEnter subject ('00000000-0000-0000-0000-000000000001'):");
+  PRINT("[C]\nEnter subject ('00000000-0000-0000-0000-000000000001'):");
   SCANF("%63s", sid);
 
   char cert[8192];
   size_t cert_len = 0;
-  PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+  PRINT("[C]\nPaste certificate here, then hit <ENTER> and type \"done\": ");
   int c;
   while ((c = getchar()) == '\n' || c == '\r')
     ;
@@ -2031,7 +2322,7 @@ set_cloud_trust_anchor(void)
     (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0));
     c = getchar()) {
     if (c == EOF) {
-      PRINT("ERROR processing input.. aborting\n");
+      PRINT("[C]ERROR processing input.. aborting\n");
       return;
     }
     cert[cert_len] = (char)c;
@@ -2046,7 +2337,7 @@ set_cloud_trust_anchor(void)
   otb_mutex_lock(app_sync_lock);
   int retcode = oc_obt_provision_trust_anchor(cert, cert_len, sid, &device_uuid,
     trustanchorcb, NULL);
-  PRINT("sending message: %d\n", retcode);
+  PRINT("[C]sending message: %d\n", retcode);
 
   otb_mutex_unlock(app_sync_lock);
 
@@ -2070,27 +2361,27 @@ factory_presets_cb(size_t device, void *data)
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    PRINT("[C]ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    PRINT("[C]ERROR installing root cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca2.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    PRINT("[C]ERROR: unable to read certificates\n");
     return;
   }
 
   rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    PRINT("[C]ERROR installing root cert\n");
     return;
   }
 #endif /* OC_SECURITY && OC_PKI */
@@ -2106,9 +2397,9 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)bm;
   (void)types;
   (void)endpoint;
-  PRINT("anchor %s, uri : %s\n", anchor, uri);
+  PRINT("[C]anchor %s, uri : %s\n", anchor, uri);
   if (!more) {
-    PRINT("----End of discovery response---\n");
+    PRINT("[C]----End of discovery response---\n");
     return OC_STOP_DISCOVERY;
   }
   return OC_CONTINUE_DISCOVERY;
@@ -2119,7 +2410,7 @@ discover_resources(void)
 {
   if (oc_list_length(unowned_devices) == 0 &&
       oc_list_length(owned_devices) == 0) {
-    PRINT("\nPlease Re-discover devices\n");
+    PRINT("[C]\nPlease Re-discover devices\n");
     return;
   }
 
@@ -2127,30 +2418,30 @@ discover_resources(void)
   int i = 0, c;
 
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  PRINT("\nMy Devices:\n");
+  PRINT("[C]\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
-  PRINT("\n\nUnowned Devices:\n");
+  PRINT("[C]\n\nUnowned Devices:\n");
   device = (device_handle_t *)oc_list_head(unowned_devices);
   while (device != NULL) {
     devices[i] = device;
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
     i++;
     device = device->next;
   }
 
-  PRINT("\nSelect device: ");
+  PRINT("[C]\nSelect device: ");
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
-    PRINT("ERROR: Invalid selection\n");
+    PRINT("[C]ERROR: Invalid selection\n");
     return;
   }
 
@@ -2158,9 +2449,9 @@ discover_resources(void)
   int ret =
     oc_obt_discover_all_resources(&devices[c]->uuid, resource_discovery, NULL);
   if (ret >= 0) {
-    PRINT("\nSuccessfully issued resource discovery request\n");
+    PRINT("[C]\nSuccessfully issued resource discovery request\n");
   } else {
-    PRINT("\nERROR issuing resource discovery request\n");
+    PRINT("[C]\nERROR issuing resource discovery request\n");
   }
   otb_mutex_unlock(app_sync_lock);
 }
@@ -2171,12 +2462,12 @@ display_device_uuid()
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  PRINT("Started device with ID: %s\n", buffer);
+  PRINT("[C] OBT Started device with ID: %s\n", buffer);
 }
 
 void test_print(void)
 {
-	PRINT("test_print\n");
+	PRINT("[C] test_print\n");
 }
 
 
@@ -2196,10 +2487,10 @@ python_main(void)
 #endif
 
 #ifdef OC_SERVER
-     PRINT("OC_SERVER\n");
+     PRINT("[C]OC_SERVER\n");
 #endif
 #ifdef OC_CLIENT
-      PRINT("OC_CLIENT\n");
+      PRINT("[C]OC_CLIENT\n");
 #endif
 
   int init;
@@ -2219,16 +2510,14 @@ python_main(void)
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_con_res_announced(false);
-  oc_set_max_app_data_size(16384);
-  
-  PRINT("oc_main_init: \n");
+  oc_set_max_app_data_size(16384);  
+  //PRINT("[C]oc_main_init: \n");
   
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
 
-
-  PRINT("oc_main_init -done: \n");
+  //PRINT("[C]oc_main_init -done: \n");
 
 #if defined(_WIN32)
   event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
