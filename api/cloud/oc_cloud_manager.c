@@ -302,7 +302,7 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
-  cloud_set_last_error(ctx, CLOUD_OK);
+  cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
 
   if (ctx->expires_in) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
