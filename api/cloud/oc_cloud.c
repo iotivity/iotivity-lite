@@ -24,6 +24,7 @@
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
+#include "port/oc_assert.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #include "security/oc_pstat.h"
@@ -108,15 +109,24 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
 {
   (void)status;
   (void)data;
+  oc_cloud_clear_context(ctx);
+}
+#endif /* OC_SECURITY */
+
+void
+oc_cloud_clear_context(oc_cloud_context_t *ctx)
+{
+  oc_assert(ctx != NULL);
+
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
+  cloud_store_dump(&ctx->store);
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
   ctx->store.cps = 0;
 }
-#endif /* OC_SECURITY */
 
 int
 oc_cloud_reset_context(size_t device)
@@ -135,11 +145,7 @@ oc_cloud_reset_context(size_t device)
   }
 #endif /* OC_SECURITY */
 
-  cloud_store_initialize(&ctx->store);
-  cloud_store_dump(&ctx->store);
-  cloud_manager_stop(ctx);
-  ctx->last_error = 0;
-  ctx->store.cps = 0;
+  oc_cloud_clear_context(ctx);
   return 0;
 }
 
