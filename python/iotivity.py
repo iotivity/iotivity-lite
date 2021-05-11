@@ -25,6 +25,7 @@
 #sudo pip3 install numpy
 # 
 
+
 import ctypes, os, sys
 from ctypes import *
 
@@ -51,9 +52,10 @@ import numpy.ctypeslib as ctl
 
 import uuid
 
-
 import threading
 import time
+
+import json
 
 
 _int_types = (c_int16, c_int32)
@@ -437,8 +439,6 @@ def ReturnString(obj, func=None, arguments=None):
 
 
 
-
-
 @CFUNCTYPE(c_int)
 def init_callback():
     print("init_callback")
@@ -483,35 +483,70 @@ OC_DEVICE_HANDLE._fields_ = (
      )
 
 # python list of copied unowned/owned devices on the local network
-my_unowned_devices = []
-my_owned_devices = []
+#my_unowned_devices = []
+#my_owned_devices = []
 
 # python callback of a discovery call
-@CFUNCTYPE(None, POINTER(OC_UUID), c_void_p, c_void_p )
-def unowned_device_cb(uuid, eps, data):
-  print("\nDiscovered unowned device:")
-  my_uuid = my_iotivity.uuid2str(uuid)
-  print (" uuid:",my_uuid)
-  if my_uuid not in my_unowned_devices:
-    my_unowned_devices.append(my_uuid)
+#@CFUNCTYPE(None, POINTER(OC_UUID), c_void_p, c_void_p )
+#def unowned_device_cb(uuid, eps, data):
+#  print("\nDiscovered unowned device:")
+#  my_uuid = my_iotivity.uuid2str(uuid)
+#  print (" uuid:",my_uuid)
+#  if my_uuid not in myunowned_devices:
+#    my_unowned_devices.append(my_uuid)
   
 
 # python callback of a discovery call
-@CFUNCTYPE(None, POINTER(OC_UUID), c_void_p, c_void_p )
-def owned_device_cb(uuid, eps, data):
-  print("\nDiscovered owned device: ")
-  my_uuid = my_iotivity.uuid2str(uuid)
-  print (" uuid:",my_uuid)
-  if my_uuid not in my_owned_devices:
-    my_owned_devices.append(my_uuid)
+#@CFUNCTYPE(None, POINTER(OC_UUID), c_void_p, c_void_p )
+#def owned_device_cb(uuid, eps, data):
+#  print("\nDiscovered owned device: ")
+#  my_uuid = my_iotivity.uuid2str(uuid)
+#  print (" uuid:",my_uuid)
+#  if my_uuid not in my_owned_devices:
+#    my_owned_devices.append(my_uuid)
 
+
+CHANGED_CALLBACK = CFUNCTYPE(None)
+RESOURCE_CALLBACK = CFUNCTYPE(None, c_char_p, c_char_p, c_char_p, c_char_p)
 
 class Iotivity():
+    # needs to be before _init_
+    def changedCB(self):
+        print("=====  lists changed ========")
+        self.list_unowned_devices()
+        self.list_owned_devices()
+        print("=====  lists changed: done ========")
+    
+    def resourceCB(self, anchor, uri, rtypes, myjson):
+        uuid = str(anchor)[8:-1]
+        my_uri = str(uri)[2:-1]
+
+        print("=  Resource callback ", uuid, my_uri)
+        my_str = str(myjson)[2:-1]
+
+        if self.resourcelist.get(uuid) is None:
+            mylist = [ my_str ]
+            self.resourcelist[uuid] = mylist
+        else:
+            mylist = self.resourcelist[uuid]
+            mylist.append(my_str)
+            self.resourcelist[uuid] = mylist
+        #print (" -----resourcelist ", self.resourcelist)
+
+
     def __init__(self):
         print ("loading ...")
         libname = 'libiotivity-lite-client-python.so'
         libdir = './'
         self.lib=ctl.load_library(libname, libdir)
+        # python list of copied unowned devices on the local network
+        # will be updated from the C layer automatically by the CHANGED_CALLBACK
+        self.unowned_devices = []
+        # python list of copied owned devices on the local network
+        # will be updated from the C layer automatically by the CHANGED_CALLBACK
+        self.owned_devices = []
+        # resource list
+        self.resourcelist = {}
 
         print (self.lib)
         print ("...")
@@ -521,20 +556,24 @@ class Iotivity():
         print("oc_set_max_app_data_size- done")
         value = self.lib.oc_get_max_app_data_size()
         print("oc_get_max_app_data_size :", value)
+        self.changedCB = CHANGED_CALLBACK(self.changedCB)
+        self.lib.install_changedCB(self.changedCB)
+
+        self.resourceCB = RESOURCE_CALLBACK(self.resourceCB)
+        self.lib.install_resourceCB(self.resourceCB)
+
         print ("...")
         self.threadid = threading.Thread(target=self.thread_function, args=())  
         self.threadid.start()
-        #self.lib.test_print()
-        
         print ("...")
-        #self.init_platform()
-        #print ("...init_platform - done")
         
     def thread_function(self):
+        """ starts the main function in C.
+        this function is threaded in python.
+        """
         print ("thread started")
         init = self.lib.python_main()
         
-
     def init_platform(self):
         # not used
         ret = self.lib.oc_storage_config("./onboarding_tool_creds");
@@ -575,18 +614,18 @@ class Iotivity():
         print ("list_unowned_devices: unowned:",nr_unowned )
         for i in range(nr_unowned):
             uuid = self.get_unowned_uuid(i)
-            print (" unowned index {} uuid {}".format(i, uuid))
-            if uuid not in my_unowned_devices:
-              my_unowned_devices.append(uuid)
+            print ("  unowned index {} uuid {}".format(i, uuid))
+            if uuid not in self.unowned_devices:
+              self.unowned_devices.append(uuid)
 
     def list_owned_devices(self):
         nr_owned = self.get_nr_owned_devices()
         print ("list_owned_devices: owned:",nr_owned )
         for i in range(nr_owned):
             uuid = self.get_owned_uuid(i)
-            print (" owned index {} uuid {}".format(i, uuid))
-            if uuid not in my_owned_devices:
-              my_owned_devices.append(uuid)
+            print ("  owned index {} uuid {}".format(i, uuid))
+            if uuid not in self.owned_devices:
+              self.owned_devices.append(uuid)
 
 
     def discover_owned(self):
@@ -704,26 +743,18 @@ class Iotivity():
 
 
     def onboard_all_unowned(self):
-        print ("onboard_all_unowned: listing NOT onboarded devices:")
+        print ("onboard_all_unowned: listing NOT onboarded devices in C:")
         self.list_unowned_devices()
 
 
         print ("onboarding...")
         self.lib.py_otm_just_works.argtypes = [String]
         self.lib.py_otm_just_works.restype = None
-        for device in my_unowned_devices:
+        for device in self.unowned_devices:
             print ("onboard device :", device, self.get_device_name(device))
             self.lib.py_otm_just_works(device)
-            #add to the python list of owned devices
-            my_owned_devices.append(device)
-            # remove the device of the python list of unowned devices
-            my_unowned_devices[:].remove(device)
 
         print ("...done.")
-        time.sleep(3)
-        self.list_owned_devices()
-    
-        #def list_owned_devices(self):
 
     
     def offboard_all_owned(self):
@@ -733,15 +764,11 @@ class Iotivity():
         print ("offboarding...")
         self.lib.py_reset_device.argtypes = [String]
         self.lib.py_reset_device.restype = None
-        for device in my_owned_devices:
+        for device in self.owned_devices:
             print ("offboard device :", device)
             self.lib.py_reset_device(device)
-            my_unowned_devices.append(device)
-            my_owned_devices[:].remove(device)
         print ("...done.")
 
-        time.sleep(3)
-        self.list_owned_devices()
 
     def provision_ace_cloud_access(self, device_uuid):
         self.lib.py_provision_ace_cloud_access.argtypes = [String]
@@ -751,14 +778,88 @@ class Iotivity():
 
     def provision_ace_all(self):
         print ("provision_ace_all....")
-        for device in my_owned_devices:
+        for device in self.owned_devices:
             self.provision_ace_cloud_access(device)
         print ("provision_ace_all...done.")
     
+    def provision_id_cert(self, device_uuid):
+        self.lib.py_provision_id_cert.argtypes = [String]
+        self.lib.py_provision_id_cert.restype = None
+        print( "py_provision_id_cert:",device_uuid)
+        self.lib.py_provision_id_cert(device_uuid)
+
+    def provision_id_cert_all(self):
+        print ("provision_id_cert_all....")
+        for device in self.owned_devices:
+            self.provision_id_cert(device)
+        print ("provision_id_cert_all...done.")
+
+    def provision_role_cert(self, uuid, role, auth):
+        self.lib.py_provision_role_cert.argtypes = [String, String, String]
+        self.lib.py_provision_role_cert.restype = None
+        self.lib.py_provision_role_cert(uuid, role, auth)
+
+    def discover_resources(self, myuuid):
+        self.lib.py_discover_resources.argtypes = [String]
+        self.lib.py_discover_resourcesrestype = None
+        self.lib.py_discover_resources(myuuid)
+
+    def get_idd(self, myuuid):
+        print("get_idd ", myuuid)
+        self.discover_resources(myuuid)
+        time.sleep(3)
+        
+        #resources = self.resourcelist.get(myuuid)
+        print("get_idd ", self.resourcelist)
+        #resources = self.resourcelist.get(myuuid)
+        print("resources :", isinstance(self.resourcelist, dict))
+        for l_uuid, value in self.resourcelist.items():
+                print(" uuid in list", l_uuid)
+                if l_uuid == myuuid:
+                    print ("    ", value)  
+        
+
     def my_sleep(self):
         while True:
             time.sleep(3)
-        
+
+
+    def test_security(self):
+        self.discover_all()
+        print ("sleeping after discovery issued..")
+        time.sleep(3)
+        self.onboard_all_unowned()
+
+        time.sleep(3)
+        my_iotivity.provision_ace_all()
+        time.sleep(3)
+        my_iotivity.provision_id_cert_all()
+        time.sleep(3)
+        my_uuid = self.get_owned_uuid(0)
+        self.provision_role_cert(my_uuid, "my_role", "my_auth")
+        self.provision_role_cert(my_uuid, "my_2nd_role", None)
+
+        time.sleep(3)
+        self.discover_resources(my_uuid)
+
+        time.sleep(3)
+        self.offboard_all_owned()
+
+
+    def test_discovery(self):
+        self.discover_all()
+        print ("sleeping after discovery issued..")
+        time.sleep(3)
+        self.onboard_all_unowned()
+        time.sleep(3)
+        my_uuid = self.get_owned_uuid(0)
+        #self.discover_resources(my_uuid)
+        self.get_idd(my_uuid)
+
+        time.sleep(3)
+        self.offboard_all_owned()
+
+
 
 my_iotivity = Iotivity()
 signal.signal(signal.SIGINT, my_iotivity.sig_handler)
@@ -766,23 +867,9 @@ signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
 time.sleep(1)
 
-print ("issueing discovery..")
-my_iotivity.discover_all()
+#my_iotivity.test_security()
 
-print ("sleeping after discovery issued..")
-time.sleep(3)
-
-my_iotivity.onboard_all_unowned()
-
-time.sleep(3)
-my_iotivity.provision_ace_all()
-
-time.sleep(3)
-
-
-my_iotivity.offboard_all_owned()
-
-#my_iotivity.my_sleep()
+my_iotivity.test_discovery()
 
 my_iotivity.quit()    
 
