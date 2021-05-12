@@ -30,14 +30,12 @@
 extern "C" {
 #endif
 
-typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE, OC_FETCH } oc_method_t;
-
+typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE} oc_method_t;
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
   OC_SECURE = (1 << 4),
   OC_PERIODIC = (1 << 6),
-  OC_SECURE_MCAST = (1 << 8)
 } oc_resource_properties_t;
 
 typedef enum {
@@ -112,7 +110,9 @@ typedef enum {
   OC_IF_RW = 1 << 5,
   OC_IF_A = 1 << 6,
   OC_IF_S = 1 << 7,
-  OC_IF_CREATE = 1 << 8
+  OC_IF_CREATE = 1 << 8,
+  OC_IF_STARTUP = 1 << 9,
+  OC_IF_STARTUP_REVERT = 1 << 10
 } oc_interface_mask_t;
 
 typedef enum {
@@ -188,6 +188,12 @@ typedef struct oc_properties_cb_t
   } cb;
   void *user_data;
 } oc_properties_cb_t;
+
+typedef struct oc_resource_defaults_data_t
+{
+  oc_resource_t *resource;
+  oc_interface_mask_t iface_mask;
+} oc_resource_defaults_data_t;
 
 struct oc_resource_s
 {
