@@ -484,10 +484,10 @@ oc_observe_notification_delayed(void *data)
 static oc_event_callback_retval_t
 oc_observe_notification_resource_defaults_delayed(void *data)
 {
-  oc_resource_defaults_data_t *resource_defaults_data = (oc_resource_defaults_data_t *)data;
+  oc_resource_defaults_data_t *resource_defaults_data =
+    (oc_resource_defaults_data_t *)data;
   notify_resource_defaults_observer(resource_defaults_data->resource,
-                                    resource_defaults_data->iface_mask,
-								    NULL);
+                                    resource_defaults_data->iface_mask, NULL);
   return OC_EVENT_DONE;
 }
 #endif
@@ -837,7 +837,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
-
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -1176,18 +1175,21 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       !resource_is_collection &&
 #endif /* OC_COLLECTIONS */
       cur_resource && (method == OC_PUT || method == OC_POST) &&
-      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
       if ((iface_mask == OC_IF_STARTUP) ||
           (iface_mask == OC_IF_STARTUP_REVERT)) {
-        oc_resource_defaults_data_t *resource_defaults_data = oc_ri_alloc_resource_defaults();
+        oc_resource_defaults_data_t *resource_defaults_data =
+          oc_ri_alloc_resource_defaults();
         resource_defaults_data->resource = cur_resource;
         resource_defaults_data->iface_mask = iface_mask;
         oc_ri_add_timed_event_callback_ticks(
-          resource_defaults_data, &oc_observe_notification_resource_defaults_delayed, 0);
+          resource_defaults_data,
+          &oc_observe_notification_resource_defaults_delayed, 0);
       } else {
         oc_ri_add_timed_event_callback_ticks(
           cur_resource, &oc_observe_notification_delayed, 0);
       }
+    }
 
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {
@@ -1601,6 +1603,7 @@ oc_ri_shutdown(void)
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all(), *next;
   while (collection != NULL) {
+    next = (oc_collection_t *)collection->res.next;
     oc_collection_free(collection);
     collection = next;
   }
