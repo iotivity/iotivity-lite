@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE} oc_method_t;
+typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE, OC_FETCH} oc_method_t;
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
