@@ -751,6 +751,7 @@ coap_receive(oc_message_t *msg)
               coap_udp_init_message(response, COAP_TYPE_CON, client_cb->method,
                                     response_mid);
               response_buffer->mid = response_mid;
+              client_cb->mid = response_mid;
               coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
               coap_set_header_block2(response, block2_num + 1, 0, block2_size);
               coap_set_header_uri_path(response, oc_string(client_cb->uri),
