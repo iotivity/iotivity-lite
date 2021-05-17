@@ -103,7 +103,8 @@ jobs:
           # the actual build
           cd port/linux
           make TCP=1 IPV4=1 CLOUD=1 PKI=1 JAVA=1
+          cd ../..
           cd swig/apps/unit_test
           JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
           JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
-          cd
+          cd ../..
