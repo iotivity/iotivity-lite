@@ -32,15 +32,16 @@ jobs:
       #  run: echo Hello, world!
 
       # Runs a set of commands using the runners shell
-      - name: make secured
+      - name: android make secured
         run: |
           # setup of the environment
           env
           ls -l
-          ndk-build NDK_DEBUG=1
+          #ndk-build NDK_DEBUG=1
           # actual build
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
         env:
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }
+          ANDROID_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           
