@@ -32,6 +32,10 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: make unsecured
         run: |
+          # https://github.com/actions/checkout/issues/81
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
           cd port/linux
           make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
           
@@ -53,3 +57,4 @@ jobs:
         run: |
           cd port/linux
           make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
+          #make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
