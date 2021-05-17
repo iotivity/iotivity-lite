@@ -94,7 +94,7 @@ jobs:
       - name: make secured with Java
         run: |
           # the setup
-          sudo apt-get -y installmake autoconf swig default-jdk
+          sudo apt-get -y install make autoconf swig default-jdk
           swig -version
           java -version
           javac -version
