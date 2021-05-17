@@ -67,14 +67,6 @@ else
 export ANDROID_BASE := "${NDK_HOME}"
 endif
 
-if [ -z "$ANDROID_NDK_ROOT" ]
-then
-    echo "not defined"
-else 
-    echo "defined"
-    export ANDROID_BASE := "${ANDROID_NDK_ROOT}"
-fi
-
 ifeq ($(ANDROID_ABI),armeabi)
 export ANDROID_HOST := arm-linux-androideabi-
 endif
