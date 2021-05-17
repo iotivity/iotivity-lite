@@ -32,8 +32,9 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: build_documentation
         run: |
-          apt update 
-          apt -y install doxygen
+          # apt update 
+          #apt -y install doxygen
+          sudo apt-get install doxygen
           doxygen --version
           cd tools
           ./build_doc.sh
