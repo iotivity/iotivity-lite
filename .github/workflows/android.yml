@@ -59,6 +59,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: android (old) make secured
         run: |
+          # https://github.com/actions/virtual-environments/issues/643
           # debugging info
           sudo apt-get --quiet update --yes
           sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
@@ -68,10 +69,15 @@ jobs:
           # unzip
           unzip -d android-sdk-linux android-sdk.zip
           # installing ...
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
+          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" #>/dev/null
+          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
+          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
+          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
+          
+          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" 
+          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" 
+          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools"
+          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2"
           # setting paths ...
           echo "ANDROID_HOME=$PWD/android-sdk-linux" >> $GITHUB_ENV
           echo ":$PWD/android-sdk-linux/platform-tools/" >> $GITHUB_PATH
