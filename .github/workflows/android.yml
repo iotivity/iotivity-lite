@@ -80,7 +80,7 @@ jobs:
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
           #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
-        env:
+        #env:
           #ENV ANDROID_HOME := $PATH/android-sdk-linux
           #ENV PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
           #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
