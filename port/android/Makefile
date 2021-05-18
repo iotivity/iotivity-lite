@@ -107,7 +107,7 @@ export PKI ?= 1
 IPV4 ?= 1
 export TCP ?= 1
 
-#export CLOUD ?= 1
+export CLOUD ?= 1
 
 
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
