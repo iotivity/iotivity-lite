@@ -68,17 +68,17 @@ jobs:
           # unzip
           unzip -d android-sdk-linux android-sdk.zip
           # installing ...
-          echo y | android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
-          echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
-          echo y | android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
-          echo y | android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
+          echo y | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
+          echo y | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
+          echo y | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
+          echo y | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
           # setting paths ...
           echo "ANDROID_HOME=$PWD/android-sdk-linux" >> $GITHUB_ENV
           echo ":$PWD/android-sdk-linux/platform-tools/" >> $GITHUB_PATH
           #ENV ANDROID_HOME := $PWD/android-sdk-linux
           #ENV PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
           env 
-          yes | android-sdk-linux/tools/bin/sdkmanager --licenses
+          yes | sudo android-sdk-linux/tools/bin/sdkmanager --licenses
           ./android-sdk-linux/ndk-bundle/build/tools/make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
           env
           # build android
