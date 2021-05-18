@@ -63,6 +63,7 @@ jobs:
           sudo apt-get --quiet update --yes
           sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
           wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-lkinux-4333796.zip
+          sudo apt-get install unzip
           unzip -d android-sdk-linux android-sdk.zip
           echo y | android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
           echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
