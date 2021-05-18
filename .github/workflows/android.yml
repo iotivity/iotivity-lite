@@ -47,12 +47,12 @@ jobs:
           wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
           #ndk-build NDK_DEBUG=1
           # actual build
-          ls -l $ANDROID_NDK_HOME
+          ls -l ${{ env.ANDROID_NDK_HOME }}
           #
-          ls -l $ANDROID_SDK_ROOT
+          ls -l ${{ env.ANDROID_SDK_ROOT }}
           
           #ANDROID_NDK_ROOT
-          ls -l $ANDROID_NDK_ROOT
+          ls -l ${{ env.ANDROID_NDK_ROOT }}
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
         env:
