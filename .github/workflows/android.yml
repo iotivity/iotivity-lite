@@ -63,12 +63,16 @@ jobs:
           sudo apt-get --quiet update --yes
           sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
           wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-lkinux-4333796.zip
-          sudo apt-get install unzip
+          # installing zip
+          sudo apt-get -y install unzip
+          # unzip
           unzip -d android-sdk-linux android-sdk.zip
+          # installing ...
           echo y | android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
           echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
           echo y | android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
           echo y | android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
+          # setting paths ...
           echo "ANDROID_HOME=$PWD/android-sdk-linux" >> $GITHUB_ENV
           echo ":$PWD/android-sdk-linux/platform-tools/" >> $GITHUB_PATH
           #ENV ANDROID_HOME := $PWD/android-sdk-linux
