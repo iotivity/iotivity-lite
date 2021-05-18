@@ -94,7 +94,7 @@ MKDIR ?= mkdir
 
 ifeq (${MYGITHUB_ACTIONS}, true)
 export HOST_TAG := linux-x86_64
-GITHUBBASE := /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/prebuilt/${HOST_TAG}/bin/
+GITHUBBASE := /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/prebuilt/${HOST_TAG}/bin
 export CC :=  ${GITHUBBASE}/aarch64-linux-android23-clang
 AR := ${GITHUBBASE}/aarch64-linux-android-ar
 endif
