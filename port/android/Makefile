@@ -169,7 +169,11 @@ CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestan
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
+ifeq ($(CLOUD),1)
 OBJ_CLOUD=$(addprefix ${OBJDIR}/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
+else
+OBJ_CLOUD =
+endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
 LIBS?= -lm -llog
@@ -204,7 +208,12 @@ ifeq ($(DEBUG_TLS),1)
 	EXTRA_CFLAGS += -DOC_DEBUG_TLS
 endif
 else
+
+# don't use these options on github
+ifeq (${MYGITHUB_ACTIONS}, false)
 	CFLAGS += -Wl,--gc-sections
+endif
+	
 endif
 
 ifeq ($(PKI),1)
