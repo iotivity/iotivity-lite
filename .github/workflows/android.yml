@@ -53,6 +53,7 @@ jobs:
           
           #ANDROID_NDK_ROOT
           ls -l ${{ env.ANDROID_NDK_ROOT }}
+          ls -lR /opt
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
         env:
