@@ -46,19 +46,14 @@ jobs:
           wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
           wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
           #ndk-build NDK_DEBUG=1
-          # actual build
-          ls -l ${{ env.ANDROID_NDK_HOME }}
-          #
-          ls -l ${{ env.ANDROID_SDK_ROOT }}
-          
-          #ANDROID_NDK_ROOT
-          ls -l ${{ env.ANDROID_NDK_ROOT }}
-          ls -lR /usr/local/lib/android/
           
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-          ANDROID_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
-          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+          #ANDROID_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+          #NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+          #NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
+          NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
+          MYGITHUB_ACTIONS: true
           
