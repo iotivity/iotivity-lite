@@ -107,7 +107,6 @@ export PKI ?= 1
 IPV4 ?= 1
 export TCP ?= 1
 
-# test without cloud
 #export CLOUD ?= 1
 
 
