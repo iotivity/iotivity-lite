@@ -36,14 +36,7 @@ jobs:
         run: |
           # debugging info
           env
-          # setup of the java (swig) environment
-          sudo apt-get -y install make autoconf swig default-jdk
-          #swig -version
-          #java -version
-          #javac -version
-          wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
-          wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
-          #ndk-build NDK_DEBUG=1
+          # build android
           cd port/android
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
           #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
