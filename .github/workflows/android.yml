@@ -39,7 +39,7 @@ jobs:
           ls -l
           # setup of the java (swig) environment
           #sudo apt-get -y install make autoconf swig default-jdk
-          sudo apt-get -y default-jdk
+          #sudo apt-get -y default-jdk
           swig -version
           java -version
           javac -version
