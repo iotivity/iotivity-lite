@@ -38,6 +38,7 @@ jobs:
           env
           # build android
           cd port/android
+          ls -l  /usr/local/lib/android/sdk/ndk/
           /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android23-clang -v
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
           #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
@@ -62,8 +63,9 @@ jobs:
         run: |
           # https://github.com/actions/virtual-environments/issues/643
           # debugging info
-          sudo apt-get --quiet update --yes
-          sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
+          #sudo apt-get --quiet update --yes
+          #sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
+          echo " hello world!"
           # retrieving the sdk
           wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-lkinux-4333796.zip
           # installing zip
