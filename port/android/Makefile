@@ -91,12 +91,27 @@ endif
 RM ?= rm
 MKDIR ?= mkdir
 
+
+ifeq (${MYGITHUB_ACTIONS}, true)
+export HOST_TAG := linux-x86_64
+#GITHUBBASE := /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/${HOST_TAG}/bin
+GITHUBBASE := /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/${HOST_TAG}/bin
+#21.4.7075529
+#             /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/linux-x86_64/bin
+export CC :=  ${GITHUBBASE}/aarch64-linux-android23-clang
+AR := ${GITHUBBASE}/aarch64-linux-android-ar
+endif
+
+
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
 IPV4 ?= 1
 export TCP ?= 1
+
 export CLOUD ?= 1
+
+
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
 # default. It also assumes the use of OC_IDD_API is used by default.
 JAVA ?= 1
@@ -156,7 +171,11 @@ CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestan
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
+ifeq ($(CLOUD),1)
 OBJ_CLOUD=$(addprefix ${OBJDIR}/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
+else
+OBJ_CLOUD =
+endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
 LIBS?= -lm -llog
@@ -191,7 +210,12 @@ ifeq ($(DEBUG_TLS),1)
 	EXTRA_CFLAGS += -DOC_DEBUG_TLS
 endif
 else
+
+# don't use these options on github
+ifeq (${MYGITHUB_ACTIONS}, false)
 	CFLAGS += -Wl,--gc-sections
+endif
+	
 endif
 
 ifeq ($(PKI),1)
