@@ -27,10 +27,6 @@ jobs:
         with:
           ndk-version: r21e
 
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
-
       # Runs a set of commands using the runners shell
       - name: android make secured
         run: |
@@ -38,70 +34,15 @@ jobs:
           env
           # build android
           cd port/android
+          # show which compilers there are
+          # use v21 since v22 gives an link error with duplicate symbols.
+          # note that this is hard coded in the makefile
           ls -l  /usr/local/lib/android/sdk/ndk/
-          /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android23-clang -v
           make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
           #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-          #ANDROID_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
-          #NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
           #NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
           NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
           MYGITHUB_ACTIONS: true
-          
-   make_android_old:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - uses: actions/checkout@v2
-      # Runs a set of commands using the runners shell
-      - name: android (old) make secured
-        run: |
-          # https://github.com/actions/virtual-environments/issues/643
-          # debugging info
-          #sudo apt-get --quiet update --yes
-          #sudo apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
-          echo " hello world!"
-          # retrieving the sdk
-          wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-lkinux-4333796.zip
-          # installing zip
-          sudo apt-get -y install unzip
-          # unzip
-          unzip -d android-sdk-linux android-sdk.zip
-          # installing ...
-          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" #>/dev/null
-          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
-          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
-          #echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
-          
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" 
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" 
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "platform-tools"
-          echo "y" | sudo android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2"
-          # setting paths ...
-          echo "ANDROID_HOME=$PWD/android-sdk-linux" >> $GITHUB_ENV
-          echo ":$PWD/android-sdk-linux/platform-tools/" >> $GITHUB_PATH
-          #ENV ANDROID_HOME := $PWD/android-sdk-linux
-          #ENV PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
-          env 
-          yes | sudo android-sdk-linux/tools/bin/sdkmanager --licenses
-          ./android-sdk-linux/ndk-bundle/build/tools/make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
-          env
-          # build android
-          cd port/android
-          make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
-          #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
-        #env:
-          #ENV ANDROID_HOME := $PATH/android-sdk-linux
-          #ENV PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
-          #ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-          #ANDROID_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
-          #NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
-          #NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
-          #NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
-          #MYGITHUB_ACTIONS: true
           
