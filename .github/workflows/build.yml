@@ -67,6 +67,21 @@ jobs:
           cd port/linux
           make TCP=1 IPV4=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 
           
+          
+   make_linux_ctt_test_app:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
+      - uses: actions/checkout@v2
+      # Runs a set of commands using the runners shell
+      - name: make with options (including cloud)
+        run: |
+          sudo apt-get -y install libboost-all-dev
+          cd port/linux
+          make TCP=1 IPV4=1 SWUPDATE=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 
+          
    make_linux_secured_java:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
