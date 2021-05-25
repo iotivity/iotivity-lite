@@ -237,6 +237,33 @@ oc_list_remove(oc_list_t list, void *item)
 }
 /*---------------------------------------------------------------------------*/
 /**
+ * Remove a specific element from a list and return a pointer to the removed item.
+ *
+ * This function removes a specified element from the list.
+ *
+ * \param list The list.
+ * \param item The item that is to be removed from the list.
+ * \return Pointer to the removed element of list.
+ *
+ */
+/*---------------------------------------------------------------------------*/
+void*
+oc_list_remove2(oc_list_t list, void *item)
+{
+  struct list **l;
+
+  for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
+    if (*l == item) {
+      *l = (*l)->next;
+      return item;
+    }
+  }
+
+  return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
+/**
  * Get the length of a list.
  *
  * This function counts the number of elements on a specified list.

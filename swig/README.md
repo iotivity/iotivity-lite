@@ -62,7 +62,7 @@ request developer access to the iotivity-lite project.
 ### Build Java language bindings
 Navigate to `<iotivity-lite>/port/linux`
 
-    make IPV4=1 DEBUG=1 JAVA=1 IDD=1
+    make IPV4=1 DEBUG=1 JAVA=1 IDD=1 CLOUD=1
 
 If make fails check see the Verify installation of needed tools section.
 

@@ -1151,6 +1151,13 @@ bool oc_add_resource(oc_resource_t *resource);
 bool oc_delete_resource(oc_resource_t *resource);
 
 /**
+ * Schedule a callback to remove a resource.
+ *
+ * @param[in] resource the resource to delete
+ */
+void oc_delayed_delete_resource(oc_resource_t* resource);
+
+/**
   @brief Callback for change notifications from the oic.wk.con resource.
 
   This callback is invoked to notify a change of one or more properties

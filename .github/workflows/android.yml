@@ -1,0 +1,48 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-android
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+   make_android:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
+      - uses: actions/checkout@v2
+      - uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21e
+
+      # Runs a set of commands using the runners shell
+      - name: android make secured
+        run: |
+          # debugging info
+          env
+          # build android
+          cd port/android
+          # show which compilers there are
+          # use v21 since v22 gives an link error with duplicate symbols.
+          # note that this is hard coded in the makefile
+          ls -l  /usr/local/lib/android/sdk/ndk/
+          make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
+          #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          #NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
+          NDK_HOME: /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/
+          MYGITHUB_ACTIONS: true
+          

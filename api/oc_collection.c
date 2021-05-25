@@ -218,7 +218,7 @@ oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len,
     uri_path++;
     uri_path_len--;
   }
-  oc_collection_t *collection = oc_list_head(oc_collections);
+  oc_resource_t *collection = (oc_resource_t *)oc_list_head(oc_collections);
   while (collection != NULL) {
     if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
         strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0 &&
@@ -226,7 +226,7 @@ oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len,
       break;
     collection = collection->next;
   }
-  return collection;
+  return (oc_collection_t *)collection;
 }
 
 oc_link_t *
@@ -259,9 +259,9 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
 bool
 oc_check_if_collection(oc_resource_t *resource)
 {
-  oc_collection_t *collection = oc_list_head(oc_collections);
+  oc_resource_t *collection = (oc_resource_t *)oc_list_head(oc_collections);
   while (collection != NULL) {
-    if ((oc_collection_t *)resource == collection)
+    if (resource == collection)
       return true;
     collection = collection->next;
   }
@@ -391,10 +391,10 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
   if (!collection) {
     collection = oc_collection_get_all();
   } else {
-    collection = collection->next;
+    collection = (oc_collection_t *)collection->res.next;
   }
 
-  while (collection && collection->device == resource->device) {
+  while (collection && collection->res.device == resource->device) {
     oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
     while (link) {
       if (link->resource == resource) {
@@ -402,7 +402,7 @@ oc_get_next_collection_with_link(oc_resource_t *resource,
       }
       link = link->next;
     }
-    collection = collection->next;
+    collection = (oc_collection_t *)collection->res.next;
   }
 
   return collection;
@@ -690,19 +690,19 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         link = link->next;
       }
       oc_rep_close_array(root, links);
-      if (collection->get_properties.cb.get_props) {
-        collection->get_properties.cb.get_props(
+      if (collection->res.get_properties.cb.get_props) {
+        collection->res.get_properties.cb.get_props(
           (oc_resource_t *)collection, OC_IF_BASELINE,
-          collection->get_properties.user_data);
+          collection->res.get_properties.user_data);
       }
       oc_rep_end_root_object();
 
       pcode = ecode = oc_status_code(OC_STATUS_OK);
     } else if (method == OC_PUT || method == OC_POST) {
-      if (collection->set_properties.cb.set_props) {
-        collection->set_properties.cb.set_props(
+      if (collection->res.set_properties.cb.set_props) {
+        collection->res.set_properties.cb.set_props(
           (oc_resource_t *)collection, request->request_payload,
-          collection->set_properties.user_data);
+          collection->res.set_properties.user_data);
       }
     }
   } break;

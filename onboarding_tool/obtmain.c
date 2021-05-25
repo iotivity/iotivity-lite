@@ -70,6 +70,25 @@ static struct timespec ts;
 #endif
 static int quit;
 
+
+/**
+* function to print the returned cbor as JSON
+*
+*/
+void
+print_rep(oc_rep_t* rep, bool pretty_print)
+{
+  char* json;
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
+  json = (char*)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, pretty_print);
+  printf("%s\n", json);
+  free(json);
+}
+
+
+
 static void
 display_menu(void)
 {
@@ -112,6 +131,12 @@ display_menu(void)
   PRINT("[26] Provision Server Group OSCORE context\n");
 #endif /* OC_OSCORE */
   PRINT("[27] Set security domain info\n");
+#ifdef OC_CLOUD
+  PRINT("-----------------------------------------------\n");
+  PRINT("[30] Provision cloud config info\n");
+  PRINT("[31] RETRIEVE cloud config info\n");
+  PRINT("[32] Provistion cloud trust anchor\n");
+#endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
@@ -1502,6 +1527,7 @@ provision_ace2(void)
 
   const char *conn_types[2] = { "anon-clear", "auth-crypt" };
   int num_resources = 0;
+  char di[OC_UUID_LEN];
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
@@ -1534,57 +1560,65 @@ provision_ace2(void)
   PRINT("\n[0]: %s\n", conn_types[0]);
   PRINT("[1]: %s\n", conn_types[1]);
   PRINT("[2]: Role\n");
+  PRINT("[3]: Cloud\n");
   i = 0;
   while (device != NULL) {
-    char di[OC_UUID_LEN];
+    //char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[%d]: %s - %s\n", i + 3, di, device->device_name);
+    PRINT("[%d]: %s - %s\n", i + 4, di, device->device_name);
     i++;
     device = device->next;
 
     if (!device) {
       oc_uuid_to_str(oc_core_get_device_id(0), di, OC_UUID_LEN);
-      PRINT("[%d]: %s - (OBT)\n", i + 3, di);
+      PRINT("[%d]: %s - (OBT)\n", i + 4, di);
       i++;
     }
   }
   PRINT("\nSelect subject: ");
   SCANF("%d", &sub);
 
-  if (sub >= (i + 3)) {
+  if ((sub > (i + 3)) || (sub < 0)) {
     PRINT("ERROR: Invalid selection\n");
     return;
   }
 
   oc_sec_ace_t *ace = NULL;
-  if (sub > 2) {
-    if (sub == (i + 2)) {
+  if (sub == 0) {
+    ace = oc_obt_new_ace_for_connection(OC_CONN_ANON_CLEAR);
+  }
+  else if (sub == 1) {
+    ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
+  }
+  else if (sub == 2) {
+    char role[64];
+    PRINT("\nEnter role: ");
+    SCANF("%63s", role);
+    int d;
+    PRINT("\nAuthority? [0-No, 1-Yes]: ");
+    SCANF("%d", &d);
+    if (d == 1) {
+      char authority[64];
+      PRINT("\nEnter Authority: ");
+      SCANF("%63s", authority);
+      ace = oc_obt_new_ace_for_role(role, authority);
+    }
+    else {
+      ace = oc_obt_new_ace_for_role(role, NULL);
+    }
+  } else  {
+    if (sub == 3 ) {   
+      PRINT("\nEnter Cloud sid: ");
+      SCANF("%63s", di);
+      oc_uuid_t uuid_di;
+      oc_str_to_uuid(di, &uuid_di);
+      ace = oc_obt_new_ace_for_subject(&uuid_di);
+    } else if (sub == (i + 3)) {
       ace = oc_obt_new_ace_for_subject(oc_core_get_device_id(0));
     } else {
-      ace = oc_obt_new_ace_for_subject(&devices[sub - 3]->uuid);
+      ace = oc_obt_new_ace_for_subject(&devices[sub - 4]->uuid);
     }
-  } else {
-    if (sub == 0) {
-      ace = oc_obt_new_ace_for_connection(OC_CONN_ANON_CLEAR);
-    } else if (sub == 1) {
-      ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
-    } else {
-      char role[64];
-      PRINT("\nEnter role: ");
-      SCANF("%63s", role);
-      int d;
-      PRINT("\nAuthority? [0-No, 1-Yes]: ");
-      SCANF("%d", &d);
-      if (d == 1) {
-        char authority[64];
-        PRINT("\nEnter Authority: ");
-        SCANF("%63s", authority);
-        ace = oc_obt_new_ace_for_role(role, authority);
-      } else {
-        ace = oc_obt_new_ace_for_role(role, NULL);
-      }
-    }
-  }
+  } 
 
   if (!ace) {
     PRINT("\nERROR: Could not create ACE\n");
@@ -1773,6 +1807,237 @@ set_sd_info()
   SCANF("%d", &priv);
   oc_obt_set_sd_info(name, priv);
 }
+
+#ifdef OC_CLOUD
+
+static void
+post_response_cloud_config(oc_client_response_t* data)
+{
+  PRINT("post_response_cloud_config:\n");
+  if (data->code == OC_STATUS_CHANGED)
+    PRINT("POST response: CHANGED\n");
+  else if (data->code == OC_STATUS_CREATED)
+    PRINT("POST response: CREATED\n");
+  else
+    PRINT("POST response code %d\n", data->code);
+
+  if (data->payload != NULL) {
+    print_rep(data->payload, false);
+  }
+}
+
+
+static void
+set_cloud_info(void)
+{
+  char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
+  char cis[64] = "coaps+tcp://127.0.0.1:5683";
+  char at[64] = "test";
+  char sid[64] = "00000000-0000-0000-0000-000000000001";
+  char apn[64] = "plgd";
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to configure: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("configuring: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+
+  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  SCANF("%63s", url);
+  PRINT("\nPayload\n");
+  PRINT("\nEnter access token 'at' ('test') :");
+  SCANF("%63s", at);
+  PRINT("\nEnter apn ('plgd'): ");
+  SCANF("%63s", apn);
+  PRINT("\nEnter cis ('coaps+tcp://127.0.0.1:5684'):");
+  SCANF("%63s", cis);
+  PRINT("\nEnter sid ('00000000-0000-0000-0000-000000000001'):");
+  SCANF("%63s", sid);
+
+  otb_mutex_lock(app_sync_lock);
+ 
+    oc_obt_update_cloud_conf_device(&device_uuid, url,
+      at, apn, cis, sid,
+      post_response_cloud_config, NULL);
+  
+  otb_mutex_unlock(app_sync_lock);
+}
+
+
+static void
+get_cloud_info(void)
+{
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+  char url[64] = "/CoapCloudConfResURI";  // url of the coap cloud config url
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to retrieve Cloud config from: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("retrieving: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+  PRINT("\nEnter url of cloudconfig resource (/CoapCloudConfResURI) : ");
+  SCANF("%63s", url);
+
+  PRINT("\nretrieving data from %s :\n", url);
+
+  otb_mutex_lock(app_sync_lock);
+  oc_obt_retrieve_cloud_conf_device(&device_uuid, url,
+    post_response_cloud_config, NULL);
+  otb_mutex_unlock(app_sync_lock);
+}
+
+
+void trustanchorcb(int status, void* data)
+{
+  (void)data;
+  if (status >= 0) {
+    PRINT("\nSuccessfully installed trust anchor for cloud\n");
+  }
+  else {
+    PRINT("\nERROR installing trust anchor %d\n", status);
+  }
+}
+
+
+static void
+set_cloud_trust_anchor(void)
+{
+  char di[OC_UUID_LEN];
+  oc_uuid_t device_uuid;
+  char sid[64] = "00000000-0000-0000-0000-000000000001";
+
+  if (oc_list_length(owned_devices) == 0) {
+    PRINT("\n\nPlease Re-Discover Owned devices\n");
+    return;
+  }
+
+  device_handle_t* device = (device_handle_t*)oc_list_head(owned_devices);
+  int i = 0, c1;
+
+  PRINT("\nMy Devices:\n");
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    PRINT("[%d]: %s - %s\n", i, di, device->device_name);
+    i++;
+    device = device->next;
+  }
+  PRINT("\nSelect device to set cloud trust anchor: ");
+  SCANF("%d", &c1);
+  if (c1 < 0 || c1 >= i) {
+    PRINT("ERROR: Invalid selection\n");
+    return;
+  }
+
+  i = 0;
+  device = (device_handle_t*)oc_list_head(owned_devices);
+  while (device != NULL) {
+    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
+    oc_str_to_uuid(di, &device_uuid);
+    if (c1 == i) {
+      PRINT("setting trust anchor on: [%d]: %s - %s\n", i, di, device->device_name);
+      break;
+    }
+    i++;
+    device = device->next;
+  }
+
+  PRINT("\nEnter subject ('00000000-0000-0000-0000-000000000001'):");
+  SCANF("%63s", sid);
+
+  char cert[8192];
+  size_t cert_len = 0;
+  PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+  int c;
+  while ((c = getchar()) == '\n' || c == '\r')
+    ;
+  for (; (cert_len < 4 ||
+    (cert_len >= 4 && memcmp(&cert[cert_len - 4], "done", 4) != 0));
+    c = getchar()) {
+    if (c == EOF) {
+      PRINT("ERROR processing input.. aborting\n");
+      return;
+    }
+    cert[cert_len] = (char)c;
+    cert_len++;
+  }
+
+  while (cert[cert_len - 1] != '-' && cert_len > 1) {
+    cert_len--;
+  }
+  cert[cert_len] = '\0';
+
+  otb_mutex_lock(app_sync_lock);
+  int retcode = oc_obt_provision_trust_anchor(cert, cert_len, sid, &device_uuid,
+    trustanchorcb, NULL);
+  PRINT("sending message: %d\n", retcode);
+
+  otb_mutex_unlock(app_sync_lock);
+
+}
+
+
+#endif /* OC_CLOUD */
 
 void
 factory_presets_cb(size_t device, void *data)
@@ -2033,6 +2298,17 @@ main(void)
     case 27:
       set_sd_info();
       break;
+#ifdef OC_CLOUD
+    case 30:
+      set_cloud_info();
+      break;
+  case 31:
+      get_cloud_info();
+      break;
+  case 32:
+    set_cloud_trust_anchor();
+    break;
+#endif /* OC_CLOUD */
 #ifdef OC_PKI
     case 96:
       install_trust_anchor();

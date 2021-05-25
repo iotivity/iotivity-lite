@@ -50,6 +50,9 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
+#ifdef OC_COLLECTIONS_IF_CREATE
+#include "oc_resource_factory.h"
+#endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
@@ -67,6 +70,7 @@
 OC_LIST(app_resources);
 OC_LIST(observe_callbacks);
 OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
+OC_MEMB(resource_default_s, oc_resource_defaults_data_t, OC_MAX_APP_RESOURCES);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
@@ -347,16 +351,41 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
+oc_resource_defaults_data_t *
+oc_ri_alloc_resource_defaults(void)
+{
+  return oc_memb_alloc(&resource_default_s);
+}
+
 bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
   if (!resource)
     return false;
 
+   /**
+   * Prevent double deallocation: oc_rt_factory_free_created_resource
+   * called below will invoke the delete handler of the resource which will
+   * invoke this function again. We use the list of resources to check
+   * whether the resource exists and when it doesn't we assume that
+   * a deallocation of the resource was already invoked and skip this one.
+   */
+  if (oc_list_remove2(app_resources, resource) == NULL) {
+    return true;
+  }
+
   if (resource->num_observers > 0) {
     coap_remove_observer_by_resource(resource);
   }
-  oc_list_remove(app_resources, resource);
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
+  defined(OC_COLLECTIONS_IF_CREATE)
+  oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
+  if (rtc != NULL) {
+    oc_rt_factory_free_created_resource(rtc, rtc->rf);
+  }
+#endif
+
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
   return true;
@@ -485,6 +514,18 @@ oc_observe_notification_delayed(void *data)
 
 #ifdef OC_SERVER
 static oc_event_callback_retval_t
+oc_observe_notification_resource_defaults_delayed(void *data)
+{
+  oc_resource_defaults_data_t *resource_defaults_data =
+    (oc_resource_defaults_data_t *)data;
+  notify_resource_defaults_observer(resource_defaults_data->resource,
+                                    resource_defaults_data->iface_mask, NULL);
+  return OC_EVENT_DONE;
+}
+#endif
+
+#ifdef OC_SERVER
+static oc_event_callback_retval_t
 periodic_observe_handler(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
@@ -598,6 +639,10 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_S;
   if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
     iface_mask |= OC_IF_CREATE;
+  if (14 == if_len && strncmp(iface, "oic.if.startup", if_len) == 0)
+    iface_mask |= OC_IF_STARTUP;
+  if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0)
+    iface_mask |= OC_IF_STARTUP_REVERT;
   return iface_mask;
 }
 
@@ -629,6 +674,8 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
    * supports CREATE, RETRIEVE and UPDATE.
    */
   case OC_IF_A:
+  case OC_IF_STARTUP:
+  case OC_IF_STARTUP_REVERT:
     break;
   }
   return supported;
@@ -960,7 +1007,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
-
 #if defined(OC_BLOCK_WISE)
   oc_blockwise_free_request_buffer(*request_state);
   *request_state = NULL;
@@ -1166,9 +1212,21 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       !resource_is_collection &&
 #endif /* OC_COLLECTIONS */
       cur_resource && (method == OC_PUT || method == OC_POST) &&
-      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-      oc_ri_add_timed_event_callback_ticks(cur_resource,
-                                           &oc_observe_notification_delayed, 0);
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      if ((iface_mask == OC_IF_STARTUP) ||
+          (iface_mask == OC_IF_STARTUP_REVERT)) {
+        oc_resource_defaults_data_t *resource_defaults_data =
+          oc_ri_alloc_resource_defaults();
+        resource_defaults_data->resource = cur_resource;
+        resource_defaults_data->iface_mask = iface_mask;
+        oc_ri_add_timed_event_callback_ticks(
+          resource_defaults_data,
+          &oc_observe_notification_resource_defaults_delayed, 0);
+      } else {
+        oc_ri_add_timed_event_callback_ticks(
+          cur_resource, &oc_observe_notification_delayed, 0);
+      }
+    }
 
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {
@@ -1593,7 +1651,7 @@ oc_ri_shutdown(void)
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all(), *next;
   while (collection != NULL) {
-    next = collection->next;
+    next = (oc_collection_t *)collection->res.next;
     oc_collection_free(collection);
     collection = next;
   }

@@ -624,6 +624,29 @@ int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt
 }
 %}
 
+
+
+%ignore oc_obt_provision_trust_anchor;
+%rename(provisionTrustAnchor) jni_obt_provision_trust_anchor;
+%inline %{
+int jni_oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, char* subject, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_provision_trust_anchor(certificate, certificate_size, subject, uuid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY && OC_PKI */
+  return return_value;
+}
+%}
+
+
 %ignore oc_obt_new_ace_for_subject;
 %rename(newAceForSubject) jni_obt_new_ace_for_subject;
 %inline %{

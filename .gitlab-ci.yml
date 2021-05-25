@@ -27,6 +27,39 @@ Linux_Unsecured_Test:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
 
+Linux_with_java:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf swig default-jdk
+    - swig -version
+    - java -version
+    - javac -version
+    - wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
+    - wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+  script:
+    - cd port/linux
+    - make TCP=1 IPV4=1 CLOUD=1 PKI=1 JAVA=1
+    - cd -
+    - cd swig/apps/unit_test
+    - JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
+    - JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
+    - cd -
+
+
+
+Linux_Compile_Options:
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
+  script:
+    - cd port/linux
+    - make TCP=1 IPV4=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 
+
 Android_build:
   variables:
     GIT_SUBMODULE_STRATEGY: normal

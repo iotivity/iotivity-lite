@@ -85,7 +85,12 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #endif /* !OC_BLOCK_WISE */
 
 #ifdef OC_REQUEST_HISTORY
-#define OC_REQUEST_HISTORY_SIZE (250)
+// The size of the array used to deduplicate CoAP messages.
+// A value of 25 means that the message ID & device counter
+// are compared to the ones in the last 25 messages. If a
+// match is found, the message is dropped as it must be
+// a duplicate.
+#define OC_REQUEST_HISTORY_SIZE (25)
 static uint16_t history[OC_REQUEST_HISTORY_SIZE];
 static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t idx;

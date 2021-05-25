@@ -480,7 +480,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       u = K;
     } else if (units[0] == 'F') {
       u = F;
-    } else if (units[0] != 'C') {
+    } else if (units[0] == 'C') {
       u = C;
     } else {
       invalid_query = true;
@@ -944,6 +944,12 @@ register_resources(void)
   oc_add_collection(col);
   PRINT("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
+
+    oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
+    oc_resource_set_observable(device_resource, false);
+    
+    oc_resource_t* platform_resource = oc_core_get_resource_by_index(OCF_P, DEVICE);
+    oc_resource_set_observable(platform_resource, false);
 }
 
 static void
