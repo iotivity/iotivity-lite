@@ -34,7 +34,7 @@
 #include "oc_core_res.h"
 
 #ifdef OC_CLOUD
-  #include "oc_cloud.h"
+#include "oc_cloud.h"
 #endif
 
 static size_t query_iterator;
