@@ -471,7 +471,7 @@ oc_delayed_delete_resource_cb(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
 #ifdef OC_CLOUD
-  oc_cloud_delete_resource(resource);
+  /* oc_cloud_delete_resource(resource); */
 #endif
   oc_delete_resource(resource);
   return OC_EVENT_DONE;
