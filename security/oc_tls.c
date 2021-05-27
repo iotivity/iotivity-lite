@@ -1347,7 +1347,7 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
     mbedtls_ssl_conf_dtls_cookies(conf, mbedtls_ssl_cookie_write,
                                   mbedtls_ssl_cookie_check, &cookie_ctx);
-    mbedtls_ssl_conf_handshake_timeout(conf, 2500, 20000);
+    mbedtls_ssl_conf_handshake_timeout(conf, 1000, 20000);
   }
 
   return 0;
