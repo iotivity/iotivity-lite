@@ -36,7 +36,7 @@ oc_event_callback_retval_t generate_csr(void *data)
   {
     struct csr_callback_params *params = data;
     size_t device = params->device;
-    unsigned char csr = malloc(4096);
+    unsigned char *csr = malloc(4096);
 
     oc_set_separate_response_buffer(&csr_response);
 
