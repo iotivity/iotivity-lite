@@ -35,6 +35,10 @@
 
 static size_t query_iterator;
 
+#ifdef OC_SERVER
+static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
+#endif // OC_SERVER
+
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
               const char *spec_version, const char *data_model_version,
@@ -466,13 +470,19 @@ oc_delete_resource(oc_resource_t *resource)
   return oc_ri_delete_resource(resource);
 }
 
+void
+oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback)
+{
+  g_delayed_delete_resource_cb = callback;
+}
+
 static oc_event_callback_retval_t
 oc_delayed_delete_resource_cb(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
-#ifdef OC_CLOUD
-  /* oc_cloud_delete_resource(resource); */
-#endif
+  if (g_delayed_delete_resource_cb) {
+    g_delayed_delete_resource_cb(resource);
+  }
   oc_delete_resource(resource);
   return OC_EVENT_DONE;
 }
