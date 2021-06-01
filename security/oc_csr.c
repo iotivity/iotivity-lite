@@ -36,7 +36,7 @@ oc_event_callback_retval_t generate_csr(void *data)
   {
     struct csr_callback_params *params = data;
     size_t device = params->device;
-    unsigned char *csr = malloc(512);
+    unsigned char *csr = malloc(1024);
 
     oc_set_separate_response_buffer(&csr_response);
 
@@ -47,7 +47,7 @@ oc_event_callback_retval_t generate_csr(void *data)
       return OC_EVENT_DONE;
     }
 
-    int ret = oc_certs_generate_csr(device, csr, 512);
+    int ret = oc_certs_generate_csr(device, csr, 1024);
 
     if (ret != 0) {
       oc_send_separate_response(&csr_response, OC_STATUS_INTERNAL_SERVER_ERROR);
@@ -67,6 +67,7 @@ oc_event_callback_retval_t generate_csr(void *data)
 
     oc_send_separate_response(&csr_response, OC_STATUS_OK);
     free(params);
+    free(csr);
   }
   return OC_EVENT_DONE;
 }
