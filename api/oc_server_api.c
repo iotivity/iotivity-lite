@@ -158,13 +158,15 @@ oc_process_baseline_interface(oc_resource_t *resource)
   if (resource->tag_pos_desc > 0) {
     const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
     if (desc) {
-      oc_rep_set_text_string(root, tag - pos - desc, desc);
+      /* tag-pos-desc will be handled as a string */
+      oc_rep_set_text_string(root, tag-pos-desc, desc);
     }
   }
   if (resource->tag_func_desc > 0) {
     const char *func = oc_enum_to_str(resource->tag_func_desc);
     if (func) {
-      oc_rep_set_text_string(root, tag - func - desc, func);
+      /* tag-pos-desc will be handled as a string */
+      oc_rep_set_text_string(root, tag-func-desc, func);
     }
   }
   if (resource->tag_locn > 0) {
