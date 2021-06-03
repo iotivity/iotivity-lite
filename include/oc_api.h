@@ -1153,24 +1153,6 @@ bool oc_add_resource(oc_resource_t *resource);
 bool oc_delete_resource(oc_resource_t *resource);
 
 /**
- * @brief Callback invoked on resource before it is deleted by
- * oc_delayed_delete_resource.
- *
- * @param resource Resource to be deleted
- */
-typedef void (*oc_delete_resource_cb_t)(oc_resource_t *resource);
-
-/**
- * Sets the callback that gets invoked by oc_delayed_delete_resource
- * before each resource is deleted.
- *
- * @param callback The callback to set or NULL to unset it. If the function
- *                 is invoked a second time, then the previously set callback is
- *                 simply replaced.
- */
-void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
-
-/**
  * Schedule a callback to remove a resource.
  *
  * @param[in] resource the resource to delete

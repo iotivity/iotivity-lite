@@ -18,6 +18,7 @@
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
+#include "oc_server_api_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_store.h"
