@@ -213,7 +213,8 @@ error:
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_RESPONSE);
   } else {
     ctx->store.status |= OC_CLOUD_FAILURE;
-    cloud_set_cps(ctx, OC_CPS_REGISTERING);
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
   }
   return -1;
 }
@@ -270,9 +271,10 @@ cloud_register(void *data)
           ctx->device, 
           cloud_register_handler, 
           data)) {
-        cloud_set_cps(ctx, OC_CPS_REGISTERING);
+        cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
       } else {
-        cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+        // While retrying, keep last error (clec) to CLOUD_OK
+        cloud_set_last_error(ctx, CLOUD_OK);
       }
       oc_set_delayed_callback(data, cloud_register,
                               session_timeout[ctx->retry_count]);
@@ -376,7 +378,8 @@ cloud_login(void *data)
           ctx->device,
           cloud_login_handler, 
           ctx)) {
-        cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+        // While retrying, keep last error (clec) to CLOUD_OK
+        cloud_set_last_error(ctx, CLOUD_OK);
       }
 
       oc_set_delayed_callback(ctx, cloud_login,
@@ -549,7 +552,8 @@ send_ping(void *data)
   OC_DBG("[CM] try send ping(%d)\n", ctx->retry_count);
   if (!is_retry_over(ctx)) {
     if (!oc_send_ping(false, ctx->cloud_ep, 1, send_ping_handler, ctx)) {
-      cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+      // While retrying, keep last error (clec) to CLOUD_OK
+      cloud_set_last_error(ctx, CLOUD_OK);
     }
     ctx->retry_count++;
   } else {
