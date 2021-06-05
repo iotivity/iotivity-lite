@@ -17,6 +17,8 @@
 #ifndef OC_SERVER_API_INTERNAL_H
 #define OC_SERVER_API_INTERNAL_H
 
+#ifdef OC_CLOUD
+
 #include "oc_api.h"
 
 /**
@@ -36,5 +38,7 @@ typedef void (*oc_delete_resource_cb_t)(oc_resource_t *resource);
  *                 simply replaced.
  */
 void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
+
+#endif /* OC_CLOUD */
 
 #endif /* OC_SERVER_API_INTERNAL_H */
