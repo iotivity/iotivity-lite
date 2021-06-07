@@ -19,6 +19,10 @@
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 
+#if defined(OC_CLOUD) && defined(OC_SERVER)
+#include "oc_server_api_internal.h"
+#endif /* OC_CLOUD && OC_SERVER */
+
 #ifdef OC_SECURITY
 #include "security/oc_store.h"
 #endif /* OC_SECURITY */
@@ -34,6 +38,10 @@
 #include "oc_core_res.h"
 
 static size_t query_iterator;
+
+#if defined(OC_CLOUD) && defined(OC_SERVER)
+static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
+#endif /* OC_CLOUD && OC_SERVER */
 
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
@@ -468,13 +476,23 @@ oc_delete_resource(oc_resource_t *resource)
   return oc_ri_delete_resource(resource);
 }
 
+#ifdef OC_CLOUD
+void
+oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback)
+{
+  g_delayed_delete_resource_cb = callback;
+}
+#endif /* OC_CLOUD */
+
 static oc_event_callback_retval_t
 oc_delayed_delete_resource_cb(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
 #ifdef OC_CLOUD
-  /* oc_cloud_delete_resource(resource); */
-#endif
+  if (g_delayed_delete_resource_cb) {
+    g_delayed_delete_resource_cb(resource);
+  }
+#endif /* OC_CLOUD */
   oc_delete_resource(resource);
   return OC_EVENT_DONE;
 }

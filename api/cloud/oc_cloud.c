@@ -24,6 +24,7 @@
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
+#include "api/oc_server_api_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #include "security/oc_pstat.h"
@@ -343,6 +344,8 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 int
 oc_cloud_init(void)
 {
+  oc_set_on_delayed_delete_resource_cb(oc_cloud_delete_resource);
+
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_cloud_context_t *ctx =
