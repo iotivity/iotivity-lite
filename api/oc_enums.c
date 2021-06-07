@@ -97,6 +97,68 @@ static const char *oc_enums[] = { "aborted",
                                   "wrinklePrevent",
                                   "zigzag" };
 
+static const char *oc_locns[] = {
+                                  "unknown",       
+								  "attic",        
+								  "balcony",
+                                  "ballroom",      
+								  "bathroom",     
+								  "bedroom",
+                                  "border",        
+								  "boxroom",      
+								  "cellar",
+                                  "cloakroom",     
+								  "conservatory", 
+								  "corridor",
+                                  "deck",          
+								  "den",          
+								  "diningroom",
+                                  "drawingroom",   
+								  "driveway",     
+								  "dungeon",
+                                  "ensuite",       
+								  "entrance",     
+								  "familyroom",
+                                  "garage",        
+								  "garden",       
+								  "guestroom",
+                                  "hall",          
+								  "indoor",       
+								  "kitchen",
+                                  "larder",        
+								  "lawn",         
+								  "library",
+                                  "livingroom",    
+								  "lounge",       
+								  "mancave",
+                                  "masterbedroom", 
+								  "musicroom",    
+								  "office",
+                                  "outdoor",       
+								  "pantry",       
+								  "parkinglot",
+                                  "parlour",       
+								  "patio",        
+								  "receiptionroom",
+                                  "restroom",      
+								  "roof",         
+								  "roofterrace",
+                                  "sauna",         
+								  "scullery",     
+								  "shed",
+                                  "sittingroom",   
+								  "snug",         
+								  "spa",
+                                  "studio",        
+								  "suite",        
+								  "swimmingpool",
+                                  "terrace",       
+								  "toilet",       
+								  "utilityroom",
+                                  "vegetableplot", 
+								  "ward",         
+								  "yard" }; 
+
 const char *
 oc_enum_to_str(oc_enum_t val)
 {
@@ -113,4 +175,27 @@ oc_enum_pos_desc_to_str(oc_pos_description_t pos)
     return pos_desc[pos - 1];
   }
   return NULL;
+}
+
+const char *
+oc_enum_locn_to_str(oc_locn_t locn)
+{
+  if (locn <= (sizeof(oc_locns) / sizeof(char *))) {
+    return oc_locns[locn - 1];
+  }
+  return NULL;
+}
+
+oc_locn_t
+oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined)
+{
+  oc_locn_t locn = OCF_LOCN_UNKNOWN;
+  for (int i = 0; i < (int)(sizeof(oc_locns) / sizeof(char *)); i++) {
+    if (strcmp(oc_string(locn_str), oc_locns[i]) == 0) {
+      locn = i + 1;
+      *oc_defined = true;
+      break;
+    }
+  }
+  return locn;
 }

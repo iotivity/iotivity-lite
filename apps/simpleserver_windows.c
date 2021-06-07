@@ -15,6 +15,7 @@
 */
 
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 #include <windows.h>
@@ -27,6 +28,7 @@ static CRITICAL_SECTION cs;
 static bool state = false;
 int power;
 oc_string_t name;
+bool g_binaryswitch_value = false;
 
 static int
 app_init(void)
@@ -35,7 +37,84 @@ app_init(void)
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);
+  oc_resource_tag_locn(oc_core_get_resource_by_index(OCF_D, 0), OCF_LOCN_UNKNOWN);
   return ret;
+}
+
+static void
+get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
+                 void *user_data)
+{
+  (void)user_data; /* not used */
+  PRINT("get_binaryswitch: interface %d\n", interfaces);
+  oc_rep_start_root_object();
+  switch (interfaces) {
+  case OC_IF_BASELINE:
+    PRINT("   Adding Baseline info\n");
+    oc_process_baseline_interface(request->resource);
+    /* fall through */
+  case OC_IF_A:
+    /* property "value" */
+    oc_rep_set_boolean(root, value, g_binaryswitch_value);
+    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    break;
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+
+static void
+post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
+                  void *user_data)
+{
+  (void)interfaces;
+  (void)user_data;
+  bool error_state = false;
+  PRINT("post_binaryswitch:\n");
+  oc_rep_t *rep = request->request_payload;
+  /* loop over the request document to check if all inputs are ok */
+  while (rep != NULL) {
+    PRINT("key: (check) %s \n", oc_string(rep->name));
+    if (memcmp(oc_string(rep->name), "value", 5) == 0) {
+      /* property "value" of type boolean exist in payload */
+      if (rep->type != OC_REP_BOOL) {
+        error_state = true;
+        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+      }
+    }
+
+    rep = rep->next;
+  }
+  /* if the input is ok, then process the input document and assign the global
+   * variables */
+  if (error_state == false) {
+    /* loop over all the properties in the input document */
+    oc_rep_t *rep = request->request_payload;
+    while (rep != NULL) {
+      PRINT("key: (assign) %s \n", oc_string(rep->name));
+      /* no error: assign the variables */
+      if (memcmp(oc_string(rep->name), "value", 5) == 0) {
+        /* assign "value" */
+        g_binaryswitch_value = rep->value.boolean;
+      }
+      rep = rep->next;
+    }
+    /* set the response */
+    PRINT("Set response \n");
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, value, g_binaryswitch_value);
+    oc_rep_end_root_object();
+
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    /* TODO: add error response, if any */
+    //oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+    oc_send_diagnostic_message(request, "Test Diagnostic Response", 24,
+                               OC_STATUS_BAD_REQUEST);
+  }
 }
 
 static void
@@ -109,8 +188,8 @@ static void
 register_resources(void)
 {
   oc_resource_t *res = oc_new_resource(NULL, "/a/light", 2, 0);
-  oc_resource_bind_resource_type(res, "core.light");
-  oc_resource_bind_resource_type(res, "core.brightlight");
+  oc_resource_bind_resource_type(res, "x.com.core.light");
+  oc_resource_bind_resource_type(res, "x.com.core.brightlight");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
   oc_resource_set_discoverable(res, true);
@@ -119,6 +198,18 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
+
+  oc_resource_t *res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_discoverable(res_binaryswitch, true);
+  oc_resource_set_periodic_observable(res_binaryswitch, 1);
+  oc_resource_set_request_handler(res_binaryswitch, OC_GET, get_binaryswitch,
+                                  NULL);
+  oc_resource_set_request_handler(res_binaryswitch, OC_POST, post_binaryswitch,
+                                  NULL);
+  oc_add_resource(res_binaryswitch);
 }
 
 static void
@@ -160,6 +251,7 @@ main(void)
   oc_storage_config("./simpleserver_creds/");
 #endif /* OC_STORAGE */
 
+  oc_set_con_res_announced(true);
   init = oc_main_init(&handler);
   if (init < 0)
     return init;

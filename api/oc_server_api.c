@@ -19,6 +19,10 @@
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 
+#if defined(OC_CLOUD) && defined(OC_SERVER)
+#include "oc_server_api_internal.h"
+#endif /* OC_CLOUD && OC_SERVER */
+
 #ifdef OC_SECURITY
 #include "security/oc_store.h"
 #endif /* OC_SECURITY */
@@ -34,6 +38,10 @@
 #include "oc_core_res.h"
 
 static size_t query_iterator;
+
+#if defined(OC_CLOUD) && defined(OC_SERVER)
+static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
+#endif /* OC_CLOUD && OC_SERVER */
 
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
@@ -142,6 +150,12 @@ oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func)
 }
 
 void
+oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn)
+{
+  resource->tag_locn = locn;
+}
+
+void
 oc_process_baseline_interface(oc_resource_t *resource)
 {
   if (oc_string_len(resource->name) > 0) {
@@ -152,13 +166,21 @@ oc_process_baseline_interface(oc_resource_t *resource)
   if (resource->tag_pos_desc > 0) {
     const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
     if (desc) {
+      /* tag-pos-desc will be handled as a string */
       oc_rep_set_text_string(root, tag-pos-desc, desc);
     }
   }
   if (resource->tag_func_desc > 0) {
     const char *func = oc_enum_to_str(resource->tag_func_desc);
     if (func) {
+      /* tag-pos-desc will be handled as a string */
       oc_rep_set_text_string(root, tag-func-desc, func);
+    }
+  }
+  if (resource->tag_locn > 0) {
+    const char *locn = oc_enum_locn_to_str(resource->tag_locn);
+    if (locn) {
+      oc_rep_set_text_string(root, tag-locn, locn);
     }
   }
   double *pos = resource->tag_pos_rel;
@@ -454,13 +476,23 @@ oc_delete_resource(oc_resource_t *resource)
   return oc_ri_delete_resource(resource);
 }
 
+#ifdef OC_CLOUD
+void
+oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback)
+{
+  g_delayed_delete_resource_cb = callback;
+}
+#endif /* OC_CLOUD */
+
 static oc_event_callback_retval_t
 oc_delayed_delete_resource_cb(void *data)
 {
   oc_resource_t *resource = (oc_resource_t *)data;
 #ifdef OC_CLOUD
-  oc_cloud_delete_resource(resource);
-#endif
+  if (g_delayed_delete_resource_cb) {
+    g_delayed_delete_resource_cb(resource);
+  }
+#endif /* OC_CLOUD */
   oc_delete_resource(resource);
   return OC_EVENT_DONE;
 }
