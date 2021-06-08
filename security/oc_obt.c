@@ -624,7 +624,7 @@ obt_check_owned(oc_client_response_t *data)
 
 /* Unowned device discovery */
 static int
-discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
+discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, char *deviceuuid, void *data)
 {
   oc_discovery_cb_t *c = (oc_discovery_cb_t *)oc_memb_alloc(&oc_discovery_s);
   if (!c) {
@@ -633,22 +633,32 @@ discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
   c->cb = cb;
   c->data = data;
 
+  char doxm_endpoint[] = "/oic/sec/doxm";
+  char discovery_query[60] = "owned=FALSE";
+
+  if (deviceuuid && strlen(deviceuuid) > 0) {
+    char uuid_query[49];
+    snprintf(uuid_query, 49, "?deviceuuid=%s", deviceuuid);
+    strncat(discovery_query, uuid_query, strlen(uuid_query));
+  }
+  OC_DBG("Query parameter string for discovery: %s\n", discovery_query);
+
   if (scope == 0x02) {
-    if (oc_do_ip_multicast("/oic/sec/doxm", "owned=FALSE", &obt_check_owned,
+    if (oc_do_ip_multicast(doxm_endpoint, discovery_query, &obt_check_owned,
                            c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
   } else if (scope == 0x03) {
-    if (oc_do_realm_local_ipv6_multicast("/oic/sec/doxm", "owned=FALSE",
+    if (oc_do_realm_local_ipv6_multicast(doxm_endpoint, discovery_query,
                                          &obt_check_owned, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
   } else if (scope == 0x05) {
-    if (oc_do_site_local_ipv6_multicast("/oic/sec/doxm", "owned=FALSE",
+    if (oc_do_site_local_ipv6_multicast(doxm_endpoint, discovery_query,
                                         &obt_check_owned, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
@@ -662,22 +672,23 @@ discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
 
 int
 oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
-                                                 void *data)
+                                                 char *deviceuuid, void *data)
 {
-  return discover_unowned_devices(0x03, cb, data);
+  return discover_unowned_devices(0x03, cb, deviceuuid, data);
 }
 
 int
 oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
-                                                void *data)
+                                                char *deviceuuid, void *data)
 {
-  return discover_unowned_devices(0x05, cb, data);
+  return discover_unowned_devices(0x05, cb, deviceuuid, data);
 }
 
 int
-oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data)
+oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, char *deviceuuid,
+                                void *data)
 {
-  return discover_unowned_devices(0x02, cb, data);
+  return discover_unowned_devices(0x02, cb, deviceuuid, data);
 }
 
 /* Owned device disvoery */

@@ -210,7 +210,7 @@ void oc_obt_shutdown(void);
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
+int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, char *deviceuuid, void *data);
 
 /**
  * Discover all unowned devices using the realm-local address scope
@@ -233,7 +233,7 @@ int oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data);
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
+int oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb, char *deviceuuid,
                                                      void *data);
 
 /**
@@ -257,7 +257,7 @@ int oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
+int oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb, char *deviceuuid,
                                                     void *data);
 
 /**
