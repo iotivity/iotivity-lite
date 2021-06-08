@@ -138,6 +138,8 @@ display_menu(void)
   PRINT("[32] Provistion cloud trust anchor\n");
 #endif /* OC_CLOUD */
   PRINT("-----------------------------------------------\n");
+  PRINT("[40] Discover unowned Device with matching UUID\n");
+  PRINT("-----------------------------------------------\n");
 #ifdef OC_PKI
   PRINT("[96] Install new manufacturer trust anchor\n");
 #endif /* OC_PKI */
@@ -372,12 +374,24 @@ discover_unowned_devices(uint8_t scope)
 {
   otb_mutex_lock(app_sync_lock);
   if (scope == 0x02) {
-    oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
+    oc_obt_discover_unowned_devices(unowned_device_cb, NULL, NULL);
   } else if (scope == 0x03) {
-    oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
+    oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL, NULL);
   } else if (scope == 0x05) {
-    oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
+    oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL, NULL);
   }
+  otb_mutex_unlock(app_sync_lock);
+  signal_event_loop();
+}
+
+static void
+discover_unowned_device_by_uuid(void)
+{
+  char uuid_buf[OC_UUID_LEN];
+  PRINT("Enter Device UUID: ");
+  SCANF("%s", uuid_buf);
+  otb_mutex_lock(app_sync_lock);
+  oc_obt_discover_unowned_devices(unowned_device_cb, uuid_buf, NULL);
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
 }
@@ -2309,6 +2323,9 @@ main(void)
     set_cloud_trust_anchor();
     break;
 #endif /* OC_CLOUD */
+  case 40:
+    discover_unowned_device_by_uuid();
+    break;
 #ifdef OC_PKI
     case 96:
       install_trust_anchor();
