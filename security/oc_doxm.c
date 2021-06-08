@@ -178,12 +178,24 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   switch (iface_mask) {
   case OC_IF_RW:
   case OC_IF_BASELINE: {
+    bool ignore_request = false;
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
     size_t device = request->resource->device;
-    if (ql > 0 &&
-        ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
-         (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
+
+    if (ql > 0 && ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0)
+          || (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
+      ignore_request = true;
+    }
+
+    ql = oc_get_query_value(request, "deviceuuid", &q);
+    if (!ignore_request && ql > 0) {
+      char my_uuid[OC_UUID_LEN];
+      oc_uuid_to_str(oc_core_get_device_id(0), my_uuid, sizeof(my_uuid));
+      ignore_request = (strncasecmp(q, my_uuid, OC_UUID_LEN) != 0);
+    }
+
+    if (ignore_request) {
       if (request->origin && (request->origin->flags & MULTICAST) == 0) {
         request->response->response_buffer->code =
           oc_status_code(OC_STATUS_BAD_REQUEST);
