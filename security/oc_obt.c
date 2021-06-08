@@ -638,7 +638,7 @@ discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, char *deviceuu
 
   if (deviceuuid && strlen(deviceuuid) > 0) {
     char uuid_query[49];
-    snprintf(uuid_query, 49, "?deviceuuid=%s", deviceuuid);
+    snprintf(uuid_query, 49, "&deviceuuid=%s", deviceuuid);
     strncat(discovery_query, uuid_query, strlen(uuid_query));
   }
   OC_DBG("Query parameter string for discovery: %s\n", discovery_query);
