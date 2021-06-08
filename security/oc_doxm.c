@@ -191,8 +191,10 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     ql = oc_get_query_value(request, "deviceuuid", &q);
     if (!ignore_request && ql > 0) {
       char my_uuid[OC_UUID_LEN];
-      oc_uuid_to_str(oc_core_get_device_id(0), my_uuid, sizeof(my_uuid));
-      ignore_request = (strncasecmp(q, my_uuid, OC_UUID_LEN) != 0);
+      oc_uuid_to_str(oc_core_get_device_id(0), my_uuid, OC_UUID_LEN);
+      if (strncasecmp(q, my_uuid, OC_UUID_LEN - 1) != 0) {
+        ignore_request = true;
+      }
     }
 
     if (ignore_request) {
