@@ -30,18 +30,27 @@ static int quit = 0;
 static bool switch_state;
 
 #ifdef OC_SOFTWARE_UPDATE
-#include <boost/network/uri.hpp>
+//#include <boost/network/uri.hpp>
 #include <iostream>
+#include <regex>
 using namespace boost::network;
 
 int
 validate_purl(const char *purl)
 {
+  if (std::regex_match (purl, std::regex("^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$") )) {
+    return 0;
+  }
+
+  /* old code*/
+  /*
   uri::uri instance(purl);
   if (instance.is_valid() == 0) {
     return -1;
   }
   return 0;
+  */
+  return -1;
 }
 
 int
