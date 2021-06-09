@@ -33,13 +33,19 @@ static bool switch_state;
 //#include <boost/network/uri.hpp>
 #include <iostream>
 #include <regex>
-using namespace boost::network;
+//using namespace boost::network;
 
 int
 validate_purl(const char *purl)
 {
   /* https://stackoverflow.com/questions/38608116/how-to-check-a-specified-string-is-a-valid-url-or-not-using-c-code/38608262 */
-  if (std::regex_match (purl, std::regex("^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$") )) {
+  // regex pattern
+  std::string pattern = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
+
+  // Construct regex object
+  std::regex url_regex(pattern);
+
+  if (std::regex_match(purl, url_regex)) {
     return 0;
   }
 
