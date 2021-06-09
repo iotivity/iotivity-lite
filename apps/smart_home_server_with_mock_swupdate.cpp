@@ -49,7 +49,7 @@ validate_purl(const char *purl)
 ../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\+' [-Werror]
   std::string pattern = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
   */
-  std::string pattern = "https?://(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,4}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)";
+  std::string pattern = "https?://(www.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,4}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)";
 
   // Construct regex object
   std::regex url_regex(pattern);
