@@ -40,7 +40,16 @@ validate_purl(const char *purl)
 {
   /* https://stackoverflow.com/questions/38608116/how-to-check-a-specified-string-is-a-valid-url-or-not-using-c-code/38608262 */
   // regex pattern
+//#pragma warning( disable : 4507 34 )
+/*
+../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\/' [-Werror]
+../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\.' [-Werror]
+../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\+' [-Werror]
+../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\.' [-Werror]
+../../apps/smart_home_server_with_mock_swupdate.cpp:43:25: error: unknown escape sequence: '\+' [-Werror]
   std::string pattern = "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)";
+  */
+  std::string pattern = "https?://(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,4}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)";
 
   // Construct regex object
   std::regex url_regex(pattern);
