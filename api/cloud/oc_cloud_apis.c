@@ -168,6 +168,12 @@ oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
   return (int)ctx->expires_in;
 }
 
+void
+oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl)
+{
+  ctx->time_to_live = ttl;
+}
+
 static void
 cloud_logout_internal(oc_client_response_t *data)
 {

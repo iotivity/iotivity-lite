@@ -156,7 +156,7 @@ publish_resources(oc_cloud_context_t *ctx)
   }
 
   rd_publish(ctx->cloud_ep, ctx->rd_publish_resources, ctx->device,
-             publish_resources_handler, LOW_QOS, ctx);
+             ctx->time_to_live, publish_resources_handler, LOW_QOS, ctx);
 }
 
 int
@@ -308,6 +308,7 @@ oc_cloud_publish_resources(size_t device)
   }
   return -1;
 }
+
 #else  /* OC_CLOUD*/
 typedef int dummy_declaration;
 #endif /* !OC_CLOUD */
