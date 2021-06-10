@@ -99,6 +99,7 @@ typedef struct oc_cloud_context_t
   uint8_t retry_refresh_token_count;
   oc_cloud_error_t last_error;
   uint16_t expires_in;
+  uint32_t time_to_live; /**< Time to live of published resources in seconds */
 
   oc_link_t *rd_publish_resources;
   oc_link_t *rd_published_resources;
@@ -124,6 +125,14 @@ int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 
 int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Set Time to Live value in the provided cloud context.
+ *
+ * @param ctx Cloud context to update, must not be NULL.
+ * @param ttl Time to live value in seconds.
+ */
+void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl);
 
 int oc_cloud_add_resource(oc_resource_t *resource);
 void oc_cloud_delete_resource(oc_resource_t *resource);
