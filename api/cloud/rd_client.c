@@ -64,7 +64,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, di, id);
     oc_rep_set_text_string(root, n, name);
-    oc_rep_set_int(root, lt, ttl);
+    oc_rep_set_int(root, ttl, ttl);
 
     oc_rep_set_array(root, links);
     oc_link_t *link = links;
