@@ -23,11 +23,11 @@ The OCF Core Framework provides a versatile communications layer with best-in-cl
 
 Please review the following resources for more details:
 
-- `OCF Security <https://openconnectivity.org/specs/OCF_Security_Specification_v2.1.2.pdf>`_
-- `Device Commissioning (On-boarding and Provisioning) <https://openconnectivity.org/specs/OCF_Onboarding_Tool_Specification_v2.1.2.pdf>`_
-- `Cloud Connectivity <https://openconnectivity.org/specs/OCF_Device_To_Cloud_Services_Specification_v2.1.2.pdf>`_
-- `Bridging <https://openconnectivity.org/specs/OCF_Bridging_Specification_v2.1.2.pdf>`_
-- `Headless Configuration (Wi-Fi Easy Setup) <https://openconnectivity.org/specs/OCF_Wi-Fi_Easy_Setup_Specification_v2.1.2.pdf>`_
+- `OCF Security <https://openconnectivity.org/specs/OCF_Security_Specification.pdf>`_
+- `Device Commissioning (On-boarding and Provisioning) <https://openconnectivity.org/specs/OCF_Onboarding_Tool_Specification.pdf>`_
+- `Cloud Connectivity <https://openconnectivity.org/specs/OCF_Device_To_Cloud_Services_Specification.pdf>`_
+- `Bridging <https://openconnectivity.org/specs/OCF_Bridging_Specification.pdf>`_
+- `Headless Configuration (Wi-Fi Easy Setup) <https://openconnectivity.org/specs/OCF_Easy_Setup_Specification.pdf>`_
 
 The IoTivity project was created to bring together the open-source community to accelerate the development of the framework and services required to connect the growing number of IoT devices. The IoTivity project offers device vendors and application developers royalty-free access to `OCF technologies <https://openconnectivity.org/developer/specifications/>`_ under the `Apache 2.0 license <https://iotivity.org/about/apache-license>`_.
 
@@ -221,4 +221,4 @@ Questions
 `IoTivity-Lite Developer Mailing List <https://iotivity.groups.io/g/iotivity-dev>`_
 
 Bugs
-`Gitlab issues <https://gitlab.iotivity.org/iotivity/iotivity-lite/issues>`_
+`Github issues <https://github.com/iotivity/iotivity-lite/issues>`_
