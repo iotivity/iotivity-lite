@@ -258,7 +258,9 @@ cloud_rd_manager_status_changed(oc_cloud_context_t *ctx)
     publish_published_resources(ctx);
     delete_resources(ctx, false);
     oc_remove_delayed_callback(ctx, publish_published_resources);
-    oc_set_delayed_callback(ctx, publish_published_resources, ONE_HOUR);
+    if (ctx->time_to_live != RD_PUBLISH_TTL_UNLIMITED) {
+      oc_set_delayed_callback(ctx, publish_published_resources, ONE_HOUR);
+    }
   } else {
     oc_remove_delayed_callback(ctx, publish_published_resources);
   }
