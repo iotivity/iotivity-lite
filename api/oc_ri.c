@@ -643,6 +643,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_STARTUP;
   if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0)
     iface_mask |= OC_IF_STARTUP_REVERT;
+  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0)
+    iface_mask |= OC_IF_W;
   return iface_mask;
 }
 
@@ -676,6 +678,7 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_A:
   case OC_IF_STARTUP:
   case OC_IF_STARTUP_REVERT:
+  case OC_IF_W:
     break;
   }
   return supported;
