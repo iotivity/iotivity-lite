@@ -29,13 +29,6 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
-/**
- * Value of 0 means that the check which removes links after their Time to Live
- * property expires should be skipped. Thus the Time to Live of such link
- * is unlimited. This is the default value for the Time to Live property.
- */
-#define RD_PUBLISH_TTL_UNLIMITED 0
-
 OC_LIST(cloud_context_list);
 OC_MEMB(cloud_context_pool, oc_cloud_context_t, OC_MAX_NUM_DEVICES);
 
