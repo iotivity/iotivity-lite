@@ -31,6 +31,13 @@
 extern "C" {
 #endif
 
+/**
+ * Value of 0 means that the check which removes links after their Time to Live
+ * property expires should be skipped. Thus the Time to Live of such link
+ * is unlimited. This is the default value for the Time to Live property.
+ */
+#define RD_PUBLISH_TTL_UNLIMITED 0
+
 typedef struct cloud_conf_update_t
 {
   char *access_token; /**< Access Token resolved with an auth code. */
@@ -97,6 +104,19 @@ bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
                                        oc_response_handler_t handler,
                                        void *user_data);
 
+/**
+ * @brief Update resource links after manager status change.
+ *
+ * If cloud is in logged in state the function executes several resource links
+ * updates: deletes links scheduled to be deleted, publishes links scheduled
+ * to be published and republishes links that were already published.
+ * Additionally, if Time to Live property is not equal to RD_PUBLISH_TTL_UNLIMITED
+ * then published links are scheduled to be republished each hour. (If
+ * cloud_rd_manager_status_changed function is triggered again before the scheduled
+ * time passes the republishing is rescheduled with updated time.)
+ *
+ * @param ctx Cloud context, must not be NULL
+ */
 void cloud_rd_manager_status_changed(oc_cloud_context_t *ctx);
 void cloud_rd_deinit(oc_cloud_context_t *ctx);
 
