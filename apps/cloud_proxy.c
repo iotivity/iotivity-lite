@@ -47,6 +47,15 @@
 *     if input data is correct
 *       updates the global variables
 *
+*  handlers for the proxied device
+*  incomming requests from the cloud are handled by:
+     - get_resource
+          the response from the local device is handled by: get_local_resource_response
+     - post_resource
+          the response from the local device is handled by: post_local_resource_response
+     - delete_resource
+          the response from the local device is handled by: delete_local_resource_response
+*
 *
 * PKI SECURITY
 *  to install a certificate use MANUFACTORER_PKI compile option
@@ -56,7 +65,7 @@
 *    products should not have test certificates.
 *    Hence this example is being build without the manufactorer certificate by default.
 *
-* compile flag PROXY_ALL_DISCOVERD_DEVICES
+* compile flag PROXY_ALL_DISCOVERED_DEVICES
 *   this flag enables that all devices on the network will be proxied.
 *
 * building on linux (in port/linux):
@@ -65,13 +74,18 @@
 * Usage:
 * onboard the cloud_proxy using an OBT
 *   configure the ACL for the d2dserverlist (e.g. install ACL for DELETE)
-* connect to a cloud using an OBT
-* add a device (one by one) to be proxied:
+* connect to a cloud using an OBT via a mediator
+*   when connected to the cloud, the client part will issue a discovery for all devices on realm and site local scopes
+*   devices that are in the d2dserver list will be announced to the cloud
+* add a device (one by one) to be proxied, example:
 *    POST to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
-* list the devices that are proxied:
+* list the devices that are proxied, example:
 *    GET to /d2dserverlist
-* delete a device (one by one) that is proxied:
+* delete a device (one by one) that is proxied, example:
 *    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
+
+TODO:
+- save the d2dserverlist to disk, read at startup
 
 */
 /*
@@ -94,7 +108,7 @@
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
-#define PROXY_ALL_DISCOVERD_DEVICES
+#define PROXY_ALL_DISCOVERED_DEVICES
 
 #ifdef __linux__
 /* linux specific code */
@@ -163,7 +177,7 @@ static char* g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = { "oic.r.d2dserverlist"
 int g_d2dserverlist_nr_resource_types = 1;
 
 /* forward declarations */
-static void issue_requests(void);
+void issue_requests(void);
 
 
 
@@ -656,10 +670,6 @@ random_pin_cb(const unsigned char* pin, size_t pin_len, void* data)
 #endif /* OC_SECURITY */
 
 
-
-
-
-
 void
 factory_presets_cb(size_t device, void* data)
 {
@@ -1031,7 +1041,7 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       anchor_to_udn(anchor, udn);
       PRINT("  UDN '%s'\n", udn);
 
-#ifdef PROXY_ALL_DISCOVERD_DEVICES
+#ifndef PROXY_ALL_DISCOVERED_DEVICES
       if (if_di_exist(udn, (int)strlen(udn)) == false)
       {
         return OC_CONTINUE_DISCOVERY;
@@ -1041,14 +1051,19 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       if (is_udn_listed(udn) == NULL) {
         // add new server to the list
         PRINT("  ADDING UDN '%s'\n", udn);
-
-        if (discovered_server_count < MAX_DISCOVERED_SERVER) {                
+        if (discovered_server_count < MAX_DISCOVERED_SERVER) {
+          // allocate the endpoint
           oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
-          oc_endpoint_copy(copy, endpoint);
+          // search for the secure endpoint
+          oc_endpoint_t* ep = endpoint;  // start of the list
+          while ( (ep->flags & SECURED) != 0) {
+              ep = ep->next;
+          }
+          oc_endpoint_copy(copy, ep);
           discovered_server[discovered_server_count++] = copy;
         }
         else {
-          PRINT("Discovered server storage limit reached \n");
+          PRINT("Discovered server storage limit reached: %d\n", MAX_DISCOVERED_SERVER);
           return OC_CONTINUE_DISCOVERY;
         }
       }
@@ -1119,7 +1134,7 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void
+void
 issue_requests(void)
 {
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
@@ -1352,7 +1367,7 @@ main(int argc, char* argv[])
                                        .register_resources = register_resources
 #ifdef OC_CLIENT
                                        ,
-                                       .requests_entry = NULL //issue_requests
+                                       .requests_entry = NULL
 #endif
   };
 #ifdef OC_SECURITY
