@@ -128,6 +128,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_manager_stop(ctx);
   ctx->last_error = 0;
   ctx->store.cps = 0;
+  cloud_store_dump(&ctx->store);
 }
 
 int
@@ -376,6 +377,7 @@ oc_cloud_init(void)
       cloud_store_initialize(&ctx->store);
     }
 #endif
+    ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
 
     oc_list_add(cloud_context_list, ctx);
 

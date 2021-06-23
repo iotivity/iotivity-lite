@@ -404,7 +404,9 @@ smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_s
 
 smart_home_server_with_mock_swupdate: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_with_mock_swupdate.cpp
 	@mkdir -p $@_creds
-	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
+	# old implemenation with boost
+	#${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
+	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS}
 
 multi_device_server: libiotivity-lite-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
 	@mkdir -p $@_creds

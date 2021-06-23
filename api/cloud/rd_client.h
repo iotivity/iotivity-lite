@@ -39,15 +39,18 @@ extern "C" {
   @brief Publish RD resource to Resource Directory.
   @param endpoint The endpoint of the RD.
   @param links This is the resource which we need to register to RD.
-   If null, oic/p and oic/d resources will be published.
+    If null, oic/p and oic/d resources will be published.
   @param device Index of the device for an unique identifier.
+  @param ttl Time in seconds to indicate a RD, i.e. how long to keep this
+    published item.
   @param handler To refer to the request sent out on behalf of calling this API.
   @param qos Quality of service.
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
 bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+                uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
+                void *user_data);
 
 /**
   @brief Delete RD resource from Resource Directory.
