@@ -1315,11 +1315,6 @@ connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("setting pktinfo IPv4 option %d\n", errno);
     return -1;
   }
-  if (setsockopt(dev->server4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
   if (bind(dev->server4_sock, (struct sockaddr *)&dev->server4,
            sizeof(dev->server4)) == -1) {
     OC_ERR("binding server4 socket %d", errno);
@@ -1359,11 +1354,6 @@ connectivity_ipv4_init(ip_context_t *dev)
   if (setsockopt(dev->secure4_sock, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) ==
       -1) {
     OC_ERR("setting pktinfo IPV4 option %d\n", errno);
-    return -1;
-  }
-  if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr IPv4 option %d", errno);
     return -1;
   }
   if (bind(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
@@ -1463,11 +1453,6 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting sock option %d", errno);
     return -1;
   }
-  if (setsockopt(dev->server_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
 #ifdef IPV6_ADDR_PREFERENCES
   int prefer = 2;
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
@@ -1522,11 +1507,6 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
-  }
-  if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
 #ifdef IPV6_ADDR_PREFERENCES
