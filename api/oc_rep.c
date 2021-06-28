@@ -331,12 +331,18 @@ get_tagged_value:
           *err |= CborErrorIllegalType;
           return;
         } else {
-          (*prev)->next = _alloc_rep();
-          if ((*prev)->next == NULL) {
+          if (*prev) != 0 {
+            (*prev)->next = _alloc_rep();
+            if ((*prev)->next == NULL) {
+              *err = CborErrorOutOfMemory;
+              return;
+            }
+            prev = &(*prev)->next;
+          }
+          else {
             *err = CborErrorOutOfMemory;
             return;
           }
-          prev = &(*prev)->next;
         }
         (*prev)->type = OC_REP_OBJECT;
         (*prev)->next = 0;
