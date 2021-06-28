@@ -331,7 +331,7 @@ get_tagged_value:
           *err |= CborErrorIllegalType;
           return;
         } else {
-          if (*prev) != 0 {
+          if ((*prev) != 0) {
             (*prev)->next = _alloc_rep();
             if ((*prev)->next == NULL) {
               *err = CborErrorOutOfMemory;
