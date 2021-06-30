@@ -331,15 +331,14 @@ get_tagged_value:
           *err |= CborErrorIllegalType;
           return;
         } else {
-          if ((*prev) != 0) {
+          if ((*prev) != NULL) {
             (*prev)->next = _alloc_rep();
             if ((*prev)->next == NULL) {
               *err = CborErrorOutOfMemory;
               return;
             }
             prev = &(*prev)->next;
-          }
-          else {
+          } else {
             *err = CborErrorOutOfMemory;
             return;
           }
