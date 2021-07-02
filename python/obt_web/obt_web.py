@@ -10,12 +10,12 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
+import signal
+
 from flask import Flask, render_template, send_from_directory
 from flask_socketio import SocketIO
 from iotivity import Iotivity
 
-my_iotivity = Iotivity()
-signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 
 
 
@@ -34,22 +34,14 @@ def send_js(path):
     print("path:{}".format(path))
     return send_from_directory('include', path)
 
+@socketio.on('message')
+def handle_message(data):
+    print("Discover Unowned Devices"+data);
 
-@socketio.on('device_add')
-def handle_event(json, methods=['GET', 'POST']):
-    print('received device add event: ' + str(json))
-    socketio.emit('device_add', json)
-
-@socketio.on('device_remove')
-def handle_event(json, methods=['GET', 'POST']):
-    print('received device remove event: ' + str(json))
-    socketio.emit('device_remove', json)
-
-
-@socketio.on('device_update')
-def handle_event(json, methods=['GET', 'POST']):
-    print('received device update event: ' + str(json))
-    socketio.emit('device_update', json)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0',debug=True)
+    my_iotivity = Iotivity()
+    signal.signal(signal.SIGINT, my_iotivity.sig_handler)
+
+    socketio.emit('obt_initialized','True')
