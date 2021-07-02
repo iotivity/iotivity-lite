@@ -537,7 +537,7 @@ class Iotivity():
     def __init__(self):
         print ("loading ...")
         libname = 'libiotivity-lite-client-python.so'
-        libdir = './'
+        libdir = os.path.dirname(__file__) 
         self.lib=ctl.load_library(libname, libdir)
         # python list of copied unowned devices on the local network
         # will be updated from the C layer automatically by the CHANGED_CALLBACK
@@ -861,17 +861,17 @@ class Iotivity():
 
 
 
-my_iotivity = Iotivity()
-signal.signal(signal.SIGINT, my_iotivity.sig_handler)
+#my_iotivity = Iotivity()
+#signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
-time.sleep(1)
+#time.sleep(1)
 
 #my_iotivity.test_security()
 
-my_iotivity.test_discovery()
+#my_iotivity.test_discovery()
 
-my_iotivity.quit()    
+#my_iotivity.quit()    
 
 
 

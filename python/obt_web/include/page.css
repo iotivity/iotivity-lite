@@ -1,0 +1,97 @@
+.wrapper {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+
+div.unknown_device {
+   content:url(images/unknown.png);
+   width:100px;
+}
+div.light_device {
+   content:url(images/lighting.png);
+   width:100px;
+}
+div.camera_device {
+   content:url(images/027-webcam.png);
+   width:100px;
+}
+
+
+div.message_holder {
+	padding:10px;
+	height:100%;
+}
+
+.w3-yeller {
+background-color: yellow;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body,html{
+ height: 100%;
+}
+
+/* Style the header */
+header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
+}
+
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 30%;
+  height: 300px; /* only for demonstration, should be removed */
+  background: #ccc;
+  padding: 20px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+
+section {
+   height: 100%;
+}
+
+
+article {
+  float: left;
+  padding: 20px;
+  width: 70%;
+  background-color: #f1f1f1;
+  height: 300px; /* only for demonstration, should be removed */
+}
+
+/*V Clear floats after the columns */
+section:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the footer */
+footer {
+  background-color: #777;
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
