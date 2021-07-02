@@ -41,6 +41,9 @@
      socket.on( 'obt_initialized', function( msg ) {
         console.log( msg )
       })
+     socket.on( 'unowned_devices', function( msg ) {
+        console.log( msg )
+      })
 	function discover_unowned(){
 	alert("Unowned");
 	socket.send("discover_unowned");

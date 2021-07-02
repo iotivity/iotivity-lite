@@ -18,6 +18,7 @@ from iotivity import Iotivity
 
 
 
+my_iotivity = Iotivity()
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
@@ -37,11 +38,13 @@ def send_js(path):
 @socketio.on('message')
 def handle_message(data):
     print("Discover Unowned Devices"+data);
+    my_iotivity.discover_unowned();
+    socketio.send('unowned_devices')
+
 
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0',debug=True)
-    my_iotivity = Iotivity()
     signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 
     socketio.emit('obt_initialized','True')
