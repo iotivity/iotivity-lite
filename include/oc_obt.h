@@ -673,6 +673,29 @@ int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
 int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
+
+/**
+ * local (internal) function to add a certificate.
+ *
+ * @param device the device to assign the certificate too
+ * @param cert the certificate data
+ * @param cert_size the certificate data size
+ * @param key the key data
+ * @param key_size the key data size
+ * @param credusage usage of the credential
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see oc_obt_status_cb_t
+ * @see oc_obt_add_roleid
+ * @see oc_obt_free_roleid
+ */
+int obt_oc_obt_pki_add_identity_cert(size_t device, const unsigned char* cert,
+  size_t cert_size, const unsigned char* key,
+  size_t key_size, oc_sec_credusage_t credusage);
+
 /**
  * Provision a role certificate to a Client application.
  *
