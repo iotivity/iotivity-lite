@@ -1084,12 +1084,13 @@ int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
   return -1;
 #endif /* OC_SECURITY */
 }
+%}
 
 %ignore oc_obt_retrieve_cloud_conf_device;
 %rename(RetrieveCloudConfDevice) jni_oc_obt_retrieve_cloud_conf_device;
 %inline %{
 int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url, 
-  oc_obt_status_cb_t callback, jni_callback_data jcb)
+  oc_response_handler_t callback, jni_callback_data* jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -1104,6 +1105,7 @@ int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url,
   return -1;
 #endif /* OC_SECURITY */
 }
+%}
 
 %ignore oc_obt_update_cloud_conf_device;
 %rename(UpdateCloudConfDevice) jni_oc_obt_update_cloud_conf_device;
@@ -1111,7 +1113,7 @@ int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url,
 int jni_oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
   const char* url, const char* at, const char* apn,
   const char* cis, const char* sid, 
-  oc_obt_status_cb_t callback, jni_callback_data jcb)
+  oc_response_handler_t callback, jni_callback_data* jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -1126,9 +1128,8 @@ int jni_oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
   return -1;
 #endif /* OC_SECURITY */
 }
-
-
-
 %}
+
+
 %include "oc_acl.h"
 %include "oc_obt.h";
