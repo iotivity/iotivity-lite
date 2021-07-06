@@ -692,7 +692,7 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
  * @see oc_obt_add_roleid
  * @see oc_obt_free_roleid
  */
-int obt_oc_obt_pki_add_identity_cert(size_t device, const unsigned char* cert,
+int oc_obt_pki_add_identity_cert(size_t device, const unsigned char* cert,
   size_t cert_size, const unsigned char* key,
   size_t key_size, oc_sec_credusage_t credusage);
 
