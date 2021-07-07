@@ -126,6 +126,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   return -1;
 }
 
+
 static int
 pki_add_identity_cert(size_t device, const unsigned char *cert,
                       size_t cert_size, const unsigned char *key,
@@ -241,6 +242,13 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   oc_free_string(&subjectuuid);
 
   return credid;
+}
+
+int oc_obt_add_identity_cert(size_t device, const unsigned char* cert,
+  size_t cert_size, const unsigned char* key,
+  size_t key_size, oc_sec_credusage_t credusage)
+{
+  return pki_add_identity_cert(device, cert, cert_size, key, key_size, credusage);
 }
 
 int
