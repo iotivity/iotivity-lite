@@ -607,6 +607,11 @@ int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t c
 
 %ignore oc_obt_pki_add_identity_cert;
 %rename(addIdentityCertificate) jni_oc_obt_pki_add_identity_cert;
+
+
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *key, size_t key_size) };
+
 %inline %{
 int jni_oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
                       size_t cert_size, const unsigned char *key,

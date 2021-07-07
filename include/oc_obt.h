@@ -675,9 +675,11 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
 
 
 /**
- * local (internal) function to add a certificate.
+ * Internal obt function to add a certificate credential to be used by the OBT CA.
+ * function set the certificate so that the OBT CMS can use this 
+ * certificate as intermediate CA.
  *
- * @param device the device to assign the certificate too
+ * @param device the device to assign the certificate to
  * @param cert the certificate data
  * @param cert_size the certificate data size
  * @param key the key data
