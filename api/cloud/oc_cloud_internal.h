@@ -68,6 +68,7 @@ void oc_cloud_shutdown(void);
 void oc_cloud_register_handler(oc_client_response_t *data);
 void oc_cloud_login_handler(oc_client_response_t *data);
 void oc_cloud_refresh_token_handler(oc_client_response_t *data);
+void oc_cloud_clear_context(oc_cloud_context_t *ctx);
 int oc_cloud_reset_context(size_t device);
 
 void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
@@ -90,8 +91,20 @@ bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
                            const char *auth_code, const char *uid,
                            const char *access_token, size_t device,
                            oc_response_handler_t handler, void *user_data);
-bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
-                             const char *access_token, size_t device,
+/**
+ * @brief Send request to deregister device from cloud.
+ * 
+ * The device must be registered and logged in for this call to succeed.
+ * 
+ * @param endpoint cloud endpoint
+ * @param uid user id
+ * @param device index of the device to deregister
+ * @param handler response callback
+ * @param user_data data passed to response callback
+ * @return true on success
+ *         false otherwise
+ */
+bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid, size_t device,
                              oc_response_handler_t handler, void *user_data);
 bool cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
                         const char *access_token, size_t device,

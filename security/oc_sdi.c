@@ -94,7 +94,10 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
           OC_ERR("oc_sdi: Can set uuid property only in RFOTM");
           return false;
         }
-
+        if (oc_string_len(rep->value.string) < OC_UUID_LEN - 1) {
+          OC_ERR("oc_sdi: Invalid uuid %s", oc_string(rep->value.string));
+          return false;
+        }
         oc_str_to_uuid(oc_string(rep->value.string), &s->uuid);
         suc = true;
       } else if (len == 4 && memcmp("name", oc_string(rep->name), 4) == 0) {
@@ -108,10 +111,10 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
         if (oc_string_len(s->name) > 0) {
           oc_free_string(&s->name);
         }
-	if (oc_string_len(rep->value.string) > 0) {
-	  oc_new_string(&s->name, oc_string(rep->value.string),
-			oc_string_len(rep->value.string));
-	}
+        if (oc_string_len(rep->value.string) > 0) {
+          oc_new_string(&s->name, oc_string(rep->value.string),
+              oc_string_len(rep->value.string));
+        }
         suc = true;
       } else {
         OC_ERR("oc_sdi: Unknown property %s", oc_string(rep->name));

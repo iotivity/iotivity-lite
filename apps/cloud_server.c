@@ -334,6 +334,7 @@ typedef struct oc_switch_t
   bool state;
 } oc_switch_t;
 
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 
 OC_MEMB(switch_s, oc_switch_t, 1);
