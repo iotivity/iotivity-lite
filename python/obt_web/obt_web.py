@@ -5,24 +5,25 @@
 #socketio.run(app,host='0.0.0.0')
 
 #add parent directory to path so we can import iotivity
-import os, sys
+import os, sys, time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-
+from threading import Lock
 import signal
+import simplejson as json
 
 from flask import Flask, render_template, send_from_directory
 from flask_socketio import SocketIO
 from iotivity import Iotivity
 
+thread = None
+thread_lock = Lock()
 
-
-my_iotivity = Iotivity()
 
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='threading')
 
 @app.route('/')
 def sessions(methods=['GET','POST']):
@@ -38,13 +39,28 @@ def send_js(path):
 @socketio.on('message')
 def handle_message(data):
     print("Discover Unowned Devices"+data);
-    my_iotivity.discover_unowned();
-    socketio.send('unowned_devices')
+    unowned_devices_bytelist = my_iotivity.discover_unowned()
+    print("OBT: {}".format(unowned_devices_bytelist))
+    #my_dict = {0: 'ff032204-f580-4f92-6eef-bee073446044', 1: 'a796eed7-3704-4428-75a3-497a2d584ee9'}
+    #socketio.emit('unowned',unowned_devices_bytelist)
+    socketio.emit('unowned',unowned_devices_bytelist)
 
 
+#@socketio.event
+#def connect():
+#    global thread
+#    with thread_lock:
+#        if thread is None:
+#            thread = socketio.start_background_task(background_thread)
+#    socketio.emit('my_response', {'data': 'Connected', 'count': 0})
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0',debug=True)
+    my_iotivity = Iotivity()
     signal.signal(signal.SIGINT, my_iotivity.sig_handler)
-
     socketio.emit('obt_initialized','True')
+    time.sleep(5)
+    socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False)
+
+
+
+

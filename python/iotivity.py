@@ -57,6 +57,7 @@ import time
 
 import json
 
+unowned_return_list=[]
 
 _int_types = (c_int16, c_int32)
 if hasattr(ctypes, "c_int64"):
@@ -600,6 +601,14 @@ class Iotivity():
         #ret = self.lib.oc_obt_discover_unowned_devices(unowned_device_cb, None)
         #ret = self.lib.py_discover_unowned_devices()
         print("discover_unowned- done")
+        time.sleep(3)
+        unowned_return_list={}
+        nr_unowned = self.get_nr_unowned_devices()
+        for i in range(nr_unowned):
+            uuid = self.get_unowned_uuid(i)+""
+            unowned_return_list[i] = str(uuid)
+        print("Returned devices Array {}",unowned_return_list)
+        return unowned_return_list
 
     def discover_all(self):
         self.discover_unowned()
@@ -608,6 +617,16 @@ class Iotivity():
         self.list_owned_devices()
         self.list_unowned_devices()
 
+
+    def return_unowned_devices(self):
+        print("Called return list Thread:{}".format(threading.get_ident()))
+        unowned_return_list={}
+        nr_unowned = self.get_nr_unowned_devices()
+        for i in range(nr_unowned):
+            uuid = self.get_unowned_uuid(i)+""
+            unowned_return_list[i] = uuid
+        print("Returned devices Array {}",unowned_return_list)
+        return unowned_return_list
         
     def list_unowned_devices(self):
         nr_unowned = self.get_nr_unowned_devices()
@@ -617,6 +636,7 @@ class Iotivity():
             print ("  unowned index {} uuid {}".format(i, uuid))
             if uuid not in self.unowned_devices:
               self.unowned_devices.append(uuid)
+    
 
     def list_owned_devices(self):
         nr_owned = self.get_nr_owned_devices()
