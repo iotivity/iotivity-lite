@@ -41,9 +41,9 @@ def handle_message(data):
     print("Discover Unowned Devices"+data);
     unowned_devices_bytelist = my_iotivity.discover_unowned()
     print("OBT: {}".format(unowned_devices_bytelist))
-    #my_dict = {0: 'ff032204-f580-4f92-6eef-bee073446044', 1: 'a796eed7-3704-4428-75a3-497a2d584ee9'}
-    #socketio.emit('unowned',unowned_devices_bytelist)
-    socketio.emit('unowned',unowned_devices_bytelist)
+    #my_dict = {"0": "ff032204-f580-4f92-6eef-bee073446044", "1": "a796eed7-3704-4428-75a3-497a2d584ee9"}
+    #socketio.emit('unowned',json.dumps(my_dict))
+    socketio.emit('unowned',json.dumps(unowned_devices_bytelist))
 
 
 #@socketio.event

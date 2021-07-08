@@ -606,7 +606,7 @@ class Iotivity():
         nr_unowned = self.get_nr_unowned_devices()
         for i in range(nr_unowned):
             uuid = self.get_unowned_uuid(i)+""
-            unowned_return_list[i] = str(uuid)
+            unowned_return_list[str(i)] = str(uuid)
         print("Returned devices Array {}",unowned_return_list)
         return unowned_return_list
 

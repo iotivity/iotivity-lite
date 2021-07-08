@@ -34,6 +34,47 @@
   }
 </style>
     <script type="text/javascript">
+      var imagePath = 'include/images/';
+      function buildDevice(uuid, ownedState){
+		var card = document.createElement("div");
+			card.setAttribute('id',uuid);
+			card.setAttribute('class','w3-card-4 w3-grey w3-round');
+			card.setAttribute('style','width:220px;padding:5px;float:left;min-height:200px;margin:5px;display:none');
+		    var label = document.createElement("header");
+			    label.setAttribute('class','w3-container w3-light-grey w3-round');
+			    label.setAttribute('id','label_'+uuid);
+			    label.setAttribute('style','margin:5px;font-size:15px;');
+	      		    label.innerHTML=uuid;
+		    var imageContainer = document.createElement("div");
+			    imageContainer.setAttribute('class','w3-container w3-round');
+			    imageContainer.setAttribute('id','image_container_'+uuid);
+			    imageContainer.setAttribute('style','margin:5px;position:relative;border:2px solid lightgrey;');
+			    var image = document.createElement("img");
+				    image.setAttribute('id','image_'+uuid);
+				    image.setAttribute('src',imagePath+'unknown.png');
+				    image.setAttribute('style','width:100%;margin:5px');
+	      		   imageContainer.append(image);
+
+		    var statusContainer = document.createElement("div");
+			    statusContainer.setAttribute('class','w3-container w3-light-grey w3-round');
+			    statusContainer.setAttribute('style','margin:5px;font-size:12px');
+			    statusContainer.setAttribute('id','statusi_container_'+uuid)
+			    var statusTxt = document.createElement("div");
+				statusTxt.setAttribute('id','statusTxt_'+uuid);
+				statusTxt.innerHTML = "<b>"+ownedState+"<br>Device Discovered</b>";
+			    statusContainer.append(statusTxt);
+
+	      card.append(label);
+	      card.append(imageContainer);
+	      card.append(statusContainer);
+	      return card;
+      }
+      function addDevice(parentId, device) {
+	    // Adds an element to the document
+	    var p = document.getElementById(parentId);
+	    p.append(device);
+	    $(device).show("bounce",{times:2,distance:10},900);
+	}
 
 
 
@@ -41,13 +82,29 @@
      socket.on( 'obt_initialized', function( msg ) {
         console.log( msg )
       })
-     socket.on( 'unowned_devices', function( msg ) {
+     socket.on( 'unowned', function( msg ) {
         console.log( msg )
+	var discovery = JSON.parse(msg);
+	for (var key in discovery) {
+	    if (discovery.hasOwnProperty(key)) {
+		console.log(key + " -> " + discovery[key]);
+		newDevice = buildDevice(discovery[key],"unowned");
+		addDevice('device_container',newDevice);
+	    }
+	}
       })
 	function discover_unowned(){
         console.log( 'Get Unowned Devices' )
 	socket.send("discover_unowned");
 	}
+
+	// This is for testing UI
+	//newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
+	//addDevice('device_container',newDevice);
+
+
+
+
     </script>
 </section>
 <footer>
