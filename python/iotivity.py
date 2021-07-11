@@ -776,6 +776,13 @@ class Iotivity():
 
         print ("...done.")
 
+
+    def onboard_device(self,device):
+        print("Onboarding device: {}".format(device))
+        self.lib.py_otm_just_works.argtypes = [String]
+        self.lib.py_otm_just_works.restype = None
+        self.lib.py_otm_just_works(device)
+
     
     def offboard_all_owned(self):
         print ("listing onboarded devices:")

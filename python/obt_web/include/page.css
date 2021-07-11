@@ -38,12 +38,18 @@ body,html{
 
 /* Style the header */
 header {
-  background-color: #666;
+  background-color: #FFF;
   padding: 30px;
-  text-align: center;
-  font-size: 35px;
-  color: white;
+  color: black;
+  box-shadow:  0px 10px 5px lightgrey;
 }
+
+header .header-text {
+	display:inline;
+	font-size:75%;
+	padding-left:50px;
+}
+
 
 /* Create two columns/boxes that floats next to each other */
 nav {
@@ -65,6 +71,14 @@ section {
    height: 100%;
 }
 
+#accordian {
+	min-height: 600px;
+}
+
+section button {
+	margin:20px;
+
+}
 
 article {
   float: left;

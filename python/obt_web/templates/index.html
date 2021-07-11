@@ -12,14 +12,32 @@
   <body>
 	  <div class='wrapper'>
 <header>
-	<img src="include/images/cablelabs-logo.png"><h2>Streamlined Onboarding Demo</h2>
+	<img src="include/images/ocf-logo.png" style="float:left;max-width:50%">
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="include/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+      <script>
+  $( function() {
+	  $( "#accordion" ).accordion({
+	  collapsible: true,
+	  heightStyle: "content",
+	  });
+	$('#accordion .ui-accordion-content').show();
+  } );
+  </script>
 </header>
 <section>
-	<button type="button" onclick="discover_unowned()">Discover</button>
+	<button type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_unowned()">Discover Devices </button>
+<div id="accordion">
+  <h3>Unowned Devices</h3>
+  <div id="unowned_devices">
+  </div>
+  <h3>Owned Devices</h3>
+  <div id="owned_devices">
+  </div>
+</div>
+
     <div id='device_container' class="message_holder"></div>
 
 
@@ -57,31 +75,48 @@
 
 		    var statusContainer = document.createElement("div");
 			    statusContainer.setAttribute('class','w3-container w3-light-grey w3-round');
-			    statusContainer.setAttribute('style','margin:5px;font-size:12px');
+			    statusContainer.setAttribute('style','margin:5px;font-size:12px;padding:2px');
 			    statusContainer.setAttribute('id','statusi_container_'+uuid)
 			    var statusTxt = document.createElement("div");
 				statusTxt.setAttribute('id','statusTxt_'+uuid);
-				statusTxt.innerHTML = "<b>"+ownedState+"<br>Device Discovered</b>";
+				statusTxt.setAttribute('style','margin:5px;float:left');
+				statusTxt.innerHTML = "<b>"+ownedState+"</b>";
 			    statusContainer.append(statusTxt);
+	      		    var button = document.createElement("div");
+				button.setAttribute('id','statusbutton_'+uuid);
+				button.setAttribute('onclick','onboardDevice("'+uuid+'")');
+	      			button.setAttribute('class','w3-button w3-green w3-round-large');
+				button.setAttribute('style','margin:2px;float:right;font-size:20px');
+	      			button.innerHTML = "+";
+	      		    statusContainer.append(button);
 
 	      card.append(label);
 	      card.append(imageContainer);
 	      card.append(statusContainer);
 	      return card;
       }
+
+	
+
       function addDevice(parentId, device) {
 	    // Adds an element to the document
+	    //var p = document.getElementById(parentId);
 	    var p = document.getElementById(parentId);
 	    p.append(device);
 	    $(device).show("bounce",{times:2,distance:10},900);
 	}
 
 
-
+	/*Socket setup*/
 	var socket = io.connect('http://' + document.domain +  ':' + location.port);
+
+	/*OBT is up and running*/
      socket.on( 'obt_initialized', function( msg ) {
         console.log( msg )
       })
+
+
+	/*Return of Unowned Devices*/
      socket.on( 'unowned', function( msg ) {
         console.log( msg )
 	var discovery = JSON.parse(msg);
@@ -93,15 +128,26 @@
 	    }
 	}
       })
+
+
+	/*Button callbacks*/
+
+	function onboardDevice(uuid){
+		console.log("Perform Ownership of UUID:"+uuid);
+		socket.emit("onboard_device",uuid);
+	}
+
 	function discover_unowned(){
         console.log( 'Get Unowned Devices' )
-	socket.send("discover_unowned");
+	socket.emit("discover_unowned","data");
 	}
 
 	// This is for testing UI
-	//newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
-	//addDevice('device_container',newDevice);
+	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
+	addDevice('unowned_devices',newDevice);
 
+	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b136',"unowned");
+	addDevice('owned_devices',newDevice);
 
 
 
