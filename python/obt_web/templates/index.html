@@ -20,7 +20,10 @@
       <script>
       var imagePath = 'include/images/';
 
-      var stack = []; 
+      var unowned_devices_stack = []; 
+      var owned_devices_stack = []; 
+      var unowned_delete_stack = [];
+      var owned_delete_stack = [];
 
   $( function() {
 	  $( "#accordion" ).accordion({
@@ -46,14 +49,29 @@ function showWait(parentId){
 	}
   }
 
+function toggle_qr(){
+  var qr = document.getElementById("qr-container");
+  var qr_button = document.getElementById("qr-button");
+  if (qr.style.display === "none") {
+    qr.style.display = "block";
+    qr_button.innerHTML = "Hide QR Scanner";	  
+  } else {
+    qr.style.display = "none";
+    qr_button.innerHTML = "Show QR Scanner";	  
+  }
+}
+
 
   </script>
 </header>
 <section>
 	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_devices()">Discover Devices </button>
+	<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue" onclick="toggle_qr()">Show QR Scanner </button>
     <script src="include/html5-qrcode.min.js"></script>
-	<div id="qr-reader" style="width:500px"></div>
-	<div id="qr-reader-results">Hello</div>
+        <div id="qr-container" style="display:none">
+		<div id="qr-reader" style="width:500px"></div>
+		<div id="qr-reader-results"></div>
+	</div>
     <script>
 
 var resultContainer = document.getElementById('qr-reader-results');
