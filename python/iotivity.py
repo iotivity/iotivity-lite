@@ -593,15 +593,11 @@ class Iotivity():
     def discover_unowned(self):
         print("discover_unowned ")
         # OBT application
-        #ret = self.lib.discover_unowned_devices(c_int(0x02))
-        #ret = self.lib.discover_unowned_devices(c_int(0x03))
         ret = self.lib.discover_unowned_devices(c_int(0x05))
         time.sleep(3)
         # python callback application
-        #ret = self.lib.oc_obt_discover_unowned_devices(unowned_device_cb, None)
-        #ret = self.lib.py_discover_unowned_devices()
         print("discover_unowned- done")
-        time.sleep(3)
+        #time.sleep(3)
         unowned_return_list={}
         nr_unowned = self.get_nr_unowned_devices()
         for i in range(nr_unowned):
@@ -656,6 +652,13 @@ class Iotivity():
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
         print("discover_owned- done")
+        owned_return_list={}
+        nr_owned = self.get_nr_owned_devices()
+        for i in range(nr_owned):
+            uuid = self.get_owned_uuid(i)+""
+            owned_return_list[str(i)] = str(uuid)
+        print("Returned devices Array {}",owned_return_list)
+        return owned_return_list
 
         
     def quit(self):

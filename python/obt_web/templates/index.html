@@ -18,6 +18,10 @@
     <script src="include/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
       <script>
+      var imagePath = 'include/images/';
+
+      var stack = []; 
+
   $( function() {
 	  $( "#accordion" ).accordion({
 	  collapsible: true,
@@ -25,10 +29,28 @@
 	  });
 	$('#accordion .ui-accordion-content').show();
   } );
+
+function showWait(parentId){
+	var b = document.getElementById(parentId);
+	var image = document.createElement("img");
+	image.setAttribute('id',parentId+'_wait_image');
+	image.setAttribute('src',imagePath+'loader.gif');
+	b.append(image);
+}
+
+  function hideWait(parentId){
+	try{
+		var d = document.getElementById(parentId+'_wait_image');
+		d.remove();
+	}catch{
+	}
+  }
+
+
   </script>
 </header>
 <section>
-	<button type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_unowned()">Discover Devices </button>
+	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_devices()">Discover Devices </button>
 <div id="accordion">
   <h3>Unowned Devices</h3>
   <div id="unowned_devices">
@@ -106,6 +128,17 @@
 	    $(device).show("bounce",{times:2,distance:10},900);
 	}
 
+	function removeDevice(uuid) {
+	    // Removes an element from the document
+	    try{
+		    var element = document.getElementById(uuid);
+		    element.parentNode.removeChild(element);
+	    }catch{
+		//pass
+	    }
+	}
+
+
 
 	/*Socket setup*/
 	var socket = io.connect('http://' + document.domain +  ':' + location.port);
@@ -124,9 +157,25 @@
 	    if (discovery.hasOwnProperty(key)) {
 		console.log(key + " -> " + discovery[key]);
 		newDevice = buildDevice(discovery[key],"unowned");
-		addDevice('device_container',newDevice);
+		addDevice('unowned_devices',newDevice);
 	    }
 	}
+      })
+	/*Return of owned Devices*/
+     socket.on( 'owned', function( msg ) {
+        console.log( "Owned "+msg )
+	var discovery = JSON.parse(msg);
+	for (var key in discovery) {
+	    if (discovery.hasOwnProperty(key)) {
+		console.log(key + " -> " + discovery[key]);
+		newDevice = buildDevice(discovery[key],"owned");
+		addDevice('owned_devices',newDevice);
+	    }
+	}
+	  hideWait('button_discover');
+	  for (var i=0;i<stack.length;i++){
+		console.log(stack[i]);
+	    }
       })
 
 
@@ -134,12 +183,24 @@
 
 	function onboardDevice(uuid){
 		console.log("Perform Ownership of UUID:"+uuid);
+		showWait('statusbutton_'+uuid);
+		stack.push(uuid);
 		socket.emit("onboard_device",uuid);
+		discover_owned();        
+	}
+	function discover_owned(){
+		console.log( 'Get owned Devices' )
+		socket.emit("discover_owned","data");
 	}
 
 	function discover_unowned(){
-        console.log( 'Get Unowned Devices' )
-	socket.emit("discover_unowned","data");
+		console.log( 'Get Unowned Devices' )
+		socket.emit("discover_unowned","data");
+	}
+	function discover_devices(){
+        console.log( 'Get Devices' )
+	showWait('button_discover');
+	socket.emit("discover_devices","data");
 	}
 
 	// This is for testing UI
