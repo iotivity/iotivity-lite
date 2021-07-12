@@ -82,7 +82,10 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, my_iotivity.sig_handler)
     socketio.emit('obt_initialized','True')
     time.sleep(5)
+    #Insecure
     socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False)
+    #Secure Self-signed (required for camera)
+    #socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False,ssl_context=('cert.pem', 'key.pem'))
 
 
 

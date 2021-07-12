@@ -51,6 +51,30 @@ function showWait(parentId){
 </header>
 <section>
 	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_devices()">Discover Devices </button>
+    <script src="include/html5-qrcode.min.js"></script>
+	<div id="qr-reader" style="width:500px"></div>
+	<div id="qr-reader-results">Hello</div>
+    <script>
+
+var resultContainer = document.getElementById('qr-reader-results');
+var lastResult, countResults = 0;
+
+function onScanSuccess(decodedText, decodedResult) {
+    if (decodedText !== lastResult) {
+        ++countResults;
+        lastResult = decodedText;
+        // Handle on success condition with the decoded message.
+        console.log(`Scan result ${decodedText}`, decodedResult);
+	var results = document.getElementById('qr-reader-results');
+	results.innerHTML=decodedText;
+    }
+}
+
+var html5QrcodeScanner = new Html5QrcodeScanner(
+    "qr-reader", { fps: 10, qrbox: 250 });
+html5QrcodeScanner.render(onScanSuccess);
+
+    </script>
 <div id="accordion">
   <h3>Unowned Devices</h3>
   <div id="unowned_devices">
