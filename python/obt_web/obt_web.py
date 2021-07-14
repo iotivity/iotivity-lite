@@ -61,6 +61,12 @@ def handle_event(data):
     print("OBT: {}".format(owned_devices_bytelist))
     socketio.emit('owned',json.dumps(owned_devices_bytelist))
 
+@socketio.on('discover_resources')
+def handle_event(data):
+    print("Discover Resources Device :{}".format(data));
+    owned_devices_resourcelist = my_iotivity.discover_resources(data)
+    print("OBT Resources: {}".format(owned_devices_resourcelist))
+    #socketio.emit('owned',json.dumps(owned_devices_bytelist))
 
 @socketio.on('onboard_device')
 def handle_onboard(data):
@@ -68,6 +74,11 @@ def handle_onboard(data):
     onboard_device = my_iotivity.onboard_device(data)
     print("OBT: {}".format(onboard_device))
 
+@socketio.on('offboard_device')
+def handle_offonboard(data):
+    print("Offboard Device:{}".format(data))
+    onboard_device = my_iotivity.offboard_device(data)
+    print("OBT: {}".format(onboard_device))
 
 #@socketio.event
 #def connect():

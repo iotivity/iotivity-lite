@@ -75,7 +75,7 @@ section {
 	min-height: 600px;
 }
 
-section button {
+section .nav-button {
 	margin:20px;
 
 }
@@ -108,4 +108,40 @@ footer {
     width: 100%;
     height: auto;
   }
+}
+
+/* Style the button that is used to open and close the collapsible content */
+
+.collapsible {
+  background-color: #336699;
+  color: white;
+  cursor: pointer;
+  padding: 2px 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color: #555;
+}
+
+.content {
+  padding: 10px 18px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  background-color: #fff;
+}
+
+.device-label {
+box-shadow:none;
+font-size:12px;
+margin:5px;
+}
+
+.image-container {
+padding:2px;margin:5px;position:relative;border:2px solid white;
 }

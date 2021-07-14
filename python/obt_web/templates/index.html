@@ -25,13 +25,6 @@
       var unowned_delete_stack = [];
       var owned_delete_stack = [];
 
-  $( function() {
-	  $( "#accordion" ).accordion({
-	  collapsible: true,
-	  heightStyle: "content",
-	  });
-	$('#accordion .ui-accordion-content').show();
-  } );
 
 function showWait(parentId){
 	var b = document.getElementById(parentId);
@@ -61,18 +54,36 @@ function toggle_qr(){
   }
 }
 
+function capitalize(s)
+{
+    return s[0].toUpperCase() + s.slice(1);
+}
+
+function deviceButtonMouseOver(uuid,text)
+{
+	//alert(uuid);
+	document.getElementById('statusbutton_'+uuid).innerHTML=text;
+}
 
   </script>
 </header>
 <section>
-	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue" onclick="discover_devices()">Discover Devices </button>
-	<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue" onclick="toggle_qr()">Show QR Scanner </button>
+	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue nav-button" onclick="discover_devices()">Discover Devices </button>
+	<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue nav-button" onclick="toggle_qr()">Show QR Scanner </button>
     <script src="include/html5-qrcode.min.js"></script>
         <div id="qr-container" style="display:none">
 		<div id="qr-reader" style="width:500px"></div>
 		<div id="qr-reader-results"></div>
 	</div>
-    <script>
+<button type="button" class="collapsible">Unowned Devices</button>
+  <div class="content" id="unowned_devices" style="max-height:100%">
+  </div>
+<button type="button" class="collapsible">Owned Devices</button>
+  <div class="content" id="owned_devices" style="max-height:100%">
+  </div>
+    
+  
+<script>
 
 var resultContainer = document.getElementById('qr-reader-results');
 var lastResult, countResults = 0;
@@ -92,15 +103,23 @@ var html5QrcodeScanner = new Html5QrcodeScanner(
     "qr-reader", { fps: 10, qrbox: 250 });
 html5QrcodeScanner.render(onScanSuccess);
 
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    } 
+  });
+}
+
     </script>
-<div id="accordion">
-  <h3>Unowned Devices</h3>
-  <div id="unowned_devices">
-  </div>
-  <h3>Owned Devices</h3>
-  <div id="owned_devices">
-  </div>
-</div>
+
 
     <div id='device_container' class="message_holder"></div>
 
@@ -118,45 +137,86 @@ html5QrcodeScanner.render(onScanSuccess);
     <script type="text/javascript">
       var imagePath = 'include/images/';
       function buildDevice(uuid, ownedState){
+	        
+	    if (ownedState =='unowned'){
 		var card = document.createElement("div");
 			card.setAttribute('id',uuid);
 			card.setAttribute('class','w3-card-4 w3-grey w3-round');
 			card.setAttribute('style','width:220px;padding:5px;float:left;min-height:200px;margin:5px;display:none');
 		    var label = document.createElement("header");
-			    label.setAttribute('class','w3-container w3-light-grey w3-round');
+			    label.setAttribute('class','w3-container  w3-round device-label');
 			    label.setAttribute('id','label_'+uuid);
-			    label.setAttribute('style','margin:5px;font-size:15px;');
 	      		    label.innerHTML=uuid;
 		    var imageContainer = document.createElement("div");
-			    imageContainer.setAttribute('class','w3-container w3-round');
+			    imageContainer.setAttribute('class','w3-container w3-round image-container');
 			    imageContainer.setAttribute('id','image_container_'+uuid);
-			    imageContainer.setAttribute('style','margin:5px;position:relative;border:2px solid lightgrey;');
 			    var image = document.createElement("img");
 				    image.setAttribute('id','image_'+uuid);
-				    image.setAttribute('src',imagePath+'unknown.png');
+				    image.setAttribute('src',imagePath+'ocf.png');
 				    image.setAttribute('style','width:100%;margin:5px');
 	      		   imageContainer.append(image);
 
 		    var statusContainer = document.createElement("div");
-			    statusContainer.setAttribute('class','w3-container w3-light-grey w3-round');
-			    statusContainer.setAttribute('style','margin:5px;font-size:12px;padding:2px');
-			    statusContainer.setAttribute('id','statusi_container_'+uuid)
+			    statusContainer.setAttribute('class','w3-container w3-white');
+			    statusContainer.setAttribute('style','margin:2px;font-size:12px;padding:2px;width:98%;position:absolute;left:0;bottom:0;opacity:0.8');
+			    statusContainer.setAttribute('id','status_container_'+uuid)
 			    var statusTxt = document.createElement("div");
 				statusTxt.setAttribute('id','statusTxt_'+uuid);
 				statusTxt.setAttribute('style','margin:5px;float:left');
-				statusTxt.innerHTML = "<b>"+ownedState+"</b>";
+		    		console.log("#statusTxt_"+uuid);
+				    statusTxt.innerHTML = "<b>"+capitalize(ownedState)+"<br> Device</b>";
 			    statusContainer.append(statusTxt);
 	      		    var button = document.createElement("div");
 				button.setAttribute('id','statusbutton_'+uuid);
 				button.setAttribute('onclick','onboardDevice("'+uuid+'")');
-	      			button.setAttribute('class','w3-button w3-green w3-round-large');
-				button.setAttribute('style','margin:2px;float:right;font-size:20px');
-	      			button.innerHTML = "+";
+				button.setAttribute('class','w3-button w3-green w3-round-large');
+				button.innerHTML = "+";
+				button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
 	      		    statusContainer.append(button);
+		   imageContainer.append(statusContainer);
 
 	      card.append(label);
 	      card.append(imageContainer);
-	      card.append(statusContainer);
+	      }//////////End Unowned State
+	      else{
+		var card = document.createElement("div");
+			card.setAttribute('id',uuid);
+			card.setAttribute('class','w3-card-4 w3-grey w3-round');
+			card.setAttribute('style','width:220px;padding:5px;float:left;min-height:200px;margin:5px;display:none');
+		    var label = document.createElement("header");
+			    label.setAttribute('class','w3-container w3-round device-label');
+			    label.setAttribute('id','label_'+uuid);
+	      		    label.innerHTML=uuid;
+		    var imageContainer = document.createElement("div");
+			    imageContainer.setAttribute('class','w3-container w3-round image-container');
+			    imageContainer.setAttribute('id','image_container_'+uuid);
+			    var image = document.createElement("img");
+				    image.setAttribute('id','image_'+uuid);
+				    image.setAttribute('src',imagePath+'ocf.png');
+				    image.setAttribute('style','width:100%;margin:5px;');
+	      		   imageContainer.append(image);
+
+		    var statusContainer = document.createElement("div");
+			    statusContainer.setAttribute('class','w3-container w3-white');
+			    statusContainer.setAttribute('style','margin:2px;font-size:12px;padding:2px;width:98%;position:absolute;left:0;bottom:0;opacity:0.8');
+			    statusContainer.setAttribute('id','status_container_'+uuid)
+			    var statusTxt = document.createElement("div");
+				statusTxt.setAttribute('id','statusTxt_'+uuid);
+				statusTxt.setAttribute('style','margin:5px;float:left');
+				      statusTxt.innerHTML = "<b>"+capitalize(ownedState) +"<br> Device</b>";
+			    statusContainer.append(statusTxt);
+	      		    var button = document.createElement("div");
+				button.setAttribute('id','statusbutton_'+uuid);
+				button.setAttribute('onclick','offboardDevice("'+uuid+'")');
+				button.setAttribute('class','w3-button w3-red w3-round-large');
+				button.innerHTML = "X";
+				button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
+	      		    statusContainer.append(button);
+		   imageContainer.append(statusContainer);
+
+	      card.append(label);
+	      card.append(imageContainer);
+	      }///////////////End Owned State
 	      return card;
       }
 
@@ -164,7 +224,6 @@ html5QrcodeScanner.render(onScanSuccess);
 
       function addDevice(parentId, device) {
 	    // Adds an element to the document
-	    //var p = document.getElementById(parentId);
 	    var p = document.getElementById(parentId);
 	    p.append(device);
 	    $(device).show("bounce",{times:2,distance:10},900);
@@ -172,12 +231,13 @@ html5QrcodeScanner.render(onScanSuccess);
 
 	function removeDevice(uuid) {
 	    // Removes an element from the document
-	    try{
+	    //try{
 		    var element = document.getElementById(uuid);
-		    element.parentNode.removeChild(element);
-	    }catch{
+		    //element.hide("bounce",{times:2,distance:10},900);
+		    $('#'+uuid).hide("puff").delay(10).queue(function(){$(this).remove();});
+	    //}catch{
 		//pass
-	    }
+	    //}
 	}
 
 
@@ -194,14 +254,20 @@ html5QrcodeScanner.render(onScanSuccess);
 	/*Return of Unowned Devices*/
      socket.on( 'unowned', function( msg ) {
         console.log( msg )
+	//clear array
 	var discovery = JSON.parse(msg);
 	for (var key in discovery) {
 	    if (discovery.hasOwnProperty(key)) {
-		console.log(key + " -> " + discovery[key]);
-		newDevice = buildDevice(discovery[key],"unowned");
-		addDevice('unowned_devices',newDevice);
+		    if (!unowned_devices_stack.includes(discovery[key])){
+			console.log(key + " -> " + discovery[key]);
+			newDevice = buildDevice(discovery[key],"unowned");
+			addDevice('unowned_devices',newDevice);
+			unowned_devices_stack.push(discovery[key]);
+			console.log("Unowned Devices: "+unowned_devices_stack);
+		    }
 	    }
 	}
+	  update_ui_devices();
       })
 	/*Return of owned Devices*/
      socket.on( 'owned', function( msg ) {
@@ -209,27 +275,59 @@ html5QrcodeScanner.render(onScanSuccess);
 	var discovery = JSON.parse(msg);
 	for (var key in discovery) {
 	    if (discovery.hasOwnProperty(key)) {
-		console.log(key + " -> " + discovery[key]);
-		newDevice = buildDevice(discovery[key],"owned");
-		addDevice('owned_devices',newDevice);
+		    if (!owned_devices_stack.includes(discovery[key])){
+			console.log(key + " -> " + discovery[key]);
+			newDevice = buildDevice(discovery[key],"owned");
+			addDevice('owned_devices',newDevice);
+			owned_devices_stack.push(discovery[key]);
+			console.log("Owned Devices: "+owned_devices_stack);
+			discoverResources(discovery[key]);
+		    }
 	    }
 	}
 	  hideWait('button_discover');
-	  for (var i=0;i<stack.length;i++){
-		console.log(stack[i]);
-	    }
+	  update_ui_devices();
       })
 
+
+	function update_ui_devices(){
+		console.log("Remove Unowned Devices\n" + unowned_delete_stack);
+		for (var d=0;d<unowned_delete_stack.length;d++){
+			console.log("Remove device\n "+ unowned_delete_stack[d]);
+			removeDevice(unowned_delete_stack[d]);
+		}
+		for (var d=0;d<owned_delete_stack.length;d++){
+			console.log("Remove device\n "+ owned_delete_stack[d]);
+			removeDevice(owned_delete_stack[d]);
+		}
+	}
+
+	function discoverResources(uuid){
+		console.log("Discover Resources:\n"+uuid);
+		socket.emit("discover_resources",uuid);
+        }
 
 	/*Button callbacks*/
 
 	function onboardDevice(uuid){
-		console.log("Perform Ownership of UUID:"+uuid);
+		console.log("Perform Ownership of UUID:\n"+uuid);
+		//keep track of owned uuid for later deletion from unowned 
+		unowned_delete_stack.push(uuid); 
 		showWait('statusbutton_'+uuid);
-		stack.push(uuid);
 		socket.emit("onboard_device",uuid);
-		discover_owned();        
+		discover_devices();
 	}
+	
+	function offboardDevice(uuid){
+		console.log("Perform Reset of UUID:\n"+uuid);
+		//keep track of owned uuid for later deletion from owned 
+		owned_delete_stack.push(uuid); 
+		showWait('statusbutton_'+uuid);
+		socket.emit("offboard_device",uuid);
+		discover_devices();
+	}
+
+
 	function discover_owned(){
 		console.log( 'Get owned Devices' )
 		socket.emit("discover_owned","data");
@@ -240,16 +338,16 @@ html5QrcodeScanner.render(onScanSuccess);
 		socket.emit("discover_unowned","data");
 	}
 	function discover_devices(){
-        console.log( 'Get Devices' )
-	showWait('button_discover');
-	socket.emit("discover_devices","data");
+		console.log( 'Discover  Devices' )
+		showWait('button_discover');
+		socket.emit("discover_devices","data");
 	}
 
 	// This is for testing UI
 	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
 	addDevice('unowned_devices',newDevice);
 
-	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b136',"unowned");
+	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b136',"owned");
 	addDevice('owned_devices',newDevice);
 
 

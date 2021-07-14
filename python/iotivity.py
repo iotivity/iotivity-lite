@@ -532,7 +532,7 @@ class Iotivity():
             mylist = self.resourcelist[uuid]
             mylist.append(my_str)
             self.resourcelist[uuid] = mylist
-        #print (" -----resourcelist ", self.resourcelist)
+        print (" -----resourcelist ", self.resourcelist)
 
 
     def __init__(self):
@@ -786,6 +786,12 @@ class Iotivity():
         self.lib.py_otm_just_works.restype = None
         self.lib.py_otm_just_works(device)
 
+    def offboard_device(self,device):
+        print ("offboard device :", device)
+        self.lib.py_reset_device.argtypes = [String]
+        self.lib.py_reset_device.restype = None
+        self.lib.py_reset_device(device)
+        print ("...done.")
     
     def offboard_all_owned(self):
         print ("listing onboarded devices:")
