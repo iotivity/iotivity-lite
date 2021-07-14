@@ -21,6 +21,9 @@ thread = None
 thread_lock = Lock()
 
 
+def to_json(obj):
+    return json.dumps(obj, default=lambda obj: obj.__dict__)
+
 app = Flask(__name__)
 #app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
 socketio = SocketIO(app, async_mode='threading')
@@ -46,6 +49,8 @@ def handle_event(data):
     owned_devices_bytelist = my_iotivity.discover_owned()
     print("OBT: {}".format(owned_devices_bytelist))
     socketio.emit('owned',json.dumps(owned_devices_bytelist))
+    devices_array = my_iotivity.return_devices_array()
+    print(to_json(devices_array))
 
 @socketio.on('discover_unowned')
 def handle_event(data):

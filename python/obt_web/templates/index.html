@@ -18,12 +18,39 @@
     <script src="include/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
       <script>
+/* Jquery Function*/
+var dialog;
+      $( function(){
+	      /*QR Dialog*/
+  dialog = $( "#qr-container" ).dialog({
+      modal: true,
+      autoOpen: false,
+      maxWidth:600,
+      maxHeight: 500,
+      width: 600,
+      height: 500,
+      open: function() {
+        $('.ui-widget-overlay').addClass('custom-overlay');
+      },   
+      buttons: {
+        Ok: function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });
+    $( "#qr-button" ).button().on( "click", function() {
+      dialog.dialog( "open" );
+    });
+}); /*End Jquery*/
+
       var imagePath = 'include/images/';
 
       var unowned_devices_stack = []; 
       var owned_devices_stack = []; 
       var unowned_delete_stack = [];
       var owned_delete_stack = [];
+
+
 
 
 function showWait(parentId){
@@ -69,9 +96,10 @@ function deviceButtonMouseOver(uuid,text)
 </header>
 <section>
 	<button id='button_discover' type="button" class="w3-button w3-round-large w3-light-blue nav-button" onclick="discover_devices()">Discover Devices </button>
-	<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue nav-button" onclick="toggle_qr()">Show QR Scanner </button>
+	<!--<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue nav-button" onclick="toggle_qr()">Show QR Scanner </button>-->
+	<button id='qr-button' type="button" class="w3-button w3-round-large w3-light-blue nav-button" >Show QR Scanner </button>
     <script src="include/html5-qrcode.min.js"></script>
-        <div id="qr-container" style="display:none">
+        <div id="qr-container">
 		<div id="qr-reader" style="width:500px"></div>
 		<div id="qr-reader-results"></div>
 	</div>
@@ -234,7 +262,8 @@ for (i = 0; i < coll.length; i++) {
 	    //try{
 		    var element = document.getElementById(uuid);
 		    //element.hide("bounce",{times:2,distance:10},900);
-		    $('#'+uuid).hide("puff").delay(10).queue(function(){$(this).remove();});
+		    //$('#'+uuid).hide("puff").delay(10).queue(function(){$(this).remove();});
+		$('#'+uuid).hide("drop",{direction:"down"}).delay(10).queue(function(){$(this).remove();});
 	    //}catch{
 		//pass
 	    //}

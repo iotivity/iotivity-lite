@@ -145,3 +145,13 @@ margin:5px;
 .image-container {
 padding:2px;margin:5px;position:relative;border:2px solid white;
 }
+
+.ui-widget-overlay.custom-overlay
+{
+    background-color: black;
+    background-image: none;
+    opacity: 0.9;
+    z-index: 1040;    
+}
+
+

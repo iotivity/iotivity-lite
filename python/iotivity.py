@@ -510,6 +510,16 @@ OC_DEVICE_HANDLE._fields_ = (
 CHANGED_CALLBACK = CFUNCTYPE(None)
 RESOURCE_CALLBACK = CFUNCTYPE(None, c_char_p, c_char_p, c_char_p, c_char_p)
 
+
+class Device():
+
+    def __init__(self,uuid,owned_state=None,name="",resources=None):
+        self.uuid = uuid
+        self.owned_state = owned_state
+        self.name = name 
+        self.resources = resources or {}
+
+
 class Iotivity():
     # needs to be before _init_
     def changedCB(self):
@@ -548,6 +558,8 @@ class Iotivity():
         self.owned_devices = []
         # resource list
         self.resourcelist = {}
+
+        self.device_array = []
 
         print (self.lib)
         print ("...")
@@ -603,8 +615,13 @@ class Iotivity():
         for i in range(nr_unowned):
             uuid = self.get_unowned_uuid(i)+""
             unowned_return_list[str(i)] = str(uuid)
+            dev = Device(str(uuid),owned_state=False)
+            self.device_array.append(dev)
         print("Returned devices Array {}",unowned_return_list)
         return unowned_return_list
+
+    def return_devices_array(self):
+        return self.device_array
 
     def discover_all(self):
         self.discover_unowned()
