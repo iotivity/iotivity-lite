@@ -403,8 +403,10 @@ coap_receive(oc_message_t *msg)
 
           if (response_buffer && (response_buffer->next_block_offset -
                                   block2_offset) > block2_size) {
-            oc_blockwise_free_response_buffer(response_buffer);
-            response_buffer = NULL;
+            // UDP transfer can duplicate messages and we want to avoid terminate BWT, so we drop the message. 
+            OC_DBG("dropped message because message was already provided for block2");
+            coap_clear_transaction(transaction);
+            return 0;
           }
 
           if (response_buffer) {
