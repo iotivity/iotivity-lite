@@ -249,7 +249,7 @@ static oc_endpoint_t* is_udn_listed(char* udn)
       }
       ep = ep->next;
     }
-    ep = ep->next;
+    // ep = ep->next;
   }
   PRINT("None matched, returning NULL endpoint\n");
   return NULL;
