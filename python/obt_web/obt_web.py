@@ -44,12 +44,13 @@ def handle_event(data):
     print("Discover Unowned Devices X"+data);
     unowned_devices_bytelist = my_iotivity.discover_unowned()
     print("OBT: {}".format(unowned_devices_bytelist))
-    socketio.emit('unowned',json.dumps(unowned_devices_bytelist))
+    #socketio.emit('unowned',json.dumps(unowned_devices_bytelist))
     print("Discover Owned Devices X"+data);
     owned_devices_bytelist = my_iotivity.discover_owned()
     print("OBT: {}".format(owned_devices_bytelist))
-    socketio.emit('owned',json.dumps(owned_devices_bytelist))
+    #socketio.emit('owned',json.dumps(owned_devices_bytelist))
     devices_array = my_iotivity.return_devices_array()
+    socketio.emit('device_discovery',to_json(devices_array))
     print(to_json(devices_array))
 
 @socketio.on('discover_unowned')

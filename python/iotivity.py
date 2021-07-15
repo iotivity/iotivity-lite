@@ -601,6 +601,13 @@ class Iotivity():
         print ("oc_device_bind_resource_type-cms-done", ret)
         print("oc_init_platform-done",ret)
         self.lib.display_device_uuid();
+
+
+    def purge_device_array(self,owned_state):
+        for index, device in enumerate(self.device_array):
+            if device.owned_state==owned_state:
+                print("Remove: {}".format(device.uuid))
+                self.device_array.pop(index)
         
     def discover_unowned(self):
         print("discover_unowned ")
@@ -609,13 +616,16 @@ class Iotivity():
         time.sleep(3)
         # python callback application
         print("discover_unowned- done")
-        #time.sleep(3)
         unowned_return_list={}
         nr_unowned = self.get_nr_unowned_devices()
+        owned_state=False
+        self.purge_device_array(owned_state)
         for i in range(nr_unowned):
             uuid = self.get_unowned_uuid(i)+""
+            dev_name = self.get_unowned_device_name(i)+""
+            self.discover_resources(uuid)
             unowned_return_list[str(i)] = str(uuid)
-            dev = Device(str(uuid),owned_state=False)
+            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name))
             self.device_array.append(dev)
         print("Returned devices Array {}",unowned_return_list)
         return unowned_return_list
@@ -671,9 +681,14 @@ class Iotivity():
         print("discover_owned- done")
         owned_return_list={}
         nr_owned = self.get_nr_owned_devices()
+        owned_state=True
+        self.purge_device_array(owned_state)
         for i in range(nr_owned):
             uuid = self.get_owned_uuid(i)+""
+            dev_name = self.get_owned_device_name(i)+""
             owned_return_list[str(i)] = str(uuid)
+            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name))
+            self.device_array.append(dev)
         print("Returned devices Array {}",owned_return_list)
         return owned_return_list
 
@@ -754,7 +769,7 @@ class Iotivity():
         if sizeof(c_int) == sizeof(c_void_p):
             self.lib.get_device_name.restype = ReturnString
         else:
-            self.lib.get_uget_device_nameuid.restype = String
+            self.lib.get_uuid.restype = String
             self.lib.get_device_name.errcheck = ReturnString
         return self.lib.get_device_name(1,c_int(index))
 
@@ -768,6 +783,7 @@ class Iotivity():
             self.lib.get_device_name.restype = String
             self.lib.get_uuid.errcheck = ReturnString
         device_name  = self.lib.get_device_name(0,c_int(index))
+        print("Device Name: {}, {}".format(device_name,index))
         return device_name
 
     def get_device_name(self, device_uuid):

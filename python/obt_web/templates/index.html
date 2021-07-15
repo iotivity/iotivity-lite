@@ -164,7 +164,7 @@ for (i = 0; i < coll.length; i++) {
 </style>
     <script type="text/javascript">
       var imagePath = 'include/images/';
-      function buildDevice(uuid, ownedState){
+      function buildDevice(uuid, ownedState,name){
 	        
 	    if (ownedState =='unowned'){
 		var card = document.createElement("div");
@@ -174,7 +174,23 @@ for (i = 0; i < coll.length; i++) {
 		    var label = document.createElement("header");
 			    label.setAttribute('class','w3-container  w3-round device-label');
 			    label.setAttribute('id','label_'+uuid);
-	      		    label.innerHTML=uuid;
+		    	    var name_label = document.createElement("div");
+		    	    name_label.setAttribute('id','name_label_'+uuid);
+			    name_label.setAttribute('class','name-label');
+		    	    name_label.innerHTML = name;
+		    	    var uuid_label = document.createElement("div");
+		    	    uuid_label.setAttribute('id','uuid_label_'+uuid);
+			    uuid_label.setAttribute('class','uuid-label');
+		    	    uuid_label.innerHTML = uuid;
+		    	    if(name){
+				    label.append(name_label);
+			    	    uuid_label.setAttribute('style','font-size:8px');
+				    label.append(uuid_label);
+			    }else
+			    {	
+			    	    uuid_label.setAttribute('style','font-size:12px');
+				    label.append(uuid_label);
+			    }
 		    var imageContainer = document.createElement("div");
 			    imageContainer.setAttribute('class','w3-container w3-round image-container');
 			    imageContainer.setAttribute('id','image_container_'+uuid);
@@ -214,7 +230,22 @@ for (i = 0; i < coll.length; i++) {
 		    var label = document.createElement("header");
 			    label.setAttribute('class','w3-container w3-round device-label');
 			    label.setAttribute('id','label_'+uuid);
-	      		    label.innerHTML=uuid;
+		    	    var name_label = document.createElement("div");
+		    	    name_label.setAttribute('id','name_label_'+uuid);
+			    name_label.setAttribute('class','name-label');
+		    	    name_label.innerHTML = name;
+		    	    var uuid_label = document.createElement("div");
+		    	    uuid_label.setAttribute('id','uuid_label_'+uuid);
+			    uuid_label.setAttribute('class','uuid-label');
+		    	    uuid_label.innerHTML = uuid;
+		    	    if(name){
+				    label.append(name_label);
+			    	    uuid_label.setAttribute('style','font-size:8px');
+				    label.append(uuid_label);
+			    }else
+			    {	
+				    label.append(uuid_label);
+			    }
 		    var imageContainer = document.createElement("div");
 			    imageContainer.setAttribute('class','w3-container w3-round image-container');
 			    imageContainer.setAttribute('id','image_container_'+uuid);
@@ -311,6 +342,39 @@ for (i = 0; i < coll.length; i++) {
 			owned_devices_stack.push(discovery[key]);
 			console.log("Owned Devices: "+owned_devices_stack);
 			discoverResources(discovery[key]);
+		    }
+	    }
+	}
+	  hideWait('button_discover');
+	  update_ui_devices();
+      })
+
+
+	/*Return of All discovered devices*/
+     socket.on( 'device_discovery', function( msg ) {
+	var discovery = JSON.parse(msg);
+	console.log(discovery);
+	for (var key in discovery) {
+	    if (discovery.hasOwnProperty(key)) {
+		var name = discovery[key].name;
+		    /*Owned Devices*/
+		    if (discovery[key].owned_state){
+			    if (!owned_devices_stack.includes(discovery[key].uuid)){
+				console.log(key + " -> " + discovery[key].uuid);
+				newDevice = buildDevice(discovery[key].uuid,"owned",name);
+				addDevice('owned_devices',newDevice);
+				owned_devices_stack.push(discovery[key].uuid);
+				console.log("Owned Devices: "+owned_devices_stack);
+			    }
+		    }else //Unowned devices
+		    {
+			    if (!unowned_devices_stack.includes(discovery[key].uuid)){
+				console.log(key + " -> " + discovery[key]);
+				newDevice = buildDevice(discovery[key].uuid,"unowned",name);
+				addDevice('unowned_devices',newDevice);
+				unowned_devices_stack.push(discovery[key].uuid);
+				console.log("Unowned Devices: "+unowned_devices_stack);
+			    }
 		    }
 	    }
 	}
