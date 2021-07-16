@@ -108,7 +108,7 @@ TODO:
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
-#define PROXY_ALL_DISCOVERED_DEVICES
+//#define PROXY_ALL_DISCOVERED_DEVICES
 
 #ifdef __linux__
 /* linux specific code */
@@ -148,6 +148,8 @@ static const char* sid = "00000000-0000-0000-0000-000000000001";
 static const char* apn = "plgd";
 static const char* device_name = "CloudProxy";
 
+static g_discovery_udn[MAX_PAYLOAD_STRING];
+
 /* global property variables for path: "d2dserverlist" */
 static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* the name for the attribute */
 
@@ -161,11 +163,9 @@ struct _d2dserverlist_d2dserverlist_t
   char eps_s[MAX_PAYLOAD_STRING];  /* the OCF Endpoint information of the target Resource */
   char eps[MAX_PAYLOAD_STRING];    /* the OCF Endpoint information of the target Resource */
   char href[MAX_PAYLOAD_STRING];   /* This is the target URI, it can be specified as a Relative Reference or fully-qualified URI. */
-  bool discovered;
 };
 
-struct _d2dserverlist_d2dserverlist_t g_d2dserverlist_d2dserverlist[MAX_ARRAY];
-int g_d2dserverlist_d2dserverlist_array_size = 0;
+struct _d2dserverlist_d2dserverlist_t g_d2dserverlist_d2dserverlist[MAX_DISCOVERED_SERVER];
 
 char g_d2dserverlist_di[MAX_PAYLOAD_STRING] = ""; /* current value of property "di" Format pattern according to IETF RFC 4122. */
 
@@ -177,7 +177,8 @@ static char* g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = { "oic.r.d2dserverlist"
 int g_d2dserverlist_nr_resource_types = 1;
 
 /* forward declarations */
-void issue_requests(void);
+void issue_requests(char* udn);
+void issue_requests_all(void);
 
 /**
 * function to print the returned cbor as JSON
@@ -232,6 +233,29 @@ static void anchor_to_udn(const char* anchor, char* udn)
   strcpy(udn, &anchor[6]);
 }
 
+
+/**
+* function to retrieve the index based on udn
+* using global discovered_server list
+*
+* @param udn to check if it is in the list
+* @return index, -1 is not in list
+*/
+static int is_udn_listed_index(char* udn)
+{
+  PRINT("  Finding UDN %s \n", udn);
+
+  for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
+    if (strcmp(g_d2dserverlist_d2dserverlist[i].di, udn) == 0)
+    {
+      return i;
+    }
+  }
+  PRINT("None matched\n");
+  return -1;
+}
+
+
 /**
 * function to retrieve the endpoint based on udn
 * using global discovered_server list
@@ -241,10 +265,10 @@ static void anchor_to_udn(const char* anchor, char* udn)
 */
 static oc_endpoint_t* is_udn_listed(char* udn)
 {
-
   PRINT("  Finding UDN %s \n", udn);
 
-  for (int i=0; i<discovered_server_count; i++) {
+  //for (int i=0; i<discovered_server_count; i++) {
+  for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     oc_endpoint_t* ep = discovered_server[i];
     while (ep != NULL) {
       char uuid[OC_UUID_LEN] = { 0 };
@@ -258,7 +282,6 @@ static oc_endpoint_t* is_udn_listed(char* udn)
       }
       ep = ep->next;
     }
-    // ep = ep->next;
   }
   PRINT("None matched, returning NULL endpoint\n");
   return NULL;
@@ -518,6 +541,7 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
   (void)user_data;
   bool error_state = true;
   PRINT("-- Begin post_d2dserverlist:\n");
+  int stored_index = 0;
   //oc_rep_t* rep = request->request_payload;
 
   // di is a query param, copy from DELETE.
@@ -538,6 +562,7 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
       {
         if (strlen(g_d2dserverlist_d2dserverlist[i].di) == 0) {
           strncpy(g_d2dserverlist_d2dserverlist[i].di, _di, _di_len);
+          stored_index = i;
           stored = true;
           PRINT(" storing at %d \n", i);
           break;
@@ -569,7 +594,7 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
         oc_send_response(request, OC_STATUS_CHANGED);
 
         /* do a new discovery so that the new device will be added */
-        issue_requests();
+        issue_requests(g_d2dserverlist_d2dserverlist[stored_index].di);
       }
       else {
         PRINT("MAX array exceeded, not stored, returing error \n");
@@ -741,8 +766,8 @@ initialize_variables(void)
 {
   /* initialize global variables for resource "d2dserverlist" */
   /* initialize array "d2dserverlist" : This Property maintains the list of the D2D Device's connection info i.e. {Device ID, Resource URI, end points} */
-  memset((void*)&g_d2dserverlist_d2dserverlist, 0, sizeof(struct _d2dserverlist_d2dserverlist_t));
-  g_d2dserverlist_d2dserverlist_array_size = 0;
+  memset((void*)&g_d2dserverlist_d2dserverlist, 0, sizeof(g_d2dserverlist_d2dserverlist));
+  memset((void*)discovered_server, 0, sizeof(discovered_server));
 
   strcpy(g_d2dserverlist_di, "");  /* current value of property "di" Format pattern according to IETF RFC 4122. */
 
@@ -1043,7 +1068,10 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
   char udn[200];
   char udn_url[200];
   int nr_resource_types = 0;
+  bool add_devices = false;
 
+  char* discovered_udn = (char*)user_data;
+  
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
  // PRINT("-----DISCOVERYCB %s %s nr_resourcetypes=%zd\n", anchor, uri, oc_string_array_get_allocated_size(types));
@@ -1060,16 +1088,15 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       anchor_to_udn(anchor, udn);
       PRINT("  UDN '%s'\n", udn);
 
-#ifndef PROXY_ALL_DISCOVERED_DEVICES
-      if (if_di_exist(udn, (int)strlen(udn)) == false)
-      {
-        return OC_CONTINUE_DISCOVERY;
-      }
-#endif
+#ifdef PROXY_ALL_DISCOVERED_DEVICES
+      //if (if_di_exist(udn, (int)strlen(udn)) == false)
+      //{
+      //  return OC_CONTINUE_DISCOVERY;
+      //}
 
       if (is_udn_listed(udn) == NULL) {
         // add new server to the list
-        PRINT("  ADDING UDN '%s'\n", udn);
+        PRINT("  ADDING UDN '%s at %d'\n", udn, discovered_server_count);
         if (discovered_server_count < MAX_DISCOVERED_SERVER) {
           // allocate the endpoint
           oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
@@ -1085,7 +1112,27 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
           PRINT("Discovered server storage limit reached: %d\n", MAX_DISCOVERED_SERVER);
           return OC_CONTINUE_DISCOVERY;
         }
+
+        //strcpy(discovered_udn, udn);
+        discovered_udn = udn;
       }
+#endif
+      /* update the end point, it might have changed*/
+      int index = is_udn_listed_index(udn);
+      if (index != -1) {
+        // add new server to the list
+        PRINT("  UPDATING UDN '%s'\n", udn);
+        // allocate the endpoint
+        oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
+        // search for the secure endpoint
+        oc_endpoint_t* ep = endpoint;  // start of the list
+        while ((ep->flags & SECURED) != 0) {
+          ep = ep->next;
+        }
+        oc_endpoint_copy(copy, ep);
+        discovered_server[index] = copy;
+      }
+
       strncpy(url, uri, uri_len);
       url[uri_len] = '\0';
       
@@ -1104,48 +1151,51 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       strcat(udn_url, udn);
       strcat(udn_url, url);
 
-      PRINT("   Register Resource with local path \"%s\"\n", udn_url);
-      // oc_resource_t* new_resource = oc_new_resource(NULL, udn_url, nr_resource_types, 0);
-      oc_resource_t* new_resource = oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
-      for (int j = 0; j < nr_resource_types; j++) {
-        oc_resource_bind_resource_type(new_resource, oc_string_array_get_item(types, j));
-      }
+      if (discovered_udn != NULL && strcmp(discovered_udn, udn) == 0){
 
-      if (iface_mask & OC_IF_BASELINE) {
-        PRINT("   IF BASELINE\n");
-        oc_resource_bind_resource_interface(new_resource, OC_IF_BASELINE); /* oic.if.baseline */
-      }
-      if (iface_mask & OC_IF_R) {
-        PRINT("   IF R\n");
-        oc_resource_bind_resource_interface(new_resource, OC_IF_R); /* oic.if.r */
-        oc_resource_set_default_interface(new_resource, OC_IF_R);
-      }
-      if (iface_mask & OC_IF_RW) {
-        PRINT("   IF RW\n");
-        oc_resource_bind_resource_interface(new_resource, OC_IF_RW); /* oic.if.rw */
-        oc_resource_set_default_interface(new_resource, OC_IF_RW);
-      }
-      if (iface_mask & OC_IF_A) {
-        PRINT("   IF A\n");
-        oc_resource_bind_resource_interface(new_resource, OC_IF_A); /* oic.if.a */
-        oc_resource_set_default_interface(new_resource, OC_IF_A);
-      }
-      if (iface_mask & OC_IF_S) {
-        PRINT("   IF S\n");
-        oc_resource_bind_resource_interface(new_resource, OC_IF_S); /* oic.if.S */
-        oc_resource_set_default_interface(new_resource, OC_IF_S);
-      }
-     
-      oc_resource_set_request_handler(new_resource, OC_DELETE, delete_resource, NULL);
-      oc_resource_set_request_handler(new_resource, OC_GET, get_resource, NULL);
-      oc_resource_set_request_handler(new_resource, OC_POST, post_resource, NULL);
-      // TODO enable this again.
-      //oc_resource_set_discoverable(new_resource, false);
+        PRINT("   Register Resource with local path \"%s\"\n", udn_url);
+        // oc_resource_t* new_resource = oc_new_resource(NULL, udn_url, nr_resource_types, 0);
+        oc_resource_t* new_resource = oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
+        for (int j = 0; j < nr_resource_types; j++) {
+          oc_resource_bind_resource_type(new_resource, oc_string_array_get_item(types, j));
+        }
 
-      oc_add_resource(new_resource);
+        if (iface_mask & OC_IF_BASELINE) {
+          PRINT("   IF BASELINE\n");
+          oc_resource_bind_resource_interface(new_resource, OC_IF_BASELINE); /* oic.if.baseline */
+        }
+        if (iface_mask & OC_IF_R) {
+          PRINT("   IF R\n");
+          oc_resource_bind_resource_interface(new_resource, OC_IF_R); /* oic.if.r */
+          oc_resource_set_default_interface(new_resource, OC_IF_R);
+        }
+        if (iface_mask & OC_IF_RW) {
+          PRINT("   IF RW\n");
+          oc_resource_bind_resource_interface(new_resource, OC_IF_RW); /* oic.if.rw */
+          oc_resource_set_default_interface(new_resource, OC_IF_RW);
+        }
+        if (iface_mask & OC_IF_A) {
+          PRINT("   IF A\n");
+          oc_resource_bind_resource_interface(new_resource, OC_IF_A); /* oic.if.a */
+          oc_resource_set_default_interface(new_resource, OC_IF_A);
+        }
+        if (iface_mask & OC_IF_S) {
+          PRINT("   IF S\n");
+          oc_resource_bind_resource_interface(new_resource, OC_IF_S); /* oic.if.S */
+          oc_resource_set_default_interface(new_resource, OC_IF_S);
+        }
 
-      int retval = oc_cloud_add_resource(new_resource);
-      PRINT("   ADD resource: %d\n", retval);
+        oc_resource_set_request_handler(new_resource, OC_DELETE, delete_resource, NULL);
+        oc_resource_set_request_handler(new_resource, OC_GET, get_resource, NULL);
+        oc_resource_set_request_handler(new_resource, OC_POST, post_resource, NULL);
+        // TODO enable this again.
+        //oc_resource_set_discoverable(new_resource, false);
+
+        oc_add_resource(new_resource);
+
+        int retval = oc_cloud_add_resource(new_resource);
+        PRINT("   ADD resource: %d\n", retval);
+      }
 
       //return OC_STOP_DISCOVERY;
     }
@@ -1154,14 +1204,22 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
 }
 
 void
-issue_requests(void)
+issue_requests(char* current_udn)
+{
+  oc_do_site_local_ipv6_discovery_all(&discovery, current_udn);
+  oc_do_realm_local_ipv6_discovery_all(&discovery, current_udn);
+  //oc_do_ip_discovery_all(& discovery, NULL);
+  //oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
+}
+
+void
+issue_requests_all(void)
 {
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
   //oc_do_ip_discovery_all(& discovery, NULL);
   //oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
 }
-
 
 #ifndef NO_MAIN
 
@@ -1231,7 +1289,8 @@ cloud_status_handler(oc_cloud_context_t* ctx, oc_cloud_status_t status,
   }
   if (status & OC_CLOUD_LOGGED_IN) {
     PRINT("\t\t-Logged In\n");
-    issue_requests();
+    /* issue start up request*/
+    issue_requests_all();
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
     PRINT("\t\t-Logged Out\n");
@@ -1385,8 +1444,11 @@ main(int argc, char* argv[])
                                        .signal_event_loop = signal_event_loop,
                                        .register_resources = register_resources
 #ifdef OC_CLIENT
-                                       ,
-                                       .requests_entry = NULL
+#ifdef PROXY_ALL_DISCOVERED_DEVICES
+                                       , .requests_entry = issue_requests_all
+#else
+                                       , .requests_entry = NULL
+#endif
 #endif
   };
 #ifdef OC_SECURITY
