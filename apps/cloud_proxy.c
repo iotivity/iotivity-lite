@@ -148,7 +148,6 @@ static const char* sid = "00000000-0000-0000-0000-000000000001";
 static const char* apn = "plgd";
 static const char* device_name = "CloudProxy";
 
-
 /* global property variables for path: "d2dserverlist" */
 static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* the name for the attribute */
 
@@ -158,18 +157,19 @@ static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* th
 */
 struct _d2dserverlist_d2dserverlist_t
 {
-  char di[MAX_PAYLOAD_STRING];  /* Format pattern according to IETF RFC 4122. */
+  char di[MAX_PAYLOAD_STRING];     /* Format pattern according to IETF RFC 4122. */
   char eps_s[MAX_PAYLOAD_STRING];  /* the OCF Endpoint information of the target Resource */
-  char eps[MAX_PAYLOAD_STRING];  /* the OCF Endpoint information of the target Resource */
-  char href[MAX_PAYLOAD_STRING];  /* This is the target URI, it can be specified as a Relative Reference or fully-qualified URI. */
-
+  char eps[MAX_PAYLOAD_STRING];    /* the OCF Endpoint information of the target Resource */
+  char href[MAX_PAYLOAD_STRING];   /* This is the target URI, it can be specified as a Relative Reference or fully-qualified URI. */
+  bool discovered;
 };
+
 struct _d2dserverlist_d2dserverlist_t g_d2dserverlist_d2dserverlist[MAX_ARRAY];
 int g_d2dserverlist_d2dserverlist_array_size = 0;
 
+char g_d2dserverlist_di[MAX_PAYLOAD_STRING] = ""; /* current value of property "di" Format pattern according to IETF RFC 4122. */
 
-//static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_di = "di"; /* the name for the attribute */
-char g_d2dserverlist_di[MAX_PAYLOAD_STRING] = """"; /* current value of property "di" Format pattern according to IETF RFC 4122. *//* registration data variables for the resources */
+/* registration data variables for the resources */
 
 /* global resource variables for path: d2dserverlist */
 static char* g_d2dserverlist_RESOURCE_ENDPOINT = "d2dserverlist"; /* used path for this resource */
@@ -179,11 +179,12 @@ int g_d2dserverlist_nr_resource_types = 1;
 /* forward declarations */
 void issue_requests(void);
 
-
-
 /**
 * function to print the returned cbor as JSON
 *
+* @param rep the cbor representation
+* @param print_print nice printing, e.g. nicely indented json
+* 
 */
 void
 print_rep(oc_rep_t* rep, bool pretty_print)
@@ -200,6 +201,8 @@ print_rep(oc_rep_t* rep, bool pretty_print)
 /**
 * function to retrieve the udn from the cloud url
 *
+* @param url the input url
+* @param udn the udn parsed out from the input url
 */
 static void url_to_udn(const char* url, char* udn)
 {
@@ -210,6 +213,8 @@ static void url_to_udn(const char* url, char* udn)
 /**
 * function to retrieve the local url from the cloud url
 *
+* @param url the input url
+* @param local_url the local url withoug the udn prefix
 */
 static void url_to_local_url(const char* url, char* local_url)
 {
@@ -219,6 +224,8 @@ static void url_to_local_url(const char* url, char* local_url)
 /**
 * function to retrieve the udn from the anchor
 *
+* @param anchor url with udn 
+* @param anchor url without the anchor part
 */
 static void anchor_to_udn(const char* anchor, char* udn)
 {
@@ -229,6 +236,8 @@ static void anchor_to_udn(const char* anchor, char* udn)
 * function to retrieve the endpoint based on udn
 * using global discovered_server list
 *
+* @param udn to check if it is in the list 
+* @return endpoint or NULL (e.g. not in list)
 */
 static oc_endpoint_t* is_udn_listed(char* udn)
 {
@@ -414,8 +423,11 @@ get_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* u
 }
 
 /** 
-* check if the di exist in the array.
-* array 
+* check if the di exist in the d2d server list array
+* 
+* @param di di to be checked (not NULL terminated)
+* @param di_len length of di
+* @return true : found, false: not found
 */
 static bool
 if_di_exist(char* di, int di_len)
@@ -431,6 +443,10 @@ if_di_exist(char* di, int di_len)
 /**
 *  remove the di from the server list.
 *  e.g. blanks the udn.
+* 
+* @param di di to be checked (not NULL terminated)
+* @param len length of di
+* @return true : removed, false: not removed
 */
 static bool
 remove_di(char* di, int len)
@@ -551,6 +567,9 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
       oc_rep_end_root_object();
       if (stored == true) {
         oc_send_response(request, OC_STATUS_CHANGED);
+
+        /* do a new discovery so that the new device will be added */
+        issue_requests();
       }
       else {
         PRINT("MAX array exceeded, not stored, returing error \n");
