@@ -41,7 +41,7 @@ var dialog;
     $( "#qr-button" ).button().on( "click", function() {
       dialog.dialog( "open" );
     });
-}); /*End Jquery*/
+}); /*====================End Jquery=======================*/
 
       var imagePath = 'include/images/';
 
@@ -51,7 +51,10 @@ var dialog;
       var owned_delete_stack = [];
 
 
-
+function openDeviceDialog(device)
+{
+	$("#device_dialog_"+device).dialog("open");
+}
 
 function showWait(parentId){
 	var b = document.getElementById(parentId);
@@ -253,6 +256,7 @@ for (i = 0; i < coll.length; i++) {
 				    image.setAttribute('id','image_'+uuid);
 				    image.setAttribute('src',imagePath+'ocf.png');
 				    image.setAttribute('style','width:100%;margin:5px;');
+		      		    image.setAttribute('onclick','openDeviceDialog("'+uuid+'")');
 	      		   imageContainer.append(image);
 
 		    var statusContainer = document.createElement("div");
@@ -272,6 +276,71 @@ for (i = 0; i < coll.length; i++) {
 				button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
 	      		    statusContainer.append(button);
 		   imageContainer.append(statusContainer);
+		      /*This defines a dialog for owned devices opens on click of image*/
+		      var device_title="";
+		      if (name)
+		      {
+			device_title = name+" " + uuid;
+		      }
+		      else
+		      {
+			device_title = uuid;
+		      }
+		      $('<div id="device_dialog_'+uuid+'"></div>').dialog({
+				modal: true,
+				title: device_title,
+			      autoOpen: false,
+			      maxWidth:600,
+			      maxHeight: 500,
+			      width: 600,
+			      height: 500,
+			      create: function() {
+				  var device_tabs = $(`<div id="device_tabs_`+uuid+`">
+					  <ul>
+					    <li><a href="#tabs-1">Control</a></li>
+					    <li><a href="#tabs-2">Config</a></li>
+					    <li><a href="#tabs-3">Resources</a></li>
+					  </ul>
+					  <div id="tabs-1">
+					    <p>
+					         /a/light
+					  </p>
+						  <label class="switch">
+						  <input type="checkbox">
+						  <span class="slider round"></span>
+						</label>
+					  </p>
+					  <p>
+					  /a/brightlight
+					  </p>
+					  <p>
+						<div class="slidecontainer">
+						  <input type="range" min="1" max="100" value="50">
+						</div>
+					  </p>
+
+					  </div>
+					  <div id="tabs-2">
+					    <p></p>
+					  </div>
+					  <div id="tabs-3">
+					    <p></p>
+					    <p></p>
+					  </div>
+					</div>`).tabs();
+				      device_tabs.css({'min-heght':'400px','overflow':'auto'}); 
+				      $(this).append(device_tabs);
+			      },   
+			      open: function() {
+				/*Make background dark.  See page.css*/
+				$('.ui-widget-overlay').addClass('custom-overlay');
+			      },
+				buttons: {
+				  Ok: function() {
+				    $( this ).dialog( "close" );
+				  }
+				}
+			      });  //end confirm dialog
 
 	      card.append(label);
 	      card.append(imageContainer);
