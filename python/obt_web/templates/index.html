@@ -26,9 +26,9 @@ var dialog;
       modal: true,
       autoOpen: false,
       maxWidth:600,
-      maxHeight: 500,
+      maxHeight: 700,
       width: 600,
-      height: 500,
+      height: 700,
       open: function() {
         $('.ui-widget-overlay').addClass('custom-overlay');
       },   
@@ -373,6 +373,8 @@ for (i = 0; i < coll.length; i++) {
 
 	/*Socket setup*/
 	var socket = io.connect('http://' + document.domain +  ':' + location.port);
+	/*Secure Socket*/
+	var socket = io.connect('https://' + document.domain +  ':' + location.port);
 
 	/*OBT is up and running*/
      socket.on( 'obt_initialized', function( msg ) {
