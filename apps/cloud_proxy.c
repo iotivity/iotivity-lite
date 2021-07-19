@@ -246,7 +246,7 @@ static void anchor_to_udn(const char* anchor, char* udn)
 */
 static int is_udn_listed_index(char* udn)
 {
-  PRINT("  Finding UDN %s \n", udn);
+  PRINT("is_udn_listed_index:  Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strcmp(g_d2dserverlist_d2dserverlist[i].di, udn) == 0)
@@ -255,6 +255,28 @@ static int is_udn_listed_index(char* udn)
     }
   }
   PRINT("None matched\n");
+  return -1;
+}
+
+
+/**
+* function to find an empty slot in
+* the global discovered_server list
+*
+* @param udn to check if it is in the list
+* @return index, -1 full
+*/
+static int find_empty_slot(void)
+{
+  PRINT("  Finding empty slot \n");
+
+  for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
+    if (strcmp(g_d2dserverlist_d2dserverlist[i].di, "") == 0)
+    {
+      return i;
+    }
+  }
+  PRINT("no empty slot\n");
   return -1;
 }
 
@@ -1120,36 +1142,58 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
         discovered_udn = udn;
       }
 #endif
-      /* update the end point, it might have changed*/
-      int index = is_udn_listed_index(udn);
-      if (index != -1) {
-        // add new server to the list
-        PRINT("  UPDATING UDN '%s'\n", udn);
-        // allocate the endpoint
-        oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
-        // search for the secure endpoint
-        oc_endpoint_t* ep = endpoint;  // start of the list
-        while ((ep->flags & SECURED) != 0) {
-          ep = ep->next;
-        }
-        oc_endpoint_copy(copy, ep);
-        discovered_server[index] = copy;
-      }
 
-      strncpy(url, uri, uri_len);
-      url[uri_len] = '\0';
-      
+
       PRINT("  Resource %s hosted at endpoints:\n", url);
       oc_endpoint_t* ep = endpoint;
       while (ep != NULL) {
         char uuid[OC_UUID_LEN] = { 0 };
         oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
 
-        PRINT( "di = %s\n",  uuid);
+        PRINT("di = %s\n", uuid);
         PRINTipaddr(*ep);
         PRINT("\n");
         ep = ep->next;
       }
+
+      oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
+      // search for the secure endpoint
+      ep = endpoint;  // start of the list
+      while ((ep != NULL) && (ep->flags & SECURED) != 0) {
+        ep = ep->next;
+      }
+      if (ep == NULL) {
+        PRINT("  No secure endpoint on UDN '%s'\n", udn);
+        return OC_CONTINUE_DISCOVERY;
+      }
+      // make a copy, so that we can store it in the array to find it back later.
+      oc_endpoint_copy(copy, ep);
+
+      /* update the end point, it might have changed*/
+      int index = is_udn_listed_index(udn);
+      if (index != -1) {
+        // add new server to the list
+        PRINT("  UPDATING UDN '%s'\n", udn);
+        discovered_server[index] = copy;
+      }
+      else {
+        index = find_empty_slot();
+        if (index != -1) {
+          // add new server to the list
+          PRINT("  ADDING UDN '%s'\n", udn);
+          discovered_server[index] = copy;
+          strcpy(g_d2dserverlist_d2dserverlist[index].di, udn);
+        }
+        else {
+          PRINT("  NO SPACE TO STORE: '%s'\n", udn);
+        }
+      }
+
+      // make uri as url NULL terminated
+      strncpy(url, uri, uri_len);
+      url[uri_len] = '\0';
+
+      // make extended url with local UDN as prefix
       strcpy(udn_url, "/");
       strcat(udn_url, udn);
       strcat(udn_url, url);
@@ -1191,8 +1235,8 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
         oc_resource_set_request_handler(new_resource, OC_DELETE, delete_resource, NULL);
         oc_resource_set_request_handler(new_resource, OC_GET, get_resource, NULL);
         oc_resource_set_request_handler(new_resource, OC_POST, post_resource, NULL);
-        // TODO enable this again.
-        //oc_resource_set_discoverable(new_resource, false);
+        // set resource to not discoverable, so that it does listed in the proxy device
+        oc_resource_set_discoverable(new_resource, false);
 
         oc_add_resource(new_resource);
 
