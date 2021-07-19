@@ -139,7 +139,11 @@ volatile int quit = 0;          /* stop variable, used by handle_signal */
 
 #define MAX_DISCOVERED_SERVER 100
 static oc_endpoint_t* discovered_server[MAX_DISCOVERED_SERVER];
+
+#ifdef PROXY_ALL_DISCOVERED_DEVICES
 static int discovered_server_count = 0;
+static g_discovery_udn[MAX_PAYLOAD_STRING];
+#endif
 
 static const char* cis = "coap+tcp://127.0.0.1:5683";
 //static const char* cis = "coap+tcp://128.0.0.4:5683";
@@ -148,7 +152,6 @@ static const char* sid = "00000000-0000-0000-0000-000000000001";
 static const char* apn = "plgd";
 static const char* device_name = "CloudProxy";
 
-static g_discovery_udn[MAX_PAYLOAD_STRING];
 
 /* global property variables for path: "d2dserverlist" */
 static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* the name for the attribute */
@@ -1068,7 +1071,7 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
   char udn[200];
   char udn_url[200];
   int nr_resource_types = 0;
-  bool add_devices = false;
+  //bool add_devices = false;
 
   char* discovered_udn = (char*)user_data;
   
