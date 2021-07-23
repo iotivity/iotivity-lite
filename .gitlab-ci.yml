@@ -27,30 +27,50 @@ Linux_Unsecured_Test:
     - cd port/linux
     - make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
 
+Linux_with_java:
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf swig default-jdk
+    - swig -version
+    - java -version
+    - javac -version
+    - wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
+    - wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+  script:
+    - cd port/linux
+    - make TCP=1 IPV4=1 CLOUD=1 PKI=1 JAVA=1
+    - cd -
+    - cd swig/apps/unit_test
+    - JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
+    - JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
+    - cd -
+
+
+
+Linux_Compile_Options:
+  variables:
+    GIT_SUBMODULE_STRATEGY: normal
+  stage: build
+  before_script:
+    - apt update && apt -y install make autoconf
+    - set -o pipefail
+    - export VERBOSE=false
+    - export CCACHE_DISABLE=false
+  script:
+    - cd port/linux
+    - make TCP=1 IPV4=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0 
+
 Android_build:
   variables:
     GIT_SUBMODULE_STRATEGY: normal
   stage: build
-  image: openjdk:8-jdk
-  before_script:
-      - apt-get --quiet update --yes
-      - apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 make autoconf swig patch
-      - wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
-      - unzip -d android-sdk-linux android-sdk.zip
-      - echo y | android-sdk-linux/tools/bin/sdkmanager "ndk-bundle" >/dev/null
-      - echo y | android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" >/dev/null
-      - echo y | android-sdk-linux/tools/bin/sdkmanager "platform-tools" >/dev/null
-      - echo y | android-sdk-linux/tools/bin/sdkmanager "build-tools;28.0.2" >/dev/null
-      - export ANDROID_HOME=$PWD/android-sdk-linux
-      - export PATH=$PATH:$PWD/android-sdk-linux/platform-tools/
-      # temporarily disable checking for EPIPE error and use yes to accept all licenses
-      - set +o pipefail
-      - yes | android-sdk-linux/tools/bin/sdkmanager --licenses
-      - set -o pipefail
-      - ./android-sdk-linux/ndk-bundle/build/tools/make_standalone_toolchain.py --arch arm --api 23 --install-dir ~/android-arm-23
+  image: gitlab.iotivity.org:5050/iotivity/iotivity-lite
   script:
     - cd port/android
     - make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
+  retry:
+    max: 2
+    when: runner_system_failure
 
 doxygen:
   variables:
@@ -62,3 +82,4 @@ doxygen:
     - doxygen --version
     - cd tools
     - ./build_doc.sh
+    

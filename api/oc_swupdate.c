@@ -89,7 +89,7 @@ oc_load_sw(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    oc_parse_rep(buf, (int)ret, &rep);
     oc_swupdate_decode(rep, device);
     oc_free_rep(rep);
   }
@@ -132,15 +132,9 @@ oc_swupdate_free(void)
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_swupdate_t *s = &sw[i];
     oc_dump_sw(i);
-    if (oc_string_len(s->purl) > 0) {
-      oc_free_string(&s->purl);
-    }
-    if (oc_string_len(s->nv) > 0) {
-      oc_free_string(&s->nv);
-    }
-    if (oc_string_len(s->signage) > 0) {
-      oc_free_string(&s->signage);
-    }
+    oc_free_string(&s->purl);
+    oc_free_string(&s->nv);
+    oc_free_string(&s->signage);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (sw) {
@@ -218,10 +212,8 @@ oc_swupdate_notify_upgrading(size_t device, const char *version,
   oc_swupdate_t *s = &sw[device];
   s->swupdatestate = OC_SWUPDATE_STATE_UPGRADING;
   s->swupdateresult = result;
-  if (oc_string_len(s->nv) > 0) {
-    oc_free_string(&s->nv);
-    oc_new_string(&s->nv, version, strlen(version));
-  }
+  oc_free_string(&s->nv);
+  oc_new_string(&s->nv, version, strlen(version));
   s->lastupdate = timestamp;
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
@@ -404,9 +396,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
     }
     if (oc_string_len(rep->name) == 2 &&
         memcmp(oc_string(rep->name), "nv", 2) == 0) {
-      if (oc_string_len(s->nv) > 0) {
-        oc_free_string(&s->nv);
-      }
+      oc_free_string(&s->nv);
       if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->nv, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
@@ -414,9 +404,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
     }
     if (oc_string_len(rep->name) == 4 &&
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
-      if (oc_string_len(s->purl) > 0) {
-        oc_free_string(&s->purl);
-      }
+      oc_free_string(&s->purl);
       if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->purl, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
@@ -424,9 +412,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
     }
     if (oc_string_len(rep->name) == 6 &&
         memcmp(oc_string(rep->name), "signed", 6) == 0) {
-      if (oc_string_len(s->signage) > 0) {
-        oc_free_string(&s->signage);
-      }
+      oc_free_string(&s->signage);
       if (oc_string_len(rep->value.string) > 0) {
         oc_new_string(&s->signage, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
@@ -466,16 +452,16 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
 
 /**
  * post method for "/sw" resource.
-* The function has as input the request body, which are the input values of the
-* POST method.
-* The input values (as a set) are checked if all supplied values are correct.
-* If the input values are correct, they will be assigned to the global  property
-* values.
-* Resource Description:
-* Mechanism to schedule a start of the software update.
-*
-* @param requestRep the request representation.
-*/
+ * The function has as input the request body, which are the input values of the
+ * POST method.
+ * The input values (as a set) are checked if all supplied values are correct.
+ * If the input values are correct, they will be assigned to the global property
+ * values.
+ * Resource Description:
+ * Mechanism to schedule a start of the software update.
+ *
+ * @param requestRep the request representation.
+ */
 static void
 post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
@@ -587,17 +573,17 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 }
 
 /**
-* get method for "/sw" resource.
-* function is called to intialize the return values of the GET method.
-* initialisation of the returned values are done from the global property
-* values.
-* Resource Description:
-* The Resource performing scheduled software update.
-*
-* @param request the request representation.
-* @param interfaces the interface used for this call
-* @param user_data the user data.
-*/
+ * get method for "/sw" resource.
+ * function is called to intialize the return values of the GET method.
+ * initialisation of the returned values are done from the global property
+ * values.
+ * Resource Description:
+ * The Resource performing scheduled software update.
+ *
+ * @param request the request representation.
+ * @param interfaces the interface used for this call
+ * @param user_data the user data.
+ */
 
 static void
 get_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)

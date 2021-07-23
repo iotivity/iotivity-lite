@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016-2019 Intel Corporation
+// Copyright (c) 2016-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,10 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include <stdlib.h>
-
+#ifdef OC_OSCORE
+#include <ctype.h>
+#include "oc_oscore_context.h"
+#endif /* OC_OSCORE */
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 #define OXM_RANDOM_DEVICE_PIN "oic.sec.doxm.rdp"
@@ -158,18 +161,17 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
     oc_sec_remove_role_cred(oc_string(cred->role.role),
                             oc_string(cred->role.authority));
 #endif /* OC_PKI && OC_CLIENT */
-    oc_free_string(&cred->role.role);
-    if (oc_string_len(cred->role.authority) > 0) {
-      oc_free_string(&cred->role.authority);
-    }
   }
-  if (oc_string_len(cred->privatedata.data) > 0) {
-    oc_free_string(&cred->privatedata.data);
+  oc_free_string(&cred->role.role);
+  oc_free_string(&cred->role.authority);
+  oc_free_string(&cred->privatedata.data);
+#ifdef OC_OSCORE
+  if (cred->oscore_ctx) {
+    oc_oscore_free_context(cred->oscore_ctx);
   }
+#endif /* OC_OSCORE */
 #ifdef OC_PKI
-  if (oc_string_len(cred->publicdata.data) > 0) {
-    oc_free_string(&cred->publicdata.data);
-  }
+  oc_free_string(&cred->publicdata.data);
 
   if (cred->credtype == OC_CREDTYPE_CERT) {
     if (cred->credusage != OC_CREDUSAGE_TRUSTCA &&
@@ -440,9 +442,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
 #endif /* OC_PKI */
       ) {
 #ifdef OC_PKI
-        if (oc_string_len(public_key) > 0) {
-          oc_free_string(&public_key);
-        }
+        oc_free_string(&public_key);
 #endif /* OC_PKI */
         return credid;
       } else {
@@ -475,9 +475,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                 publicdata_size == oc_string_len(cred->publicdata.data) &&
                 memcmp(publicdata, oc_string(cred->publicdata.data),
                        publicdata_size) == 0) {
-              if (oc_string_len(public_key) > 0) {
-                oc_free_string(&public_key);
-              }
+              oc_free_string(&public_key);
               return cred->credid;
             }
           }
@@ -494,9 +492,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       if ((oc_string_len(roles->publicdata.data) == publicdata_size) &&
           memcmp(oc_string(roles->publicdata.data), publicdata,
                  publicdata_size) == 0) {
-        if (oc_string_len(public_key) > 0) {
-          oc_free_string(&public_key);
-        }
+        oc_free_string(&public_key);
         return roles->credid;
       }
       roles = roles->next;
@@ -616,16 +612,12 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   }
 #endif /* OC_PKI */
 #ifdef OC_PKI
-  if (oc_string_len(public_key) > 0) {
-    oc_free_string(&public_key);
-  }
+  oc_free_string(&public_key);
 #endif /* OC_PKI */
   return cred->credid;
 add_new_cred_error:
 #ifdef OC_PKI
-  if (oc_string_len(public_key) > 0) {
-    oc_free_string(&public_key);
-  }
+  oc_free_string(&public_key);
 #endif /* OC_PKI */
   return -1;
 }
@@ -685,12 +677,15 @@ oc_cred_read_encoding(oc_sec_encoding_t encoding)
 
 #ifdef OC_PKI
 static void
-oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
+oc_sec_encode_roles(oc_tls_peer_t *client, size_t device,
+                    oc_interface_mask_t iface_mask)
 {
   oc_sec_cred_t *cr = oc_sec_get_roles(client);
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_ROLES, device));
+  if (iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_ROLES, device));
+  }
   oc_rep_set_array(root, roles);
   while (cr != NULL) {
     oc_rep_object_array_start_item(roles);
@@ -730,13 +725,16 @@ oc_sec_encode_roles(oc_tls_peer_t *client, size_t device)
 #endif /* OC_PKI */
 
 void
-oc_sec_encode_cred(bool persist, size_t device)
+oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
+                   bool to_storage)
 {
   oc_sec_cred_t *cr = oc_list_head(devices[device].creds);
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_CRED, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_CRED, device));
+  }
   oc_rep_set_array(root, creds);
   while (cr != NULL) {
     oc_rep_object_array_start_item(creds);
@@ -789,6 +787,34 @@ oc_sec_encode_cred(bool persist, size_t device)
       oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
     }
     oc_rep_close_object(creds, privatedata);
+#ifdef OC_OSCORE
+    /* oscore */
+    if (cr->oscore_ctx) {
+      oc_oscore_context_t *oscore_ctx = (oc_oscore_context_t *)cr->oscore_ctx;
+      char hex_str[OSCORE_CTXID_LEN * 2 + 1];
+      size_t hex_str_len;
+      oc_rep_set_object(creds, oscore);
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
+        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        oc_conv_byte_array_to_hex_string(
+          oscore_ctx->sendid, oscore_ctx->sendid_len, hex_str, &hex_str_len);
+        oc_rep_set_text_string(oscore, senderid, hex_str);
+      }
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
+        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        oc_conv_byte_array_to_hex_string(
+          oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
+        oc_rep_set_text_string(oscore, recipientid, hex_str);
+      }
+      if (cr->credtype != OC_CREDTYPE_OSCORE) {
+        oc_rep_set_text_string(oscore, desc, oc_string(oscore_ctx->desc));
+      }
+      if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
+        oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
+      }
+      oc_rep_close_object(creds, oscore);
+    }
+#endif /* OC_OSCORE */
 #ifdef OC_PKI
     /* credusage */
     const char *credusage_string = oc_cred_read_credusage(cr->credusage);
@@ -882,6 +908,31 @@ oc_cred_parse_encoding(oc_string_t *encoding_string)
   return encoding;
 }
 
+#ifdef OC_OSCORE
+static bool
+is_valid_oscore_id(const char *id, size_t id_len)
+{
+  if (id_len != 14) {
+    return false;
+  }
+  size_t i;
+  for (i = 0; i < id_len; i++) {
+    if (!isxdigit(id[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif /* OC_OSCORE */
+
+static oc_event_callback_retval_t
+dump_cred(void *data)
+{
+  size_t device = (size_t)data;
+  oc_sec_dump_cred(device);
+  return OC_EVENT_DONE;
+}
+
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                    bool roles_resource, oc_tls_peer_t *client, size_t device)
@@ -889,6 +940,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
+  bool got_oscore_ctx = false;
 
   if (!roles_resource) {
     while (t != NULL) {
@@ -947,6 +999,10 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           oc_sec_encoding_t publicdatatype = 0;
           size_t publicdata_size = 0;
 #endif /* OC_PKI */
+#ifdef OC_OSCORE
+          const char *sid = NULL, *rid = NULL, *desc = NULL;
+          uint64_t ssn = 0;
+#endif /* OC_OSCORE */
           bool owner_cred = false;
           bool non_empty = false;
           while (cred != NULL) {
@@ -975,7 +1031,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
               }
 #endif /* OC_PKI */
               break;
-            /* publicdata, privatedata and roleid */
+            /* publicdata, privatedata, roleid, oscore */
             case OC_REP_OBJECT: {
               oc_rep_t *data = cred->value.object;
               if ((len == 11 &&
@@ -1049,6 +1105,52 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                   data = data->next;
                 }
               }
+#ifdef OC_OSCORE
+              /* oscore configuration */
+              else if (len == 6 &&
+                       memcmp(oc_string(cred->name), "oscore", 6) == 0) {
+                got_oscore_ctx = true;
+                /* senderid, recipientid, ssn, desc */
+                while (data != NULL) {
+                  len = oc_string_len(data->name);
+                  if (data->type == OC_REP_STRING && len == 8 &&
+                      memcmp(oc_string(data->name), "senderid", 8) == 0) {
+                    if (!is_valid_oscore_id(
+                          oc_string(data->value.string),
+                          oc_string_len(data->value.string))) {
+                      OC_ERR("oc_cred: invalid oscore/senderid");
+                      return false;
+                    }
+                    sid = oc_string(data->value.string);
+                  } else if (data->type == OC_REP_STRING && len == 11 &&
+                             memcmp(oc_string(data->name), "recipientid", 11) ==
+                               0) {
+                    if (!is_valid_oscore_id(
+                          oc_string(data->value.string),
+                          oc_string_len(data->value.string))) {
+                      OC_ERR("oc_cred: invalid oscore/senderid");
+                      return false;
+                    }
+                    rid = oc_string(data->value.string);
+                  } else if (data->type == OC_REP_STRING && len == 4 &&
+                             memcmp(oc_string(data->name), "desc", 4) == 0) {
+                    desc = oc_string(data->value.string);
+                  } else if (data->type == OC_REP_INT && len == 3 &&
+                             memcmp(oc_string(data->name), "ssn", 3) == 0) {
+                    if (!from_storage) {
+                      OC_ERR("oc_cred: oscore/ssn is R-only");
+                      return false;
+                    }
+                    ssn = data->value.integer;
+                  } else {
+                    OC_ERR("oc_cred: unexpected property/value type in oscore "
+                           "config");
+                    return false;
+                  }
+                  data = data->next;
+                }
+              }
+#endif /* OC_OSCORE */
             } break;
             case OC_REP_BOOL:
               if (len == 10 &&
@@ -1062,6 +1164,24 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
             cred = cred->next;
           }
 
+#ifdef OC_OSCORE
+          if (credtype == OC_CREDTYPE_OSCORE &&
+              (!sid || !rid || privatedata_size != OSCORE_MASTER_SECRET_LEN ||
+               desc)) {
+            OC_ERR("oc_cred: invalid oscore credential..rejecting");
+            return false;
+          }
+          if (credtype == OC_CREDTYPE_OSCORE_MCAST_CLIENT &&
+              (!sid || rid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+            OC_ERR("oc_cred: invalid oscore credential..rejecting");
+            return false;
+          }
+          if (credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER &&
+              (!rid || sid || privatedata_size != OSCORE_MASTER_SECRET_LEN)) {
+            OC_ERR("oc_cred: invalid oscore credential..rejecting");
+            return false;
+          }
+#endif /* OC_OSCORE */
           if (non_empty) {
             credid = oc_sec_add_new_cred(
               device, roles_resource, client, credid, credtype,
@@ -1085,6 +1205,17 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 
             oc_sec_cred_t *cr = oc_sec_get_cred_by_credid(credid, device);
             if (cr) {
+#ifdef OC_OSCORE
+              if (sid || rid) {
+                oc_oscore_context_t *oscore_ctx = oc_oscore_add_context(
+                  device, sid, rid, ssn, desc, cr, from_storage);
+                if (!oscore_ctx) {
+                  return false;
+                }
+
+                cr->oscore_ctx = oscore_ctx;
+              }
+#endif /* OC_OSCORE */
               cr->owner_cred = owner_cred;
               /* Obtain a handle to the owner credential entry where that
                * applies
@@ -1105,13 +1236,17 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
     }
     rep = rep->next;
   }
+
+  if (from_storage && got_oscore_ctx) {
+    oc_set_delayed_callback((void *)device, dump_cred, 0);
+  }
+
   return true;
 }
 
 void
 get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
-  (void)iface_mask;
   (void)data;
   bool roles_resource = false;
 #ifdef OC_PKI
@@ -1122,12 +1257,12 @@ get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 #endif /* OC_PKI */
   if (!roles_resource) {
-    oc_sec_encode_cred(false, request->resource->device);
+    oc_sec_encode_cred(false, request->resource->device, iface_mask, false);
   }
 #ifdef OC_PKI
   else {
     client = oc_tls_get_peer(request->origin);
-    oc_sec_encode_roles(client, request->resource->device);
+    oc_sec_encode_roles(client, request->resource->device, iface_mask);
   }
 #endif /* OC_PKI */
   oc_send_response(request, OC_STATUS_OK);

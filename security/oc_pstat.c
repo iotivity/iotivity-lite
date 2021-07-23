@@ -20,11 +20,13 @@
 #include "api/oc_main.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
+#include "oc_ael.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_roles.h"
+#include "oc_sdi.h"
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
@@ -157,9 +159,17 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
+    oc_sec_ael_default(device);
+    oc_sec_sdi_default(device);
     if (!from_storage && oc_get_con_res_announced()) {
       oc_device_info_t *di = oc_core_get_device_info(device);
       oc_free_string(&di->name);
+
+	  oc_resource_t *oic_d = oc_core_get_resource_by_index(OCF_D, device);
+	  oc_locn_t oc_locn = oic_d->tag_locn;
+      if (oc_locn > 0) {
+        oc_resource_tag_locn(oic_d, OCF_LOCN_UNKNOWN);
+      }
     }
 #ifdef OC_PKI
     oc_sec_free_roles_for_device(device);
@@ -406,15 +416,18 @@ oc_sec_pstat_default(size_t device)
 }
 
 void
-oc_sec_encode_pstat(size_t device)
+oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
+                    bool to_storage)
 {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
 #endif /* OC_DEBUG */
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+  }
   oc_rep_set_object(root, dos);
   oc_rep_set_boolean(dos, p, pstat[device].p);
   oc_rep_set_int(dos, s, pstat[device].s);
@@ -563,8 +576,9 @@ get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
-    oc_sec_encode_pstat(request->resource->device);
+    oc_sec_encode_pstat(request->resource->device, iface_mask, false);
     oc_send_response(request, OC_STATUS_OK);
   } break;
   default:

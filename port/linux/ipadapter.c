@@ -16,6 +16,7 @@
 
 #define _GNU_SOURCE
 #include "ipcontext.h"
+#include "ipadapter.h"
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif
@@ -40,6 +41,7 @@
 #include <sys/select.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -645,9 +647,6 @@ process_interface_change_event(void)
   }
 
   if (if_state_changed) {
-#ifdef OC_SECURITY
-    oc_close_all_tls_sessions();
-#endif /* OC_SECURITY */
     for (i = 0; i < num_devices; i++) {
       ip_context_t *dev = get_ip_context_for_device(i);
       oc_network_event_handler_mutex_lock();
@@ -871,7 +870,7 @@ network_event_thread(void *data)
   int i, n;
 
   while (dev->terminate != 1) {
-    setfds = dev->rfds;
+    setfds = ip_context_rfds_fd_copy(dev);
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
     if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
@@ -1050,6 +1049,10 @@ oc_send_buffer(oc_message_t *message)
   int send_sock = -1;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+
+  if (!dev) {
+    return -1;
+  }
 
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
@@ -1312,11 +1315,6 @@ connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("setting pktinfo IPv4 option %d\n", errno);
     return -1;
   }
-  if (setsockopt(dev->server4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
   if (bind(dev->server4_sock, (struct sockaddr *)&dev->server4,
            sizeof(dev->server4)) == -1) {
     OC_ERR("binding server4 socket %d", errno);
@@ -1358,11 +1356,6 @@ connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("setting pktinfo IPV4 option %d\n", errno);
     return -1;
   }
-  if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr IPv4 option %d", errno);
-    return -1;
-  }
   if (bind(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
            sizeof(dev->secure4)) == -1) {
     OC_ERR("binding IPv4 secure socket %d", errno);
@@ -1399,8 +1392,16 @@ oc_connectivity_init(size_t device)
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
 
+  if (pthread_mutex_init(&dev->rfds_mutex, NULL) != 0) {
+    oc_abort("error initializing TCP adapter mutex");
+  }
+
   if (pipe(dev->shutdown_pipe) < 0) {
     OC_ERR("shutdown pipe: %d", errno);
+    return -1;
+  }
+  if (set_nonblock_socket(dev->shutdown_pipe[0]) < 0) {
+    OC_ERR("Could not set non-block shutdown_pipe[0]");
     return -1;
   }
 
@@ -1450,11 +1451,6 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting sock option %d", errno);
-    return -1;
-  }
-  if (setsockopt(dev->server_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
 #ifdef IPV6_ADDR_PREFERENCES
@@ -1511,11 +1507,6 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
-  }
-  if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
 #ifdef IPV6_ADDR_PREFERENCES
@@ -1614,6 +1605,8 @@ oc_connectivity_shutdown(size_t device)
     OC_WRN("cannot wakeup network thread");
   }
 
+  pthread_join(dev->event_thread, NULL);
+
   close(dev->server_sock);
   close(dev->mcast_sock);
 
@@ -1633,10 +1626,10 @@ oc_connectivity_shutdown(size_t device)
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-  pthread_join(dev->event_thread, NULL);
-
   close(dev->shutdown_pipe[1]);
   close(dev->shutdown_pipe[0]);
+
+  pthread_mutex_destroy(&dev->rfds_mutex);
 
   free_endpoints_list(dev);
 
@@ -1791,3 +1784,36 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   return ret;
 }
 #endif /* OC_DNS_LOOKUP */
+
+int
+set_nonblock_socket(int sockfd) {
+  int flags = fcntl(sockfd, F_GETFL, 0);
+  if (flags < 0) {
+    return -1;
+  }
+
+  return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+}
+
+void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_SET(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
+}
+
+void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_CLR(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
+}
+
+fd_set ip_context_rfds_fd_copy(ip_context_t* dev)
+{
+  fd_set setfds;
+  pthread_mutex_lock(&dev->rfds_mutex);
+  memcpy(&setfds, &dev->rfds, sizeof(dev->rfds));
+  pthread_mutex_unlock(&dev->rfds_mutex);
+  return setfds;
+}

@@ -1,0 +1,67 @@
+menu "IoTivity Example Configuration"
+
+config WIFI_SSID
+    string "WiFi SSID"
+	default "myssid"
+	help
+		SSID (network name) for the ESP32 to connect to.
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+	default "myssid"
+	help
+		WiFi password (WPA or WPA2) for the ESP32 to match.
+		can be blank if the network has no security set.
+
+config OC_DEBUG
+    bool "OC_DEBUG"
+    help
+        enable or disable IoTivity-constrained debug
+
+config APP_DEBUG
+    bool "APP_DEBUG"
+    help
+        enable or disable application debug
+
+config DYNAMIC
+    bool "DYNAMIC"
+    default "y"
+    help
+        enable or disable DYNAMIC
+
+config SECURE
+    bool "SECURE"
+    default "y"
+    help
+        enable or disable SECURE
+
+config IPV4
+    bool "IPV4"
+    default "y"
+    help
+        enable or disable IPV4
+
+config TCP
+    bool "TCP"
+    default "y"
+    help
+        enable or disable TCP
+
+config CLOUD
+    bool "CLOUD"
+    default "y"
+    help
+        enable or disable CLOUD
+
+config BLINK_GPIO
+    int "Blink GPIO number"
+    range 0 34
+    default 13
+    help
+        GPIO number (IOxx) to blink on and off.
+
+        Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+
+        GPIOs 35-39 are input-only so cannot be used as outputs.
+
+endmenu

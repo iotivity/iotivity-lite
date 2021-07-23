@@ -46,7 +46,7 @@ else
 endif
 
 ifeq ($(SECURE),1)
-	SRC_COMMON += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c
+	SRC_COMMON += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c oc_sdi.c
 	SRC_COMMON += memory_buffer_alloc.c
 	CFLAGS += -DOC_SECURITY
 endif

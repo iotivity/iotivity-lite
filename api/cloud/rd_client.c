@@ -26,8 +26,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-#define RD_PUBLISH_TTL 86400
-
 static void
 _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
                       int64_t ins)
@@ -52,7 +50,7 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
 
 static bool
 rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                          const char *id, const char *name,
+                          const char *id, const char *name, uint32_t ttl,
                           oc_response_handler_t handler, oc_qos_t qos,
                           void *user_data)
 {
@@ -66,7 +64,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, di, id);
     oc_rep_set_text_string(root, n, name);
-    oc_rep_set_int(root, lt, RD_PUBLISH_TTL);
+    oc_rep_set_int(root, ttl, ttl);
 
     oc_rep_set_array(root, links);
     oc_link_t *link = links;
@@ -87,7 +85,8 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 
 bool
 rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+           uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
+           void *user_data)
 {
   char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
@@ -104,14 +103,14 @@ rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
     oc_list_add((oc_list_t)link_p, link_d);
 
     status = rd_publish_with_device_id(endpoint, link_p, uuid,
-                                       oc_string(device_info->name), handler,
-                                       qos, user_data);
+                                       oc_string(device_info->name), ttl,
+                                       handler, qos, user_data);
     oc_delete_link(link_p);
     oc_delete_link(link_d);
   } else {
     status = rd_publish_with_device_id(endpoint, links, uuid,
-                                       oc_string(device_info->name), handler,
-                                       qos, user_data);
+                                       oc_string(device_info->name), ttl,
+                                       handler, qos, user_data);
   }
 
   return status;

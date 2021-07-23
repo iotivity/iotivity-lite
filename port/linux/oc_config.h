@@ -23,6 +23,8 @@ typedef uint64_t oc_clock_time_t;
 #define OC_NETWORK_MONITOR
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
+/* Add request history for deduplicate UDP/DTLS messages */
+#define OC_REQUEST_HISTORY
 
 /* Add support for software update */
 //#define OC_SOFTWARE_UPDATE or run "make" with SWUPDATE=1
@@ -30,7 +32,8 @@ typedef uint64_t oc_clock_time_t;
 //#define OC_COLLECTIONS_IF_CREATE or run "make" with CREATE=1
 /* Add support for the maintenance resource */
 //#define OC_MNT or run "make" with MNT=1
-
+/* Add batch interface support to /oic/res */
+#define OC_RES_BATCH_SUPPORT
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_CACHE

@@ -70,7 +70,7 @@ app_init(void)
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.0.5",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.2.2",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   PRINT("\tSwitch device added.\n");
 #if defined(OC_IDD_API)
@@ -124,7 +124,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       u = K;
     } else if (units[0] == 'F') {
       u = F;
-    } else if (units[0] != 'C') {
+    } else if (units[0] == 'C') {
       u = C;
     } else {
       invalid_query = true;
@@ -543,6 +543,8 @@ register_resources(void)
   oc_resource_set_periodic_observable(temp_resource, 1);
   oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
+  oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
+  oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
   oc_add_resource(temp_resource);
   PRINT("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
@@ -553,6 +555,9 @@ register_resources(void)
   oc_resource_set_discoverable(bswitch, true);
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+  oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
+  oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
+  oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
 #ifdef OC_COLLECTIONS
@@ -736,6 +741,13 @@ main(void)
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
 
+  /* set the latency to 240 seconds*/
+  /* if no latency is needed then remove the next line */
+  oc_core_set_latency(240);
+  /* set the MTU size to the (minimum IPv6 MTU - size of UDP/IP headers) */
+  /* DTLS handshake messages would be fragmented to fit within this size */
+  /* This enables certificate-based DTLS handshakes over Thread */
+  oc_set_mtu_size(1232);
 #ifdef OC_STORAGE
   oc_storage_config("./smart_home_server_linux_creds");
 #endif /* OC_STORAGE */

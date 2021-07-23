@@ -169,11 +169,13 @@ sp_to_string(oc_sp_types_t sp_type)
 }
 
 void
-oc_sec_encode_sp(size_t device)
+oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
 {
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_SP, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_SP, device));
+  }
   oc_rep_set_text_string(root, currentprofile,
                          sp_to_string(sp[device].current_profile));
   oc_rep_set_array(root, supportedprofiles);
@@ -204,8 +206,9 @@ get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
-    oc_sec_encode_sp(request->resource->device);
+    oc_sec_encode_sp(request->resource->device, iface_mask, false);
     oc_send_response(request, OC_STATUS_OK);
   } break;
   default:

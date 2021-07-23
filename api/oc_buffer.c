@@ -26,6 +26,9 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
 #include "oc_buffer.h"
@@ -33,8 +36,13 @@
 #include "oc_events.h"
 
 OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
+#ifdef OC_INOUT_BUFFER_POOL
+OC_MEMB_STATIC(oc_incoming_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
+OC_MEMB_STATIC(oc_outgoing_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
+#else  /* OC_INOUT_BUFFER_POOL */
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
+#endif /* !OC_INOUT_BUFFER_POOL */
 
 static oc_message_t *
 allocate_message(struct oc_memb *pool)
@@ -43,13 +51,13 @@ allocate_message(struct oc_memb *pool)
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
   if (message) {
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
     message->data = malloc(OC_PDU_SIZE);
     if (!message->data) {
       oc_memb_free(pool, message);
       return NULL;
     }
-#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
     message->pool = pool;
     message->length = 0;
     message->next = 0;
@@ -58,16 +66,16 @@ allocate_message(struct oc_memb *pool)
 #ifdef OC_SECURITY
     message->encrypted = 0;
 #endif /* OC_SECURITY */
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
     OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
            oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
   }
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
   else {
     OC_WRN("buffer: No free TX/RX buffers!");
   }
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
   return message;
 }
 
@@ -111,14 +119,14 @@ oc_message_unref(oc_message_t *message)
   if (message) {
     message->ref_count--;
     if (message->ref_count <= 0) {
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
       free(message->data);
-#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
       struct oc_memb *pool = message->pool;
       oc_memb_free(pool, message);
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
       OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
     }
   }
 }
@@ -171,8 +179,19 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         OC_DBG("Inbound network event: encrypted request");
         oc_process_post(&oc_tls_handler, oc_events[UDP_TO_TLS_EVENT], data);
       } else {
+#ifdef OC_OSCORE
+        if (((oc_message_t *)data)->endpoint.flags & MULTICAST) {
+          OC_DBG("Inbound network event: multicast request");
+          oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT],
+                          data);
+        } else {
+          OC_DBG("Inbound network event: decrypted request");
+          oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+        }
+#else  /* OC_OSCORE */
         OC_DBG("Inbound network event: decrypted request");
         oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+#endif /* OC_OSCORE */
       }
 #else  /* OC_SECURITY */
       OC_DBG("Inbound network event: decrypted request");
@@ -186,13 +205,27 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
         OC_DBG("Outbound network event: multicast request");
         oc_send_discovery_request(message);
         oc_message_unref(message);
-      } else
+      }
+#if defined(OC_SECURITY) && defined(OC_OSCORE)
+      else if ((message->endpoint.flags & MULTICAST) &&
+               (message->endpoint.flags & SECURED)) {
+        OC_DBG("Outbound secure multicast request: forwarding to OSCORE");
+        oc_process_post(&oc_oscore_handler,
+                        oc_events[OUTBOUND_GROUP_OSCORE_EVENT], data);
+      }
+#endif /* OC_SECURITY && OC_OSCORE */
+      else
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
         if (message->endpoint.flags & SECURED) {
-        OC_DBG("Outbound network event: forwarding to TLS");
-
+#ifdef OC_OSCORE
+        OC_DBG("Outbound network event: forwarding to OSCORE");
+        oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_OSCORE_EVENT],
+                        data);
+      } else
+#else /* OC_OSCORE */
 #ifdef OC_CLIENT
+        OC_DBG("Outbound network event: forwarding to TLS");
         if (!oc_tls_connected(&message->endpoint)) {
           OC_DBG("Posting INIT_TLS_CONN_EVENT");
           oc_process_post(&oc_tls_handler, oc_events[INIT_TLS_CONN_EVENT],
@@ -204,6 +237,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
           oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], data);
         }
       } else
+#endif /* !OC_OSCORE */
 #endif /* OC_SECURITY */
       {
         OC_DBG("Outbound network event: unicast message");

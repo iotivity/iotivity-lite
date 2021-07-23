@@ -106,12 +106,22 @@ oc_sec_doxm_default(size_t device)
     }
   }
 
-  doxm[device].oxmsel = 0;
+  /* In RESET, oxmsel shall be set to (4) "oic.sec.oxm.self" */
+  doxm[device].oxmsel = 4;
 #ifdef OC_PKI
   doxm[device].sct = 9;
 #else  /* OC_PKI */
   doxm[device].sct = 1;
 #endif /* !OC_PKI */
+#ifdef OC_OSCORE
+  doxm[device].sct |= OC_CREDTYPE_OSCORE;
+#ifdef OC_CLIENT
+  doxm[device].sct |= OC_CREDTYPE_OSCORE_MCAST_CLIENT;
+#endif /* OC_CLIENT */
+#ifdef OC_SERVER
+  doxm[device].sct |= OC_CREDTYPE_OSCORE_MCAST_SERVER;
+#endif /* OC_SERVER */
+#endif /* OC_OSCORE */
   doxm[device].owned = false;
   memset(doxm[device].devowneruuid.id, 0, 16);
   memset(doxm[device].rowneruuid.id, 0, 16);
@@ -123,12 +133,15 @@ oc_sec_doxm_default(size_t device)
 }
 
 void
-oc_sec_encode_doxm(size_t device, bool to_storage)
+oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
+                   bool to_storage)
 {
   char uuid[37];
   oc_rep_start_root_object();
-  oc_process_baseline_interface(
-    oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+  if (to_storage || iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+  }
   /* oxms */
   if (!to_storage) {
     evaluate_supported_oxms(device);
@@ -163,6 +176,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   switch (iface_mask) {
+  case OC_IF_RW:
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
@@ -177,7 +191,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         oc_ignore_request(request);
       }
     } else {
-      oc_sec_encode_doxm(device, false);
+      oc_sec_encode_doxm(device, iface_mask, false);
       oc_send_response(request, OC_STATUS_OK);
     }
   } break;
@@ -187,7 +201,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 bool
-oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
+oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
@@ -200,9 +214,15 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     /* owned */
     case OC_REP_BOOL:
       if (len == 5 && memcmp(oc_string(t->name), "owned", 5) == 0) {
-        if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set owned property only in RFOTM");
-          return false;
+        if (!from_storage) {
+          if (ps->s != OC_DOS_RFOTM) {
+            OC_ERR("oc_doxm: can set owned property only in RFOTM");
+            return false;
+          }
+          if (!doc) {
+            OC_ERR("oc_doxm: cannot set owned property outside DOC");
+            return false;
+          }
         }
       } else {
         OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
@@ -229,6 +249,10 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
               OC_ERR("oc_doxm: Attempting to select an unsupported OXM");
               return false;
             }
+            if (doc) {
+              OC_ERR("oc_doxm: cannot set oxmsel inside DOC");
+              return false;
+            }
           }
         }
       } else if (from_storage && len == 3 &&
@@ -241,24 +265,42 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     /* deviceuuid, devowneruuid and rowneruuid */
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(t->name), "deviceuuid", 10) == 0) {
-        if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set deviceuuid property only in RFOTM");
-          return false;
+        if (!from_storage) {
+          if (ps->s != OC_DOS_RFOTM) {
+            OC_ERR("oc_doxm: can set deviceuuid property only in RFOTM");
+            return false;
+          }
+          if (!doc) {
+            OC_ERR("oc_doxm: cannot set deviceuuid outside DOC");
+            return false;
+          }
         }
       } else if (len == 12 &&
                  memcmp(oc_string(t->name), "devowneruuid", 12) == 0) {
-        if (!from_storage && ps->s != OC_DOS_RFOTM) {
-          OC_ERR("oc_doxm: Can set devowneruuid property only in RFOTM");
-          return false;
+        if (!from_storage) {
+          if (ps->s != OC_DOS_RFOTM) {
+            OC_ERR("oc_doxm: can set devowneruuid property only in RFOTM");
+            return false;
+          }
+          if (!doc) {
+            OC_ERR("oc_doxm: cannot set devowneruuid outside DOC");
+            return false;
+          }
         }
       } else if (len == 10 &&
                  memcmp(oc_string(t->name), "rowneruuid", 10) == 0) {
-        if (!from_storage && ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
-          OC_ERR("oc_doxm: Can set rowneruuid property only in RFOTM");
-          return false;
+        if (!from_storage) {
+          if (ps->s != OC_DOS_RFOTM && ps->s != OC_DOS_SRESET) {
+            OC_ERR("oc_doxm: can set rowneruuid property only in RFOTM");
+            return false;
+          }
+          if (!doc) {
+            OC_ERR("oc_doxm: cannot set rowneruuid outside DOC");
+            return false;
+          }
         }
       } else {
-        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
+        OC_ERR("oc_doxm: unknown property %s", oc_string(t->name));
         return false;
       }
       break;
@@ -266,7 +308,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
     case OC_REP_INT_ARRAY:
       if (!from_storage && len == 4 &&
           memcmp(oc_string(t->name), "oxms", 4) == 0) {
-        OC_ERR("oc_doxm: Can set oxms property");
+        OC_ERR("oc_doxm: cannot set oxms property");
         return false;
       }
       break;
@@ -274,7 +316,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, size_t device)
       if (!((len == 2 && (memcmp(oc_string(t->name), "rt", 2) == 0 ||
                           memcmp(oc_string(t->name), "if", 2) == 0))) &&
           !(len == 4 && memcmp(oc_string(t->name), "oxms", 4) == 0)) {
-        OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
+        OC_ERR("oc_doxm: unknown property %s", oc_string(t->name));
         return false;
       }
     } break;
@@ -343,7 +385,8 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
-  if (oc_sec_decode_doxm(request->request_payload, false,
+  oc_tls_peer_t *p = oc_tls_get_peer(request->origin);
+  if (oc_sec_decode_doxm(request->request_payload, false, (p) ? p->doc : false,
                          request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_doxm(request->resource->device);

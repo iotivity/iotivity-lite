@@ -1,0 +1,23 @@
+diff --git a/components/coap/port/include/coap_config_posix.h b/components/coap/port/include/coap_config_posix.h
+index 3f6b7c605..8b80ff3ac 100644
+--- a/components/coap/port/include/coap_config_posix.h
++++ b/components/coap/port/include/coap_config_posix.h
+@@ -32,18 +32,11 @@
+ #define HAVE_STRUCT_CMSGHDR
+ 
+ #define ipi_spec_dst ipi_addr
+-struct in6_pktinfo {
+-  struct in6_addr ipi6_addr;        /* src/dst IPv6 address */
+-  unsigned int ipi6_ifindex;        /* send/recv interface index */
+-};
+ #define IN6_IS_ADDR_V4MAPPED(a) \
+         ((((__const uint32_t *) (a))[0] == 0)                                 \
+          && (((__const uint32_t *) (a))[1] == 0)                              \
+          && (((__const uint32_t *) (a))[2] == htonl (0xffff)))
+ 
+-/* As not defined, just need to define is as something innocuous */
+-#define IPV6_PKTINFO IPV6_CHECKSUM
+-
+ #define PACKAGE_NAME "libcoap-posix"
+ #define PACKAGE_VERSION "?"
+ 

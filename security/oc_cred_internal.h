@@ -23,8 +23,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 struct oc_tls_peer_t;
@@ -42,7 +41,8 @@ int oc_sec_add_new_cred(size_t device, bool roles_resource,
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
 void oc_sec_cred_free(void);
-void oc_sec_encode_cred(bool persist, size_t device);
+void oc_sec_encode_cred(bool persist, size_t device,
+                        oc_interface_mask_t iface_mask, bool to_storage);
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                         bool roles_resource, struct oc_tls_peer_t *client,
                         size_t device);

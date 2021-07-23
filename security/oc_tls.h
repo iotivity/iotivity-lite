@@ -28,8 +28,7 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 OC_PROCESS_NAME(oc_tls_handler);
@@ -54,9 +53,13 @@ typedef struct oc_tls_peer_t
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
   oc_clock_time_t timestamp;
+  bool doc;
 #ifdef OC_PKI
   oc_string_t public_key;
 #endif /* OC_PKI */
+#ifdef OC_TCP
+  oc_message_t* processed_recv_message;
+#endif
 } oc_tls_peer_t;
 
 int oc_tls_init_context(void);
@@ -76,6 +79,7 @@ oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
 oc_tls_peer_t *oc_tls_get_peer(oc_endpoint_t *endpoint);
 bool oc_tls_connected(oc_endpoint_t *endpoint);
 bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
+int oc_tls_num_peers(size_t device);
 
 /* Public APIs for selecting certificate credentials */
 void oc_tls_select_cert_ciphersuite(void);
@@ -91,6 +95,11 @@ bool oc_tls_is_cert_otm_supported(size_t device);
 
 /* Internal interface for generating a random PIN */
 void oc_tls_generate_random_pin(void);
+
+/* Internal interface for changing psk authority hint */
+#ifdef OC_CLIENT
+void oc_tls_use_pin_obt_psk_identity(void);
+#endif /* OC_CLIENT */
 
 /* Internal interface for deriving a PSK for the Random PIN OTM */
 int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,

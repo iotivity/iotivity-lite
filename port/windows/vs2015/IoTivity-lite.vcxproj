@@ -237,6 +237,7 @@
     <ClInclude Include="..\..\..\include\oc_cred.h" />
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
     <ClInclude Include="..\..\..\include\oc_endpoint.h" />
+    <ClInclude Include="..\..\..\include\oc_enums.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
     <ClInclude Include="..\..\..\include\oc_introspection.h" />
     <ClInclude Include="..\..\..\include\oc_network_events.h" />
@@ -261,6 +262,8 @@
     <ClInclude Include="..\..\..\messaging\coap\separate.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions.h" />
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
+    <ClInclude Include="..\..\..\security\oc_ael.h" />
+    <ClInclude Include="..\..\..\security\oc_audit.h" />
     <ClInclude Include="..\..\..\security\oc_certs.h" />
     <ClInclude Include="..\..\..\security\oc_cred_internal.h" />
     <ClInclude Include="..\..\..\security\oc_csr.h" />
@@ -269,6 +272,7 @@
     <ClInclude Include="..\..\..\security\oc_obt_internal.h" />
     <ClInclude Include="..\..\..\security\oc_pstat.h" />
     <ClInclude Include="..\..\..\security\oc_roles.h" />
+    <ClInclude Include="..\..\..\security\oc_sdi.h" />
     <ClInclude Include="..\..\..\security\oc_sp.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr.h" />
@@ -319,6 +323,7 @@
     <ClCompile Include="..\..\..\api\oc_core_res.c" />
     <ClCompile Include="..\..\..\api\oc_discovery.c" />
     <ClCompile Include="..\..\..\api\oc_endpoint.c" />
+    <ClCompile Include="..\..\..\api\oc_enums.c" />
     <ClCompile Include="..\..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
     <ClCompile Include="..\..\..\api\oc_main.c" />
@@ -414,6 +419,8 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_ael.c" />
+    <ClCompile Include="..\..\..\security\oc_audit.c" />
     <ClCompile Include="..\..\..\security\oc_certs.c" />
     <ClCompile Include="..\..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\..\security\oc_csr.c" />
@@ -427,6 +434,7 @@
     <ClCompile Include="..\..\..\security\oc_pki.c" />
     <ClCompile Include="..\..\..\security\oc_pstat.c" />
     <ClCompile Include="..\..\..\security\oc_roles.c" />
+    <ClCompile Include="..\..\..\security\oc_sdi.c" />
     <ClCompile Include="..\..\..\security\oc_sp.c" />
     <ClCompile Include="..\..\..\security\oc_store.c" />
     <ClCompile Include="..\..\..\security\oc_svr.c" />

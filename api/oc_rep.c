@@ -54,6 +54,13 @@ oc_rep_get_encoder_buf(void)
   return g_buf;
 }
 
+void oc_rep_encode_raw(const uint8_t* data, size_t len)
+{
+  memcpy(g_buf, data, len);
+  g_encoder.data.ptr = g_buf + len;
+  g_err = CborNoError;
+}
+
 int
 oc_rep_get_encoded_payload_size(void)
 {
@@ -324,12 +331,17 @@ get_tagged_value:
           *err |= CborErrorIllegalType;
           return;
         } else {
-          (*prev)->next = _alloc_rep();
-          if ((*prev)->next == NULL) {
+          if ((*prev) != NULL) {
+            (*prev)->next = _alloc_rep();
+            if ((*prev)->next == NULL) {
+              *err = CborErrorOutOfMemory;
+              return;
+            }
+            prev = &(*prev)->next;
+          } else {
             *err = CborErrorOutOfMemory;
             return;
           }
-          prev = &(*prev)->next;
         }
         (*prev)->type = OC_REP_OBJECT;
         (*prev)->next = 0;

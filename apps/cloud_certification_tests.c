@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 // define application specific values.
-static const char *spec_version = "ocf.2.0.5";
+static const char *spec_version = "ocf.2.2.1";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *device_rt = "oic.d.switch";
@@ -90,12 +90,26 @@ display_menu(void)
     }                                                                          \
   } while (0)
 
+static void
+set_device_custom_property(void *data)
+{
+  (void)data;
+  oc_rep_set_array(root, dmn);
+
+  oc_rep_object_array_begin_item(dmn);
+  oc_rep_set_text_string(dmn, language, "en");
+  oc_rep_set_text_string(dmn, value, manufacturer);
+  oc_rep_object_array_end_item(dmn);
+
+  oc_rep_close_array(root, dmn);
+}
+
 static int
 app_init(void)
 {
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                       data_model_version, NULL, NULL);
+                       data_model_version, set_device_custom_property, NULL);
   if (ret || !deviceid) {
     return ret;
   }

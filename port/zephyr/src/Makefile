@@ -134,5 +134,6 @@ obj-y += ../../../deps/mbedtls/library/aes.o \
          ../../../security/oc_pstat.o \
          ../../../security/oc_store.o \
          ../../../security/oc_svr.o \
+         ../../../security/oc_sdi.o \
          storage.o
 endif

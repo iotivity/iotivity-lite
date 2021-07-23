@@ -486,6 +486,10 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
   int bytes_sent = 0;
 
   if (send_sock == INVALID_SOCKET) {
+    if (message->endpoint.flags & ACCEPTED) {
+      OC_ERR("connection was closed");
+      goto oc_tcp_send_buffer_done;
+    }
     if ((send_sock = initiate_new_session_locked(dev, &message->endpoint,
                                                  receiver)) == INVALID_SOCKET) {
       OC_ERR("could not initiate new TCP session");
@@ -620,7 +624,7 @@ accept_socket(SOCKET s, void *ctx)
     if (!(network_events.lNetworkEvents & (FD_ACCEPT | FD_CLOSE))) {
       return;
     }
-    endpoint.flags = IPV6 | TCP;
+    endpoint.flags = IPV6 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server_sock, &endpoint) ==
         SOCKET_ERROR) {
       OC_ERR("accept new tcp session fail");
@@ -636,7 +640,7 @@ accept_socket(SOCKET s, void *ctx)
     if (!(network_events.lNetworkEvents & (FD_ACCEPT | FD_CLOSE))) {
       return;
     }
-    endpoint.flags = IPV6 | SECURED | TCP;
+    endpoint.flags = IPV6 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure_sock, &endpoint) ==
         SOCKET_ERROR) {
       OC_ERR("accept new tcp secure session fail");
@@ -653,7 +657,7 @@ accept_socket(SOCKET s, void *ctx)
     if (!(network_events.lNetworkEvents & (FD_ACCEPT | FD_CLOSE))) {
       return;
     }
-    endpoint.flags = IPV4 | TCP;
+    endpoint.flags = IPV4 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server4_sock, &endpoint) ==
         SOCKET_ERROR) {
       OC_ERR("accept new tcp4 session fail");
@@ -669,7 +673,7 @@ accept_socket(SOCKET s, void *ctx)
     if (!(network_events.lNetworkEvents & (FD_ACCEPT | FD_CLOSE))) {
       return;
     }
-    endpoint.flags = IPV4 | SECURED | TCP;
+    endpoint.flags = IPV4 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure4_sock, &endpoint) ==
         SOCKET_ERROR) {
       OC_ERR("accept new tcp4 secure session fail");

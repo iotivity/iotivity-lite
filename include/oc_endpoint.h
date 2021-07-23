@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017 Intel Corporation
+// Copyright (c) 2017, 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@
 
 #include "oc_helpers.h"
 #include "oc_uuid.h"
+#ifdef OC_OSCORE
+#include "messaging/coap/oscore_constants.h"
+#endif /* OC_OSCORE */
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +57,8 @@ enum transport_flags {
   IPV6 = 1 << 3,
   TCP = 1 << 4,
   GATT = 1 << 5,
-  MULTICAST = 1 << 6
+  MULTICAST = 1 << 6,
+  ACCEPTED = 1 << 7
 };
 
 typedef struct oc_endpoint_t
@@ -71,6 +75,10 @@ typedef struct oc_endpoint_t
   int interface_index;
   uint8_t priority;
   ocf_version_t version;
+#ifdef OC_OSCORE
+  uint8_t piv[OSCORE_PIV_LEN];
+  uint8_t piv_len;
+#endif /* OC_OSCORE */
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \

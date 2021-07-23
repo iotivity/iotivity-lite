@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2016, 2018, 2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,10 +63,18 @@ extern "C" {
 
 enum {
 #ifdef OC_TCP // TODO: need to check about tls packet.
+#ifdef OC_OSCORE
+  OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + 2 * COAP_MAX_HEADER_SIZE)
+#else  /* OC_OSCORE */
   OC_PDU_SIZE = (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)
-#else /* OC_TCP */
+#endif /* !OC_OSCORE */
+#else  /* OC_TCP */
 #ifdef OC_SECURITY
-  OC_PDU_SIZE = (2 * OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#ifdef OC_OSCORE
+  OC_PDU_SIZE = (OC_BLOCK_SIZE + 2 * COAP_MAX_HEADER_SIZE)
+#else  /* OC_OSCORE */
+  OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
+#endif /* !OC_OSCORE */
 #else  /* OC_SECURITY */
   OC_PDU_SIZE = (OC_BLOCK_SIZE + COAP_MAX_HEADER_SIZE)
 #endif /* !OC_SECURITY */
@@ -81,8 +89,12 @@ enum {
 extern "C" {
 #endif
 #ifdef OC_TCP
+#ifdef OC_OSCORE
+#define OC_PDU_SIZE (oc_get_max_app_data_size() + 2 * COAP_MAX_HEADER_SIZE)
+#else /* OC_OSCORE */
 #define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
-#else /* OC_TCP */
+#endif /* !OC_OSCORE */
+#else  /* OC_TCP */
 #define OC_PDU_SIZE (oc_get_mtu_size())
 #endif /* !OC_TCP */
 #define OC_BLOCK_SIZE (oc_get_block_size())
@@ -97,7 +109,11 @@ struct oc_message_s
   size_t length;
   uint8_t ref_count;
 #ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_INOUT_BUFFER_SIZE
+  uint8_t data[OC_INOUT_BUFFER_SIZE];
+#else  /* OC_INOUT_BUFFER_SIZE */
   uint8_t *data;
+#endif /* !OC_INOUT_BUFFER_SIZE */
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t data[OC_PDU_SIZE];
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -106,7 +122,7 @@ struct oc_message_s
 #endif /* OC_TCP */
 #ifdef OC_SECURITY
   uint8_t encrypted;
-#endif
+#endif /* OC_SECURITY */
 };
 
 int oc_send_buffer(oc_message_t *message);

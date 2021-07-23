@@ -26,15 +26,15 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void oc_sec_acl_init(void);
 void oc_sec_acl_free(void);
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
 void oc_sec_acl_default(size_t device);
-bool oc_sec_encode_acl(size_t device);
+bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
+                       bool to_storage);
 bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_acl_init(void);
 void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -44,8 +44,7 @@ void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                       oc_endpoint_t *endpoint);
-void oc_sec_set_post_otm_acl(size_t device);
-void oc_sec_ace_clear_bootstrap_aces(size_t device);
+void oc_sec_acl_add_bootsrap_acl(size_t device);
 bool oc_sec_acl_add_created_resource_ace(const char *href,
                                          oc_endpoint_t *client, size_t device,
                                          bool collection);

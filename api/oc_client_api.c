@@ -36,6 +36,9 @@ oc_client_cb_t *client_cb;
 static oc_blockwise_state_t *request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
+#ifdef OC_OSCORE
+oc_message_t *multicast_update = NULL;
+#endif /* OC_OSCORE */
 oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 
 static bool
@@ -128,15 +131,16 @@ prepare_coap_request(oc_client_cb_t *cb)
     type = COAP_TYPE_CON;
   }
 
-  transaction = coap_new_transaction(cb->mid, &cb->endpoint);
+  transaction =
+    coap_new_transaction(cb->mid, cb->token, cb->token_len, &cb->endpoint);
 
   if (!transaction) {
     return false;
   }
 
-#ifndef OC_BLOCK_WISE
   oc_rep_new(transaction->message->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
-#else  /* !OC_BLOCK_WISE */
+
+#ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
@@ -185,6 +189,97 @@ prepare_coap_request(oc_client_cb_t *cb)
 
   return true;
 }
+
+#ifdef OC_OSCORE
+bool
+oc_do_multicast_update(void)
+{
+  int payload_size = oc_rep_get_encoded_payload_size();
+
+  if (payload_size > 0) {
+    coap_set_payload(request, multicast_update->data + COAP_MAX_HEADER_SIZE,
+                     payload_size);
+  } else {
+    goto do_multicast_update_error;
+  }
+
+  if (payload_size > 0) {
+    coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+  }
+
+  multicast_update->length =
+    coap_serialize_message(request, multicast_update->data);
+  if (multicast_update->length > 0) {
+    oc_send_message(multicast_update);
+  } else {
+    goto do_multicast_update_error;
+  }
+
+#ifdef OC_IPV4
+  oc_message_t *multicast_update4 = oc_internal_allocate_outgoing_message();
+  if (multicast_update4) {
+    oc_make_ipv4_endpoint(mcast4, IPV4 | MULTICAST | SECURED, 5683, 0xe0, 0x00,
+                          0x01, 0xbb);
+
+    memcpy(&multicast_update4->endpoint, &mcast4, sizeof(oc_endpoint_t));
+
+    multicast_update4->length = multicast_update->length;
+    memcpy(multicast_update4->data, multicast_update->data,
+           multicast_update->length);
+
+    oc_send_message(multicast_update4);
+  }
+#endif /* OC_IPV4 */
+
+  multicast_update = NULL;
+  return true;
+do_multicast_update_error:
+  oc_message_unref(multicast_update);
+  multicast_update = NULL;
+  return false;
+}
+
+bool
+oc_init_multicast_update(const char *uri, const char *query)
+{
+  oc_make_ipv6_endpoint(mcast, IPV6 | MULTICAST | SECURED, 5683, 0xff, 0x02, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58);
+  mcast.addr.ipv6.scope = 0;
+
+  coap_message_type_t type = COAP_TYPE_NON;
+
+  multicast_update = oc_internal_allocate_outgoing_message();
+
+  if (!multicast_update) {
+    return false;
+  }
+
+  memcpy(&multicast_update->endpoint, &mcast, sizeof(oc_endpoint_t));
+
+  oc_rep_new(multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
+
+  coap_udp_init_message(request, type, OC_POST, coap_get_mid());
+
+  coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+
+  request->token_len = 8;
+  int i = 0;
+  uint32_t r;
+  while (i < request->token_len) {
+    r = oc_random_value();
+    memcpy(request->token + i, &r, sizeof(r));
+    i += sizeof(r);
+  }
+
+  coap_set_header_uri_path(request, uri, strlen(uri));
+
+  if (query) {
+    coap_set_header_uri_query(request, query);
+  }
+
+  return true;
+}
+#endif /* OC_OSCORE */
 
 void
 oc_free_server_endpoints(oc_endpoint_t *endpoint)
@@ -603,9 +698,8 @@ oc_do_site_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x05, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -633,9 +727,8 @@ oc_do_realm_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = multi_scope_ipv6_discovery(NULL, 0x03, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -657,9 +750,8 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 #endif
   bool status = multi_scope_ipv6_discovery(cb4, 0x02, oc_string(uri_query),
                                            handlers, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 
@@ -700,9 +792,8 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
   }
   bool status = dispatch_ip_discovery(NULL, oc_string(uri_query), handlers,
                                       endpoint, user_data);
-  if (oc_string_len(uri_query) > 0) {
-    oc_free_string(&uri_query);
-  }
+  oc_free_string(&uri_query);
+
   return status;
 }
 

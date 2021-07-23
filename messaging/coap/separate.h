@@ -54,8 +54,7 @@
 #include "transactions.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct coap_separate

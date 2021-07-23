@@ -19,10 +19,10 @@
 
 #include "separate.h"
 #include "util/oc_list.h"
+#include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 struct oc_separate_response_s
@@ -34,14 +34,16 @@ struct oc_separate_response_s
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
+  size_t len;
 };
 
 struct oc_response_buffer_s
 {
   uint8_t *buffer;
-  uint16_t buffer_size;
-  uint16_t response_length;
+  size_t buffer_size;
+  size_t response_length;
   int code;
+  oc_content_format_t content_format;
 };
 
 #ifdef __cplusplus

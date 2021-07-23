@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2017-2019 Intel Corporation
+// Copyright (c) 2017-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #ifndef OC_OBT_INTERNAL_H
 #define OC_OBT_INTERNAL_H
 
+#include "messaging/coap/oscore_constants.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_obt.h"
@@ -25,8 +26,7 @@
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Used for tracking owned/unowned devices in oc_obt's internal caches */
@@ -69,6 +69,7 @@ typedef struct oc_otm_ctx_t
   struct oc_otm_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
+  bool sdi;
 } oc_otm_ctx_t;
 
 /* Context to be maintained over dos transition sequence */
@@ -102,6 +103,50 @@ typedef struct oc_credprov_ctx_t
   uint8_t key[16];
   oc_role_t *roles;
 } oc_credprov_ctx_t;
+
+
+/* Context to be maintained over installing a trust anchor
+ * sequence
+ */
+typedef struct oc_trustanchor_ctx_t
+{
+  struct oc_trustanchor_ctx_t* next;
+  oc_status_cb_t cb;
+  oc_device_t* device1;
+  oc_switch_dos_ctx_t* switch_dos;
+  char *trustanchor;
+  size_t trustanchor_size;
+  char trustanchor_subject[64];
+} oc_trustanchor_ctx_t;
+
+/* Context to be maintained over the pair-wise OSCORE context provisioning
+ * sequence
+ */
+typedef struct oc_oscoreprov_ctx_t
+{
+  struct oc_oscoreprov_ctx_t *next;
+  oc_status_cb_t cb;
+  oc_device_t *device1;
+  oc_device_t *device2;
+  oc_switch_dos_ctx_t *switch_dos;
+  uint8_t sendid[OSCORE_CTXID_LEN];
+  uint8_t recvid[OSCORE_CTXID_LEN];
+  uint8_t secret[OSCORE_MASTER_SECRET_LEN];
+} oc_oscoreprov_ctx_t;
+
+/* Context to be maintained over the group OSCORE context provisioning
+ * sequence.
+ */
+typedef struct oc_oscoregroupprov_ctx_t
+{
+  struct oc_oscoregroupprov_ctx_t *next;
+  oc_device_status_cb_t cb;
+  oc_device_t *device;
+  oc_uuid_t subjectuuid;
+  oc_string_t desc;
+  oc_switch_dos_ctx_t *switch_dos;
+  oc_sec_credtype_t type;
+} oc_oscoregroupprov_ctx_t;
 
 /* Context over a RETRIEVE credentials request */
 typedef struct oc_credret_ctx_t
@@ -189,6 +234,7 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
                               const uint8_t *issuer_private_key,
                               const size_t issuer_private_key_size,
                               oc_string_t *role_cert);
+
 #ifdef __cplusplus
 }
 #endif

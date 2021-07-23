@@ -52,8 +52,7 @@
 #include "util/oc_etimer.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /*
@@ -75,6 +74,8 @@ typedef struct coap_transaction
   struct coap_transaction *next; /* for LIST */
 
   uint16_t mid;
+  uint8_t token_len;
+  uint8_t token[COAP_TOKEN_LEN];
   struct oc_etimer retrans_timer;
   uint8_t retrans_counter;
   oc_message_t *message;
@@ -83,12 +84,15 @@ typedef struct coap_transaction
 
 void coap_register_as_transaction_handler(void);
 
-coap_transaction_t *coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint);
+coap_transaction_t *coap_new_transaction(uint16_t mid, uint8_t *token,
+                                         uint8_t token_len,
+                                         oc_endpoint_t *endpoint);
 
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
-
+coap_transaction_t *coap_get_transaction_by_token(uint8_t *token,
+                                                  uint8_t token_len);
 void coap_check_transactions(void);
 void coap_free_all_transactions(void);
 void coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint);

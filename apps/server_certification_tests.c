@@ -31,7 +31,7 @@
 static const size_t DEVICE = 0;
 
 // define application specific values.
-static const char *spec_version = "ocf.2.1.1";
+static const char *spec_version = "ocf.2.2.2";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *deivce_uri = "/oic/d";
@@ -480,7 +480,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
       u = K;
     } else if (units[0] == 'F') {
       u = F;
-    } else if (units[0] != 'C') {
+    } else if (units[0] == 'C') {
       u = C;
     } else {
       invalid_query = true;
@@ -899,6 +899,11 @@ register_resources(void)
   oc_resource_set_periodic_observable(temp_resource, 1);
   oc_resource_set_request_handler(temp_resource, OC_GET, get_temp, NULL);
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
+  oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
+  oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
+ #ifdef OC_OSCORE
+  oc_resource_set_secure_mcast(temp_resource, true);
+#endif /* OC_OSCORE */
   oc_add_resource(temp_resource);
   PRINT("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
@@ -909,6 +914,9 @@ register_resources(void)
   oc_resource_set_discoverable(bswitch, true);
   oc_resource_set_request_handler(bswitch, OC_GET, get_switch, NULL);
   oc_resource_set_request_handler(bswitch, OC_POST, post_switch, NULL);
+  oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
+  oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
+  oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
 #ifdef OC_COLLECTIONS
@@ -936,6 +944,12 @@ register_resources(void)
   oc_add_collection(col);
   PRINT("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
+
+    oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
+    oc_resource_set_observable(device_resource, false);
+    
+    oc_resource_t* platform_resource = oc_core_get_resource_by_index(OCF_P, DEVICE);
+    oc_resource_set_observable(platform_resource, false);
 }
 
 static void

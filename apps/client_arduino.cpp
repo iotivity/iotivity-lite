@@ -10,13 +10,15 @@
 
 #ifdef __AVR__
 #ifdef OC_XMEM
-void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
-void extRAMinit(void) {
-    // set up the xmem registers
-    XMCRB=0;
-    XMCRA=1<<SRE;
-    DDRD|=_BV(PD7);
-    DDRL|=(_BV(PL6)|_BV(PL7));
+void extRAMinit(void) __attribute__((used, naked, section(".init3")));
+void
+extRAMinit(void)
+{
+  // set up the xmem registers
+  XMCRB = 0;
+  XMCRA = 1 << SRE;
+  DDRD |= _BV(PD7);
+  DDRL |= (_BV(PL6) | _BV(PL7));
 }
 #endif
 #endif
@@ -66,8 +68,7 @@ observe_light(oc_client_response_t *data)
       break;
     case OC_REP_STRING:
       OC_DBG("%s", oc_string(rep->value.string));
-      if (oc_string_len(name))
-        oc_free_string(&name);
+      oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
       break;
@@ -159,8 +160,7 @@ get_light(oc_client_response_t *data)
       break;
     case OC_REP_STRING:
       OC_DBG("%s", oc_string(rep->value.string));
-      if (oc_string_len(name))
-        oc_free_string(&name);
+      oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
       break;
@@ -244,9 +244,9 @@ OC_PROCESS_THREAD(sample_client_process, ev, data)
 {
   (void)data;
   static struct oc_etimer et;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
   static oc_clock_time_t next_event;
   oc_set_mtu_size(1024);
   oc_set_max_app_data_size(1024);
@@ -255,32 +255,31 @@ OC_PROCESS_THREAD(sample_client_process, ev, data)
   while (ev != OC_PROCESS_EVENT_EXIT) {
     oc_etimer_set(&et, (oc_clock_time_t)next_event);
 
-    if(ev == OC_PROCESS_EVENT_INIT){
+    if (ev == OC_PROCESS_EVENT_INIT) {
       int init = oc_main_init(&handler);
-      if (init < 0){
+      if (init < 0) {
         OC_DBG("Client Init failed!");
         return init;
       }
       OC_DBG("Client process init!");
-    }
-    else if(ev == OC_PROCESS_EVENT_TIMER){
+    } else if (ev == OC_PROCESS_EVENT_TIMER) {
       next_event = oc_main_poll();
       next_event -= oc_clock_time();
     }
     OC_PROCESS_WAIT_EVENT();
   }
- OC_PROCESS_END();
+  OC_PROCESS_END();
 }
 
 // Arduino Ethernet Shield
-uint8_t ConnectToNetwork()
+uint8_t
+ConnectToNetwork()
 {
   // Note: ****Update the MAC address here with your shield's MAC address****
-  uint8_t ETHERNET_MAC[] = {0x90, 0xA2, 0xDA, 0x11, 0x44, 0xA9};
+  uint8_t ETHERNET_MAC[] = { 0x90, 0xA2, 0xDA, 0x11, 0x44, 0xA9 };
   Ethernet.init(5); // CS Pin for MKRZERO
   uint8_t error = Ethernet.begin(ETHERNET_MAC);
-  if (error  == 0)
-  {
+  if (error == 0) {
     OC_ERR("Error connecting to Network: %d", error);
     return -1;
   }
@@ -289,18 +288,19 @@ uint8_t ConnectToNetwork()
   return 0;
 }
 
-void setup() {
+void
+setup()
+{
 #if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
-	Serial.begin(250000);
+  Serial.begin(250000);
 #else
-	Serial.begin(115200);
+  Serial.begin(115200);
 #endif
 #if defined(__SAMD21G18A__)
   while (!Serial) {
   }
 #endif
-  if (ConnectToNetwork() != 0)
-  {
+  if (ConnectToNetwork() != 0) {
     OC_ERR("Unable to connect to network");
     return;
   }
@@ -312,7 +312,9 @@ void setup() {
   delay(200);
 }
 
-void loop() {
+void
+loop()
+{
 
   oc_process_run();
 }

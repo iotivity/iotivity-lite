@@ -81,7 +81,8 @@ coap_register_as_transaction_handler(void)
 }
 
 coap_transaction_t *
-coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
+coap_new_transaction(uint16_t mid, uint8_t *token, uint8_t token_len,
+                     oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
@@ -89,6 +90,10 @@ coap_new_transaction(uint16_t mid, oc_endpoint_t *endpoint)
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;
+      if (token_len > 0) {
+        memcpy(t->token, token, token_len);
+        t->token_len = token_len;
+      }
       t->retrans_counter = 0;
 
       /* save client address */
@@ -215,6 +220,20 @@ coap_get_transaction_by_mid(uint16_t mid)
   return NULL;
 }
 
+coap_transaction_t *
+coap_get_transaction_by_token(uint8_t *token, uint8_t token_len)
+{
+  coap_transaction_t *t = NULL;
+
+  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
+       t = t->next) {
+    if (t->token_len == token_len && memcmp(t->token, token, token_len) == 0) {
+      OC_DBG("Found transaction by token %p", (void *)t);
+      return t;
+    }
+  }
+  return NULL;
+}
 /*---------------------------------------------------------------------------*/
 void
 coap_check_transactions(void)

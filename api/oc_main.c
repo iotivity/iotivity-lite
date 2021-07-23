@@ -44,9 +44,11 @@
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
 #include "security/oc_sp.h"
+#include "security/oc_ael.h"
 #ifdef OC_PKI
 #include "security/oc_keypair.h"
 #endif /* OC_PKI */
+#include "security/oc_sdi.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_CLOUD
@@ -81,18 +83,35 @@ oc_get_factory_presets_cb(void)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
+#ifdef OC_OSCORE
+static size_t _OC_MTU_SIZE = 1024 + 2 * COAP_MAX_HEADER_SIZE;
+#elif OC_INOUT_BUFFER_SIZE
+static size_t _OC_MTU_SIZE = OC_INOUT_BUFFER_SIZE;
+#else  /* OC_OSCORE */
 static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
+#endif /* !OC_OSCORE */
+#ifdef OC_APP_DATA_BUFFER_SIZE
 static size_t _OC_MAX_APP_DATA_SIZE = 8192;
-static size_t _OC_BLOCK_SIZE = 1024;
+#else                                /* OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_MAX_APP_DATA_SIZE = 8192;
+#endif                               /* !OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
 int
 oc_set_mtu_size(size_t mtu_size)
 {
   (void)mtu_size;
+#ifdef OC_INOUT_BUFFER_SIZE
+  return -1;
+#endif /* OC_INOUT_BUFFER_SIZE */
 #ifdef OC_BLOCK_WISE
   if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
     return -1;
+#ifdef OC_OSCORE
+  _OC_MTU_SIZE = mtu_size + COAP_MAX_HEADER_SIZE;
+#else  /* OC_OSCORE */
   _OC_MTU_SIZE = mtu_size;
+#endif /* !OC_OSCORE */
   mtu_size -= COAP_MAX_HEADER_SIZE;
   size_t i;
   for (i = 10; i >= 4 && (mtu_size >> i) == 0; i--)
@@ -111,6 +130,9 @@ oc_get_mtu_size(void)
 void
 oc_set_max_app_data_size(size_t size)
 {
+#ifdef OC_APP_DATA_BUFFER_SIZE
+  return;
+#endif /* OC_APP_DATA_BUFFER_SIZE */
   _OC_MAX_APP_DATA_SIZE = size;
 #ifndef OC_BLOCK_WISE
   _OC_BLOCK_SIZE = size;
@@ -217,18 +239,9 @@ oc_main_init(const oc_handler_t *handler)
   oc_sec_create_svr();
 #endif
 
-#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  oc_cloud_init();
-#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_init();
 #endif /* OC_SOFTWARE_UPDATE */
-
-#ifdef OC_SERVER
-  if (app_callbacks->register_resources)
-    app_callbacks->register_resources();
-#endif
 
 #ifdef OC_SECURITY
   size_t device;
@@ -244,11 +257,27 @@ oc_main_init(const oc_handler_t *handler)
     oc_sec_load_acl(device);
     OC_DBG("oc_main_init(): loading sp");
     oc_sec_load_sp(device);
+    OC_DBG("oc_main_init(): loading ael");
+    oc_sec_load_ael(device);
 #ifdef OC_PKI
     OC_DBG("oc_main_init(): loading ECDSA keypair");
     oc_sec_load_ecdsa_keypair(device);
 #endif /* OC_PKI */
+    OC_DBG("oc_main_init(): loading sdi");
+    oc_sec_load_sdi(device);
   }
+#endif
+
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+// initialize cloud after load pstat
+  oc_cloud_init();
+  OC_DBG("oc_main_init(): loading cloud");
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#ifdef OC_SERVER
+// initialize after cloud because their can be registered to cloud.
+  if (app_callbacks->register_resources)
+    app_callbacks->register_resources();
 #endif
 
   OC_DBG("oc_main: stack initialized");
@@ -296,15 +325,17 @@ oc_main_shutdown(void)
   oc_ri_shutdown();
 
 #ifdef OC_SECURITY
+  oc_tls_shutdown();
   oc_sec_acl_free();
   oc_sec_cred_free();
   oc_sec_doxm_free();
   oc_sec_pstat_free();
+  oc_sec_ael_free();
   oc_sec_sp_free();
 #ifdef OC_PKI
   oc_free_ecdsa_keypairs();
 #endif /* OC_PKI */
-  oc_tls_shutdown();
+  oc_sec_sdi_free();
 #endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE

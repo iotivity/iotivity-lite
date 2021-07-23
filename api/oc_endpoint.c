@@ -472,15 +472,13 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #else /* OC_IPV4 */
   else {
 #ifdef OC_DNS_LOOKUP
-    if (oc_string_len(ipaddress) > 0)
-      oc_free_string(&ipaddress);
+    oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
     return -1;
   }
 #endif /* !OC_IPV4 */
 #ifdef OC_DNS_LOOKUP
-  if (oc_string_len(ipaddress) > 0)
-    oc_free_string(&ipaddress);
+  oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
   return 0;
 }
@@ -586,7 +584,8 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   if (!ep1 || !ep2)
     return -1;
 
-  if ((ep1->flags & ~MULTICAST) != (ep2->flags & ~MULTICAST) ||
+  if ((ep1->flags & ~(MULTICAST | ACCEPTED)) !=
+        (ep2->flags & ~(MULTICAST | ACCEPTED)) ||
       ep1->device != ep2->device) {
     return -1;
   }

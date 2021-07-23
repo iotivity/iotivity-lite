@@ -72,6 +72,14 @@ int oc_rep_get_encoded_payload_size(void);
 const uint8_t *oc_rep_get_encoder_buf(void);
 
 /**
+ * @brief Encode raw data, as if it was already encoded.
+ * 
+ * @param data Pointer to data to be encoded. Will be copied into the global buffer.
+ * @param len Length of data.
+ */
+void oc_rep_encode_raw(const uint8_t* data, size_t len);
+
+/**
  * Get a pointer to the cbor object with the given `name`
  *
  * @return cbor object pointer

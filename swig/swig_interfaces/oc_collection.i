@@ -1,11 +1,13 @@
 /* File oc_api.i */
 %module OCCollectionUtil
 
-%include "stdint.i"
-%include iotivity.swg
+%include "stdint.i";
+%include "arrays_java.i";
+%include "iotivity.swg";
 
-%import oc_ri.i
-%import oc_uuid.i
+%import "oc_ri.i";
+%import "oc_uuid.i";
+%import "oc_enums.i";
 
 %{
 #include "oc_collection.h"
@@ -29,6 +31,9 @@ typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::delete_handler;
 %ignore oc_collection_s::get_properties;
 %ignore oc_collection_s::set_properties;
+%rename(tagPositionRelative) oc_collection_s::tag_pos_rel;
+%rename(tagPositionDescription) oc_collection_s::tag_pos_desc;
+%rename(tagPositionFunction) oc_collection_s::tag_pos_func;
 %rename (numLinks) oc_collection_s::num_links;
 %ignore oc_collection_s::OC_LIST_STRUCT(mandatory_rts);
 // TODO convert to array of strings.

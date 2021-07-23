@@ -7,6 +7,48 @@
         "application/json"
   ],
   "paths":{
+      "/oc/con": {
+        "get": {
+          "description": "",
+          "parameters": [
+            {
+              "$ref": "#/parameters/interface-rw"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description" : "",
+              "schema": {
+                "$ref": "#/definitions/Configuration"
+              }
+            }
+          }
+        },
+        "post": {
+          "description": "",
+          "parameters": [
+            {
+              "$ref": "#/parameters/interface-rw"
+            },
+            {
+              "name": "body",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/ConfigurationUpdate"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "",
+              "schema": {
+                "$ref": "#/definitions/ConfigurationUpdate"
+              }
+            }
+          }
+        }
+      },
         "/platform?if=oic.if.ll":{
             "get":{
                 "responses":{
@@ -142,7 +184,7 @@
         },
         "parameters":[
                     {
-                        "$ref":"#/parameters/interface-update"
+                        "$ref":"#/parameters/interface-all40"
           },
           {
                         "schema":{
@@ -232,7 +274,7 @@
         },
         "parameters":[
                     {
-                        "$ref":"#/parameters/interface-all"
+                        "$ref":"#/parameters/interface-rw"
           }
         ],
         "description":""
@@ -250,7 +292,7 @@
         },
         "parameters":[
                     {
-                        "$ref":"#/parameters/interface-update"
+                        "$ref":"#/parameters/interface-all40"
           },
           {
                         "schema":{
@@ -350,7 +392,7 @@
           "description":""
         },
         "tag-pos-desc":{
-                    "description":"Descriptive relative position of the Resource",
+                    "description":"",
           "type":"string",
           "enum":[
                         "unknown",
@@ -378,7 +420,7 @@
         "tag-pos-rel":{
                     "type":"array",
           "readOnly":true,
-          "description":"Relative position; against a known [0,0,0] point.",
+          "description":"",
           "minItems":3,
           "maxItems":3,
           "items":{
@@ -430,7 +472,7 @@
                     "items":{
                         "properties":{
                             "tag-pos-desc":{
-                                "description":"Descriptive relative position of the Resource",
+                                "description":"",
                 "type":"string",
                 "enum":[
                                     "unknown",
@@ -451,7 +493,6 @@
                 "readOnly":true
               },
               "anchor":{
-                                "format":"uri",
                 "type":"string",
                 "maxLength":256,
                 "description":""
@@ -690,7 +731,7 @@
           "description":""
         },
         "tag-pos-desc":{
-                    "description":"Descriptive relative position of the Resource",
+                    "description":"",
           "type":"string",
           "enum":[
                         "unknown",
@@ -830,7 +871,7 @@
         "mnmo":{
                     "type":"string",
           "readOnly":true,
-          "maxLength":64,
+          "maxLength":128,
           "description":""
         },
         "mndt":{
@@ -869,7 +910,7 @@
             "items":{
                 "properties":{
                     "tag-pos-desc":{
-                        "description":"Descriptive relative position of the Resource",
+                        "description":"",
             "type":"string",
             "enum":[
                             "unknown",
@@ -890,7 +931,6 @@
             "readOnly":true
           },
           "anchor":{
-                        "format":"uri",
             "type":"string",
             "maxLength":256,
             "description":""
@@ -1195,7 +1235,7 @@
     "oic.oic-link":{
             "properties":{
                 "tag-pos-desc":{
-                    "description":"Descriptive relative position of the Resource",
+                    "description":"",
           "type":"string",
           "enum":[
                         "unknown",
@@ -1216,7 +1256,6 @@
           "readOnly":true
         },
         "anchor":{
-                    "format":"uri",
           "type":"string",
           "maxLength":256,
           "description":""
@@ -1335,7 +1374,7 @@
           "description":""
         },
         "di":{
-                    "type":"string",
+          "type":"string",
           "pattern":"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
           "description":""
         },
@@ -1350,16 +1389,67 @@
         "if"
       ],
       "type":"object"
-    }
+    },
+      "Configuration": {
+        "properties": {
+          "rt":  {
+            "description": "",
+            "items": {
+              "enum": ["oic.wk.con"],
+              "type": "string",
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array",
+            "default": ["oic.wk.con"]
+          },
+          "n": {
+              "type": "string",
+              "readOnly": true,
+              "maxLength": 64,
+              "description": ""
+          },
+          "if" : {
+            "description": "",
+            "items": {
+              "enum": [
+                "oic.if.baseline",
+                "oic.if.rw"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          }
+        },
+        "type" : "object",
+        "required": ["n"]
+      },
+      "ConfigurationUpdate" : {
+        "properties": {
+          "n": {
+            "description": "",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": ["n"],
+        "type" : "object"
+      }
   },
   "info":{
         "version":"20190215",
-    "title":"serverlite24521",
-    "termsOfService":"https://openconnectivityfoundation.github.io/core/DISCLAIMER.md",
+    "title":"serverlite",
+    "termsOfService":"",
     "license":{
-            "x-copyright":"copyright 2016-2017, 2019 Open Connectivity Foundation, Inc. All rights reserved.",
-      "url":"https://github.com/openconnectivityfoundation/core/blob/e28a9e0a92e17042ba3e83661e4c0fbce8bdc4ba/LICENSE.md",
-      "name":"OCF Data Model License"
+      "x-copyright":"",
+      "url":"",
+      "name":""
     }
   },
   "parameters":{
@@ -1371,24 +1461,12 @@
       ],
       "in":"query",
       "name":"units",
-      "x-queryexample":"/TemperatureResURI?units=C",
       "description":"",
       "type":"string"
     },
     "interface10":{
             "enum":[
                 "oic.if.a",
-        "oic.if.baseline"
-      ],
-      "type":"string",
-      "in":"query",
-      "name":"if"
-    },
-    "interface-update":{
-            "enum":[
-                "oic.if.ll",
-        "oic.if.create",
-        "oic.if.b",
         "oic.if.baseline"
       ],
       "type":"string",
@@ -1425,18 +1503,9 @@
     },
     "interface-all40":{
             "enum":[
-                "oic.if.ll",
+        "oic.if.ll",
         "oic.if.create",
         "oic.if.b",
-        "oic.if.baseline"
-      ],
-      "type":"string",
-      "in":"query",
-      "name":"if"
-    },
-    "interface-all":{
-            "enum":[
-                "oic.if.rw",
         "oic.if.baseline"
       ],
       "type":"string",

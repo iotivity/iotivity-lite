@@ -13,6 +13,7 @@
 %import "oc_endpoint.i"
 %import "oc_rep.i"
 %import "oc_uuid.i"
+%import "oc_enums.i"
 
 %pragma(java) jniclasscode=%{
   static {
@@ -662,6 +663,9 @@ void jni_remove_ownership_status_cb(jobject cb)
 %rename(resourceSetDefaultInterface) oc_resource_set_default_interface;
 %rename(resourceBindResourceType) oc_resource_bind_resource_type;
 %rename(deviceBindResourceType) oc_device_bind_resource_type;
+%rename(resourceTagPositionDescription) oc_resource_tag_pos_desc;
+%rename(resourceTagPositionRelative) oc_resource_tag_pos_rel;
+%rename(resourceTagFunctionDescription) oc_resource_tag_func_desc;
 %rename(processBaselineInterface) oc_process_baseline_interface;
 
 // DOCUMENTATION workaround

@@ -78,15 +78,15 @@ oc_core_introspection_data_handler(oc_request_t *request,
   IDD_size = oc_storage_read(
     idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 #endif /* OC_IDD_API */
-  request->response->content_format = APPLICATION_VND_OCF_CBOR;
+  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
-    request->response->response_buffer->response_length = (uint16_t)IDD_size;
+    request->response->response_buffer->response_length = IDD_size;
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     OC_ERR(
       "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
       IDD_size, OC_MAX_APP_DATA_SIZE);
-    request->response->response_buffer->response_length = (uint16_t)0;
+    request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
   }

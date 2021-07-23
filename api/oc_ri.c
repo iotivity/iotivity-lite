@@ -50,11 +50,20 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
+#ifdef OC_COLLECTIONS_IF_CREATE
+#include "oc_resource_factory.h"
+#endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_pstat.h"
+#include "security/oc_roles.h"
 #include "security/oc_tls.h"
+#include "security/oc_audit.h"
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
@@ -141,6 +150,19 @@ oc_resource_t *
 oc_ri_get_app_resources(void)
 {
   return oc_list_head(app_resources);
+}
+
+bool
+oc_ri_is_app_resource_valid(oc_resource_t *resource)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+  while (res) {
+    if (res == resource) {
+      return true;
+    }
+    res = res->next;
+  }
+  return false;
 }
 #endif
 
@@ -229,6 +251,9 @@ start_processes(void)
 
 #ifdef OC_SECURITY
   oc_process_start(&oc_tls_handler, NULL);
+#ifdef OC_OSCORE
+  oc_process_start(&oc_oscore_handler, NULL);
+#endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
   oc_process_start(&oc_network_events, NULL);
@@ -249,6 +274,9 @@ stop_processes(void)
   oc_process_exit(&coap_engine);
 
 #ifdef OC_SECURITY
+#ifdef OC_OSCORE
+  oc_process_exit(&oc_oscore_handler);
+#endif /* OC_OSCORE */
   oc_process_exit(&oc_tls_handler);
 #endif /* OC_SECURITY */
 
@@ -259,6 +287,8 @@ stop_processes(void)
 oc_resource_t *
 oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 {
+  if (!uri || uri_len == 0)
+    return NULL;
   int skip = 0;
   if (uri[0] != '/')
     skip = 1;
@@ -326,10 +356,29 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
+  /**
+   * Prevent double deallocation: oc_rt_factory_free_created_resource
+   * called below will invoke the delete handler of the resource which will
+   * invoke this function again. We use the list of resources to check
+   * whether the resource exists and when it doesn't we assume that
+   * a deallocation of the resource was already invoked and skip this one.
+   */
+  if (oc_list_remove2(app_resources, resource) == NULL) {
+    return true;
+  }
+
   if (resource->num_observers > 0) {
     coap_remove_observer_by_resource(resource);
   }
-  oc_list_remove(app_resources, resource);
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS) && \
+  defined(OC_COLLECTIONS_IF_CREATE)
+  oc_rt_created_t* rtc = oc_rt_get_factory_create_for_resource(resource);
+  if (rtc != NULL) {
+    oc_rt_factory_free_created_resource(rtc, rtc->rf);
+  }
+#endif
+
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
   return true;
@@ -363,12 +412,8 @@ void
 oc_ri_free_resource_properties(oc_resource_t *resource)
 {
   if (resource) {
-    if (oc_string_len(resource->name) > 0) {
-      oc_free_string(&(resource->name));
-    }
-    if (oc_string_len(resource->uri) > 0) {
-      oc_free_string(&(resource->uri));
-    }
+    oc_free_string(&(resource->name));
+    oc_free_string(&(resource->uri));
     if (oc_string_array_get_allocated_size(resource->types) > 0) {
       oc_free_string_array(&(resource->types));
     }
@@ -617,6 +662,47 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   return supported;
 }
 
+#ifdef OC_SECURITY
+static void
+oc_ri_audit_log(oc_method_t method, oc_resource_t *resource,
+                oc_endpoint_t *endpoint)
+{
+#define LINE_WIDTH 80
+  char aux_arr[6][LINE_WIDTH];
+  memset(aux_arr, 0, sizeof(aux_arr));
+  char *aux[] = { aux_arr[0], aux_arr[1], aux_arr[2],
+                  aux_arr[3], aux_arr[4], aux_arr[5] };
+  size_t idx = 1;
+  SNPRINTFipaddr(aux[0], LINE_WIDTH, *endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (peer) {
+    oc_uuid_to_str(&peer->uuid, aux[idx++], LINE_WIDTH);
+  }
+  memcpy(aux[idx++], oc_string(resource->uri), oc_string_len(resource->uri));
+  static const char *method_str_val[] = { "UNKNOWN", "RETRIEVE", "UPDATE",
+                                          "UPDATE", "DELETE" };
+  snprintf(aux[idx++], LINE_WIDTH, "attempt to %s the resource",
+           method_str_val[method]);
+  static const char *state_str_val[] = { "RESET", "RFOTM", "RFPRO", "RFNOP",
+                                         "SRESET" };
+  int state = oc_sec_get_pstat(endpoint->device)->s;
+  snprintf(aux[idx++], LINE_WIDTH, "device is in %s", state_str_val[state]);
+  snprintf(aux[idx++], LINE_WIDTH, "No roles asserted");
+#ifdef OC_PKI
+  if (peer) {
+    size_t pos = 0;
+    for (oc_sec_cred_t *rc = oc_sec_get_roles(peer); rc && pos < LINE_WIDTH;
+         rc = rc->next) {
+      pos += snprintf(aux[idx - 1] + pos, LINE_WIDTH - pos - 1, "%s ",
+                      oc_string(rc->role.role));
+    }
+  }
+#endif /* OC_PKI */
+  oc_audit_log(endpoint->device, "AC-1", "Access Denied", 0x01, 2,
+               (const char **)aux, idx);
+}
+#endif /* OC_SECURITY */
+
 #ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response,
@@ -678,10 +764,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    */
   response_buffer.code = 0;
   response_buffer.response_length = 0;
+  response_buffer.content_format = 0;
 
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
-  response_obj.content_format = 0;
 
   request_obj.response = &response_obj;
   request_obj.request_payload = NULL;
@@ -696,7 +782,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_interface_mask_t iface_query = 0, iface_mask = 0;
 
   /* Obtain request uri from the CoAP packet. */
-  const char *uri_path;
+  const char *uri_path = NULL;
   size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
   /* Obtain query string from CoAP packet. */
@@ -764,13 +850,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         entity_too_large = true;
       bad_request = true;
     }
-
-#if defined(OC_BLOCK_WISE)
-    /* Free request_state cause it isn't used any more
-     */
-    oc_blockwise_free_request_buffer(*request_state);
-    *request_state = NULL;
-#endif
   }
 
   oc_resource_t *resource, *cur_resource = NULL;
@@ -825,6 +904,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         !does_interface_support_method(iface_mask, method)) {
       forbidden = true;
       bad_request = true;
+#ifdef OC_SECURITY
+      oc_audit_log(endpoint->device, "COMM-1", "Operation not supported", 0x40,
+                   2, NULL, 0);
+#endif
     }
   }
 
@@ -845,13 +928,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
                         uri_query_len);
         }
         response_buffer.buffer = (*response_state)->buffer;
-        response_buffer.buffer_size = (uint16_t)OC_MAX_APP_DATA_SIZE;
+        response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
       }
     }
   }
 #else  /* OC_BLOCK_WISE */
   response_buffer.buffer = buffer;
-  response_buffer.buffer_size = (uint16_t)OC_BLOCK_SIZE;
+  response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
   if (cur_resource && !bad_request) {
@@ -871,6 +954,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      */
     if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
       authorized = false;
+      oc_ri_audit_log(method, cur_resource, endpoint);
     } else
 #endif /* OC_SECURITY */
     {
@@ -903,6 +987,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       }
     }
   }
+
+
+#if defined(OC_BLOCK_WISE)
+  oc_blockwise_free_request_buffer(*request_state);
+  *request_state = NULL;
+#endif
 
   if (request_obj.request_payload) {
     /* To the extent that the request payload was parsed, free the
@@ -1116,8 +1206,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      if (response_obj.content_format > 0) {
-        coap_set_header_content_format(response, response_obj.content_format);
+      if (response_buffer.content_format > 0) {
+        coap_set_header_content_format(response,
+                                       response_buffer.content_format);
       }
     }
 
@@ -1143,9 +1234,7 @@ free_client_cb(oc_client_cb_t *cb)
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
   oc_free_string(&cb->uri);
-  if (oc_string_len(cb->query)) {
-    oc_free_string(&cb->query);
-  }
+  oc_free_string(&cb->query);
   oc_memb_free(&client_cbs_s, cb);
 }
 
@@ -1305,6 +1394,17 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #else  /* OC_BLOCK_WISE */
   coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
 #endif /* !OC_BLOCK_WISE */
+
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+  if (client_response.observe_option > 1) {
+    uint64_t notification_num = 0;
+    oscore_read_piv(endpoint->piv, endpoint->piv_len, &notification_num);
+    if (notification_num < cb->notification_num) {
+      return true;
+    }
+    cb->notification_num = notification_num;
+  }
+#endif /* OC_OSCORE && OC_SECURITY */
 
   bool separate = false;
 
@@ -1521,7 +1621,7 @@ oc_ri_shutdown(void)
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all(), *next;
   while (collection != NULL) {
-    next = collection->next;
+    next = (oc_collection_t *)collection->res.next;
     oc_collection_free(collection);
     collection = next;
   }

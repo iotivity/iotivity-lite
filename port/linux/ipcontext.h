@@ -59,7 +59,6 @@ typedef struct tcp_context_t
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   int connect_pipe[2];
-  pthread_mutex_t mutex;
 } tcp_context_t;
 #endif
 
@@ -94,9 +93,35 @@ typedef struct ip_context_t {
   pthread_t event_thread;
   int terminate;
   size_t device;
+  pthread_mutex_t rfds_mutex;
   fd_set rfds;
   int shutdown_pipe[2];
 } ip_context_t;
+
+/** 
+ * Set a given file descriptor to a set (dev->rfds) under the mutex(rfds_mutex). 
+ *
+ * @param[in] dev the device network context.
+ * @param[in] sockfd the file descriptor.
+ */
+void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd);
+
+/**
+ * Remove a given file descriptor from a set (dev->rfds) under the mutex(rfds_mutex).
+ *
+ * @param[in] dev the device network context.
+ * @param[in] sockfd the file descriptor.
+ */
+void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd);
+
+/**
+ * Make a copy of file descriptor set (dev->rfds) under the mutex(rfds_mutex). 
+ * 
+ * @param[in] dev the device network context.
+ * 
+ * @return a copy of file descriptor set.
+ */
+fd_set ip_context_rfds_fd_copy(ip_context_t* dev);
 
 #ifdef __cplusplus
 }

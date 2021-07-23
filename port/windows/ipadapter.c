@@ -1593,6 +1593,9 @@ oc_connectivity_shutdown(size_t device)
   /* signal WSASelectEvent() in the thread to leave */
   WSASetEvent(dev->event_server_handle);
 
+  WaitForSingleObject(dev->event_thread_handle, INFINITE);
+  TerminateThread(dev->event_thread_handle, 0);
+
   closesocket(dev->server_sock);
   closesocket(dev->mcast_sock);
 
@@ -1611,9 +1614,6 @@ oc_connectivity_shutdown(size_t device)
 #ifdef OC_TCP
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
-
-  WaitForSingleObject(dev->event_thread_handle, INFINITE);
-  TerminateThread(dev->event_thread_handle, 0);
 
   free_endpoints_list(dev);
 

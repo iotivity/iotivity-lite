@@ -12,6 +12,7 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+export OSCORE ?= 1
 IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
@@ -113,11 +114,19 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2
+
+ifeq ($(V6DNS),1)
+	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
+endif
 
 ifeq ($(CREATE),1)
 	EXTRA_CFLAGS += -DOC_COLLECTIONS_IF_CREATE
 endif
+
+#ifeq ($(COLLECTIONS),1)
+#	EXTRA_CFLAGS += -DOC_COLLECTIONS
+#endif
 
 ifeq ($(MNT),1)
 	EXTRA_CFLAGS += -DOC_MNT
@@ -126,6 +135,8 @@ endif
 ifeq ($(SWUPDATE),1)
 	SAMPLES += smart_home_server_with_mock_swupdate
 endif
+
+
 
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
@@ -167,11 +178,12 @@ ifeq ($(SWUPDATE),1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
+	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
-	SRC += ../../security/oc_obt.c ../../security/oc_obt_otm_justworks.c ../../security/oc_obt_otm_randompin.c ../../security/oc_obt_otm_cert.c ../../security/oc_obt_certs.c
+	SRC += ../../security/oc_obt.c ../../security/oc_obt_otm_justworks.c \
+		../../security/oc_obt_otm_randompin.c ../../security/oc_obt_otm_cert.c ../../security/oc_obt_certs.c
 	SAMPLES += ${OBT}
 else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
@@ -179,6 +191,10 @@ endif
 	CFLAGS += ${DTLSFLAGS}
 	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
+endif
+
+ifeq ($(OSCORE),1)
+	EXTRA_CFLAGS += -DOC_OSCORE
 endif
 
 ifeq ($(IPV4),1)
@@ -265,6 +281,7 @@ copy_idd_files:
 	@cp ../../apps/smart_home_server_linux_IDD.cbor .
 	@cp ../../apps/server_certification_tests_IDD.cbor .
 	@cp ../../apps/client_certification_tests_IDD.cbor .
+	@cp ../../apps/server_rules_IDD.cbor .
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -334,6 +351,14 @@ simpleserver: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
+secure_mcast_server1: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server1.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_server1.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+secure_mcast_server2: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server2.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_server2.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
 simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
@@ -341,6 +366,10 @@ simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleclient.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+secure_mcast_client: libiotivity-lite-client.a $(ROOT_DIR)/apps/secure_mcast_client.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/secure_mcast_client.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
 introspectionclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/introspectionclient.c
 	@mkdir -p $@_creds
@@ -360,6 +389,10 @@ client_block_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_block_linu
 server_block_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_block_linux.c
 	${CC} -o $@ ../../apps/server_block_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
 
+server_rules: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_rules.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/server_rules.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
+
 server_certification_tests: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_certification_tests.c copy_pki_certs copy_idd_files
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/server_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
@@ -370,7 +403,9 @@ smart_home_server_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_s
 
 smart_home_server_with_mock_swupdate: libiotivity-lite-server.a $(ROOT_DIR)/apps/smart_home_server_with_mock_swupdate.cpp
 	@mkdir -p $@_creds
-	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
+	# old implemenation with boost
+	#${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS} -lboost_system -lcppnetlib-uri
+	${CXX} -o $@ ../../apps/smart_home_server_with_mock_swupdate.cpp libiotivity-lite-server.a -DOC_SERVER ${CXXFLAGS} ${LIBS}
 
 multi_device_server: libiotivity-lite-server.a $(ROOT_DIR)/apps/multi_device_server_linux.c
 	@mkdir -p $@_creds
@@ -455,7 +490,7 @@ endif
 clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
 	rm -rf $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
-	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor
+	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor server_rules_IDD.cbor
 
 cleanall: clean
 	rm -rf ${all} $(SAMPLES) $(TESTS) ${OBT} ${SAMPLES_CREDS} $(MBEDTLS_PATCH_FILE) *.o

@@ -19,8 +19,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void oc_sec_load_pstat(size_t device);
@@ -37,6 +36,10 @@ void oc_sec_load_sp(size_t device);
 void oc_sec_dump_sp(size_t device);
 void oc_sec_load_ecdsa_keypair(size_t device);
 void oc_sec_dump_ecdsa_keypair(size_t device);
+void oc_sec_dump_ael(size_t device);
+void oc_sec_load_ael(size_t device);
+void oc_sec_load_sdi(size_t device);
+void oc_sec_dump_sdi(size_t device);
 
 #ifdef __cplusplus
 }

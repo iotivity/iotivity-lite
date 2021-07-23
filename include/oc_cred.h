@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2016-2019 Intel Corporation
+// Copyright (c) 2016-2020 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,14 +24,16 @@
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum oc_sec_credtype_t {
   OC_CREDTYPE_NULL = 0,
   OC_CREDTYPE_PSK = 1,
-  OC_CREDTYPE_CERT = 8
+  OC_CREDTYPE_CERT = 8,
+  OC_CREDTYPE_OSCORE = 64,
+  OC_CREDTYPE_OSCORE_MCAST_CLIENT = 128,
+  OC_CREDTYPE_OSCORE_MCAST_SERVER = 256
 } oc_sec_credtype_t;
 
 typedef enum oc_sec_credusage_t {
@@ -73,6 +75,9 @@ typedef struct oc_sec_cred_t
   struct oc_sec_cred_t *child;
   void *ctx;
 #endif /* OC_PKI */
+#ifdef OC_OSCORE
+  void *oscore_ctx;
+#endif /* OC_OSCORE */
   int credid;
   oc_sec_credtype_t credtype;
   oc_uuid_t subjectuuid;

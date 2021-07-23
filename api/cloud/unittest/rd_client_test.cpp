@@ -63,7 +63,7 @@ oc_endpoint_t TestRDClient::s_endpoint;
 TEST_F(TestRDClient, rd_publish_p)
 {
   // When
-  bool ret = rd_publish(&s_endpoint, NULL, 0, onPostResponse, LOW_QOS, NULL);
+  bool ret = rd_publish(&s_endpoint, NULL, 0, 0, onPostResponse, LOW_QOS, NULL);
 
   // Then
   EXPECT_TRUE(ret);
@@ -75,7 +75,7 @@ TEST_F(TestRDClient, rd_publish_f)
   oc_endpoint_t *ep = NULL;
 
   // When
-  bool ret = rd_publish(ep, NULL, 0, NULL, LOW_QOS, NULL);
+  bool ret = rd_publish(ep, NULL, 0, 0, NULL, LOW_QOS, NULL);
 
   // Then
   EXPECT_FALSE(ret);

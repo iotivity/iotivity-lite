@@ -1,0 +1,14 @@
+diff --git a/components/mbedtls/port/include/mbedtls/esp_config.h b/components/mbedtls/port/include/mbedtls/esp_config.h
+index 60826e6c2..30cfd8528 100644
+--- a/components/mbedtls/port/include/mbedtls/esp_config.h
++++ b/components/mbedtls/port/include/mbedtls/esp_config.h
+@@ -2463,6 +2463,9 @@
+ #include MBEDTLS_USER_CONFIG_FILE
+ #endif
+ 
++#define MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
++#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
++
+ #include "mbedtls/check_config.h"
+ 
+ #endif /* MBEDTLS_CONFIG_H */
