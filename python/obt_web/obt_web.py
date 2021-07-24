@@ -25,7 +25,9 @@ def to_json(obj):
     return json.dumps(obj, default=lambda obj: obj.__dict__)
 
 app = Flask(__name__)
-#app.config['SECRET_KEY'] = 'vnkdjnfjknfl1232#'
+
+#Load app secret from file
+app.config.from_pyfile('secret')
 socketio = SocketIO(app, async_mode='threading')
 
 @app.route('/')
