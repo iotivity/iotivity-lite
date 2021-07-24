@@ -15,7 +15,7 @@ source bin/activate
 
 pip install -r requirements.txt
 
-**_NOTE:_** for running the web page in secure mode
+TIP: for running the web page in secure mode
 apt-get install openssl
 
 # Build Shared Library
