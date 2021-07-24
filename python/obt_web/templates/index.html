@@ -1,9 +1,13 @@
 <!DOCTYPE html>
   <html lang="en">
   <head>
-    <title>IoT Demo</title>
+    <title>OCF Onboarding Tool</title>
     <link rel="stylesheet" href="include/page.css">
     <link rel="stylesheet" href="include/jquery-ui.min.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="include/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="include/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="include/favicon/favicon-16x16.png">
+    <link rel="manifest" href="include/favicon/site.webmanifest">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
@@ -372,7 +376,7 @@ for (i = 0; i < coll.length; i++) {
 
 
 	/*Socket setup*/
-	var socket = io.connect('http://' + document.domain +  ':' + location.port);
+	//var socket = io.connect('http://' + document.domain +  ':' + location.port);
 	/*Secure Socket*/
 	var socket = io.connect('https://' + document.domain +  ':' + location.port);
 
@@ -431,7 +435,13 @@ for (i = 0; i < coll.length; i++) {
 		    /*Owned Devices*/
 		    if (discovery[key].owned_state){
 			    if (!owned_devices_stack.includes(discovery[key].uuid)){
-				console.log(key + " -> " + discovery[key].uuid);
+				var resources = discovery[key].resources;
+				console.log("Resources:");
+				for (var res in resources)
+				    {
+					    console.log("Res: " + res);
+
+			        	}
 				newDevice = buildDevice(discovery[key].uuid,"owned",name);
 				addDevice('owned_devices',newDevice);
 				owned_devices_stack.push(discovery[key].uuid);
@@ -440,7 +450,6 @@ for (i = 0; i < coll.length; i++) {
 		    }else //Unowned devices
 		    {
 			    if (!unowned_devices_stack.includes(discovery[key].uuid)){
-				console.log(key + " -> " + discovery[key]);
 				newDevice = buildDevice(discovery[key].uuid,"unowned",name);
 				addDevice('unowned_devices',newDevice);
 				unowned_devices_stack.push(discovery[key].uuid);
@@ -508,11 +517,11 @@ for (i = 0; i < coll.length; i++) {
 	}
 
 	// This is for testing UI
-	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
-	addDevice('unowned_devices',newDevice);
+	//newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b135',"unowned");
+	//addDevice('unowned_devices',newDevice);
 
-	newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b136',"owned");
-	addDevice('owned_devices',newDevice);
+	//newDevice = buildDevice('bf5a6a4f-e94d-4df6-61ed-0178af45b136',"owned");
+	//addDevice('owned_devices',newDevice);
 
 
 

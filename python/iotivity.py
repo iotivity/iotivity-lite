@@ -57,6 +57,8 @@ import time
 
 import json
 
+import copy
+
 unowned_return_list=[]
 
 _int_types = (c_int16, c_int32)
@@ -530,18 +532,19 @@ class Iotivity():
     
     def resourceCB(self, anchor, uri, rtypes, myjson):
         uuid = str(anchor)[8:-1]
+        uuid_new = copy.deepcopy(uuid)
         my_uri = str(uri)[2:-1]
 
-        print("=  Resource callback ", uuid, my_uri)
+        print("=  Resource callback ", uuid_new, my_uri)
         my_str = str(myjson)[2:-1]
 
-        if self.resourcelist.get(uuid) is None:
+        if self.resourcelist.get(uuid_new) is None:
             mylist = [ my_str ]
-            self.resourcelist[uuid] = mylist
+            self.resourcelist[uuid_new] = mylist
         else:
-            mylist = self.resourcelist[uuid]
+            mylist = self.resourcelist[uuid_new]
             mylist.append(my_str)
-            self.resourcelist[uuid] = mylist
+            self.resourcelist[uuid_new] = mylist
         print (" -----resourcelist ", self.resourcelist)
 
 
@@ -688,6 +691,9 @@ class Iotivity():
             dev_name = self.get_owned_device_name(i)+""
             owned_return_list[str(i)] = str(uuid)
             dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name))
+            print("Owned UUID Discovery:{}".format(uuid))
+            self.discover_resources(uuid)
+            dev.resources = self.resourcelist
             self.device_array.append(dev)
         print("Returned devices Array {}",owned_return_list)
         return owned_return_list
