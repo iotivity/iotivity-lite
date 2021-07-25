@@ -48,7 +48,8 @@ https://IP:5000
 3. Seperate Javascript into seperate file
 4. Make all javascript local
 5. OTM selection
-6. Resources dictionary is currently using the unowned uuid.  Needs to be the ownned UUID
+6. ~~Resources dictionary is currently using the unowned uuid.  Needs to be the ownned UUID~~
 7. Finish simple client
 8. Finish ACL editing
+9. Implement threading events for resourcelist (need to wait until resources are populated)
 

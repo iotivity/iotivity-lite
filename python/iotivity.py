@@ -542,6 +542,7 @@ class Iotivity():
             mylist = [ my_str ]
             self.resourcelist[uuid_new] = mylist
         else:
+            print("UUID:{}".format(uuid_new))
             mylist = self.resourcelist[uuid_new]
             mylist.append(my_str)
             self.resourcelist[uuid_new] = mylist
@@ -825,11 +826,23 @@ class Iotivity():
         self.lib.py_otm_just_works.restype = None
         self.lib.py_otm_just_works(device)
 
+        #remove unowned uuid form resource list
+        for key in self.resourcelist.keys():
+            if key == device:
+                del self.resourcelist[device]
+                break
+
     def offboard_device(self,device):
         print ("offboard device :", device)
         self.lib.py_reset_device.argtypes = [String]
         self.lib.py_reset_device.restype = None
         self.lib.py_reset_device(device)
+        
+        #remove owned uuid form resource list
+        for key in self.resourcelist.keys():
+            if key == device:
+                del self.resourcelist[device]
+                break
         print ("...done.")
     
     def offboard_all_owned(self):
