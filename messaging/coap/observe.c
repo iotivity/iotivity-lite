@@ -1052,7 +1052,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
                                          response_buf->content_format);
         }
         coap_set_token(notification, obs->token, obs->token_len);
-        transaction = coap_new_transaction(coap_get_mid(), &obs->endpoint);
+        transaction = coap_new_transaction(coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
         if (transaction) {
           obs->last_mid = transaction->mid;
           notification->mid = transaction->mid;

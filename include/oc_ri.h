@@ -191,6 +191,12 @@ typedef struct oc_properties_cb_t
   void *user_data;
 } oc_properties_cb_t;
 
+typedef struct oc_resource_defaults_data_t
+{
+	oc_resource_t* resource;
+	oc_interface_mask_t iface_mask;
+} oc_resource_defaults_data_t;
+
 struct oc_resource_s
 {
   struct oc_resource_s *next;

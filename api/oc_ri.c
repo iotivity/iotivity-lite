@@ -70,6 +70,7 @@
 OC_LIST(app_resources);
 OC_LIST(observe_callbacks);
 OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
+OC_MEMB(resource_default_s, oc_resource_defaults_data_t, OC_MAX_APP_RESOURCES);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
@@ -350,6 +351,12 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
+oc_resource_defaults_data_t*
+oc_ri_alloc_resource_defaults(void)
+{
+	return oc_memb_alloc(&resource_default_s);
+}
+
 bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
@@ -502,6 +509,18 @@ oc_observe_notification_delayed(void *data)
   (void)data;
   coap_notify_observers((oc_resource_t *)data, NULL, NULL);
   return OC_EVENT_DONE;
+}
+#endif
+
+#ifdef OC_SERVER
+static oc_event_callback_retval_t
+oc_observe_notification_resource_defaults_delayed(void* data)
+{
+	oc_resource_defaults_data_t* resource_defaults_data = (oc_resource_defaults_data_t*)data;
+	notify_resource_defaults_observer(resource_defaults_data->resource,
+		resource_defaults_data->iface_mask,
+		NULL);
+	return OC_EVENT_DONE;
 }
 #endif
 
@@ -1195,8 +1214,18 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* OC_COLLECTIONS */
       cur_resource && (method == OC_PUT || method == OC_POST) &&
       response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-      oc_ri_add_timed_event_callback_ticks(cur_resource,
-                                           &oc_observe_notification_delayed, 0);
+	  if ((iface_mask == OC_IF_STARTUP) ||
+		(iface_mask == OC_IF_STARTUP_REVERT)) {
+		oc_resource_defaults_data_t* resource_defaults_data = oc_ri_alloc_resource_defaults();
+		resource_defaults_data->resource = cur_resource;
+		resource_defaults_data->iface_mask = iface_mask;
+		oc_ri_add_timed_event_callback_ticks(
+			resource_defaults_data, &oc_observe_notification_resource_defaults_delayed, 0);
+	  }
+	  else {
+		oc_ri_add_timed_event_callback_ticks(
+			cur_resource, &oc_observe_notification_delayed, 0);
+	  }
 
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {
