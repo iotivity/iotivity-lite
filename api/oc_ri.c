@@ -1208,24 +1208,25 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * altered the resource state, so attempt to notify all observers
      * of that resource with the change.
      */
-    if (
+	if (
 #ifdef OC_COLLECTIONS
-      !resource_is_collection &&
+		!resource_is_collection &&
 #endif /* OC_COLLECTIONS */
-      cur_resource && (method == OC_PUT || method == OC_POST) &&
-      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST))
-	  if ((iface_mask == OC_IF_STARTUP) ||
-		(iface_mask == OC_IF_STARTUP_REVERT)) {
-		oc_resource_defaults_data_t* resource_defaults_data = oc_ri_alloc_resource_defaults();
-		resource_defaults_data->resource = cur_resource;
-		resource_defaults_data->iface_mask = iface_mask;
-		oc_ri_add_timed_event_callback_ticks(
-			resource_defaults_data, &oc_observe_notification_resource_defaults_delayed, 0);
-	  }
-	  else {
-		oc_ri_add_timed_event_callback_ticks(
-			cur_resource, &oc_observe_notification_delayed, 0);
-	  }
+		cur_resource && (method == OC_PUT || method == OC_POST) &&
+		response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+		if ((iface_mask == OC_IF_STARTUP) ||
+			(iface_mask == OC_IF_STARTUP_REVERT)) {
+			oc_resource_defaults_data_t* resource_defaults_data = oc_ri_alloc_resource_defaults();
+			resource_defaults_data->resource = cur_resource;
+			resource_defaults_data->iface_mask = iface_mask;
+			oc_ri_add_timed_event_callback_ticks(
+				resource_defaults_data, &oc_observe_notification_resource_defaults_delayed, 0);
+		}
+		else {
+			oc_ri_add_timed_event_callback_ticks(
+				cur_resource, &oc_observe_notification_delayed, 0);
+		}
+	}
 
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {
