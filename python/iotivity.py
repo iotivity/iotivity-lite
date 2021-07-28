@@ -61,6 +61,8 @@ import copy
 
 unowned_return_list=[]
 
+event = threading.Event()
+
 _int_types = (c_int16, c_int32)
 if hasattr(ctypes, "c_int64"):
     # Some builds of ctypes apparently do not have c_int64
@@ -515,11 +517,12 @@ RESOURCE_CALLBACK = CFUNCTYPE(None, c_char_p, c_char_p, c_char_p, c_char_p)
 
 class Device():
 
-    def __init__(self,uuid,owned_state=None,name="",resources=None):
+    def __init__(self,uuid,owned_state=None,name="",resources=None,resource_array=None):
         self.uuid = uuid
         self.owned_state = owned_state
         self.name = name 
         self.resources = resources or {}
+        self.resource_array = resource_array or []
 
 
 class Iotivity():
@@ -535,18 +538,30 @@ class Iotivity():
         uuid_new = copy.deepcopy(uuid)
         my_uri = str(uri)[2:-1]
 
+ 
+
         print("=  Resource callback ", uuid_new, my_uri)
         my_str = str(myjson)[2:-1]
+        res_json = json.loads(my_str)
+        print(json.dumps(res_json, indent=4)) 
+
+        for key in self.resourcelist.keys():
+            print("RES:{}".format(key))
 
         if self.resourcelist.get(uuid_new) is None:
             mylist = [ my_str ]
-            self.resourcelist[uuid_new] = mylist
+            #don't add duplicate rsources lists
+            if uuid_new not in self.resourcelist:
+                self.resourcelist[uuid_new] = mylist
         else:
             print("UUID:{}".format(uuid_new))
             mylist = self.resourcelist[uuid_new]
             mylist.append(my_str)
-            self.resourcelist[uuid_new] = mylist
-        print (" -----resourcelist ", self.resourcelist)
+            #don't add duplicate rsources lists
+            if uuid_new not in self.resourcelist:
+                self.resourcelist[uuid_new] = mylist
+        print (" -----resourcelist ", mylist)
+        event.set()
 
 
     def __init__(self):
@@ -628,10 +643,17 @@ class Iotivity():
             uuid = self.get_unowned_uuid(i)+""
             dev_name = self.get_unowned_device_name(i)+""
             self.discover_resources(uuid)
+            event.clear()
             unowned_return_list[str(i)] = str(uuid)
-            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name))
+            event.wait()
+            for index, device in enumerate(self.device_array):
+                if device.uuid == str(uuid):
+                    if device.owned_state == owned_state:
+                        return
+            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name),resources=self.resourcelist[str(uuid)])
             self.device_array.append(dev)
-        print("Returned devices Array {}",unowned_return_list)
+
+        print("UNOWNED DEVICE ARRAY {}",self.device_array)
         return unowned_return_list
 
     def return_devices_array(self):
@@ -652,7 +674,6 @@ class Iotivity():
         for i in range(nr_unowned):
             uuid = self.get_unowned_uuid(i)+""
             unowned_return_list[i] = uuid
-        print("Returned devices Array {}",unowned_return_list)
         return unowned_return_list
         
     def list_unowned_devices(self):
@@ -680,6 +701,7 @@ class Iotivity():
         #ret = self.lib.discover_owned_devices(c_int(0x02))
         #ret = self.lib.discover_owned_devices(c_int(0x03))
         ret = self.lib.discover_owned_devices(c_int(0x05))
+        time.sleep(3)
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
         print("discover_owned- done")
@@ -690,13 +712,17 @@ class Iotivity():
         for i in range(nr_owned):
             uuid = self.get_owned_uuid(i)+""
             dev_name = self.get_owned_device_name(i)+""
-            owned_return_list[str(i)] = str(uuid)
-            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name))
-            print("Owned UUID Discovery:{}".format(uuid))
+            event.clear()
             self.discover_resources(uuid)
-            dev.resources = self.resourcelist
+            owned_return_list[str(i)] = str(uuid)
+            event.wait()
+            for index, device in enumerate(self.device_array):
+                if device.uuid == str(uuid):
+                    if device.owned_state == owned_state:
+                        return
+            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name),resources=self.resourcelist[str(uuid)])
             self.device_array.append(dev)
-        print("Returned devices Array {}",owned_return_list)
+        print("OWNED DEVICE ARRAY {}",self.device_array)
         return owned_return_list
 
         
