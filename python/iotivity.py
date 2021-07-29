@@ -538,15 +538,16 @@ class Iotivity():
         uuid_new = copy.deepcopy(uuid)
         my_uri = str(uri)[2:-1]
 
+        #Look for zero length uri...this means discovery is complete
+        if len(my_uri) <=0:
+            event.set()
+            print("ALL resources gathered");
  
 
         print("=  Resource callback ", uuid_new, my_uri)
         my_str = str(myjson)[2:-1]
-        res_json = json.loads(my_str)
-        print(json.dumps(res_json, indent=4)) 
+        my_str = json.loads(my_str)
 
-        for key in self.resourcelist.keys():
-            print("RES:{}".format(key))
 
         if self.resourcelist.get(uuid_new) is None:
             mylist = [ my_str ]
@@ -561,7 +562,6 @@ class Iotivity():
             if uuid_new not in self.resourcelist:
                 self.resourcelist[uuid_new] = mylist
         print (" -----resourcelist ", mylist)
-        event.set()
 
 
     def __init__(self):

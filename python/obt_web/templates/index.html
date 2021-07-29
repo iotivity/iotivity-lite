@@ -454,6 +454,13 @@ for (i = 0; i < coll.length; i++) {
 				addDevice('unowned_devices',newDevice);
 				unowned_devices_stack.push(discovery[key].uuid);
 				console.log("Unowned Devices: "+unowned_devices_stack);
+				var resources = discovery[key].resources;
+				console.log("Resources:");
+				for (var res in resources)
+				    {
+					    console.log("Res: " + resources[res].uri);
+
+			        	}
 			    }
 		    }
 	    }

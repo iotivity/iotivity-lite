@@ -2609,10 +2609,12 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   strcat(json,"]");
   strcat(json,"}");
 
-  //PRINT("[C]anchor %s, uri : %s\n", anchor, uri);
+  PRINT("[C]anchor %s, uri : %s\n", anchor, uri);
   inform_resource_python(anchor, uri, strtypes, json);
   if (!more) {
     PRINT("[C]----End of discovery response---\n");
+    uri = "";
+    inform_resource_python(anchor, uri, strtypes, json);
     return OC_STOP_DISCOVERY;
   }
   return OC_CONTINUE_DISCOVERY;
