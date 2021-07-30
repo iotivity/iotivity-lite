@@ -27,7 +27,6 @@
 #endif
 #include <signal.h>
 #include <stdio.h>
-
 #define MAX_NUM_DEVICES (50)
 #define MAX_NUM_RESOURCES (100)
 #define MAX_NUM_RT (50)
@@ -381,6 +380,7 @@ discover_unowned_devices(uint8_t scope)
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
 }
+
 
 static void
 otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)

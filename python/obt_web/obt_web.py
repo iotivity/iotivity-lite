@@ -88,6 +88,10 @@ def handle_offonboard(data):
     onboard_device = my_iotivity.offboard_device(data)
     print("OBT: {}".format(onboard_device))
 
+@socketio.on('provision_pairwise')
+def handle_pairwise(data):
+    print("Provision Pairwise Device:{}".format(data))
+
 #@socketio.event
 #def connect():
 #    global thread

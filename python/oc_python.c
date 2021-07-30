@@ -1806,8 +1806,7 @@ provision_oscore_contexts(void)
 }
 #endif /* OC_OSCORE */
 
-static void
-provision_credentials_cb(int status, void *data)
+static void provision_credentials_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
@@ -1817,43 +1816,22 @@ provision_credentials_cb(int status, void *data)
   }
 }
 
-static void
-provision_credentials(void)
+
+
+void
+py_provision_credentials(char* uuid1,char* uuid2)
 {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
-  device_handle_t *devices[MAX_NUM_DEVICES];
-  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1, c2;
-
-  PRINT("[C]\nProvision pairwise (PSK) credentials\nMy Devices:\n");
-  while (device != NULL) {
-    devices[i] = device;
-    char di[OC_UUID_LEN];
-    oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
-    PRINT("[C][%d]: %s - %s\n", i, di, device->device_name);
-    i++;
-    device = device->next;
-  }
-  PRINT("[C]\nSelect device 1: ");
-  SCANF("%d", &c1);
-  if (c1 < 0 || c1 >= i) {
-    PRINT("[C]ERROR: Invalid selection\n");
-    return;
-  }
-  PRINT("[C]Select device 2: ");
-  SCANF("%d", &c2);
-  if (c2 < 0 || c2 >= i || c2 == c1) {
-    PRINT("[C]ERROR: Invalid selection\n");
-    return;
-  }
+  device_handle_t *device1 = py_getdevice_from_uuid(uuid1, 1);
+  device_handle_t *device2 = py_getdevice_from_uuid(uuid2, 1);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_pairwise_credentials(
-    &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+    &device1->uuid, &device2->uuid, provision_credentials_cb, NULL);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued request to provision credentials\n");
   } else {
@@ -2825,7 +2803,7 @@ python_main(void)
       break;
 #endif 
     case 12:
-      provision_credentials();
+      //provision_credentials(uuid1,uuid2);
       break;
     case 13:
       provision_ace2();

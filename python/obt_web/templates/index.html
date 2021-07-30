@@ -3,6 +3,7 @@
   <head>
     <title>OCF Onboarding Tool</title>
     <link rel="stylesheet" href="include/page.css">
+    <link rel="stylesheet" href="include/css/multi-select.css">
     <link rel="stylesheet" href="include/jquery-ui.min.css">
     <link rel="apple-touch-icon" sizes="180x180" href="include/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="include/favicon/favicon-32x32.png">
@@ -20,6 +21,7 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="include/jquery-ui.min.js"></script>
+    <script src="include/javascript/jquery.multi-select.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
       <script>
 /* Jquery Function*/
@@ -302,7 +304,7 @@ for (i = 0; i < coll.length; i++) {
 				  var device_tabs = $(`<div id="device_tabs_`+uuid+`">
 					  <ul>
 					    <li><a href="#tabs-1">Control</a></li>
-					    <li><a href="#tabs-2">Config</a></li>
+					    <li><a href="#credentials"+uuid>Credentials</a></li>
 					    <li><a href="#tabs-3">Resources</a></li>
 					  </ul>
 					  <div id="tabs-1">
@@ -324,8 +326,12 @@ for (i = 0; i < coll.length; i++) {
 					  </p>
 
 					  </div>
-					  <div id="tabs-2">
-					    <p></p>
+					  <div id="credentials">
+					    <p id='cred_`+uuid+`'>
+					    	<select id='pairwise_selector_`+uuid+`' multiple='multiple'>
+						</select>
+
+					    </p>
 					  </div>
 					  <div id="tabs-3">
 					    <p></p>
@@ -334,10 +340,37 @@ for (i = 0; i < coll.length; i++) {
 					</div>`).tabs();
 				      device_tabs.css({'min-heght':'400px','overflow':'auto'}); 
 				      $(this).append(device_tabs);
+				      $('#pairwise_selector_'+uuid).multiSelect({  
+					      selectableHeader: "<div class='custom-header'>Available Devices</div>",
+					      selectionHeader: "<div class='custom-header'>Selected Devices</div>",
+				      });
+					    //var pair_button = document.createElement("div");
+						//pair_button.setAttribute('id','credsbutton_'+uuid);
+						//pair_button.setAttribute('onclick','install_creds("'+uuid+'")');
+						//pair_button.setAttribute('class','w3-button w3-green w3-round-large');
+						//pair_button.innerHTML = "+";
+						//pair_button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
+						//$('#credentials_'+uuid).append(pair_button);
 			      },   
 			      open: function() {
 				/*Make background dark.  See page.css*/
 				$('.ui-widget-overlay').addClass('custom-overlay');
+				console.log("clicked"+uuid);
+				for (var device in owned_devices_stack)
+				      {
+					      var device_uuid = owned_devices_stack[device];
+					      if (device_uuid == uuid)
+					      {
+						      continue;
+					      }
+					      else
+					      {
+						      //revisit nothing shows up on first device.
+						      console.log("Open: "+ uuid + "Not Open: " + device_uuid);
+						      $('#pairwise_selector_'+uuid).multiSelect('addOption', { value: device_uuid, text: device_uuid, index: device });
+
+					      }
+				      };
 			      },
 				buttons: {
 				  Ok: function() {

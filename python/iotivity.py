@@ -884,6 +884,10 @@ class Iotivity():
         print ("...done.")
 
 
+    def provision_pairwise(self, device1_uuid, device2_uuid):
+        self.lib.py_provision_credentials(device1uuid,device2_uuid)
+
+
     def provision_ace_cloud_access(self, device_uuid):
         self.lib.py_provision_ace_cloud_access.argtypes = [String]
         self.lib.py_provision_ace_cloud_access.restype = None
