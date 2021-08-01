@@ -328,7 +328,7 @@ for (i = 0; i < coll.length; i++) {
 					  </div>
 					  <div id="credentials">
 					    <p id='cred_`+uuid+`'>
-					    	<select id='pairwise_selector_`+uuid+`' multiple='multiple'>
+					    	<select id='credential_selector_`+uuid+`' multiple='multiple'>
 						</select>
 
 					    </p>
@@ -340,17 +340,17 @@ for (i = 0; i < coll.length; i++) {
 					</div>`).tabs();
 				      device_tabs.css({'min-heght':'400px','overflow':'auto'}); 
 				      $(this).append(device_tabs);
-				      $('#pairwise_selector_'+uuid).multiSelect({  
+				      $('#credential_selector_'+uuid).multiSelect({  
 					      selectableHeader: "<div class='custom-header'>Available Devices</div>",
 					      selectionHeader: "<div class='custom-header'>Selected Devices</div>",
 				      });
-					    //var pair_button = document.createElement("div");
-						//pair_button.setAttribute('id','credsbutton_'+uuid);
-						//pair_button.setAttribute('onclick','install_creds("'+uuid+'")');
-						//pair_button.setAttribute('class','w3-button w3-green w3-round-large');
-						//pair_button.innerHTML = "+";
-						//pair_button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
-						//$('#credentials_'+uuid).append(pair_button);
+					    var pair_button = document.createElement("div");
+						pair_button.setAttribute('id','credsbutton_'+uuid);
+						pair_button.setAttribute('onclick','addCredentials("'+uuid+'")');
+						pair_button.setAttribute('class','w3-button w3-green w3-round-large');
+						pair_button.innerHTML = "Add Credentials";
+						pair_button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
+						$('#cred_'+uuid).append(pair_button);
 			      },   
 			      open: function() {
 				/*Make background dark.  See page.css*/
@@ -367,13 +367,13 @@ for (i = 0; i < coll.length; i++) {
 					      {
 						      //revisit nothing shows up on first device.
 						      console.log("Open: "+ uuid + "Not Open: " + device_uuid);
-						      $('#pairwise_selector_'+uuid).multiSelect('addOption', { value: device_uuid, text: device_uuid, index: device });
+						      $('#credential_selector_'+uuid).multiSelect('addOption', { value: device_uuid, text: device_uuid, index: device });
 
 					      }
 				      };
 			      },
 				buttons: {
-				  Ok: function() {
+				  Close: function() {
 				    $( this ).dialog( "close" );
 				  }
 				}
@@ -502,6 +502,18 @@ for (i = 0; i < coll.length; i++) {
 	  update_ui_devices();
       })
 
+	/*Loops through selected devices in credential selector
+	sends these uuids and the source uuid to webserver/obt*/
+	function addCredentials(source_device)
+	{
+		var values = $("#credential_selector_"+source_device).val();
+		console.log("Provisioning Credentials\n"+values);
+		var credentials = new Object();
+		credentials.source_device = source_device;
+		credentials.type = "pairwise";
+		credentials.target_devices = values;
+		socket.emit("provision_credentials",JSON.stringify(credentials));
+	}
 
 	function update_ui_devices(){
 		console.log("Remove Unowned Devices\n" + unowned_delete_stack);

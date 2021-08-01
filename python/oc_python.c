@@ -1819,8 +1819,9 @@ static void provision_credentials_cb(int status, void *data)
 
 
 void
-py_provision_credentials(char* uuid1,char* uuid2)
+py_provision_pairwise_credentials(char* uuid1, char* uuid2)
 {
+  PRINT("[C] Source %s, Target %s",uuid1,uuid2);
   if (oc_list_length(owned_devices) == 0) {
     PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1828,16 +1829,28 @@ py_provision_credentials(char* uuid1,char* uuid2)
 
   device_handle_t *device1 = py_getdevice_from_uuid(uuid1, 1);
   device_handle_t *device2 = py_getdevice_from_uuid(uuid2, 1);
+  if (device1 == NULL)
+  {
+    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid1 %s \n",uuid1);
+    return;
+  }
+  if (device2 == NULL)
+ {
+    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid2 %s \n",uuid2);
+    return;
+  }
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_pairwise_credentials(
     &device1->uuid, &device2->uuid, provision_credentials_cb, NULL);
+  PRINT("[C]Provisioning Pariwise\n");
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued request to provision credentials\n");
   } else {
     PRINT("[C]\nERROR issuing request to provision credentials\n");
   }
   otb_mutex_unlock(app_sync_lock);
+  
 }
 
 static void

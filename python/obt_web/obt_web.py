@@ -12,6 +12,7 @@ sys.path.append(parentdir)
 from threading import Lock
 import signal
 import simplejson as json
+from types import SimpleNamespace
 
 from flask import Flask, render_template, send_from_directory
 from flask_socketio import SocketIO
@@ -88,9 +89,13 @@ def handle_offonboard(data):
     onboard_device = my_iotivity.offboard_device(data)
     print("OBT: {}".format(onboard_device))
 
-@socketio.on('provision_pairwise')
+@socketio.on('provision_credentials')
 def handle_pairwise(data):
     print("Provision Pairwise Device:{}".format(data))
+    credentials = json.loads(data, object_hook=lambda d: SimpleNamespace(**d))
+    for target in credentials.target_devices:
+        print("Provision Pairwise Source Device:{} Target Device:{}".format(credentials.source_device,target))
+        provision = my_iotivity.provision_pairwise(target,credentials.source_device)
 
 #@socketio.event
 #def connect():
