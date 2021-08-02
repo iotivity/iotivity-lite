@@ -1551,8 +1551,12 @@ main(int argc, char* argv[])
 
 
   char buff[FILENAME_MAX];
-  GetCurrentDir(buff, FILENAME_MAX);
-  PRINT("Current working dir: %s\n", buff);
+  char* retbuf = NULL;
+  retbuf = GetCurrentDir(buff, FILENAME_MAX);
+  if (retbuf != NULL)
+  {
+    PRINT("Current working dir: %s\n", buff);
+  }
   PRINT("OCF Server name : \"%s\"\n", device_name);
 
   /*
@@ -1641,7 +1645,7 @@ main(int argc, char* argv[])
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
 
   // reset the device, for easier debugging.
-  // oc_reset();
+  oc_reset();
 
   PRINT("OCF server \"%s\" running, waiting on incoming connections.\n", device_name);
 
