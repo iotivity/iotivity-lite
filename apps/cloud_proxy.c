@@ -1484,12 +1484,14 @@ void oc_ownership_status_cb(const oc_uuid_t* device_uuid,
   size_t device_index, bool owned,
   void* user_data)
 {
+  (void)user_data;
+
   char uuid[37] = { 0 };
   oc_uuid_to_str(device_uuid, uuid, OC_UUID_LEN);
   PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 
-  oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
-  PRINT(" oc_core_get_device_id: UUID: : '%s'\n", proxy_di);
+  oc_uuid_to_str(oc_core_get_device_id(device_index), proxy_di, OC_UUID_LEN);
+  PRINT(" oc_core_get_device_id %d : UUID: '%s'\n", owned, proxy_di);
 }
 
 
