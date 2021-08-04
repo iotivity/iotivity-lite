@@ -109,7 +109,7 @@ TODO:
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
-#define PROXY_ALL_DISCOVERED_DEVICES
+//#define PROXY_ALL_DISCOVERED_DEVICES
 
 #ifdef __linux__
 /* linux specific code */
@@ -1177,7 +1177,8 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
         char uuid[OC_UUID_LEN] = { 0 };
         oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
 
-        PRINT("di = %s\n", uuid);
+        PRINT("   di = %s\n", uuid);
+        PRINT("      ");
         PRINTipaddr(*ep);
         PRINT("\n");
         ep = ep->next;
@@ -1186,11 +1187,14 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       if (is_added_current_device) {
         // search for the secure endpoint, so that it can be stored
         ep = endpoint;  // start of the list
-        while ((ep != NULL) && (ep->flags & SECURED) != 0) {
+        while ((ep != NULL) && !(ep->flags & SECURED) ) {
           ep = ep->next;
         }
         if (ep != NULL) {
-          PRINT("  discovery secure endpoint on UDN '%s'\n", this_udn);
+          PRINT("  discovery secure endpoint on UDN '%s' :\n", this_udn);
+          PRINT("    secure: ");
+          PRINTipaddr(*ep);
+          PRINT("\n");
           // make a copy, so that we can store it in the array to find it back later.
           oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
           oc_endpoint_copy(copy, ep);
