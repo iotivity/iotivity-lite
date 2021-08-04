@@ -109,7 +109,7 @@ TODO:
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
-//#define PROXY_ALL_DISCOVERED_DEVICES
+#define PROXY_ALL_DISCOVERED_DEVICES
 
 #ifdef __linux__
 /* linux specific code */
@@ -151,13 +151,7 @@ volatile int quit = 0;          /* stop variable, used by handle_signal */
 #define MAX_DISCOVERED_SERVER 100
 static oc_endpoint_t* discovered_server[MAX_DISCOVERED_SERVER];
 
-#ifdef PROXY_ALL_DISCOVERED_DEVICES
-static int discovered_server_count = 0;
-static g_discovery_udn[MAX_PAYLOAD_STRING];
-#endif
-
 static const char* cis = "coap+tcp://127.0.0.1:5683";
-//static const char* cis = "coap+tcp://128.0.0.4:5683";
 static const char* auth_code = "test";
 static const char* sid = "00000000-0000-0000-0000-000000000001";
 static const char* apn = "plgd";
@@ -327,7 +321,6 @@ static oc_endpoint_t* is_udn_listed(char* udn)
 {
   PRINT("  Finding UDN %s \n", udn);
 
-  //for (int i=0; i<discovered_server_count; i++) {
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     oc_endpoint_t* ep = discovered_server[i];
     while (ep != NULL) {
@@ -1152,12 +1145,15 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
   }
   anchor_to_udn(anchor, this_udn);
 
-  //PRINT("  discovery: UDN (anchor) '%s'\n", this_udn);
-  //PRINT("  discovery: discovered_udn: '%s'\n", added_udn);
   bool is_added_current_device = false;
   if (strcmp(this_udn, added_udn) == 0) {
     is_added_current_device = true;
   }
+#ifdef PROXY_ALL_DISCOVERED_DEVICES
+  // make sure that the discovered device is handled
+  is_added_current_device = true;
+  strcpy(added_udn, this_udn);
+#endif
 
   //PRINT("        discovery: adding device: '%s %s [%s]'\n", btoa(is_added_current_device), uri, this_udn);
   if (is_added_current_device == false) {
@@ -1316,6 +1312,7 @@ issue_requests(char* current_udn)
 void
 issue_requests_all(void)
 {
+  PRINT("issue_requests_all: Discovery of devices at start up\n");
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
   //oc_do_ip_discovery_all(& discovery, NULL);
@@ -1645,7 +1642,7 @@ main(int argc, char* argv[])
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
 
   // reset the device, for easier debugging.
-  oc_reset();
+  //oc_reset();
 
   PRINT("OCF server \"%s\" running, waiting on incoming connections.\n", device_name);
 
