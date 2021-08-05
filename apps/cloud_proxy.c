@@ -1309,6 +1309,9 @@ issue_requests(char* current_udn)
 {
   oc_do_site_local_ipv6_discovery_all(&discovery, current_udn);
   oc_do_realm_local_ipv6_discovery_all(&discovery, current_udn);
+#ifdef OC_IPV4
+  oc_do_ip_discovery_all(&discovery, current_udn);
+#endif
   //oc_do_ip_discovery_all(& discovery, NULL);
   //oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
 }
@@ -1319,6 +1322,9 @@ issue_requests_all(void)
   PRINT("issue_requests_all: Discovery of devices at start up\n");
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
+#ifdef OC_IPV4
+  oc_do_ip_discovery_all(&discovery, current_udn);
+#endif
   //oc_do_ip_discovery_all(& discovery, NULL);
   //oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
 }
