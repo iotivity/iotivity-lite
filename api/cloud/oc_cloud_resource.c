@@ -152,6 +152,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   case OC_CPS_UNINITIALIZED:
   case OC_CPS_READYTOREGISTER:
   case OC_CPS_FAILED:
+  case OC_CPS_DEREGISTERING:
 	  request_invalid_in_state = !request_invalid_in_state;
     break;
   case OC_CPS_REGISTERING:
