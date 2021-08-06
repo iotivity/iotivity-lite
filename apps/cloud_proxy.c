@@ -1323,7 +1323,7 @@ issue_requests_all(void)
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
 #ifdef OC_IPV4
-  oc_do_ip_discovery_all(&discovery, current_udn);
+  oc_do_ip_discovery_all(&discovery, NULL);
 #endif
   //oc_do_ip_discovery_all(& discovery, NULL);
   //oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
