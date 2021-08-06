@@ -169,12 +169,6 @@ oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
   return (int)ctx->expires_in;
 }
 
-void
-oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl)
-{
-  ctx->time_to_live = ttl;
-}
-
 static void
 cloud_logout_internal(oc_client_response_t *data)
 {
@@ -268,6 +262,7 @@ cloud_deregister(cloud_api_param_t *p)
 
   OC_DBG("try deregister device %zu\n", device);
   bool cannotConnect = true;
+  ctx->store.cps = OC_CPS_DEREGISTERING;
   // This value is calculated by coap_oscore_serialize_message for deregister
   // message with empty query parameters. The value should remain the same
   // unless some global options are added to coap requests.
