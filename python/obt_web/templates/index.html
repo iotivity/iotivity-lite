@@ -312,7 +312,7 @@ for (i = 0; i < coll.length; i++) {
 					         /a/light
 					  </p>
 						  <label class="switch">
-						  <input type="checkbox">
+						  <input type="checkbox" id='switch_`+uuid+`' onchange=send_command(this)>
 						  <span class="slider round"></span>
 						</label>
 					  </p>
@@ -406,6 +406,19 @@ for (i = 0; i < coll.length; i++) {
 	    //}
 	}
 
+	/*Handle command from basic client*/
+	function send_command(obj){
+		var obj_array = obj.id.split('_');
+		uuid = obj_array[1];
+		state = obj.checked
+		if (state==true){
+			state=1;
+		}else{
+			state=0;
+		}
+		console.log(uuid,state);
+		socket.emit("send_command",uuid,state);
+	}
 
 
 	/*Socket setup*/

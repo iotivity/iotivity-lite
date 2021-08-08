@@ -43,7 +43,7 @@ https://IP:5000
 
 # TODO
 
-1. Check for OBT creds and do not start a new OBT every time
+1. ~~Check for OBT creds and do not start a new OBT every time~~
 2. Clean up Javascript
 3. Seperate Javascript into seperate file
 4. Make all javascript local

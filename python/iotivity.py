@@ -946,6 +946,15 @@ class Iotivity():
                     print ("    ", value)  
         
 
+    def client_command(self,uuid,command):
+        print(colored(20*" "+"Client Command->Target:{}-->{}"+20*" ",'yellow',attrs=['underline']).format(uuid,command))
+        self.lib.py_post.argtypes = [String]
+        self.lib.py_post.restype = None
+        self.lib.py_post(uuid,command)
+        return "ok"
+
+
+
     def my_sleep(self):
         while True:
             time.sleep(3)

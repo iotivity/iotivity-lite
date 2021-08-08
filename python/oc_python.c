@@ -2697,6 +2697,27 @@ discover_resources(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
+
+void py_post(char* uri, int value){
+  PRINT("[C] POST_light: %s-> %d\n",uri,value);
+  //int uri_len = strlen(uri);
+  
+  //static oc_endpoint_t *light_server;
+  /*
+  if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, state, true);
+    oc_rep_set_int(root, power, 55);
+    oc_rep_end_root_object();
+    if (oc_do_post())
+      PRINT("Sent POST request\n");
+    else
+      PRINT("Could not send POST request\n");
+  } else
+    PRINT("Could not init POST request\n");
+    */
+}
+
 void
 display_device_uuid()
 {

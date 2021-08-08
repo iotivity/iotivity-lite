@@ -84,6 +84,11 @@ def handle_pairwise(data):
         print("Provision Pairwise Source Device:{} Target Device:{}".format(credentials.source_device,target))
         provision = my_iotivity.provision_pairwise(target,credentials.source_device)
 
+@socketio.on('send_command')
+def send_command(uuid,command):
+    #print("Device:{},Command:{}".format(uuid,command))
+    ret = my_iotivity.client_command(uuid,command)
+
 #@socketio.event
 #def connect():
 #    global thread
