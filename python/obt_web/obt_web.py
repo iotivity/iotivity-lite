@@ -9,17 +9,15 @@ import os, sys, time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-from threading import Lock
 import signal
 import simplejson as json
+import threading
 from types import SimpleNamespace
 
 from flask import Flask, render_template, send_from_directory
 from flask_socketio import SocketIO
 from iotivity import Iotivity
 
-thread = None
-thread_lock = Lock()
 
 
 def to_json(obj):
@@ -42,33 +40,22 @@ def send_js(path):
     print("path:{}".format(path))
     return send_from_directory('include', path)
 
+"""
+Listen for incoming connections from website
+Discover unowned, owned then resources
+"""
 @socketio.on('discover_devices')
 def handle_event(data):
-    print("Discover Unowned Devices X"+data);
-    unowned_devices_bytelist = my_iotivity.discover_unowned()
-    print("OBT: {}".format(unowned_devices_bytelist))
-    #socketio.emit('unowned',json.dumps(unowned_devices_bytelist))
-    print("Discover Owned Devices X"+data);
-    owned_devices_bytelist = my_iotivity.discover_owned()
-    print("OBT: {}".format(owned_devices_bytelist))
-    #socketio.emit('owned',json.dumps(owned_devices_bytelist))
-    devices_array = my_iotivity.return_devices_array()
+    #print("Discover Unowned Devices"+data);
+    devices_array = my_iotivity.discover_unowned()
     socketio.emit('device_discovery',to_json(devices_array))
-    print(to_json(devices_array))
+    #print("Discover Owned Devices X"+data);
+    devices_array = my_iotivity.discover_owned()
+    socketio.emit('device_discovery',to_json(devices_array))
+    for device in devices_array:
+        resources_array = my_iotivity.discover_resources(device.uuid)
+        socketio.emit('resource_discovery',to_json(resources_array))
 
-@socketio.on('discover_unowned')
-def handle_event(data):
-    print("Discover Unowned Devices X"+data);
-    unowned_devices_bytelist = my_iotivity.discover_unowned()
-    print("OBT: {}".format(unowned_devices_bytelist))
-    socketio.emit('unowned',json.dumps(unowned_devices_bytelist))
-
-@socketio.on('discover_owned')
-def handle_event(data):
-    print("Discover Owned Devices X"+data);
-    owned_devices_bytelist = my_iotivity.discover_owned()
-    print("OBT: {}".format(owned_devices_bytelist))
-    socketio.emit('owned',json.dumps(owned_devices_bytelist))
 
 @socketio.on('discover_resources')
 def handle_event(data):
@@ -106,14 +93,17 @@ def handle_pairwise(data):
 #    socketio.emit('my_response', {'data': 'Connected', 'count': 0})
 
 if __name__ == '__main__':
-    my_iotivity = Iotivity()
+    debug = ['resources']
+    my_iotivity = Iotivity(debug=debug)
     signal.signal(signal.SIGINT, my_iotivity.sig_handler)
     socketio.emit('obt_initialized','True')
     time.sleep(5)
     #Insecure
     #socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False)
-    #Secure Self-signed (required for camera)
-    socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False,ssl_context=('cert.pem', 'key.pem'))
+    #run in seperate thread
+    #threading.Thread(target=app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'))).start()
+    #Secure Self-signed (required for camera) See README for certs
+    socketio.run(app, host='0.0.0.0',debug=False,use_reloader=False,ssl_context=('cert.pem', 'key.pem'))
 
 
 

@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
+#include "security/oc_obt_internal.h"
 #include <unistd.h>
 #if defined(_WIN32)
 #include <windows.h>
@@ -80,7 +81,7 @@ static int quit = 0;
 * callback prototype to inform python layer that the onboarded/unonboarded list have changed
 *
 */
-typedef void (*changedCB) (void);
+typedef void (*changedCB) (char* uuid, char* state, char* event);
 typedef void (*resourceCB) (char* anchor, char* uri, char* types, char* interfaces);
 
 /**
@@ -121,11 +122,11 @@ void install_resourceCB(resourceCB resourceCB) {
 * function to call the callback to python.
 *
 */
-void inform_python(void)
+void inform_python(const char* uuid, const char* state, const char* event)
 {
   //PRINT("[C]inform_python %p\n",my_CBFunctions.changedFCB);
   if (my_CBFunctions.changedFCB != NULL) {
-    my_CBFunctions.changedFCB();
+    my_CBFunctions.changedFCB((char*)uuid,(char*)state,(char*)event);
   }
 }
 
@@ -438,8 +439,15 @@ get_device(oc_client_response_t *data)
     PRINT("[C] adding device to list.%s.%s\n",di, n);
     add_device_to_list(&uuid, n, data->user_data);
 
+    bool owned = oc_obt_is_owned_device(&uuid);
+    char* state = "";
+    if (owned){
+	state="owned";
+    }else{
+	state="unowned";
+    }
     PRINT("[C] adding device to list...\n");
-    inform_python();
+    inform_python(di,state,NULL);
   }
 }
 
@@ -539,7 +547,7 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python();
+    inform_python(NULL,NULL,NULL);
   } else {
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
@@ -660,7 +668,7 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python();
+    inform_python(NULL,NULL,NULL);
   } else {
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
@@ -723,7 +731,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python();
+    inform_python(NULL,NULL,NULL);
   } else {
     oc_memb_free(&device_handles, device);
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
@@ -794,7 +802,7 @@ void py_otm_just_works(char* uuid)
      * list
      */
     oc_list_remove(unowned_devices, devices[c]);
-    inform_python();
+    inform_python(NULL,NULL,NULL);
   } else {
     PRINT("[C] ERROR issuing request to perform ownership transfer\n");
   }
@@ -1198,13 +1206,15 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[37];
+  char* state = "";
   oc_uuid_to_str(uuid, di, 37);
 
   oc_memb_free(&device_handles, data);
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
-    inform_python();
+    state = "reset";
+    inform_python(di,state,NULL);
   } else {
     PRINT("[C]\nERROR performing hard RESET to device %s\n", di);
   }

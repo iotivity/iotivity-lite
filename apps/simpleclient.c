@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
 
 pthread_mutex_t mutex;
 pthread_cond_t cv;
@@ -100,6 +101,7 @@ post2_light(oc_client_response_t *data)
 static void
 post_light(oc_client_response_t *data)
 {
+  sleep(1);
   PRINT("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");

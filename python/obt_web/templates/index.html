@@ -468,13 +468,6 @@ for (i = 0; i < coll.length; i++) {
 		    /*Owned Devices*/
 		    if (discovery[key].owned_state){
 			    if (!owned_devices_stack.includes(discovery[key].uuid)){
-				var resources = discovery[key].resources;
-				console.log("Resources:");
-				for (var res in resources)
-				    {
-					    console.log("Res: " + res);
-
-			        	}
 				newDevice = buildDevice(discovery[key].uuid,"owned",name);
 				addDevice('owned_devices',newDevice);
 				owned_devices_stack.push(discovery[key].uuid);
@@ -487,13 +480,6 @@ for (i = 0; i < coll.length; i++) {
 				addDevice('unowned_devices',newDevice);
 				unowned_devices_stack.push(discovery[key].uuid);
 				console.log("Unowned Devices: "+unowned_devices_stack);
-				var resources = discovery[key].resources;
-				console.log("Resources:");
-				for (var res in resources)
-				    {
-					    console.log("Res: " + resources[res].uri);
-
-			        	}
 			    }
 		    }
 	    }
@@ -501,6 +487,15 @@ for (i = 0; i < coll.length; i++) {
 	  hideWait('button_discover');
 	  update_ui_devices();
       })
+     
+	socket.on( 'resource_discovery', function( msg ) {
+		var resources = JSON.parse(msg);
+		console.log(resources);
+		for (var uuid in resources) {
+			console.log(uuid);
+		}
+
+	})
 
 	/*Loops through selected devices in credential selector
 	sends these uuids and the source uuid to webserver/obt*/

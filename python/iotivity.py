@@ -47,6 +47,7 @@ from os import listdir
 from os.path import isfile, join
 from shutil import copyfile
 from  collections import OrderedDict
+from termcolor import colored
 
 import numpy.ctypeslib as ctl
 
@@ -61,7 +62,11 @@ import copy
 
 unowned_return_list=[]
 
-event = threading.Event()
+unowned_event = threading.Event()
+owned_event = threading.Event()
+resource_event = threading.Event()
+
+ten_spaces = "          "
 
 _int_types = (c_int16, c_int32)
 if hasattr(ctypes, "c_int64"):
@@ -511,7 +516,7 @@ OC_DEVICE_HANDLE._fields_ = (
 #    my_owned_devices.append(my_uuid)
 
 
-CHANGED_CALLBACK = CFUNCTYPE(None)
+CHANGED_CALLBACK = CFUNCTYPE(None, c_char_p, c_char_p)
 RESOURCE_CALLBACK = CFUNCTYPE(None, c_char_p, c_char_p, c_char_p, c_char_p)
 
 
@@ -521,17 +526,29 @@ class Device():
         self.uuid = uuid
         self.owned_state = owned_state
         self.name = name 
-        self.resources = resources or {}
-        self.resource_array = resource_array or []
+
 
 
 class Iotivity():
     # needs to be before _init_
-    def changedCB(self):
-        print("=====  lists changed ========")
-        self.list_unowned_devices()
-        self.list_owned_devices()
-        print("=====  lists changed: done ========")
+    def changedCB(self,uuid,cb_event):
+        name = ""
+        if uuid != None:
+            uuid = uuid.decode("utf-8")
+            name = self.get_device_name(uuid);
+        if cb_event !=  None:
+            cb_event = cb_event.decode("utf-8")
+        if(cb_event=="unowned"):
+            print("Unowned Discovery Event:{}".format(uuid))
+            dev = Device(uuid,owned_state=False,name=name)
+            if not self.device_array_contains(uuid):
+                self.device_array.append(dev)
+            unowned_event.set()
+        if(cb_event=="owned"):
+            print("Owned Discovery Event:{}".format(uuid))
+            dev = Device(uuid,owned_state=True,name=name)
+            self.device_array.append(dev)
+            owned_event.set()
     
     def resourceCB(self, anchor, uri, rtypes, myjson):
         uuid = str(anchor)[8:-1]
@@ -540,11 +557,11 @@ class Iotivity():
 
         #Look for zero length uri...this means discovery is complete
         if len(my_uri) <=0:
-            event.set()
+            resource_event.set()
             print("ALL resources gathered");
  
-
-        print("=  Resource callback ", uuid_new, my_uri)
+        print(colored("          Resource Event          \n",'green',attrs=['underline']))
+        print(colored("UUID:{}, \nURI:{}",'green').format(uuid_new,my_uri))
         my_str = str(myjson)[2:-1]
         my_str = json.loads(my_str)
 
@@ -555,16 +572,16 @@ class Iotivity():
             if uuid_new not in self.resourcelist:
                 self.resourcelist[uuid_new] = mylist
         else:
-            print("UUID:{}".format(uuid_new))
             mylist = self.resourcelist[uuid_new]
             mylist.append(my_str)
             #don't add duplicate rsources lists
             if uuid_new not in self.resourcelist:
                 self.resourcelist[uuid_new] = mylist
-        print (" -----resourcelist ", mylist)
+        if 'resources' in self.debug:
+            print(colored(" -----resourcelist {}",'cyan').format(mylist))
 
 
-    def __init__(self):
+    def __init__(self,debug=None):
         print ("loading ...")
         libname = 'libiotivity-lite-client-python.so'
         libdir = os.path.dirname(__file__) 
@@ -582,6 +599,7 @@ class Iotivity():
 
         print (self.lib)
         print ("...")
+        self.debug=debug
         self.lib.oc_set_con_res_announced(c_bool(False));
         print("oc_set_con_res_announced - done")
         self.lib.oc_set_max_app_data_size(c_size_t(16384));
@@ -590,6 +608,8 @@ class Iotivity():
         print("oc_get_max_app_data_size :", value)
         self.changedCB = CHANGED_CALLBACK(self.changedCB)
         self.lib.install_changedCB(self.changedCB)
+        ret = self.lib.oc_storage_config("./onboarding_tool_creds");
+        print("oc_storage_config : {}".format(ret))
 
         self.resourceCB = RESOURCE_CALLBACK(self.resourceCB)
         self.lib.install_resourceCB(self.resourceCB)
@@ -622,39 +642,33 @@ class Iotivity():
         self.lib.display_device_uuid();
 
 
-    def purge_device_array(self,owned_state):
+    def purge_device_array(self,uuid):
         for index, device in enumerate(self.device_array):
-            if device.owned_state==owned_state:
+            if device.uuid==uuid:
                 print("Remove: {}".format(device.uuid))
                 self.device_array.pop(index)
         
     def discover_unowned(self):
-        print("discover_unowned ")
+        print(colored(20*" "+"Discover Unowned Devices"+20*" ",'yellow',attrs=['underline']))
         # OBT application
         ret = self.lib.discover_unowned_devices(c_int(0x05))
         time.sleep(3)
         # python callback application
         print("discover_unowned- done")
-        unowned_return_list={}
         nr_unowned = self.get_nr_unowned_devices()
         owned_state=False
-        self.purge_device_array(owned_state)
-        for i in range(nr_unowned):
-            uuid = self.get_unowned_uuid(i)+""
-            dev_name = self.get_unowned_device_name(i)+""
-            self.discover_resources(uuid)
-            event.clear()
-            unowned_return_list[str(i)] = str(uuid)
-            event.wait()
-            for index, device in enumerate(self.device_array):
-                if device.uuid == str(uuid):
-                    if device.owned_state == owned_state:
-                        return
-            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name),resources=self.resourcelist[str(uuid)])
-            self.device_array.append(dev)
-
+        #self.purge_device_array(owned_state)
+        unowned_event.wait(5)
         print("UNOWNED DEVICE ARRAY {}",self.device_array)
-        return unowned_return_list
+        return self.device_array
+
+    def device_array_contains(self,uuid):
+        contains = False
+        for index, device in enumerate(self.device_array):
+            if device.uuid == uuid:
+                contains = True
+        return contains 
+
 
     def return_devices_array(self):
         return self.device_array
@@ -705,25 +719,11 @@ class Iotivity():
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
         print("discover_owned- done")
-        owned_return_list={}
         nr_owned = self.get_nr_owned_devices()
         owned_state=True
-        self.purge_device_array(owned_state)
-        for i in range(nr_owned):
-            uuid = self.get_owned_uuid(i)+""
-            dev_name = self.get_owned_device_name(i)+""
-            event.clear()
-            self.discover_resources(uuid)
-            owned_return_list[str(i)] = str(uuid)
-            event.wait()
-            for index, device in enumerate(self.device_array):
-                if device.uuid == str(uuid):
-                    if device.owned_state == owned_state:
-                        return
-            dev = Device(str(uuid),owned_state=owned_state,name=str(dev_name),resources=self.resourcelist[str(uuid)])
-            self.device_array.append(dev)
+        owned_event.wait(5)
         print("OWNED DEVICE ARRAY {}",self.device_array)
-        return owned_return_list
+        return self.device_array
 
         
     def quit(self):
@@ -823,12 +823,15 @@ class Iotivity():
         # retrieves the uuid of the owned device
         # index of owned list of devices in IoTivity layer
         self.lib.get_device_name_from_uuid.argtypes = [String]
+        device_name = ""
         if sizeof(c_int) == sizeof(c_void_p):
             self.lib.get_device_name_from_uuid.restype = ReturnString
         else:
             self.lib.get_device_name_from_uuid.restype = String
             self.lib.get_device_name_from_uuid.errcheck = ReturnString
-        return self.lib.get_device_name_from_uuid(device_uuid)
+        device_name = self.lib.get_device_name_from_uuid(device_uuid)
+        print("Device Name: {}".format(device_name))
+        return str(device_name)
 
 
     def onboard_all_unowned(self):
@@ -857,6 +860,7 @@ class Iotivity():
             if key == device:
                 del self.resourcelist[device]
                 break
+        self.purge_device_array(device)
 
     def offboard_device(self,device):
         print ("offboard device :", device)
@@ -869,7 +873,7 @@ class Iotivity():
             if key == device:
                 del self.resourcelist[device]
                 break
-        print ("...done.")
+        self.purge_device_array(device)
     
     def offboard_all_owned(self):
         print ("listing onboarded devices:")
@@ -924,6 +928,8 @@ class Iotivity():
         self.lib.py_discover_resources.argtypes = [String]
         self.lib.py_discover_resourcesrestype = None
         self.lib.py_discover_resources(myuuid)
+        resource_event.wait(10)
+        return self.resourcelist
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
