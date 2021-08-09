@@ -107,7 +107,7 @@ if __name__ == '__main__':
     #socketio.run(app, host='0.0.0.0',debug=True,use_reloader=False)
     #run in seperate thread
     #threading.Thread(target=app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'))).start()
-    #Secure Self-signed (required for camera) See README for certs
+    #Secure Self-signed (required for camera) See README for cert
     socketio.run(app, host='0.0.0.0',debug=False,use_reloader=False,ssl_context=('cert.pem', 'key.pem'))
 
 

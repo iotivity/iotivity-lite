@@ -559,6 +559,7 @@ class Iotivity():
         if len(my_uri) <=0:
             resource_event.set()
             print("ALL resources gathered");
+            print(self.resourcelist)
  
         print(colored("          Resource Event          \n",'green',attrs=['underline']))
         print(colored("UUID:{}, \nURI:{}",'green').format(uuid_new,my_uri))
@@ -711,14 +712,13 @@ class Iotivity():
 
 
     def discover_owned(self):
-        print("discover_owned ")
+        print(colored(20*" "+"Discover Unowned Devices"+20*" ",'yellow',attrs=['underline']))
         #ret = self.lib.discover_owned_devices(c_int(0x02))
         #ret = self.lib.discover_owned_devices(c_int(0x03))
         ret = self.lib.discover_owned_devices(c_int(0x05))
         time.sleep(3)
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
-        print("discover_owned- done")
         nr_owned = self.get_nr_owned_devices()
         owned_state=True
         owned_event.wait(5)
@@ -925,11 +925,12 @@ class Iotivity():
         self.lib.py_provision_role_cert(uuid, role, auth)
 
     def discover_resources(self, myuuid):
+        resource_event.clear()
         self.lib.py_discover_resources.argtypes = [String]
         self.lib.py_discover_resourcesrestype = None
         self.lib.py_discover_resources(myuuid)
         resource_event.wait(10)
-        return self.resourcelist
+        return {myuuid:self.resourcelist[myuuid]}
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)

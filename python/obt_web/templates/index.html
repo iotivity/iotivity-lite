@@ -56,6 +56,8 @@ var dialog;
       var unowned_delete_stack = [];
       var owned_delete_stack = [];
 
+      var resources_array = [];
+
 
 function openDeviceDialog(device)
 {
@@ -93,6 +95,13 @@ function toggle_qr(){
 function capitalize(s)
 {
     return s[0].toUpperCase() + s.slice(1);
+}
+
+function formatUUID(s)
+{
+	var sarray = s.split("-");
+	var ret = sarray[0]+"-"+sarray[1]+"-"+sarray[2]+"<br>"+sarray[3]+"-"+sarray[4];
+	return ret;
 }
 
 function deviceButtonMouseOver(uuid,text)
@@ -190,7 +199,8 @@ for (i = 0; i < coll.length; i++) {
 		    	    var uuid_label = document.createElement("div");
 		    	    uuid_label.setAttribute('id','uuid_label_'+uuid);
 			    uuid_label.setAttribute('class','uuid-label');
-		    	    uuid_label.innerHTML = uuid;
+		            var formatted_uuid = formatUUID(uuid);
+		    	    uuid_label.innerHTML = formatted_uuid;
 		    	    if(name){
 				    label.append(name_label);
 			    	    uuid_label.setAttribute('style','font-size:8px');
@@ -246,7 +256,8 @@ for (i = 0; i < coll.length; i++) {
 		    	    var uuid_label = document.createElement("div");
 		    	    uuid_label.setAttribute('id','uuid_label_'+uuid);
 			    uuid_label.setAttribute('class','uuid-label');
-		    	    uuid_label.innerHTML = uuid;
+		            var formatted_uuid = formatUUID(uuid);
+		    	    uuid_label.innerHTML = formatted_uuid;
 		    	    if(name){
 				    label.append(name_label);
 			    	    uuid_label.setAttribute('style','font-size:8px');
@@ -297,17 +308,19 @@ for (i = 0; i < coll.length; i++) {
 				title: device_title,
 			      autoOpen: false,
 			      maxWidth:600,
-			      maxHeight: 500,
+			      maxHeight: 700,
 			      width: 600,
-			      height: 500,
+			      height: 700,
 			      create: function() {
+				  /*These are the tabs on the dialog*/
 				  var device_tabs = $(`<div id="device_tabs_`+uuid+`">
 					  <ul>
-					    <li><a href="#tabs-1">Control</a></li>
+					    <li><a href="#client"+uuid>Client</a></li>
 					    <li><a href="#credentials"+uuid>Credentials</a></li>
-					    <li><a href="#tabs-3">Resources</a></li>
+					    <li><a href="#access_control"+uuid>Access Control</a></li>
+					    <li><a href="#resources"+uuid>Resources</a></li>
 					  </ul>
-					  <div id="tabs-1">
+					  <div id="client">
 					    <p>
 					         /a/light
 					  </p>
@@ -327,23 +340,54 @@ for (i = 0; i < coll.length; i++) {
 
 					  </div>
 					  <div id="credentials">
+					    <p>Credential Type:
+						<select id='crewdential_selector_`+uuid+`'>
+					  		<option disabled selected> Choose a credential type</option>
+					  		<option value='pairwise'>Pairwise</option>
+					  		<option value='role'>Role</option>
+					  	</select>
+					    </p>
 					    <p id='cred_`+uuid+`'>
-					    	<select id='credential_selector_`+uuid+`' multiple='multiple'>
+					    	<select id='credential_device_selector_`+uuid+`' multiple='multiple'>
 						</select>
-
 					    </p>
 					  </div>
-					  <div id="tabs-3">
-					    <p></p>
+					  <div id="access_control">
+					    <p> Resource
+						  <select id='access_control_resource_selector_`+uuid+`'>
+					          	<option disabled selected> Choose a resource</option> 
+					  	  </select>
+					    </p>
+					    <p>
+					  	<fieldset id='access_control_permissions_`+uuid+`'>
+							  <input type='checkbox' value='create'>Create</input>
+							  <input type='checkbox' value='retrieve'>Retrieve</input>
+							  <input type='checkbox' value='update'>Update</input>
+							  <input type='checkbox' value='delete'>Delete</input>
+							  <input type='checkbox' value='notify'>Notify</input>
+					  	</fieldset>
+					    </p>
+					    <p id='access_control_device_`+uuid+`'>
+					    	<select id='access_control_device_selector_`+uuid+`' multiple='multiple'>
+						</select>
+					    </p>
+					  </div>
+					  <div id="resources">
+					  <p id='resources_`+uuid+`'></p>
 					    <p></p>
 					  </div>
 					</div>`).tabs();
 				      device_tabs.css({'min-heght':'400px','overflow':'auto'}); 
 				      $(this).append(device_tabs);
-				      $('#credential_selector_'+uuid).multiSelect({  
+				      $('#credential_device_selector_'+uuid).multiSelect({  
 					      selectableHeader: "<div class='custom-header'>Available Devices</div>",
 					      selectionHeader: "<div class='custom-header'>Selected Devices</div>",
 				      });
+				      $('#access_control_device_selector_'+uuid).multiSelect({  
+					      selectableHeader: "<div class='custom-header'>Available Devices</div>",
+					      selectionHeader: "<div class='custom-header'>Target Devices</div>",
+				      });
+				      		/*Credential Button*/
 					    var pair_button = document.createElement("div");
 						pair_button.setAttribute('id','credsbutton_'+uuid);
 						pair_button.setAttribute('onclick','addCredentials("'+uuid+'")');
@@ -351,26 +395,13 @@ for (i = 0; i < coll.length; i++) {
 						pair_button.innerHTML = "Add Credentials";
 						pair_button.setAttribute('style','margin:2px;float:right;font-size:20px;opacity:1');
 						$('#cred_'+uuid).append(pair_button);
+
+				      	/*Fill resources Tab*/
+				        
 			      },   
 			      open: function() {
 				/*Make background dark.  See page.css*/
 				$('.ui-widget-overlay').addClass('custom-overlay');
-				console.log("clicked"+uuid);
-				for (var device in owned_devices_stack)
-				      {
-					      var device_uuid = owned_devices_stack[device];
-					      if (device_uuid == uuid)
-					      {
-						      continue;
-					      }
-					      else
-					      {
-						      //revisit nothing shows up on first device.
-						      console.log("Open: "+ uuid + "Not Open: " + device_uuid);
-						      $('#credential_selector_'+uuid).multiSelect('addOption', { value: device_uuid, text: device_uuid, index: device });
-
-					      }
-				      };
 			      },
 				buttons: {
 				  Close: function() {
@@ -432,44 +463,6 @@ for (i = 0; i < coll.length; i++) {
       })
 
 
-	/*Return of Unowned Devices*/
-     socket.on( 'unowned', function( msg ) {
-        console.log( msg )
-	//clear array
-	var discovery = JSON.parse(msg);
-	for (var key in discovery) {
-	    if (discovery.hasOwnProperty(key)) {
-		    if (!unowned_devices_stack.includes(discovery[key])){
-			console.log(key + " -> " + discovery[key]);
-			newDevice = buildDevice(discovery[key],"unowned");
-			addDevice('unowned_devices',newDevice);
-			unowned_devices_stack.push(discovery[key]);
-			console.log("Unowned Devices: "+unowned_devices_stack);
-		    }
-	    }
-	}
-	  update_ui_devices();
-      })
-	/*Return of owned Devices*/
-     socket.on( 'owned', function( msg ) {
-        console.log( "Owned "+msg )
-	var discovery = JSON.parse(msg);
-	for (var key in discovery) {
-	    if (discovery.hasOwnProperty(key)) {
-		    if (!owned_devices_stack.includes(discovery[key])){
-			console.log(key + " -> " + discovery[key]);
-			newDevice = buildDevice(discovery[key],"owned");
-			addDevice('owned_devices',newDevice);
-			owned_devices_stack.push(discovery[key]);
-			console.log("Owned Devices: "+owned_devices_stack);
-			discoverResources(discovery[key]);
-		    }
-	    }
-	}
-	  hideWait('button_discover');
-	  update_ui_devices();
-      })
-
 
 	/*Return of All discovered devices*/
      socket.on( 'device_discovery', function( msg ) {
@@ -478,6 +471,7 @@ for (i = 0; i < coll.length; i++) {
 	for (var key in discovery) {
 	    if (discovery.hasOwnProperty(key)) {
 		var name = discovery[key].name;
+		var uuid = discovery[key].uuid;
 		    /*Owned Devices*/
 		    if (discovery[key].owned_state){
 			    if (!owned_devices_stack.includes(discovery[key].uuid)){
@@ -495,26 +489,35 @@ for (i = 0; i < coll.length; i++) {
 				console.log("Unowned Devices: "+unowned_devices_stack);
 			    }
 		    }
+	       update_ui_devices();
 	    }
 	}
 	  hideWait('button_discover');
-	  update_ui_devices();
       })
      
 	socket.on( 'resource_discovery', function( msg ) {
 		var resources = JSON.parse(msg);
 		console.log(resources);
-		for (var uuid in resources) {
+		for (var uuid in resources){
 			console.log(uuid);
-		}
+			var resource_html ="";
+			for (var i=0; i<resources[uuid].length;i++){
+			        resource_html = resource_html+"<p>"+resources[uuid][i].uri+"</p>";
+				/*Fill Resource Selector in Access Control Tab*/
+				$("#access_control_resource_selector_"+uuid).append(new Option(resources[uuid][i].uri,resources[uuid][i].uri));
+				/*Fill Resources Tab*/
+				$("#resources_"+uuid).html(resource_html);
 
+			}
+		}
+		//resources_array.push(resources);
 	})
 
 	/*Loops through selected devices in credential selector
 	sends these uuids and the source uuid to webserver/obt*/
 	function addCredentials(source_device)
 	{
-		var values = $("#credential_selector_"+source_device).val();
+		var values = $("#credential_device_selector_"+source_device).val();
 		console.log("Provisioning Credentials\n"+values);
 		var credentials = new Object();
 		credentials.source_device = source_device;
@@ -533,6 +536,22 @@ for (i = 0; i < coll.length; i++) {
 			console.log("Remove device\n "+ owned_delete_stack[d]);
 			removeDevice(owned_delete_stack[d]);
 		}
+	    	/*Update Access Control Tab*/
+	        if(owned_devices_stack.length >1){
+	        	for (var index =0; index<owned_devices_stack.length;index++)
+		      	{
+			      var current_uuid = owned_devices_stack[index];
+			      for (var index2 =0; index2<owned_devices_stack.length;index2++)
+	    		      {
+				      var other_uuid = owned_devices_stack[index2];
+	    			      if (current_uuid != other_uuid)
+	    				{
+					      $('#access_control_device_selector_'+current_uuid).multiSelect('addOption', { value: other_uuid, text: other_uuid });
+					      $('#credential_device_selector_'+current_uuid).multiSelect('addOption', { value: other_uuid, text: other_uuid });
+	    				}
+	    		       }
+	        	}
+	    	}
 	}
 
 	function discoverResources(uuid){
