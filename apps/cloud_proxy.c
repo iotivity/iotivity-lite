@@ -790,6 +790,7 @@ register_resources(void)
   // no cloud registration.
   // only local device registration
   oc_add_resource(res_d2dserverlist);
+  oc_cloud_add_resource(res_d2dserverlist);
 }
 
 #ifdef OC_SECURITY
