@@ -27,67 +27,86 @@
 * main
 *  starts the stack, with the registered resources.
 *
-* Each resource has:
-*  global property variables (per resource path) for:
-*    the property name
-*       naming convention: g_<path>_RESOURCE_PROPERTY_NAME_<propertyname>
-*    the actual value of the property, which is typed from the json data type
-*      naming convention: g_<path>_<propertyname>
-*  global resource variables (per path) for:
-*    the path in a variable:
-*      naming convention: g_<path>_RESOURCE_ENDPOINT
-*
-*  handlers for the implemented methods (get/post)
-*   get_<path>
-*     function that is being called when a RETRIEVE is called on <path>
-*     set the global variables in the output
-*   post_<path>
-*     function that is being called when a UPDATE is called on <path>
-*     checks the input data
-*     if input data is correct
-*       updates the global variables
-*
-*  handlers for the proxied device
-*  incomming requests from the cloud are handled by:
-     - get_resource
-          the response from the local device is handled by: get_local_resource_response
-     - post_resource
-          the response from the local device is handled by: post_local_resource_response
-     - delete_resource
-          the response from the local device is handled by: delete_local_resource_response
-*
-*
-* PKI SECURITY
-*  to install a certificate use MANUFACTORER_PKI compile option
-*  - requires to have the header file"pki_certs.h"
-*  - this include file can be created with the pki.sh tool in the device builder chain.
-*    the sh script creates a Kyrio test certificate with a limited life time.
-*    products should not have test certificates.
-*    Hence this example is being build without the manufactorer certificate by default.
-*
-* compile flag PROXY_ALL_DISCOVERED_DEVICES
-*   this flag enables that all devices on the network will be proxied.
-*
-* building on linux (in port/linux):
-* make cloud_proxy CLOUD=1 CLIENT=1 OSCORE=0
-*
-* Usage:
-* onboard the cloud_proxy using an OBT
-*   configure the ACL for the d2dserverlist (e.g. install ACL for DELETE)
-* connect to a cloud using an OBT via a mediator
-*   when connected to the cloud, the client part will issue a discovery for all devices on realm and site local scopes
-*   devices that are in the d2dserver list will be announced to the cloud
-* add a device (one by one) to be proxied, example:
-*    POST to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
-* list the devices that are proxied, example:
-*    GET to /d2dserverlist
-* delete a device (one by one) that is proxied, example:
-*    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
-
-TODO:
-- save the d2dserverlist to disk, read at startup
-
-*/
+ * Each resource has:
+ *  - global property variables (per resource path) for:
+ *    - the property name
+ *       naming convention: g_[path]_RESOURCE_PROPERTY_NAME_[propertyname]
+ *    - the actual value of the property, which is typed from the json data type
+ *      naming convention: g_[path]_[propertyname]
+ *  - global resource variables (per path) for:
+ *    - the path in a variable:
+ *      naming convention: g_[path]_RESOURCE_ENDPOINT
+ *
+ *  handlers for the implemented methods (get/post):
+ *   - get_[path]
+ *     function that is being called when a RETRIEVE is called on [path]
+ *     set the global variables in the output
+ *   - post_[path]
+ *     function that is being called when a UPDATE is called on [path]
+ *     checks the input data
+ *     if input data is correct
+ *       updates the global variables
+ *
+ *
+ *  Handlers for the proxied device
+ *  incomming requests from the cloud are handled by:
+ *    - get_resource
+ *         the response from the local device is handled by: get_local_resource_response
+ *    - post_resource
+ *         the response from the local device is handled by: post_local_resource_response
+ *    - delete_resource
+ *         the response from the local device is handled by: delete_local_resource_response
+ *
+ * ## PKI SECURITY
+ *  to install a certificate use MANUFACTORER_PKI compile option
+ *  - requires to have the header file"pki_certs.h"
+ *  - this include file can be created with the pki.sh tool in the device builder chain.
+ *    the sh script creates a Kyrio test certificate with a limited life time.
+ *    products should not have test certificates.
+ *    Hence this example is being build without the manufactorer certificate by default.
+ *
+ * ## IoTivity specific defines
+ *
+ *  - OC_SECURITY 
+      enable security
+ *    - OC_PKI 
+ *      enable use of PKI, note onboarding is enabled by means of run time code
+ *    - OC_SECURITY_PIN 
+ *      enables Random PIN onboarding, 
+ *  - OC_CLOUD 
+ *    enables cloud access
+ *  - OC_IDD_API 
+ *    IDD via API, otherwise use header file to define the IDD
+ * - __linux__ 
+ *   build for linux
+ * - WIN32 
+ *   build for windows
+ *
+ * compile flag PROXY_ALL_DISCOVERED_DEVICES
+ *   this flag enables that all devices on the network will be proxied.
+ *
+ * building on linux (in port/linux):
+ * make cloud_proxy CLOUD=1 CLIENT=1 OSCORE=0
+ *
+ * ## Usage
+ * 
+ * onboard the cloud_proxy using an OBT
+ *   configure the ACL for the d2dserverlist (e.g. install ACL for DELETE)
+ * connect to a cloud using an OBT via a mediator
+ *   when connected to the cloud, the client part will issue a discovery for all devices on realm and site local scopes
+ *   devices that are in the d2dserver list will be announced to the cloud
+ * add a device (one by one) to be proxied, example:
+ *    POST to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
+ * list the devices that are proxied, example:
+ *    GET to /d2dserverlist
+ * delete a device (one by one) that is proxied, example:
+ *    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
+ * rescan the network (e.g. update endpoints towards the proxied local devices), example:
+ *    UPDATE to /d2dserverlist?scan=1
+ *
+ * TODO:
+ * - save the d2dserverlist to disk, read at startup
+ */
 /*
  tool_version          : 20200103
  input_file            : ../device_output/out_codegeneration_merged.swagger.json
@@ -106,6 +125,11 @@ TODO:
 #endif
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
+#endif
+
+#ifndef DOXYGEN
+// Force doxygen to document static inline
+#define STATIC static
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
@@ -149,19 +173,19 @@ volatile int quit = 0;          /* stop variable, used by handle_signal */
 #define MAX_URI_LENGTH (30)
 
 #define MAX_DISCOVERED_SERVER 100
-static oc_endpoint_t* discovered_server[MAX_DISCOVERED_SERVER];
+STATIC oc_endpoint_t* discovered_server[MAX_DISCOVERED_SERVER];
 
-static const char* cis = "coap+tcp://127.0.0.1:5683";
-static const char* auth_code = "test";
-static const char* sid = "00000000-0000-0000-0000-000000000001";
-static const char* apn = "plgd";
-static const char* device_name = "CloudProxy";
+STATIC const char* cis = "coap+tcp://127.0.0.1:5683";
+STATIC const char* auth_code = "test";
+STATIC const char* sid = "00000000-0000-0000-0000-000000000001";
+STATIC const char* apn = "plgd";
+STATIC const char* device_name = "CloudProxy";
 
-static char proxy_di[38];
+STATIC char proxy_di[38];
 
 
 /* global property variables for path: "d2dserverlist" */
-static char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* the name for the attribute */
+STATIC char* g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist = "dis"; /* the name for the attribute */
 
 /* array d2dserverlist  This Property maintains the list of the D2D Device's connection info i.e. {Device ID, Resource URI, end points} */
 /* array of objects 
@@ -182,8 +206,8 @@ char g_d2dserverlist_di[MAX_PAYLOAD_STRING] = ""; /* current value of property "
 /* registration data variables for the resources */
 
 /* global resource variables for path: d2dserverlist */
-static char* g_d2dserverlist_RESOURCE_ENDPOINT = "d2dserverlist"; /* used path for this resource */
-static char* g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = { "oic.r.d2dserverlist" }; /* rt value (as an array) */
+STATIC char* g_d2dserverlist_RESOURCE_ENDPOINT = "d2dserverlist"; /* used path for this resource */
+STATIC char* g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = { "oic.r.d2dserverlist" }; /* rt value (as an array) */
 int g_d2dserverlist_nr_resource_types = 1;
 
 /* forward declarations */
@@ -215,7 +239,7 @@ print_rep(oc_rep_t* rep, bool pretty_print)
 * @param url the input url
 * @param udn the udn parsed out from the input url
 */
-static void url_to_udn(const char* url, char* udn)
+STATIC void url_to_udn(const char* url, char* udn)
 {
   strcpy(udn, &url[1]);
   udn[OC_UUID_LEN - 1] = '\0';
@@ -227,7 +251,7 @@ static void url_to_udn(const char* url, char* udn)
 * @param url the input url
 * @param local_url the local url withoug the udn prefix
 */
-static void url_to_local_url(const char* url, char* local_url)
+STATIC void url_to_local_url(const char* url, char* local_url)
 {
   strcpy(local_url, &url[OC_UUID_LEN]);
 }
@@ -238,7 +262,7 @@ static void url_to_local_url(const char* url, char* local_url)
 * @param anchor url with udn 
 * @param anchor url without the anchor part
 */
-static void anchor_to_udn(const char* anchor, char* udn)
+STATIC void anchor_to_udn(const char* anchor, char* udn)
 {
   strcpy(udn, &anchor[6]);
 }
@@ -251,7 +275,7 @@ static void anchor_to_udn(const char* anchor, char* udn)
 * @param udn to check if it is in the list
 * @return index, -1 is not in list
 */
-static int is_udn_listed_index(char* udn)
+STATIC int is_udn_listed_index(char* udn)
 {
   PRINT("is_udn_listed_index:  Finding UDN %s \n", udn);
 
@@ -265,8 +289,6 @@ static int is_udn_listed_index(char* udn)
   return -1;
 }
 
-
-
 /**
 * function to retrieve the index based on udn
 * using global discovered_server list
@@ -274,7 +296,7 @@ static int is_udn_listed_index(char* udn)
 * @param udn to check if it is in the list
 * @return index, -1 is not in list
 */
-static void list_udn(void)
+STATIC void list_udn(void)
 {
   PRINT("   list_udn \n");
 
@@ -286,8 +308,6 @@ static void list_udn(void)
   PRINT("   - done list_udn \n");
 }
 
-
-
 /**
 * function to find an empty slot in
 * the global discovered_server list
@@ -295,7 +315,7 @@ static void list_udn(void)
 * @param udn to check if it is in the list
 * @return index, -1 full
 */
-static int find_empty_slot(void)
+STATIC int find_empty_slot(void)
 {
   PRINT("  Finding empty slot \n");
 
@@ -309,7 +329,6 @@ static int find_empty_slot(void)
   return -1;
 }
 
-
 /**
 * function to retrieve the endpoint based on udn
 * using global discovered_server list
@@ -317,7 +336,7 @@ static int find_empty_slot(void)
 * @param udn to check if it is in the list 
 * @return endpoint or NULL (e.g. not in list)
 */
-static oc_endpoint_t* is_udn_listed(char* udn)
+STATIC oc_endpoint_t* is_udn_listed(char* udn)
 {
   PRINT("  Finding UDN %s \n", udn);
 
@@ -399,7 +418,7 @@ app_init(void)
 * @return the error_status, e.g. if error_status is true, then the input document contains something illegal
 */
 /*
-static bool
+STATIC bool
 check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 {
   if (strcmp(oc_string(name), "n") == 0) {
@@ -438,7 +457,7 @@ check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 * @param interfaces the interface used for this call
 * @param user_data the user data.
 */
-static void
+STATIC void
 get_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)user_data;  /* variable not used */
@@ -509,7 +528,7 @@ get_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* u
 * @param di_len length of di
 * @return true : found, false: not found
 */
-static bool
+STATIC bool
 if_di_exist(char* di, int di_len)
 {
   for (int i = 0; i < MAX_ARRAY; i++) {
@@ -528,7 +547,7 @@ if_di_exist(char* di, int di_len)
 * @param len length of di
 * @return true : removed, false: not removed
 */
-static bool
+STATIC bool
 remove_di(char* di, int len)
 {
   for (int i = 0; i < MAX_ARRAY; i++) {
@@ -540,7 +559,6 @@ remove_di(char* di, int len)
   }
   return false;
 }
-
 
 /**
 *  find the resource with an url that starts with the di
@@ -556,11 +574,10 @@ oc_resource_t* find_resource(const char* di)
   return res;
 }
 
-
 /**
 *  unregister resources 
 */
-static bool
+STATIC bool
 unregister_resources(char* di, int len)
 {
   (void)len;
@@ -591,7 +608,7 @@ unregister_resources(char* di, int len)
 * @param interfaces the used interfaces during the request.
 * @param user_data the supplied user data.
 */
-static void
+STATIC void
 post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)interfaces;
@@ -604,6 +621,14 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
   // di is a query param, copy from DELETE.
   bool stored = false;
   char* _di = NULL; /* not null terminated  */
+  char* _scan = NULL; /* not null terminated  */
+
+  int _scan_len = oc_get_query_value(request, "scan", &_scan);
+  if (_scan_len > 0) {
+    issue_requests_all();
+    oc_send_response(request, OC_STATUS_CHANGED);
+    return;
+  }
 
   int _di_len = oc_get_query_value(request, "di", &_di);
   if (_di_len != -1) {
@@ -682,7 +707,7 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
 * @param interfaces the used interfaces during the request.
 * @param user_data the supplied user data.
 */
-static void
+STATIC void
 delete_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)request;
@@ -847,7 +872,7 @@ initialize_variables(void)
 * check if the resource type is a vertical resource.
 * if it is a vertical resource: it will be registered in the cloud
 */
-static bool is_vertical(char* resource_type)
+STATIC bool is_vertical(char* resource_type)
 {
   int size_rt = (int)strlen(resource_type);
 
@@ -893,12 +918,11 @@ static bool is_vertical(char* resource_type)
   return true;
 }
 
-
 /**
 * Call back for the "GET" to the local device
 * note that the user data contains the delayed response information
 */
-static void
+STATIC void
 get_local_resource_response(oc_client_response_t* data)
 {
   oc_rep_t * value_list=NULL;
@@ -926,7 +950,7 @@ get_local_resource_response(oc_client_response_t* data)
 * will invoke a GET to the local device
 * will respond as a 
 */
-static void
+STATIC void
 get_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)interfaces;
@@ -963,7 +987,7 @@ get_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* user_d
 * Call back for the "POST" to the proxy device
 * note that the user data contains the delayed response information
 */
-static void
+STATIC void
 post_local_resource_response(oc_client_response_t* data)
 {
   oc_rep_t* value_list = NULL;
@@ -989,7 +1013,7 @@ post_local_resource_response(oc_client_response_t* data)
 /**
 * Call back for the "POST" to the proxy device
 */
-static void
+STATIC void
 post_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)request;
@@ -1057,7 +1081,7 @@ post_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* user_
 * Call back for the "DELETE" to the local device
 * note that the user data contains the delayed response information
 */
-static void
+STATIC void
 delete_local_resource_response(oc_client_response_t* data)
 {
   oc_rep_t* value_list = NULL;
@@ -1085,7 +1109,7 @@ delete_local_resource_response(oc_client_response_t* data)
 * will invoke a DELETE to the local device
 * will respond as a
 */
-static void
+STATIC void
 delete_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* user_data)
 {
   (void)request;
@@ -1122,7 +1146,7 @@ delete_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* use
 
 }
 
-static oc_discovery_flags_t
+STATIC oc_discovery_flags_t
 discovery(const char* anchor, const char* uri, oc_string_array_t types,
   oc_interface_mask_t iface_mask, oc_endpoint_t* endpoint,
   oc_resource_properties_t bm, bool x, void* user_data)
@@ -1336,7 +1360,7 @@ issue_requests_all(void)
 * signal the event loop (windows version)
 * wakes up the main function to handle the next callback
 */
-static void
+STATIC void
 signal_event_loop(void)
 {
   WakeConditionVariable(&cv);
@@ -1348,7 +1372,7 @@ signal_event_loop(void)
 * signal the event loop (Linux)
 * wakes up the main function to handle the next callback
 */
-static void
+STATIC void
 signal_event_loop(void)
 {
   pthread_mutex_lock(&mutex);
@@ -1374,7 +1398,7 @@ handle_signal(int signal)
 * cloud status handler.
 * handler to print out the status of the cloud connection
 */
-static void
+STATIC void
 cloud_status_handler(oc_cloud_context_t* ctx, oc_cloud_status_t status,
   void* data)
 {
@@ -1420,7 +1444,7 @@ cloud_status_handler(oc_cloud_context_t* ctx, oc_cloud_status_t status,
 }
 #endif // OC_CLOUD
 
-static int
+STATIC int
 read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
@@ -1466,7 +1490,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 * @param device the device handle
 * @param data the user date
 */
-static void
+STATIC void
 minimal_factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -1652,7 +1676,7 @@ main(int argc, char* argv[])
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
 
   // reset the device, for easier debugging.
-  //oc_reset();
+  oc_reset();
 
   PRINT("OCF server \"%s\" running, waiting on incoming connections.\n", device_name);
 
