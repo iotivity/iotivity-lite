@@ -1539,7 +1539,6 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 
 /** 
  * factory reset callback: resetting device with cloud_ca trust anchors.
- * (Taken from cloud_server code)
  * 
  * @param device the device handle
  * @param data the user date
