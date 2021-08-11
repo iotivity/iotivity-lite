@@ -84,6 +84,15 @@ def handle_pairwise(data):
         print("Provision Pairwise Source Device:{} Target Device:{}".format(credentials.source_device,target))
         provision = my_iotivity.provision_pairwise(target,credentials.source_device)
 
+@socketio.on('provision_ace')
+def handle_pairwise(data):
+    print("Provision ACE:{}".format(data))
+    ace = json.loads(data, object_hook=lambda d: SimpleNamespace(**d))
+    crudn = "|".join(ace.crudn)
+    for subject in ace.subjects:
+        print("Provision ACE Target Device:{} Subject Device:{} CRUDN:{}".format(ace.target_device,subject,ace.href,crudn))
+        provision = my_iotivity.provision_ace(ace.target_device,subject,ace.href,crudn)
+
 @socketio.on('send_command')
 def send_command(uuid,command):
     #print("Device:{},Command:{}".format(uuid,command))

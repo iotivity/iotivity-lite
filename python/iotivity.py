@@ -891,9 +891,13 @@ class Iotivity():
     def provision_pairwise(self, device1_uuid, device2_uuid):
         self.lib.py_provision_pairwise_credentials.argtypes = [String, String]
         self.lib.py_provision_pairwise_credentials.restype = None
-        uuid1 = "553acaae-65cb-4732-68b0-c5fa77382969"
         self.lib.py_provision_pairwise_credentials(str(device1_uuid),str(device2_uuid))
 
+    def provision_ace(self, target_uuid, subject_uuid, href, crudn):
+        self.lib.py_provision_ace2.argtypes = [String, String, String, String]
+        self.lib.py_provision_ace2.restype = None
+        self.lib.py_provision_ace2(target_uuid,subject_uuid,href,crudn)
+        print("iotivity: Provission ACe2")
 
     def provision_ace_cloud_access(self, device_uuid):
         self.lib.py_provision_ace_cloud_access.argtypes = [String]
@@ -1003,6 +1007,8 @@ class Iotivity():
 
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
 #time.sleep(1)
+
+#my_iotivity.provision_ace("1234","1234","href","crudn")
 
 #my_iotivity.test_security()
 

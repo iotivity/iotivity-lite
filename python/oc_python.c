@@ -185,67 +185,6 @@ device_handle_t* py_getdevice_from_uuid(char* uuid, int owned)
 }
 
 
-static void
-display_menu(void)
-{
-	return;
-	
-  PRINT("[C]\n\n################################################\nOCF 2.x "
-        "Onboarding Tool\n################################################\n");
-  PRINT("[C][0] Display this menu\n");
-  PRINT("[C]-----------------------------------------------\n");
-  PRINT("[C][1] Discover un-owned devices\n");
-  PRINT("[C][2] Discover un-owned devices in the realm-local IPv6 scope\n");
-  PRINT("[C][3] Discover un-owned devices in the site-local IPv6 scope\n");
-  PRINT("[C][4] Discover owned devices\n");
-  PRINT("[C][5] Discover owned devices in the realm-local IPv6 scope\n");
-  PRINT("[C][6] Discover owned devices in the site-local IPv6 scope\n");
-  PRINT("[C][7] Discover all resources on the device\n");
-  PRINT("[C]-----------------------------------------------\n");
-  PRINT("[C][8] Just-Works Ownership Transfer Method\n");
-  PRINT("[C][9] Request Random PIN from device for OTM\n");
-  PRINT("[C][10] Random PIN Ownership Transfer Method\n");
-#ifdef OC_PKI
-  PRINT("[C][11] Manufacturer Certificate based Ownership Transfer Method\n");
-#endif /* OC_PKI */
-  PRINT("[C]-----------------------------------------------\n");
-  PRINT("[C][12] Provision pairwise credentials\n");
-  PRINT("[C][13] Provision ACE2\n");
-  PRINT("[C][14] Provision auth-crypt RW access to NCRs\n");
-  PRINT("[C][15] RETRIEVE /oic/sec/cred\n");
-  PRINT("[C][16] DELETE cred by credid\n");
-  PRINT("[C][17] RETRIEVE /oic/sec/acl2\n");
-  PRINT("[C][18] DELETE ace by aceid\n");
-  PRINT("[C][19] RETRIEVE own creds\n");
-  PRINT("[C][20] DELETE own cred by credid\n");
-#ifdef OC_PKI
-  PRINT("[C][21] Provision role RW access to NCRs\n");
-  PRINT("[C][22] Provision identity certificate\n");
-  PRINT("[C][23] Provision role certificate\n");
-#endif /* OC_PKI */
-#ifdef OC_OSCORE
-  PRINT("[C][24] Provision pairwise OSCORE contexts\n");
-  PRINT("[C][25] Provision Client Group OSCORE context\n");
-  PRINT("[C][26] Provision Server Group OSCORE context\n");
-#endif /* OC_OSCORE */
-  PRINT("[C][27] Set security domain info\n");
-#ifdef OC_CLOUD
-  PRINT("[C]-----------------------------------------------\n");
-  PRINT("[C][30] Provision cloud config info\n");
-  PRINT("[C][31] RETRIEVE cloud config info\n");
-  PRINT("[C][32] Provistion cloud trust anchor\n");
-#endif /* OC_CLOUD */
-  PRINT("[C]-----------------------------------------------\n");
-#ifdef OC_PKI
-  PRINT("[C][96] Install new manufacturer trust anchor\n");
-#endif /* OC_PKI */
-  PRINT("[C][97] RESET device\n");
-  PRINT("[C][98] RESET OBT\n");
-  PRINT("[C]-----------------------------------------------\n");
-  PRINT("[C][99] Exit\n");
-  PRINT("[C]################################################\n");
-  PRINT("[C]\nSelect option: \n");
-}
 
 #define SCANF(...)                                                             \
   do {                                                                         \
@@ -1936,6 +1875,43 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
+void py_provision_ace2(char* target, char* subject, char* href, char* crudn ) 
+{
+  PRINT("[C] Provision ACE2: %s,%s,%s,%s",target,subject,href,crudn); 
+  device_handle_t *device = py_getdevice_from_uuid(target, 1);
+  device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
+  
+  if (device == NULL){
+    PRINT("[C]py_provision_ace_access ERROR: Invalid uuid\n");
+    return;
+  }
+  if (subject_device == NULL){
+    PRINT("[C]py_provision_ace_access ERROR: Invalid subject uuid\n");
+    return;
+  }
+  PRINT("[C] py_provision_ace: name = %s  href = %s",device->device_name,href,crudn);
+
+  oc_sec_ace_t *ace = NULL;
+  ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
+
+  oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_href(res, href);
+  oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+  oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("[C] Successfully issued request to provision ACE\n");
+  } else {
+    PRINT("[C] ERROR issuing request to provision ACE\n");
+  }
+}
+
 void py_provision_ace_cloud_access(char* uuid ) 
 {
   
@@ -2798,12 +2774,10 @@ python_main(void)
   while (quit != 1) {
     sleep(5);
   }  
-  display_menu();
 
 
   //int c;
   while (quit != 1) {
-    display_menu();
     // SCANF("%d", &c);
     c = 99;
     c = 0;
