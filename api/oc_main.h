@@ -39,6 +39,9 @@ typedef struct oc_random_pin_t
 
 bool oc_main_initialized(void);
 
+void oc_set_drop_commands(size_t device, bool drop);
+bool oc_drop_command(size_t device);
+
 #ifdef __cplusplus
 }
 #endif
