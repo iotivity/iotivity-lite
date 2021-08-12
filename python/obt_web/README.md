@@ -50,8 +50,10 @@ https://IP:5000
 5. OTM selection
 6. ~~Resources dictionary is currently using the unowned uuid.  Needs to be the ownned UUID~~
 7. Finish simple client
-8. Finish ACL editing
+8. ~~Finish ACL editing~~
 9. ~~Implement threading events for resourcelist (need to wait until resources are populated)~~
 10. ~~Fix duplicates in Device array~~
+11. Retrieve ACES update UI
+
 
 
