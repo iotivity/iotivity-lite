@@ -897,7 +897,6 @@ class Iotivity():
         self.lib.py_provision_ace2.argtypes = [String, String, String, String]
         self.lib.py_provision_ace2.restype = None
         self.lib.py_provision_ace2(target_uuid,subject_uuid,href,crudn)
-        print("iotivity: Provission ACe2")
 
     def provision_ace_cloud_access(self, device_uuid):
         self.lib.py_provision_ace_cloud_access.argtypes = [String]

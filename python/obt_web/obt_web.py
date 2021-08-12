@@ -90,7 +90,6 @@ def handle_pairwise(data):
     ace = json.loads(data, object_hook=lambda d: SimpleNamespace(**d))
     crudn = "|".join(ace.crudn)
     for subject in ace.subjects:
-        print("Provision ACE Target Device:{} Subject Device:{} CRUDN:{}".format(ace.target_device,subject,ace.href,crudn))
         provision = my_iotivity.provision_ace(ace.target_device,subject,ace.href,crudn)
 
 @socketio.on('send_command')

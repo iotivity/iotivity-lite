@@ -31,6 +31,7 @@
 #endif
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MAX_NUM_DEVICES (50)
 #define MAX_NUM_RESOURCES (100)
@@ -1877,9 +1878,10 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 
 void py_provision_ace2(char* target, char* subject, char* href, char* crudn ) 
 {
-  PRINT("[C] Provision ACE2: %s,%s,%s,%s",target,subject,href,crudn); 
+  PRINT("[C] Provision ACE2: %s,%s,%s,%s\n",target,subject,href,crudn); 
   device_handle_t *device = py_getdevice_from_uuid(target, 1);
   device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
+
   
   if (device == NULL){
     PRINT("[C]py_provision_ace_access ERROR: Invalid uuid\n");
@@ -1887,6 +1889,10 @@ void py_provision_ace2(char* target, char* subject, char* href, char* crudn )
   }
   if (subject_device == NULL){
     PRINT("[C]py_provision_ace_access ERROR: Invalid subject uuid\n");
+    return;
+  }
+  if (crudn[0] == '\0'){
+    PRINT("[C]py_provision_ace_access ERROR: No CRUDN provided\n");
     return;
   }
   PRINT("[C] py_provision_ace: name = %s  href = %s",device->device_name,href,crudn);
@@ -1897,9 +1903,28 @@ void py_provision_ace2(char* target, char* subject, char* href, char* crudn )
   oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_href(res, href);
   oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+  char* crudn_array = strtok(crudn,"|");
 
-  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
-  oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+  while(crudn_array != NULL){
+	PRINT("- %s\n", crudn_array);
+	if (strcmp(crudn_array,"create") ==0){
+	  	oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
+	}
+	if (strcmp(crudn_array,"retrieve") ==0){
+		oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+	}
+	if (strcmp(crudn_array,"update") ==0){
+		oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+	}
+	if (strcmp(crudn_array,"delete") ==0){
+	  	oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+	}
+	if (strcmp(crudn_array,"notify") ==0){
+	  	oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
+	}
+	crudn_array = strtok(NULL,"|");
+  }
+
 
   otb_mutex_lock(app_sync_lock);
   int ret =
