@@ -25,6 +25,7 @@
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
+#include "api/oc_server_api_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
