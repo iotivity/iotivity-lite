@@ -267,10 +267,29 @@ cloud_deregister(cloud_api_param_t *p)
 
   OC_DBG("try deregister");
   bool cannotConnect = true;
+  // This value is calculated by coap_oscore_serialize_message for deregister
+  // message with empty query parameters. The value should remain the same
+  // unless some global options are added to coap requests.
+  // The deregister request won't be sent if the total size of its header is
+  // greater than COAP_MAX_HEADER_SIZE, so we must ensure that the query
+  // is not too large.
+  // Some older cloud implementations require tokens in deregister requests.
+  // To facilitate support for such implementations we append access token
+  // to the request query if the resulting query size is within the limit.
+  #define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
+  oc_string_t query = cloud_access_deregister_query(oc_string(ctx->store.uid),
+    oc_string(ctx->store.access_token), /*device*/0);
+  size_t query_size = oc_string_len(query);
+  oc_free_string(&query);
+  const char* access_token = NULL;
+  if (DEREGISTER_EMPTY_QUERY_HEADER_SIZE + query_size <= COAP_MAX_HEADER_SIZE) {
+    access_token = oc_string(ctx->store.access_token);
+  }
   if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
       cloud_access_deregister(ctx->cloud_ep,
                               oc_string(ctx->store.uid),
-                              0,
+                              access_token,
+                              /*device*/0,
                               cloud_deregistered_internal,
                               p)) {
     cannotConnect = false;
@@ -472,8 +491,38 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
   return oc_do_post();
 }
 
+oc_string_t
+cloud_access_deregister_query(const char *uid, const char *access_token, size_t device)
+{
+  oc_string_t q_uid;
+  oc_concat_strings(&q_uid, "uid=", uid);
+
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
+  oc_string_t q_di;
+  oc_concat_strings(&q_di, "&di=", uuid);
+  oc_string_t q_uid_di;
+  oc_concat_strings(&q_uid_di, oc_string(q_uid), oc_string(q_di));
+  oc_free_string(&q_uid);
+  oc_free_string(&q_di);
+
+  oc_string_t q_uid_di_at;
+  if (access_token != NULL) {
+    oc_string_t q_at;
+    oc_concat_strings(&q_at, "&accesstoken=", access_token);
+    oc_concat_strings(&q_uid_di_at, oc_string(q_uid_di), oc_string(q_at));
+    oc_free_string(&q_at);
+  } else {
+    oc_new_string(&q_uid_di_at, oc_string(q_uid_di), oc_string_len(q_uid_di));
+  }
+
+  oc_free_string(&q_uid_di);
+  return q_uid_di_at;
+}
+
 bool
-cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid, size_t device,
+cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
+                        const char *access_token, size_t device,
                         oc_response_handler_t handler, void *user_data)
 {
 #ifdef OC_SECURITY
@@ -487,26 +536,17 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid, size_t device,
     OC_ERR("Error of input parameters");
     return false;
   }
-  oc_string_t q_uid;
-  oc_concat_strings(&q_uid, "uid=", uid);
 
-  char uuid[OC_UUID_LEN] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
-  oc_string_t q_di;
-  oc_concat_strings(&q_di, "&di=", uuid);
-  oc_string_t q_uid_di;
-  oc_concat_strings(&q_uid_di, oc_string(q_uid), oc_string(q_di));
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
   }
 #endif /* OC_SECURITY */
 
-  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(q_uid_di),
+  oc_string_t query = cloud_access_deregister_query(uid, access_token, device);
+  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(query),
                         handler, HIGH_QOS, user_data);
-  oc_free_string(&q_uid);
-  oc_free_string(&q_di);
-  oc_free_string(&q_uid_di);
+  oc_free_string(&query);
   return s;
 }
 
