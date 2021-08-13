@@ -123,11 +123,11 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-  cloud_store_initialize(&ctx->store);
-  cloud_store_dump(&ctx->store);
   cloud_manager_stop(ctx);
+  cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
+  cloud_store_dump(&ctx->store);
 }
 
 int
@@ -365,6 +365,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 int
 oc_cloud_init(void)
 {
+  oc_set_on_delayed_delete_resource_cb(oc_cloud_delete_resource);
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_cloud_context_t *ctx =
@@ -388,7 +389,7 @@ oc_cloud_init(void)
       cloud_store_initialize(&ctx->store);
     }
 #endif
-
+	ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
     oc_list_add(cloud_context_list, ctx);
 
     ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);

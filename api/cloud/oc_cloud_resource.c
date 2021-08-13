@@ -62,17 +62,28 @@ cloud_response(oc_cloud_context_t *ctx)
                          (oc_string(ctx->store.auth_provider) != NULL
                             ? oc_string(ctx->store.auth_provider)
                             : ""));
+  OC_DBG("Creating Cloud Response: auth provider set");
   oc_rep_set_text_string(
     root, cis,
     (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
+
+  OC_DBG("Creating Cloud Response: cis set");
+
   oc_rep_set_text_string(
     root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
+
+  OC_DBG("Creating Cloud Response: sid set");
+
   oc_rep_set_int(root, clec, (int)ctx->last_error);
+
+  OC_DBG("Creating Cloud Response: clec set");
 
   const char *cps = cps_to_str(ctx->store.cps);
   if (cps) {
     oc_rep_set_text_string(root, cps, cps);
+	OC_DBG("Creating Cloud Response: cps set to %s", cps);
   }
+
   oc_rep_end_root_object();
 }
 
@@ -153,7 +164,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   case OC_CPS_READYTOREGISTER:
   case OC_CPS_FAILED:
   case OC_CPS_DEREGISTERING:
-	  request_invalid_in_state = !request_invalid_in_state;
+	  request_invalid_in_state = false;
     break;
   case OC_CPS_REGISTERING:
   case OC_CPS_REGISTERED: {
@@ -163,7 +174,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
 	size_t cis_len = 0;
 	oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER, &cis, &cis_len);
 	if (cis_len == 0) {
-		request_invalid_in_state = !request_invalid_in_state;
+		request_invalid_in_state = false;
 	}
   }
   }
@@ -180,7 +191,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   }
 
   bool changed = cloud_update_from_request(ctx, request);
-  //cloud_response(ctx);
+  cloud_response(ctx);
   oc_send_response(request,
                    changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST);
   if (changed) {
