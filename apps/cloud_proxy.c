@@ -277,7 +277,7 @@ STATIC void anchor_to_udn(const char* anchor, char* udn)
  */
 STATIC int is_udn_listed_index(char* udn)
 {
-  PRINT("is_udn_listed_index:  Finding UDN %s \n", udn);
+  PRINT("is_udn_listed_index: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strcmp(g_d2dserverlist_d2dserverlist[i].di, udn) == 0)
@@ -285,7 +285,7 @@ STATIC int is_udn_listed_index(char* udn)
       return i;
     }
   }
-  PRINT("None matched\n");
+  PRINT("  is_udn_listed_index: None matched\n");
   return -1;
 }
 
@@ -317,7 +317,7 @@ STATIC void list_udn(void)
  */
 STATIC int find_empty_slot(void)
 {
-  PRINT("  Finding empty slot \n");
+  PRINT("  find_empty_slot: Finding empty slot \n");
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strcmp(g_d2dserverlist_d2dserverlist[i].di, "") == 0)
@@ -325,7 +325,7 @@ STATIC int find_empty_slot(void)
       return i;
     }
   }
-  PRINT("no empty slot\n");
+  PRINT("  find_empty_slot: no empty slot\n");
   return -1;
 }
 
@@ -338,7 +338,7 @@ STATIC int find_empty_slot(void)
  */
 STATIC oc_endpoint_t* is_udn_listed(char* udn)
 {
-  PRINT("  Finding UDN %s \n", udn);
+  PRINT("  is_udn_listed: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     oc_endpoint_t* ep = discovered_server[i];
@@ -355,7 +355,7 @@ STATIC oc_endpoint_t* is_udn_listed(char* udn)
       ep = ep->next;
     }
   }
-  PRINT("None matched, returning NULL endpoint\n");
+  PRINT("  is_udn_listed: None matched, returning NULL endpoint\n");
   return NULL;
 }
 
@@ -631,6 +631,7 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
   /* do a scan to all devices */
   int _scan_len = oc_get_query_value(request, "scan", &_scan);
   if (_scan_len > 0) {
+    PRINT("   Send multicast discovery\n");
     issue_requests_all();
     oc_send_response(request, OC_STATUS_CHANGED);
     return;
@@ -660,7 +661,9 @@ post_d2dserverlist(oc_request_t* request, oc_interface_mask_t interfaces, void* 
     }
     else
     {
-      PRINT(" DI exist \n");
+      PRINT(" DI exist, no error, returning existing list\n");
+      error_state = false;
+      stored = true;
       list_udn();
     }
   }
@@ -1180,6 +1183,7 @@ delete_resource(oc_request_t* request, oc_interface_mask_t interfaces, void* use
  * @param endpoint the endpoints of the resource
  * @param bm the resource properties
  * @param user_data the user data supplied to callback
+ *        this can contain the UDN that is added to the d2dserverlist
  */
 STATIC oc_discovery_flags_t
 discovery(const char* anchor, const char* uri, oc_string_array_t types,
@@ -1192,33 +1196,30 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
   int i;
   char url [MAX_URI_LENGTH];
   char this_udn[200];
-  char added_udn[200] = "";
+  char d2d_udn[200] = "";
   char udn_url[200];
   int nr_resource_types = 0;
-  //bool add_devices = false;
 
-  strcpy(added_udn, "");
+  strcpy(d2d_udn, "");
   if (user_data != NULL)
   {
-    strcpy(added_udn,(char*)user_data);
+    strcpy(d2d_udn,(char*)user_data);
   }
   anchor_to_udn(anchor, this_udn);
 
   bool is_added_current_device = false;
-  if (strcmp(this_udn, added_udn) == 0) {
+  if (strcmp(this_udn, d2d_udn) == 0) {
     is_added_current_device = true;
   }
+
 #ifdef PROXY_ALL_DISCOVERED_DEVICES
   // make sure that the discovered device is handled
   is_added_current_device = true;
-  strcpy(added_udn, this_udn);
+  strcpy(d2d_udn, this_udn);
 #endif
 
-  //PRINT("        discovery: adding device: '%s %s [%s]'\n", btoa(is_added_current_device), uri, this_udn);
-  if (is_added_current_device == false) {
-    return OC_CONTINUE_DISCOVERY;
-  }
-  PRINT("  discovery: discovered_udn: '%s'\n", added_udn);
+  PRINT("  discovery: (cb) '%s' %d (this) '%s'\n", d2d_udn, is_added_current_device, this_udn);
+  PRINT("     -- (a) '%s' (uri) '%s'\n", anchor, uri );
 
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
@@ -1243,30 +1244,32 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
         ep = ep->next;
       }
 
-      if (is_added_current_device) {
-        // search for the secure endpoint, so that it can be stored
-        ep = endpoint;  // start of the list
-        while ((ep != NULL) && !(ep->flags & SECURED) ) {
-          ep = ep->next;
-        }
-        if (ep != NULL) {
-          PRINT("  discovery secure endpoint on UDN '%s' :\n", this_udn);
-          PRINT("    secure: ");
-          PRINTipaddr(*ep);
-          PRINT("\n");
-          // make a copy, so that we can store it in the array to find it back later.
-          oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
-          oc_endpoint_copy(copy, ep);
+      // search for the secure endpoint, so that it can be stored
+      ep = endpoint;  // start of the list
+      while ((ep != NULL) && !(ep->flags & SECURED) ) {
+        ep = ep->next;
+      }
+      if (ep != NULL) {
+        PRINT("  discovery secure endpoint on UDN '%s' :\n", this_udn);
+        PRINT("    secure: ");
+        PRINTipaddr(*ep);
+        PRINT("\n");
+        // make a copy, so that we can store it in the array to find it back later.
+        oc_endpoint_t* copy = (oc_endpoint_t*)malloc(sizeof(oc_endpoint_t));
+        oc_endpoint_copy(copy, ep);
 
-          /* update the end point, it might have changed*/
-          int index = is_udn_listed_index(this_udn);
-          if (index != -1) {
-            // add new server to the list
-            PRINT("  discovery: UPDATING UDN '%s'\n", this_udn);
-            discovered_server[index] = copy;
-          }
-#ifdef PROXY_ALL_DISCOVERED_DEVICES
-          else {
+        /* update the end point, it might have changed*/
+        int index = is_udn_listed_index(this_udn);
+        if (index != -1) {
+          // add new server to the list
+          PRINT("  discovery: UPDATING UDN '%s'\n", this_udn);
+          /* free existing endpoint */
+          free(discovered_server[index]);
+          /* add the newly copied endpoint*/
+          discovered_server[index] = copy;
+        }
+        else {
+          if (is_added_current_device) {
             index = find_empty_slot();
             if (index != -1) {
               // add new server to the list
@@ -1278,9 +1281,8 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
               PRINT("  discovery: NO SPACE TO STORE: '%s'\n", this_udn);
             }
           }
-#endif
         }
-      }  /* if discovered udn is the same as added udn*/
+      } /* ep is NULL */
 
       // make uri as url NULL terminated
       strncpy(url, uri, uri_len);
@@ -1292,14 +1294,11 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
       strcat(udn_url, url);
 
       if (is_added_current_device){
-
         PRINT("   discovery: Register Resource with local path \"%s\"\n", udn_url);
-        // oc_resource_t* new_resource = oc_new_resource(NULL, udn_url, nr_resource_types, 0);
         oc_resource_t* new_resource = oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
         for (int j = 0; j < nr_resource_types; j++) {
           oc_resource_bind_resource_type(new_resource, oc_string_array_get_item(types, j));
         }
-
         if (iface_mask & OC_IF_BASELINE) {
           PRINT("   IF BASELINE\n");
           oc_resource_bind_resource_interface(new_resource, OC_IF_BASELINE); /* oic.if.baseline */
@@ -1353,11 +1352,7 @@ discovery(const char* anchor, const char* uri, oc_string_array_t types,
         int retval = oc_cloud_add_resource(new_resource);
         PRINT("   discovery ADDED resource '%s' to cloud : %d\n", (char*)btoa(add_err), retval);
 
-        // cloud_manager_restart();
-        // force the (re) publishing of the resources towards the cloud RD, not working so commented out again.
-        //oc_cloud_context_t* ctx = oc_cloud_get_context(0);
-        //cloud_reconnect(ctx);
-      }
+      } /* adding current device, e.g. add the resource to the cloud RD */
     } /* is vertical */
   } /* if loop */
   return OC_CONTINUE_DISCOVERY;
@@ -1387,7 +1382,7 @@ issue_requests(char* current_udn)
 void
 issue_requests_all(void)
 {
-  PRINT("issue_requests_all: Discovery of devices at start up\n");
+  PRINT("issue_requests_all: Discovery of all devices \n");
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
 #ifdef OC_IPV4
