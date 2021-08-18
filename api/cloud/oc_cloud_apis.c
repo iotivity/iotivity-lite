@@ -102,7 +102,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     p->data = data;
 
     if (ctx->store.status == OC_CLOUD_INITIALIZED) {
-      OC_DBG("try register\n");
+      OC_DBG("try register device %zu\n", ctx->device);
       bool cannotConnect = true;
       if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_register(
@@ -143,7 +143,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     p->data = data;
 
     if (ctx->store.status & OC_CLOUD_REGISTERED) {
-      OC_DBG("try login");
+      OC_DBG("try login device %zu\n", ctx->device);
       bool cannotConnect = true;
       if (conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
@@ -215,7 +215,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     p->cb = cb;
     p->data = data;
 
-    OC_DBG("try logout");
+    OC_DBG("try logout device %zu", ctx->device);
     bool cannotConnect = true;
     if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_logout(ctx->cloud_ep, oc_string(ctx->store.uid),
@@ -264,8 +264,9 @@ cloud_deregister(cloud_api_param_t *p)
   oc_assert(p != NULL);
 
   oc_cloud_context_t *ctx = p->ctx;
+  size_t device = ctx->device;
 
-  OC_DBG("try deregister");
+  OC_DBG("try deregister device %zu\n", device);
   bool cannotConnect = true;
   // This value is calculated by coap_oscore_serialize_message for deregister
   // message with empty query parameters. The value should remain the same
@@ -278,7 +279,7 @@ cloud_deregister(cloud_api_param_t *p)
   // to the request query if the resulting query size is within the limit.
   #define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
   oc_string_t query = cloud_access_deregister_query(oc_string(ctx->store.uid),
-    oc_string(ctx->store.access_token), /*device*/0);
+    oc_string(ctx->store.access_token), device);
   size_t query_size = oc_string_len(query);
   oc_free_string(&query);
   const char* access_token = NULL;
@@ -289,7 +290,7 @@ cloud_deregister(cloud_api_param_t *p)
       cloud_access_deregister(ctx->cloud_ep,
                               oc_string(ctx->store.uid),
                               access_token,
-                              /*device*/0,
+                              device,
                               cloud_deregistered_internal,
                               p)) {
     cannotConnect = false;
@@ -401,7 +402,7 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     p->cb = cb;
     p->data = data;
 
-    OC_DBG("try refresh token\n");
+    OC_DBG("try refresh token for device %zu\n", ctx->device);
     bool cannotConnect = true;
     if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_refresh_access_token(
