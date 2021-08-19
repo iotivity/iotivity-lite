@@ -42,6 +42,18 @@
 #include "security/oc_tls.h"
 #endif
 
+#ifdef OC_WKCORE
+static int clf_add_line_to_buffer(const char* line) {
+  int len = (int)strlen(line);
+  oc_rep_encode_raw( (uint8_t*) line, len);
+  return len;
+}
+static int clf_add_line_size_to_buffer(const char* line, int len) {
+  oc_rep_encode_raw((uint8_t*)line, len);
+  return len;
+}
+#endif /* OC_WKCORE */
+
 static bool
 filter_resource(oc_resource_t *resource, oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
@@ -749,9 +761,133 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
+#ifdef OC_WKCORE
+static void
+oc_wkcore_discovery_handler(oc_request_t* request, oc_interface_mask_t iface_mask,
+  void* data)
+{
+  (void)data;
+  (void)iface_mask;
+  size_t response_length = 0;
+  int matches = 0;
+
+  /* check if the accept header is link-format */
+  if (request->accept != APPLICATION_LINK_FORMAT) {
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_BAD_REQUEST);
+    return;
+  } 
+
+  char* value = NULL;
+  size_t value_len;
+  char* key;
+  char* rt_request = 0;
+  int rt_len = 0;
+  const char* rt_device = 0;
+  int rt_devlen = 0;
+  size_t key_len;
+
+  oc_init_query_iterator();
+  while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
+    if (strncmp(key, "rt", key_len) == 0) {
+      rt_request = value;
+      rt_len = (int)value_len;
+    }
+  }
+
+  if (rt_request != 0 && strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
+    /* request for all devices */
+    matches = 1;
+  }
+  size_t device = request->resource->device;
+  oc_resource_t* resource = oc_core_get_resource_by_uri("oic/d", device);
+  int i;
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+    i++) {
+    size_t size = oc_string_array_get_item_size(resource->types, i);
+    const char* t =
+      (const char*)oc_string_array_get_item(resource->types, i);
+    if (strncmp(t, "oic.d", 5) == 0)
+    {
+      /* take the first oic.d.xxx in the oic/d of the list of resource/device types */
+      rt_device = t;
+      rt_devlen = size;
+    }
+  }
+
+  if (rt_request != 0 &&
+      rt_device != 0 &&
+      strncmp(rt_request, rt_device, rt_len) == 0) {
+    /* request for specific device type */
+    matches = 1;
+  }
+
+  if (matches > 0) {
+    // create the following line:
+    // <coap://[fe80::b1d6]:1111/oic/res>;ct=10000;rt="oic.wk.res oic.d.sensor";if="oic.if.11 oic.if.baseline"
+
+    int length = clf_add_line_to_buffer("<");
+    response_length += length;
+
+    oc_endpoint_t* eps = oc_connectivity_get_endpoints(request->resource->device);
+    oc_string_t ep, uri;
+    memset(&uri, 0, sizeof(oc_string_t));
+    while (eps != NULL) {
+      if (eps->flags & SECURED) {
+        if (oc_endpoint_to_string(eps, &ep) == 0) {
+          length = clf_add_line_to_buffer(oc_string(ep));
+          response_length += length;
+          oc_free_string(&ep);
+          break;
+        }
+      }
+      eps = eps->next;
+    }
+    
+    length = clf_add_line_to_buffer("/oic/res>;");
+    response_length += length;
+    length = clf_add_line_to_buffer("rt=\"oic.wk.res ");
+    response_length += length;
+    length = clf_add_line_size_to_buffer(rt_device, rt_devlen);
+    response_length += length;
+    length = clf_add_line_to_buffer("\";");
+    response_length += length;
+    length = clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");
+    response_length += length;
+  }
+
+  request->response->response_buffer->content_format = APPLICATION_LINK_FORMAT;
+  if (matches && response_length > 0) {
+    request->response->response_buffer->response_length = response_length;
+    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+  }
+  else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_BAD_REQUEST);
+  }
+  else {
+    request->response->response_buffer->code = OC_IGNORE;
+  }
+}
+#endif /* OC_WKCORE */
+
 void
 oc_create_discovery_resource(int resource_idx, size_t device)
 {
+
+#ifdef OC_WKCORE
+  if (resource_idx == WELLKNOWNCORE) {
+
+    oc_core_populate_resource(resource_idx, device, "/.well-known/core",
+      0,
+      0, OC_DISCOVERABLE,
+      oc_wkcore_discovery_handler, 0, 0, 0, 1, 
+      "wk");
+
+    return;
+  }
+#endif /* OC_WKCORE */
+
   oc_core_populate_resource(resource_idx, device, "oic/res",
 #ifdef OC_RES_BATCH_SUPPORT
                             OC_IF_B |

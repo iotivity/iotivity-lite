@@ -56,8 +56,8 @@ oc_rep_get_encoder_buf(void)
 
 void oc_rep_encode_raw(const uint8_t* data, size_t len)
 {
-  memcpy(g_buf, data, len);
-  g_encoder.data.ptr = g_buf + len;
+  memcpy(g_encoder.data.ptr, data, len);
+  g_encoder.data.ptr = g_encoder.data.ptr + len;
   g_err = CborNoError;
 }
 

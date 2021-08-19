@@ -138,6 +138,10 @@ endif
 
 
 
+ifeq ($(WKCORE),1)
+	CFLAGS += -DOC_WKCORE
+endif
+
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
 endif

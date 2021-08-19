@@ -15,6 +15,7 @@
 */
 
 #define _GNU_SOURCE
+#include "oc_config.h"
 #include "ipcontext.h"
 #include "ipadapter.h"
 #ifdef OC_TCP
@@ -59,6 +60,19 @@ static const uint8_t ALL_OCF_NODES_RL[] = {
 static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
+
+#ifdef OC_WKCORE
+static const uint8_t ALL_COAP_NODES_LL[] = {
+  0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+static const uint8_t ALL_COAP_NODES_RL[] = {
+  0xff, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+static const uint8_t ALL_COAP_NODES_SL[] = {
+  0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+#endif
+
 #define ALL_COAP_NODES_V4 0xe00001bb
 
 static pthread_mutex_t mutex;
@@ -317,6 +331,52 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
     OC_ERR("joining site-local IPv6 multicast group %d", errno);
     return -1;
   }
+
+#ifdef OC_WKCORE
+
+  OC_DBG("Adding all CoAP Nodes");
+  /* Link-local scope ALL COAP NODES */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_LL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining link-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+
+  /* Realm-local scope ALL COAP nodes  */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_RL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining realm-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+
+  /* Site-local scope ALL COAP nodes */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_SL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining site-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+#endif
 
   return 0;
 }
