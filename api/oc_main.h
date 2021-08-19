@@ -39,7 +39,26 @@ typedef struct oc_random_pin_t
 
 bool oc_main_initialized(void);
 
+/**
+ * Set acceptance of new commands(GET/PUT/POST/DELETE) for logical device
+ *
+ * The device drops/accepts new commands when the drop is set to true/false.
+ *
+ * @note If OC_SECURITY is set, this call is used to drop all new incoming 
+ *       commands during closing TLS sessions (CLOSE_ALL_TLS_SESSIONS).
+ *
+ * @param[in] device index of the logical device
+ * @param[in] drop set whether all new commands will be accepted/dropped
+ */
 void oc_set_drop_commands(size_t device, bool drop);
+
+/**
+ * Get status of dropping of logical device.
+ *
+ * @param[in] device the index of the logical device
+ *
+ * @return true if the device dropping new commands
+ */
 bool oc_drop_command(size_t device);
 
 #ifdef __cplusplus
