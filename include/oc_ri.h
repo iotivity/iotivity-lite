@@ -166,7 +166,8 @@ typedef struct oc_request_t
   oc_rep_t *request_payload;
   const uint8_t *_payload;
   size_t _payload_len;
-  oc_content_format_t content_format;
+  oc_content_format_t content_format;   /* content format (of the payload in the request) */
+  oc_content_format_t accept;           /* accept header */
   oc_response_t *response;
 } oc_request_t;
 

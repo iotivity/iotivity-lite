@@ -43,9 +43,13 @@
 #endif
 
 #ifdef OC_WKCORE
-static int clf_add_line_to_buffer(char* line) {
+static int clf_add_line_to_buffer(const char* line) {
   int len = (int)strlen(line);
   oc_rep_encode_raw( (uint8_t*) line, len);
+  return len;
+}
+static int clf_add_line_size_to_buffer(const char* line, int len) {
+  oc_rep_encode_raw((uint8_t*)line, len);
   return len;
 }
 #endif /* OC_WKCORE */
@@ -767,34 +771,31 @@ oc_wkcore_discovery_handler(oc_request_t* request, oc_interface_mask_t iface_mas
   size_t response_length = 0;
   int matches = 0;
 
-  /* enable this later*/
-  /*
-  if (request->origin && request->origin->version != APPLICATION_LINK_FORMAT) {
+  /* check if the accept header is link-format */
+  if (request->accept != APPLICATION_LINK_FORMAT) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
-  } */
+  } 
 
   char* value = NULL;
   size_t value_len;
   char* key;
-  char rt_request[60];
+  char* rt_request = 0;
   int rt_len = 0;
-  char rt_device[60];
+  const char* rt_device = 0;
+  int rt_devlen = 0;
   size_t key_len;
 
-  strcpy(rt_request, "");
-  strcpy(rt_device, "");
   oc_init_query_iterator();
   while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
     if (strncmp(key, "rt", key_len) == 0) {
-      strncpy(rt_request, value, value_len);
-      rt_request[value_len] = '\0';
+      rt_request = value;
       rt_len = (int)value_len;
     }
   }
 
-  if (strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
+  if (rt_request != 0 && strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
     /* request for all devices */
     matches = 1;
   }
@@ -809,19 +810,21 @@ oc_wkcore_discovery_handler(oc_request_t* request, oc_interface_mask_t iface_mas
     if (strncmp(t, "oic.d", 5) == 0)
     {
       /* take the first oic.d.xxx in the oic/d of the list of resource/device types */
-      strncpy(rt_device, t, size);
-      rt_device[size] = '\0';
+      rt_device = t;
+      rt_devlen = size;
     }
   }
 
-  if (strcmp(rt_request, rt_device) == 0) {
+  if (rt_request != 0 &&
+      rt_device != 0 &&
+      strncmp(rt_request, rt_device, rt_len) == 0) {
     /* request for specific device type */
     matches = 1;
   }
 
   if (matches > 0) {
     // create the following line:
-    // <coap://[fe80::b1d6]:1111/oic/res>;ct=10000;rt="oic.wk.res oic.d.sensor";if="oic.if.11     2927 oic.if.baseline"
+    // <coap://[fe80::b1d6]:1111/oic/res>;ct=10000;rt="oic.wk.res oic.d.sensor";if="oic.if.11 oic.if.baseline"
 
     int length = clf_add_line_to_buffer("<");
     response_length += length;
@@ -845,7 +848,7 @@ oc_wkcore_discovery_handler(oc_request_t* request, oc_interface_mask_t iface_mas
     response_length += length;
     length = clf_add_line_to_buffer("rt=\"oic.wk.res ");
     response_length += length;
-    length = clf_add_line_to_buffer(rt_device);
+    length = clf_add_line_size_to_buffer(rt_device, rt_devlen);
     response_length += length;
     length = clf_add_line_to_buffer("\";");
     response_length += length;

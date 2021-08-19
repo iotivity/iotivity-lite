@@ -787,6 +787,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_content_format_t cf = 0;
   coap_get_header_content_format(request, &cf);
 
+
+  /* Read the accept CoAP option in the request */
+  oc_content_format_t accept = 0;
+  coap_get_header_accept(request, &accept);
+
   if (uri_query_len) {
     request_obj.query = uri_query;
     request_obj.query_len = (int)uri_query_len;
@@ -814,6 +819,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj._payload = payload;
   request_obj._payload_len = (size_t)payload_len;
   request_obj.content_format = cf;
+  request_obj.accept = accept;
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];

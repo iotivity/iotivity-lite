@@ -364,6 +364,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
   /*  Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be
       granted.
+      if enabled also the .well-known/core will be granted access, 
+      since this also a discovery resource.
   */
   if (pstat->s == OC_DOS_RFOTM && method == OC_GET && (
 #ifdef OC_WKCORE
