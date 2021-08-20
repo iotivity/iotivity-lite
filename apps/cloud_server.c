@@ -631,6 +631,11 @@ factory_presets_cb(size_t device, void *data)
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
+  // preserve name after factory reset
+  oc_device_info_t* dev = oc_core_get_device_info(device);
+  oc_free_string(&dev->name);
+  oc_new_string(&dev->name, device_name, strlen(device_name));
+
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
