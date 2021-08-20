@@ -161,8 +161,8 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
-  err = CLOUD_ERROR_RESPONSE;
   if (ctx->store.status != OC_CLOUD_INITIALIZED) {
+    err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
@@ -319,8 +319,8 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
-  err = CLOUD_ERROR_RESPONSE;
   if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+    err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
@@ -435,8 +435,8 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
-  err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
   if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
   }
 
@@ -444,19 +444,20 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 
   char *access_value = NULL, *refresh_value = NULL;
   size_t access_size = 0, refresh_size = 0;
-  int64_t expires_in = 0;
-  if (oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
+  if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
                         &access_size)) {
-    if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
-                           &refresh_size)) {
-      goto error;
-    }
-    cloud_set_string(&ctx->store.access_token, access_value, access_size);
-    cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
-  } else {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
   }
+  if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
+                        &refresh_size)) {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
+    goto error;
+  }
+  cloud_set_string(&ctx->store.access_token, access_value, access_size);
+  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
 
+  int64_t expires_in = 0;
   oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in);
   ctx->expires_in = check_expires_in(expires_in);
   if (ctx->expires_in > 0) {
