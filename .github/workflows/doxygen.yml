@@ -1,10 +1,6 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI-documentation
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
   pull_request:
@@ -13,28 +9,41 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "check_code_style"
-   doxygen:
-    # The type of runner that the job will run on
+  doxygen:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
+        with:
+          path: iotivity-lite
+      
+      - uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.IOTIVITY_LITE_SSH_KEY }}
+        
       - name: build_documentation
         run: |
-          # apt update 
-          #apt -y install doxygen
+          sudo apt-get update -y
           sudo apt-get install doxygen
           doxygen --version
-          cd tools
+          cd ${{ github.workspace }}/iotivity-lite/tools
           ./build_doc.sh
+          
+      - name: copy-docs
+        run: |
+          cd ~/work
+          git clone git@github.com:iotivity/iotivity-lite-doxygen.git
+          cd iotivity-lite-doxygen
+          rm -rf docs
+          cp -r ${{ github.workspace }}/iotivity-lite/tools/html .
+          #Rename to "docs"
+          mv html docs
+          
+      - name: push-changes
+        run: |
+          cd ~/work/iotivity-lite-doxygen
+          git config --global user.name 'IoTivity Bot'
+          git config --global user.email 'github@iotivity.com'
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Automatic publish from github.com/iotivity/iotivity-lite"
+          git push
