@@ -85,23 +85,37 @@
  * compile flag PROXY_ALL_DISCOVERED_DEVICES
  *   this flag enables that all devices on the network will be proxied.
  * compile flag  RESET
- *   resets the device at start up
+ *   resets the device at start up, for easy testing with the CTT
  * 
  * building on linux (in port/linux):
  * make cloud_proxy CLOUD=1 CLIENT=1 OSCORE=0
  *
  * ## Usage
  * 
- * onboard the cloud_proxy using an OBT
- *   configure the ACL for the d2dserverlist (e.g. install ACL for DELETE)
- * connect to a cloud using an OBT via a mediator
- *   when connected to the cloud, the client part will issue a discovery for all devices on realm and site local scopes
+ * ### onboarding sequence
+ * 
+ * - onboard the cloud_proxy using an OBT
+ *   configure the ACE for the d2dserverlist 
+     (e.g. for DeviceSpy this is done automatically except for an ACE for DELETE)
+ * - connect to a cloud using an OBT via a mediator
+ *   - set an ACE for coapcloudconfig resource.
+ * - install ace for cloud access to the proxy
+ *   {"subject": {"uuid": "<CTT_CLOUD_UUID>"}, "permission": 6, "resources": [{"wc": "*"}]} 
+ *   so that a cloud client can invoke actions on the links in the RD.
+ *
+ *   When connected to the cloud, the client part will issue a discovery for all devices on realm and site local scopes
  *   devices that are in the d2dserver list will be announced to the cloud
- * add a device (one by one) to be proxied, example:
+ *   note that the resources(links) that listed in oic/res only are posted to the RD
+ * 
+ * ###  normal operation
+ * 
+ * - add a local device (one by one) to be proxied, example:
  *    POST to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
- * list the devices that are proxied, example:
+ *    Note that the cloud_proxy client has to be granted access to the local device
+ *    This requires intervention of an OBT to set an ACE on the local device
+ * - list the local devices that are proxied, example:
  *    GET to /d2dserverlist
- * delete a device (one by one) that is proxied, example:
+ * delete a local device (one by one) that is proxied, example:
  *    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
  * rescan the network (e.g. update endpoints towards the proxied local devices), example:
  *    UPDATE to /d2dserverlist?scan=1
