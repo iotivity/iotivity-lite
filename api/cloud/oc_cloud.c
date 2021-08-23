@@ -231,7 +231,12 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
     OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
     ctx->cloud_ep_state = state;
     if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
-      cloud_manager_restart(ctx);
+      if ((ctx->store.status == OC_CLOUD_INITIALIZED) ||
+        ((ctx->store.status & OC_CLOUD_REGISTERED) != 0)) {
+        cloud_manager_restart(ctx);
+      } else {
+        cloud_manager_stop(ctx);
+      }
     }
   }
 }

@@ -124,6 +124,9 @@ typedef enum {
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
+#ifdef OC_WKCORE
+  WELLKNOWNCORE,
+#endif
   OCF_RES,
 #ifdef OC_MNT
   OCF_MNT,
@@ -165,7 +168,8 @@ typedef struct oc_request_t
   oc_rep_t *request_payload;
   const uint8_t *_payload;
   size_t _payload_len;
-  oc_content_format_t content_format;
+  oc_content_format_t content_format;   /* content format (of the payload in the request) */
+  oc_content_format_t accept;           /* accept header */
   oc_response_t *response;
 } oc_request_t;
 

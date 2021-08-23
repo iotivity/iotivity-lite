@@ -604,6 +604,36 @@ int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t c
 }
 %}
 
+
+%ignore oc_obt_pki_add_identity_cert;
+%rename(addIdentityCertificate) jni_oc_obt_pki_add_identity_cert;
+
+
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *key, size_t key_size) };
+
+%inline %{
+int jni_oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
+                      size_t cert_size, const unsigned char *key,
+                      size_t key_size, oc_sec_credusage_t credusage)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_pki_add_identity_cert(device, cert, cert_size, key, key_size, credusage);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  int return_value = -1;
+#endif /* OC_SECURITY && OC_PKI */
+  return return_value;
+}
+%}
+
+
+
 %ignore oc_obt_provision_role_certificate;
 %rename(provisionRoleCertificate) jni_obt_provision_role_certificate;
 %inline %{
@@ -1060,5 +1090,51 @@ int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
 #endif /* OC_SECURITY */
 }
 %}
+
+%ignore oc_obt_retrieve_cloud_conf_device;
+%rename(RetrieveCloudConfDevice) jni_oc_obt_retrieve_cloud_conf_device;
+%inline %{
+int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url, 
+  oc_response_handler_t callback, jni_callback_data* jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_retrieve_cloud_conf_device(uuid, url, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_obt_update_cloud_conf_device;
+%rename(UpdateCloudConfDevice) jni_oc_obt_update_cloud_conf_device;
+%inline %{
+int jni_oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
+  const char* url, const char* at, const char* apn,
+  const char* cis, const char* sid, 
+  oc_response_handler_t callback, jni_callback_data* jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  int return_value = oc_obt_update_cloud_conf_device(uuid, url, at, apn, cis, sid, callback, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  return -1;
+#endif /* OC_SECURITY */
+}
+%}
+
+
 %include "oc_acl.h"
 %include "oc_obt.h";
