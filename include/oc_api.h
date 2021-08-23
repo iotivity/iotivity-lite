@@ -793,14 +793,40 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  */
 void oc_device_bind_resource_type(size_t device, const char *type);
 
+/**
+ * @brief Sets the tag value for tag "tag-pos-desc" on the resource
+ * 
+ * @param resource the resource
+ * @param pos the descriptive text for the tag
+ */
 void oc_resource_tag_pos_desc(oc_resource_t *resource,
                               oc_pos_description_t pos);
 
+/**
+ * @brief Sets the value for the relative position "tag-pos-rel" tag
+ * 
+ * @param resource the resource to apply the tag too.
+ * @param x the x value in 3D space
+ * @param y the y value in 3D space
+ * @param z the z value in 3D space
+ */
 void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
                              double z);
 
+/**
+ * @brief Sets the tag value for the relatvie position "tag_func_rel" tag
+ * 
+ * @param resource the resource to apply the tag too.
+ * @param func the function description
+ */
 void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
 
+/**
+ * @brief sets the value of the "tag_locn" tag
+ * 
+ * @param resource the resource to apply the tag too.
+ * @param locn the location
+ */
 void oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn);
 
 /**
@@ -1131,13 +1157,30 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_request_callback_t callback,
                                      void *user_data);
 
+/**
+ * @brief sets the callback properties for set properties and get properties
+ * 
+ * @param resource the resource for the callback data
+ * @param get_properties callback function for retrieving the properties
+ * @param get_props_user_data the user data for the get_properties callback function
+ * @param set_properties callback function for setting the properties
+ * @param set_props_user_data the user data for the set_properties callback function
+ */
 void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_get_properties_cb_t get_properties,
-                                    void *get_propr_user_data,
+                                    void *get_props_user_data,
                                     oc_set_properties_cb_t set_properties,
                                     void *set_props_user_data);
 
+
+/**
+ * @brief sets the support of the secure multicast feature
+ * 
+ * @param resource the resource 
+ * @param supported true: supported
+ */
 void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
+
 /**
  * Add a resource to the IoTivity stack.
  *
@@ -1328,17 +1371,67 @@ int oc_get_query_value(oc_request_t *request, const char *key, char **value);
  */
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
 
+/**
+ * @brief retrieve the payload from the request, no processing
+ * 
+ * @param request the request
+ * @param payload the payload of the request
+ * @param size the size in bytes of the payload
+ * @param content_format the content format of the payload
+ * @return true 
+ * @return false 
+ */
 bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
                                 size_t *size,
                                 oc_content_format_t *content_format);
+
+/**
+ * @brief send the request, no processing
+ * 
+ * @param request the request to send
+ * @param payload the payload for the request
+ * @param size the payload size
+ * @param content_format the content format
+ * @param response_code the response code to send
+ */
 void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
                           size_t size, oc_content_format_t content_format,
                           oc_status_t response_code);
+
+/**
+ * @brief retrieve the response payload, without processing
+ * 
+ * @param response the response
+ * @param payload the payload of the response
+ * @param size the size of the payload
+ * @param content_format the content format of the payload
+ * @return true - retrieved payload
+ * @return false 
+ */
 bool oc_get_response_payload_raw(oc_client_response_t *response,
                                  const uint8_t **payload, size_t *size,
                                  oc_content_format_t *content_format);
+
+/**
+ * @brief send a diagnostic payload
+ * 
+ * @param request the request
+ * @param msg the message in ascii
+ * @param msg_len the lenght of the message
+ * @param response_code the coap response code
+ */
 void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
                                 size_t msg_len, oc_status_t response_code);
+
+/**
+ * @brief retrieve the diagnostic payload from a response
+ * 
+ * @param response the response to get the diagnostic payload from
+ * @param msg the diagnotic payload
+ * @param size the size of the diagnostic payload
+ * @return true - retrieved payload
+ * @return false 
+ */
 bool oc_get_diagnostic_message(oc_client_response_t *response, const char **msg,
                                size_t *size);
 
