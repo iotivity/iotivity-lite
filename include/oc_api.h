@@ -1049,14 +1049,30 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
+/**
+ * Callback invoked to retrieve an resource 
+ */
 typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
                                                      oc_string_array_t *,
                                                      oc_resource_properties_t,
                                                      oc_interface_mask_t,
                                                      size_t);
 
+/**
+ * Callback invoked to delete an resource
+ *  
+ */
 typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
 
+/**
+ * @brief adds the resource type factory
+ * 
+ * @param rt the resource type
+ * @param get_instance creates the instance of the resource type
+ * @param free_instance sets callback to free the created instance of the resource tupe
+ * @return true 
+ * @return false 
+ */
 bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
