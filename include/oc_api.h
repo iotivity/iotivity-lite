@@ -1983,9 +1983,6 @@ bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
  * stop the multicast update (e.g. do not handle the responses)
  *
  * @param[in] response the response that should not be handled.
- *
- * @return True if the client successfully dispatched the multicast discovery
- *         request
  */
 void oc_stop_multicast(oc_client_response_t *response);
 
