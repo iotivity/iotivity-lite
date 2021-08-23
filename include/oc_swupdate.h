@@ -26,25 +26,60 @@
 extern "C" {
 #endif
 
+/**
+ * OCF defined software update results
+ *
+ */
 typedef enum {
-  OC_SWUPDATE_RESULT_IDLE = 0,
-  OC_SWUPDATE_RESULT_SUCCESS,
-  OC_SWUPDATE_RESULT_LESS_RAM,
-  OC_SWUPDATE_RESULT_LESS_FLASH,
-  OC_SWUPDATE_RESULT_CONN_FAIL,
-  OC_SWUPDATE_RESULT_SVV_FAIL,
-  OC_SWUPDATE_RESULT_INVALID_URL,
-  OC_SWUPDATE_RESULT_UPGRADE_FAIL,
+  OC_SWUPDATE_RESULT_IDLE = 0,     ///< Idle
+  OC_SWUPDATE_RESULT_SUCCESS,      ///< software update successfull
+  OC_SWUPDATE_RESULT_LESS_RAM,     ///< not enough RAM
+  OC_SWUPDATE_RESULT_LESS_FLASH,   ///< not enough FLASH
+  OC_SWUPDATE_RESULT_CONN_FAIL,    ///< connection failure
+  OC_SWUPDATE_RESULT_SVV_FAIL,     ///< version failure
+  OC_SWUPDATE_RESULT_INVALID_URL,  ///< invalid URL
+  OC_SWUPDATE_RESULT_UPGRADE_FAIL, ///< upgrade failure
 } oc_swupdate_result_t;
 
+/**
+ * @brief callback to notify if a new software version is available
+ * 
+ * @param device the device identifier
+ * @param version version of the software
+ * @param result status
+ */
 void oc_swupdate_notify_new_version_available(size_t device,
                                               const char *version,
                                               oc_swupdate_result_t result);
+
+/**
+ * @brief callback to notify if a new software version is downloaded
+ * 
+ * @param device the device identifier
+ * @param version version of the software
+ * @param result status
+ */
 void oc_swupdate_notify_downloaded(size_t device, const char *version,
                                    oc_swupdate_result_t result);
+
+/**
+ * @brief callback to notify if a new software version is upgrading
+ * 
+ * @param device the device identifier
+ * @param version version of the software
+ * @param timestamp timestamp when the upgrade starts
+ * @param result status
+ */
 void oc_swupdate_notify_upgrading(size_t device, const char *version,
                                   oc_clock_time_t timestamp,
                                   oc_swupdate_result_t result);
+
+/**
+ * @brief callback to notify if a new software version is complete
+ * 
+ * @param device the device identifier
+ * @param result status
+ */
 void oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result);
 
 typedef struct
@@ -55,6 +90,11 @@ typedef struct
   int (*perform_upgrade)(size_t device, const char *url);
 } oc_swupdate_cb_t;
 
+/**
+ * @brief sets the callbacks for software upgrade
+ * 
+ * @param swupdate_impl the structure with the software update callbacks
+ */
 void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl);
 
 #ifdef __cplusplus
