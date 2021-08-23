@@ -97,16 +97,23 @@ oc_core_introspection_wk_handler(oc_request_t *request,
                                  oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
-
+  char uuid[37] = { 0 }; /* uuid of the current device */
+  oc_string_t ocf_uuid;
+  oc_string_t ocf_uri;
+  memset(&ocf_uuid, 0, sizeof(oc_string_t));
+  memset(&ocf_uri, 0, sizeof(oc_string_t));
+  int device_index=0;
+  
   int interface_index =
     (request->origin) ? request->origin->interface_index : -1;
   enum transport_flags conn =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
+
   /* We are interested in only a single coap:// endpoint on this logical device.
    */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
   oc_string_t ep, uri;
-  memset(&uri, 0, sizeof(oc_string_t));
+  memset(&uri, 0, sizeof(oc_string_t));  
   while (eps != NULL) {
     if ((interface_index == -1 || eps->interface_index == interface_index) &&
         !(eps->flags & SECURED) && (eps->flags == conn)) {
@@ -133,10 +140,20 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   /* fall through */
   case OC_IF_R: {
     oc_rep_set_array(root, urlInfo);
+
     oc_rep_object_array_start_item(urlInfo);
     oc_rep_set_text_string(urlInfo, protocol, "coap");
     oc_rep_set_text_string(urlInfo, url, oc_string(uri));
     oc_rep_object_array_end_item(urlInfo);
+
+    oc_rep_object_array_start_item(urlInfo);
+    oc_rep_set_text_string(urlInfo, protocol, "coaps");
+    oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
+    oc_concat_strings(&ocf_uuid, "ocf://", uuid);
+    oc_concat_strings(&ocf_uri, oc_string(ocf_uuid), "/oc/introspection");
+    oc_rep_set_text_string(urlInfo, url, oc_string(ocf_uri));
+    oc_rep_object_array_end_item(urlInfo);
+
     oc_rep_close_array(root, urlInfo);
   } break;
   default:
@@ -148,6 +165,12 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   OC_DBG("got introspection resource uri %s", oc_string(uri));
   oc_free_string(&uri);
+  if (oc_string_len(ocf_uuid) > 0) {
+    oc_free_string(&ocf_uuid);
+  }
+  if (oc_string_len(ocf_uri) > 0) {
+    oc_free_string(&ocf_uri);
+  }
 }
 
 void
