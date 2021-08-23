@@ -617,16 +617,59 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
+/**
+ * @brief provision pairwise oscore contexts
+ * 
+ * @param uuid1 uuid of the first device to pair
+ * @param uuid2 uuid of the second device to pair
+ * @param cb callback invoked to indicate the success or failure of the
+ *               pairwise credentials provisioning
+ * @param data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ * @return int 
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
                                               oc_uuid_t *uuid2,
                                               oc_obt_status_cb_t cb,
                                               void *data);
 
+/**
+ * @brief provision the oscore client group on the device
+ * 
+ * @param uuid uuid of the device to provision
+ * @param desc the group description
+ * @param cb callback invoked to indicate the success or failure of the
+ *               oscore group provisioning
+ * @param data  context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ * @return int 
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
                                                  const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
 
+/**
+ * @brief provision the group contenxt on the devic
+ * 
+ * @param uuid uuid of the device to provision
+ * @param subjectuuid the subject 
+ * @param desc the description
+ * @param cb callback invoked to indicate the success or failure of the
+ *               oscore group provisioning
+ * @param data context pointer that is passed to the
+ *                 oc_obt_status_cb_t. The pointer must remain valid till the
+ *                 end of the oc_obt_status_cb_t function
+ * @return int 
+ *   - `0` on success
+ *   - `-1` on failure
+ */
 int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
                                                  oc_uuid_t *subjectuuid,
                                                  const char *desc,
