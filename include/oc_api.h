@@ -78,6 +78,13 @@ typedef struct
    * @see oc_set_introspection_data
    */
   int (*init)(void);
+  
+  /**
+   * Function to signal the event loop
+   * so that incomming events are being processed.
+   *
+   * @see oc_main_poll
+   */
   void (*signal_event_loop)(void);
 
 #ifdef OC_SERVER
@@ -245,6 +252,13 @@ typedef void (*oc_add_device_cb_t)(void *data);
  */
 int oc_main_init(const oc_handler_t *handler);
 
+
+/**
+ * poll to process tasks
+ *
+ * @return
+ *  - time for the next poll event
+ */
 oc_clock_time_t oc_main_poll(void);
 
 /**
@@ -1822,21 +1836,82 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
  */
 bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 
+/**
+ * invoke multicast discovery of devices
+ *
+ * @param[in] uri the uri for multicast command to be used 
+ * @param[in] query the query of the multicast command
+ * @param[in] handler function invoked once the client has received the servers
+ *                     response to the discovery request
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the multicast discovery
+ *         request
+ */
 bool oc_do_ip_multicast(const char *uri, const char *query,
                         oc_response_handler_t handler, void *user_data);
 
+/**
+ * invoke multicast discovery of devices on IPV6 realm local scope
+ *
+ * @param[in] uri the uri for multicast command to be used 
+ * @param[in] query the query of the multicast command
+ * @param[in] handler function invoked once the client has received the servers
+ *                     response to the discovery request
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the multicast discovery
+ *         request
+ */
 bool oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
                                       oc_response_handler_t handler,
                                       void *user_data);
 
+/**
+ * invoke multicast discovery of devices on IPV6 site local scope
+ *
+ * @param[in] uri the uri for multicast command to be used 
+ * @param[in] query the query of the multicast command
+ * @param[in] handler function invoked once the client has received the servers
+ *                     response to the discovery request
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the multicast discovery
+ *         request
+ */
 bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
                                      oc_response_handler_t handler,
                                      void *user_data);
 
+/**
+ * stop the multicast update (e.g. do not handle the responses)
+ *
+ * @param[in] response the response that should not be handled.
+ *
+ * @return True if the client successfully dispatched the multicast discovery
+ *         request
+ */
 void oc_stop_multicast(oc_client_response_t *response);
 
+/**
+ * @brief initialize the multicast update
+ * 
+ * @param uri the uri to be used
+ * @param query the query of uri
+ * @return true 
+ * @return false 
+ */
 bool oc_init_multicast_update(const char *uri, const char *query);
 
+/**
+ * @brief initiate the multicast update
+ * 
+ * @return true 
+ * @return false 
+ */
 bool oc_do_multicast_update(void);
 
 /**
@@ -1850,6 +1925,11 @@ bool oc_do_multicast_update(void);
  */
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
+/**
+ * @brief close the tls session on the indicated endpoint
+ * 
+ * @param endpoint endpoint indicating a session
+ */
 void oc_close_session(oc_endpoint_t *endpoint);
 
 /**
@@ -1859,22 +1939,62 @@ void oc_close_session(oc_endpoint_t *endpoint);
 */
 typedef struct oc_role_t
 {
-  struct oc_role_t *next;
+  struct oc_role_t *next; 
   oc_string_t role;
   oc_string_t authority;
 } oc_role_t;
 
+/**
+ * @brief retrieve all roles
+ * 
+ * @return oc_role_t* 
+ */
 oc_role_t *oc_get_all_roles(void);
 
+/**
+ * @brief assert the specific role
+ * 
+ * @param role the role
+ * @param authority the authority
+ * @param endpoint endpoint identifying the connection
+ * @param handler the response handler
+ * @param user_data the user data to be conveyed to the response handler
+ * @return true 
+ * @return false 
+ */
 bool oc_assert_role(const char *role, const char *authority,
                     oc_endpoint_t *endpoint, oc_response_handler_t handler,
                     void *user_data);
+
+/**
+ * @brief set automatic role assertion (e.g. for all endpoints with a connection)
+ * 
+ * @param auto_assert 
+ */
 void oc_auto_assert_roles(bool auto_assert);
 
+/**
+ * @brief assert all the roles for a specific endpoint
+ * 
+ * @param endpoint identifying the connection
+ * @param handler the response handler
+ * @param user_data the user data to be conveyed to the response handler
+ */
 void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
                          void *user_data);
 /** @} */ // end of doc_module_tag_asserting_roles
 #ifdef OC_TCP
+/**
+ * @brief send CoAP ping over the TCP connection
+ * 
+ * @param custody custody on/off
+ * @param endpoint endpoint to be used
+ * @param timeout_seconds timeout for the ping
+ * @param handler the response handler
+ * @param user_data the user data to be conveyed to the response handler
+ * @return true 
+ * @return false 
+ */
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,
                   void *user_data);
