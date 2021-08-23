@@ -2152,9 +2152,11 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
     _oc_signal_event_loop();                                                   \
   } while (0)
 
+/** activate the interrupt handler */
 #define oc_activate_interrupt_handler(name)                                    \
   (oc_process_start(&(name##_interrupt_x), 0))
 
+/** define the interrupt handler */
 #define oc_define_interrupt_handler(name)                                      \
   void name##_interrupt_x_handler(void);                                       \
   OC_PROCESS(name##_interrupt_x, "");                                          \
