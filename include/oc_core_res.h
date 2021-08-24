@@ -26,21 +26,38 @@
 extern "C" {
 #endif
 
+/**
+ * @brief callback for initializing the platform
+ * 
+ */
 typedef void (*oc_core_init_platform_cb_t)(void *data);
+
+/**
+ * @brief callback for adding a device
+ * 
+ */
 typedef void (*oc_core_add_device_cb_t)(void *data);
 
+/**
+ * @brief platform information
+ * 
+ */
 typedef struct oc_platform_info_t
 {
-  oc_uuid_t pi;
-  oc_string_t mfg_name;
-  oc_core_init_platform_cb_t init_platform_cb;
-  void *data;
+  oc_uuid_t pi;                                  ///< the platform identifier
+  oc_string_t mfg_name;                          ///< manufactorer name
+  oc_core_init_platform_cb_t init_platform_cb;   ///< callback function
+  void *data;                                    ///< user data for the callback function
 } oc_platform_info_t;
 
+/**
+ * @brief device information
+ * 
+ */
 typedef struct oc_device_info_t
 {
-  oc_uuid_t di;
-  oc_uuid_t piid;
+  oc_uuid_t di;                            ///< device indentifier
+  oc_uuid_t piid;                          ///< 
   oc_string_t name;
   oc_string_t icv;
   oc_string_t dmv;
@@ -48,9 +65,26 @@ typedef struct oc_device_info_t
   void *data;
 } oc_device_info_t;
 
+/**
+ * @brief initialize the core functionality
+ * 
+ */
 void oc_core_init(void);
+
+/**
+ * @brief shutdown the core functionality
+ * 
+ */
 void oc_core_shutdown(void);
 
+/**
+ * @brief initialize the platform
+ * 
+ * @param mfg_name the manufactorer name
+ * @param init_cb the callback
+ * @param data  the user data
+ * @return oc_platform_info_t* the platform information
+ */
 oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
                                           oc_core_init_platform_cb_t init_cb,
                                           void *data);
@@ -92,6 +126,7 @@ bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
 
 bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
 bool oc_core_is_SVR(oc_resource_t *resource, size_t device);
+
 bool oc_core_is_vertical_resource(oc_resource_t *resource, size_t device);
 
 /**

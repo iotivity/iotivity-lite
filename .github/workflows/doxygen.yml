@@ -30,6 +30,7 @@ jobs:
           ./build_doc.sh
           
       - name: copy-docs
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           cd ~/work
           git clone git@github.com:iotivity/iotivity-lite-doxygen.git
@@ -40,6 +41,7 @@ jobs:
           mv html docs
           
       - name: push-changes
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           cd ~/work/iotivity-lite-doxygen
           git config --global user.name 'IoTivity Bot'
