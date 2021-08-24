@@ -1,4 +1,4 @@
-name: CI-documentation
+name: CI-doxygen-publish
 
 on:
   push:

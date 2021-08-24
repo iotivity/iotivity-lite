@@ -107,22 +107,85 @@ bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                             oc_endpoint_t *endpoint);
 #endif /* !OC_BLOCK_WISE */
 
+/**
+ * @brief allocate the client callback information
+ * 
+ * @param uri the uri to be called
+ * @param endpoint the endpoint of the device
+ * @param method method to be used
+ * @param query the query params to be used
+ * @param handler the callback when data arrives
+ * @param qos quality of service level
+ * @param user_data user data to be provided with the invocation of the callback
+ * @return oc_client_cb_t* the client callback info
+ */
 oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
                                       oc_method_t method, const char *query,
                                       oc_client_handler_t handler, oc_qos_t qos,
                                       void *user_data);
 
+/**
+ * @brief retrieve the client callback information 
+ * 
+ * @param uri the uri for the callback
+ * @param endpoint the endpoint for the callback
+ * @param method the used method
+ * @return oc_client_cb_t* the client callback info
+ */
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                                     oc_method_t method);
+
+/**
+ * @brief is the client callback information valid
+ * 
+ * @param client_cb the client callback information 
+ * @return true is correct
+ * @return false is incomplete
+ */
 bool oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb);
+
+/**
+ * @brief find the client callback info by token
+ * 
+ * @param token the token
+ * @param token_len the token lenght
+ * @return oc_client_cb_t* the client callback info
+ */
 oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
                                               uint8_t token_len);
 
+/**
+ * @brief find the client callback info by message id (mid)
+ * 
+ * @param mid the message id
+ * @return oc_client_cb_t* the client callback info
+ */
 oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
+/**
+ * @brief free the client callback informatin by endpoint
+ * 
+ * @param endpoint the endpoint
+ */
 void oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint);
+
+/**
+ * @brief free the client callback infomation by message id (mid)
+ * 
+ * @param mid the message id
+ */
 void oc_ri_free_client_cbs_by_mid(uint16_t mid);
 
+/**
+ * @brief handle the discovery payload (e.g. parse the oic/res response and do the callbacks)
+ * 
+ * @param payload the recieved discovery response
+ * @param len lenght of the payload
+ * @param handler handler of the discovery
+ * @param endpoint endpoint
+ * @param user_data the user data to be supplied to the handler
+ * @return oc_discovery_flags_t the discovery flags (e.g. more to come)
+ */
 oc_discovery_flags_t oc_ri_process_discovery_payload(
   uint8_t *payload, int len, oc_client_handler_t handler,
   oc_endpoint_t *endpoint, void *user_data);
