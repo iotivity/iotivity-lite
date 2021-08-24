@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(iotivity-lite)
 
 # Patch mbedtls
+# This is suboptimal - mbedtls is cleaned and patched with every configure
 include(mbedtls-patch.cmake)
 
 # Do not build anything except for the library

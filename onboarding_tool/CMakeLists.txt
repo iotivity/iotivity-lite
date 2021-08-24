@@ -5,7 +5,7 @@ add_executable(onboarding_tool
     ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
 )
 
-target_link_libraries(onboarding_tool PRIVATE 
+target_link_libraries(onboarding_tool
     iotivity-client
     pthread
     m
