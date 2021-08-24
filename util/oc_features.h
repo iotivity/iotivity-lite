@@ -26,4 +26,9 @@
 #define OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 #endif /* __linux__ && OC_CLIENT && OC_TCP */
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#define OC_HAS_FEATURE_PUSH
+#endif
+
 #endif /* OC_FEATURES_H */

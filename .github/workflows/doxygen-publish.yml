@@ -2,9 +2,9 @@ name: CI-doxygen-publish
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
     types: [closed]
 
   # Allows you to run this workflow manually from the Actions tab

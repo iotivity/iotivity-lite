@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "util/oc_features.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
@@ -420,6 +421,17 @@ oc_resource_set_discoverable(oc_resource_t *resource, bool state)
   else
     resource->properties &= ~OC_DISCOVERABLE;
 }
+
+#ifdef OC_HAS_FEATURE_PUSH
+void
+oc_resource_set_pushable(oc_resource_t *resource, bool state)
+{
+  if (state)
+    resource->properties |= OC_PUSHABLE;
+  else
+    resource->properties &= ~OC_PUSHABLE;
+}
+#endif
 
 void
 oc_resource_set_observable(oc_resource_t *resource, bool state)

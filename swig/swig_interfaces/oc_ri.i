@@ -126,4 +126,5 @@ typedef struct oc_response_buffer_s
   int code;
 } oc_response_buffer_t;
 
+#define OC_API
 %include "oc_ri.h"

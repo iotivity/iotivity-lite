@@ -23,6 +23,7 @@
 #include "deps/tinycbor/src/cbor.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"
+#include "util/oc_features.h"
 #include <oc_config.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -1072,6 +1073,10 @@ int oc_parse_rep(const uint8_t *payload, size_t payload_size,
                  oc_rep_t **value_list);
 
 void oc_free_rep(oc_rep_t *rep);
+
+#ifdef OC_HAS_FEATURE_PUSH
+oc_rep_t *oc_alloc_rep();
+#endif
 
 /**
  * Check for a null value from an `oc_rep_t`

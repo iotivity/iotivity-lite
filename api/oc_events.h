@@ -52,6 +52,10 @@ typedef enum {
   SW_UPDATE_UPGRADING,
   SW_UPDATE_DONE,
 #endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_HAS_FEATURE_PUSH
+  PUSH_RSC_STATE_CHANGED,
+#endif /* OC_HAS_FEATURE_PUSH */
   __NUM_OC_EVENT_TYPES__
 } oc_events_t;
 

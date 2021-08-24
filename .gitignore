@@ -111,3 +111,7 @@ service/resource-directory/client/unittest/obj
 build
 
 python/plgd_headers.config
+
+# eclipse config file
+.cproject
+.project

@@ -2,9 +2,9 @@ name: doxygen documentation
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -25,4 +25,3 @@ jobs:
           doxygen --version
           cd ${{ github.workspace }}/iotivity-lite/tools
           ./build_doc.sh
-

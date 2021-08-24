@@ -21,6 +21,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
+#include "util/oc_features.h"
 
 #include <inttypes.h>
 
@@ -241,6 +242,14 @@ _alloc_rep(void)
 #endif
   return rep;
 }
+
+#ifdef OC_HAS_FEATURE_PUSH
+oc_rep_t *
+oc_alloc_rep()
+{
+  return _alloc_rep();
+}
+#endif
 
 static void
 _free_rep(oc_rep_t *rep_value)

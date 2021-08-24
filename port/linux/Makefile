@@ -195,6 +195,17 @@ ifeq ($(SWUPDATE),1)
 	export SWUPDATE
 endif
 
+
+# for PUSH NOTIFICATION
+ifeq ($(PUSH), 1)
+	EXTRA_CFLAGS += -DOC_PUSH
+	SAMPLES += push_originserver_multithread_linux push_targetserver_multithread_linux push_configurator_multithread_linux
+ifeq ($(PUSH_DEBUG), 1)
+	EXTRA_CFLAGS += -DOC_PUSHDEBUG
+endif
+endif
+
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
@@ -502,6 +513,19 @@ server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_mult
 client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+# push notification samples
+push_originserver_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_originserver_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
+
+push_targetserver_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_targetserver_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+push_configurator_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_configurator_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 $(SO_DPP_OBJ): $(ROOT_DIR)/apps/streamlined_onboarding/ocf_dpp.c
 	${CC} -o $@ -c $^ ${CFLAGS} ${SECURITY_HEADERS} ${LIBS}

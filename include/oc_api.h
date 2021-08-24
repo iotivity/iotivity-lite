@@ -29,14 +29,16 @@
 #ifndef OC_API_H
 #define OC_API_H
 
+#include "util/oc_features.h"
 #include "messaging/coap/oc_coap.h"
+#include "port/oc_storage.h"
 #include "oc_buffer_settings.h"
 #include "oc_cloud.h"
 #include "oc_config.h"
+#include "oc_export.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
-#include "port/oc_storage.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1136,6 +1138,18 @@ void oc_resource_make_public(oc_resource_t *resource);
  * @see oc_new_resource for example code using this function
  */
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
+
+#ifdef OC_HAS_FEATURE_PUSH
+/**
+ * Specify if a resource can be pushable.
+ *
+ * @param[in] resource to specify as pushable or non-pushable
+ * @param[in] state if true the resource will be pushable if false the
+ *                  resource will be non-pushable
+ */
+OC_API
+void oc_resource_set_pushable(oc_resource_t *resource, bool state);
+#endif
 
 /**
  * Specify that a resource should notify clients when a property has been
