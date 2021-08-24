@@ -55,6 +55,10 @@ void oc_random_init(void);
  */
 unsigned int oc_random_value(void);
 
+/**
+ * @brief destroy the pseudo-random generator
+ * 
+ */
 void oc_random_destroy(void);
 
 #ifdef __cplusplus

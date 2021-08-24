@@ -27,8 +27,32 @@ extern "C"
 {
 #endif
 
+/**
+ * @brief open the storage
+ * 
+ * @param store the storage (path) 
+ * @return int 
+ */
 int oc_storage_config(const char *store);
+
+/**
+ * @brief read from the storage
+ * 
+ * @param store the path to be read
+ * @param buf the buffer to store the contents
+ * @param size amount of bytes to read
+ * @return long amount of bytes read
+ */
 long oc_storage_read(const char *store, uint8_t *buf, size_t size);
+
+/**
+ * @brief write to storage
+ * 
+ * @param store the store (file path)
+ * @param buf the buffer to write
+ * @param size the size of the buffer to write
+ * @return long amount of bytes written
+ */
 long oc_storage_write(const char *store, uint8_t *buf, size_t size);
 
 #ifdef __cplusplus
