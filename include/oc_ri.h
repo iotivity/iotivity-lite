@@ -120,6 +120,14 @@ typedef enum {
   APPLICATION_SENSML_CBOR = 113,         ///< application/sensml+cbor
   APPLICATION_SENML_EXI = 114,           ///< application/senml-exi
   APPLICATION_SENSML_EXI = 115,          ///< application/sensml-exi
+  APPLICATION_PKCS7_SGK = 280,           ///< application/pkcs7-mime; smime-type=server-generated-key
+  APPLICATION_PKCS7_CO = 281,            ///< application/pkcs7-mime; smime-type=certs-only
+  APPLICATION_PKCS7_CMC_REQUEST = 282,   ///< application/pkcs7-mime; smime-type=CMC-Request
+  APPLICATION_PKCS7_CMC_RESPONSE = 283,  ///< application/pkcs7-mime; smime-type=CMC-Response
+  APPLICATION_PKCS8 = 284,               ///< application/pkcs8
+  APPLICATION_CRATTRS = 285,             ///< application/csrattrs
+  APPLICATION_PKCS10 = 286,              ///< application/pkcs10
+  APPLICATION_PKIX_CERT = 287,           ///< application/pkix-cert
   APPLICATION_VND_OCF_CBOR = 10000,      ///< application/vnd.ocf+cbor
   APPLICATION_VND_OMA_LWM2M_TLV = 11542, ///< application/vnd.oma.lwm2m+tlv
   APPLICATION_VND_OMA_LWM2M_JSON = 11543,///< application/vnd.oma.lwm2m+json
