@@ -22,6 +22,8 @@ jobs:
           - args: "-DOC_IPV4_ENABLED=ON"
           # insecure with IPv4
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
+          # enable Push Notification
+          - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_TCP_ENABLED=OFF"
 
     steps:
       - uses: actions/checkout@v2

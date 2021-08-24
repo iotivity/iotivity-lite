@@ -50,6 +50,9 @@ typedef enum {
 typedef enum {
   OC_DISCOVERABLE = (1 << 0), ///< discoverable
   OC_OBSERVABLE = (1 << 1),   ///< observable
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  OC_PUSHABLE = (1 << 2),     ///< pushable
+#endif
   OC_SECURE = (1 << 4),       ///< secure
   OC_PERIODIC = (1 << 6),     ///< periodiacal update
   OC_SECURE_MCAST = (1 << 8)  ///< secure multicast (oscore)
@@ -270,6 +273,14 @@ typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
 typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
                                        void *);
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+/**
+ * @brief application should define this callback which builds updated contents of pushable Resource
+ */
+typedef void (*oc_payload_callback_t)();
+#endif
+
+
 /**
  * @brief properties callback structure
  *
@@ -316,6 +327,9 @@ struct oc_resource_s
   uint8_t num_observers;             ///< amount of observers
 #ifdef OC_COLLECTIONS
   uint8_t num_links;               ///< number of links in the collection
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_payload_callback_t payload_builder;  ///< callback to build contents of PUSH Notification
+#endif
 #endif                             /* OC_COLLECTIONS */
   uint16_t observe_period_seconds; ///< observe period in seconds
 };

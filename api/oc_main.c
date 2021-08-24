@@ -71,6 +71,11 @@ static bool *drop_commands;
 static bool drop_commands[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+void oc_push_free();
+#endif
+
+
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
 static oc_factory_presets_t factory_presets;
@@ -374,6 +379,10 @@ oc_main_shutdown(void)
   defined(OC_COLLECTIONS_IF_CREATE)
   oc_collections_free_rt_factories();
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_push_free();
+#endif
 
   oc_ri_shutdown();
 
