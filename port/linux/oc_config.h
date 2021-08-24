@@ -43,6 +43,9 @@ typedef uint64_t oc_clock_time_t;
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
+#ifdef OC_COLLECTIONS_IF_CREATE
+#define OC_PUSH
+#endif
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
