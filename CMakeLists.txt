@@ -7,8 +7,12 @@ include(mbedtls-patch.cmake)
 # Do not build anything except for the library
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
-# Configurable dynamic memory use
+
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
+set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security")
+set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security")
+set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications")
+set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -26,10 +30,6 @@ target_include_directories(mbedcrypto PUBLIC
 
 if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto PUBLIC mbedcrypto-plat)
-endif()
-
-if(OC_DYNAMIC_ALLOCATION_ENABLED)
-    target_compile_definitions(mbedcrypto PUBLIC OC_DYNAMIC_ALLOCATION)
 endif()
 
 
@@ -151,41 +151,53 @@ target_include_directories(iotivity-coap INTERFACE
 
 target_link_libraries(iotivity-coap INTERFACE iotivity-port)
 
-# Client and server versions of Iotivity
-add_library(iotivity-client INTERFACE)
+if(OC_DYNAMIC_ALLOCATION_ENABLED)
+    target_compile_definitions(mbedcrypto PUBLIC OC_DYNAMIC_ALLOCATION)
+endif()
 
-target_link_libraries(iotivity-client INTERFACE
-    iotivity-coap
-    iotivity-common
-    iotivity-api
-)
+if(OC_SECURITY_ENABLED)
+    target_compile_definitions(mbedcrypto PUBLIC OC_SECURITY)
+endif()
 
-target_compile_definitions(iotivity-client INTERFACE OC_CLIENT)
-
-add_library(iotivity-server INTERFACE)
-
-target_link_libraries(iotivity-server INTERFACE
-    iotivity-coap
-    iotivity-common
-    iotivity-api
-)
-
-target_compile_definitions(iotivity-server INTERFACE OC_SERVER)
-
-# Configurable debugging
-set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages from the Iotivity stack.")
+if(OC_PKI_ENABLED)
+    target_compile_definitions(mbedcrypto PUBLIC OC_PKI)
+endif()
 
 if(OC_DEBUG_ENABLED)
-    target_compile_definitions(iotivity-server INTERFACE OC_DEBUG)
-    target_compile_definitions(iotivity-client INTERFACE OC_DEBUG)
     target_compile_definitions(iotivity-common INTERFACE OC_DEBUG)
 endif()
 
-# TODO remove cascoda from this var
-if(CASCODA_BUILD_OCF_PKI)
-    target_compile_definitions(mbedcrypto PUBLIC OC_PKI)
+if(OC_CLOUD_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_CLOUD)
 endif()
 
 add_library(iotivity-secure-server)
 target_link_libraries(iotivity-secure-server PRIVATE iotivity-server)
 target_compile_definitions(iotivity-secure-server PUBLIC OC_SERVER OC_SECURITY)
+
+# Client and server versions of Iotivity
+add_library(iotivity-client)
+target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
+target_link_libraries(iotivity-client
+    iotivity-coap
+    iotivity-common
+    iotivity-api
+)
+
+add_library(iotivity-server)
+target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
+target_link_libraries(iotivity-server
+    iotivity-coap
+    iotivity-common
+    iotivity-api
+)
+
+add_library(iotivity-server-client)
+target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
+target_link_libraries(iotivity-server-client
+    iotivity-coap
+    iotivity-common
+    iotivity-api
+)
+
+
