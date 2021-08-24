@@ -138,6 +138,12 @@ oc_device_info_t *oc_core_get_device_info(size_t device);
  */
 oc_platform_info_t *oc_core_get_platform_info(void);
 
+/**
+ * @brief encode the interfaces with the cbor (payload) encoder
+ * 
+ * @param parent the cbor encoder
+ * @param iface_mask the interfaces (as bit mask)
+ */
 void oc_core_encode_interfaces_mask(CborEncoder *parent,
                                     oc_interface_mask_t iface_mask);
 
