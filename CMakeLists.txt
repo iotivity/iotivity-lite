@@ -171,33 +171,31 @@ if(OC_CLOUD_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_CLOUD)
 endif()
 
-add_library(iotivity-secure-server)
-target_link_libraries(iotivity-secure-server PRIVATE iotivity-server)
-target_compile_definitions(iotivity-secure-server PUBLIC OC_SERVER OC_SECURITY)
-
 # Client and server versions of Iotivity
 add_library(iotivity-client)
 target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
-target_link_libraries(iotivity-client
+target_link_libraries(iotivity-client PRIVATE
     iotivity-coap
-    iotivity-common
     iotivity-api
 )
+target_link_libraries(iotivity-client PUBLIC iotivity-common)
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
-target_link_libraries(iotivity-server
+target_link_libraries(iotivity-server PRIVATE
     iotivity-coap
-    iotivity-common
     iotivity-api
 )
+target_link_libraries(iotivity-server PUBLIC iotivity-common)
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
-target_link_libraries(iotivity-server-client
+target_link_libraries(iotivity-server-client PRIVATE
     iotivity-coap
-    iotivity-common
     iotivity-api
 )
+target_link_libraries(iotivity-server-client PUBLIC iotivity-common)
 
-
+add_subdirectory(apps)
+add_subdirectory(onboarding_tool)
+add_subdirectory(deps)
