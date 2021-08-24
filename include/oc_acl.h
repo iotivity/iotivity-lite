@@ -77,7 +77,7 @@ typedef enum {
  */
 typedef enum {
   OC_SUBJECT_UUID = 0,  ///< DI of the device
-  OC_SUBJECT_ROLE,      ///< Security role specified as an <Authority> & <Rolename>
+  OC_SUBJECT_ROLE,      ///< Security role specified as an Authority and Rolename
   OC_SUBJECT_CONN       ///< connection type, ACE to be matched based on the connection or message type
 } oc_ace_subject_type_t;
 
