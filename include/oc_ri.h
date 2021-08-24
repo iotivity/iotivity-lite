@@ -316,6 +316,13 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
                                           oc_trigger_t event_callback,
                                           oc_clock_time_t ticks);
 
+/**
+ * @brief add timed event callback in seconds
+ * *
+ * @param cb_data the timed event callback info
+ * @param event_callback the callback
+ * @param seconds time in seconds
+ */
 #define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback,        \
                                                seconds)                        \
   do {                                                                         \
