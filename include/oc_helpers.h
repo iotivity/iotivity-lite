@@ -34,6 +34,11 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
   oc_byte_string_array_t;
 
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
+
+/**
+ * @brief cast oc_string to string
+ * 
+ */
 #define oc_string(ocstring) (oc_cast(ocstring, char))
 
 #ifdef OC_MEMORY_TRACE
@@ -70,24 +75,74 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 
 #else /* OC_MEMORY_TRACE */
 
+/**
+ * @brief allocate oc_string
+ * 
+ */
 #define oc_alloc_string(ocstring, size) _oc_alloc_string((ocstring), (size))
+
+/**
+ * @brief create new string from string (not null terminated)
+ * 
+ */
 #define oc_new_string(ocstring, str, str_len)                                  \
   _oc_new_string(ocstring, str, str_len)
 
+/**
+ * @brief free ocstring
+ * 
+ */
 #define oc_free_string(ocstring) _oc_free_string(ocstring)
+
+/**
+ * @brief free array of integers
+ * 
+ */
 #define oc_free_int_array(ocarray) (_oc_free_array(ocarray, INT_POOL))
+
+/**
+ * @brief free array of booleans
+ * 
+ */
 #define oc_free_bool_array(ocarray) (_oc_free_array(ocarray, BYTE_POOL))
+
+/**
+ * @brief free array of doubles
+ * 
+ */
 #define oc_free_double_array(ocarray) (_oc_free_array(ocarray, DOUBLE_POOL))
 
+/**
+ * @brief new integer array
+ * 
+ */
 #define oc_new_int_array(ocarray, size) (_oc_new_array(ocarray, size, INT_POOL))
+
+/**
+ * @brief new boolean array
+ * 
+ */
 #define oc_new_bool_array(ocarray, size)                                       \
   (_oc_new_array(ocarray, size, BYTE_POOL))
+
+/**
+ * @brief new double array
+ * 
+ */
 #define oc_new_double_array(ocarray, size)                                     \
   (_oc_new_array(ocarray, size, DOUBLE_POOL))
 
+/**
+ * @brief new oc string array
+ * 
+ */
 #define oc_new_string_array(ocstringarray, size)                               \
   (_oc_alloc_string_array(ocstringarray, size))
 
+/**
+ * @brief free oc string array
+ * 
+ */
 #define oc_free_string_array(ocstringarray) (_oc_free_string(ocstringarray))
 
 #define oc_new_byte_string_array(ocstringarray, size)                          \
@@ -175,23 +230,51 @@ void _oc_free_array(
 #endif
   oc_array_t *ocarray, pool type);
 
+/**
+ * @brief new array
+ * 
+ */
 void _oc_new_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
   oc_array_t *ocarray, size_t size, pool type);
 
+/**
+ * @brief allocate string array
+ * 
+ * @param ocstringarray array to be allocated
+ * @param size the size of the string array
+ */
 void _oc_alloc_string_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
   oc_string_array_t *ocstringarray, size_t size);
 
-/* Conversions between hex encoded strings and byte arrays */
+/** Conversions between hex encoded strings and byte arrays */
 
+/**
+ * @brief convert array to hex
+ * 
+ * @param[in] array array of bytes
+ * @param[in] array_len length of the array
+ * @param hex_str data as hex
+ * @param hex_str_len lenght of the hex string
+ * @return int 0 success
+ */
 int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
                                      char *hex_str, size_t *hex_str_len);
 
+/**
+ * @brief convert hex string to byte array
+ * 
+ * @param[in] hex_str hex string input
+ * @param[in] hex_str_len size of the hex string
+ * @param array array of bytes
+ * @param array_len byte array
+ * @return int 0 success
+ */
 int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
                                      uint8_t *array, size_t *array_len);
 
