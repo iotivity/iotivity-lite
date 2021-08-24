@@ -67,6 +67,11 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#include "oc_push.h"
+#endif
+
+
 #ifdef OC_SERVER
 OC_LIST(app_resources);
 OC_LIST(observe_callbacks);
@@ -373,6 +378,14 @@ start_processes(void)
 #ifdef OC_TCP
   oc_process_start(&oc_session_events, NULL);
 #endif /* OC_TCP */
+
+  /*
+   * TODO4ME<done> start oc_push_process
+   */
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_process_start(&oc_push_process, NULL);
+#endif
+
 }
 
 static void
@@ -394,6 +407,14 @@ stop_processes(void)
 #endif /* OC_SECURITY */
 
   oc_process_exit(&message_buffer_handler);
+
+  /*
+   * TODO4ME<done> stop oc_push_process
+   */
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_process_exit(&oc_push_process);
+#endif
+
 }
 
 #ifdef OC_SERVER
@@ -451,6 +472,10 @@ oc_ri_init(void)
 #endif
 
   oc_list_init(timed_callbacks);
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_push_list_init();
+#endif
 
   oc_process_init();
   start_processes();

@@ -21,6 +21,8 @@ set(OC_WKCORE_ENABLED OFF CACHE BOOL "Enable well-known core resource.")
 set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore support.")
 set(OC_IPV4_ENABLED OFF CACHE BOOL "Enable IPv4 support.")
 set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
+set(OC_PUSH_ENABLED OFF CACHE BOOL "Enable Push Notification.")
+set(OC_PUSHDEBUG_ENABLED OFF CACHE BOOL "Enable debug messages for Push Notification.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -146,6 +148,13 @@ endif()
 
 if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
+endif()
+
+if(OC_PUSH_ENABLED)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_PUSH")
+    if(OC_PUSHDEBUG_ENABLED)
+        list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_PUSHDEBUG")
+    endif()
 endif()
 
 if(BUILD_TESTING)
