@@ -129,6 +129,7 @@ typedef enum {
   APPLICATION_PKCS10 = 286,              ///< application/pkcs10
   APPLICATION_PKIX_CERT = 287,           ///< application/pkix-cert
   APPLICATION_VND_OCF_CBOR = 10000,      ///< application/vnd.ocf+cbor
+  APPLICATION_OSCORE = 10001,            ///< application/oscore
   APPLICATION_VND_OMA_LWM2M_TLV = 11542, ///< application/vnd.oma.lwm2m+tlv
   APPLICATION_VND_OMA_LWM2M_JSON = 11543,///< application/vnd.oma.lwm2m+json
   APPLICATION_VND_OMA_LWM2M_CBOR = 11544 ///< application/vnd.oma.lwm2m+cbor
