@@ -24,6 +24,10 @@ extern "C"
 {
 #endif
 
+/**
+ * @brief signal event loop
+ * 
+ */
 void _oc_signal_event_loop(void);
 
 #ifdef __cplusplus
