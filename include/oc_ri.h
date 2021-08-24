@@ -120,9 +120,9 @@ typedef enum {
   APPLICATION_SENSML_CBOR = 113,         ///< application/sensml+cbor
   APPLICATION_SENML_EXI = 114,           ///< application/senml-exi
   APPLICATION_SENSML_EXI = 115,          ///< application/sensml-exi
-  APPLICATION_VND_OCF_CBOR = 10000       ///< application/vnd.ocf+cbor
-  APPLICATION_VND_OMA_LWM2M_TLV = 11542  ///< application/vnd.oma.lwm2m+tlv
-  APPLICATION_VND_OMA_LWM2M_JSON = 11543 ///< application/vnd.oma.lwm2m+json
+  APPLICATION_VND_OCF_CBOR = 10000,      ///< application/vnd.ocf+cbor
+  APPLICATION_VND_OMA_LWM2M_TLV = 11542, ///< application/vnd.oma.lwm2m+tlv
+  APPLICATION_VND_OMA_LWM2M_JSON = 11543,///< application/vnd.oma.lwm2m+json
   APPLICATION_VND_OMA_LWM2M_CBOR = 11544 ///< application/vnd.oma.lwm2m+cbor
 } oc_content_format_t;
 
