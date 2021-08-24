@@ -56,73 +56,96 @@ typedef enum {
 
 /**
  * @brief response status
- * 
+ * can be translated to HTTP or CoAP.
  */
 typedef enum {
-  OC_STATUS_OK = 0,
-  OC_STATUS_CREATED,
-  OC_STATUS_CHANGED,
-  OC_STATUS_DELETED,
-  OC_STATUS_NOT_MODIFIED,
-  OC_STATUS_BAD_REQUEST,
-  OC_STATUS_UNAUTHORIZED,
-  OC_STATUS_BAD_OPTION,
-  OC_STATUS_FORBIDDEN,
-  OC_STATUS_NOT_FOUND,
-  OC_STATUS_METHOD_NOT_ALLOWED,
-  OC_STATUS_NOT_ACCEPTABLE,
-  OC_STATUS_REQUEST_ENTITY_TOO_LARGE,
-  OC_STATUS_UNSUPPORTED_MEDIA_TYPE,
-  OC_STATUS_INTERNAL_SERVER_ERROR,
-  OC_STATUS_NOT_IMPLEMENTED,
-  OC_STATUS_BAD_GATEWAY,
-  OC_STATUS_SERVICE_UNAVAILABLE,
-  OC_STATUS_GATEWAY_TIMEOUT,
-  OC_STATUS_PROXYING_NOT_SUPPORTED,
+  OC_STATUS_OK = 0,                    ///< OK
+  OC_STATUS_CREATED,                   ///< Created
+  OC_STATUS_CHANGED,                   ///< Changed
+  OC_STATUS_DELETED,                   ///< Deleted
+  OC_STATUS_NOT_MODIFIED,              ///< Not Modified
+  OC_STATUS_BAD_REQUEST,               ///< Bad Request
+  OC_STATUS_UNAUTHORIZED,              ///< Unauthorized
+  OC_STATUS_BAD_OPTION,                ///< Bad Option
+  OC_STATUS_FORBIDDEN,                 ///< Forbidden
+  OC_STATUS_NOT_FOUND,                 ///< Not Found
+  OC_STATUS_METHOD_NOT_ALLOWED,        ///< Method Not Allowed
+  OC_STATUS_NOT_ACCEPTABLE,            ///< Not Acceptable
+  OC_STATUS_REQUEST_ENTITY_TOO_LARGE,  ///< Request Entity Too Large
+  OC_STATUS_UNSUPPORTED_MEDIA_TYPE,    ///< Unsupported Media Type
+  OC_STATUS_INTERNAL_SERVER_ERROR,     ///< Internal Server Error
+  OC_STATUS_NOT_IMPLEMENTED,           ///< Not Implemented
+  OC_STATUS_BAD_GATEWAY,               ///< Bad Gateway
+  OC_STATUS_SERVICE_UNAVAILABLE,       ///< Service Unavailable
+  OC_STATUS_GATEWAY_TIMEOUT,           ///< Gateway Timeout
+  OC_STATUS_PROXYING_NOT_SUPPORTED,    ///< Proxying not supported
   __NUM_OC_STATUS_CODES__,
-  OC_IGNORE,
-  OC_PING_TIMEOUT
+  OC_IGNORE,                           ///< Ignore: do not respond to request
+  OC_PING_TIMEOUT                      ///< Ping Time out
 } oc_status_t;
 
 /**
  * @brief payload content formats
  * 
+ * https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#rd-parameters
+ * 
  */
 typedef enum {
-  TEXT_PLAIN = 0,
-  TEXT_XML = 1,
-  TEXT_CSV = 2,
-  TEXT_HTML = 3,
-  IMAGE_GIF = 21,
-  IMAGE_JPEG = 22,
-  IMAGE_PNG = 23,
-  IMAGE_TIFF = 24,
-  AUDIO_RAW = 25,
-  VIDEO_RAW = 26,
-  APPLICATION_LINK_FORMAT = 40,
-  APPLICATION_XML = 41,
-  APPLICATION_OCTET_STREAM = 42,
-  APPLICATION_RDF_XML = 43,
-  APPLICATION_SOAP_XML = 44,
-  APPLICATION_ATOM_XML = 45,
-  APPLICATION_XMPP_XML = 46,
-  APPLICATION_EXI = 47,
-  APPLICATION_FASTINFOSET = 48,
-  APPLICATION_SOAP_FASTINFOSET = 49,
-  APPLICATION_JSON = 50,
-  APPLICATION_X_OBIX_BINARY = 51,
-  APPLICATION_CBOR = 60,
-  APPLICATION_VND_OCF_CBOR = 10000
+  TEXT_PLAIN = 0,                        ///< text/plain
+  TEXT_XML = 1,                          ///< text/xml
+  TEXT_CSV = 2,                          ///< text/csv
+  TEXT_HTML = 3,                         ///< text/html
+  IMAGE_GIF = 21,                        ///< image/gif - not used
+  IMAGE_JPEG = 22,                       ///< image/jpeg - not used
+  IMAGE_PNG = 23,                        ///< image/png - not used
+  IMAGE_TIFF = 24,                       ///< image/tiff - not used
+  AUDIO_RAW = 25,                        ///< audio/raw - not used
+  VIDEO_RAW = 26,                        ///< video/raw - not used
+  APPLICATION_LINK_FORMAT = 40,          ///< application/link-format
+  APPLICATION_XML = 41,                  ///< application/xml
+  APPLICATION_OCTET_STREAM = 42,         ///< application/octet-stream
+  APPLICATION_RDF_XML = 43,              ///< application - not used
+  APPLICATION_SOAP_XML = 44,             ///< application/soap - not used
+  APPLICATION_ATOM_XML = 45,             ///< application - not used
+  APPLICATION_XMPP_XML = 46,             ///< application - not used
+  APPLICATION_EXI = 47,                  ///< application/exi
+  APPLICATION_FASTINFOSET = 48,          ///< application
+  APPLICATION_SOAP_FASTINFOSET = 49,     ///< application
+  APPLICATION_JSON = 50,                 ///< application/json
+  APPLICATION_X_OBIX_BINARY = 51,        ///< application - not used
+  APPLICATION_CBOR = 60,                 ///< application/cbor
+  APPLICATION_SENML_JSON = 110,          ///< application/senml+json
+  APPLICATION_SENSML_JSON = 111,         ///< application/sensml+json
+  APPLICATION_SENML_CBOR = 112,          ///< application/senml+cbor
+  APPLICATION_SENSML_CBOR = 113,         ///< application/sensml+cbor
+  APPLICATION_SENML_EXI = 114,           ///< application/senml-exi
+  APPLICATION_SENSML_EXI = 115,          ///< application/sensml-exi
+  APPLICATION_VND_OCF_CBOR = 10000       ///< application/vnd.ocf+cbor
+  APPLICATION_VND_OMA_LWM2M_TLV = 11542  ///< application/vnd.oma.lwm2m+tlv
+  APPLICATION_VND_OMA_LWM2M_JSON = 11543 ///< application/vnd.oma.lwm2m+json
+  APPLICATION_VND_OMA_LWM2M_CBOR = 11544 ///< application/vnd.oma.lwm2m+cbor
 } oc_content_format_t;
 
+/**
+ * @brief seperate response type
+ * 
+ */
 typedef struct oc_separate_response_s oc_separate_response_t;
 
+/**
+ * @brief reponse buffer type
+ * 
+ */
 typedef struct oc_response_buffer_s oc_response_buffer_t;
 
+/**
+ * @brief response type
+ * 
+ */
 typedef struct oc_response_t
 {
-  oc_separate_response_t *separate_response;
-  oc_response_buffer_t *response_buffer;
+  oc_separate_response_t *separate_response;  ///< seperate response
+  oc_response_buffer_t *response_buffer;      ///< response buffer
 } oc_response_t;
 
 /**
@@ -208,6 +231,10 @@ typedef void (*oc_request_callback_t)(oc_request_t *, oc_interface_mask_t,
                                       void *);
 
 
+/**
+ * @brief request handler type
+ * 
+ */
 typedef struct oc_request_handler_s
 {
   oc_request_callback_t cb;
