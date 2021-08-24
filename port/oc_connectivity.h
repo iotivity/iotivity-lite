@@ -207,10 +207,32 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
                                    oc_session_state_t state);
 
 #ifdef OC_TCP
-/* TCP CSM states */
-typedef enum { CSM_NONE, CSM_SENT, CSM_DONE, CSM_ERROR = 255 } tcp_csm_state_t;
+/**
+ * @brief The CSM states
+ * 
+ */
+typedef enum { 
+  CSM_NONE,         ///< None
+  CSM_SENT,         ///< Send
+  CSM_DONE,         ///< Done
+  CSM_ERROR = 255   ///< Error
+  } tcp_csm_state_t;
 
+/**
+ * @brief retrieve the cms state
+ * 
+ * @param endpoint the endpoint
+ * @return tcp_csm_state_t the cms state
+ */
 tcp_csm_state_t oc_tcp_get_csm_state(oc_endpoint_t *endpoint);
+
+/**
+ * @brief update the csm state on the tcp connection
+ * 
+ * @param endpoint the endpoint 
+ * @param csm the cms state
+ * @return int 0 = success
+ */
 int oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm);
 #endif /* OC_TCP */
 
