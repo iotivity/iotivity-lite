@@ -26,9 +26,24 @@ extern "C"
 {
 #endif
 
+/**
+ * @brief abort application
+ * 
+ */
 void abort_impl(void);
+
+/**
+ * @brief exit the application
+ * 
+ * @param status the exist status
+ */
 void exit_impl(int status);
 
+/**
+ * @brief abort with message
+ * 
+ * @param msg the message to be printed
+ */
 static inline void
 oc_abort(const char *msg)
 {
@@ -36,6 +51,10 @@ oc_abort(const char *msg)
   abort_impl();
 }
 
+/**
+ * @brief assert the condition and if it fails abort with message (reason)
+ * 
+ */
 #define oc_assert(cond)                                                        \
   do {                                                                         \
     if (!(cond)) {                                                             \
@@ -43,6 +62,11 @@ oc_abort(const char *msg)
     }                                                                          \
   } while (0)
 
+/**
+ * @brief exit the application with status
+ * 
+ * @param status the exist status
+ */
 static inline void
 oc_exit(int status)
 {
