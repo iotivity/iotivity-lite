@@ -1,5 +1,7 @@
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/build.yml/badge.svg
+
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml/badge.svg
+
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
 
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
