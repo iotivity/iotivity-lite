@@ -1,4 +1,4 @@
-name: CI-documentation
+name: doxygen documentation
 
 on:
   push:
