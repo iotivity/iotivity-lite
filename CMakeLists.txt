@@ -2,8 +2,15 @@ cmake_minimum_required(VERSION 3.13)
 project(iotivity-lite)
 
 # Patch mbedtls
-# This is suboptimal - mbedtls is cleaned and patched with every configure
-include(mbedtls-patch.cmake)
+set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
+if(OC_REAPPLY_MBEDTLS_PATCHES)
+    include(mbedtls-patch.cmake)
+    set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL 
+        "By default, mbedTLS patches are applied upon the first CMake Configure."
+        "Set this to ON to reapply the patches on the next configure" 
+         FORCE
+    )
+endif()
 
 # Do not build anything except for the library
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
