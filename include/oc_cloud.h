@@ -50,7 +50,8 @@ typedef enum oc_cps_t {
   OC_CPS_READYTOREGISTER,
   OC_CPS_REGISTERING,
   OC_CPS_REGISTERED,
-  OC_CPS_FAILED
+  OC_CPS_FAILED,
+  OC_CPS_DEREGISTERING
 } oc_cps_t;
 
 typedef struct oc_cloud_store_t
@@ -132,7 +133,7 @@ int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
  * @param ctx Cloud context to update, must not be NULL.
  * @param ttl Time to live value in seconds.
  */
-void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl);
+void oc_cloud_set_published_resources_ttl(oc_cloud_context_t* ctx, uint32_t ttl);
 
 int oc_cloud_add_resource(oc_resource_t *resource);
 void oc_cloud_delete_resource(oc_resource_t *resource);
