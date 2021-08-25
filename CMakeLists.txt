@@ -185,7 +185,6 @@ target_link_libraries(iotivity-client PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-client PUBLIC iotivity-common)
-target_include_directories(iotivity-client PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
@@ -194,7 +193,6 @@ target_link_libraries(iotivity-server PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-server PUBLIC iotivity-common)
-target_include_directories(iotivity-server PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
@@ -203,7 +201,6 @@ target_link_libraries(iotivity-server-client PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-server-client PUBLIC iotivity-common)
-target_include_directories(iotivity-server-client PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(apps)
 add_subdirectory(onboarding_tool)
