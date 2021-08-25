@@ -1,13 +1,19 @@
 cmake_minimum_required(VERSION 3.13)
 project(iotivity-lite)
 
+# Detect the platform and pick the right port
+if(UNIX)
+    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/linux)
+elseif(WIN32)
+    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/windows)
+endif()
+
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
     include(mbedtls-patch.cmake)
     set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL 
-        "By default, mbedTLS patches are applied upon the first CMake Configure."
-        "Set this to ON to reapply the patches on the next configure" 
+        "By default, mbedTLS patches are applied upon the first CMake Configure. Set this to ON to reapply the patches on the next configure."
          FORCE
     )
 endif()
@@ -31,7 +37,7 @@ endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 
 target_include_directories(mbedcrypto PUBLIC
-    ${PROJECT_SOURCE_DIR}/port/linux
+    ${PORT_DIR}
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
@@ -45,16 +51,16 @@ endif()
 add_library(iotivity-port INTERFACE)
 
 target_sources(iotivity-port INTERFACE
-    ${PROJECT_SOURCE_DIR}/port/linux/abort.c
-    ${PROJECT_SOURCE_DIR}/port/linux/clock.c
-    ${PROJECT_SOURCE_DIR}/port/linux/ipadapter.c
-    ${PROJECT_SOURCE_DIR}/port/linux/random.c
-    ${PROJECT_SOURCE_DIR}/port/linux/storage.c
-    ${PROJECT_SOURCE_DIR}/port/linux/tcpadapter.c
+    ${PORT_DIR}/abort.c
+    ${PORT_DIR}/clock.c
+    ${PORT_DIR}/ipadapter.c
+    ${PORT_DIR}/random.c
+    ${PORT_DIR}/storage.c
+    ${PORT_DIR}/tcpadapter.c
 )
 
 target_include_directories(iotivity-port INTERFACE
-    ${PROJECT_SOURCE_DIR}/port/linux
+    ${PORT_DIR}
 )
 
 # Iotivity API
