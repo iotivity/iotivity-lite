@@ -20,9 +20,9 @@
 #ifndef OC_PUSH_H
 #define OC_PUSH_H
 
+#include "oc_config.h"
 #include "util/oc_process.h"
 
-//#define OC_PUSH
 
 #ifdef __cplusplus
 extern "C"

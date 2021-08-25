@@ -32,6 +32,11 @@ extern "C" {
 
 typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE, OC_FETCH } oc_method_t;
 
+/*
+ * FIXME4ME remove later
+ */
+#define OC_PUSH
+
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
@@ -183,6 +188,11 @@ typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
 typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
                                        void *);
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+typedef void (*oc_payload_callback_t)();
+#endif
+
+
 typedef struct oc_properties_cb_t
 {
   union {
@@ -215,6 +225,9 @@ struct oc_resource_s
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+  oc_payload_callback_t payload_handler;
+#endif
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
 };

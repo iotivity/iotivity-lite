@@ -23,6 +23,7 @@
 
 #include "oc_api.h"
 #include "oc_events.h"
+#include "oc_process.h"
 
 
 OC_PROCESS(oc_push_process, "Push Notification handler");
@@ -45,7 +46,6 @@ void get_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
  */
 void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-
 }
 
 
@@ -58,6 +58,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 								oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
 								size_t device)
 {
+	/* TODO4ME from here.. 2021/8/25  */
 
 }
 
@@ -85,10 +86,10 @@ oc_resource_t *free_ns_instance(oc_resource_t *resource)
  * for Target Server \n
  * - Push Receiver ("oic.r.pushreceiver") \n
  */
-void init_push_resources()
+void init_push_resources(size_t device_index)
 {
 	/* create Push Configuration Resource */
-	oc_resource_t *push_conf = oc_new_collection("Push Configuration", "/pushconfig", 2, 0);
+	oc_resource_t *push_conf = oc_new_collection("Push Configuration", "/pushconfig", 2, device_index);
 	oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
 	oc_resource_bind_resource_interface(push_conf, OC_IF_LL | OC_IF_RW | OC_IF_CREATE | OC_IF_BASELINE);
 	oc_resource_set_default_interface(push_conf, OC_IF_LL);
@@ -109,15 +110,26 @@ void init_push_resources()
 
 OC_PROCESS_THREAD(oc_push_process, ev, data)
 {
+	oc_resource_t *src_rsc;
+
 	OC_PROCESS_BEGIN();
 
 	do {
-		/* create Push Notification Resource */
-		init_push_resources();
+		int device_count = oc_core_get_num_devices();
+
+		/* create Push Notification Resource per each Device */
+		for (int i=0; i<device_count; i++) {
+			init_push_resources(i);
+		}
 
 		OC_PROCESS_YIELD();
 
+		/* send UPDATE to target server */
+		if (ev == oc_events[PUSH_RSC_STATE_CHANGED]) {
+			src_rsc = (oc_resource_t *)data;
+			/* TODO4ME from here.. 2021/8/25  */
 
+		}
 
 	} while(0);
 
@@ -128,14 +140,22 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 /**
  *
+ * @brief re-schedule push process
  *
  */
-void oc_resource_state_changed(const char *uri)
+void oc_resource_state_changed(const char *uri, size_t device_index)
 {
-	/* post URI of Resource which is just updated */
-	oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], uri);
+	if (!oc_process_is_running(&oc_push_process)) {
+		OC_DBG("oc_push_process is not running!\n");
+		return;
+	}
 
-	oc_process_poll(&oc_push_process);
+	/* Resource which is just updated */
+	oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
+					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
+//	oc_process_poll(&oc_push_process);
+
+	_oc_signal_event_loop();
 
 	return;
 }
