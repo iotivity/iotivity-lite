@@ -1,17 +1,19 @@
-name: doxygen documentation
+name: CI-doxygen-publish
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+    types: [closed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-  doxygen:
+  doxygen-publish:
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -21,7 +23,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.IOTIVITY_LITE_SSH_KEY }}
         
-      - name: build_documentation
+      - name: doxygen_build_documentation
         run: |
           sudo apt-get update -y
           sudo apt-get install doxygen
@@ -29,8 +31,7 @@ jobs:
           cd ${{ github.workspace }}/iotivity-lite/tools
           ./build_doc.sh
           
-      - name: copy-docs
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      - name: doxygen_copy-docs
         run: |
           cd ~/work
           git clone git@github.com:iotivity/iotivity-lite-doxygen.git
@@ -40,8 +41,7 @@ jobs:
           #Rename to "docs"
           mv html docs
           
-      - name: push-changes
-        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+      - name: doxygen_push-changes
         run: |
           cd ~/work/iotivity-lite-doxygen
           git config --global user.name 'IoTivity Bot'
