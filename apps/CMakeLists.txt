@@ -32,3 +32,5 @@ target_link_libraries(simpleclient
     m
 )
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
+
+include(device-builder.cmake OPTIONAL)
