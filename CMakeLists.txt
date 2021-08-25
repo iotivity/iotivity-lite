@@ -14,6 +14,7 @@ set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security")
 set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications")
 set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages")
+set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -172,6 +173,10 @@ if(OC_CLOUD_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_CLOUD)
 endif()
 
+if(OC_IDD_API_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_IDD_API)
+endif()
+
 # Client and server versions of Iotivity
 add_library(iotivity-client)
 target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
@@ -180,6 +185,7 @@ target_link_libraries(iotivity-client PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-client PUBLIC iotivity-common)
+target_include_directories(iotivity-client PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
@@ -188,6 +194,7 @@ target_link_libraries(iotivity-server PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-server PUBLIC iotivity-common)
+target_include_directories(iotivity-server PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
@@ -196,6 +203,7 @@ target_link_libraries(iotivity-server-client PRIVATE
     iotivity-api
 )
 target_link_libraries(iotivity-server-client PUBLIC iotivity-common)
+target_include_directories(iotivity-server-client PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(apps)
 add_subdirectory(onboarding_tool)
