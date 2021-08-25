@@ -10,3 +10,5 @@ target_link_libraries(onboarding_tool
     pthread
     m
 )
+
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/onboarding_tool_creds)
