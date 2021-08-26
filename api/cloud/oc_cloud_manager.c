@@ -50,7 +50,6 @@ static oc_event_callback_retval_t cloud_login(void *data);
 static oc_event_callback_retval_t refresh_token(void *data);
 static oc_event_callback_retval_t send_ping(void *data);
 
-static uint16_t session_timeout[5] = { 3, 60, 1200, 24000, 60 };
 static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
 
 static oc_event_callback_retval_t
@@ -109,13 +108,13 @@ cloud_start_process(oc_cloud_context_t *ctx)
   ctx->retry_refresh_token_count = 0;
 
   if (ctx->store.status == OC_CLOUD_INITIALIZED) {
-    oc_set_delayed_callback(ctx, cloud_register, session_timeout[0]);
+    oc_set_delayed_callback(ctx, cloud_register, message_timeout[0]);
   } else {
     if (oc_string(ctx->store.refresh_token) &&
         oc_string_len(ctx->store.refresh_token) > 0) {
-      oc_set_delayed_callback(ctx, refresh_token, session_timeout[0]);
+      oc_set_delayed_callback(ctx, refresh_token, message_timeout[0]);
     } else {
-      oc_set_delayed_callback(ctx, cloud_login, session_timeout[0]);
+      oc_set_delayed_callback(ctx, cloud_login, message_timeout[0]);
     }
   }
   _oc_signal_event_loop();
@@ -289,10 +288,13 @@ cloud_register(void *data)
         cloud_set_last_error(ctx, CLOUD_OK);
       }
       oc_set_delayed_callback(data, cloud_register,
-                              session_timeout[ctx->retry_count]);
+                              message_timeout[ctx->retry_count]);
       ctx->retry_count++;
     } else {
-      reconnect(ctx);
+      // for register, we don't try to reconnect because the access token has short validity
+      cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_CONNECT);
+      ctx->store.status |= OC_CLOUD_FAILURE;
+      oc_set_delayed_callback(ctx, callback_handler, 0);
     }
   }
 
@@ -378,7 +380,7 @@ cloud_login_handler(oc_client_response_t *data)
       if (oc_string(ctx->store.refresh_token) &&
           oc_string_len(ctx->store.refresh_token) > 0) {
         oc_remove_delayed_callback(ctx, refresh_token);
-        oc_set_delayed_callback(ctx, refresh_token, session_timeout[0]);
+        oc_set_delayed_callback(ctx, refresh_token, message_timeout[0]);
       }
     }
     oc_set_delayed_callback(ctx, callback_handler, 0);
@@ -405,7 +407,7 @@ cloud_login(void *data)
       }
 
       oc_set_delayed_callback(ctx, cloud_login,
-                              session_timeout[ctx->retry_count]);
+                              message_timeout[ctx->retry_count]);
       ctx->retry_count++;
     } else {
       reconnect(ctx);
@@ -512,7 +514,7 @@ refresh_token_handler(oc_client_response_t *data)
     oc_remove_delayed_callback(ctx, refresh_token);
     ctx->retry_refresh_token_count = 0;
     oc_set_delayed_callback(ctx, cloud_login,
-                            session_timeout[ctx->retry_count]);
+                            message_timeout[ctx->retry_count]);
   } else {
     oc_remove_delayed_callback(ctx, refresh_token);
     if (ctx->store.status & OC_CLOUD_REGISTERED) {
@@ -545,7 +547,7 @@ refresh_token(void *data)
       cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     }
     oc_set_delayed_callback(ctx, refresh_token,
-                            session_timeout[ctx->retry_refresh_token_count]);
+                            message_timeout[ctx->retry_refresh_token_count]);
 
     ctx->retry_refresh_token_count++;
   } else {
