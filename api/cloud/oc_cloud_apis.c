@@ -74,7 +74,7 @@ conv_cloud_endpoint(oc_cloud_context_t *ctx)
   int ret = 0;
   oc_endpoint_t ep;
   memset(&ep, 0, sizeof(oc_endpoint_t));
-  if (memcmp(&ep, ctx->cloud_ep, sizeof(oc_endpoint_t)) == 0) {
+  if (ctx->cloud_ep && memcmp(&ep, ctx->cloud_ep, sizeof(oc_endpoint_t)) == 0) {
     ret = oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
 #ifdef OC_DNS_CACHE
     oc_dns_clear_cache();
@@ -166,7 +166,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 int
 oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
 {
-  return (int)ctx->expires_in;
+  return (int)ctx->store.expires_in;
 }
 
 void
@@ -380,7 +380,7 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
   if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
     bool hasRefreshToken = oc_string(ctx->store.refresh_token) &&
-      oc_string_len(ctx->store.refresh_token) > 0;
+      oc_string_len(ctx->store.refresh_token) > 0 && (!cloud_is_permanent_access_token(ctx->store.expires_in));
     if (hasRefreshToken) {
       if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) != 0) {
         OC_ERR("Failed to refresh token for deregister");
