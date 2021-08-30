@@ -462,12 +462,30 @@ register_resources(void)
   oc_add_resource(res1);
 }
 
+void mutex_lock(pthread_mutex_t *mutex)
+{
+  int e = pthread_mutex_lock(mutex);
+  if (e != 0) {
+    abort();
+  }
+  printf("lock %p\n", mutex);
+}
+
+void mutex_unlock(pthread_mutex_t *mutex)
+{
+  int e = pthread_mutex_unlock(mutex);
+  if (e != 0) {
+    abort();
+  }
+  printf("unlock %p\n", mutex);
+}
+
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
+  mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
+  mutex_unlock(&mutex);
 }
 
 void
@@ -602,9 +620,24 @@ ocf_event_thread(void *data)
 #endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
-    printf("pthread_mutex_init failed!\n");
+    printf("pthread_mutex_init(mutex) failed!\n");
     return NULL;
   }
+
+  if (pthread_mutex_init(&app_sync_lock, NULL) < 0) {
+    printf("pthread_mutex_init(app_sync_lock) failed!\n");
+    return NULL;
+  }
+
+  if (pthread_cond_init(&cv, NULL) < 0) {
+    printf("pthread_cond_init failed!\n");
+    return NULL;
+  }
+
+  for (int i = 0; i<10;i++) {
+    signal_event_loop();
+  }
+
   oc_set_con_res_announced(false);
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
@@ -621,7 +654,7 @@ ocf_event_thread(void *data)
     next_event = oc_main_poll();
     pthread_mutex_unlock(&app_sync_lock);
 
-    pthread_mutex_lock(&mutex);
+    mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
@@ -629,7 +662,7 @@ ocf_event_thread(void *data)
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
-    pthread_mutex_unlock(&mutex);
+    mutex_unlock(&mutex);
   }
   oc_main_shutdown();
   return NULL;

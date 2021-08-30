@@ -157,10 +157,9 @@ _register_handler_check_data_error(oc_client_response_t *data)
   return CLOUD_OK;
 }
 
-static int
+static oc_cloud_error_t
 _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
-  oc_cps_t cps = OC_CPS_FAILED;
   oc_cloud_error_t err = _register_handler_check_data_error(data);
   if (err != CLOUD_OK) {
     goto error;
@@ -223,25 +222,12 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 
   cloud_store_dump_async(&ctx->store);
   ctx->retry_count = 0;
-  cloud_set_last_error(ctx, CLOUD_OK);
-
   ctx->store.status |= OC_CLOUD_REGISTERED;
-
-  cloud_set_cps(ctx, OC_CPS_REGISTERED);
-
-  return 0;
+  return err;
 
 error:
   ctx->store.status |= OC_CLOUD_FAILURE;
-  if (err == CLOUD_ERROR_CONNECT) {
-    if (!is_retry_over(ctx)) {
-      // While retrying, keep last error (clec) to CLOUD_OK
-      cps = OC_CPS_REGISTERING;
-      err = CLOUD_OK;
-    }
-  }
-  cloud_set_cps_and_last_error(ctx, cps, err);
-  return -1;
+  return err;
 }
 
 void
@@ -249,7 +235,14 @@ oc_cloud_register_handler(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  _register_handler(ctx, data);
+  oc_cloud_error_t err = _register_handler(ctx, data);
+  switch (err) {
+    case CLOUD_OK:
+      cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
+      break;
+    default:
+      cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  }
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
@@ -263,8 +256,22 @@ static void
 cloud_register_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  int ret = _register_handler(ctx, data);
-  if (ret == 0) {
+  oc_cloud_error_t err = _register_handler(ctx, data);
+  switch (err) {
+    case CLOUD_OK:
+      cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
+      break;
+    case CLOUD_ERROR_CONNECT:
+      if (!is_retry_over(ctx)) {
+        // While retrying, keep last error (clec) to CLOUD_OK
+        cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
+        break;
+      }
+      /* FALLTHRU */
+    default:
+      cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  }
+  if (err == CLOUD_OK) {
     oc_remove_delayed_callback(ctx, cloud_register);
     oc_set_delayed_callback(ctx, callback_handler, 0);
     oc_set_delayed_callback(ctx, cloud_login,
@@ -339,6 +346,17 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
+
+  int64_t expires_in = 0;
+  if (!oc_rep_get_int(data->payload, EXPIRESIN_KEY, &expires_in)) {
+    err = CLOUD_ERROR_RESPONSE;
+    goto error;
+  }
+  ctx->store.expires_in = expires_in;
+  if (ctx->store.expires_in > 0) {
+    ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
+  }
+  cloud_store_dump_async(&ctx->store);
 
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;

@@ -128,7 +128,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
-  cloud_store_dump(&ctx->store);
+  cloud_store_dump_async(&ctx->store);
 }
 
 int
