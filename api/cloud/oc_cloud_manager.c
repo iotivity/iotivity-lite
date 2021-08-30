@@ -161,10 +161,6 @@ static int
 _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
   oc_cps_t cps = OC_CPS_FAILED;
-  char *access_token = NULL, *refresh_token = NULL, *uid = NULL;
-  size_t access_token_size = 0, refresh_token_size = 0, uid_size = 0;
-  oc_rep_t *payload = data->payload;
-  int64_t expires_in = 0;
   oc_cloud_error_t err = _register_handler_check_data_error(data);
   if (err != CLOUD_OK) {
     goto error;
@@ -175,22 +171,30 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
+  oc_rep_t *payload = data->payload;
+  char *access_token = NULL;
+  size_t access_token_size = 0;
   if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_token, &access_token_size) || access_token_size == 0) {
     err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
+  char *refresh_token = NULL;
+  size_t refresh_token_size = 0;
   if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_token, &refresh_token_size) || refresh_token_size == 0) {
     err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
+  char *uid = NULL;
+  size_t uid_size = 0;
   if (!oc_rep_get_string(payload, USER_ID_KEY, &uid, &uid_size) || uid_size == 0) {
     err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
 
+  int64_t expires_in = 0;
   if (!oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in)) {
     err = CLOUD_ERROR_RESPONSE;
     goto error;
