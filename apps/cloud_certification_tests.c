@@ -36,13 +36,12 @@ static const char *device_name = "Cloud Switch";
 
 static const char *manufacturer = "ocfcloud.com";
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 
-oc_resource_t *res1;
-oc_resource_t *res2;
+static oc_resource_t *res1;
 
 static struct timespec ts;
 static int quit;
@@ -462,30 +461,12 @@ register_resources(void)
   oc_add_resource(res1);
 }
 
-void mutex_lock(pthread_mutex_t *mutex)
-{
-  int e = pthread_mutex_lock(mutex);
-  if (e != 0) {
-    abort();
-  }
-  printf("lock %p\n", mutex);
-}
-
-void mutex_unlock(pthread_mutex_t *mutex)
-{
-  int e = pthread_mutex_unlock(mutex);
-  if (e != 0) {
-    abort();
-  }
-  printf("unlock %p\n", mutex);
-}
-
 static void
 signal_event_loop(void)
 {
-  mutex_lock(&mutex);
+  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  mutex_unlock(&mutex);
+  pthread_mutex_unlock(&mutex);
 }
 
 void
@@ -634,10 +615,6 @@ ocf_event_thread(void *data)
     return NULL;
   }
 
-  for (int i = 0; i<10;i++) {
-    signal_event_loop();
-  }
-
   oc_set_con_res_announced(false);
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
@@ -654,7 +631,7 @@ ocf_event_thread(void *data)
     next_event = oc_main_poll();
     pthread_mutex_unlock(&app_sync_lock);
 
-    mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
@@ -662,7 +639,7 @@ ocf_event_thread(void *data)
       ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
-    mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
   }
   oc_main_shutdown();
   return NULL;

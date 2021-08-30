@@ -58,7 +58,7 @@ typedef struct tcp_session
   tcp_csm_state_t csm_state;
 } tcp_session_t;
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 OC_LIST(session_list);
 OC_LIST(free_session_list_async);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
