@@ -24,6 +24,7 @@
 #include "oc_api.h"
 #include "oc_events.h"
 #include "oc_rep.h"
+#include "oc_endpoint.h"
 #include "util/oc_process.h"
 #include "util/oc_list.h"
 
@@ -33,7 +34,7 @@
  *
  */
 OC_MEMB(ns_memb, oc_ns_t, 1);
-OC_LIST(ns_list);
+OC_LIST(ns_col_list);
 
 OC_PROCESS(oc_push_process, "Push Notification handler");
 
@@ -60,11 +61,12 @@ void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 /**
  *
- * @brief
+ * @brief callback to be used to set existing `notification selector` with received Resource representation
  *
  * @param resource
- * @param rep
- * @param data
+ * @param rep			Resource representation structure
+ * @param data			internal structure for storing `notification selector` resource
+ * 						(oc_memb struct for ["oic.r.notificationselector", "oic.r.pushproxy"] Resource)
  * @return
  */
 bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
@@ -78,27 +80,55 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
-			else if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "prt", 3) == 0)
+			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
-				oc_new_string_array(ns_instance->prt, rep->value.array.size);
+				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
+			}
+			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
+			{
+				oc_new_string(&ns_instance->pushqif, oc_string(rep->value.string), oc_string_len(rep->value.string));
+			}
+			break;
+		case OC_REP_STRING_ARRAY:
+			if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "prt", 3) == 0)
+			{
+				oc_new_string_array(&ns_instance->prt, rep->value.array.size);
 				oc_array_t *array_item = &rep->value.array;
-				for (int i=0; i<rep->value.array.size; i++) {
+				for (int i=0; i < rep->value.array.size; i++)
+				{
 					oc_string_array_add_item(ns_instance->prt, array_item->ptr);
 					array_item = array_item->next;
 				}
 			}
-			/* TODO4ME from here.. 2021/8/27  */
-			
-
+			else if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "pif", 3) == 0)
+			{
+				oc_new_string_array(&ns_instance->pif, rep->value.array.size);
+				oc_array_t *array_item = &rep->value.array;
+				for (int i=0; i < rep->value.array.size; i++)
+				{
+					oc_string_array_add_item(ns_instance->pif, array_item->ptr);
+					array_item = array_item->next;
+				}
+			}
+			else if (oc_string_len(rep->name) == 8 && memcmp(oc_string(rep->name), "sourcert", 8) == 0)
+			{
+				oc_new_string_array(&ns_instance->sourcert, rep->value.array.size);
+				oc_array_t *array_item = &rep->value.array;
+				for (int i=0; i < rep->value.array.size; i++) {
+					oc_string_array_add_item(ns_instance->sourcert, array_item->ptr);
+					array_item = array_item->next;
+				}
+				/*
+				 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면 bad request 에러를 리턴해야 함 (shall)
+				 */
+			}
 			break;
-
-//		case OC_REP_DOUBLE:
-//			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "power", 5) == 0) {
-//				ec->power = rep->value.double_p;
-//			} else if (oc_string_len(rep->name) == 6 && memcmp(oc_string(rep->name), "energy", 6) == 0) {
-//				ec->energy = rep->value.double_p;
-//			}
-//			break;
+		case OC_REP_INT:
+			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
+			{
+				ns_instance->state = rep->value.integer;
+			}
+			break;
 		default:
 			break;
 		}
@@ -111,23 +141,71 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 /**
  *
- * @brief prepare Resource presentation of ["oic.r.notificationselector", "oic.r.pushproxy"]
+ * @brief callback to be used to prepare `notification selector` from existing Resource representation
  *
  * @param resource
- * @param iface_mask
- * @param data oc_memb struct for ["oic.r.notificationselector", "oic.r.pushproxy"] Resource
+ * @param iface_mask		interface to be used to send response
+ * @param data				internal structure for storing `notification selector` resource
+ * 							(oc_memb struct for ["oic.r.notificationselector", "oic.r.pushproxy"] Resource)
  */
 void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, void *data)
 {
-	oc_ns_t *ns = (oc_ns_t *)data;
+	oc_ns_t *ns_instance = (oc_ns_t *)data;
+
 	oc_rep_start_root_object();
 	switch (iface_mask) {
 	case OC_IF_BASELINE:
 		oc_process_baseline_interface(resource);
 		/* fall through */
-	case OC_IF_S:
-		oc_rep_set_double(root, power, ns->power);
-		oc_rep_set_double(root, energy, ns->energy);
+	case OC_IF_RW:
+		/* phref (optional) */
+		if (oc_string_len(ns_instance->phref))
+		{
+			oc_rep_set_text_string(root, phref, oc_string(ns_instance->phref));
+		}
+
+		/* prt (optional) */
+		if (oc_string_array_get_allocated_size(ns_instance->prt))
+		{
+			oc_rep_set_array(root, prt);
+			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->prt); i++)
+			{
+				oc_rep_add_text_string(prt, oc_string_array_get_item(ns_instance->prt, i));
+			}
+			oc_rep_close_array(root, prt);
+		}
+
+		/* pif (optional) */
+		if (oc_string_array_get_allocated_size(ns_instance->pif))
+		{
+			oc_rep_set_array(root, pif);
+			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->pif); i++)
+			{
+				oc_rep_add_text_string(pif, oc_string_array_get_item(ns_instance->pif, i));
+			}
+			oc_rep_close_array(root, pif);
+		}
+
+		/* pushtarget */
+		oc_rep_set_text_string(root, pushtarget, oc_string(ns_instance->pushtarget));
+
+		/* pushqif */
+		oc_rep_set_text_string(root, pushqif, oc_string(ns_instance->pushqif));
+
+		/* sourcert */
+		if (oc_string_array_get_allocated_size(ns_instance->sourcert))
+		{
+			oc_rep_set_array(root, sourcert);
+			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->sourcert); i++)
+			{
+				oc_rep_add_text_string(sourcert, oc_string_array_get_item(ns_instance->sourcert, i));
+			}
+			oc_rep_close_array(root, sourcert);
+		}
+
+		/* state */
+		oc_rep_set_int(root, state, ns_instance->state);
+
 		break;
 	default:
 		break;
@@ -146,7 +224,7 @@ void get_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_da
 
 /**
  *
- * @brief callback for creating new notification selector
+ * @brief callback for getting & creating new `notification selector`
  *
  */
 oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
@@ -170,7 +248,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 			oc_resource_set_properties_cbs(ns_instance->resource, get_ns_properties, ns_instance, set_ns_properties, ns_instance);
 			oc_add_resource(ns_instance->resource);
 
-			oc_list_add(ns_list, ns_instance);
+			oc_list_add(ns_col_list, ns_instance);
 			return ns_instance->resource;
 		} else {
 			oc_memb_free(&ns_memb, ns_instance);
@@ -186,9 +264,21 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
  * @brief callback for freeing existing notification selector
  *
  */
-oc_resource_t *free_ns_instance(oc_resource_t *resource)
+void free_ns_instance(oc_resource_t *resource)
 {
+	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_col_list);
 
+	while (ns_instance)
+	{
+		if (ns_instance->resource == resource)
+		{
+			oc_delete_resource(resource);
+			oc_list_remove(ns_col_list, ns_instance);
+			oc_memb_free(&ns_memb, ns_instance);
+			return;
+		}
+		ns_instance = ns_instance->next;
+	}
 }
 
 
@@ -221,6 +311,7 @@ void init_push_resources(size_t device_index)
 	oc_collection_add_supported_rt(push_conf, "oic.r.pushproxy");
 
 	oc_collections_add_rt_factory("oic.r.notificationselector", get_ns_instance, free_ns_instance);
+//	oc_collections_add_rt_factory("oic.r.pushproxy", get_pp_instance, free_pp_instance);
 
 	oc_add_collection(push_conf);
 }
@@ -245,7 +336,29 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 		/* send UPDATE to target server */
 		if (ev == oc_events[PUSH_RSC_STATE_CHANGED]) {
 			src_rsc = (oc_resource_t *)data;
-			/* TODO4ME from here.. 2021/8/25  */
+			/*
+			 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
+			 */
+			/* TODO4ME from here.. 2021/8/30  */
+			/*
+			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
+			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
+			 */
+
+//			if (!is_resource_found())
+//				return;
+//
+//			if (oc_init_post(a_light, &target_ep, NULL, &post_response, LOW_QOS, NULL)) {
+//				oc_rep_start_root_object();
+//				oc_rep_set_boolean(root, state, false);
+//				oc_rep_set_int(root, power, 105);
+//				oc_rep_end_root_object();
+//				if (oc_do_post())
+//					printf("Sent POST request\n");
+//				else
+//					printf("Could not send POST request\n");
+//			} else
+//				printf("Could not init POST request\n");
 
 		}
 

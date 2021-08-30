@@ -30,6 +30,15 @@ extern "C"
 {
 #endif
 
+
+typedef enum {
+	OC_PP_WFP,
+	OC_PP_WFU,
+	OC_PP_WFR,
+	OC_PP_TOUT,
+	OC_PP_ERR
+} oc_pp_state_t;
+
 /*
  * Resource creation and request handlers for ["oic.r.notificationselector", "oic.r.pushproxy"] instances
  */
@@ -40,10 +49,11 @@ typedef struct oc_ns
 	oc_string_t phref;
 	oc_string_array_t prt;
 	oc_string_array_t pif;
-	oc_string_t push_target;
+	oc_string_t pushtarget;
 	oc_string_t pushqif;
 	oc_string_array_t sourcert;
-	char state;
+	oc_string_array_t endpoints;
+	oc_pp_state_t state;
 } oc_ns_t;
 
 
