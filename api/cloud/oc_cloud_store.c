@@ -160,6 +160,7 @@ cloud_store_dump_handler(void *data)
 void
 cloud_store_dump_async(const oc_cloud_store_t *store)
 {
+  oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
   _oc_signal_event_loop();
 }
