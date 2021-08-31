@@ -30,11 +30,28 @@
 
 /**
  *
- * @brief variable for storing new collection member of push config Resource
+ * @brief	variable for storing new collection member of push config Resource
  *
  */
 OC_MEMB(ns_memb, oc_ns_t, 1);
-OC_LIST(ns_col_list);
+
+/**
+ * @brief	`ns_col_list` keeps real data of all Notification Selector Resources
+ * 			(it includes all Resources of all Devices)
+ *
+ * 			each list member is instance of `oc_ns_t`
+ */
+OC_LIST(ns_list);
+
+
+/**
+ * @brief	`recvs_list` keeps real data of all Receiver object in Push Receiver Resource
+ * 			(it includes all Receiver objects of Resource of all Devices)
+ *
+ * 			each list member is instance of `oc_recv_t`
+ */
+OC_LIST(recvs_list);
+
 
 OC_PROCESS(oc_push_process, "Push Notification handler");
 
@@ -248,7 +265,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 			oc_resource_set_properties_cbs(ns_instance->resource, get_ns_properties, ns_instance, set_ns_properties, ns_instance);
 			oc_add_resource(ns_instance->resource);
 
-			oc_list_add(ns_col_list, ns_instance);
+			oc_list_add(ns_list, ns_instance);
 			return ns_instance->resource;
 		} else {
 			oc_memb_free(&ns_memb, ns_instance);
@@ -266,14 +283,14 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
  */
 void free_ns_instance(oc_resource_t *resource)
 {
-	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_col_list);
+	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
 
 	while (ns_instance)
 	{
 		if (ns_instance->resource == resource)
 		{
 			oc_delete_resource(resource);
-			oc_list_remove(ns_col_list, ns_instance);
+			oc_list_remove(ns_list, ns_instance);
 			oc_memb_free(&ns_memb, ns_instance);
 			return;
 		}
@@ -284,7 +301,8 @@ void free_ns_instance(oc_resource_t *resource)
 
 
 /**
- * @brief initialize Resources for Push Notification
+ *
+ * @brief initialize Push Configuration Resource
  *
  * @details
  * for Origin Server: \n
@@ -293,8 +311,10 @@ void free_ns_instance(oc_resource_t *resource)
  *
  * for Target Server \n
  * - Push Receiver ("oic.r.pushreceiver") \n
+ *
+ * @param device_index	device index
  */
-void init_push_resources(size_t device_index)
+void init_pushconf_resource(size_t device_index)
 {
 	/* create Push Configuration Resource */
 	oc_resource_t *push_conf = oc_new_collection("Push Configuration", "/pushconfig", 2, device_index);
@@ -315,6 +335,101 @@ void init_push_resources(size_t device_index)
 
 	oc_add_collection(push_conf);
 }
+
+
+/**
+ *
+ * @brief	GET callback for Push Receiver Resource
+ *
+ * @param request
+ * @param iface_mask
+ * @param user_data
+ */
+void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+	oc_rep_start_root_object();
+	switch (iface_mask)
+	{
+	case OC_IF_BASELINE:
+		oc_process_baseline_interface(request->resource);
+	case OC_IF_RW:
+		/*
+		 * `receivers` object array
+		 */
+		oc_rep_open_array(root, receivers);
+		oc_recv_t *recv_instance = (oc_recv_t *)oc_list_head(recvs_list);
+		while (recv_instance)
+		{
+			if (recv_instance->resource == request->resource)
+			{
+				/* == open new receiver object == */
+				oc_rep_object_array_begin_item(receivers);
+				/* receiver:uri */
+				oc_rep_set_text_string(receivers, uri, oc_string(recv_instance->uri));
+
+				/* receiver:rts[] */
+				oc_rep_open_array(receivers, rts);
+				for (char i=0; i < oc_string_array_get_allocated_size(recv_instance->rts); i++)
+				{
+					oc_rep_add_text_string(rts, oc_string_array_get_item(recv_instance->rts, i));
+				}
+				oc_rep_close_array(receivers, rts);
+
+				/* == close object == */
+				oc_rep_object_array_end_item(receivers);
+			}
+			recv_instance = recv_instance->next;
+		}
+		oc_rep_close_array(root, receivers);
+		break;
+	default:
+		break;
+	}
+	oc_rep_end_root_object();
+	oc_send_response(request, OC_STATUS_OK);
+
+	return;
+}
+
+
+
+/**
+ *
+ * @brief	POST callback for Push Receiver Resource
+ *
+ * @param request
+ * @param iface_mask
+ * @param user_data
+ */
+void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+
+}
+
+
+
+/**
+ *
+ * @brief initiate Push Receiver Resource
+ *
+ * @param device_index
+ */
+void init_pushreceiver_resource(size_t device_index)
+{
+	/* create Push Receiver Resource */
+	oc_resource_t *push_recv = oc_new_resource("Push Configuration", "/pushreceivers", 1, device_index);
+
+	oc_resource_bind_resource_type(push_recv, "oic.r.pushreceiver");
+	oc_resource_bind_resource_interface(push_recv, OC_IF_RW | OC_IF_BASELINE);
+	oc_resource_set_default_interface(push_recv, OC_IF_RW);
+	oc_resource_set_discoverable(push_recv, true);
+
+	oc_resource_set_request_handler(push_recv, OC_GET, get_pushrecv, NULL);
+	oc_resource_set_request_handler(push_recv, OC_POST, post_pushrecv, NULL);
+
+	oc_add_resource(push_recv);
+}
+
 
 
 OC_PROCESS_THREAD(oc_push_process, ev, data)
