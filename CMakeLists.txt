@@ -79,6 +79,8 @@ endif()
 
 if(UNIX)
     target_link_libraries(iotivity-port INTERFACE pthread m)
+elseif(WIN32)
+    target_link_libraries(iotivity-port INTERFACE bcrypt iphlpapi)
 endif()
 
 # Iotivity API
