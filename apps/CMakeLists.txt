@@ -43,5 +43,5 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/device_builder_server.c)
         pthread
         m
     )
-    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
 endif()
