@@ -65,6 +65,14 @@ static char *g_dali_RESOURCE_PROPERTY_NAME_tbus = "tbus"; /* the name for the at
 int g_dali_tbus[MAX_ARRAY];
 size_t g_dali_tbus_array_size;
 
+/* global property variables for path: "/DaliConf" */
+static char *g_config_RESOURCE_PROPERTY_NAME_bus = "bus"; /* the name for the attribute */
+int g_config_bus = 2; /* current value of property "bus" assign the bus identifier. */
+static char *g_config_RESOURCE_PROPERTY_NAME_src = "src"; /* the name for the attribute */
+int g_config_src = 5; /* current value of property "src" assigned source address. -1 means not yet assigned by the Application controller. */
+static char *g_config_RESOURCE_PROPERTY_NAME_ver = "ver"; /* the name for the attribute */
+int g_config_ver = 2; /* current value of property "ver" version of dali on the device. */
+
 
 static pthread_t event_thread;
 static pthread_mutex_t cloud_sync_lock;
@@ -1049,6 +1057,176 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data
   PRINT("-- End post_dali\n");
 }
 
+/**
+* get method for "/DaliConf" resource.
+* function is called to intialize the return values of the GET method.
+* initialisation of the returned values are done from the global property values.
+* Resource Description:
+* This Resource describes a DALI (addressing) configuration,  IEC 62386-104, Digital  addressable lighting interface - Part 104: General requirements - Wireless and alternative wired system.
+*
+* @param request the request representation.
+* @param interfaces the interface used for this call
+* @param user_data the user data.
+*/
+static void
+get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+{
+  (void)user_data;  /* variable not used */
+  /* TODO: SENSOR add here the code to talk to the HW if one implements a sensor.
+     the call to the HW needs to fill in the global variable before it returns to this function here.
+     alternative is to have a callback from the hardware that sets the global variables.
+  
+     The implementation always return everything that belongs to the resource.
+     this implementation is not optimal, but is functionally correct and will pass CTT1.2.2 */
+  bool error_state = false;
+  
+  
+  PRINT("-- Begin get_config: interface %d\n", interfaces);
+  oc_rep_start_root_object();
+  switch (interfaces) {
+  case OC_IF_BASELINE:
+    PRINT("   Adding Baseline info\n" );
+    oc_process_baseline_interface(request->resource);
+    
+    /* property (integer) 'bus' */
+    oc_rep_set_int(root, bus, g_config_bus);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    /* property (integer) 'src' */
+    oc_rep_set_int(root, src, g_config_src);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    /* property (integer) 'ver' */
+    oc_rep_set_int(root, ver, g_config_ver);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    break;
+  case OC_IF_RW:
+   
+    /* property (integer) 'bus' */
+    oc_rep_set_int(root, bus, g_config_bus);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    /* property (integer) 'src' */
+    oc_rep_set_int(root, src, g_config_src);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    /* property (integer) 'ver' */
+    oc_rep_set_int(root, ver, g_config_ver);
+    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    break;
+  
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+  if (error_state == false) {
+    oc_send_response(request, OC_STATUS_OK);
+  }
+  else {
+    oc_send_response(request, OC_STATUS_BAD_OPTION);
+  }
+  PRINT("-- End get_config\n");
+}
+
+/**
+* post method for "/DaliConf" resource.
+* The function has as input the request body, which are the input values of the POST method.
+* The input values (as a set) are checked if all supplied values are correct.
+* If the input values are correct, they will be assigned to the global  property values.
+* Resource Description:
+* The POST can be used to set the bus identification or to issue an DALI FF frame. The command can be issued as Multicast (SSM) or as unicast. The Multicast command will have no response, the unicast command can have a BF response
+*
+* @param request the request representation.
+* @param interfaces the used interfaces during the request.
+* @param user_data the supplied user data.
+*/
+static void
+post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+{
+  (void)interfaces;
+  (void)user_data;
+  bool error_state = false;
+  PRINT("-- Begin post_config:\n");
+  oc_rep_t *rep = request->request_payload;
+  
+  /* loop over the request document for each required input field to check if all required input fields are present */
+  /* loop over the request document to check if all inputs are ok */
+  rep = request->request_payload;
+  while (rep != NULL) {
+    PRINT("key: (check) %s \n", oc_string(rep->name));
+    
+    error_state = check_on_readonly_common_resource_properties(rep->name, error_state);
+    if (strcmp ( oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_bus) == 0) {
+      /* property "bus" of type integer exist in payload */
+      if (rep->type != OC_REP_INT) {
+        error_state = true;
+        PRINT ("   property 'bus' is not of type int %d \n", rep->type);
+      }
+      
+      
+    }
+    if (strcmp ( oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_src) == 0) {
+      /* property "src" of type integer exist in payload */
+      if (rep->type != OC_REP_INT) {
+        error_state = true;
+        PRINT ("   property 'src' is not of type int %d \n", rep->type);
+      }
+      
+    }
+    if (strcmp(oc_string(rep->name), "ver") == 0) {
+      error_state = true;
+      PRINT("   property 'ver' is not allowed \n");
+    }
+    rep = rep->next;
+  }
+  /* if the input is ok, then process the input document and assign the global variables */
+  if (error_state == false)
+  {
+    switch (interfaces) {
+    default: {
+      /* loop over all the properties in the input document */
+      oc_rep_t *rep = request->request_payload;
+      while (rep != NULL) {
+        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        /* no error: assign the variables */
+        
+        if (strcmp ( oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_bus) == 0) {
+          /* assign "bus" */
+          PRINT ("  property 'bus' : %d\n", (int) rep->value.integer);
+          g_config_bus = (int) rep->value.integer;
+        }
+        if (strcmp ( oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_src) == 0) {
+          /* assign "src" */
+          PRINT ("  property 'src' : %d\n", (int) rep->value.integer);
+          g_config_src = (int) rep->value.integer;
+        }
+        rep = rep->next;
+      }
+      /* set the response */
+      PRINT("Set response \n");
+      oc_rep_start_root_object();
+      /*oc_process_baseline_interface(request->resource); */
+      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+      oc_rep_set_int(root, bus, g_config_bus );
+      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+      oc_rep_set_int(root, src, g_config_src );
+      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+      oc_rep_set_int(root, ver, g_config_ver );
+    
+      oc_rep_end_root_object();
+      /* TODO: ACTUATOR add here the code to talk to the HW if one implements an actuator.
+       one can use the global variables as input to those calls
+       the global values have been updated already with the data from the request */
+      oc_send_response(request, OC_STATUS_CHANGED);
+      }
+    }
+  }
+  else
+  {
+    PRINT("  Returning Error \n");
+    /* TODO: add error response, if any */
+    //oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+  PRINT("-- End post_config\n");
+}
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.switch.binary instances */
 typedef struct oc_switch_t
@@ -1270,7 +1448,7 @@ register_resources(void)
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
-  PRINT("Register Resource with local path \"/dali\"\n");
+
   oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
   oc_resource_bind_resource_type(res_dali, "oic.r.dali");
   oc_resource_bind_resource_interface(res_dali, OC_IF_BASELINE ); /* oic.if.baseline */
@@ -1285,6 +1463,34 @@ register_resources(void)
   oc_cloud_add_resource(res_dali);
   #endif
   oc_add_resource(res_dali);
+  PRINT("\tDali resource added.\n");
+
+  oc_resource_t *dali_config = oc_new_resource(NULL, "/DaliConf", 1, 0);
+  oc_resource_bind_resource_type(dali_config, "oic.r.dali.conf");
+
+  
+  oc_resource_bind_resource_interface(dali_config,  OC_IF_RW); /* oic.if.rw */
+  oc_resource_bind_resource_interface(dali_config,  OC_IF_BASELINE); /* oic.if.baseline */
+  oc_resource_set_default_interface(dali_config,  OC_IF_RW);  
+  oc_resource_set_discoverable(dali_config, true);
+  /* periodic observable
+     to be used when one wants to send an event per time slice
+     period is 1 second */
+  oc_resource_set_periodic_observable(dali_config, 1);
+  /* set observable
+     events are send when oc_notify_observers(oc_resource_t *resource) is called.
+    this function must be called when the value changes, preferable on an interrupt when something is read from the hardware. */
+  /*oc_resource_set_observable(dali_config, true); */
+   
+  oc_resource_set_request_handler(dali_config, OC_GET, get_dali_config, NULL);
+  oc_resource_set_request_handler(dali_config, OC_POST, post_dali_config, NULL);
+  
+#ifdef OC_CLOUD
+  oc_cloud_add_resource(dali_config);
+#endif
+  oc_add_resource(dali_config);
+  
+
 #ifdef OC_COLLECTIONS
   col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
