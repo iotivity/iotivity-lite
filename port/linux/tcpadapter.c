@@ -69,11 +69,6 @@ signal_network_thread(ip_context_t *dev);
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
 {
-  int reuse = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
   if (bind(sock, (struct sockaddr *)sock_info, sizeof(*sock_info)) == -1) {
     OC_ERR("binding socket %d", errno);
     return -1;

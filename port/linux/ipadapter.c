@@ -15,6 +15,7 @@
 */
 
 #define _GNU_SOURCE
+#include "oc_config.h"
 #include "ipcontext.h"
 #include "ipadapter.h"
 #ifdef OC_TCP
@@ -59,6 +60,19 @@ static const uint8_t ALL_OCF_NODES_RL[] = {
 static const uint8_t ALL_OCF_NODES_SL[] = {
   0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
 };
+
+#ifdef OC_WKCORE
+static const uint8_t ALL_COAP_NODES_LL[] = {
+  0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+static const uint8_t ALL_COAP_NODES_RL[] = {
+  0xff, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+static const uint8_t ALL_COAP_NODES_SL[] = {
+  0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
+};
+#endif
+
 #define ALL_COAP_NODES_V4 0xe00001bb
 
 static pthread_mutex_t mutex;
@@ -317,6 +331,52 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
     OC_ERR("joining site-local IPv6 multicast group %d", errno);
     return -1;
   }
+
+#ifdef OC_WKCORE
+
+  OC_DBG("Adding all CoAP Nodes");
+  /* Link-local scope ALL COAP NODES */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_LL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining link-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+
+  /* Realm-local scope ALL COAP nodes  */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_RL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining realm-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+
+  /* Site-local scope ALL COAP nodes */
+  memset(&mreq, 0, sizeof(mreq));
+  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_SL, 16);
+  mreq.ipv6mr_interface = interface_index;
+
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq));
+
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
+    sizeof(mreq)) == -1) {
+    OC_ERR("joining site-local IPv6 multicast group %d", errno);
+    return -1;
+  }
+#endif
 
   return 0;
 }
@@ -1315,11 +1375,6 @@ connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("setting pktinfo IPv4 option %d\n", errno);
     return -1;
   }
-  if (setsockopt(dev->server4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
   if (bind(dev->server4_sock, (struct sockaddr *)&dev->server4,
            sizeof(dev->server4)) == -1) {
     OC_ERR("binding server4 socket %d", errno);
@@ -1359,11 +1414,6 @@ connectivity_ipv4_init(ip_context_t *dev)
   if (setsockopt(dev->secure4_sock, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) ==
       -1) {
     OC_ERR("setting pktinfo IPV4 option %d\n", errno);
-    return -1;
-  }
-  if (setsockopt(dev->secure4_sock, SOL_SOCKET, SO_REUSEADDR, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting reuseaddr IPv4 option %d", errno);
     return -1;
   }
   if (bind(dev->secure4_sock, (struct sockaddr *)&dev->secure4,
@@ -1463,11 +1513,6 @@ oc_connectivity_init(size_t device)
     OC_ERR("setting sock option %d", errno);
     return -1;
   }
-  if (setsockopt(dev->server_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
-  }
 #ifdef IPV6_ADDR_PREFERENCES
   int prefer = 2;
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
@@ -1522,11 +1567,6 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
-  }
-  if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
 #ifdef IPV6_ADDR_PREFERENCES

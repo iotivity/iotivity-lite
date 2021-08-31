@@ -3,106 +3,21 @@
     "d01": {
       "description": "",
       "properties": {
-        "di": {
-          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
-          "type": "string"
-        },
-        "eps": {
-          "items": {
-            "properties": {
-              "ep": {
-                "description": "",
-                "format": "uri",
-                "type": "string"
-              },
-              "lat": {
-                "description": "",
-                "exclusiveMinimum": true,
-                "minimum": 0,
-                "type": "integer"
-              },
-              "pri": {
-                "description": "",
-                "minimum": 1,
-                "type": "integer"
-              }
-            },
-            "type": "object"
-          },
-          "type": "array"
-        },
-        "href": {
-          "format": "uri",
-          "maxLength": 256,
-          "type": "string"
-        }
-      },
-      "required": [
-        "di",
-        "eps"
-      ],
-      "type": "object"
-    },
-    "d02": {
-      "description": "",
-      "properties": {
-        "d2dserverlist": {
+        "dis": {
           "items": {
             "description": "",
-            "properties": {
-              "di": {
-                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
-                "type": "string"
-              },
-              "eps": {
-                "items": {
-                  "properties": {
-                    "ep": {
-                      "description": "",
-                      "format": "uri",
-                      "type": "string"
-                    },
-                    "lat": {
-                      "description": "",
-                      "exclusiveMinimum": true,
-                      "minimum": 0,
-                      "type": "integer"
-                    },
-                    "pri": {
-                      "description": "",
-                      "minimum": 1,
-                      "type": "integer"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              "href": {
-                "format": "uri",
-                "maxLength": 256,
-                "type": "string"
-              }
-            },
-            "required": [
-              "di",
-              "eps"
-            ],
-            "type": "object"
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "type": "string"
           },
+          "readOnly": true,
           "type": "array",
           "uniqueItems": true
-        },
-        "id": {
-          "maxLength": 64,
-          "readOnly": true,
-          "type": "string"
         },
         "if": {
           "items": {
             "enum": [
-              "oic.if.baseline",
-              "oic.if.rw"
+              "oic.if.rw",
+              "oic.if.baseline"
             ],
             "type": "string"
           },
@@ -110,11 +25,6 @@
           "readOnly": true,
           "type": "array",
           "uniqueItems": true
-        },
-        "n": {
-          "maxLength": 64,
-          "readOnly": true,
-          "type": "string"
         },
         "rt": {
           "default": [
@@ -134,19 +44,25 @@
         }
       },
       "required": [
-        "d2dserverlist"
+        "dis"
       ],
       "type": "object"
     },
-    "d03": {
+    "d02": {
       "properties": {
-        "di": {
-          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
-          "type": "string"
+        "dis": {
+          "items": {
+            "description": "",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "type": "string"
+          },
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
         }
       },
       "required": [
-        "di"
+        "dis"
       ],
       "type": "object"
     }
@@ -155,14 +71,14 @@
     "license": {
       "name": " "
     },
-    "title": "server_lite_446",
+    "title": "server_lite_950",
     "version": " "
   },
   "parameters": {
     "p01": {
       "enum": [
-        "oic.if.baseline",
-        "oic.if.rw"
+        "oic.if.rw",
+        "oic.if.baseline"
       ],
       "in": "query",
       "name": "if",
@@ -176,26 +92,23 @@
     }
   },
   "paths": {
-    "d2dserverlist": {
+    "/d2dserverlist": {
       "delete": {
         "description": "",
         "parameters": [
-          {
-            "$ref": "#/parameters/p01"
-          },
           {
             "$ref": "#/parameters/p03"
           }
         ],
         "responses": {
           "202": {
-            "description": ""
-          },
-          "404": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/d03"
+              "$ref": "#/definitions/d02"
             }
+          },
+          "404": {
+            "description": ""
           }
         }
       },
@@ -210,7 +123,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/d02"
+              "$ref": "#/definitions/d01"
             }
           }
         }
@@ -219,22 +132,23 @@
         "description": "",
         "parameters": [
           {
-            "$ref": "#/parameters/p01"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/d03"
-            }
+            "$ref": "#/parameters/p03"
           }
         ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
           },
-          "204": {
+          "203": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
+          },
+          "400": {
             "description": ""
           },
           "404": {

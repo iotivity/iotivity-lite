@@ -51,6 +51,7 @@
 #include <string.h>
 
 #include "api/oc_events.h"
+#include "api/oc_main.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 
@@ -167,6 +168,7 @@ close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
+  oc_set_drop_commands(device, false);
   return OC_EVENT_DONE;
 }
 #endif /* OC_SECURITY */
@@ -348,6 +350,10 @@ coap_receive(oc_message_t *msg)
           }
 
           if (!request_buffer && block1_num == 0) {
+            if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE) {
+              OC_WRN("cannot process new request during closing TLS sessions");
+              goto init_reset_message;
+            }
             OC_DBG("creating new block-wise request buffer");
             request_buffer = oc_blockwise_alloc_request_buffer(
               href, href_len, &msg->endpoint, message->code,
@@ -403,8 +409,10 @@ coap_receive(oc_message_t *msg)
 
           if (response_buffer && (response_buffer->next_block_offset -
                                   block2_offset) > block2_size) {
-            oc_blockwise_free_response_buffer(response_buffer);
-            response_buffer = NULL;
+            // UDP transfer can duplicate messages and we want to avoid terminate BWT, so we drop the message. 
+            OC_DBG("dropped message because message was already provided for block2");
+            coap_clear_transaction(transaction);
+            return 0;
           }
 
           if (response_buffer) {
@@ -451,6 +459,10 @@ coap_receive(oc_message_t *msg)
                   message->uri_query, message->uri_query_len,
                   OC_BLOCKWISE_SERVER);
                 if (!request_buffer) {
+                  if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE)  {
+                    OC_WRN("cannot process new request during closing TLS sessions");
+                    goto init_reset_message;
+                  }
                   request_buffer = oc_blockwise_alloc_request_buffer(
                     href, href_len, &msg->endpoint, message->code,
                     OC_BLOCKWISE_SERVER);
@@ -477,6 +489,10 @@ coap_receive(oc_message_t *msg)
           goto init_reset_message;
         } else {
           OC_DBG("no block options; processing regular request");
+          if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE)  {
+            OC_WRN("cannot process new request during closing TLS sessions");
+            goto init_reset_message;
+          }
 #ifdef OC_TCP
           if ((msg->endpoint.flags & TCP &&
                incoming_block_len <= (uint32_t)OC_MAX_APP_DATA_SIZE) ||
@@ -885,6 +901,7 @@ send_message:
 
 #ifdef OC_SECURITY
   if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+    oc_set_drop_commands(msg->endpoint.device, true);
     oc_set_delayed_callback((void *)msg->endpoint.device,
                             &close_all_tls_sessions, 2);
   }

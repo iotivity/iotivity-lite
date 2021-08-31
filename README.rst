@@ -1,5 +1,11 @@
-.. image:: https://gitlab.iotivity.org/iotivity/iotivity-lite/badges/master/pipeline.svg
-   :target: https://gitlab.iotivity.org/iotivity/iotivity-lite/-/pipelines
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/build.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/build.yml
+
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml
+   
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml
 
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
    :target: https://github.com/plgd-dev/cloud

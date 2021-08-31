@@ -401,6 +401,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   oc_create_discovery_resource(OCF_RES, device_count);
 
+#ifdef OC_WKCORE
+  oc_create_discovery_resource(WELLKNOWNCORE, device_count);
+#endif
+
   oc_create_introspection_resource(device_count);
 
 #ifdef OC_MNT
