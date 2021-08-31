@@ -70,10 +70,11 @@ target_sources(iotivity-port INTERFACE
 )
 
 if(WIN32)
-target_sources(iotivity-port INTERFACE
-    ${PORT_DIR}/mutex.c
-    ${PORT_DIR}/network_addresses.c
-)
+    target_sources(iotivity-port INTERFACE
+        ${PORT_DIR}/mutex.c
+        ${PORT_DIR}/network_addresses.c
+    )
+    target_compile_definitions(iotivity-port INTERFACE OC_IPV4)
 endif()
 
 if(UNIX)
