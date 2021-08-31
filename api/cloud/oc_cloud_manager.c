@@ -41,8 +41,6 @@
 #define PING_DELAY 20
 #define PING_DELAY_ON_TIMEOUT (PING_DELAY/5)
 
-struct oc_memb rep_objects_pool = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-
 static void cloud_start_process(oc_cloud_context_t *ctx);
 static oc_event_callback_retval_t cloud_register(void *data);
 static oc_event_callback_retval_t cloud_login(void *data);
