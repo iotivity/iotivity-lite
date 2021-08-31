@@ -64,6 +64,13 @@ target_sources(iotivity-port INTERFACE
     ${PORT_DIR}/tcpadapter.c
 )
 
+if(WIN32)
+target_sources(iotivity-port INTERFACE
+    ${PORT_DIR}/mutex.c
+    ${PORT_DIR}/network_addresses.c
+)
+endif()
+
 target_include_directories(iotivity-port INTERFACE
     ${PORT_DIR}
 )
