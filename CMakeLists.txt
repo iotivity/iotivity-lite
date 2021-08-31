@@ -55,7 +55,10 @@ endif()
 
 add_library(iotivity-port INTERFACE)
 
-target_include_directories(iotivity-port INTERFACE BEFORE ${PORT_DIR})
+target_include_directories(iotivity-port INTERFACE 
+    ${PORT_DIR}
+    ${PROJECT_SOURCE_DIR}/port
+)
 
 target_sources(iotivity-port INTERFACE
     ${PORT_DIR}/abort.c
