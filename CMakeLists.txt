@@ -55,6 +55,8 @@ endif()
 
 add_library(iotivity-port INTERFACE)
 
+target_include_directories(iotivity-port INTERFACE BEFORE ${PORT_DIR})
+
 target_sources(iotivity-port INTERFACE
     ${PORT_DIR}/abort.c
     ${PORT_DIR}/clock.c
@@ -70,10 +72,6 @@ target_sources(iotivity-port INTERFACE
     ${PORT_DIR}/network_addresses.c
 )
 endif()
-
-target_include_directories(iotivity-port INTERFACE
-    ${PORT_DIR}
-)
 
 if(UNIX)
     target_link_libraries(iotivity-port INTERFACE pthread m)
