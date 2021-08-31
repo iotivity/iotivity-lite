@@ -39,8 +39,7 @@
 #define EXPIRESIN_KEY "expiresin"
 
 #define PING_DELAY 20
-#define PING_DELAY_ON_TIMEOUT 3
-#define MAX_RETRY_COUNT (4)
+#define PING_DELAY_ON_TIMEOUT (PING_DELAY/5)
 
 struct oc_memb rep_objects_pool = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 
@@ -50,7 +49,8 @@ static oc_event_callback_retval_t cloud_login(void *data);
 static oc_event_callback_retval_t refresh_token(void *data);
 static oc_event_callback_retval_t send_ping(void *data);
 
-static uint8_t message_timeout[5] = { 1, 2, 4, 8, 10 };
+static uint8_t message_timeout[6] = { 2, 4, 8, 16, 32, 64 };
+#define MAX_RETRY_COUNT (sizeof(message_timeout)/sizeof(message_timeout[0]))
 
 static oc_event_callback_retval_t
 callback_handler(void *data)
@@ -157,9 +157,10 @@ _register_handler_check_data_error(oc_client_response_t *data)
   return CLOUD_OK;
 }
 
-static oc_cloud_error_t
-_register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
+static int
+_register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data, bool retry)
 {
+  oc_cps_t cps = OC_CPS_FAILED;
   oc_cloud_error_t err = _register_handler_check_data_error(data);
   if (err != CLOUD_OK) {
     goto error;
@@ -223,11 +224,22 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   cloud_store_dump_async(&ctx->store);
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_REGISTERED;
-  return err;
+
+  cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
+
+  return 0;
 
 error:
   ctx->store.status |= OC_CLOUD_FAILURE;
-  return err;
+  if (err == CLOUD_ERROR_CONNECT && retry) {
+    if (!is_retry_over(ctx)) {
+      // While retrying, keep last error (clec) to CLOUD_OK
+      cps = OC_CPS_REGISTERING;
+      err = CLOUD_OK;
+    }
+  }
+  cloud_set_cps_and_last_error(ctx, cps, err);
+  return -1;
 }
 
 void
@@ -235,14 +247,7 @@ oc_cloud_register_handler(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  oc_cloud_error_t err = _register_handler(ctx, data);
-  switch (err) {
-    case CLOUD_OK:
-      cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
-      break;
-    default:
-      cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
-  }
+  _register_handler(ctx, data, false);
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
@@ -256,22 +261,8 @@ static void
 cloud_register_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  oc_cloud_error_t err = _register_handler(ctx, data);
-  switch (err) {
-    case CLOUD_OK:
-      cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
-      break;
-    case CLOUD_ERROR_CONNECT:
-      if (!is_retry_over(ctx)) {
-        // While retrying, keep last error (clec) to CLOUD_OK
-        cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
-        break;
-      }
-      /* FALLTHRU */
-    default:
-      cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
-  }
-  if (err == CLOUD_OK) {
+  int ret = _register_handler(ctx, data, true);
+  if (ret == 0) {
     oc_remove_delayed_callback(ctx, cloud_register);
     oc_set_delayed_callback(ctx, callback_handler, 0);
     oc_set_delayed_callback(ctx, cloud_login,
@@ -361,10 +352,6 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
   cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
-
-  if (ctx->store.expires_in) {
-    ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
-  }
   return 0;
 
 error:
