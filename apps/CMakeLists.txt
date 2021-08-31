@@ -33,5 +33,15 @@ target_link_libraries(simpleclient
 )
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 
-# include file used to compile the Device Builder application
-include(device-builder.cmake OPTIONAL)
+if(EXISTS ${PROJECT_SOURCE_DIR}/device_builder_server.c)
+    add_executable(device_builder_server
+        ${PROJECT_SOURCE_DIR}/device_builder_server.c
+        ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
+    )
+    target_link_libraries(device_builder_server
+        iotivity-server-client
+        pthread
+        m
+    )
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server)
+endif()
