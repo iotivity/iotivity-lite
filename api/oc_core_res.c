@@ -147,6 +147,15 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   if (iface_mask & OC_IF_BASELINE) {
     oc_rep_add_text_string(if, "oic.if.baseline");
   }
+  if (iface_mask & OC_IF_W) {
+    oc_rep_add_text_string(if, "oic.if.w");
+  }
+  if (iface_mask & OC_IF_STARTUP) {
+    oc_rep_add_text_string(if, "oic.if.startup");
+  }
+  if (iface_mask & OC_IF_STARTUP_REVERT) {
+    oc_rep_add_text_string(if, "oic.if.startup.revert");
+  }
   oc_rep_end_array((parent), if);
 }
 

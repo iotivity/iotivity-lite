@@ -149,7 +149,7 @@ ifeq ($(CLOUD),1)
 	CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
-	SAMPLES += cloud_client cloud_server cloud_tests
+	SAMPLES += cloud_client cloud_server cloud_tests cloud_proxy
 endif
 
 OBT = onboarding_tool
@@ -286,6 +286,7 @@ copy_idd_files:
 	@cp ../../apps/server_certification_tests_IDD.cbor .
 	@cp ../../apps/client_certification_tests_IDD.cbor .
 	@cp ../../apps/server_rules_IDD.cbor .
+	@cp ../../apps/cloud_proxy_IDD.cbor .
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -430,6 +431,10 @@ cloud_client: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_client.c c
 cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certification_tests.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
+
+cloud_proxy: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_proxy.c copy_pki_certs copy_idd_files
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/cloud_proxy.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
 
 ${OBT}: libiotivity-lite-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
 	@mkdir -p $@_creds

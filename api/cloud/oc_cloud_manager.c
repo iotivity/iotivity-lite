@@ -140,18 +140,29 @@ check_expires_in(int64_t expires_in)
   return expires_in > UINT16_MAX ? UINT16_MAX : (uint16_t)expires_in;
 }
 
+static oc_cloud_error_t
+_register_handler_check_data_error(oc_client_response_t *data)
+{
+  if (data->code == OC_STATUS_SERVICE_UNAVAILABLE || data->code == OC_STATUS_GATEWAY_TIMEOUT) {
+    return CLOUD_ERROR_CONNECT;
+  }
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return CLOUD_ERROR_RESPONSE;
+  }
+  return CLOUD_OK;
+}
+
 static int
 _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
-  oc_cloud_error_t err = CLOUD_ERROR_RESPONSE;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
-    err = CLOUD_ERROR_CONNECT;
-    goto error;
-  } else if (data->code >= OC_STATUS_BAD_REQUEST) {
+  oc_cps_t cps = OC_CPS_FAILED;
+  oc_cloud_error_t err = _register_handler_check_data_error(data);
+  if (err != CLOUD_OK) {
     goto error;
   }
 
   if (ctx->store.status != OC_CLOUD_INITIALIZED) {
+    err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
@@ -208,14 +219,15 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   return 0;
 
 error:
-  if (is_retry_over(ctx)) {
-    ctx->store.status |= OC_CLOUD_FAILURE;
-    cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
-  } else {
-    ctx->store.status |= OC_CLOUD_FAILURE;
-    // While retrying, keep last error (clec) to CLOUD_OK
-    cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
+  ctx->store.status |= OC_CLOUD_FAILURE;
+  if (err == CLOUD_ERROR_CONNECT) {
+    if (!is_retry_over(ctx)) {
+      // While retrying, keep last error (clec) to CLOUD_OK
+      cps = OC_CPS_REGISTERING;
+      err = CLOUD_OK;
+    }
   }
+  cloud_set_cps_and_last_error(ctx, cps, err);
   return -1;
 }
 
@@ -246,7 +258,7 @@ cloud_register_handler(oc_client_response_t *data)
                             message_timeout[ctx->retry_count]);
   } else {
     oc_remove_delayed_callback(ctx, cloud_register);
-    if (data->code != OC_STATUS_UNAUTHORIZED) {
+    if (ctx->store.status == OC_CLOUD_INITIALIZED) {
       oc_set_delayed_callback(ctx, cloud_register,
                               message_timeout[ctx->retry_count]);
     }
@@ -262,14 +274,14 @@ cloud_register(void *data)
   if (ctx->store.status == OC_CLOUD_INITIALIZED) {
     OC_DBG("[CM] try register(%d)\n", ctx->retry_count);
     if (!is_retry_over(ctx)) {
-      if (oc_string(ctx->store.ci_server) && (conv_cloud_endpoint(ctx) == 0) && 
+      if (oc_string(ctx->store.ci_server) && (conv_cloud_endpoint(ctx) == 0) &&
         cloud_access_register(ctx->cloud_ep,
-          oc_string(ctx->store.auth_provider), 
+          oc_string(ctx->store.auth_provider),
           NULL,
-          oc_string(ctx->store.uid), 
+          oc_string(ctx->store.uid),
           oc_string(ctx->store.access_token),
-          ctx->device, 
-          cloud_register_handler, 
+          ctx->device,
+          cloud_register_handler,
           data)) {
         cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
       } else {
@@ -287,18 +299,28 @@ cloud_register(void *data)
   return OC_EVENT_DONE;
 }
 
+static oc_cloud_error_t
+_login_handler_check_data_error(oc_client_response_t *data)
+{
+  if (data->code == OC_STATUS_SERVICE_UNAVAILABLE || data->code == OC_STATUS_GATEWAY_TIMEOUT) {
+    return CLOUD_ERROR_CONNECT;
+  }
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return CLOUD_ERROR_RESPONSE;
+  }
+  return CLOUD_OK;
+}
+
 static int
 _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
-  oc_cloud_error_t err = CLOUD_ERROR_RESPONSE;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
-    err = CLOUD_ERROR_CONNECT;
-    goto error;
-  } else if (data->code >= OC_STATUS_BAD_REQUEST) {
+  oc_cloud_error_t err = _login_handler_check_data_error(data);
+  if (err != CLOUD_OK) {
     goto error;
   }
 
   if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+    err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
 
@@ -372,11 +394,11 @@ cloud_login(void *data)
     OC_DBG("[CM] try login (%d)\n", ctx->retry_count);
     if (!is_retry_over(ctx)) {
       if ( (conv_cloud_endpoint(ctx) != 0) ||
-        !cloud_access_login(ctx->cloud_ep, 
+        !cloud_access_login(ctx->cloud_ep,
           oc_string(ctx->store.uid),
-          oc_string(ctx->store.access_token), 
+          oc_string(ctx->store.access_token),
           ctx->device,
-          cloud_login_handler, 
+          cloud_login_handler,
           ctx)) {
         // While retrying, keep last error (clec) to CLOUD_OK
         cloud_set_last_error(ctx, CLOUD_OK);
@@ -393,18 +415,28 @@ cloud_login(void *data)
   return OC_EVENT_DONE;
 }
 
+static oc_cloud_error_t
+_refresh_token_handler_check_data_error(oc_client_response_t *data)
+{
+  if (data->code == OC_STATUS_SERVICE_UNAVAILABLE || data->code == OC_STATUS_GATEWAY_TIMEOUT) {
+    return CLOUD_ERROR_CONNECT;
+  }
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
+    return CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
+  }
+  return CLOUD_OK;
+}
+
 static int
 _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
-  oc_cloud_error_t err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
-    err = CLOUD_ERROR_CONNECT;
-    goto error;
-  } else if (data->code >= OC_STATUS_BAD_REQUEST) {
+  oc_cloud_error_t err = _refresh_token_handler_check_data_error(data);
+  if (err != CLOUD_OK) {
     goto error;
   }
 
   if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
   }
 
@@ -412,19 +444,20 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 
   char *access_value = NULL, *refresh_value = NULL;
   size_t access_size = 0, refresh_size = 0;
-  int64_t expires_in = 0;
-  if (oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
+  if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
                         &access_size)) {
-    if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
-                           &refresh_size)) {
-      goto error;
-    }
-    cloud_set_string(&ctx->store.access_token, access_value, access_size);
-    cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
-  } else {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
   }
+  if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
+                        &refresh_size)) {
+    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
+    goto error;
+  }
+  cloud_set_string(&ctx->store.access_token, access_value, access_size);
+  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
 
+  int64_t expires_in = 0;
   oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in);
   ctx->expires_in = check_expires_in(expires_in);
   if (ctx->expires_in > 0) {
@@ -442,8 +475,13 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 error:
   ctx->store.status |= OC_CLOUD_FAILURE;
   // we cannot be considered as logged in when refresh token fails.
-  ctx->store.status &= ~(OC_CLOUD_LOGGED_IN);
-  cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
+  if (err != CLOUD_ERROR_CONNECT) {
+    ctx->store.status &= ~OC_CLOUD_REGISTERED;
+    cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  } else {
+    cloud_set_last_error(ctx, err);
+  }
   return -1;
 }
 
@@ -477,7 +515,7 @@ refresh_token_handler(oc_client_response_t *data)
                             session_timeout[ctx->retry_count]);
   } else {
     oc_remove_delayed_callback(ctx, refresh_token);
-    if (data->code != OC_STATUS_UNAUTHORIZED) {
+    if (ctx->store.status & OC_CLOUD_REGISTERED) {
       oc_set_delayed_callback(ctx, refresh_token,
                               message_timeout[ctx->retry_refresh_token_count]);
     }
@@ -497,12 +535,12 @@ refresh_token(void *data)
   OC_DBG("[CM] try refresh token(%d)\n", ctx->retry_refresh_token_count);
 
   if (!is_refresh_token_retry_over(ctx)) {
-    if ( (conv_cloud_endpoint(ctx) != 0) || 
-      !cloud_access_refresh_access_token(ctx->cloud_ep, 
+    if ( (conv_cloud_endpoint(ctx) != 0) ||
+      !cloud_access_refresh_access_token(ctx->cloud_ep,
         oc_string(ctx->store.uid),
-        oc_string(ctx->store.refresh_token), 
+        oc_string(ctx->store.refresh_token),
         ctx->device,
-        refresh_token_handler, 
+        refresh_token_handler,
         ctx)) {
       cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     }

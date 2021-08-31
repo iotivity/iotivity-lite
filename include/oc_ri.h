@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+
 /**
  * @brief CoAP methods
  * 
@@ -162,14 +163,18 @@ typedef struct oc_response_t
  * 
  */
 typedef enum {
-  OC_IF_BASELINE = 1 << 1,   ///< oic.if.baseline
-  OC_IF_LL = 1 << 2,         ///< oic.if.ll
-  OC_IF_B = 1 << 3,          ///< oic.if.b
-  OC_IF_R = 1 << 4,          ///< oic.if.r
-  OC_IF_RW = 1 << 5,         ///< oic.if.rw
-  OC_IF_A = 1 << 6,          ///< oic.if.a
-  OC_IF_S = 1 << 7,          ///< oic.if.s
-  OC_IF_CREATE = 1 << 8      ///< oic.if.create
+
+  OC_IF_BASELINE = 1 << 1,        ///< oic.if.baseline
+  OC_IF_LL = 1 << 2,              ///< oic.if.ll
+  OC_IF_B = 1 << 3,               ///< oic.if.b
+  OC_IF_R = 1 << 4,               ///< oic.if.r
+  OC_IF_RW = 1 << 5,              ///< oic.if.rw
+  OC_IF_A = 1 << 6,               ///< oic.if.a
+  OC_IF_S = 1 << 7,               ///< oic.if.s
+  OC_IF_CREATE = 1 << 8,          ///< oic.if.create
+  OC_IF_W = 1 << 9,               ///< oic.if.w
+  OC_IF_STARTUP = 1 << 10,        ///< oic.if.startup
+  OC_IF_STARTUP_REVERT = 1 << 11  ///< oic.if.startup.revert
 } oc_interface_mask_t;
 
 typedef enum {
@@ -275,6 +280,14 @@ typedef struct oc_properties_cb_t
   } cb;
   void *user_data;
 } oc_properties_cb_t;
+
+
+typedef struct oc_resource_defaults_data_t
+{
+  oc_resource_t *resource;
+  oc_interface_mask_t iface_mask;
+} oc_resource_defaults_data_t;
+
 
 /**
  * @brief resource structure
