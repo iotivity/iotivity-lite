@@ -53,7 +53,7 @@ elseif(WIN32)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleclient
-        iotivity-client
+        iotivity-server-client
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 endif()
