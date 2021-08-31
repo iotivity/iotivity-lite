@@ -12,3 +12,10 @@ target_link_libraries(onboarding_tool
 )
 
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/onboarding_tool_creds)
+
+# copy credentials
+add_custom_target(copy-pki-certs-obt ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${iotivity-lite-apps_SOURCE_DIR}/pki_certs
+    ${PROJECT_BINARY_DIR}/pki_certs
+)

@@ -45,3 +45,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/device_builder_server.c)
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
 endif()
+
+# copy credentials, used by example applications.
+add_custom_target(copy-pki-certs ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${PROJECT_SOURCE_DIR}/pki_certs
+    ${PROJECT_BINARY_DIR}/pki_certs
+)
