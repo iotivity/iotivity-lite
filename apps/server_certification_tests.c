@@ -24,6 +24,10 @@
 #include <signal.h>
 #include <stdio.h>
 
+#ifdef OC_CLOUD
+#include "oc_cloud.h"
+#endif
+
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
 #endif
@@ -39,6 +43,28 @@ static const char *device_rt = "oic.d.switch";
 static const char *device_name = "OCFTestServer";
 
 static const char *manufacturer = "OCF";
+
+#define btoa(x) ((x)?"true":"false")
+#define MAX_ARRAY 10            /* max size of the array */
+
+/* global property variables for path: "/dali" */
+static char *g_dali_RESOURCE_PROPERTY_NAME_pld = "pld"; /* the name for the attribute */
+/* array pld  Each DALI byte is conveyed as an byte */
+uint8_t g_dali_pld[MAX_ARRAY];
+size_t g_dali_pld_array_size;
+static char *g_dali_RESOURCE_PROPERTY_NAME_pld_s = "pld_s"; /* the name for the attribute */
+int g_dali_pld_s = 0; /* current value of property "pld_s" The amount of integers in the Dali payload. */
+static char *g_dali_RESOURCE_PROPERTY_NAME_prio = "prio"; /* the name for the attribute */
+int g_dali_prio = 0; /* current value of property "prio" The priority of the command. */
+static char *g_dali_RESOURCE_PROPERTY_NAME_src = "src"; /* the name for the attribute */
+int g_dali_src = 0; /* current value of property "src" assigned source address. -1 means not yet assigned by the Application controller. */
+static char *g_dali_RESOURCE_PROPERTY_NAME_st = "st"; /* the name for the attribute */
+bool g_dali_st = false; /* current value of property "st" The command has to be send twice. */
+static char *g_dali_RESOURCE_PROPERTY_NAME_tbus = "tbus"; /* the name for the attribute */
+/* array tbus  The set of  bus identifiers to which the command should be applied. */
+int g_dali_tbus[MAX_ARRAY];
+size_t g_dali_tbus_array_size;
+
 
 static pthread_t event_thread;
 static pthread_mutex_t cloud_sync_lock;
@@ -405,6 +431,31 @@ cloud_send_ping(void)
 }
 #endif /* OC_CLOUD */
 
+/**
+* helper function to check if the POST input document contains 
+* the common readOnly properties or the resouce readOnly properties
+* @param name the name of the property
+* @return the error_status, e.g. if error_status is true, then the input document contains something illegal
+*/
+static bool
+check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
+{
+  if (strcmp ( oc_string(name), "n") == 0) {
+    error_state = true;
+    PRINT ("   property \"n\" is ReadOnly \n");
+  }else if (strcmp ( oc_string(name), "if") == 0) {
+    error_state = true;
+    PRINT ("   property \"if\" is ReadOnly \n");
+  } else if (strcmp ( oc_string(name), "rt") == 0) {
+    error_state = true;
+    PRINT ("   property \"rt\" is ReadOnly \n");
+  } else if (strcmp ( oc_string(name), "id") == 0) {
+    error_state = true;
+    PRINT ("   property \"id\" is ReadOnly \n");
+  }
+  return error_state;
+}
+
 oc_define_interrupt_handler(toggle_switch)
 {
   if (bswitch) {
@@ -698,6 +749,306 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
+/**
+* get method for "/dali" resource.
+* function is called to intialize the return values of the GET method.
+* initialisation of the returned values are done from the global property values.
+* Resource Description:
+* This Resource describes the DALI write resource, able to convey FF and BF according  IEC 62386-104, Digital  addressable lighting interface - Part 104: General requirements - Wireless and alternative wired system.
+* Retrieve on this Resource only returns common Properties.
+*
+* @param request the request representation.
+* @param interfaces the interface used for this call
+* @param user_data the user data.
+*/
+static void
+get_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+{
+  (void)user_data;  /* variable not used */
+  /* TODO: SENSOR add here the code to talk to the HW if one implements a sensor.
+     the call to the HW needs to fill in the global variable before it returns to this function here.
+     alternative is to have a callback from the hardware that sets the global variables.
+  
+     The implementation always return everything that belongs to the resource.
+     this implementation is not optimal, but is functionally correct and will pass CTT1.2.2 */
+  bool error_state = false;
+  
+  
+  PRINT("-- Begin get_dali: interface %d\n", interfaces);
+  oc_rep_start_root_object();
+  switch (interfaces) {
+  case OC_IF_BASELINE:
+    PRINT("   Adding Baseline info\n" );
+    oc_process_baseline_interface(request->resource);
+    break;
+  case OC_IF_W:
+    error_state = true;
+    break;
+  
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+  if (error_state == false) {
+    oc_send_response(request, OC_STATUS_OK);
+  }
+  else {
+    oc_send_response(request, OC_STATUS_BAD_OPTION);
+  }
+  PRINT("-- End get_dali %s\n", btoa(error_state));
+}
+
+/**
+* post method for "/dali" resource.
+* The function has as input the request body, which are the input values of the POST method.
+* The input values (as a set) are checked if all supplied values are correct.
+* If the input values are correct, they will be assigned to the global  property values.
+* Resource Description:
+* The POST can be used to issue an DALI FF frame. The command can be issued as Multicast (SSM) or as unicast. The Multicast command will have no response. The unicast command can have a BF response.
+*
+* @param request the request representation.
+* @param interfaces the used interfaces during the request.
+* @param user_data the supplied user data.
+*/
+static void
+post_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+{
+  (void)interfaces;
+  (void)user_data;
+  bool error_state = false;
+  PRINT("-- Begin post_dali:\n");
+  oc_rep_t *rep = request->request_payload;
+  
+  /* loop over the request document for each required input field to check if all required input fields are present */
+  bool var_in_request= false; 
+  rep = request->request_payload;
+  while (rep != NULL) {
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld) == 0) {
+      var_in_request = true;
+    }
+    rep = rep->next;
+  }
+  if ( var_in_request == false) 
+  { 
+    error_state = true;
+    PRINT (" required property: 'pld' not in request\n");
+  }
+  var_in_request= false; 
+  rep = request->request_payload;
+  while (rep != NULL) {
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld_s) == 0) {
+      var_in_request = true;
+    }
+    rep = rep->next;
+  }
+  if ( var_in_request == false) 
+  { 
+    error_state = true;
+    PRINT (" required property: 'pld_s' not in request\n");
+  }
+  /* loop over the request document to check if all inputs are ok */
+  rep = request->request_payload;
+  while (rep != NULL) {
+    PRINT("key: (check) %s \n", oc_string(rep->name));
+    
+    error_state = check_on_readonly_common_resource_properties(rep->name, error_state);
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld) == 0) {
+      /* property "pld" of type array exist in payload */
+      
+      size_t array_size=0;
+      
+      if (rep->type == OC_REP_BYTE_STRING)
+      {
+        char *temp_byte_array = 0;  
+        oc_rep_get_byte_string(rep, "pld", &temp_byte_array, &array_size);
+      }
+      else {
+        int64_t *temp_array = 0;  
+        oc_rep_get_int_array(rep, "pld", &temp_array, &array_size);
+      }
+      if ( array_size > MAX_ARRAY)
+      {
+         error_state = true;
+         PRINT ("   property array 'pld' is too long: %d expected: MAX_ARRAY \n", (int)array_size);
+      }
+    }
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld_s) == 0) {
+      /* property "pld_s" of type integer exist in payload */
+      if (rep->type != OC_REP_INT) {
+        error_state = true;
+        PRINT ("   property 'pld_s' is not of type int %d \n", rep->type);
+      }
+      
+      
+    }
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_prio) == 0) {
+      /* property "prio" of type integer exist in payload */
+      if (rep->type != OC_REP_INT) {
+        error_state = true;
+        PRINT ("   property 'prio' is not of type int %d \n", rep->type);
+      }
+      
+      
+    }
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_src) == 0) {
+      /* property "src" of type integer exist in payload */
+      if (rep->type != OC_REP_INT) {
+        error_state = true;
+        PRINT ("   property 'src' is not of type int %d \n", rep->type);
+      }
+      
+      
+    }
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_st) == 0) {
+      /* property "st" of type boolean exist in payload */
+      if (rep->type != OC_REP_BOOL) {
+        error_state = true;
+        PRINT ("   property 'st' is not of type bool %d \n", rep->type);
+      }
+    }
+    if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_tbus) == 0) {
+      /* property "tbus" of type array exist in payload */
+      
+      size_t array_size=0;
+      
+      if (rep->type == OC_REP_BYTE_STRING)
+      {
+        char *temp_byte_array = 0;  
+        oc_rep_get_byte_string(rep, "tbus", &temp_byte_array, &array_size);
+      }
+      else {
+        int64_t *temp_array = 0;  
+        oc_rep_get_int_array(rep, "tbus", &temp_array, &array_size);
+      }
+      if ( array_size > MAX_ARRAY)
+      {
+         error_state = true;
+         PRINT ("   property array 'tbus' is too long: %d expected: MAX_ARRAY \n", (int)array_size);
+      }
+    }rep = rep->next;
+  }
+  /* if the input is ok, then process the input document and assign the global variables */
+  if (error_state == false)
+  {
+    switch (interfaces) {
+    default: {
+      /* loop over all the properties in the input document */
+      oc_rep_t *rep = request->request_payload;
+      while (rep != NULL) {
+        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        /* no error: assign the variables */
+         
+          if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld) == 0) {
+              /* retrieve the array pointer to the int array of of property "pld"
+                 note that the variable g_dali_pld_array_size will contain the array size in the payload. */
+             if (rep->type == OC_REP_BYTE_STRING) {
+               char *temp_array = 0;  
+               oc_rep_get_byte_string(rep, "pld", &temp_array, &g_dali_pld_array_size);
+               /* copy over the data of the retrieved (byte) array to the global variable */
+               for (int j = 0; j < (int)g_dali_pld_array_size; j++) {
+                 PRINT(" byte %d ", temp_array[j]);
+                 g_dali_pld[j] = temp_array[j];
+               }
+             }
+             else {
+               int64_t *temp_integer = 0;
+               oc_rep_get_int_array(rep, "pld", &temp_integer, &g_dali_pld_array_size);
+               /* copy over the data of the retrieved (integer) array to the global variable */
+               for (int j = 0; j < (int)g_dali_pld_array_size; j++) {
+                 PRINT(" integer %lld ", temp_integer[j]);
+                 g_dali_pld[j] = (uint8_t)temp_integer[j];
+               }
+             }
+          }
+        if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld_s) == 0) {
+          /* assign "pld_s" */
+          PRINT ("  property 'pld_s' : %d\n", (int) rep->value.integer);
+          g_dali_pld_s = (int) rep->value.integer;
+        }
+        if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_prio) == 0) {
+          /* assign "prio" */
+          PRINT ("  property 'prio' : %d\n", (int) rep->value.integer);
+          g_dali_prio = (int) rep->value.integer;
+        }
+        if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_src) == 0) {
+          /* assign "src" */
+          PRINT ("  property 'src' : %d\n", (int) rep->value.integer);
+          g_dali_src = (int) rep->value.integer;
+        }
+        if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_st)== 0) {
+          /* assign "st" */
+          PRINT ("  property 'st' : %s\n", (char *)btoa(rep->value.boolean));
+          g_dali_st = rep->value.boolean;
+        } 
+          if (strcmp ( oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_tbus) == 0) {
+              /* retrieve the array pointer to the int array of of property "tbus"
+                 note that the variable g_dali_tbus_array_size will contain the array size in the payload. */
+             if (rep->type == OC_REP_BYTE_STRING) {
+               char *temp_array = 0;  
+               oc_rep_get_byte_string(rep, "tbus", &temp_array, &g_dali_tbus_array_size);
+               /* copy over the data of the retrieved (byte) array to the global variable */
+               for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
+                 PRINT(" byte %d ", temp_array[j]);
+                 g_dali_tbus[j] = temp_array[j];
+               }
+             }
+             else {
+               int64_t *temp_integer = 0;
+               oc_rep_get_int_array(rep, "tbus", &temp_integer, &g_dali_tbus_array_size);
+               /* copy over the data of the retrieved (integer) array to the global variable */
+               for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
+                 PRINT(" integer %lld ", temp_integer[j]);
+                 g_dali_tbus[j] = temp_integer[j];
+               }
+             }
+          }
+        rep = rep->next;
+      }
+      /* set the response */
+      PRINT("Set response \n");
+      oc_rep_start_root_object();
+      /*oc_process_baseline_interface(request->resource); */
+       
+      oc_rep_set_array(root, pld);
+      for (int i=0; i< (int)g_dali_pld_array_size; i++) {
+        oc_rep_add_int(pld, g_dali_pld[i]);
+      }
+      oc_rep_close_array(root, pld);
+      
+      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_pld_s, g_dali_pld_s);
+      oc_rep_set_int(root, pld_s, g_dali_pld_s );
+      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_prio, g_dali_prio);
+      oc_rep_set_int(root, prio, g_dali_prio );
+      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_src, g_dali_src);
+      oc_rep_set_int(root, src, g_dali_src );
+      PRINT("   %s : %s", g_dali_RESOURCE_PROPERTY_NAME_st, (char *)btoa(g_dali_st));
+      oc_rep_set_boolean(root, st, g_dali_st);
+       
+      oc_rep_set_array(root, tbus);
+      for (int i=0; i< (int)g_dali_tbus_array_size; i++) {
+        oc_rep_add_int(tbus, g_dali_tbus[i]);
+      }
+      oc_rep_close_array(root, tbus);
+      
+    
+      oc_rep_end_root_object();
+      /* TODO: ACTUATOR add here the code to talk to the HW if one implements an actuator.
+       one can use the global variables as input to those calls
+       the global values have been updated already with the data from the request */
+      oc_send_response(request, OC_STATUS_CHANGED);
+      }
+    }
+  }
+  else
+  {
+    PRINT("  Returning Error \n");
+    /* TODO: add error response, if any */
+    //oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+  PRINT("-- End post_dali\n");
+}
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.switch.binary instances */
 typedef struct oc_switch_t
@@ -919,6 +1270,21 @@ register_resources(void)
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
+  PRINT("Register Resource with local path \"/dali\"\n");
+  oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
+  oc_resource_bind_resource_type(res_dali, "oic.r.dali");
+  oc_resource_bind_resource_interface(res_dali, OC_IF_BASELINE ); /* oic.if.baseline */
+  oc_resource_bind_resource_interface(res_dali, OC_IF_W); /* oic.if.w */
+  oc_resource_set_default_interface(res_dali, OC_IF_BASELINE);
+  oc_resource_set_discoverable(res_dali, true);
+  oc_resource_set_secure_mcast(res_dali, true);
+  oc_resource_set_periodic_observable(res_dali, 1);
+  oc_resource_set_request_handler(res_dali, OC_GET, get_dali, NULL);
+  oc_resource_set_request_handler(res_dali, OC_POST, post_dali, NULL);
+  #ifdef OC_CLOUD
+  oc_cloud_add_resource(res_dali);
+  #endif
+  oc_add_resource(res_dali);
 #ifdef OC_COLLECTIONS
   col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
