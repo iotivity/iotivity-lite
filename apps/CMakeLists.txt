@@ -6,8 +6,6 @@ add_executable(simpleserver
 )
 target_link_libraries(simpleserver
     iotivity-server-client
-    pthread
-    m
 )
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_creds)
 
@@ -17,8 +15,6 @@ add_executable(simpleserver_pki
 )
 target_link_libraries(simpleserver_pki
     iotivity-server-client
-    pthread
-    m
 )
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_pki_creds)
 
@@ -28,8 +24,6 @@ add_executable(simpleclient
 )
 target_link_libraries(simpleclient
     iotivity-client
-    pthread
-    m
 )
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 
@@ -40,8 +34,6 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/device_builder_server.c)
     )
     target_link_libraries(device_builder_server
         iotivity-server-client
-        pthread
-        m
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
 endif()

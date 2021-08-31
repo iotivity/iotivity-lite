@@ -47,6 +47,11 @@ if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto PUBLIC mbedcrypto-plat)
 endif()
 
+# do not treat warnings as errors on Windows
+if(MSVC)
+    target_compile_options(mbedtls PRIVATE /W1 /WX-)
+    target_compile_options(mbedx509 PRIVATE /W1 /WX-)
+endif()
 
 add_library(iotivity-port INTERFACE)
 
@@ -62,6 +67,10 @@ target_sources(iotivity-port INTERFACE
 target_include_directories(iotivity-port INTERFACE
     ${PORT_DIR}
 )
+
+if(UNIX)
+    target_link_libraries(iotivity-port INTERFACE pthread m)
+endif()
 
 # Iotivity API
 add_library(iotivity-api INTERFACE)
