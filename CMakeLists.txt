@@ -180,6 +180,7 @@ endif()
 
 if(OC_DEBUG_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_DEBUG)
+    target_compile_definitions(mbedcrypto PUBLIC OC_DEBUG)
 endif()
 
 if(OC_CLOUD_ENABLED)
