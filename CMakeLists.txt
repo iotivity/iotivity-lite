@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 project(iotivity-lite)
 
-# Detect the platform and pick the right port
-if(UNIX)
-    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/linux)
-elseif(WIN32)
-    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/windows)
-endif()
-
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
@@ -37,11 +30,12 @@ endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 
 target_include_directories(mbedcrypto PUBLIC
-    ${PORT_DIR}
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
+
+target_link_libraries(mbedcrypto PRIVATE iotivity-port)
 
 if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto PUBLIC mbedcrypto-plat)
