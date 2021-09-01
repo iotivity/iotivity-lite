@@ -53,36 +53,6 @@ if(MSVC)
     target_compile_options(mbedx509 PRIVATE /W1 /WX-)
 endif()
 
-add_library(iotivity-port INTERFACE)
-
-target_include_directories(iotivity-port INTERFACE 
-    ${PORT_DIR}
-    ${PROJECT_SOURCE_DIR}/port
-)
-
-target_sources(iotivity-port INTERFACE
-    ${PORT_DIR}/abort.c
-    ${PORT_DIR}/clock.c
-    ${PORT_DIR}/ipadapter.c
-    ${PORT_DIR}/random.c
-    ${PORT_DIR}/storage.c
-    ${PORT_DIR}/tcpadapter.c
-)
-
-if(WIN32)
-    target_sources(iotivity-port INTERFACE
-        ${PORT_DIR}/mutex.c
-        ${PORT_DIR}/network_addresses.c
-    )
-    target_compile_definitions(iotivity-port INTERFACE OC_IPV4)
-endif()
-
-if(UNIX)
-    target_link_libraries(iotivity-port INTERFACE pthread m)
-elseif(WIN32)
-    target_link_libraries(iotivity-port INTERFACE bcrypt iphlpapi)
-endif()
-
 # Iotivity API
 add_library(iotivity-api INTERFACE)
 
@@ -245,6 +215,7 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     )
 endif()
 
+add_subdirectory(port)
 add_subdirectory(apps)
 add_subdirectory(onboarding_tool)
 add_subdirectory(deps)
