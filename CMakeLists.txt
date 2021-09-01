@@ -236,6 +236,15 @@ target_link_libraries(iotivity-server-client PRIVATE
 )
 target_link_libraries(iotivity-server-client PUBLIC iotivity-common)
 
+
+if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    # Add clang-format target
+    add_custom_target(format
+        COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/tools/clang-format.cmake
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+endif()
+
 add_subdirectory(apps)
 add_subdirectory(onboarding_tool)
 add_subdirectory(deps)
