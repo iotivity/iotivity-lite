@@ -458,7 +458,7 @@ void oc_ri_free_resource_properties(oc_resource_t *resource);
  * @param value the value belonging to the key
  * @param value_len the lenght of the value
  * @param n the posiition to query
- * @return int 
+ * @return int the position of the next key value pair in the query or NULL
  */
 int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
                                   char **key, size_t *key_len, char **value,
@@ -475,6 +475,30 @@ int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
  */
 int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                           char **value);
+
+/**
+ * @brief checks if key exist in query
+ * 
+ * @param[in] query the query to inspect
+ * @param[in] query_len the lenght of the query
+ * @param[in] key the key to be checked if exist, key is null terminated
+ * @return int -1 = not exist
+ */
+int oc_ri_query_exists(const char* query, size_t query_len, const char* key);
+
+/**
+ * @brief check if the nth key exists
+ * 
+ * @param query the query to inspect
+ * @param query_len the lenght of the query
+ * @param key the key to be checked if exist, key is not null terminated
+ * @param key_len the key length
+ * @param n 
+ * @return int 
+ */
+int oc_ri_query_nth_key_exists(const char* query, size_t query_len, char** key,
+  size_t* key_len,
+  size_t n);
 
 /**
  * @brief retrieve the interface mask from the interface name

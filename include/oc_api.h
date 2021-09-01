@@ -1370,6 +1370,18 @@ bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
 
 /**
+ * Checks if a query parameter 'key' exist in the URL query parameter
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ * @param[in] key the key being searched for
+ *
+ * @return
+ *   - 1 exist
+ *   - -1 does not exist
+ */
+int oc_query_value_exists(oc_request_t* request, const char* key);
+
+/**
  * Called after the response to a GET, PUT, POST or DELETE call has been
  * prepared completed
  *
