@@ -36,13 +36,12 @@ static const char *device_name = "Cloud Switch";
 
 static const char *manufacturer = "ocfcloud.com";
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
 static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 
-oc_resource_t *res1;
-oc_resource_t *res2;
+static oc_resource_t *res1;
 
 static struct timespec ts;
 static int quit;
@@ -602,9 +601,20 @@ ocf_event_thread(void *data)
 #endif /* OC_STORAGE */
 
   if (pthread_mutex_init(&mutex, NULL) < 0) {
-    printf("pthread_mutex_init failed!\n");
+    printf("pthread_mutex_init(mutex) failed!\n");
     return NULL;
   }
+
+  if (pthread_mutex_init(&app_sync_lock, NULL) < 0) {
+    printf("pthread_mutex_init(app_sync_lock) failed!\n");
+    return NULL;
+  }
+
+  if (pthread_cond_init(&cv, NULL) < 0) {
+    printf("pthread_cond_init failed!\n");
+    return NULL;
+  }
+
   oc_set_con_res_announced(false);
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY

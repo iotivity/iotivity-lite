@@ -148,6 +148,12 @@ void cloud_manager_stop(oc_cloud_context_t *ctx);
 
 void oc_create_cloudconf_resource(size_t device);
 
+/**
+ * @brief Provides information whether expires in of the access token means permanent.
+ *
+ * @return true if it is permanent
+ */
+bool cloud_is_permanent_access_token(int64_t expires_in);
 #ifdef __cplusplus
 }
 #endif

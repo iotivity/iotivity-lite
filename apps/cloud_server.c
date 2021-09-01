@@ -206,7 +206,7 @@ struct light_t
   int64_t power;
 };
 
-struct light_t light1 = { 0 };
+static struct light_t light1 = { 0 };
 
 static void
 get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
@@ -287,7 +287,7 @@ register_lights(void)
 #ifdef OC_COLLECTIONS
 
 /* Setting custom Collection-level properties */
-int64_t g_battery_level = 94;
+static int64_t g_battery_level = 94;
 
 static bool
 set_switches_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)

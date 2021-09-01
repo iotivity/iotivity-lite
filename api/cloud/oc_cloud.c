@@ -128,7 +128,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
-  cloud_store_dump(&ctx->store);
+  cloud_store_dump_async(&ctx->store);
 }
 
 int
@@ -240,11 +240,8 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
     OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
     ctx->cloud_ep_state = state;
     if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
-      if ((ctx->store.status == OC_CLOUD_INITIALIZED) ||
-        ((ctx->store.status & OC_CLOUD_REGISTERED) != 0)) {
+      if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
         cloud_manager_restart(ctx);
-      } else {
-        cloud_manager_stop(ctx);
       }
     }
   }

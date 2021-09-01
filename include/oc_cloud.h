@@ -62,6 +62,7 @@ typedef struct oc_cloud_store_t
   oc_string_t access_token;
   oc_string_t refresh_token;
   oc_string_t sid;
+  int64_t expires_in;
   uint8_t status;
   oc_cps_t cps;
   size_t device;
@@ -99,7 +100,6 @@ typedef struct oc_cloud_context_t
   uint8_t retry_count;
   uint8_t retry_refresh_token_count;
   oc_cloud_error_t last_error;
-  uint16_t expires_in;
   uint32_t time_to_live; /**< Time to live of published resources in seconds */
 
   oc_link_t *rd_publish_resources;   /**< Resource links to publish */
