@@ -180,7 +180,7 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
 {
   int next_pos = -1;
   size_t i = 0;
-  char *start = (char *)query, *current, *end = (char *)query + query_len;
+  char *start = (char *)query, *current, * current2, *end = (char *)query + query_len;
   current = start;
 
   while (i < (n - 1) && current != NULL) {
@@ -193,6 +193,13 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
   }
 
   current = memchr(start, '=', end - start);
+  current2 = memchr(start, '&', end - start);
+  if (current2 != NULL) {
+    if (current2 < current) {
+      /* the key is does not have = */
+      current = NULL;
+    }
+  }
   if (current != NULL) {
     *key_len = (current - start);
     *key = start;
@@ -204,21 +211,31 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
       *value_len = (current - *value);
     }
     next_pos = (int)(*value + *value_len - query + 1);
+  } else {
+    current = memchr(start, '&', end - start);
+    if (current == NULL) {
+      current = end;
+    }
+    /* there is no value */
+    *key = start;
+    *key_len = (current - start);
+    next_pos = *key_len+1;
   }
+
   return next_pos;
 }
 
 int
-oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
-                      char **value)
+oc_ri_get_query_value(const char* query, size_t query_len, const char* key,
+  char** value)
 {
   int next_pos = 0, found = -1;
   size_t kl, vl, pos = 0;
-  char *k;
+  char* k;
 
   while (pos < query_len) {
     next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
-                                             &kl, value, &vl, 1u);
+      &kl, value, &vl, 1u);
     if (next_pos == -1)
       return -1;
 
@@ -226,6 +243,89 @@ oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
       found = (int)vl;
       break;
     }
+
+    pos += next_pos;
+  }
+  return found;
+}
+
+int
+oc_ri_query_nth_key_exists(const char* query, size_t query_len, char** key,
+  size_t* key_len,
+  size_t n)
+{
+  int next_pos = -1;
+  size_t i = 0;
+  size_t value_len;
+  char* start = (char*)query, * current, * current2, * end = (char*)query + query_len;
+  char* value = NULL;
+  current = start;
+
+  while (i < (n - 1) && current != NULL) {
+    current = memchr(start, '&', end - start);
+    if (current == NULL) {
+      return -1;
+    }
+    i++;
+    start = current + 1;
+  }
+
+  current = memchr(start, '=', end - start);
+  current2 = memchr(start, '&', end - start);
+  if (current2 != NULL) {
+    if (current2 < current) {
+      /* the key is does not have = */
+      current = NULL;
+    }
+  }
+  if (current != NULL) {
+    /* there is a value */
+    *key_len = (current - start);
+    *key = start;
+    value = current + 1;
+    current = memchr(value, '&', end - value);
+    if (current == NULL) {
+      value_len = (end - value);
+    }
+    else {
+      value_len = (current - value);
+    }
+    next_pos = (int)(value + value_len - query + 1);
+  }
+  else {
+    current = memchr(start, '&', end - start);
+    if (current == NULL) {
+      current = end;
+    }
+    /* there is no value */
+    *key = start;
+    *key_len = (current - start);
+    next_pos = *key_len+1;
+  }
+
+  return next_pos;
+}
+
+int
+oc_ri_query_exists(const char* query, size_t query_len, const char* key)
+{
+  int next_pos = 0, found = -1;
+  size_t kl, pos = 0;
+  char* k;
+
+  while (pos < query_len) {
+    next_pos = oc_ri_query_nth_key_exists(query + pos, query_len - pos, &k,
+      &kl, 1u);
+
+    if (next_pos == -1)
+      return -1;
+
+    if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
+      found = 1;
+      break;
+    }
+    if (next_pos == 0)
+      return -1;
 
     pos += next_pos;
   }
@@ -351,10 +451,10 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
-oc_resource_defaults_data_t*
+oc_resource_defaults_data_t *
 oc_ri_alloc_resource_defaults(void)
 {
-	return oc_memb_alloc(&resource_default_s);
+  return oc_memb_alloc(&resource_default_s);
 }
 
 bool
@@ -363,7 +463,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
-  /**
+   /**
    * Prevent double deallocation: oc_rt_factory_free_created_resource
    * called below will invoke the delete handler of the resource which will
    * invoke this function again. We use the list of resources to check
@@ -378,9 +478,9 @@ oc_ri_delete_resource(oc_resource_t *resource)
     coap_remove_observer_by_resource(resource);
   }
 
-#if defined(OC_SERVER) && defined(OC_COLLECTIONS) && \
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
-  oc_rt_created_t* rtc = oc_rt_get_factory_create_for_resource(resource);
+  oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
   if (rtc != NULL) {
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
   }
@@ -514,13 +614,13 @@ oc_observe_notification_delayed(void *data)
 
 #ifdef OC_SERVER
 static oc_event_callback_retval_t
-oc_observe_notification_resource_defaults_delayed(void* data)
+oc_observe_notification_resource_defaults_delayed(void *data)
 {
-	oc_resource_defaults_data_t* resource_defaults_data = (oc_resource_defaults_data_t*)data;
-	notify_resource_defaults_observer(resource_defaults_data->resource,
-		resource_defaults_data->iface_mask,
-		NULL);
-	return OC_EVENT_DONE;
+  oc_resource_defaults_data_t *resource_defaults_data =
+    (oc_resource_defaults_data_t *)data;
+  notify_resource_defaults_observer(resource_defaults_data->resource,
+                                    resource_defaults_data->iface_mask, NULL);
+  return OC_EVENT_DONE;
 }
 #endif
 
@@ -643,6 +743,8 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_STARTUP;
   if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0)
     iface_mask |= OC_IF_STARTUP_REVERT;
+  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0)
+    iface_mask |= OC_IF_W;
   return iface_mask;
 }
 
@@ -676,6 +778,7 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_A:
   case OC_IF_STARTUP:
   case OC_IF_STARTUP_REVERT:
+  case OC_IF_W:
     break;
   }
   return supported;
@@ -812,6 +915,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   oc_content_format_t cf = 0;
   coap_get_header_content_format(request, &cf);
 
+
+  /* Read the accept CoAP option in the request */
+  oc_content_format_t accept = 0;
+  coap_get_header_accept(request, &accept);
+
   if (uri_query_len) {
     request_obj.query = uri_query;
     request_obj.query_len = (int)uri_query_len;
@@ -839,6 +947,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj._payload = payload;
   request_obj._payload_len = (size_t)payload_len;
   request_obj.content_format = cf;
+  request_obj.accept = accept;
 #ifndef OC_DYNAMIC_ALLOCATION
   char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
@@ -1006,7 +1115,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       }
     }
   }
-
 
 #if defined(OC_BLOCK_WISE)
   oc_blockwise_free_request_buffer(*request_state);
@@ -1212,21 +1320,22 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #ifdef OC_COLLECTIONS
 		!resource_is_collection &&
 #endif /* OC_COLLECTIONS */
-		cur_resource && (method == OC_PUT || method == OC_POST) &&
-		response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-		if ((iface_mask == OC_IF_STARTUP) ||
-			(iface_mask == OC_IF_STARTUP_REVERT)) {
-			oc_resource_defaults_data_t* resource_defaults_data = oc_ri_alloc_resource_defaults();
-			resource_defaults_data->resource = cur_resource;
-			resource_defaults_data->iface_mask = iface_mask;
-			oc_ri_add_timed_event_callback_ticks(
-				resource_defaults_data, &oc_observe_notification_resource_defaults_delayed, 0);
-		}
-		else {
-			oc_ri_add_timed_event_callback_ticks(
-				cur_resource, &oc_observe_notification_delayed, 0);
-		}
-	}
+      cur_resource && (method == OC_PUT || method == OC_POST) &&
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      if ((iface_mask == OC_IF_STARTUP) ||
+          (iface_mask == OC_IF_STARTUP_REVERT)) {
+        oc_resource_defaults_data_t *resource_defaults_data =
+          oc_ri_alloc_resource_defaults();
+        resource_defaults_data->resource = cur_resource;
+        resource_defaults_data->iface_mask = iface_mask;
+        oc_ri_add_timed_event_callback_ticks(
+          resource_defaults_data,
+          &oc_observe_notification_resource_defaults_delayed, 0);
+      } else {
+        oc_ri_add_timed_event_callback_ticks(
+          cur_resource, &oc_observe_notification_delayed, 0);
+      }
+    }
 
 #endif /* OC_SERVER */
     if (response_buffer.response_length > 0) {

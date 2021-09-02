@@ -107,3 +107,5 @@ service/resource-directory/client/unittest/obj
 
 #vscode setting files
 .vscode
+
+build

@@ -64,6 +64,13 @@
 
 #include "oc_main.h"
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+static bool *drop_commands;
+#else  /* OC_DYNAMIC_ALLOCATION */
+static bool drop_commands[OC_MAX_NUM_DEVICES];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
 static oc_factory_presets_t factory_presets;
@@ -225,6 +232,12 @@ oc_main_init(const oc_handler_t *handler)
     oc_shutdown_all_devices();
     goto err;
   }
+#ifdef OC_DYNAMIC_ALLOCATION
+  drop_commands = (bool *)calloc(oc_core_get_num_devices(), sizeof(bool));
+  if (!drop_commands) {
+    oc_abort("Insufficient memory");
+  }
+#endif
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
@@ -293,6 +306,10 @@ oc_main_init(const oc_handler_t *handler)
 
 err:
   OC_ERR("oc_main: error in stack initialization");
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(drop_commands);
+  drop_commands = NULL;
+#endif
   return ret;
 }
 
@@ -344,6 +361,13 @@ oc_main_shutdown(void)
 
   oc_shutdown_all_devices();
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(drop_commands);
+  drop_commands = NULL;
+#else
+  memset(drop_commands, 0, sizeof(bool)*OC_MAX_NUM_DEVICES);
+#endif
+
   app_callbacks = NULL;
 
 #ifdef OC_MEMORY_TRACE
@@ -363,4 +387,16 @@ _oc_signal_event_loop(void)
   if (app_callbacks) {
     app_callbacks->signal_event_loop();
   }
+}
+
+void
+oc_set_drop_commands(size_t device, bool drop)
+{
+  drop_commands[device] = drop;
+}
+
+bool
+oc_drop_command(size_t device)
+{
+  return drop_commands[device];
 }

@@ -59,6 +59,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_STORAGE
 #endif
 
+/* /.well-known/core discovery on ALL COAP nodes */
+//#define OC_WKCORE
+
 #ifdef __cplusplus
 }
 #endif

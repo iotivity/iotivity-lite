@@ -1,11 +1,30 @@
-.. image:: https://gitlab.iotivity.org/iotivity/iotivity-lite/badges/master/pipeline.svg
-   :target: https://gitlab.iotivity.org/iotivity/iotivity-lite/-/pipelines
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/build.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/build.yml
+
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml
+   
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml
+   
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml
+   
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml
+
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml
+   
+.. image:: https://img.shields.io/github/v/release/iotivity/iotivity-lite
+   :target: https://github.com/iotivity/iotivity-lite/releases
 
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
    :target: https://github.com/plgd-dev/cloud
 
 .. image:: https://badges.gitter.im/ocfcloud/Lobby.svg
    :target: https://gitter.im/ocfcloud/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
+   
 
 Introduction
 ------------

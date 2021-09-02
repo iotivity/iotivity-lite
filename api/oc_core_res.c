@@ -153,6 +153,15 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   if (iface_mask & OC_IF_BASELINE) {
     oc_rep_add_text_string(if, "oic.if.baseline");
   }
+  if (iface_mask & OC_IF_W) {
+    oc_rep_add_text_string(if, "oic.if.w");
+  }
+  if (iface_mask & OC_IF_STARTUP) {
+    oc_rep_add_text_string(if, "oic.if.startup");
+  }
+  if (iface_mask & OC_IF_STARTUP_REVERT) {
+    oc_rep_add_text_string(if, "oic.if.startup.revert");
+  }
   oc_rep_end_array((parent), if);
 }
 
@@ -397,6 +406,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   }
 
   oc_create_discovery_resource(OCF_RES, device_count);
+
+#ifdef OC_WKCORE
+  oc_create_discovery_resource(WELLKNOWNCORE, device_count);
+#endif
 
   oc_create_introspection_resource(device_count);
 

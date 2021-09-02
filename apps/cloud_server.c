@@ -206,7 +206,7 @@ struct light_t
   int64_t power;
 };
 
-struct light_t light1 = { 0 };
+static struct light_t light1 = { 0 };
 
 static void
 get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
@@ -287,7 +287,7 @@ register_lights(void)
 #ifdef OC_COLLECTIONS
 
 /* Setting custom Collection-level properties */
-int64_t g_battery_level = 94;
+static int64_t g_battery_level = 94;
 
 static bool
 set_switches_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
@@ -333,6 +333,7 @@ typedef struct oc_switch_t
   uint16_t id;
   bool state;
 } oc_switch_t;
+
 
 #ifdef OC_COLLECTIONS_IF_CREATE
 
@@ -630,6 +631,11 @@ factory_presets_cb(size_t device, void *data)
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
+  // preserve name after factory reset
+  oc_device_info_t* dev = oc_core_get_device_info(device);
+  oc_free_string(&dev->name);
+  oc_new_string(&dev->name, device_name, strlen(device_name));
+
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {

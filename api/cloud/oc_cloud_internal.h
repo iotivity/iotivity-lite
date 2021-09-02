@@ -68,6 +68,7 @@ void oc_cloud_shutdown(void);
 void oc_cloud_register_handler(oc_client_response_t *data);
 void oc_cloud_login_handler(oc_client_response_t *data);
 void oc_cloud_refresh_token_handler(oc_client_response_t *data);
+void oc_cloud_clear_context(oc_cloud_context_t *ctx);
 int oc_cloud_reset_context(size_t device);
 
 void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
@@ -90,6 +91,28 @@ bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
                            const char *auth_code, const char *uid,
                            const char *access_token, size_t device,
                            oc_response_handler_t handler, void *user_data);
+
+/**
+ * @brief Generate URI query for deregister request.
+ *
+ * @return URI query, must be freed by caller
+ */
+oc_string_t cloud_access_deregister_query(const char *uid, const char *access_token,
+                                          size_t device);
+/**
+ * @brief Send request to deregister device from cloud.
+ *
+ * The device must be registered and logged in for this call to succeed.
+ *
+ * @param endpoint cloud endpoint
+ * @param uid user id
+ * @param access_token access token
+ * @param device index of the device to deregister
+ * @param handler response callback
+ * @param user_data data passed to response callback
+ * @return true on success
+ *         false otherwise
+ */
 bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
                              const char *access_token, size_t device,
                              oc_response_handler_t handler, void *user_data);
@@ -125,6 +148,12 @@ void cloud_manager_stop(oc_cloud_context_t *ctx);
 
 void oc_create_cloudconf_resource(size_t device);
 
+/**
+ * @brief Provides information whether expires in of the access token means permanent.
+ *
+ * @return true if it is permanent
+ */
+bool cloud_is_permanent_access_token(int64_t expires_in);
 #ifdef __cplusplus
 }
 #endif

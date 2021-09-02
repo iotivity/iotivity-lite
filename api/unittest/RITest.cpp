@@ -1,7 +1,7 @@
 /******************************************************************
  *
  * Copyright 2018 GRANITE RIVER LABS All Rights Reserved.
- *
+ *           2021 CASCODA LTD        All Rights Reserved.
  *
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -141,3 +141,53 @@ TEST_F(TestOcRi, RiAddResource_P)
     EXPECT_EQ(res_check, 1);
     oc_ri_delete_resource(res);
 }
+
+
+TEST_F(TestOcRi, RIGetQueryValue_P)
+{
+  const char *input[] = { "key=1", 
+                          "data=1&key=2",
+                          "key=2&data=3",
+                          "x&key=2&data=3",
+                          "y&x&key=2&data=3",
+                          "y&x&key=2",
+                          "y&x&key=2&y"
+  };
+  int ret;
+  char *value;
+
+  for (int i = 0; i < 7; i++) {
+    ret = oc_ri_get_query_value(input[i], strlen(input[i]), "key", &value);
+    EXPECT_EQ(1, ret) << "P input[" << i << "] " << input[i] << " "<< "key";
+  }
+  for (int i = 0; i < 7; i++) {
+    ret = oc_ri_get_query_value(input[i], strlen(input[i]), "key2", &value);
+    EXPECT_EQ(-1, ret) << "N input[" << i << "] " << input[i] << " "<<"key2";
+  }
+}
+
+TEST_F(TestOcRi, RIQueryExists_P)
+{
+  const char *input[] = { "key=1", 
+                          "key",
+                          "data=1&key=2",
+                          "data=2&key",
+                          "key&data=3",
+                          "key=2&data=3",
+                          "x=1&key=2&data=3",
+                          "y=&key=2&data=3",
+                          "y=1&x&key=2&data=3",
+                          "y=1&x&key"
+  };
+  int ret;
+  for (int i = 0; i < 10; i++) {
+    ret = oc_ri_query_exists(input[i], strlen(input[i]), "key");
+    EXPECT_EQ(1, ret) << "P input[" << i << "] " << input[i]  << " "<<"key";
+  }
+  for (int i = 0; i < 10; i++) {
+    ret = oc_ri_query_exists(input[i], strlen(input[i]), "key2");
+    EXPECT_EQ(-1, ret) << "N input[" << i << "] " << input[i] << " "<<"key2";
+  }
+}
+
+

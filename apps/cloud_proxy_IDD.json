@@ -1,0 +1,162 @@
+{
+  "definitions": {
+    "d01": {
+      "description": "",
+      "properties": {
+        "dis": {
+          "items": {
+            "description": "",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "type": "string"
+          },
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "if": {
+          "items": {
+            "enum": [
+              "oic.if.rw",
+              "oic.if.baseline"
+            ],
+            "type": "string"
+          },
+          "minItems": 2,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rt": {
+          "default": [
+            "oic.r.d2dserverlist"
+          ],
+          "items": {
+            "enum": [
+              "oic.r.d2dserverlist"
+            ],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "minItems": 1,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "dis"
+      ],
+      "type": "object"
+    },
+    "d02": {
+      "properties": {
+        "dis": {
+          "items": {
+            "description": "",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "type": "string"
+          },
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "dis"
+      ],
+      "type": "object"
+    }
+  },
+  "info": {
+    "license": {
+      "name": " "
+    },
+    "title": "server_lite_950",
+    "version": " "
+  },
+  "parameters": {
+    "p01": {
+      "enum": [
+        "oic.if.rw",
+        "oic.if.baseline"
+      ],
+      "in": "query",
+      "name": "if",
+      "type": "string"
+    },
+    "p03": {
+      "in": "query",
+      "name": "di",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "type": "string"
+    }
+  },
+  "paths": {
+    "/d2dserverlist": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p03"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p01"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d01"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/parameters/p03"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
+          },
+          "203": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/d02"
+            }
+          },
+          "400": {
+            "description": ""
+          },
+          "404": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "swagger": "2.0"
+}
