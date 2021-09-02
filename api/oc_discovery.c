@@ -167,7 +167,9 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   if (resource->tag_pos_desc > 0) {
     const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
     if (desc) {
-      oc_rep_set_text_string(link, tag - pos - desc, desc);
+      // clang-format off
+      oc_rep_set_text_string(link, tag-pos-desc, desc);
+      // clang-format on
     }
   }
 
@@ -175,7 +177,9 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   if (resource->tag_func_desc > 0) {
     const char *func = oc_enum_to_str(resource->tag_func_desc);
     if (func) {
-      oc_rep_set_text_string(link, tag - func - desc, func);
+      // clang-format off
+      oc_rep_set_text_string(link, tag-func-desc, func);
+      // clang-format on
     }
   }
 
@@ -183,7 +187,9 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   if (resource->tag_locn > 0) {
     const char *locn = oc_enum_locn_to_str(resource->tag_locn);
     if (locn) {
-      oc_rep_set_text_string(link, tag - locn, locn);
+      // clang-format off
+      oc_rep_set_text_string(link, tag-locn, locn);
+      // clang-format on
     }
   }
 
