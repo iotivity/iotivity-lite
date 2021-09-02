@@ -18,4 +18,5 @@ if(UNIX)
         ${iotivity-lite-apps_SOURCE_DIR}/pki_certs
         ${PROJECT_BINARY_DIR}/pki_certs
     )
+    add_dependencies(iotivity-port copy-pki-certs-obt)
 endif()
