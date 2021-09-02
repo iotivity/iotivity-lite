@@ -22,6 +22,7 @@
 
 #include "oc_config.h"
 #include "oc_helpers.h"
+#include "oc_memb.h"
 #include "util/oc_process.h"
 
 
@@ -40,7 +41,7 @@ typedef enum {
 } oc_pp_state_t;
 
 /*
- * Resource creation and request handlers for ["oic.r.notificationselector", "oic.r.pushproxy"] instances
+ * Resource creation and request handlers for ["oic.r.notificationselector", "oic.r.pushproxy"] Resource
  */
 typedef struct oc_ns
 {
@@ -56,16 +57,28 @@ typedef struct oc_ns
 	oc_pp_state_t state;
 } oc_ns_t;
 
+
 /*
- * Object creation and request handler for `Receiver` object of Push Receiver Resource
+ * structure for member of "oic.r.pushreceiver:receivers" array
  */
 typedef struct oc_recv
 {
-	struct oc_ns *next;
-	oc_resource_t *resource;
+//	oc_recv_t *next;
 	oc_string_t uri;
 	oc_string_array_t rts;
 } oc_recv_t;
+
+
+/*
+ * Object creation and request handler for Push Receiver Resource
+ */
+typedef struct oc_recvs
+{
+	struct oc_ns *next;
+	oc_resource_t *resource;
+	struct oc_mmem *receivers;
+//	OC_LIST_STRUCT(receivers);
+} oc_recvs_t;
 
 
 OC_PROCESS_NAME(oc_push_process);

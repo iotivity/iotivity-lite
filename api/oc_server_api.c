@@ -381,6 +381,19 @@ oc_resource_set_discoverable(oc_resource_t *resource, bool state)
     resource->properties &= ~OC_DISCOVERABLE;
 }
 
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+void
+oc_resource_set_pushable(oc_resource_t *resource, bool state)
+{
+  if (state)
+    resource->properties |= OC_PUSHABLE;
+  else
+    resource->properties &= ~OC_PUSHABLE;
+}
+#endif
+
+
 void
 oc_resource_set_observable(oc_resource_t *resource, bool state)
 {

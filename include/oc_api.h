@@ -1048,6 +1048,12 @@ void oc_resource_make_public(oc_resource_t *resource);
  */
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+void oc_resource_set_pushable(oc_resource_t *resource, bool state);
+#endif
+
+
 /**
  * Specify that a resource should notify clients when a property has been
  * modified.

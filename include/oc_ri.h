@@ -33,7 +33,7 @@ extern "C" {
 typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE, OC_FETCH } oc_method_t;
 
 /*
- * FIXME4ME remove later
+ * TODO4ME remove later
  */
 #define OC_PUSH
 
