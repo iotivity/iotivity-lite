@@ -35,10 +35,10 @@ target_include_directories(mbedcrypto PUBLIC
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
 
-target_link_libraries(mbedcrypto PRIVATE iotivity-port)
+target_link_libraries(mbedcrypto iotivity-port)
 
 if(TARGET mbedcrypto-plat)
-	target_link_libraries(mbedcrypto PUBLIC mbedcrypto-plat)
+	target_link_libraries(mbedcrypto mbedcrypto-plat)
 endif()
 
 # do not treat warnings as errors on Windows
