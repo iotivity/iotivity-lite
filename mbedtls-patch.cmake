@@ -1,7 +1,7 @@
 # This is the iotivity-lite patch tool (originally written in make) ported to cmake so
 # that it can run cross-platform. It applies the collection of patches in iotivity-lite/patches/
 # to mbedtls. This should be run in the Iotivity source directory.
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.10)
 
 # Find git
 find_package(Git)
