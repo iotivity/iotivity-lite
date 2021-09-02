@@ -4,12 +4,12 @@
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/android.yml
    
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml
+   
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml
 
-.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml/badge.svg
-   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml
-   
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml
    
