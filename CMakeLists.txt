@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required (VERSION 3.10)
 project(iotivity-lite)
 
 # Patch mbedtls
@@ -34,8 +34,6 @@ target_include_directories(mbedcrypto PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
-
-target_link_libraries(mbedcrypto iotivity-port)
 
 if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto mbedcrypto-plat)

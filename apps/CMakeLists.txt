@@ -64,3 +64,5 @@ add_custom_target(copy-pki-certs ALL
     ${PROJECT_SOURCE_DIR}/pki_certs
     ${PROJECT_BINARY_DIR}/pki_certs
 )
+
+add_dependencies(iotivity-port copy-pki-credentials)
