@@ -39,11 +39,6 @@ if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto mbedcrypto-plat)
 endif()
 
-# do not treat warnings as errors on Windows
-if(MSVC)
-    target_compile_options(mbedtls PRIVATE /W1 /WX-)
-    target_compile_options(mbedx509 PRIVATE /W1 /WX-)
-endif()
 
 # Iotivity API
 add_library(iotivity-api INTERFACE)
@@ -86,6 +81,16 @@ target_include_directories(iotivity-api INTERFACE
 
 # Core functions used by Iotivity
 add_library(iotivity-common INTERFACE)
+
+
+# do not treat warnings as errors on Windows
+# block should be defined after the target library
+if(MSVC)
+    target_compile_options(mbedtls PRIVATE /W1 /WX-)
+    target_compile_options(mbedx509 PRIVATE /W1 /WX-)
+    target_compile_options(mbedcrypto PRIVATE /W1 /WX-)
+    target_compile_options(iotivity-api INTERFACE /W1 /WX-)
+endif()
 
 target_sources(iotivity-common INTERFACE
     # Utilities that are used deep within Iotivity
