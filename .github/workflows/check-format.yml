@@ -25,12 +25,15 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
       - uses: actions/checkout@v2
       # Runs a set of commands using the runners shell
-      - name: unit_test
+      - name: format-check
         run: |
           # https://github.com/actions/checkout/issues/81
           auth_header="$(git config --local --get http.https://github.com/.extraheader)"
           git submodule sync --recursive
           git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+
+          sudo apt install clang-format-6.0
+
           mkdir build
           cd build
           cmake ../.
