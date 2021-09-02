@@ -33,7 +33,7 @@ oc_clock_time(void)
   uint32_t time = otPlatAlarmMilliGetNow();
 
   if (time < prev_time) {
-      high_time++;
+    high_time++;
   }
 
   prev_time = time;

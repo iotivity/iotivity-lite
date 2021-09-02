@@ -23,13 +23,13 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
- * encode byte buffer to base64 string. The base64 encoder does not NUL terminate
- * its output. User the return value to add '\0' to the end of the string.
+ * encode byte buffer to base64 string. The base64 encoder does not NUL
+ * terminate its output. User the return value to add '\0' to the end of the
+ * string.
  *
  * Output is uint8_t casting is needed to use value as a string.
  *
@@ -44,8 +44,8 @@ extern "C"
  *    b64_buf_size++;
  *    // allocate space
  *    char *b64_buf = (char *)calloc(1, b64_buf_size);
- *    int output_len = oc_base64_encode(input, sizeof(input), (uint8_t *)b64_buf, b64_buf_size);
- *    if (output_len < 0) {
+ *    int output_len = oc_base64_encode(input, sizeof(input), (uint8_t
+ * *)b64_buf, b64_buf_size); if (output_len < 0) {
  *       //handle error
  *    }
  *    // append NUL character to end of string.

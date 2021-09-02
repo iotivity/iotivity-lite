@@ -180,7 +180,8 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
 {
   int next_pos = -1;
   size_t i = 0;
-  char *start = (char *)query, *current, * current2, *end = (char *)query + query_len;
+  char *start = (char *)query, *current, *current2,
+       *end = (char *)query + query_len;
   current = start;
 
   while (i < (n - 1) && current != NULL) {
@@ -219,23 +220,23 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
     /* there is no value */
     *key = start;
     *key_len = (current - start);
-    next_pos = *key_len+1;
+    next_pos = *key_len + 1;
   }
 
   return next_pos;
 }
 
 int
-oc_ri_get_query_value(const char* query, size_t query_len, const char* key,
-  char** value)
+oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
+                      char **value)
 {
   int next_pos = 0, found = -1;
   size_t kl, vl, pos = 0;
-  char* k;
+  char *k;
 
   while (pos < query_len) {
     next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
-      &kl, value, &vl, 1u);
+                                             &kl, value, &vl, 1u);
     if (next_pos == -1)
       return -1;
 
@@ -250,15 +251,15 @@ oc_ri_get_query_value(const char* query, size_t query_len, const char* key,
 }
 
 int
-oc_ri_query_nth_key_exists(const char* query, size_t query_len, char** key,
-  size_t* key_len,
-  size_t n)
+oc_ri_query_nth_key_exists(const char *query, size_t query_len, char **key,
+                           size_t *key_len, size_t n)
 {
   int next_pos = -1;
   size_t i = 0;
   size_t value_len;
-  char* start = (char*)query, * current, * current2, * end = (char*)query + query_len;
-  char* value = NULL;
+  char *start = (char *)query, *current, *current2,
+       *end = (char *)query + query_len;
+  char *value = NULL;
   current = start;
 
   while (i < (n - 1) && current != NULL) {
@@ -286,13 +287,11 @@ oc_ri_query_nth_key_exists(const char* query, size_t query_len, char** key,
     current = memchr(value, '&', end - value);
     if (current == NULL) {
       value_len = (end - value);
-    }
-    else {
+    } else {
       value_len = (current - value);
     }
     next_pos = (int)(value + value_len - query + 1);
-  }
-  else {
+  } else {
     current = memchr(start, '&', end - start);
     if (current == NULL) {
       current = end;
@@ -300,22 +299,22 @@ oc_ri_query_nth_key_exists(const char* query, size_t query_len, char** key,
     /* there is no value */
     *key = start;
     *key_len = (current - start);
-    next_pos = *key_len+1;
+    next_pos = *key_len + 1;
   }
 
   return next_pos;
 }
 
 int
-oc_ri_query_exists(const char* query, size_t query_len, const char* key)
+oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 {
   int next_pos = 0, found = -1;
   size_t kl, pos = 0;
-  char* k;
+  char *k;
 
   while (pos < query_len) {
-    next_pos = oc_ri_query_nth_key_exists(query + pos, query_len - pos, &k,
-      &kl, 1u);
+    next_pos =
+      oc_ri_query_nth_key_exists(query + pos, query_len - pos, &k, &kl, 1u);
 
     if (next_pos == -1)
       return -1;
@@ -463,7 +462,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
-   /**
+  /**
    * Prevent double deallocation: oc_rt_factory_free_created_resource
    * called below will invoke the delete handler of the resource which will
    * invoke this function again. We use the list of resources to check
@@ -914,7 +913,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Read the Content-Format CoAP option in the request */
   oc_content_format_t cf = 0;
   coap_get_header_content_format(request, &cf);
-
 
   /* Read the accept CoAP option in the request */
   oc_content_format_t accept = 0;

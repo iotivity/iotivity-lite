@@ -20,8 +20,7 @@
 #define OC_MEM_TRACE_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define MEM_TRACE_ALLOC (1) // it would be combination when BYTE, INT, DOUBLE

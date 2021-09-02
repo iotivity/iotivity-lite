@@ -40,57 +40,55 @@
 #define OCF_SPEC_VERSION "ocf.1.0.0"
 #define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
 
+class TestTlsConnection : public testing::Test {
+protected:
+  virtual void SetUp()
+  {
+    oc_ri_init();
+    oc_network_event_handler_mutex_init();
+    oc_core_init();
+    oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
+    oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME, OCF_SPEC_VERSION,
+                  OCF_DATA_MODEL_VERSION, NULL, NULL);
+  }
 
-class TestTlsConnection: public testing::Test
-{
-    protected:
-        virtual void SetUp()
-        {
-            oc_ri_init();
-            oc_network_event_handler_mutex_init();
-            oc_core_init();
-            oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
-            oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
-                        OCF_SPEC_VERSION, OCF_DATA_MODEL_VERSION, NULL, NULL);
-        }
-
-        virtual void TearDown()
-        {
-           oc_ri_shutdown();
-           oc_tls_shutdown();
-           oc_connectivity_shutdown(0);
-           oc_network_event_handler_mutex_destroy();
-           oc_core_shutdown();
-        }
+  virtual void TearDown()
+  {
+    oc_ri_shutdown();
+    oc_tls_shutdown();
+    oc_connectivity_shutdown(0);
+    oc_network_event_handler_mutex_destroy();
+    oc_core_shutdown();
+  }
 };
 
 #if defined(OC_TCP) && defined(OC_SECURITY)
 TEST_F(TestTlsConnection, InitTlsTest_P)
 {
 
-    int errorCode = oc_tls_init_context();
-    EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
+  int errorCode = oc_tls_init_context();
+  EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
 TEST_F(TestTlsConnection, InitTlsTestTwice_P)
 {
 
-    int errorCode = oc_tls_init_context();
-    ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
-    oc_tls_shutdown();
-    errorCode = oc_tls_init_context();
-    EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
+  int errorCode = oc_tls_init_context();
+  ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
+  oc_tls_shutdown();
+  errorCode = oc_tls_init_context();
+  EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
 TEST_F(TestTlsConnection, TlsConnectionTest_N)
 {
 
-    int errorCode = oc_tls_init_context();
-    ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
-    oc_endpoint_t *endpoint = oc_new_endpoint();
-    bool isConnected = oc_tls_connected(endpoint);
-    EXPECT_FALSE(isConnected ) << "Failed to update";
-    oc_free_endpoint(endpoint);
+  int errorCode = oc_tls_init_context();
+  ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
+  oc_endpoint_t *endpoint = oc_new_endpoint();
+  bool isConnected = oc_tls_connected(endpoint);
+  EXPECT_FALSE(isConnected) << "Failed to update";
+  oc_free_endpoint(endpoint);
 }
 
 #endif

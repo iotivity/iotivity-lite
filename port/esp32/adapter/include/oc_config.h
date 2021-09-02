@@ -7,11 +7,10 @@
 #include "sdkconfig.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-   typedef uint64_t oc_clock_time_t;
+typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 //#define OC_SPEC_VER_OIC
 /* Security Layer */

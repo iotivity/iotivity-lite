@@ -2138,18 +2138,18 @@ read_application_data(oc_tls_peer_t *peer)
       oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
     }
-#else  /* OC_OSCORE */
-    if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
-        OC_PROCESS_ERR_FULL) {
+#else /* OC_OSCORE */
+      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
+          OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
-      oc_message_unref(msg);
+        oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
-    }
+      }
 #endif /* !OC_OSCORE */
-    }
-    OC_DBG("oc_tls: Decrypted incoming message");
-#ifndef OC_INOUT_BUFFER_SIZE
   }
+  OC_DBG("oc_tls: Decrypted incoming message");
+#ifndef OC_INOUT_BUFFER_SIZE
+}
 #endif /* !OC_INOUT_BUFFER_SIZE */
 }
 

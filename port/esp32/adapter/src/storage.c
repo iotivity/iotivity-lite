@@ -30,7 +30,8 @@ static char store_path[STORE_PATH_SIZE];
 static int store_path_len;
 static bool path_set = false;
 
-int oc_storage_config(const char *store)
+int
+oc_storage_config(const char *store)
 {
   store_path_len = strlen(store);
   if (store_path_len >= STORE_PATH_SIZE)
@@ -43,24 +44,22 @@ int oc_storage_config(const char *store)
   return 0;
 }
 
-long oc_storage_read(const char *store, uint8_t *buf, size_t size)
+long
+oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   APP_DBG("oc_storage_read: %s", store);
-  if (!path_set)
-  {
+  if (!path_set) {
     return -ENOENT;
   }
   nvs_handle_t handle;
   esp_err_t err = nvs_open(store_path, NVS_READONLY, &handle);
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     APP_DBG("oc_storage_read cannot nvs_open %s: %d", store, err);
     return -EINVAL;
   }
 
   err = nvs_get_blob(handle, store, buf, &size);
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     APP_DBG("oc_storage_read cannot nvs_get_blob  %s: %d", store, err);
     nvs_close(handle);
     return -EINVAL;
@@ -70,32 +69,29 @@ long oc_storage_read(const char *store, uint8_t *buf, size_t size)
   return size;
 }
 
-long oc_storage_write(const char *store, uint8_t *buf, size_t size)
+long
+oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
-  //APP_DBG("oc_storage_write: %s", store);
-  if (!path_set)
-  {
+  // APP_DBG("oc_storage_write: %s", store);
+  if (!path_set) {
     return -ENOENT;
   }
   nvs_handle_t handle;
   esp_err_t err = nvs_open(store_path, NVS_READWRITE, &handle);
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     APP_DBG("oc_storage_write cannot nvs_open  %s: %d", store, err);
     return -EINVAL;
   }
 
   err = nvs_set_blob(handle, store, buf, size);
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     APP_DBG("oc_storage_write cannot nvs_set_blob  %s: %d", store, err);
     nvs_close(handle);
     return -EINVAL;
   }
 
   err = nvs_commit(handle);
-  if (err != ESP_OK)
-  {
+  if (err != ESP_OK) {
     APP_DBG("oc_storage_write cannot nvs_commit  %s: %d", store, err);
     nvs_close(handle);
     return -EINVAL;

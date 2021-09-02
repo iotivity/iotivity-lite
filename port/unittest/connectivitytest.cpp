@@ -23,174 +23,166 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-    #include "port/oc_connectivity.h"
-    #include "oc_network_monitor.h"
+#include "port/oc_connectivity.h"
+#include "oc_network_monitor.h"
 }
 
 static const size_t device = 0;
 static bool is_callback_received = false;
 
-class TestConnectivity: public testing::Test
-{
-    protected:
-        virtual void SetUp()
-        {
-            is_callback_received = false;
-            oc_network_event_handler_mutex_init();
-            oc_connectivity_init(device);
-        }
+class TestConnectivity : public testing::Test {
+protected:
+  virtual void SetUp()
+  {
+    is_callback_received = false;
+    oc_network_event_handler_mutex_init();
+    oc_connectivity_init(device);
+  }
 
-        virtual void TearDown()
-        {
-            oc_connectivity_shutdown(device);
-            oc_network_event_handler_mutex_destroy();
-        }
+  virtual void TearDown()
+  {
+    oc_connectivity_shutdown(device);
+    oc_network_event_handler_mutex_destroy();
+  }
 };
 
 TEST(TestConnectivity_init, oc_connectivity_init)
 {
-    int ret = oc_connectivity_init(device);
-    EXPECT_EQ(0, ret);
-    oc_connectivity_shutdown(device);
+  int ret = oc_connectivity_init(device);
+  EXPECT_EQ(0, ret);
+  oc_connectivity_shutdown(device);
 }
 
 TEST_F(TestConnectivity, oc_connectivity_get_endpoints)
 {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
-    EXPECT_NE(NULL, ep);
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+  EXPECT_NE(NULL, ep);
 }
 
-static void interface_event_handler(oc_interface_event_t event)
+static void
+interface_event_handler(oc_interface_event_t event)
 {
-    EXPECT_EQ(NETWORK_INTERFACE_UP, event);
-    is_callback_received = true;
+  EXPECT_EQ(NETWORK_INTERFACE_UP, event);
+  is_callback_received = true;
 }
 
 TEST_F(TestConnectivity, oc_add_network_interface_event_callback)
 {
-    int ret =
-        oc_add_network_interface_event_callback(interface_event_handler);
-    EXPECT_EQ(0, ret);
+  int ret = oc_add_network_interface_event_callback(interface_event_handler);
+  EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestConnectivity, oc_remove_network_interface_event_callback)
 {
-    oc_add_network_interface_event_callback(interface_event_handler);
-    int ret =
-        oc_remove_network_interface_event_callback(interface_event_handler);
-    EXPECT_EQ(0, ret);
+  oc_add_network_interface_event_callback(interface_event_handler);
+  int ret = oc_remove_network_interface_event_callback(interface_event_handler);
+  EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestConnectivity, oc_remove_network_interface_event_callback_invalid)
 {
-    int ret =
-        oc_remove_network_interface_event_callback(interface_event_handler);
-    EXPECT_EQ(-1, ret);
+  int ret = oc_remove_network_interface_event_callback(interface_event_handler);
+  EXPECT_EQ(-1, ret);
 }
 
 TEST_F(TestConnectivity, handle_network_interface_event_callback)
 {
-    oc_add_network_interface_event_callback(interface_event_handler);
-    handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
-    EXPECT_EQ(true, is_callback_received);
+  oc_add_network_interface_event_callback(interface_event_handler);
+  handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
+  EXPECT_EQ(true, is_callback_received);
 }
 
-static void session_event_handler(const oc_endpoint_t *ep,
-                                  oc_session_state_t state)
+static void
+session_event_handler(const oc_endpoint_t *ep, oc_session_state_t state)
 {
-    EXPECT_NE(NULL, ep);
-    EXPECT_EQ(OC_SESSION_CONNECTED, state);
-    is_callback_received = true;
+  EXPECT_NE(NULL, ep);
+  EXPECT_EQ(OC_SESSION_CONNECTED, state);
+  is_callback_received = true;
 }
 
 TEST_F(TestConnectivity, oc_add_session_event_callback)
 {
-    int ret =
-        oc_add_session_event_callback(session_event_handler);
-    EXPECT_EQ(0, ret);
+  int ret = oc_add_session_event_callback(session_event_handler);
+  EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestConnectivity, oc_remove_session_event_callback)
 {
-    oc_add_session_event_callback(session_event_handler);
-    int ret =
-        oc_remove_session_event_callback(session_event_handler);
-    EXPECT_EQ(0, ret);
+  oc_add_session_event_callback(session_event_handler);
+  int ret = oc_remove_session_event_callback(session_event_handler);
+  EXPECT_EQ(0, ret);
 }
 
 TEST_F(TestConnectivity, oc_remove_session_event_callback_invalid)
 {
-    int ret =
-        oc_remove_session_event_callback(session_event_handler);
-    EXPECT_EQ(-1, ret);
+  int ret = oc_remove_session_event_callback(session_event_handler);
+  EXPECT_EQ(-1, ret);
 }
 
 TEST_F(TestConnectivity, handle_session_event_callback)
 {
-    oc_add_session_event_callback(session_event_handler);
-    oc_endpoint_t ep;
-    handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
-    EXPECT_EQ(true, is_callback_received);
+  oc_add_session_event_callback(session_event_handler);
+  oc_endpoint_t ep;
+  handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
+  EXPECT_EQ(true, is_callback_received);
 }
 
 #ifdef OC_TCP
 TEST_F(TestConnectivity, oc_tcp_get_csm_state_P)
 {
-    oc_endpoint_t ep;
-    tcp_csm_state_t ret = oc_tcp_get_csm_state(&ep);
+  oc_endpoint_t ep;
+  tcp_csm_state_t ret = oc_tcp_get_csm_state(&ep);
 
-    EXPECT_EQ(CSM_NONE, ret);
+  EXPECT_EQ(CSM_NONE, ret);
 }
 
 TEST_F(TestConnectivity, oc_tcp_get_csm_state_N)
 {
-    tcp_csm_state_t ret = oc_tcp_get_csm_state(NULL);
+  tcp_csm_state_t ret = oc_tcp_get_csm_state(NULL);
 
-    EXPECT_EQ(CSM_ERROR, ret);
+  EXPECT_EQ(CSM_ERROR, ret);
 }
 
 TEST_F(TestConnectivity, oc_tcp_update_csm_state_P)
 {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
-    while (ep) {
-        if (ep->flags & TCP && !(ep->flags & SECURED) &&
-            ep->flags & IPV4)
-            break;
-        ep = ep->next;
-    }
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+  while (ep) {
+    if (ep->flags & TCP && !(ep->flags & SECURED) && ep->flags & IPV4)
+      break;
+    ep = ep->next;
+  }
 
-    ASSERT_NE(NULL, ep);
+  ASSERT_NE(NULL, ep);
 
-    oc_message_t message;
-    uint8_t *data = (uint8_t *)"connect";
-    memcpy(&message.endpoint, ep, sizeof(oc_endpoint_t));
-    message.data = data;
-    message.length = 7;
-    oc_send_buffer(&message);
+  oc_message_t message;
+  uint8_t *data = (uint8_t *)"connect";
+  memcpy(&message.endpoint, ep, sizeof(oc_endpoint_t));
+  message.data = data;
+  message.length = 7;
+  oc_send_buffer(&message);
 
-    oc_tcp_update_csm_state(ep, CSM_DONE);
+  oc_tcp_update_csm_state(ep, CSM_DONE);
 
-    tcp_csm_state_t ret = oc_tcp_get_csm_state(ep);
+  tcp_csm_state_t ret = oc_tcp_get_csm_state(ep);
 
-    EXPECT_EQ(CSM_DONE, ret);
+  EXPECT_EQ(CSM_DONE, ret);
 }
 
 TEST_F(TestConnectivity, oc_tcp_update_csm_state_N)
 {
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
-    while (ep) {
-        if (ep->flags & TCP && !(ep->flags & SECURED) &&
-            ep->flags & IPV4)
-            break;
-        ep = ep->next;
-    }
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+  while (ep) {
+    if (ep->flags & TCP && !(ep->flags & SECURED) && ep->flags & IPV4)
+      break;
+    ep = ep->next;
+  }
 
-    ASSERT_NE(NULL, ep);
+  ASSERT_NE(NULL, ep);
 
-    oc_tcp_update_csm_state(ep, CSM_DONE);
+  oc_tcp_update_csm_state(ep, CSM_DONE);
 
-    tcp_csm_state_t ret = oc_tcp_get_csm_state(ep);
+  tcp_csm_state_t ret = oc_tcp_get_csm_state(ep);
 
-    EXPECT_NE(CSM_DONE, ret);
+  EXPECT_NE(CSM_DONE, ret);
 }
 #endif /* OC_TCP */

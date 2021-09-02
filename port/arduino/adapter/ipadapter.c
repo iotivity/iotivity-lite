@@ -27,18 +27,27 @@
 OC_PROCESS(ip_adapter_process, "IP Adapter");
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
-OC_MEMB(device_eps, oc_endpoint_t, 2*OC_MAX_NUM_DEVICES); // fix
+OC_MEMB(device_eps, oc_endpoint_t, 2 * OC_MAX_NUM_DEVICES); // fix
 
 void
-oc_network_event_handler_mutex_init(void){}
+oc_network_event_handler_mutex_init(void)
+{
+}
 
 void
-oc_network_event_handler_mutex_lock(void){}
+oc_network_event_handler_mutex_lock(void)
+{
+}
 
 void
-oc_network_event_handler_mutex_unlock(void){}
+oc_network_event_handler_mutex_unlock(void)
+{
+}
 
-void oc_network_event_handler_mutex_destroy(void) {}
+void
+oc_network_event_handler_mutex_destroy(void)
+{
+}
 
 static ip_context_t *
 get_ip_context_for_device(size_t device)
@@ -108,7 +117,9 @@ oc_connectivity_get_endpoints(size_t device)
   return oc_list_head(dev->eps);
 }
 
-int oc_send_buffer(oc_message_t *message) {
+int
+oc_send_buffer(oc_message_t *message)
+{
   PRINT("Outgoing message to: ");
   PRINTipaddr(message->endpoint);
   PRINT("\r\n");
@@ -117,15 +128,15 @@ int oc_send_buffer(oc_message_t *message) {
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 #ifdef OC_CLIENT
   if (message->endpoint.flags & DISCOVERY) {
-      send_sock = dev->mcast4_sock;
-      send_port = (uint16_t)OCF_MCAST_PORT_UNSECURED;
+    send_sock = dev->mcast4_sock;
+    send_port = (uint16_t)OCF_MCAST_PORT_UNSECURED;
   } else {
 #ifdef OC_SECURITY
-      if (message->endpoint.flags & SECURED) {
-        send_sock = dev->secure4_sock;
-      } else
+    if (message->endpoint.flags & SECURED) {
+      send_sock = dev->secure4_sock;
+    } else
 #else
-        send_sock = dev->server4_sock;
+    send_sock = dev->server4_sock;
 #endif
       send_port = message->endpoint.addr.ipv4.port;
   }
@@ -142,10 +153,10 @@ int oc_send_buffer(oc_message_t *message) {
   }
 #endif
     send_sock = dev->server4_sock;
-    send_port = message->endpoint.addr.ipv4.port;
+  send_port = message->endpoint.addr.ipv4.port;
 #endif
   ard_send_data(send_sock, message->endpoint.addr.ipv4.address, &send_port,
-                         message->data, message->length);
+                message->data, message->length);
   return message->length;
 }
 
@@ -173,14 +184,16 @@ oc_connectivity_init(size_t device)
   dev->port4 = (uint16_t)OCF_PORT_UNSECURED;
   dev->server4_sock = start_udp_server(&dev->port4);
 #ifdef OC_SERVER
-  dev->mcast4_sock = start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &mcast_port);
+  dev->mcast4_sock =
+    start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &mcast_port);
 #endif
 #ifdef OC_CLIENT
-  dev->mcast4_sock = start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &dev->port4);
+  dev->mcast4_sock =
+    start_udp_mcast_server(OCF_IPv4_MULTICAST, &mcast_port, &dev->port4);
 #endif
 #ifdef OC_SECURITY
-    dev->dtls4_port = (uint16_t)OCF_PORT_SECURED;
-    dev->secure4_sock = start_udp_server(&dev->dtls4_port);
+  dev->dtls4_port = (uint16_t)OCF_PORT_SECURED;
+  dev->secure4_sock = start_udp_server(&dev->dtls4_port);
 #endif
   oc_process_start(&ip_adapter_process, dev);
 
@@ -215,8 +228,9 @@ oc_udp_receive_message(ip_context_t *dev, sdset_t *sds, oc_message_t *message)
 
   // unsecure unicast reception
   if (!SD_ISSET(dev->server4_sock, sds)) {
-      int count = recv_msg(&dev->server4_sock,message->endpoint.addr.ipv4.address,
-                          &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
+    int count =
+      recv_msg(&dev->server4_sock, message->endpoint.addr.ipv4.address,
+               &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -227,8 +241,9 @@ oc_udp_receive_message(ip_context_t *dev, sdset_t *sds, oc_message_t *message)
   }
   // multcast reception
   if (!SD_ISSET(dev->mcast4_sock, sds)) {
-      int count = recv_msg(&dev->mcast4_sock,message->endpoint.addr.ipv4.address,
-                          &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
+    int count =
+      recv_msg(&dev->mcast4_sock, message->endpoint.addr.ipv4.address,
+               &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -239,8 +254,9 @@ oc_udp_receive_message(ip_context_t *dev, sdset_t *sds, oc_message_t *message)
   }
 #ifdef OC_SECURITY
   if (!SD_ISSET(dev->secure4_sock, sds)) {
-      int count = recv_msg(&dev->secure4_sock,message->endpoint.addr.ipv4.address,
-                          &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
+    int count =
+      recv_msg(&dev->secure4_sock, message->endpoint.addr.ipv4.address,
+               &message->endpoint.addr.ipv4.port, message->data, sds->rcv_size);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -277,21 +293,22 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
   while (ev != OC_PROCESS_EVENT_EXIT) {
     oc_etimer_set(&et, (oc_clock_time_t)0.01);
 
-    if(ev == OC_PROCESS_EVENT_INIT){
+    if (ev == OC_PROCESS_EVENT_INIT) {
 
       dev = (ip_context_t *)data;
       oc_udp_add_socks_to_SD_SET(dev);
       memcpy(&setsds, &dev->rsds, sizeof(sdset_t));
-      maxsd =  (dev->server4_sock > dev->mcast4_sock) ? dev->server4_sock : dev->mcast4_sock;
+      maxsd = (dev->server4_sock > dev->mcast4_sock) ? dev->server4_sock
+                                                     : dev->mcast4_sock;
 #ifdef OC_SECURITY
-      maxsd = (dev->secure4_sock > dev->mcast4_sock) ? dev->secure4_sock : dev->mcast4_sock;
+      maxsd = (dev->secure4_sock > dev->mcast4_sock) ? dev->secure4_sock
+                                                     : dev->mcast4_sock;
 #endif
       OC_DBG("ipadapter: Initialized ip_adapter_process");
-    }
-    else if(ev == OC_PROCESS_EVENT_TIMER){
-      n = select( maxsd + 1 , &setsds);
-      if(n > 0) {
-        for(i = 0; i < n; i++) {
+    } else if (ev == OC_PROCESS_EVENT_TIMER) {
+      n = select(maxsd + 1, &setsds);
+      if (n > 0) {
+        for (i = 0; i < n; i++) {
 
           oc_message_t *message = oc_allocate_message();
           if (!message) {
@@ -299,7 +316,7 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
           }
           message->endpoint.device = dev->device;
           if (oc_udp_receive_message(dev, &setsds, message) ==
-            ADAPTER_STATUS_RECEIVE) {
+              ADAPTER_STATUS_RECEIVE) {
             goto common;
           }
           oc_message_unref(message);
@@ -314,5 +331,5 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
     }
     OC_PROCESS_WAIT_EVENT();
   }
- OC_PROCESS_END();
+  OC_PROCESS_END();
 }

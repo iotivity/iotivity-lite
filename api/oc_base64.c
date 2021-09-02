@@ -120,8 +120,7 @@ int
 oc_base64_decode(uint8_t *str, size_t len)
 {
   /* All valid Base64 encoded strings will be multiples of 4 */
-  if (0 != (len % 4))
-  {
+  if (0 != (len % 4)) {
     return -1;
   }
   /* The Base64 input string is decoded in-place. */
@@ -149,15 +148,12 @@ oc_base64_decode(uint8_t *str, size_t len)
     /* Break if we encounter the padding character.
      * The input buffer str now contains the fully decoded string.
      */
-    else if (val_s == '=')
-    {
+    else if (val_s == '=') {
       /* Padding character "=" can only show up as last 2 characters */
-      if (i < len - 2)
-      {
+      if (i < len - 2) {
         return -1;
       }
-      if (i == len - 2 && '=' != str[i+1])
-      {
+      if (i == len - 2 && '=' != str[i + 1]) {
         return -1;
       }
       break;

@@ -27,20 +27,19 @@
 #include <socket.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-typedef enum
-{
-	/** Success status code - START HERE.*/
-	STATUS_OK = 0,
-	STATUS_FAILED = -1,
-	SOCKET_OPERATION_FAILED = -2,
-	STATUS_INVALID_PARAM = 1,
-	SERVER_STARTED_ALREADY = 2,
+typedef enum {
+  /** Success status code - START HERE.*/
+  STATUS_OK = 0,
+  STATUS_FAILED = -1,
+  SOCKET_OPERATION_FAILED = -2,
+  STATUS_INVALID_PARAM = 1,
+  SERVER_STARTED_ALREADY = 2,
 } OCResult_t;
 
-typedef struct  sdset_t {
+typedef struct sdset_t
+{
   uint8_t sdsset;
   uint8_t sds[MAX_SOCK_NUM];
   uint8_t ready_sds;
@@ -48,22 +47,25 @@ typedef struct  sdset_t {
 } sdset_t;
 
 #define SETSIZE (8)
-#define SD_ZERO(_setsds) (((sdset_t*)_setsds)->sdsset = 0 )
-#define SD_SET(sd,_setsds)                                  \
-do {                                                        \
-	((sdset_t*)_setsds)->sds[sd] = sd;                      \
-	((sdset_t*)_setsds)->sdsset |= (1 << (sd % SETSIZE));	\
-} while(0)
-#define SD_CLR(sd, _setsds)   (((sdset_t*)_setsds)->sdsset &= ~(1 << (sd % SETSIZE)))
-#define SD_ISSET(sd, _setsds) (((sdset_t*)_setsds)->sdsset & (1 << (sd % SETSIZE)))
+#define SD_ZERO(_setsds) (((sdset_t *)_setsds)->sdsset = 0)
+#define SD_SET(sd, _setsds)                                                    \
+  do {                                                                         \
+    ((sdset_t *)_setsds)->sds[sd] = sd;                                        \
+    ((sdset_t *)_setsds)->sdsset |= (1 << (sd % SETSIZE));                     \
+  } while (0)
+#define SD_CLR(sd, _setsds)                                                    \
+  (((sdset_t *)_setsds)->sdsset &= ~(1 << (sd % SETSIZE)))
+#define SD_ISSET(sd, _setsds)                                                  \
+  (((sdset_t *)_setsds)->sdsset & (1 << (sd % SETSIZE)))
 
 uint8_t select(uint8_t nsds, sdset_t *setsds);
-int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr,
-				uint16_t *sender_port, uint8_t *data, uint16_t packets_size);
+int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr, uint16_t *sender_port,
+                 uint8_t *data, uint16_t packets_size);
 
 uint8_t start_udp_server(uint16_t *local_port);
 
-uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port, uint16_t *local_port);
+uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port,
+                               uint16_t *local_port);
 
 /**
  * Get available UDP socket.
@@ -78,7 +80,8 @@ extern OCResult_t arduino_get_free_socket(uint8_t *sockID);
  * @param[out]      socketID    Unicast socket ID.
  * @return  ::OC_STATUS_OK or Appropriate error code.
  */
-extern OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID);
+extern OCResult_t arduino_init_udp_socket(uint16_t *local_port,
+                                          uint8_t *socketID);
 
 /**
  * Initialize Multicast UDP socket.
@@ -89,8 +92,10 @@ extern OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketI
  * @return  ::OC_STATUS_OK or Appropriate error code.
  */
 
-extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port,
-												     uint16_t *local_port, uint8_t *socketID);
+extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr,
+                                                uint16_t *mcast_port,
+                                                uint16_t *local_port,
+                                                uint8_t *socketID);
 /**
  * To parse the IP address and port from "ipaddress:port".
  * @param[in]   ipAddrStr       IP address to be parsed.
@@ -99,18 +104,18 @@ extern OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t
  * @param[out]  port            Parsed Port number.
  * @return ::CA_STATUS_OK or Appropriate error code.
  */
-extern OCResult_t arduino_parse_IPv4_addr(const char *ipAddrStr, uint8_t *ipAddr,
-                                      uint8_t ipAddrLen, uint16_t *port);
+extern OCResult_t arduino_parse_IPv4_addr(const char *ipAddrStr,
+                                          uint8_t *ipAddr, uint8_t ipAddrLen,
+                                          uint16_t *port);
 /**
-* Get the Interface Info(Allocated IP address)
-* @param[in] address  endpoint ipv4 address
-*/
+ * Get the Interface Info(Allocated IP address)
+ * @param[in] address  endpoint ipv4 address
+ */
 OCResult_t oc_ard_get_iface_addr(uint8_t *address);
 
-
-
 extern OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr,
-								uint16_t *dest_port, uint8_t *data, const uint16_t len);
+                                uint16_t *dest_port, uint8_t *data,
+                                const uint16_t len);
 
 #ifdef __cplusplus
 }

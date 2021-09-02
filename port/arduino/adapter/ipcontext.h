@@ -24,8 +24,7 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -35,8 +34,8 @@ typedef enum {
   ADAPTER_STATUS_ERROR     /* Error */
 } adapter_receive_state_t;
 
-
-typedef struct ip_context_t {
+typedef struct ip_context_t
+{
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps);
   uint8_t mcast4_sock;

@@ -44,7 +44,7 @@
 
 #define TLS_HEADER_SIZE 5
 
-#define DEFAULT_RECEIVE_SIZE \
+#define DEFAULT_RECEIVE_SIZE                                                   \
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 #define LIMIT_RETRY_CONNECT 5
@@ -67,18 +67,15 @@ static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
 {
   int reuse = 1;
-  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1)
-  {
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
     OC_ERR("setting reuseaddr option %d", errno);
     return -1;
   }
-  if (bind(sock, (struct sockaddr *)sock_info, sizeof(*sock_info)) == -1)
-  {
+  if (bind(sock, (struct sockaddr *)sock_info, sizeof(*sock_info)) == -1) {
     OC_ERR("binding socket %d", errno);
     return -1;
   }
-  if (listen(sock, OC_TCP_LISTEN_BACKLOG) == -1)
-  {
+  if (listen(sock, OC_TCP_LISTEN_BACKLOG) == -1) {
     OC_ERR("listening socket %d", errno);
     return -1;
   }
@@ -91,8 +88,7 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
 {
 
   socklen_t socklen = sizeof(*sock_info);
-  if (getsockname(sock, (struct sockaddr *)sock_info, &socklen) == -1)
-  {
+  if (getsockname(sock, (struct sockaddr *)sock_info, &socklen) == -1) {
     OC_ERR("obtaining socket information %d", errno);
     return -1;
   }
@@ -105,44 +101,35 @@ get_interface_index(int sock)
 {
   struct sockaddr_storage addr;
   socklen_t socklen = sizeof(addr);
-  if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1)
-  {
+  if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
     OC_ERR("obtaining socket information %d", errno);
     return -1;
   }
-  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif; esp_netif = esp_netif_next(esp_netif))
-  {
-    if (!esp_netif_is_netif_up(esp_netif))
-    {
+  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif;
+       esp_netif = esp_netif_next(esp_netif)) {
+    if (!esp_netif_is_netif_up(esp_netif)) {
       continue;
     }
-    if (addr.ss_family == AF_INET)
-    {
+    if (addr.ss_family == AF_INET) {
       esp_netif_ip_info_t ip_info;
-      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK)
-      {
+      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK) {
         continue;
       }
       struct sockaddr_in *b = (struct sockaddr_in *)&addr;
-      if (b->sin_addr.s_addr == ip_info.ip.addr)
-      {
+      if (b->sin_addr.s_addr == ip_info.ip.addr) {
         return esp_netif_get_netif_impl_index(esp_netif);
       }
     }
-    if (addr.ss_family == AF_INET6)
-    {
+    if (addr.ss_family == AF_INET6) {
       struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
       esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
       int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
-      for (int i = 0; i < num; ++i)
-      {
+      for (int i = 0; i < num; ++i) {
 
-        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i]))
-        {
+        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i])) {
           continue;
         }
-        if (memcmp(&if_ip6[i].addr, b->sin6_addr.s6_addr, 16) == 0)
-        {
+        if (memcmp(&if_ip6[i].addr, b->sin6_addr.s6_addr, 16) == 0) {
           return esp_netif_get_netif_impl_index(esp_netif);
         }
       }
@@ -152,7 +139,8 @@ get_interface_index(int sock)
   return -1;
 }
 
-void oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
+void
+oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 {
   FD_SET(dev->tcp.server_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -173,16 +161,14 @@ free_tcp_session(tcp_session_t *session)
 {
   oc_list_remove(session_list, session);
 
-  if (!oc_session_events_is_ongoing())
-  {
+  if (!oc_session_events_is_ongoing()) {
     oc_session_end_event(&session->endpoint);
   }
 
   FD_CLR(session->sock, &session->dev->rfds);
 
   ssize_t len = 0;
-  do
-  {
+  do {
     uint8_t dummy_value = 0xef;
     len = write(session->dev->tcp.connect_pipe[1], &dummy_value, 1);
   } while (len == -1 && errno == EINTR);
@@ -199,8 +185,7 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
                 tcp_csm_state_t state)
 {
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
-  if (!session)
-  {
+  if (!session) {
     OC_ERR("could not allocate new TCP session object");
     return -1;
   }
@@ -215,8 +200,7 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
 
   oc_list_add(session_list, session);
 
-  if (!(endpoint->flags & SECURED))
-  {
+  if (!(endpoint->flags & SECURED)) {
     oc_session_start_event((oc_endpoint_t *)endpoint);
   }
 
@@ -233,24 +217,20 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
   socklen_t receive_len = sizeof(receive_from);
 
   int new_socket = accept(fd, (struct sockaddr *)&receive_from, &receive_len);
-  if (new_socket < 0)
-  {
+  if (new_socket < 0) {
     OC_ERR("failed to accept incoming TCP connection");
     return -1;
   }
   OC_DBG("accepted incomming TCP connection");
 
-  if (endpoint->flags & IPV6)
-  {
+  if (endpoint->flags & IPV6) {
     struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receive_from;
     memcpy(endpoint->addr.ipv6.address, r->sin6_addr.s6_addr,
            sizeof(r->sin6_addr.s6_addr));
     endpoint->addr.ipv6.scope = r->sin6_scope_id;
     endpoint->addr.ipv6.port = ntohs(r->sin6_port);
 #ifdef OC_IPV4
-  }
-  else if (endpoint->flags & IPV4)
-  {
+  } else if (endpoint->flags & IPV4) {
     struct sockaddr_in *r = (struct sockaddr_in *)&receive_from;
     memcpy(endpoint->addr.ipv4.address, &r->sin_addr.s_addr,
            sizeof(r->sin_addr.s_addr));
@@ -260,8 +240,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   FD_CLR(fd, setfds);
 
-  if (add_new_session(new_socket, dev, endpoint, CSM_NONE) < 0)
-  {
+  if (add_new_session(new_socket, dev, endpoint, CSM_NONE) < 0) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -277,13 +256,11 @@ find_session_by_endpoint(oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_list_head(session_list);
   while (session != NULL &&
-         oc_endpoint_compare(&session->endpoint, endpoint) != 0)
-  {
+         oc_endpoint_compare(&session->endpoint, endpoint) != 0) {
     session = session->next;
   }
 
-  if (!session)
-  {
+  if (!session) {
 #ifdef OC_DEBUG
     PRINT("could not find ongoing TCP session for endpoint:");
     PRINTipaddr(*endpoint);
@@ -303,13 +280,11 @@ static tcp_session_t *
 get_ready_to_read_session(fd_set *setfds)
 {
   tcp_session_t *session = oc_list_head(session_list);
-  while (session != NULL && !FD_ISSET(session->sock, setfds))
-  {
+  while (session != NULL && !FD_ISSET(session->sock, setfds)) {
     session = session->next;
   }
 
-  if (!session)
-  {
+  if (!session) {
     OC_ERR("could not find any open ready-to-read session");
     return NULL;
   }
@@ -320,14 +295,11 @@ static size_t
 get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
 {
   size_t total_length = 0;
-  if (endpoint->flags & SECURED)
-  {
+  if (endpoint->flags & SECURED) {
     //[3][4] bytes in tls header are tls payload length
     total_length =
-        TLS_HEADER_SIZE + (size_t)((message->data[3] << 8) | message->data[4]);
-  }
-  else
-  {
+      TLS_HEADER_SIZE + (size_t)((message->data[3] << 8) | message->data[4]);
+  } else {
     total_length = coap_tcp_get_packet_size(message->data);
   }
 
@@ -339,69 +311,56 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
 
-#define ret_with_code(status) \
-  ret = status;               \
+#define ret_with_code(status)                                                  \
+  ret = status;                                                                \
   goto oc_tcp_receive_message_done
 
   adapter_receive_state_t ret = ADAPTER_STATUS_ERROR;
   message->endpoint.device = dev->device;
 
-  if (FD_ISSET(dev->tcp.server_sock, fds))
-  {
+  if (FD_ISSET(dev->tcp.server_sock, fds)) {
     message->endpoint.flags = IPV6 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server_sock, fds, &message->endpoint) <
-        0)
-    {
+        0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
-  }
-  else if (FD_ISSET(dev->tcp.secure_sock, fds))
-  {
+  } else if (FD_ISSET(dev->tcp.secure_sock, fds)) {
     message->endpoint.flags = IPV6 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure_sock, fds, &message->endpoint) <
-        0)
-    {
+        0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  }
-  else if (FD_ISSET(dev->tcp.server4_sock, fds))
-  {
+  } else if (FD_ISSET(dev->tcp.server4_sock, fds)) {
     message->endpoint.flags = IPV4 | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.server4_sock, fds,
-                           &message->endpoint) < 0)
-    {
+                           &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #ifdef OC_SECURITY
-  }
-  else if (FD_ISSET(dev->tcp.secure4_sock, fds))
-  {
-    message->endpoint.flags = IPV4 | SECURED | TCP  | ACCEPTED;
+  } else if (FD_ISSET(dev->tcp.secure4_sock, fds)) {
+    message->endpoint.flags = IPV4 | SECURED | TCP | ACCEPTED;
     if (accept_new_session(dev, dev->tcp.secure4_sock, fds,
-                           &message->endpoint) < 0)
-    {
+                           &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
     ret_with_code(ADAPTER_STATUS_ACCEPT);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-  }
-  else if (FD_ISSET(dev->tcp.connect_pipe[0], fds))
-  {
+  } else if (FD_ISSET(dev->tcp.connect_pipe[0], fds)) {
     ssize_t len = read(dev->tcp.connect_pipe[0], message->data, OC_PDU_SIZE);
-    OC_DBG("oc_tcp_receive_message select: dev->tcp.connect_pipe[0]: %d", (int)len);
-    if (len < 0)
-    {
+    OC_DBG("oc_tcp_receive_message select: dev->tcp.connect_pipe[0]: %d",
+           (int)len);
+    if (len < 0) {
       OC_ERR("read error! %d", errno);
       ret_with_code(ADAPTER_STATUS_ERROR);
     }
@@ -411,8 +370,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
   // find session.
   tcp_session_t *session = get_ready_to_read_session(fds);
-  if (!session)
-  {
+  if (!session) {
     OC_DBG("could not find TCP session socket in fd set");
     ret_with_code(ADAPTER_STATUS_NONE);
   }
@@ -421,20 +379,16 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
   message->length = 0;
-  do
-  {
+  do {
     int count =
-        recv(session->sock, message->data + message->length, want_read, 0);
-    if (count < 0)
-    {
+      recv(session->sock, message->data + message->length, want_read, 0);
+    if (count < 0) {
       OC_ERR("recv error! %d", errno);
 
       free_tcp_session(session);
 
       ret_with_code(ADAPTER_STATUS_ERROR);
-    }
-    else if (count == 0)
-    {
+    } else if (count == 0) {
       OC_DBG("peer closed TCP session\n");
 
       free_tcp_session(session);
@@ -446,12 +400,10 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     message->length += (size_t)count;
     want_read -= (size_t)count;
 
-    if (total_length == 0)
-    {
+    if (total_length == 0) {
       total_length = get_total_length_from_header(message, &session->endpoint);
       if (total_length >
-          (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE))
-      {
+          (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
         OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
                total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         OC_ERR("It may occur buffer overflow.");
@@ -465,8 +417,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
   memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
 #ifdef OC_SECURITY
-  if (message->endpoint.flags & SECURED)
-  {
+  if (message->endpoint.flags & SECURED) {
     message->encrypted = 1;
   }
 #endif /* OC_SECURITY */
@@ -480,12 +431,12 @@ oc_tcp_receive_message_done:
   return ret;
 }
 
-void oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
+void
+oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
-  if (session)
-  {
+  if (session) {
     free_tcp_session(session);
   }
   pthread_mutex_unlock(&dev->tcp.mutex);
@@ -496,8 +447,7 @@ get_session_socket(oc_endpoint_t *endpoint)
 {
   int sock = -1;
   tcp_session_t *session = find_session_by_endpoint(endpoint);
-  if (!session)
-  {
+  if (!session) {
     return -1;
   }
 
@@ -514,27 +464,23 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
   struct timeval tval;
 
   flags = fcntl(sockfd, F_GETFL, 0);
-  if (flags < 0)
-  {
+  if (flags < 0) {
     return -1;
   }
 
   error = fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
-  if (error < 0)
-  {
+  if (error < 0) {
     return -1;
   }
 
   error = 0;
-  if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0)
-  {
+  if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
     if (errno != EINPROGRESS)
       return -1;
   }
 
   /* Do whatever we want while the connect is taking place. */
-  if (n == 0)
-  {
+  if (n == 0) {
     goto done; /* connect completed immediately */
   }
 
@@ -543,36 +489,28 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0)
-  {
+  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0) {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
   }
 
-  if (FD_ISSET(sockfd, &wset))
-  {
+  if (FD_ISSET(sockfd, &wset)) {
     len = sizeof(error);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
       return -1; /* Solaris pending error */
-  }
-  else
-  {
+  } else {
     OC_DBG("select error: sockfd not set");
     return -1;
   }
 
 done:
-  if (error < 0)
-  {
+  if (error < 0) {
     errno = error;
     return -1;
-  }
-  else
-  {
+  } else {
     error = fcntl(sockfd, F_SETFL, flags); /* restore file status flags */
-    if (error < 0)
-    {
+    if (error < 0) {
       return -1;
     }
   }
@@ -586,21 +524,16 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   int sock = -1;
   uint8_t retry_cnt = 0;
 
-  while (retry_cnt < LIMIT_RETRY_CONNECT)
-  {
-    if (endpoint->flags & IPV6)
-    {
+  while (retry_cnt < LIMIT_RETRY_CONNECT) {
+    if (endpoint->flags & IPV6) {
       sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 #ifdef OC_IPV4
-    }
-    else if (endpoint->flags & IPV4)
-    {
+    } else if (endpoint->flags & IPV4) {
       sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 #endif
     }
 
-    if (sock < 0)
-    {
+    if (sock < 0) {
       OC_ERR("could not create socket for new TCP session");
       return -1;
     }
@@ -608,8 +541,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
     socklen_t receiver_size = sizeof(*receiver);
     int ret = 0;
     if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
-                            TCP_CONNECT_TIMEOUT)) == 0)
-    {
+                            TCP_CONNECT_TIMEOUT)) == 0) {
       break;
     }
 
@@ -618,16 +550,14 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
     OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
   }
 
-  if (retry_cnt >= LIMIT_RETRY_CONNECT)
-  {
+  if (retry_cnt >= LIMIT_RETRY_CONNECT) {
     OC_ERR("could not initiate TCP connection");
     return -1;
   }
 
   OC_DBG("successfully initiated TCP connection");
 
-  if (add_new_session(sock, dev, endpoint, CSM_SENT) < 0)
-  {
+  if (add_new_session(sock, dev, endpoint, CSM_SENT) < 0) {
     OC_ERR("could not record new TCP session");
     close(sock);
     return -1;
@@ -636,8 +566,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   FD_SET(sock, &dev->rfds);
 
   ssize_t len = 0;
-  do
-  {
+  do {
     uint8_t dummy_value = 0xef;
     len = write(dev->tcp.connect_pipe[1], &dummy_value, 1);
   } while (len == -1 && errno == EINTR);
@@ -647,39 +576,35 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   return sock;
 }
 
-int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
-                       const struct sockaddr_storage *receiver)
+int
+oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
+                   const struct sockaddr_storage *receiver)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   int send_sock = get_session_socket(&message->endpoint);
 
   size_t bytes_sent = 0;
-  if (send_sock < 0)
-  {
+  if (send_sock < 0) {
     if (message->endpoint.flags & ACCEPTED) {
       OC_ERR("connection was closed");
       goto oc_tcp_send_buffer_done;
     }
     if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
-        0)
-    {
+        0) {
       OC_ERR("could not initiate new TCP session");
       goto oc_tcp_send_buffer_done;
     }
   }
 
   send_sock = get_session_socket(&message->endpoint);
-  if (send_sock < 0)
-  {
+  if (send_sock < 0) {
     goto oc_tcp_send_buffer_done;
   }
 
-  do
-  {
+  do {
     ssize_t send_len = send(send_sock, message->data + bytes_sent,
                             message->length - bytes_sent, MSG_NOSIGNAL);
-    if (send_len < 0)
-    {
+    if (send_len < 0) {
       OC_WRN("send() returned errno %d", errno);
       goto oc_tcp_send_buffer_done;
     }
@@ -690,8 +615,7 @@ int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
 
-  if (bytes_sent == 0)
-  {
+  if (bytes_sent == 0) {
     return -1;
   }
 
@@ -720,48 +644,42 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 
   dev->tcp.server4_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-  if (dev->tcp.server4_sock < 0)
-  {
+  if (dev->tcp.server4_sock < 0) {
     OC_ERR("creating TCP server socket");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->tcp.secure4_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (dev->tcp.secure4_sock < 0)
-  {
+  if (dev->tcp.secure4_sock < 0) {
     OC_ERR("creating TCP secure socket");
     return -1;
   }
 #endif /* OC_SECURITY */
 
-  if (configure_tcp_socket(dev->tcp.server4_sock, &dev->tcp.server4) < 0)
-  {
+  if (configure_tcp_socket(dev->tcp.server4_sock, &dev->tcp.server4) < 0) {
     OC_ERR("set socket option in server socket");
     return -1;
   }
 
-  if (get_assigned_tcp_port(dev->tcp.server4_sock, &dev->tcp.server4) < 0)
-  {
+  if (get_assigned_tcp_port(dev->tcp.server4_sock, &dev->tcp.server4) < 0) {
     OC_ERR("get port for server socket");
     return -1;
   }
   dev->tcp.port4 = ntohs(((struct sockaddr_in *)&dev->tcp.server4)->sin_port);
 
 #ifdef OC_SECURITY
-  if (configure_tcp_socket(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0)
-  {
+  if (configure_tcp_socket(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0) {
     OC_ERR("set socket option in secure socket");
     return -1;
   }
 
-  if (get_assigned_tcp_port(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0)
-  {
+  if (get_assigned_tcp_port(dev->tcp.secure4_sock, &dev->tcp.secure4) < 0) {
     OC_ERR("get port for secure socket");
     return -1;
   }
   dev->tcp.tls4_port =
-      ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
+    ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
 
   OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
@@ -770,12 +688,12 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif /* OC_IPV4 */
 
-int oc_tcp_connectivity_init(ip_context_t *dev)
+int
+oc_tcp_connectivity_init(ip_context_t *dev)
 {
   OC_DBG("Initializing TCP adapter for device %zd", dev->device);
 
-  if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0)
-  {
+  if (pthread_mutex_init(&dev->tcp.mutex, NULL) != 0) {
     oc_abort("error initializing TCP adapter mutex");
   }
   memset(&dev->tcp.server, 0, sizeof(struct sockaddr_storage));
@@ -794,43 +712,37 @@ int oc_tcp_connectivity_init(ip_context_t *dev)
 
   dev->tcp.server_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 
-  if (dev->tcp.server_sock < 0)
-  {
+  if (dev->tcp.server_sock < 0) {
     OC_ERR("creating TCP server socket");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->tcp.secure_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-  if (dev->tcp.secure_sock < 0)
-  {
+  if (dev->tcp.secure_sock < 0) {
     OC_ERR("creating TCP secure socket");
     return -1;
   }
 #endif /* OC_SECURITY */
 
-  if (configure_tcp_socket(dev->tcp.server_sock, &dev->tcp.server) < 0)
-  {
+  if (configure_tcp_socket(dev->tcp.server_sock, &dev->tcp.server) < 0) {
     OC_ERR("set socket option in server socket");
     return -1;
   }
 
-  if (get_assigned_tcp_port(dev->tcp.server_sock, &dev->tcp.server) < 0)
-  {
+  if (get_assigned_tcp_port(dev->tcp.server_sock, &dev->tcp.server) < 0) {
     OC_ERR("get port for server socket");
     return -1;
   }
   dev->tcp.port = ntohs(((struct sockaddr_in *)&dev->tcp.server)->sin_port);
 
 #ifdef OC_SECURITY
-  if (configure_tcp_socket(dev->tcp.secure_sock, &dev->tcp.secure) < 0)
-  {
+  if (configure_tcp_socket(dev->tcp.secure_sock, &dev->tcp.secure) < 0) {
     OC_ERR("set socket option in secure socket");
     return -1;
   }
 
-  if (get_assigned_tcp_port(dev->tcp.secure_sock, &dev->tcp.secure) < 0)
-  {
+  if (get_assigned_tcp_port(dev->tcp.secure_sock, &dev->tcp.secure) < 0) {
     OC_ERR("get port for secure socket");
     return -1;
   }
@@ -838,14 +750,12 @@ int oc_tcp_connectivity_init(ip_context_t *dev)
 #endif /* OC_SECURITY */
 
 #ifdef OC_IPV4
-  if (tcp_connectivity_ipv4_init(dev) != 0)
-  {
+  if (tcp_connectivity_ipv4_init(dev) != 0) {
     OC_ERR("Could not initialize IPv4 for TCP");
   }
 #endif /* OC_IPV4 */
 
-  if (vfs_pipe(dev->tcp.connect_pipe) < 0)
-  {
+  if (vfs_pipe(dev->tcp.connect_pipe) < 0) {
     OC_ERR("Could not initialize connection pipe");
   }
 
@@ -866,7 +776,8 @@ int oc_tcp_connectivity_init(ip_context_t *dev)
   return 0;
 }
 
-void oc_tcp_connectivity_shutdown(ip_context_t *dev)
+void
+oc_tcp_connectivity_shutdown(ip_context_t *dev)
 {
   close(dev->tcp.server_sock);
 
@@ -885,11 +796,9 @@ void oc_tcp_connectivity_shutdown(ip_context_t *dev)
   close(dev->tcp.connect_pipe[1]);
 
   tcp_session_t *session = (tcp_session_t *)oc_list_head(session_list), *next;
-  while (session != NULL)
-  {
+  while (session != NULL) {
     next = session->next;
-    if (session->endpoint.device == dev->device)
-    {
+    if (session->endpoint.device == dev->device) {
       free_tcp_session(session);
     }
     session = next;
@@ -903,30 +812,27 @@ void oc_tcp_connectivity_shutdown(ip_context_t *dev)
 tcp_csm_state_t
 oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
 {
-  if (!endpoint)
-  {
+  if (!endpoint) {
     return CSM_ERROR;
   }
 
   tcp_session_t *session = find_session_by_endpoint(endpoint);
-  if (!session)
-  {
+  if (!session) {
     return CSM_NONE;
   }
 
   return session->csm_state;
 }
 
-int oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm)
+int
+oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm)
 {
-  if (!endpoint)
-  {
+  if (!endpoint) {
     return -1;
   }
 
   tcp_session_t *session = find_session_by_endpoint(endpoint);
-  if (!session)
-  {
+  if (!session) {
     return -1;
   }
 

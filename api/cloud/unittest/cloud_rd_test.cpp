@@ -22,8 +22,7 @@
 #include "oc_cloud_internal.h"
 #include "oc_collection.h"
 
-class TestCloudRD : public testing::Test
-{
+class TestCloudRD : public testing::Test {
 public:
   static oc_handler_t s_handler;
   static pthread_mutex_t mutex;

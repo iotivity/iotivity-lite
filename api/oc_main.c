@@ -282,13 +282,13 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-// initialize cloud after load pstat
+  // initialize cloud after load pstat
   oc_cloud_init();
   OC_DBG("oc_main_init(): loading cloud");
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #ifdef OC_SERVER
-// initialize after cloud because their can be registered to cloud.
+  // initialize after cloud because their can be registered to cloud.
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
 #endif
@@ -365,7 +365,7 @@ oc_main_shutdown(void)
   free(drop_commands);
   drop_commands = NULL;
 #else
-  memset(drop_commands, 0, sizeof(bool)*OC_MAX_NUM_DEVICES);
+  memset(drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
 #endif
 
   app_callbacks = NULL;

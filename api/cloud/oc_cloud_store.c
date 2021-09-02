@@ -60,18 +60,19 @@ cloud_store_load(oc_cloud_store_t *store)
 }
 
 static void
-rep_set_text_string(CborEncoder *object_map, const char* key, const char* value)
+rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
 {
-  g_err |= cbor_encode_text_string(object_map, key, strlen(key));      
-  if ((const char *)value != NULL) {                                      
-    g_err |= cbor_encode_text_string(object_map, value, strlen(value));  
-  } else {                                                                  
-    g_err |= cbor_encode_text_string(object_map, "", 0);                 
+  g_err |= cbor_encode_text_string(object_map, key, strlen(key));
+  if ((const char *)value != NULL) {
+    g_err |= cbor_encode_text_string(object_map, value, strlen(value));
+  } else {
+    g_err |= cbor_encode_text_string(object_map, "", 0);
   }
 }
 
 static void
-rep_set_int(CborEncoder *object_map, const char* key, int64_t value) {
+rep_set_int(CborEncoder *object_map, const char *key, int64_t value)
+{
   g_err |= cbor_encode_text_string(object_map, key, strlen(key));
   g_err |= cbor_encode_int(object_map, value);
 }
@@ -89,14 +90,16 @@ gen_cloud_tag(const char *name, size_t device, char *cloud_tag)
 static void
 encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
 {
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_CI_SERVER), oc_string(store->ci_server));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_CI_SERVER),
+                      oc_string(store->ci_server));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
-                         oc_string(store->auth_provider));
+                      oc_string(store->auth_provider));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_UID), oc_string(store->uid));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_SID), oc_string(store->sid));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_ACCESS_TOKEN), oc_string(store->access_token));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
+                      oc_string(store->access_token));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
-                         oc_string(store->refresh_token));
+                      oc_string(store->refresh_token));
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_STATUS), store->status);
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_CPS), store->cps);
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_EXPIRES_IN), store->expires_in);
@@ -175,25 +178,34 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
     len = oc_string_len(t->name);
     switch (t->type) {
     case OC_REP_STRING:
-      if (len == strlen(CLOUD_XSTR(CLOUD_CI_SERVER)) && memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CI_SERVER), strlen(CLOUD_XSTR(CLOUD_CI_SERVER))) == 0) {
+      if (len == strlen(CLOUD_XSTR(CLOUD_CI_SERVER)) &&
+          memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CI_SERVER),
+                 strlen(CLOUD_XSTR(CLOUD_CI_SERVER))) == 0) {
         cloud_set_string(&store->ci_server, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == strlen(CLOUD_XSTR(CLOUD_SID)) && memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_SID), strlen(CLOUD_XSTR(CLOUD_SID))) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_SID)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_SID),
+                        strlen(CLOUD_XSTR(CLOUD_SID))) == 0) {
         cloud_set_string(&store->sid, oc_string(t->value.string),
                          oc_string_len(t->value.string));
       } else if (len == strlen(CLOUD_XSTR(CLOUD_AUTH_PROVIDER)) &&
-                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_AUTH_PROVIDER), strlen(CLOUD_XSTR(CLOUD_AUTH_PROVIDER))) == 0) {
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
+                        strlen(CLOUD_XSTR(CLOUD_AUTH_PROVIDER))) == 0) {
         cloud_set_string(&store->auth_provider, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == strlen(CLOUD_XSTR(CLOUD_UID)) && memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_UID), strlen(CLOUD_XSTR(CLOUD_UID))) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_UID)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_UID),
+                        strlen(CLOUD_XSTR(CLOUD_UID))) == 0) {
         cloud_set_string(&store->uid, oc_string(t->value.string),
                          oc_string_len(t->value.string));
       } else if (len == strlen(CLOUD_XSTR(CLOUD_ACCESS_TOKEN)) &&
-                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_ACCESS_TOKEN), strlen(CLOUD_XSTR(CLOUD_ACCESS_TOKEN))) == 0) {
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
+                        strlen(CLOUD_XSTR(CLOUD_ACCESS_TOKEN))) == 0) {
         cloud_set_string(&store->access_token, oc_string(t->value.string),
                          oc_string_len(t->value.string));
       } else if (len == strlen(CLOUD_XSTR(CLOUD_REFRESH_TOKEN)) &&
-                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_REFRESH_TOKEN), strlen(CLOUD_XSTR(CLOUD_REFRESH_TOKEN))) == 0) {
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
+                        strlen(CLOUD_XSTR(CLOUD_REFRESH_TOKEN))) == 0) {
         cloud_set_string(&store->refresh_token, oc_string(t->value.string),
                          oc_string_len(t->value.string));
       } else {
@@ -202,12 +214,17 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
       }
       break;
     case OC_REP_INT:
-      if (len == strlen(CLOUD_XSTR(CLOUD_STATUS)) && memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_STATUS), strlen(CLOUD_XSTR(CLOUD_STATUS))) == 0) {
+      if (len == strlen(CLOUD_XSTR(CLOUD_STATUS)) &&
+          memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_STATUS),
+                 strlen(CLOUD_XSTR(CLOUD_STATUS))) == 0) {
         store->status = (uint8_t)t->value.integer;
-      } else if (len == strlen(CLOUD_XSTR(CLOUD_CPS)) && memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CPS), strlen(CLOUD_XSTR(CLOUD_CPS))) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_CPS)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CPS),
+                        strlen(CLOUD_XSTR(CLOUD_CPS))) == 0) {
         store->cps = (uint8_t)t->value.integer;
       } else if (len == strlen(CLOUD_XSTR(CLOUD_EXPIRES_IN)) &&
-                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_EXPIRES_IN), strlen(CLOUD_XSTR(CLOUD_EXPIRES_IN))) == 0) {
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_EXPIRES_IN),
+                        strlen(CLOUD_XSTR(CLOUD_EXPIRES_IN))) == 0) {
         store->expires_in = t->value.integer;
       } else {
         OC_ERR("[CLOUD_STORE] Unknown property %s", oc_string(t->name));

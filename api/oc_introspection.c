@@ -51,8 +51,7 @@ oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   long rr = oc_storage_write(idd_tag, IDD, IDD_size);
-  PRINT("\tIntrospection data set written data size: %d [bytes]\n",
-        (int)rr);
+  PRINT("\tIntrospection data set written data size: %d [bytes]\n", (int)rr);
 }
 #endif /*OC_IDD_API*/
 

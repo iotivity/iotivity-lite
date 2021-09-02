@@ -364,20 +364,21 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
   /*  Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be
       granted.
-      if enabled also the .well-known/core will be granted access, 
+      if enabled also the .well-known/core will be granted access,
       since this also a discovery resource.
   */
-  if (pstat->s == OC_DOS_RFOTM && method == OC_GET && (
+  if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
+      (
 #ifdef OC_WKCORE
-       (oc_string_len(resource->uri) == 17 &&
-        memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0) ||
+        (oc_string_len(resource->uri) == 17 &&
+         memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0) ||
 #endif
-       (oc_string_len(resource->uri) == 8 &&
-        memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
-       (oc_string_len(resource->uri) == 6 &&
-        memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
-       (oc_string_len(resource->uri) == 6 &&
-        memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
+        (oc_string_len(resource->uri) == 8 &&
+         memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
+        (oc_string_len(resource->uri) == 6 &&
+         memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
+        (oc_string_len(resource->uri) == 6 &&
+         memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
     return true;
   }
   /* Requests over unsecured channel prior to DOC */
@@ -1097,8 +1098,8 @@ oc_sec_acl_add_bootsrap_acl(size_t device)
   oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/p", 0,
                         device);
 #ifdef OC_WKCORE
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/.well-known/core", 0,
-    device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2,
+                        "/.well-known/core", 0, device);
 #endif
 }
 

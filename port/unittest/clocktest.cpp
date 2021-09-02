@@ -23,40 +23,35 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-    #include "port/oc_clock.h"
+#include "port/oc_clock.h"
 }
 
-class TestClock: public testing::Test
-{
-    protected:
-        virtual void SetUp()
-        {
-        }
+class TestClock : public testing::Test {
+protected:
+  virtual void SetUp() {}
 
-        virtual void TearDown()
-        {
-        }
+  virtual void TearDown() {}
 };
 
 TEST_F(TestClock, oc_clock_time)
 {
-    oc_clock_time_t timestamp = oc_clock_time();
-    EXPECT_NE(0, timestamp);
+  oc_clock_time_t timestamp = oc_clock_time();
+  EXPECT_NE(0, timestamp);
 }
 
 TEST_F(TestClock, oc_clock_seconds)
 {
-    long time_seconds = oc_clock_seconds();
-    EXPECT_NE(0, time_seconds);
+  long time_seconds = oc_clock_seconds();
+  EXPECT_NE(0, time_seconds);
 }
 
 TEST_F(TestClock, oc_clock_wait)
 {
-    oc_clock_time_t wait_time = 1 * (OC_CLOCK_SECOND / 1000);
-    oc_clock_time_t prev_stamp = oc_clock_time();
-    oc_clock_wait(wait_time);
-    oc_clock_time_t cur_stamp = oc_clock_time();
+  oc_clock_time_t wait_time = 1 * (OC_CLOCK_SECOND / 1000);
+  oc_clock_time_t prev_stamp = oc_clock_time();
+  oc_clock_wait(wait_time);
+  oc_clock_time_t cur_stamp = oc_clock_time();
 
-    int seconds = (cur_stamp - prev_stamp) / OC_CLOCK_SECOND;
-    EXPECT_EQ(1, seconds);
+  int seconds = (cur_stamp - prev_stamp) / OC_CLOCK_SECOND;
+  EXPECT_EQ(1, seconds);
 }

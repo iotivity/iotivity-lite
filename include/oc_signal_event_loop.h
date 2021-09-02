@@ -20,13 +20,12 @@
 #define OC_SIGNAL_EVENT_LOOP_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief signal event loop
- * 
+ *
  */
 void _oc_signal_event_loop(void);
 

@@ -40,7 +40,7 @@ const struct test_t
   { "1970-01-01T00:00:0XZ" },      /* Non-digit in component                */
   { "1970-01-01T00:00:00.12345X7890Z" }, /* Non-digit in component */
   { "1970-01-01T00:00:00.1234567890Z" }, /* Fraction > 9 digits */
-  { "1970-01-01T00:00:00,123456789Z" }, /* Decimal sign must be full stop */
+  { "1970-01-01T00:00:00,123456789Z" },  /* Decimal sign must be full stop */
   { "1970-01-01T00:00:00Z " }, /* Trailing space                        */
 };
 

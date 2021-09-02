@@ -10,13 +10,15 @@
 
 #ifdef __AVR__
 #ifdef OC_XMEM
-void extRAMinit(void)__attribute__ ((used, naked, section (".init3")));
-void extRAMinit(void) {
-    // set up the xmem registers
-    XMCRB=0;
-    XMCRA=1<<SRE;
-    DDRD|=_BV(PD7);
-    DDRL|=(_BV(PL6)|_BV(PL7));
+void extRAMinit(void) __attribute__((used, naked, section(".init3")));
+void
+extRAMinit(void)
+{
+  // set up the xmem registers
+  XMCRB = 0;
+  XMCRA = 1 << SRE;
+  DDRD |= _BV(PD7);
+  DDRL |= (_BV(PL6) | _BV(PL7));
 }
 #endif
 #endif
@@ -59,7 +61,8 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
 {
   (void)interface;
   (void)user_data;
@@ -92,8 +95,7 @@ post_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data
 }
 
 static void
-put_light(oc_request_t *request, oc_interface_mask_t interface,
-           void *user_data)
+put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)interface;
   (void)user_data;
@@ -122,14 +124,14 @@ signal_event_loop(void)
   oc_process_post(&sample_server_process, OC_PROCESS_EVENT_TIMER, NULL);
 }
 
-
 OC_PROCESS_THREAD(sample_server_process, ev, data)
 {
   (void)data;
   static struct oc_etimer et;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
   static oc_clock_time_t next_event;
   oc_set_mtu_size(1024);
   oc_set_max_app_data_size(2048);
@@ -139,66 +141,68 @@ OC_PROCESS_THREAD(sample_server_process, ev, data)
   OC_DBG("Initializing server for arduino");
 
   while (ev != OC_PROCESS_EVENT_EXIT) {
- 	oc_etimer_set(&et, (oc_clock_time_t)next_event);
+    oc_etimer_set(&et, (oc_clock_time_t)next_event);
 
-	if(ev == OC_PROCESS_EVENT_INIT){
-		int init = oc_main_init(&handler);
-		if (init < 0){
-			OC_DBG("Server Init failed!");
-			return init;
-		}
-      	OC_DBG("Server process init!");
-	}
-	else if(ev == OC_PROCESS_EVENT_TIMER){
-		next_event = oc_main_poll();
-		next_event -= oc_clock_time();
-	}
+    if (ev == OC_PROCESS_EVENT_INIT) {
+      int init = oc_main_init(&handler);
+      if (init < 0) {
+        OC_DBG("Server Init failed!");
+        return init;
+      }
+      OC_DBG("Server process init!");
+    } else if (ev == OC_PROCESS_EVENT_TIMER) {
+      next_event = oc_main_poll();
+      next_event -= oc_clock_time();
+    }
     OC_PROCESS_WAIT_EVENT();
   }
- OC_PROCESS_END();
+  OC_PROCESS_END();
 }
 // Arduino Ethernet Shield
-uint8_t ConnectToNetwork()
+uint8_t
+ConnectToNetwork()
 {
-	// Note: ****Update the MAC address here with your shield's MAC address****
-	uint8_t ETHERNET_MAC[] = {0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9};
+  // Note: ****Update the MAC address here with your shield's MAC address****
+  uint8_t ETHERNET_MAC[] = { 0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9 };
 #if defined(__SAMD21G18A__)
   Ethernet.init(5); // CS Pin for MKRZERO
 #endif
-	uint8_t error = Ethernet.begin(ETHERNET_MAC);
-	if (error  == 0)
-	{
-		OC_ERR("Error connecting to Network: %d", error);
-		return -1;
-	}
+  uint8_t error = Ethernet.begin(ETHERNET_MAC);
+  if (error == 0) {
+    OC_ERR("Error connecting to Network: %d", error);
+    return -1;
+  }
   IPAddress ip = Ethernet.localIP();
   OC_DBG("Connected to Ethernet IP: %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-	return 0;
+  return 0;
 }
 
-void setup() {
+void
+setup()
+{
 #if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
-	Serial.begin(115200);
+  Serial.begin(115200);
 #else
-	Serial.begin(115200);
+  Serial.begin(115200);
 #endif
 #if defined(__SAMD21G18A__)
   while (!Serial) {
   }
 #endif
-	if (ConnectToNetwork() != 0)
-	{
-		OC_ERR("Unable to connect to network");
-		return;
-	}
+  if (ConnectToNetwork() != 0) {
+    OC_ERR("Unable to connect to network");
+    return;
+  }
 
 #ifdef OC_SECURITY
   oc_storage_config("creds");
 #endif /* OC_SECURITY */
-	oc_process_start(&sample_server_process, NULL);
-  	delay(200);
+  oc_process_start(&sample_server_process, NULL);
+  delay(200);
 }
 
-void loop() {
-	oc_process_run();
+void
+loop()
+{
+  oc_process_run();
 }
