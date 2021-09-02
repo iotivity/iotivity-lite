@@ -50,9 +50,10 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
+#include <wchar.h>
+
 #include <inttypes.h>
 #include <stddef.h>
-#include <wchar.h>
 
 #ifdef __cplusplus
 extern "C" {
