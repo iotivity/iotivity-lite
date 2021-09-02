@@ -69,7 +69,8 @@ extern "C" {
  *
  * \hideinitializer
  */
-struct oc_etimer {
+struct oc_etimer
+{
   struct oc_timer timer;
   struct oc_etimer *next;
   struct oc_process *p;

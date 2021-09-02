@@ -21,12 +21,21 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-void oc_random_init(void) { srand((unsigned)GetTickCount()); }
+void
+oc_random_init(void)
+{
+  srand((unsigned)GetTickCount());
+}
 
-unsigned int oc_random_value(void) {
+unsigned int
+oc_random_value(void)
+{
   unsigned int val = 0;
   rand_s(&val);
   return val;
 }
 
-void oc_random_destroy() {}
+void
+oc_random_destroy()
+{
+}

@@ -56,13 +56,21 @@
 
 OC_MEMB(api_params, cloud_api_param_t, 1);
 
-cloud_api_param_t *alloc_api_param(void) {
+cloud_api_param_t *
+alloc_api_param(void)
+{
   return (cloud_api_param_t *)oc_memb_alloc(&api_params);
 }
 
-void free_api_param(cloud_api_param_t *p) { oc_memb_free(&api_params, p); }
+void
+free_api_param(cloud_api_param_t *p)
+{
+  oc_memb_free(&api_params, p);
+}
 
-int conv_cloud_endpoint(oc_cloud_context_t *ctx) {
+int
+conv_cloud_endpoint(oc_cloud_context_t *ctx)
+{
   int ret = 0;
   oc_endpoint_t ep;
   memset(&ep, 0, sizeof(oc_endpoint_t));
@@ -75,7 +83,9 @@ int conv_cloud_endpoint(oc_cloud_context_t *ctx) {
   return ret;
 }
 
-int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
+int
+oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
   if (!ctx || !cb) {
     return -1;
   }
@@ -96,9 +106,9 @@ int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
       bool cannotConnect = true;
       if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_register(
-              ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
-              oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-              ctx->device, oc_cloud_register_handler, p)) {
+            ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
+            oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
+            ctx->device, oc_cloud_register_handler, p)) {
         cannotConnect = false;
         ctx->store.cps = OC_CPS_REGISTERING;
       }
@@ -114,7 +124,9 @@ int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
   return -1;
 }
 
-int oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
+int
+oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
   if (!ctx || !cb) {
     return -1;
   }
@@ -151,16 +163,21 @@ int oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
   return -1;
 }
 
-int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx) {
+int
+oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
+{
   return (int)ctx->store.expires_in;
 }
 
-void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
-                                          uint32_t ttl) {
+void
+oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl)
+{
   ctx->time_to_live = ttl;
 }
 
-static void cloud_logout_internal(oc_client_response_t *data) {
+static void
+cloud_logout_internal(oc_client_response_t *data)
+{
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
@@ -182,7 +199,9 @@ static void cloud_logout_internal(oc_client_response_t *data) {
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_LOGGED_OUT);
 }
 
-int oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
+int
+oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
   if (!ctx || !cb) {
     return -1;
   }
@@ -214,7 +233,9 @@ int oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
   return -1;
 }
 
-static void cloud_deregistered_internal(oc_client_response_t *data) {
+static void
+cloud_deregistered_internal(oc_client_response_t *data)
+{
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   if (data->code < OC_STATUS_BAD_REQUEST ||
@@ -237,7 +258,9 @@ static void cloud_deregistered_internal(oc_client_response_t *data) {
   cloud_store_dump_async(&ctx->store);
 }
 
-static bool check_accesstoken_for_deregister(oc_cloud_context_t *ctx) {
+static bool
+check_accesstoken_for_deregister(oc_cloud_context_t *ctx)
+{
 // This value is calculated by coap_oscore_serialize_message for deregister
 // message with empty query parameters. The value should remain the same
 // unless some global options are added to coap requests.
@@ -250,8 +273,7 @@ static bool check_accesstoken_for_deregister(oc_cloud_context_t *ctx) {
 #define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
 
   oc_string_t query = cloud_access_deregister_query(
-      oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-      ctx->device);
+    oc_string(ctx->store.uid), oc_string(ctx->store.access_token), ctx->device);
   size_t query_size = oc_string_len(query);
   oc_free_string(&query);
 
@@ -259,7 +281,9 @@ static bool check_accesstoken_for_deregister(oc_cloud_context_t *ctx) {
          COAP_MAX_HEADER_SIZE;
 }
 
-static int cloud_deregister(cloud_api_param_t *p, bool useAccessToken) {
+static int
+cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
+{
   oc_assert(p != NULL);
 
   oc_cloud_context_t *ctx = p->ctx;
@@ -269,9 +293,9 @@ static int cloud_deregister(cloud_api_param_t *p, bool useAccessToken) {
 
   if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0) {
     if (cloud_access_deregister(
-            ctx->cloud_ep, oc_string(ctx->store.uid),
-            useAccessToken ? oc_string(ctx->store.access_token) : NULL,
-            ctx->device, cloud_deregistered_internal, p)) {
+          ctx->cloud_ep, oc_string(ctx->store.uid),
+          useAccessToken ? oc_string(ctx->store.access_token) : NULL,
+          ctx->device, cloud_deregistered_internal, p)) {
       cannotConnect = false;
     }
   }
@@ -283,8 +307,10 @@ static int cloud_deregister(cloud_api_param_t *p, bool useAccessToken) {
   return 0;
 }
 
-static void cloud_login_for_deregister(oc_cloud_context_t *ctx,
-                                       oc_cloud_status_t status, void *data) {
+static void
+cloud_login_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                           void *data)
+{
   cloud_api_param_t *p = (cloud_api_param_t *)data;
 
   if ((status & OC_CLOUD_LOGGED_IN) == 0) {
@@ -300,9 +326,10 @@ static void cloud_login_for_deregister(oc_cloud_context_t *ctx,
   }
 }
 
-static void cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
-                                               oc_cloud_status_t status,
-                                               void *data) {
+static void
+cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
+                                   oc_cloud_status_t status, void *data)
+{
   cloud_api_param_t *p = (cloud_api_param_t *)data;
 
   if ((status & OC_CLOUD_REFRESHED_TOKEN) == 0) {
@@ -330,7 +357,9 @@ static void cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
   }
 }
 
-int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
+int
+oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
   if (!ctx || !cb) {
     return -1;
   }
@@ -350,9 +379,9 @@ int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
   if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
     bool hasRefreshToken =
-        oc_string(ctx->store.refresh_token) &&
-        oc_string_len(ctx->store.refresh_token) > 0 &&
-        (!cloud_is_permanent_access_token(ctx->store.expires_in));
+      oc_string(ctx->store.refresh_token) &&
+      oc_string_len(ctx->store.refresh_token) > 0 &&
+      (!cloud_is_permanent_access_token(ctx->store.expires_in));
     if (hasRefreshToken) {
       if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) !=
           0) {
@@ -380,8 +409,9 @@ int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data) {
   return cloud_deregister(p, canUseAccessToken);
 }
 
-int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
-                           void *data) {
+int
+oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
   if (!ctx || !cb) {
     return -1;
   }
@@ -400,9 +430,9 @@ int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
     bool cannotConnect = true;
     if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_refresh_access_token(
-            ctx->cloud_ep, oc_string(ctx->store.uid),
-            oc_string(ctx->store.refresh_token), ctx->device,
-            oc_cloud_refresh_token_handler, p)) {
+          ctx->cloud_ep, oc_string(ctx->store.uid),
+          oc_string(ctx->store.refresh_token), ctx->device,
+          oc_cloud_refresh_token_handler, p)) {
       cannotConnect = false;
     }
     if (cannotConnect) {
@@ -415,9 +445,10 @@ int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
   return -1;
 }
 
-int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
-                                oc_discovery_all_handler_t handler,
-                                void *user_data) {
+int
+oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+                            oc_discovery_all_handler_t handler, void *user_data)
+{
   if (!ctx) {
     return -1;
   }
@@ -434,10 +465,12 @@ int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
 }
 
 /* Internal APIs for accessing the OCF Cloud */
-bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
-                           const char *auth_code, const char *uid,
-                           const char *access_token, size_t device,
-                           oc_response_handler_t handler, void *user_data) {
+bool
+cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
+                      const char *auth_code, const char *uid,
+                      const char *access_token, size_t device,
+                      oc_response_handler_t handler, void *user_data)
+{
 #ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s != OC_DOS_RFNOP) {
@@ -459,7 +492,7 @@ bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
                    user_data)) {
-    char uuid[OC_UUID_LEN] = {0};
+    char uuid[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
@@ -483,13 +516,14 @@ bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
   return oc_do_post();
 }
 
-oc_string_t cloud_access_deregister_query(const char *uid,
-                                          const char *access_token,
-                                          size_t device) {
+oc_string_t
+cloud_access_deregister_query(const char *uid, const char *access_token,
+                              size_t device)
+{
   oc_string_t q_uid;
   oc_concat_strings(&q_uid, "uid=", uid);
 
-  char uuid[OC_UUID_LEN] = {0};
+  char uuid[OC_UUID_LEN] = { 0 };
   oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
   oc_string_t q_di;
   oc_concat_strings(&q_di, "&di=", uuid);
@@ -512,9 +546,11 @@ oc_string_t cloud_access_deregister_query(const char *uid,
   return q_uid_di_at;
 }
 
-bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
-                             const char *access_token, size_t device,
-                             oc_response_handler_t handler, void *user_data) {
+bool
+cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
+                        const char *access_token, size_t device,
+                        oc_response_handler_t handler, void *user_data)
+{
 #ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s != OC_DOS_RFNOP) {
@@ -540,11 +576,11 @@ bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
   return s;
 }
 
-static bool cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
-                                   const char *access_token, size_t device,
-                                   bool is_sign_in,
-                                   oc_response_handler_t handler,
-                                   void *user_data) {
+static bool
+cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
+                       const char *access_token, size_t device, bool is_sign_in,
+                       oc_response_handler_t handler, void *user_data)
+{
 #ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s != OC_DOS_RFNOP) {
@@ -565,7 +601,7 @@ static bool cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {
-    char uuid[OC_UUID_LEN] = {0};
+    char uuid[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
@@ -582,24 +618,30 @@ static bool cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
   return oc_do_post();
 }
 
-bool cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
-                        const char *access_token, size_t device,
-                        oc_response_handler_t handler, void *user_data) {
+bool
+cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
+                   const char *access_token, size_t device,
+                   oc_response_handler_t handler, void *user_data)
+{
   return cloud_access_login_out(endpoint, uid, access_token, device, true,
                                 handler, user_data);
 }
 
-bool cloud_access_logout(oc_endpoint_t *endpoint, const char *uid,
-                         const char *access_token, size_t device,
-                         oc_response_handler_t handler, void *user_data) {
+bool
+cloud_access_logout(oc_endpoint_t *endpoint, const char *uid,
+                    const char *access_token, size_t device,
+                    oc_response_handler_t handler, void *user_data)
+{
   return cloud_access_login_out(endpoint, uid, access_token, device, false,
                                 handler, user_data);
 }
 
-bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
-                                       const char *refresh_token, size_t device,
-                                       oc_response_handler_t handler,
-                                       void *user_data) {
+bool
+cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
+                                  const char *refresh_token, size_t device,
+                                  oc_response_handler_t handler,
+                                  void *user_data)
+{
 #ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s != OC_DOS_RFNOP) {
@@ -620,7 +662,7 @@ bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
                    LOW_QOS, user_data)) {
-    char uuid[OC_UUID_LEN] = {0};
+    char uuid[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();

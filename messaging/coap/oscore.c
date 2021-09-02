@@ -22,7 +22,9 @@
 #include "coap_signal.h"
 #include "oc_ri.h"
 
-void oscore_send_error(void *packet, uint8_t code, oc_endpoint_t *endpoint) {
+void
+oscore_send_error(void *packet, uint8_t code, oc_endpoint_t *endpoint)
+{
   if (endpoint->flags & MULTICAST) {
     return;
   }
@@ -58,7 +60,9 @@ void oscore_send_error(void *packet, uint8_t code, oc_endpoint_t *endpoint) {
   }
 }
 
-int oscore_read_piv(uint8_t *piv, uint8_t piv_len, uint64_t *ssn) {
+int
+oscore_read_piv(uint8_t *piv, uint8_t piv_len, uint64_t *ssn)
+{
   *ssn = 0;
 
   uint8_t i, j = sizeof(uint64_t) - piv_len;
@@ -71,15 +75,17 @@ int oscore_read_piv(uint8_t *piv, uint8_t piv_len, uint64_t *ssn) {
     /* If byte order is Little-endian, convert to Big-endian */
     *ssn = (*ssn & 0x00ff00ff00ff00ff) << 8 | (*ssn & 0xff00ff00ff00ff00) >> 8;
     *ssn =
-        (*ssn & 0x0000ffff0000ffff) << 16 | (*ssn & 0xffff0000ffff0000) >> 16;
+      (*ssn & 0x0000ffff0000ffff) << 16 | (*ssn & 0xffff0000ffff0000) >> 16;
     *ssn =
-        (*ssn & 0x00000000ffffffff) << 32 | (*ssn & 0xffffffff00000000) >> 32;
+      (*ssn & 0x00000000ffffffff) << 32 | (*ssn & 0xffffffff00000000) >> 32;
   }
 
   return 0;
 }
 
-int oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len) {
+int
+oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len)
+{
   int _botest = 1;
 
   memset(piv, 0, OSCORE_PIV_LEN);
@@ -111,7 +117,9 @@ int oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len) {
   return 0;
 }
 
-uint32_t oscore_get_outer_code(void *packet) {
+uint32_t
+oscore_get_outer_code(void *packet)
+{
   coap_packet_t const *coap_pkt = (coap_packet_t *)packet;
 
   bool observe = false;
@@ -141,9 +149,11 @@ uint32_t oscore_get_outer_code(void *packet) {
   return oc_status_code(OC_STATUS_CHANGED);
 }
 
-int coap_get_header_oscore(void *packet, uint8_t **piv, uint8_t *piv_len,
-                           uint8_t **kid, uint8_t *kid_len, uint8_t **kid_ctx,
-                           uint8_t *kid_ctx_len) {
+int
+coap_get_header_oscore(void *packet, uint8_t **piv, uint8_t *piv_len,
+                       uint8_t **kid, uint8_t *kid_len, uint8_t **kid_ctx,
+                       uint8_t *kid_ctx_len)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (!IS_OPTION(coap_pkt, COAP_OPTION_OSCORE)) {
@@ -171,9 +181,11 @@ int coap_get_header_oscore(void *packet, uint8_t **piv, uint8_t *piv_len,
   return 1;
 }
 
-int coap_set_header_oscore(void *packet, uint8_t *piv, uint8_t piv_len,
-                           uint8_t *kid, uint8_t kid_len, uint8_t *kid_ctx,
-                           uint8_t kid_ctx_len) {
+int
+coap_set_header_oscore(void *packet, uint8_t *piv, uint8_t piv_len,
+                       uint8_t *kid, uint8_t kid_len, uint8_t *kid_ctx,
+                       uint8_t kid_ctx_len)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->oscore_flags = piv_len;
@@ -205,8 +217,10 @@ int coap_set_header_oscore(void *packet, uint8_t *piv, uint8_t piv_len,
   return 1;
 }
 
-int coap_parse_oscore_option(void *packet, uint8_t *current_option,
-                             size_t option_length) {
+int
+coap_parse_oscore_option(void *packet, uint8_t *current_option,
+                         size_t option_length)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   /*
@@ -277,13 +291,15 @@ int coap_parse_oscore_option(void *packet, uint8_t *current_option,
   return 0;
 }
 
-size_t coap_serialize_oscore_option(unsigned int *current_number, void *packet,
-                                    uint8_t *buffer) {
+size_t
+coap_serialize_oscore_option(unsigned int *current_number, void *packet,
+                             uint8_t *buffer)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   /* Calculate OSCORE option value length */
   size_t option_length =
-      coap_pkt->piv_len + coap_pkt->kid_len + coap_pkt->kid_ctx_len;
+    coap_pkt->piv_len + coap_pkt->kid_len + coap_pkt->kid_ctx_len;
   if (coap_pkt->kid_ctx_len > 0) {
     ++option_length;
   }
@@ -293,7 +309,7 @@ size_t coap_serialize_oscore_option(unsigned int *current_number, void *packet,
 
   /* Serialize OSCORE option header */
   size_t header_length = coap_set_option_header(
-      COAP_OPTION_OSCORE - *current_number, option_length, buffer);
+    COAP_OPTION_OSCORE - *current_number, option_length, buffer);
 
   if (buffer) {
     buffer += header_length;
@@ -343,16 +359,21 @@ size_t coap_serialize_oscore_option(unsigned int *current_number, void *packet,
   return option_length + header_length;
 }
 
-size_t oscore_serialize_plaintext(void *packet, uint8_t *buffer) {
+size_t
+oscore_serialize_plaintext(void *packet, uint8_t *buffer)
+{
   return coap_oscore_serialize_message(packet, buffer, true, false, true);
 }
 
-size_t oscore_serialize_message(void *packet, uint8_t *buffer) {
+size_t
+oscore_serialize_message(void *packet, uint8_t *buffer)
+{
   return coap_oscore_serialize_message(packet, buffer, false, true, true);
 }
 
-coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
-                                         void *packet) {
+coap_status_t
+oscore_parse_inner_message(uint8_t *data, size_t data_len, void *packet)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   /* initialize packet */
@@ -368,7 +389,7 @@ coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
 
   /* Parse inner options */
   coap_status_t ret = coap_oscore_parse_options(
-      packet, data, data_len, current_option, true, false, true);
+    packet, data, data_len, current_option, true, false, true);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed! %d", ret);
     return ret;
@@ -377,7 +398,9 @@ coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
   return COAP_NO_ERROR;
 }
 
-int oscore_is_oscore_message(oc_message_t *msg) {
+int
+oscore_is_oscore_message(oc_message_t *msg)
+{
   uint8_t *current_option = NULL;
 
   /* Determine exact location of the CoAP options in the packet buffer */
@@ -390,7 +413,7 @@ int oscore_is_oscore_message(oc_message_t *msg) {
                                   &num_extended_length_bytes);
 
     current_option =
-        msg->data + COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes;
+      msg->data + COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes;
   } else
 #endif /* OC_TCP */
   {
@@ -454,7 +477,9 @@ int oscore_is_oscore_message(oc_message_t *msg) {
   return -1;
 }
 
-coap_status_t oscore_parse_outer_message(oc_message_t *msg, void *packet) {
+coap_status_t
+oscore_parse_outer_message(oc_message_t *msg, void *packet)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   /* initialize packet */
   memset(coap_pkt, 0, sizeof(coap_packet_t));
@@ -476,7 +501,7 @@ coap_status_t oscore_parse_outer_message(oc_message_t *msg, void *packet) {
     coap_pkt->code = coap_pkt->buffer[1 + num_extended_length_bytes];
 
     current_option =
-        msg->data + COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes;
+      msg->data + COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes;
 
   } else
 #endif /* OC_TCP */
@@ -516,7 +541,7 @@ coap_status_t oscore_parse_outer_message(oc_message_t *msg, void *packet) {
 
   /* Parse outer options */
   coap_status_t ret = coap_oscore_parse_options(
-      packet, msg->data, msg->length, current_option, false, true, true);
+    packet, msg->data, msg->length, current_option, false, true, true);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed! %d", ret);
     return ret;

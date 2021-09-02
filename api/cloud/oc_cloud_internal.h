@@ -38,7 +38,8 @@ extern "C" {
  */
 #define RD_PUBLISH_TTL_UNLIMITED 0
 
-typedef struct cloud_conf_update_t {
+typedef struct cloud_conf_update_t
+{
   char *access_token; /**< Access Token resolved with an auth code. */
   size_t access_token_len;
   char *auth_provider; /**< Auth Provider ID*/
@@ -50,7 +51,8 @@ typedef struct cloud_conf_update_t {
   size_t sid_len;
 } cloud_conf_update_t;
 
-typedef struct cloud_api_param_t {
+typedef struct cloud_api_param_t
+{
   oc_cloud_context_t *ctx;
   oc_cloud_cb_t cb;
   void *data;

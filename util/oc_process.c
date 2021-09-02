@@ -52,7 +52,8 @@ static oc_process_event_t lastevent;
 /*
  * Structure used for keeping the queue of active events.
  */
-struct event_data {
+struct event_data
+{
   oc_process_event_t ev;
   oc_process_data_t data;
   struct oc_process *p;
@@ -85,9 +86,15 @@ static void call_process(struct oc_process *p, oc_process_event_t ev,
                          oc_process_data_t data);
 
 /*---------------------------------------------------------------------------*/
-oc_process_event_t oc_process_alloc_event(void) { return lastevent++; }
+oc_process_event_t
+oc_process_alloc_event(void)
+{
+  return lastevent++;
+}
 /*---------------------------------------------------------------------------*/
-void oc_process_start(struct oc_process *p, oc_process_data_t data) {
+void
+oc_process_start(struct oc_process *p, oc_process_data_t data)
+{
   struct oc_process *q;
 
   /* First make sure that we don't try to start a process that is
@@ -109,7 +116,9 @@ void oc_process_start(struct oc_process *p, oc_process_data_t data) {
   oc_process_post_synch(p, OC_PROCESS_EVENT_INIT, data);
 }
 /*---------------------------------------------------------------------------*/
-static void exit_process(struct oc_process *p, struct oc_process *fromprocess) {
+static void
+exit_process(struct oc_process *p, struct oc_process *fromprocess)
+{
   register struct oc_process *q;
   struct oc_process *old_current = oc_process_current;
 
@@ -157,8 +166,10 @@ static void exit_process(struct oc_process *p, struct oc_process *fromprocess) {
   oc_process_current = old_current;
 }
 /*---------------------------------------------------------------------------*/
-static void call_process(struct oc_process *p, oc_process_event_t ev,
-                         oc_process_data_t data) {
+static void
+call_process(struct oc_process *p, oc_process_event_t ev,
+             oc_process_data_t data)
+{
   int ret;
 
   if ((p->state & OC_PROCESS_STATE_RUNNING) && p->thread != NULL) {
@@ -173,17 +184,23 @@ static void call_process(struct oc_process *p, oc_process_event_t ev,
   }
 }
 /*---------------------------------------------------------------------------*/
-void oc_process_exit(struct oc_process *p) {
+void
+oc_process_exit(struct oc_process *p)
+{
   exit_process(p, OC_PROCESS_CURRENT());
 }
 /*---------------------------------------------------------------------------*/
-void oc_process_shutdown(void) {
+void
+oc_process_shutdown(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   free(events);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void oc_process_init(void) {
+void
+oc_process_init(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   events = (struct event_data *)calloc(OC_PROCESS_NUMEVENTS,
                                        sizeof(struct event_data));
@@ -206,7 +223,9 @@ void oc_process_init(void) {
  * Call each process' poll handler.
  */
 /*---------------------------------------------------------------------------*/
-static void do_poll(void) {
+static void
+do_poll(void)
+{
   struct oc_process *p;
 
   poll_requested = 0;
@@ -225,7 +244,9 @@ static void do_poll(void) {
  * listening processes.
  */
 /*---------------------------------------------------------------------------*/
-static void do_event(void) {
+static void
+do_event(void)
+{
   static oc_process_event_t ev;
   static oc_process_data_t data;
   static struct oc_process *receiver;
@@ -279,7 +300,9 @@ static void do_event(void) {
   }
 }
 /*---------------------------------------------------------------------------*/
-int oc_process_run(void) {
+int
+oc_process_run(void)
+{
   /* Process poll events. */
   if (poll_requested) {
     do_poll();
@@ -291,17 +314,23 @@ int oc_process_run(void) {
   return nevents + poll_requested;
 }
 /*---------------------------------------------------------------------------*/
-int oc_process_nevents(void) { return nevents + poll_requested; }
+int
+oc_process_nevents(void)
+{
+  return nevents + poll_requested;
+}
 /*---------------------------------------------------------------------------*/
-int oc_process_post(struct oc_process *p, oc_process_event_t ev,
-                    oc_process_data_t data) {
+int
+oc_process_post(struct oc_process *p, oc_process_event_t ev,
+                oc_process_data_t data)
+{
   static oc_process_num_events_t snum;
 
   if (nevents == OC_PROCESS_NUMEVENTS) {
 #ifdef OC_DYNAMIC_ALLOCATION
     OC_PROCESS_NUMEVENTS <<= 1;
-    events = (struct event_data *)realloc(
-        events, (OC_PROCESS_NUMEVENTS) * sizeof(struct event_data));
+    events = (struct event_data *)realloc(events, (OC_PROCESS_NUMEVENTS) *
+                                                    sizeof(struct event_data));
     if (!events) {
       oc_abort("Insufficient memory");
     }
@@ -336,15 +365,19 @@ int oc_process_post(struct oc_process *p, oc_process_event_t ev,
   return OC_PROCESS_ERR_OK;
 }
 /*---------------------------------------------------------------------------*/
-void oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
-                           oc_process_data_t data) {
+void
+oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
+                      oc_process_data_t data)
+{
   struct oc_process *caller = oc_process_current;
 
   call_process(p, ev, data);
   oc_process_current = caller;
 }
 /*---------------------------------------------------------------------------*/
-void oc_process_poll(struct oc_process *p) {
+void
+oc_process_poll(struct oc_process *p)
+{
   if (p != NULL) {
     if (p->state == OC_PROCESS_STATE_RUNNING ||
         p->state == OC_PROCESS_STATE_CALLED) {
@@ -354,7 +387,9 @@ void oc_process_poll(struct oc_process *p) {
   }
 }
 /*---------------------------------------------------------------------------*/
-int oc_process_is_running(struct oc_process *p) {
+int
+oc_process_is_running(struct oc_process *p)
+{
   return p->state != OC_PROCESS_STATE_NONE;
 }
 /*---------------------------------------------------------------------------*/

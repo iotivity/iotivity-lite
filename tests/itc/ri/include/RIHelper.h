@@ -34,41 +34,41 @@
 #define MAX_URI_LENGTH (30)
 
 // resource types
-constexpr char RESOURCE_TYPE_LIGHT[]{"core.light"};
-constexpr char RESOURCE_TYPE_BRIGHT_LIGHT[]{"core.brightlight"};
-constexpr char RESOURCE_TYPE_FAN[]{"core.fan"};
-constexpr char RESOURCE_TYPE_TEMPERATURE[]{"oic.r.temperature"};
-constexpr char RESOURCE_TYPE_PLATFORM[]{"oic.wk.p"};
-constexpr char RESOURCE_TYPE_DEVICE[]{"oic.wk.d"};
-constexpr char RESOURCE_URI_LIGHT[]{"/a/light"};
-constexpr char RESOURCE_URI_FAN[]{"/a/fan"};
-constexpr char RESOURCE_INTERFACE_DEFAULT[]{"oc.if.a"};
-constexpr char RESOURCE_INTERFACE_RW[]{"core.rw"};
+constexpr char RESOURCE_TYPE_LIGHT[]{ "core.light" };
+constexpr char RESOURCE_TYPE_BRIGHT_LIGHT[]{ "core.brightlight" };
+constexpr char RESOURCE_TYPE_FAN[]{ "core.fan" };
+constexpr char RESOURCE_TYPE_TEMPERATURE[]{ "oic.r.temperature" };
+constexpr char RESOURCE_TYPE_PLATFORM[]{ "oic.wk.p" };
+constexpr char RESOURCE_TYPE_DEVICE[]{ "oic.wk.d" };
+constexpr char RESOURCE_URI_LIGHT[]{ "/a/light" };
+constexpr char RESOURCE_URI_FAN[]{ "/a/fan" };
+constexpr char RESOURCE_INTERFACE_DEFAULT[]{ "oc.if.a" };
+constexpr char RESOURCE_INTERFACE_RW[]{ "core.rw" };
 
-constexpr char DEVICE_URI_LIGHT[]{"/oic/d"};
-constexpr char DEVICE_TYPE_LIGHT[]{"oic.d.light"};
-constexpr char DEVICE_NAME_LIGHT[]{"Lamp"};
-constexpr char OCF_SPEC_VERSION[]{"ocf.1.0.0"};
-constexpr char OCF_DATA_MODEL_VERSION[]{"ocf.res.1.0.0"};
+constexpr char DEVICE_URI_LIGHT[]{ "/oic/d" };
+constexpr char DEVICE_TYPE_LIGHT[]{ "oic.d.light" };
+constexpr char DEVICE_NAME_LIGHT[]{ "Lamp" };
+constexpr char OCF_SPEC_VERSION[]{ "ocf.1.0.0" };
+constexpr char OCF_DATA_MODEL_VERSION[]{ "ocf.res.1.0.0" };
 
-constexpr char KEY_TEMPERATURE[]{"temperature"};
-constexpr char KEY_UNITS[]{"units"};
-constexpr char KEY_HOUR[]{"x.samsung.hour"};
+constexpr char KEY_TEMPERATURE[]{ "temperature" };
+constexpr char KEY_UNITS[]{ "units" };
+constexpr char KEY_HOUR[]{ "x.samsung.hour" };
 
-constexpr char KEY_DEVICE_NAME[]{"n"};
-constexpr char KEY_SPEC_VERSION[]{"lcv"};
+constexpr char KEY_DEVICE_NAME[]{ "n" };
+constexpr char KEY_SPEC_VERSION[]{ "lcv" };
 
-constexpr char KEY_PLATFORM_ID[]{"pi"};
-constexpr char KEY_MANUFACTURER_NAME[]{"mnmn"};
-constexpr char KEY_MANUFACTURER_URL[]{"mnml"};
-constexpr char KEY_MODEL_NUMBER[]{"mnmo"};
-constexpr char KEY_DATE_OF_MANUFACTURE[]{"mndt"};
-constexpr char KEY_PLATFORM_VERSION[]{"mnpv"};
-constexpr char KEY_OPERATING_SYSTEM[]{"mnos"};
-constexpr char KEY_HARDWARE_VERSION[]{"mnhw"};
-constexpr char KEY_FIRMWARE_VERSION[]{"mnfv"};
-constexpr char KEY_SUPPORT_URL[]{"mnsl"};
-constexpr char KEY_SYSTEM_TIME[]{"st"};
+constexpr char KEY_PLATFORM_ID[]{ "pi" };
+constexpr char KEY_MANUFACTURER_NAME[]{ "mnmn" };
+constexpr char KEY_MANUFACTURER_URL[]{ "mnml" };
+constexpr char KEY_MODEL_NUMBER[]{ "mnmo" };
+constexpr char KEY_DATE_OF_MANUFACTURE[]{ "mndt" };
+constexpr char KEY_PLATFORM_VERSION[]{ "mnpv" };
+constexpr char KEY_OPERATING_SYSTEM[]{ "mnos" };
+constexpr char KEY_HARDWARE_VERSION[]{ "mnhw" };
+constexpr char KEY_FIRMWARE_VERSION[]{ "mnfv" };
+constexpr char KEY_SUPPORT_URL[]{ "mnsl" };
+constexpr char KEY_SYSTEM_TIME[]{ "st" };
 
 class RIHelper {
 private:

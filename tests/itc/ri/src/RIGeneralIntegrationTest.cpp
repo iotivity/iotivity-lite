@@ -29,7 +29,8 @@ public:
   virtual void TearDown() {}
 };
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -37,7 +38,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_initclient_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_initclient_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -45,7 +47,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_initclient_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_client_createResource_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_client_createResource_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -58,7 +61,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_client_createResource_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_client_discover_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_client_discover_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -71,7 +75,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_client_discover_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_observe_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_observe_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -86,7 +91,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_observe_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_post_request_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_post_request_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -101,7 +107,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_post_request_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_put_request_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_put_request_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();
@@ -116,7 +123,8 @@ TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_put_request_P) {
   m_pRIHelper->shutDown();
 }
 
-TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_get_request_P) {
+TEST(RIGeneralIntegrationTest, ri_nonsecure_clien_get_request_P)
+{
 
   RIHelper *m_pRIHelper;
   m_pRIHelper = RIHelper::getInstance();

@@ -44,15 +44,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/utsname.h>
 #include <unistd.h>
 
-struct netlinkrequest {
+struct netlinkrequest
+{
   struct nlmsghdr header;
   struct ifaddrmsg msg;
 };
 
 static const int kMaxReadSize = 4096;
 
-static int set_ifname(struct ifaddrs *ifaddr, int interface) {
-  char buf[IFNAMSIZ] = {0};
+static int
+set_ifname(struct ifaddrs *ifaddr, int interface)
+{
+  char buf[IFNAMSIZ] = { 0 };
   char *name = if_indextoname(interface, buf);
   if (name == NULL) {
     return -1;
@@ -62,7 +65,9 @@ static int set_ifname(struct ifaddrs *ifaddr, int interface) {
   return 0;
 }
 
-static int set_flags(struct ifaddrs *ifaddr) {
+static int
+set_flags(struct ifaddrs *ifaddr)
+{
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd == -1) {
     return -1;
@@ -79,8 +84,10 @@ static int set_flags(struct ifaddrs *ifaddr) {
   return 0;
 }
 
-static int set_addresses(struct ifaddrs *ifaddr, struct ifaddrmsg *msg,
-                         void *data, size_t len) {
+static int
+set_addresses(struct ifaddrs *ifaddr, struct ifaddrmsg *msg, void *data,
+              size_t len)
+{
   if (msg->ifa_family == AF_INET) {
     struct sockaddr_in *sa = malloc(sizeof(struct sockaddr_in));
     memset(sa, 0, sizeof(struct sockaddr_in));
@@ -100,7 +107,9 @@ static int set_addresses(struct ifaddrs *ifaddr, struct ifaddrmsg *msg,
   return 0;
 }
 
-static int make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen) {
+static int
+make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen)
+{
   char *prefix = NULL;
   if (family == AF_INET) {
     struct sockaddr_in *mask = malloc(sizeof(struct sockaddr_in));
@@ -134,8 +143,10 @@ static int make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen) {
   return 0;
 }
 
-static int populate_ifaddrs(struct ifaddrs *ifaddr, struct ifaddrmsg *msg,
-                            void *bytes, size_t len) {
+static int
+populate_ifaddrs(struct ifaddrs *ifaddr, struct ifaddrmsg *msg, void *bytes,
+                 size_t len)
+{
   if (set_ifname(ifaddr, msg->ifa_index) != 0) {
     return -1;
   }
@@ -151,7 +162,9 @@ static int populate_ifaddrs(struct ifaddrs *ifaddr, struct ifaddrmsg *msg,
   return 0;
 }
 
-int android_getifaddrs(struct ifaddrs **result) {
+int
+android_getifaddrs(struct ifaddrs **result)
+{
   int fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
   if (fd < 0) {
     return -1;
@@ -224,7 +237,9 @@ int android_getifaddrs(struct ifaddrs **result) {
   return -1;
 }
 
-void android_freeifaddrs(struct ifaddrs *addrs) {
+void
+android_freeifaddrs(struct ifaddrs *addrs)
+{
   struct ifaddrs *last = NULL;
   struct ifaddrs *cursor = addrs;
   while (cursor) {

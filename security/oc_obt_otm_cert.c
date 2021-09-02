@@ -32,7 +32,9 @@
 #include "security/oc_tls.h"
 
 /* Manufacturer certificate-based ownership transfer */
-static void obt_cert_16(oc_client_response_t *data) {
+static void
+obt_cert_16(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -49,7 +51,9 @@ static void obt_cert_16(oc_client_response_t *data) {
   oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_15(oc_client_response_t *data) {
+static void
+obt_cert_15(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -79,7 +83,9 @@ err_obt_cert_15:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_14(oc_client_response_t *data) {
+static void
+obt_cert_14(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -185,7 +191,9 @@ err_obt_cert_14:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_13(oc_client_response_t *data) {
+static void
+obt_cert_13(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -208,7 +216,9 @@ err_obt_cert_13:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_12(oc_client_response_t *data) {
+static void
+obt_cert_12(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -238,7 +248,9 @@ err_obt_cert_12:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_11(oc_client_response_t *data) {
+static void
+obt_cert_11(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -273,7 +285,9 @@ err_obt_cert_11:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_10(oc_client_response_t *data) {
+static void
+obt_cert_10(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -307,7 +321,9 @@ err_obt_cert_10:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_9(oc_client_response_t *data) {
+static void
+obt_cert_9(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -378,7 +394,9 @@ err_obt_cert_9:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_8(oc_client_response_t *data) {
+static void
+obt_cert_8(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -410,7 +428,9 @@ err_obt_cert_8:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_7(oc_client_response_t *data) {
+static void
+obt_cert_7(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -443,7 +463,9 @@ err_obt_cert_7:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_6(oc_client_response_t *data) {
+static void
+obt_cert_6(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -477,7 +499,9 @@ err_obt_cert_6:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_5(oc_client_response_t *data) {
+static void
+obt_cert_5(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -490,7 +514,7 @@ static void obt_cert_5(oc_client_response_t *data) {
 
   /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid = {{0}};
+  oc_uuid_t dev_uuid = { { 0 } };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
@@ -520,7 +544,9 @@ err_obt_cert_5:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_4(oc_client_response_t *data) {
+static void
+obt_cert_4(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -553,7 +579,9 @@ err_obt_cert_4:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_3(oc_client_response_t *data) {
+static void
+obt_cert_3(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -583,7 +611,9 @@ err_obt_cert_3:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_CERT);
 }
 
-static void obt_cert_2(oc_client_response_t *data) {
+static void
+obt_cert_2(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -646,8 +676,10 @@ err_obt_cert_2:
   15) post pstat s=rfnop
   16) <close DTLS>
 */
-int oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                            void *data) {
+int
+oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                        void *data)
+{
   OC_DBG("In oc_obt_perform_cert_otm");
 
   oc_device_t *device = oc_obt_get_cached_device_handle(uuid);

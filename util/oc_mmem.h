@@ -43,7 +43,8 @@ extern "C" {
 
 #define OC_MMEM_PTR(m) (struct oc_mmem *)(m)->ptr
 
-struct oc_mmem {
+struct oc_mmem
+{
   struct oc_mmem *next;
   size_t size;
   void *ptr;
@@ -68,15 +69,15 @@ void oc_mmem_init(void);
 
 size_t _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
-    const char *func,
+  const char *func,
 #endif
-    struct oc_mmem *m, size_t size, pool pool_type);
+  struct oc_mmem *m, size_t size, pool pool_type);
 
 void _oc_mmem_free(
 #ifdef OC_MEMORY_TRACE
-    const char *func,
+  const char *func,
 #endif
-    struct oc_mmem *m, pool pool_type);
+  struct oc_mmem *m, pool pool_type);
 
 #ifdef __cplusplus
 }

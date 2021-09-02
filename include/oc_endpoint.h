@@ -35,7 +35,8 @@ typedef enum { OCF_VER_1_0_0 = 2048, OIC_VER_1_1_0 = 2112 } ocf_version_t;
  * @brief ipv6 data structure
  *
  */
-typedef struct {
+typedef struct
+{
   uint16_t port;       ///< port number
   uint8_t address[16]; ///< address
   uint8_t scope;       ///< scope of the address (multicast)
@@ -45,7 +46,8 @@ typedef struct {
  * @brief ipv4 data structure
  *
  */
-typedef struct {
+typedef struct
+{
   uint16_t port;      ///< port
   uint8_t address[4]; ///< address
 } oc_ipv4_addr_t;
@@ -54,7 +56,8 @@ typedef struct {
  * @brief ble address data structure
  *
  */
-typedef struct {
+typedef struct
+{
   uint8_t type;       ///< type of address
   uint8_t address[6]; ///< ble address
 } oc_le_addr_t;
@@ -78,7 +81,8 @@ enum transport_flags {
  * @brief the endpoint information
  *
  */
-typedef struct oc_endpoint_t {
+typedef struct oc_endpoint_t
+{
   struct oc_endpoint_t *next; ///< pointer to the next structure
   size_t device;              ///< device index
   enum transport_flags flags; ///< the transport flags
@@ -98,13 +102,13 @@ typedef struct oc_endpoint_t {
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
-  oc_endpoint_t __name__ = {                                                   \
-      .flags = __flags__,                                                      \
-      .addr.ipv4 = {.port = __port__, .address = {__VA_ARGS__}}}
+  oc_endpoint_t __name__ = { .flags = __flags__,                               \
+                             .addr.ipv4 = { .port = __port__,                  \
+                                            .address = { __VA_ARGS__ } } }
 #define oc_make_ipv6_endpoint(__name__, __flags__, __port__, ...)              \
-  oc_endpoint_t __name__ = {                                                   \
-      .flags = __flags__,                                                      \
-      .addr.ipv6 = {.port = __port__, .address = {__VA_ARGS__}}}
+  oc_endpoint_t __name__ = { .flags = __flags__,                               \
+                             .addr.ipv6 = { .port = __port__,                  \
+                                            .address = { __VA_ARGS__ } } }
 
 /**
  * @brief create new endpoint

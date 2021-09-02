@@ -26,7 +26,8 @@
 
 #define UUID "12345678123412341234123456789012"
 
-TEST(UUIDGeneration, StrToUUIDTest_P) {
+TEST(UUIDGeneration, StrToUUIDTest_P)
+{
   oc_uuid_t uuid;
   memset(&uuid, 0, sizeof(oc_uuid_t));
   oc_uuid_t uuidTemp = uuid;
@@ -34,26 +35,29 @@ TEST(UUIDGeneration, StrToUUIDTest_P) {
   EXPECT_NE(uuid.id, uuidTemp.id);
 }
 
-TEST(UUIDGeneration, WildcardStrToUUID) {
+TEST(UUIDGeneration, WildcardStrToUUID)
+{
   const char *u = "*";
   oc_uuid_t uuid;
   oc_str_to_uuid(u, &uuid);
-  oc_uuid_t wc = {{0}};
+  oc_uuid_t wc = { { 0 } };
   wc.id[0] = '*';
   EXPECT_EQ(memcmp(wc.id, uuid.id, 16), 0);
 }
 
-TEST(UUIDGeneration, WildcardUUIDToStr) {
+TEST(UUIDGeneration, WildcardUUIDToStr)
+{
   const char *u = "*";
   char wc[37];
-  oc_uuid_t uuid = {{0}};
+  oc_uuid_t uuid = { { 0 } };
   uuid.id[0] = '*';
   oc_uuid_to_str(&uuid, wc, 37);
   EXPECT_EQ(strlen(u), strlen(wc));
   EXPECT_EQ(memcmp(u, wc, strlen(u)), 0);
 }
 
-TEST(UUIDGeneration, NonWildcardUUID) {
+TEST(UUIDGeneration, NonWildcardUUID)
+{
   const char *u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
   char nonwc[37];
   oc_uuid_t uuid;
@@ -101,7 +105,8 @@ TEST(UUIDGeneration, NonWildcardUUID) {
  * o  Set all the other bits to randomly (or pseudo-randomly) chosen
  *    values.
  */
-TEST(UUIDGeneration, GenerateType4UUID) {
+TEST(UUIDGeneration, GenerateType4UUID)
+{
   // Type 4 uuid uses iotivities psudo random number generator.
   oc_random_init();
   oc_uuid_t uuid;

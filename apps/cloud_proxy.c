@@ -203,7 +203,7 @@ volatile int quit = 0;      /**< stop variable, used by handle_signal */
 #define MAX_DISCOVERED_SERVER                                                  \
   100 /**< amount of local devices that can be stored (during the program) */
 STATIC oc_endpoint_t
-    *discovered_server[MAX_DISCOVERED_SERVER]; /**< storage of the end ponits */
+  *discovered_server[MAX_DISCOVERED_SERVER]; /**< storage of the end ponits */
 
 STATIC const char *cis = "coap+tcp://127.0.0.1:5683";
 STATIC const char *auth_code = "test";
@@ -215,14 +215,15 @@ STATIC char proxy_di[38];
 
 /** global property variables for path: "d2dserverlist" */
 STATIC char *g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist =
-    "dis"; /**< the name for the attribute */
+  "dis"; /**< the name for the attribute */
 
 /* array of objects
  *  di == strlen == zero ==> empty slot
  */
-struct _d2dserverlist_d2dserverlist_t {
+struct _d2dserverlist_d2dserverlist_t
+{
   char
-      di[MAX_PAYLOAD_STRING]; /**< Format pattern according to IETF RFC 4122. */
+    di[MAX_PAYLOAD_STRING]; /**< Format pattern according to IETF RFC 4122. */
   char eps_s[MAX_PAYLOAD_STRING]; /**< the OCF Endpoint information of the
                                      target Resource */
   char eps[MAX_PAYLOAD_STRING];  /**< the OCF Endpoint information of the target
@@ -235,19 +236,20 @@ struct _d2dserverlist_d2dserverlist_t {
 /** array d2dserverlist  This Property maintains the list of the D2D Device's
  * connection info i.e. {Device ID, Resource URI, end points} */
 struct _d2dserverlist_d2dserverlist_t
-    g_d2dserverlist_d2dserverlist[MAX_DISCOVERED_SERVER];
+  g_d2dserverlist_d2dserverlist[MAX_DISCOVERED_SERVER];
 
 char g_d2dserverlist_di[MAX_PAYLOAD_STRING] =
-    ""; /**<current value of property "di" Format pattern according to IETF RFC
-           4122. */
+  ""; /**<current value of property "di" Format pattern according to IETF RFC
+         4122. */
 
 /* registration data variables for the resources */
 
 /* global resource variables for path: d2dserverlist */
 STATIC char *g_d2dserverlist_RESOURCE_ENDPOINT =
-    "d2dserverlist"; /**< used path for this resource */
+  "d2dserverlist"; /**< used path for this resource */
 STATIC char *g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = {
-    "oic.r.d2dserverlist"}; /**< rt value (as an array) */
+  "oic.r.d2dserverlist"
+}; /**< rt value (as an array) */
 int g_d2dserverlist_nr_resource_types = 1;
 
 /* forward declarations */
@@ -260,7 +262,9 @@ void issue_requests_all(void);
  * @param rep the cbor representation
  * @param print_print nice printing, e.g. nicely indented json
  */
-void print_rep(oc_rep_t *rep, bool pretty_print) {
+void
+print_rep(oc_rep_t *rep, bool pretty_print)
+{
   char *json;
   size_t json_size;
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
@@ -276,7 +280,9 @@ void print_rep(oc_rep_t *rep, bool pretty_print) {
  * @param url the input url
  * @param udn the udn parsed out from the input url
  */
-STATIC void url_to_udn(const char *url, char *udn) {
+STATIC void
+url_to_udn(const char *url, char *udn)
+{
   strcpy(udn, &url[1]);
   udn[OC_UUID_LEN - 1] = '\0';
 }
@@ -287,7 +293,9 @@ STATIC void url_to_udn(const char *url, char *udn) {
  * @param url the input url
  * @param local_url the local url withoug the udn prefix
  */
-STATIC void url_to_local_url(const char *url, char *local_url) {
+STATIC void
+url_to_local_url(const char *url, char *local_url)
+{
   strcpy(local_url, &url[OC_UUID_LEN]);
 }
 
@@ -297,7 +305,9 @@ STATIC void url_to_local_url(const char *url, char *local_url) {
  * @param anchor url with udn
  * @param anchor url without the anchor part
  */
-STATIC void anchor_to_udn(const char *anchor, char *udn) {
+STATIC void
+anchor_to_udn(const char *anchor, char *udn)
+{
   strcpy(udn, &anchor[6]);
 }
 
@@ -308,7 +318,9 @@ STATIC void anchor_to_udn(const char *anchor, char *udn) {
  * @param udn to check if it is in the list
  * @return index, -1 is not in list
  */
-STATIC int is_udn_listed_index(char *udn) {
+STATIC int
+is_udn_listed_index(char *udn)
+{
   PRINT("is_udn_listed_index: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
@@ -327,7 +339,9 @@ STATIC int is_udn_listed_index(char *udn) {
  * @param udn to check if it is in the list
  * @return index, -1 is not in list
  */
-STATIC void list_udn(void) {
+STATIC void
+list_udn(void)
+{
   PRINT("   list_udn \n");
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
@@ -345,7 +359,9 @@ STATIC void list_udn(void) {
  * @param udn to check if it is in the list
  * @return index, -1 full
  */
-STATIC int find_empty_slot(void) {
+STATIC int
+find_empty_slot(void)
+{
   PRINT("  find_empty_slot: Finding empty slot \n");
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
@@ -364,13 +380,15 @@ STATIC int find_empty_slot(void) {
  * @param udn to check if it is in the list
  * @return endpoint or NULL (e.g. not in list)
  */
-STATIC oc_endpoint_t *is_udn_listed(char *udn) {
+STATIC oc_endpoint_t *
+is_udn_listed(char *udn)
+{
   PRINT("  is_udn_listed: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     oc_endpoint_t *ep = discovered_server[i];
     while (ep != NULL) {
-      char uuid[OC_UUID_LEN] = {0};
+      char uuid[OC_UUID_LEN] = { 0 };
       oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
       PRINT("        uuid %s\n", uuid);
       PRINT("        udn  %s\n", udn);
@@ -390,7 +408,9 @@ STATIC oc_endpoint_t *is_udn_listed(char *udn) {
  * function to set up the device.
  *
  */
-int app_init(void) {
+int
+app_init(void)
+{
   int ret = oc_init_platform("ocf", NULL, NULL);
   /* the settings determine the appearance of the device on the network
      can be ocf.2.2.0 (or even higher)
@@ -405,8 +425,8 @@ int app_init(void) {
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
-      "\tERROR Could not read 'cloud_proxy_IDD.cbor'\n"
-      "\tIntrospection data not set.\n";
+    "\tERROR Could not read 'cloud_proxy_IDD.cbor'\n"
+    "\tIntrospection data not set.\n";
   fp = fopen("./cloud_proxy_IDD.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
@@ -481,8 +501,10 @@ check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-STATIC void get_d2dserverlist(oc_request_t *request,
-                              oc_interface_mask_t interfaces, void *user_data) {
+STATIC void
+get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
+                  void *user_data)
+{
   (void)user_data; /* variable not used */
   /* TODO: SENSOR add here the code to talk to the HW if one implements a
      sensor. the call to the HW needs to fill in the global variable before it
@@ -551,7 +573,9 @@ STATIC void get_d2dserverlist(oc_request_t *request,
  * @param di_len length of di
  * @return true : found, false: not found
  */
-STATIC bool if_di_exist(char *di, int di_len) {
+STATIC bool
+if_di_exist(char *di, int di_len)
+{
   for (int i = 0; i < MAX_ARRAY; i++) {
     if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, di_len) == 0) {
       return true;
@@ -568,7 +592,9 @@ STATIC bool if_di_exist(char *di, int di_len) {
  * @param len length of di
  * @return true : removed, false: not removed
  */
-STATIC bool remove_di(char *di, int len) {
+STATIC bool
+remove_di(char *di, int len)
+{
   for (int i = 0; i < MAX_ARRAY; i++) {
     PRINT("   %s %.*s ", g_d2dserverlist_d2dserverlist[i].di, len, di);
     if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, len) == 0) {
@@ -585,7 +611,9 @@ STATIC bool remove_di(char *di, int len) {
  * @param di di to be checked (not NULL terminated)
  * @return return the resource or NULL
  */
-oc_resource_t *find_resource(const char *di) {
+oc_resource_t *
+find_resource(const char *di)
+{
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
     if (strncmp(di, oc_string(res->uri), strlen(di)) == 0)
@@ -601,7 +629,9 @@ oc_resource_t *find_resource(const char *di) {
  * @param di di to be checked (not NULL terminated)
  * @param len length of di
  */
-STATIC bool unregister_resources(char *di, int len) {
+STATIC bool
+unregister_resources(char *di, int len)
+{
   (void)len;
   oc_resource_t *res = NULL;
 
@@ -632,9 +662,10 @@ STATIC bool unregister_resources(char *di, int len) {
  * @param interfaces the used interfaces during the request.
  * @param user_data the supplied user data.
  */
-STATIC void post_d2dserverlist(oc_request_t *request,
-                               oc_interface_mask_t interfaces,
-                               void *user_data) {
+STATIC void
+post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
+                   void *user_data)
+{
   (void)interfaces;
   (void)user_data;
   bool error_state = true;
@@ -732,9 +763,10 @@ STATIC void post_d2dserverlist(oc_request_t *request,
  * @param interfaces the used interfaces during the request.
  * @param user_data the supplied user data.
  */
-STATIC void delete_d2dserverlist(oc_request_t *request,
-                                 oc_interface_mask_t interfaces,
-                                 void *user_data) {
+STATIC void
+delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
+                     void *user_data)
+{
   (void)request;
   (void)interfaces;
   (void)user_data;
@@ -786,12 +818,14 @@ STATIC void delete_d2dserverlist(oc_request_t *request,
  *     default interface is the first of the list of interfaces as specified in
  * the input file
  */
-void register_resources(void) {
+void
+register_resources(void)
+{
 
   PRINT("Register Resource with local path \"d2dserverlist\"\n");
   oc_resource_t *res_d2dserverlist =
-      oc_new_resource(NULL, g_d2dserverlist_RESOURCE_ENDPOINT,
-                      g_d2dserverlist_nr_resource_types, 0);
+    oc_new_resource(NULL, g_d2dserverlist_RESOURCE_ENDPOINT,
+                    g_d2dserverlist_nr_resource_types, 0);
   PRINT("     number of Resource Types: %d\n",
         g_d2dserverlist_nr_resource_types);
   for (int a = 0; a < g_d2dserverlist_nr_resource_types; a++) {
@@ -831,7 +865,9 @@ void register_resources(void) {
 
 #ifdef OC_SECURITY
 #ifdef OC_SECURITY_PIN
-void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
   (void)data;
   PRINT("\n====================\n");
   PRINT("Random PIN: %.*s\n", (int)pin_len, pin);
@@ -840,7 +876,9 @@ void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
 #endif /* OC_SECURITY_PIN */
 #endif /* OC_SECURITY */
 
-void factory_presets_cb(size_t device, void *data) {
+void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -849,8 +887,8 @@ void factory_presets_cb(size_t device, void *data) {
 #include "oc_pki.h"
 #include "pki_certs.h"
   int credid =
-      oc_pki_add_mfg_cert(0, (const unsigned char *)my_cert, strlen(my_cert),
-                          (const unsigned char *)my_key, strlen(my_key));
+    oc_pki_add_mfg_cert(0, (const unsigned char *)my_cert, strlen(my_cert),
+                        (const unsigned char *)my_key, strlen(my_key));
   if (credid < 0) {
     PRINT("ERROR installing PKI certificate\n");
   } else {
@@ -883,7 +921,9 @@ void factory_presets_cb(size_t device, void *data) {
  * intializes the global variables
  * registers and starts the handler
  */
-void initialize_variables(void) {
+void
+initialize_variables(void)
+{
   /* initialize global variables for resource "d2dserverlist" */
   /* initialize array "d2dserverlist" : This Property maintains the list of the
    * D2D Device's connection info i.e. {Device ID, Resource URI, end points} */
@@ -904,7 +944,9 @@ void initialize_variables(void) {
  *
  * @param resource_type the resource type (rt).
  */
-STATIC bool is_vertical(char *resource_type) {
+STATIC bool
+is_vertical(char *resource_type)
+{
   int size_rt = (int)strlen(resource_type);
 
   if (strncmp(resource_type, "oic.d.", 6) == 0)
@@ -955,7 +997,9 @@ STATIC bool is_vertical(char *resource_type) {
  *
  * @param data the client response
  */
-STATIC void get_local_resource_response(oc_client_response_t *data) {
+STATIC void
+get_local_resource_response(oc_client_response_t *data)
+{
   oc_rep_t *value_list = NULL;
   oc_separate_response_t *delay_response;
 
@@ -984,8 +1028,10 @@ STATIC void get_local_resource_response(oc_client_response_t *data) {
  * @param interfaces The interfaces for the GET call
  * @param user_data the user data supplied with the callback
  */
-STATIC void get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
-                         void *user_data) {
+STATIC void
+get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
+             void *user_data)
+{
   (void)interfaces;
   (void)user_data;
   char query_as_string[MAX_URI_LENGTH * 2] = "";
@@ -1023,7 +1069,9 @@ STATIC void get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
  *
  * @param data the client response
  */
-STATIC void post_local_resource_response(oc_client_response_t *data) {
+STATIC void
+post_local_resource_response(oc_client_response_t *data)
+{
   oc_rep_t *value_list = NULL;
   oc_separate_response_t *delay_response;
 
@@ -1051,8 +1099,10 @@ STATIC void post_local_resource_response(oc_client_response_t *data) {
  * @param interfaces The interfaces for the GET call
  * @param user_data the user data supplied with the callback
  */
-STATIC void post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
-                          void *user_data) {
+STATIC void
+post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
+              void *user_data)
+{
   (void)request;
   (void)interfaces;
   (void)user_data;
@@ -1084,7 +1134,7 @@ STATIC void post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   }
 
   bool berr =
-      oc_get_request_payload_raw(request, &payload, &len, &content_format);
+    oc_get_request_payload_raw(request, &payload, &len, &content_format);
   PRINT("      raw buffer ok: %s\n", btoa(berr));
 
   int err = oc_parse_rep(payload, (int)len, &value_list);
@@ -1121,7 +1171,9 @@ STATIC void post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
  *
  * @param data the client response
  */
-STATIC void delete_local_resource_response(oc_client_response_t *data) {
+STATIC void
+delete_local_resource_response(oc_client_response_t *data)
+{
   oc_rep_t *value_list = NULL;
   oc_separate_response_t *delay_response;
 
@@ -1150,8 +1202,10 @@ STATIC void delete_local_resource_response(oc_client_response_t *data) {
  * @param interfaces The interfaces for the GET call
  * @param user_data the user data supplied with the callback
  */
-STATIC void delete_resource(oc_request_t *request,
-                            oc_interface_mask_t interfaces, void *user_data) {
+STATIC void
+delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
+                void *user_data)
+{
   (void)request;
   (void)interfaces;
   (void)user_data;
@@ -1199,12 +1253,11 @@ STATIC void delete_resource(oc_request_t *request,
  * @param user_data the user data supplied to callback
  *        this can contain the UDN that is added to the d2dserverlist
  */
-STATIC oc_discovery_flags_t discovery(const char *anchor, const char *uri,
-                                      oc_string_array_t types,
-                                      oc_interface_mask_t iface_mask,
-                                      oc_endpoint_t *endpoint,
-                                      oc_resource_properties_t bm, bool x,
-                                      void *user_data) {
+STATIC oc_discovery_flags_t
+discovery(const char *anchor, const char *uri, oc_string_array_t types,
+          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_resource_properties_t bm, bool x, void *user_data)
+{
   (void)user_data;
   (void)bm;
   (void)x;
@@ -1249,7 +1302,7 @@ STATIC oc_discovery_flags_t discovery(const char *anchor, const char *uri,
       PRINT("  discovery: Resource %s hosted at endpoints:\n", uri);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        char uuid[OC_UUID_LEN] = {0};
+        char uuid[OC_UUID_LEN] = { 0 };
         oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
 
         PRINT("   di = %s\n", uuid);
@@ -1311,7 +1364,7 @@ STATIC oc_discovery_flags_t discovery(const char *anchor, const char *uri,
         PRINT("   discovery: Register Resource with local path \"%s\"\n",
               udn_url);
         oc_resource_t *new_resource =
-            oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
+          oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
         for (int j = 0; j < nr_resource_types; j++) {
           oc_resource_bind_resource_type(new_resource,
                                          oc_string_array_get_item(types, j));
@@ -1319,7 +1372,7 @@ STATIC oc_discovery_flags_t discovery(const char *anchor, const char *uri,
         if (iface_mask & OC_IF_BASELINE) {
           PRINT("   IF BASELINE\n");
           oc_resource_bind_resource_interface(
-              new_resource, OC_IF_BASELINE); /* oic.if.baseline */
+            new_resource, OC_IF_BASELINE); /* oic.if.baseline */
         }
         if (iface_mask & OC_IF_LL) {
           PRINT("   IF LL\n");
@@ -1393,7 +1446,9 @@ STATIC oc_discovery_flags_t discovery(const char *anchor, const char *uri,
  *
  * @param current_udn the current udn as user data for the discovery callback
  */
-void issue_requests(char *current_udn) {
+void
+issue_requests(char *current_udn)
+{
   oc_do_site_local_ipv6_discovery_all(&discovery, current_udn);
   oc_do_realm_local_ipv6_discovery_all(&discovery, current_udn);
 #ifdef OC_IPV4
@@ -1407,7 +1462,9 @@ void issue_requests(char *current_udn) {
  * issue a discovery request
  * no user data supplied (e.g. NULL)
  */
-void issue_requests_all(void) {
+void
+issue_requests_all(void)
+{
   PRINT("issue_requests_all: Discovery of all devices \n");
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
@@ -1425,7 +1482,11 @@ void issue_requests_all(void) {
  * signal the event loop (windows version)
  * wakes up the main function to handle the next callback
  */
-STATIC void signal_event_loop(void) { WakeConditionVariable(&cv); }
+STATIC void
+signal_event_loop(void)
+{
+  WakeConditionVariable(&cv);
+}
 #endif /* WIN32 */
 
 #ifdef __linux__
@@ -1433,7 +1494,9 @@ STATIC void signal_event_loop(void) { WakeConditionVariable(&cv); }
  * signal the event loop (Linux)
  * wakes up the main function to handle the next callback
  */
-STATIC void signal_event_loop(void) {
+STATIC void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
@@ -1444,7 +1507,9 @@ STATIC void signal_event_loop(void) {
  * handle Ctrl-C
  * @param signal the captured signal
  */
-void handle_signal(int signal) {
+void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
@@ -1459,8 +1524,10 @@ void handle_signal(int signal) {
  * @param status the cloud status
  * @param data the user data supplied to the callback
  */
-STATIC void cloud_status_handler(oc_cloud_context_t *ctx,
-                                 oc_cloud_status_t status, void *data) {
+STATIC void
+cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                     void *data)
+{
   (void)data;
   PRINT("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -1507,7 +1574,9 @@ STATIC void cloud_status_handler(oc_cloud_context_t *ctx,
  * @param status the cloud status
  * @param data the user data supplied to the callback
  */
-STATIC int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+STATIC int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -1551,7 +1620,9 @@ STATIC int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
  * @param device the device handle
  * @param data the user date
  */
-STATIC void minimal_factory_presets_cb(size_t device, void *data) {
+STATIC void
+minimal_factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
   unsigned char cloud_ca[4096];
@@ -1562,7 +1633,7 @@ STATIC void minimal_factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
+    oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -1576,13 +1647,15 @@ STATIC void minimal_factory_presets_cb(size_t device, void *data) {
  * @param device_index the index in the device list
  * @param owned owned/unowned
  */
-void oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
-                            bool owned, void *user_data) {
+void
+oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
+                       bool owned, void *user_data)
+{
   (void)user_data;
   (void)device_index;
   (void)owned;
 
-  char uuid[37] = {0};
+  char uuid[37] = { 0 };
   oc_uuid_to_str(device_uuid, uuid, OC_UUID_LEN);
   PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 }
@@ -1597,7 +1670,9 @@ void oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
  * @param argc the amount of arguments
  * @param argv the arguments
  */
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[])
+{
   int init;
   oc_clock_time_t next_event;
 
@@ -1670,16 +1745,16 @@ int main(int argc, char *argv[]) {
 #endif /* OC_SECURITY */
 
   /* initializes the handlers structure */
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = register_resources
 #ifdef OC_CLIENT
 #ifdef PROXY_ALL_DISCOVERED_DEVICES
-                                       ,
-                                       .requests_entry = issue_requests_all
+                                        ,
+                                        .requests_entry = issue_requests_all
 #else
-                                       ,
-                                       .requests_entry = NULL
+                                        ,
+                                        .requests_entry = NULL
 #endif
 #endif
   };
@@ -1718,7 +1793,7 @@ int main(int argc, char *argv[]) {
         int retval;
         /* configure the */
         retval =
-            oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+          oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
         PRINT("   config status  %d\n", retval);
 
         PRINT("Conf Cloud Manager\n");
@@ -1756,7 +1831,7 @@ int main(int argc, char *argv[]) {
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }

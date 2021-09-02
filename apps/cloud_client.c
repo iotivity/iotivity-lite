@@ -29,7 +29,9 @@
 #endif
 static int quit;
 
-static void display_menu(void) {
+static void
+display_menu(void)
+{
   PRINT("\n\n################################################\nOCF 2.x "
         "Cloud-connected "
         "Client\n################################################\n");
@@ -95,7 +97,9 @@ static pthread_cond_t cv;
 static struct timespec ts;
 #endif
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
 #if defined(_WIN32)
   WakeConditionVariable(&cv);
 #elif defined(__linux__)
@@ -105,13 +109,16 @@ static void signal_event_loop(void) {
 #endif
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   quit = 1;
   signal_event_loop();
 }
 
-typedef struct resource_t {
+typedef struct resource_t
+{
   struct resource_t *next;
   oc_endpoint_t *endpoint;
   char uri[64];
@@ -120,12 +127,16 @@ typedef struct resource_t {
 OC_LIST(resources);
 OC_MEMB(resources_m, resource_t, 100);
 
-static void free_resource(resource_t *res) {
+static void
+free_resource(resource_t *res)
+{
   oc_free_server_endpoints(res->endpoint);
   oc_memb_free(&resources_m, res);
 }
 
-static void free_all_resources(void) {
+static void
+free_all_resources(void)
+{
   resource_t *l = (resource_t *)oc_list_pop(resources);
   while (l != NULL) {
     free_resource(l);
@@ -133,7 +144,9 @@ static void free_all_resources(void) {
   }
 }
 
-static void show_discovered_resources(resource_t **res) {
+static void
+show_discovered_resources(resource_t **res)
+{
   PRINT("\nDiscovered resources:\n");
   resource_t *l = (resource_t *)oc_list_head(resources);
   int i = 0;
@@ -155,7 +168,9 @@ static void show_discovered_resources(resource_t **res) {
   }
 }
 
-static void GET_handler(oc_client_response_t *data) {
+static void
+GET_handler(oc_client_response_t *data)
+{
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
@@ -167,7 +182,9 @@ static void GET_handler(oc_client_response_t *data) {
   PRINT("payload: %s\n", buf);
 }
 
-static void get_resource(void) {
+static void
+get_resource(void)
+{
   otb_mutex_lock(app_sync_lock);
   if (oc_list_length(resources) > 0) {
     resource_t *res[100];
@@ -190,8 +207,10 @@ static void get_resource(void) {
   signal_event_loop();
 }
 
-static void cloud_status_handler(oc_cloud_context_t *ctx,
-                                 oc_cloud_status_t status, void *data) {
+static void
+cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                     void *data)
+{
   (void)data;
   PRINT("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -222,7 +241,9 @@ static void cloud_status_handler(oc_cloud_context_t *ctx,
   }
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
@@ -232,7 +253,8 @@ static int app_init(void) {
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, bool more, void *user_data) {
+          oc_resource_properties_t bm, bool more, void *user_data)
+{
   (void)anchor;
   (void)user_data;
   (void)iface_mask;
@@ -256,7 +278,9 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void discover_resources(void) {
+static void
+discover_resources(void)
+{
   otb_mutex_lock(app_sync_lock);
   free_all_resources();
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
@@ -269,7 +293,9 @@ static void discover_resources(void) {
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -308,7 +334,9 @@ static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void factory_presets_cb(size_t device, void *data) {
+void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -320,7 +348,7 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
+    oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -329,11 +357,13 @@ void factory_presets_cb(size_t device, void *data) {
 }
 
 #if defined(_WIN32)
-DWORD WINAPI ocf_event_thread(LPVOID lpParam) {
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = NULL,
-                                       .requests_entry = NULL};
+DWORD WINAPI
+ocf_event_thread(LPVOID lpParam)
+{
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = NULL,
+                                        .requests_entry = NULL };
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_client_creds/");
 #endif /* OC_STORAGE */
@@ -362,7 +392,7 @@ DWORD WINAPI ocf_event_thread(LPVOID lpParam) {
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -371,12 +401,14 @@ DWORD WINAPI ocf_event_thread(LPVOID lpParam) {
   return TRUE;
 }
 #elif defined(__linux__)
-static void *ocf_event_thread(void *data) {
+static void *
+ocf_event_thread(void *data)
+{
   (void)data;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = NULL,
-                                       .requests_entry = NULL};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = NULL,
+                                        .requests_entry = NULL };
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_client_creds/");
 #endif /* OC_STORAGE */
@@ -413,7 +445,9 @@ static void *ocf_event_thread(void *data) {
 }
 #endif
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[])
+{
   if (argc == 1) {
     PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
           "<apn>\n");

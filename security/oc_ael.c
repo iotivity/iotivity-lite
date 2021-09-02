@@ -54,12 +54,13 @@ static size_t oc_sec_ael_calc_event_size(const char *aeid, const char *message,
                                          const char **aux_info,
                                          size_t aux_size);
 
-static oc_sec_ael_event_t *
-oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
-                        oc_clock_time_t timestamp, const char *aeid,
-                        const char *message, const char **aux_info,
-                        size_t aux_size, size_t event_sz);
-static inline void oc_sec_ael_free_event(oc_sec_ael_event_t *event) {
+static oc_sec_ael_event_t *oc_sec_ael_create_event(
+  size_t device, uint8_t category, uint8_t priority, oc_clock_time_t timestamp,
+  const char *aeid, const char *message, const char **aux_info, size_t aux_size,
+  size_t event_sz);
+static inline void
+oc_sec_ael_free_event(oc_sec_ael_event_t *event)
+{
   if (event) {
     if (oc_string_len(event->aeid) > 0) {
       oc_free_string(&event->aeid);
@@ -68,7 +69,7 @@ static inline void oc_sec_ael_free_event(oc_sec_ael_event_t *event) {
       oc_free_string(&event->message);
     }
     oc_sec_ael_aux_info_t *aux =
-        (oc_sec_ael_aux_info_t *)oc_list_pop(event->aux_info);
+      (oc_sec_ael_aux_info_t *)oc_list_pop(event->aux_info);
     while (aux) {
       oc_free_string(&aux->aux_info);
       oc_memb_free(&aux_s, aux);
@@ -78,7 +79,9 @@ static inline void oc_sec_ael_free_event(oc_sec_ael_event_t *event) {
   }
 }
 
-static inline size_t oc_sec_ael_max_space(size_t device) {
+static inline size_t
+oc_sec_ael_max_space(size_t device)
+{
   oc_sec_ael_t *a = &ael[device];
   size_t res = OC_SEC_AEL_MAX_SIZE;
   switch (a->unit) {
@@ -91,7 +94,9 @@ static inline size_t oc_sec_ael_max_space(size_t device) {
   }
   return res;
 }
-static inline size_t oc_sec_ael_used_space(size_t device) {
+static inline size_t
+oc_sec_ael_used_space(size_t device)
+{
   oc_sec_ael_t *a = &ael[device];
   size_t res = 0;
   switch (ael->unit) {
@@ -105,7 +110,9 @@ static inline size_t oc_sec_ael_used_space(size_t device) {
   return res;
 }
 
-void oc_sec_ael_init(void) {
+void
+oc_sec_ael_init(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   ael = (oc_sec_ael_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_ael_t));
   if (!ael) {
@@ -118,7 +125,9 @@ void oc_sec_ael_init(void) {
   }
 }
 
-void oc_sec_ael_free(void) {
+void
+oc_sec_ael_free(void)
+{
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_ael_reset(device);
@@ -129,7 +138,9 @@ void oc_sec_ael_free(void) {
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void oc_sec_ael_default(size_t device) {
+void
+oc_sec_ael_default(size_t device)
+{
   oc_sec_ael_reset(device);
   oc_sec_ael_t *a = &ael[device];
   a->categoryfilter = OC_SEC_AEL_CATEGORYFILTER_DEFAULT;
@@ -140,15 +151,18 @@ void oc_sec_ael_default(size_t device) {
   oc_sec_dump_ael(device);
 }
 
-bool oc_sec_ael_add(size_t device, uint8_t category, uint8_t priority,
-                    const char *aeid, const char *message, const char **aux,
-                    size_t aux_len) {
+bool
+oc_sec_ael_add(size_t device, uint8_t category, uint8_t priority,
+               const char *aeid, const char *message, const char **aux,
+               size_t aux_len)
+{
   return oc_sec_ael_add_event(device, category, priority, oc_clock_time(), aeid,
                               message, aux, aux_len, true);
 }
 
-void get_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *data) {
+void
+get_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   if (request) {
     switch (iface_mask) {
@@ -165,8 +179,9 @@ void get_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
   }
 }
-void post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *data) {
+void
+post_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)iface_mask;
   (void)data;
   if (request) {
@@ -193,14 +208,16 @@ void post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
-                       bool to_storage) {
+bool
+oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
+                  bool to_storage)
+{
   oc_sec_ael_t *a = &ael[device];
   char tmpstr[64];
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-        oc_core_get_resource_by_index(OCF_SEC_AEL, device));
+      oc_core_get_resource_by_index(OCF_SEC_AEL, device));
   }
   /* categoryfilter */
   oc_rep_set_int(root, categoryfilter, a->categoryfilter);
@@ -249,7 +266,7 @@ bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
     oc_rep_open_array(events, auxiliaryinfo);
     if (oc_list_length(e->aux_info) > 0) {
       oc_sec_ael_aux_info_t *aux =
-          (oc_sec_ael_aux_info_t *)oc_list_head(e->aux_info);
+        (oc_sec_ael_aux_info_t *)oc_list_head(e->aux_info);
       while (aux) {
         oc_rep_add_text_string(auxiliaryinfo, oc_string(aux->aux_info));
         aux = aux->next;
@@ -263,7 +280,9 @@ bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
   return true;
 }
 
-bool oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage) {
+bool
+oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage)
+{
   oc_sec_ael_t *a = &ael[device];
   oc_rep_t *repc = rep;
   for (; repc; repc = repc->next) {
@@ -304,7 +323,7 @@ bool oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage) {
           char *aeid = NULL;
           char *message = NULL;
           size_t aux_sz = 0;
-          char *aux[AEL_AUX_INFO_MAX_ITEMS] = {0};
+          char *aux[AEL_AUX_INFO_MAX_ITEMS] = { 0 };
           for (oc_rep_t *r = event->value.object; r; r = r->next) {
             size_t l = oc_string_len(r->name);
             switch (r->type) {
@@ -357,7 +376,9 @@ bool oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage) {
   return true;
 }
 
-static void oc_sec_ael_reset(size_t device) {
+static void
+oc_sec_ael_reset(size_t device)
+{
   oc_sec_ael_t *a = &ael[device];
   oc_sec_ael_event_t *e = (oc_sec_ael_event_t *)oc_list_pop(a->events);
   while (e) {
@@ -366,11 +387,12 @@ static void oc_sec_ael_reset(size_t device) {
   }
 }
 
-static bool oc_sec_ael_add_event(size_t device, uint8_t category,
-                                 uint8_t priority, oc_clock_time_t timestamp,
-                                 const char *aeid, const char *message,
-                                 const char **aux, size_t aux_len,
-                                 bool write_to_storage) {
+static bool
+oc_sec_ael_add_event(size_t device, uint8_t category, uint8_t priority,
+                     oc_clock_time_t timestamp, const char *aeid,
+                     const char *message, const char **aux, size_t aux_len,
+                     bool write_to_storage)
+{
   bool res = false;
   oc_sec_ael_t *a = &ael[device];
 
@@ -394,8 +416,8 @@ static bool oc_sec_ael_add_event(size_t device, uint8_t category,
     }
     // create/add event
     oc_sec_ael_event_t *e =
-        oc_sec_ael_create_event(device, category, priority, timestamp, aeid,
-                                message, aux, aux_len, event_sz);
+      oc_sec_ael_create_event(device, category, priority, timestamp, aeid,
+                              message, aux, aux_len, event_sz);
     if (!e) {
       OC_ERR("Can't create event!");
     } else {
@@ -410,9 +432,10 @@ static bool oc_sec_ael_add_event(size_t device, uint8_t category,
   return res;
 }
 
-static size_t oc_sec_ael_calc_event_size(const char *aeid, const char *message,
-                                         const char **aux_info,
-                                         size_t aux_size) {
+static size_t
+oc_sec_ael_calc_event_size(const char *aeid, const char *message,
+                           const char **aux_info, size_t aux_size)
+{
   size_t res = sizeof(oc_sec_ael_event_t);
 
   if (aeid) {
@@ -434,7 +457,8 @@ static oc_sec_ael_event_t *
 oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
                         oc_clock_time_t timestamp, const char *aeid,
                         const char *message, const char **aux_info,
-                        size_t aux_size, size_t event_sz) {
+                        size_t aux_size, size_t event_sz)
+{
   // allocate memory
   oc_sec_ael_event_t *res = (oc_sec_ael_event_t *)oc_memb_alloc(&events_s);
   if (!res) {
@@ -456,7 +480,7 @@ oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
     size_t i;
     for (i = 0; i < aux_size; i++) {
       oc_sec_ael_aux_info_t *a_info =
-          (oc_sec_ael_aux_info_t *)oc_memb_alloc(&aux_s);
+        (oc_sec_ael_aux_info_t *)oc_memb_alloc(&aux_s);
       if (a_info) {
         oc_new_string(&a_info->aux_info, aux_info[i], strlen(aux_info[i]));
         oc_list_add(res->aux_info, a_info);

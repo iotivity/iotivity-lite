@@ -37,7 +37,8 @@ static oc_sec_doxm_t *doxm;
 static oc_sec_doxm_t doxm[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-typedef struct oc_doxm_owned_cb_s {
+typedef struct oc_doxm_owned_cb_s
+{
   struct oc_doxm_owned_cb_s *next;
   oc_ownership_status_cb_t cb;
   void *user_data;
@@ -46,10 +47,12 @@ typedef struct oc_doxm_owned_cb_s {
 OC_LIST(oc_doxm_owned_cb_list_t);
 OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
 
-void oc_sec_doxm_free(void) {
+void
+oc_sec_doxm_free(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_doxm_owned_cb_t *doxm_cb_item =
-      (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
+    (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
   while (doxm_cb_item) {
     free(doxm_cb_item);
     doxm_cb_item = (oc_doxm_owned_cb_t *)oc_list_pop(oc_doxm_owned_cb_list_t);
@@ -60,17 +63,21 @@ void oc_sec_doxm_free(void) {
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void oc_sec_doxm_init(void) {
+void
+oc_sec_doxm_init(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   doxm =
-      (oc_sec_doxm_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_doxm_t));
+    (oc_sec_doxm_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_doxm_t));
   if (!doxm) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-static void evaluate_supported_oxms(size_t device) {
+static void
+evaluate_supported_oxms(size_t device)
+{
   doxm[device].oxms[0] = OC_OXMTYPE_JW;
   doxm[device].oxms[1] = -1;
   doxm[device].oxms[2] = -1;
@@ -85,11 +92,13 @@ static void evaluate_supported_oxms(size_t device) {
 #endif /* OC_PKI */
 }
 
-void oc_sec_doxm_default(size_t device) {
+void
+oc_sec_doxm_default(size_t device)
+{
   // invoke the device owned changed cb before the deviceuuid is reset
   if (doxm[device].owned) {
     oc_doxm_owned_cb_t *doxm_cb_item =
-        (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
       (doxm_cb_item->cb)(&doxm[device].deviceuuid, device, false,
                          doxm_cb_item->user_data);
@@ -123,13 +132,15 @@ void oc_sec_doxm_default(size_t device) {
   oc_sec_dump_doxm(device);
 }
 
-void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
-                        bool to_storage) {
+void
+oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
+                   bool to_storage)
+{
   char uuid[37];
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-        oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
+      oc_core_get_resource_by_index(OCF_SEC_DOXM, device));
   }
   /* oxms */
   if (!to_storage) {
@@ -154,10 +165,15 @@ void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
   oc_rep_end_root_object();
 }
 
-oc_sec_doxm_t *oc_sec_get_doxm(size_t device) { return &doxm[device]; }
+oc_sec_doxm_t *
+oc_sec_get_doxm(size_t device)
+{
+  return &doxm[device];
+}
 
-void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *data) {
+void
+get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   switch (iface_mask) {
   case OC_IF_RW:
@@ -170,7 +186,7 @@ void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
          (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       if (request->origin && (request->origin->flags & MULTICAST) == 0) {
         request->response->response_buffer->code =
-            oc_status_code(OC_STATUS_BAD_REQUEST);
+          oc_status_code(OC_STATUS_BAD_REQUEST);
       } else {
         oc_ignore_request(request);
       }
@@ -184,8 +200,9 @@ void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc,
-                        size_t device) {
+bool
+oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
+{
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
@@ -352,7 +369,7 @@ bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc,
 
   if (owned_changed == true) {
     oc_doxm_owned_cb_t *doxm_cb_item =
-        (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
     while (doxm_cb_item) {
       oc_doxm_owned_cb_t *invokee = doxm_cb_item;
       doxm_cb_item = doxm_cb_item->next;
@@ -363,8 +380,9 @@ bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc,
   return true;
 }
 
-void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
-               void *data) {
+void
+post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)iface_mask;
   (void)data;
   oc_tls_peer_t *p = oc_tls_get_peer(request->origin);
@@ -377,7 +395,9 @@ void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data) {
+void
+oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
+{
   oc_doxm_owned_cb_t *new_doxm_cb = oc_memb_alloc(&oc_doxm_owned_cb_s);
   if (!new_doxm_cb) {
     oc_abort("Insufficient memory");
@@ -387,10 +407,11 @@ void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data) {
   oc_list_add(oc_doxm_owned_cb_list_t, new_doxm_cb);
 }
 
-void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
-                                   void *user_data) {
+void
+oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
+{
   oc_doxm_owned_cb_t *doxm_cb_item =
-      (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
+    (oc_doxm_owned_cb_t *)oc_list_head(oc_doxm_owned_cb_list_t);
   while (doxm_cb_item) {
     if (cb == doxm_cb_item->cb && user_data == doxm_cb_item->user_data) {
       oc_list_remove(oc_doxm_owned_cb_list_t, doxm_cb_item);
@@ -401,7 +422,9 @@ void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
   }
 }
 
-bool oc_is_owned_device(size_t device_index) {
+bool
+oc_is_owned_device(size_t device_index)
+{
   if (doxm) {
     return doxm[device_index].owned;
   }

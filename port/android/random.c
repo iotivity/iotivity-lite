@@ -24,9 +24,15 @@
 
 static int urandom_fd;
 
-void oc_random_init(void) { urandom_fd = open("/dev/urandom", O_RDONLY); }
+void
+oc_random_init(void)
+{
+  urandom_fd = open("/dev/urandom", O_RDONLY);
+}
 
-unsigned int oc_random_value(void) {
+unsigned int
+oc_random_value(void)
+{
   unsigned int rand = 0;
   int ret = read(urandom_fd, &rand, sizeof(rand));
   assert(ret != -1);
@@ -36,4 +42,8 @@ unsigned int oc_random_value(void) {
   return rand;
 }
 
-void oc_random_destroy(void) { close(urandom_fd); }
+void
+oc_random_destroy(void)
+{
+  close(urandom_fd);
+}

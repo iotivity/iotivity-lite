@@ -28,15 +28,19 @@ static int quit = 0;
 static bool light_state = false;
 static int counter;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
-static void get_count(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+get_count(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)user_data;
   PRINT("GET_count:\n");
   counter++;
@@ -55,8 +59,10 @@ static void get_count(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_count(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data) {
+static void
+post_count(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
   (void)interface;
   (void)user_data;
   PRINT("POST_count:\n");
@@ -81,8 +87,10 @@ static void post_count(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
@@ -100,8 +108,10 @@ static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
@@ -126,8 +136,10 @@ static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   post_light(request, iface_mask, user_data);
@@ -136,7 +148,8 @@ static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.energy.consumption instances
  */
-typedef struct oc_ec_t {
+typedef struct oc_ec_t
+{
   struct oc_ec_t *next;
   oc_resource_t *resource;
   double power;
@@ -145,7 +158,9 @@ typedef struct oc_ec_t {
 OC_MEMB(ec_s, oc_ec_t, 1);
 OC_LIST(ecs);
 
-bool set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data) {
+bool
+set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
   (void)resource;
   oc_ec_t *ec = (oc_ec_t *)data;
   while (rep != NULL) {
@@ -167,8 +182,10 @@ bool set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data) {
   return true;
 }
 
-void get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                       void *data) {
+void
+get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                  void *data)
+{
   oc_ec_t *ec = (oc_ec_t *)data;
   oc_rep_start_root_object();
   switch (iface_mask) {
@@ -185,19 +202,22 @@ void get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   oc_rep_end_root_object();
 }
 
-void get_ec(oc_request_t *request, oc_interface_mask_t iface_mask,
-            void *user_data) {
+void
+get_ec(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
   get_ec_properties(request->resource, iface_mask, user_data);
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_resource_t *get_ec_instance(const char *href, oc_string_array_t *types,
-                               oc_resource_properties_t bm,
-                               oc_interface_mask_t iface_mask, size_t device) {
+oc_resource_t *
+get_ec_instance(const char *href, oc_string_array_t *types,
+                oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                size_t device)
+{
   oc_ec_t *ec = (oc_ec_t *)oc_memb_alloc(&ec_s);
   if (ec) {
     ec->resource = oc_new_resource(
-        NULL, href, oc_string_array_get_allocated_size(*types), device);
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
     if (ec->resource) {
       size_t i;
       for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
@@ -221,7 +241,9 @@ oc_resource_t *get_ec_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-void free_ec_instance(oc_resource_t *resource) {
+void
+free_ec_instance(oc_resource_t *resource)
+{
   oc_ec_t *ec = (oc_ec_t *)oc_list_head(ecs);
   while (ec) {
     if (ec->resource == resource) {
@@ -235,7 +257,9 @@ void free_ec_instance(oc_resource_t *resource) {
 }
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res1 = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, "oic.r.light");
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
@@ -282,19 +306,25 @@ static void register_resources(void) {
 #endif /* OC_COLLECTIONS */
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -302,10 +332,10 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 

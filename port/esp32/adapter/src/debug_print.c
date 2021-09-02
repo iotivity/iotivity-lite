@@ -10,7 +10,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void print_macro_info() {
+void
+print_macro_info()
+{
   printf("\n****************************************\n");
 
 #ifdef OC_DEBUG
@@ -70,7 +72,9 @@ void print_macro_info() {
   printf("\n****************************************\n");
 }
 
-void print_message_info(oc_message_t *message) {
+void
+print_message_info(oc_message_t *message)
+{
 #ifdef OC_DEBUG
   printf("\n****************************************\n");
 
@@ -118,8 +122,10 @@ void print_message_info(oc_message_t *message) {
  * @return noreturn
  *
  */
-void print_debug(const char *data, const unsigned int len, const char *note,
-                 int mode) {
+void
+print_debug(const char *data, const unsigned int len, const char *note,
+            int mode)
+{
 #define BINARY_SHOW 0x10
 #define BYTES_SHOW 0x01
   printf("\n********** %s [len:%u] start addr:%p **********\n", note, len,

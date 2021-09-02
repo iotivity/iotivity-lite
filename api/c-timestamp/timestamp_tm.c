@@ -32,12 +32,14 @@
 #include <stddef.h>
 #include <time.h>
 
-static const uint16_t DayOffset[13] = {0,   306, 337, 0,   31,  61, 92,
-                                       122, 153, 184, 214, 245, 275};
+static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
+                                        122, 153, 184, 214, 245, 275 };
 
 /* Rata Die algorithm by Peter Baum */
 
-static void rdn_to_struct_tm(uint32_t rdn, struct tm *tmp) {
+static void
+rdn_to_struct_tm(uint32_t rdn, struct tm *tmp)
+{
   uint32_t Z, H, A, B;
   uint32_t C, y, m, d;
 
@@ -62,8 +64,9 @@ static void rdn_to_struct_tm(uint32_t rdn, struct tm *tmp) {
 
 #define RDN_OFFSET INT64_C(62135683200) /* 1970-01-01T00:00:00 */
 
-static struct tm *timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp,
-                                  const bool local) {
+static struct tm *
+timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp, const bool local)
+{
   uint64_t sec;
   uint32_t rdn, sod;
 
@@ -86,10 +89,14 @@ static struct tm *timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp,
   return tmp;
 }
 
-struct tm *timestamp_to_tm_local(const timestamp_t *tsp, struct tm *tmp) {
+struct tm *
+timestamp_to_tm_local(const timestamp_t *tsp, struct tm *tmp)
+{
   return timestamp_to_tm(tsp, tmp, true);
 }
 
-struct tm *timestamp_to_tm_utc(const timestamp_t *tsp, struct tm *tmp) {
+struct tm *
+timestamp_to_tm_utc(const timestamp_t *tsp, struct tm *tmp)
+{
   return timestamp_to_tm(tsp, tmp, false);
 }

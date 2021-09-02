@@ -26,8 +26,10 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-static void _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
-                                  char *rel, int64_t ins) {
+static void
+_add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
+                      int64_t ins)
+{
   if (!parent || !resource) {
     OC_ERR("Error of input parameters");
     return;
@@ -46,11 +48,12 @@ static void _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
   oc_rep_end_object(parent, links);
 }
 
-static bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                                      const char *id, const char *name,
-                                      uint32_t ttl,
-                                      oc_response_handler_t handler,
-                                      oc_qos_t qos, void *user_data) {
+static bool
+rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+                          const char *id, const char *name, uint32_t ttl,
+                          oc_response_handler_t handler, oc_qos_t qos,
+                          void *user_data)
+{
   if (!endpoint || !id || !links || !handler) {
     OC_ERR("Error of input parameters");
     return false;
@@ -80,10 +83,12 @@ static bool rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
   return oc_do_post();
 }
 
-bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-                uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
-                void *user_data) {
-  char uuid[OC_UUID_LEN] = {0};
+bool
+rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+           uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
+           void *user_data)
+{
+  char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
   if (!device_info)
     return false;
@@ -92,9 +97,9 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
   bool status = false;
   if (!links) {
     oc_link_t *link_p =
-        oc_new_link(oc_core_get_resource_by_index(OCF_P, device));
+      oc_new_link(oc_core_get_resource_by_index(OCF_P, device));
     oc_link_t *link_d =
-        oc_new_link(oc_core_get_resource_by_index(OCF_D, device));
+      oc_new_link(oc_core_get_resource_by_index(OCF_D, device));
     oc_list_add((oc_list_t)link_p, link_d);
 
     status = rd_publish_with_device_id(endpoint, link_p, uuid,
@@ -111,10 +116,11 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
   return status;
 }
 
-static bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
-                                     const char *id,
-                                     oc_response_handler_t handler,
-                                     oc_qos_t qos, void *user_data) {
+static bool
+rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+                         const char *id, oc_response_handler_t handler,
+                         oc_qos_t qos, void *user_data)
+{
   if (!endpoint || !id || !handler) {
     OC_ERR("Error of input parameters");
     return false;
@@ -128,14 +134,16 @@ static bool rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     links = links->next;
   }
 
-  bool ret = oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos,
-                          user_data);
+  bool ret =
+    oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos, user_data);
   return ret;
 }
 
-bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-               oc_response_handler_t handler, oc_qos_t qos, void *user_data) {
-  char uuid[OC_UUID_LEN] = {0};
+bool
+rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+          oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+{
+  char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
   if (!device_info)
     return false;

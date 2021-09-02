@@ -45,20 +45,18 @@ extern "C" {
 #define OC_MAX_BLOCK_SIZE (OC_BLOCK_WISE_SET_MTU - COAP_MAX_HEADER_SIZE)
 #define OC_BLOCK_SIZE                                                          \
   (OC_MAX_BLOCK_SIZE < 32                                                      \
-       ? 16                                                                    \
-       : (OC_MAX_BLOCK_SIZE < 64                                               \
-              ? 32                                                             \
-              : (OC_MAX_BLOCK_SIZE < 128                                       \
-                     ? 64                                                      \
-                     : (OC_MAX_BLOCK_SIZE < 256                                \
-                            ? 128                                              \
-                            : (OC_MAX_BLOCK_SIZE < 512                         \
-                                   ? 256                                       \
-                                   : (OC_MAX_BLOCK_SIZE < 1024                 \
-                                          ? 512                                \
-                                          : (OC_MAX_BLOCK_SIZE < 2048          \
-                                                 ? 1024                        \
-                                                 : 2048)))))))
+     ? 16                                                                      \
+     : (OC_MAX_BLOCK_SIZE < 64                                                 \
+          ? 32                                                                 \
+          : (OC_MAX_BLOCK_SIZE < 128                                           \
+               ? 64                                                            \
+               : (OC_MAX_BLOCK_SIZE < 256                                      \
+                    ? 128                                                      \
+                    : (OC_MAX_BLOCK_SIZE < 512                                 \
+                         ? 256                                                 \
+                         : (OC_MAX_BLOCK_SIZE < 1024                           \
+                              ? 512                                            \
+                              : (OC_MAX_BLOCK_SIZE < 2048 ? 1024 : 2048)))))))
 #else /* OC_BLOCK_WISE_SET_MTU */
 #define OC_BLOCK_SIZE (OC_MAX_APP_DATA_SIZE)
 #endif /* !OC_BLOCK_WISE_SET_MTU */
@@ -103,7 +101,8 @@ extern "C" {
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-struct oc_message_s {
+struct oc_message_s
+{
   struct oc_message_s *next;
   struct oc_memb *pool;
   oc_endpoint_t endpoint;

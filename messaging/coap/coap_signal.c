@@ -22,7 +22,9 @@
 #include <string.h>
 
 #ifdef OC_TCP
-static void coap_make_token(coap_packet_t *packet) {
+static void
+coap_make_token(coap_packet_t *packet)
+{
   packet->token_len = COAP_TOKEN_LEN;
   int i = 0;
   uint32_t r;
@@ -33,8 +35,9 @@ static void coap_make_token(coap_packet_t *packet) {
   }
 }
 
-static int coap_send_signal_message(oc_endpoint_t *endpoint,
-                                    coap_packet_t *packet) {
+static int
+coap_send_signal_message(oc_endpoint_t *endpoint, coap_packet_t *packet)
+{
   oc_message_t *message = oc_internal_allocate_outgoing_message();
   if (!message) {
     OC_ERR("message alloc failed.");
@@ -49,8 +52,10 @@ static int coap_send_signal_message(oc_endpoint_t *endpoint,
   return 1;
 }
 
-int coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
-                          uint8_t blockwise_transfer_option) {
+int
+coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
+                      uint8_t blockwise_transfer_option)
+{
   (void)blockwise_transfer_option;
   if (!endpoint)
     return 0;
@@ -81,8 +86,10 @@ int coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
   return coap_send_signal_message(endpoint, csm_pkt);
 }
 
-int coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
-                           uint8_t *token, uint8_t token_len) {
+int
+coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
+                       uint8_t *token, uint8_t token_len)
+{
   if (!endpoint || !token || token_len == 0)
     return 0;
 
@@ -110,7 +117,9 @@ int coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
   return 1;
 }
 
-int coap_send_pong_message(oc_endpoint_t *endpoint, void *packet) {
+int
+coap_send_pong_message(oc_endpoint_t *endpoint, void *packet)
+{
   if (!endpoint || !packet)
     return 0;
 
@@ -131,8 +140,10 @@ int coap_send_pong_message(oc_endpoint_t *endpoint, void *packet) {
   return coap_send_signal_message(endpoint, pong_pkt);
 }
 
-int coap_send_release_message(oc_endpoint_t *endpoint, const char *alt_addr,
-                              size_t alt_addr_len, uint32_t hold_off) {
+int
+coap_send_release_message(oc_endpoint_t *endpoint, const char *alt_addr,
+                          size_t alt_addr_len, uint32_t hold_off)
+{
   if (!endpoint)
     return 0;
 
@@ -159,8 +170,10 @@ int coap_send_release_message(oc_endpoint_t *endpoint, const char *alt_addr,
   return coap_send_signal_message(endpoint, release_pkt);
 }
 
-int coap_send_abort_message(oc_endpoint_t *endpoint, uint16_t opt,
-                            const char *diagnostic, size_t diagnostic_len) {
+int
+coap_send_abort_message(oc_endpoint_t *endpoint, uint16_t opt,
+                        const char *diagnostic, size_t diagnostic_len)
+{
   if (!endpoint)
     return 0;
 
@@ -187,7 +200,9 @@ int coap_send_abort_message(oc_endpoint_t *endpoint, uint16_t opt,
   return coap_send_signal_message(endpoint, abort_pkt);
 }
 
-int coap_check_signal_message(void *packet) {
+int
+coap_check_signal_message(void *packet)
+{
   if (!packet)
     return 0;
 
@@ -200,7 +215,9 @@ int coap_check_signal_message(void *packet) {
   return 0;
 }
 
-int handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint) {
+int
+handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   OC_DBG("Coap signal message received.(code: %d)", coap_pkt->code);
@@ -233,7 +250,9 @@ int handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint) {
   return COAP_NO_ERROR;
 }
 
-int coap_signal_get_max_msg_size(void *packet, uint32_t *size) {
+int
+coap_signal_get_max_msg_size(void *packet, uint32_t *size)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != CSM_7_01 ||
@@ -244,7 +263,9 @@ int coap_signal_get_max_msg_size(void *packet, uint32_t *size) {
   return 1;
 }
 
-int coap_signal_set_max_msg_size(void *packet, uint32_t size) {
+int
+coap_signal_set_max_msg_size(void *packet, uint32_t size)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != CSM_7_01) {
@@ -255,8 +276,9 @@ int coap_signal_set_max_msg_size(void *packet, uint32_t size) {
   return 1;
 }
 
-int coap_signal_get_blockwise_transfer(void *packet,
-                                       uint8_t *blockwise_transfer) {
+int
+coap_signal_get_blockwise_transfer(void *packet, uint8_t *blockwise_transfer)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != CSM_7_01 ||
@@ -267,8 +289,9 @@ int coap_signal_get_blockwise_transfer(void *packet,
   return 1;
 }
 
-int coap_signal_set_blockwise_transfer(void *packet,
-                                       uint8_t blockwise_transfer) {
+int
+coap_signal_set_blockwise_transfer(void *packet, uint8_t blockwise_transfer)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != CSM_7_01 ||
@@ -280,7 +303,9 @@ int coap_signal_set_blockwise_transfer(void *packet,
   return 1;
 }
 
-int coap_signal_get_custody(void *packet, uint8_t *custody) {
+int
+coap_signal_get_custody(void *packet, uint8_t *custody)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if ((coap_pkt->code != PING_7_02 && coap_pkt->code != PONG_7_03) ||
@@ -291,7 +316,9 @@ int coap_signal_get_custody(void *packet, uint8_t *custody) {
   return 1;
 }
 
-int coap_signal_set_custody(void *packet, uint8_t custody) {
+int
+coap_signal_set_custody(void *packet, uint8_t custody)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if ((coap_pkt->code != PING_7_02 && coap_pkt->code != PONG_7_03) ||
@@ -303,7 +330,9 @@ int coap_signal_set_custody(void *packet, uint8_t custody) {
   return 1;
 }
 
-size_t coap_signal_get_alt_addr(void *packet, const char **addr) {
+size_t
+coap_signal_get_alt_addr(void *packet, const char **addr)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != RELEASE_7_04 ||
@@ -314,8 +343,9 @@ size_t coap_signal_get_alt_addr(void *packet, const char **addr) {
   return coap_pkt->alt_addr_len;
 }
 
-size_t coap_signal_set_alt_addr(void *packet, const char *addr,
-                                size_t addr_len) {
+size_t
+coap_signal_set_alt_addr(void *packet, const char *addr, size_t addr_len)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != RELEASE_7_04 || !addr || addr_len <= 0) {
@@ -327,7 +357,9 @@ size_t coap_signal_set_alt_addr(void *packet, const char *addr,
   return coap_pkt->alt_addr_len;
 }
 
-int coap_signal_get_hold_off(void *packet, uint32_t *time_seconds) {
+int
+coap_signal_get_hold_off(void *packet, uint32_t *time_seconds)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != RELEASE_7_04 ||
@@ -338,7 +370,9 @@ int coap_signal_get_hold_off(void *packet, uint32_t *time_seconds) {
   return 1;
 }
 
-int coap_signal_set_hold_off(void *packet, uint32_t time_seconds) {
+int
+coap_signal_set_hold_off(void *packet, uint32_t time_seconds)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != RELEASE_7_04) {
@@ -349,7 +383,9 @@ int coap_signal_set_hold_off(void *packet, uint32_t time_seconds) {
   return 1;
 }
 
-int coap_signal_get_bad_csm(void *packet, uint16_t *opt) {
+int
+coap_signal_get_bad_csm(void *packet, uint16_t *opt)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != ABORT_7_05 ||
@@ -360,7 +396,9 @@ int coap_signal_get_bad_csm(void *packet, uint16_t *opt) {
   return 1;
 }
 
-int coap_signal_set_bad_csm(void *packet, uint16_t opt) {
+int
+coap_signal_set_bad_csm(void *packet, uint16_t opt)
+{
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (coap_pkt->code != ABORT_7_05) {

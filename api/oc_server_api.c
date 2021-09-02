@@ -43,40 +43,52 @@ static size_t query_iterator;
 static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
 #endif /* OC_CLOUD && OC_SERVER */
 
-int oc_add_device(const char *uri, const char *rt, const char *name,
-                  const char *spec_version, const char *data_model_version,
-                  oc_add_device_cb_t add_device_cb, void *data) {
+int
+oc_add_device(const char *uri, const char *rt, const char *name,
+              const char *spec_version, const char *data_model_version,
+              oc_add_device_cb_t add_device_cb, void *data)
+{
   if (!oc_core_add_new_device(uri, rt, name, spec_version, data_model_version,
                               add_device_cb, data))
     return -1;
   return 0;
 }
 
-int oc_init_platform(const char *mfg_name,
-                     oc_init_platform_cb_t init_platform_cb, void *data) {
+int
+oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
+                 void *data)
+{
   if (!oc_core_init_platform(mfg_name, init_platform_cb, data))
     return -1;
   return 0;
 }
 
-int oc_get_query_value(oc_request_t *request, const char *key, char **value) {
+int
+oc_get_query_value(oc_request_t *request, const char *key, char **value)
+{
   if (!request)
     return -1;
   return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
-int oc_query_value_exists(oc_request_t *request, const char *key) {
+int
+oc_query_value_exists(oc_request_t *request, const char *key)
+{
   if (!request)
     return -1;
   return oc_ri_query_exists(request->query, request->query_len, key);
 }
 
-static int response_length(void) {
+static int
+response_length(void)
+{
   int size = oc_rep_get_encoded_payload_size();
   return (size <= 2) ? 0 : size;
 }
 
-void oc_send_response(oc_request_t *request, oc_status_t response_code) {
+void
+oc_send_response(oc_request_t *request, oc_status_t response_code)
+{
 #ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     request->response->response_buffer->content_format = APPLICATION_CBOR;
@@ -84,17 +96,21 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code) {
 #endif /* OC_SPEC_VER_OIC */
   {
     request->response->response_buffer->content_format =
-        APPLICATION_VND_OCF_CBOR;
+      APPLICATION_VND_OCF_CBOR;
   }
   request->response->response_buffer->response_length = response_length();
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
-void oc_ignore_request(oc_request_t *request) {
+void
+oc_ignore_request(oc_request_t *request)
+{
   request->response->response_buffer->code = OC_IGNORE;
 }
 
-void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid) {
+void
+oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid)
+{
   if (piid && device < oc_core_get_num_devices()) {
     oc_device_info_t *info = oc_core_get_device_info(device);
     if (info) {
@@ -109,36 +125,47 @@ void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid) {
   }
 }
 
-void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
-                             uint16_t seconds) {
+void
+oc_set_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
+{
   oc_ri_add_timed_event_callback_seconds(cb_data, callback, seconds);
 }
 
-void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback) {
+void
+oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
+{
   oc_ri_remove_timed_event_callback(cb_data, callback);
 }
 
-void oc_resource_tag_pos_desc(oc_resource_t *resource,
-                              oc_pos_description_t pos) {
+void
+oc_resource_tag_pos_desc(oc_resource_t *resource, oc_pos_description_t pos)
+{
   resource->tag_pos_desc = pos;
 }
 
-void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
-                             double z) {
+void
+oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y, double z)
+{
   resource->tag_pos_rel[0] = x;
   resource->tag_pos_rel[1] = y;
   resource->tag_pos_rel[2] = z;
 }
 
-void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func) {
+void
+oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func)
+{
   resource->tag_func_desc = func;
 }
 
-void oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn) {
+void
+oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn)
+{
   resource->tag_locn = locn;
 }
 
-void oc_process_baseline_interface(oc_resource_t *resource) {
+void
+oc_process_baseline_interface(oc_resource_t *resource)
+{
   if (oc_string_len(resource->name) > 0) {
     oc_rep_set_text_string(root, n, oc_string(resource->name));
   }
@@ -175,18 +202,26 @@ void oc_process_baseline_interface(oc_resource_t *resource) {
   }
 }
 
-void oc_init_query_iterator(void) { query_iterator = 0; }
+void
+oc_init_query_iterator(void)
+{
+  query_iterator = 0;
+}
 
-int oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
-                     char **value, size_t *value_len) {
+int
+oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
+                 char **value, size_t *value_len)
+{
   query_iterator++;
   return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
                                        key_len, value, value_len,
                                        query_iterator);
 }
 
-bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
-                                 char **value, int *value_len) {
+bool
+oc_iterate_query_get_values(oc_request_t *request, const char *key,
+                            char **value, int *value_len)
+{
   char *current_key = 0;
   size_t key_len = 0, v_len;
   int pos = 0;
@@ -211,9 +246,10 @@ more_or_done:
 
 #ifdef OC_SERVER
 
-bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
-                                size_t *size,
-                                oc_content_format_t *content_format) {
+bool
+oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
+                           size_t *size, oc_content_format_t *content_format)
+{
   if (!request || !payload || !size || !content_format) {
     return false;
   }
@@ -226,25 +262,30 @@ bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
   return false;
 }
 
-void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
-                          size_t size, oc_content_format_t content_format,
-                          oc_status_t response_code) {
+void
+oc_send_response_raw(oc_request_t *request, const uint8_t *payload, size_t size,
+                     oc_content_format_t content_format,
+                     oc_status_t response_code)
+{
   request->response->response_buffer->content_format = content_format;
   memcpy(request->response->response_buffer->buffer, payload, size);
   request->response->response_buffer->response_length = size;
   request->response->response_buffer->code = oc_status_code(response_code);
 }
 
-void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
-                                size_t msg_len, oc_status_t response_code) {
+void
+oc_send_diagnostic_message(oc_request_t *request, const char *msg,
+                           size_t msg_len, oc_status_t response_code)
+{
   oc_send_response_raw(request, (const uint8_t *)msg, msg_len, TEXT_PLAIN,
                        response_code);
 }
 
-static void oc_populate_resource_object(oc_resource_t *resource,
-                                        const char *name, const char *uri,
-                                        uint8_t num_resource_types,
-                                        size_t device) {
+static void
+oc_populate_resource_object(oc_resource_t *resource, const char *name,
+                            const char *uri, uint8_t num_resource_types,
+                            size_t device)
+{
   if (name) {
     oc_new_string(&resource->name, name, strlen(name));
   } else {
@@ -260,8 +301,10 @@ static void oc_populate_resource_object(oc_resource_t *resource,
 #endif /* OC_SECURITY */
 }
 
-oc_resource_t *oc_new_resource(const char *name, const char *uri,
-                               uint8_t num_resource_types, size_t device) {
+oc_resource_t *
+oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
+                size_t device)
+{
   oc_resource_t *resource = oc_ri_alloc_resource();
   if (resource) {
     resource->interfaces = OC_IF_BASELINE;
@@ -275,8 +318,10 @@ oc_resource_t *oc_new_resource(const char *name, const char *uri,
 }
 
 #if defined(OC_COLLECTIONS)
-oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types, size_t device) {
+oc_resource_t *
+oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
+                  size_t device)
+{
   oc_resource_t *collection = (oc_resource_t *)oc_collection_alloc();
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
@@ -287,75 +332,96 @@ oc_resource_t *oc_new_collection(const char *name, const char *uri,
   return collection;
 }
 
-void oc_delete_collection(oc_resource_t *collection) {
+void
+oc_delete_collection(oc_resource_t *collection)
+{
   oc_collection_free((oc_collection_t *)collection);
 }
 
-void oc_add_collection(oc_resource_t *collection) {
+void
+oc_add_collection(oc_resource_t *collection)
+{
   oc_resource_set_observable(collection, true);
   oc_collection_add((oc_collection_t *)collection);
 }
 
-oc_resource_t *oc_collection_get_collections(void) {
+oc_resource_t *
+oc_collection_get_collections(void)
+{
   return (oc_resource_t *)oc_collection_get_all();
 }
 #endif /* OC_COLLECTIONS */
 
-void oc_resource_bind_resource_interface(oc_resource_t *resource,
-                                         oc_interface_mask_t iface_mask) {
+void
+oc_resource_bind_resource_interface(oc_resource_t *resource,
+                                    oc_interface_mask_t iface_mask)
+{
   resource->interfaces |= iface_mask;
 }
 
-void oc_resource_set_default_interface(oc_resource_t *resource,
-                                       oc_interface_mask_t iface_mask) {
+void
+oc_resource_set_default_interface(oc_resource_t *resource,
+                                  oc_interface_mask_t iface_mask)
+{
   resource->default_interface = iface_mask;
 }
 
-void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type) {
+void
+oc_resource_bind_resource_type(oc_resource_t *resource, const char *type)
+{
   oc_string_array_add_item(resource->types, (char *)type);
 }
 
 #ifdef OC_SECURITY
-void oc_resource_make_public(oc_resource_t *resource) {
+void
+oc_resource_make_public(oc_resource_t *resource)
+{
   resource->properties &= ~OC_SECURE;
 }
 #endif /* OC_SECURITY */
 
-void oc_resource_set_discoverable(oc_resource_t *resource, bool state) {
+void
+oc_resource_set_discoverable(oc_resource_t *resource, bool state)
+{
   if (state)
     resource->properties |= OC_DISCOVERABLE;
   else
     resource->properties &= ~OC_DISCOVERABLE;
 }
 
-void oc_resource_set_observable(oc_resource_t *resource, bool state) {
+void
+oc_resource_set_observable(oc_resource_t *resource, bool state)
+{
   if (state)
     resource->properties |= OC_OBSERVABLE;
   else
     resource->properties &= ~(OC_OBSERVABLE | OC_PERIODIC);
 }
 
-void oc_resource_set_periodic_observable(oc_resource_t *resource,
-                                         uint16_t seconds) {
+void
+oc_resource_set_periodic_observable(oc_resource_t *resource, uint16_t seconds)
+{
   resource->properties |= OC_OBSERVABLE | OC_PERIODIC;
   resource->observe_period_seconds = seconds;
 }
 
-void oc_resource_set_properties_cbs(oc_resource_t *resource,
-                                    oc_get_properties_cb_t get_properties,
-                                    void *get_props_user_data,
-                                    oc_set_properties_cb_t set_properties,
-                                    void *set_props_user_data) {
+void
+oc_resource_set_properties_cbs(oc_resource_t *resource,
+                               oc_get_properties_cb_t get_properties,
+                               void *get_props_user_data,
+                               oc_set_properties_cb_t set_properties,
+                               void *set_props_user_data)
+{
   resource->get_properties.cb.get_props = get_properties;
   resource->get_properties.user_data = get_props_user_data;
   resource->set_properties.cb.set_props = set_properties;
   resource->set_properties.user_data = set_props_user_data;
 }
 
-void oc_resource_set_request_handler(oc_resource_t *resource,
-                                     oc_method_t method,
-                                     oc_request_callback_t callback,
-                                     void *user_data) {
+void
+oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
+                                oc_request_callback_t callback, void *user_data)
+{
   oc_request_handler_t *handler = NULL;
   switch (method) {
   case OC_GET:
@@ -381,7 +447,9 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
 }
 
 #ifdef OC_OSCORE
-void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported) {
+void
+oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)
+{
   if (resource) {
     if (supported) {
       resource->properties |= OC_SECURE_MCAST;
@@ -392,7 +460,9 @@ void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported) {
 }
 #endif /* OC_OSCORE */
 
-void oc_set_con_write_cb(oc_con_write_cb_t callback) {
+void
+oc_set_con_write_cb(oc_con_write_cb_t callback)
+{
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
@@ -402,21 +472,29 @@ void oc_set_con_write_cb(oc_con_write_cb_t callback) {
   }
 }
 
-bool oc_add_resource(oc_resource_t *resource) {
+bool
+oc_add_resource(oc_resource_t *resource)
+{
   return oc_ri_add_resource(resource);
 }
 
-bool oc_delete_resource(oc_resource_t *resource) {
+bool
+oc_delete_resource(oc_resource_t *resource)
+{
   return oc_ri_delete_resource(resource);
 }
 
 #ifdef OC_CLOUD
-void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback) {
+void
+oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback)
+{
   g_delayed_delete_resource_cb = callback;
 }
 #endif /* OC_CLOUD */
 
-static oc_event_callback_retval_t oc_delayed_delete_resource_cb(void *data) {
+static oc_event_callback_retval_t
+oc_delayed_delete_resource_cb(void *data)
+{
   oc_resource_t *resource = (oc_resource_t *)data;
 #ifdef OC_CLOUD
   if (g_delayed_delete_resource_cb) {
@@ -427,17 +505,23 @@ static oc_event_callback_retval_t oc_delayed_delete_resource_cb(void *data) {
   return OC_EVENT_DONE;
 }
 
-void oc_delayed_delete_resource(oc_resource_t *resource) {
+void
+oc_delayed_delete_resource(oc_resource_t *resource)
+{
   oc_set_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
 }
 
-void oc_indicate_separate_response(oc_request_t *request,
-                                   oc_separate_response_t *response) {
+void
+oc_indicate_separate_response(oc_request_t *request,
+                              oc_separate_response_t *response)
+{
   request->response->separate_response = response;
   oc_send_response(request, OC_STATUS_OK);
 }
 
-void oc_set_separate_response_buffer(oc_separate_response_t *handle) {
+void
+oc_set_separate_response_buffer(oc_separate_response_t *handle)
+{
 #ifdef OC_BLOCK_WISE
   oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
@@ -445,8 +529,10 @@ void oc_set_separate_response_buffer(oc_separate_response_t *handle) {
 #endif /* !OC_BLOCK_WISE */
 }
 
-void oc_send_separate_response(oc_separate_response_t *handle,
-                               oc_status_t response_code) {
+void
+oc_send_separate_response(oc_separate_response_t *handle,
+                          oc_status_t response_code)
+{
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
   if (handle->len != 0)
@@ -464,7 +550,7 @@ void oc_send_separate_response(oc_separate_response_t *handle,
     next = cur->next;
     if (cur->observe < 3) {
       coap_transaction_t *t = coap_new_transaction(
-          coap_get_mid(), cur->token, cur->token_len, &cur->endpoint);
+        coap_get_mid(), cur->token, cur->token_len, &cur->endpoint);
       if (t) {
         coap_separate_resume(response, cur,
                              (uint8_t)oc_status_code(response_code), t->mid);
@@ -480,8 +566,8 @@ void oc_send_separate_response(oc_separate_response_t *handle,
         if (response_buffer.response_length > cur->block2_size) {
 #endif /* !OC_TCP */
           response_state = oc_blockwise_find_response_buffer(
-              oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-              cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
+            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
+            cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             if (response_state->payload_size ==
                 response_state->next_block_offset) {
@@ -492,8 +578,8 @@ void oc_send_separate_response(oc_separate_response_t *handle,
             }
           }
           response_state = oc_blockwise_alloc_response_buffer(
-              oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-              cur->method, OC_BLOCKWISE_SERVER);
+            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
+            cur->method, OC_BLOCKWISE_SERVER);
           if (!response_state) {
             goto next_separate_request;
           }
@@ -504,18 +590,18 @@ void oc_send_separate_response(oc_separate_response_t *handle,
 
           uint32_t payload_size = 0;
           const void *payload = oc_blockwise_dispatch_block(
-              response_state, 0, cur->block2_size, &payload_size);
+            response_state, 0, cur->block2_size, &payload_size);
           if (payload) {
             coap_set_payload(response, payload, payload_size);
             coap_set_header_block2(response, 0, 1, cur->block2_size);
             coap_set_header_size2(response, response_state->payload_size);
             oc_blockwise_response_state_t *bwt_res_state =
-                (oc_blockwise_response_state_t *)response_state;
+              (oc_blockwise_response_state_t *)response_state;
             coap_set_header_etag(response, bwt_res_state->etag, COAP_ETAG_LEN);
           }
         } else
 #endif /* OC_BLOCK_WISE */
-            if (response_buffer.response_length > 0) {
+          if (response_buffer.response_length > 0) {
           coap_set_payload(response, handle->buffer,
                            response_buffer.response_length);
         }
@@ -529,7 +615,7 @@ void oc_send_separate_response(oc_separate_response_t *handle,
       }
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
-          oc_string(cur->uri), oc_string_len(cur->uri), cur->endpoint.device);
+        oc_string(cur->uri), oc_string_len(cur->uri), cur->endpoint.device);
       if (resource) {
         coap_notify_observers(resource, &response_buffer, &cur->endpoint);
       }
@@ -546,7 +632,9 @@ void oc_send_separate_response(oc_separate_response_t *handle,
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-int oc_notify_observers(oc_resource_t *resource) {
+int
+oc_notify_observers(oc_resource_t *resource)
+{
   return coap_notify_observers(resource, NULL, NULL);
 }
 #endif /* OC_SERVER */

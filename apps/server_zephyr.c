@@ -28,20 +28,26 @@
 static struct k_sem block;
 static bool light_state = false;
 
-static void set_device_custom_property(void *data) {
+static void
+set_device_custom_property(void *data)
+{
   (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Kishen's light", "1.0", "1.0",
                        set_device_custom_property, NULL);
   return ret;
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
@@ -59,8 +65,10 @@ static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   PRINT("Light state %d\n", light_state);
 }
 
-static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
@@ -84,14 +92,18 @@ static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   light_state = state;
 }
 
-static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   post_light(request, iface_mask, user_data);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
@@ -104,30 +116,40 @@ static void register_resources(void) {
   oc_add_resource(res);
 }
 
-static void signal_event_loop(void) { k_sem_give(&block); }
+static void
+signal_event_loop(void)
+{
+  k_sem_give(&block);
+}
 
 #ifdef CONFIG_NET_L2_BT
-static void connected(struct bt_conn *conn, u8_t err) {
+static void
+connected(struct bt_conn *conn, u8_t err)
+{
   PRINT("client connected\n");
 }
 
-static void disconnected(struct bt_conn *conn, u8_t reason) {
+static void
+disconnected(struct bt_conn *conn, u8_t reason)
+{
   PRINT("client disconnected\n");
 }
 #endif
 
-void main(void) {
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+void
+main(void)
+{
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   k_sem_init(&block, 0, 1);
 
 #ifdef CONFIG_NET_L2_BT
   static struct bt_conn_cb conn_callbacks = {
-      .connected = connected,
-      .disconnected = disconnected,
+    .connected = connected,
+    .disconnected = disconnected,
   };
 
 #ifndef CONFIG_NET_APP_AUTO_INIT

@@ -31,14 +31,22 @@ static int quit;
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
 
-static void signal_event_loop(void) { WakeConditionVariable(&cv); }
+static void
+signal_event_loop(void)
+{
+  WakeConditionVariable(&cv);
+}
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   signal_event_loop();
   quit = 1;
 }
 
-static int init(void) {
+static int
+init(void)
+{
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
 
@@ -46,7 +54,9 @@ static int init(void) {
   return 0;
 }
 
-static void run(void) {
+static void
+run(void)
+{
   while (quit != 1) {
     oc_clock_time_t next_event = oc_main_poll();
     if (next_event == 0) {
@@ -55,7 +65,7 @@ static void run(void) {
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -67,13 +77,17 @@ static void run(void) {
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   if (signal == SIGPIPE) {
     return;
   }
@@ -81,7 +95,9 @@ static void handle_signal(int signal) {
   quit = 1;
 }
 
-static int init(void) {
+static int
+init(void)
+{
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -96,7 +112,9 @@ static int init(void) {
   return 0;
 }
 
-static void run(void) {
+static void
+run(void)
+{
   while (quit != 1) {
     oc_clock_time_t next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
@@ -138,8 +156,10 @@ static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "plgd";
 #endif /* OC_SECURITY */
 
-static void cloud_status_handler(oc_cloud_context_t *ctx,
-                                 oc_cloud_status_t status, void *data) {
+static void
+cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                     void *data)
+{
   (void)data;
   PRINT("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -170,7 +190,9 @@ static void cloud_status_handler(oc_cloud_context_t *ctx,
   }
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   oc_set_con_res_announced(true);
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
@@ -178,15 +200,17 @@ static int app_init(void) {
   return ret;
 }
 
-struct light_t {
+struct light_t
+{
   bool state;
   int64_t power;
 };
 
-static struct light_t light1 = {0};
+static struct light_t light1 = { 0 };
 
-static void get_handler(oc_request_t *request, oc_interface_mask_t iface,
-                        void *user_data) {
+static void
+get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
+{
   struct light_t *light = (struct light_t *)user_data;
 
   PRINT("get_handler:\n");
@@ -208,8 +232,10 @@ static void get_handler(oc_request_t *request, oc_interface_mask_t iface,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *user_data) {
+static void
+post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
   struct light_t *light = (struct light_t *)user_data;
   (void)iface_mask;
   printf("post_handler:\n");
@@ -243,7 +269,9 @@ static void post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void register_lights(void) {
+static void
+register_lights(void)
+{
   oc_resource_t *res1 = oc_new_resource(NULL, "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, resource_rt);
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
@@ -261,8 +289,9 @@ static void register_lights(void) {
 /* Setting custom Collection-level properties */
 static int64_t g_battery_level = 94;
 
-static bool set_switches_properties(oc_resource_t *resource, oc_rep_t *rep,
-                                    void *data) {
+static bool
+set_switches_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
   (void)resource;
   (void)data;
   while (rep != NULL) {
@@ -281,9 +310,10 @@ static bool set_switches_properties(oc_resource_t *resource, oc_rep_t *rep,
   return true;
 }
 
-static void get_switches_properties(oc_resource_t *resource,
-                                    oc_interface_mask_t iface_mask,
-                                    void *data) {
+static void
+get_switches_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                        void *data)
+{
   (void)resource;
   (void)data;
   switch (iface_mask) {
@@ -296,7 +326,8 @@ static void get_switches_properties(oc_resource_t *resource,
 }
 
 /* Resource creation and request handlers for oic.r.switch.binary instances */
-typedef struct oc_switch_t {
+typedef struct oc_switch_t
+{
   struct oc_switch_t *next;
   oc_resource_t *resource;
   uint16_t id;
@@ -308,8 +339,9 @@ typedef struct oc_switch_t {
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches); // list of switch instances ordered by id
 
-static bool set_switch_properties(oc_resource_t *resource, oc_rep_t *rep,
-                                  void *data) {
+static bool
+set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
   (void)resource;
   oc_switch_t *cswitch = (oc_switch_t *)data;
   while (rep != NULL) {
@@ -325,8 +357,10 @@ static bool set_switch_properties(oc_resource_t *resource, oc_rep_t *rep,
   return true;
 }
 
-static void get_switch_properties(oc_resource_t *resource,
-                                  oc_interface_mask_t iface_mask, void *data) {
+static void
+get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                      void *data)
+{
   oc_switch_t *cswitch = (oc_switch_t *)data;
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -340,8 +374,10 @@ static void get_switch_properties(oc_resource_t *resource,
   }
 }
 
-static void post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *user_data) {
+static void
+post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
   (void)iface_mask;
   oc_switch_t *cswitch = (oc_switch_t *)user_data;
   oc_rep_t *rep = request->request_payload;
@@ -381,16 +417,20 @@ static void post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-static void get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *user_data) {
+static void
+get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
   oc_rep_start_root_object();
   get_switch_properties(request->resource, iface_mask, user_data);
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void delete_cswitch(oc_request_t *request,
-                           oc_interface_mask_t iface_mask, void *user_data) {
+static void
+delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+               void *user_data)
+{
   OC_DBG("%s", __func__);
   (void)request;
   (void)iface_mask;
@@ -408,7 +448,9 @@ static void delete_cswitch(oc_request_t *request,
  *    the second element (id=2) because the next id in order should be 3.
  *    Since it is 5 and the list is ordered we know 3 is free to use.
  */
-static oc_switch_t *get_next_free_position() {
+static oc_switch_t *
+get_next_free_position()
+{
   oc_switch_t *item = oc_list_head(switches);
   if (!item || item->id != 1) {
     return NULL;
@@ -423,17 +465,19 @@ static oc_switch_t *get_next_free_position() {
   return item;
 }
 
-static oc_event_callback_retval_t register_to_cloud(void *res) {
+static oc_event_callback_retval_t
+register_to_cloud(void *res)
+{
   oc_resource_t *r = (oc_resource_t *)res;
   oc_cloud_add_resource(r);
   return OC_EVENT_DONE;
 }
 
-static oc_resource_t *get_switch_instance(const char *href,
-                                          oc_string_array_t *types,
-                                          oc_resource_properties_t bm,
-                                          oc_interface_mask_t iface_mask,
-                                          size_t device) {
+static oc_resource_t *
+get_switch_instance(const char *href, oc_string_array_t *types,
+                    oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                    size_t device)
+{
   (void)href;
   oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
   if (cswitch) {
@@ -443,13 +487,13 @@ static oc_resource_t *get_switch_instance(const char *href,
       cswitch_id = prev->id + 1;
     }
     const size_t href_size =
-        sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
+      sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
     char cswitch_href[href_size];
     snprintf(cswitch_href, sizeof(cswitch_href), "/switches/%u",
              (unsigned)cswitch_id);
 
     cswitch->resource = oc_new_resource(
-        NULL, cswitch_href, oc_string_array_get_allocated_size(*types), device);
+      NULL, cswitch_href, oc_string_array_get_allocated_size(*types), device);
     if (cswitch->resource) {
       cswitch->id = cswitch_id;
       size_t i;
@@ -479,7 +523,9 @@ static oc_resource_t *get_switch_instance(const char *href,
   return NULL;
 }
 
-static void free_switch_instance(oc_resource_t *resource) {
+static void
+free_switch_instance(oc_resource_t *resource)
+{
   OC_DBG("%s", __func__);
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
@@ -495,7 +541,9 @@ static void free_switch_instance(oc_resource_t *resource) {
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-static void register_collection(void) {
+static void
+register_collection(void)
+{
   oc_resource_t *col = oc_new_collection(NULL, "/switches", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
@@ -520,12 +568,16 @@ static void register_collection(void) {
 }
 #endif /* OC_COLLECTIONS */
 
-static void register_con() {
+static void
+register_con()
+{
   oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, 0);
   oc_cloud_add_resource(con_res);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   register_lights();
 #ifdef OC_COLLECTIONS
   register_collection();
@@ -534,7 +586,9 @@ static void register_resources(void) {
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -573,7 +627,9 @@ static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-static void factory_presets_cb(size_t device, void *data) {
+static void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -590,7 +646,7 @@ static void factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
+    oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -598,7 +654,9 @@ static void factory_presets_cb(size_t device, void *data) {
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[])
+{
   if (argc == 1) {
     PRINT("./cloud_server <device-name-without-spaces> <auth-code> <cis> <sid> "
           "<apn>\n");
@@ -635,10 +693,10 @@ int main(int argc, char *argv[]) {
     return ret;
   }
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */

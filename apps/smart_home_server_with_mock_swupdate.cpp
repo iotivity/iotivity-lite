@@ -39,7 +39,9 @@ using namespace boost::network;
 #include <regex>
 #endif
 
-int validate_purl(const char *purl) {
+int
+validate_purl(const char *purl)
+{
 #ifdef BOOST_FOR_URL_VALIDATION
   /* code based on boost and (https://github.com/cpp-netlib/uri
    renable: also modify the port/linux makefile target:
@@ -76,7 +78,9 @@ int validate_purl(const char *purl) {
 #endif
 }
 
-int check_new_version(size_t device, const char *url, const char *version) {
+int
+check_new_version(size_t device, const char *url, const char *version)
+{
   if (!url) {
     oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
     return -1;
@@ -90,13 +94,17 @@ int check_new_version(size_t device, const char *url, const char *version) {
   return 0;
 }
 
-int download_update(size_t device, const char *url) {
+int
+download_update(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_downloaded(device, "2.0", OC_SWUPDATE_RESULT_SUCCESS);
   return 0;
 }
 
-int perform_upgrade(size_t device, const char *url) {
+int
+perform_upgrade(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_upgrading(device, "2.0", oc_clock_time(),
                                OC_SWUPDATE_RESULT_SUCCESS);
@@ -106,7 +114,9 @@ int perform_upgrade(size_t device, const char *url) {
 }
 #endif /* OC_SOFTWARE_UPDATE */
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int err = oc_init_platform("Intel", NULL, NULL);
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.2.2",
@@ -114,8 +124,10 @@ static int app_init(void) {
   return err;
 }
 
-static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)user_data;
   PRINT("GET_switch:\n");
   oc_rep_start_root_object();
@@ -134,8 +146,10 @@ static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *user_data) {
+static void
+post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_switch:\n");
@@ -173,7 +187,9 @@ static void post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
@@ -184,27 +200,35 @@ static void register_resources(void) {
   oc_add_resource(bswitch);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
 #ifdef OC_SECURITY
-void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
   (void)data;
   PRINT("\n\nRandom PIN: %.*s\n\n", pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -243,7 +267,9 @@ static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void factory_presets_cb(size_t device, void *data) {
+void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -276,7 +302,7 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
-      0, ee_credid, (const unsigned char *)cert, cert_len);
+    0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
     PRINT("ERROR installing intermediate CA cert\n");
@@ -290,7 +316,7 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -300,7 +326,9 @@ void factory_presets_cb(size_t device, void *data) {
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);

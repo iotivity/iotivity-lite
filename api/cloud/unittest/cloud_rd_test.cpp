@@ -30,26 +30,30 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void) {
+  static int appInit(void)
+  {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                             "ocf.res.1.0.0", NULL, NULL);
     return result;
   }
 
-  static void signalEventLoop(void) {
+  static void signalEventLoop(void)
+  {
     pthread_mutex_lock(&mutex);
     pthread_cond_signal(&cv);
     pthread_mutex_unlock(&mutex);
   }
 
-  static oc_event_callback_retval_t quitEvent(void *data) {
+  static oc_event_callback_retval_t quitEvent(void *data)
+  {
     bool *quit = (bool *)data;
     *quit = true;
     return OC_EVENT_DONE;
   }
 
-  static void poolEvents(uint16_t seconds) {
+  static void poolEvents(uint16_t seconds)
+  {
     bool quit = false;
     oc_set_delayed_callback(&quit, quitEvent, seconds);
 
@@ -73,14 +77,16 @@ public:
   }
 
 protected:
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
   }
 
-  static oc_resource_t *findResource(oc_link_t *head, oc_resource_t *res) {
+  static oc_resource_t *findResource(oc_link_t *head, oc_resource_t *res)
+  {
     for (oc_link_t *l = head; l; l = l->next) {
       if (l->resource == res) {
         return l->resource;
@@ -96,7 +102,8 @@ oc_handler_t TestCloudRD::s_handler;
 pthread_mutex_t TestCloudRD::mutex;
 pthread_cond_t TestCloudRD::cv;
 
-TEST_F(TestCloudRD, cloud_publish_f) {
+TEST_F(TestCloudRD, cloud_publish_f)
+{
   // When
   int ret = oc_cloud_add_resource(NULL);
 
@@ -104,7 +111,8 @@ TEST_F(TestCloudRD, cloud_publish_f) {
   ASSERT_EQ(-1, ret);
 }
 
-TEST_F(TestCloudRD, cloud_publish_p) {
+TEST_F(TestCloudRD, cloud_publish_p)
+{
   // When
   oc_resource_t *res1 = oc_new_resource(NULL, "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, "test");
@@ -118,7 +126,8 @@ TEST_F(TestCloudRD, cloud_publish_p) {
   EXPECT_EQ(res1, findResource(ctx->rd_publish_resources, res1));
 }
 
-TEST_F(TestCloudRD, cloud_delete) {
+TEST_F(TestCloudRD, cloud_delete)
+{
   // When
   oc_resource_t *res1 = oc_new_resource(NULL, "/light/1", 1, 0);
   oc_resource_bind_resource_type(res1, "test");

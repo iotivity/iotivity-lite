@@ -50,7 +50,7 @@ typedef enum oc_sec_credusage_t {
   OC_CREDUSAGE_IDENTITY_CERT = 1 << 2, ///< Certificate oic.sec.cred.cert
   OC_CREDUSAGE_ROLE_CERT = 1 << 3, ///< Role Certificate oic.sec.cred.rolecert
   OC_CREDUSAGE_MFG_TRUSTCA =
-      1 << 4, ///< Manufacturer Trust CA oic.sec.cred.mfgtrustca
+    1 << 4, ///< Manufacturer Trust CA oic.sec.cred.mfgtrustca
   OC_CREDUSAGE_MFG_CERT = 1 << 5 ///< Manufacturer CA oic.sec.cred.mfgcert
 } oc_sec_credusage_t;
 
@@ -71,7 +71,8 @@ typedef enum oc_sec_encoding_t {
  * @brief credential data info
  *
  */
-typedef struct oc_cred_data_t {
+typedef struct oc_cred_data_t
+{
   oc_string_t data;           ///< the credential data
   oc_sec_encoding_t encoding; ///< the encoding of the credential data
 } oc_cred_data_t;
@@ -80,9 +81,11 @@ typedef struct oc_cred_data_t {
  * @brief security credential information
  *
  */
-typedef struct oc_sec_cred_t {
+typedef struct oc_sec_cred_t
+{
   struct oc_sec_cred_t *next; ///< pointer to the next credential
-  struct {
+  struct
+  {
     oc_string_t role;      ///< role
     oc_string_t authority; ///< authority
   } role;
@@ -107,7 +110,8 @@ typedef struct oc_sec_cred_t {
  * @brief credential and rowner information
  *
  */
-typedef struct oc_sec_creds_t {
+typedef struct oc_sec_creds_t
+{
   OC_LIST_STRUCT(creds); ///< list of credentials
   oc_uuid_t rowneruuid;  ///< row owner uuid
 } oc_sec_creds_t;

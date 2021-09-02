@@ -43,7 +43,9 @@ OC_LIST(rt_factories);
 OC_LIST(params_list);
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-oc_collection_t *oc_collection_alloc(void) {
+oc_collection_t *
+oc_collection_alloc(void)
+{
   oc_collection_t *collection = oc_memb_alloc(&oc_collections_s);
   if (collection) {
     OC_LIST_STRUCT_INIT(collection, supported_rts);
@@ -55,7 +57,9 @@ oc_collection_t *oc_collection_alloc(void) {
   return NULL;
 }
 
-void oc_collection_free(oc_collection_t *collection) {
+void
+oc_collection_free(oc_collection_t *collection)
+{
   if (collection != NULL) {
     oc_list_remove(oc_collections, collection);
     oc_ri_free_resource_properties((oc_resource_t *)collection);
@@ -87,7 +91,9 @@ void oc_collection_free(oc_collection_t *collection) {
   }
 }
 
-oc_link_t *oc_new_link(oc_resource_t *resource) {
+oc_link_t *
+oc_new_link(oc_resource_t *resource)
+{
   if (resource) {
     oc_link_t *link = oc_memb_alloc(&oc_links_s);
     if (link) {
@@ -106,7 +112,9 @@ oc_link_t *oc_new_link(oc_resource_t *resource) {
   return NULL;
 }
 
-void oc_delete_link(oc_link_t *link) {
+void
+oc_delete_link(oc_link_t *link)
+{
   if (link) {
     oc_link_params_t *p = (oc_link_params_t *)oc_list_pop(link->params);
     while (p) {
@@ -124,23 +132,31 @@ void oc_delete_link(oc_link_t *link) {
   }
 }
 
-static oc_event_callback_retval_t batch_notify_collection(void *data) {
+static oc_event_callback_retval_t
+batch_notify_collection(void *data)
+{
   coap_notify_collection_batch(data);
   return OC_EVENT_DONE;
 }
 
-static oc_event_callback_retval_t baseline_notify_collection(void *data) {
+static oc_event_callback_retval_t
+baseline_notify_collection(void *data)
+{
   coap_notify_collection_baseline(data);
   return OC_EVENT_DONE;
 }
 
-static oc_event_callback_retval_t links_list_notify_collection(void *data) {
+static oc_event_callback_retval_t
+links_list_notify_collection(void *data)
+{
   coap_notify_collection_links_list(data);
   oc_set_delayed_callback(data, baseline_notify_collection, 0);
   return OC_EVENT_DONE;
 }
 
-void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link) {
+void
+oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
+{
   oc_collection_t *c = (oc_collection_t *)collection;
   oc_list_add(c->links, link);
   if (link->resource == collection) {
@@ -149,7 +165,9 @@ void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link) {
   oc_set_delayed_callback(collection, links_list_notify_collection, 0);
 }
 
-void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link) {
+void
+oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
+{
   if (collection && link) {
     oc_collection_t *c = (oc_collection_t *)collection;
     oc_list_remove(c->links, link);
@@ -157,20 +175,25 @@ void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link) {
   }
 }
 
-oc_link_t *oc_collection_get_links(oc_resource_t *collection) {
+oc_link_t *
+oc_collection_get_links(oc_resource_t *collection)
+{
   if (collection)
     return (oc_link_t *)oc_list_head(((oc_collection_t *)collection)->links);
   return NULL;
 }
 
-void oc_link_add_rel(oc_link_t *link, const char *rel) {
+void
+oc_link_add_rel(oc_link_t *link, const char *rel)
+{
   if (link) {
     oc_string_array_add_item(link->rel, rel);
   }
 }
 
-void oc_link_add_link_param(oc_link_t *link, const char *key,
-                            const char *value) {
+void
+oc_link_add_link_param(oc_link_t *link, const char *key, const char *value)
+{
   if (link) {
     oc_link_params_t *p = oc_memb_alloc(&oc_params_s);
     if (p) {
@@ -181,13 +204,16 @@ void oc_link_add_link_param(oc_link_t *link, const char *key,
   }
 }
 
-void oc_link_set_interfaces(oc_link_t *link,
-                            oc_interface_mask_t new_interfaces) {
+void
+oc_link_set_interfaces(oc_link_t *link, oc_interface_mask_t new_interfaces)
+{
   link->interfaces = new_interfaces;
 }
 
-oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
-                                          size_t uri_path_len, size_t device) {
+oc_collection_t *
+oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len,
+                         size_t device)
+{
   while (uri_path[0] == '/') {
     uri_path++;
     uri_path_len--;
@@ -203,8 +229,10 @@ oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
   return (oc_collection_t *)collection;
 }
 
-oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
-                              int uri_path_len) {
+oc_link_t *
+oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
+                   int uri_path_len)
+{
   oc_link_t *link = NULL;
 
   if (collection && uri_path && uri_path_len > 0) {
@@ -218,7 +246,7 @@ oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
       if (link->resource &&
           (int)oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
           strncmp(oc_string(link->resource->uri) + 1, uri_path, uri_path_len) ==
-              0) {
+            0) {
         break;
       }
       link = link->next;
@@ -228,7 +256,9 @@ oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
   return link;
 }
 
-bool oc_check_if_collection(oc_resource_t *resource) {
+bool
+oc_check_if_collection(oc_resource_t *resource)
+{
   oc_resource_t *collection = (oc_resource_t *)oc_list_head(oc_collections);
   while (collection != NULL) {
     if (resource == collection)
@@ -238,11 +268,15 @@ bool oc_check_if_collection(oc_resource_t *resource) {
   return false;
 }
 
-void oc_collection_add(oc_collection_t *collection) {
+void
+oc_collection_add(oc_collection_t *collection)
+{
   oc_list_add(oc_collections, collection);
 }
 
-static oc_rt_t *is_known_rt(oc_list_t list, const char *rt) {
+static oc_rt_t *
+is_known_rt(oc_list_t list, const char *rt)
+{
   oc_rt_t *rtt = (oc_rt_t *)oc_list_head(list);
   while (rtt) {
     if (strlen(rt) == oc_string_len(rtt->rt) &&
@@ -256,7 +290,9 @@ static oc_rt_t *is_known_rt(oc_list_t list, const char *rt) {
 }
 
 #ifdef OC_COLLECTIONS_IF_CREATE
-static oc_rt_factory_t *is_known_rtfactory(const char *rt) {
+static oc_rt_factory_t *
+is_known_rtfactory(const char *rt)
+{
   oc_rt_factory_t *rf = (oc_rt_factory_t *)oc_list_head(rt_factories);
   while (rf) {
     if (strlen(rt) == oc_string_len(rf->rt) &&
@@ -269,7 +305,9 @@ static oc_rt_factory_t *is_known_rtfactory(const char *rt) {
   return NULL;
 }
 
-void oc_collections_free_rt_factories(void) {
+void
+oc_collections_free_rt_factories(void)
+{
   oc_fi_factory_free_all_created_resources();
   oc_rt_factory_t *rf = (oc_rt_factory_t *)oc_list_pop(rt_factories);
   while (rf) {
@@ -279,9 +317,11 @@ void oc_collections_free_rt_factories(void) {
   }
 }
 
-bool oc_collections_add_rt_factory(const char *rt,
-                                   oc_resource_get_instance_t get_instance,
-                                   oc_resource_free_instance_t free_instance) {
+bool
+oc_collections_add_rt_factory(const char *rt,
+                              oc_resource_get_instance_t get_instance,
+                              oc_resource_free_instance_t free_instance)
+{
   if (is_known_rtfactory(rt)) {
     return true;
   }
@@ -299,7 +339,9 @@ bool oc_collections_add_rt_factory(const char *rt,
   return true;
 }
 
-static void add_link_param(const char *key, const char *value) {
+static void
+add_link_param(const char *key, const char *value)
+{
   oc_link_params_t *p = oc_memb_alloc(&oc_params_s);
 
   if (p) {
@@ -310,7 +352,9 @@ static void add_link_param(const char *key, const char *value) {
 }
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt) {
+bool
+oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt)
+{
   oc_collection_t *col = (oc_collection_t *)collection;
   if (!is_known_rt(col->supported_rts, rt)) {
     oc_rt_t *rtt = (oc_rt_t *)oc_memb_alloc(&rtt_s);
@@ -323,7 +367,9 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt) {
   return false;
 }
 
-bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt) {
+bool
+oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt)
+{
   oc_collection_t *col = (oc_collection_t *)collection;
   if (!is_known_rt(col->mandatory_rts, rt)) {
     oc_rt_t *rtt = (oc_rt_t *)oc_memb_alloc(&rtt_s);
@@ -336,8 +382,10 @@ bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt) {
   return false;
 }
 
-oc_collection_t *oc_get_next_collection_with_link(oc_resource_t *resource,
-                                                  oc_collection_t *start) {
+oc_collection_t *
+oc_get_next_collection_with_link(oc_resource_t *resource,
+                                 oc_collection_t *start)
+{
   oc_collection_t *collection = start;
 
   if (!collection) {
@@ -360,9 +408,11 @@ oc_collection_t *oc_get_next_collection_with_link(oc_resource_t *resource,
   return collection;
 }
 
-bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
-                                  oc_interface_mask_t iface_mask,
-                                  oc_resource_t *notify_resource) {
+bool
+oc_handle_collection_request(oc_method_t method, oc_request_t *request,
+                             oc_interface_mask_t iface_mask,
+                             oc_resource_t *notify_resource)
+{
   int ecode = oc_status_code(OC_STATUS_OK);
   int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
@@ -389,8 +439,8 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                  i < oc_string_array_get_allocated_size(rep->value.array);
                  i++) {
               interfaces |= oc_ri_get_interface_mask(
-                  oc_string_array_get_item(rep->value.array, i),
-                  oc_string_array_get_item_size(rep->value.array, i));
+                oc_string_array_get_item(rep->value.array, i),
+                oc_string_array_get_item_size(rep->value.array, i));
             }
           }
         } break;
@@ -442,11 +492,11 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
         if (!bad_request) {
           oc_rt_created_t *new_res = oc_rt_factory_create_resource(
-              collection, rt, bm, interfaces, rf, request->resource->device);
+            collection, rt, bm, interfaces, rf, request->resource->device);
           if (new_res) {
             if (!payload || !new_res->resource->set_properties.cb.set_props(
-                                new_res->resource, payload,
-                                new_res->resource->set_properties.user_data)) {
+                              new_res->resource, payload,
+                              new_res->resource->set_properties.user_data)) {
               oc_rt_factory_free_created_resource(new_res, rf);
               bad_request = true;
             }
@@ -472,14 +522,14 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               memcpy(&g_encoder, &root_map, sizeof(CborEncoder));
               oc_rep_start_root_object();
               new_res->resource->get_properties.cb.get_props(
-                  new_res->resource, OC_IF_BASELINE,
-                  new_res->resource->get_properties.user_data);
+                new_res->resource, OC_IF_BASELINE,
+                new_res->resource->get_properties.user_data);
               oc_rep_end_root_object();
               memcpy(&root_map, &g_encoder, sizeof(CborEncoder));
               memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
 
               oc_link_params_t *p =
-                  (oc_link_params_t *)oc_list_pop(params_list);
+                (oc_link_params_t *)oc_list_pop(params_list);
               while (p) {
                 oc_rep_set_key(oc_rep_object(root), oc_string(p->key));
                 oc_rep_set_value_text_string(root, oc_string(p->value));
@@ -491,10 +541,10 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 
 #ifdef OC_SECURITY
               oc_sec_acl_add_created_resource_ace(
-                  oc_string(new_res->resource->uri), request->origin,
-                  request->resource->device,
-                  false); /* TODO: handle creation of Collections */
-#endif                    /* OC_SECURITY */
+                oc_string(new_res->resource->uri), request->origin,
+                request->resource->device,
+                false); /* TODO: handle creation of Collections */
+#endif                  /* OC_SECURITY */
             }
           } else {
             bad_request = true;
@@ -572,15 +622,15 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
             p = p->next;
           }
           oc_rep_set_object(links, p);
-          oc_rep_set_uint(p, bm,
-                          (uint8_t)(link->resource->properties &
-                                    ~(OC_PERIODIC | OC_SECURE)));
+          oc_rep_set_uint(
+            p, bm,
+            (uint8_t)(link->resource->properties & ~(OC_PERIODIC | OC_SECURE)));
           oc_rep_close_object(links, p);
 
           // tag-pos-desc
           if (link->resource->tag_pos_desc > 0) {
             const char *desc =
-                oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
+              oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
             if (desc) {
               oc_rep_set_text_string(links, tag - pos - desc, desc);
             }
@@ -608,7 +658,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
           // eps
           oc_rep_set_array(links, eps);
           oc_endpoint_t *eps =
-              oc_connectivity_get_endpoints(link->resource->device);
+            oc_connectivity_get_endpoints(link->resource->device);
           while (eps != NULL) {
             /*  If this resource has been explicitly tagged as SECURE on the
              *  application layer, skip all coap:// endpoints, and only include
@@ -642,8 +692,8 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       oc_rep_close_array(root, links);
       if (collection->res.get_properties.cb.get_props) {
         collection->res.get_properties.cb.get_props(
-            (oc_resource_t *)collection, OC_IF_BASELINE,
-            collection->res.get_properties.user_data);
+          (oc_resource_t *)collection, OC_IF_BASELINE,
+          collection->res.get_properties.user_data);
       }
       oc_rep_end_root_object();
 
@@ -651,8 +701,8 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     } else if (method == OC_PUT || method == OC_POST) {
       if (collection->res.set_properties.cb.set_props) {
         collection->res.set_properties.cb.set_props(
-            (oc_resource_t *)collection, request->request_payload,
-            collection->res.set_properties.user_data);
+          (oc_resource_t *)collection, request->request_payload,
+          collection->res.set_properties.user_data);
       }
     }
   } break;
@@ -674,14 +724,14 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         }
         oc_rep_set_object(links, p);
         oc_rep_set_uint(
-            p, bm,
-            (uint8_t)(link->resource->properties & ~(OC_PERIODIC | OC_SECURE)));
+          p, bm,
+          (uint8_t)(link->resource->properties & ~(OC_PERIODIC | OC_SECURE)));
         oc_rep_close_object(links, p);
 
         // tag-pos-desc
         if (link->resource->tag_pos_desc > 0) {
           const char *desc =
-              oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
+            oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
           if (desc) {
             oc_rep_set_text_string(links, tag - pos - desc, desc);
           }
@@ -709,7 +759,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
         // eps
         oc_rep_set_array(links, eps);
         oc_endpoint_t *eps =
-            oc_connectivity_get_endpoints(link->resource->device);
+          oc_connectivity_get_endpoints(link->resource->device);
         while (eps != NULL) {
           /* If this resource has been explicitly tagged as SECURE on the
            * application layer, skip all coap:// endpoints, and only include
@@ -746,8 +796,8 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   } break;
   case OC_IF_B: {
     CborEncoder encoder, prev_link;
-    oc_request_t rest_request = {0};
-    oc_response_t response = {0};
+    oc_request_t rest_request = { 0 };
+    oc_response_t response = { 0 };
     oc_response_buffer_t response_buffer;
     bool method_not_found = false, get_delete = false;
     oc_rep_t *rep = request->request_payload;
@@ -828,11 +878,11 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                     oc_check_if_collection(link->resource)) {
                   request->resource = link->resource;
                   oc_handle_collection_request(
-                      method, request, link->resource->default_interface, NULL);
+                    method, request, link->resource->default_interface, NULL);
                   request->resource = (oc_resource_t *)collection;
                 } else {
                   oc_interface_mask_t req_iface =
-                      link->resource->default_interface;
+                    link->resource->default_interface;
                   if (link->resource == (oc_resource_t *)collection) {
                     req_iface = OC_IF_BASELINE;
                   }
@@ -840,32 +890,32 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                   case OC_GET:
                     if (link->resource->get_handler.cb)
                       link->resource->get_handler.cb(
-                          &rest_request, req_iface,
-                          link->resource->get_handler.user_data);
+                        &rest_request, req_iface,
+                        link->resource->get_handler.user_data);
                     else
                       method_not_found = true;
                     break;
                   case OC_PUT:
                     if (link->resource->put_handler.cb)
                       link->resource->put_handler.cb(
-                          &rest_request, req_iface,
-                          link->resource->put_handler.user_data);
+                        &rest_request, req_iface,
+                        link->resource->put_handler.user_data);
                     else
                       method_not_found = true;
                     break;
                   case OC_POST:
                     if (link->resource->post_handler.cb)
                       link->resource->post_handler.cb(
-                          &rest_request, req_iface,
-                          link->resource->post_handler.user_data);
+                        &rest_request, req_iface,
+                        link->resource->post_handler.user_data);
                     else
                       method_not_found = true;
                     break;
                   case OC_DELETE:
                     if (link->resource->delete_handler.cb)
                       link->resource->delete_handler.cb(
-                          &rest_request, req_iface,
-                          link->resource->delete_handler.user_data);
+                        &rest_request, req_iface,
+                        link->resource->delete_handler.user_data);
                     else
                       method_not_found = true;
                     break;
@@ -881,7 +931,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
               } else {
                 if ((method == OC_PUT || method == OC_POST) &&
                     response_buffer.code <
-                        oc_status_code(OC_STATUS_BAD_REQUEST)) {
+                      oc_status_code(OC_STATUS_BAD_REQUEST)) {
                 }
                 if (response_buffer.code <
                     oc_status_code(OC_STATUS_BAD_REQUEST)) {
@@ -954,7 +1004,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
-          request->resource, request->response->response_buffer, iface_mask);
+        request->resource, request->response->response_buffer, iface_mask);
     } else if (iface_mask == OC_IF_B) {
       oc_set_delayed_callback(request->resource, batch_notify_collection, 0);
     }
@@ -963,7 +1013,9 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   return true;
 }
 
-oc_collection_t *oc_collection_get_all(void) {
+oc_collection_t *
+oc_collection_get_all(void)
+{
   return (oc_collection_t *)oc_list_head(oc_collections);
 }
 

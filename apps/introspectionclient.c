@@ -26,7 +26,9 @@ struct timespec ts;
 
 int quit = 0;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Apple", NULL, NULL);
   printf("\tPlatform initialized.\n");
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
@@ -42,7 +44,9 @@ static char introspection_data_uri[MAX_URI_LENGTH];
 static oc_endpoint_t wk_introspection_server;
 static oc_endpoint_t introspection_data_server;
 
-void print_rep(oc_rep_t *rep, bool pretty_print) {
+void
+print_rep(oc_rep_t *rep, bool pretty_print)
+{
   char *json;
   size_t json_size;
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
@@ -52,7 +56,9 @@ void print_rep(oc_rep_t *rep, bool pretty_print) {
   free(json);
 }
 
-static void get_introspection_data(oc_client_response_t *data) {
+static void
+get_introspection_data(oc_client_response_t *data)
+{
   printf("\nInside the get_introspection_data handler:\n");
   if (data->code == OC_STATUS_OK) {
     oc_rep_t *rep = data->payload;
@@ -72,7 +78,9 @@ static void get_introspection_data(oc_client_response_t *data) {
   }
 }
 
-static void get_wk_introspection(oc_client_response_t *data) {
+static void
+get_wk_introspection(oc_client_response_t *data)
+{
   printf("\nInside the get_wk_introspection handler:\n");
   oc_rep_t *rep = data->payload;
 
@@ -115,7 +123,8 @@ static void get_wk_introspection(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)anchor;
   (void)user_data;
   (void)iface_mask;
@@ -149,25 +158,33 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   printf(
-      "Making ip discovery request for OCF 'oic.wk.introspection' resource.\n");
+    "Making ip discovery request for OCF 'oic.wk.introspection' resource.\n");
   oc_do_ip_discovery("oic.wk.introspection", &discovery, NULL);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-void handle_signal(int signal) {
+void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -175,9 +192,9 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 

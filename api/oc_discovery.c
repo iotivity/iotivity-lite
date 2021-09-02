@@ -43,20 +43,25 @@
 #endif
 
 #ifdef OC_WKCORE
-static int clf_add_line_to_buffer(const char *line) {
+static int
+clf_add_line_to_buffer(const char *line)
+{
   int len = (int)strlen(line);
   oc_rep_encode_raw((uint8_t *)line, len);
   return len;
 }
-static int clf_add_line_size_to_buffer(const char *line, int len) {
+static int
+clf_add_line_size_to_buffer(const char *line, int len)
+{
   oc_rep_encode_raw((uint8_t *)line, len);
   return len;
 }
 #endif /* OC_WKCORE */
 
-static bool filter_resource(oc_resource_t *resource, oc_request_t *request,
-                            const char *anchor, CborEncoder *links,
-                            size_t device_index) {
+static bool
+filter_resource(oc_resource_t *resource, oc_request_t *request,
+                const char *anchor, CborEncoder *links, size_t device_index)
+{
   if (!oc_filter_resource_by_rt(resource, request)) {
     return false;
   }
@@ -67,9 +72,9 @@ static bool filter_resource(oc_resource_t *resource, oc_request_t *request,
 
 #ifdef OC_SECURITY
   bool owned_for_SVRs =
-      (oc_core_is_SVR(resource, device_index) &&
-       (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
-        oc_tls_num_peers(device_index) != 0));
+    (oc_core_is_SVR(resource, device_index) &&
+     (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
+      oc_tls_num_peers(device_index) != 0));
 #endif /* OC_SECURITY */
 
   oc_rep_start_object(links, link);
@@ -198,8 +203,10 @@ static bool filter_resource(oc_resource_t *resource, oc_request_t *request,
   return true;
 }
 
-static int process_device_resources(CborEncoder *links, oc_request_t *request,
-                                    size_t device_index) {
+static int
+process_device_resources(CborEncoder *links, oc_request_t *request,
+                         size_t device_index)
+{
   int matches = 0;
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
@@ -219,8 +226,8 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
     matches++;
 
   if (filter_resource(
-          oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
-          request, oc_string(anchor), links, device_index))
+        oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
+        request, oc_string(anchor), links, device_index))
     matches++;
 
   if (oc_get_con_res_announced() &&
@@ -234,8 +241,8 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
 #endif /* OC_MNT */
 #ifdef OC_SOFTWARE_UPDATE
   if (filter_resource(
-          oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index), request,
-          oc_string(anchor), links, device_index))
+        oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_SOFTWARE_UPDATE */
 
@@ -245,8 +252,8 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
     matches++;
 
   if (filter_resource(
-          oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_index), request,
-          oc_string(anchor), links, device_index))
+        oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_ACL, device_index),
@@ -271,8 +278,8 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
     matches++;
 
   if (filter_resource(
-          oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
-          oc_string(anchor), links, device_index))
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_PKI */
 
@@ -284,8 +291,8 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   if (filter_resource(
-          oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index),
-          request, oc_string(anchor), links, device_index))
+        oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index), request,
+        oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
@@ -321,8 +328,10 @@ static int process_device_resources(CborEncoder *links, oc_request_t *request,
 }
 
 #ifdef OC_SPEC_VER_OIC
-static bool filter_oic_1_1_resource(oc_resource_t *resource,
-                                    oc_request_t *request, CborEncoder *links) {
+static bool
+filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
+                        CborEncoder *links)
+{
   if (!oc_filter_resource_by_rt(resource, request)) {
     return false;
   }
@@ -391,7 +400,7 @@ static bool filter_oic_1_1_resource(oc_resource_t *resource,
       }
     } else
 #endif /* OC_TCP */
-        if (eps->flags & SECURED) {
+      if (eps->flags & SECURED) {
       if (request->origin->flags & IPV6 && eps->flags & IPV6) {
         oc_rep_set_uint(p, port, eps->addr.ipv6.port);
       }
@@ -411,9 +420,10 @@ static bool filter_oic_1_1_resource(oc_resource_t *resource,
   return true;
 }
 
-static int process_oic_1_1_device_object(CborEncoder *device,
-                                         oc_request_t *request,
-                                         size_t device_num, bool baseline) {
+static int
+process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
+                              size_t device_num, bool baseline)
+{
   int matches = 0;
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, OC_UUID_LEN);
@@ -440,8 +450,8 @@ static int process_oic_1_1_device_object(CborEncoder *device,
   /* oic.wk.con */
   if (oc_get_con_res_announced() &&
       filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_CON, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_CON, device_num), request,
+        oc_rep_array(links)))
     matches++;
 
 #ifdef OC_SERVER
@@ -471,45 +481,45 @@ static int process_oic_1_1_device_object(CborEncoder *device,
 
 #ifdef OC_SECURITY
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_DOXM, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_DOXM, device_num), request,
+        oc_rep_array(links)))
     matches++;
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_num), request,
+        oc_rep_array(links)))
     matches++;
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_CRED, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_CRED, device_num), request,
+        oc_rep_array(links)))
     matches++;
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_ACL, device_num), request,
+        oc_rep_array(links)))
     matches++;
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_AEL, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_AEL, device_num), request,
+        oc_rep_array(links)))
     matches++;
 
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_SP, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_SP, device_num), request,
+        oc_rep_array(links)))
     matches++;
 #ifdef OC_PKI
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_CSR, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_CSR, device_num), request,
+        oc_rep_array(links)))
     matches++;
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_SEC_ROLES, device_num), request,
-          oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_SEC_ROLES, device_num), request,
+        oc_rep_array(links)))
     matches++;
 #endif /* OC_PKI */
 #endif
 
   if (filter_oic_1_1_resource(
-          oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_num),
-          request, oc_rep_array(links)))
+        oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_num),
+        request, oc_rep_array(links)))
     matches++;
 
   oc_rep_close_array(links, links);
@@ -518,9 +528,10 @@ static int process_oic_1_1_device_object(CborEncoder *device,
   return matches;
 }
 
-static void oc_core_1_1_discovery_handler(oc_request_t *request,
-                                          oc_interface_mask_t iface_mask,
-                                          void *data) {
+static void
+oc_core_1_1_discovery_handler(oc_request_t *request,
+                              oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   int matches = 0;
   size_t device;
@@ -553,7 +564,7 @@ static void oc_core_1_1_discovery_handler(oc_request_t *request,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
@@ -561,15 +572,16 @@ static void oc_core_1_1_discovery_handler(oc_request_t *request,
 #endif /* OC_SPEC_VER_OIC */
 
 #ifdef OC_RES_BATCH_SUPPORT
-static void process_batch_response(CborEncoder *links_array,
-                                   oc_resource_t *resource,
-                                   oc_endpoint_t *endpoint) {
+static void
+process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
+                       oc_endpoint_t *endpoint)
+{
   if (!(resource->properties & OC_DISCOVERABLE)) {
     return;
   }
 
-  oc_request_t rest_request = {0};
-  oc_response_t response = {0};
+  oc_request_t rest_request = { 0 };
+  oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer;
   response.response_buffer = &response_buffer;
   rest_request.response = &response;
@@ -620,19 +632,19 @@ static void process_batch_response(CborEncoder *links_array,
 #endif /* OC_SECURITY */
 }
 
-static void process_batch_request(CborEncoder *links_array,
-                                  oc_endpoint_t *endpoint,
-                                  size_t device_index) {
+static void
+process_batch_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
+                      size_t device_index)
+{
   process_batch_response(links_array, oc_core_get_resource_by_index(OCF_P, 0),
                          endpoint);
-  process_batch_response(links_array,
-                         oc_core_get_resource_by_index(OCF_D, device_index),
-                         endpoint);
+  process_batch_response(
+    links_array, oc_core_get_resource_by_index(OCF_D, device_index), endpoint);
 
   process_batch_response(
-      links_array,
-      oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
-      endpoint);
+    links_array,
+    oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
+    endpoint);
 
   if (oc_get_con_res_announced()) {
     process_batch_response(links_array,
@@ -648,14 +660,14 @@ static void process_batch_request(CborEncoder *links_array,
 
 #ifdef OC_SOFTWARE_UPDATE
   process_batch_response(
-      links_array, oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index),
-      endpoint);
+    links_array, oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index),
+    endpoint);
 #endif /* OC_SOFTWARE_UPDATE */
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   process_batch_response(
-      links_array,
-      oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index), endpoint);
+    links_array, oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index),
+    endpoint);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #ifdef OC_SERVER
@@ -679,9 +691,10 @@ static void process_batch_request(CborEncoder *links_array,
 }
 #endif /* OC_RES_BATCH_SUPPORT */
 
-static void oc_core_discovery_handler(oc_request_t *request,
-                                      oc_interface_mask_t iface_mask,
-                                      void *data) {
+static void
+oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+                          void *data)
+{
   (void)data;
 
 #ifdef OC_SPEC_VER_OIC
@@ -745,7 +758,7 @@ static void oc_core_discovery_handler(oc_request_t *request,
     oc_rep_start_object(oc_rep_array(links), props);
     memcpy(&root_map, &props_map, sizeof(CborEncoder));
     oc_process_baseline_interface(
-        oc_core_get_resource_by_index(OCF_RES, device));
+      oc_core_get_resource_by_index(OCF_RES, device));
 #ifdef OC_SECURITY
     oc_sec_sdi_t *s = oc_sec_get_sdi(device);
     if (!s->priv) {
@@ -772,16 +785,17 @@ static void oc_core_discovery_handler(oc_request_t *request,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
 }
 
 #ifdef OC_WKCORE
-static void oc_wkcore_discovery_handler(oc_request_t *request,
-                                        oc_interface_mask_t iface_mask,
-                                        void *data) {
+static void
+oc_wkcore_discovery_handler(oc_request_t *request,
+                            oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   (void)iface_mask;
   size_t response_length = 0;
@@ -790,7 +804,7 @@ static void oc_wkcore_discovery_handler(oc_request_t *request,
   /* check if the accept header is link-format */
   if (request->accept != APPLICATION_LINK_FORMAT) {
     request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
   }
 
@@ -845,7 +859,7 @@ static void oc_wkcore_discovery_handler(oc_request_t *request,
     response_length += length;
 
     oc_endpoint_t *eps =
-        oc_connectivity_get_endpoints(request->resource->device);
+      oc_connectivity_get_endpoints(request->resource->device);
     oc_string_t ep, uri;
     memset(&uri, 0, sizeof(oc_string_t));
     while (eps != NULL) {
@@ -869,7 +883,7 @@ static void oc_wkcore_discovery_handler(oc_request_t *request,
     length = clf_add_line_to_buffer("\";");
     response_length += length;
     length =
-        clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");
+      clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");
     response_length += length;
   }
 
@@ -879,14 +893,16 @@ static void oc_wkcore_discovery_handler(oc_request_t *request,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
     request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_status_code(OC_STATUS_BAD_REQUEST);
   } else {
     request->response->response_buffer->code = OC_IGNORE;
   }
 }
 #endif /* OC_WKCORE */
 
-void oc_create_discovery_resource(int resource_idx, size_t device) {
+void
+oc_create_discovery_resource(int resource_idx, size_t device)
+{
 
 #ifdef OC_WKCORE
   if (resource_idx == WELLKNOWNCORE) {
@@ -903,7 +919,7 @@ void oc_create_discovery_resource(int resource_idx, size_t device) {
 #ifdef OC_RES_BATCH_SUPPORT
                             OC_IF_B |
 #endif /* OC_RES_BATCH_SUPPORT */
-                                OC_IF_LL | OC_IF_BASELINE,
+                              OC_IF_LL | OC_IF_BASELINE,
                             OC_IF_LL, OC_DISCOVERABLE,
                             oc_core_discovery_handler, 0, 0, 0, 1,
                             "oic.wk.res");
@@ -913,7 +929,8 @@ void oc_create_discovery_resource(int resource_idx, size_t device) {
 oc_discovery_flags_t
 oc_ri_process_discovery_payload(uint8_t *payload, int len,
                                 oc_client_handler_t client_handler,
-                                oc_endpoint_t *endpoint, void *user_data) {
+                                oc_endpoint_t *endpoint, void *user_data)
+{
   oc_discovery_handler_t handler = client_handler.discovery;
   oc_discovery_all_handler_t all_handler = client_handler.discovery_all;
   bool all = false;
@@ -931,10 +948,11 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
   memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
   memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-  struct oc_memb rep_objects = {sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                rep_objects_alloc, (void *)rep_objects_pool, 0};
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                 rep_objects_alloc, (void *)rep_objects_pool,
+                                 0 };
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  struct oc_memb rep_objects = {sizeof(oc_rep_t), 0, 0, 0, 0};
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
 
@@ -1002,8 +1020,8 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
           for (i = 0; i < oc_string_array_get_allocated_size(link->value.array);
                i++) {
             iface_mask |= oc_ri_get_interface_mask(
-                oc_string_array_get_item(link->value.array, i),
-                oc_string_array_get_item_size(link->value.array, i));
+              oc_string_array_get_item(link->value.array, i),
+              oc_string_array_get_item_size(link->value.array, i));
           }
         }
       } break;

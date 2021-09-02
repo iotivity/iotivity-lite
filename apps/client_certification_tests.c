@@ -35,7 +35,8 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-typedef struct device_handle_t {
+typedef struct device_handle_t
+{
   struct device_handle_t *next;
   oc_uuid_t uuid;
   char device_name[64];
@@ -48,7 +49,8 @@ OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
 /* List of known un-owned devices */
 OC_LIST(unowned_devices);
 
-typedef struct resource_t {
+typedef struct resource_t
+{
   struct resource_t *next;
   oc_endpoint_t *endpoint;
   char uri[64];
@@ -57,12 +59,16 @@ typedef struct resource_t {
 OC_LIST(resources);
 OC_MEMB(resources_m, resource_t, 100);
 
-static void free_resource(resource_t *res) {
+static void
+free_resource(resource_t *res)
+{
   oc_free_server_endpoints(res->endpoint);
   oc_memb_free(&resources_m, res);
 }
 
-static void free_all_resources(void) {
+static void
+free_all_resources(void)
+{
   resource_t *l = (resource_t *)oc_list_pop(resources);
   while (l != NULL) {
     free_resource(l);
@@ -70,7 +76,9 @@ static void free_all_resources(void) {
   }
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.2",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
@@ -80,8 +88,8 @@ static int app_init(void) {
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
-      "\tERROR Could not read client_certification_tests_IDD.cbor\n"
-      "\tIntrospection data not set for device.\n";
+    "\tERROR Could not read client_certification_tests_IDD.cbor\n"
+    "\tIntrospection data not set for device.\n";
   fp = fopen("./client_certification_tests_IDD.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
@@ -114,7 +122,9 @@ static int app_init(void) {
     }                                                                          \
   } while (0)
 
-static void display_menu(void) {
+static void
+display_menu(void)
+{
   PRINT("\n\n################################################\nClient "
         "Certification Tests"
         "\n################################################\n");
@@ -150,12 +160,16 @@ static void display_menu(void) {
 }
 
 #ifdef OC_SOFTWARE_UPDATE
-int validate_purl(const char *purl) {
+int
+validate_purl(const char *purl)
+{
   (void)purl;
   return 0;
 }
 
-int check_new_version(size_t device, const char *url, const char *version) {
+int
+check_new_version(size_t device, const char *url, const char *version)
+{
   if (!url) {
     oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
     return -1;
@@ -169,13 +183,17 @@ int check_new_version(size_t device, const char *url, const char *version) {
   return 0;
 }
 
-int download_update(size_t device, const char *url) {
+int
+download_update(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_downloaded(device, "2.0", OC_SWUPDATE_RESULT_SUCCESS);
   return 0;
 }
 
-int perform_upgrade(size_t device, const char *url) {
+int
+perform_upgrade(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_upgrading(device, "2.0", oc_clock_time(),
                                OC_SWUPDATE_RESULT_SUCCESS);
@@ -184,7 +202,9 @@ int perform_upgrade(size_t device, const char *url) {
   return 0;
 }
 #endif /* OC_SOFTWARE_UPDATE */
-static resource_t *get_discovered_resource_by_uri(char *uri) {
+static resource_t *
+get_discovered_resource_by_uri(char *uri)
+{
   resource_t *resource = (resource_t *)oc_list_head(resources);
   while (resource != NULL) {
     if (strcmp(resource->uri, uri) == 0) {
@@ -196,7 +216,9 @@ static resource_t *get_discovered_resource_by_uri(char *uri) {
   return NULL;
 }
 
-static void show_discovered_resources(resource_t **res) {
+static void
+show_discovered_resources(resource_t **res)
+{
   PRINT("\nDiscovered resources:\n");
   resource_t *l = (resource_t *)oc_list_head(resources);
   int i = 0;
@@ -218,19 +240,25 @@ static void show_discovered_resources(resource_t **res) {
   }
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static void *ocf_event_thread(void *data) {
+static void *
+ocf_event_thread(void *data)
+{
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -252,7 +280,9 @@ static void *ocf_event_thread(void *data) {
   return NULL;
 }
 
-static void POST_handler(oc_client_response_t *data) {
+static void
+POST_handler(oc_client_response_t *data)
+{
   PRINT("POST_handler:\n");
   if (data->code == OC_STATUS_CHANGED) {
     PRINT("POST response OK\n");
@@ -269,7 +299,9 @@ static void POST_handler(oc_client_response_t *data) {
   display_menu();
 }
 
-static void GET_handler(oc_client_response_t *data) {
+static void
+GET_handler(oc_client_response_t *data)
+{
   PRINT("GET_handler:\n");
   char buf[4096];
   oc_rep_to_json(data->payload, buf, 4096, true);
@@ -282,12 +314,16 @@ static void GET_handler(oc_client_response_t *data) {
 }
 
 #ifdef OC_TCP
-static void ping_handler(oc_client_response_t *data) {
+static void
+ping_handler(oc_client_response_t *data)
+{
   (void)data;
   PRINT("\nReceived Pong\n");
 }
 
-static void cloud_send_ping(void) {
+static void
+cloud_send_ping(void)
+{
   PRINT("\nEnter receiving endpoint: ");
   char addr[256];
   SCANF("%255s", addr);
@@ -313,7 +349,9 @@ static void cloud_send_ping(void) {
 }
 #endif /* OC_TCP */
 
-static void get_resource(bool tcp, bool observe) {
+static void
+get_resource(bool tcp, bool observe)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
     resource_t *res[100];
@@ -346,7 +384,9 @@ static void get_resource(bool tcp, bool observe) {
   signal_event_loop();
 }
 
-static void stop_observe_resource(bool tcp) {
+static void
+stop_observe_resource(bool tcp)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
     resource_t *res[100];
@@ -370,7 +410,9 @@ static void stop_observe_resource(bool tcp) {
   signal_event_loop();
 }
 
-static void post_resource(bool tcp, bool mcast) {
+static void
+post_resource(bool tcp, bool mcast)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
     resource_t *res[100];
@@ -420,7 +462,8 @@ static void post_resource(bool tcp, bool mcast) {
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, bool more, void *user_data) {
+          oc_resource_properties_t bm, bool more, void *user_data)
+{
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -448,7 +491,8 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 static oc_discovery_flags_t
 null_discovery(const char *di, const char *uri, oc_string_array_t types,
                oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-               oc_resource_properties_t bm, void *user_data) {
+               oc_resource_properties_t bm, void *user_data)
+{
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -460,13 +504,17 @@ null_discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_STOP_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   if (!oc_do_ip_discovery(NULL, &null_discovery, NULL)) {
     PRINT("\nERROR: Could not issue discovery request\n");
   }
 }
 
-static void discover_resources(void) {
+static void
+discover_resources(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   free_all_resources();
   if (!oc_do_ip_discovery_all(&discovery, NULL)) {
@@ -476,7 +524,9 @@ static void discover_resources(void) {
   signal_event_loop();
 }
 
-static void discover_site_local_resources(void) {
+static void
+discover_site_local_resources(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   free_all_resources();
   if (!oc_do_site_local_ipv6_discovery_all(&discovery, NULL)) {
@@ -486,7 +536,9 @@ static void discover_site_local_resources(void) {
   signal_event_loop();
 }
 
-static void discover_realm_local_resources(void) {
+static void
+discover_realm_local_resources(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   free_all_resources();
   if (!oc_do_realm_local_ipv6_discovery_all(&discovery, NULL)) {
@@ -497,13 +549,17 @@ static void discover_realm_local_resources(void) {
 }
 
 #ifdef OC_SECURITY
-void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
   (void)data;
   PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -542,7 +598,9 @@ static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void factory_presets_cb(size_t device, void *data) {
+void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -576,7 +634,7 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
-      0, ee_credid, (const unsigned char *)cert, cert_len);
+    0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
     PRINT("ERROR installing intermediate CA cert\n");
@@ -591,21 +649,23 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
   }
 
   oc_pki_set_security_profile(
-      0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE,
-      OC_SP_BASELINE, ee_credid);
+    0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE, OC_SP_BASELINE,
+    ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 
 /* App utility functions */
 #ifdef OC_SECURITY
-static device_handle_t *is_device_in_list(oc_uuid_t *uuid, oc_list_t list) {
+static device_handle_t *
+is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+{
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
     if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
@@ -616,8 +676,9 @@ static device_handle_t *is_device_in_list(oc_uuid_t *uuid, oc_list_t list) {
   return NULL;
 }
 
-static bool add_device_to_list(oc_uuid_t *uuid, const char *device_name,
-                               oc_list_t list) {
+static bool
+add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
+{
   device_handle_t *device = is_device_in_list(uuid, list);
 
   if (!device) {
@@ -641,7 +702,9 @@ static bool add_device_to_list(oc_uuid_t *uuid, const char *device_name,
 }
 
 /* App invocations of oc_obt APIs */
-static void get_device(oc_client_response_t *data) {
+static void
+get_device(oc_client_response_t *data)
+{
   oc_rep_t *rep = data->payload;
   char *di = NULL, *n = NULL;
   size_t di_len = 0, n_len = 0;
@@ -658,7 +721,9 @@ static void get_device(oc_client_response_t *data) {
   }
 }
 
-static void unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data) {
+static void
+unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+{
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -674,7 +739,9 @@ static void unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data) {
   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
 }
 
-static void otm_just_works_cb(oc_uuid_t *uuid, int status, void *data) {
+static void
+otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+{
   (void)status;
   (void)data;
   device_handle_t *device = (device_handle_t *)data;
@@ -690,7 +757,9 @@ static void otm_just_works_cb(oc_uuid_t *uuid, int status, void *data) {
   }
 }
 
-static void otm_just_works(void) {
+static void
+otm_just_works(void)
+{
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
     return;
@@ -734,11 +803,13 @@ static void otm_just_works(void) {
 }
 #endif /* OC_SECURITY */
 
-static void post_cloud_configuration_resource(bool tcp) {
+static void
+post_cloud_configuration_resource(bool tcp)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(resources) > 0) {
     resource_t *cloudconf_resource =
-        get_discovered_resource_by_uri("/CoAPCloudConf");
+      get_discovered_resource_by_uri("/CoAPCloudConf");
     if (cloudconf_resource) {
       char cis_value[1000];
       char sid_value[1000];
@@ -773,14 +844,18 @@ static void post_cloud_configuration_resource(bool tcp) {
   signal_event_loop();
 }
 
-void display_device_uuid(void) {
+void
+display_device_uuid(void)
+{
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
   PRINT("Started device with ID: %s\n", buffer);
 }
 
-int main(void) {
+int
+main(void)
+{
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -789,9 +864,9 @@ int main(void) {
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_set_con_res_announced(true);
 #ifdef OC_STORAGE

@@ -74,13 +74,16 @@ static struct oc_process *transaction_handler_process = NULL;
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void coap_register_as_transaction_handler(void) {
+void
+coap_register_as_transaction_handler(void)
+{
   transaction_handler_process = OC_PROCESS_CURRENT();
 }
 
-coap_transaction_t *coap_new_transaction(uint16_t mid, uint8_t *token,
-                                         uint8_t token_len,
-                                         oc_endpoint_t *endpoint) {
+coap_transaction_t *
+coap_new_transaction(uint16_t mid, uint8_t *token, uint8_t token_len,
+                     oc_endpoint_t *endpoint)
+{
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
     t->message = oc_internal_allocate_outgoing_message();
@@ -97,8 +100,8 @@ coap_transaction_t *coap_new_transaction(uint16_t mid, uint8_t *token,
       memcpy(&t->message->endpoint, endpoint, sizeof(oc_endpoint_t));
 
       oc_list_add(
-          transactions_list,
-          t); /* list itself makes sure same element is not added twice */
+        transactions_list,
+        t); /* list itself makes sure same element is not added twice */
     } else {
       oc_memb_free(&transactions_memb, t);
       t = NULL;
@@ -111,7 +114,9 @@ coap_transaction_t *coap_new_transaction(uint16_t mid, uint8_t *token,
 }
 
 /*---------------------------------------------------------------------------*/
-void coap_send_transaction(coap_transaction_t *t) {
+void
+coap_send_transaction(coap_transaction_t *t)
+{
   if (!oc_main_initialized()) {
     return;
   }
@@ -121,10 +126,10 @@ void coap_send_transaction(coap_transaction_t *t) {
   bool confirmable = false;
 
   confirmable =
-      (COAP_TYPE_CON == ((COAP_HEADER_TYPE_MASK & t->message->data[0]) >>
-                         COAP_HEADER_TYPE_POSITION))
-          ? true
-          : false;
+    (COAP_TYPE_CON == ((COAP_HEADER_TYPE_MASK & t->message->data[0]) >>
+                       COAP_HEADER_TYPE_POSITION))
+      ? true
+      : false;
 
 #ifdef OC_TCP
   if (!(t->message->endpoint.flags & TCP) && confirmable) {
@@ -137,9 +142,9 @@ void coap_send_transaction(coap_transaction_t *t) {
 
       if (t->retrans_counter == 0) {
         t->retrans_timer.timer.interval =
-            COAP_RESPONSE_TIMEOUT_TICKS +
-            (oc_random_value() %
-             (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
+          COAP_RESPONSE_TIMEOUT_TICKS +
+          (oc_random_value() %
+           (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
         OC_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
       } else {
         t->retrans_timer.timer.interval <<= 1; /* double */
@@ -188,7 +193,9 @@ void coap_send_transaction(coap_transaction_t *t) {
   }
 }
 /*---------------------------------------------------------------------------*/
-void coap_clear_transaction(coap_transaction_t *t) {
+void
+coap_clear_transaction(coap_transaction_t *t)
+{
   if (t) {
     OC_DBG("Freeing transaction %u: %p", t->mid, (void *)t);
 
@@ -198,7 +205,9 @@ void coap_clear_transaction(coap_transaction_t *t) {
     oc_memb_free(&transactions_memb, t);
   }
 }
-coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid) {
+coap_transaction_t *
+coap_get_transaction_by_mid(uint16_t mid)
+{
   coap_transaction_t *t = NULL;
 
   for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
@@ -211,8 +220,9 @@ coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid) {
   return NULL;
 }
 
-coap_transaction_t *coap_get_transaction_by_token(uint8_t *token,
-                                                  uint8_t token_len) {
+coap_transaction_t *
+coap_get_transaction_by_token(uint8_t *token, uint8_t token_len)
+{
   coap_transaction_t *t = NULL;
 
   for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
@@ -225,7 +235,9 @@ coap_transaction_t *coap_get_transaction_by_token(uint8_t *token,
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-void coap_check_transactions(void) {
+void
+coap_check_transactions(void)
+{
   coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
                      *next;
   while (t != NULL) {
@@ -244,7 +256,9 @@ void coap_check_transactions(void) {
   }
 }
 /*---------------------------------------------------------------------------*/
-void coap_free_all_transactions(void) {
+void
+coap_free_all_transactions(void)
+{
   coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
                      *next;
   while (t != NULL) {
@@ -254,7 +268,9 @@ void coap_free_all_transactions(void) {
   }
 }
 
-void coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint) {
+void
+coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint)
+{
   coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
                      *next;
   while (t != NULL) {

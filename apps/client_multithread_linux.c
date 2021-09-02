@@ -56,18 +56,23 @@ static uint16_t ping_timeout = 1;
 
 typedef void (*custom_func_t)(oc_endpoint_t *);
 
-typedef struct {
+typedef struct
+{
   custom_func_t func;
 } custom_func_s;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
   return ret;
 }
 
-static bool is_resource_found(void) {
+static bool
+is_resource_found(void)
+{
   if (!resource_found) {
     printf("Please discovery resource first!\n");
     return false;
@@ -76,7 +81,9 @@ static bool is_resource_found(void) {
   return true;
 }
 
-static void stop_observe(void) {
+static void
+stop_observe(void)
+{
   if (!is_resource_found())
     return;
 
@@ -89,7 +96,9 @@ static void stop_observe(void) {
 static void send_ping(uint16_t timeout_seconds);
 
 #ifdef OC_TCP
-static void pong_received_handler(oc_client_response_t *data) {
+static void
+pong_received_handler(oc_client_response_t *data)
+{
   if (data->code == OC_PING_TIMEOUT) {
     printf("PING timeout!\n");
     ping_count++;
@@ -111,7 +120,9 @@ static void pong_received_handler(oc_client_response_t *data) {
 }
 #endif /* OC_TCP */
 
-static void send_ping(uint16_t timeout_seconds) {
+static void
+send_ping(uint16_t timeout_seconds)
+{
   (void)timeout_seconds;
   if (!is_resource_found())
     return;
@@ -129,7 +140,9 @@ static void send_ping(uint16_t timeout_seconds) {
   }
 }
 
-static void parse_payload(oc_client_response_t *data) {
+static void
+parse_payload(oc_client_response_t *data)
+{
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     printf("key %s, value ", oc_string(rep->name));
@@ -155,7 +168,9 @@ static void parse_payload(oc_client_response_t *data) {
   }
 }
 
-static void observe_response(oc_client_response_t *data) {
+static void
+observe_response(oc_client_response_t *data)
+{
   if (data->observe_option == 0) {
     printf("OBSERVE register success!\n");
   }
@@ -164,7 +179,9 @@ static void observe_response(oc_client_response_t *data) {
   parse_payload(data);
 }
 
-static void observe_request(void) {
+static void
+observe_request(void)
+{
   if (!is_resource_found())
     return;
 
@@ -172,7 +189,9 @@ static void observe_request(void) {
   printf("Sent OBSERVE request\n");
 }
 
-static void post_response(oc_client_response_t *data) {
+static void
+post_response(oc_client_response_t *data)
+{
   printf("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     printf("POST response: CHANGED\n");
@@ -182,7 +201,9 @@ static void post_response(oc_client_response_t *data) {
     printf("POST response code %d\n", data->code);
 }
 
-static void post_request(void) {
+static void
+post_request(void)
+{
   if (!is_resource_found())
     return;
 
@@ -199,12 +220,16 @@ static void post_request(void) {
     printf("Could not init POST request\n");
 }
 
-static void get_response(oc_client_response_t *data) {
+static void
+get_response(oc_client_response_t *data)
+{
   printf("GET_light:\n");
   parse_payload(data);
 }
 
-static void get_request(void) {
+static void
+get_request(void)
+{
   if (!is_resource_found())
     return;
 
@@ -214,7 +239,8 @@ static void get_request(void) {
 static oc_discovery_flags_t
 discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                  oc_resource_properties_t bm, void *user_data) {
+                  oc_resource_properties_t bm, void *user_data)
+{
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
 
   (void)anchor;
@@ -247,7 +273,9 @@ exit:
   return ret;
 }
 
-static void find_first_endpoint(oc_endpoint_t *endpoint) {
+static void
+find_first_endpoint(oc_endpoint_t *endpoint)
+{
   oc_endpoint_t *ep = endpoint;
   memcpy(&target_ep, ep, sizeof(oc_endpoint_t));
   resource_found = true;
@@ -259,7 +287,9 @@ static void find_first_endpoint(oc_endpoint_t *endpoint) {
   }
 }
 
-static void find_same_endpoint(oc_endpoint_t *endpoint) {
+static void
+find_same_endpoint(oc_endpoint_t *endpoint)
+{
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     PRINTipaddr(*ep);
@@ -274,19 +304,25 @@ static void find_same_endpoint(oc_endpoint_t *endpoint) {
   }
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-void handle_signal(int signal) {
+void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static void *process_func(void *data) {
+static void *
+process_func(void *data)
+{
   (void)data;
   oc_clock_time_t next_event;
 
@@ -308,7 +344,9 @@ static void *process_func(void *data) {
   pthread_exit(0);
 }
 
-void print_menu(void) {
+void
+print_menu(void)
+{
   pthread_mutex_lock(&app_mutex);
   printf("=====================================\n");
   printf("1. Discovery\n");
@@ -323,7 +361,9 @@ void print_menu(void) {
   pthread_mutex_unlock(&app_mutex);
 }
 
-int main(void) {
+int
+main(void)
+{
   int init = 0;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -349,8 +389,9 @@ int main(void) {
   set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop =
+                                          signal_event_loop };
 
 #ifdef OC_STORAGE
   oc_storage_config("./client_multithread_linux_creds");
@@ -380,8 +421,8 @@ int main(void) {
     goto exit;
   }
 
-  custom_func_s first_func = {.func = find_first_endpoint};
-  custom_func_s same_func = {.func = find_same_endpoint};
+  custom_func_s first_func = { .func = find_first_endpoint };
+  custom_func_s same_func = { .func = find_same_endpoint };
 
   int key;
   while (quit != 1) {

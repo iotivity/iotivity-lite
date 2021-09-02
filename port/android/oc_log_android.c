@@ -19,7 +19,9 @@
 #define ADDR_SIZE 64
 #define TAG_SIZE 256
 
-int get_log_level(const char *level) {
+int
+get_log_level(const char *level)
+{
   int log_level = 0;
   if (strcmp(level, "DEBUG") == 0) {
     log_level = ANDROID_LOG_DEBUG;
@@ -33,11 +35,15 @@ int get_log_level(const char *level) {
   return log_level;
 }
 
-void get_tag(char *tag, const char *file, const char *func, int line) {
+void
+get_tag(char *tag, const char *file, const char *func, int line)
+{
   snprintf(tag, TAG_SIZE, "%s <%s:%d>", file, func, line);
 }
 
-void get_ipaddr(char *buffer, oc_endpoint_t endpoint) {
+void
+get_ipaddr(char *buffer, oc_endpoint_t endpoint)
+{
   if (endpoint.flags & IPV4) {
     snprintf(buffer, ADDR_SIZE, "[%d.%d.%d.%d]:%d",
              endpoint.addr.ipv4.address[0], endpoint.addr.ipv4.address[1],
@@ -59,8 +65,10 @@ void get_ipaddr(char *buffer, oc_endpoint_t endpoint) {
   }
 }
 
-void android_log(const char *level, const char *file, const char *func,
-                 int line, ...) {
+void
+android_log(const char *level, const char *file, const char *func, int line,
+            ...)
+{
   char tag[TAG_SIZE];
   get_tag(tag, file, func, line);
   va_list args;
@@ -70,8 +78,10 @@ void android_log(const char *level, const char *file, const char *func,
   va_end(args);
 }
 
-void android_log_ipaddr(const char *level, const char *file, const char *func,
-                        int line, oc_endpoint_t endpoint) {
+void
+android_log_ipaddr(const char *level, const char *file, const char *func,
+                   int line, oc_endpoint_t endpoint)
+{
   char tag[TAG_SIZE];
   get_tag(tag, file, func, line);
   char addr[ADDR_SIZE];
@@ -79,8 +89,10 @@ void android_log_ipaddr(const char *level, const char *file, const char *func,
   __android_log_write(get_log_level(level), tag, addr);
 }
 
-void android_log_bytes(const char *level, const char *file, const char *func,
-                       int line, uint8_t *bytes, size_t length) {
+void
+android_log_bytes(const char *level, const char *file, const char *func,
+                  int line, uint8_t *bytes, size_t length)
+{
   char tag[TAG_SIZE];
   get_tag(tag, file, func, line);
   char buffer[length * 3 + 1];

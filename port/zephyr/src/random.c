@@ -17,9 +17,19 @@
 #include "port/oc_random.h"
 #include <random/rand32.h>
 
-void oc_random_init(void) {}
+void
+oc_random_init(void)
+{
+}
 
 // FIXME: Update below to interface with desired PRNG implementation
-unsigned int oc_random_value(void) { return (unsigned int)sys_rand32_get(); }
+unsigned int
+oc_random_value(void)
+{
+  return (unsigned int)sys_rand32_get();
+}
 
-void oc_random_destroy(void) {}
+void
+oc_random_destroy(void)
+{
+}

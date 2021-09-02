@@ -25,7 +25,8 @@
 extern "C" {
 #endif
 
-struct oc_separate_response_s {
+struct oc_separate_response_s
+{
   OC_LIST_STRUCT(requests);
   int active;
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -36,7 +37,8 @@ struct oc_separate_response_s {
   size_t len;
 };
 
-struct oc_response_buffer_s {
+struct oc_response_buffer_s
+{
   uint8_t *buffer;
   size_t buffer_size;
   size_t response_length;

@@ -30,7 +30,8 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void) {
+  static int appInit(void)
+  {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Cloud's Light",
                             "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
@@ -40,7 +41,8 @@ public:
   static void signalEventLoop(void) {}
 
 protected:
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
@@ -57,17 +59,19 @@ protected:
 oc_handler_t TestCloudAccess::s_handler;
 oc_endpoint_t TestCloudAccess::s_endpoint;
 
-TEST_F(TestCloudAccess, cloud_access_sign_up_p) {
+TEST_F(TestCloudAccess, cloud_access_sign_up_p)
+{
   // When
   bool ret =
-      cloud_access_register(&s_endpoint, "auth_provider", "auth_code", "uid",
-                            "access_token", 0, onPostResponse, NULL);
+    cloud_access_register(&s_endpoint, "auth_provider", "auth_code", "uid",
+                          "access_token", 0, onPostResponse, NULL);
 
   // Then
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_sign_up_f) {
+TEST_F(TestCloudAccess, cloud_access_sign_up_f)
+{
   // Given
   oc_endpoint_t *ep = NULL;
 
@@ -78,7 +82,8 @@ TEST_F(TestCloudAccess, cloud_access_sign_up_f) {
   EXPECT_FALSE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_sign_in_p) {
+TEST_F(TestCloudAccess, cloud_access_sign_in_p)
+{
   // When
   bool ret = cloud_access_login(&s_endpoint, "uid", "access_token", 0,
                                 onPostResponse, NULL);
@@ -87,7 +92,8 @@ TEST_F(TestCloudAccess, cloud_access_sign_in_p) {
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_sign_in_f) {
+TEST_F(TestCloudAccess, cloud_access_sign_in_f)
+{
   // Given
   oc_endpoint_t *ep = NULL;
 
@@ -98,7 +104,8 @@ TEST_F(TestCloudAccess, cloud_access_sign_in_f) {
   EXPECT_FALSE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_sign_out_p) {
+TEST_F(TestCloudAccess, cloud_access_sign_out_p)
+{
   // When
   bool ret = cloud_access_sign_out(&s_endpoint, "uid", "access_token", 0,
                                    onPostResponse, NULL);
@@ -107,7 +114,8 @@ TEST_F(TestCloudAccess, cloud_access_sign_out_p) {
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_sign_out_f) {
+TEST_F(TestCloudAccess, cloud_access_sign_out_f)
+{
   // Given
   oc_endpoint_t *ep = NULL;
 
@@ -118,16 +126,18 @@ TEST_F(TestCloudAccess, cloud_access_sign_out_f) {
   EXPECT_FALSE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_refresh_access_token_p) {
+TEST_F(TestCloudAccess, cloud_access_refresh_access_token_p)
+{
   // When
   bool ret = cloud_access_refresh_access_token(
-      &s_endpoint, "uid", "refresh_token", 0, onPostResponse, NULL);
+    &s_endpoint, "uid", "refresh_token", 0, onPostResponse, NULL);
 
   // Then
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestCloudAccess, cloud_access_refresh_access_token_f) {
+TEST_F(TestCloudAccess, cloud_access_refresh_access_token_f)
+{
   // Given
   oc_endpoint_t *ep = NULL;
 

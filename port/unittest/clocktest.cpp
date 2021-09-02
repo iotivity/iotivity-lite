@@ -33,17 +33,20 @@ protected:
   virtual void TearDown() {}
 };
 
-TEST_F(TestClock, oc_clock_time) {
+TEST_F(TestClock, oc_clock_time)
+{
   oc_clock_time_t timestamp = oc_clock_time();
   EXPECT_NE(0, timestamp);
 }
 
-TEST_F(TestClock, oc_clock_seconds) {
+TEST_F(TestClock, oc_clock_seconds)
+{
   long time_seconds = oc_clock_seconds();
   EXPECT_NE(0, time_seconds);
 }
 
-TEST_F(TestClock, oc_clock_wait) {
+TEST_F(TestClock, oc_clock_wait)
+{
   oc_clock_time_t wait_time = 1 * (OC_CLOCK_SECOND / 1000);
   oc_clock_time_t prev_stamp = oc_clock_time();
   oc_clock_wait(wait_time);

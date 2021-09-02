@@ -43,7 +43,9 @@ void exit_impl(int status);
  *
  * @param msg the message to be printed
  */
-static inline void oc_abort(const char *msg) {
+static inline void
+oc_abort(const char *msg)
+{
   PRINT("\n%s\nAbort.\n", msg);
   abort_impl();
 }
@@ -64,7 +66,11 @@ static inline void oc_abort(const char *msg) {
  *
  * @param status the exist status
  */
-static inline void oc_exit(int status) { exit_impl(status); }
+static inline void
+oc_exit(int status)
+{
+  exit_impl(status);
+}
 
 #ifdef __cplusplus
 }

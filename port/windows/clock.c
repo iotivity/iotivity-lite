@@ -20,9 +20,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-void oc_clock_init(void) {}
+void
+oc_clock_init(void)
+{
+}
 
-oc_clock_time_t oc_clock_time(void) {
+oc_clock_time_t
+oc_clock_time(void)
+{
   oc_clock_time_t time = 0;
 
   // This magic number is the number of 100 nanosecond intervals since January
@@ -43,6 +48,14 @@ oc_clock_time_t oc_clock_time(void) {
   return time;
 }
 
-unsigned long oc_clock_seconds(void) { return (unsigned long)time(0); }
+unsigned long
+oc_clock_seconds(void)
+{
+  return (unsigned long)time(0);
+}
 
-void oc_clock_wait(oc_clock_time_t t) { Sleep((DWORD)(t * 1000)); }
+void
+oc_clock_wait(oc_clock_time_t t)
+{
+  Sleep((DWORD)(t * 1000));
+}

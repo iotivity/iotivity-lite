@@ -38,7 +38,8 @@ typedef enum {
   SERVER_STARTED_ALREADY = 2,
 } OCResult_t;
 
-typedef struct sdset_t {
+typedef struct sdset_t
+{
   uint8_t sdsset;
   uint8_t sds[MAX_SOCK_NUM];
   uint8_t ready_sds;

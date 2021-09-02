@@ -26,7 +26,9 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel Corporation", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "Generic Client", "ocf.1.0.0",
                        "ocf.res.1.3.0", NULL, NULL);
@@ -38,14 +40,18 @@ static char light_1[MAX_URI_LENGTH];
 static oc_endpoint_t *light_server;
 static bool light_state = false;
 
-static oc_event_callback_retval_t stop_observe(void *data) {
+static oc_event_callback_retval_t
+stop_observe(void *data)
+{
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, light_server);
   return OC_EVENT_DONE;
 }
 
-static void post_light(oc_client_response_t *data) {
+static void
+post_light(oc_client_response_t *data)
+{
   PRINT("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -53,7 +59,9 @@ static void post_light(oc_client_response_t *data) {
     PRINT("POST response code %d\n", data->code);
 }
 
-static void observe_light(oc_client_response_t *data) {
+static void
+observe_light(oc_client_response_t *data)
+{
   PRINT("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -84,7 +92,8 @@ static void observe_light(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -116,23 +125,31 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   oc_do_ip_discovery("oic.r.light", &discovery, NULL);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -140,9 +157,9 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 

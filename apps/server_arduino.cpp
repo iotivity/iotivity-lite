@@ -11,7 +11,9 @@
 #ifdef __AVR__
 #ifdef OC_XMEM
 void extRAMinit(void) __attribute__((used, naked, section(".init3")));
-void extRAMinit(void) {
+void
+extRAMinit(void)
+{
   // set up the xmem registers
   XMCRB = 0;
   XMCRA = 1 << SRE;
@@ -25,15 +27,18 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t interface,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
   (void)user_data;
   ++power;
 
@@ -55,8 +60,10 @@ static void get_light(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_light(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data) {
+static void
+post_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
   (void)interface;
   (void)user_data;
   OC_DBG("POST_light:\n");
@@ -87,14 +94,17 @@ static void post_light(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void put_light(oc_request_t *request, oc_interface_mask_t interface,
-                      void *user_data) {
+static void
+put_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
   (void)interface;
   (void)user_data;
   post_light(request, interface, user_data);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res = oc_new_resource("Yann's Light", "/a/light", 2, 0);
   oc_resource_bind_resource_type(res, "core.light");
   oc_resource_bind_resource_type(res, "core.brightlight");
@@ -108,17 +118,20 @@ static void register_resources(void) {
   oc_add_resource(res);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   oc_process_post(&sample_server_process, OC_PROCESS_EVENT_TIMER, NULL);
 }
 
-OC_PROCESS_THREAD(sample_server_process, ev, data) {
+OC_PROCESS_THREAD(sample_server_process, ev, data)
+{
   (void)data;
   static struct oc_etimer et;
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
   static oc_clock_time_t next_event;
   oc_set_mtu_size(1024);
   oc_set_max_app_data_size(2048);
@@ -146,9 +159,11 @@ OC_PROCESS_THREAD(sample_server_process, ev, data) {
   OC_PROCESS_END();
 }
 // Arduino Ethernet Shield
-uint8_t ConnectToNetwork() {
+uint8_t
+ConnectToNetwork()
+{
   // Note: ****Update the MAC address here with your shield's MAC address****
-  uint8_t ETHERNET_MAC[] = {0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9};
+  uint8_t ETHERNET_MAC[] = { 0x92, 0xA1, 0xDA, 0x11, 0x44, 0xA9 };
 #if defined(__SAMD21G18A__)
   Ethernet.init(5); // CS Pin for MKRZERO
 #endif
@@ -162,7 +177,9 @@ uint8_t ConnectToNetwork() {
   return 0;
 }
 
-void setup() {
+void
+setup()
+{
 #if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
   Serial.begin(115200);
 #else
@@ -184,4 +201,8 @@ void setup() {
   delay(200);
 }
 
-void loop() { oc_process_run(); }
+void
+loop()
+{
+  oc_process_run();
+}

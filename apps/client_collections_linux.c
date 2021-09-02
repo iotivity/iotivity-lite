@@ -26,7 +26,9 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Apple", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -43,7 +45,8 @@ static void get_lights_oic_if_b(oc_client_response_t *data);
 static oc_discovery_flags_t
 dishand(const char *anchor, const char *uri, oc_string_array_t types,
         oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-        oc_resource_properties_t bm, void *user_data) {
+        oc_resource_properties_t bm, void *user_data)
+{
   (void)anchor;
   (void)interfaces;
   (void)user_data;
@@ -58,7 +61,9 @@ dishand(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void post_lights_oic_if_create(oc_client_response_t *data) {
+static void
+post_lights_oic_if_create(oc_client_response_t *data)
+{
   (void)data;
   PRINT("\n\nPOST_lights:oic_if_create\n\n");
 
@@ -109,7 +114,9 @@ static void post_lights_oic_if_create(oc_client_response_t *data) {
 }
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-static oc_event_callback_retval_t stop_observe(void *data) {
+static oc_event_callback_retval_t
+stop_observe(void *data)
+{
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(lights, lights_server);
@@ -153,7 +160,9 @@ static oc_event_callback_retval_t stop_observe(void *data) {
   return OC_EVENT_DONE;
 }
 
-static void post_lights_oic_if_b(oc_client_response_t *data) {
+static void
+post_lights_oic_if_b(oc_client_response_t *data)
+{
   PRINT("\nPOST_lights_oic_if_b:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -204,7 +213,9 @@ static void post_lights_oic_if_b(oc_client_response_t *data) {
   oc_set_delayed_callback(NULL, &stop_observe, 5);
 }
 
-static void get_lights_oic_if_b(oc_client_response_t *data) {
+static void
+get_lights_oic_if_b(oc_client_response_t *data)
+{
   PRINT("\nGET_lights_oic_if_b:\n");
   oc_rep_t *ll = data->payload;
 
@@ -277,7 +288,9 @@ static void get_lights_oic_if_b(oc_client_response_t *data) {
   do_once = false;
 }
 
-static void get_lights_oic_if_ll(oc_client_response_t *data) {
+static void
+get_lights_oic_if_ll(oc_client_response_t *data)
+{
   PRINT("\nGET_lights_oic_if_ll:\n");
   oc_rep_t *ll = data->payload;
 
@@ -339,7 +352,8 @@ static void get_lights_oic_if_ll(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)anchor;
   (void)iface_mask;
   (void)user_data;
@@ -375,23 +389,31 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   oc_do_ip_discovery("oic.wk.col", &discovery, NULL);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -399,9 +421,9 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 

@@ -30,18 +30,25 @@
 #include "timestamp.h"
 #include <stddef.h>
 
-static int leap_year(uint16_t y) {
+static int
+leap_year(uint16_t y)
+{
   return ((y & 3) == 0 && (y % 100 != 0 || y % 400 == 0));
 }
 
-static unsigned char month_days(uint16_t y, uint16_t m) {
+static unsigned char
+month_days(uint16_t y, uint16_t m)
+{
   static const unsigned char days[2][13] = {
-      {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-      {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
+    { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+    { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+  };
   return days[m == 2 && leap_year(y)][m];
 }
 
-static int parse_2d(const unsigned char *const p, size_t i, uint16_t *vp) {
+static int
+parse_2d(const unsigned char *const p, size_t i, uint16_t *vp)
+{
   unsigned char d0, d1;
   if (((d0 = p[i + 0] - '0') > 9) || ((d1 = p[i + 1] - '0') > 9))
     return 1;
@@ -49,7 +56,9 @@ static int parse_2d(const unsigned char *const p, size_t i, uint16_t *vp) {
   return 0;
 }
 
-static int parse_4d(const unsigned char *const p, size_t i, uint16_t *vp) {
+static int
+parse_4d(const unsigned char *const p, size_t i, uint16_t *vp)
+{
   unsigned char d0, d1, d2, d3;
   if (((d0 = p[i + 0] - '0') > 9) || ((d1 = p[i + 1] - '0') > 9) ||
       ((d2 = p[i + 2] - '0') > 9) || ((d3 = p[i + 3] - '0') > 9))
@@ -58,13 +67,16 @@ static int parse_4d(const unsigned char *const p, size_t i, uint16_t *vp) {
   return 0;
 }
 
-static const uint32_t Pow10[10] = {
-    1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
+static const uint32_t Pow10[10] = { 1,         10,        100,     1000,
+                                    10000,     100000,    1000000, 10000000,
+                                    100000000, 1000000000 };
 
-static const uint16_t DayOffset[13] = {0,   306, 337, 0,   31,  61, 92,
-                                       122, 153, 184, 214, 245, 275};
+static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
+                                        122, 153, 184, 214, 245, 275 };
 
-int timestamp_parse(const char *str, size_t len, timestamp_t *tsp) {
+int
+timestamp_parse(const char *str, size_t len, timestamp_t *tsp)
+{
   const unsigned char *cur, *end;
   unsigned char ch;
   uint16_t year, month, day, hour, min, sec;
@@ -98,8 +110,8 @@ int timestamp_parse(const char *str, size_t len, timestamp_t *tsp) {
   if (month < 3)
     year--;
 
-  rdn = (1461 * year) / 4 - year / 100 + year / 400 + DayOffset[month] + day -
-        306;
+  rdn =
+    (1461 * year) / 4 - year / 100 + year / 400 + DayOffset[month] + day - 306;
   sod = hour * 3600 + min * 60 + sec;
   end = cur + len;
   cur = cur + 19;

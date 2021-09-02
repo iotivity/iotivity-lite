@@ -31,7 +31,9 @@
 #include "security/oc_tls.h"
 
 /* Just-works ownership transfer */
-static void obt_jw_16(oc_client_response_t *data) {
+static void
+obt_jw_16(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -48,7 +50,9 @@ static void obt_jw_16(oc_client_response_t *data) {
   oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_15(oc_client_response_t *data) {
+static void
+obt_jw_15(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -78,7 +82,9 @@ err_obt_jw_15:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_14(oc_client_response_t *data) {
+static void
+obt_jw_14(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -184,7 +190,9 @@ err_obt_jw_14:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_13(oc_client_response_t *data) {
+static void
+obt_jw_13(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -207,7 +215,9 @@ err_obt_jw_13:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_12(oc_client_response_t *data) {
+static void
+obt_jw_12(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -237,7 +247,9 @@ err_obt_jw_12:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_11(oc_client_response_t *data) {
+static void
+obt_jw_11(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -272,7 +284,9 @@ err_obt_jw_11:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_10(oc_client_response_t *data) {
+static void
+obt_jw_10(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -306,7 +320,9 @@ err_obt_jw_10:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_9(oc_client_response_t *data) {
+static void
+obt_jw_9(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -329,8 +345,8 @@ static void obt_jw_9(oc_client_response_t *data) {
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
   uint8_t key[16];
   bool derived = oc_sec_derive_owner_psk(
-      ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
-      device->uuid.id, 16, my_uuid->id, 16, key, 16);
+    ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
+    device->uuid.id, 16, my_uuid->id, 16, key, 16);
 #undef OXM_JUST_WORKS
   if (!derived) {
     goto err_obt_jw_9;
@@ -377,7 +393,9 @@ err_obt_jw_9:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_8(oc_client_response_t *data) {
+static void
+obt_jw_8(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -409,7 +427,9 @@ err_obt_jw_8:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_7(oc_client_response_t *data) {
+static void
+obt_jw_7(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -442,7 +462,9 @@ err_obt_jw_7:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_6(oc_client_response_t *data) {
+static void
+obt_jw_6(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -476,7 +498,9 @@ err_obt_jw_6:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_5(oc_client_response_t *data) {
+static void
+obt_jw_5(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -489,7 +513,7 @@ static void obt_jw_5(oc_client_response_t *data) {
 
   /** 5) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid = {{0}};
+  oc_uuid_t dev_uuid = { { 0 } };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
@@ -519,7 +543,9 @@ err_obt_jw_5:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_4(oc_client_response_t *data) {
+static void
+obt_jw_4(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -552,7 +578,9 @@ err_obt_jw_4:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_3(oc_client_response_t *data) {
+static void
+obt_jw_3(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -582,7 +610,9 @@ err_obt_jw_3:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_JW);
 }
 
-static void obt_jw_2(oc_client_response_t *data) {
+static void
+obt_jw_2(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -645,8 +675,10 @@ err_obt_jw_2:
   15) post pstat s=rfnop
   16) <close DTLS>
 */
-int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                                  void *data) {
+int
+oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                              void *data)
+{
   OC_DBG("In oc_obt_perform_just_works_otm");
 
   oc_device_t *device = oc_obt_get_cached_device_handle(uuid);

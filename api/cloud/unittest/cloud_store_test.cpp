@@ -32,26 +32,30 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void) {
+  static int appInit(void)
+  {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                             "ocf.res.1.0.0", NULL, NULL);
     return result;
   }
 
-  static void signalEventLoop(void) {
+  static void signalEventLoop(void)
+  {
     pthread_mutex_lock(&mutex);
     pthread_cond_signal(&cv);
     pthread_mutex_unlock(&mutex);
   }
 
-  static oc_event_callback_retval_t quitEvent(void *data) {
+  static oc_event_callback_retval_t quitEvent(void *data)
+  {
     bool *quit = (bool *)data;
     *quit = true;
     return OC_EVENT_DONE;
   }
 
-  static void poolEvents(uint16_t seconds) {
+  static void poolEvents(uint16_t seconds)
+  {
     bool quit = false;
     oc_set_delayed_callback(&quit, quitEvent, seconds);
 
@@ -75,7 +79,8 @@ public:
   }
 
 protected:
-  static void SetUpTestCase() {
+  static void SetUpTestCase()
+  {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
@@ -102,7 +107,8 @@ oc_cloud_context_t TestCloudStore::s_context;
 #define STATUS (OC_CLOUD_LOGGED_IN)
 #define UID ("uid")
 
-TEST_F(TestCloudStore, dump_async) {
+TEST_F(TestCloudStore, dump_async)
+{
   oc_cloud_store_t store;
   oc_new_string(&store.access_token, ACCESS_TOKEN, strlen(ACCESS_TOKEN));
   oc_new_string(&store.auth_provider, AUTH_PROVIDER, strlen(AUTH_PROVIDER));
@@ -135,7 +141,8 @@ TEST_F(TestCloudStore, dump_async) {
 #endif
 }
 
-TEST_F(TestCloudStore, load_defaults) {
+TEST_F(TestCloudStore, load_defaults)
+{
   oc_cloud_store_t store1;
   memset(&store1, 0, sizeof(store1));
   cloud_store_load(&store1);
@@ -145,7 +152,8 @@ TEST_F(TestCloudStore, load_defaults) {
                oc_string(store1.ci_server));
 }
 
-TEST_F(TestCloudStore, dump) {
+TEST_F(TestCloudStore, dump)
+{
   oc_cloud_store_t store;
   oc_new_string(&store.access_token, ACCESS_TOKEN, strlen(ACCESS_TOKEN));
   oc_new_string(&store.auth_provider, AUTH_PROVIDER, strlen(AUTH_PROVIDER));

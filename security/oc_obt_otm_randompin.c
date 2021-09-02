@@ -34,7 +34,9 @@
 
 void oc_tls_use_pin_obt_psk_identity(void);
 
-static void obt_rdp_14(oc_client_response_t *data) {
+static void
+obt_rdp_14(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -51,7 +53,9 @@ static void obt_rdp_14(oc_client_response_t *data) {
   oc_obt_free_otm_ctx(o, 0, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_13(oc_client_response_t *data) {
+static void
+obt_rdp_13(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -81,7 +85,9 @@ err_obt_rdp_13:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_12(oc_client_response_t *data) {
+static void
+obt_rdp_12(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -187,7 +193,9 @@ err_obt_rdp_12:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_11(oc_client_response_t *data) {
+static void
+obt_rdp_11(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -210,7 +218,9 @@ err_obt_rdp_11:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_10(oc_client_response_t *data) {
+static void
+obt_rdp_10(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -240,7 +250,9 @@ err_obt_rdp_10:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_9(oc_client_response_t *data) {
+static void
+obt_rdp_9(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -275,7 +287,9 @@ err_obt_rdp_9:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_8(oc_client_response_t *data) {
+static void
+obt_rdp_8(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -309,7 +323,9 @@ err_obt_rdp_8:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_7(oc_client_response_t *data) {
+static void
+obt_rdp_7(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -332,8 +348,8 @@ static void obt_rdp_7(oc_client_response_t *data) {
 #define OXM_RDP "oic.sec.doxm.rdp"
   uint8_t key[16];
   bool derived =
-      oc_sec_derive_owner_psk(ep, (const uint8_t *)OXM_RDP, strlen(OXM_RDP),
-                              device->uuid.id, 16, my_uuid->id, 16, key, 16);
+    oc_sec_derive_owner_psk(ep, (const uint8_t *)OXM_RDP, strlen(OXM_RDP),
+                            device->uuid.id, 16, my_uuid->id, 16, key, 16);
 #undef OXM_RDP
   if (!derived) {
     goto err_obt_rdp_7;
@@ -380,7 +396,9 @@ err_obt_rdp_7:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_6(oc_client_response_t *data) {
+static void
+obt_rdp_6(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -412,7 +430,9 @@ err_obt_rdp_6:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_5(oc_client_response_t *data) {
+static void
+obt_rdp_5(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -445,7 +465,9 @@ err_obt_rdp_5:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_4(oc_client_response_t *data) {
+static void
+obt_rdp_4(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -479,7 +501,9 @@ err_obt_rdp_4:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_3(oc_client_response_t *data) {
+static void
+obt_rdp_3(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -492,7 +516,7 @@ static void obt_rdp_3(oc_client_response_t *data) {
 
   /** 3) generate random deviceuuid; <store new peer uuid>; post doxm deviceuuid
    */
-  oc_uuid_t dev_uuid = {{0}};
+  oc_uuid_t dev_uuid = { { 0 } };
   oc_gen_uuid(&dev_uuid);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(&dev_uuid, uuid, OC_UUID_LEN);
@@ -530,7 +554,9 @@ err_obt_rdp_3:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
 }
 
-static void obt_rdp_2(oc_client_response_t *data) {
+static void
+obt_rdp_2(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -580,9 +606,11 @@ err_obt_rdp_2:
   13) post pstat s=rfnop
   14) <close DTLS>
 */
-int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
-                                  size_t pin_len, oc_obt_device_status_cb_t cb,
-                                  void *data) {
+int
+oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
+                              size_t pin_len, oc_obt_device_status_cb_t cb,
+                              void *data)
+{
   OC_DBG("In oc_obt_perform_random_pin_otm");
 
   oc_device_t *device = oc_obt_get_cached_device_handle(uuid);
@@ -616,8 +644,8 @@ int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
    */
 
   int credid = oc_sec_add_new_cred(
-      0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, subjectuuid,
-      OC_ENCODING_RAW, 16, key, 0, 0, NULL, NULL, NULL);
+    0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, subjectuuid,
+    OC_ENCODING_RAW, 16, key, 0, 0, NULL, NULL, NULL);
 
   if (credid == -1) {
     oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);
@@ -655,7 +683,9 @@ int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
 
 /* Request a peer device to generate and display a Random PIN */
 
-static void obt_rrdp_3(oc_client_response_t *data) {
+static void
+obt_rrdp_3(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -673,7 +703,9 @@ err_obt_rrdp_3:
   oc_obt_free_otm_ctx(o, -1, OC_OBT_RDP);
 }
 
-static void obt_rrdp_2(oc_client_response_t *data) {
+static void
+obt_rrdp_2(oc_client_response_t *data)
+{
   if (!oc_obt_is_otm_ctx_valid(data->user_data)) {
     return;
   }
@@ -723,8 +755,10 @@ err_obt_rrdp_2:
   2) post doxm oxmsel=1
   3) success/fail
 */
-int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                              void *data) {
+int
+oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+                          void *data)
+{
   OC_DBG("In oc_obt_request_random_pin");
 
   if (oc_obt_is_owned_device(uuid)) {

@@ -25,7 +25,9 @@ static uint16_t tx_tail = 0;
 static uint16_t tx_size = 0;
 static char tx_buffer[TX_BUFFER_SIZE];
 
-static void send(void) {
+static void
+send(void)
+{
   if (tx_tail > tx_head) {
     tx_size = TX_BUFFER_SIZE - tx_tail;
   } else {
@@ -37,7 +39,9 @@ static void send(void) {
   }
 }
 
-static bool put_char(char c) {
+static bool
+put_char(char c)
+{
   uint16_t next_head = tx_head + 1;
 
   if (next_head == TX_BUFFER_SIZE) {
@@ -54,7 +58,9 @@ static bool put_char(char c) {
   return true;
 }
 
-int _write(int file, const char *ptr, int len) {
+int
+_write(int file, const char *ptr, int len)
+{
   (void)file;
 
   int i;
@@ -83,7 +89,9 @@ int _write(int file, const char *ptr, int len) {
 
 #endif
 
-void otPlatUartSendDone(void) {
+void
+otPlatUartSendDone(void)
+{
 #ifdef OC_RETARGET
   tx_tail += tx_size;
 
@@ -97,7 +105,9 @@ void otPlatUartSendDone(void) {
 #endif
 }
 
-void otPlatUartReceived(const uint8_t *buf, uint16_t len) {
+void
+otPlatUartReceived(const uint8_t *buf, uint16_t len)
+{
   (void)buf;
   (void)len;
 }

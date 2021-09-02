@@ -28,13 +28,15 @@
 
 #define FUNC_NAME_LEN 30
 
-typedef struct _mem_info {
+typedef struct _mem_info
+{
   int peak;
   int current;
   OC_LIST_STRUCT(mem_log_list);
 } mem_info_s;
 
-typedef struct _mem_logger {
+typedef struct _mem_logger
+{
   struct mem_logger_s *next; /* for LIST */
   char func[FUNC_NAME_LEN + 1];
   int size;
@@ -45,7 +47,7 @@ typedef struct _mem_logger {
 } mem_logger_s;
 
 static mem_info_s mInfo = {
-    0,
+  0,
 };
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -56,14 +58,17 @@ int list_index = 0;
 
 static void oc_mem_trace_free(void);
 
-void oc_mem_trace_init(void) {
+void
+oc_mem_trace_init(void)
+{
   mInfo.current = 0;
   mInfo.peak = 0;
   OC_LIST_STRUCT_INIT(&mInfo, mem_log_list);
 }
 
-void oc_mem_trace_add_pace(const char *func, int size, int type,
-                           void *address) {
+void
+oc_mem_trace_add_pace(const char *func, int size, int type, void *address)
+{
   if (!mInfo.mem_log_list)
     return;
 
@@ -103,7 +108,9 @@ void oc_mem_trace_add_pace(const char *func, int size, int type,
   oc_list_add((&mInfo)->mem_log_list, mem_log_item);
 }
 
-void oc_mem_trace_print_paces(void) {
+void
+oc_mem_trace_print_paces(void)
+{
   int cnt = 0;
   mem_logger_s *mem_log_item_link = oc_list_head((&mInfo)->mem_log_list);
 
@@ -127,7 +134,9 @@ void oc_mem_trace_print_paces(void) {
   PRINT("================\n");
 }
 
-void oc_mem_trace_shutdown(void) {
+void
+oc_mem_trace_shutdown(void)
+{
   oc_mem_trace_print_paces();
 
   if (mInfo.current) {
@@ -140,7 +149,9 @@ void oc_mem_trace_shutdown(void) {
   oc_mem_trace_free();
 }
 
-static void oc_mem_trace_free(void) {
+static void
+oc_mem_trace_free(void)
+{
 
   mem_logger_s *mem_log_item = oc_list_pop((&mInfo)->mem_log_list);
 
@@ -153,5 +164,8 @@ static void oc_mem_trace_free(void) {
 }
 #else  /* OC_MEMORY_TRACE */
 // TODO : it would be removed if MEMTRACE=0 excludes compiling this file
-void dummy_null_func(void) {}
+void
+dummy_null_func(void)
+{
+}
 #endif /* !OC_MEMORY_TRACE */

@@ -30,19 +30,23 @@
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static bool quit, light[NUM_LIGHTS] = {true, false, true};
+static bool quit, light[NUM_LIGHTS] = { true, false, true };
 static int client_status, server_status;
 static pid_t client_pid, server_pid;
 
 /*********** common ***************/
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   quit = true;
   signal_event_loop();
@@ -50,7 +54,9 @@ static void handle_signal(int signal) {
 
 /*********** client ***************/
 
-static void check_resource_cb(oc_client_response_t *data) {
+static void
+check_resource_cb(oc_client_response_t *data)
+{
   static int count = 0;
   bool light = *(bool *)data->user_data;
 
@@ -75,7 +81,8 @@ static void check_resource_cb(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
              oc_interface_mask_t iface_mask, oc_endpoint_t *server,
-             oc_resource_properties_t bm, void *user_data) {
+             oc_resource_properties_t bm, void *user_data)
+{
   (void)bm;
   (void)di;
   (void)iface_mask;
@@ -93,7 +100,7 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
       continue;
 
     ret =
-        oc_do_get(uri, server, NULL, check_resource_cb, HIGH_QOS, &light[pos]);
+      oc_do_get(uri, server, NULL, check_resource_cb, HIGH_QOS, &light[pos]);
     pos++;
     if (!ret)
       exit(EXIT_FAILURE);
@@ -102,11 +109,15 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void requests_entry(void) {
+static void
+requests_entry(void)
+{
   oc_do_ip_discovery("constrained.r.test", &discovery_cb, NULL);
 }
 
-static int app_init_client(void) {
+static int
+app_init_client(void)
+{
   int ret;
 
   ret = oc_init_platform("Intel", NULL, NULL);
@@ -116,13 +127,15 @@ static int app_init_client(void) {
   return ret;
 }
 
-static int start_client() {
+static int
+start_client()
+{
   int ret;
   struct sigaction sa;
   static const oc_handler_t handler = {
-      .init = app_init_client,
-      .signal_event_loop = signal_event_loop,
-      .requests_entry = requests_entry,
+    .init = app_init_client,
+    .signal_event_loop = signal_event_loop,
+    .requests_entry = requests_entry,
   };
 
   ret = oc_main_init(&handler);
@@ -164,7 +177,9 @@ static int start_client() {
 }
 
 /*********** server ***************/
-static int app_init(void) {
+static int
+app_init(void)
+{
   int r = oc_init_platform("Intel", NULL, NULL);
   if (r != 0)
     return r;
@@ -173,8 +188,10 @@ static int app_init(void) {
                        "1.0", "1.0", NULL, NULL);
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   oc_rep_start_root_object();
   bool light = *(bool *)user_data;
 
@@ -191,7 +208,9 @@ static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   int i;
 
   for (i = 0; i < NUM_LIGHTS; i++) {
@@ -214,13 +233,15 @@ static void register_resources(void) {
   }
 }
 
-static int start_server(void) {
+static int
+start_server(void)
+{
   int ret;
   struct sigaction sa;
   static const oc_handler_t handler = {
-      .init = app_init,
-      .signal_event_loop = signal_event_loop,
-      .register_resources = register_resources,
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
   };
 
   ret = oc_main_init(&handler);
@@ -260,7 +281,9 @@ static int start_server(void) {
 
 /************************ main *********************************/
 
-static void child_handler(int sig) {
+static void
+child_handler(int sig)
+{
   (void)sig;
   pid_t pid;
   int status;
@@ -284,7 +307,9 @@ static void child_handler(int sig) {
   }
 }
 
-int main(int argc, const char *argv[]) {
+int
+main(int argc, const char *argv[])
+{
   (void)argc;
   (void)argv;
   struct sigaction sa;

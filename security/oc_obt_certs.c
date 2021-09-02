@@ -30,13 +30,15 @@
 #include "security/oc_obt_internal.h"
 #include "security/oc_store.h"
 
-int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
-                              const uint8_t *subject_public_key,
-                              const size_t subject_public_key_size,
-                              const char *issuer_name,
-                              const uint8_t *issuer_private_key,
-                              const size_t issuer_private_key_size,
-                              oc_string_t *role_cert) {
+int
+oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
+                          const uint8_t *subject_public_key,
+                          const size_t subject_public_key_size,
+                          const char *issuer_name,
+                          const uint8_t *issuer_private_key,
+                          const size_t issuer_private_key_size,
+                          oc_string_t *role_cert)
+{
   int ret = 0;
 
   if (!roles || !role_cert) {
@@ -95,7 +97,7 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
   }
 
   /* notBefore and notAfter: [now] to 12/31/2029 23:59:59 */
-  timestamp_t now_t = {0};
+  timestamp_t now_t = { 0 };
   oc_clock_time_t now = oc_clock_time();
   now_t.sec = (int64_t)(now / OC_CLOCK_SECOND);
   now_t.nsec = 0;
@@ -140,7 +142,7 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
   }
   /* keyUsage: digitalSignature (0) and keyAgreement(4) */
   ret = mbedtls_x509write_crt_set_key_usage(
-      &cert, MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
+    &cert, MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
   if (ret < 0) {
     OC_ERR("error writing role cert keyUsage %d", ret);
     goto exit;
@@ -160,12 +162,12 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
      * the GeneralNames SEQUEENCE.
      */
     next_name = (mbedtls_x509_general_names *)calloc(
-        1, sizeof(mbedtls_x509_general_names));
+      1, sizeof(mbedtls_x509_general_names));
     if (next_name) {
       next_name->general_name.name_type =
-          MBEDTLS_X509_GENERALNAME_DIRECTORYNAME;
+        MBEDTLS_X509_GENERALNAME_DIRECTORYNAME;
       ret = mbedtls_x509_string_to_names(
-          &next_name->general_name.name.directory_name, roleid);
+        &next_name->general_name.name.directory_name, roleid);
       if (ret < 0) {
         OC_ERR("error writing roleid to GeneralName %d", ret);
         goto exit;
@@ -197,46 +199,46 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
   /* extendedKeyUsage: serverAuthentication , clientAuthentication, Role
    * certificate */
   const unsigned char extendedKeyUsage[] = {
-      MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED, /* SEQUENCE OF.. Tag */
-      0x20,                                             /* Length of Sequence */
-      MBEDTLS_ASN1_OID,                                 /* OID Tag */
-      0x08, /* Length of serverAuthentication OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x05,
-      0x05,
-      0x07,
-      0x03,
-      0x01,             /* OID: 1.3.6.1.5.5.7.3.1 */
-      MBEDTLS_ASN1_OID, /* OID Tag */
-      0x08,             /* Length of clientAuthentication OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x05,
-      0x05,
-      0x07,
-      0x03,
-      0x02,             /* OID: 1.3.6.1.5.5.7.3.2 */
-      MBEDTLS_ASN1_OID, /* OID Tag */
-      0x0A,             /* Length of Role certificate OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x04,
-      0x01,
-      0x82,
-      0xDE,
-      0x7C,
-      0x01,
-      0x07 /* OID: 1.3.6.1.4.1.44924.1.7 */
+    MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED, /* SEQUENCE OF.. Tag */
+    0x20,                                             /* Length of Sequence */
+    MBEDTLS_ASN1_OID,                                 /* OID Tag */
+    0x08, /* Length of serverAuthentication OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x05,
+    0x05,
+    0x07,
+    0x03,
+    0x01,             /* OID: 1.3.6.1.5.5.7.3.1 */
+    MBEDTLS_ASN1_OID, /* OID Tag */
+    0x08,             /* Length of clientAuthentication OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x05,
+    0x05,
+    0x07,
+    0x03,
+    0x02,             /* OID: 1.3.6.1.5.5.7.3.2 */
+    MBEDTLS_ASN1_OID, /* OID Tag */
+    0x0A,             /* Length of Role certificate OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x04,
+    0x01,
+    0x82,
+    0xDE,
+    0x7C,
+    0x01,
+    0x07 /* OID: 1.3.6.1.4.1.44924.1.7 */
   };
 
   ret = mbedtls_x509write_crt_set_extension(
-      &cert, MBEDTLS_OID_EXTENDED_KEY_USAGE,
-      MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE), 0, extendedKeyUsage,
-      sizeof(extendedKeyUsage));
+    &cert, MBEDTLS_OID_EXTENDED_KEY_USAGE,
+    MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE), 0, extendedKeyUsage,
+    sizeof(extendedKeyUsage));
   if (ret < 0) {
     OC_ERR("error writing extendedKeyUsage to cert %d", ret);
     goto exit;
@@ -254,13 +256,13 @@ int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
 exit:
   if (next_name) {
     mbedtls_asn1_free_named_data_list(
-        &next_name->general_name.name.directory_name);
+      &next_name->general_name.name.directory_name);
     free(next_name);
   }
   while (general_names) {
     next_name = general_names->next;
     mbedtls_asn1_free_named_data_list(
-        &general_names->general_name.name.directory_name);
+      &general_names->general_name.name.directory_name);
     free(general_names);
     general_names = next_name;
   }
@@ -276,13 +278,15 @@ exit:
   return 0;
 }
 
-int oc_obt_generate_identity_cert(const char *subject_name,
-                                  const uint8_t *subject_public_key,
-                                  const size_t subject_public_key_size,
-                                  const char *issuer_name,
-                                  const uint8_t *issuer_private_key,
-                                  const size_t issuer_private_key_size,
-                                  oc_string_t *id_cert) {
+int
+oc_obt_generate_identity_cert(const char *subject_name,
+                              const uint8_t *subject_public_key,
+                              const size_t subject_public_key_size,
+                              const char *issuer_name,
+                              const uint8_t *issuer_private_key,
+                              const size_t issuer_private_key_size,
+                              oc_string_t *id_cert)
+{
   int ret = 0;
 
   mbedtls_x509write_cert cert;
@@ -334,7 +338,7 @@ int oc_obt_generate_identity_cert(const char *subject_name,
   }
 
   /* notBefore and notAfter: [now] to 12/31/2029 23:59:59 */
-  timestamp_t now_t = {0};
+  timestamp_t now_t = { 0 };
   oc_clock_time_t now = oc_clock_time();
   now_t.sec = (int64_t)(now / OC_CLOCK_SECOND);
   now_t.nsec = 0;
@@ -379,7 +383,7 @@ int oc_obt_generate_identity_cert(const char *subject_name,
   }
   /* keyUsage: digitalSignature (0) and keyAgreement(4) */
   ret = mbedtls_x509write_crt_set_key_usage(
-      &cert, MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
+    &cert, MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
   if (ret < 0) {
     OC_ERR("error writing identity cert keyUsage %d", ret);
     goto exit;
@@ -387,46 +391,46 @@ int oc_obt_generate_identity_cert(const char *subject_name,
   /* extendedKeyUsage: serverAuthentication , clientAuthentication, Identity
    * certificate */
   const unsigned char extendedKeyUsage[] = {
-      MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED, /* SEQUENCE OF.. Tag */
-      0x20,                                             /* Length of Sequence */
-      MBEDTLS_ASN1_OID,                                 /* OID Tag */
-      0x08, /* Length of serverAuthentication OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x05,
-      0x05,
-      0x07,
-      0x03,
-      0x01,             /* OID: 1.3.6.1.5.5.7.3.1 */
-      MBEDTLS_ASN1_OID, /* OID Tag */
-      0x08,             /* Length of clientAuthentication OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x05,
-      0x05,
-      0x07,
-      0x03,
-      0x02,             /* OID: 1.3.6.1.5.5.7.3.2 */
-      MBEDTLS_ASN1_OID, /* OID Tag */
-      0x0A,             /* Length of Identity certificate OID */
-      0x2B,
-      0x06,
-      0x01,
-      0x04,
-      0x01,
-      0x82,
-      0xDE,
-      0x7C,
-      0x01,
-      0x06 /* OID: 1.3.6.1.4.1.44924.1.6 */
+    MBEDTLS_ASN1_SEQUENCE | MBEDTLS_ASN1_CONSTRUCTED, /* SEQUENCE OF.. Tag */
+    0x20,                                             /* Length of Sequence */
+    MBEDTLS_ASN1_OID,                                 /* OID Tag */
+    0x08, /* Length of serverAuthentication OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x05,
+    0x05,
+    0x07,
+    0x03,
+    0x01,             /* OID: 1.3.6.1.5.5.7.3.1 */
+    MBEDTLS_ASN1_OID, /* OID Tag */
+    0x08,             /* Length of clientAuthentication OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x05,
+    0x05,
+    0x07,
+    0x03,
+    0x02,             /* OID: 1.3.6.1.5.5.7.3.2 */
+    MBEDTLS_ASN1_OID, /* OID Tag */
+    0x0A,             /* Length of Identity certificate OID */
+    0x2B,
+    0x06,
+    0x01,
+    0x04,
+    0x01,
+    0x82,
+    0xDE,
+    0x7C,
+    0x01,
+    0x06 /* OID: 1.3.6.1.4.1.44924.1.6 */
   };
 
   ret = mbedtls_x509write_crt_set_extension(
-      &cert, MBEDTLS_OID_EXTENDED_KEY_USAGE,
-      MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE), 0, extendedKeyUsage,
-      sizeof(extendedKeyUsage));
+    &cert, MBEDTLS_OID_EXTENDED_KEY_USAGE,
+    MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE), 0, extendedKeyUsage,
+    sizeof(extendedKeyUsage));
   if (ret < 0) {
     OC_ERR("could not write extendedKeyUsage into cert %d", ret);
     goto exit;
@@ -468,11 +472,13 @@ exit:
   return ret;
 }
 
-int oc_obt_generate_self_signed_root_cert(const char *subject_name,
-                                          const uint8_t *public_key,
-                                          const size_t public_key_size,
-                                          const uint8_t *private_key,
-                                          const size_t private_key_size) {
+int
+oc_obt_generate_self_signed_root_cert(const char *subject_name,
+                                      const uint8_t *public_key,
+                                      const size_t public_key_size,
+                                      const uint8_t *private_key,
+                                      const size_t private_key_size)
+{
   int ret = 0;
 
   mbedtls_x509write_cert cert;
@@ -519,7 +525,7 @@ int oc_obt_generate_self_signed_root_cert(const char *subject_name,
   }
 
   /* notBefore and notAfter: [now] to 12/31/2029 23:59:59 */
-  timestamp_t now_t = {0};
+  timestamp_t now_t = { 0 };
   oc_clock_time_t now = oc_clock_time();
   now_t.sec = (int64_t)(now / OC_CLOCK_SECOND);
   now_t.nsec = 0;
@@ -564,8 +570,8 @@ int oc_obt_generate_self_signed_root_cert(const char *subject_name,
   }
   /* keyUsage: keyCertSign (5), cRLSign and digitalSignature(0) */
   ret = mbedtls_x509write_crt_set_key_usage(
-      &cert, MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN |
-                 MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
+    &cert, MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN |
+             MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
   if (ret < 0) {
     OC_ERR("error writing root cert keyUsage %d", ret);
     goto exit;
@@ -581,8 +587,8 @@ int oc_obt_generate_self_signed_root_cert(const char *subject_name,
   }
 
   ret = oc_sec_add_new_cred(
-      0, false, NULL, -1, OC_CREDTYPE_CERT, OC_CREDUSAGE_TRUSTCA, "*", 0, 0,
-      NULL, OC_ENCODING_PEM, strlen(cert_pem), (uint8_t *)cert_pem, NULL, NULL);
+    0, false, NULL, -1, OC_CREDTYPE_CERT, OC_CREDUSAGE_TRUSTCA, "*", 0, 0, NULL,
+    OC_ENCODING_PEM, strlen(cert_pem), (uint8_t *)cert_pem, NULL, NULL);
 
   if (ret == -1) {
     OC_ERR("could not write root cert into /oic/sec/cred");

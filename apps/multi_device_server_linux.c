@@ -25,7 +25,8 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
-static struct _fridge_state {
+static struct _fridge_state
+{
   int filter;
   bool rapid_freeze;
   bool defrost;
@@ -33,7 +34,9 @@ static struct _fridge_state {
 } fridge_state;
 static double thermostat;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Refrigerator", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.refrigeration", "My fridge",
                        "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
@@ -42,8 +45,10 @@ static int app_init(void) {
   return ret;
 }
 
-static void get_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+get_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)user_data;
   PRINT("GET_fridge:\n");
   oc_rep_start_root_object();
@@ -64,8 +69,10 @@ static void get_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *user_data) {
+static void
+post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
   (void)user_data;
   (void)iface_mask;
   PRINT("POST_fridge:\n");
@@ -109,8 +116,9 @@ static void post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void get_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
-                     void *user_data) {
+static void
+get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
   (void)user_data;
   (void)request;
   PRINT("GET_temp:\n");
@@ -130,8 +138,10 @@ static void get_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)user_data;
   (void)iface_mask;
   PRINT("POST_temp:\n");
@@ -162,7 +172,9 @@ static void post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res = oc_new_resource("myfridge", "/fridge/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.refrigeration");
   oc_resource_bind_resource_interface(res, OC_IF_A);
@@ -184,19 +196,25 @@ static void register_resources(void) {
   oc_add_resource(res1);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -204,10 +222,10 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 

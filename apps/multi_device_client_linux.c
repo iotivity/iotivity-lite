@@ -25,7 +25,8 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
-static struct _fridge_state {
+static struct _fridge_state
+{
   int filter;
   bool rapid_freeze;
   bool defrost;
@@ -33,7 +34,9 @@ static struct _fridge_state {
 } fridge_state;
 static double thermostat = 0.0;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("FridgeRemote", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.remote", "My remote", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -46,19 +49,25 @@ static char temp_1[MAX_URI_LENGTH];
 static oc_endpoint_t *fridge_server, *temp_server;
 static bool stop_get_post = false;
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static oc_event_callback_retval_t stop_client(void *data) {
+static oc_event_callback_retval_t
+stop_client(void *data)
+{
   (void)data;
   PRINT("Stopping client...\n");
   handle_signal(0);
@@ -68,7 +77,9 @@ static oc_event_callback_retval_t stop_client(void *data) {
 static void get_platform(oc_client_response_t *data);
 static void get_device(oc_client_response_t *data);
 
-static oc_event_callback_retval_t get_p_and_d(void *data) {
+static oc_event_callback_retval_t
+get_p_and_d(void *data)
+{
   (void)data;
   oc_do_get("oic/p", fridge_server, NULL, &get_platform, LOW_QOS, NULL);
   oc_do_get("oic/d", fridge_server, "if=oic.if.baseline", &get_device, LOW_QOS,
@@ -85,7 +96,9 @@ static oc_event_callback_retval_t get_p_and_d(void *data) {
 
 static void get_temp(oc_client_response_t *data);
 
-static void post_temp(oc_client_response_t *data) {
+static void
+post_temp(oc_client_response_t *data)
+{
   PRINT("POST_fridge:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -97,7 +110,9 @@ static void post_temp(oc_client_response_t *data) {
   }
 }
 
-static void get_temp(oc_client_response_t *data) {
+static void
+get_temp(oc_client_response_t *data)
+{
   PRINT("GET_temp:\n");
   oc_rep_t *rep = data->payload;
 
@@ -132,7 +147,9 @@ static void get_temp(oc_client_response_t *data) {
 
 static void get_fridge(oc_client_response_t *data);
 
-static void post_fridge(oc_client_response_t *data) {
+static void
+post_fridge(oc_client_response_t *data)
+{
   PRINT("POST_fridge:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -144,7 +161,9 @@ static void post_fridge(oc_client_response_t *data) {
   }
 }
 
-static void get_fridge(oc_client_response_t *data) {
+static void
+get_fridge(oc_client_response_t *data)
+{
   PRINT("GET_fridge:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -192,7 +211,9 @@ static void get_fridge(oc_client_response_t *data) {
     PRINT("Could not init POST\n");
 }
 
-static void get_platform(oc_client_response_t *data) {
+static void
+get_platform(oc_client_response_t *data)
+{
   PRINT("GET_platform:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -213,7 +234,9 @@ static void get_platform(oc_client_response_t *data) {
   }
 }
 
-static void get_device(oc_client_response_t *data) {
+static void
+get_device(oc_client_response_t *data)
+{
   PRINT("GET_device:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -255,7 +278,8 @@ static void get_device(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   (void)bm;
@@ -300,12 +324,16 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   oc_do_ip_discovery(NULL, &discovery, NULL);
   oc_set_delayed_callback(NULL, &get_p_and_d, 10);
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -313,9 +341,9 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 

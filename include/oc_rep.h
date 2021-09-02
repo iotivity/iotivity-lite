@@ -306,7 +306,7 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
   do {                                                                         \
     CborEncoder name##_array;                                                  \
   g_err |=                                                                     \
-      cbor_encoder_create_array(parent, &name##_array, CborIndefiniteLength)
+    cbor_encoder_create_array(parent, &name##_array, CborIndefiniteLength)
 
 /**
  * End the array object.  No additional items can be added to the array after
@@ -324,8 +324,8 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
 #define oc_rep_start_links_array() oc_rep_begin_links_array()
 
 #define oc_rep_begin_links_array()                                             \
-  g_err |= cbor_encoder_create_array(&g_encoder, &links_array,                 \
-                                     CborIndefiniteLength)
+  g_err |=                                                                     \
+    cbor_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength)
 
 #define oc_rep_end_links_array()                                               \
   g_err |= cbor_encoder_close_container(&g_encoder, &links_array)
@@ -771,7 +771,7 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     CborEncoder key##_value_array;                                             \
     g_err |=                                                                   \
-        cbor_encoder_create_array(&object##_map, &key##_value_array, length);  \
+      cbor_encoder_create_array(&object##_map, &key##_value_array, length);    \
     int i;                                                                     \
     for (i = 0; i < length; i++) {                                             \
       g_err |= cbor_encode_int(&key##_value_array, values[i]);                 \
@@ -808,7 +808,7 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     CborEncoder key##_value_array;                                             \
     g_err |=                                                                   \
-        cbor_encoder_create_array(&object##_map, &key##_value_array, length);  \
+      cbor_encoder_create_array(&object##_map, &key##_value_array, length);    \
     int i;                                                                     \
     for (i = 0; i < length; i++) {                                             \
       g_err |= cbor_encode_boolean(&key##_value_array, values[i]);             \
@@ -846,7 +846,7 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
     g_err |= cbor_encode_text_string(&object##_map, #key, strlen(#key));       \
     CborEncoder key##_value_array;                                             \
     g_err |=                                                                   \
-        cbor_encoder_create_array(&object##_map, &key##_value_array, length);  \
+      cbor_encoder_create_array(&object##_map, &key##_value_array, length);    \
     int i;                                                                     \
     for (i = 0; i < length; i++) {                                             \
       g_err |= cbor_encode_floating_point(&key##_value_array, CborDoubleType,  \
@@ -912,8 +912,8 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
     for (i = 0; i < (int)oc_string_array_get_allocated_size(values); i++) {    \
       if (oc_string_array_get_item_size(values, i) > 0) {                      \
         g_err |= cbor_encode_text_string(                                      \
-            &key##_value_array, oc_string_array_get_item(values, i),           \
-            oc_string_array_get_item_size(values, i));                         \
+          &key##_value_array, oc_string_array_get_item(values, i),             \
+          oc_string_array_get_item_size(values, i));                           \
       }                                                                        \
     }                                                                          \
     g_err |= cbor_encoder_close_container(&object##_map, &key##_value_array);  \
@@ -949,7 +949,8 @@ typedef enum {
   OC_REP_OBJECT_ARRAY = 0x0E
 } oc_rep_value_type_t;
 
-typedef struct oc_rep_s {
+typedef struct oc_rep_s
+{
   oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;

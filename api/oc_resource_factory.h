@@ -23,14 +23,16 @@
 extern "C" {
 #endif
 
-typedef struct oc_rt_factory_t {
+typedef struct oc_rt_factory_t
+{
   struct oc_rt_factory_t *next;
   oc_string_t rt;
   oc_resource_get_instance_t get_instance;
   oc_resource_free_instance_t free_instance;
 } oc_rt_factory_t;
 
-typedef struct oc_rt_created_t {
+typedef struct oc_rt_created_t
+{
   struct oc_rt_created_t *next;
   oc_resource_t *resource;
   oc_collection_t *collection;

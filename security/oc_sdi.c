@@ -29,7 +29,9 @@ static oc_sec_sdi_t *sdi;
 static oc_sec_sdi_t sdi[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-void oc_sec_sdi_init(void) {
+void
+oc_sec_sdi_init(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   sdi = (oc_sec_sdi_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sdi_t));
   if (!sdi) {
@@ -38,7 +40,9 @@ void oc_sec_sdi_init(void) {
 #endif
 }
 
-void oc_sec_sdi_free(void) {
+void
+oc_sec_sdi_free(void)
+{
   size_t device;
 
   if (!sdi) {
@@ -58,7 +62,9 @@ void oc_sec_sdi_free(void) {
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void oc_sec_sdi_default(size_t device) {
+void
+oc_sec_sdi_default(size_t device)
+{
   if (!sdi) {
     return;
   }
@@ -71,7 +77,9 @@ void oc_sec_sdi_default(size_t device) {
   oc_sec_dump_sdi(device);
 }
 
-bool oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device) {
+bool
+oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
+{
   bool suc = false;
   oc_sec_sdi_t *s = oc_sec_get_sdi(device);
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
@@ -136,7 +144,9 @@ bool oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device) {
   return suc;
 }
 
-void oc_sec_encode_sdi(size_t device, bool to_storage) {
+void
+oc_sec_encode_sdi(size_t device, bool to_storage)
+{
   char uuid[37];
   oc_sec_sdi_t *s = oc_sec_get_sdi(device);
 
@@ -157,10 +167,15 @@ void oc_sec_encode_sdi(size_t device, bool to_storage) {
   }
 }
 
-oc_sec_sdi_t *oc_sec_get_sdi(size_t device) { return &sdi[device]; }
+oc_sec_sdi_t *
+oc_sec_get_sdi(size_t device)
+{
+  return &sdi[device];
+}
 
-void get_sdi(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *data) {
+void
+get_sdi(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   switch (iface_mask) {
   case OC_IF_BASELINE: {
@@ -168,7 +183,7 @@ void get_sdi(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_rep_start_root_object();
 
     oc_process_baseline_interface(
-        oc_core_get_resource_by_index(OCF_SEC_SDI, request->resource->device));
+      oc_core_get_resource_by_index(OCF_SEC_SDI, request->resource->device));
     oc_sec_encode_sdi(request->resource->device, false);
 
     oc_rep_end_root_object();
@@ -184,8 +199,9 @@ void get_sdi(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-void post_sdi(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *data) {
+void
+post_sdi(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;

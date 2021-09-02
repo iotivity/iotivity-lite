@@ -24,7 +24,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   oc_sp_types_t supported_profiles;
   oc_sp_types_t current_profile;
   int credid;

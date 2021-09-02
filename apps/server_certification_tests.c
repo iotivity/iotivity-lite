@@ -74,7 +74,9 @@ oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
     } while (0);                                                               \
   }
 
-static void display_menu(void) {
+static void
+display_menu(void)
+{
   PRINT("\n\n################################################\nOCF "
         "Server Certification Test "
         "Tool\n################################################\n");
@@ -103,12 +105,16 @@ static void display_menu(void) {
 }
 
 #ifdef OC_SOFTWARE_UPDATE
-int validate_purl(const char *purl) {
+int
+validate_purl(const char *purl)
+{
   (void)purl;
   return 0;
 }
 
-int check_new_version(size_t device, const char *url, const char *version) {
+int
+check_new_version(size_t device, const char *url, const char *version)
+{
   if (!url) {
     oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
     return -1;
@@ -122,13 +128,17 @@ int check_new_version(size_t device, const char *url, const char *version) {
   return 0;
 }
 
-int download_update(size_t device, const char *url) {
+int
+download_update(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_downloaded(device, "2.0", OC_SWUPDATE_RESULT_SUCCESS);
   return 0;
 }
 
-int perform_upgrade(size_t device, const char *url) {
+int
+perform_upgrade(size_t device, const char *url)
+{
   (void)url;
   oc_swupdate_notify_upgrading(device, "2.0", oc_clock_time(),
                                OC_SWUPDATE_RESULT_SUCCESS);
@@ -139,8 +149,10 @@ int perform_upgrade(size_t device, const char *url) {
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_CLOUD
-static void cloud_refresh_token_cb(oc_cloud_context_t *ctx,
-                                   oc_cloud_status_t status, void *data) {
+static void
+cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                       void *data)
+{
   (void)data;
   PRINT("\nCloud Refresh Token status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -171,7 +183,9 @@ static void cloud_refresh_token_cb(oc_cloud_context_t *ctx,
   }
 }
 
-static void cloud_refresh_token(void) {
+static void
+cloud_refresh_token(void)
+{
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
     return;
@@ -186,8 +200,10 @@ static void cloud_refresh_token(void) {
   }
 }
 
-static void cloud_deregister_cb(oc_cloud_context_t *ctx,
-                                oc_cloud_status_t status, void *data) {
+static void
+cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                    void *data)
+{
   (void)data;
   PRINT("\nCloud DeRegister status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -215,7 +231,9 @@ static void cloud_deregister_cb(oc_cloud_context_t *ctx,
   }
 }
 
-static void cloud_deregister(void) {
+static void
+cloud_deregister(void)
+{
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
     return;
@@ -230,8 +248,9 @@ static void cloud_deregister(void) {
   }
 }
 
-static void cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                            void *data) {
+static void
+cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
+{
   (void)data;
   PRINT("\nCloud Logout status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -256,7 +275,9 @@ static void cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
-static void cloud_logout(void) {
+static void
+cloud_logout(void)
+{
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
     return;
@@ -271,8 +292,9 @@ static void cloud_logout(void) {
   }
 }
 
-static void cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                           void *data) {
+static void
+cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
+{
   (void)data;
   PRINT("\nCloud Login status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -294,7 +316,9 @@ static void cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
-static void cloud_login(void) {
+static void
+cloud_login(void)
+{
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
     return;
@@ -309,8 +333,9 @@ static void cloud_login(void) {
   }
 }
 
-static void cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                              void *data) {
+static void
+cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
+{
   (void)data;
   PRINT("\nCloud Register status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -329,7 +354,9 @@ static void cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
-static void cloud_register(void) {
+static void
+cloud_register(void)
+{
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
     return;
@@ -344,12 +371,16 @@ static void cloud_register(void) {
   }
 }
 
-static void ping_handler(oc_client_response_t *data) {
+static void
+ping_handler(oc_client_response_t *data)
+{
   (void)data;
   PRINT("\nReceived Pong\n");
 }
 
-static void cloud_send_ping(void) {
+static void
+cloud_send_ping(void)
+{
   PRINT("\nEnter receiving endpoint: ");
   char addr[256];
   SCANF("%255s", addr);
@@ -374,19 +405,24 @@ static void cloud_send_ping(void) {
 }
 #endif /* OC_CLOUD */
 
-oc_define_interrupt_handler(toggle_switch) {
+oc_define_interrupt_handler(toggle_switch)
+{
   if (bswitch) {
     oc_notify_observers(bswitch);
   }
 }
 
-static void toggle_switch_resource() {
+static void
+toggle_switch_resource()
+{
   PRINT("\nSwitch toggled\n");
   switch_state = !switch_state;
   oc_signal_interrupt_handler(toggle_switch);
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform(manufacturer, NULL, NULL);
 
@@ -398,8 +434,8 @@ static int app_init(void) {
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
-      "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-      "\tIntrospection data not set for device.\n";
+    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
+    "\tIntrospection data not set for device.\n";
   fp = fopen("./server_certification_tests_IDD.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
@@ -430,8 +466,9 @@ static int app_init(void) {
   return err;
 }
 
-static void get_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
-                     void *user_data) {
+static void
+get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
   (void)user_data;
   PRINT("GET_temp:\n");
   bool invalid_query = false;
@@ -501,8 +538,10 @@ static void get_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_temp:\n");
@@ -596,8 +635,10 @@ static void post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)user_data;
   PRINT("GET_switch:\n");
   oc_rep_start_root_object();
@@ -616,8 +657,10 @@ static void get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *user_data) {
+static void
+post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_switch:\n");
@@ -657,7 +700,8 @@ static void post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.switch.binary instances */
-typedef struct oc_switch_t {
+typedef struct oc_switch_t
+{
   struct oc_switch_t *next;
   oc_resource_t *resource;
   bool state;
@@ -665,7 +709,9 @@ typedef struct oc_switch_t {
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches);
 
-bool set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data) {
+bool
+set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
   (void)resource;
   oc_switch_t *cswitch = (oc_switch_t *)data;
   while (rep != NULL) {
@@ -681,8 +727,10 @@ bool set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data) {
   return true;
 }
 
-void get_switch_properties(oc_resource_t *resource,
-                           oc_interface_mask_t iface_mask, void *data) {
+void
+get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                      void *data)
+{
   oc_switch_t *cswitch = (oc_switch_t *)data;
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -696,8 +744,10 @@ void get_switch_properties(oc_resource_t *resource,
   }
 }
 
-void post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                  void *user_data) {
+void
+post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *user_data)
+{
   (void)iface_mask;
   oc_switch_t *cswitch = (oc_switch_t *)user_data;
   oc_rep_t *rep = request->request_payload;
@@ -737,22 +787,25 @@ void post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-void get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                 void *user_data) {
+void
+get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
   oc_rep_start_root_object();
   get_switch_properties(request->resource, iface_mask, user_data);
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_resource_t *get_switch_instance(const char *href, oc_string_array_t *types,
-                                   oc_resource_properties_t bm,
-                                   oc_interface_mask_t iface_mask,
-                                   size_t device) {
+oc_resource_t *
+get_switch_instance(const char *href, oc_string_array_t *types,
+                    oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
+                    size_t device)
+{
   oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
   if (cswitch) {
     cswitch->resource = oc_new_resource(
-        NULL, href, oc_string_array_get_allocated_size(*types), device);
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
     if (cswitch->resource) {
       size_t i;
       for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
@@ -779,7 +832,9 @@ oc_resource_t *get_switch_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-void free_switch_instance(oc_resource_t *resource) {
+void
+free_switch_instance(oc_resource_t *resource)
+{
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
     if (cswitch->resource == resource) {
@@ -796,8 +851,9 @@ void free_switch_instance(oc_resource_t *resource) {
 
 /* Setting custom Collection-level properties */
 int64_t battery_level = 94;
-bool set_platform_properties(oc_resource_t *resource, oc_rep_t *rep,
-                             void *data) {
+bool
+set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+{
   (void)resource;
   (void)data;
   while (rep != NULL) {
@@ -816,8 +872,10 @@ bool set_platform_properties(oc_resource_t *resource, oc_rep_t *rep,
   return true;
 }
 
-void get_platform_properties(oc_resource_t *resource,
-                             oc_interface_mask_t iface_mask, void *data) {
+void
+get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+                        void *data)
+{
   (void)resource;
   (void)data;
   switch (iface_mask) {
@@ -829,7 +887,9 @@ void get_platform_properties(oc_resource_t *resource,
   }
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   temp_resource = oc_new_resource(NULL, "/temp", 1, 0);
   oc_resource_bind_resource_type(temp_resource, "oic.r.temperature");
   oc_resource_bind_resource_interface(temp_resource, OC_IF_A);
@@ -889,31 +949,39 @@ static void register_resources(void) {
   oc_resource_set_observable(device_resource, false);
 
   oc_resource_t *platform_resource =
-      oc_core_get_resource_by_index(OCF_P, DEVICE);
+    oc_core_get_resource_by_index(OCF_P, DEVICE);
   oc_resource_set_observable(platform_resource, false);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
 #ifdef OC_SECURITY
-void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
   (void)data;
   PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
+static int
+read_pem(const char *file_path, char *buffer, size_t *buffer_len)
+{
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -952,7 +1020,9 @@ static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void factory_presets_cb(size_t device, void *data) {
+void
+factory_presets_cb(size_t device, void *data)
+{
   (void)device;
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -985,7 +1055,7 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
-      0, ee_credid, (const unsigned char *)cert, cert_len);
+    0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
     PRINT("ERROR installing intermediate CA cert\n");
@@ -999,19 +1069,21 @@ void factory_presets_cb(size_t device, void *data) {
   }
 
   int rootca_credid =
-      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
   }
 
   oc_pki_set_security_profile(
-      0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE,
-      OC_SP_BASELINE, ee_credid);
+    0, OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE, OC_SP_BASELINE,
+    ee_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-static void *ocf_event_thread(void *data) {
+static void *
+ocf_event_thread(void *data)
+{
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -1033,24 +1105,28 @@ static void *ocf_event_thread(void *data) {
   return NULL;
 }
 
-void display_device_uuid(void) {
+void
+display_device_uuid(void)
+{
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
   PRINT("Started device with ID: %s\n", buffer);
 }
 
-int main(void) {
+int
+main(void)
+{
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_set_con_res_announced(true);
   // max app data size set to 13k large enough to hold full IDD

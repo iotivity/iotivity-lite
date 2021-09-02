@@ -28,7 +28,8 @@
 extern "C" {
 #endif
 
-typedef struct oc_oscore_context_t {
+typedef struct oc_oscore_context_t
+{
   struct oc_oscore_context_t *next;
   /* Provisioned parameters */
   void *cred; /* cred entry contains the master secret */
@@ -74,8 +75,8 @@ oc_oscore_context_t *oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx,
                                                    uint8_t kid_len);
 
 oc_oscore_context_t *oc_oscore_find_context_by_token_mid(
-    size_t device, uint8_t *token, uint8_t token_len, uint16_t mid,
-    uint8_t **request_piv, uint8_t *request_piv_len, bool tcp);
+  size_t device, uint8_t *token, uint8_t token_len, uint16_t mid,
+  uint8_t **request_piv, uint8_t *request_piv_len, bool tcp);
 
 oc_oscore_context_t *oc_oscore_find_group_context(void);
 

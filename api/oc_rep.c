@@ -28,27 +28,43 @@ static uint8_t *g_buf;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
 
-void oc_rep_set_pool(struct oc_memb *rep_objects_pool) {
+void
+oc_rep_set_pool(struct oc_memb *rep_objects_pool)
+{
   rep_objects = rep_objects_pool;
 }
 
-void oc_rep_new(uint8_t *out_payload, int size) {
+void
+oc_rep_new(uint8_t *out_payload, int size)
+{
   g_err = CborNoError;
   g_buf = out_payload;
   cbor_encoder_init(&g_encoder, out_payload, size, 0);
 }
 
-CborError oc_rep_get_cbor_errno(void) { return g_err; }
+CborError
+oc_rep_get_cbor_errno(void)
+{
+  return g_err;
+}
 
-const uint8_t *oc_rep_get_encoder_buf(void) { return g_buf; }
+const uint8_t *
+oc_rep_get_encoder_buf(void)
+{
+  return g_buf;
+}
 
-void oc_rep_encode_raw(const uint8_t *data, size_t len) {
+void
+oc_rep_encode_raw(const uint8_t *data, size_t len)
+{
   memcpy(g_encoder.data.ptr, data, len);
   g_encoder.data.ptr = g_encoder.data.ptr + len;
   g_err = CborNoError;
 }
 
-int oc_rep_get_encoded_payload_size(void) {
+int
+oc_rep_get_encoded_payload_size(void)
+{
   size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
   if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
@@ -59,7 +75,9 @@ int oc_rep_get_encoded_payload_size(void) {
   return (int)size;
 }
 
-static oc_rep_t *_alloc_rep(void) {
+static oc_rep_t *
+_alloc_rep(void)
+{
   oc_rep_t *rep = oc_memb_alloc(rep_objects);
   if (rep != NULL) {
     rep->name.size = 0;
@@ -70,11 +88,15 @@ static oc_rep_t *_alloc_rep(void) {
   return rep;
 }
 
-static void _free_rep(oc_rep_t *rep_value) {
+static void
+_free_rep(oc_rep_t *rep_value)
+{
   oc_memb_free(rep_objects, rep_value);
 }
 
-void oc_free_rep(oc_rep_t *rep) {
+void
+oc_free_rep(oc_rep_t *rep)
+{
   if (rep == 0)
     return;
   oc_free_rep(rep->next);
@@ -124,8 +146,9 @@ void oc_free_rep(oc_rep_t *rep) {
 */
 
 /* Parse single property */
-static void oc_parse_rep_value(CborValue *value, oc_rep_t **rep,
-                               CborError *err) {
+static void
+oc_parse_rep_value(CborValue *value, oc_rep_t **rep, CborError *err)
+{
   size_t k, len;
   CborValue map, array;
   *rep = _alloc_rep();
@@ -179,7 +202,7 @@ get_tagged_value:
       return;
     oc_alloc_string(&cur->value.string, len);
     *err |= cbor_value_copy_byte_string(
-        value, oc_cast(cur->value.string, uint8_t), &len, NULL);
+      value, oc_cast(cur->value.string, uint8_t), &len, NULL);
     cur->type = OC_REP_BYTE_STRING;
     break;
   case CborTextStringType:
@@ -231,7 +254,7 @@ get_tagged_value:
         }
 
         *err |=
-            cbor_value_get_int64(&array, oc_int_array(cur->value.array) + k);
+          cbor_value_get_int64(&array, oc_int_array(cur->value.array) + k);
         break;
       case CborDoubleType:
         if (k == 0) {
@@ -242,8 +265,8 @@ get_tagged_value:
           return;
         }
 
-        *err |= cbor_value_get_double(&array,
-                                      oc_double_array(cur->value.array) + k);
+        *err |=
+          cbor_value_get_double(&array, oc_double_array(cur->value.array) + k);
         break;
       case CborBooleanType:
         if (k == 0) {
@@ -255,7 +278,7 @@ get_tagged_value:
         }
 
         *err |=
-            cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
+          cbor_value_get_boolean(&array, oc_bool_array(cur->value.array) + k);
         break;
       case CborByteStringType: {
         if (k == 0) {
@@ -271,13 +294,12 @@ get_tagged_value:
           len = STRING_ARRAY_ITEM_MAX_LEN - 1;
         }
         uint8_t *size =
-            (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k);
+          (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k);
         size -= 1;
         *size = (uint8_t)len;
         *err |= cbor_value_copy_byte_string(
-            &array,
-            (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k), &len,
-            NULL);
+          &array, (uint8_t *)oc_byte_string_array_get_item(cur->value.array, k),
+          &len, NULL);
       } break;
       case CborTextStringType:
         if (k == 0) {
@@ -294,8 +316,8 @@ get_tagged_value:
           len = STRING_ARRAY_ITEM_MAX_LEN;
         }
         *err |= cbor_value_copy_text_string(
-            &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
-            NULL);
+          &array, (char *)oc_string_array_get_item(cur->value.array, k), &len,
+          NULL);
         break;
       case CborMapType:
         if (k == 0) {
@@ -352,8 +374,9 @@ get_tagged_value:
   }
 }
 
-int oc_parse_rep(const uint8_t *in_payload, int payload_size,
-                 oc_rep_t **out_rep) {
+int
+oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
+{
   CborParser parser;
   CborValue root_value, cur_value, map;
   CborError err = CborNoError;
@@ -400,8 +423,10 @@ int oc_parse_rep(const uint8_t *in_payload, int payload_size,
   return err;
 }
 
-static bool oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type,
-                             const char *key, void **value, size_t *size) {
+static bool
+oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
+                 void **value, size_t *size)
+{
   if (!rep || !key || !value) {
     OC_ERR("Error of input parameters");
     return false;
@@ -464,7 +489,9 @@ static bool oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type,
   return false;
 }
 
-bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value) {
+bool
+oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value)
+{
   if (!value) {
     OC_ERR("Error of input parameters");
     return false;
@@ -473,7 +500,9 @@ bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value) {
                           (size_t *)NULL);
 }
 
-bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value) {
+bool
+oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value)
+{
   if (!value) {
     OC_ERR("Error of input parameters");
     return false;
@@ -482,7 +511,9 @@ bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value) {
                           (size_t *)NULL);
 }
 
-bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value) {
+bool
+oc_rep_get_double(oc_rep_t *rep, const char *key, double *value)
+{
   if (!value) {
     OC_ERR("Error of input parameters");
     return false;
@@ -491,8 +522,10 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value) {
                           (size_t *)NULL);
 }
 
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
-                            size_t *size) {
+bool
+oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+                       size_t *size)
+{
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -500,8 +533,9 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
   return oc_rep_get_value(rep, OC_REP_BYTE_STRING, key, (void **)value, size);
 }
 
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
-                       size_t *size) {
+bool
+oc_rep_get_string(oc_rep_t *rep, const char *key, char **value, size_t *size)
+{
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -509,8 +543,10 @@ bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
   return oc_rep_get_value(rep, OC_REP_STRING, key, (void **)value, size);
 }
 
-bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
-                          size_t *size) {
+bool
+oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
+                     size_t *size)
+{
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -518,8 +554,10 @@ bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
   return oc_rep_get_value(rep, OC_REP_INT_ARRAY, key, (void **)value, size);
 }
 
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
-                           size_t *size) {
+bool
+oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+                      size_t *size)
+{
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -527,8 +565,10 @@ bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
   return oc_rep_get_value(rep, OC_REP_BOOL_ARRAY, key, (void **)value, size);
 }
 
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
-                             size_t *size) {
+bool
+oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
+                        size_t *size)
+{
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -536,8 +576,10 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
   return oc_rep_get_value(rep, OC_REP_DOUBLE_ARRAY, key, (void **)value, size);
 }
 
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
-                                  oc_string_array_t *value, size_t *size) {
+bool
+oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+                             oc_string_array_t *value, size_t *size)
+{
   if (!value || !size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -546,8 +588,10 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
                           size);
 }
 
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
-                             oc_string_array_t *value, size_t *size) {
+bool
+oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+                        oc_string_array_t *value, size_t *size)
+{
   if (!value || !size) {
     OC_ERR("Error of input parameters");
     return false;
@@ -555,11 +599,15 @@ bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
   return oc_rep_get_value(rep, OC_REP_STRING_ARRAY, key, (void **)&value, size);
 }
 
-bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value) {
+bool
+oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value)
+{
   return oc_rep_get_value(rep, OC_REP_OBJECT, key, (void **)value, NULL);
 }
 
-bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value) {
+bool
+oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value)
+{
   return oc_rep_get_value(rep, OC_REP_OBJECT_ARRAY, key, (void **)value, NULL);
 }
 
@@ -601,12 +649,14 @@ bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value) {
  * is set to true. It helps produce output with reasonably human readable
  * white-space.
  */
-size_t oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth) {
+size_t
+oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   for (int i = 0; i < tab_depth; i++) {
     num_char_printed =
-        snprintf(buf, buf_size, "%s", OC_PRETTY_PRINT_TAB_CHARACTER);
+      snprintf(buf, buf_size, "%s", OC_PRETTY_PRINT_TAB_CHARACTER);
     OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   }
   return total_char_printed;
@@ -619,9 +669,10 @@ size_t oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth) {
  * an OC_REP_BYTE_STRING_ARRAY. If uses the base64 encoded to encode the
  * byte_string to a base64 string.
  */
-size_t oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
-                                                 char *byte_str,
-                                                 size_t byte_str_size) {
+size_t
+oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
+                                          char *byte_str, size_t byte_str_size)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   // calculate the b64 encoded string size
@@ -658,8 +709,10 @@ size_t oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
  *
  * Currently does not handle OC_REP_ARRAY data type.
  */
-size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
-                             int tab_depth, bool pretty_print) {
+size_t
+oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
+                      bool pretty_print)
+{
   (void)buf;
   (void)buf_size;
   size_t num_char_printed = 0;
@@ -672,9 +725,9 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
 
     if (oc_string_len(rep->name) > 0) {
       num_char_printed =
-          (pretty_print)
-              ? snprintf(buf, buf_size, "\"%s\" : ", oc_string(rep->name))
-              : snprintf(buf, buf_size, "\"%s\":", oc_string(rep->name));
+        (pretty_print)
+          ? snprintf(buf, buf_size, "\"%s\" : ", oc_string(rep->name))
+          : snprintf(buf, buf_size, "\"%s\":", oc_string(rep->name));
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
     }
     switch (rep->type) {
@@ -685,7 +738,7 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
     }
     case OC_REP_INT: {
       num_char_printed =
-          snprintf(buf, buf_size, "%" PRId64, rep->value.integer);
+        snprintf(buf, buf_size, "%" PRId64, rep->value.integer);
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
       break;
     }
@@ -695,8 +748,8 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
       break;
     }
     case OC_REP_BOOL: {
-      num_char_printed = snprintf(buf, buf_size, "%s",
-                                  (rep->value.boolean) ? "true" : "false");
+      num_char_printed =
+        snprintf(buf, buf_size, "%s", (rep->value.boolean) ? "true" : "false");
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
       break;
     }
@@ -706,13 +759,13 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
       oc_rep_get_byte_string(rep, oc_string(rep->name), &byte_string,
                              &byte_string_size);
       num_char_printed = oc_rep_to_json_base64_encoded_byte_string(
-          buf, buf_size, byte_string, byte_string_size);
+        buf, buf_size, byte_string, byte_string_size);
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
       break;
     }
     case OC_REP_STRING: {
       num_char_printed =
-          snprintf(buf, buf_size, "\"%s\"", oc_string(rep->value.string));
+        snprintf(buf, buf_size, "\"%s\"", oc_string(rep->value.string));
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
       break;
     }
@@ -780,7 +833,7 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
                             &bool_array_size);
       for (size_t i = 0; i < bool_array_size; i++) {
         num_char_printed =
-            snprintf(buf, buf_size, "%s", (bool_array[i]) ? "true" : "false");
+          snprintf(buf, buf_size, "%s", (bool_array[i]) ? "true" : "false");
         OC_JSON_UPDATE_BUFFER_AND_TOTAL;
         if (i < bool_array_size - 1) {
           num_char_printed = (pretty_print) ? snprintf(buf, buf_size, ", ")
@@ -807,9 +860,9 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
         }
         char *byte_string = oc_byte_string_array_get_item(byte_str_array, i);
         size_t byte_string_size =
-            oc_byte_string_array_get_item_size(byte_str_array, i);
+          oc_byte_string_array_get_item_size(byte_str_array, i);
         num_char_printed = oc_rep_to_json_base64_encoded_byte_string(
-            buf, buf_size, byte_string, byte_string_size);
+          buf, buf_size, byte_string, byte_string_size);
         OC_JSON_UPDATE_BUFFER_AND_TOTAL;
         if (i < byte_str_array_size - 1) {
           num_char_printed = (pretty_print) ? snprintf(buf, buf_size, ",\n")
@@ -920,23 +973,24 @@ size_t oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size,
   return total_char_printed;
 }
 
-size_t oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size,
-                      bool pretty_print) {
+size_t
+oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size, bool pretty_print)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   bool object_array =
-      (rep && (rep->type == OC_REP_OBJECT) && (oc_string_len(rep->name) == 0));
-  num_char_printed =
-      (pretty_print) ? snprintf(buf, buf_size, (object_array) ? "[\n" : "{\n")
-                     : snprintf(buf, buf_size, (object_array) ? "[" : "{");
+    (rep && (rep->type == OC_REP_OBJECT) && (oc_string_len(rep->name) == 0));
+  num_char_printed = (pretty_print)
+                       ? snprintf(buf, buf_size, (object_array) ? "[\n" : "{\n")
+                       : snprintf(buf, buf_size, (object_array) ? "[" : "{");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
 
   num_char_printed = oc_rep_to_json_format(rep, buf, buf_size, 0, pretty_print);
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
 
-  num_char_printed =
-      (pretty_print) ? snprintf(buf, buf_size, (object_array) ? "]\n" : "}\n")
-                     : snprintf(buf, buf_size, (object_array) ? "]" : "}");
+  num_char_printed = (pretty_print)
+                       ? snprintf(buf, buf_size, (object_array) ? "]\n" : "}\n")
+                       : snprintf(buf, buf_size, (object_array) ? "]" : "}");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   return total_char_printed;
 }

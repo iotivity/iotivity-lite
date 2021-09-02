@@ -35,7 +35,8 @@ typedef enum oc_sec_doxmtype_t {
   OC_OXMTYPE_MFG_CERT = 2
 } oc_sec_oxmtype_t;
 
-typedef struct {
+typedef struct
+{
   int oxmsel;
   int oxms[3];
   int num_oxms;

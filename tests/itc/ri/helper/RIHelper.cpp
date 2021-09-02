@@ -42,7 +42,9 @@ RIHelper::RIHelper() {}
 
 RIHelper::~RIHelper() {}
 
-RIHelper *RIHelper::getInstance(void) {
+RIHelper *
+RIHelper::getInstance(void)
+{
   if (s_riHelperInstance == NULL) {
     if (s_riHelperInstance == NULL) {
       s_riHelperInstance = new RIHelper();
@@ -51,7 +53,9 @@ RIHelper *RIHelper::getInstance(void) {
   return s_riHelperInstance;
 }
 
-int RIHelper::createResource() {
+int
+RIHelper::createResource()
+{
   PRINT("createResource\n");
   int init = 0;
   struct sigaction sa;
@@ -71,7 +75,9 @@ int RIHelper::createResource() {
 
   return init;
 }
-int RIHelper::waitForEvent() {
+int
+RIHelper::waitForEvent()
+{
   while (s_generalQuit != 1) {
     PRINT("waitforevent\n");
     oc_main_poll();
@@ -79,7 +85,9 @@ int RIHelper::waitForEvent() {
   }
 }
 
-int RIHelper::initServer() {
+int
+RIHelper::initServer()
+{
   PRINT("initServer\n");
   int ret = 0;
   s_handler.init = appInitCb;
@@ -90,7 +98,9 @@ int RIHelper::initServer() {
   return ret;
 }
 
-int RIHelper::initClient() {
+int
+RIHelper::initClient()
+{
   PRINT("initClient\n");
   int ret = 0;
   s_handler.init = appInitCb;
@@ -101,7 +111,9 @@ int RIHelper::initClient() {
   return ret;
 }
 
-int RIHelper::appInitCb(void) {
+int
+RIHelper::appInitCb(void)
+{
   PRINT("appInitCb\n");
 
   int ret = oc_init_platform(MANUFACTURE_NAME, NULL, NULL);
@@ -110,26 +122,42 @@ int RIHelper::appInitCb(void) {
   return ret;
 }
 
-int RIHelper::appEmptyInitCb(void) {
+int
+RIHelper::appEmptyInitCb(void)
+{
   PRINT("appEmptyInitCb\n");
   return 1;
 }
-void RIHelper::issueEmptyRequestsCb(void) { PRINT("issueEmptyRequestsCb\n"); }
+void
+RIHelper::issueEmptyRequestsCb(void)
+{
+  PRINT("issueEmptyRequestsCb\n");
+}
 
-void RIHelper::registerEmptyResourcesCb(void) {
+void
+RIHelper::registerEmptyResourcesCb(void)
+{
   PRINT("registerEmptyResourcesCb\n");
 }
 
-void RIHelper::signalEventLoopCb(void) {
+void
+RIHelper::signalEventLoopCb(void)
+{
   PRINT("signalEventLoopCb\n");
   pthread_mutex_lock(&s_mutex);
   pthread_cond_signal(&s_cv);
   pthread_mutex_unlock(&s_mutex);
 }
 
-void RIHelper::issueRequestsCb(void) { PRINT("issueRequestsCb\n"); }
+void
+RIHelper::issueRequestsCb(void)
+{
+  PRINT("issueRequestsCb\n");
+}
 
-void RIHelper::registerResourcesCb(void) {
+void
+RIHelper::registerResourcesCb(void)
+{
   PRINT("registerResourcesCb\n");
 
   s_pResource = oc_new_resource(NULL, RESOURCE_URI_LIGHT, 2, 0);
@@ -144,19 +172,25 @@ void RIHelper::registerResourcesCb(void) {
   oc_resource_set_request_handler(s_pResource, OC_POST, postLightCb, NULL);
   oc_add_resource(s_pResource);
 }
-void RIHelper::unRegisterResources(void) {
+void
+RIHelper::unRegisterResources(void)
+{
   PRINT("unRegisterResources\n");
   oc_delete_resource(s_pResource);
   s_pResource = NULL;
 }
 
-void RIHelper::shutDown() {
+void
+RIHelper::shutDown()
+{
   PRINT("shutDown:\n");
   oc_main_shutdown();
 }
 
-void RIHelper::getLightCb(oc_request_t *request, oc_interface_mask_t interface,
-                          void *user_data) {
+void
+RIHelper::getLightCb(oc_request_t *request, oc_interface_mask_t interface,
+                     void *user_data)
+{
   PRINT("getLightCb:\n");
   (void)user_data;
   oc_rep_start_root_object();
@@ -175,8 +209,10 @@ void RIHelper::getLightCb(oc_request_t *request, oc_interface_mask_t interface,
   PRINT("Light state %d\n", s_lightState);
 }
 
-void RIHelper::postLightCb(oc_request_t *request, oc_interface_mask_t interface,
-                           void *user_data) {
+void
+RIHelper::postLightCb(oc_request_t *request, oc_interface_mask_t interface,
+                      void *user_data)
+{
   PRINT("postLightCb:\n");
   (void)interface;
   (void)user_data;
@@ -200,14 +236,18 @@ void RIHelper::postLightCb(oc_request_t *request, oc_interface_mask_t interface,
   s_lightState = state;
 }
 
-void RIHelper::putLightCb(oc_request_t *request, oc_interface_mask_t interface,
-                          void *user_data) {
+void
+RIHelper::putLightCb(oc_request_t *request, oc_interface_mask_t interface,
+                     void *user_data)
+{
   postLightCb(request, interface, user_data);
 }
 
 /** Client Side **/
 
-oc_event_callback_retval_t RIHelper::stopObserveClientCb(void *data) {
+oc_event_callback_retval_t
+RIHelper::stopObserveClientCb(void *data)
+{
   (void)data;
   PRINT("stopObserveClientCb\n");
   oc_stop_observe(s_lightUri, s_pLightEndpoint);
@@ -215,7 +255,9 @@ oc_event_callback_retval_t RIHelper::stopObserveClientCb(void *data) {
   return OC_EVENT_DONE;
 }
 
-void RIHelper::observeLightCb(oc_client_response_t *data) {
+void
+RIHelper::observeLightCb(oc_client_response_t *data)
+{
   PRINT("observeLightCb\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -233,14 +275,18 @@ void RIHelper::observeLightCb(oc_client_response_t *data) {
   s_isObserveResourceSuccessfull = true;
 }
 
-void RIHelper::getLightClientCb(oc_client_response_t *data) {
+void
+RIHelper::getLightClientCb(oc_client_response_t *data)
+{
   PRINT("getLightClientCb\n");
   (void)data;
   s_isRequestSucessfull = true;
   s_generalQuit = 1;
 }
 
-void RIHelper::postLightClientCb(oc_client_response_t *data) {
+void
+RIHelper::postLightClientCb(oc_client_response_t *data)
+{
   PRINT("postLightClientCb:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -250,7 +296,9 @@ void RIHelper::postLightClientCb(oc_client_response_t *data) {
   s_generalQuit = 1;
 }
 
-void RIHelper::putLightClientCb(oc_client_response_t *data) {
+void
+RIHelper::putLightClientCb(oc_client_response_t *data)
+{
   PRINT("putLightClientCb\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("PUT response OK\n");
@@ -260,7 +308,9 @@ void RIHelper::putLightClientCb(oc_client_response_t *data) {
   s_generalQuit = 1;
 }
 
-void RIHelper::deleteLightClientCb(oc_client_response_t *data) {
+void
+RIHelper::deleteLightClientCb(oc_client_response_t *data)
+{
   PRINT("deleteLightClientCb\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("DELETE response OK\n");
@@ -273,7 +323,8 @@ void RIHelper::deleteLightClientCb(oc_client_response_t *data) {
 oc_discovery_flags_t
 RIHelper::discovery(const char *di, const char *uri, oc_string_array_t types,
                     oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-                    oc_resource_properties_t bm, void *user_data) {
+                    oc_resource_properties_t bm, void *user_data)
+{
   (void)di;
   (void)interfaces;
   (void)user_data;
@@ -299,13 +350,17 @@ RIHelper::discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-void RIHelper::discoverResource() {
+void
+RIHelper::discoverResource()
+{
   PRINT("discoverResource:\n");
   s_generalQuit = 0;
   oc_do_ip_discovery(NULL, &discovery, NULL);
 }
 
-void RIHelper::getResource() {
+void
+RIHelper::getResource()
+{
   PRINT("getResource:\n");
   s_generalQuit = 0;
   s_isRequestSucessfull = false;
@@ -313,14 +368,18 @@ void RIHelper::getResource() {
             NULL);
 }
 
-void RIHelper::deleteResource() {
+void
+RIHelper::deleteResource()
+{
   PRINT("deleteResource:\n");
   s_generalQuit = 0;
   s_isRequestSucessfull = false;
   oc_do_delete(s_lightUri, s_pLightEndpoint, NULL, &deleteLightClientCb,
                LOW_QOS, NULL);
 }
-void RIHelper::postRequestResource() {
+void
+RIHelper::postRequestResource()
+{
   PRINT("postRequestResource:\n");
   s_generalQuit = 0;
   s_isRequestSucessfull = false;
@@ -337,7 +396,9 @@ void RIHelper::postRequestResource() {
     PRINT("Could not init POST\n");
 }
 
-void RIHelper::putRequestResource() {
+void
+RIHelper::putRequestResource()
+{
   PRINT("putRequestResource:\n");
   s_generalQuit = 0;
   s_isRequestSucessfull = false;
@@ -354,7 +415,9 @@ void RIHelper::putRequestResource() {
     PRINT("Could not init PUT\n");
 }
 
-void RIHelper::observeResource() {
+void
+RIHelper::observeResource()
+{
   PRINT("observeResource:\n");
   s_generalQuit = 0;
   oc_do_observe(s_lightUri, s_pLightEndpoint, NULL, &observeLightCb, LOW_QOS,
@@ -362,7 +425,9 @@ void RIHelper::observeResource() {
   oc_set_delayed_callback(NULL, &stopObserveClientCb, 10);
 }
 
-void RIHelper::handleSignalCb(int signal) {
+void
+RIHelper::handleSignalCb(int signal)
+{
   (void)signal;
   PRINT("handleSignalCb:\n");
   signalEventLoopCb();

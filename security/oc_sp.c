@@ -36,24 +36,26 @@ static oc_sec_sp_t sp_mfg_default[OC_MAX_NUM_DEVICES];
 #define OC_SP_BLUE_OID "1.3.6.1.4.1.51414.0.0.3.0"
 #define OC_SP_PURPLE_OID "1.3.6.1.4.1.51414.0.0.4.0"
 
-void oc_pki_set_security_profile(size_t device,
-                                 oc_sp_types_t supported_profiles,
-                                 oc_sp_types_t current_profile,
-                                 int mfg_credid) {
+void
+oc_pki_set_security_profile(size_t device, oc_sp_types_t supported_profiles,
+                            oc_sp_types_t current_profile, int mfg_credid)
+{
   sp_mfg_default[device].supported_profiles |= supported_profiles;
   sp_mfg_default[device].current_profile = current_profile;
   sp_mfg_default[device].credid = mfg_credid;
   sp[device] = sp_mfg_default[device];
 }
 
-void oc_sec_sp_init(void) {
+void
+oc_sec_sp_init(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   sp = (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
   if (!sp) {
     oc_abort("Insufficient memory");
   }
   sp_mfg_default =
-      (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
+    (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
   if (!sp_mfg_default) {
     oc_abort("Insufficient memory");
   }
@@ -66,7 +68,9 @@ void oc_sec_sp_init(void) {
   }
 }
 
-void oc_sec_sp_free(void) {
+void
+oc_sec_sp_free(void)
+{
 #ifdef OC_DYNAMIC_ALLOCATION
   if (sp) {
     free(sp);
@@ -77,9 +81,15 @@ void oc_sec_sp_free(void) {
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void oc_sec_sp_default(size_t device) { sp[device] = sp_mfg_default[device]; }
+void
+oc_sec_sp_default(size_t device)
+{
+  sp[device] = sp_mfg_default[device];
+}
 
-static oc_sp_types_t string_to_sp(const char *sp_string) {
+static oc_sp_types_t
+string_to_sp(const char *sp_string)
+{
   oc_sp_types_t sp = 0;
   if (strlen(sp_string) == strlen(OC_SP_BASELINE_OID) &&
       memcmp(OC_SP_BASELINE_OID, sp_string, strlen(OC_SP_BASELINE_OID)) == 0) {
@@ -92,13 +102,15 @@ static oc_sp_types_t string_to_sp(const char *sp_string) {
     sp = OC_SP_BLUE;
   } else if (strlen(sp_string) == strlen(OC_SP_PURPLE_OID) &&
              memcmp(OC_SP_PURPLE_OID, sp_string, strlen(OC_SP_PURPLE_OID)) ==
-                 0) {
+               0) {
     sp = OC_SP_PURPLE;
   }
   return sp;
 }
 
-bool oc_sec_decode_sp(oc_rep_t *rep, size_t device) {
+bool
+oc_sec_decode_sp(oc_rep_t *rep, size_t device)
+{
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFNOP) {
     return false;
@@ -110,7 +122,7 @@ bool oc_sec_decode_sp(oc_rep_t *rep, size_t device) {
       if (len == 14 &&
           memcmp("currentprofile", oc_string(rep->name), 14) == 0) {
         oc_sp_types_t current_profile =
-            string_to_sp(oc_string(rep->value.string));
+          string_to_sp(oc_string(rep->value.string));
         if ((current_profile & sp[device].supported_profiles) == 0) {
           return false;
         }
@@ -140,7 +152,9 @@ bool oc_sec_decode_sp(oc_rep_t *rep, size_t device) {
   return true;
 }
 
-static const char *sp_to_string(oc_sp_types_t sp_type) {
+static const char *
+sp_to_string(oc_sp_types_t sp_type)
+{
   switch (sp_type) {
   case OC_SP_BASELINE:
     return OC_SP_BASELINE_OID;
@@ -154,12 +168,13 @@ static const char *sp_to_string(oc_sp_types_t sp_type) {
   return NULL;
 }
 
-void oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask,
-                      bool to_storage) {
+void
+oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
+{
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-        oc_core_get_resource_by_index(OCF_SEC_SP, device));
+      oc_core_get_resource_by_index(OCF_SEC_SP, device));
   }
   oc_rep_set_text_string(root, currentprofile,
                          sp_to_string(sp[device].current_profile));
@@ -180,9 +195,15 @@ void oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask,
   oc_rep_end_root_object();
 }
 
-oc_sec_sp_t *oc_sec_get_sp(size_t device) { return &sp[device]; }
+oc_sec_sp_t *
+oc_sec_get_sp(size_t device)
+{
+  return &sp[device];
+}
 
-void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data) {
+void
+get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)data;
   switch (iface_mask) {
   case OC_IF_RW:
@@ -195,8 +216,9 @@ void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data) {
   }
 }
 
-void post_sp(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *data) {
+void
+post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
   (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;

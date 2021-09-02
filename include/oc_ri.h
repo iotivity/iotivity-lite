@@ -121,12 +121,12 @@ typedef enum {
   APPLICATION_SENML_EXI = 114,       ///< application/senml-exi
   APPLICATION_SENSML_EXI = 115,      ///< application/sensml-exi
   APPLICATION_PKCS7_SGK =
-      280, ///< application/pkcs7-mime; smime-type=server-generated-key
+    280, ///< application/pkcs7-mime; smime-type=server-generated-key
   APPLICATION_PKCS7_CO = 281, ///< application/pkcs7-mime; smime-type=certs-only
   APPLICATION_PKCS7_CMC_REQUEST =
-      282, ///< application/pkcs7-mime; smime-type=CMC-Request
+    282, ///< application/pkcs7-mime; smime-type=CMC-Request
   APPLICATION_PKCS7_CMC_RESPONSE =
-      283,                 ///< application/pkcs7-mime; smime-type=CMC-Response
+    283,                   ///< application/pkcs7-mime; smime-type=CMC-Response
   APPLICATION_PKCS8 = 284, ///< application/pkcs8
   APPLICATION_CRATTRS = 285,              ///< application/csrattrs
   APPLICATION_PKCS10 = 286,               ///< application/pkcs10
@@ -154,7 +154,8 @@ typedef struct oc_response_buffer_s oc_response_buffer_t;
  * @brief response type
  *
  */
-typedef struct oc_response_t {
+typedef struct oc_response_t
+{
   oc_separate_response_t *separate_response; ///< seperate response
   oc_response_buffer_t *response_buffer;     ///< response buffer
 } oc_response_t;
@@ -224,7 +225,8 @@ typedef struct oc_resource_s oc_resource_t;
  * @brief request information structure
  *
  */
-typedef struct oc_request_t {
+typedef struct oc_request_t
+{
   oc_endpoint_t *origin;     ///< origin of the request
   oc_resource_t *resource;   ///< resource structure
   const char *query;         ///< query (as string)
@@ -233,7 +235,7 @@ typedef struct oc_request_t {
   const uint8_t *_payload;   ///< payload of the request
   size_t _payload_len;       ///< payload size
   oc_content_format_t
-      content_format; ///< content format (of the payload in the request)
+    content_format; ///< content format (of the payload in the request)
   oc_content_format_t accept; ///< accept header
   oc_response_t *response;    ///< pointer to the response
 } oc_request_t;
@@ -249,7 +251,8 @@ typedef void (*oc_request_callback_t)(oc_request_t *, oc_interface_mask_t,
  * @brief request handler type
  *
  */
-typedef struct oc_request_handler_s {
+typedef struct oc_request_handler_s
+{
   oc_request_callback_t cb;
   void *user_data;
 } oc_request_handler_t;
@@ -271,7 +274,8 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
  * @brief properties callback structure
  *
  */
-typedef struct oc_properties_cb_t {
+typedef struct oc_properties_cb_t
+{
   union {
     oc_set_properties_cb_t set_props;
     oc_get_properties_cb_t get_props;
@@ -279,7 +283,8 @@ typedef struct oc_properties_cb_t {
   void *user_data;
 } oc_properties_cb_t;
 
-typedef struct oc_resource_defaults_data_t {
+typedef struct oc_resource_defaults_data_t
+{
   oc_resource_t *resource;
   oc_interface_mask_t iface_mask;
 } oc_resource_defaults_data_t;
@@ -288,7 +293,8 @@ typedef struct oc_resource_defaults_data_t {
  * @brief resource structure
  *
  */
-struct oc_resource_s {
+struct oc_resource_s
+{
   struct oc_resource_s *next;            ///< next resource
   size_t device;                         ///< device index
   oc_string_t name;                      ///< name of the resource (e.g. "n")
@@ -328,7 +334,8 @@ typedef oc_event_callback_retval_t (*oc_trigger_t)(void *);
  * @brief event callback
  *
  */
-typedef struct oc_event_callback_s {
+typedef struct oc_event_callback_s
+{
   struct oc_event_callback_s *next; ///< next callback
   struct oc_etimer timer;           ///< timer
   oc_trigger_t callback;            ///< callback to be invoked
@@ -369,8 +376,8 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
                                                seconds)                        \
   do {                                                                         \
     oc_ri_add_timed_event_callback_ticks(                                      \
-        cb_data, event_callback,                                               \
-        (oc_clock_time_t)seconds *(oc_clock_time_t)OC_CLOCK_SECOND);           \
+      cb_data, event_callback,                                                 \
+      (oc_clock_time_t)seconds *(oc_clock_time_t)OC_CLOCK_SECOND);             \
   } while (0)
 
 /**

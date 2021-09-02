@@ -30,7 +30,9 @@ static bool state = false;
 int power;
 oc_string_t name;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -38,8 +40,10 @@ static int app_init(void) {
   return ret;
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)user_data;
   ++power;
 
@@ -61,8 +65,10 @@ static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *user_data) {
+static void
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
@@ -93,14 +99,18 @@ static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
+static void
+put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
+{
   (void)iface_mask;
   (void)user_data;
   post_light(request, iface_mask, user_data);
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res = oc_new_resource(NULL, "/a/light", 2, 0);
   oc_resource_bind_resource_type(res, "core.light");
   oc_resource_bind_resource_type(res, "core.brightlight");
@@ -114,19 +124,25 @@ static void register_resources(void) {
   oc_add_resource(res);
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-void handle_signal(int signal) {
+void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -134,10 +150,10 @@ int main(void) {
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 

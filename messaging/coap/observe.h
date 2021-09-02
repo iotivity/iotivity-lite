@@ -57,7 +57,8 @@
 extern "C" {
 #endif
 
-typedef struct coap_observer {
+typedef struct coap_observer
+{
   struct coap_observer *next; /* for LIST */
 
   oc_resource_t *resource;

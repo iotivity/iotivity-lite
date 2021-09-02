@@ -23,7 +23,8 @@
 #include <synchapi.h>
 
 HANDLE
-mutex_new() {
+mutex_new()
+{
   HANDLE mutex = CreateMutex(NULL, FALSE, NULL);
   if (mutex == NULL) {
     oc_abort("error initializing mutex");
@@ -31,8 +32,20 @@ mutex_new() {
   return mutex;
 }
 
-void mutex_lock(HANDLE m) { WaitForSingleObject(m, INFINITE); }
+void
+mutex_lock(HANDLE m)
+{
+  WaitForSingleObject(m, INFINITE);
+}
 
-void mutex_unlock(HANDLE m) { ReleaseMutex(m); }
+void
+mutex_unlock(HANDLE m)
+{
+  ReleaseMutex(m);
+}
 
-void mutex_free(HANDLE m) { CloseHandle(m); }
+void
+mutex_free(HANDLE m)
+{
+  CloseHandle(m);
+}

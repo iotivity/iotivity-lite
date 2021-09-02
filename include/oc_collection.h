@@ -26,13 +26,15 @@
 extern "C" {
 #endif
 
-typedef struct oc_link_params_t {
+typedef struct oc_link_params_t
+{
   struct oc_link_params_t *next;
   oc_string_t key;
   oc_string_t value;
 } oc_link_params_t;
 
-struct oc_link_s {
+struct oc_link_s
+{
   struct oc_link_s *next;
   oc_resource_t *resource;
   oc_interface_mask_t interfaces;
@@ -41,12 +43,14 @@ struct oc_link_s {
   OC_LIST_STRUCT(params);
 };
 
-typedef struct oc_rt_t {
+typedef struct oc_rt_t
+{
   struct oc_rt_t *next;
   oc_string_t rt;
 } oc_rt_t;
 
-struct oc_collection_s {
+struct oc_collection_s
+{
   struct oc_resource_s res;
   OC_LIST_STRUCT(mandatory_rts);
   OC_LIST_STRUCT(supported_rts);

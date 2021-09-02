@@ -38,7 +38,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
   int64_t sec;  /* Number of seconds since the epoch of 1970-01-01T00:00:00Z */
   int32_t nsec; /* Nanoseconds [0, 999999999] */
   int16_t offset; /* Offset from UTC in minutes [-1439, 1439] */

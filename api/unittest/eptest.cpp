@@ -20,9 +20,10 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 
-TEST(OCEndpoints, StringToEndpoint) {
+TEST(OCEndpoints, StringToEndpoint)
+{
 #ifdef OC_IPV4
-  const char *spu0[1] = {"coaps://10.211.55.3:56789/a/light"};
+  const char *spu0[1] = { "coaps://10.211.55.3:56789/a/light" };
   for (int i = 0; i < 1; i++) {
     oc_string_t s;
     oc_new_string(&s, spu0[i], strlen(spu0[i]));
@@ -41,7 +42,7 @@ TEST(OCEndpoints, StringToEndpoint) {
       EXPECT_FALSE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv4.port, 56789);
       EXPECT_STREQ(oc_string(uri), "/a/light");
-      uint8_t addr[4] = {10, 211, 55, 3};
+      uint8_t addr[4] = { 10, 211, 55, 3 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
     } break;
     default:
@@ -52,9 +53,9 @@ TEST(OCEndpoints, StringToEndpoint) {
   }
 #endif /* OC_IPV4 */
 
-  const char *spu1[3] = {"coap://openconnectivity.org",
-                         "coap://openconnectivity.org/alpha",
-                         "coaps://openconnectivity.org:3456/alpha"};
+  const char *spu1[3] = { "coap://openconnectivity.org",
+                          "coap://openconnectivity.org/alpha",
+                          "coaps://openconnectivity.org:3456/alpha" };
   for (int i = 0; i < 3; i++) {
     oc_string_t s;
     oc_new_string(&s, spu1[i], strlen(spu1[i]));
@@ -109,8 +110,8 @@ TEST(OCEndpoints, StringToEndpoint) {
 
 #ifdef OC_TCP
 #ifdef OC_IPV4
-  const char *spu2[2] = {"coaps+tcp://10.211.55.3/a/light",
-                         "coap+tcp://1.2.3.4:2568"};
+  const char *spu2[2] = { "coaps+tcp://10.211.55.3/a/light",
+                          "coap+tcp://1.2.3.4:2568" };
   for (int i = 0; i < 2; i++) {
     oc_string_t s;
     oc_new_string(&s, spu2[i], strlen(spu2[i]));
@@ -129,7 +130,7 @@ TEST(OCEndpoints, StringToEndpoint) {
       EXPECT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv4.port, 5684);
       EXPECT_STREQ(oc_string(uri), "/a/light");
-      uint8_t addr[4] = {10, 211, 55, 3};
+      uint8_t addr[4] = { 10, 211, 55, 3 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
     } break;
     case 1: {
@@ -138,7 +139,7 @@ TEST(OCEndpoints, StringToEndpoint) {
       EXPECT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv4.port, 2568);
       EXPECT_EQ(oc_string_len(uri), 0);
-      uint8_t addr[4] = {1, 2, 3, 4};
+      uint8_t addr[4] = { 1, 2, 3, 4 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
     } break;
     default:
@@ -148,9 +149,10 @@ TEST(OCEndpoints, StringToEndpoint) {
     oc_free_string(&uri);
   }
 #endif /* OC_IPV4 */
-  const char *spu3[4] = {
-      "coaps+tcp://openconnectivity.org:3456", "coap+tcp://[ff02::158]",
-      "coaps+tcp://[ff02::158]/a/light", "coaps+tcp://[fe80::12]:2439/a/light"};
+  const char *spu3[4] = { "coaps+tcp://openconnectivity.org:3456",
+                          "coap+tcp://[ff02::158]",
+                          "coaps+tcp://[ff02::158]/a/light",
+                          "coaps+tcp://[fe80::12]:2439/a/light" };
   for (int i = 0; i < 4; i++) {
     oc_string_t s;
     oc_new_string(&s, spu3[i], strlen(spu3[i]));
@@ -176,8 +178,8 @@ TEST(OCEndpoints, StringToEndpoint) {
       ASSERT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv6.port, 5683);
       EXPECT_EQ(oc_string_len(uri), 0);
-      uint8_t addr[16] = {0xff, 0x02, 0, 0, 0, 0, 0,    0,
-                          0,    0,    0, 0, 0, 0, 0x01, 0x58};
+      uint8_t addr[16] = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
+                           0,    0,    0, 0, 0, 0, 0x01, 0x58 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
     } break;
     case 2: {
@@ -185,8 +187,8 @@ TEST(OCEndpoints, StringToEndpoint) {
       ASSERT_TRUE(ep.flags & SECURED);
       ASSERT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv6.port, 5684);
-      uint8_t addr[16] = {0xff, 0x02, 0, 0, 0, 0, 0,    0,
-                          0,    0,    0, 0, 0, 0, 0x01, 0x58};
+      uint8_t addr[16] = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
+                           0,    0,    0, 0, 0, 0, 0x01, 0x58 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
       EXPECT_STREQ(oc_string(uri), "/a/light");
     } break;
@@ -195,8 +197,8 @@ TEST(OCEndpoints, StringToEndpoint) {
       ASSERT_TRUE(ep.flags & SECURED);
       ASSERT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv6.port, 2439);
-      uint8_t addr[16] = {0xfe, 0x80, 0, 0, 0, 0, 0, 0,
-                          0,    0,    0, 0, 0, 0, 0, 0x12};
+      uint8_t addr[16] = { 0xfe, 0x80, 0, 0, 0, 0, 0, 0,
+                           0,    0,    0, 0, 0, 0, 0, 0x12 };
       EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
       EXPECT_STREQ(oc_string(uri), "/a/light");
     } break;
@@ -208,10 +210,10 @@ TEST(OCEndpoints, StringToEndpoint) {
   }
 
   // test dns lookup when uri is NULL
-  const char *spu4[4] = {"coap://10.211.55.3:56789/a/light",
-                         "coaps+tcp://10.211.55.3/a/light",
-                         "coap://openconnectivity.org/alpha",
-                         "coaps://openconnectivity.org:3456/alpha"};
+  const char *spu4[4] = { "coap://10.211.55.3:56789/a/light",
+                          "coaps+tcp://10.211.55.3/a/light",
+                          "coap://openconnectivity.org/alpha",
+                          "coaps://openconnectivity.org:3456/alpha" };
   for (int i = 0; i < 4; i++) {
     oc_string_t s;
     oc_new_string(&s, spu4[i], strlen(spu4[i]));
@@ -223,19 +225,20 @@ TEST(OCEndpoints, StringToEndpoint) {
 #endif
 }
 
-TEST(OCEndpoints, EndpointStringParsePath) {
-  const char *spu[12] = {"coaps://10.211.55.3:56789/a/light",
-                         "coap://openconnectivity.org",
-                         "coap://openconnectivity.org/alpha",
-                         "coaps://openconnectivity.org:3456/alpha",
-                         "coaps+tcp://10.211.55.3/a/light",
-                         "coap+tcp://1.2.3.4:2568",
-                         "coaps+tcp://openconnectivity.org:3456",
-                         "coap+tcp://[ff02::158]",
-                         "coaps+tcp://[ff02::158]/a/light",
-                         "coaps+tcp://[fe80::12]:2439/a/light",
-                         "coaps+tcp://[fe80::12]:2439/a/light?s=100",
-                         "coap://0/foo"};
+TEST(OCEndpoints, EndpointStringParsePath)
+{
+  const char *spu[12] = { "coaps://10.211.55.3:56789/a/light",
+                          "coap://openconnectivity.org",
+                          "coap://openconnectivity.org/alpha",
+                          "coaps://openconnectivity.org:3456/alpha",
+                          "coaps+tcp://10.211.55.3/a/light",
+                          "coap+tcp://1.2.3.4:2568",
+                          "coaps+tcp://openconnectivity.org:3456",
+                          "coap+tcp://[ff02::158]",
+                          "coaps+tcp://[ff02::158]/a/light",
+                          "coaps+tcp://[fe80::12]:2439/a/light",
+                          "coaps+tcp://[fe80::12]:2439/a/light?s=100",
+                          "coap://0/foo" };
   for (int i = 0; i < 12; i++) {
     oc_string_t s;
     oc_string_t path;
@@ -310,8 +313,8 @@ TEST(OCEndpoints, EndpointStringParsePath) {
 
   // paths with expected errors
   const char *spu2[2] = {
-      "coaps://",                        // no address
-      "coaps:/10.211.55.3:56789/a/light" // missing ://
+    "coaps://",                        // no address
+    "coaps:/10.211.55.3:56789/a/light" // missing ://
   };
   for (int i = 0; i < 2; i++) {
     oc_string_t s;

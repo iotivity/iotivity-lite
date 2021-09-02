@@ -23,7 +23,9 @@
 #include "port/oc_log.h"
 #include <ctype.h>
 
-OCResult_t arduino_get_free_socket(uint8_t *sockID) {
+OCResult_t
+arduino_get_free_socket(uint8_t *sockID)
+{
 
   uint8_t state;
   if (!wiznet5500) {
@@ -46,7 +48,9 @@ OCResult_t arduino_get_free_socket(uint8_t *sockID) {
   return STATUS_OK;
 }
 
-OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID) {
+OCResult_t
+arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID)
+{
 
   if (!socketID) {
     OC_ERR("Socket ID not provided!");
@@ -65,17 +69,17 @@ OCResult_t arduino_init_udp_socket(uint16_t *local_port, uint8_t *socketID) {
   }
   return STATUS_OK;
 }
-OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr,
-                                         uint16_t *mcast_port,
-                                         uint16_t *local_port,
-                                         uint8_t *socketID) {
+OCResult_t
+arduino_init_mcast_udp_socket(const char *mcast_addr, uint16_t *mcast_port,
+                              uint16_t *local_port, uint8_t *socketID)
+{
 
   if (!socketID || !mcast_addr) {
     OC_ERR("Socket ID or mcast addr null!");
     return SOCKET_OPERATION_FAILED;
   }
-  uint8_t mcast_mac_addr[] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
-  uint8_t ip_addr[4] = {0};
+  uint8_t mcast_mac_addr[] = { 0x01, 0x00, 0x5E, 0x00, 0x00, 0x00 };
+  uint8_t ip_addr[4] = { 0 };
   uint16_t parsed_port = 0;
   if (arduino_parse_IPv4_addr(mcast_addr, ip_addr, sizeof(ip_addr),
                               &parsed_port) != STATUS_OK) {
@@ -102,7 +106,9 @@ OCResult_t arduino_init_mcast_udp_socket(const char *mcast_addr,
   return STATUS_OK;
 }
 /// Retrieves the IP address assigned to Arduino Ethernet shield
-OCResult_t oc_ard_get_iface_addr(uint8_t *address) {
+OCResult_t
+oc_ard_get_iface_addr(uint8_t *address)
+{
   // TODO : Fix this for scenarios when this API is invoked when device is not
   // connected
   if (!wiznet5500) {
@@ -114,8 +120,10 @@ OCResult_t oc_ard_get_iface_addr(uint8_t *address) {
   return STATUS_OK;
 }
 
-OCResult_t arduino_parse_IPv4_addr(const char *ip_addrStr, uint8_t *ip_addr,
-                                   uint8_t ip_addrLen, uint16_t *port) {
+OCResult_t
+arduino_parse_IPv4_addr(const char *ip_addrStr, uint8_t *ip_addr,
+                        uint8_t ip_addrLen, uint16_t *port)
+{
   if (!ip_addr || !isdigit(ip_addrStr[0]) || !port) {
     OC_ERR("invalid param!");
     return STATUS_INVALID_PARAM;
@@ -164,7 +172,9 @@ OCResult_t arduino_parse_IPv4_addr(const char *ip_addrStr, uint8_t *ip_addr,
  */
 bool arduino_mcast_serv_started = false;
 
-uint8_t start_udp_server(uint16_t *local_port) {
+uint8_t
+start_udp_server(uint16_t *local_port)
+{
   if (!local_port) {
     OC_DBG("server port null!");
     return STATUS_FAILED;
@@ -182,8 +192,10 @@ uint8_t start_udp_server(uint16_t *local_port) {
   }
   return serverFD;
 }
-uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port,
-                               uint16_t *local_port) {
+uint8_t
+start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port,
+                       uint16_t *local_port)
+{
   if (arduino_mcast_serv_started == true) {
     return SERVER_STARTED_ALREADY;
   }
@@ -195,7 +207,9 @@ uint8_t start_udp_mcast_server(const char *mcast_addr, uint16_t *mcast_port,
 }
 
 /*Utility method to monitor ready socket*/
-static uint16_t socket_ready(uint8_t *socketID) {
+static uint16_t
+socket_ready(uint8_t *socketID)
+{
 
   if (!wiznet5500) {
     wiznet5500 = wiz5500_create();
@@ -210,7 +224,9 @@ static uint16_t socket_ready(uint8_t *socketID) {
   }
 }
 
-uint8_t select(uint8_t nsds, sdset_t *setsds) {
+uint8_t
+select(uint8_t nsds, sdset_t *setsds)
+{
   uint8_t n = 0;
   for (int i = 1; i < nsds; i++) {
     uint16_t ret = socket_ready(&setsds->sds[i]);
@@ -225,17 +241,20 @@ uint8_t select(uint8_t nsds, sdset_t *setsds) {
   return n;
 }
 
-int16_t recv_msg(uint8_t *socketID, uint8_t *sender_addr, uint16_t *sender_port,
-                 uint8_t *data, uint16_t packets_size) {
+int16_t
+recv_msg(uint8_t *socketID, uint8_t *sender_addr, uint16_t *sender_port,
+         uint8_t *data, uint16_t packets_size)
+{
   packets_size =
-      packets_size > OC_MAX_APP_DATA_SIZE ? OC_MAX_APP_DATA_SIZE : packets_size;
+    packets_size > OC_MAX_APP_DATA_SIZE ? OC_MAX_APP_DATA_SIZE : packets_size;
   return recvfrom(*socketID, (uint8_t *)data, packets_size + 1, sender_addr,
                   sender_port);
 }
 
-OCResult_t ard_send_data(uint8_t socketID, uint8_t *dest_addr,
-                         uint16_t *dest_port, uint8_t *data,
-                         const uint16_t len) {
+OCResult_t
+ard_send_data(uint8_t socketID, uint8_t *dest_addr, uint16_t *dest_port,
+              uint8_t *data, const uint16_t len)
+{
   uint8_t _socketID = socketID; // default client socket
   uint32_t ret = sendto(_socketID, data, len, dest_addr, *dest_port);
   if (ret <= 0) {

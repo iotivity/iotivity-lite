@@ -165,7 +165,8 @@ PT_THREAD(driver_thread(struct pt *pt))
 extern "C" {
 #endif
 
-struct pt_sem {
+struct pt_sem
+{
   unsigned int head, tail;
 };
 

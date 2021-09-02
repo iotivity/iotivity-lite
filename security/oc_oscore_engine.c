@@ -32,14 +32,17 @@
 
 OC_PROCESS(oc_oscore_handler, "OSCORE Process");
 
-static oc_event_callback_retval_t dump_cred(void *data) {
+static oc_event_callback_retval_t
+dump_cred(void *data)
+{
   size_t device = (size_t)data;
   oc_sec_dump_cred(device);
   return OC_EVENT_DONE;
 }
 
-static bool check_if_replayed_request(oc_oscore_context_t *oscore_ctx,
-                                      uint64_t piv) {
+static bool
+check_if_replayed_request(oc_oscore_context_t *oscore_ctx, uint64_t piv)
+{
   uint8_t i;
   if (piv == 0 && oscore_ctx->rwin[0] == 0 &&
       oscore_ctx->rwin[OSCORE_REPLAY_WINDOW_SIZE - 1] == 0) {
@@ -56,7 +59,9 @@ fresh_request:
   return false;
 }
 
-static int oc_oscore_recv_message(oc_message_t *message) {
+static int
+oc_oscore_recv_message(oc_message_t *message)
+{
   /* OSCORE layer receive path pseudocode
    * ------------------------------------
    * If incoming oc_message_t is an OSCORE message:
@@ -137,17 +142,17 @@ static int oc_oscore_recv_message(oc_message_t *message) {
       OC_LOGbytes(oscore_pkt->kid, oscore_pkt->kid_len);
       OC_DBG("### searching for OSCORE context by kid ###");
       oscore_ctx =
-          oc_oscore_find_context_by_kid(oscore_ctx, message->endpoint.device,
-                                        oscore_pkt->kid, oscore_pkt->kid_len);
+        oc_oscore_find_context_by_kid(oscore_ctx, message->endpoint.device,
+                                      oscore_pkt->kid, oscore_pkt->kid_len);
     } else {
       /* If message is response */
       if (oscore_pkt->code > OC_FETCH) {
         /* Search for OSCORE context by token */
         OC_DBG("### searching for OSCORE context by token ###");
         oscore_ctx = oc_oscore_find_context_by_token_mid(
-            message->endpoint.device, oscore_pkt->token, oscore_pkt->token_len,
-            oscore_pkt->mid, &request_piv, &request_piv_len,
-            message->endpoint.flags & TCP);
+          message->endpoint.device, oscore_pkt->token, oscore_pkt->token_len,
+          oscore_pkt->mid, &request_piv, &request_piv_len,
+          message->endpoint.flags & TCP);
       } else {
         /* OSCORE message is request and lacks kid, return error */
         OC_ERR("***OSCORE protected request lacks kid param***");
@@ -210,7 +215,7 @@ static int oc_oscore_recv_message(oc_message_t *message) {
                            oscore_ctx->commoniv, nonce, OSCORE_AEAD_NONCE_LEN);
 
       OC_DBG(
-          "---computed AEAD nonce using received Partial IV and Recipient ID");
+        "---computed AEAD nonce using received Partial IV and Recipient ID");
       OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
     }
 
@@ -319,7 +324,9 @@ oscore_recv_error:
 }
 
 #ifdef OC_CLIENT
-static int oc_oscore_send_multicast_message(oc_message_t *message) {
+static int
+oc_oscore_send_multicast_message(oc_message_t *message)
+{
   /* OSCORE layer secure multicast pseudocode
    * ----------------------------------------
    * Search for group OSCORE context
@@ -410,7 +417,7 @@ static int oc_oscore_send_multicast_message(oc_message_t *message) {
        (code, inner options, payload)
     */
     size_t plaintext_size = oscore_serialize_plaintext(
-        coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
+      coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
 
     OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
 
@@ -423,10 +430,10 @@ static int oc_oscore_send_multicast_message(oc_message_t *message) {
     /* Encrypt OSCORE plaintext */
     OC_DBG("### encrypting OSCORE plaintext ###");
 
-    int ret = oc_oscore_encrypt(coap_pkt->payload, coap_pkt->payload_len,
-                                OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
-                                OSCORE_AEAD_NONCE_LEN, AAD, AAD_len,
-                                coap_pkt->payload);
+    int ret =
+      oc_oscore_encrypt(coap_pkt->payload, coap_pkt->payload_len,
+                        OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
+                        OSCORE_AEAD_NONCE_LEN, AAD, AAD_len, coap_pkt->payload);
 
     if (ret != 0) {
       OC_ERR("***error encrypting OSCORE plaintext***");
@@ -467,7 +474,9 @@ oscore_group_send_error:
 }
 #endif /* OC_CLIENT */
 
-static int oc_oscore_send_message(oc_message_t *msg) {
+static int
+oc_oscore_send_message(oc_message_t *msg)
+{
   /* OSCORE layer sending path pseudocode
    * ------------------------------------
    * Search for OSCORE context by peer UUID
@@ -509,7 +518,7 @@ static int oc_oscore_send_message(oc_message_t *msg) {
    */
   oc_message_t *message = msg;
   oc_oscore_context_t *oscore_ctx = oc_oscore_find_context_by_UUID(
-      message->endpoint.device, &message->endpoint.di);
+    message->endpoint.device, &message->endpoint.di);
 
   if (oscore_ctx) {
     OC_DBG("#################################");
@@ -590,7 +599,7 @@ static int oc_oscore_send_message(oc_message_t *msg) {
       if (coap_pkt->code >= OC_GET && coap_pkt->code <= OC_DELETE) {
         /* Find client cb for the request */
         oc_client_cb_t *cb =
-            oc_ri_find_client_cb_by_token(coap_pkt->token, coap_pkt->token_len);
+          oc_ri_find_client_cb_by_token(coap_pkt->token, coap_pkt->token_len);
 
         if (!cb) {
           OC_ERR("**could not find client callback corresponding to request**");
@@ -694,7 +703,7 @@ static int oc_oscore_send_message(oc_message_t *msg) {
     if (coap_pkt->observe > 1) {
       coap_pkt->observe = 0;
       OC_DBG(
-          "---response is a notification; making inner Observe option empty");
+        "---response is a notification; making inner Observe option empty");
     }
 
     OC_DBG("### serializing OSCORE plaintext ###");
@@ -702,7 +711,7 @@ static int oc_oscore_send_message(oc_message_t *msg) {
        (code, inner options, payload)
     */
     size_t plaintext_size = oscore_serialize_plaintext(
-        coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
+      coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
 
     OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
 
@@ -715,10 +724,10 @@ static int oc_oscore_send_message(oc_message_t *msg) {
     /* Encrypt OSCORE plaintext */
     OC_DBG("### encrypting OSCORE plaintext ###");
 
-    int ret = oc_oscore_encrypt(coap_pkt->payload, coap_pkt->payload_len,
-                                OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
-                                OSCORE_AEAD_NONCE_LEN, AAD, AAD_len,
-                                coap_pkt->payload);
+    int ret =
+      oc_oscore_encrypt(coap_pkt->payload, coap_pkt->payload_len,
+                        OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
+                        OSCORE_AEAD_NONCE_LEN, AAD, AAD_len, coap_pkt->payload);
 
     if (ret != 0) {
       OC_ERR("***error encrypting OSCORE plaintext***");
@@ -779,7 +788,8 @@ oscore_send_error:
   return -1;
 }
 
-OC_PROCESS_THREAD(oc_oscore_handler, ev, data) {
+OC_PROCESS_THREAD(oc_oscore_handler, ev, data)
+{
   OC_PROCESS_BEGIN();
   while (1) {
     OC_PROCESS_YIELD();

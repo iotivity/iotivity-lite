@@ -57,7 +57,8 @@
 extern "C" {
 #endif
 
-typedef struct coap_separate {
+typedef struct coap_separate
+{
   struct coap_separate *next;
   coap_message_type_t type;
   uint8_t token_len;

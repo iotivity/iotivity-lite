@@ -30,7 +30,9 @@
 #define OC_RSRVD_SERVERID "sid"
 #define OC_RSRVD_LAST_ERROR_CODE "clec"
 
-static const char *cps_to_str(oc_cps_t cps) {
+static const char *
+cps_to_str(oc_cps_t cps)
+{
   switch (cps) {
   case OC_CPS_UNINITIALIZED:
     return "uninitialized";
@@ -50,23 +52,25 @@ static const char *cps_to_str(oc_cps_t cps) {
   return NULL;
 }
 
-static void cloud_response(oc_cloud_context_t *ctx) {
+static void
+cloud_response(oc_cloud_context_t *ctx)
+{
   OC_DBG("Creating Cloud Response");
   oc_rep_start_root_object();
   oc_process_baseline_interface(ctx->cloud_conf);
   oc_rep_set_text_string(root, apn,
                          (oc_string(ctx->store.auth_provider) != NULL
-                              ? oc_string(ctx->store.auth_provider)
-                              : ""));
+                            ? oc_string(ctx->store.auth_provider)
+                            : ""));
   OC_DBG("Creating Cloud Response: auth provider set");
   oc_rep_set_text_string(
-      root, cis,
-      (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
+    root, cis,
+    (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
 
   OC_DBG("Creating Cloud Response: cis set");
 
   oc_rep_set_text_string(
-      root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
+    root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
 
   OC_DBG("Creating Cloud Response: sid set");
 
@@ -83,8 +87,9 @@ static void cloud_response(oc_cloud_context_t *ctx) {
   oc_rep_end_root_object();
 }
 
-static void get_cloud(oc_request_t *request, oc_interface_mask_t interface,
-                      void *user_data) {
+static void
+get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
   (void)user_data;
   (void)interface;
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
@@ -98,8 +103,9 @@ static void get_cloud(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static bool cloud_update_from_request(oc_cloud_context_t *ctx,
-                                      oc_request_t *request) {
+static bool
+cloud_update_from_request(oc_cloud_context_t *ctx, oc_request_t *request)
+{
   uint8_t required = 0;
   bool changed = false;
   cloud_conf_update_t data;
@@ -140,8 +146,10 @@ static bool cloud_update_from_request(oc_cloud_context_t *ctx,
   return changed;
 }
 
-static void post_cloud(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data) {
+static void
+post_cloud(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
   (void)user_data;
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
   if (!ctx) {
@@ -192,14 +200,16 @@ static void post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   }
 }
 
-void oc_create_cloudconf_resource(size_t device) {
+void
+oc_create_cloudconf_resource(size_t device)
+{
   OC_DBG("oc_cloud_resource: Initializing CoAPCloudConf resource");
 
   oc_core_populate_resource(
-      OCF_COAPCLOUDCONF, device, OC_RSRVD_URI_COAPCLOUDCONF,
-      OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_cloud, 0, post_cloud, 0,
-      1, OC_RSRVD_RES_TYPE_COAPCLOUDCONF);
+    OCF_COAPCLOUDCONF, device, OC_RSRVD_URI_COAPCLOUDCONF,
+    OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_cloud, 0, post_cloud, 0, 1,
+    OC_RSRVD_RES_TYPE_COAPCLOUDCONF);
 }
 #else  /* OC_CLOUD*/
 typedef int dummy_declaration;

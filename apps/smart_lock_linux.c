@@ -31,7 +31,8 @@ static int quit = 0;
 
 typedef enum { UNKNOWN = 0, LOCKED, UNLOCKED } lock_state;
 
-typedef struct oc_smartlock_t {
+typedef struct oc_smartlock_t
+{
   struct oc_smartlock_t *next;
   oc_endpoint_t *endpoint;
   char uri[64];
@@ -41,12 +42,16 @@ typedef struct oc_smartlock_t {
 OC_LIST(smartlocks);
 OC_MEMB(smartlocks_m, oc_smartlock_t, 100);
 
-static void free_smart_lock(oc_smartlock_t *lock) {
+static void
+free_smart_lock(oc_smartlock_t *lock)
+{
   oc_free_server_endpoints(lock->endpoint);
   oc_memb_free(&smartlocks_m, lock);
 }
 
-static void free_all_known_locks(void) {
+static void
+free_all_known_locks(void)
+{
   oc_smartlock_t *l = (oc_smartlock_t *)oc_list_pop(smartlocks);
   while (l != NULL) {
     free_smart_lock(l);
@@ -54,7 +59,9 @@ static void free_all_known_locks(void) {
   }
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel Corporation", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "SmartLock", "ocf.1.0.0",
                        "ocf.res.1.3.0", NULL, NULL);
@@ -68,7 +75,9 @@ static int app_init(void) {
     }                                                                          \
   } while (0)
 
-static void display_menu(void) {
+static void
+display_menu(void)
+{
   PRINT("\n\n################################################\nSmart Lock "
         "Controller"
         "\n################################################\n");
@@ -86,7 +95,9 @@ static void display_menu(void) {
   PRINT("\nSelect option: \n");
 }
 
-static oc_event_callback_retval_t show_discovered_locks(void *data) {
+static oc_event_callback_retval_t
+show_discovered_locks(void *data)
+{
   (void)data;
   PRINT("\nDiscovered locks with rt oic.r.lock.status:\n");
   oc_smartlock_t **locks = (oc_smartlock_t **)data;
@@ -111,19 +122,25 @@ static oc_event_callback_retval_t show_discovered_locks(void *data) {
   return OC_EVENT_DONE;
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void handle_signal(int signal) {
+static void
+handle_signal(int signal)
+{
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static void *ocf_event_thread(void *data) {
+static void *
+ocf_event_thread(void *data)
+{
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -145,7 +162,9 @@ static void *ocf_event_thread(void *data) {
   return NULL;
 }
 
-static void POST_handler(oc_client_response_t *data) {
+static void
+POST_handler(oc_client_response_t *data)
+{
   PRINT("POST_lock_state:\n");
   if (data->code == OC_STATUS_CHANGED) {
     PRINT("POST response OK\n");
@@ -178,7 +197,9 @@ static void POST_handler(oc_client_response_t *data) {
   display_menu();
 }
 
-static void GET_handler(oc_client_response_t *data) {
+static void
+GET_handler(oc_client_response_t *data)
+{
   PRINT("GET_lock_state:\n");
   oc_smartlock_t *lock = (oc_smartlock_t *)data->user_data;
   oc_rep_t *rep = data->payload;
@@ -205,7 +226,9 @@ static void GET_handler(oc_client_response_t *data) {
   display_menu();
 }
 
-static void get_lock_state(bool observe) {
+static void
+get_lock_state(bool observe)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
@@ -235,7 +258,9 @@ static void get_lock_state(bool observe) {
   signal_event_loop();
 }
 
-static void stop_observe_lock_state(void) {
+static void
+stop_observe_lock_state(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
@@ -255,7 +280,9 @@ static void stop_observe_lock_state(void) {
   signal_event_loop();
 }
 
-static void post_lock_state(void) {
+static void
+post_lock_state(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
@@ -299,7 +326,8 @@ static void post_lock_state(void) {
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -327,7 +355,8 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 static oc_discovery_flags_t
 null_discovery(const char *di, const char *uri, oc_string_array_t types,
                oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-               oc_resource_properties_t bm, void *user_data) {
+               oc_resource_properties_t bm, void *user_data)
+{
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -339,13 +368,17 @@ null_discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_STOP_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   if (!oc_do_ip_discovery(NULL, &null_discovery, NULL)) {
     PRINT("\nERROR: Could not issue discovery request\n");
   }
 }
 
-static void discover_smart_locks(void) {
+static void
+discover_smart_locks(void)
+{
   pthread_mutex_lock(&app_sync_lock);
   free_all_known_locks();
   if (oc_do_ip_discovery("oic.r.lock.status", &discovery, NULL)) {
@@ -356,13 +389,17 @@ static void discover_smart_locks(void) {
 }
 
 #ifdef OC_SECURITY
-void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data) {
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
   (void)data;
   PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
-int main(void) {
+int
+main(void)
+{
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -371,9 +408,9 @@ int main(void) {
 
   int init;
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .requests_entry = issue_requests };
 
 #ifdef OC_STORAGE
   oc_storage_config("./smart_lock_creds");

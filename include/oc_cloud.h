@@ -54,7 +54,8 @@ typedef enum oc_cps_t {
   OC_CPS_DEREGISTERING
 } oc_cps_t;
 
-typedef struct oc_cloud_store_t {
+typedef struct oc_cloud_store_t
+{
   oc_string_t ci_server;
   oc_string_t auth_provider;
   oc_string_t uid;
@@ -83,7 +84,8 @@ struct oc_cloud_context_t;
 typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
                               oc_cloud_status_t status, void *user_data);
 
-typedef struct oc_cloud_context_t {
+typedef struct oc_cloud_context_t
+{
   struct oc_cloud_context_t *next;
 
   size_t device;

@@ -30,7 +30,8 @@ extern "C" {
 #endif
 
 /* Used for tracking owned/unowned devices in oc_obt's internal caches */
-typedef struct oc_device_t {
+typedef struct oc_device_t
+{
   struct oc_device_t *next;
   oc_endpoint_t *endpoint;
   oc_uuid_t uuid;
@@ -38,14 +39,16 @@ typedef struct oc_device_t {
 } oc_device_t;
 
 /* Context for oc_obt_discover_owned/unowned cbs */
-typedef struct oc_discovery_cb_t {
+typedef struct oc_discovery_cb_t
+{
   struct oc_discovery_cb_t *next;
   oc_obt_discovery_cb_t cb;
   void *data;
 } oc_discovery_cb_t;
 
 /* Context for oc_obt_provision_pairwise_credentials and switch_dos cb */
-typedef struct {
+typedef struct
+{
   oc_obt_status_cb_t cb;
   void *data;
 } oc_status_cb_t;
@@ -54,13 +57,15 @@ typedef struct {
  * oc_obt_device_hard_reset, oc_obt_request_random_pin() and
  * oc_obt_perform_random_pin_otm() cbs
  */
-typedef struct {
+typedef struct
+{
   oc_obt_device_status_cb_t cb;
   void *data;
 } oc_device_status_cb_t;
 
 /* Context to be maintained over OTM sequence */
-typedef struct oc_otm_ctx_t {
+typedef struct oc_otm_ctx_t
+{
   struct oc_otm_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
@@ -68,7 +73,8 @@ typedef struct oc_otm_ctx_t {
 } oc_otm_ctx_t;
 
 /* Context to be maintained over dos transition sequence */
-typedef struct oc_switch_dos_ctx_t {
+typedef struct oc_switch_dos_ctx_t
+{
   struct oc_switch_dos_ctx_t *next;
   oc_status_cb_t cb;
   oc_device_t *device;
@@ -76,7 +82,8 @@ typedef struct oc_switch_dos_ctx_t {
 } oc_switch_dos_ctx_t;
 
 /* Context to be maintained over hard RESET sequence */
-typedef struct oc_hard_reset_ctx_t {
+typedef struct oc_hard_reset_ctx_t
+{
   struct oc_hard_reset_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
@@ -86,7 +93,8 @@ typedef struct oc_hard_reset_ctx_t {
 /* Context to be maintained over pair-wise credential provisioning
  * sequence
  */
-typedef struct oc_credprov_ctx_t {
+typedef struct oc_credprov_ctx_t
+{
   struct oc_credprov_ctx_t *next;
   oc_status_cb_t cb;
   oc_device_t *device1;
@@ -99,7 +107,8 @@ typedef struct oc_credprov_ctx_t {
 /* Context to be maintained over installing a trust anchor
  * sequence
  */
-typedef struct oc_trustanchor_ctx_t {
+typedef struct oc_trustanchor_ctx_t
+{
   struct oc_trustanchor_ctx_t *next;
   oc_status_cb_t cb;
   oc_device_t *device1;
@@ -112,7 +121,8 @@ typedef struct oc_trustanchor_ctx_t {
 /* Context to be maintained over the pair-wise OSCORE context provisioning
  * sequence
  */
-typedef struct oc_oscoreprov_ctx_t {
+typedef struct oc_oscoreprov_ctx_t
+{
   struct oc_oscoreprov_ctx_t *next;
   oc_status_cb_t cb;
   oc_device_t *device1;
@@ -126,7 +136,8 @@ typedef struct oc_oscoreprov_ctx_t {
 /* Context to be maintained over the group OSCORE context provisioning
  * sequence.
  */
-typedef struct oc_oscoregroupprov_ctx_t {
+typedef struct oc_oscoregroupprov_ctx_t
+{
   struct oc_oscoregroupprov_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
@@ -137,14 +148,16 @@ typedef struct oc_oscoregroupprov_ctx_t {
 } oc_oscoregroupprov_ctx_t;
 
 /* Context over a RETRIEVE credentials request */
-typedef struct oc_credret_ctx_t {
+typedef struct oc_credret_ctx_t
+{
   struct oc_credret_ctx_t *next;
   oc_obt_creds_cb_t cb;
   void *data;
 } oc_credret_ctx_t;
 
 /* Context over a DELETE credentials request */
-typedef struct oc_creddel_ctx_t {
+typedef struct oc_creddel_ctx_t
+{
   struct oc_creddel_ctx_t *next;
   oc_status_cb_t cb;
   oc_switch_dos_ctx_t *switch_dos;
@@ -153,7 +166,8 @@ typedef struct oc_creddel_ctx_t {
 } oc_creddel_ctx_t;
 
 /* Context to be maintained over ACE provisioning sequence */
-typedef struct oc_acl2prov_ctx_t {
+typedef struct oc_acl2prov_ctx_t
+{
   struct oc_acl2prov_ctx_t *next;
   oc_device_status_cb_t cb;
   oc_device_t *device;
@@ -162,14 +176,16 @@ typedef struct oc_acl2prov_ctx_t {
 } oc_acl2prov_ctx_t;
 
 /* Context over a RETRIEVE ACL request */
-typedef struct oc_aclret_ctx_t {
+typedef struct oc_aclret_ctx_t
+{
   struct oc_aclret_ctx_t *next;
   oc_obt_acl_cb_t cb;
   void *data;
 } oc_aclret_ctx_t;
 
 /* Context over a DELETE ACE request */
-typedef struct oc_acedel_ctx_t {
+typedef struct oc_acedel_ctx_t
+{
   struct oc_acedel_ctx_t *next;
   oc_status_cb_t cb;
   oc_switch_dos_ctx_t *switch_dos;

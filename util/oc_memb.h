@@ -92,25 +92,26 @@ extern "C" {
 extern "C" {
 #endif
 #define OC_MEMB(name, structure, num)                                          \
-  static struct oc_memb name = {sizeof(structure), 0, 0, 0, 0}
+  static struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
 #define OC_MEMB_STATIC(name, structure, num)                                   \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
-  static struct oc_memb name = {sizeof(structure), num,                        \
-                                CC_CONCAT(name, _memb_count),                  \
-                                (void *)CC_CONCAT(name, _memb_mem), 0}
+  static struct oc_memb name = { sizeof(structure), num,                       \
+                                 CC_CONCAT(name, _memb_count),                 \
+                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
 #else /* OC_DYNAMIC_ALLOCATION */
 #define OC_MEMB(name, structure, num)                                          \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
-  static struct oc_memb name = {sizeof(structure), num,                        \
-                                CC_CONCAT(name, _memb_count),                  \
-                                (void *)CC_CONCAT(name, _memb_mem), 0}
+  static struct oc_memb name = { sizeof(structure), num,                       \
+                                 CC_CONCAT(name, _memb_count),                 \
+                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 typedef void (*oc_memb_buffers_avail_callback_t)(int);
 
-struct oc_memb {
+struct oc_memb
+{
   unsigned short size;
   unsigned short num;
   char *count;
@@ -132,9 +133,9 @@ void oc_memb_init(struct oc_memb *m);
  */
 void *_oc_memb_alloc(
 #ifdef OC_MEMORY_TRACE
-    const char *func,
+  const char *func,
 #endif
-    struct oc_memb *m);
+  struct oc_memb *m);
 
 /**
  * Deallocate a memory block from a memory block previously declared
@@ -150,9 +151,9 @@ void *_oc_memb_alloc(
  */
 char _oc_memb_free(
 #ifdef OC_MEMORY_TRACE
-    const char *func,
+  const char *func,
 #endif
-    struct oc_memb *m, void *ptr);
+  struct oc_memb *m, void *ptr);
 
 #ifdef OC_MEMORY_TRACE
 #define oc_memb_alloc(m) (void *)_oc_memb_alloc(__func__, m)

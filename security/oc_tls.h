@@ -33,12 +33,14 @@ extern "C" {
 
 OC_PROCESS_NAME(oc_tls_handler);
 
-typedef struct {
+typedef struct
+{
   struct oc_etimer fin_timer;
   oc_clock_time_t int_ticks;
 } oc_tls_retr_timer_t;
 
-typedef struct oc_tls_peer_t {
+typedef struct oc_tls_peer_t
+{
   struct oc_tls_peer_t *next;
   OC_LIST_STRUCT(recv_q);
   OC_LIST_STRUCT(send_q);

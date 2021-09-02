@@ -19,8 +19,18 @@
 
 #include <openthread/platform/random.h>
 
-void oc_random_init(void) {}
+void
+oc_random_init(void)
+{
+}
 
-unsigned int oc_random_value(void) { return otPlatRandomGet(); }
+unsigned int
+oc_random_value(void)
+{
+  return otPlatRandomGet();
+}
 
-void oc_random_destroy(void) {}
+void
+oc_random_destroy(void)
+{
+}

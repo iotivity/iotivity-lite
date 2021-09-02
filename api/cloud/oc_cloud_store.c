@@ -51,14 +51,17 @@ static int cloud_store_load_internal(const char *store_name,
                                      oc_cloud_store_t *store);
 static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
 
-void cloud_store_load(oc_cloud_store_t *store) {
+void
+cloud_store_load(oc_cloud_store_t *store)
+{
   char cloud_tag[CLOUD_TAG_MAX];
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   cloud_store_load_internal(cloud_tag, store);
 }
 
-static void rep_set_text_string(CborEncoder *object_map, const char *key,
-                                const char *value) {
+static void
+rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
+{
   g_err |= cbor_encode_text_string(object_map, key, strlen(key));
   if ((const char *)value != NULL) {
     g_err |= cbor_encode_text_string(object_map, value, strlen(value));
@@ -67,22 +70,26 @@ static void rep_set_text_string(CborEncoder *object_map, const char *key,
   }
 }
 
-static void rep_set_int(CborEncoder *object_map, const char *key,
-                        int64_t value) {
+static void
+rep_set_int(CborEncoder *object_map, const char *key, int64_t value)
+{
   g_err |= cbor_encode_text_string(object_map, key, strlen(key));
   g_err |= cbor_encode_int(object_map, value);
 }
 
-static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag) {
+static void
+gen_cloud_tag(const char *name, size_t device, char *cloud_tag)
+{
   int cloud_tag_len =
-      snprintf(cloud_tag, CLOUD_TAG_MAX, "%s_%zd", name, device);
-  cloud_tag_len = (cloud_tag_len < CLOUD_TAG_MAX - 1) ? cloud_tag_len + 1
-                                                      : CLOUD_TAG_MAX - 1;
+    snprintf(cloud_tag, CLOUD_TAG_MAX, "%s_%zd", name, device);
+  cloud_tag_len =
+    (cloud_tag_len < CLOUD_TAG_MAX - 1) ? cloud_tag_len + 1 : CLOUD_TAG_MAX - 1;
   cloud_tag[cloud_tag_len] = '\0';
 }
 
-static void encode_cloud_with_map(CborEncoder *object_map,
-                                  const oc_cloud_store_t *store) {
+static void
+encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
+{
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_CI_SERVER),
                       oc_string(store->ci_server));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
@@ -98,14 +105,17 @@ static void encode_cloud_with_map(CborEncoder *object_map,
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_EXPIRES_IN), store->expires_in);
 }
 
-static void cloud_store_encode(const oc_cloud_store_t *store) {
+static void
+cloud_store_encode(const oc_cloud_store_t *store)
+{
   oc_rep_start_root_object();
   encode_cloud_with_map(&root_map, store);
   oc_rep_end_root_object();
 }
 
-static long cloud_store_dump_internal(const char *store_name,
-                                      const oc_cloud_store_t *store) {
+static long
+cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
+{
   if (!store_name || !store) {
     return -1;
   }
@@ -133,26 +143,34 @@ static long cloud_store_dump_internal(const char *store_name,
   return size;
 }
 
-void cloud_store_dump(const oc_cloud_store_t *store) {
+void
+cloud_store_dump(const oc_cloud_store_t *store)
+{
   char cloud_tag[CLOUD_TAG_MAX];
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   // Calling dump for cloud and access point info
   cloud_store_dump_internal(cloud_tag, store);
 }
 
-static oc_event_callback_retval_t cloud_store_dump_handler(void *data) {
+static oc_event_callback_retval_t
+cloud_store_dump_handler(void *data)
+{
   oc_cloud_store_t *store = (oc_cloud_store_t *)data;
   cloud_store_dump(store);
   return OC_EVENT_DONE;
 }
 
-void cloud_store_dump_async(const oc_cloud_store_t *store) {
+void
+cloud_store_dump_async(const oc_cloud_store_t *store)
+{
   oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
   _oc_signal_event_loop();
 }
 
-static int cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store) {
+static int
+cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
+{
   oc_rep_t *t = rep;
   size_t len = 0;
 
@@ -222,7 +240,9 @@ static int cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store) {
   return 0;
 }
 
-void cloud_store_deinit(oc_cloud_store_t *store) {
+void
+cloud_store_deinit(oc_cloud_store_t *store)
+{
   cloud_set_string(&store->ci_server, NULL, 0);
   cloud_set_string(&store->auth_provider, NULL, 0);
   cloud_set_string(&store->uid, NULL, 0);
@@ -233,8 +253,9 @@ void cloud_store_deinit(oc_cloud_store_t *store) {
   store->expires_in = 0;
 }
 
-static int cloud_store_load_internal(const char *store_name,
-                                     oc_cloud_store_t *store) {
+static int
+cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
+{
   if (!store_name || !store) {
     return -1;
   }
@@ -259,11 +280,11 @@ static int cloud_store_load_internal(const char *store_name,
     oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
     memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
     memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = {sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                  rep_objects_alloc, (void *)rep_objects_pool,
-                                  0};
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                   rep_objects_alloc, (void *)rep_objects_pool,
+                                   0 };
 #else  /* !OC_DYNAMIC_ALLOCATION */
-    struct oc_memb rep_objects = {sizeof(oc_rep_t), 0, 0, 0, 0};
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (int)size, &rep);
@@ -280,7 +301,9 @@ static int cloud_store_load_internal(const char *store_name,
   return ret;
 }
 
-void cloud_store_initialize(oc_cloud_store_t *store) {
+void
+cloud_store_initialize(oc_cloud_store_t *store)
+{
   cloud_set_string(&store->ci_server, "coaps+tcp://127.0.0.1", 21);
   cloud_set_string(&store->auth_provider, NULL, 0);
   cloud_set_string(&store->uid, NULL, 0);

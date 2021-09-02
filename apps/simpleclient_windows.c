@@ -24,7 +24,9 @@ int quit = 0;
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Apple", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -39,14 +41,18 @@ static bool state;
 static int power;
 static oc_string_t name;
 
-static oc_event_callback_retval_t stop_observe(void *data) {
+static oc_event_callback_retval_t
+stop_observe(void *data)
+{
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(a_light, light_server);
   return OC_EVENT_DONE;
 }
 
-static void observe_light(oc_client_response_t *data) {
+static void
+observe_light(oc_client_response_t *data)
+{
   PRINT("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -73,7 +79,9 @@ static void observe_light(oc_client_response_t *data) {
   }
 }
 
-static void post2_light(oc_client_response_t *data) {
+static void
+post2_light(oc_client_response_t *data)
+{
   PRINT("POST2_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");
@@ -87,7 +95,9 @@ static void post2_light(oc_client_response_t *data) {
   PRINT("Sent OBSERVE request\n");
 }
 
-static void post_light(oc_client_response_t *data) {
+static void
+post_light(oc_client_response_t *data)
+{
   PRINT("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");
@@ -109,7 +119,9 @@ static void post_light(oc_client_response_t *data) {
     PRINT("Could not init POST request\n");
 }
 
-static void put_light(oc_client_response_t *data) {
+static void
+put_light(oc_client_response_t *data)
+{
   PRINT("PUT_light:\n");
 
   if (data->code == OC_STATUS_CHANGED)
@@ -130,7 +142,9 @@ static void put_light(oc_client_response_t *data) {
     PRINT("Could not init POST request\n");
 }
 
-static void get_light(oc_client_response_t *data) {
+static void
+get_light(oc_client_response_t *data)
+{
   PRINT("GET_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -173,7 +187,8 @@ static void get_light(oc_client_response_t *data) {
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data) {
+          oc_resource_properties_t bm, void *user_data)
+{
   (void)anchor;
   (void)user_data;
   (void)iface_mask;
@@ -207,18 +222,28 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void issue_requests(void) {
+static void
+issue_requests(void)
+{
   oc_do_ip_discovery("core.light", &discovery, NULL);
 }
 
-static void signal_event_loop(void) { WakeConditionVariable(&cv); }
+static void
+signal_event_loop(void)
+{
+  WakeConditionVariable(&cv);
+}
 
-void handle_signal(int signal) {
+void
+handle_signal(int signal)
+{
   signal_event_loop();
   quit = 1;
 }
 
-int main(void) {
+int
+main(void)
+{
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
 
@@ -226,10 +251,10 @@ int main(void) {
 
   signal(SIGINT, handle_signal);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = 0,
-                                       .requests_entry = issue_requests};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources = 0,
+                                        .requests_entry = issue_requests };
 
   oc_clock_time_t next_event;
 
@@ -249,7 +274,7 @@ int main(void) {
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }

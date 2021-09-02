@@ -29,7 +29,8 @@
 // TODO: make the number of UARTs chip dependent
 #define PIPE_NUM 4
 
-typedef struct {
+typedef struct
+{
   char buffer[2];
   int used;
   bool read_created;
@@ -39,9 +40,10 @@ typedef struct {
 } vfs_pipe_context_t;
 
 static portMUX_TYPE s_registered_ctx_lock = portMUX_INITIALIZER_UNLOCKED;
-static vfs_pipe_context_t *s_ctx[PIPE_NUM] = {0};
+static vfs_pipe_context_t *s_ctx[PIPE_NUM] = { 0 };
 
-typedef struct {
+typedef struct
+{
   esp_vfs_select_sem_t select_sem;
   fd_set *readfds;
   fd_set *writefds;
@@ -57,21 +59,31 @@ static portMUX_TYPE s_registered_select_lock = portMUX_INITIALIZER_UNLOCKED;
 
 static esp_err_t pipe_end_select(void *end_select_args);
 
-static int get_index(int fd) { return fd / 2; }
+static int
+get_index(int fd)
+{
+  return fd / 2;
+}
 
-static vfs_pipe_context_t *get_ctx_locked(int fd) {
+static vfs_pipe_context_t *
+get_ctx_locked(int fd)
+{
   assert(fd >= 0 && fd < PIPE_NUM);
   return s_ctx[get_index(fd)];
 }
 
-static void free_ctx_locked(int index) {
+static void
+free_ctx_locked(int index)
+{
   if (s_ctx[index] == NULL)
     return;
   free(s_ctx[index]);
   s_ctx[index] = NULL;
 }
 
-static int parse_index(const char *path) {
+static int
+parse_index(const char *path)
+{
   int index = -1;
   const char *p = path + 1;
   for (int i = 0; i < PIPE_NUM; ++i) {
@@ -90,7 +102,9 @@ static int parse_index(const char *path) {
   return index;
 }
 
-static vfs_pipe_context_t *create_ctx_locked() {
+static vfs_pipe_context_t *
+create_ctx_locked()
+{
   vfs_pipe_context_t *ctx = malloc(sizeof(vfs_pipe_context_t));
   ctx->used = 0;
   ctx->read_created = false;
@@ -100,7 +114,9 @@ static vfs_pipe_context_t *create_ctx_locked() {
   return ctx;
 }
 
-static int pipe_open_read(const char *path, int flags, int mode) {
+static int
+pipe_open_read(const char *path, int flags, int mode)
+{
   int index = parse_index(path);
   if (index < 0) {
     return index;
@@ -129,7 +145,9 @@ static int pipe_open_read(const char *path, int flags, int mode) {
   return 2 * index;
 }
 
-static int pipe_open_write(const char *path, int flags, int mode) {
+static int
+pipe_open_write(const char *path, int flags, int mode)
+{
   int index = parse_index(path);
   if (index < 0) {
     return index;
@@ -158,8 +176,10 @@ static int pipe_open_write(const char *path, int flags, int mode) {
   return 2 * index + 1;
 }
 
-static bool prepare_notify_registered(pipe_select_args_t *args, int pipe_fd,
-                                      bool read, bool write) {
+static bool
+prepare_notify_registered(pipe_select_args_t *args, int pipe_fd, bool read,
+                          bool write)
+{
   bool notify = false;
   if (args) {
     if (read && FD_ISSET(pipe_fd, &args->readfds_orig)) {
@@ -174,7 +194,9 @@ static bool prepare_notify_registered(pipe_select_args_t *args, int pipe_fd,
   return notify;
 }
 
-static void select_notify(int pipe_fd, bool read, bool write) {
+static void
+select_notify(int pipe_fd, bool read, bool write)
+{
   portENTER_CRITICAL_ISR(&s_registered_select_lock);
   for (int i = 0; i < s_registered_select_num; ++i) {
     pipe_select_args_t *args = s_registered_selects[i];
@@ -185,7 +207,9 @@ static void select_notify(int pipe_fd, bool read, bool write) {
   portEXIT_CRITICAL_ISR(&s_registered_select_lock);
 }
 
-static ssize_t pipe_write(int fd, const void *data, size_t size) {
+static ssize_t
+pipe_write(int fd, const void *data, size_t size)
+{
   portENTER_CRITICAL(&s_registered_ctx_lock);
   vfs_pipe_context_t *ctx = get_ctx_locked(fd);
   if (ctx == NULL) {
@@ -213,7 +237,9 @@ static ssize_t pipe_write(int fd, const void *data, size_t size) {
   return size;
 }
 
-static ssize_t pipe_read(int fd, void *data, size_t size) {
+static ssize_t
+pipe_read(int fd, void *data, size_t size)
+{
   portENTER_CRITICAL(&s_registered_ctx_lock);
   vfs_pipe_context_t *ctx = get_ctx_locked(fd);
   if (ctx == NULL) {
@@ -243,13 +269,17 @@ static ssize_t pipe_read(int fd, void *data, size_t size) {
   return s;
 }
 
-static int pipe_fstat(int fd, struct stat *st) {
+static int
+pipe_fstat(int fd, struct stat *st)
+{
   assert(fd >= 0 && fd < 3);
   st->st_mode = S_IFCHR;
   return 0;
 }
 
-static int pipe_close_read(int fd) {
+static int
+pipe_close_read(int fd)
+{
   assert(fd >= 0 && fd < PIPE_NUM);
   portENTER_CRITICAL(&s_registered_ctx_lock);
   vfs_pipe_context_t *ctx = get_ctx_locked(fd);
@@ -271,7 +301,9 @@ static int pipe_close_read(int fd) {
   return 0;
 }
 
-static int pipe_close_write(int fd) {
+static int
+pipe_close_write(int fd)
+{
   assert(fd >= 0 && fd < PIPE_NUM);
   portENTER_CRITICAL(&s_registered_ctx_lock);
   vfs_pipe_context_t *ctx = get_ctx_locked(fd);
@@ -294,15 +326,17 @@ static int pipe_close_write(int fd) {
   return 0;
 }
 
-static esp_err_t register_select(pipe_select_args_t *args) {
+static esp_err_t
+register_select(pipe_select_args_t *args)
+{
   esp_err_t ret = ESP_ERR_INVALID_ARG;
 
   if (args) {
     portENTER_CRITICAL(&s_registered_select_lock);
     const int new_size = s_registered_select_num + 1;
     if ((s_registered_selects =
-             realloc(s_registered_selects,
-                     new_size * sizeof(pipe_select_args_t *))) == NULL) {
+           realloc(s_registered_selects,
+                   new_size * sizeof(pipe_select_args_t *))) == NULL) {
       ret = ESP_ERR_NO_MEM;
     } else {
       s_registered_selects[s_registered_select_num] = args;
@@ -315,7 +349,9 @@ static esp_err_t register_select(pipe_select_args_t *args) {
   return ret;
 }
 
-static esp_err_t unregister_select(pipe_select_args_t *args) {
+static esp_err_t
+unregister_select(pipe_select_args_t *args)
+{
   esp_err_t ret = ESP_OK;
   if (args) {
     ret = ESP_ERR_INVALID_STATE;
@@ -342,10 +378,11 @@ static esp_err_t unregister_select(pipe_select_args_t *args) {
   return ret;
 }
 
-static esp_err_t pipe_start_select(int nfds, fd_set *readfds, fd_set *writefds,
-                                   fd_set *exceptfds,
-                                   esp_vfs_select_sem_t select_sem,
-                                   void **end_select_args) {
+static esp_err_t
+pipe_start_select(int nfds, fd_set *readfds, fd_set *writefds,
+                  fd_set *exceptfds, esp_vfs_select_sem_t select_sem,
+                  void **end_select_args)
+{
   const int max_fds = MIN(nfds, PIPE_NUM);
   *end_select_args = NULL;
 
@@ -372,7 +409,7 @@ static esp_err_t pipe_start_select(int nfds, fd_set *readfds, fd_set *writefds,
   args->writefds = writefds;
   args->errorfds = exceptfds;
   args->readfds_orig =
-      *readfds; // store the original values because they will be set to zero
+    *readfds; // store the original values because they will be set to zero
   args->writefds_orig = *writefds;
   args->errorfds_orig = *exceptfds;
   FD_ZERO(readfds);
@@ -413,7 +450,9 @@ static esp_err_t pipe_start_select(int nfds, fd_set *readfds, fd_set *writefds,
   return ESP_OK;
 }
 
-static esp_err_t pipe_end_select(void *end_select_args) {
+static esp_err_t
+pipe_end_select(void *end_select_args)
+{
   pipe_select_args_t *args = end_select_args;
   esp_err_t ret = unregister_select(args);
   if (args) {
@@ -422,33 +461,37 @@ static esp_err_t pipe_end_select(void *end_select_args) {
   return ret;
 }
 
-void esp_vfs_dev_pipe_register(void) {
+void
+esp_vfs_dev_pipe_register(void)
+{
   esp_vfs_t vfs_read = {
-      .flags = ESP_VFS_FLAG_DEFAULT,
-      .open = &pipe_open_read,
-      .fstat = &pipe_fstat,
-      .close = &pipe_close_read,
-      .read = &pipe_read,
+    .flags = ESP_VFS_FLAG_DEFAULT,
+    .open = &pipe_open_read,
+    .fstat = &pipe_fstat,
+    .close = &pipe_close_read,
+    .read = &pipe_read,
 
-      .start_select = &pipe_start_select,
-      .end_select = &pipe_end_select,
+    .start_select = &pipe_start_select,
+    .end_select = &pipe_end_select,
   };
   ESP_ERROR_CHECK(esp_vfs_register("/dev/pipe/read", &vfs_read, NULL));
 
   esp_vfs_t vfs_write = {
-      .flags = ESP_VFS_FLAG_DEFAULT,
-      .open = &pipe_open_write,
-      .fstat = &pipe_fstat,
-      .close = &pipe_close_write,
-      .write = &pipe_write,
+    .flags = ESP_VFS_FLAG_DEFAULT,
+    .open = &pipe_open_write,
+    .fstat = &pipe_fstat,
+    .close = &pipe_close_write,
+    .write = &pipe_write,
 
-      .start_select = &pipe_start_select,
-      .end_select = &pipe_end_select,
+    .start_select = &pipe_start_select,
+    .end_select = &pipe_end_select,
   };
   ESP_ERROR_CHECK(esp_vfs_register("/dev/pipe/write", &vfs_write, NULL));
 }
 
-int vfs_pipe(int pipefd[2]) {
+int
+vfs_pipe(int pipefd[2])
+{
   int index = -1;
   portENTER_CRITICAL(&s_registered_ctx_lock);
   for (int i = 0; i <= sizeof(s_ctx); ++i) {

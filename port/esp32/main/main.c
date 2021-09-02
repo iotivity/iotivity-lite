@@ -51,20 +51,25 @@ static bool light_state = false;
 static const char *TAG = "iotivity server";
 static const char *device_name = "esp32";
 
-static void set_device_custom_property(void *data) {
+static void
+set_device_custom_property(void *data)
+{
   (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-static int app_init(void) {
+static int
+app_init(void)
+{
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", device_name, "ocf.1.0.0",
                        "ocf.res.1.0.0", set_device_custom_property, NULL);
   return ret;
 }
 
-static void get_light(oc_request_t *request, oc_interface_mask_t interface,
-                      void *user_data) {
+static void
+get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
+{
   (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
@@ -83,8 +88,10 @@ static void get_light(oc_request_t *request, oc_interface_mask_t interface,
   PRINT("Light state %d\n", light_state);
 }
 
-static void post_light(oc_request_t *request, oc_interface_mask_t interface,
-                       void *user_data) {
+static void
+post_light(oc_request_t *request, oc_interface_mask_t interface,
+           void *user_data)
+{
   (void)user_data;
   (void)interface;
   PRINT("POST_light:\n");
@@ -112,7 +119,9 @@ static void post_light(oc_request_t *request, oc_interface_mask_t interface,
   light_state = state;
 }
 
-static void register_resources(void) {
+static void
+register_resources(void)
+{
   oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
@@ -127,7 +136,9 @@ static void register_resources(void) {
 #endif /* OC_CLOUD */
 }
 
-static void signal_event_loop(void) {
+static void
+signal_event_loop(void)
+{
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
@@ -143,34 +154,46 @@ handle_signal(int signal)
 }
 */
 
-static void sta_start(void *esp_netif, esp_event_base_t event_base,
-                      int32_t event_id, void *event_data) {
+static void
+sta_start(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
+          void *event_data)
+{
   esp_wifi_connect();
 }
 
-static void sta_disconnected(void *esp_netif, esp_event_base_t event_base,
-                             int32_t event_id, void *event_data) {
+static void
+sta_disconnected(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
+                 void *event_data)
+{
   esp_wifi_connect();
   xEventGroupClearBits(wifi_event_group, IPV4_CONNECTED_BIT);
   xEventGroupClearBits(wifi_event_group, IPV6_CONNECTED_BIT);
 }
 
-static void sta_connected(void *esp_netif, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data) {
+static void
+sta_connected(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
+              void *event_data)
+{
   esp_netif_create_ip6_linklocal(esp_netif);
 }
 
-static void got_ip(void *esp_netif, esp_event_base_t event_base,
-                   int32_t event_id, void *event_data) {
+static void
+got_ip(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
+       void *event_data)
+{
   xEventGroupSetBits(wifi_event_group, IPV4_CONNECTED_BIT);
 }
 
-static void got_ip6(void *esp_netif, esp_event_base_t event_base,
-                    int32_t event_id, void *event_data) {
+static void
+got_ip6(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
+        void *event_data)
+{
   xEventGroupSetBits(wifi_event_group, IPV6_CONNECTED_BIT);
 }
 
-static void initialise_wifi(void) {
+static void
+initialise_wifi(void)
+{
   esp_err_t err = esp_event_loop_create_default();
   if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
     ESP_ERROR_CHECK(err);
@@ -182,7 +205,7 @@ static void initialise_wifi(void) {
   ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
   esp_netif_inherent_config_t esp_netif_config =
-      ESP_NETIF_INHERENT_DEFAULT_WIFI_STA();
+    ESP_NETIF_INHERENT_DEFAULT_WIFI_STA();
   // Prefix the interface description with the module TAG
   // Warning: the interface desc is used in tests to capture actual connection
   // details (IP, gw, mask)
@@ -195,30 +218,32 @@ static void initialise_wifi(void) {
 
   wifi_event_group = xEventGroupCreate();
   ESP_ERROR_CHECK(esp_event_handler_register(
-      WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, sta_disconnected, NULL));
+    WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, sta_disconnected, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START,
                                              sta_start, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(
-      WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, sta_connected, netif));
+    WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, sta_connected, netif));
   ESP_ERROR_CHECK(
-      esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, got_ip, NULL));
+    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, got_ip, NULL));
   ESP_ERROR_CHECK(
-      esp_event_handler_register(IP_EVENT, IP_EVENT_GOT_IP6, got_ip6, NULL));
+    esp_event_handler_register(IP_EVENT, IP_EVENT_GOT_IP6, got_ip6, NULL));
 
   wifi_config_t wifi_config = {
-      .sta =
-          {
-              .ssid = EXAMPLE_WIFI_SSID,
-              .password = EXAMPLE_WIFI_PASS,
-          },
+    .sta =
+      {
+        .ssid = EXAMPLE_WIFI_SSID,
+        .password = EXAMPLE_WIFI_PASS,
+      },
   };
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-static void cloud_status_handler(oc_cloud_context_t *ctx,
-                                 oc_cloud_status_t status, void *data) {
+static void
+cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
+                     void *data)
+{
   (void)data;
   PRINT("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
@@ -249,7 +274,9 @@ static void cloud_status_handler(oc_cloud_context_t *ctx,
   }
 }
 
-void factory_presets_cb_new(size_t device, void *data) {
+void
+factory_presets_cb_new(size_t device, void *data)
+{
   gpio_reset_pin(BLINK_GPIO);
   gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
@@ -261,85 +288,85 @@ void factory_presets_cb_new(size_t device, void *data) {
   PRINT("factory_presets_cb: %d\n", (int)device);
 
   const char *cert =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIEFDCCA7qgAwIBAgIJAI0K+3tTsk4eMAoGCCqGSM49BAMCMFsxDDAKBgNVBAoM\n"
-      "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEnMCUGA1UE\n"
-      "AwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUgQ0EwMDAyMB4XDTIwMDQxNDE3MzMy\n"
-      "NloXDTIwMDUxNDE3MzMyNlowYTEMMAoGA1UECgwDT0NGMSIwIAYDVQQLDBlLeXJp\n"
-      "byBUZXN0IEluZnJhc3RydWN0dXJlMS0wKwYDVQQDDCQyYjI1ODQ4Mi04ZDZhLTQ5\n"
-      "OTEtOGQ2OS0zMTAxNDE5ODE2NDYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARZ\n"
-      "H0LnMEg5BR41xctwQMPoNwa0ERVB1J9WWUvdrKq4GVkX/HwPUGvViISpmIS0GM8z\n"
-      "Ky2IjHm+rMrc4oSTfyX0o4ICXzCCAlswCQYDVR0TBAIwADAOBgNVHQ8BAf8EBAMC\n"
-      "A4gwKQYDVR0lBCIwIAYIKwYBBQUHAwIGCCsGAQUFBwMBBgorBgEEAYLefAEGMB0G\n"
-      "A1UdDgQWBBTS5/x0htLNUYt8JoL82HU2rkjuWDAfBgNVHSMEGDAWgBQZc2oEGgsH\n"
-      "cE9TeVM2h/wMunyuCzCBlgYIKwYBBQUHAQEEgYkwgYYwXQYIKwYBBQUHMAKGUWh0\n"
-      "dHA6Ly90ZXN0cGtpLmt5cmlvLmNvbS9vY2YvY2FjZXJ0cy9CQkU2NEY5QTdFRTM3\n"
-      "RDI5QTA1RTRCQjc3NTk1RjMwOEJFNDFFQjA3LmNydDAlBggrBgEFBQcwAYYZaHR0\n"
-      "cDovL3Rlc3RvY3NwLmt5cmlvLmNvbTBfBgNVHR8EWDBWMFSgUqBQhk5odHRwOi8v\n"
-      "dGVzdHBraS5reXJpby5jb20vb2NmL2NybHMvQkJFNjRGOUE3RUUzN0QyOUEwNUU0\n"
-      "QkI3NzU5NUYzMDhCRTQxRUIwNy5jcmwwGAYDVR0gBBEwDzANBgsrBgEEAYORVgAB\n"
-      "AjBhBgorBgEEAYORVgEABFMwUTAJAgECAgEAAgEAMDYMGTEuMy42LjEuNC4xLjUx\n"
-      "NDE0LjAuMC4xLjAMGTEuMy42LjEuNC4xLjUxNDE0LjAuMC4yLjAMBUxpdGUxDAVM\n"
-      "aXRlMTAqBgorBgEEAYORVgEBBBwwGgYLKwYBBAGDkVYBAQAGCysGAQQBg5FWAQEB\n"
-      "MDAGCisGAQQBg5FWAQIEIjAgDA4xLjMuNi4xLjQuMS43MQwJRGlzY292ZXJ5DAMx\n"
-      "LjAwCgYIKoZIzj0EAwIDSAAwRQIgedG7zHeLh9YzM0bU3DQBnKDRIFnJHiDayyuE\n"
-      "8pVfJOQCIQCo/llZOZD87IHzsyxEfXm/QhkTNA5WJOa7sjF2ngQ1/g==\n"
-      "-----END CERTIFICATE-----\n";
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIEFDCCA7qgAwIBAgIJAI0K+3tTsk4eMAoGCCqGSM49BAMCMFsxDDAKBgNVBAoM\n"
+    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEnMCUGA1UE\n"
+    "AwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUgQ0EwMDAyMB4XDTIwMDQxNDE3MzMy\n"
+    "NloXDTIwMDUxNDE3MzMyNlowYTEMMAoGA1UECgwDT0NGMSIwIAYDVQQLDBlLeXJp\n"
+    "byBUZXN0IEluZnJhc3RydWN0dXJlMS0wKwYDVQQDDCQyYjI1ODQ4Mi04ZDZhLTQ5\n"
+    "OTEtOGQ2OS0zMTAxNDE5ODE2NDYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARZ\n"
+    "H0LnMEg5BR41xctwQMPoNwa0ERVB1J9WWUvdrKq4GVkX/HwPUGvViISpmIS0GM8z\n"
+    "Ky2IjHm+rMrc4oSTfyX0o4ICXzCCAlswCQYDVR0TBAIwADAOBgNVHQ8BAf8EBAMC\n"
+    "A4gwKQYDVR0lBCIwIAYIKwYBBQUHAwIGCCsGAQUFBwMBBgorBgEEAYLefAEGMB0G\n"
+    "A1UdDgQWBBTS5/x0htLNUYt8JoL82HU2rkjuWDAfBgNVHSMEGDAWgBQZc2oEGgsH\n"
+    "cE9TeVM2h/wMunyuCzCBlgYIKwYBBQUHAQEEgYkwgYYwXQYIKwYBBQUHMAKGUWh0\n"
+    "dHA6Ly90ZXN0cGtpLmt5cmlvLmNvbS9vY2YvY2FjZXJ0cy9CQkU2NEY5QTdFRTM3\n"
+    "RDI5QTA1RTRCQjc3NTk1RjMwOEJFNDFFQjA3LmNydDAlBggrBgEFBQcwAYYZaHR0\n"
+    "cDovL3Rlc3RvY3NwLmt5cmlvLmNvbTBfBgNVHR8EWDBWMFSgUqBQhk5odHRwOi8v\n"
+    "dGVzdHBraS5reXJpby5jb20vb2NmL2NybHMvQkJFNjRGOUE3RUUzN0QyOUEwNUU0\n"
+    "QkI3NzU5NUYzMDhCRTQxRUIwNy5jcmwwGAYDVR0gBBEwDzANBgsrBgEEAYORVgAB\n"
+    "AjBhBgorBgEEAYORVgEABFMwUTAJAgECAgEAAgEAMDYMGTEuMy42LjEuNC4xLjUx\n"
+    "NDE0LjAuMC4xLjAMGTEuMy42LjEuNC4xLjUxNDE0LjAuMC4yLjAMBUxpdGUxDAVM\n"
+    "aXRlMTAqBgorBgEEAYORVgEBBBwwGgYLKwYBBAGDkVYBAQAGCysGAQQBg5FWAQEB\n"
+    "MDAGCisGAQQBg5FWAQIEIjAgDA4xLjMuNi4xLjQuMS43MQwJRGlzY292ZXJ5DAMx\n"
+    "LjAwCgYIKoZIzj0EAwIDSAAwRQIgedG7zHeLh9YzM0bU3DQBnKDRIFnJHiDayyuE\n"
+    "8pVfJOQCIQCo/llZOZD87IHzsyxEfXm/QhkTNA5WJOa7sjF2ngQ1/g==\n"
+    "-----END CERTIFICATE-----\n";
 
   const char *key =
-      "-----BEGIN EC PARAMETERS-----\n"
-      "BggqhkjOPQMBBw==\n"
-      "-----END EC PARAMETERS-----\n"
-      "-----BEGIN EC PRIVATE KEY-----\n"
-      "MHcCAQEEIBF8S8rq+h8EnykDcCpAyvMam+u3D9i/5oYF5owt/+SnoAoGCCqGSM49\n"
-      "AwEHoUQDQgAEWR9C5zBIOQUeNcXLcEDD6DcGtBEVQdSfVllL3ayquBlZF/x8D1Br\n"
-      "1YiEqZiEtBjPMystiIx5vqzK3OKEk38l9A==\n"
-      "-----END EC PRIVATE KEY-----\n";
+    "-----BEGIN EC PARAMETERS-----\n"
+    "BggqhkjOPQMBBw==\n"
+    "-----END EC PARAMETERS-----\n"
+    "-----BEGIN EC PRIVATE KEY-----\n"
+    "MHcCAQEEIBF8S8rq+h8EnykDcCpAyvMam+u3D9i/5oYF5owt/+SnoAoGCCqGSM49\n"
+    "AwEHoUQDQgAEWR9C5zBIOQUeNcXLcEDD6DcGtBEVQdSfVllL3ayquBlZF/x8D1Br\n"
+    "1YiEqZiEtBjPMystiIx5vqzK3OKEk38l9A==\n"
+    "-----END EC PRIVATE KEY-----\n";
   const char *inter_ca =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIC+jCCAqGgAwIBAgIJAPObjMBXKhG1MAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
-      "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
-      "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxODEyMTVaFw0yODEx\n"
-      "MjYxODEyMTVaMFsxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
-      "bmZyYXN0cnVjdHVyZTEnMCUGA1UEAwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUg\n"
-      "Q0EwMDAyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvA+Gn3ofRpH40XuVppBR\n"
-      "f78mDtfclOkBd7/32yQcmK2LQ0wm/uyl2cyeABPuN6NFcR9+LYkXZ5P4Ovy9R43Q\n"
-      "vqOCAVQwggFQMBIGA1UdEwEB/wQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgGGMB0G\n"
-      "A1UdDgQWBBQZc2oEGgsHcE9TeVM2h/wMunyuCzAfBgNVHSMEGDAWgBQoSOTlJ1jZ\n"
-      "CO4JNOSxuz1ZZh/I9TCBjQYIKwYBBQUHAQEEgYAwfjBVBggrBgEFBQcwAoZJaHR0\n"
-      "cDovL3Rlc3Rwa2kua3lyaW8uY29tL29jZi80RTY4RTNGQ0YwRjJFNEY4MEE4RDE0\n"
-      "MzhGNkExQkE1Njk1NzEzRDYzLmNydDAlBggrBgEFBQcwAYYZaHR0cDovL3Rlc3Rv\n"
-      "Y3NwLmt5cmlvLmNvbTBaBgNVHR8EUzBRME+gTaBLhklodHRwOi8vdGVzdHBraS5r\n"
-      "eXJpby5jb20vb2NmLzRFNjhFM0ZDRjBGMkU0RjgwQThEMTQzOEY2QTFCQTU2OTU3\n"
-      "MTNENjMuY3JsMAoGCCqGSM49BAMCA0cAMEQCHwXkRYd+u5pOPH544wBmBRJz/b0j\n"
-      "ppvUIHx8IUH0CioCIQDC8CnMVTOC5aIoo5Yg4k7BDDNxbRQoPujYes0OTVGgPA==\n"
-      "-----END CERTIFICATE-----\n";
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIC+jCCAqGgAwIBAgIJAPObjMBXKhG1MAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
+    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
+    "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxODEyMTVaFw0yODEx\n"
+    "MjYxODEyMTVaMFsxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
+    "bmZyYXN0cnVjdHVyZTEnMCUGA1UEAwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUg\n"
+    "Q0EwMDAyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvA+Gn3ofRpH40XuVppBR\n"
+    "f78mDtfclOkBd7/32yQcmK2LQ0wm/uyl2cyeABPuN6NFcR9+LYkXZ5P4Ovy9R43Q\n"
+    "vqOCAVQwggFQMBIGA1UdEwEB/wQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgGGMB0G\n"
+    "A1UdDgQWBBQZc2oEGgsHcE9TeVM2h/wMunyuCzAfBgNVHSMEGDAWgBQoSOTlJ1jZ\n"
+    "CO4JNOSxuz1ZZh/I9TCBjQYIKwYBBQUHAQEEgYAwfjBVBggrBgEFBQcwAoZJaHR0\n"
+    "cDovL3Rlc3Rwa2kua3lyaW8uY29tL29jZi80RTY4RTNGQ0YwRjJFNEY4MEE4RDE0\n"
+    "MzhGNkExQkE1Njk1NzEzRDYzLmNydDAlBggrBgEFBQcwAYYZaHR0cDovL3Rlc3Rv\n"
+    "Y3NwLmt5cmlvLmNvbTBaBgNVHR8EUzBRME+gTaBLhklodHRwOi8vdGVzdHBraS5r\n"
+    "eXJpby5jb20vb2NmLzRFNjhFM0ZDRjBGMkU0RjgwQThEMTQzOEY2QTFCQTU2OTU3\n"
+    "MTNENjMuY3JsMAoGCCqGSM49BAMCA0cAMEQCHwXkRYd+u5pOPH544wBmBRJz/b0j\n"
+    "ppvUIHx8IUH0CioCIQDC8CnMVTOC5aIoo5Yg4k7BDDNxbRQoPujYes0OTVGgPA==\n"
+    "-----END CERTIFICATE-----\n";
 
   const char *root_ca =
-      "-----BEGIN CERTIFICATE-----\n"
-      "MIIB3zCCAYWgAwIBAgIJAPObjMBXKhGyMAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
-      "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
-      "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxNzMxMDVaFw0yODEx\n"
-      "MjcxNzMxMDVaMFMxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
-      "bmZyYXN0cnVjdHVyZTEfMB0GA1UEAwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjBZ\n"
-      "MBMGByqGSM49AgEGCCqGSM49AwEHA0IABGt1sU2QhQcK/kflKSF9TCrvKaDckLWd\n"
-      "ZoyvP6z0OrqNdtBscZgVYsSHMQZ1R19wWxsflvNr8bMVW1K3HWMkpsijQjBAMA8G\n"
-      "A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBQoSOTlJ1jZ\n"
-      "CO4JNOSxuz1ZZh/I9TAKBggqhkjOPQQDAgNIADBFAiAlMUwgVeL8d5W4jZdFJ5Zg\n"
-      "clk7XT66LNMfGkExSjU1ngIhANOvTmd32A0kEtIpHbiKA8+RFDCPJWjN4loxrBC7\n"
-      "v0JE\n"
-      "-----END CERTIFICATE-----\n";
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIB3zCCAYWgAwIBAgIJAPObjMBXKhGyMAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
+    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
+    "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxNzMxMDVaFw0yODEx\n"
+    "MjcxNzMxMDVaMFMxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
+    "bmZyYXN0cnVjdHVyZTEfMB0GA1UEAwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjBZ\n"
+    "MBMGByqGSM49AgEGCCqGSM49AwEHA0IABGt1sU2QhQcK/kflKSF9TCrvKaDckLWd\n"
+    "ZoyvP6z0OrqNdtBscZgVYsSHMQZ1R19wWxsflvNr8bMVW1K3HWMkpsijQjBAMA8G\n"
+    "A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBQoSOTlJ1jZ\n"
+    "CO4JNOSxuz1ZZh/I9TAKBggqhkjOPQQDAgNIADBFAiAlMUwgVeL8d5W4jZdFJ5Zg\n"
+    "clk7XT66LNMfGkExSjU1ngIhANOvTmd32A0kEtIpHbiKA8+RFDCPJWjN4loxrBC7\n"
+    "v0JE\n"
+    "-----END CERTIFICATE-----\n";
 
   int ee_credid =
-      oc_pki_add_mfg_cert(0, (const unsigned char *)cert, strlen(cert),
-                          (const unsigned char *)key, strlen(key));
+    oc_pki_add_mfg_cert(0, (const unsigned char *)cert, strlen(cert),
+                        (const unsigned char *)key, strlen(key));
   if (ee_credid < 0) {
     PRINT("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
-      0, ee_credid, (const unsigned char *)inter_ca, strlen(inter_ca));
+    0, ee_credid, (const unsigned char *)inter_ca, strlen(inter_ca));
 
   if (subca_credid < 0) {
     PRINT("ERROR installing intermediate CA cert\n");
@@ -347,7 +374,7 @@ void factory_presets_cb_new(size_t device, void *data) {
   }
 
   int rootca_credid = oc_pki_add_mfg_trust_anchor(
-      0, (const unsigned char *)root_ca, strlen(root_ca));
+    0, (const unsigned char *)root_ca, strlen(root_ca));
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -357,7 +384,9 @@ void factory_presets_cb_new(size_t device, void *data) {
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-oc_event_callback_retval_t heap_dbg(void *v) {
+oc_event_callback_retval_t
+heap_dbg(void *v)
+{
   printf("heap size:%d\n", esp_get_free_heap_size());
   return OC_EVENT_CONTINUE;
 }
@@ -372,10 +401,12 @@ static StaticTask_t xTaskBuffer;
 // the RTOS port.
 static StackType_t xStack[STACK_SIZE];
 
-static void server_main(void *pvParameter) {
+static void
+server_main(void *pvParameter)
+{
   int init;
-  tcpip_adapter_ip_info_t ip4_info = {0};
-  struct ip6_addr if_ipaddr_ip6 = {0};
+  tcpip_adapter_ip_info_t ip4_info = { 0 };
+  struct ip6_addr if_ipaddr_ip6 = { 0 };
   ESP_LOGI(TAG, "iotivity server task started");
   // wait to fetch IPv4 && ipv6 address
 #ifdef OC_IPV4
@@ -401,10 +432,10 @@ static void server_main(void *pvParameter) {
     ESP_LOGI(TAG, "got IPv6 addr:%s", ip6addr_ntoa(&if_ipaddr_ip6));
   }
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                           register_resources};
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 
@@ -446,7 +477,9 @@ static void server_main(void *pvParameter) {
 
 static TaskHandle_t xHandle = NULL;
 
-void app_main(void) {
+void
+app_main(void)
+{
   if (nvs_flash_init() != ESP_OK) {
     print_error("nvs_flash_init failed");
   }
@@ -461,11 +494,11 @@ void app_main(void) {
 
   // Create the task without using any dynamic memory allocation.
   xHandle = xTaskCreateStatic(
-      server_main,   // Function that implements the task.
-      "server_main", // Text name for the task.
-      STACK_SIZE,    // Stack size in bytes, not words.
-      NULL,          // Parameter passed into the task.
-      5,             // Priority at which the task is created.
-      xStack,        // Array to use as the task's stack.
-      &xTaskBuffer); // Variable to hold the task's data structure.
+    server_main,   // Function that implements the task.
+    "server_main", // Text name for the task.
+    STACK_SIZE,    // Stack size in bytes, not words.
+    NULL,          // Parameter passed into the task.
+    5,             // Priority at which the task is created.
+    xStack,        // Array to use as the task's stack.
+    &xTaskBuffer); // Variable to hold the task's data structure.
 }
