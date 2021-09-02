@@ -17,11 +17,13 @@
 */
 
 #define WIN32_LEAN_AND_MEAN
-#include <Mswsock.h>
-#include <WinSock2.h>
-#include <iphlpapi.h>
+// clang-format off
 #include <windows.h>
+#include <WinSock2.h>
+#include <Mswsock.h>
+#include <iphlpapi.h>
 #include <ws2tcpip.h>
+// clang-format on
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
