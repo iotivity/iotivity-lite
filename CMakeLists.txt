@@ -46,9 +46,7 @@ if(MSVC)
     target_compile_options(mbedtls PRIVATE /W1 /WX-)
     target_compile_options(mbedx509 PRIVATE /W1 /WX-)
     target_compile_options(mbedcrypto PRIVATE /W1 /WX-)
-    target_compile_options(iotivity-common PRIVATE /W1 /WX-)
-    target_compile_options(iotivity-port PRIVATE /W1 /WX-)
-    target_compile_options(iotivity-api PRIVATE /W1 /WX-)
+    target_compile_options(iotivity-api PUBLIC /W1 /WX-)
 endif()
 
 # Iotivity API
