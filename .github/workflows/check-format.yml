@@ -39,5 +39,5 @@ jobs:
           cd build
           cmake ../.
           make format
-          git diff --exit-code
+          git diff --exit-code --ignore-submodules=all
           
