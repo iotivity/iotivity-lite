@@ -74,8 +74,6 @@ port/esp32/sdkconfig.old
 *.tmp
 *.gcda
 *.gcno
-.clang-format
-_clang-format
 whitespace_commit_checker.sh
 port/linux/platformtest
 port/linux/storage_test
