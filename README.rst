@@ -7,6 +7,9 @@
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-linux.yml
    
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml
+   
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml
 
