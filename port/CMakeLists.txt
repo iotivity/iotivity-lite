@@ -16,6 +16,11 @@ if(UNIX OR WIN32)
         ${PORT_DIR}
         ${PROJECT_SOURCE_DIR}
     )
+
+    target_include_directories(mbedcrypto PUBLIC
+        ${PORT_DIR}
+        ${PROJECT_SOURCE_DIR}
+    )
     
     target_sources(iotivity-port INTERFACE
         ${PORT_DIR}/abort.c
