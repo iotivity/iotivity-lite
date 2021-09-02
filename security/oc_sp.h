@@ -17,15 +17,14 @@
 #ifndef OC_SP_H
 #define OC_SP_H
 
-#include "oc_ri.h"
 #include "oc_pki.h"
+#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct
-{
+typedef struct {
   oc_sp_types_t supported_profiles;
   oc_sp_types_t current_profile;
   int credid;

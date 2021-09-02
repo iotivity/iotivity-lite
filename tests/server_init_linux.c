@@ -21,9 +21,7 @@
 
 #include <stdio.h>
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret;
 
   ret = oc_init_platform("Intel", NULL, NULL);
@@ -34,24 +32,16 @@ app_init(void)
   return ret;
 }
 
-static void
-signal_event_loop(void)
-{
-}
+static void signal_event_loop(void) {}
 
-static void
-register_resources(void)
-{
-}
+static void register_resources(void) {}
 
-int
-main(void)
-{
+int main(void) {
   int init;
   const oc_handler_t handler = {
-    .init = app_init,
-    .signal_event_loop = signal_event_loop,
-    .register_resources = register_resources,
+      .init = app_init,
+      .signal_event_loop = signal_event_loop,
+      .register_resources = register_resources,
   };
 
   init = oc_main_init(&handler);

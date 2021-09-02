@@ -30,8 +30,7 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void)
-  {
+  static int appInit(void) {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Jaehong's Light",
                             "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
@@ -41,8 +40,7 @@ public:
   static void signalEventLoop(void) {}
 
 protected:
-  static void SetUpTestCase()
-  {
+  static void SetUpTestCase() {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
@@ -59,8 +57,7 @@ protected:
 oc_handler_t TestRDClient::s_handler;
 oc_endpoint_t TestRDClient::s_endpoint;
 
-TEST_F(TestRDClient, rd_publish_p)
-{
+TEST_F(TestRDClient, rd_publish_p) {
   // When
   bool ret = rd_publish(&s_endpoint, NULL, 0, 0, onPostResponse, LOW_QOS, NULL);
 
@@ -68,8 +65,7 @@ TEST_F(TestRDClient, rd_publish_p)
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestRDClient, rd_publish_f)
-{
+TEST_F(TestRDClient, rd_publish_f) {
   // Given
   oc_endpoint_t *ep = NULL;
 
@@ -80,8 +76,7 @@ TEST_F(TestRDClient, rd_publish_f)
   EXPECT_FALSE(ret);
 }
 
-TEST_F(TestRDClient, rd_delete_p)
-{
+TEST_F(TestRDClient, rd_delete_p) {
   // When
   bool ret = rd_delete(&s_endpoint, NULL, 0, onPostResponse, LOW_QOS, NULL);
 
@@ -89,8 +84,7 @@ TEST_F(TestRDClient, rd_delete_p)
   EXPECT_TRUE(ret);
 }
 
-TEST_F(TestRDClient, rd_delete_f)
-{
+TEST_F(TestRDClient, rd_delete_f) {
   // Given
   oc_endpoint_t *ep = NULL;
 

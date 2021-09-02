@@ -1,19 +1,17 @@
 #include "Ethernet2.h"
-#include "serial.h"
 #include "oc_api.h"
-#include "oc_clock.h"
 #include "oc_assert.h"
-#include "oc_storage.h"
+#include "oc_clock.h"
 #include "oc_connectivity.h"
-#include "util/oc_process.h"
 #include "oc_network_events_mutex.h"
+#include "oc_storage.h"
+#include "serial.h"
+#include "util/oc_process.h"
 
 #ifdef __AVR__
 #ifdef OC_XMEM
 void extRAMinit(void) __attribute__((used, naked, section(".init3")));
-void
-extRAMinit(void)
-{
+void extRAMinit(void) {
   // set up the xmem registers
   XMCRB = 0;
   XMCRA = 1 << SRE;
@@ -24,9 +22,7 @@ extRAMinit(void)
 #endif
 
 OC_PROCESS(sample_client_process, "client");
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Apple", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -41,18 +37,14 @@ static bool state;
 static int power;
 static oc_string_t name;
 
-static oc_event_callback_retval_t
-stop_observe(void *data)
-{
+static oc_event_callback_retval_t stop_observe(void *data) {
   (void)data;
   OC_DBG("Stopping OBSERVE");
   oc_stop_observe(a_light, light_server);
   return OC_EVENT_DONE;
 }
 
-static void
-observe_light(oc_client_response_t *data)
-{
+static void observe_light(oc_client_response_t *data) {
   OC_DBG("OBSERVE_light:");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -79,9 +71,7 @@ observe_light(oc_client_response_t *data)
   }
 }
 
-static void
-post2_light(oc_client_response_t *data)
-{
+static void post2_light(oc_client_response_t *data) {
   OC_DBG("POST2_light:");
   if (data->code == OC_STATUS_CHANGED)
     OC_DBG("POST response: CHANGED");
@@ -95,9 +85,7 @@ post2_light(oc_client_response_t *data)
   OC_DBG("Sent OBSERVE request");
 }
 
-static void
-post_light(oc_client_response_t *data)
-{
+static void post_light(oc_client_response_t *data) {
   OC_DBG("POST_light:");
   if (data->code == OC_STATUS_CHANGED)
     OC_DBG("POST response: CHANGED");
@@ -119,9 +107,7 @@ post_light(oc_client_response_t *data)
     OC_DBG("Could not init POST request");
 }
 
-static void
-put_light(oc_client_response_t *data)
-{
+static void put_light(oc_client_response_t *data) {
   OC_DBG("PUT_light:");
 
   if (data->code == OC_STATUS_CHANGED)
@@ -142,9 +128,7 @@ put_light(oc_client_response_t *data)
     OC_DBG("Could not init POST request");
 }
 
-static void
-get_light(oc_client_response_t *data)
-{
+static void get_light(oc_client_response_t *data) {
   OC_DBG("GET_light:");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -187,8 +171,7 @@ get_light(oc_client_response_t *data)
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
-{
+          oc_resource_properties_t bm, void *user_data) {
   (void)anchor;
   (void)user_data;
   (void)interfaces;
@@ -228,25 +211,20 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   oc_free_server_endpoints(endpoint);
   return OC_CONTINUE_DISCOVERY;
 }
-static void
-issue_requests(void)
-{
+static void issue_requests(void) {
   oc_do_ip_discovery("core.light", &discovery, NULL);
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   oc_process_post(&sample_client_process, OC_PROCESS_EVENT_TIMER, NULL);
 }
 
-OC_PROCESS_THREAD(sample_client_process, ev, data)
-{
+OC_PROCESS_THREAD(sample_client_process, ev, data) {
   (void)data;
   static struct oc_etimer et;
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .requests_entry = issue_requests};
   static oc_clock_time_t next_event;
   oc_set_mtu_size(1024);
   oc_set_max_app_data_size(1024);
@@ -272,11 +250,9 @@ OC_PROCESS_THREAD(sample_client_process, ev, data)
 }
 
 // Arduino Ethernet Shield
-uint8_t
-ConnectToNetwork()
-{
+uint8_t ConnectToNetwork() {
   // Note: ****Update the MAC address here with your shield's MAC address****
-  uint8_t ETHERNET_MAC[] = { 0x90, 0xA2, 0xDA, 0x11, 0x44, 0xA9 };
+  uint8_t ETHERNET_MAC[] = {0x90, 0xA2, 0xDA, 0x11, 0x44, 0xA9};
   Ethernet.init(5); // CS Pin for MKRZERO
   uint8_t error = Ethernet.begin(ETHERNET_MAC);
   if (error == 0) {
@@ -288,9 +264,7 @@ ConnectToNetwork()
   return 0;
 }
 
-void
-setup()
-{
+void setup() {
 #if defined(__arm__) && defined(__SAMD21G18A__) || defined(__SAM3X8E__)
   Serial.begin(250000);
 #else
@@ -312,9 +286,4 @@ setup()
   delay(200);
 }
 
-void
-loop()
-{
-
-  oc_process_run();
-}
+void loop() { oc_process_run(); }

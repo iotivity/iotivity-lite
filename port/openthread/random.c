@@ -14,23 +14,13 @@
 // limitations under the License.
 */
 
-#include "port/oc_random.h"
 #include "port/oc_log.h"
+#include "port/oc_random.h"
 
 #include <openthread/platform/random.h>
 
-void
-oc_random_init(void)
-{
-}
+void oc_random_init(void) {}
 
-unsigned int
-oc_random_value(void)
-{
-  return otPlatRandomGet();
-}
+unsigned int oc_random_value(void) { return otPlatRandomGet(); }
 
-void
-oc_random_destroy(void)
-{
-}
+void oc_random_destroy(void) {}

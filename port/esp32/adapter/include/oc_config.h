@@ -2,9 +2,9 @@
 #define OC_CONFIG_H
 
 /* Time resolution */
+#include "sdkconfig.h"
 #include <stdint.h>
 #include <time.h>
-#include "sdkconfig.h"
 
 #ifdef __cplusplus
 extern "C" {

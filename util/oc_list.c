@@ -38,8 +38,7 @@
 #define NULL 0
 #endif
 
-struct list
-{
+struct list {
   struct list *next;
 };
 
@@ -52,11 +51,7 @@ struct list
  *
  * \param list The list to be initialized.
  */
-void
-oc_list_init(oc_list_t list)
-{
-  *list = NULL;
-}
+void oc_list_init(oc_list_t list) { *list = NULL; }
 /*---------------------------------------------------------------------------*/
 /**
  * Get a pointer to the first element of a list.
@@ -69,11 +64,7 @@ oc_list_init(oc_list_t list)
  *
  * \sa oc_list_tail()
  */
-void *
-oc_list_head(oc_list_t list)
-{
-  return *list;
-}
+void *oc_list_head(oc_list_t list) { return *list; }
 /*---------------------------------------------------------------------------*/
 /**
  * Duplicate a list.
@@ -87,11 +78,7 @@ oc_list_head(oc_list_t list)
  * \param dest The destination list.
  * \param src The source list.
  */
-void
-oc_list_copy(oc_list_t dest, oc_list_t src)
-{
-  *dest = *src;
-}
+void oc_list_copy(oc_list_t dest, oc_list_t src) { *dest = *src; }
 /*---------------------------------------------------------------------------*/
 /**
  * Get the tail of a list.
@@ -104,9 +91,7 @@ oc_list_copy(oc_list_t dest, oc_list_t src)
  *
  * \sa oc_list_head()
  */
-void *
-oc_list_tail(oc_list_t list)
-{
+void *oc_list_tail(oc_list_t list) {
   struct list *l;
 
   if (*list == NULL) {
@@ -130,9 +115,7 @@ oc_list_tail(oc_list_t list)
  * \sa oc_list_push()
  *
  */
-void
-oc_list_add(oc_list_t list, void *item)
-{
+void oc_list_add(oc_list_t list, void *item) {
   struct list *l;
 
   ((struct list *)item)->next = NULL;
@@ -149,9 +132,7 @@ oc_list_add(oc_list_t list, void *item)
 /**
  * Add an item to the start of the list.
  */
-void
-oc_list_push(oc_list_t list, void *item)
-{
+void oc_list_push(oc_list_t list, void *item) {
   /* Make sure not to add the same element twice */
   oc_list_remove(list, item);
 
@@ -168,9 +149,7 @@ oc_list_push(oc_list_t list, void *item)
  * \return The removed object
  *
  */
-void *
-oc_list_chop(oc_list_t list)
-{
+void *oc_list_chop(oc_list_t list) {
   struct list *l, *r;
 
   if (*list == NULL) {
@@ -201,9 +180,7 @@ oc_list_chop(oc_list_t list)
  * \return Pointer to the removed element of list.
  */
 /*---------------------------------------------------------------------------*/
-void *
-oc_list_pop(oc_list_t list)
-{
+void *oc_list_pop(oc_list_t list) {
   struct list *l;
   l = *list;
   if (*list != NULL) {
@@ -223,9 +200,7 @@ oc_list_pop(oc_list_t list)
  *
  */
 /*---------------------------------------------------------------------------*/
-void
-oc_list_remove(oc_list_t list, void *item)
-{
+void oc_list_remove(oc_list_t list, void *item) {
   struct list **l;
 
   for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
@@ -248,9 +223,7 @@ oc_list_remove(oc_list_t list, void *item)
  *
  */
 /*---------------------------------------------------------------------------*/
-void *
-oc_list_remove2(oc_list_t list, void *item)
-{
+void *oc_list_remove2(oc_list_t list, void *item) {
   struct list **l;
 
   for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
@@ -273,9 +246,7 @@ oc_list_remove2(oc_list_t list, void *item)
  * \return The length of the list.
  */
 /*---------------------------------------------------------------------------*/
-int
-oc_list_length(oc_list_t list)
-{
+int oc_list_length(oc_list_t list) {
   struct list *l;
   int n = 0;
 
@@ -301,9 +272,7 @@ oc_list_length(oc_list_t list)
  *             start of the list.
  *
  */
-void
-oc_list_insert(oc_list_t list, void *previtem, void *newitem)
-{
+void oc_list_insert(oc_list_t list, void *previtem, void *newitem) {
   if (previtem == NULL) {
     oc_list_push(list, newitem);
   } else {
@@ -323,9 +292,7 @@ oc_list_insert(oc_list_t list, void *previtem, void *newitem)
  *             the list. This function is used when iterating through
  *             lists.
  */
-void *
-oc_list_item_next(void *item)
-{
+void *oc_list_item_next(void *item) {
   return item == NULL ? NULL : ((struct list *)item)->next;
 }
 /*---------------------------------------------------------------------------*/

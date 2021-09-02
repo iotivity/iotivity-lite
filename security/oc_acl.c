@@ -49,12 +49,10 @@ static const char *wc_public = "-";
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
 OC_MEMB(res_l, oc_ace_res_t, OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES);
 
-void
-oc_sec_acl_init(void)
-{
+void oc_sec_acl_init(void) {
 #ifdef OC_DYNAMIC_ALLOCATION
   aclist =
-    (oc_sec_acl_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_acl_t));
+      (oc_sec_acl_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_acl_t));
   if (!aclist) {
     oc_abort("Insufficient memory");
   }
@@ -65,15 +63,9 @@ oc_sec_acl_init(void)
   }
 }
 
-oc_sec_acl_t *
-oc_sec_get_acl(size_t device)
-{
-  return &aclist[device];
-}
+oc_sec_acl_t *oc_sec_get_acl(size_t device) { return &aclist[device]; }
 
-static bool
-unique_aceid(int aceid, size_t device)
-{
+static bool unique_aceid(int aceid, size_t device) {
   oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
   while (ace != NULL) {
     if (ace->aceid == aceid)
@@ -83,9 +75,7 @@ unique_aceid(int aceid, size_t device)
   return true;
 }
 
-static int
-get_new_aceid(size_t device)
-{
+static int get_new_aceid(size_t device) {
   int aceid;
   do {
     aceid = oc_random_value() >> 1;
@@ -93,10 +83,10 @@ get_new_aceid(size_t device)
   return aceid;
 }
 
-static oc_ace_res_t *
-oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
-                         const char *href, oc_ace_wildcard_t wildcard)
-{
+static oc_ace_res_t *oc_sec_ace_find_resource(oc_ace_res_t *start,
+                                              oc_sec_ace_t *ace,
+                                              const char *href,
+                                              oc_ace_wildcard_t wildcard) {
   int skip = 0;
   if (href && href[0] != '/')
     skip = 1;
@@ -139,11 +129,11 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   return res;
 }
 
-static oc_sec_ace_t *
-oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
-                        oc_ace_subject_t *subject, int aceid,
-                        uint16_t permission, size_t device)
-{
+static oc_sec_ace_t *oc_sec_acl_find_subject(oc_sec_ace_t *start,
+                                             oc_ace_subject_type_t type,
+                                             oc_ace_subject_t *subject,
+                                             int aceid, uint16_t permission,
+                                             size_t device) {
   oc_sec_ace_t *ace = start;
   if (!ace) {
     ace = (oc_sec_ace_t *)oc_list_head(aclist[device].subjects);
@@ -166,14 +156,14 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
         break;
       case OC_SUBJECT_ROLE:
         if ((oc_string_len(subject->role.role) ==
-               oc_string_len(ace->subject.role.role) &&
+                 oc_string_len(ace->subject.role.role) &&
              memcmp(oc_string(subject->role.role),
                     oc_string(ace->subject.role.role),
                     oc_string_len(subject->role.role)) == 0)) {
           if (oc_string_len(ace->subject.role.authority) == 0) {
             return ace;
           } else if (oc_string_len(ace->subject.role.authority) ==
-                       oc_string_len(subject->role.authority) &&
+                         oc_string_len(subject->role.authority) &&
                      memcmp(oc_string(subject->role.authority),
                             oc_string(ace->subject.role.authority),
                             oc_string_len(subject->role.authority)) == 0) {
@@ -194,10 +184,9 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
   return ace;
 }
 
-static uint16_t
-oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource, bool is_DCR,
-                      bool is_public)
-{
+static uint16_t oc_ace_get_permission(oc_sec_ace_t *ace,
+                                      oc_resource_t *resource, bool is_DCR,
+                                      bool is_public) {
   uint16_t permission = 0;
 
   /* If the resource is discoverable and exposes >=1 unsecured endpoints
@@ -221,7 +210,7 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource, bool is_DCR,
   }
 
   oc_ace_res_t *res =
-    oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri), wc);
+      oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri), wc);
 
   while (res != NULL) {
     permission |= ace->permission;
@@ -233,9 +222,7 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource, bool is_DCR,
 }
 
 #ifdef OC_DEBUG
-static void
-dump_acl(size_t device)
-{
+static void dump_acl(size_t device) {
   oc_sec_acl_t *a = &aclist[device];
   oc_sec_ace_t *ace = oc_list_head(a->subjects);
   PRINT("\nAccess Control List\n---------\n");
@@ -293,10 +280,9 @@ dump_acl(size_t device)
 }
 #endif /* OC_DEBUG */
 
-static uint16_t
-get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
-                     size_t device, bool is_DCR, bool is_public)
-{
+static uint16_t get_role_permissions(oc_sec_cred_t *role_cred,
+                                     oc_resource_t *resource, size_t device,
+                                     bool is_DCR, bool is_public) {
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   do {
@@ -313,10 +299,8 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
   return permission;
 }
 
-bool
-oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_endpoint_t *endpoint)
-{
+bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
+                      oc_endpoint_t *endpoint) {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
 #endif /* OC_DEBUG */
@@ -370,15 +354,15 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
       (
 #ifdef OC_WKCORE
-        (oc_string_len(resource->uri) == 17 &&
-         memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0) ||
+          (oc_string_len(resource->uri) == 17 &&
+           memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0) ||
 #endif
-        (oc_string_len(resource->uri) == 8 &&
-         memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
-        (oc_string_len(resource->uri) == 6 &&
-         memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
-        (oc_string_len(resource->uri) == 6 &&
-         memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
+          (oc_string_len(resource->uri) == 8 &&
+           memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
+          (oc_string_len(resource->uri) == 6 &&
+           memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
+          (oc_string_len(resource->uri) == 6 &&
+           memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
     return true;
   }
   /* Requests over unsecured channel prior to DOC */
@@ -477,7 +461,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
 
     if (peer && oc_tls_uses_psk_cred(peer)) {
       oc_sec_cred_t *role_cred = oc_sec_find_cred(
-        uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
+          uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
       if (role_cred && oc_string_len(role_cred->role.role) > 0) {
         permission |= get_role_permissions(role_cred, resource,
                                            endpoint->device, is_DCR, is_public);
@@ -565,15 +549,13 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   return false;
 }
 
-bool
-oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
-                  bool to_storage)
-{
+bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
+                       bool to_storage) {
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-      oc_core_get_resource_by_index(OCF_SEC_ACL, device));
+        oc_core_get_resource_by_index(OCF_SEC_ACL, device));
   }
   oc_rep_set_array(root, aclist2);
   oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
@@ -648,10 +630,9 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
 static oc_ace_res_t *
 oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                    const char *href, oc_ace_wildcard_t wildcard, int aceid,
-                   uint16_t permission, size_t device, bool create)
-{
+                   uint16_t permission, size_t device, bool create) {
   oc_sec_ace_t *ace =
-    oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
+      oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
   oc_ace_res_t *res = NULL;
 
   if (ace) {
@@ -757,20 +738,18 @@ done:
   return res;
 }
 
-static bool
-oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
-                      int aceid, uint16_t permission, const char *href,
-                      oc_ace_wildcard_t wildcard, size_t device)
-{
+static bool oc_sec_ace_update_res(oc_ace_subject_type_t type,
+                                  oc_ace_subject_t *subject, int aceid,
+                                  uint16_t permission, const char *href,
+                                  oc_ace_wildcard_t wildcard, size_t device) {
   if (oc_sec_ace_get_res(type, subject, href, wildcard, aceid, permission,
                          device, true))
     return true;
   return false;
 }
 
-static void
-oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
-{
+static void oc_ace_free_resources(size_t device, oc_sec_ace_t **ace,
+                                  const char *href) {
   oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head((*ace)->resources),
                *next = NULL;
   while (res != NULL) {
@@ -792,9 +771,7 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
   }
 }
 
-static bool
-oc_acl_remove_ace(int aceid, size_t device)
-{
+static bool oc_acl_remove_ace(int aceid, size_t device) {
   bool removed = false;
   oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects), *next = 0;
   while (ace != NULL) {
@@ -815,9 +792,7 @@ oc_acl_remove_ace(int aceid, size_t device)
   return removed;
 }
 
-static void
-oc_sec_clear_acl(size_t device)
-{
+static void oc_sec_clear_acl(size_t device) {
   oc_sec_acl_t *acl_d = &aclist[device];
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
   while (ace != NULL) {
@@ -831,9 +806,7 @@ oc_sec_clear_acl(size_t device)
   }
 }
 
-void
-oc_sec_acl_free(void)
-{
+void oc_sec_acl_free(void) {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_clear_acl(device);
@@ -846,11 +819,10 @@ oc_sec_acl_free(void)
 }
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
-  defined(OC_COLLECTIONS_IF_CREATE)
-bool
-oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
-                                    size_t device, bool collection)
-{
+    defined(OC_COLLECTIONS_IF_CREATE)
+bool oc_sec_acl_add_created_resource_ace(const char *href,
+                                         oc_endpoint_t *client, size_t device,
+                                         bool collection) {
   oc_uuid_t *uuid = &client->di;
 
   oc_ace_subject_t subject;
@@ -858,7 +830,7 @@ oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
   memcpy(subject.uuid.id, uuid->id, sizeof(oc_uuid_t));
 
   oc_ace_permissions_t perm =
-    OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
+      OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
   if (collection) {
     perm |= OC_PERM_CREATE;
   }
@@ -869,17 +841,13 @@ oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
 }
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
-void
-oc_sec_acl_default(size_t device)
-{
+void oc_sec_acl_default(size_t device) {
   oc_sec_clear_acl(device);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
 
-bool
-oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
-{
+bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device) {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
   size_t len = 0;
@@ -964,7 +932,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
                          memcmp(oc_string(sub->name), "conntype", 8) == 0) {
                 if (oc_string_len(sub->value.string) == 10 &&
                     memcmp(oc_string(sub->value.string), "auth-crypt", 10) ==
-                      0) {
+                        0) {
                   subject.conn = OC_CONN_AUTH_CRYPT;
                 } else if (oc_string_len(sub->value.string) == 10 &&
                            memcmp(oc_string(sub->value.string), "anon-clear",
@@ -1084,9 +1052,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
   return true;
 }
 
-void
-oc_sec_acl_add_bootsrap_acl(size_t device)
-{
+void oc_sec_acl_add_bootsrap_acl(size_t device) {
   oc_ace_subject_t _anon_clear;
   memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
   _anon_clear.conn = OC_CONN_ANON_CLEAR;
@@ -1103,9 +1069,8 @@ oc_sec_acl_add_bootsrap_acl(size_t device)
 #endif
 }
 
-void
-post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
+              void *data) {
   (void)iface_mask;
   (void)data;
   if (oc_sec_decode_acl(request->request_payload, false,
@@ -1117,9 +1082,8 @@ post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-void
-delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
+                void *data) {
   (void)iface_mask;
   (void)data;
 
@@ -1154,9 +1118,8 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-void
-get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *data) {
   (void)data;
   if (oc_sec_encode_acl(request->resource->device, iface_mask, false)) {
     oc_send_response(request, OC_STATUS_OK);

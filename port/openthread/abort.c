@@ -16,7 +16,4 @@
 
 #include "port/oc_assert.h"
 
-void
-abort_impl()
-{
-}
+void abort_impl() {}

@@ -5,14 +5,12 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-#include <stdio.h>
-#include <stdint.h>
 #include "debug_print.h"
 #include "port/oc_connectivity.h"
+#include <stdint.h>
+#include <stdio.h>
 
-void
-print_macro_info()
-{
+void print_macro_info() {
   printf("\n****************************************\n");
 
 #ifdef OC_DEBUG
@@ -72,9 +70,7 @@ print_macro_info()
   printf("\n****************************************\n");
 }
 
-void
-print_message_info(oc_message_t *message)
-{
+void print_message_info(oc_message_t *message) {
 #ifdef OC_DEBUG
   printf("\n****************************************\n");
 
@@ -122,10 +118,8 @@ print_message_info(oc_message_t *message)
  * @return noreturn
  *
  */
-void
-print_debug(const char *data, const unsigned int len, const char *note,
-            int mode)
-{
+void print_debug(const char *data, const unsigned int len, const char *note,
+                 int mode) {
 #define BINARY_SHOW 0x10
 #define BYTES_SHOW 0x01
   printf("\n********** %s [len:%u] start addr:%p **********\n", note, len,

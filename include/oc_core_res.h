@@ -42,8 +42,7 @@ typedef void (*oc_core_add_device_cb_t)(void *data);
  * @brief platform information
  *
  */
-typedef struct oc_platform_info_t
-{
+typedef struct oc_platform_info_t {
   oc_uuid_t pi;                                ///< the platform identifier
   oc_string_t mfg_name;                        ///< manufactorer name
   oc_core_init_platform_cb_t init_platform_cb; ///< callback function
@@ -54,8 +53,7 @@ typedef struct oc_platform_info_t
  * @brief device information
  *
  */
-typedef struct oc_device_info_t
-{
+typedef struct oc_device_info_t {
   oc_uuid_t di;                          ///< device indentifier
   oc_uuid_t piid;                        ///< Permanent Immutable ID
   oc_string_t name;                      ///< name of the device
@@ -101,12 +99,10 @@ oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
  * @param data supplied user data
  * @return oc_device_info_t* the device information
  */
-oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
-                                         const char *name,
-                                         const char *spec_version,
-                                         const char *data_model_version,
-                                         oc_core_add_device_cb_t add_device_cb,
-                                         void *data);
+oc_device_info_t *
+oc_core_add_new_device(const char *uri, const char *rt, const char *name,
+                       const char *spec_version, const char *data_model_version,
+                       oc_core_add_device_cb_t add_device_cb, void *data);
 
 /**
  * @brief retrieve the amount of devices

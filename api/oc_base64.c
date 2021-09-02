@@ -20,20 +20,17 @@
  * based on their definitions in RFC 4648.
  */
 
-int
-oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
-                 size_t output_buffer_len)
-{
+int oc_base64_encode(const uint8_t *input, size_t input_len,
+                     uint8_t *output_buffer, size_t output_buffer_len) {
   /* The Base64 alphabet. This table provides a mapping from 6-bit binary
    * values to Base64 characters.
    */
-  uint8_t alphabet[65] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                           'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                           'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                           'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                           'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                           '8', '9', '+', '/', '=' };
+  uint8_t alphabet[65] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                          'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                          'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                          'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                          's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
+                          '3', '4', '5', '6', '7', '8', '9', '+', '/', '='};
   uint8_t val = 0;
   size_t i;
   int j = 0;
@@ -116,9 +113,7 @@ oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
   return j;
 }
 
-int
-oc_base64_decode(uint8_t *str, size_t len)
-{
+int oc_base64_decode(uint8_t *str, size_t len) {
   /* All valid Base64 encoded strings will be multiples of 4 */
   if (0 != (len % 4)) {
     return -1;

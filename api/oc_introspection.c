@@ -17,12 +17,12 @@
 #include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
-#include "oc_config.h"
 
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
@@ -35,19 +35,15 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_IDD_API is defined.
 
 #define MAX_TAG_LENGTH 20
 
-static void
-gen_idd_tag(const char *name, size_t device_index, char *idd_tag)
-{
+static void gen_idd_tag(const char *name, size_t device_index, char *idd_tag) {
   int idd_tag_len =
-    snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%zd", name, device_index);
+      snprintf(idd_tag, MAX_TAG_LENGTH, "%s_%zd", name, device_index);
   idd_tag_len =
-    (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
+      (idd_tag_len < MAX_TAG_LENGTH) ? idd_tag_len + 1 : MAX_TAG_LENGTH;
   idd_tag[idd_tag_len - 1] = '\0';
 }
 
-void
-oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
-{
+void oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size) {
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   long rr = oc_storage_write(idd_tag, IDD, IDD_size);
@@ -55,10 +51,9 @@ oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
 }
 #endif /*OC_IDD_API*/
 
-static void
-oc_core_introspection_data_handler(oc_request_t *request,
-                                   oc_interface_mask_t iface_mask, void *data)
-{
+static void oc_core_introspection_data_handler(oc_request_t *request,
+                                               oc_interface_mask_t iface_mask,
+                                               void *data) {
   (void)iface_mask;
   (void)data;
 
@@ -76,8 +71,9 @@ oc_core_introspection_data_handler(oc_request_t *request,
 #else  /* OC_IDD_API */
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", request->resource->device, idd_tag);
-  IDD_size = oc_storage_read(
-    idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
+  IDD_size =
+      oc_storage_read(idd_tag, request->response->response_buffer->buffer,
+                      OC_MAX_APP_DATA_SIZE);
 #endif /* OC_IDD_API */
   request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
@@ -85,24 +81,23 @@ oc_core_introspection_data_handler(oc_request_t *request,
     request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
   } else {
     OC_ERR(
-      "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
-      IDD_size, OC_MAX_APP_DATA_SIZE);
+        "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
+        IDD_size, OC_MAX_APP_DATA_SIZE);
     request->response->response_buffer->response_length = 0;
     request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
+        oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 }
 
-static void
-oc_core_introspection_wk_handler(oc_request_t *request,
-                                 oc_interface_mask_t iface_mask, void *data)
-{
+static void oc_core_introspection_wk_handler(oc_request_t *request,
+                                             oc_interface_mask_t iface_mask,
+                                             void *data) {
   (void)data;
 
   int interface_index =
-    (request->origin) ? request->origin->interface_index : -1;
+      (request->origin) ? request->origin->interface_index : -1;
   enum transport_flags conn =
-    (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
+      (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
    */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
@@ -151,15 +146,13 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   oc_free_string(&uri);
 }
 
-void
-oc_create_introspection_resource(size_t device)
-{
+void oc_create_introspection_resource(size_t device) {
   OC_DBG("oc_introspection: Initializing introspection resource");
 
   oc_core_populate_resource(
-    OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
-    OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_SECURE | OC_DISCOVERABLE,
-    oc_core_introspection_wk_handler, 0, 0, 0, 1, "oic.wk.introspection");
+      OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
+      OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_SECURE | OC_DISCOVERABLE,
+      oc_core_introspection_wk_handler, 0, 0, 0, 1, "oic.wk.introspection");
   oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
                             OC_IF_BASELINE, OC_IF_BASELINE, 0,
                             oc_core_introspection_data_handler, 0, 0, 0, 1,

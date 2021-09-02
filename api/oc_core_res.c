@@ -57,9 +57,7 @@ static size_t device_count = 0;
 /* Number of characters of OC_NAME_CON_RES */
 #define OC_NAMELEN_CON_RES 6
 
-void
-oc_core_init(void)
-{
+void oc_core_init(void) {
   oc_core_shutdown();
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -73,8 +71,7 @@ oc_core_init(void)
 }
 
 static void
-oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
-{
+oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item) {
 
   if (oc_device_info_item) {
     oc_free_string(&(oc_device_info_item->name));
@@ -83,9 +80,7 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
   }
 }
 
-void
-oc_core_shutdown(void)
-{
+void oc_core_shutdown(void) {
   size_t i;
   oc_free_string(&(oc_platform_info.mfg_name));
 
@@ -117,10 +112,8 @@ oc_core_shutdown(void)
   device_count = 0;
 }
 
-void
-oc_core_encode_interfaces_mask(CborEncoder *parent,
-                               oc_interface_mask_t iface_mask)
-{
+void oc_core_encode_interfaces_mask(CborEncoder *parent,
+                                    oc_interface_mask_t iface_mask) {
   oc_rep_set_key((parent), "if");
   oc_rep_start_array((parent), if);
   if (iface_mask & OC_IF_R) {
@@ -159,10 +152,8 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
   oc_rep_end_array((parent), if);
 }
 
-static void
-oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-                       void *data)
-{
+static void oc_core_device_handler(oc_request_t *request,
+                                   oc_interface_mask_t iface_mask, void *data) {
   (void)data;
   size_t device = request->resource->device;
   oc_rep_start_root_object();
@@ -197,10 +188,9 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *data)
-{
+static void oc_core_con_handler_get(oc_request_t *request,
+                                    oc_interface_mask_t iface_mask,
+                                    void *data) {
   (void)data;
   size_t device = request->resource->device;
   oc_rep_start_root_object();
@@ -230,17 +220,15 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #if defined(OC_SERVER) && defined(OC_CLOUD)
 static oc_event_callback_retval_t
-oc_core_con_notify_observers_delayed(void *data)
-{
+oc_core_con_notify_observers_delayed(void *data) {
   oc_notify_observers((oc_resource_t *)data);
   return OC_EVENT_DONE;
 }
 #endif /* OC_SERVER && OC_CLOUD */
 
-static void
-oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *data)
-{
+static void oc_core_con_handler_post(oc_request_t *request,
+                                     oc_interface_mask_t iface_mask,
+                                     void *data) {
   (void)iface_mask;
   oc_rep_t *rep = request->request_payload;
   bool changed = false;
@@ -262,7 +250,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #if defined(OC_SERVER) && defined(OC_CLOUD)
       oc_resource_t *device_resource =
-        oc_core_get_resource_by_index(OCF_D, device);
+          oc_core_get_resource_by_index(OCF_D, device);
       oc_set_delayed_callback(device_resource,
                               oc_core_con_notify_observers_delayed, 0);
 #endif /* OC_SERVER && OC_CLOUD */
@@ -304,41 +292,20 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-size_t
-oc_core_get_num_devices(void)
-{
-  return device_count;
-}
+size_t oc_core_get_num_devices(void) { return device_count; }
 
-bool
-oc_get_con_res_announced(void)
-{
-  return announce_con_res;
-}
+bool oc_get_con_res_announced(void) { return announce_con_res; }
 
-void
-oc_core_set_latency(int latency)
-{
-  res_latency = latency;
-}
+void oc_core_set_latency(int latency) { res_latency = latency; }
 
-int
-oc_core_get_latency(void)
-{
-  return res_latency;
-}
+int oc_core_get_latency(void) { return res_latency; }
 
-void
-oc_set_con_res_announced(bool announce)
-{
-  announce_con_res = announce;
-}
+void oc_set_con_res_announced(bool announce) { announce_con_res = announce; }
 
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
-                       oc_core_add_device_cb_t add_device_cb, void *data)
-{
+                       oc_core_add_device_cb_t add_device_cb, void *data) {
   (void)data;
 #ifndef OC_DYNAMIC_ALLOCATION
   if (device_count == OC_MAX_NUM_DEVICES) {
@@ -348,7 +315,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #else /* !OC_DYNAMIC_ALLOCATION */
   size_t new_num = 1 + OCF_D * (device_count + 1);
   core_resources =
-    (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
+      (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
 
   if (!core_resources) {
     oc_abort("Insufficient memory");
@@ -357,7 +324,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   memset(device, 0, OCF_D * sizeof(oc_resource_t));
 
   oc_device_info = (oc_device_info_t *)realloc(
-    oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
+      oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
 
   if (!oc_device_info) {
     oc_abort("Insufficient memory");
@@ -379,8 +346,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                               oc_core_device_handler, 0, 0, 0, 1, rt);
   } else {
     oc_core_populate_resource(
-      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-      oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
+        OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
+        oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
   }
 
   oc_gen_uuid(&oc_device_info[device_count].piid);
@@ -428,9 +395,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   return &oc_device_info[device_count - 1];
 }
 
-static void
-oc_device_bind_rt(size_t device_index, const char *rt)
-{
+static void oc_device_bind_rt(size_t device_index, const char *rt) {
   oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
   oc_string_array_t types;
 
@@ -453,16 +418,13 @@ oc_device_bind_rt(size_t device_index, const char *rt)
   oc_free_string_array(&types);
 }
 
-void
-oc_device_bind_resource_type(size_t device, const char *type)
-{
+void oc_device_bind_resource_type(size_t device, const char *type) {
   oc_device_bind_rt(device, type);
 }
 
-static void
-oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *data)
-{
+static void oc_core_platform_handler(oc_request_t *request,
+                                     oc_interface_mask_t iface_mask,
+                                     void *data) {
   (void)data;
   oc_rep_start_root_object();
 
@@ -488,10 +450,9 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_platform_info_t *
-oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
-                      void *data)
-{
+oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
+                                          oc_core_init_platform_cb_t init_cb,
+                                          void *data) {
   if (oc_platform_info.mfg_name.size > 0) {
     return &oc_platform_info;
   }
@@ -514,9 +475,7 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
   return &oc_platform_info;
 }
 
-void
-oc_store_uri(const char *s_uri, oc_string_t *d_uri)
-{
+void oc_store_uri(const char *s_uri, oc_string_t *d_uri) {
   if (s_uri[0] != '/') {
     size_t s_len = strlen(s_uri);
     oc_alloc_string(d_uri, s_len + 2);
@@ -528,15 +487,14 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
   }
 }
 
-void
-oc_core_populate_resource(int core_resource, size_t device_index,
-                          const char *uri, oc_interface_mask_t iface_mask,
-                          oc_interface_mask_t default_interface, int properties,
-                          oc_request_callback_t get, oc_request_callback_t put,
-                          oc_request_callback_t post,
-                          oc_request_callback_t delete, int num_resource_types,
-                          ...)
-{
+void oc_core_populate_resource(int core_resource, size_t device_index,
+                               const char *uri, oc_interface_mask_t iface_mask,
+                               oc_interface_mask_t default_interface,
+                               int properties, oc_request_callback_t get,
+                               oc_request_callback_t put,
+                               oc_request_callback_t post,
+                               oc_request_callback_t delete,
+                               int num_resource_types, ...) {
   oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
   if (!r) {
     return;
@@ -560,33 +518,25 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   r->delete_handler.cb = delete;
 }
 
-oc_uuid_t *
-oc_core_get_device_id(size_t device)
-{
+oc_uuid_t *oc_core_get_device_id(size_t device) {
   if (device >= device_count) {
     return NULL;
   }
   return &oc_device_info[device].di;
 }
 
-oc_device_info_t *
-oc_core_get_device_info(size_t device)
-{
+oc_device_info_t *oc_core_get_device_info(size_t device) {
   if (device >= device_count) {
     return NULL;
   }
   return &oc_device_info[device];
 }
 
-oc_platform_info_t *
-oc_core_get_platform_info(void)
-{
+oc_platform_info_t *oc_core_get_platform_info(void) {
   return &oc_platform_info;
 }
 
-oc_resource_t *
-oc_core_get_resource_by_index(int type, size_t device)
-{
+oc_resource_t *oc_core_get_resource_by_index(int type, size_t device) {
   if (type == OCF_P) {
     return &core_resources[0];
   }
@@ -594,9 +544,7 @@ oc_core_get_resource_by_index(int type, size_t device)
 }
 
 #ifdef OC_SECURITY
-bool
-oc_core_is_SVR(oc_resource_t *resource, size_t device)
-{
+bool oc_core_is_SVR(oc_resource_t *resource, size_t device) {
   size_t device_svrs = OCF_D * device + OCF_SEC_DOXM;
 
   size_t SVRs_end = (device + 1) * OCF_D - 1, i;
@@ -610,9 +558,7 @@ oc_core_is_SVR(oc_resource_t *resource, size_t device)
 }
 #endif /* OC_SECURITY */
 
-bool
-oc_core_is_vertical_resource(oc_resource_t *resource, size_t device)
-{
+bool oc_core_is_vertical_resource(oc_resource_t *resource, size_t device) {
   if (resource == &core_resources[0]) {
     return true;
   }
@@ -629,9 +575,7 @@ oc_core_is_vertical_resource(oc_resource_t *resource, size_t device)
   return true;
 }
 
-bool
-oc_core_is_DCR(oc_resource_t *resource, size_t device)
-{
+bool oc_core_is_DCR(oc_resource_t *resource, size_t device) {
   if (resource == &core_resources[0]) {
     return true;
   }
@@ -653,9 +597,7 @@ oc_core_is_DCR(oc_resource_t *resource, size_t device)
   return false;
 }
 
-oc_resource_t *
-oc_core_get_resource_by_uri(const char *uri, size_t device)
-{
+oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device) {
   int skip = 0, type = 0;
   if (uri[0] == '/')
     skip = 1;
@@ -733,16 +675,14 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   return &core_resources[res];
 }
 
-bool
-oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
-{
+bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request) {
   bool match = true, more_query_params = false;
   char *rt = NULL;
   int rt_len = -1;
   oc_init_query_iterator();
   do {
     more_query_params =
-      oc_iterate_query_get_values(request, "rt", &rt, &rt_len);
+        oc_iterate_query_get_values(request, "rt", &rt, &rt_len);
     if (rt_len > 0) {
       match = false;
       int i;
@@ -750,7 +690,7 @@ oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
            i++) {
         size_t size = oc_string_array_get_item_size(resource->types, i);
         const char *t =
-          (const char *)oc_string_array_get_item(resource->types, i);
+            (const char *)oc_string_array_get_item(resource->types, i);
         if (rt_len == (int)size && strncmp(rt, t, rt_len) == 0) {
           return true;
         }

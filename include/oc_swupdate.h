@@ -82,8 +82,7 @@ void oc_swupdate_notify_upgrading(size_t device, const char *version,
  */
 void oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result);
 
-typedef struct
-{
+typedef struct {
   int (*validate_purl)(const char *url);
   int (*check_new_version)(size_t device, const char *url, const char *version);
   int (*download_update)(size_t device, const char *url);

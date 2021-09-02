@@ -2,9 +2,7 @@
 #include "timestamp.h"
 #include <string.h>
 
-int
-main()
-{
+int main() {
   timestamp_t t1, t2;
 
   t1.sec = t2.sec = 0;

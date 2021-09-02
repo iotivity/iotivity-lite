@@ -19,12 +19,12 @@
  ******************************************************************/
 
 #include <cstdlib>
-#include <string>
-#include <stdio.h>
 #include <gtest/gtest.h>
+#include <stdio.h>
+#include <string>
 
-#include "oc_core_res.h"
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_helpers.h"
 
 #define DEVICE_URI "/oic/d"
@@ -36,28 +36,24 @@
 
 class TestCoreResource : public testing::Test {
 protected:
-  virtual void SetUp()
-  {
+  virtual void SetUp() {
     oc_core_init();
     oc_random_init();
   }
-  virtual void TearDown()
-  {
+  virtual void TearDown() {
     oc_core_shutdown();
     oc_random_destroy();
   }
 };
 
-TEST_F(TestCoreResource, InitPlatform_P)
-{
+TEST_F(TestCoreResource, InitPlatform_P) {
   int oc_platform_info;
 
   oc_platform_info = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
   EXPECT_EQ(0, oc_platform_info);
 }
 
-TEST_F(TestCoreResource, CoreInitPlatform_P)
-{
+TEST_F(TestCoreResource, CoreInitPlatform_P) {
   oc_platform_info_t *oc_platform_info;
 
   oc_platform_info = oc_core_init_platform(MANUFACTURER_NAME, NULL, NULL);
@@ -65,8 +61,7 @@ TEST_F(TestCoreResource, CoreInitPlatform_P)
             oc_string_len(oc_platform_info->mfg_name));
 }
 
-TEST_F(TestCoreResource, CoreDevice_P)
-{
+TEST_F(TestCoreResource, CoreDevice_P) {
   int numcoredevice;
   oc_device_info_t *addcoredevice;
 
@@ -79,8 +74,7 @@ TEST_F(TestCoreResource, CoreDevice_P)
   oc_connectivity_shutdown(0);
 }
 
-TEST_F(TestCoreResource, CoreGetResource_P)
-{
+TEST_F(TestCoreResource, CoreGetResource_P) {
   oc_core_init_platform(MANUFACTURER_NAME, NULL, NULL);
 
   char uri[] = "/oic/p";

@@ -27,19 +27,16 @@ static struct timespec ts;
 static int quit = 0;
 static bool light_state = false;
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Room1 lights", "ocf.2.2.2",
                        "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }
 
-static void
-retrieve_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data)
-{
+static void retrieve_light_switch(oc_request_t *request,
+                                  oc_interface_mask_t iface_mask,
+                                  void *user_data) {
   (void)user_data;
   PRINT("RETRIEVE light switch:\n");
   oc_rep_start_root_object();
@@ -58,10 +55,9 @@ retrieve_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   PRINT("Light state %d\n", light_state);
 }
 
-static void
-update_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
-                    void *user_data)
-{
+static void update_light_switch(oc_request_t *request,
+                                oc_interface_mask_t iface_mask,
+                                void *user_data) {
   (void)user_data;
   (void)iface_mask;
   PRINT("UPDATE light switch:\n");
@@ -106,9 +102,7 @@ update_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   oc_resource_t *res = oc_new_resource("rooflights1", "/lights", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
@@ -123,25 +117,19 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -149,10 +137,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                           register_resources};
 
   oc_clock_time_t next_event;
 

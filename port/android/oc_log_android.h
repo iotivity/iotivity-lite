@@ -17,11 +17,11 @@
 #ifndef OC_LOG_ANDROID_H
 #define OC_LOG_ANDROID_H
 
+#include "oc_endpoint.h"
+#include <android/log.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <android/log.h>
-#include "oc_endpoint.h"
 
 #ifdef __cplusplus
 extern "C" {

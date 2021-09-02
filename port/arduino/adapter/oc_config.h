@@ -20,8 +20,8 @@
 #define CONFIG_H
 
 /* Time resolution */
-#include <stdint.h>
 #include <TimeLib.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

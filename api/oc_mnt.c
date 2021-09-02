@@ -23,9 +23,8 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
-void
-get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *data) {
   (void)data;
   oc_rep_start_root_object();
   switch (iface_mask) {
@@ -42,9 +41,8 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_send_response(request, OC_STATUS_OK);
 }
 
-void
-post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask,
+              void *data) {
   (void)iface_mask;
   (void)data;
 
@@ -73,13 +71,11 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-void
-oc_create_maintenance_resource(size_t device)
-{
+void oc_create_maintenance_resource(size_t device) {
   OC_DBG("oc_introspection: Initializing maintehance resource");
 
   oc_core_populate_resource(
-    OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-    OC_SECURE | OC_DISCOVERABLE, get_mnt, 0, post_mnt, 0, 1, "oic.wk.mnt");
+      OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_SECURE | OC_DISCOVERABLE, get_mnt, 0, post_mnt, 0, 1, "oic.wk.mnt");
 }
 #endif /* OC_MNT */

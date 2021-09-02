@@ -16,19 +16,17 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include "messaging/coap/oscore_constants.h"
 #include "oc_oscore_crypto.h"
-#include "mbedtls/md.h"
 #include "mbedtls/ccm.h"
+#include "mbedtls/md.h"
+#include "messaging/coap/oscore_constants.h"
 #include "oc_rep.h"
 
 #define HMAC_SHA256_HASHLEN (32)
 #define HKDF_OUTPUT_MAXLEN (512)
 
-static void
-HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
-            uint8_t data_len, uint8_t *hmac)
-{
+static void HMAC_SHA256(const uint8_t *key, uint8_t key_len,
+                        const uint8_t *data, uint8_t data_len, uint8_t *hmac) {
   memset(hmac, 0, HMAC_SHA256_HASHLEN);
 
   mbedtls_md_context_t hmac_SHA256;
@@ -43,10 +41,9 @@ HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
   mbedtls_md_free(&hmac_SHA256);
 }
 
-static int
-HKDF_Extract(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
-             uint8_t ikm_len, uint8_t *prk_buffer)
-{
+static int HKDF_Extract(const uint8_t *salt, uint8_t salt_len,
+                        const uint8_t *ikm, uint8_t ikm_len,
+                        uint8_t *prk_buffer) {
   /* From RFC 5869
    *    HKDF-Extract(salt, IKM) -> PRK, where
    *       PRK = HMAC-Hash(salt, IKM)
@@ -63,10 +60,8 @@ HKDF_Extract(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
   return 0;
 }
 
-static int
-HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
-            uint8_t *okm, size_t okm_len)
-{
+static int HKDF_Expand(const uint8_t *prk, const uint8_t *info,
+                       uint8_t info_len, uint8_t *okm, size_t okm_len) {
   /* From RFC 5869
    *    HKDF-Expand(PRK, info, L) -> OKM
    */
@@ -114,21 +109,18 @@ HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
   return 0;
 }
 
-int
-HKDF_SHA256(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
-            uint8_t ikm_len, uint8_t *info, uint8_t info_len, uint8_t *okm,
-            uint8_t okm_len)
-{
+int HKDF_SHA256(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
+                uint8_t ikm_len, uint8_t *info, uint8_t info_len, uint8_t *okm,
+                uint8_t okm_len) {
   uint8_t PRK[HMAC_SHA256_HASHLEN];
   HKDF_Extract(salt, salt_len, ikm, ikm_len, PRK);
   HKDF_Expand(PRK, info, info_len, okm, okm_len);
   return 0;
 }
 
-void
-oc_oscore_AEAD_nonce(uint8_t *id, uint8_t id_len, uint8_t *piv, uint8_t piv_len,
-                     uint8_t *civ, uint8_t *nonce, uint8_t nonce_len)
-{
+void oc_oscore_AEAD_nonce(uint8_t *id, uint8_t id_len, uint8_t *piv,
+                          uint8_t piv_len, uint8_t *civ, uint8_t *nonce,
+                          uint8_t nonce_len) {
   OC_DBG("### computing AEAD nonce ###");
   OC_DBG("Sender ID:");
   OC_LOGbytes(id, id_len);
@@ -165,10 +157,8 @@ oc_oscore_AEAD_nonce(uint8_t *id, uint8_t id_len, uint8_t *piv, uint8_t piv_len,
   }
 }
 
-int
-oc_oscore_compose_AAD(uint8_t *kid, uint8_t kid_len, uint8_t *piv,
-                      uint8_t piv_len, uint8_t *AAD, uint8_t *AAD_len)
-{
+int oc_oscore_compose_AAD(uint8_t *kid, uint8_t kid_len, uint8_t *piv,
+                          uint8_t piv_len, uint8_t *AAD, uint8_t *AAD_len) {
   uint8_t aad_array[OSCORE_AAD_MAX_LEN];
 
   CborEncoder e, a, alg;
@@ -231,12 +221,10 @@ oc_oscore_compose_AAD(uint8_t *kid, uint8_t kid_len, uint8_t *piv,
   return 0;
 }
 
-int
-oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
-                  uint8_t *key, size_t key_len, uint8_t *nonce,
-                  size_t nonce_len, uint8_t *AAD, size_t AAD_len,
-                  uint8_t *output)
-{
+int oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
+                      uint8_t *key, size_t key_len, uint8_t *nonce,
+                      size_t nonce_len, uint8_t *AAD, size_t AAD_len,
+                      uint8_t *output) {
   mbedtls_ccm_context ccm;
   mbedtls_ccm_init(&ccm);
   mbedtls_ccm_setkey(&ccm, MBEDTLS_CIPHER_ID_AES, key, key_len * 8);
@@ -253,19 +241,17 @@ oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
   return ret;
 }
 
-int
-oc_oscore_decrypt(uint8_t *ciphertext, size_t ciphertext_len, size_t tag_len,
-                  uint8_t *key, size_t key_len, uint8_t *nonce,
-                  size_t nonce_len, uint8_t *AAD, size_t AAD_len,
-                  uint8_t *output)
-{
+int oc_oscore_decrypt(uint8_t *ciphertext, size_t ciphertext_len,
+                      size_t tag_len, uint8_t *key, size_t key_len,
+                      uint8_t *nonce, size_t nonce_len, uint8_t *AAD,
+                      size_t AAD_len, uint8_t *output) {
   mbedtls_ccm_context ccm;
   mbedtls_ccm_init(&ccm);
   mbedtls_ccm_setkey(&ccm, MBEDTLS_CIPHER_ID_AES, key, key_len * 8);
 
   int ret = mbedtls_ccm_auth_decrypt(
-    &ccm, ciphertext_len - tag_len, nonce, nonce_len, AAD, AAD_len, ciphertext,
-    output, ciphertext + ciphertext_len - tag_len, tag_len);
+      &ccm, ciphertext_len - tag_len, nonce, nonce_len, AAD, AAD_len,
+      ciphertext, output, ciphertext + ciphertext_len - tag_len, tag_len);
 
   if (ret != 0) {
     OC_ERR("***error decrypting/verifying response: mbedtls (%d)***", ret);

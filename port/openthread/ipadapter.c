@@ -32,10 +32,8 @@ static otUdpSocket multicast_socket;
 
 static oc_endpoint_t *eps;
 
-static void
-udp_receive_cbk(void *context, otMessage *ot_message,
-                const otMessageInfo *ot_message_info)
-{
+static void udp_receive_cbk(void *context, otMessage *ot_message,
+                            const otMessageInfo *ot_message_info) {
   (void)context;
 
   OC_DBG("Receive udp cbk");
@@ -44,7 +42,7 @@ udp_receive_cbk(void *context, otMessage *ot_message,
 
   if (oc_message) {
     uint16_t payloadLength =
-      otMessageGetLength(ot_message) - otMessageGetOffset(ot_message);
+        otMessageGetLength(ot_message) - otMessageGetOffset(ot_message);
     if (otMessageRead(ot_message, otMessageGetOffset(ot_message),
                       oc_message->data, payloadLength) != payloadLength) {
       OC_ERR("Can't read message");
@@ -66,9 +64,7 @@ udp_receive_cbk(void *context, otMessage *ot_message,
   }
 }
 
-static void
-free_endpoints(void)
-{
+static void free_endpoints(void) {
   oc_endpoint_t *ep = eps, *next;
   while (ep != NULL) {
     next = ep->next;
@@ -77,9 +73,7 @@ free_endpoints(void)
   }
 }
 
-oc_endpoint_t *
-oc_connectivity_get_endpoints(size_t device)
-{
+oc_endpoint_t *oc_connectivity_get_endpoints(size_t device) {
   (void)device;
   const otNetifAddress *address;
 
@@ -118,9 +112,7 @@ oc_connectivity_get_endpoints(size_t device)
   return eps;
 }
 
-int
-oc_send_buffer(oc_message_t *message)
-{
+int oc_send_buffer(oc_message_t *message) {
   otMessage *ot_message = otUdpNewMessage(ot_instance, true);
 
   if (!ot_message) {
@@ -157,9 +149,7 @@ oc_send_buffer(oc_message_t *message)
   return 0;
 }
 
-int
-oc_connectivity_init(size_t device)
-{
+int oc_connectivity_init(size_t device) {
   (void)device;
 
   OC_DBG("Connectivity init");
@@ -208,9 +198,7 @@ oc_connectivity_init(size_t device)
   return 0;
 }
 
-void
-oc_connectivity_shutdown(size_t device)
-{
+void oc_connectivity_shutdown(size_t device) {
   (void)device;
 
   OC_DBG("Connectivity shutdown: %d", device);
@@ -220,9 +208,7 @@ oc_connectivity_shutdown(size_t device)
 }
 
 #ifdef OC_CLIENT
-void
-oc_send_discovery_request(oc_message_t *message)
-{
+void oc_send_discovery_request(oc_message_t *message) {
   OC_DBG("Send discovery request");
 
   oc_send_buffer(message);
@@ -234,26 +220,14 @@ oc_send_discovery_request(oc_message_t *message)
  * connectivity interface, but are not used since the adapter process does
  * not preempt the process running the event loop.
  */
-void
-oc_network_event_handler_mutex_init(void)
-{
-  OC_DBG("Network mutex init");
-}
+void oc_network_event_handler_mutex_init(void) { OC_DBG("Network mutex init"); }
 
-void
-oc_network_event_handler_mutex_lock(void)
-{
-  OC_DBG("Network mutex lock");
-}
+void oc_network_event_handler_mutex_lock(void) { OC_DBG("Network mutex lock"); }
 
-void
-oc_network_event_handler_mutex_unlock(void)
-{
+void oc_network_event_handler_mutex_unlock(void) {
   OC_DBG("Network mutex unlock");
 }
 
-void
-oc_network_event_handler_mutex_destroy(void)
-{
+void oc_network_event_handler_mutex_destroy(void) {
   OC_DBG("Network mutex destroy");
 }

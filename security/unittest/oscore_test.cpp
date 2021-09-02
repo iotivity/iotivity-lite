@@ -16,14 +16,14 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include <cstdlib>
-#include "gtest/gtest.h"
-#include "oc_helpers.h"
-#include "messaging/coap/oscore.h"
 #include "messaging/coap/coap.h"
-#include "security/oc_oscore_crypto.h"
+#include "messaging/coap/oscore.h"
+#include "oc_helpers.h"
 #include "security/oc_oscore.h"
 #include "security/oc_oscore_context.h"
+#include "security/oc_oscore_crypto.h"
+#include "gtest/gtest.h"
+#include <cstdlib>
 
 class TestOSCORE : public testing::Test {
 protected:
@@ -36,8 +36,7 @@ protected:
 
 /* C.1.  Test Vector 1: Key Derivation with Master Salt */
 /* C.1.1.  Client */
-TEST_F(TestOSCORE, ClientKDFWithSalt_P)
-{
+TEST_F(TestOSCORE, ClientKDFWithSalt_P) {
   /*
    Inputs:
    Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -53,7 +52,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
    recipient nonce: 0x4722d4dd6d944169eefb54987c (13 bytes)
   */
 
-  uint8_t rid[1] = { 0x01 };
+  uint8_t rid[1] = {0x01};
   uint8_t secret[512], salt[512];
   size_t secret_len = 512, salt_len = 512;
 
@@ -102,7 +101,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "4622d4dd6d944168eefb54987c");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -121,8 +120,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
 }
 
 /* C.1.2.  Server */
-TEST_F(TestOSCORE, ServerKDFWithSalt_P)
-{
+TEST_F(TestOSCORE, ServerKDFWithSalt_P) {
   /*
     Inputs:
     Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -138,7 +136,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
     recipient nonce: 0x4722d4dd6d944169eefb54987c (13 bytes)
   */
 
-  uint8_t sid[1] = { 0x01 };
+  uint8_t sid[1] = {0x01};
   uint8_t secret[512], salt[512];
   size_t secret_len = 512, salt_len = 512;
 
@@ -187,7 +185,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "4622d4dd6d944168eefb54987c");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(sid, 1, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -207,8 +205,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
 
 /* C.2.  Test Vector 2: Key Derivation without Master Salt */
 /* C.2.1.  Client */
-TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
-{
+TEST_F(TestOSCORE, ClientKDFWithoutSalt_P) {
   /*
     Inputs:
     Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -223,7 +220,7 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
     recipient nonce: 0xbf35ae297d2dace810c52e99f9 (13 bytes)
   */
 
-  uint8_t sid[1] = { 0 }, rid[1] = { 0x01 };
+  uint8_t sid[1] = {0}, rid[1] = {0x01};
   uint8_t secret[512];
   size_t secret_len = 512;
 
@@ -267,7 +264,7 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "be35ae297d2dace910c52e99f9");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(sid, 1, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -286,8 +283,7 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
 }
 
 /* C.2.2.  Server */
-TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
-{
+TEST_F(TestOSCORE, ServerKDFWithoutSalt_P) {
   /*
     Inputs:
     Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -302,7 +298,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
     recipient nonce: 0xbf35ae297d2dace910c52e99f9 (13 bytes)
   */
 
-  uint8_t sid[1] = { 0x01 }, rid[1] = { 0 };
+  uint8_t sid[1] = {0x01}, rid[1] = {0};
   uint8_t secret[512];
   size_t secret_len = 512;
 
@@ -346,7 +342,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "be35ae297d2dace910c52e99f9");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(sid, 1, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -366,8 +362,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
 
 /* C.3.  Test Vector 3: Key Derivation with ID Context */
 /* C.3.1.  Client */
-TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
-{
+TEST_F(TestOSCORE, ClientKDFWithIDContext_P) {
   /*
     Inputs:
     Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -384,7 +379,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
     recipient nonce: 0x2da58fb85ff1b81d0b7181b85e (13 bytes)
   */
 
-  uint8_t rid[1] = { 0x01 };
+  uint8_t rid[1] = {0x01};
   uint8_t secret[512], salt[512], idctx[512];
   size_t secret_len = 512, salt_len = 512, idctx_len = 512;
 
@@ -440,7 +435,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "2ca58fb85ff1b81c0b7181b85e");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -459,8 +454,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
 }
 
 /* C.3.2.  Server */
-TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
-{
+TEST_F(TestOSCORE, ServerKDFWithIDContext_P) {
   /*
     Inputs:
     Master Secret: 0x0102030405060708090a0b0c0d0e0f10 (16 bytes)
@@ -477,7 +471,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
     recipient nonce: 0x2ca58fb85ff1b81c0b7181b85e (13 bytes)
   */
 
-  uint8_t sid[1] = { 0x01 };
+  uint8_t sid[1] = {0x01};
   uint8_t secret[512], salt[512], idctx[512];
   size_t secret_len = 512, salt_len = 512, idctx_len = 512;
 
@@ -533,7 +527,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "2ca58fb85ff1b81c0b7181b85e");
 
-  uint8_t piv[1] = { 0 };
+  uint8_t piv[1] = {0};
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
   oc_oscore_AEAD_nonce(sid, 1, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -552,8 +546,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
 }
 
 /* C.4.  Test Vector 4: OSCORE Request, Client */
-TEST_F(TestOSCORE, ClientRequest1_P)
-{
+TEST_F(TestOSCORE, ClientRequest1_P) {
   /*
     Unprotected CoAP request:
      0x44015d1f00003974396c6f63616c686f737483747631 (22 bytes)
@@ -578,8 +571,8 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   uint8_t civ[512];
   size_t civ_len = 512;
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
-    0);
+      oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
+      0);
 
   /*
     Sender ID: 0x (0 byte)
@@ -589,9 +582,9 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   const char *key_str = "f0910ed7295e6ad4b54fc793154302ff";
   uint8_t skey[512];
   size_t skey_len = 512;
-  EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey, &skey_len),
-    0);
+  EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey,
+                                             &skey_len),
+            0);
 
   uint64_t ssn = 20;
   uint8_t piv[OSCORE_PIV_LEN], piv_len = OSCORE_PIV_LEN;
@@ -607,7 +600,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   size_t testvec_len = 512;
 
   EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
+      oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
@@ -635,10 +628,10 @@ TEST_F(TestOSCORE, ClientRequest1_P)
                               AAD_len, buffer + 256),
             0);
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(
+                buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec,
+                &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "612f1092f1776f1c1668b3825e");
 
   coap_pkt->payload = buffer + 256;
@@ -657,17 +650,16 @@ TEST_F(TestOSCORE, ClientRequest1_P)
       3616c686f7374620914ff612f1092f1776f1c1668b3825e (35 bytes)
   */
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec,
+                                             &testvec_len),
+            0);
   EXPECT_STREQ(
-    testvec,
-    "44025d1f00003974396c6f63616c686f7374620914ff612f1092f1776f1c1668b3825e");
+      testvec,
+      "44025d1f00003974396c6f63616c686f7374620914ff612f1092f1776f1c1668b3825e");
 }
 
 /* C.5.  Test Vector 5: OSCORE Request, Client */
-TEST_F(TestOSCORE, ClientRequest2_P)
-{
+TEST_F(TestOSCORE, ClientRequest2_P) {
   /*
     Unprotected CoAP request:
      0x440171c30000b932396c6f63616c686f737483747631 (22 bytes)
@@ -692,21 +684,21 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   uint8_t civ[512];
   size_t civ_len = 512;
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
-    0);
+      oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
+      0);
 
   /*
     Sender ID: 0x00 (1 byte)
     Sender Key: 0x321b26943253c7ffb6003b0b64d74041 (16 bytes)
     Sender Sequence Number: 20
   */
-  uint8_t sid[1] = { 0 };
+  uint8_t sid[1] = {0};
   const char *key_str = "321b26943253c7ffb6003b0b64d74041";
   uint8_t skey[512];
   size_t skey_len = 512;
-  EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey, &skey_len),
-    0);
+  EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey,
+                                             &skey_len),
+            0);
 
   uint64_t ssn = 20;
   uint8_t piv[OSCORE_PIV_LEN], piv_len = OSCORE_PIV_LEN;
@@ -722,7 +714,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   size_t testvec_len = 512;
 
   EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
+      oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
   EXPECT_STREQ(testvec, "8368456e63727970743040498501810a4100411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
@@ -749,10 +741,10 @@ TEST_F(TestOSCORE, ClientRequest2_P)
                               AAD_len, buffer + 256),
             0);
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(
+                buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec,
+                &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "4ed339a5a379b0b8bc731fffb0");
 
   coap_pkt->payload = buffer + 256;
@@ -771,17 +763,15 @@ TEST_F(TestOSCORE, ClientRequest2_P)
       3616c686f737463091400ff4ed339a5a379b0b8bc731fffb0 (36 bytes)
   */
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
-    0);
-  EXPECT_STREQ(
-    testvec,
-    "440271c30000b932396c6f63616c686f737463091400ff4ed339a5a379b0b8bc731fffb0");
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec,
+                                             &testvec_len),
+            0);
+  EXPECT_STREQ(testvec, "440271c30000b932396c6f63616c686f737463091400ff4ed339a5"
+                        "a379b0b8bc731fffb0");
 }
 
 /* C.6.  Test Vector 6: OSCORE Request, Client */
-TEST_F(TestOSCORE, ClientRequest3_P)
-{
+TEST_F(TestOSCORE, ClientRequest3_P) {
   /*
     Unprotected CoAP request:
      0x44012f8eef9bbf7a396c6f63616c686f737483747631 (22 bytes)
@@ -806,8 +796,8 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   uint8_t civ[512];
   size_t civ_len = 512;
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
-    0);
+      oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
+      0);
 
   /*
     ID Context: 0x37cbf3210017a2d3 (8 bytes)
@@ -825,9 +815,9 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   const char *key_str = "af2a1300a5e95788b356336eeecd2b92";
   uint8_t skey[512];
   size_t skey_len = 512;
-  EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey, &skey_len),
-    0);
+  EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey,
+                                             &skey_len),
+            0);
 
   uint64_t ssn = 20;
   uint8_t piv[OSCORE_PIV_LEN], piv_len = OSCORE_PIV_LEN;
@@ -843,7 +833,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   size_t testvec_len = 512;
 
   EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
+      oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
@@ -871,10 +861,10 @@ TEST_F(TestOSCORE, ClientRequest3_P)
                               AAD_len, buffer + 256),
             0);
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(
+                buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec,
+                &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "72cd7273fd331ac45cffbe55c3");
 
   coap_pkt->payload = buffer + 256;
@@ -894,16 +884,15 @@ TEST_F(TestOSCORE, ClientRequest3_P)
       72cd7273fd331ac45cffbe55c3 (44 bytes)
   */
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec,
+                                             &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "44022f8eef9bbf7a396c6f63616c686f73746b19140837cbf32100"
                         "17a2d3ff72cd7273fd331ac45cffbe55c3");
 }
 
 /* C.7.  Test Vector 7: OSCORE Response, Server */
-TEST_F(TestOSCORE, ServerResponse1_P)
-{
+TEST_F(TestOSCORE, ServerResponse1_P) {
   /*
     Unprotected CoAP response:
      0x64455d1f00003974ff48656c6c6f20576f726c6421 (21 bytes)
@@ -928,8 +917,8 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   uint8_t civ[512];
   size_t civ_len = 512;
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
-    0);
+      oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
+      0);
 
   /*
     Sender ID: 0x01 (1 byte)
@@ -939,12 +928,12 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   const char *key_str = "ffb14e093c94c9cac9471648b4f98710";
   uint8_t skey[512];
   size_t skey_len = 512;
-  EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey, &skey_len),
-    0);
+  EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey,
+                                             &skey_len),
+            0);
 
   /* Using request_piv & request_kid from test vector C.4 */
-  uint8_t request_piv[1] = { 0x14 };
+  uint8_t request_piv[1] = {0x14};
 
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
@@ -955,7 +944,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   size_t testvec_len = 512;
 
   EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
+      oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x45ff48656c6c6f20576f726c6421 (14 bytes) */
@@ -985,10 +974,10 @@ TEST_F(TestOSCORE, ServerResponse1_P)
                               AAD_len, buffer + 256),
             0);
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(
+                buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec,
+                &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "dbaad1e9a7e7b2a813d3c31524378303cdafae119106");
 
   coap_pkt->payload = buffer + 256;
@@ -1009,17 +998,16 @@ TEST_F(TestOSCORE, ServerResponse1_P)
       (32 bytes)
   */
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec,
+                                             &testvec_len),
+            0);
   EXPECT_STREQ(
-    testvec,
-    "64445d1f0000397490ffdbaad1e9a7e7b2a813d3c31524378303cdafae119106");
+      testvec,
+      "64445d1f0000397490ffdbaad1e9a7e7b2a813d3c31524378303cdafae119106");
 }
 
 /* C.8.  Test Vector 8: OSCORE Response with Partial IV, Server */
-TEST_F(TestOSCORE, ServerResponse2_P)
-{
+TEST_F(TestOSCORE, ServerResponse2_P) {
   /*
     Unprotected CoAP response:
      0x64455d1f00003974ff48656c6c6f20576f726c6421 (21 bytes)
@@ -1044,8 +1032,8 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   uint8_t civ[512];
   size_t civ_len = 512;
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
-    0);
+      oc_conv_hex_string_to_byte_array(civ_str, strlen(civ_str), civ, &civ_len),
+      0);
 
   /*
     Sender Key: 0xffb14e093c94c9cac9471648b4f98710 (16 bytes)
@@ -1053,12 +1041,12 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   const char *key_str = "ffb14e093c94c9cac9471648b4f98710";
   uint8_t skey[512];
   size_t skey_len = 512;
-  EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey, &skey_len),
-    0);
+  EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str, strlen(key_str), skey,
+                                             &skey_len),
+            0);
 
   /* Using request_piv & request_kid from test vetor in C.4 */
-  uint8_t request_piv[1] = { 0x14 };
+  uint8_t request_piv[1] = {0x14};
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
   EXPECT_EQ(oc_oscore_compose_AAD(NULL, 0, request_piv, 1, AAD, &AAD_len), 0);
@@ -1067,7 +1055,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   size_t testvec_len = 512;
 
   EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
+      oc_conv_byte_array_to_hex_string(AAD, AAD_len, testvec, &testvec_len), 0);
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x45ff48656c6c6f20576f726c6421 (14 bytes) */
@@ -1083,8 +1071,8 @@ TEST_F(TestOSCORE, ServerResponse2_P)
     Sender ID: 0x01 (1 byte)
     Sender Sequence Number: 0
   */
-  uint8_t sid[1] = { 0x01 };
-  uint8_t piv[1] = { 0 };
+  uint8_t sid[1] = {0x01};
+  uint8_t piv[1] = {0};
   /* Verify nonce: 0x4722d4dd6d944169eefb54987c (13 bytes) */
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
   oc_oscore_AEAD_nonce(sid, 1, piv, 1, civ, nonce, OSCORE_AEAD_NONCE_LEN);
@@ -1101,10 +1089,10 @@ TEST_F(TestOSCORE, ServerResponse2_P)
                               AAD_len, buffer + 256),
             0);
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(
+                buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec,
+                &testvec_len),
+            0);
   EXPECT_STREQ(testvec, "4d4c13669384b67354b2b6175ff4b8658c666a6cf88e");
 
   coap_pkt->payload = buffer + 256;
@@ -1124,12 +1112,12 @@ TEST_F(TestOSCORE, ServerResponse2_P)
       ff4d4c13669384b67354b2b6175ff4b8658c666a6cf88e (34 bytes)
   */
   testvec_len = 512;
-  EXPECT_EQ(
-    oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
-    0);
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec,
+                                             &testvec_len),
+            0);
   EXPECT_STREQ(
-    testvec,
-    "64445d1f00003974920100ff4d4c13669384b67354b2b6175ff4b8658c666a6cf88e");
+      testvec,
+      "64445d1f00003974920100ff4d4c13669384b67354b2b6175ff4b8658c666a6cf88e");
 }
 #else  /* OC_SECURITY && OC_OSCORE */
 typedef int dummy_declaration;

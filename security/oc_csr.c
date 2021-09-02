@@ -22,9 +22,8 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 
-void
-get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask,
+             void *data) {
   (void)data;
 
   size_t device = request->resource->device;
@@ -40,7 +39,7 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_rep_start_root_object();
   if (iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-      oc_core_get_resource_by_index(OCF_SEC_CSR, device));
+        oc_core_get_resource_by_index(OCF_SEC_CSR, device));
   }
   oc_rep_set_text_string(root, csr, (const char *)csr);
   oc_rep_set_text_string(root, encoding, "oic.sec.encoding.pem");

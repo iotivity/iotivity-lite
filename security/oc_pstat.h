@@ -37,8 +37,7 @@ typedef enum {
   OC_DPM_NSA = 256
 } oc_dpmtype_t;
 
-typedef struct
-{
+typedef struct {
   oc_dostype_t s;
   bool p;
   bool isop;

@@ -74,13 +74,14 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
  * then retry later.
  */
 #ifdef OC_BLOCK_WISE
-int
-coap_separate_accept(void *request, oc_separate_response_t *separate_response,
-                     oc_endpoint_t *endpoint, int observe, uint16_t block2_size)
+int coap_separate_accept(void *request,
+                         oc_separate_response_t *separate_response,
+                         oc_endpoint_t *endpoint, int observe,
+                         uint16_t block2_size)
 #else  /* OC_BLOCK_WISE */
-int
-coap_separate_accept(void *request, oc_separate_response_t *separate_response,
-                     oc_endpoint_t *endpoint, int observe)
+int coap_separate_accept(void *request,
+                         oc_separate_response_t *separate_response,
+                         oc_endpoint_t *endpoint, int observe)
 #endif /* !OC_BLOCK_WISE */
 {
   coap_status_code = CLEAR_TRANSACTION;
@@ -165,10 +166,8 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   return 1;
 }
 /*----------------------------------------------------------------------------*/
-void
-coap_separate_resume(void *response, coap_separate_t *separate_store,
-                     uint8_t code, uint16_t mid)
-{
+void coap_separate_resume(void *response, coap_separate_t *separate_store,
+                          uint8_t code, uint16_t mid) {
 #ifdef OC_TCP
   if (separate_store->endpoint.flags & TCP) {
     coap_tcp_init_message(response, code);
@@ -185,10 +184,8 @@ coap_separate_resume(void *response, coap_separate_t *separate_store,
   }
 }
 /*---------------------------------------------------------------------------*/
-void
-coap_separate_clear(oc_separate_response_t *separate_response,
-                    coap_separate_t *separate_store)
-{
+void coap_separate_clear(oc_separate_response_t *separate_response,
+                         coap_separate_t *separate_store) {
 #ifdef OC_BLOCK_WISE
   oc_free_string(&separate_store->uri);
 #endif /* OC_BLOCK_WISE */

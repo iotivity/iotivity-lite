@@ -28,9 +28,7 @@ extern "C" {
 static otDEFINE_ALIGNED_VAR(sOcInstanceRaw, sizeof(ocInstance), uint64_t);
 
 extern "C" {
-void
-ocInstanceInit(const oc_handler_t *handler)
-{
+void ocInstanceInit(const oc_handler_t *handler) {
   ocInstance *instance = NULL;
 
   instance = new (&sOcInstanceRaw) ocInstance();
@@ -40,55 +38,36 @@ ocInstanceInit(const oc_handler_t *handler)
   oc_assert(oc_main_init(handler) == 0);
 }
 
-void
-ocInstanceSignal()
-{
-  ocInstance::GetInstance()->PollRequest();
-}
+void ocInstanceSignal() { ocInstance::GetInstance()->PollRequest(); }
 }
 
 ocInstance *ocInstance::sInstance = NULL;
 
-ocInstance *
-ocInstance::GetInstance()
-{
-  return sInstance;
-}
+ocInstance *ocInstance::GetInstance() { return sInstance; }
 
 ocInstance::ocInstance()
-  : mPollRequest(ot::Instance::Get(), &ocInstance::HandlePollRequest, this)
-  , mPollTimer(ot::Instance::Get(), &ocInstance::HandlePollTimer, this)
-{
+    : mPollRequest(ot::Instance::Get(), &ocInstance::HandlePollRequest, this),
+      mPollTimer(ot::Instance::Get(), &ocInstance::HandlePollTimer, this) {
   sInstance = this;
 
   mPollRequest.Post();
 }
 
-void
-ocInstance::PollRequest()
-{
-  mPollRequest.Post();
-}
+void ocInstance::PollRequest() { mPollRequest.Post(); }
 
-void
-ocInstance::HandlePollRequest(ot::Tasklet &tasklet)
-{
+void ocInstance::HandlePollRequest(ot::Tasklet &tasklet) {
   (void)tasklet;
 
   ocInstance::GetInstance()->onPollRequest();
 }
 
-void
-ocInstance::HandlePollTimer(ot::Timer &timer)
-{
+void ocInstance::HandlePollTimer(ot::Timer &timer) {
   (void)timer;
 
   ocInstance::GetInstance()->onPollTimer();
 }
 
-void
-ocInstance::onPollRequest()
-{
+void ocInstance::onPollRequest() {
   oc_clock_time_t time = oc_main_poll();
 
   OC_DBG("Poll %lu", time);
@@ -100,8 +79,4 @@ ocInstance::onPollRequest()
   }
 }
 
-void
-ocInstance::onPollTimer()
-{
-  onPollRequest();
-}
+void ocInstance::onPollTimer() { onPollRequest(); }

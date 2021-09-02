@@ -42,30 +42,24 @@
 #endif
 
 #define OC_MEMMAP_KEY                                                          \
-  {                                                                            \
-    0xab, 0xcd, 0xef                                                           \
-  }
+  { 0xab, 0xcd, 0xef }
 
 #define OC_MEMMAP_CLOSER_ERASABLE_SECTOR(_pos)                                 \
   (_pos * (_pos / memmap.sector_size))
 
-struct memmap_key
-{
+struct memmap_key {
   uint8_t key[OC_MEMORY_KEY_SIZE];
   size_t offset;
   size_t size;
 };
 
-static struct
-{
+static struct {
   struct device *flash;
   size_t sector_size, max_rw_size;
   struct memmap_key keys[OC_MEMORY_KEY_NUMBER];
 } memmap;
 
-static unsigned int
-align_power2(unsigned int value)
-{
+static unsigned int align_power2(unsigned int value) {
   unsigned int left_zeros;
 
   if (value <= 1)
@@ -78,9 +72,7 @@ align_power2(unsigned int value)
   return (unsigned int)1 << ((sizeof(value) * 8) - left_zeros);
 }
 
-static size_t
-find_next_available_sector(void)
-{
+static size_t find_next_available_sector(void) {
   size_t times;
   uint8_t key[] = OC_MEMMAP_KEY;
 
@@ -91,9 +83,7 @@ find_next_available_sector(void)
   return times * memmap.sector_size;
 }
 
-static int
-storage_init(size_t initial_offset)
-{
+static int storage_init(size_t initial_offset) {
   int r;
   uint8_t key[] = OC_MEMMAP_KEY;
   size_t times, extra, off = 0;
@@ -108,9 +98,9 @@ storage_init(size_t initial_offset)
   if (r < 0)
     return r;
 
-  r =
-    flash_erase(memmap.flash, OC_MEMMAP_CLOSER_ERASABLE_SECTOR(initial_offset),
-                memmap.sector_size);
+  r = flash_erase(memmap.flash,
+                  OC_MEMMAP_CLOSER_ERASABLE_SECTOR(initial_offset),
+                  memmap.sector_size);
   if (r < 0)
     return r;
 
@@ -163,9 +153,7 @@ storage_init(size_t initial_offset)
  * For arduino 101 internal flash it will be:
  * W25QXXDV,4096,256
  */
-int
-oc_storage_config(const char *path)
-{
+int oc_storage_config(const char *path) {
   char *aux, device_name[16];
   unsigned int size;
   size_t initial_offset;
@@ -252,9 +240,7 @@ err:
   return -errno;
 }
 
-static struct memmap_key *
-find_key(const char *store)
-{
+static struct memmap_key *find_key(const char *store) {
   int i, empty_pos = -1;
 
   for (i = 0; i < sizeof(memmap.keys) / sizeof(memmap.keys[0]); i++) {
@@ -277,9 +263,7 @@ find_key(const char *store)
  * store should contains the memory position to read.
  * The value should be multiple of the flash sector size.
  */
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
-{
+long oc_storage_read(const char *store, uint8_t *buf, size_t size) {
   int r;
   struct memmap_key *key;
   size_t times = 0, extra = 0;
@@ -321,9 +305,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
  * store should contains the memory position to write.
  * The value should be multiple of the flash sector size.
  */
-long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
-{
+long oc_storage_write(const char *store, uint8_t *buf, size_t size) {
   int r = 0;
   struct memmap_key *key;
   size_t times = 0, extra = 0, erase_value = memmap.sector_size;

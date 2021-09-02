@@ -44,8 +44,7 @@ extern "C" {
  * Fills out a list of ifaddr structs (see below) which contain information
  * about every network interface available on the host.
  * See 'man getifaddrs' on Linux or OS X (nb: it is not a POSIX function). */
-struct ifaddrs
-{
+struct ifaddrs {
   struct ifaddrs *ifa_next;
   char *ifa_name;
   unsigned int ifa_flags;

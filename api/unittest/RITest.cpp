@@ -19,14 +19,14 @@
  ******************************************************************/
 
 #include <cstdlib>
-#include <string>
-#include <stdio.h>
 #include <gtest/gtest.h>
+#include <stdio.h>
+#include <string>
 
-#include "port/linux/oc_config.h"
 #include "oc_api.h"
-#include "oc_ri.h"
 #include "oc_helpers.h"
+#include "oc_ri.h"
+#include "port/linux/oc_config.h"
 
 #define RESOURCE_URI "/LightResourceURI"
 #define RESOURCE_NAME "roomlights"
@@ -38,16 +38,14 @@ protected:
   virtual void TearDown() { oc_ri_shutdown(); }
 };
 
-static void
-onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
-{
+static void onGet(oc_request_t *request, oc_interface_mask_t iface_mask,
+                  void *user_data) {
   (void)request;
   (void)iface_mask;
   (void)user_data;
 }
 
-TEST_F(TestOcRi, GetAppResourceByUri_P)
-{
+TEST_F(TestOcRi, GetAppResourceByUri_P) {
   oc_resource_t *res;
 
   res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
@@ -61,16 +59,14 @@ TEST_F(TestOcRi, GetAppResourceByUri_P)
   oc_ri_delete_resource(res);
 }
 
-TEST_F(TestOcRi, GetAppResourceByUri_N)
-{
+TEST_F(TestOcRi, GetAppResourceByUri_N) {
   oc_resource_t *res;
 
   res = oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
   EXPECT_EQ(res, NULL);
 }
 
-TEST_F(TestOcRi, RiGetAppResource_P)
-{
+TEST_F(TestOcRi, RiGetAppResource_P) {
   oc_resource_t *res;
 
   res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
@@ -83,16 +79,14 @@ TEST_F(TestOcRi, RiGetAppResource_P)
   oc_ri_delete_resource(res);
 }
 
-TEST_F(TestOcRi, RiGetAppResource_N)
-{
+TEST_F(TestOcRi, RiGetAppResource_N) {
   oc_resource_t *res;
 
   res = oc_ri_get_app_resources();
   EXPECT_EQ(0, res);
 }
 
-TEST_F(TestOcRi, RiAllocResource_P)
-{
+TEST_F(TestOcRi, RiAllocResource_P) {
   oc_resource_t *res;
 
   res = oc_ri_alloc_resource();
@@ -100,8 +94,7 @@ TEST_F(TestOcRi, RiAllocResource_P)
   oc_ri_delete_resource(res);
 }
 
-TEST_F(TestOcRi, RiDeleteResource_P)
-{
+TEST_F(TestOcRi, RiDeleteResource_P) {
   oc_resource_t *res;
   bool del_check;
 
@@ -110,8 +103,7 @@ TEST_F(TestOcRi, RiDeleteResource_P)
   EXPECT_EQ(del_check, 1);
 }
 
-TEST_F(TestOcRi, RiFreeResourceProperties_P)
-{
+TEST_F(TestOcRi, RiFreeResourceProperties_P) {
   oc_resource_t *res;
 
   res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
@@ -120,8 +112,7 @@ TEST_F(TestOcRi, RiFreeResourceProperties_P)
   oc_ri_delete_resource(res);
 }
 
-TEST_F(TestOcRi, RiAddResource_P)
-{
+TEST_F(TestOcRi, RiAddResource_P) {
   oc_resource_t *res;
   bool res_check;
 
@@ -134,11 +125,10 @@ TEST_F(TestOcRi, RiAddResource_P)
   oc_ri_delete_resource(res);
 }
 
-TEST_F(TestOcRi, RIGetQueryValue_P)
-{
-  const char *input[] = { "key=1",          "data=1&key=2",     "key=2&data=3",
-                          "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
-                          "y&x&key=2&y" };
+TEST_F(TestOcRi, RIGetQueryValue_P) {
+  const char *input[] = {"key=1",          "data=1&key=2",     "key=2&data=3",
+                         "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
+                         "y&x&key=2&y"};
   int ret;
   char *value;
 
@@ -154,18 +144,17 @@ TEST_F(TestOcRi, RIGetQueryValue_P)
   }
 }
 
-TEST_F(TestOcRi, RIQueryExists_P)
-{
-  const char *input[] = { "key=1",
-                          "key",
-                          "data=1&key=2",
-                          "data=2&key",
-                          "key&data=3",
-                          "key=2&data=3",
-                          "x=1&key=2&data=3",
-                          "y=&key=2&data=3",
-                          "y=1&x&key=2&data=3",
-                          "y=1&x&key" };
+TEST_F(TestOcRi, RIQueryExists_P) {
+  const char *input[] = {"key=1",
+                         "key",
+                         "data=1&key=2",
+                         "data=2&key",
+                         "key&data=3",
+                         "key=2&data=3",
+                         "x=1&key=2&data=3",
+                         "y=&key=2&data=3",
+                         "y=1&x&key=2&data=3",
+                         "y=1&x&key"};
   int ret;
   for (int i = 0; i < 10; i++) {
     ret = oc_ri_query_exists(input[i], strlen(input[i]), "key");

@@ -16,10 +16,10 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include <cstdlib>
-#include "gtest/gtest.h"
 #include "oc_helpers.h"
 #include "security/oc_oscore_crypto.h"
+#include "gtest/gtest.h"
+#include <cstdlib>
 
 class TestOSCOREHKDF : public testing::Test {
 protected:
@@ -30,8 +30,7 @@ protected:
 
 /* Test cases from RFC 5869 */
 
-TEST_F(TestOSCOREHKDF, HKFDTC1_P)
-{
+TEST_F(TestOSCOREHKDF, HKFDTC1_P) {
   /*
     IKM  = 0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b (22 octets)
     salt = 0x000102030405060708090a0b0c (13 octets)
@@ -47,8 +46,8 @@ TEST_F(TestOSCOREHKDF, HKFDTC1_P)
   size_t L = 42;
 
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
-    0);
+      oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
+      0);
   EXPECT_EQ(ikm_len, 22);
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(salt_str, strlen(salt_str), salt,
                                              &salt_len),
@@ -75,8 +74,7 @@ TEST_F(TestOSCOREHKDF, HKFDTC1_P)
                      "cc4c5bf34007208d5b887185865");
 }
 
-TEST_F(TestOSCOREHKDF, HKFDTC2_P)
-{
+TEST_F(TestOSCOREHKDF, HKFDTC2_P) {
   /*
     IKM  = 0x000102030405060708090a0b0c0d0e0f
            101112131415161718191a1b1c1d1e1f
@@ -116,8 +114,8 @@ TEST_F(TestOSCOREHKDF, HKFDTC2_P)
   size_t L = 82;
 
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
-    0);
+      oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
+      0);
   EXPECT_EQ(ikm_len, 80);
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(salt_str, strlen(salt_str), salt,
                                              &salt_len),
@@ -148,8 +146,7 @@ TEST_F(TestOSCOREHKDF, HKFDTC2_P)
                      "7793a9aca3db71cc30c58179ec3e87c14c01d5c1f3434f1d87");
 }
 
-TEST_F(TestOSCOREHKDF, HKFDTC3_P)
-{
+TEST_F(TestOSCOREHKDF, HKFDTC3_P) {
   /*
     IKM  = 0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b (22 octets)
     salt = (0 octets)
@@ -162,8 +159,8 @@ TEST_F(TestOSCOREHKDF, HKFDTC3_P)
   size_t ikm_len = 512, L = 42;
 
   EXPECT_EQ(
-    oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
-    0);
+      oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
+      0);
   EXPECT_EQ(ikm_len, 22);
   EXPECT_EQ(HKDF_SHA256(NULL, 0, ikm, ikm_len, NULL, 0, okm, L), 0);
 

@@ -17,14 +17,6 @@
 #include "port/oc_assert.h"
 #include <stdlib.h>
 
-void
-abort_impl(void)
-{
-  abort();
-}
+void abort_impl(void) { abort(); }
 
-void
-exit_impl(int status)
-{
-  exit(status);
-}
+void exit_impl(int status) { exit(status); }

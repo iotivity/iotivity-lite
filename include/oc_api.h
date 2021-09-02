@@ -46,8 +46,7 @@ extern "C" {
  *
  * @see oc_main_init
  */
-typedef struct
-{
+typedef struct {
   /**
    * Device initialization callback that is invoked to initialize the platform
    * and device(s).
@@ -2056,8 +2055,7 @@ void oc_close_session(oc_endpoint_t *endpoint);
   Asserting roles support functions
   @{
 */
-typedef struct oc_role_t
-{
+typedef struct oc_role_t {
   struct oc_role_t *next;
   oc_string_t role;
   oc_string_t authority;
@@ -2174,8 +2172,7 @@ void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 #define oc_define_interrupt_handler(name)                                      \
   void name##_interrupt_x_handler(void);                                       \
   OC_PROCESS(name##_interrupt_x, "");                                          \
-  OC_PROCESS_THREAD(name##_interrupt_x, ev, data)                              \
-  {                                                                            \
+  OC_PROCESS_THREAD(name##_interrupt_x, ev, data) {                            \
     (void)data;                                                                \
     OC_PROCESS_POLLHANDLER(name##_interrupt_x_handler());                      \
     OC_PROCESS_BEGIN();                                                        \

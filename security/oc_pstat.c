@@ -46,9 +46,7 @@ static oc_sec_pstat_t *pstat;
 static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-void
-oc_sec_pstat_free(void)
-{
+void oc_sec_pstat_free(void) {
 #ifdef OC_DYNAMIC_ALLOCATION
   if (pstat) {
     free(pstat);
@@ -56,21 +54,17 @@ oc_sec_pstat_free(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void
-oc_sec_pstat_init(void)
-{
+void oc_sec_pstat_init(void) {
 #ifdef OC_DYNAMIC_ALLOCATION
-  pstat =
-    (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
+  pstat = (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(),
+                                   sizeof(oc_sec_pstat_t));
   if (!pstat) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-static bool
-nil_uuid(oc_uuid_t *uuid)
-{
+static bool nil_uuid(oc_uuid_t *uuid) {
   int i;
   for (i = 0; i < 16; i++) {
     if (uuid->id[i] != 0) {
@@ -81,9 +75,7 @@ nil_uuid(oc_uuid_t *uuid)
 }
 
 #ifdef OC_DEBUG
-static void
-dump_pstat_dos(oc_sec_pstat_t *ps)
-{
+static void dump_pstat_dos(oc_sec_pstat_t *ps) {
   switch (ps->s) {
   case OC_DOS_RESET:
     OC_DBG("oc_pstat: dos is RESET");
@@ -104,9 +96,7 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
 }
 #endif /* OC_DEBUG */
 
-static bool
-valid_transition(size_t device, oc_dostype_t state)
-{
+static bool valid_transition(size_t device, oc_dostype_t state) {
   switch (pstat[device].s) {
   case OC_DOS_RESET:
     if (state == OC_DOS_RESET || state == OC_DOS_RFOTM)
@@ -132,10 +122,8 @@ valid_transition(size_t device, oc_dostype_t state)
   return true;
 }
 
-static bool
-oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
-                      bool self_reset)
-{
+static bool oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device,
+                                  bool from_storage, bool self_reset) {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   oc_sec_acl_t *acl = oc_sec_get_acl(device);
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
@@ -392,33 +380,23 @@ pstat_state_error:
   return false;
 }
 
-oc_sec_pstat_t *
-oc_sec_get_pstat(size_t device)
-{
+oc_sec_pstat_t *oc_sec_get_pstat(size_t device) {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
 #endif /* OC_DEBUG */
   return &pstat[device];
 }
 
-bool
-oc_sec_is_operational(size_t device)
-{
-  return pstat[device].isop;
-}
+bool oc_sec_is_operational(size_t device) { return pstat[device].isop; }
 
-void
-oc_sec_pstat_default(size_t device)
-{
-  oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
+void oc_sec_pstat_default(size_t device) {
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET};
   oc_pstat_handle_state(&ps, device, true, false);
   oc_sec_dump_pstat(device);
 }
 
-void
-oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
-                    bool to_storage)
-{
+void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
+                         bool to_storage) {
 #ifdef OC_DEBUG
   dump_pstat_dos(&pstat[device]);
 #endif /* OC_DEBUG */
@@ -426,7 +404,7 @@ oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
     oc_process_baseline_interface(
-      oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+        oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
   }
   oc_rep_set_object(root, dos);
   oc_rep_set_boolean(dos, p, pstat[device].p);
@@ -443,9 +421,7 @@ oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
 }
 
 #ifdef OC_SOFTWARE_UPDATE
-static void
-oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
-{
+static void oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm) {
   if (*tm == OC_DPM_NSA) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISAC, device);
     *tm = 0;
@@ -458,9 +434,7 @@ oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
   }
 }
 
-void
-oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
-{
+void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm) {
   oc_sec_pstat_t *ps = &pstat[device];
   ps->cm = cm;
 #ifdef OC_SERVER
@@ -469,9 +443,7 @@ oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
 }
 #endif /* OC_SOFTWARE_UPDATE */
 
-bool
-oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
-{
+bool oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device) {
   bool transition_state = false, target_mode = false;
   oc_sec_pstat_t ps;
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
@@ -562,7 +534,7 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
       bool transition_success =
-        oc_pstat_handle_state(&ps, device, from_storage, false);
+          oc_pstat_handle_state(&ps, device, from_storage, false);
       return transition_success;
     }
     memcpy(&pstat[device], &ps, sizeof(oc_sec_pstat_t));
@@ -571,9 +543,8 @@ oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
   return false;
 }
 
-void
-get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
+               void *data) {
   (void)data;
   switch (iface_mask) {
   case OC_IF_RW:
@@ -586,9 +557,8 @@ get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-void
-post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
-{
+void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
+                void *data) {
   (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;
@@ -602,24 +572,16 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-bool
-oc_pstat_reset_device(size_t device, bool self_reset)
-{
-  oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
+bool oc_pstat_reset_device(size_t device, bool self_reset) {
+  oc_sec_pstat_t ps = {.s = OC_DOS_RESET};
   bool ret = oc_pstat_handle_state(&ps, device, false, self_reset);
   oc_sec_dump_pstat(device);
   return ret;
 }
 
-void
-oc_reset_device(size_t device)
-{
-  oc_pstat_reset_device(device, true);
-}
+void oc_reset_device(size_t device) { oc_pstat_reset_device(device, true); }
 
-void
-oc_reset()
-{
+void oc_reset() {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_pstat_reset_device(device, true);

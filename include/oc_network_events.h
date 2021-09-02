@@ -45,8 +45,7 @@ typedef void (*interface_event_handler_t)(oc_interface_event_t event);
 /**
  * Structure to manage network interface handler list.
  */
-typedef struct oc_network_interface_cb
-{
+typedef struct oc_network_interface_cb {
   struct oc_network_interface_cb *next;
   interface_event_handler_t handler;
 } oc_network_interface_cb_t;

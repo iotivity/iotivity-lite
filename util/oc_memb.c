@@ -41,22 +41,18 @@
 #endif
 
 /*---------------------------------------------------------------------------*/
-void
-oc_memb_init(struct oc_memb *m)
-{
+void oc_memb_init(struct oc_memb *m) {
   if (m->num > 0) {
     memset(m->count, 0, m->num);
     memset(m->mem, 0, (unsigned)m->num * sizeof(char *));
   }
 }
 /*---------------------------------------------------------------------------*/
-void *
-_oc_memb_alloc(
+void *_oc_memb_alloc(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  struct oc_memb *m)
-{
+    struct oc_memb *m) {
   if (!m) {
     OC_ERR("oc_memb is NULL");
     return NULL;
@@ -99,13 +95,11 @@ _oc_memb_alloc(
   return ptr;
 }
 /*---------------------------------------------------------------------------*/
-char
-_oc_memb_free(
+char _oc_memb_free(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  struct oc_memb *m, void *ptr)
-{
+    struct oc_memb *m, void *ptr) {
   if (!m) {
     OC_ERR("oc_memb is NULL");
     return -1;
@@ -145,16 +139,12 @@ _oc_memb_free(
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-int
-oc_memb_inmemb(struct oc_memb *m, void *ptr)
-{
+int oc_memb_inmemb(struct oc_memb *m, void *ptr) {
   return (char *)ptr >= (char *)m->mem &&
          (char *)ptr < (char *)m->mem + (m->num * m->size);
 }
 /*---------------------------------------------------------------------------*/
-int
-oc_memb_numfree(struct oc_memb *m)
-{
+int oc_memb_numfree(struct oc_memb *m) {
   int i;
   int num_free = 0;
 
@@ -167,10 +157,8 @@ oc_memb_numfree(struct oc_memb *m)
   return num_free;
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_memb_set_buffers_avail_cb(struct oc_memb *m,
-                             oc_memb_buffers_avail_callback_t cb)
-{
+void oc_memb_set_buffers_avail_cb(struct oc_memb *m,
+                                  oc_memb_buffers_avail_callback_t cb) {
   m->buffers_avail_cb = cb;
 }
 /*---------------------------------------------------------------------------*/

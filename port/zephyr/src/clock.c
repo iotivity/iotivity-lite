@@ -16,25 +16,12 @@
 
 #include "port/oc_clock.h"
 
-void
-oc_clock_init(void)
-{
-}
+void oc_clock_init(void) {}
 
-oc_clock_time_t
-oc_clock_time(void)
-{
-  return k_uptime_get();
-}
+oc_clock_time_t oc_clock_time(void) { return k_uptime_get(); }
 
-unsigned long
-oc_clock_seconds(void)
-{
+unsigned long oc_clock_seconds(void) {
   return (oc_clock_time() + OC_CLOCK_SECOND - 1) / OC_CLOCK_SECOND;
 }
 
-void
-oc_clock_wait(oc_clock_time_t t)
-{
-  k_sleep(t);
-}
+void oc_clock_wait(oc_clock_time_t t) { k_sleep(t); }

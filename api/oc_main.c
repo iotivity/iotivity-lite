@@ -31,20 +31,20 @@
 #include "oc_signal_event_loop.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
-  defined(OC_COLLECTIONS_IF_CREATE)
+    defined(OC_COLLECTIONS_IF_CREATE)
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_ael.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
+#include "security/oc_sp.h"
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
-#include "security/oc_sp.h"
-#include "security/oc_ael.h"
 #ifdef OC_PKI
 #include "security/oc_keypair.h"
 #endif /* OC_PKI */
@@ -75,16 +75,12 @@ static bool initialized = false;
 static const oc_handler_t *app_callbacks;
 static oc_factory_presets_t factory_presets;
 
-void
-oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data)
-{
+void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data) {
   factory_presets.cb = cb;
   factory_presets.data = data;
 }
 
-oc_factory_presets_t *
-oc_get_factory_presets_cb(void)
-{
+oc_factory_presets_t *oc_get_factory_presets_cb(void) {
   return &factory_presets;
 }
 
@@ -104,9 +100,7 @@ static size_t _OC_MAX_APP_DATA_SIZE = 8192;
 #endif                               /* !OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
-int
-oc_set_mtu_size(size_t mtu_size)
-{
+int oc_set_mtu_size(size_t mtu_size) {
   (void)mtu_size;
 #ifdef OC_INOUT_BUFFER_SIZE
   return -1;
@@ -128,15 +122,9 @@ oc_set_mtu_size(size_t mtu_size)
   return 0;
 }
 
-long
-oc_get_mtu_size(void)
-{
-  return (long)_OC_MTU_SIZE;
-}
+long oc_get_mtu_size(void) { return (long)_OC_MTU_SIZE; }
 
-void
-oc_set_max_app_data_size(size_t size)
-{
+void oc_set_max_app_data_size(size_t size) {
 #ifdef OC_APP_DATA_BUFFER_SIZE
   return;
 #endif /* OC_APP_DATA_BUFFER_SIZE */
@@ -147,58 +135,38 @@ oc_set_max_app_data_size(size_t size)
 #endif /* !OC_BLOCK_WISE */
 }
 
-long
-oc_get_max_app_data_size(void)
-{
-  return (long)_OC_MAX_APP_DATA_SIZE;
-}
+long oc_get_max_app_data_size(void) { return (long)_OC_MAX_APP_DATA_SIZE; }
 
-long
-oc_get_block_size(void)
-{
-  return (long)_OC_BLOCK_SIZE;
-}
+long oc_get_block_size(void) { return (long)_OC_BLOCK_SIZE; }
 #else
-int
-oc_set_mtu_size(size_t mtu_size)
-{
+int oc_set_mtu_size(size_t mtu_size) {
   (void)mtu_size;
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
-long
-oc_get_mtu_size(void)
-{
+long oc_get_mtu_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
-void
-oc_set_max_app_data_size(size_t size)
-{
+void oc_set_max_app_data_size(size_t size) {
   (void)size;
   OC_WRN("Dynamic memory not available");
 }
 
-long
-oc_get_max_app_data_size(void)
-{
+long oc_get_max_app_data_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 
-long
-oc_get_block_size(void)
-{
+long oc_get_block_size(void) {
   OC_WRN("Dynamic memory not available");
   return -1;
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-static void
-oc_shutdown_all_devices(void)
-{
+static void oc_shutdown_all_devices(void) {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
@@ -208,9 +176,7 @@ oc_shutdown_all_devices(void)
   oc_core_shutdown();
 }
 
-int
-oc_main_init(const oc_handler_t *handler)
-{
+int oc_main_init(const oc_handler_t *handler) {
   int ret;
 
   if (initialized == true)
@@ -313,9 +279,7 @@ err:
   return ret;
 }
 
-oc_clock_time_t
-oc_main_poll(void)
-{
+oc_clock_time_t oc_main_poll(void) {
   oc_clock_time_t ticks_until_next_event = oc_etimer_request_poll();
   while (oc_process_run()) {
     ticks_until_next_event = oc_etimer_request_poll();
@@ -323,9 +287,7 @@ oc_main_poll(void)
   return ticks_until_next_event;
 }
 
-void
-oc_main_shutdown(void)
-{
+void oc_main_shutdown(void) {
   if (initialized == false)
     return;
 
@@ -335,7 +297,7 @@ oc_main_shutdown(void)
   oc_cloud_shutdown();
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
-  defined(OC_COLLECTIONS_IF_CREATE)
+    defined(OC_COLLECTIONS_IF_CREATE)
   oc_collections_free_rt_factories();
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
@@ -375,28 +337,16 @@ oc_main_shutdown(void)
 #endif /* OC_MEMORY_TRACE */
 }
 
-bool
-oc_main_initialized(void)
-{
-  return initialized;
-}
+bool oc_main_initialized(void) { return initialized; }
 
-void
-_oc_signal_event_loop(void)
-{
+void _oc_signal_event_loop(void) {
   if (app_callbacks) {
     app_callbacks->signal_event_loop();
   }
 }
 
-void
-oc_set_drop_commands(size_t device, bool drop)
-{
+void oc_set_drop_commands(size_t device, bool drop) {
   drop_commands[device] = drop;
 }
 
-bool
-oc_drop_command(size_t device)
-{
-  return drop_commands[device];
-}
+bool oc_drop_command(size_t device) { return drop_commands[device]; }

@@ -35,9 +35,7 @@
 
 OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
 
-oc_endpoint_t *
-oc_new_endpoint(void)
-{
+oc_endpoint_t *oc_new_endpoint(void) {
 #ifndef OC_DYNAMIC_ALLOCATION
   oc_network_event_handler_mutex_lock();
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -48,26 +46,21 @@ oc_new_endpoint(void)
   return endpoint;
 }
 
-void
-oc_free_endpoint(oc_endpoint_t *endpoint)
-{
+void oc_free_endpoint(oc_endpoint_t *endpoint) {
   if (endpoint) {
     oc_memb_free(&oc_endpoints_s, endpoint);
   }
 }
 
-void
-oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di)
-{
+void oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di) {
   if (endpoint && di) {
     memcpy(endpoint->di.id, di->id, 16);
   }
 }
 
 #ifdef OC_IPV4
-static void
-oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
-{
+static void oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint,
+                                       oc_string_t *endpoint_str) {
   if (!endpoint || !endpoint_str) {
     return;
   }
@@ -84,7 +77,7 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     }
   } else
 #endif
-    if (endpoint->flags & SECURED) {
+      if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
@@ -92,9 +85,8 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 }
 #endif /* OC_IPV4 */
 
-static void
-oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
-{
+static void oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint,
+                                       oc_string_t *endpoint_str) {
   if (!endpoint || !endpoint_str) {
     return;
   }
@@ -162,16 +154,14 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     }
   } else
 #endif
-    if (endpoint->flags & SECURED) {
+      if (endpoint->flags & SECURED) {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
   } else {
     oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
   }
 }
 
-int
-oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
-{
+int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str) {
   if (!endpoint || !endpoint_str)
     return -1;
 
@@ -190,9 +180,8 @@ oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 }
 
 #ifdef OC_IPV4
-static void
-oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
-{
+static void oc_parse_ipv4_address(const char *address, size_t len,
+                                  oc_endpoint_t *endpoint) {
   if (!address || !endpoint) {
     return;
   }
@@ -208,9 +197,7 @@ oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 }
 #endif /* OC_IPV4 */
 
-static uint8_t
-hex_to_bin(const char *hex, size_t len)
-{
+static uint8_t hex_to_bin(const char *hex, size_t len) {
   size_t n = 0;
   uint8_t h, b = 0;
 low_nibble:
@@ -280,9 +267,8 @@ low_nibble:
   return b;
 }
 
-static void
-oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
-{
+static void oc_parse_ipv6_address(const char *address, size_t len,
+                                  oc_endpoint_t *endpoint) {
   if (!address || !endpoint) {
     return;
   }
@@ -342,10 +328,8 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
   }
 }
 
-static int
-oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
-                         oc_string_t *uri)
-{
+static int oc_parse_endpoint_string(oc_string_t *endpoint_str,
+                                    oc_endpoint_t *endpoint, oc_string_t *uri) {
   if (!endpoint_str || !endpoint)
     return -1;
 
@@ -366,9 +350,9 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     endpoint->flags = TCP;
   } else
 #endif
-    if (len > strlen(OC_SCHEME_COAPS) &&
-        memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
-               strlen(OC_SCHEME_COAPS)) == 0) {
+      if (len > strlen(OC_SCHEME_COAPS) &&
+          memcmp(OC_SCHEME_COAPS, oc_string(*endpoint_str),
+                 strlen(OC_SCHEME_COAPS)) == 0) {
     address = oc_string(*endpoint_str) + strlen(OC_SCHEME_COAPS);
     endpoint->flags = SECURED;
   } else if (len > strlen(OC_SCHEME_COAP) &&
@@ -483,10 +467,8 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   return 0;
 }
 
-int
-oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
-                      oc_string_t *uri)
-{
+int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
+                          oc_string_t *uri) {
   if (endpoint && endpoint_str) {
     memset(endpoint, 0, sizeof(oc_endpoint_t));
     return oc_parse_endpoint_string(endpoint_str, endpoint, uri);
@@ -494,9 +476,8 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   return -1;
 }
 
-int
-oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
-{
+int oc_endpoint_string_parse_path(oc_string_t *endpoint_str,
+                                  oc_string_t *path) {
   if (!endpoint_str) {
     return -1;
   }
@@ -514,7 +495,7 @@ oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
   address += 3;
 
   size_t len =
-    oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
+      oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
 
   // the smallest possible address is '0' anything smaller is invalid.
   if (len < 1) {
@@ -541,9 +522,7 @@ oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
   return 0;
 }
 
-int
-oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
-{
+int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint) {
   if (!endpoint || !(endpoint->flags & IPV6)) {
     return -1;
   }
@@ -554,9 +533,8 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
   return -1;
 }
 
-int
-oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
-{
+int oc_endpoint_compare_address(const oc_endpoint_t *ep1,
+                                const oc_endpoint_t *ep2) {
   if (!ep1 || !ep2)
     return -1;
 
@@ -578,14 +556,12 @@ oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   return -1;
 }
 
-int
-oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
-{
+int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2) {
   if (!ep1 || !ep2)
     return -1;
 
   if ((ep1->flags & ~(MULTICAST | ACCEPTED)) !=
-        (ep2->flags & ~(MULTICAST | ACCEPTED)) ||
+          (ep2->flags & ~(MULTICAST | ACCEPTED)) ||
       ep1->device != ep2->device) {
     return -1;
   }
@@ -609,18 +585,14 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   return -1;
 }
 
-void
-oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src)
-{
+void oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src) {
   if (dst && src) {
     memcpy(dst, src, sizeof(oc_endpoint_t));
     dst->next = NULL;
   }
 }
 
-void
-oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src)
-{
+void oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src) {
   if (dst && src) {
     oc_endpoint_t *ep = oc_new_endpoint();
     *dst = ep;
@@ -636,9 +608,7 @@ oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src)
 }
 
 #ifdef OC_CLIENT
-void
-oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
-{
+void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index) {
   if (!ep) {
     return;
   }

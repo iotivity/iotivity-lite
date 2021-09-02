@@ -39,8 +39,7 @@ typedef enum {
   OC_SWUPDATE_UPGRADE
 } oc_swupdate_action_t;
 
-typedef struct
-{
+typedef struct {
   oc_string_t purl;
   oc_string_t nv;
   oc_string_t signage;

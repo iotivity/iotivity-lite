@@ -24,8 +24,7 @@
 extern "C" {
 #endif
 
-typedef struct
-{
+typedef struct {
   bool priv;
   oc_uuid_t uuid;
   oc_string_t name;

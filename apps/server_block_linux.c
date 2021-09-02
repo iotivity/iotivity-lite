@@ -27,9 +27,7 @@ static struct timespec ts;
 static int quit = 0;
 static int large_array[100];
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.array", "Large array generator",
                        "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
@@ -38,9 +36,7 @@ app_init(void)
 
 static oc_separate_response_t array_response;
 
-static oc_event_callback_retval_t
-handle_array_response(void *data)
-{
+static oc_event_callback_retval_t handle_array_response(void *data) {
   (void)data;
   if (array_response.active) {
     oc_set_separate_response_buffer(&array_response);
@@ -59,20 +55,16 @@ handle_array_response(void *data)
   return OC_EVENT_DONE;
 }
 
-static void
-get_array(oc_request_t *request, oc_interface_mask_t iface_mask,
-          void *user_data)
-{
+static void get_array(oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
   (void)iface_mask;
   (void)user_data;
   oc_indicate_separate_response(request, &array_response);
   oc_set_delayed_callback(NULL, &handle_array_response, 5);
 }
 
-static void
-post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
-{
+static void post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
+                       void *user_data) {
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_array:\n");
@@ -96,9 +88,7 @@ post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   oc_resource_t *res = oc_new_resource("arrayofvalues", "/array/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.array");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
@@ -110,25 +100,19 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -136,10 +120,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                           register_resources};
 
   oc_clock_time_t next_event;
 

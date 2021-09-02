@@ -45,7 +45,7 @@
 
 #ifndef OC_DYNAMIC_ALLOCATION
 #if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
-  !defined(OC_DOUBLES_POOL_SIZE)
+    !defined(OC_DOUBLES_POOL_SIZE)
 #error "Please define byte, int, double pool sizes in oc_config.h"
 #endif /* ...POOL_SIZE */
 
@@ -62,13 +62,11 @@ OC_LIST(doubles_list);
 #endif /* OC_DYNAMIC_ALLOCATION */
 /*---------------------------------------------------------------------------*/
 
-size_t
-_oc_mmem_alloc(
+size_t _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  struct oc_mmem *m, size_t size, pool pool_type)
-{
+    struct oc_mmem *m, size_t size, pool pool_type) {
   if (!m) {
     OC_ERR("oc_mmem is NULL");
     return 0;
@@ -136,13 +134,11 @@ _oc_mmem_alloc(
   return (int)bytes_allocated;
 }
 
-void
-_oc_mmem_free(
+void _oc_mmem_free(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  struct oc_mmem *m, pool pool_type)
-{
+    struct oc_mmem *m, pool pool_type) {
   if (!m) {
     OC_ERR("oc_mmem is NULL");
     return;
@@ -171,7 +167,7 @@ _oc_mmem_free(
     case BYTE_POOL:
       memmove(m->ptr, m->next->ptr,
               &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
-                (unsigned char *)m->next->ptr);
+                  (unsigned char *)m->next->ptr);
 
       break;
     case INT_POOL:
@@ -181,7 +177,7 @@ _oc_mmem_free(
     case DOUBLE_POOL:
       memmove(m->ptr, m->next->ptr,
               &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles] -
-                (double *)m->next->ptr);
+                  (double *)m->next->ptr);
       break;
     default:
       return;
@@ -213,9 +209,7 @@ _oc_mmem_free(
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void
-oc_mmem_init(void)
-{
+void oc_mmem_init(void) {
 #ifndef OC_DYNAMIC_ALLOCATION
   static int inited = 0;
   if (inited) {

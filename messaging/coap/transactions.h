@@ -66,11 +66,10 @@ extern "C" {
   (long)((OC_CLOCK_SECOND * COAP_RESPONSE_TIMEOUT *                            \
           ((float)COAP_RESPONSE_RANDOM_FACTOR - 1.0)) +                        \
          0.5) +                                                                \
-    1
+      1
 
 /* container for transactions with message buffer and retransmission info */
-typedef struct coap_transaction
-{
+typedef struct coap_transaction {
   struct coap_transaction *next; /* for LIST */
 
   uint16_t mid;

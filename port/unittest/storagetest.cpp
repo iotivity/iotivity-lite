@@ -19,8 +19,8 @@
  ******************************************************************/
 
 #include <cstdlib>
-#include <string>
 #include <gtest/gtest.h>
+#include <string>
 
 extern "C" {
 #include "port/oc_storage.h"
@@ -40,34 +40,29 @@ protected:
 };
 
 #ifdef OC_SECURITY
-TEST_F(TestStorage, oc_storage_config_fail_with_length_over)
-{
+TEST_F(TestStorage, oc_storage_config_fail_with_length_over) {
   int ret = oc_storage_config("./"
                               "storage_test_long_size_fail_storage_test_long_"
                               "size_fail_storage_test_long_size_fail");
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_read_fail)
-{
+TEST_F(TestStorage, oc_storage_read_fail) {
   int ret = oc_storage_read(file_name, buf, 100);
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_write_fail)
-{
+TEST_F(TestStorage, oc_storage_write_fail) {
   int ret = oc_storage_write(file_name, buf, 100);
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_config)
-{
+TEST_F(TestStorage, oc_storage_config) {
   int ret = oc_storage_config(path);
   EXPECT_EQ(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_write)
-{
+TEST_F(TestStorage, oc_storage_write) {
   uint8_t str[100] = "storage";
   int ret = oc_storage_write(file_name, str, strlen((char *)str));
   EXPECT_LE(0, ret);

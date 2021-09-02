@@ -24,8 +24,7 @@ extern "C" {
 /*
  * Expected input and output comes from section 10 of RFC4648
  */
-TEST(B64Test, RFC4648_EncodeTestVectors)
-{
+TEST(B64Test, RFC4648_EncodeTestVectors) {
   char buf[128];
   int outputLength = 0;
   // clang-format off
@@ -67,12 +66,12 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
   size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
   size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
   size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
+      (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
 
   ASSERT_EQ(inputArraySize, outputArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
   ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
   for (size_t i = 0; i < inputArraySize; ++i) {
     outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
                                     (uint8_t *)buf, bufSize);
@@ -88,10 +87,9 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
   }
 }
 
-TEST(B64Test, RFC4648_DecodeTestVectors)
-{
+TEST(B64Test, RFC4648_DecodeTestVectors) {
   uint8_t buf[128] = {
-    0,
+      0,
   };
   size_t outputLength = 0;
   // clang-format off
@@ -133,12 +131,12 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
   size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
   size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
   size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
+      (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
 
   ASSERT_EQ(inputArraySize, outputArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
   ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     strncpy((char *)buf, input[i], bufSize);
@@ -147,16 +145,15 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
     EXPECT_NE(-1, outputLength) << "Failed to Base64 decode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
     EXPECT_STREQ(output[i], (char *)buf)
-      << "Failed to Base64 decode \"" << input[i] << "\" to \"" << output[i]
-      << "\"";
+        << "Failed to Base64 decode \"" << input[i] << "\" to \"" << output[i]
+        << "\"";
     EXPECT_EQ(expectedOutputLenth[i], outputLength);
   }
 }
 
-TEST(B64Test, DecodeInputMissingPadding)
-{
+TEST(B64Test, DecodeInputMissingPadding) {
   uint8_t buf[128] = {
-    0,
+      0,
   };
   size_t outputLength = 0;
 
@@ -176,14 +173,13 @@ TEST(B64Test, DecodeInputMissingPadding)
     buf[bufSize] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
-      << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
+        << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
 }
 
-TEST(B64Test, DecodeInputInvalidCharacters)
-{
+TEST(B64Test, DecodeInputInvalidCharacters) {
   uint8_t buf[128] = {
-    0,
+      0,
   };
   size_t outputLength = 0;
 
@@ -208,14 +204,13 @@ TEST(B64Test, DecodeInputInvalidCharacters)
     buf[bufSize] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
-      << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
+        << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
 }
 
-TEST(B64Test, DecodeInputInvalidPadding)
-{
+TEST(B64Test, DecodeInputInvalidPadding) {
   uint8_t buf[128] = {
-    0,
+      0,
   };
   size_t outputLength = 0;
   // clang-format off
@@ -237,7 +232,7 @@ TEST(B64Test, DecodeInputInvalidPadding)
     buf[bufSize] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
-      << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
+        << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
 }
 
@@ -261,9 +256,8 @@ TEST(B64Test, DecodeInputInvalidPadding)
  * For this test to work the first encoded value must be larger than the second.
  * This test is also coded to only expect two values.
  */
-TEST(B64Test, encoder_does_not_null_terminate)
-{
-  char buf[128] = { 0 };
+TEST(B64Test, encoder_does_not_null_terminate) {
+  char buf[128] = {0};
   int outputLength = 0;
   // clang-format off
   const char *input[] =
@@ -289,12 +283,12 @@ TEST(B64Test, encoder_does_not_null_terminate)
   size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
   size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
   size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
+      (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
 
   ASSERT_EQ(inputArraySize, outputArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
   ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
-    << "Input test data and output test data missmatch.";
+      << "Input test data and output test data missmatch.";
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
@@ -331,8 +325,7 @@ TEST(B64Test, encoder_does_not_null_terminate)
 }
 
 // verify round trip encoding
-TEST(B64Test, EncodeThenDecode)
-{
+TEST(B64Test, EncodeThenDecode) {
 
   const char input[] = "This is a string that will be passed into  the Base64 "
                        "encoder.  After it is encoded the encoded result will "
@@ -360,7 +353,7 @@ TEST(B64Test, EncodeThenDecode)
 
   outputLength = oc_base64_decode((uint8_t *)b64Buf, strlen(b64Buf));
   EXPECT_NE(-1, outputLength)
-    << "Failed to Base64 decode \"" << input << "\" to \"" << b64Buf << "\"";
+      << "Failed to Base64 decode \"" << input << "\" to \"" << b64Buf << "\"";
   EXPECT_EQ(sizeof(input), outputLength);
   EXPECT_STREQ(input, (char *)b64Buf);
   free(b64Buf);

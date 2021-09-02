@@ -26,9 +26,7 @@
  * to convert between their string and binary representations.
  */
 
-void
-oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
-{
+void oc_str_to_uuid(const char *str, oc_uuid_t *uuid) {
   if (str[0] == '*' && strlen(str) == 1) {
     memset(uuid->id, 0, 16);
     uuid->id[0] = '*';
@@ -78,14 +76,12 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
   }
 }
 
-void
-oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
-{
+void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen) {
   int i, j = 0;
   if (buflen < OC_UUID_LEN || !uuid)
     return;
   if (uuid->id[0] == '*') {
-    uint8_t zeros[15] = { 0 };
+    uint8_t zeros[15] = {0};
     if (memcmp(&uuid->id[1], zeros, 15) == 0) {
       memset(buffer, 0, buflen);
       buffer[0] = '*';
@@ -108,9 +104,7 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
   }
 }
 
-void
-oc_gen_uuid(oc_uuid_t *uuid)
-{
+void oc_gen_uuid(oc_uuid_t *uuid) {
   int i;
   uint32_t r;
 

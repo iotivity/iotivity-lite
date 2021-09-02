@@ -33,8 +33,7 @@
 #define MAX_NUM_RT (50)
 
 /* Structure in app to track currently discovered owned/unowned devices */
-typedef struct device_handle_t
-{
+typedef struct device_handle_t {
   struct device_handle_t *next;
   oc_uuid_t uuid;
   char device_name[64];
@@ -74,9 +73,7 @@ static int quit;
  * function to print the returned cbor as JSON
  *
  */
-void
-print_rep(oc_rep_t *rep, bool pretty_print)
-{
+void print_rep(oc_rep_t *rep, bool pretty_print) {
   char *json;
   size_t json_size;
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
@@ -86,9 +83,7 @@ print_rep(oc_rep_t *rep, bool pretty_print)
   free(json);
 }
 
-static void
-display_menu(void)
-{
+static void display_menu(void) {
   PRINT("\n\n################################################\nOCF 2.x "
         "Onboarding Tool\n################################################\n");
   PRINT("[0] Display this menu\n");
@@ -154,9 +149,7 @@ display_menu(void)
     }                                                                          \
   } while (0)
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.2",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
@@ -165,15 +158,9 @@ app_init(void)
   return ret;
 }
 
-static void
-issue_requests(void)
-{
-  oc_obt_init();
-}
+static void issue_requests(void) { oc_obt_init(); }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
 #if defined(_WIN32)
   WakeConditionVariable(&cv);
 #elif defined(__linux__)
@@ -183,18 +170,14 @@ signal_event_loop(void)
 #endif
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   quit = 1;
   signal_event_loop();
 }
 
 #if defined(_WIN32)
-DWORD WINAPI
-ocf_event_thread(LPVOID lpParam)
-{
+DWORD WINAPI ocf_event_thread(LPVOID lpParam) {
   oc_clock_time_t next_event;
   while (quit != 1) {
     otb_mutex_lock(app_sync_lock);
@@ -207,7 +190,7 @@ ocf_event_thread(LPVOID lpParam)
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -217,9 +200,7 @@ ocf_event_thread(LPVOID lpParam)
   return TRUE;
 }
 #elif defined(__linux__)
-static void *
-ocf_event_thread(void *data)
-{
+static void *ocf_event_thread(void *data) {
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -244,9 +225,7 @@ ocf_event_thread(void *data)
 #endif
 
 /* App utility functions */
-static device_handle_t *
-is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
-{
+static device_handle_t *is_device_in_list(oc_uuid_t *uuid, oc_list_t list) {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
     if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
@@ -257,9 +236,8 @@ is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
   return NULL;
 }
 
-static bool
-add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
-{
+static bool add_device_to_list(oc_uuid_t *uuid, const char *device_name,
+                               oc_list_t list) {
   device_handle_t *device = is_device_in_list(uuid, list);
 
   if (!device) {
@@ -282,9 +260,7 @@ add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
   return true;
 }
 
-void
-empty_device_list(oc_list_t list)
-{
+void empty_device_list(oc_list_t list) {
   device_handle_t *device = (device_handle_t *)oc_list_pop(list);
   while (device != NULL) {
     oc_memb_free(&device_handles, device);
@@ -294,9 +270,7 @@ empty_device_list(oc_list_t list)
 /* End of app utility functions */
 
 /* App invocations of oc_obt APIs */
-static void
-get_device(oc_client_response_t *data)
-{
+static void get_device(oc_client_response_t *data) {
   oc_rep_t *rep = data->payload;
   char *di = NULL, *n = NULL;
   size_t di_len = 0, n_len = 0;
@@ -313,9 +287,7 @@ get_device(oc_client_response_t *data)
   }
 }
 
-static void
-unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
-{
+static void unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -331,9 +303,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
 }
 
-static void
-owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
-{
+static void owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -349,9 +319,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
 }
 
-static void
-discover_owned_devices(uint8_t scope)
-{
+static void discover_owned_devices(uint8_t scope) {
   otb_mutex_lock(app_sync_lock);
   if (scope == 0x02) {
     oc_obt_discover_owned_devices(owned_device_cb, NULL);
@@ -364,9 +332,7 @@ discover_owned_devices(uint8_t scope)
   signal_event_loop();
 }
 
-static void
-discover_unowned_devices(uint8_t scope)
-{
+static void discover_unowned_devices(uint8_t scope) {
   otb_mutex_lock(app_sync_lock);
   if (scope == 0x02) {
     oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
@@ -379,9 +345,7 @@ discover_unowned_devices(uint8_t scope)
   signal_event_loop();
 }
 
-static void
-otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void otm_rdp_cb(oc_uuid_t *uuid, int status, void *data) {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
@@ -396,9 +360,7 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-otm_rdp(void)
-{
+static void otm_rdp(void) {
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
     return;
@@ -429,8 +391,9 @@ otm_rdp(void)
   SCANF("%10s", pin);
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_perform_random_pin_otm(
-    &devices[c]->uuid, pin, strlen((const char *)pin), otm_rdp_cb, devices[c]);
+  int ret = oc_obt_perform_random_pin_otm(&devices[c]->uuid, pin,
+                                          strlen((const char *)pin), otm_rdp_cb,
+                                          devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform Random PIN OTM\n");
     /* Having issued an OTM request, remove this item from the unowned device
@@ -444,9 +407,7 @@ otm_rdp(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-random_pin_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void random_pin_cb(oc_uuid_t *uuid, int status, void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -458,9 +419,7 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-request_random_pin(void)
-{
+static void request_random_pin(void) {
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
     return;
@@ -499,9 +458,7 @@ request_random_pin(void)
 }
 
 #ifdef OC_PKI
-static void
-otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void otm_cert_cb(oc_uuid_t *uuid, int status, void *data) {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
@@ -516,9 +473,7 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-otm_cert(void)
-{
+static void otm_cert(void) {
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
     return;
@@ -561,9 +516,7 @@ otm_cert(void)
 }
 #endif /* OC_PKI */
 
-static void
-otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void otm_just_works_cb(oc_uuid_t *uuid, int status, void *data) {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
   char di[37];
@@ -578,9 +531,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-otm_just_works(void)
-{
+static void otm_just_works(void) {
   if (oc_list_length(unowned_devices) == 0) {
     PRINT("\nPlease Re-discover Unowned devices\n");
     return;
@@ -623,9 +574,7 @@ otm_just_works(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
-{
+static void retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data) {
   (void)data;
   if (acl) {
     PRINT("\n/oic/sec/acl2:\n");
@@ -702,9 +651,7 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
   }
 }
 
-static void
-retrieve_acl2_rsrc(void)
-{
+static void retrieve_acl2_rsrc(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -740,9 +687,7 @@ retrieve_acl2_rsrc(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-display_cred_rsrc(oc_sec_creds_t *creds)
-{
+static void display_cred_rsrc(oc_sec_creds_t *creds) {
   if (creds) {
     PRINT("\n/oic/sec/cred:\n");
     oc_sec_cred_t *cr = oc_list_head(creds->creds);
@@ -775,9 +720,7 @@ display_cred_rsrc(oc_sec_creds_t *creds)
   }
 }
 
-static void
-retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
-{
+static void retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data) {
   (void)data;
   if (creds) {
     display_cred_rsrc(creds);
@@ -788,9 +731,7 @@ retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data)
   }
 }
 
-static void
-retrieve_own_creds(void)
-{
+static void retrieve_own_creds(void) {
   otb_mutex_lock(app_sync_lock);
   /* The creds returned by oc_obt_retrieve_own_creds() point to
      internal data structures that store the security context of the OBT.
@@ -800,9 +741,7 @@ retrieve_own_creds(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-retrieve_cred_rsrc(void)
-{
+static void retrieve_cred_rsrc(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -830,7 +769,7 @@ retrieve_cred_rsrc(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret =
-    oc_obt_retrieve_creds(&devices[c]->uuid, retrieve_cred_rsrc_cb, NULL);
+      oc_obt_retrieve_creds(&devices[c]->uuid, retrieve_cred_rsrc_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to RETRIEVE /oic/sec/cred\n");
   } else {
@@ -839,9 +778,7 @@ retrieve_cred_rsrc(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-delete_ace_by_aceid_cb(int status, void *data)
-{
+static void delete_ace_by_aceid_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully DELETEd ace\n");
@@ -850,9 +787,7 @@ delete_ace_by_aceid_cb(int status, void *data)
   }
 }
 
-static void
-delete_ace_by_aceid(void)
-{
+static void delete_ace_by_aceid(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -893,9 +828,7 @@ delete_ace_by_aceid(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-delete_cred_by_credid_cb(int status, void *data)
-{
+static void delete_cred_by_credid_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully DELETEd cred\n");
@@ -904,9 +837,7 @@ delete_cred_by_credid_cb(int status, void *data)
   }
 }
 
-static void
-delete_own_cred_by_credid(void)
-{
+static void delete_own_cred_by_credid(void) {
   PRINT("\nEnter credid: ");
   int credid;
   SCANF("%d", &credid);
@@ -921,9 +852,7 @@ delete_own_cred_by_credid(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-delete_cred_by_credid(void)
-{
+static void delete_cred_by_credid(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -964,9 +893,7 @@ delete_cred_by_credid(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-reset_device_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void reset_device_cb(oc_uuid_t *uuid, int status, void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -980,9 +907,7 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-reset_device(void)
-{
+static void reset_device(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1010,7 +935,7 @@ reset_device(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret =
-    oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, devices[c]);
+      oc_obt_device_hard_reset(&devices[c]->uuid, reset_device_cb, devices[c]);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to perform hard RESET\n");
     oc_list_remove(owned_devices, devices[c]);
@@ -1021,9 +946,7 @@ reset_device(void)
 }
 
 #ifdef OC_PKI
-static void
-provision_id_cert_cb(int status, void *data)
-{
+static void provision_id_cert_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned identity certificate\n");
@@ -1032,9 +955,7 @@ provision_id_cert_cb(int status, void *data)
   }
 }
 
-static void
-provision_id_cert(void)
-{
+static void provision_id_cert(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1071,9 +992,7 @@ provision_id_cert(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-provision_role_cert_cb(int status, void *data)
-{
+static void provision_role_cert_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned role certificate\n");
@@ -1082,9 +1001,7 @@ provision_role_cert_cb(int status, void *data)
   }
 }
 
-static void
-provision_role_cert(void)
-{
+static void provision_role_cert(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1140,9 +1057,8 @@ provision_role_cert(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status,
+                                           void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -1154,9 +1070,7 @@ provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-provision_role_wildcard_ace(void)
-{
+static void provision_role_wildcard_ace(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1202,8 +1116,8 @@ provision_role_wildcard_ace(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_role_wildcard_ace(
-    &devices[dev]->uuid, role, (d == 1) ? authority : NULL,
-    provision_role_wildcard_ace_cb, NULL);
+      &devices[dev]->uuid, role, (d == 1) ? authority : NULL,
+      provision_role_wildcard_ace_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision role * ACE\n");
@@ -1214,9 +1128,8 @@ provision_role_wildcard_ace(void)
 #endif /* OC_PKI */
 
 #ifdef OC_OSCORE
-static void
-provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void provision_group_context_cb(oc_uuid_t *uuid, int status,
+                                       void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -1228,9 +1141,7 @@ provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-provision_server_group_oscore_context(void)
-{
+static void provision_server_group_oscore_context(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1271,8 +1182,8 @@ provision_server_group_oscore_context(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_server_group_oscore_context(
-    &devices[dev]->uuid, &devices[subject]->uuid, NULL,
-    provision_group_context_cb, NULL);
+      &devices[dev]->uuid, &devices[subject]->uuid, NULL,
+      provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision server group OSCORE "
@@ -1282,9 +1193,7 @@ provision_server_group_oscore_context(void)
   }
 }
 
-static void
-provision_client_group_oscore_context(void)
-{
+static void provision_client_group_oscore_context(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1318,7 +1227,7 @@ provision_client_group_oscore_context(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_client_group_oscore_context(
-    &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
+      &devices[dev]->uuid, NULL, provision_group_context_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision client group OSCORE "
@@ -1328,9 +1237,7 @@ provision_client_group_oscore_context(void)
   }
 }
 
-static void
-provision_oscore_contexts_cb(int status, void *data)
-{
+static void provision_oscore_contexts_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned pairwise OSCORE contexts\n");
@@ -1339,9 +1246,7 @@ provision_oscore_contexts_cb(int status, void *data)
   }
 }
 
-static void
-provision_oscore_contexts(void)
-{
+static void provision_oscore_contexts(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1375,7 +1280,8 @@ provision_oscore_contexts(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_pairwise_oscore_contexts(
-    &devices[c1]->uuid, &devices[c2]->uuid, provision_oscore_contexts_cb, NULL);
+      &devices[c1]->uuid, &devices[c2]->uuid, provision_oscore_contexts_cb,
+      NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision OSCORE contexts\n");
   } else {
@@ -1385,9 +1291,7 @@ provision_oscore_contexts(void)
 }
 #endif /* OC_OSCORE */
 
-static void
-provision_credentials_cb(int status, void *data)
-{
+static void provision_credentials_cb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned pairwise credentials\n");
@@ -1396,9 +1300,7 @@ provision_credentials_cb(int status, void *data)
   }
 }
 
-static void
-provision_credentials(void)
-{
+static void provision_credentials(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1432,7 +1334,7 @@ provision_credentials(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_pairwise_credentials(
-    &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
+      &devices[c1]->uuid, &devices[c2]->uuid, provision_credentials_cb, NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision credentials\n");
   } else {
@@ -1441,9 +1343,8 @@ provision_credentials(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status,
+                                                void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -1455,9 +1356,7 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-provision_authcrypt_wildcard_ace(void)
-{
+static void provision_authcrypt_wildcard_ace(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1491,7 +1390,7 @@ provision_authcrypt_wildcard_ace(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_auth_wildcard_ace(
-    &devices[dev]->uuid, provision_authcrypt_wildcard_ace_cb, NULL);
+      &devices[dev]->uuid, provision_authcrypt_wildcard_ace_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision auth-crypt * ACE\n");
@@ -1500,9 +1399,7 @@ provision_authcrypt_wildcard_ace(void)
   }
 }
 
-static void
-provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
-{
+static void provision_ace2_cb(oc_uuid_t *uuid, int status, void *data) {
   (void)data;
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
@@ -1514,15 +1411,13 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-static void
-provision_ace2(void)
-{
+static void provision_ace2(void) {
   if (oc_list_length(owned_devices) == 0) {
     PRINT("\n\nPlease Re-Discover Owned devices\n");
     return;
   }
 
-  const char *conn_types[2] = { "anon-clear", "auth-crypt" };
+  const char *conn_types[2] = {"anon-clear", "auth-crypt"};
   int num_resources = 0;
   char di[OC_UUID_LEN];
 
@@ -1704,7 +1599,7 @@ provision_ace2(void)
 
   otb_mutex_lock(app_sync_lock);
   int ret =
-    oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
+      oc_obt_provision_ace(&devices[dev]->uuid, ace, provision_ace2_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued request to provision ACE\n");
@@ -1714,9 +1609,7 @@ provision_ace2(void)
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-static int
-read_pem(const char *file_path, char *buffer, size_t *buffer_len)
-{
+static int read_pem(const char *file_path, char *buffer, size_t *buffer_len) {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
     PRINT("ERROR: unable to read PEM\n");
@@ -1756,9 +1649,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 #endif /* OC_SECURITY && OC_PKI */
 
 #ifdef OC_PKI
-static void
-install_trust_anchor(void)
-{
+static void install_trust_anchor(void) {
   char cert[8192];
   size_t cert_len = 0;
   PRINT("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
@@ -1782,7 +1673,7 @@ install_trust_anchor(void)
   cert[cert_len] = '\0';
 
   int rootca_credid =
-    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, strlen(cert));
+      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, strlen(cert));
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -1790,10 +1681,8 @@ install_trust_anchor(void)
 }
 #endif /* OC_PKI */
 
-static void
-set_sd_info()
-{
-  char name[64] = { 0 };
+static void set_sd_info() {
+  char name[64] = {0};
   int priv = 0;
   PRINT("\n\nEnter security domain name: ");
   SCANF("%63s", name);
@@ -1804,9 +1693,7 @@ set_sd_info()
 
 #ifdef OC_CLOUD
 
-static void
-post_response_cloud_config(oc_client_response_t *data)
-{
+static void post_response_cloud_config(oc_client_response_t *data) {
   PRINT("post_response_cloud_config:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response: CHANGED\n");
@@ -1820,9 +1707,7 @@ post_response_cloud_config(oc_client_response_t *data)
   }
 }
 
-static void
-set_cloud_info(void)
-{
+static void set_cloud_info(void) {
   char url[64] = "/CoapCloudConfResURI"; // url of the coap cloud config url
   char cis[64] = "coaps+tcp://127.0.0.1:5683";
   char at[64] = "test";
@@ -1886,9 +1771,7 @@ set_cloud_info(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-static void
-get_cloud_info(void)
-{
+static void get_cloud_info(void) {
   char di[OC_UUID_LEN];
   oc_uuid_t device_uuid;
   char url[64] = "/CoapCloudConfResURI"; // url of the coap cloud config url
@@ -1938,9 +1821,7 @@ get_cloud_info(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-void
-trustanchorcb(int status, void *data)
-{
+void trustanchorcb(int status, void *data) {
   (void)data;
   if (status >= 0) {
     PRINT("\nSuccessfully installed trust anchor for cloud\n");
@@ -1949,9 +1830,7 @@ trustanchorcb(int status, void *data)
   }
 }
 
-static void
-set_cloud_trust_anchor(void)
-{
+static void set_cloud_trust_anchor(void) {
   char di[OC_UUID_LEN];
   oc_uuid_t device_uuid;
   char sid[64] = "00000000-0000-0000-0000-000000000001";
@@ -2027,9 +1906,7 @@ set_cloud_trust_anchor(void)
 
 #endif /* OC_CLOUD */
 
-void
-factory_presets_cb(size_t device, void *data)
-{
+void factory_presets_cb(size_t device, void *data) {
   (void)device;
   (void)data;
   oc_obt_shutdown();
@@ -2047,7 +1924,7 @@ factory_presets_cb(size_t device, void *data)
   }
 
   int rootca_credid =
-    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -2060,7 +1937,7 @@ factory_presets_cb(size_t device, void *data)
   }
 
   rootca_credid =
-    oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
+      oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
     PRINT("ERROR installing root cert\n");
     return;
@@ -2071,8 +1948,7 @@ factory_presets_cb(size_t device, void *data)
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, bool more, void *user_data)
-{
+                   oc_resource_properties_t bm, bool more, void *user_data) {
   (void)user_data;
   (void)iface_mask;
   (void)bm;
@@ -2086,9 +1962,7 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void
-discover_resources(void)
-{
+static void discover_resources(void) {
   if (oc_list_length(unowned_devices) == 0 &&
       oc_list_length(owned_devices) == 0) {
     PRINT("\nPlease Re-discover devices\n");
@@ -2127,8 +2001,8 @@ discover_resources(void)
   }
 
   otb_mutex_lock(app_sync_lock);
-  int ret =
-    oc_obt_discover_all_resources(&devices[c]->uuid, resource_discovery, NULL);
+  int ret = oc_obt_discover_all_resources(&devices[c]->uuid, resource_discovery,
+                                          NULL);
   if (ret >= 0) {
     PRINT("\nSuccessfully issued resource discovery request\n");
   } else {
@@ -2137,18 +2011,14 @@ discover_resources(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-void
-display_device_uuid()
-{
+void display_device_uuid() {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
   PRINT("Started device with ID: %s\n", buffer);
 }
 
-int
-main(void)
-{
+int main(void) {
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
@@ -2163,9 +2033,9 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .requests_entry = issue_requests};
 
 #ifdef OC_STORAGE
   oc_storage_config("./onboarding_tool_creds");

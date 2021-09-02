@@ -36,9 +36,7 @@ OC_LIST(session_end_events);
 static int SESSION_STATE_FREE_DELAY_SECS;
 static bool session_end_ref = false;
 
-static oc_event_callback_retval_t
-free_session_state_delayed(void *data)
-{
+static oc_event_callback_retval_t free_session_state_delayed(void *data) {
   (void)data;
   session_end_ref = true;
   oc_endpoint_t *session_event = NULL;
@@ -55,21 +53,13 @@ free_session_state_delayed(void *data)
   return OC_EVENT_DONE;
 }
 
-bool
-oc_session_events_is_ongoing(void)
-{
-  return session_end_ref;
-}
+bool oc_session_events_is_ongoing(void) { return session_end_ref; }
 
-void
-oc_session_events_set_event_delay(int secs)
-{
+void oc_session_events_set_event_delay(int secs) {
   SESSION_STATE_FREE_DELAY_SECS = secs;
 }
 
-static void
-oc_process_session_event(void)
-{
+static void oc_process_session_event(void) {
   oc_endpoint_t *session_event = NULL;
   do {
     oc_network_event_handler_mutex_lock();
@@ -88,8 +78,7 @@ oc_process_session_event(void)
 }
 
 OC_PROCESS(oc_session_events, "");
-OC_PROCESS_THREAD(oc_session_events, ev, data)
-{
+OC_PROCESS_THREAD(oc_session_events, ev, data) {
   (void)data;
   OC_PROCESS_POLLHANDLER(oc_process_session_event());
   OC_PROCESS_BEGIN();
@@ -100,9 +89,7 @@ OC_PROCESS_THREAD(oc_session_events, ev, data)
   OC_PROCESS_END();
 }
 
-void
-oc_session_start_event(oc_endpoint_t *endpoint)
-{
+void oc_session_start_event(oc_endpoint_t *endpoint) {
   if (!oc_process_is_running(&(oc_session_events))) {
     return;
   }
@@ -119,9 +106,7 @@ oc_session_start_event(oc_endpoint_t *endpoint)
   _oc_signal_event_loop();
 }
 
-void
-oc_session_end_event(oc_endpoint_t *endpoint)
-{
+void oc_session_end_event(oc_endpoint_t *endpoint) {
   if (!oc_process_is_running(&(oc_session_events))) {
     return;
   }
@@ -139,9 +124,7 @@ oc_session_end_event(oc_endpoint_t *endpoint)
 }
 #endif /* OC_TCP */
 
-void
-oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
-{
+void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state) {
   (void)endpoint;
   (void)state;
   if (state == OC_SESSION_DISCONNECTED) {

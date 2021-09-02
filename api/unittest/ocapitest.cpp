@@ -19,8 +19,8 @@
  ******************************************************************/
 
 #include <cstdlib>
-#include <string>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
@@ -36,26 +36,13 @@
 #define OCF_SPEC_VERSION "ocf.1.0.0"
 #define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
 
-static int
-appInit(void)
-{
-  return -1;
-}
+static int appInit(void) { return -1; }
 
-static void
-registerResources(void)
-{
-}
+static void registerResources(void) {}
 
-static void
-signalEventLoop(void)
-{
-}
+static void signalEventLoop(void) {}
 
-static void
-requestsEntry(void)
-{
-}
+static void requestsEntry(void) {}
 
 class TestServerClient : public testing::Test {
 protected:
@@ -74,17 +61,15 @@ private:
   static pthread_cond_t s_cv;
 
 public:
-  static int appInit(void)
-  {
+  static int appInit(void) {
     int result = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
     result |=
-      oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME, OCF_SPEC_VERSION,
-                    OCF_DATA_MODEL_VERSION, NULL, NULL);
+        oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME, OCF_SPEC_VERSION,
+                      OCF_DATA_MODEL_VERSION, NULL, NULL);
     return result;
   }
 
-  static void registerResources(void)
-  {
+  static void registerResources(void) {
     s_pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
     oc_resource_bind_resource_type(s_pResource, RESOURCE_TYPE);
     oc_resource_bind_resource_interface(s_pResource, OC_IF_BASELINE);
@@ -96,8 +81,7 @@ public:
     oc_add_resource(s_pResource);
   }
 
-  static void signalEventLoop(void)
-  {
+  static void signalEventLoop(void) {
     pthread_mutex_lock(&s_mutex);
     pthread_cond_signal(&s_cv);
     pthread_mutex_unlock(&s_mutex);
@@ -105,11 +89,10 @@ public:
 
   static void requestsEntry(void) {}
 
-  static oc_discovery_flags_t onResourceDiscovered(
-    const char *di, const char *uri, oc_string_array_t types,
-    oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-    oc_resource_properties_t bm, void *user_data)
-  {
+  static oc_discovery_flags_t
+  onResourceDiscovered(const char *di, const char *uri, oc_string_array_t types,
+                       oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                       oc_resource_properties_t bm, void *user_data) {
     (void)di;
     (void)types;
     (void)iface_mask;
@@ -126,16 +109,14 @@ public:
   }
 
   static void onGet(oc_request_t *request, oc_interface_mask_t iface_mask,
-                    void *user_data)
-  {
+                    void *user_data) {
     (void)request;
     (void)iface_mask;
     (void)user_data;
     s_isCallbackReceived = true;
   }
 
-  static bool startServer(std::string &errorMessage)
-  {
+  static bool startServer(std::string &errorMessage) {
     bool isPassed = true;
     s_handler.init = appInit;
     s_handler.signal_event_loop = signalEventLoop;
@@ -156,14 +137,12 @@ public:
     return isPassed;
   }
 
-  static void stopServer()
-  {
+  static void stopServer() {
     if (s_isServerStarted) {
       oc_main_shutdown();
     }
   }
-  static bool discoverResource(std::string &errorMessage)
-  {
+  static bool discoverResource(std::string &errorMessage) {
     s_isCallbackReceived = false;
     oc_do_ip_discovery(NULL, &onResourceDiscovered, NULL);
     waitForEvent(MAX_WAIT_TIME);
@@ -173,8 +152,7 @@ public:
     return s_isCallbackReceived;
   }
 
-  static void waitForEvent(int waitTime)
-  {
+  static void waitForEvent(int waitTime) {
     oc_clock_time_t next_event;
     (void)next_event;
     while (waitTime && !s_isCallbackReceived) {
@@ -185,8 +163,7 @@ public:
     }
   }
 
-  static bool sendGetRequest(std::string &errorMessage)
-  {
+  static bool sendGetRequest(std::string &errorMessage) {
     (void)errorMessage;
     bool isPassed = true;
 
@@ -194,8 +171,7 @@ public:
     return isPassed;
   }
 
-  static bool unregisterReresource(std::string &errorMessage)
-  {
+  static bool unregisterReresource(std::string &errorMessage) {
     (void)errorMessage;
     bool isPassed = true;
     oc_delete_resource(s_pResource);
@@ -212,27 +188,24 @@ pthread_cond_t ApiHelper::s_cv;
 
 class TestUnicastRequest : public testing::Test {
 protected:
-  virtual void SetUp()
-  {
+  virtual void SetUp() {
     std::string msg = "";
     ASSERT_TRUE(ApiHelper::startServer(msg)) << msg;
     ASSERT_TRUE(ApiHelper::discoverResource(msg)) << msg;
   }
 
-  virtual void TearDown()
-  {
+  virtual void TearDown() {
     std::string msg = "";
     ApiHelper::unregisterReresource(msg);
     ApiHelper::stopServer();
   }
 };
 
-TEST(TestServerClient, ServerStartTest_P)
-{
-  static const oc_handler_t handler = { .init = appInit,
-                                        .signal_event_loop = signalEventLoop,
-                                        .register_resources = registerResources,
-                                        .requests_entry = requestsEntry };
+TEST(TestServerClient, ServerStartTest_P) {
+  static const oc_handler_t handler = {.init = appInit,
+                                       .signal_event_loop = signalEventLoop,
+                                       .register_resources = registerResources,
+                                       .requests_entry = requestsEntry};
 
   int result = oc_main_init(&handler);
   EXPECT_LT(result, 0);
@@ -240,13 +213,12 @@ TEST(TestServerClient, ServerStartTest_P)
   oc_main_shutdown();
 }
 
-TEST(TestServerClient, ServerStopTest_P)
-{
+TEST(TestServerClient, ServerStopTest_P) {
 
-  static const oc_handler_t handler = { .init = appInit,
-                                        .signal_event_loop = signalEventLoop,
-                                        .register_resources = registerResources,
-                                        .requests_entry = requestsEntry };
+  static const oc_handler_t handler = {.init = appInit,
+                                       .signal_event_loop = signalEventLoop,
+                                       .register_resources = registerResources,
+                                       .requests_entry = requestsEntry};
 
   int result = oc_main_init(&handler);
   ASSERT_LT(result, 0);
@@ -254,16 +226,14 @@ TEST(TestServerClient, ServerStopTest_P)
   oc_main_shutdown();
 }
 
-TEST(TestUnicastRequest, SendGetRequest_P)
-{
+TEST(TestUnicastRequest, SendGetRequest_P) {
 
   std::string result = "";
 
   EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
 }
 
-TEST(TestUnicastRequest, SendGetRequestTwice_P)
-{
+TEST(TestUnicastRequest, SendGetRequestTwice_P) {
 
   std::string result = "";
   EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;

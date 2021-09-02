@@ -42,9 +42,7 @@ static oc_clock_time_t next_expiration;
 
 OC_PROCESS(oc_etimer_process, "Event timer");
 /*---------------------------------------------------------------------------*/
-static void
-update_time(void)
-{
+static void update_time(void) {
   oc_clock_time_t tdist;
   oc_clock_time_t now;
   struct oc_etimer *t;
@@ -65,8 +63,7 @@ update_time(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-OC_PROCESS_THREAD(oc_etimer_process, ev, data)
-{
+OC_PROCESS_THREAD(oc_etimer_process, ev, data) {
   struct oc_etimer *t, *u;
 
   OC_PROCESS_BEGIN();
@@ -129,16 +126,12 @@ OC_PROCESS_THREAD(oc_etimer_process, ev, data)
   OC_PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-oc_clock_time_t
-oc_etimer_request_poll(void)
-{
+oc_clock_time_t oc_etimer_request_poll(void) {
   oc_process_poll(&oc_etimer_process);
   return oc_etimer_next_expiration_time();
 }
 /*---------------------------------------------------------------------------*/
-static void
-add_timer(struct oc_etimer *timer)
-{
+static void add_timer(struct oc_etimer *timer) {
   struct oc_etimer *t;
 
   oc_etimer_request_poll();
@@ -162,76 +155,50 @@ add_timer(struct oc_etimer *timer)
   update_time();
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval)
-{
+void oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval) {
   oc_timer_set(&et->timer, interval);
   add_timer(et);
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_reset_with_new_interval(struct oc_etimer *et,
-                                  oc_clock_time_t interval)
-{
+void oc_etimer_reset_with_new_interval(struct oc_etimer *et,
+                                       oc_clock_time_t interval) {
   oc_timer_reset(&et->timer);
   et->timer.interval = interval;
   add_timer(et);
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_reset(struct oc_etimer *et)
-{
+void oc_etimer_reset(struct oc_etimer *et) {
   oc_timer_reset(&et->timer);
   add_timer(et);
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_restart(struct oc_etimer *et)
-{
+void oc_etimer_restart(struct oc_etimer *et) {
   oc_timer_restart(&et->timer);
   add_timer(et);
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_adjust(struct oc_etimer *et, int timediff)
-{
+void oc_etimer_adjust(struct oc_etimer *et, int timediff) {
   et->timer.start += timediff;
   update_time();
 }
 /*---------------------------------------------------------------------------*/
-int
-oc_etimer_expired(struct oc_etimer *et)
-{
-  return et->p == OC_PROCESS_NONE;
-}
+int oc_etimer_expired(struct oc_etimer *et) { return et->p == OC_PROCESS_NONE; }
 /*---------------------------------------------------------------------------*/
-oc_clock_time_t
-oc_etimer_expiration_time(struct oc_etimer *et)
-{
+oc_clock_time_t oc_etimer_expiration_time(struct oc_etimer *et) {
   return et->timer.start + et->timer.interval;
 }
 /*---------------------------------------------------------------------------*/
-oc_clock_time_t
-oc_etimer_start_time(struct oc_etimer *et)
-{
+oc_clock_time_t oc_etimer_start_time(struct oc_etimer *et) {
   return et->timer.start;
 }
 /*---------------------------------------------------------------------------*/
-int
-oc_etimer_pending(void)
-{
-  return timerlist != NULL;
-}
+int oc_etimer_pending(void) { return timerlist != NULL; }
 /*---------------------------------------------------------------------------*/
-oc_clock_time_t
-oc_etimer_next_expiration_time(void)
-{
+oc_clock_time_t oc_etimer_next_expiration_time(void) {
   return oc_etimer_pending() ? next_expiration : 0;
 }
 /*---------------------------------------------------------------------------*/
-void
-oc_etimer_stop(struct oc_etimer *et)
-{
+void oc_etimer_stop(struct oc_etimer *et) {
   struct oc_etimer *t;
 
   /* First check if et is the first event timer on the list. */

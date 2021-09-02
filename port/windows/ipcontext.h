@@ -20,11 +20,11 @@
 #define IPCONTEXT_H
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <WinSock2.h>
 #include "oc_endpoint.h"
 #include <Mswsock.h>
+#include <WinSock2.h>
 #include <iphlpapi.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 
 #ifdef __cplusplus
@@ -39,8 +39,7 @@ typedef enum {
 } adapter_receive_state_t;
 
 #ifdef OC_TCP
-typedef struct tcp_context_t
-{
+typedef struct tcp_context_t {
   struct sockaddr_storage server;
   SOCKET server_sock;
   uint16_t port;
@@ -69,8 +68,7 @@ typedef struct tcp_context_t
 } tcp_context_t;
 #endif
 
-typedef struct ip_context_t
-{
+typedef struct ip_context_t {
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps);
   struct sockaddr_storage mcast;

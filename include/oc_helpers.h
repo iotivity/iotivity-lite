@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
-  oc_byte_string_array_t;
+    oc_byte_string_array_t;
 
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
 
@@ -215,9 +215,9 @@ bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
  */
 void _oc_new_string(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_string_t *ocstring, const char *str, size_t str_len);
+    oc_string_t *ocstring, const char *str, size_t str_len);
 
 /**
  * @brief allocate oc_string
@@ -227,9 +227,9 @@ void _oc_new_string(
  */
 void _oc_alloc_string(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_string_t *ocstring, size_t size);
+    oc_string_t *ocstring, size_t size);
 
 /**
  * @brief free oc string
@@ -238,9 +238,9 @@ void _oc_alloc_string(
  */
 void _oc_free_string(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_string_t *ocstring);
+    oc_string_t *ocstring);
 
 /**
  * @brief free array
@@ -250,9 +250,9 @@ void _oc_free_string(
  */
 void _oc_free_array(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_array_t *ocarray, pool type);
+    oc_array_t *ocarray, pool type);
 
 /**
  * @brief new array
@@ -263,9 +263,9 @@ void _oc_free_array(
  */
 void _oc_new_array(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_array_t *ocarray, size_t size, pool type);
+    oc_array_t *ocarray, size_t size, pool type);
 
 /**
  * @brief allocate string array
@@ -275,9 +275,9 @@ void _oc_new_array(
  */
 void _oc_alloc_string_array(
 #ifdef OC_MEMORY_TRACE
-  const char *func,
+    const char *func,
 #endif
-  oc_string_array_t *ocstringarray, size_t size);
+    oc_string_array_t *ocstringarray, size_t size);
 
 /** Conversions between hex encoded strings and byte arrays */
 

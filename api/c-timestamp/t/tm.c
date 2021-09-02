@@ -2,9 +2,7 @@
 #include "timestamp.h"
 #include <string.h>
 
-int
-main()
-{
+int main() {
   timestamp_t ts;
   struct tm tm;
 

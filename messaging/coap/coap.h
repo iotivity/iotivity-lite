@@ -57,10 +57,10 @@
 #endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
+#include "oc_ri.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log.h"
 #include "port/oc_random.h"
-#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,8 +90,7 @@ enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
 typedef enum { COAP_TRANSPORT_UDP, COAP_TRANSPORT_TCP } coap_transport_type_t;
 
 /* parsed message struct */
-typedef struct
-{
+typedef struct {
   uint8_t *buffer; /* pointer to CoAP header / incoming packet buffer / memory
                       to serialize packet */
   coap_transport_type_t transport_type;
@@ -197,8 +196,8 @@ typedef struct
 #define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text)            \
   if (IS_OPTION(coap_pkt, number)) {                                           \
     option_length += coap_serialize_array_option(                              \
-      number, current_number, option, (uint8_t *)coap_pkt->field,              \
-      coap_pkt->field##_len, splitter);                                        \
+        number, current_number, option, (uint8_t *)coap_pkt->field,            \
+        coap_pkt->field##_len, splitter);                                      \
     if (option) {                                                              \
       OC_DBG(text " [%.*s]", (int)coap_pkt->field##_len, coap_pkt->field);     \
       option = option_array + option_length;                                   \
@@ -213,7 +212,7 @@ typedef struct
     }                                                                          \
     block |= 0xF & coap_log_2(coap_pkt->field##_size / 16);                    \
     option_length +=                                                           \
-      coap_serialize_int_option(number, current_number, option, block);        \
+        coap_serialize_int_option(number, current_number, option, block);      \
     if (option) {                                                              \
       OC_DBG(text " [%lu%s (%u B/blk)]", (unsigned long)coap_pkt->field##_num, \
              coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size);       \
@@ -273,34 +272,34 @@ int coap_get_header_if_none_match(void *packet);
 int coap_set_header_if_none_match(void *packet);
 
 int coap_get_header_proxy_uri(
-  void *packet,
-  const char **uri); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **uri); /* in-place string might not be 0-terminated. */
 int coap_set_header_proxy_uri(void *packet, const char *uri);
 
 int coap_get_header_proxy_scheme(
-  void *packet,
-  const char **scheme); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **scheme); /* in-place string might not be 0-terminated. */
 int coap_set_header_proxy_scheme(void *packet, const char *scheme);
 
 int coap_get_header_uri_host(
-  void *packet,
-  const char **host); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **host); /* in-place string might not be 0-terminated. */
 int coap_set_header_uri_host(void *packet, const char *host);
 
 size_t coap_get_header_uri_path(
-  void *packet,
-  const char **path); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **path); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_uri_path(void *packet, const char *path,
                                 size_t path_len);
 
 size_t coap_get_header_uri_query(
-  void *packet,
-  const char **query); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **query); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_uri_query(void *packet, const char *query);
 
 int coap_get_header_location_path(
-  void *packet,
-  const char **path); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **path); /* in-place string might not be 0-terminated. */
 int coap_set_header_location_path(void *packet,
                                   const char *path); /* also splits optional
                                                         query into
@@ -308,8 +307,8 @@ int coap_set_header_location_path(void *packet,
                                                         */
 
 int coap_get_header_location_query(
-  void *packet,
-  const char **query); /* in-place string might not be 0-terminated. */
+    void *packet,
+    const char **query); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_location_query(void *packet, const char *query);
 
 int coap_get_header_observe(void *packet, uint32_t *observe);

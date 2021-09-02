@@ -38,8 +38,7 @@ extern "C" {
  */
 #define OC_UUID_LEN (37)
 
-typedef struct
-{
+typedef struct {
   uint8_t id[16];
 } oc_uuid_t;
 

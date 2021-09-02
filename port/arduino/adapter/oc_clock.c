@@ -15,19 +15,17 @@
 * limitations under the License.
 *
 ******************************************************************/
-#include <stdlib.h>
-#include <Arduino.h>
 #include "port/oc_clock.h"
-#include "port/oc_log.h"
 #include "TimeLib.h"
+#include "port/oc_log.h"
+#include <Arduino.h>
+#include <stdlib.h>
 
 #define SERIAL_TIMEOUT 50 // 50ms wait for client response: may need adjustment
 #define TIME_REQUEST 7    // ASCII bell character requests a time sync message
 #define DEFAULT_TIME ((time_t)(1357041600UL))
 
-void
-oc_clock_init(void)
-{
+void oc_clock_init(void) {
 
 #ifdef SERIAL_TIME
   setSyncProvider(requestSync); // set function to call when sync required
@@ -35,23 +33,17 @@ oc_clock_init(void)
   setTime(DEFAULT_TIME);
 }
 /*Wont it be better to have a millissecond based system time?*/
-oc_clock_time_t
-oc_clock_time(void)
-{
+oc_clock_time_t oc_clock_time(void) {
   oc_clock_time_t time = (oc_clock_time_t)secondNow();
   return time * OC_CLOCK_CONF_TICKS_PER_SECOND;
 }
 
-unsigned long
-oc_clock_seconds(void)
-{
+unsigned long oc_clock_seconds(void) {
   oc_clock_time_t time = (oc_clock_time_t)secondNow();
   return time;
 }
 
-void
-oc_clock_wait(oc_clock_time_t t)
-{
+void oc_clock_wait(oc_clock_time_t t) {
   oc_clock_time_t interval = (oc_clock_time_t)ceil(t / 1.e09);
   oc_clock_time_t beginWait = (oc_clock_time_t)micros();
   while ((micros() - beginWait) <= interval) {
@@ -70,9 +62,7 @@ oc_clock_wait(oc_clock_time_t t)
  * sleeping or blocked
  *
  */
-time_t
-requestSync()
-{
+time_t requestSync() {
 
   // request for time sync from serial client
   iotivitySerial_write(TIME_REQUEST) oc_clock_time_t pctime = 0;

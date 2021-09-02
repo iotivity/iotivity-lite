@@ -31,8 +31,7 @@ extern "C" {
  * @brief security access control list
  *
  */
-typedef struct oc_sec_acl_s
-{
+typedef struct oc_sec_acl_s {
   OC_LIST_STRUCT(subjects); ///< list of subjects
   oc_uuid_t rowneruuid;     ///< rowner uuid
 } oc_sec_acl_t;
@@ -65,7 +64,7 @@ typedef enum {
   OC_PERM_NONE = 0,          ///< no permissions
   OC_PERM_CREATE = (1 << 0), ///< Create permission is granted
   OC_PERM_RETRIEVE =
-    (1 << 1),                ///< Read, observe, discover permission is granted
+      (1 << 1),              ///< Read, observe, discover permission is granted
   OC_PERM_UPDATE = (1 << 2), ///< Write, update permission is granted
   OC_PERM_DELETE = (1 << 3), ///< Delete permission is granted
   OC_PERM_NOTIFY = (1 << 4)  ///< Notify permission is granted
@@ -86,8 +85,7 @@ typedef enum {
  * @brief ACE resource information
  *
  */
-typedef struct oc_ace_res_t
-{
+typedef struct oc_ace_res_t {
   struct oc_ace_res_t *next;      ///< pointer to next entry
   oc_string_t href;               ///< href
   oc_interface_mask_t interfaces; ///< applicable interfaces (as bit mask)
@@ -101,8 +99,7 @@ typedef struct oc_ace_res_t
  */
 typedef union oc_ace_subject_t {
   oc_uuid_t uuid; ///< DI
-  struct
-  {
+  struct {
     oc_string_t role;      ///< role
     oc_string_t authority; ///< authority
   } role;
@@ -113,8 +110,7 @@ typedef union oc_ace_subject_t {
  * @brief Security ACE information
  *
  */
-typedef struct oc_sec_ace_t
-{
+typedef struct oc_sec_ace_t {
   struct oc_sec_ace_t *next;          ///< pointer to next entry
   OC_LIST_STRUCT(resources);          ///< list of resources
   oc_ace_subject_type_t subject_type; ///< subject type

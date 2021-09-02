@@ -19,8 +19,7 @@
 static oc_separate_response_t temp_response;
 static int temperature;
 
-oc_define_interrupt_handler(temp_sensor)
-{
+oc_define_interrupt_handler(temp_sensor) {
   if (temp_response.active) {
     oc_set_separate_response_buffer(&temp_response);
 
@@ -32,9 +31,7 @@ oc_define_interrupt_handler(temp_sensor)
   }
 }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   oc_activate_interrupt_handler(temp_sensor);
   int ret = oc_init_platform("GE", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.tempsensor", "Home temperature monitor",
@@ -42,17 +39,14 @@ app_init(void)
   return ret;
 }
 
-static void
-get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
-{
+static void get_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
+                     void *user_data) {
   (void)iface_mask;
   (void)user_data;
   oc_indicate_separate_response(request, &temp_response);
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   oc_resource_t *res = oc_new_resource("tempsensor", "/temp/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.tempsensor");
   oc_resource_bind_resource_interface(res, OC_IF_R);
@@ -69,15 +63,11 @@ register_resources(void)
 static char thread_stack[512];
 static struct k_sem signal_interrupt;
 
-static void
-signal_interrupt_thread(struct k_timer *timer)
-{
+static void signal_interrupt_thread(struct k_timer *timer) {
   k_sem_give(&signal_interrupt);
 }
 
-static void
-fake_sensor_interrupts(void)
-{
+static void fake_sensor_interrupts(void) {
   struct k_timer timer;
   k_timer_init(&timer, signal_interrupt_thread, NULL);
   k_sem_init(&signal_interrupt, 0, 1);
@@ -95,19 +85,13 @@ fake_sensor_interrupts(void)
 
 static struct k_sem block;
 
-static void
-signal_event_loop(void)
-{
-  k_sem_give(&block);
-}
+static void signal_event_loop(void) { k_sem_give(&block); }
 
-void
-main(void)
-{
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+void main(void) {
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                           register_resources};
 
   k_sem_init(&block, 0, 1);
 

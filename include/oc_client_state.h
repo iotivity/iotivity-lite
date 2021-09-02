@@ -47,8 +47,7 @@ typedef enum {
  * @brief Client response information
  *
  */
-typedef struct
-{
+typedef struct {
   oc_rep_t *payload;       ///< response payload, interpreted as cbor
   const uint8_t *_payload; ///< payload buffer
   size_t _payload_len;     ///< payload buffer lenght
@@ -74,16 +73,16 @@ typedef enum {
  *
  */
 typedef oc_discovery_flags_t (*oc_discovery_all_handler_t)(
-  const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-  oc_endpoint_t *, oc_resource_properties_t, bool, void *);
+    const char *, const char *, oc_string_array_t, oc_interface_mask_t,
+    oc_endpoint_t *, oc_resource_properties_t, bool, void *);
 
 /**
  * @brief discovery handler
  *
  */
 typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
-  const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-  oc_endpoint_t *, oc_resource_properties_t, void *);
+    const char *, const char *, oc_string_array_t, oc_interface_mask_t,
+    oc_endpoint_t *, oc_resource_properties_t, void *);
 
 /**
  * @brief client response handler
@@ -95,8 +94,7 @@ typedef void (*oc_response_handler_t)(oc_client_response_t *);
  * @brief client handler information
  *
  */
-typedef struct oc_client_handler_t
-{
+typedef struct oc_client_handler_t {
   oc_response_handler_t response;           ///< response handler
   oc_discovery_handler_t discovery;         ///< discovery handler
   oc_discovery_all_handler_t discovery_all; ///< discovery all handler
@@ -106,8 +104,7 @@ typedef struct oc_client_handler_t
  * @brief client callback information
  *
  */
-typedef struct oc_client_cb_t
-{
+typedef struct oc_client_cb_t {
   struct oc_client_cb_t *next;   ///< pointer next callback information
   oc_string_t uri;               ///< the uri
   oc_string_t query;             ///< query parameters
@@ -241,9 +238,10 @@ void oc_ri_free_client_cbs_by_mid(uint16_t mid);
  * @param user_data the user data to be supplied to the handler
  * @return oc_discovery_flags_t the discovery flags (e.g. more to come)
  */
-oc_discovery_flags_t oc_ri_process_discovery_payload(
-  uint8_t *payload, int len, oc_client_handler_t handler,
-  oc_endpoint_t *endpoint, void *user_data);
+oc_discovery_flags_t
+oc_ri_process_discovery_payload(uint8_t *payload, int len,
+                                oc_client_handler_t handler,
+                                oc_endpoint_t *endpoint, void *user_data);
 
 #ifdef __cplusplus
 }

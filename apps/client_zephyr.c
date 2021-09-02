@@ -26,34 +26,26 @@ static bool light_state = false;
 static struct k_sem block;
 static bool got_discovery_response = false;
 
-static void
-set_device_custom_property(void *data)
-{
+static void set_device_custom_property(void *data) {
   (void)data;
   oc_set_custom_device_property(purpose, "operate lamp");
 }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Apple", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "1.0", "1.0",
                        set_device_custom_property, NULL);
   return ret;
 }
 
-static oc_event_callback_retval_t
-stop_observe(void *data)
-{
+static oc_event_callback_retval_t stop_observe(void *data) {
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, light_server);
   return OC_EVENT_DONE;
 }
 
-static void
-post_light(oc_client_response_t *data)
-{
+static void post_light(oc_client_response_t *data) {
   PRINT("POST_light:\n");
   if (data->code == OC_STATUS_OK)
     PRINT("POST response OK\n");
@@ -61,9 +53,7 @@ post_light(oc_client_response_t *data)
     PRINT("POST response code %d\n", data->code);
 }
 
-static void
-observe_light(oc_client_response_t *data)
-{
+static void observe_light(oc_client_response_t *data) {
   PRINT("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -94,8 +84,7 @@ observe_light(oc_client_response_t *data)
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
-{
+          oc_resource_properties_t bm, void *user_data) {
   (void)anchor;
   (void)iface_mask;
   (void)user_data;
@@ -122,9 +111,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static oc_event_callback_retval_t
-do_discovery(void *data)
-{
+static oc_event_callback_retval_t do_discovery(void *data) {
   (void)data;
   if (got_discovery_response) {
     return OC_EVENT_DONE;
@@ -133,24 +120,16 @@ do_discovery(void *data)
   return OC_EVENT_CONTINUE;
 }
 
-static void
-issue_requests(void)
-{
+static void issue_requests(void) {
   oc_set_delayed_callback(NULL, &do_discovery, 10);
 }
 
-static void
-signal_event_loop(void)
-{
-  k_sem_give(&block);
-}
+static void signal_event_loop(void) { k_sem_give(&block); }
 
-void
-main(void)
-{
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+void main(void) {
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .requests_entry = issue_requests};
 
   k_sem_init(&block, 0, 1);
 

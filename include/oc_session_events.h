@@ -47,8 +47,7 @@ typedef void (*session_event_handler_t)(const oc_endpoint_t *endpoint,
 /**
  * Structure to manage session event handler list.
  */
-typedef struct oc_session_event_cb
-{
+typedef struct oc_session_event_cb {
   struct oc_session_event_cb *next;
   session_event_handler_t handler;
 } oc_session_event_cb_t;

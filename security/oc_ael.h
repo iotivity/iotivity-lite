@@ -26,14 +26,12 @@
 extern "C" {
 #endif
 
-typedef struct oc_sec_ael_aux_info_t
-{
+typedef struct oc_sec_ael_aux_info_t {
   struct oc_sec_ael_aux_info_t *next;
   oc_string_t aux_info;
 } oc_sec_ael_aux_info_t;
 
-typedef struct oc_sec_ael_event_t
-{
+typedef struct oc_sec_ael_event_t {
   struct oc_sec_ael_event_t *next;
   size_t size;
   uint8_t category;
@@ -76,8 +74,7 @@ typedef enum {
   OC_SEC_AEL_UNIT_DEFAULT = OC_SEC_AEL_UNIT_BYTE,
 } oc_sec_ael_unit_t;
 
-typedef struct oc_sec_ael_t
-{
+typedef struct oc_sec_ael_t {
   uint8_t categoryfilter;
   uint8_t priorityfilter;
   size_t maxsize;

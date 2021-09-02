@@ -30,30 +30,26 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void)
-  {
+  static int appInit(void) {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                             "ocf.res.1.0.0", NULL, NULL);
     return result;
   }
 
-  static void signalEventLoop(void)
-  {
+  static void signalEventLoop(void) {
     pthread_mutex_lock(&mutex);
     pthread_cond_signal(&cv);
     pthread_mutex_unlock(&mutex);
   }
 
-  static oc_event_callback_retval_t quitEvent(void *data)
-  {
+  static oc_event_callback_retval_t quitEvent(void *data) {
     bool *quit = (bool *)data;
     *quit = true;
     return OC_EVENT_DONE;
   }
 
-  static void poolEvents(uint16_t seconds)
-  {
+  static void poolEvents(uint16_t seconds) {
     bool quit = false;
     oc_set_delayed_callback(&quit, quitEvent, seconds);
 
@@ -77,16 +73,14 @@ public:
   }
 
 protected:
-  static void SetUpTestCase()
-  {
+  static void SetUpTestCase() {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
   }
 
-  static void update_status(oc_cloud_status_t status, void *data)
-  {
+  static void update_status(oc_cloud_status_t status, void *data) {
     oc_cloud_status_t *u_status = (oc_cloud_status_t *)data;
     *u_status = status;
   }
@@ -98,14 +92,12 @@ oc_handler_t TestCloud::s_handler;
 pthread_mutex_t TestCloud::mutex;
 pthread_cond_t TestCloud::cv;
 
-TEST_F(TestCloud, oc_cloud_get_context)
-{
+TEST_F(TestCloud, oc_cloud_get_context) {
   EXPECT_NE(NULL, oc_cloud_get_context(0));
   EXPECT_EQ(NULL, oc_cloud_get_context(1));
 }
 
-TEST_F(TestCloud, cloud_status)
-{
+TEST_F(TestCloud, cloud_status) {
   oc_cloud_status_t status;
   memset(&status, 0, sizeof(status));
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
@@ -115,8 +107,7 @@ TEST_F(TestCloud, cloud_status)
   EXPECT_EQ(ctx->store.status, status);
 }
 
-TEST_F(TestCloud, cloud_set_string)
-{
+TEST_F(TestCloud, cloud_set_string) {
   oc_string_t str;
   memset(&str, 0, sizeof(str));
   cloud_set_string(&str, "a", 1);
@@ -129,8 +120,7 @@ TEST_F(TestCloud, cloud_set_string)
   EXPECT_EQ(NULL, oc_string(str));
 }
 
-TEST_F(TestCloud, cloud_set_last_error)
-{
+TEST_F(TestCloud, cloud_set_last_error) {
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   ASSERT_NE(NULL, ctx);
 
@@ -140,8 +130,7 @@ TEST_F(TestCloud, cloud_set_last_error)
   ASSERT_EQ((oc_cloud_error_t)err, ctx->last_error);
 }
 
-TEST_F(TestCloud, cloud_update_by_resource)
-{
+TEST_F(TestCloud, cloud_update_by_resource) {
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   ASSERT_NE(NULL, ctx);
   ctx->store.status = OC_CLOUD_FAILURE;

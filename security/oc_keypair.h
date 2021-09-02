@@ -28,8 +28,7 @@ extern "C" {
 #define OC_ECDSA_PUBKEY_SIZE (91)
 #define OC_ECDSA_PRIVKEY_SIZE (200)
 
-typedef struct oc_ecdsa_keypair_t
-{
+typedef struct oc_ecdsa_keypair_t {
   struct oc_ecdsa_keypair_t *next;
   size_t device;
   uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];

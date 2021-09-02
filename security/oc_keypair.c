@@ -27,9 +27,7 @@
 OC_MEMB(oc_keypairs_s, oc_ecdsa_keypair_t, OC_MAX_NUM_DEVICES);
 OC_LIST(oc_keypairs);
 
-oc_ecdsa_keypair_t *
-oc_sec_get_ecdsa_keypair(size_t device)
-{
+oc_ecdsa_keypair_t *oc_sec_get_ecdsa_keypair(size_t device) {
   oc_ecdsa_keypair_t *kp = (oc_ecdsa_keypair_t *)oc_list_head(oc_keypairs);
   while (kp) {
     if (kp->device == device) {
@@ -40,9 +38,7 @@ oc_sec_get_ecdsa_keypair(size_t device)
   return NULL;
 }
 
-void
-oc_free_ecdsa_keypairs(void)
-{
+void oc_free_ecdsa_keypairs(void) {
   oc_ecdsa_keypair_t *kp = (oc_ecdsa_keypair_t *)oc_list_pop(oc_keypairs);
   while (kp) {
     oc_memb_free(&oc_keypairs_s, kp);
@@ -50,9 +46,7 @@ oc_free_ecdsa_keypairs(void)
   }
 }
 
-static oc_ecdsa_keypair_t *
-add_keypair(size_t device)
-{
+static oc_ecdsa_keypair_t *add_keypair(size_t device) {
   oc_ecdsa_keypair_t *kp = oc_memb_alloc(&oc_keypairs_s);
   if (!kp) {
     return NULL;
@@ -62,9 +56,7 @@ add_keypair(size_t device)
   return kp;
 }
 
-bool
-oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device)
-{
+bool oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device) {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
     kp = add_keypair(device);
@@ -98,9 +90,7 @@ oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device)
   return true;
 }
 
-bool
-oc_sec_encode_ecdsa_keypair(size_t device)
-{
+bool oc_sec_encode_ecdsa_keypair(size_t device) {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
     return false;
@@ -116,11 +106,10 @@ oc_sec_encode_ecdsa_keypair(size_t device)
   return true;
 }
 
-int
-oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
-                          size_t *public_key_size, uint8_t *private_key,
-                          size_t private_key_buf_size, size_t *private_key_size)
-{
+int oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
+                              size_t *public_key_size, uint8_t *private_key,
+                              size_t private_key_buf_size,
+                              size_t *private_key_size) {
   mbedtls_pk_context pk;
   mbedtls_entropy_context entropy;
   mbedtls_ctr_drbg_context ctr_drbg;
@@ -183,9 +172,7 @@ generate_ecdsa_keypair_error:
   return -1;
 }
 
-int
-oc_generate_ecdsa_keypair_for_device(size_t device)
-{
+int oc_generate_ecdsa_keypair_for_device(size_t device) {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
     kp = add_keypair(device);
@@ -196,8 +183,8 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
 
   size_t public_key_size = 0;
   if (oc_generate_ecdsa_keypair(
-        kp->public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size, kp->private_key,
-        OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
+          kp->public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size,
+          kp->private_key, OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
     oc_memb_free(&oc_keypairs_s, kp);
     return -1;
   }

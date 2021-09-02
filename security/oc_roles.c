@@ -29,15 +29,9 @@
 OC_MEMB(role_creds_s, oc_role_t, OC_ROLES_NUM_ROLE_CREDS);
 OC_LIST(role_creds);
 
-oc_role_t *
-oc_sec_get_role_creds(void)
-{
-  return oc_list_head(role_creds);
-}
+oc_role_t *oc_sec_get_role_creds(void) { return oc_list_head(role_creds); }
 
-static oc_role_t *
-allocate_role_cred(const char *role, const char *authority)
-{
+static oc_role_t *allocate_role_cred(const char *role, const char *authority) {
   oc_role_t *role_cred = (oc_role_t *)oc_memb_alloc(&role_creds_s);
   if (role) {
     oc_new_string(&role_cred->role, role, strlen(role));
@@ -47,9 +41,7 @@ allocate_role_cred(const char *role, const char *authority)
   return role_cred;
 }
 
-static oc_role_t *
-find_role_cred(const char *role, const char *authority)
-{
+static oc_role_t *find_role_cred(const char *role, const char *authority) {
   oc_role_t *role_cred = (oc_role_t *)oc_list_head(role_creds);
   size_t role_len = strlen(role);
   size_t authority_len = (authority ? strlen(authority) : 0);
@@ -69,9 +61,7 @@ find_role_cred(const char *role, const char *authority)
   return role_cred;
 }
 
-void
-oc_sec_remove_role_cred(const char *role, const char *authority)
-{
+void oc_sec_remove_role_cred(const char *role, const char *authority) {
   oc_role_t *role_cred = find_role_cred(role, authority);
   if (role_cred) {
     oc_list_remove(role_creds, role_cred);
@@ -79,9 +69,7 @@ oc_sec_remove_role_cred(const char *role, const char *authority)
   }
 }
 
-oc_role_t *
-oc_sec_add_role_cred(const char *role, const char *authority)
-{
+oc_role_t *oc_sec_add_role_cred(const char *role, const char *authority) {
   oc_role_t *role_cred = find_role_cred(role, authority);
   if (!role_cred) {
     role_cred = allocate_role_cred(role, authority);
@@ -90,8 +78,7 @@ oc_sec_add_role_cred(const char *role, const char *authority)
 }
 #endif /* OC_CLIENT */
 
-typedef struct oc_sec_roles_t
-{
+typedef struct oc_sec_roles_t {
   struct oc_sec_roles_t *next;
   OC_LIST_STRUCT(roles);
   oc_tls_peer_t *client;
@@ -103,9 +90,7 @@ OC_MEMB(roles_s, oc_sec_cred_t, OC_ROLES_NUM_ROLES);
 OC_MEMB(clients_s, oc_sec_roles_t, OC_MAX_NUM_DEVICES);
 OC_LIST(clients);
 
-static oc_sec_roles_t *
-get_roles_for_client(oc_tls_peer_t *client)
-{
+static oc_sec_roles_t *get_roles_for_client(oc_tls_peer_t *client) {
   oc_sec_roles_t *roles = (oc_sec_roles_t *)oc_list_head(clients);
   while (roles) {
     if (roles->client == client) {
@@ -116,9 +101,8 @@ get_roles_for_client(oc_tls_peer_t *client)
   return roles;
 }
 
-static oc_sec_roles_t *
-allocate_roles_for_client(oc_tls_peer_t *client, size_t device)
-{
+static oc_sec_roles_t *allocate_roles_for_client(oc_tls_peer_t *client,
+                                                 size_t device) {
   oc_sec_roles_t *roles = (oc_sec_roles_t *)oc_memb_alloc(&clients_s);
   if (!roles) {
     return NULL;
@@ -130,9 +114,7 @@ allocate_roles_for_client(oc_tls_peer_t *client, size_t device)
   return roles;
 }
 
-oc_sec_cred_t *
-oc_sec_allocate_role(oc_tls_peer_t *client, size_t device)
-{
+oc_sec_cred_t *oc_sec_allocate_role(oc_tls_peer_t *client, size_t device) {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (!roles) {
     roles = allocate_roles_for_client(client, device);
@@ -152,9 +134,7 @@ oc_sec_allocate_role(oc_tls_peer_t *client, size_t device)
   return NULL;
 }
 
-oc_sec_cred_t *
-oc_sec_get_roles(oc_tls_peer_t *client)
-{
+oc_sec_cred_t *oc_sec_get_roles(oc_tls_peer_t *client) {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
     return (oc_sec_cred_t *)oc_list_head(roles->roles);
@@ -162,17 +142,13 @@ oc_sec_get_roles(oc_tls_peer_t *client)
   return NULL;
 }
 
-static void
-free_cred_properties(oc_sec_cred_t *cred)
-{
+static void free_cred_properties(oc_sec_cred_t *cred) {
   oc_free_string(&cred->role.role);
   oc_free_string(&cred->role.authority);
   oc_free_string(&cred->publicdata.data);
 }
 
-void
-oc_sec_free_role(oc_sec_cred_t *role, oc_tls_peer_t *client)
-{
+void oc_sec_free_role(oc_sec_cred_t *role, oc_tls_peer_t *client) {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
     oc_sec_cred_t *r = (oc_sec_cred_t *)oc_list_head(roles->roles);
@@ -190,9 +166,7 @@ oc_sec_free_role(oc_sec_cred_t *role, oc_tls_peer_t *client)
   }
 }
 
-void
-oc_sec_free_roles_for_device(size_t device)
-{
+void oc_sec_free_roles_for_device(size_t device) {
   oc_sec_roles_t *roles = (oc_sec_roles_t *)oc_list_head(clients), *next;
   while (roles) {
     next = roles->next;
@@ -203,9 +177,7 @@ oc_sec_free_roles_for_device(size_t device)
   }
 }
 
-void
-oc_sec_free_roles(oc_tls_peer_t *client)
-{
+void oc_sec_free_roles(oc_tls_peer_t *client) {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
     oc_sec_cred_t *r = (oc_sec_cred_t *)oc_list_pop(roles->roles);
@@ -221,9 +193,7 @@ oc_sec_free_roles(oc_tls_peer_t *client)
   }
 }
 
-int
-oc_sec_free_role_by_credid(int credid, oc_tls_peer_t *client)
-{
+int oc_sec_free_role_by_credid(int credid, oc_tls_peer_t *client) {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
     oc_sec_cred_t *r = (oc_sec_cred_t *)oc_list_head(roles->roles);

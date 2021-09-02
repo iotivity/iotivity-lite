@@ -18,13 +18,13 @@
  *
  ******************************************************************/
 
-#include <cstdlib>
 #include "gtest/gtest.h"
+#include <cstdlib>
 
-#include "oc_tls.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"
+#include "oc_tls.h"
 #define delete pseudo_delete
 #include "oc_core_res.h"
 #undef delete
@@ -42,8 +42,7 @@
 
 class TestTlsConnection : public testing::Test {
 protected:
-  virtual void SetUp()
-  {
+  virtual void SetUp() {
     oc_ri_init();
     oc_network_event_handler_mutex_init();
     oc_core_init();
@@ -52,8 +51,7 @@ protected:
                   OCF_DATA_MODEL_VERSION, NULL, NULL);
   }
 
-  virtual void TearDown()
-  {
+  virtual void TearDown() {
     oc_ri_shutdown();
     oc_tls_shutdown();
     oc_connectivity_shutdown(0);
@@ -63,15 +61,13 @@ protected:
 };
 
 #if defined(OC_TCP) && defined(OC_SECURITY)
-TEST_F(TestTlsConnection, InitTlsTest_P)
-{
+TEST_F(TestTlsConnection, InitTlsTest_P) {
 
   int errorCode = oc_tls_init_context();
   EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
-TEST_F(TestTlsConnection, InitTlsTestTwice_P)
-{
+TEST_F(TestTlsConnection, InitTlsTestTwice_P) {
 
   int errorCode = oc_tls_init_context();
   ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
@@ -80,8 +76,7 @@ TEST_F(TestTlsConnection, InitTlsTestTwice_P)
   EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
-TEST_F(TestTlsConnection, TlsConnectionTest_N)
-{
+TEST_F(TestTlsConnection, TlsConnectionTest_N) {
 
   int errorCode = oc_tls_init_context();
   ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";

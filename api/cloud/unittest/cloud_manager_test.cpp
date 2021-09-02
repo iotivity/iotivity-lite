@@ -31,30 +31,26 @@ public:
 
   static void onPostResponse(oc_client_response_t *data) { (void)data; }
 
-  static int appInit(void)
-  {
+  static int appInit(void) {
     int result = oc_init_platform("OCFCloud", NULL, NULL);
     result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                             "ocf.res.1.0.0", NULL, NULL);
     return result;
   }
 
-  static void signalEventLoop(void)
-  {
+  static void signalEventLoop(void) {
     pthread_mutex_lock(&mutex);
     pthread_cond_signal(&cv);
     pthread_mutex_unlock(&mutex);
   }
 
-  static oc_event_callback_retval_t quitEvent(void *data)
-  {
+  static oc_event_callback_retval_t quitEvent(void *data) {
     bool *quit = (bool *)data;
     *quit = true;
     return OC_EVENT_DONE;
   }
 
-  static void poolEvents(uint16_t seconds)
-  {
+  static void poolEvents(uint16_t seconds) {
     bool quit = false;
     oc_set_delayed_callback(&quit, quitEvent, seconds);
 
@@ -78,8 +74,7 @@ public:
   }
 
 protected:
-  static void SetUpTestCase()
-  {
+  static void SetUpTestCase() {
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
@@ -96,8 +91,7 @@ oc_cloud_context_t TestCloudManager::s_context;
 pthread_mutex_t TestCloudManager::mutex;
 pthread_cond_t TestCloudManager::cv;
 
-TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
-{
+TEST_F(TestCloudManager, cloud_manager_start_initialized_f) {
   // When
   s_context.store.status = OC_CLOUD_INITIALIZED;
   cloud_manager_start(&s_context);
@@ -109,8 +103,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
   EXPECT_EQ(OC_CLOUD_INITIALIZED, s_context.store.status);
 }
 
-TEST_F(TestCloudManager, cloud_manager_start_signed_up_f)
-{
+TEST_F(TestCloudManager, cloud_manager_start_signed_up_f) {
   // When
   s_context.store.status = OC_CLOUD_LOGGED_IN;
   cloud_manager_start(&s_context);
@@ -122,8 +115,7 @@ TEST_F(TestCloudManager, cloud_manager_start_signed_up_f)
   EXPECT_EQ(OC_CLOUD_LOGGED_IN, s_context.store.status);
 }
 
-TEST_F(TestCloudManager, cloud_manager_start_signed_in_f)
-{
+TEST_F(TestCloudManager, cloud_manager_start_signed_in_f) {
   // When
   s_context.store.status = OC_CLOUD_LOGGED_IN;
   cloud_manager_start(&s_context);

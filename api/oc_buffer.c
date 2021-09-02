@@ -44,9 +44,7 @@ OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* !OC_INOUT_BUFFER_POOL */
 
-static oc_message_t *
-allocate_message(struct oc_memb *pool)
-{
+static oc_message_t *allocate_message(struct oc_memb *pool) {
   oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
@@ -79,43 +77,31 @@ allocate_message(struct oc_memb *pool)
   return message;
 }
 
-oc_message_t *
-oc_allocate_message_from_pool(struct oc_memb *pool)
-{
+oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool) {
   if (pool) {
     return allocate_message(pool);
   }
   return NULL;
 }
 
-void
-oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
-{
+void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb) {
   oc_memb_set_buffers_avail_cb(&oc_incoming_buffers, cb);
 }
 
-oc_message_t *
-oc_allocate_message(void)
-{
+oc_message_t *oc_allocate_message(void) {
   return allocate_message(&oc_incoming_buffers);
 }
 
-oc_message_t *
-oc_internal_allocate_outgoing_message(void)
-{
+oc_message_t *oc_internal_allocate_outgoing_message(void) {
   return allocate_message(&oc_outgoing_buffers);
 }
 
-void
-oc_message_add_ref(oc_message_t *message)
-{
+void oc_message_add_ref(oc_message_t *message) {
   if (message)
     message->ref_count++;
 }
 
-void
-oc_message_unref(oc_message_t *message)
-{
+void oc_message_unref(oc_message_t *message) {
   if (message) {
     message->ref_count--;
     if (message->ref_count <= 0) {
@@ -131,17 +117,13 @@ oc_message_unref(oc_message_t *message)
   }
 }
 
-void
-oc_recv_message(oc_message_t *message)
-{
+void oc_recv_message(oc_message_t *message) {
   if (oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL)
     oc_message_unref(message);
 }
 
-void
-oc_send_message(oc_message_t *message)
-{
+void oc_send_message(oc_message_t *message) {
   if (oc_process_post(&message_buffer_handler,
                       oc_events[OUTBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL)
@@ -151,23 +133,18 @@ oc_send_message(oc_message_t *message)
 }
 
 #ifdef OC_SECURITY
-void
-oc_close_all_tls_sessions_for_device(size_t device)
-{
+void oc_close_all_tls_sessions_for_device(size_t device) {
   oc_process_post(&message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
                   (oc_process_data_t)device);
 }
 
-void
-oc_close_all_tls_sessions(void)
-{
+void oc_close_all_tls_sessions(void) {
   oc_process_poll(&(oc_tls_handler));
   _oc_signal_event_loop();
 }
 #endif /* OC_SECURITY */
 
-OC_PROCESS_THREAD(message_buffer_handler, ev, data)
-{
+OC_PROCESS_THREAD(message_buffer_handler, ev, data) {
   OC_PROCESS_BEGIN();
   OC_DBG("Started buffer handler process");
   while (1) {
@@ -217,7 +194,7 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
       else
 #endif /* OC_CLIENT */
 #ifdef OC_SECURITY
-        if (message->endpoint.flags & SECURED) {
+          if (message->endpoint.flags & SECURED) {
 #ifdef OC_OSCORE
         OC_DBG("Outbound network event: forwarding to OSCORE");
         oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_OSCORE_EVENT],

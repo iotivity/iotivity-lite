@@ -77,8 +77,7 @@ extern "C" {
  *
  * \hideinitializer
  */
-struct oc_timer
-{
+struct oc_timer {
   oc_clock_time_t start;
   oc_clock_time_t interval;
 };

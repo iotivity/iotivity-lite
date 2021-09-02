@@ -19,8 +19,8 @@
 #ifndef IPCONTEXT_H
 #define IPCONTEXT_H
 
-#include "oc_endpoint.h"
 #include "ethadapter_utils.h"
+#include "oc_endpoint.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -34,8 +34,7 @@ typedef enum {
   ADAPTER_STATUS_ERROR     /* Error */
 } adapter_receive_state_t;
 
-typedef struct ip_context_t
-{
+typedef struct ip_context_t {
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps);
   uint8_t mcast4_sock;

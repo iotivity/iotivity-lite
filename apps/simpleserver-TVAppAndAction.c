@@ -32,9 +32,7 @@ oc_string_array_t my_supportedactions;
 /* global property variables for path: "/binaryswitch" */
 bool g_binaryswitch_value = false;
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.2.2.3",
                        "ocf.res.1.3.0, ocf.sh.1.3.0", NULL, NULL);
@@ -65,8 +63,8 @@ app_init(void)
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
-    "\tERROR Could not read 'server_introspection.cbor'\n"
-    "\tIntrospection data not set.\n";
+      "\tERROR Could not read 'server_introspection.cbor'\n"
+      "\tIntrospection data not set.\n";
   fp = fopen("c:/users/m.trayer/OCF/TVApps/server_introspection.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
@@ -80,8 +78,8 @@ app_init(void)
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
       PRINT(
-        "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
-        (int)buffer_size);
+          "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
+          (int)buffer_size);
     } else {
       PRINT("%s", introspection_error);
     }
@@ -95,9 +93,7 @@ app_init(void)
   return ret;
 }
 
-bool
-verify_action_in_supported_set(char *action, int action_len)
-{
+bool verify_action_in_supported_set(char *action, int action_len) {
   bool rc = false;
   size_t i;
 
@@ -115,10 +111,8 @@ verify_action_in_supported_set(char *action, int action_len)
   return rc;
 }
 
-static void
-get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                 void *user_data)
-{
+static void get_binaryswitch(oc_request_t *request,
+                             oc_interface_mask_t interfaces, void *user_data) {
   (void)user_data; /* not used */
 
   PRINT("get_binaryswitch: interface %d\n", interfaces);
@@ -152,10 +146,8 @@ values.
 *
 * @param requestRep the request representation.
 */
-static void
-post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                  void *user_data)
-{
+static void post_binaryswitch(oc_request_t *request,
+                              oc_interface_mask_t interfaces, void *user_data) {
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
@@ -201,10 +193,8 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   }
 }
 
-static void
-get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
-                  void *user_data)
-{
+static void get_remotecontrol(oc_request_t *request,
+                              oc_interface_mask_t iface_mask, void *user_data) {
   (void)user_data;
 
   /* Check if query string includes action selectio, it is does, reject the
@@ -213,7 +203,7 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   int action_len = -1;
   oc_init_query_iterator();
   bool rc =
-    oc_iterate_query_get_values(request, "action", &action, &action_len);
+      oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
     // An action parm was received
@@ -245,10 +235,9 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
-                   void *user_data)
-{
+static void post_remotecontrol(oc_request_t *request,
+                               oc_interface_mask_t iface_mask,
+                               void *user_data) {
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_remotecontrol:\n");
@@ -260,7 +249,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   int action_len = -1;
   oc_init_query_iterator();
   bool rc =
-    oc_iterate_query_get_values(request, "action", &action, &action_len);
+      oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
     PRINT("POST action length = %d \n", action_len);
@@ -291,9 +280,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
   oc_resource_t *res = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.switch.binary");
@@ -306,7 +293,7 @@ register_resources(void)
 
   PRINT("Register Resource with local path \"/remotecontrol\"\n");
   oc_resource_t *res2 =
-    oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
+      oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
   oc_resource_bind_resource_type(res2, "oic.r.remotecontrol");
   oc_resource_bind_resource_interface(res2, OC_IF_A);
   oc_resource_set_default_interface(res2, OC_IF_A);
@@ -316,22 +303,14 @@ register_resources(void)
   oc_add_resource(res2);
 }
 
-static void
-signal_event_loop(void)
-{
-  WakeConditionVariable(&cv);
-}
+static void signal_event_loop(void) { WakeConditionVariable(&cv); }
 
-void
-handle_signal(int signal)
-{
+void handle_signal(int signal) {
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
 
@@ -342,11 +321,10 @@ main(void)
   /* initialize global variables for resource "/binaryswitch" */
   g_binaryswitch_value = false;
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = 0 };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources = register_resources,
+                                       .requests_entry = 0};
 
   oc_clock_time_t next_event;
 
@@ -366,7 +344,7 @@ main(void)
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }

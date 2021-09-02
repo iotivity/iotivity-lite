@@ -16,20 +16,18 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 #include "oc_oscore_context.h"
-#include "oc_oscore_crypto.h"
 #include "messaging/coap/transactions.h"
-#include "oc_client_state.h"
-#include "oc_store.h"
 #include "oc_api.h"
-#include "oc_rep.h"
+#include "oc_client_state.h"
 #include "oc_cred.h"
+#include "oc_oscore_crypto.h"
+#include "oc_rep.h"
+#include "oc_store.h"
 #include "port/oc_log.h"
 OC_LIST(contexts);
 OC_MEMB(ctx_s, oc_oscore_context_t, 1);
 
-oc_oscore_context_t *
-oc_oscore_find_group_context(void)
-{
+oc_oscore_context_t *oc_oscore_find_group_context(void) {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
 
   while (ctx != NULL) {
@@ -44,10 +42,9 @@ oc_oscore_find_group_context(void)
   return NULL;
 }
 
-oc_oscore_context_t *
-oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx, size_t device,
-                              uint8_t *kid, uint8_t kid_len)
-{
+oc_oscore_context_t *oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx,
+                                                   size_t device, uint8_t *kid,
+                                                   uint8_t kid_len) {
   if (!ctx) {
     ctx = (oc_oscore_context_t *)oc_list_head(contexts);
   }
@@ -61,12 +58,9 @@ oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx, size_t device,
   return ctx;
 }
 
-oc_oscore_context_t *
-oc_oscore_find_context_by_token_mid(size_t device, uint8_t *token,
-                                    uint8_t token_len, uint16_t mid,
-                                    uint8_t **request_piv,
-                                    uint8_t *request_piv_len, bool tcp)
-{
+oc_oscore_context_t *oc_oscore_find_context_by_token_mid(
+    size_t device, uint8_t *token, uint8_t token_len, uint16_t mid,
+    uint8_t **request_piv, uint8_t *request_piv_len, bool tcp) {
   oc_uuid_t *uuid;
 #ifdef OC_CLIENT
   /* Search for client cb by token */
@@ -107,9 +101,8 @@ oc_oscore_find_context_by_token_mid(size_t device, uint8_t *token,
   return NULL;
 }
 
-oc_oscore_context_t *
-oc_oscore_find_context_by_UUID(size_t device, oc_uuid_t *uuid)
-{
+oc_oscore_context_t *oc_oscore_find_context_by_UUID(size_t device,
+                                                    oc_uuid_t *uuid) {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
   while (ctx != NULL) {
     oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
@@ -122,9 +115,7 @@ oc_oscore_find_context_by_UUID(size_t device, oc_uuid_t *uuid)
   return ctx;
 }
 
-void
-oc_oscore_free_context(oc_oscore_context_t *ctx)
-{
+void oc_oscore_free_context(oc_oscore_context_t *ctx) {
   if (ctx) {
     if (ctx->desc.size > 0) {
       oc_free_string(&ctx->desc);
@@ -134,11 +125,11 @@ oc_oscore_free_context(oc_oscore_context_t *ctx)
   }
 }
 
-oc_oscore_context_t *
-oc_oscore_add_context(size_t device, const char *senderid,
-                      const char *recipientid, uint64_t ssn, const char *desc,
-                      void *cred_entry, bool from_storage)
-{
+oc_oscore_context_t *oc_oscore_add_context(size_t device, const char *senderid,
+                                           const char *recipientid,
+                                           uint64_t ssn, const char *desc,
+                                           void *cred_entry,
+                                           bool from_storage) {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
 
   if (!ctx || (!senderid && !recipientid) || !cred_entry) {
@@ -185,10 +176,10 @@ oc_oscore_add_context(size_t device, const char *senderid,
   if (senderid) {
     OC_DBG("### \t\tderiving Sender key ###");
     if (oc_oscore_context_derive_param(
-          ctx->sendid, ctx->sendid_len, ctx->idctx, ctx->idctx_len, "Key",
-          oc_cast(cred->privatedata.data, uint8_t),
-          oc_string_len(cred->privatedata.data), NULL, 0, ctx->sendkey,
-          OSCORE_KEY_LEN) < 0) {
+            ctx->sendid, ctx->sendid_len, ctx->idctx, ctx->idctx_len, "Key",
+            oc_cast(cred->privatedata.data, uint8_t),
+            oc_string_len(cred->privatedata.data), NULL, 0, ctx->sendkey,
+            OSCORE_KEY_LEN) < 0) {
       OC_ERR("*** error deriving Sender key ###");
       goto add_oscore_context_error;
     }
@@ -199,10 +190,10 @@ oc_oscore_add_context(size_t device, const char *senderid,
   if (recipientid) {
     OC_DBG("### \t\tderiving Recipient key ###");
     if (oc_oscore_context_derive_param(
-          ctx->recvid, ctx->recvid_len, ctx->idctx, ctx->idctx_len, "Key",
-          oc_cast(cred->privatedata.data, uint8_t),
-          oc_string_len(cred->privatedata.data), NULL, 0, ctx->recvkey,
-          OSCORE_KEY_LEN) < 0) {
+            ctx->recvid, ctx->recvid_len, ctx->idctx, ctx->idctx_len, "Key",
+            oc_cast(cred->privatedata.data, uint8_t),
+            oc_string_len(cred->privatedata.data), NULL, 0, ctx->recvkey,
+            OSCORE_KEY_LEN) < 0) {
       OC_ERR("*** error deriving Recipient key ###");
       goto add_oscore_context_error;
     }
@@ -231,14 +222,12 @@ add_oscore_context_error:
   return NULL;
 }
 
-int
-oc_oscore_context_derive_param(const uint8_t *id, uint8_t id_len,
-                               uint8_t *id_ctx, uint8_t id_ctx_len,
-                               const char *type, uint8_t *secret,
-                               uint8_t secret_len, uint8_t *salt,
-                               uint8_t salt_len, uint8_t *param,
-                               uint8_t param_len)
-{
+int oc_oscore_context_derive_param(const uint8_t *id, uint8_t id_len,
+                                   uint8_t *id_ctx, uint8_t id_ctx_len,
+                                   const char *type, uint8_t *secret,
+                                   uint8_t secret_len, uint8_t *salt,
+                                   uint8_t salt_len, uint8_t *param,
+                                   uint8_t param_len) {
   uint8_t info[OSCORE_INFO_MAX_LEN];
   CborEncoder e, a;
   CborError err = CborNoError;

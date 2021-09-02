@@ -33,9 +33,7 @@
 #define UUID_PREFIX_LEN (5)
 #define MBEDTLS_ULIMITED_PATHLEN 0
 
-int
-oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
-{
+int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt) {
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
 
@@ -68,10 +66,8 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
   return 0;
 }
 
-int
-oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
-                            oc_string_t *public_key)
-{
+int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
+                                oc_string_t *public_key) {
 #define RSA_PUB_DER_MAX_BYTES (38 + 2 * MBEDTLS_MPI_MAX_SIZE)
 #define ECP_PUB_DER_MAX_BYTES (30 + 2 * MBEDTLS_ECP_MAX_BYTES)
   size_t key_size;
@@ -86,10 +82,8 @@ oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
                                      oc_cast(*public_key, uint8_t), key_size);
 }
 
-int
-oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
-                          oc_string_t *public_key)
-{
+int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
+                              oc_string_t *public_key) {
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
 
@@ -112,11 +106,9 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
   return ret;
 }
 
-int
-oc_certs_parse_role_certificate(const unsigned char *role_certificate,
-                                size_t cert_size, oc_sec_cred_t *role_cred,
-                                bool roles_resource)
-{
+int oc_certs_parse_role_certificate(const unsigned char *role_certificate,
+                                    size_t cert_size, oc_sec_cred_t *role_cred,
+                                    bool roles_resource) {
   mbedtls_x509_crt c;
   mbedtls_x509_crt *cert;
   if (roles_resource) {
@@ -162,7 +154,7 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
     if (GeneralName->general_name.name_type ==
         MBEDTLS_X509_GENERALNAME_DIRECTORYNAME) {
       for (const mbedtls_x509_name *directoryName =
-             GeneralName->general_name.name.directory_name;
+               GeneralName->general_name.name.directory_name;
            directoryName != NULL; directoryName = directoryName->next) {
         /* Look for the Common Name (CN) component in the directoryName */
         if ((directoryName->oid.len == MBEDTLS_OID_SIZE(MBEDTLS_OID_AT_CN)) &&
@@ -226,9 +218,7 @@ exit_parse_role_cert:
   return -1;
 }
 
-int
-oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len)
-{
+int oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len) {
   if (buf_len < 45) {
     return -1;
   }
@@ -237,12 +227,10 @@ oc_certs_encode_CN_with_UUID(oc_uuid_t *uuid, char *buf, size_t buf_len)
   return 0;
 }
 
-int
-oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
-                           oc_string_t *subjectuuid)
-{
+int oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
+                               oc_string_t *subjectuuid) {
   mbedtls_asn1_named_data *subject =
-    (mbedtls_asn1_named_data *)&(cert->subject);
+      (mbedtls_asn1_named_data *)&(cert->subject);
 
   while (subject) {
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &(subject->oid)) == 0) {
@@ -276,10 +264,8 @@ oc_certs_parse_CN_for_UUID(const mbedtls_x509_crt *cert,
   return 0;
 }
 
-int
-oc_certs_parse_CN_for_UUID_raw(const unsigned char *cert, size_t cert_size,
-                               oc_string_t *uuid)
-{
+int oc_certs_parse_CN_for_UUID_raw(const unsigned char *cert, size_t cert_size,
+                                   oc_string_t *uuid) {
   int ret = -1;
 
   mbedtls_x509_crt crt;
@@ -298,10 +284,9 @@ oc_certs_parse_CN_for_UUID_raw(const unsigned char *cert, size_t cert_size,
   return ret;
 }
 
-static int
-oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
-                          size_t output_buffer_len)
-{
+static int oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert,
+                                     char *output_buffer,
+                                     size_t output_buffer_len) {
 #define append_to_output(x)                                                    \
   do {                                                                         \
     output_buffer[j++] = x;                                                    \
@@ -314,13 +299,12 @@ oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
 
   size_t ch = 0;
 
-  uint8_t alphabet[65] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                           'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                           'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                           'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                           'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                           '8', '9', '+', '/', '=' };
+  uint8_t alphabet[65] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                          'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                          'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                          'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                          's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
+                          '3', '4', '5', '6', '7', '8', '9', '+', '/', '='};
   uint8_t val = 0;
   size_t i, j = 0;
   size_t input_len = cert->raw.len;
@@ -384,15 +368,14 @@ oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
   return (int)j;
 }
 
-int
-oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
-                                char *output_buffer, size_t output_buffer_len)
-{
+int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
+                                    char *output_buffer,
+                                    size_t output_buffer_len) {
   size_t buffer_len = output_buffer_len;
   mbedtls_x509_crt *cert = (mbedtls_x509_crt *)cert_chain;
   while (cert != NULL) {
     if (oc_certs_serialize_to_pem(
-          cert, output_buffer + output_buffer_len - buffer_len, buffer_len) ==
+            cert, output_buffer + output_buffer_len - buffer_len, buffer_len) ==
         -1) {
       return -1;
     }
@@ -402,9 +385,7 @@ oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
   return (int)strlen(output_buffer);
 }
 
-static int
-validate_x509v1_fields(const mbedtls_x509_crt *cert)
-{
+static int validate_x509v1_fields(const mbedtls_x509_crt *cert) {
   /* signatureAlgorithm */
   if ((MBEDTLS_X509_ID_FLAG(cert->sig_md) &
        MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)) == 0) {
@@ -448,10 +429,9 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert)
   return 0;
 }
 
-int
-oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
-                                      bool is_root, bool is_otm, int depth)
-{
+int oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
+                                          bool is_root, bool is_otm,
+                                          int depth) {
   OC_DBG("attempting to validate %s cert", is_root ? "root" : "intermediate");
   /* Validate common X.509v1 fields */
   if (validate_x509v1_fields(cert) < 0) {
@@ -459,9 +439,9 @@ oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
   }
 
   /* Root certificates (and ONLY Root certificates) shall be self-issued */
-  bool is_self_issued =
-    (cert->issuer_raw.len == cert->subject_raw.len) ||
-    memcmp(cert->issuer_raw.p, cert->subject_raw.p, cert->issuer_raw.len) == 0;
+  bool is_self_issued = (cert->issuer_raw.len == cert->subject_raw.len) ||
+                        memcmp(cert->issuer_raw.p, cert->subject_raw.p,
+                               cert->issuer_raw.len) == 0;
   if (is_root && !is_self_issued) {
     OC_WRN("certificate is not a valid root CA");
     return -1;
@@ -474,11 +454,11 @@ oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
   /* keyCertSign (5) & cRLSign (6) bits SHALL be enabled */
   /* Digital Signature bit may optionally be enabled */
   unsigned int optional_key_usage =
-    is_otm ? MBEDTLS_X509_KU_DIGITAL_SIGNATURE
-           : MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_CRL_SIGN;
+      is_otm ? MBEDTLS_X509_KU_DIGITAL_SIGNATURE
+             : MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_CRL_SIGN;
   unsigned int key_usage =
-    is_otm ? MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN
-           : MBEDTLS_X509_KU_KEY_CERT_SIGN;
+      is_otm ? MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN
+             : MBEDTLS_X509_KU_KEY_CERT_SIGN;
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -512,9 +492,7 @@ oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
   return 0;
 }
 
-int
-oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
-{
+int oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert) {
   OC_DBG("attempting to validate end entity cert");
   /* Validate common X.509v1 fields */
   if (validate_x509v1_fields(cert) < 0) {
@@ -525,7 +503,7 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
    * the only bits enabled.
    */
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
+      (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -545,8 +523,8 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
    * serverAuthentication - 1.3.6.1.5.5.7.3.1
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_SERVER_AUTH,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) != 0) {
+          cert, MBEDTLS_OID_SERVER_AUTH,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) != 0) {
     OC_WRN("serverAuthentication OID is absent");
     return -1;
   }
@@ -555,8 +533,8 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
    * clientAuthentication - 1.3.6.1.5.5.7.3.2
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_CLIENT_AUTH,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH)) != 0) {
+          cert, MBEDTLS_OID_CLIENT_AUTH,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH)) != 0) {
     OC_WRN("clientAuthentication OID is absent");
     return -1;
   }
@@ -565,31 +543,31 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
    * Identity certificate - 1.3.6.1.4.1.44924.1.6
    * Role certificate - 1.3.6.1.4.1.44924.1.7
    */
-  const unsigned char identity_cert_oid[] = { 0x2b,             /* 1.3 */
-                                              0x06,             /* .6 */
-                                              0x01,             /* .1 */
-                                              0x04,             /* .4 */
-                                              0x01,             /* .1 */
-                                              0x82,             /* .44924 */
-                                              0xDE, 0x7C, 0x01, /* .1 */
-                                              0x06 };           /* .6 */
+  const unsigned char identity_cert_oid[] = {0x2b,             /* 1.3 */
+                                             0x06,             /* .6 */
+                                             0x01,             /* .1 */
+                                             0x04,             /* .4 */
+                                             0x01,             /* .1 */
+                                             0x82,             /* .44924 */
+                                             0xDE, 0x7C, 0x01, /* .1 */
+                                             0x06};            /* .6 */
 
-  const unsigned char role_cert_oid[] = { 0x2b,             /* 1.3 */
-                                          0x06,             /* .6 */
-                                          0x01,             /* .1 */
-                                          0x04,             /* .4 */
-                                          0x01,             /* .1 */
-                                          0x82,             /* .44924 */
-                                          0xDE, 0x7C, 0x01, /* .1 */
-                                          0x07 };           /* .7 */
+  const unsigned char role_cert_oid[] = {0x2b,             /* 1.3 */
+                                         0x06,             /* .6 */
+                                         0x01,             /* .1 */
+                                         0x04,             /* .4 */
+                                         0x01,             /* .1 */
+                                         0x82,             /* .44924 */
+                                         0xDE, 0x7C, 0x01, /* .1 */
+                                         0x07};            /* .7 */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) !=
+          cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) !=
       0) {
     OC_WRN("identity certificate OID is absent");
     return -1;
   }
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) == 0) {
+          cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) == 0) {
     OC_WRN("role certificate OID present in identity certificate");
     return -1;
   }
@@ -598,8 +576,8 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
    * OID (2.5.29.37.0)
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE)) == 0) {
+          cert, MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE)) == 0) {
     OC_WRN("anyExtendedKeyUsage OID present in identity certificate");
     return -1;
   }
@@ -607,9 +585,7 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
   return 0;
 }
 
-int
-oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
-{
+int oc_certs_validate_role_cert(const mbedtls_x509_crt *cert) {
   OC_DBG("attempting to validate role certificate");
 
   /* Validate common X.509v1 fields */
@@ -621,7 +597,7 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
    * the only bits enabled.
    */
   unsigned int key_usage =
-    (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
+      (MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT);
   if ((cert->key_usage & key_usage) != key_usage) {
     OC_WRN("key_usage constraints not met");
     return -1;
@@ -641,8 +617,8 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
    * serverAuthentication - 1.3.6.1.5.5.7.3.1
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_SERVER_AUTH,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) != 0) {
+          cert, MBEDTLS_OID_SERVER_AUTH,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) != 0) {
     OC_WRN("serverAuthentication OID is absent");
     return -1;
   }
@@ -651,8 +627,8 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
    * clientAuthentication - 1.3.6.1.5.5.7.3.2
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_CLIENT_AUTH,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH)) != 0) {
+          cert, MBEDTLS_OID_CLIENT_AUTH,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_CLIENT_AUTH)) != 0) {
     OC_WRN("clientAuthentication OID is absent");
     return -1;
   }
@@ -661,31 +637,31 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
    * Identity certificate - 1.3.6.1.4.1.44924.1.6
    * Role certificate - 1.3.6.1.4.1.44924.1.7
    */
-  const unsigned char identity_cert_oid[] = { 0x2b,             /* 1.3 */
-                                              0x06,             /* .6 */
-                                              0x01,             /* .1 */
-                                              0x04,             /* .4 */
-                                              0x01,             /* .1 */
-                                              0x82,             /* .44924 */
-                                              0xDE, 0x7C, 0x01, /* .1 */
-                                              0x06 };           /* .6 */
+  const unsigned char identity_cert_oid[] = {0x2b,             /* 1.3 */
+                                             0x06,             /* .6 */
+                                             0x01,             /* .1 */
+                                             0x04,             /* .4 */
+                                             0x01,             /* .1 */
+                                             0x82,             /* .44924 */
+                                             0xDE, 0x7C, 0x01, /* .1 */
+                                             0x06};            /* .6 */
 
-  const unsigned char role_cert_oid[] = { 0x2b,             /* 1.3 */
-                                          0x06,             /* .6 */
-                                          0x01,             /* .1 */
-                                          0x04,             /* .4 */
-                                          0x01,             /* .1 */
-                                          0x82,             /* .44924 */
-                                          0xDE, 0x7C, 0x01, /* .1 */
-                                          0x07 };           /* .7 */
+  const unsigned char role_cert_oid[] = {0x2b,             /* 1.3 */
+                                         0x06,             /* .6 */
+                                         0x01,             /* .1 */
+                                         0x04,             /* .4 */
+                                         0x01,             /* .1 */
+                                         0x82,             /* .44924 */
+                                         0xDE, 0x7C, 0x01, /* .1 */
+                                         0x07};            /* .7 */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) ==
+          cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) ==
       0) {
     OC_WRN("identity certificate OID is present in role certificate");
     return -1;
   }
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) != 0) {
+          cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) != 0) {
     OC_WRN("role certificate OID is absent");
     return -1;
   }
@@ -694,8 +670,8 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
    * OID (2.5.29.37.0)
    */
   if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE,
-        MBEDTLS_OID_SIZE(MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE)) == 0) {
+          cert, MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE,
+          MBEDTLS_OID_SIZE(MBEDTLS_OID_ANY_EXTENDED_KEY_USAGE)) == 0) {
     OC_WRN("anyExtendedKeyUsage OID present in identity certificate");
     return -1;
   }
@@ -703,10 +679,8 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
   return 0;
 }
 
-int
-oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
-                               mbedtls_x509_crt *child)
-{
+int oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
+                                   mbedtls_x509_crt *child) {
   if (child->issuer_raw.len == issuer->subject_raw.len &&
       memcmp(child->issuer_raw.p, issuer->subject_raw.p,
              child->issuer_raw.len) == 0) {
@@ -715,9 +689,7 @@ oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
   return -1;
 }
 
-int
-oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
-{
+int oc_certs_is_PEM(const unsigned char *cert, size_t cert_len) {
   const char *pem_begin = "-----BEGIN ";
   if (cert_len > strlen(pem_begin) &&
       memcmp(cert, pem_begin, strlen(pem_begin)) == 0) {
@@ -726,10 +698,8 @@ oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
   return -1;
 }
 
-int
-oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
-                      oc_string_t *subject_DN, uint8_t *public_key)
-{
+int oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
+                          oc_string_t *subject_DN, uint8_t *public_key) {
   int ret = -1;
   mbedtls_x509_csr c;
 
@@ -749,9 +719,9 @@ oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
       OC_ERR("unable to hash CertificationRequestInfo in CSR %d", ret);
       goto exit_csr;
     }
-    ret =
-      mbedtls_pk_verify((mbedtls_pk_context *)&c.pk, MBEDTLS_MD_SHA256,
-                        CertificationRequestInfo_SHA256, 0, c.sig.p, c.sig.len);
+    ret = mbedtls_pk_verify((mbedtls_pk_context *)&c.pk, MBEDTLS_MD_SHA256,
+                            CertificationRequestInfo_SHA256, 0, c.sig.p,
+                            c.sig.len);
     if (ret < 0) {
       OC_ERR("unable to verify signature in CSR %d", ret);
       goto exit_csr;
@@ -784,9 +754,7 @@ exit_csr:
   return 0;
 }
 
-int
-oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
-{
+int oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len) {
   oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
     OC_ERR("could not find public/private key pair on device %zd", device);
@@ -814,7 +782,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
   mbedtls_pk_init(&pk);
 
   int ret =
-    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_ECDSA_PUBKEY_SIZE);
+      mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_ECDSA_PUBKEY_SIZE);
   if (ret != 0) {
     OC_ERR("could not parse public key for device %zd", device);
     goto generate_csr_error;

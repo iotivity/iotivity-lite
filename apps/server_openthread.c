@@ -16,43 +16,37 @@
 
 #include <unistd.h>
 
+#include <examples/platforms/platform.h>
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
-#include <examples/platforms/platform.h>
 
 #ifdef OC_RETARGET
 #include <openthread/platform/uart.h>
 #endif
 
 #include "oc_api.h"
-#include "port/oc_assert.h"
 #include "oc_instance.h"
+#include "port/oc_assert.h"
 
 otInstance *ot_instance;
 
 static bool light_state = false;
 
-static void
-set_device_custom_property(void *data)
-{
+static void set_device_custom_property(void *data) {
   (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
 }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Openthread", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Openthread light", "ocf.1.0.0",
                        "ocf.res.1.0.0", set_device_custom_property, NULL);
   return ret;
 }
 
-static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-          void *user_data)
-{
+static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
   (void)user_data;
   PRINT("GET_light:\n");
   oc_rep_start_root_object();
@@ -70,10 +64,8 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   PRINT("Light state %d\n", light_state);
 }
 
-static void
-post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
-{
+static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                       void *user_data) {
   (void)user_data;
   (void)iface_mask;
   PRINT("POST_light:\n");
@@ -97,16 +89,12 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   light_state = state;
 }
 
-static void
-put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-          void *user_data)
-{
+static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
   post_light(request, iface_mask, user_data);
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
@@ -119,9 +107,7 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-static void
-ot_state_changed(uint32_t flags, void *context)
-{
+static void ot_state_changed(uint32_t flags, void *context) {
   (void)context;
 
   if (flags & OT_CHANGED_THREAD_ROLE) {
@@ -129,15 +115,9 @@ ot_state_changed(uint32_t flags, void *context)
   }
 }
 
-static void
-signal_event_loop(void)
-{
-  ocInstanceSignal();
-}
+static void signal_event_loop(void) { ocInstanceSignal(); }
 
-static int
-start_thread(void)
-{
+static int start_thread(void) {
   if (!otThreadGetAutoStart(ot_instance)) {
     if (otIp6SetEnabled(ot_instance, true) != OT_ERROR_NONE) {
       OC_ERR("Can't enable ip6\n");
@@ -160,9 +140,7 @@ start_thread(void)
   return 0;
 }
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   // init openthread
 
   PlatformInit(argc, argv);
@@ -181,10 +159,10 @@ main(int argc, char *argv[])
 
   // init iotivity
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                           register_resources};
 
   ocInstanceInit(&handler);
 

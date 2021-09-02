@@ -275,7 +275,7 @@ typedef unsigned char oc_process_num_events_t;
  */
 #define OC_PROCESS_THREAD(name, ev, data)                                      \
   static PT_THREAD(process_thread_##name(                                      \
-    struct pt *process_pt, oc_process_event_t ev, oc_process_data_t data))
+      struct pt *process_pt, oc_process_event_t ev, oc_process_data_t data))
 
 /**
  * Declare the name of a process.
@@ -303,17 +303,16 @@ typedef unsigned char oc_process_num_events_t;
 #ifdef OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
 #define OC_PROCESS(name, strname)                                              \
   OC_PROCESS_THREAD(name, ev, data);                                           \
-  struct oc_process name = { NULL, process_thread_##name, { 0 }, 0, 0 }
+  struct oc_process name = {NULL, process_thread_##name, {0}, 0, 0}
 #else
 #define OC_PROCESS(name, strname)                                              \
   OC_PROCESS_THREAD(name, ev, data);                                           \
-  struct oc_process name = { NULL, strname, process_thread_##name, { 0 }, 0, 0 }
+  struct oc_process name = {NULL, strname, process_thread_##name, {0}, 0, 0}
 #endif
 
 /** @} */
 
-struct oc_process
-{
+struct oc_process {
   struct oc_process *next;
 #ifdef OC_PROCESS_CONF_NO_OC_PROCESS_NAMES
 #define OC_PROCESS_NAME_STRING(process) ""

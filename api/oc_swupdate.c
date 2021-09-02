@@ -41,26 +41,20 @@ void oc_swupdate_decode(oc_rep_t *rep, size_t device);
 
 static const oc_swupdate_cb_t *cb;
 
-void
-oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
-{
+void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl) {
   cb = swupdate_impl;
 }
 
 #define SVR_TAG_MAX (32)
-static void
-gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
-{
+static void gen_svr_tag(const char *name, size_t device_index, char *svr_tag) {
   int svr_tag_len =
-    snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
+      snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
   svr_tag_len =
-    (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
+      (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
   svr_tag[svr_tag_len] = '\0';
 }
 
-static void
-oc_load_sw(size_t device)
-{
+static void oc_load_sw(size_t device) {
   long ret = 0;
   oc_rep_t *rep = 0;
 
@@ -82,11 +76,11 @@ oc_load_sw(size_t device)
     oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
     memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
     memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    struct oc_memb rep_objects = {sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                                  rep_objects_alloc, (void *)rep_objects_pool,
+                                  0};
 #else  /* !OC_DYNAMIC_ALLOCATION */
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+    struct oc_memb rep_objects = {sizeof(oc_rep_t), 0, 0, 0, 0};
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (int)ret, &rep);
@@ -99,9 +93,7 @@ oc_load_sw(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-static void
-oc_dump_sw(size_t device)
-{
+static void oc_dump_sw(size_t device) {
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf)
@@ -125,9 +117,7 @@ oc_dump_sw(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void
-oc_swupdate_free(void)
-{
+void oc_swupdate_free(void) {
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
     oc_swupdate_t *s = &sw[i];
@@ -143,12 +133,10 @@ oc_swupdate_free(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-void
-oc_swupdate_init(void)
-{
+void oc_swupdate_init(void) {
 #ifdef OC_DYNAMIC_ALLOCATION
   sw =
-    (oc_swupdate_t *)calloc(oc_core_get_num_devices(), sizeof(oc_swupdate_t));
+      (oc_swupdate_t *)calloc(oc_core_get_num_devices(), sizeof(oc_swupdate_t));
   if (!sw) {
     oc_abort("Insufficient memory");
   }
@@ -164,10 +152,9 @@ oc_swupdate_init(void)
   }
 }
 
-void
-oc_swupdate_notify_new_version_available(size_t device, const char *version,
-                                         oc_swupdate_result_t result)
-{
+void oc_swupdate_notify_new_version_available(size_t device,
+                                              const char *version,
+                                              oc_swupdate_result_t result) {
   (void)version;
   OC_DBG("new software version %s available for device %zd", version, device);
   oc_sec_pstat_set_current_mode(device, OC_DPM_NSA);
@@ -180,10 +167,8 @@ oc_swupdate_notify_new_version_available(size_t device, const char *version,
   oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
 }
 
-void
-oc_swupdate_notify_downloaded(size_t device, const char *version,
-                              oc_swupdate_result_t result)
-{
+void oc_swupdate_notify_downloaded(size_t device, const char *version,
+                                   oc_swupdate_result_t result) {
   (void)version;
   OC_DBG("software version %s downloaded and validated for device %zd", version,
          device);
@@ -202,11 +187,9 @@ oc_swupdate_notify_downloaded(size_t device, const char *version,
   oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
 }
 
-void
-oc_swupdate_notify_upgrading(size_t device, const char *version,
-                             oc_clock_time_t timestamp,
-                             oc_swupdate_result_t result)
-{
+void oc_swupdate_notify_upgrading(size_t device, const char *version,
+                                  oc_clock_time_t timestamp,
+                                  oc_swupdate_result_t result) {
   OC_DBG("upgrading to software version %s on device %zd", version, device);
   oc_sec_pstat_set_current_mode(device, OC_DPM_NSA | OC_DPM_SVV | OC_DPM_SSV);
   oc_swupdate_t *s = &sw[device];
@@ -220,9 +203,7 @@ oc_swupdate_notify_upgrading(size_t device, const char *version,
 #endif /* OC_SERVER */
 }
 
-void
-oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
-{
+void oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result) {
   oc_sec_pstat_set_current_mode(device, 0);
   oc_swupdate_t *s = &sw[device];
   s->swupdateaction = OC_SWUPDATE_IDLE;
@@ -233,15 +214,13 @@ oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
 #endif /* OC_SERVER */
 }
 
-void
-oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device)
-{
+void oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device) {
   oc_swupdate_t *s = &sw[device];
   s->swupdateaction = action;
   if (action == OC_SWUPDATE_ISAC) {
     if (cb && cb->check_new_version &&
         cb->check_new_version(device, oc_string(s->purl), oc_string(s->nv)) <
-          0) {
+            0) {
       OC_ERR("could not check for availability of new version of software");
     }
   } else if (action == OC_SWUPDATE_ISVV) {
@@ -257,9 +236,7 @@ oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device)
   }
 }
 
-static const char *
-action_to_str(oc_swupdate_action_t action)
-{
+static const char *action_to_str(oc_swupdate_action_t action) {
   switch (action) {
   case OC_SWUPDATE_IDLE:
     return "idle";
@@ -273,9 +250,7 @@ action_to_str(oc_swupdate_action_t action)
   return NULL;
 }
 
-static const char *
-state_to_str(oc_swupdate_state_t state)
-{
+static const char *state_to_str(oc_swupdate_state_t state) {
   switch (state) {
   case OC_SWUPDATE_STATE_IDLE:
     return "idle";
@@ -291,9 +266,7 @@ state_to_str(oc_swupdate_state_t state)
   return NULL;
 }
 
-static oc_swupdate_state_t
-str_to_state(const char *state)
-{
+static oc_swupdate_state_t str_to_state(const char *state) {
   size_t len = strlen(state);
   if (len == 4 && memcmp(state, "idle", 4) == 0) {
     return OC_SWUPDATE_STATE_IDLE;
@@ -313,9 +286,7 @@ str_to_state(const char *state)
   return OC_SWUPDATE_STATE_UPGRADING + 1;
 }
 
-static oc_swupdate_action_t
-str_to_action(const char *action)
-{
+static oc_swupdate_action_t str_to_action(const char *action) {
   size_t len = strlen(action);
   if (len == 4 && memcmp(action, "idle", 4) == 0) {
     return OC_SWUPDATE_IDLE;
@@ -332,15 +303,13 @@ str_to_action(const char *action)
   return OC_SWUPDATE_UPGRADE + 1;
 }
 
-void
-oc_swupdate_encode(oc_interface_mask_t interfaces, size_t device)
-{
+void oc_swupdate_encode(oc_interface_mask_t interfaces, size_t device) {
   oc_swupdate_t *s = &sw[device];
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(
-      oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
+        oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
   /* fall through */
   case OC_IF_RW: {
     char ts[64];
@@ -369,9 +338,7 @@ oc_swupdate_encode(oc_interface_mask_t interfaces, size_t device)
   oc_rep_end_root_object();
 }
 
-static oc_event_callback_retval_t
-schedule_update(void *data)
-{
+static oc_event_callback_retval_t schedule_update(void *data) {
   oc_swupdate_t *s = (oc_swupdate_t *)data;
   size_t i;
   for (i = 0; i < oc_core_get_num_devices(); i++) {
@@ -383,16 +350,14 @@ schedule_update(void *data)
   return OC_EVENT_DONE;
 }
 
-void
-oc_swupdate_decode(oc_rep_t *rep, size_t device)
-{
+void oc_swupdate_decode(oc_rep_t *rep, size_t device) {
   oc_swupdate_t *s = &sw[device];
   /* loop over all the properties in the input document */
   while (rep != NULL) {
     if (oc_string_len(rep->name) == 10 &&
         memcmp(oc_string(rep->name), "lastupdate", 10) == 0) {
       s->lastupdate = oc_clock_parse_time_rfc3339(
-        oc_string(rep->value.string), oc_string_len(rep->value.string));
+          oc_string(rep->value.string), oc_string_len(rep->value.string));
     }
     if (oc_string_len(rep->name) == 2 &&
         memcmp(oc_string(rep->name), "nv", 2) == 0) {
@@ -433,7 +398,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
     if (oc_string_len(rep->name) == 10 &&
         memcmp(oc_string(rep->name), "updatetime", 10) == 0) {
       s->updatetime = oc_clock_parse_time_rfc3339(
-        oc_string(rep->value.string), oc_string_len(rep->value.string));
+          oc_string(rep->value.string), oc_string_len(rep->value.string));
     }
     rep = rep->next;
   }
@@ -462,9 +427,8 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
  *
  * @param requestRep the request representation.
  */
-static void
-post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
-{
+static void post_sw(oc_request_t *request, oc_interface_mask_t interfaces,
+                    void *user_data) {
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
@@ -535,7 +499,7 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
         error_state = true;
       }
       oc_clock_time_t mytime = oc_clock_parse_time_rfc3339(
-        oc_string(rep->value.string), oc_string_len(rep->value.string));
+          oc_string(rep->value.string), oc_string_len(rep->value.string));
       if (mytime == 0) {
         error_state = true;
       } else if (mytime < oc_clock_time()) {
@@ -585,17 +549,14 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
  * @param user_data the user data.
  */
 
-static void
-get_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
-{
+static void get_sw(oc_request_t *request, oc_interface_mask_t interfaces,
+                   void *user_data) {
   (void)user_data;
   oc_swupdate_encode(interfaces, request->resource->device);
   oc_send_response(request, OC_STATUS_OK);
 }
 
-void
-oc_create_swupdate_resource(size_t device)
-{
+void oc_create_swupdate_resource(size_t device) {
   oc_core_populate_resource(OCF_SW_UPDATE, device, "sw",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                             OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_sw,

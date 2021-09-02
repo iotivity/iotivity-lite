@@ -16,9 +16,7 @@
 
 #include "oc_api.h"
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("GE", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.smarthub", "Smart home hub",
                        "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
@@ -30,18 +28,14 @@ static char temp_1[MAX_URI_LENGTH];
 static oc_endpoint_t *temp_sensor;
 static int temperature;
 
-static oc_event_callback_retval_t
-stop_observe(void *data)
-{
+static oc_event_callback_retval_t stop_observe(void *data) {
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(temp_1, temp_sensor);
   return OC_EVENT_DONE;
 }
 
-static void
-get_temp(oc_client_response_t *data)
-{
+static void get_temp(oc_client_response_t *data) {
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     PRINT("key %s, value ", oc_string(rep->name));
@@ -60,8 +54,7 @@ get_temp(oc_client_response_t *data)
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
-{
+          oc_resource_properties_t bm, void *user_data) {
   (void)anchor;
   (void)iface_mask;
   (void)user_data;
@@ -94,9 +87,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void
-issue_requests(void)
-{
+static void issue_requests(void) {
   oc_do_ip_discovery("oic.r.tempsensor", &discovery, NULL);
 }
 
@@ -110,34 +101,28 @@ static pthread_cond_t cv;
 static struct timespec ts;
 static int quit = 0;
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .requests_entry = issue_requests};
 
   oc_clock_time_t next_event;
 

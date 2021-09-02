@@ -172,8 +172,7 @@ jclass cls_OCSecurityAcl;
  * passed back upto the java callback class. Serving the same
  * function as the C void *user_data pointer.
  */
-typedef struct jni_callback_data_s
-{
+typedef struct jni_callback_data_s {
   struct jni_callback_data_s *next;
   JNIEnv *jenv;
   jobject jcb_obj;
@@ -185,8 +184,8 @@ void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
 void jni_list_clear();
 jni_callback_data *jni_list_get_item_by_java_callback(jobject callback);
-jni_callback_data *jni_list_get_item_by_callback_valid(
-  jni_callback_valid_t cb_valid);
+jni_callback_data *
+jni_list_get_item_by_callback_valid(jni_callback_valid_t cb_valid);
 
 JavaVM *get_jvm();
 
@@ -199,8 +198,8 @@ void release_jni_env(jint getEnvResult);
  * OCDiscoveryAllHandler
  */
 oc_discovery_flags_t jni_oc_discovery_all_handler_callback(
-  const char *anchor, const char *uri, oc_string_array_t types,
-  oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-  oc_resource_properties_t bm, bool more, void *user_data);
+    const char *anchor, const char *uri, oc_string_array_t types,
+    oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+    oc_resource_properties_t bm, bool more, void *user_data);
 
 #endif /* OC_IOTIVITY_LITE_H */

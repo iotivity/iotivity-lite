@@ -28,8 +28,7 @@ static struct timespec ts;
 static int quit = 0;
 
 char mcast_uri[64];
-typedef struct light_switch_t
-{
+typedef struct light_switch_t {
   struct light_switch_t *next;
   oc_endpoint_t *endpoint;
 } light_switch_t;
@@ -37,16 +36,12 @@ typedef struct light_switch_t
 OC_LIST(light_switches);
 OC_MEMB(light_switches_m, light_switch_t, 100);
 
-static void
-free_light_switch(light_switch_t *res)
-{
+static void free_light_switch(light_switch_t *res) {
   oc_free_server_endpoints(res->endpoint);
   oc_memb_free(&light_switches_m, res);
 }
 
-static void
-free_all_light_switches(void)
-{
+static void free_all_light_switches(void) {
   light_switch_t *l = (light_switch_t *)oc_list_pop(light_switches);
   while (l != NULL) {
     free_light_switch(l);
@@ -54,9 +49,7 @@ free_all_light_switches(void)
   }
 }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "Secure multicast client",
                        "ocf.2.2.1", "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
@@ -70,9 +63,7 @@ app_init(void)
     }                                                                          \
   } while (0)
 
-static void
-display_menu(void)
-{
+static void display_menu(void) {
   PRINT("\n\n################################################\nSecure "
         "multicast Client for light switches"
         "\n################################################\n");
@@ -91,9 +82,7 @@ display_menu(void)
   PRINT("\nSelect option: \n");
 }
 
-static void
-show_discovered_light_switches(light_switch_t **res)
-{
+static void show_discovered_light_switches(light_switch_t **res) {
   PRINT("\nDiscovered light switches:\n");
   light_switch_t *l = (light_switch_t *)oc_list_head(light_switches);
   int i = 0;
@@ -115,25 +104,19 @@ show_discovered_light_switches(light_switch_t **res)
   }
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-static void
-handle_signal(int signal)
-{
+static void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static void *
-ocf_event_thread(void *data)
-{
+static void *ocf_event_thread(void *data) {
   (void)data;
   oc_clock_time_t next_event;
   while (quit != 1) {
@@ -155,9 +138,7 @@ ocf_event_thread(void *data)
   return NULL;
 }
 
-static void
-update_handler(oc_client_response_t *data)
-{
+static void update_handler(oc_client_response_t *data) {
   PRINT("UPDATE light switch:\n");
   if (data->code == OC_STATUS_CHANGED) {
     PRINT("UPDATE response CHANGED\n");
@@ -174,9 +155,7 @@ update_handler(oc_client_response_t *data)
   display_menu();
 }
 
-static void
-retrieve_handler(oc_client_response_t *data)
-{
+static void retrieve_handler(oc_client_response_t *data) {
   PRINT("RETRIEVE light switch:\n");
   char buf[4096];
   oc_rep_to_json(data->payload, buf, 4096, true);
@@ -191,9 +170,7 @@ retrieve_handler(oc_client_response_t *data)
   display_menu();
 }
 
-static void
-retrieve_light_switch(bool observe)
-{
+static void retrieve_light_switch(bool observe) {
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(light_switches) > 0) {
     light_switch_t *res[100];
@@ -223,9 +200,7 @@ retrieve_light_switch(bool observe)
   signal_event_loop();
 }
 
-static void
-stop_observe_light_switch(void)
-{
+static void stop_observe_light_switch(void) {
   pthread_mutex_lock(&app_sync_lock);
   if (oc_list_length(light_switches) > 0) {
     light_switch_t *res[100];
@@ -246,9 +221,7 @@ stop_observe_light_switch(void)
   signal_event_loop();
 }
 
-static void
-update_light_switch(bool multicast)
-{
+static void update_light_switch(bool multicast) {
 #ifndef OC_OSCORE
   multicast = false;
 #endif /* OC_OSCORE */
@@ -308,8 +281,7 @@ update_light_switch(bool multicast)
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
-{
+          oc_resource_properties_t bm, void *user_data) {
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -354,9 +326,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void
-discover_light_switches(void)
-{
+static void discover_light_switches(void) {
   pthread_mutex_lock(&app_sync_lock);
   free_all_light_switches();
   PRINT("\nDiscovering light switches...");
@@ -367,9 +337,7 @@ discover_light_switches(void)
   signal_event_loop();
 }
 
-int
-main(void)
-{
+int main(void) {
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -378,9 +346,9 @@ main(void)
 
   int init;
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = NULL };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .requests_entry = NULL};
 
 #ifdef OC_STORAGE
   oc_storage_config("./secure_mcast_client_creds");

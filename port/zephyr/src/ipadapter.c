@@ -33,9 +33,7 @@ static struct net_context *udp_recv6;
 #define OCF_MCAST_IP6ADDR                                                      \
   {                                                                            \
     {                                                                          \
-      {                                                                        \
-        0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58             \
-      }                                                                        \
+      { 0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58 }           \
     }                                                                          \
   }
 static struct in6_addr in6addr_mcast = OCF_MCAST_IP6ADDR;
@@ -59,41 +57,26 @@ static oc_endpoint_t *eps;
  */
 static struct k_sem sem;
 
-void
-oc_network_event_handler_mutex_init(void)
-{
+void oc_network_event_handler_mutex_init(void) {
   k_sem_init(&sem, 0, 1);
   k_sem_give(&sem);
 }
 
-void
-oc_network_event_handler_mutex_lock(void)
-{
-  k_sem_take(&sem, K_FOREVER);
-}
+void oc_network_event_handler_mutex_lock(void) { k_sem_take(&sem, K_FOREVER); }
 
-void
-oc_network_event_handler_mutex_unlock(void)
-{
-  k_sem_give(&sem);
-}
+void oc_network_event_handler_mutex_unlock(void) { k_sem_give(&sem); }
 
-void
-oc_network_event_handler_mutex_destroy(void)
-{
-}
+void oc_network_event_handler_mutex_destroy(void) {}
 
-static void
-oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
-                   void *user_data)
-{
+static void oc_network_receive(struct net_context *context, struct net_pkt *pkt,
+                               int status, void *user_data) {
   oc_message_t *message = oc_allocate_message();
 
   if (message) {
     uint16_t pos;
     struct net_udp_hdr *udp =
-      (struct net_udp_hdr *)((u8_t *)(NET_IPV6_HDR(pkt)) +
-                             sizeof(struct net_ipv6_hdr));
+        (struct net_udp_hdr *)((u8_t *)(NET_IPV6_HDR(pkt)) +
+                               sizeof(struct net_ipv6_hdr));
     size_t bytes_read = net_pkt_appdatalen(pkt);
     if (bytes_read < 0) {
       oc_message_unref(message);
@@ -136,9 +119,8 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
   net_pkt_unref(pkt);
 }
 
-static inline void
-udp_sent(struct net_context *context, int status, void *token, void *user_data)
-{
+static inline void udp_sent(struct net_context *context, int status,
+                            void *token, void *user_data) {
   if (!status) {
     OC_DBG("oc_send_buffer: sent %d bytes", POINTER_TO_UINT(token));
   } else if (status < 0) {
@@ -146,9 +128,7 @@ udp_sent(struct net_context *context, int status, void *token, void *user_data)
   }
 }
 
-int
-oc_send_buffer(oc_message_t *message)
-{
+int oc_send_buffer(oc_message_t *message) {
 #ifdef OC_DEBUG
   PRINT("oc_send_buffer: outgoing message to ");
   PRINTipaddr(message->endpoint);
@@ -178,15 +158,15 @@ oc_send_buffer(oc_message_t *message)
   }
 
   bool status =
-    net_pkt_append_all(send_pkt, message->length, message->data, K_NO_WAIT);
+      net_pkt_append_all(send_pkt, message->length, message->data, K_NO_WAIT);
   if (!status) {
     OC_WRN("oc_send_buffer: cannot populate send_pkt");
     return -1;
   }
 
   int ret = net_context_sendto(
-    send_pkt, (struct sockaddr *)&peer_addr, sizeof(struct sockaddr_in6),
-    udp_sent, 0, UINT_TO_POINTER(net_pkt_get_len(send_pkt)), NULL);
+      send_pkt, (struct sockaddr *)&peer_addr, sizeof(struct sockaddr_in6),
+      udp_sent, 0, UINT_TO_POINTER(net_pkt_get_len(send_pkt)), NULL);
   if (ret < 0) {
     OC_WRN("oc_send_buffer: cannot send data to peer (%d)", ret);
     net_pkt_unref(send_pkt);
@@ -195,9 +175,7 @@ oc_send_buffer(oc_message_t *message)
   return message->length;
 }
 
-static void
-free_endpoints(void)
-{
+static void free_endpoints(void) {
   oc_endpoint_t *ep = eps, *next;
   while (ep != NULL) {
     next = ep->next;
@@ -206,9 +184,7 @@ free_endpoints(void)
   }
 }
 
-oc_endpoint_t *
-oc_connectivity_get_endpoints(size_t device)
-{
+oc_endpoint_t *oc_connectivity_get_endpoints(size_t device) {
   (void)device;
   if (!eps) {
     oc_endpoint_t *ep = oc_new_endpoint();
@@ -237,9 +213,7 @@ oc_connectivity_get_endpoints(size_t device)
   return eps;
 }
 
-int
-oc_connectivity_init(size_t device)
-{
+int oc_connectivity_init(size_t device) {
   (void)device;
   int ret;
 
@@ -263,7 +237,8 @@ oc_connectivity_init(size_t device)
 #ifdef OC_DEBUG
   struct net_if_addr *ifaddr =
 #endif
-    net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL, 0);
+      net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL,
+                           0);
 #ifdef OC_DEBUG
   OC_DBG("=====>>>Interface unicast address added @ %p", ifaddr);
 #endif
@@ -361,9 +336,7 @@ error:
   return -1;
 }
 
-void
-oc_connectivity_shutdown(size_t device)
-{
+void oc_connectivity_shutdown(size_t device) {
   (void)device;
 #ifdef OC_SECURITY
   net_context_put(dtls_recv6);
@@ -374,9 +347,7 @@ oc_connectivity_shutdown(size_t device)
 }
 
 #ifdef OC_CLIENT
-void
-oc_send_discovery_request(oc_message_t *message)
-{
+void oc_send_discovery_request(oc_message_t *message) {
   oc_send_buffer(message);
 }
 #endif /* OC_CLIENT */

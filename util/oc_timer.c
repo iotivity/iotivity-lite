@@ -46,9 +46,7 @@
  * \param interval The interval before the timer expires.
  *
  */
-void
-oc_timer_set(struct oc_timer *t, oc_clock_time_t interval)
-{
+void oc_timer_set(struct oc_timer *t, oc_clock_time_t interval) {
   t->interval = interval;
   t->start = oc_clock_time();
 }
@@ -67,11 +65,7 @@ oc_timer_set(struct oc_timer *t, oc_clock_time_t interval)
  * \param t A pointer to the timer.
  * \sa oc_timer_restart()
  */
-void
-oc_timer_reset(struct oc_timer *t)
-{
-  t->start += t->interval;
-}
+void oc_timer_reset(struct oc_timer *t) { t->start += t->interval; }
 /*---------------------------------------------------------------------------*/
 /**
  * Restart the timer from the current point in time
@@ -87,11 +81,7 @@ oc_timer_reset(struct oc_timer *t)
  *
  * \sa oc_timer_reset()
  */
-void
-oc_timer_restart(struct oc_timer *t)
-{
-  t->start = oc_clock_time();
-}
+void oc_timer_restart(struct oc_timer *t) { t->start = oc_clock_time(); }
 /*---------------------------------------------------------------------------*/
 /**
  * Check if a timer has expired.
@@ -104,9 +94,7 @@ oc_timer_restart(struct oc_timer *t)
  * \return Non-zero if the timer has expired, zero otherwise.
  *
  */
-int
-oc_timer_expired(struct oc_timer *t)
-{
+int oc_timer_expired(struct oc_timer *t) {
   /* Note: Can not return diff >= t->interval so we add 1 to diff and return
      t->interval < diff - required to avoid an internal error in mspgcc. */
   oc_clock_time_t diff = (oc_clock_time() - t->start) + 1;
@@ -123,9 +111,7 @@ oc_timer_expired(struct oc_timer *t)
  * \return The time until the timer expires
  *
  */
-oc_clock_time_t
-oc_timer_remaining(struct oc_timer *t)
-{
+oc_clock_time_t oc_timer_remaining(struct oc_timer *t) {
   return t->start + t->interval - oc_clock_time();
 }
 /*---------------------------------------------------------------------------*/

@@ -23,8 +23,8 @@
 #ifndef ETH_ADAPTER_UTILS_
 #define ETH_ADAPTER_UTILS_
 
-#include <stdint.h>
 #include <socket.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,8 +38,7 @@ typedef enum {
   SERVER_STARTED_ALREADY = 2,
 } OCResult_t;
 
-typedef struct sdset_t
-{
+typedef struct sdset_t {
   uint8_t sdsset;
   uint8_t sds[MAX_SOCK_NUM];
   uint8_t ready_sds;

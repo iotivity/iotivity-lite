@@ -29,9 +29,7 @@ static char store_path[STORE_PATH_SIZE];
 static int store_path_len;
 static bool path_set = false;
 
-int
-oc_storage_config(const char *store)
-{
+int oc_storage_config(const char *store) {
   store_path_len = strlen(store);
   if (store_path_len >= STORE_PATH_SIZE)
     return -ENOENT;
@@ -42,9 +40,7 @@ oc_storage_config(const char *store)
   return 0;
 }
 
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
-{
+long oc_storage_read(const char *store, uint8_t *buf, size_t size) {
   FILE *fp = 0;
   size_t store_len = strlen(store);
 
@@ -63,9 +59,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   return size;
 }
 
-long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
-{
+long oc_storage_write(const char *store, uint8_t *buf, size_t size) {
   FILE *fp;
   size_t store_len = strlen(store);
 

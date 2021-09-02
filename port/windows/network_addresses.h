@@ -22,8 +22,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <ws2tcpip.h>
 
-typedef struct ifaddr_t
-{
+typedef struct ifaddr_t {
   struct ifaddr_t *next;
   struct sockaddr_storage addr;
   DWORD if_index;

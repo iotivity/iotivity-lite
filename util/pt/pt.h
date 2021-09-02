@@ -54,8 +54,7 @@
 extern "C" {
 #endif
 
-struct pt
-{
+struct pt {
   lc_t lc;
 };
 

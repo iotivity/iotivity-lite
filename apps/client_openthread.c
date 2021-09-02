@@ -14,26 +14,24 @@
 // limitations under the License.
 */
 
+#include <examples/platforms/platform.h>
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
-#include <examples/platforms/platform.h>
 
 #ifdef OC_RETARGET
 #include <openthread/platform/uart.h>
 #endif
 
 #include "oc_api.h"
-#include "port/oc_assert.h"
 #include "oc_instance.h"
+#include "port/oc_assert.h"
 
 otInstance *ot_instance;
 
 static bool got_discovery_response = false;
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Open thread", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "Generic Client", "ocf.1.0.0",
                        "ocf.res.1.3.0", NULL, NULL);
@@ -45,18 +43,14 @@ static char light_1[MAX_URI_LENGTH];
 static oc_endpoint_t *light_server;
 static bool light_state = false;
 
-static oc_event_callback_retval_t
-stop_observe(void *data)
-{
+static oc_event_callback_retval_t stop_observe(void *data) {
   (void)data;
   PRINT("Stopping OBSERVE\n");
   oc_stop_observe(light_1, light_server);
   return OC_EVENT_DONE;
 }
 
-static void
-post_light(oc_client_response_t *data)
-{
+static void post_light(oc_client_response_t *data) {
   PRINT("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
     PRINT("POST response OK\n");
@@ -64,9 +58,7 @@ post_light(oc_client_response_t *data)
     PRINT("POST response code %d\n", data->code);
 }
 
-static void
-observe_light(oc_client_response_t *data)
-{
+static void observe_light(oc_client_response_t *data) {
   PRINT("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -97,8 +89,7 @@ observe_light(oc_client_response_t *data)
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
-{
+          oc_resource_properties_t bm, void *user_data) {
   (void)di;
   (void)iface_mask;
   (void)user_data;
@@ -130,9 +121,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-static void
-ot_state_changed(uint32_t flags, void *context)
-{
+static void ot_state_changed(uint32_t flags, void *context) {
   (void)context;
 
   if (flags & OT_CHANGED_THREAD_ROLE) {
@@ -146,15 +135,9 @@ ot_state_changed(uint32_t flags, void *context)
   }
 }
 
-static void
-signal_event_loop(void)
-{
-  ocInstanceSignal();
-}
+static void signal_event_loop(void) { ocInstanceSignal(); }
 
-static int
-start_thread(void)
-{
+static int start_thread(void) {
   if (!otThreadGetAutoStart(ot_instance)) {
     if (otIp6SetEnabled(ot_instance, true) != OT_ERROR_NONE) {
       OC_ERR("Can't enable ip6\n");
@@ -177,9 +160,7 @@ start_thread(void)
   return 0;
 }
 
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   // init openthread
 
   PlatformInit(argc, argv);
@@ -198,9 +179,8 @@ main(int argc, char *argv[])
 
   // init iotivity
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop =
-                                          signal_event_loop };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop};
 
   ocInstanceInit(&handler);
 

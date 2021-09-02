@@ -56,14 +56,9 @@ int power;
 oc_string_t name;
 static oc_separate_response_t sep_response;
 
-oc_define_interrupt_handler(observe)
-{
-  oc_notify_observers(res);
-}
+oc_define_interrupt_handler(observe) { oc_notify_observers(res); }
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   oc_activate_interrupt_handler(observe);
   int ret = oc_init_platform(manufacturer, NULL, NULL);
   ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
@@ -72,9 +67,7 @@ app_init(void)
   return ret;
 }
 
-static oc_event_callback_retval_t
-handle_separate_response(void *data)
-{
+static oc_event_callback_retval_t handle_separate_response(void *data) {
   (void)data;
   if (sep_response.active) {
     oc_set_separate_response_buffer(&sep_response);
@@ -89,10 +82,8 @@ handle_separate_response(void *data)
   return OC_EVENT_DONE;
 }
 
-static void
-get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-            void *user_data)
-{
+static void get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+                        void *user_data) {
   (void)user_data;
 
   printf("get_handler:\n");
@@ -119,10 +110,8 @@ get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-             void *user_data)
-{
+static void post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+                         void *user_data) {
   (void)iface_mask;
   (void)user_data;
   printf("post_handler:\n");
@@ -154,38 +143,28 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void
-put_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-            void *user_data)
-{
+static void put_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+                        void *user_data) {
   (void)iface_mask;
   (void)user_data;
   post_handler(request, iface_mask, user_data);
 }
 
-static void
-change_state(void)
-{
+static void change_state(void) {
   state = !state;
   oc_signal_interrupt_handler(observe);
 }
 
-static void
-change_power(void)
-{
+static void change_power(void) {
   power += 5;
   oc_signal_interrupt_handler(observe);
 }
 
-static void
-change_separate_response_policy(void)
-{
+static void change_separate_response_policy(void) {
   is_separate_response = !is_separate_response;
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   res = oc_new_resource(NULL, resource_uri, 2, 0);
   oc_resource_bind_resource_type(res, resource_rt);
   oc_resource_bind_resource_type(res, additional_rt);
@@ -199,25 +178,19 @@ register_resources(void)
   oc_add_resource(res);
 }
 
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
 }
 
-void
-handle_signal(int signal)
-{
+void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
 }
 
-static void *
-process_func(void *data)
-{
+static void *process_func(void *data) {
   (void)data;
   oc_clock_time_t next_event;
 
@@ -239,9 +212,7 @@ process_func(void *data)
   pthread_exit(0);
 }
 
-void
-print_menu(void)
-{
+void print_menu(void) {
   pthread_mutex_lock(&app_mutex);
   printf("=====================================\n");
   printf("1. Change my state(%d)\n", state);
@@ -252,9 +223,7 @@ print_menu(void)
   pthread_mutex_unlock(&app_mutex);
 }
 
-int
-main(void)
-{
+int main(void) {
   int init = 0;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -262,10 +231,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources =
+                                           register_resources};
 
 #ifdef OC_STORAGE
   oc_storage_config("./server_multithread_linux_creds");

@@ -18,8 +18,8 @@
 
 #include "oc_api.h"
 #include "oc_collection.h"
-#include "oc_ri.h"
 #include "oc_core_res.h"
+#include "oc_ri.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 
@@ -35,8 +35,7 @@ static struct timespec ts;
 
 #define MAX_STRING 65 /* max size of the strings. */
 
-typedef struct scenemappings_t
-{
+typedef struct scenemappings_t {
   struct scenemappings_t *next;
   char scene[MAX_STRING];
   char key[MAX_STRING];
@@ -78,9 +77,7 @@ oc_resource_t *res_scenecol1;
 
 static pthread_t toggle_switch_thread;
 
-static oc_event_callback_retval_t
-set_scene(void *data)
-{
+static oc_event_callback_retval_t set_scene(void *data) {
   (void)data;
   scenemappings_t *sm = (scenemappings_t *)oc_list_head(smap);
   while (sm) {
@@ -96,9 +93,7 @@ set_scene(void *data)
   return OC_EVENT_DONE;
 }
 
-static void
-perform_rule_action(void)
-{
+static void perform_rule_action(void) {
   /*
    * Set lastscene on the target scenecollection
    */
@@ -108,9 +103,7 @@ perform_rule_action(void)
   }
 }
 
-static void
-rule_notify_and_eval(void)
-{
+static void rule_notify_and_eval(void) {
   /*
    * rule expression value has changed
    */
@@ -134,8 +127,7 @@ rule_notify_and_eval(void)
   }
 }
 
-oc_define_interrupt_handler(toggle_switch)
-{
+oc_define_interrupt_handler(toggle_switch) {
   if (res_binaryswitch) {
     oc_notify_observers(res_binaryswitch);
     rule_notify_and_eval();
@@ -146,9 +138,7 @@ oc_define_interrupt_handler(toggle_switch)
  * function to set up the device.
  *
  */
-static int
-app_init(void)
-{
+static int app_init(void) {
   oc_activate_interrupt_handler(toggle_switch);
   int ret = oc_init_platform("ocf", NULL, NULL);
   /* the settings determine the appearance of the device on the network
@@ -183,8 +173,8 @@ app_init(void)
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
-    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
+      "\tERROR Could not read server_certification_tests_IDD.cbor\n"
+      "\tIntrospection data not set for device.\n";
   fp = fopen("./server_rules_IDD.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
@@ -209,9 +199,7 @@ app_init(void)
   return ret;
 }
 
-static void *
-toggle_switch_resource(void *data)
-{
+static void *toggle_switch_resource(void *data) {
   (void)data;
   while (quit != 1) {
     char c = getchar();
@@ -240,10 +228,8 @@ toggle_switch_resource(void *data)
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-static void
-get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                 void *user_data)
-{
+static void get_binaryswitch(oc_request_t *request,
+                             oc_interface_mask_t interfaces, void *user_data) {
   (void)user_data; /* not used */
   /* TODO: SENSOR add here the code to talk to the HW if one implements a
      sensor. the call to the HW needs to fill in the global variable before it
@@ -281,10 +267,8 @@ values.
 *
 * @param requestRep the request representation.
 */
-static void
-post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                  void *user_data)
-{
+static void post_binaryswitch(oc_request_t *request,
+                              oc_interface_mask_t interfaces, void *user_data) {
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
@@ -341,10 +325,8 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-static void
-get_audio(oc_request_t *request, oc_interface_mask_t interfaces,
-          void *user_data)
-{
+static void get_audio(oc_request_t *request, oc_interface_mask_t interfaces,
+                      void *user_data) {
   (void)user_data; /* not used */
 
   PRINT("get_audio: interface %d\n", interfaces);
@@ -377,10 +359,8 @@ values.
 *
 * @param requestRep the request representation.
 */
-static void
-post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
-           void *user_data)
-{
+static void post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
+                       void *user_data) {
   (void)interfaces;
   (void)user_data;
   PRINT("post_audio:\n");
@@ -417,10 +397,8 @@ post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-static void
-get_scenemember(oc_request_t *request, oc_interface_mask_t interfaces,
-                void *user_data)
-{
+static void get_scenemember(oc_request_t *request,
+                            oc_interface_mask_t interfaces, void *user_data) {
   (void)user_data; /* not used */
 
   PRINT("get_scenemember: interface %d\n", interfaces);
@@ -467,10 +445,9 @@ get_scenemember(oc_request_t *request, oc_interface_mask_t interfaces,
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-static void
-get_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
-                   void *user_data)
-{
+static void get_ruleexpression(oc_request_t *request,
+                               oc_interface_mask_t interfaces,
+                               void *user_data) {
   (void)user_data; /* not used */
 
   PRINT("get_ruleexpression: interface %d\n", interfaces);
@@ -505,10 +482,9 @@ values.
 *
 * @param requestRep the request representation.
 */
-static void
-post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
-                    void *user_data)
-{
+static void post_ruleexpression(oc_request_t *request,
+                                oc_interface_mask_t interfaces,
+                                void *user_data) {
   (void)interfaces;
   (void)user_data;
 
@@ -566,10 +542,8 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
  * @param interfaces the interface used for this call
  * @param user_data the user data.
  */
-static void
-get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
-               void *user_data)
-{
+static void get_ruleaction(oc_request_t *request,
+                           oc_interface_mask_t interfaces, void *user_data) {
   (void)user_data; /* not used */
 
   PRINT("get_ruleaction: interface %d\n", interfaces);
@@ -606,10 +580,8 @@ values.
 *
 * @param requestRep the request representation.
 */
-static void
-post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
-                void *user_data)
-{
+static void post_ruleaction(oc_request_t *request,
+                            oc_interface_mask_t interfaces, void *user_data) {
   (void)interfaces;
   (void)user_data;
   PRINT("post_ruleaction:\n");
@@ -644,9 +616,8 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 /**
  * Callbacks for handling Collection level Properties on Scene Collection
  */
-bool
-set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
-{
+bool set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep,
+                             void *data) {
   (void)resource;
   (void)data;
   while (rep != NULL) {
@@ -680,10 +651,8 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
-get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                        void *data)
-{
+void get_scenecol_properties(oc_resource_t *resource,
+                             oc_interface_mask_t iface_mask, void *data) {
   (void)resource;
   (void)data;
   switch (iface_mask) {
@@ -707,9 +676,7 @@ get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
  *   - discoverable
  *   - used interfaces (from the global variables).
  */
-static void
-register_resources(void)
-{
+static void register_resources(void) {
 
   PRINT("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
@@ -737,7 +704,7 @@ register_resources(void)
 
   PRINT("Register Resource with local path \"/scenemember1\"\n");
   oc_resource_t *res_scenemember1 =
-    oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
+      oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
   oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
   oc_resource_set_discoverable(res_scenemember1, true);
   oc_resource_set_periodic_observable(res_scenemember1, 1);
@@ -747,7 +714,7 @@ register_resources(void)
 
   PRINT("Register Collection with local path \"/scenecollection1\"\n");
   res_scenecol1 =
-    oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
+      oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
   // Remove batch from the set of supported interafaces
   res_scenecol1->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
@@ -764,7 +731,7 @@ register_resources(void)
 
   PRINT("Register Collection with local path \"/scenelist\"\n");
   oc_resource_t *res_scenelist =
-    oc_new_collection("Scene List", "/scenelist", 1, 0);
+      oc_new_collection("Scene List", "/scenelist", 1, 0);
   oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
   oc_resource_set_discoverable(res_scenelist, true);
   // Remove batch from the set of supported interafaces
@@ -779,7 +746,7 @@ register_resources(void)
 
   PRINT("Register Resource with local path \"/ruleexpression\"\n");
   res_ruleexpression =
-    oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
+      oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
   oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
   oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
@@ -793,7 +760,7 @@ register_resources(void)
 
   PRINT("Register Resource with local path \"/ruleaction\"\n");
   oc_resource_t *res_ruleaction =
-    oc_new_resource("Rule Action", "/ruleaction", 1, 0);
+      oc_new_resource("Rule Action", "/ruleaction", 1, 0);
   oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
   oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
   oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
@@ -806,7 +773,7 @@ register_resources(void)
 
   PRINT("Register Collection with local path \"/ruleinputcollection\"\n");
   oc_resource_t *res_ruleinputcol =
-    oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
+      oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
   // Remove batch from the set of supported interafaces
   res_ruleinputcol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleinputcol,
@@ -827,8 +794,8 @@ register_resources(void)
   oc_add_collection(res_ruleinputcol);
 
   PRINT("Register Collection with local path \"/ruleactioncollection\"\n");
-  oc_resource_t *res_ruleactioncol =
-    oc_new_collection("Rule Action Collection", "/ruleactioncollection", 1, 0);
+  oc_resource_t *res_ruleactioncol = oc_new_collection(
+      "Rule Action Collection", "/ruleactioncollection", 1, 0);
   // Remove batch from the set of supported interafaces
   res_ruleactioncol->interfaces = OC_IF_BASELINE | OC_IF_LL;
   oc_resource_bind_resource_type(res_ruleactioncol,
@@ -874,9 +841,7 @@ register_resources(void)
  * signal the event loop (Linux)
  * wakes up the main function to handle the next callback
  */
-static void
-signal_event_loop(void)
-{
+static void signal_event_loop(void) {
   pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
   pthread_mutex_unlock(&mutex);
@@ -886,9 +851,7 @@ signal_event_loop(void)
  * handle Ctrl-C
  * @param signal the captured signal
  */
-void
-handle_signal(int signal)
-{
+void handle_signal(int signal) {
   (void)signal;
   signal_event_loop();
   quit = 1;
@@ -897,9 +860,7 @@ handle_signal(int signal)
 /**
  * Display UUID of device
  */
-void
-display_device_uuid(void)
-{
+void display_device_uuid(void) {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
@@ -913,9 +874,7 @@ display_device_uuid(void)
  * handles (in a loop) the next event.
  * shuts down the stack
  */
-int
-main(void)
-{
+int main(void) {
   int init;
 
   /* linux specific */
@@ -927,17 +886,17 @@ main(void)
   sigaction(SIGINT, &sa, NULL);
   /* initialize global variables for resource "/binaryswitch" */
   g_binaryswitch_value =
-    false; /* current value of property "value" The status of the switch. */
+      false; /* current value of property "value" The status of the switch. */
   /* set the flag for oic/con resource. */
   oc_set_con_res_announced(true);
 
   /* initializes the handlers structure */
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources = register_resources
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources = register_resources
 #ifdef OC_CLIENT
-                                        ,
-                                        .requests_entry = 0
+                                       ,
+                                       .requests_entry = 0
 #endif
   };
   oc_clock_time_t next_event;

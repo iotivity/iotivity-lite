@@ -14,22 +14,17 @@
 // limitations under the License.
 */
 
-#include "port/oc_clock.h"
 #include "oc_api.h"
+#include "port/oc_clock.h"
 
 #include <openthread/platform/alarm-milli.h>
 
 static uint32_t prev_time = 0;
 static uint32_t high_time = 0;
 
-void
-oc_clock_init(void)
-{
-}
+void oc_clock_init(void) {}
 
-oc_clock_time_t
-oc_clock_time(void)
-{
+oc_clock_time_t oc_clock_time(void) {
   uint32_t time = otPlatAlarmMilliGetNow();
 
   if (time < prev_time) {
@@ -41,16 +36,10 @@ oc_clock_time(void)
   return (uint64_t)high_time << 32 | time;
 }
 
-unsigned long
-oc_clock_seconds(void)
-{
+unsigned long oc_clock_seconds(void) {
   unsigned long time = oc_clock_time() / OC_CLOCK_SECOND;
 
   return time;
 }
 
-void
-oc_clock_wait(oc_clock_time_t t)
-{
-  (void)t;
-}
+void oc_clock_wait(oc_clock_time_t t) { (void)t; }

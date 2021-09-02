@@ -17,28 +17,25 @@
 */
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <WinSock2.h>
 #include <Mswsock.h>
+#include <WinSock2.h>
 #include <inttypes.h>
 #include <iphlpapi.h>
 #include <malloc.h>
 #include <oc_log.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 
 /**
  * Structure to manage interface list.
  */
-typedef struct ifaddr_t
-{
+typedef struct ifaddr_t {
   struct ifaddr_t *next;
   struct sockaddr_storage addr;
   DWORD if_index;
 } ifaddr_t;
 
-ifaddr_t *
-get_network_addresses()
-{
+ifaddr_t *get_network_addresses() {
   ifaddr_t *ifaddr_list = NULL;
   ULONG family = AF_INET6;
   int i, max_retries = 5;
@@ -57,11 +54,11 @@ get_network_addresses()
       OC_ERR("not enough memory to run GetAdaptersAddresses");
       return NULL;
     }
-    dwRetVal =
-      GetAdaptersAddresses(family,
-                           GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST |
-                             GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
-                           NULL, interface_list, &out_buf_len);
+    dwRetVal = GetAdaptersAddresses(
+        family,
+        GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST |
+            GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
+        NULL, interface_list, &out_buf_len);
     if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
       OC_ERR("retry GetAdaptersAddresses with out_buf_len=%d", out_buf_len);
       free(interface_list);
@@ -96,7 +93,7 @@ get_network_addresses()
       ifaddr_t *ifaddr = NULL;
       if (address->Address.lpSockaddr->sa_family == AF_INET) {
         struct sockaddr_in *addr =
-          (struct sockaddr_in *)address->Address.lpSockaddr;
+            (struct sockaddr_in *)address->Address.lpSockaddr;
         ifaddr = calloc(1, sizeof(ifaddr_t));
         if (ifaddr == NULL) {
           OC_ERR("no memory for ifaddr");
@@ -115,7 +112,7 @@ get_network_addresses()
          address = address->Next) {
       if (address->Address.lpSockaddr->sa_family == AF_INET6) {
         struct sockaddr_in6 *addr =
-          (struct sockaddr_in6 *)address->Address.lpSockaddr;
+            (struct sockaddr_in6 *)address->Address.lpSockaddr;
         /* If the first address we see is link-local save it. */
         if (!v6addr && IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
           v6addr = addr;
@@ -150,7 +147,7 @@ get_network_addresses()
         if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
             !(address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
 #ifdef OC_DEBUG
-          char dotname[NI_MAXHOST] = { 0 };
+          char dotname[NI_MAXHOST] = {0};
           getnameinfo((const SOCKADDR *)addr, sizeof(struct sockaddr_in6),
                       dotname, sizeof(dotname), NULL, 0, NI_NUMERICHOST);
           PRINT("%s is not IN6_IS_ADDR_LINKLOCAL and not "
@@ -181,9 +178,7 @@ cleanup:
   return ifaddr_list;
 }
 
-void
-free_network_addresses(ifaddr_t *ifaddr)
-{
+void free_network_addresses(ifaddr_t *ifaddr) {
   while (ifaddr) {
     ifaddr_t *tmp = ifaddr;
     ifaddr = ifaddr->next;

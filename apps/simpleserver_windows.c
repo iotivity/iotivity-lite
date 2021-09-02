@@ -30,9 +30,7 @@ int power;
 oc_string_t name;
 bool g_binaryswitch_value = false;
 
-static int
-app_init(void)
-{
+static int app_init(void) {
   int ret = oc_init_platform("Intel", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
@@ -42,10 +40,8 @@ app_init(void)
   return ret;
 }
 
-static void
-get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                 void *user_data)
-{
+static void get_binaryswitch(oc_request_t *request,
+                             oc_interface_mask_t interfaces, void *user_data) {
   (void)user_data; /* not used */
   PRINT("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
@@ -66,10 +62,8 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
-                  void *user_data)
-{
+static void post_binaryswitch(oc_request_t *request,
+                              oc_interface_mask_t interfaces, void *user_data) {
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
@@ -117,10 +111,8 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   }
 }
 
-static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-          void *user_data)
-{
+static void get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
   (void)user_data;
   ++power;
 
@@ -141,10 +133,8 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-static void
-post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
-{
+static void post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                       void *user_data) {
   (void)iface_mask;
   (void)user_data;
   PRINT("POST_light:\n");
@@ -175,18 +165,14 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void
-put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-          void *user_data)
-{
+static void put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
   (void)iface_mask;
   (void)user_data;
   post_light(request, iface_mask, user_data);
 }
 
-static void
-register_resources(void)
-{
+static void register_resources(void) {
   oc_resource_t *res = oc_new_resource(NULL, "/a/light", 2, 0);
   oc_resource_bind_resource_type(res, "x.com.core.light");
   oc_resource_bind_resource_type(res, "x.com.core.brightlight");
@@ -200,7 +186,7 @@ register_resources(void)
   oc_add_resource(res);
 
   oc_resource_t *res_binaryswitch =
-    oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+      oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
@@ -213,22 +199,14 @@ register_resources(void)
   oc_add_resource(res_binaryswitch);
 }
 
-static void
-signal_event_loop(void)
-{
-  WakeConditionVariable(&cv);
-}
+static void signal_event_loop(void) { WakeConditionVariable(&cv); }
 
-void
-handle_signal(int signal)
-{
+void handle_signal(int signal) {
   signal_event_loop();
   quit = 1;
 }
 
-int
-main(void)
-{
+int main(void) {
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
 
@@ -240,11 +218,10 @@ main(void)
 
   signal(SIGINT, handle_signal);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = 0 };
+  static const oc_handler_t handler = {.init = app_init,
+                                       .signal_event_loop = signal_event_loop,
+                                       .register_resources = register_resources,
+                                       .requests_entry = 0};
 
   oc_clock_time_t next_event;
 
@@ -265,7 +242,7 @@ main(void)
       oc_clock_time_t now = oc_clock_time();
       if (now < next_event) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+            &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
