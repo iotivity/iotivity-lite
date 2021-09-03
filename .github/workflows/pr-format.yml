@@ -1,0 +1,53 @@
+name: FormatPullRequest
+
+on: issue_comment
+
+jobs:
+  format:
+    name: Format the pull request if the '~format' comment is made
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '~format') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: octokit/graphql-action@v2.x
+        id: get_branch
+        with:
+          query: |
+            query get_branch($owner:String!,$repo:String!,$pr_num:Int!) {
+              repository(owner: $owner, name: $repo) {
+                pullRequest(number: $pr_num) {
+                  headRefName
+                }
+              }
+            }
+          owner: ${{ github.event.repository.owner.login }}
+          repo: ${{ github.event.repository.name }}
+          pr_num: ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v2
+        with:
+          path: iotivity-lite
+          ref: ${{ fromJSON(steps.get_branch.outputs.data).repository.pullRequest.headRefName }}
+
+      - name: add reaction
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          reactions: eyes
+
+      - name: build-docs
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install clang-format-6.0
+          cmake -S ${{ github.workspace }}/iotivity-lite -B ${{ github.workspace }}/build-format
+          make -C ${{ github.workspace }}/build-format format
+
+      - name: push-changes
+        run: |
+          cd ${{ github.workspace }}/iotivity-lite
+          git config --global user.name 'Cascoda Bot'
+          git config --global user.email 'github@cascoda.com'
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Automatic format commit"
+          git push
