@@ -35,7 +35,7 @@ Introduction
 IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Core Framework <https://iotivity.org/documentation/ocf-core-framework>`_.
 
 The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. 
-The Open Connectivity Foundation (OCF), a group of industry leaders have created a standard specification and certification program to address these challenges.
+The Open Connectivity Foundation (OCF), a group of industry leaders have created a `(ISO/IEC) <https://www.iso.org/standard/53238.html>`_ standard specification and certification program to address these challenges.
 
 .. image:: Architecture.png
    :scale: 100%
@@ -43,9 +43,10 @@ The Open Connectivity Foundation (OCF), a group of industry leaders have created
    :align: center
 
 The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
-IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
+IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. 
+The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
 
-Please review the following resources for more details:
+Please review the following `specifications <https://openconnectivity.org/developer/specifications/>`_ for more details:
 
 - `OCF Security <https://openconnectivity.org/specs/OCF_Security_Specification.pdf>`_
 - `Device Commissioning (On-boarding and Provisioning) <https://openconnectivity.org/specs/OCF_Onboarding_Tool_Specification.pdf>`_
@@ -136,6 +137,18 @@ apps/*
 swig/*
   contains instructions and code to build Java language bindings using
   the SWIG tool.
+
+Other information sources
+-------------------------
+
+
+- `IoTivity.org <https://iotivity.org/>`_
+- `OCF GitHub <https://github.com/openconnectivityfoundation>`_
+- `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
+- `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
+- `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
+- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
+
 
 Build instructions
 ------------------
