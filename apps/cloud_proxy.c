@@ -17,17 +17,17 @@
 */
 
 /* Application Design
-*
-* support functions:
-* app_init
-*  initializes the oic/p and oic/d values.
-* register_resources
-*  function that registers all endpoints, e.g. sets the RETRIEVE/UPDATE handlers
-for each end point
-*
-* main
-*  starts the stack, with the registered resources.
-*
+ *
+ * support functions:
+ * app_init
+ *  initializes the oic/p and oic/d values.
+ * register_resources
+ *  function that registers all endpoints, e.g. sets the RETRIEVE/UPDATE handlers
+ *  for each end point
+ *
+ * main
+ *  starts the stack, with the registered resources.
+ *
  * Each resource has:
  *  - global property variables (per resource path) for:
  *    - the property name
@@ -53,28 +53,28 @@ for each end point
  *  incomming requests from the cloud are handled by:
  *    - get_resource
  *         the response from the local device is handled by:
-get_local_resource_response
+ *         get_local_resource_response
  *    - post_resource
  *         the response from the local device is handled by:
-post_local_resource_response
+ *         post_local_resource_response
  *    - delete_resource
  *         the response from the local device is handled by:
-delete_local_resource_response
+ *         delete_local_resource_response
  *
  * ## PKI SECURITY
  *  to install a certificate use MANUFACTORER_PKI compile option
  *  - requires to have the header file"pki_certs.h"
  *  - this include file can be created with the pki.sh tool in the device
-builder chain.
+ *    builder chain.
  *    the sh script creates a Kyrio test certificate with a limited life time.
  *    products should not have test certificates.
  *    Hence this example is being build without the manufactorer certificate by
-default.
+ *    default.
  *
  * ## IoTivity specific defines
  *
  *  - OC_SECURITY
-      enable security
+ *      enable security
  *    - OC_PKI
  *      enable use of PKI, note onboarding is enabled by means of run time code
  *    - OC_SECURITY_PIN
@@ -102,35 +102,35 @@ default.
  *
  * - onboard the cloud_proxy using an OBT
  *   configure the ACE for the d2dserverlist
-     (e.g. for DeviceSpy this is done automatically except for an ACE for
-DELETE)
+ *   (e.g. for DeviceSpy this is done automatically except for an ACE for
+ *    DELETE)
  * - connect to a cloud using an OBT via a mediator
  *   - set an ACE for coapcloudconfig resource.
  * - install ace for cloud access to the proxy
  *   {"subject": {"uuid": "<CTT_CLOUD_UUID>"}, "permission": 6, "resources":
-[{"wc": "*"}]}
+ *   [{"wc": "*"}]}
  *   so that a cloud client can invoke actions on the links in the RD.
  *
  *   When connected to the cloud, the client part will issue a discovery for all
-devices on realm and site local scopes
+ *   devices on realm and site local scopes
  *   devices that are in the d2dserver list will be announced to the cloud
  *   note that the resources(links) that listed in oic/res only are posted to
-the RD
+ *   the RD
  *
  * ###  normal operation
  *
  * - add a local device (one by one) to be proxied, example:
  *    POST to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
  *    Note that the cloud_proxy client has to be granted access to the local
-device
+ *    device
  *    This requires intervention of an OBT to set an ACE on the local device
  * - list the local devices that are proxied, example:
  *    GET to /d2dserverlist
- * delete a local device (one by one) that is proxied, example:
+ *    delete a local device (one by one) that is proxied, example:
  *    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
- * rescan the network (e.g. update endpoints towards the proxied local devices),
-example:
- *    UPDATE to /d2dserverlist?scan=1
+ *    rescan the network (e.g. update endpoints towards the proxied local devices),
+ *    example:
+ *      UPDATE to /d2dserverlist?scan=1
  *
  * TODO:
  * - save the d2dserverlist to disk, read at startup
