@@ -1314,9 +1314,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * altered the resource state, so attempt to notify all observers
      * of that resource with the change.
      */
-	if (
+    if (
 #ifdef OC_COLLECTIONS
-		!resource_is_collection &&
+      !resource_is_collection &&
 #endif /* OC_COLLECTIONS */
       cur_resource && (method == OC_PUT || method == OC_POST) &&
       response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
