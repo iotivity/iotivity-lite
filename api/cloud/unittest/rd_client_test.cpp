@@ -23,8 +23,7 @@
 #include "oc_endpoint.h"
 #include "rd_client.h"
 
-class TestRDClient : public testing::Test
-{
+class TestRDClient : public testing::Test {
 public:
   static oc_handler_t s_handler;
   static oc_endpoint_t s_endpoint;

@@ -16,18 +16,18 @@
 
 #include <unistd.h>
 
+#include <examples/platforms/platform.h>
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
-#include <examples/platforms/platform.h>
 
 #ifdef OC_RETARGET
 #include <openthread/platform/uart.h>
 #endif
 
 #include "oc_api.h"
-#include "port/oc_assert.h"
 #include "oc_instance.h"
+#include "port/oc_assert.h"
 
 otInstance *ot_instance;
 
@@ -50,7 +50,8 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)user_data;
   PRINT("GET_light:\n");
@@ -70,7 +71,8 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
@@ -97,7 +99,7 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_dat
 
 static void
 put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
+          void *user_data)
 {
   post_light(request, iface_mask, user_data);
 }
@@ -123,7 +125,7 @@ ot_state_changed(uint32_t flags, void *context)
   (void)context;
 
   if (flags & OT_CHANGED_THREAD_ROLE) {
-      PRINT("Role: %d\n", otThreadGetDeviceRole(ot_instance));
+    PRINT("Role: %d\n", otThreadGetDeviceRole(ot_instance));
   }
 }
 
@@ -133,8 +135,8 @@ signal_event_loop(void)
   ocInstanceSignal();
 }
 
-static
-int start_thread(void)
+static int
+start_thread(void)
 {
   if (!otThreadGetAutoStart(ot_instance)) {
     if (otIp6SetEnabled(ot_instance, true) != OT_ERROR_NONE) {
@@ -150,7 +152,7 @@ int start_thread(void)
       return -1;
     }
 
-    if(otThreadSetAutoStart(ot_instance, true) != OT_ERROR_NONE) {
+    if (otThreadSetAutoStart(ot_instance, true) != OT_ERROR_NONE) {
       OC_ERR("Can't set thread autostart\n");
       return -1;
     }
@@ -179,10 +181,10 @@ main(int argc, char *argv[])
 
   // init iotivity
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                        register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   ocInstanceInit(&handler);
 

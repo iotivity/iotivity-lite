@@ -57,8 +57,7 @@
 #define LC_SWITCH_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* WARNING! lc implementation using switch() does not work if an

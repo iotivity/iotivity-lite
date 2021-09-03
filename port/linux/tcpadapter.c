@@ -18,9 +18,9 @@
 
 #define __USE_GNU
 
-#include "ipadapter.h"
 #include "tcpadapter.h"
 #include "api/oc_session_events_internal.h"
+#include "ipadapter.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "oc_endpoint.h"
@@ -63,8 +63,7 @@ OC_LIST(session_list);
 OC_LIST(free_session_list_async);
 OC_MEMB(tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
-static void
-signal_network_thread(ip_context_t *dev);
+static void signal_network_thread(ip_context_t *dev);
 
 static int
 configure_tcp_socket(int sock, struct sockaddr_storage *sock_info)
@@ -165,7 +164,8 @@ free_tcp_session_async_locked(tcp_session_t *session)
   oc_list_add(free_session_list_async, session);
 
   signal_network_thread(session->dev);
-  OC_DBG("signaled network event thread to monitor that the session need to be removed");
+  OC_DBG("signaled network event thread to monitor that the session need to be "
+         "removed");
   OC_DBG("free TCP session async");
 }
 
@@ -198,13 +198,13 @@ static void
 process_free_tcp_session_locked()
 {
   while (true) {
-    tcp_session_t *session = (tcp_session_t *)oc_list_pop(free_session_list_async);
+    tcp_session_t *session =
+      (tcp_session_t *)oc_list_pop(free_session_list_async);
     if (session == NULL)
       return;
     free_tcp_session(session);
   }
 }
-
 
 static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
@@ -458,7 +458,7 @@ oc_tcp_receive_message_done:
 void
 oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
 {
-  (void) dev;
+  (void)dev;
   pthread_mutex_lock(&mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
   if (session) {

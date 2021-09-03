@@ -15,20 +15,20 @@
 */
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
-#include "oc_oscore.h"
-#include "oc_oscore_crypto.h"
-#include "oc_oscore_context.h"
-#include "oc_pstat.h"
 #include "api/oc_events.h"
-#include "util/oc_process.h"
-#include "oc_store.h"
-#include "oc_api.h"
-#include "messaging/coap/engine.h"
-#include "messaging/coap/coap_signal.h"
-#include "messaging/coap/transactions.h"
-#include "oc_tls.h"
-#include "oc_client_state.h"
 #include "mbedtls/ccm.h"
+#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/engine.h"
+#include "messaging/coap/transactions.h"
+#include "oc_api.h"
+#include "oc_client_state.h"
+#include "oc_oscore.h"
+#include "oc_oscore_context.h"
+#include "oc_oscore_crypto.h"
+#include "oc_pstat.h"
+#include "oc_store.h"
+#include "oc_tls.h"
+#include "util/oc_process.h"
 
 OC_PROCESS(oc_oscore_handler, "OSCORE Process");
 
@@ -525,8 +525,8 @@ oc_oscore_send_message(oc_message_t *msg)
     OC_DBG("found OSCORE context corresponding to the peer UUID");
     /* Is this is an inadvertent response to a secure multicast message */
     if (msg->endpoint.flags & MULTICAST) {
-      OC_DBG(
-        "### secure multicast requests do not elicit a response, discard ###");
+      OC_DBG("### secure multicast requests do not elicit a response, discard "
+             "###");
       oc_message_unref(msg);
       return 0;
     }

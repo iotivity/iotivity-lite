@@ -17,20 +17,22 @@
 #ifndef OC_LOG_ANDROID_H
 #define OC_LOG_ANDROID_H
 
+#include "oc_endpoint.h"
+#include <android/log.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <android/log.h>
-#include "oc_endpoint.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-void android_log(const char *level, const char *file, const char *func, int line, ...);
-void android_log_ipaddr(const char *level, const char *file, const char *func, int line, oc_endpoint_t endpoint);
-void android_log_bytes(const char *level, const char *file, const char *func, int line, uint8_t *bytes, size_t length);
+void android_log(const char *level, const char *file, const char *func,
+                 int line, ...);
+void android_log_ipaddr(const char *level, const char *file, const char *func,
+                        int line, oc_endpoint_t endpoint);
+void android_log_bytes(const char *level, const char *file, const char *func,
+                       int line, uint8_t *bytes, size_t length);
 
 #ifdef __cplusplus
 }

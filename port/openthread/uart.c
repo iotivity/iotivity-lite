@@ -65,7 +65,7 @@ _write(int file, const char *ptr, int len)
 
   int i;
 
-  for(i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
 
     if (*ptr == '\n') {
       if (!put_char('\r')) {

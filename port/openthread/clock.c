@@ -14,8 +14,8 @@
 // limitations under the License.
 */
 
-#include "port/oc_clock.h"
 #include "oc_api.h"
+#include "port/oc_clock.h"
 
 #include <openthread/platform/alarm-milli.h>
 
@@ -33,7 +33,7 @@ oc_clock_time(void)
   uint32_t time = otPlatAlarmMilliGetNow();
 
   if (time < prev_time) {
-      high_time++;
+    high_time++;
   }
 
   prev_time = time;

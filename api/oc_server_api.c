@@ -72,7 +72,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 }
 
 int
-oc_query_value_exists(oc_request_t* request, const char* key)
+oc_query_value_exists(oc_request_t *request, const char *key)
 {
   if (!request)
     return -1;
@@ -175,20 +175,26 @@ oc_process_baseline_interface(oc_resource_t *resource)
     const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
     if (desc) {
       /* tag-pos-desc will be handled as a string */
+      // clang-format off
       oc_rep_set_text_string(root, tag-pos-desc, desc);
+      // clang-format on
     }
   }
   if (resource->tag_func_desc > 0) {
     const char *func = oc_enum_to_str(resource->tag_func_desc);
     if (func) {
       /* tag-pos-desc will be handled as a string */
+      // clang-format off
       oc_rep_set_text_string(root, tag-func-desc, func);
+      // clang-format on
     }
   }
   if (resource->tag_locn > 0) {
     const char *locn = oc_enum_locn_to_str(resource->tag_locn);
     if (locn) {
+      // clang-format off
       oc_rep_set_text_string(root, tag-locn, locn);
+      // clang-format on
     }
   }
   double *pos = resource->tag_pos_rel;
@@ -326,8 +332,8 @@ oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
     collection->default_interface = OC_IF_LL;
-    oc_populate_resource_object(collection, name, uri,
-                                num_resource_types, device);
+    oc_populate_resource_object(collection, name, uri, num_resource_types,
+                                device);
   }
   return collection;
 }

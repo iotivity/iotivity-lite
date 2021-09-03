@@ -43,7 +43,7 @@ typedef enum {
 
 /**
  * @brief callback to notify if a new software version is available
- * 
+ *
  * @param device the device identifier
  * @param version version of the software
  * @param result status
@@ -54,7 +54,7 @@ void oc_swupdate_notify_new_version_available(size_t device,
 
 /**
  * @brief callback to notify if a new software version is downloaded
- * 
+ *
  * @param device the device identifier
  * @param version version of the software
  * @param result status
@@ -64,7 +64,7 @@ void oc_swupdate_notify_downloaded(size_t device, const char *version,
 
 /**
  * @brief callback to notify if a new software version is upgrading
- * 
+ *
  * @param device the device identifier
  * @param version version of the software
  * @param timestamp timestamp when the upgrade starts
@@ -76,7 +76,7 @@ void oc_swupdate_notify_upgrading(size_t device, const char *version,
 
 /**
  * @brief callback to notify if a new software version is complete
- * 
+ *
  * @param device the device identifier
  * @param result status
  */
@@ -92,7 +92,7 @@ typedef struct
 
 /**
  * @brief sets the callbacks for software upgrade
- * 
+ *
  * @param swupdate_impl the structure with the software update callbacks
  */
 void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl);

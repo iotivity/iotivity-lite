@@ -43,8 +43,8 @@ udp_receive_cbk(void *context, otMessage *ot_message,
   oc_message_t *oc_message = oc_allocate_message();
 
   if (oc_message) {
-    uint16_t payloadLength = otMessageGetLength(ot_message) -
-                             otMessageGetOffset(ot_message);
+    uint16_t payloadLength =
+      otMessageGetLength(ot_message) - otMessageGetOffset(ot_message);
     if (otMessageRead(ot_message, otMessageGetOffset(ot_message),
                       oc_message->data, payloadLength) != payloadLength) {
       OC_ERR("Can't read message");
@@ -128,8 +128,8 @@ oc_send_buffer(oc_message_t *message)
     return -1;
   }
 
-  if (otMessageAppend(ot_message,
-                      message->data, message->length) != OT_ERROR_NONE) {
+  if (otMessageAppend(ot_message, message->data, message->length) !=
+      OT_ERROR_NONE) {
     OC_ERR("Can't append message");
     return -1;
   }
@@ -141,7 +141,7 @@ oc_send_buffer(oc_message_t *message)
   message_info.mInterfaceId = OT_NETIF_INTERFACE_ID_THREAD;
 
   memcpy(&message_info.mPeerAddr.mFields, message->endpoint.addr.ipv6.address,
-	 OT_IP6_ADDRESS_SIZE);
+         OT_IP6_ADDRESS_SIZE);
   message_info.mPeerPort = message->endpoint.addr.ipv6.port;
 
 #ifdef OC_DEBUG
@@ -176,8 +176,8 @@ oc_connectivity_init(size_t device)
     return -1;
   }
 
-  if (otUdpOpen(ot_instance, &unicast_socket,
-                udp_receive_cbk, NULL) != OT_ERROR_NONE) {
+  if (otUdpOpen(ot_instance, &unicast_socket, udp_receive_cbk, NULL) !=
+      OT_ERROR_NONE) {
     OC_ERR("Can't open unicast socket");
     return -1;
   }
@@ -193,8 +193,8 @@ oc_connectivity_init(size_t device)
     return -1;
   }
 
-  if (otUdpOpen(ot_instance, &multicast_socket,
-                udp_receive_cbk, NULL) != OT_ERROR_NONE) {
+  if (otUdpOpen(ot_instance, &multicast_socket, udp_receive_cbk, NULL) !=
+      OT_ERROR_NONE) {
     OC_ERR("Can't open multicast socket");
     return -1;
   }
@@ -233,7 +233,7 @@ oc_send_discovery_request(oc_message_t *message)
  * oc_network_event_handler_mutex_* are defined only to comply with the
  * connectivity interface, but are not used since the adapter process does
  * not preempt the process running the event loop.
-*/
+ */
 void
 oc_network_event_handler_mutex_init(void)
 {

@@ -22,26 +22,25 @@
 #include "port/oc_log.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief abort application
- * 
+ *
  */
 void abort_impl(void);
 
 /**
  * @brief exit the application
- * 
+ *
  * @param status the exist status
  */
 void exit_impl(int status);
 
 /**
  * @brief abort with message
- * 
+ *
  * @param msg the message to be printed
  */
 static inline void
@@ -53,7 +52,7 @@ oc_abort(const char *msg)
 
 /**
  * @brief assert the condition and if it fails abort with message (reason)
- * 
+ *
  */
 #define oc_assert(cond)                                                        \
   do {                                                                         \
@@ -64,7 +63,7 @@ oc_abort(const char *msg)
 
 /**
  * @brief exit the application with status
- * 
+ *
  * @param status the exist status
  */
 static inline void

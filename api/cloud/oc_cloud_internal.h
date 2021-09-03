@@ -82,7 +82,8 @@ void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
 void cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps);
-void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps, oc_cloud_error_t error);
+void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
+                                  oc_cloud_error_t error);
 void cloud_update_by_resource(oc_cloud_context_t *ctx,
                               const cloud_conf_update_t *data);
 void cloud_reconnect(oc_cloud_context_t *ctx);
@@ -97,7 +98,8 @@ bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
  *
  * @return URI query, must be freed by caller
  */
-oc_string_t cloud_access_deregister_query(const char *uid, const char *access_token,
+oc_string_t cloud_access_deregister_query(const char *uid,
+                                          const char *access_token,
                                           size_t device);
 /**
  * @brief Send request to deregister device from cloud.
@@ -133,10 +135,11 @@ bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
  * If cloud is in logged in state the function executes several resource links
  * updates: deletes links scheduled to be deleted, publishes links scheduled
  * to be published and republishes links that were already published.
- * Additionally, if Time to Live property is not equal to RD_PUBLISH_TTL_UNLIMITED
- * then published links are scheduled to be republished each hour. (If
- * cloud_rd_manager_status_changed function is triggered again before the scheduled
- * time passes the republishing is rescheduled with updated time.)
+ * Additionally, if Time to Live property is not equal to
+ * RD_PUBLISH_TTL_UNLIMITED then published links are scheduled to be republished
+ * each hour. (If cloud_rd_manager_status_changed function is triggered again
+ * before the scheduled time passes the republishing is rescheduled with updated
+ * time.)
  *
  * @param ctx Cloud context, must not be NULL
  */
@@ -149,7 +152,8 @@ void cloud_manager_stop(oc_cloud_context_t *ctx);
 void oc_create_cloudconf_resource(size_t device);
 
 /**
- * @brief Provides information whether expires in of the access token means permanent.
+ * @brief Provides information whether expires in of the access token means
+ * permanent.
  *
  * @return true if it is permanent
  */

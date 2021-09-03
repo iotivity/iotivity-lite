@@ -25,8 +25,7 @@
 #include "oc_ri.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);

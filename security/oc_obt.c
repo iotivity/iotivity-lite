@@ -1403,21 +1403,19 @@ free_credprov_state(oc_credprov_ctx_t *p, int status)
   oc_memb_free(&oc_credprov_ctx_m, p);
 }
 
-
-
 /* Provision trust anchor sequence */
 static void
-free_trustanchor_state(oc_trustanchor_ctx_t* p, int status)
+free_trustanchor_state(oc_trustanchor_ctx_t *p, int status)
 {
   if (!is_item_in_list(oc_installtrust_ctx_l, p)) {
     return;
   }
   oc_list_remove(oc_installtrust_ctx_l, p);
-  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
   oc_tls_close_connection(ep);
- 
+
   p->cb.cb(status, p->cb.data);
-  //p->cb.cb(p->cb.data);
+  // p->cb.cb(p->cb.data);
 
   if (p->switch_dos) {
     free_switch_dos_state(p->switch_dos);
@@ -1425,8 +1423,6 @@ free_trustanchor_state(oc_trustanchor_ctx_t* p, int status)
   }
   oc_memb_free(&oc_installtrust_ctx_m, p);
 }
-
-
 
 static void
 free_credprov_ctx(oc_credprov_ctx_t *ctx, int status)
@@ -2069,65 +2065,63 @@ oc_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t cb,
 }
 
 static void
-trustanchor_device_RFNOP_complete(int status, void* response_data)
+trustanchor_device_RFNOP_complete(int status, void *response_data)
 {
-  oc_trustanchor_ctx_t* p = (oc_trustanchor_ctx_t*)response_data;
+  oc_trustanchor_ctx_t *p = (oc_trustanchor_ctx_t *)response_data;
   p->switch_dos = NULL;
 
   if (status >= 0) {
     free_trustanchor_state(p, 0);
-  }
-  else {
+  } else {
     free_trustanchor_state(p, -1);
   }
 }
 
-
 static void
-trustanchor_device_RFNOP(oc_client_response_t* data)
+trustanchor_device_RFNOP(oc_client_response_t *data)
 {
   PRINT("trustanchor_device_RFNOP\n");
   if (!is_item_in_list(oc_installtrust_ctx_l, data->user_data)) {
     return;
   }
 
-  oc_trustanchor_ctx_t* p = (oc_trustanchor_ctx_t*)data->user_data;
+  oc_trustanchor_ctx_t *p = (oc_trustanchor_ctx_t *)data->user_data;
 
- if (data->code >= OC_STATUS_BAD_REQUEST) {
+  if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_trustanchor_device_RFNOP;
- }
+  }
 
-  p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, trustanchor_device_RFNOP_complete, p);
+  p->switch_dos =
+    switch_dos(p->device1, OC_DOS_RFNOP, trustanchor_device_RFNOP_complete, p);
   if (p->switch_dos) {
     return;
   }
 
 err_trustanchor_device_RFNOP:
   free_trustanchor_state(p, -1);
-
 }
 
-
 static void
-//trustanchor_device_RFPRO(oc_client_response_t* response_data)
-trustanchor_device_RFPRO(int status, void* response_data)
+// trustanchor_device_RFPRO(oc_client_response_t* response_data)
+trustanchor_device_RFPRO(int status, void *response_data)
 {
   PRINT("trustanchor_device_RFPRO\n");
   if (!is_item_in_list(oc_installtrust_ctx_l, response_data)) {
     return;
   }
 
-  oc_trustanchor_ctx_t* p = (oc_trustanchor_ctx_t*)response_data;
+  oc_trustanchor_ctx_t *p = (oc_trustanchor_ctx_t *)response_data;
   if (status >= 0) {
-    oc_sec_cred_t* root = oc_sec_get_cred_by_credid(root_cert_credid, 0);
+    oc_sec_cred_t *root = oc_sec_get_cred_by_credid(root_cert_credid, 0);
     if (!root) {
       goto err_trustanchor_device_RFPRO;
     }
 
     /**  3) post cred with trustca
-     */ 
-    oc_endpoint_t* ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &trustanchor_device_RFNOP, HIGH_QOS, p)) {
+     */
+    oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+    if (oc_init_post("/oic/sec/cred", ep, NULL, &trustanchor_device_RFNOP,
+                     HIGH_QOS, p)) {
       oc_rep_start_root_object();
       oc_rep_set_array(root, creds);
       oc_rep_object_array_start_item(creds);
@@ -2136,7 +2130,7 @@ trustanchor_device_RFPRO(int status, void* response_data)
       oc_rep_set_text_string(creds, subjectuuid, p->trustanchor_subject);
 
       oc_rep_set_object(creds, publicdata);
-      oc_rep_set_text_string(publicdata, data, (char*)p->trustanchor);
+      oc_rep_set_text_string(publicdata, data, (char *)p->trustanchor);
       oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
       oc_rep_close_object(creds, publicdata);
 
@@ -2155,16 +2149,15 @@ err_trustanchor_device_RFPRO:
   free_trustanchor_state(p, -1);
 }
 
-
 static void
-trustanchor_supports_cert_creds(oc_client_response_t* data)
+trustanchor_supports_cert_creds(oc_client_response_t *data)
 {
   PRINT("trustanchor_supports_cert_creds\n");
   if (!is_item_in_list(oc_installtrust_ctx_l, data->user_data)) {
     return;
   }
 
-  oc_trustanchor_ctx_t* p = (oc_trustanchor_ctx_t*)data->user_data;
+  oc_trustanchor_ctx_t *p = (oc_trustanchor_ctx_t *)data->user_data;
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     goto err_trustanchor_supports_cert_creds;
@@ -2176,7 +2169,8 @@ trustanchor_supports_cert_creds(oc_client_response_t* data)
     if (sct & 0x0000000000000008) {
       /**  2) switch dos to RFPRO
        */
-      p->switch_dos = switch_dos(p->device1, OC_DOS_RFPRO, trustanchor_device_RFPRO, p);
+      p->switch_dos =
+        switch_dos(p->device1, OC_DOS_RFPRO, trustanchor_device_RFPRO, p);
       if (p->switch_dos) {
         return;
       }
@@ -2185,9 +2179,8 @@ trustanchor_supports_cert_creds(oc_client_response_t* data)
 
 err_trustanchor_supports_cert_creds:
   free_trustanchor_state(p, -1);
-  //oc_memb_free(&oc_trustanchor_ctx_t, p);
+  // oc_memb_free(&oc_trustanchor_ctx_t, p);
 }
-
 
 /*
   Provision trust anchor (certificate):
@@ -2196,11 +2189,13 @@ err_trustanchor_supports_cert_creds:
   2) post cred with trustca
   3) switch dos to RFNOP
 */
-int oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, char* subject, oc_uuid_t* uuid,
-  oc_obt_status_cb_t cb, void* data)
+int
+oc_obt_provision_trust_anchor(char *certificate, size_t certificate_size,
+                              char *subject, oc_uuid_t *uuid,
+                              oc_obt_status_cb_t cb, void *data)
 {
   OC_ERR("oc_obt_provision_trust_anchor");
-  oc_trustanchor_ctx_t* p = oc_memb_alloc(&oc_installtrust_ctx_m);
+  oc_trustanchor_ctx_t *p = oc_memb_alloc(&oc_installtrust_ctx_m);
   if (!p) {
     return -1;
   }
@@ -2209,7 +2204,7 @@ int oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, ch
     return -1;
   }
 
-  oc_device_t* device = oc_obt_get_owned_device_handle(uuid);
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
   if (!device) {
     return -1;
   }
@@ -2224,13 +2219,14 @@ int oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, ch
 
   /**  1) check if certificates is supported
    */
-  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &trustanchor_supports_cert_creds, HIGH_QOS, p)) {
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &trustanchor_supports_cert_creds,
+                HIGH_QOS, p)) {
     oc_list_add(oc_installtrust_ctx_l, p);
     return 0;
   }
 
-  //oc_memb_free(&oc_installtrust_ctx_m, p);
+  // oc_memb_free(&oc_installtrust_ctx_m, p);
 
   return -1;
 }
@@ -3319,22 +3315,21 @@ oc_obt_delete_own_cred_by_credid(int credid)
   return -1;
 }
 
-
-int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
-  const char* url, const char* at, const char* apn,
-  const char* cis, const char* sid, 
-  oc_response_handler_t cb, void* user_data)
+int
+oc_obt_update_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+                                const char *at, const char *apn,
+                                const char *cis, const char *sid,
+                                oc_response_handler_t cb, void *user_data)
 {
-  oc_device_t* device = oc_obt_get_owned_device_handle(uuid);
-  if (device == NULL)
-  {
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (device == NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
     PRINT("Could not find device from udn %s\n", di);
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
-  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (ep == NULL) {
     PRINT("Could not find ep from device \n");
     return -1;
@@ -3357,8 +3352,7 @@ int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
       PRINT("Could not send POST request\n");
       return -1;
     }
-  }
-  else {
+  } else {
     PRINT("Could not init POST request\n");
     return -1;
   }
@@ -3366,24 +3360,24 @@ int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
   return 0;
 }
 
-int oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid,
-  const char* url, oc_response_handler_t cb, void* user_data)
+int
+oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+                                  oc_response_handler_t cb, void *user_data)
 {
   // TODO get the URL from the device
-  //char url[200] = "/CoapCloudConfResURI";
+  // char url[200] = "/CoapCloudConfResURI";
   int err = 0;
 
-  //oc_device_t* device = oc_obt_get_cached_device_handle(uuid);
-  oc_device_t* device = oc_obt_get_owned_device_handle(uuid);
-  if (device == NULL)
-  {
+  // oc_device_t* device = oc_obt_get_cached_device_handle(uuid);
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (device == NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
     PRINT("Could not find device from udn %s\n", di);
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
-  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(device->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (ep == NULL) {
     PRINT("Could not find ep from device \n");
     return -1;

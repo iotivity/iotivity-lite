@@ -57,10 +57,10 @@
 #endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
+#include "oc_ri.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log.h"
 #include "port/oc_random.h"
-#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -254,7 +254,7 @@ int coap_set_status_code(void *packet, unsigned int code);
 int coap_set_token(void *packet, const uint8_t *token, size_t token_len);
 
 int coap_get_header_content_format(void *packet, oc_content_format_t *format);
-int coap_set_header_content_format(void *packet, oc_content_format_t  format);
+int coap_set_header_content_format(void *packet, oc_content_format_t format);
 
 int coap_get_header_accept(void *packet, unsigned int *accept);
 int coap_set_header_accept(void *packet, unsigned int accept);

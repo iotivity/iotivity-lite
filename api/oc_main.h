@@ -44,7 +44,7 @@ bool oc_main_initialized(void);
  *
  * The device drops/accepts new commands when the drop is set to true/false.
  *
- * @note If OC_SECURITY is set, this call is used to drop all new incoming 
+ * @note If OC_SECURITY is set, this call is used to drop all new incoming
  *       commands during closing TLS sessions (CLOSE_ALL_TLS_SESSIONS).
  *
  * @param[in] device index of the logical device

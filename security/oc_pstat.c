@@ -165,8 +165,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       oc_device_info_t *di = oc_core_get_device_info(device);
       oc_free_string(&di->name);
 
-	  oc_resource_t *oic_d = oc_core_get_resource_by_index(OCF_D, device);
-	  oc_locn_t oc_locn = oic_d->tag_locn;
+      oc_resource_t *oic_d = oc_core_get_resource_by_index(OCF_D, device);
+      oc_locn_t oc_locn = oic_d->tag_locn;
       if (oc_locn > 0) {
         oc_resource_tag_locn(oic_d, OCF_LOCN_UNKNOWN);
       }

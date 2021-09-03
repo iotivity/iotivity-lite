@@ -60,7 +60,8 @@ handle_array_response(void *data)
 }
 
 static void
-get_array(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_array(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
@@ -135,10 +136,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources =
-                                         register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 

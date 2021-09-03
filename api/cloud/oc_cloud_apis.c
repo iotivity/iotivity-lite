@@ -170,9 +170,9 @@ oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
 }
 
 void
-oc_cloud_set_published_resources_ttl(oc_cloud_context_t* ctx, uint32_t ttl)
+oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl)
 {
-	ctx->time_to_live = ttl;
+  ctx->time_to_live = ttl;
 }
 
 static void
@@ -259,24 +259,26 @@ cloud_deregistered_internal(oc_client_response_t *data)
 }
 
 static bool
-check_accesstoken_for_deregister(oc_cloud_context_t *ctx) {
-  // This value is calculated by coap_oscore_serialize_message for deregister
-  // message with empty query parameters. The value should remain the same
-  // unless some global options are added to coap requests.
-  // The deregister request won't be sent if the total size of its header is
-  // greater than COAP_MAX_HEADER_SIZE, so we must ensure that the query
-  // is not too large.
-  // Some older cloud implementations require tokens in deregister requests.
-  // To facilitate support for such implementations we append access token
-  // to the request query if the resulting query size is within the limit.
-  #define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
+check_accesstoken_for_deregister(oc_cloud_context_t *ctx)
+{
+// This value is calculated by coap_oscore_serialize_message for deregister
+// message with empty query parameters. The value should remain the same
+// unless some global options are added to coap requests.
+// The deregister request won't be sent if the total size of its header is
+// greater than COAP_MAX_HEADER_SIZE, so we must ensure that the query
+// is not too large.
+// Some older cloud implementations require tokens in deregister requests.
+// To facilitate support for such implementations we append access token
+// to the request query if the resulting query size is within the limit.
+#define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
 
-  oc_string_t query = cloud_access_deregister_query(oc_string(ctx->store.uid),
-    oc_string(ctx->store.access_token), ctx->device);
+  oc_string_t query = cloud_access_deregister_query(
+    oc_string(ctx->store.uid), oc_string(ctx->store.access_token), ctx->device);
   size_t query_size = oc_string_len(query);
   oc_free_string(&query);
 
-  return DEREGISTER_EMPTY_QUERY_HEADER_SIZE + query_size <= COAP_MAX_HEADER_SIZE;
+  return DEREGISTER_EMPTY_QUERY_HEADER_SIZE + query_size <=
+         COAP_MAX_HEADER_SIZE;
 }
 
 static int
@@ -289,14 +291,11 @@ cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
   bool cannotConnect = true;
   cloud_set_cps(ctx, OC_CPS_DEREGISTERING);
 
-  if (oc_string(ctx->store.ci_server) &&
-      conv_cloud_endpoint(ctx) == 0) {
-      if (cloud_access_deregister(ctx->cloud_ep,
-                              oc_string(ctx->store.uid),
-                              useAccessToken ? oc_string(ctx->store.access_token) : NULL,
-                              ctx->device,
-                              cloud_deregistered_internal,
-                              p)) {
+  if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0) {
+    if (cloud_access_deregister(
+          ctx->cloud_ep, oc_string(ctx->store.uid),
+          useAccessToken ? oc_string(ctx->store.access_token) : NULL,
+          ctx->device, cloud_deregistered_internal, p)) {
       cannotConnect = false;
     }
   }
@@ -310,9 +309,9 @@ cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
 
 static void
 cloud_login_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                       void *data)
+                           void *data)
 {
-  cloud_api_param_t *p = (cloud_api_param_t*) data;
+  cloud_api_param_t *p = (cloud_api_param_t *)data;
 
   if ((status & OC_CLOUD_LOGGED_IN) == 0) {
     OC_ERR("Failed to login to cloud for deregister");
@@ -328,10 +327,10 @@ cloud_login_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 }
 
 static void
-cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                       void *data)
+cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
+                                   oc_cloud_status_t status, void *data)
 {
-  cloud_api_param_t *p = (cloud_api_param_t*)data;
+  cloud_api_param_t *p = (cloud_api_param_t *)data;
 
   if ((status & OC_CLOUD_REFRESHED_TOKEN) == 0) {
     OC_ERR("Failed to refresh access token for deregister");
@@ -379,10 +378,13 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
   if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
-    bool hasRefreshToken = oc_string(ctx->store.refresh_token) &&
-      oc_string_len(ctx->store.refresh_token) > 0 && (!cloud_is_permanent_access_token(ctx->store.expires_in));
+    bool hasRefreshToken =
+      oc_string(ctx->store.refresh_token) &&
+      oc_string_len(ctx->store.refresh_token) > 0 &&
+      (!cloud_is_permanent_access_token(ctx->store.expires_in));
     if (hasRefreshToken) {
-      if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) != 0) {
+      if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) !=
+          0) {
         OC_ERR("Failed to refresh token for deregister");
         free_api_param(p);
         return -1;
@@ -391,7 +393,8 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     }
 
     if (canUseAccessToken) {
-      // short access token -> we can use it in query and deregister without login
+      // short access token -> we can use it in query and deregister without
+      // login
       return cloud_deregister(p, true);
     }
 
@@ -514,7 +517,8 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
 }
 
 oc_string_t
-cloud_access_deregister_query(const char *uid, const char *access_token, size_t device)
+cloud_access_deregister_query(const char *uid, const char *access_token,
+                              size_t device)
 {
   oc_string_t q_uid;
   oc_concat_strings(&q_uid, "uid=", uid);

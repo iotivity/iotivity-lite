@@ -133,7 +133,7 @@ _oc_mmem_alloc(
   oc_mem_trace_add_pace(func, bytes_allocated, MEM_TRACE_ALLOC, m->ptr);
 #endif
 
-  return (int) bytes_allocated;
+  return (int)bytes_allocated;
 }
 
 void
@@ -169,8 +169,9 @@ _oc_mmem_free(
   if (m->next != NULL) {
     switch (pool_type) {
     case BYTE_POOL:
-      memmove(m->ptr, m->next->ptr, &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
-                                      (unsigned char *)m->next->ptr);
+      memmove(m->ptr, m->next->ptr,
+              &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
+                (unsigned char *)m->next->ptr);
 
       break;
     case INT_POOL:
@@ -205,7 +206,7 @@ _oc_mmem_free(
     oc_list_remove(doubles_list, m);
     break;
   }
-#else /* !OC_DYNAMIC_ALLOCATION */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   (void)pool_type;
   free(m->ptr);
   m->size = 0;

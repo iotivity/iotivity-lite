@@ -127,7 +127,7 @@ struct oc_message_s
 
 /**
  * @brief send buffer
- * 
+ *
  * @param message message to send
  * @return int 0 = success
  */
@@ -135,7 +135,7 @@ int oc_send_buffer(oc_message_t *message);
 
 /**
  * @brief initialize the connectivity (e.g. open sockets) for the device
- * 
+ *
  * @param device the device index
  * @return int 0 = success
  */
@@ -143,21 +143,21 @@ int oc_connectivity_init(size_t device);
 
 /**
  * @brief shut down the connectivity for device at device index
- * 
+ *
  * @param device the device index
  */
 void oc_connectivity_shutdown(size_t device);
 
 /**
  * @brief send discovery request
- * 
+ *
  * @param message the message
  */
 void oc_send_discovery_request(oc_message_t *message);
 
 /**
  * @brief end session for the specific endpoint
- * 
+ *
  * @param endpoint the endpoint to close the session for
  */
 void oc_connectivity_end_session(oc_endpoint_t *endpoint);
@@ -165,8 +165,8 @@ void oc_connectivity_end_session(oc_endpoint_t *endpoint);
 #ifdef OC_DNS_LOOKUP
 /**
  * @brief dns look up
- * 
- * @param domain the url 
+ *
+ * @param domain the url
  * @param addr the address
  * @param flags the transport flags
  * @return int 0 = success
@@ -176,7 +176,7 @@ int oc_dns_lookup(const char *domain, oc_string_t *addr,
 #ifdef OC_DNS_CACHE
 /**
  * @brief clear the DNS cache
- * 
+ *
  */
 void oc_dns_clear_cache(void);
 #endif /* OC_DNS_CACHE */
@@ -184,7 +184,7 @@ void oc_dns_clear_cache(void);
 
 /**
  * @brief retrieve list of endpoints for the device
- * 
+ *
  * @param device the device index
  * @return oc_endpoint_t* list of endpoints
  */
@@ -192,14 +192,14 @@ oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
 
 /**
  * @brief the callback function for an network change
- * 
+ *
  * @param event the network event
  */
 void handle_network_interface_event_callback(oc_interface_event_t event);
 
 /**
  * @brief the session callback
- * 
+ *
  * @param endpoint endpoint for the session
  * @param state the state of the session
  */
@@ -209,18 +209,18 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
 #ifdef OC_TCP
 /**
  * @brief The CSM states
- * 
+ *
  */
-typedef enum { 
-  CSM_NONE,         ///< None
-  CSM_SENT,         ///< Send
-  CSM_DONE,         ///< Done
-  CSM_ERROR = 255   ///< Error
-  } tcp_csm_state_t;
+typedef enum {
+  CSM_NONE,       ///< None
+  CSM_SENT,       ///< Send
+  CSM_DONE,       ///< Done
+  CSM_ERROR = 255 ///< Error
+} tcp_csm_state_t;
 
 /**
  * @brief retrieve the cms state
- * 
+ *
  * @param endpoint the endpoint
  * @return tcp_csm_state_t the cms state
  */
@@ -228,8 +228,8 @@ tcp_csm_state_t oc_tcp_get_csm_state(oc_endpoint_t *endpoint);
 
 /**
  * @brief update the csm state on the tcp connection
- * 
- * @param endpoint the endpoint 
+ *
+ * @param endpoint the endpoint
  * @param csm the cms state
  * @return int 0 = success
  */

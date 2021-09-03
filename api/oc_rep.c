@@ -54,7 +54,8 @@ oc_rep_get_encoder_buf(void)
   return g_buf;
 }
 
-void oc_rep_encode_raw(const uint8_t* data, size_t len)
+void
+oc_rep_encode_raw(const uint8_t *data, size_t len)
 {
   memcpy(g_encoder.data.ptr, data, len);
   g_encoder.data.ptr = g_encoder.data.ptr + len;
@@ -649,7 +650,8 @@ oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value)
  * white-space.
  */
 size_t
-oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth) {
+oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   for (int i = 0; i < tab_depth; i++) {
@@ -669,8 +671,8 @@ oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth) {
  */
 size_t
 oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
-                                          char *byte_str,
-                                          size_t byte_str_size) {
+                                          char *byte_str, size_t byte_str_size)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   // calculate the b64 encoded string size
@@ -709,7 +711,8 @@ oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
  */
 size_t
 oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
-                      bool pretty_print) {
+                      bool pretty_print)
+{
   (void)buf;
   (void)buf_size;
   size_t num_char_printed = 0;
@@ -720,7 +723,7 @@ oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;
     }
 
-    if(oc_string_len(rep->name) > 0) {
+    if (oc_string_len(rep->name) > 0) {
       num_char_printed =
         (pretty_print)
           ? snprintf(buf, buf_size, "\"%s\" : ", oc_string(rep->name))
@@ -971,19 +974,23 @@ oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
 }
 
 size_t
-oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size, bool pretty_print) {
+oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size, bool pretty_print)
+{
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
-  bool object_array = (rep && (rep->type == OC_REP_OBJECT) && (oc_string_len(rep->name) == 0) );
-  num_char_printed = (pretty_print) ? snprintf(buf, buf_size, (object_array)?"[\n":"{\n")
-                                    : snprintf(buf, buf_size, (object_array)?"[":"{");
+  bool object_array =
+    (rep && (rep->type == OC_REP_OBJECT) && (oc_string_len(rep->name) == 0));
+  num_char_printed = (pretty_print)
+                       ? snprintf(buf, buf_size, (object_array) ? "[\n" : "{\n")
+                       : snprintf(buf, buf_size, (object_array) ? "[" : "{");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
 
   num_char_printed = oc_rep_to_json_format(rep, buf, buf_size, 0, pretty_print);
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
 
-  num_char_printed = (pretty_print) ? snprintf(buf, buf_size, (object_array)?"]\n":"}\n")
-                                    : snprintf(buf, buf_size, (object_array)?"]":"}");
+  num_char_printed = (pretty_print)
+                       ? snprintf(buf, buf_size, (object_array) ? "]\n" : "}\n")
+                       : snprintf(buf, buf_size, (object_array) ? "]" : "}");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   return total_char_printed;
 }

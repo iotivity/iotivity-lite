@@ -17,6 +17,7 @@
 */
 
 #define WIN32_LEAN_AND_MEAN
+// clang-format off
 #include <windows.h>
 #include <WinSock2.h>
 #include <Mswsock.h>
@@ -25,6 +26,7 @@
 #include <malloc.h>
 #include <oc_log.h>
 #include <ws2tcpip.h>
+// clang-format on
 
 /**
  * Structure to manage interface list.

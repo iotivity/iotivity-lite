@@ -24,17 +24,16 @@
 #include "util/oc_process.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief session states
- * 
+ *
  */
 typedef enum {
-  OC_SESSION_CONNECTED,    ///< session connected
-  OC_SESSION_DISCONNECTED  ///< session disconnected
+  OC_SESSION_CONNECTED,   ///< session connected
+  OC_SESSION_DISCONNECTED ///< session disconnected
 } oc_session_state_t;
 
 /**
@@ -58,21 +57,21 @@ OC_PROCESS_NAME(oc_session_events);
 
 /**
  * @brief session start event
- * 
+ *
  * @param endpoint start event on endpoint
  */
 void oc_session_start_event(oc_endpoint_t *endpoint);
 
 /**
  * @brief session end event
- * 
+ *
  * @param endpoint stop event on endpoint
  */
 void oc_session_end_event(oc_endpoint_t *endpoint);
 
 /**
  * @brief set delay for events
- * 
+ *
  * @param secs delay in seconds
  */
 void oc_session_events_set_event_delay(int secs);

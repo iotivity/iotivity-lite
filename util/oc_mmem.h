@@ -38,8 +38,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define OC_MMEM_PTR(m) (struct oc_mmem *)(m)->ptr
@@ -63,8 +62,7 @@ void oc_mmem_init(void);
 
 #else /* OC_MEMORY_TRACE */
 
-#define oc_mmem_alloc(m, size, pool_type)                                      \
-  _oc_mmem_alloc(m, size, pool_type)
+#define oc_mmem_alloc(m, size, pool_type) _oc_mmem_alloc(m, size, pool_type)
 #define oc_mmem_free(m, pool_type) _oc_mmem_free(m, pool_type)
 
 #endif /* !OC_MEMORY_TRACE */

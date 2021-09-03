@@ -21,16 +21,16 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #define NUM_LIGHTS 3
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static bool quit, light[NUM_LIGHTS] = {true, false, true};
+static bool quit, light[NUM_LIGHTS] = { true, false, true };
 static int client_status, server_status;
 static pid_t client_pid, server_pid;
 
@@ -62,12 +62,12 @@ check_resource_cb(oc_client_response_t *data)
 
   for (oc_rep_t *rep = data->payload; rep; rep = rep->next) {
     switch (rep->type) {
-      case OC_REP_BOOL:
-        if (light != rep->value.boolean)
-          exit(EXIT_FAILURE);
-        break;
-      default:
+    case OC_REP_BOOL:
+      if (light != rep->value.boolean)
         exit(EXIT_FAILURE);
+      break;
+    default:
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -87,7 +87,7 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
   (void)di;
   (void)iface_mask;
   (void)user_data;
-  
+
   int i, array_size;
   static int pos = 0;
 
@@ -99,7 +99,8 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
     if (!rt || strcmp(rt, "constrained.r.test"))
       continue;
 
-    ret = oc_do_get(uri, server, NULL, check_resource_cb, HIGH_QOS, &light[pos]);
+    ret =
+      oc_do_get(uri, server, NULL, check_resource_cb, HIGH_QOS, &light[pos]);
     pos++;
     if (!ret)
       exit(EXIT_FAILURE);
@@ -120,8 +121,8 @@ app_init_client(void)
   int ret;
 
   ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.test-client", "Client Test", "1.0", "1.0",
-      NULL, NULL);
+  ret |= oc_add_device("/oic/d", "oic.d.test-client", "Client Test", "1.0",
+                       "1.0", NULL, NULL);
 
   return ret;
 }
@@ -183,24 +184,25 @@ app_init(void)
   if (r != 0)
     return r;
 
-  return oc_add_device("/oic/d", "constrained.d.server-test", "Server Test", "1.0",
-      "1.0", NULL, NULL);
+  return oc_add_device("/oic/d", "constrained.d.server-test", "Server Test",
+                       "1.0", "1.0", NULL, NULL);
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   oc_rep_start_root_object();
   bool light = *(bool *)user_data;
 
   switch (iface_mask) {
-    case OC_IF_BASELINE:
-      oc_process_baseline_interface(request->resource);
-    case OC_IF_RW:
-      oc_rep_set_boolean(root, state, light);
-      break;
-    default:
-      break;
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(request->resource);
+  case OC_IF_RW:
+    oc_rep_set_boolean(root, state, light);
+    break;
+  default:
+    break;
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
@@ -220,7 +222,7 @@ register_resources(void)
     if (r < 0 || r >= (int)sizeof(name))
       exit(EXIT_FAILURE);
 
-    res = oc_new_resource(NULL,name, 1, 0);
+    res = oc_new_resource(NULL, name, 1, 0);
     oc_resource_bind_resource_type(res, "constrained.r.test");
     oc_resource_bind_resource_interface(res, OC_IF_RW);
     oc_resource_set_default_interface(res, OC_IF_RW);
@@ -282,12 +284,12 @@ start_server(void)
 static void
 child_handler(int sig)
 {
- (void) sig;
+  (void)sig;
   pid_t pid;
   int status;
   static int child_count = 0;
 
-  while((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+  while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
     child_count++;
     if (pid == client_pid) {
       client_status = status;
@@ -305,10 +307,11 @@ child_handler(int sig)
   }
 }
 
-int main(int argc, const char *argv[])
+int
+main(int argc, const char *argv[])
 {
-  (void) argc;
-  (void) argv;
+  (void)argc;
+  (void)argv;
   struct sigaction sa;
 
   sigemptyset(&sa.sa_mask);

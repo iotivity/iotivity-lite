@@ -54,8 +54,7 @@
 #include "transactions.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 OC_PROCESS_NAME(coap_engine);
