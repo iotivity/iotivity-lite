@@ -58,7 +58,7 @@ The IoTivity project was created to bring together the open-source community to 
 IoTivity stack features
 -----------------------
 
-- **OS agnostic:** The `IoTivity device stack (https://iotivity.github.io/iotivity-lite-doxygen/)` and modules work cross-platform (pure C code) and execute in an event-driven style. The stack interacts with lower level OS/hardware platform-specific functionality through a set of abstract interfaces. This decoupling of the common OCF standards related functionality from platform adaptation code promotes ease of long-term maintenance and evolution of the stack through successive releases of the OCF specifications.
+- **OS agnostic:** The `IoTivity device stack <https://iotivity.github.io/iotivity-lite-doxygen/>`_ and modules work cross-platform (pure C code) and execute in an event-driven style. The stack interacts with lower level OS/hardware platform-specific functionality through a set of abstract interfaces. This decoupling of the common OCF standards related functionality from platform adaptation code promotes ease of long-term maintenance and evolution of the stack through successive releases of the OCF specifications.
 
 .. image:: Porting.png
    :scale: 100%
