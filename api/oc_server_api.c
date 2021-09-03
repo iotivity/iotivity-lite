@@ -544,9 +544,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
                           oc_status_t response_code)
 {
   oc_response_buffer_t response_buffer;
-  response_buffer.buffer = handle->buffer;
-  if (handle->len != 0)
-    response_buffer.response_length = handle->len;
+  response_buffer.buffer = handle->response_state->buffer;
+  if (handle->response_state->payload_size != 0)
+    response_buffer.response_length = handle->response_state->payload_size;
   else
     response_buffer.response_length = response_length();
 

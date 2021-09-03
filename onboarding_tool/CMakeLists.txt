@@ -7,7 +7,7 @@ if(UNIX)
     )
 
     target_link_libraries(onboarding_tool
-        iotivity-client
+        iotivity-server-client
     )
 
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/onboarding_tool_creds)
