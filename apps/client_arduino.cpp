@@ -1,12 +1,12 @@
 #include "Ethernet2.h"
-#include "serial.h"
 #include "oc_api.h"
-#include "oc_clock.h"
 #include "oc_assert.h"
-#include "oc_storage.h"
+#include "oc_clock.h"
 #include "oc_connectivity.h"
-#include "util/oc_process.h"
 #include "oc_network_events_mutex.h"
+#include "oc_storage.h"
+#include "serial.h"
+#include "util/oc_process.h"
 
 #ifdef __AVR__
 #ifdef OC_XMEM
@@ -315,6 +315,5 @@ setup()
 void
 loop()
 {
-
   oc_process_run();
 }

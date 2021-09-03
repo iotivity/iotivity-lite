@@ -10,11 +10,14 @@
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/cmake-windows.yml
    
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml
+   
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/doxygen.yml
 
-.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml/badge.svg
-   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/unittest.yml
+.. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/check-format.yml/badge.svg
+   :target: https://github.com/iotivity/iotivity-lite/actions/workflows/check-format.yml
    
 .. image:: https://img.shields.io/github/v/release/iotivity/iotivity-lite
    :target: https://github.com/iotivity/iotivity-lite/releases
@@ -31,16 +34,19 @@ Introduction
 
 IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Core Framework <https://iotivity.org/documentation/ocf-core-framework>`_.
 
-The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. The Open Connectivity Foundation (OCF), a group of industry leaders have created a standard specification and certification program to address these challenges.
+The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. 
+The Open Connectivity Foundation (OCF), a group of industry leaders have created a `(ISO/IEC) <https://www.iso.org/standard/53238.html>`_ standard specification and certification program to address these challenges.
 
 .. image:: Architecture.png
    :scale: 100%
    :alt: Architecture
    :align: center
 
-The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
+The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
+IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. 
+The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
 
-Please review the following resources for more details:
+Please review the following `specifications <https://openconnectivity.org/developer/specifications/>`_ for more details:
 
 - `OCF Security <https://openconnectivity.org/specs/OCF_Security_Specification.pdf>`_
 - `Device Commissioning (On-boarding and Provisioning) <https://openconnectivity.org/specs/OCF_Onboarding_Tool_Specification.pdf>`_
@@ -53,7 +59,7 @@ The IoTivity project was created to bring together the open-source community to 
 IoTivity stack features
 -----------------------
 
-- **OS agnostic:** The IoTivity device stack and modules work cross-platform (pure C code) and execute in an event-driven style. The stack interacts with lower level OS/hardware platform-specific functionality through a set of abstract interfaces. This decoupling of the common OCF standards related functionality from platform adaptation code promotes ease of long-term maintenance and evolution of the stack through successive releases of the OCF specifications.
+- **OS agnostic:** The `IoTivity device stack <https://iotivity.github.io/iotivity-lite-doxygen/>`_ and modules work cross-platform (pure C code) and execute in an event-driven style. The stack interacts with lower level OS/hardware platform-specific functionality through a set of abstract interfaces. This decoupling of the common OCF standards related functionality from platform adaptation code promotes ease of long-term maintenance and evolution of the stack through successive releases of the OCF specifications.
 
 .. image:: Porting.png
    :scale: 100%
@@ -131,6 +137,18 @@ apps/*
 swig/*
   contains instructions and code to build Java language bindings using
   the SWIG tool.
+
+Other information sources
+-------------------------
+
+
+- `IoTivity.org <https://iotivity.org/>`_
+- `OCF GitHub <https://github.com/openconnectivityfoundation>`_
+- `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
+- `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
+- `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
+- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
+
 
 Build instructions
 ------------------

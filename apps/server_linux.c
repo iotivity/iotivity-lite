@@ -44,7 +44,8 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)user_data;
   PRINT("GET_light:\n");
@@ -65,7 +66,8 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
@@ -92,7 +94,7 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_dat
 
 static void
 put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
+          void *user_data)
 {
   post_light(request, iface_mask, user_data);
 }
@@ -138,9 +140,10 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   oc_clock_time_t next_event;
 

@@ -748,13 +748,14 @@ coap_notify_observers(oc_resource_t *resource,
         if (response_buf) {
           coap_packet_t notification[1];
           bool is_revert = false;
-		  uint8_t status_code = CONTENT_2_05;
+          uint8_t status_code = CONTENT_2_05;
           if (obs->iface_mask == OC_IF_STARTUP_REVERT) {
-            OC_DBG("coap_notify_observers: Setting Valid response for a REVERT notification");
+            OC_DBG("coap_notify_observers: Setting Valid response for a REVERT "
+                   "notification");
             status_code = VALID_2_03;
             response_buf->code = VALID_2_03;
             is_revert = !is_revert;
-		  }
+          }
 #ifdef OC_TCP
           if (obs->endpoint.flags & TCP) {
             coap_tcp_init_message(notification, status_code);
@@ -764,7 +765,7 @@ coap_notify_observers(oc_resource_t *resource,
             coap_udp_init_message(notification, COAP_TYPE_NON, status_code, 0);
           }
 
-		  if (!is_revert) {
+          if (!is_revert) {
 #ifdef OC_BLOCK_WISE
 #ifdef OC_TCP
             if (!(obs->endpoint.flags & TCP) &&
@@ -820,15 +821,15 @@ coap_notify_observers(oc_resource_t *resource,
 #else  /* OC_TCP */
               if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
-                OC_DBG(
-                  "coap_observe_notify: forcing CON notification to check for "
-                  "client liveness");
+                OC_DBG("coap_observe_notify: forcing CON notification to check "
+                       "for "
+                       "client liveness");
                 notification->type = COAP_TYPE_CON;
               }
               coap_set_payload(notification, response_buf->buffer,
                                response_buf->response_length);
             } //! blockwise transfer
-          } // !is_revert
+          }   // !is_revert
 
           coap_set_status_code(notification, response_buf->code);
           if (notification->code < BAD_REQUEST_4_00 &&
@@ -1069,51 +1070,50 @@ notify_resource_defaults_observer(oc_resource_t *resource,
     }     //! separate response
     obs = obs->next;
   } // While observers
-    leave_notify_observers:;
+leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
-      if (buffer) {
-        free(buffer);
-      }
+  if (buffer) {
+    free(buffer);
+  }
 #endif
-    }
+}
 
 /*---------------------------------------------------------------------------*/
 #ifdef OC_BLOCK_WISE
-    int coap_observe_handler(void *request, void *response,
-                             oc_resource_t *resource, uint16_t block2_size,
-                             oc_endpoint_t *endpoint,
-                             oc_interface_mask_t iface_mask)
+int
+coap_observe_handler(void *request, void *response, oc_resource_t *resource,
+                     uint16_t block2_size, oc_endpoint_t *endpoint,
+                     oc_interface_mask_t iface_mask)
 #else  /* OC_BLOCK_WISE */
-    int coap_observe_handler(void *request, void *response,
-                             oc_resource_t *resource, oc_endpoint_t *endpoint,
-                             oc_interface_mask_t iface_mask)
+int
+coap_observe_handler(void *request, void *response, oc_resource_t *resource,
+                     oc_endpoint_t *endpoint, oc_interface_mask_t iface_mask)
 #endif /* !OC_BLOCK_WISE */
-    {
-      (void)iface_mask;
-      coap_packet_t *const coap_req = (coap_packet_t *)request;
-      coap_packet_t *const coap_res = (coap_packet_t *)response;
-      int dup = -1;
-      if (coap_req->code == COAP_GET && coap_res->code < 128) {
-        if (IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
-          if (coap_req->observe == 0) {
-            dup =
+{
+  (void)iface_mask;
+  coap_packet_t *const coap_req = (coap_packet_t *)request;
+  coap_packet_t *const coap_res = (coap_packet_t *)response;
+  int dup = -1;
+  if (coap_req->code == COAP_GET && coap_res->code < 128) {
+    if (IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
+      if (coap_req->observe == 0) {
+        dup =
 #ifdef OC_BLOCK_WISE
-              add_observer(resource, block2_size, endpoint, coap_req->token,
-                           coap_req->token_len, coap_req->uri_path,
-                           coap_req->uri_path_len, iface_mask);
+          add_observer(resource, block2_size, endpoint, coap_req->token,
+                       coap_req->token_len, coap_req->uri_path,
+                       coap_req->uri_path_len, iface_mask);
 #else  /* OC_BLOCK_WISE */
-              add_observer(resource, endpoint, coap_req->token,
-                           coap_req->token_len, coap_req->uri_path,
-                           coap_req->uri_path_len, iface_mask);
+          add_observer(resource, endpoint, coap_req->token, coap_req->token_len,
+                       coap_req->uri_path, coap_req->uri_path_len, iface_mask);
 #endif /* !OC_BLOCK_WISE */
-          } else if (coap_req->observe == 1) {
-            dup = coap_remove_observer_by_token(endpoint, coap_req->token,
-                                                coap_req->token_len);
-          }
-        }
+      } else if (coap_req->observe == 1) {
+        dup = coap_remove_observer_by_token(endpoint, coap_req->token,
+                                            coap_req->token_len);
       }
-      return dup;
     }
-    /*---------------------------------------------------------------------------*/
+  }
+  return dup;
+}
+/*---------------------------------------------------------------------------*/
 
 #endif /* OC_SERVER */

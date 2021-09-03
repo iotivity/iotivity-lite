@@ -20,8 +20,7 @@
 #include <common/tasklet.hpp>
 #include <common/timer.hpp>
 
-class ocInstance
-{
+class ocInstance {
 public:
   ocInstance();
 

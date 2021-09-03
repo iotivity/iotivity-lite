@@ -26,8 +26,7 @@
 #include <sys/socket.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -63,7 +62,8 @@ typedef struct tcp_context_t
 } tcp_context_t;
 #endif
 
-typedef struct ip_context_t {
+typedef struct ip_context_t
+{
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps);
   struct sockaddr_storage mcast;

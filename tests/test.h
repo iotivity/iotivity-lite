@@ -21,13 +21,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ASSERT(expr) \
-    do { \
-        if ((!(expr))) { \
-            fprintf(stderr, "%s:%d: %s: Assertion: `" # expr "' failed.\n", \
-                __FILE__, __LINE__, __func__); \
-            exit(1); \
-        } \
-    } while (0)
+#define ASSERT(expr)                                                           \
+  do {                                                                         \
+    if ((!(expr))) {                                                           \
+      fprintf(stderr, "%s:%d: %s: Assertion: `" #expr "' failed.\n", __FILE__, \
+              __LINE__, __func__);                                             \
+      exit(1);                                                                 \
+    }                                                                          \
+  } while (0)
 
 #endif

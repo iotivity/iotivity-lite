@@ -51,8 +51,7 @@
 #include "lc.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 struct pt
@@ -123,7 +122,7 @@ struct pt
     if (PT_YIELD_FLAG) {                                                       \
       ;                                                                        \
     }                                                                          \
-  LC_RESUME((pt)->lc)
+    LC_RESUME((pt)->lc)
 
 /**
  * Declare the end of a protothread.

@@ -45,7 +45,8 @@ app_init(void)
 }
 
 static void
-get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+          void *user_data)
 {
   (void)user_data;
   PRINT("GET_light:\n");
@@ -65,7 +66,8 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data
 }
 
 static void
-post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
+           void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
@@ -92,7 +94,7 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_dat
 
 static void
 put_light(oc_request_t *request, oc_interface_mask_t iface_mask,
-           void *user_data)
+          void *user_data)
 {
   (void)iface_mask;
   (void)user_data;
@@ -121,12 +123,14 @@ signal_event_loop(void)
 }
 
 #ifdef CONFIG_NET_L2_BT
-static void connected(struct bt_conn *conn, u8_t err)
+static void
+connected(struct bt_conn *conn, u8_t err)
 {
   PRINT("client connected\n");
 }
 
-static void disconnected(struct bt_conn *conn, u8_t reason)
+static void
+disconnected(struct bt_conn *conn, u8_t reason)
 {
   PRINT("client disconnected\n");
 }
@@ -135,9 +139,10 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
 void
 main(void)
 {
-  static const oc_handler_t handler = {.init = app_init,
-                                       .signal_event_loop = signal_event_loop,
-                                       .register_resources = register_resources };
+  static const oc_handler_t handler = { .init = app_init,
+                                        .signal_event_loop = signal_event_loop,
+                                        .register_resources =
+                                          register_resources };
 
   k_sem_init(&block, 0, 1);
 

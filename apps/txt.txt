@@ -40,6 +40,7 @@ simpleserver.c
 simpleserver_pki.c
 simpleserver_windows.c
 simpleserver-TVAppAndAction.c
+simpleserver-resourcedefaults.c
 smart_home_server_linux.c
 smart_home_server_linux_IDD.cbor
 smart_home_server_linux_IDD.json

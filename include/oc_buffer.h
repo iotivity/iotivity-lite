@@ -25,29 +25,28 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 OC_PROCESS_NAME(message_buffer_handler);
 
 /**
  * @brief function to allocate a message
- * 
+ *
  * @return oc_message_t* the allocated message
  */
 oc_message_t *oc_allocate_message(void);
 
 /**
  * @brief set callback for memory availability
- * 
- * @param cb the callback 
+ *
+ * @param cb the callback
  */
 void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb);
 
 /**
  * @brief allocate message from specific memory pool
- * 
+ *
  * @param pool the memory pool to use for allocation
  * @return oc_message_t* the message
  */
@@ -56,49 +55,49 @@ oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool);
 /**
  * @brief allocate message
  * internal function
- * 
+ *
  * @return oc_message_t* the CoAP message
  */
 oc_message_t *oc_internal_allocate_outgoing_message(void);
 
 /**
  * @brief add reference (for tracking in use)
- * 
+ *
  * @param message the message
  */
 void oc_message_add_ref(oc_message_t *message);
 
 /**
  * @brief remove reference (for tracking in use)
- * 
+ *
  * @param message the message
  */
 void oc_message_unref(oc_message_t *message);
 
 /**
  * @brief receive (CoAP) message
- * 
+ *
  * @param message the received messsage
  */
 void oc_recv_message(oc_message_t *message);
 
 /**
  * @brief send (CoAP) message
- * 
+ *
  * @param message the CoAP message
  */
 void oc_send_message(oc_message_t *message);
 
 /**
  * @brief close all tls session for the specific device
- * 
+ *
  * @param device the device index
  */
 void oc_close_all_tls_sessions_for_device(size_t device);
 
 /**
  * @brief close all tls sessions
- * 
+ *
  */
 void oc_close_all_tls_sessions(void);
 

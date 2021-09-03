@@ -29,8 +29,8 @@ app_init(void)
   ret = oc_init_platform("Intel", NULL, NULL);
   ASSERT(ret == 0);
 
-  ret = oc_add_device("/oic/d", "oic.d.test-server-init", "Server init test", "1.0", "1.0",
-                       NULL, NULL);
+  ret = oc_add_device("/oic/d", "oic.d.test-server-init", "Server init test",
+                      "1.0", "1.0", NULL, NULL);
   return ret;
 }
 
@@ -49,10 +49,10 @@ main(void)
 {
   int init;
   const oc_handler_t handler = {
-		.init = app_init,
-		.signal_event_loop = signal_event_loop,
-		.register_resources = register_resources,
-	};
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
   init = oc_main_init(&handler);
   ASSERT(init == 0);

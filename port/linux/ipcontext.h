@@ -26,8 +26,7 @@
 #include <sys/socket.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef enum {
@@ -62,7 +61,8 @@ typedef struct tcp_context_t
 } tcp_context_t;
 #endif
 
-typedef struct ip_context_t {
+typedef struct ip_context_t
+{
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps);
   struct sockaddr_storage mcast;
@@ -98,30 +98,31 @@ typedef struct ip_context_t {
   int shutdown_pipe[2];
 } ip_context_t;
 
-/** 
- * Set a given file descriptor to a set (dev->rfds) under the mutex(rfds_mutex). 
+/**
+ * Set a given file descriptor to a set (dev->rfds) under the mutex(rfds_mutex).
  *
  * @param[in] dev the device network context.
  * @param[in] sockfd the file descriptor.
  */
-void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd);
+void ip_context_rfds_fd_set(ip_context_t *dev, int sockfd);
 
 /**
- * Remove a given file descriptor from a set (dev->rfds) under the mutex(rfds_mutex).
+ * Remove a given file descriptor from a set (dev->rfds) under the
+ * mutex(rfds_mutex).
  *
  * @param[in] dev the device network context.
  * @param[in] sockfd the file descriptor.
  */
-void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd);
+void ip_context_rfds_fd_clr(ip_context_t *dev, int sockfd);
 
 /**
- * Make a copy of file descriptor set (dev->rfds) under the mutex(rfds_mutex). 
- * 
+ * Make a copy of file descriptor set (dev->rfds) under the mutex(rfds_mutex).
+ *
  * @param[in] dev the device network context.
- * 
+ *
  * @return a copy of file descriptor set.
  */
-fd_set ip_context_rfds_fd_copy(ip_context_t* dev);
+fd_set ip_context_rfds_fd_copy(ip_context_t *dev);
 
 #ifdef __cplusplus
 }

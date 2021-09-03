@@ -37,7 +37,8 @@ app_init(void)
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
   oc_new_string(&name, "John's Light", 12);
-  oc_resource_tag_locn(oc_core_get_resource_by_index(OCF_D, 0), OCF_LOCN_UNKNOWN);
+  oc_resource_tag_locn(oc_core_get_resource_by_index(OCF_D, 0),
+                       OCF_LOCN_UNKNOWN);
   return ret;
 }
 
@@ -64,7 +65,6 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
-
 
 static void
 post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
@@ -111,7 +111,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     /* TODO: add error response, if any */
-    //oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+    // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_diagnostic_message(request, "Test Diagnostic Response", 24,
                                OC_STATUS_BAD_REQUEST);
   }
@@ -199,7 +199,8 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
 
-  oc_resource_t *res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  oc_resource_t *res_binaryswitch =
+    oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);

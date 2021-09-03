@@ -22,13 +22,12 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief create a resource that is discoverable (e.g. listed in oic/res)
- * 
+ *
  * @param resource_idx the resource index
  * @param device the device to which the resource belongs
  */

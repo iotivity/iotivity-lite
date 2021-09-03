@@ -901,7 +901,7 @@ register_resources(void)
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
- #ifdef OC_OSCORE
+#ifdef OC_OSCORE
   oc_resource_set_secure_mcast(temp_resource, true);
 #endif /* OC_OSCORE */
   oc_add_resource(temp_resource);
@@ -945,11 +945,12 @@ register_resources(void)
   PRINT("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
 
-    oc_resource_t* device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
-    oc_resource_set_observable(device_resource, false);
-    
-    oc_resource_t* platform_resource = oc_core_get_resource_by_index(OCF_P, DEVICE);
-    oc_resource_set_observable(platform_resource, false);
+  oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
+  oc_resource_set_observable(device_resource, false);
+
+  oc_resource_t *platform_resource =
+    oc_core_get_resource_by_index(OCF_P, DEVICE);
+  oc_resource_set_observable(platform_resource, false);
 }
 
 static void

@@ -16,10 +16,10 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include <cstdlib>
-#include "gtest/gtest.h"
 #include "oc_helpers.h"
 #include "security/oc_oscore_crypto.h"
+#include "gtest/gtest.h"
+#include <cstdlib>
 
 class TestOSCOREHKDF : public testing::Test {
 protected:

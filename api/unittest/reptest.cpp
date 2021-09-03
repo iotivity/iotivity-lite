@@ -45,7 +45,8 @@ TEST(TestRep, OCRepEncodedPayloadSizeTooSmall)
   EXPECT_EQ(-1, oc_rep_get_encoded_payload_size());
 }
 
-TEST(TestRep, RepToJson_null) {
+TEST(TestRep, RepToJson_null)
+{
   oc_rep_t *rep = NULL;
   EXPECT_EQ(2, oc_rep_to_json(rep, NULL, 0, false));
   EXPECT_EQ(4, oc_rep_to_json(rep, NULL, 0, true));
@@ -1360,7 +1361,8 @@ TEST(TestRep, OCRepSetGetStringArray)
   oc_rep_to_json(rep, json, json_size + 1, false);
   const char non_pretty_json[] =
     "{\"quotes\":"
-    "[\"Do not take life too seriously. You will never get out of it alive.\","
+    "[\"Do not take life too seriously. You will never get out of it "
+    "alive.\","
     "\"All generalizations are false, including this one.\","
     "\"Those who believe in telekinetics, raise my hand.\","
     "\"I refuse to join any club that would have me as a member.\"]}";
@@ -1452,7 +1454,8 @@ TEST(TestRep, OCRepAddGetStringArray)
   oc_rep_to_json(rep, json, json_size + 1, false);
   const char non_pretty_json[] =
     "{\"quotes\":"
-    "[\"Do not take life too seriously. You will never get out of it alive.\","
+    "[\"Do not take life too seriously. You will never get out of it "
+    "alive.\","
     "\"All generalizations are false, including this one.\","
     "\"Those who believe in telekinetics, raise my hand.\","
     "\"I refuse to join any club that would have me as a member.\"]}";
@@ -1518,7 +1521,6 @@ TEST(TestRep, OCRepRootArrayObject)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_links_array();
 
-
   /* convert CborEncoder to oc_rep_t */
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
@@ -1530,46 +1532,45 @@ TEST(TestRep, OCRepRootArrayObject)
   ASSERT_TRUE(rep != NULL);
 
   /* read the values from the oc_rep_t */
-    /* calling this an object_array is a bit of a misnomer internally it is a
-     * linked list */
-    EXPECT_EQ(0, oc_string_len(rep->name));
-    EXPECT_EQ(OC_REP_OBJECT, rep->type);
-    oc_rep_t *links = rep;
-    ASSERT_TRUE(links != NULL);
+  /* calling this an object_array is a bit of a misnomer internally it is a
+   * linked list */
+  EXPECT_EQ(0, oc_string_len(rep->name));
+  EXPECT_EQ(OC_REP_OBJECT, rep->type);
+  oc_rep_t *links = rep;
+  ASSERT_TRUE(links != NULL);
 
+  char *href_out = NULL;
+  size_t href_out_size = 0;
 
-    char *href_out = NULL;
-    size_t href_out_size = 0;
+  oc_rep_t *rep_out = NULL;
 
-    oc_rep_t *rep_out = NULL;
+  EXPECT_TRUE(
+    oc_rep_get_string(links->value.object, "href", &href_out, &href_out_size));
+  EXPECT_EQ(strlen("/light/1"), href_out_size);
+  EXPECT_STREQ("/light/1", href_out);
 
-    EXPECT_TRUE(oc_rep_get_string(links->value.object, "href", &href_out,
-                                  &href_out_size));
-    EXPECT_EQ(strlen("/light/1"), href_out_size);
-    EXPECT_STREQ("/light/1", href_out);
+  EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
+  ASSERT_TRUE(rep_out != NULL);
 
-    EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
-    ASSERT_TRUE(rep_out != NULL);
+  EXPECT_EQ(OC_REP_BOOL, rep_out->type);
+  bool state_out = false;
+  EXPECT_TRUE(oc_rep_get_bool(rep_out, "state", &state_out));
+  EXPECT_TRUE(state_out);
 
-    EXPECT_EQ(OC_REP_BOOL, rep_out->type);
-    bool state_out = false;
-    EXPECT_TRUE(oc_rep_get_bool(rep_out, "state", &state_out));
-    EXPECT_TRUE(state_out);
+  links = links->next;
+  // "[{"href":"/light/1","rep":{"state":true}},{"href":"/count/1","rep":{"count":100}}]"
+  EXPECT_TRUE(
+    oc_rep_get_string(links->value.object, "href", &href_out, &href_out_size));
+  EXPECT_EQ(strlen("/count/1"), href_out_size);
+  EXPECT_STREQ("/count/1", href_out);
 
-    links = links->next;
-    // "[{"href":"/light/1","rep":{"state":true}},{"href":"/count/1","rep":{"count":100}}]"
-    EXPECT_TRUE(oc_rep_get_string(links->value.object, "href", &href_out,
-                                  &href_out_size));
-    EXPECT_EQ(strlen("/count/1"), href_out_size);
-    EXPECT_STREQ("/count/1", href_out);
+  EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
+  ASSERT_TRUE(rep_out != NULL);
 
-    EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
-    ASSERT_TRUE(rep_out != NULL);
-
-    EXPECT_EQ(OC_REP_INT, rep_out->type);
-    int64_t count_out = 0;
-    EXPECT_TRUE(oc_rep_get_int(rep_out, "count", &count_out));
-    EXPECT_EQ(100, count_out);
+  EXPECT_EQ(OC_REP_INT, rep_out->type);
+  int64_t count_out = 0;
+  EXPECT_TRUE(oc_rep_get_int(rep_out, "count", &count_out));
+  EXPECT_EQ(100, count_out);
 
   char *json;
   size_t json_size;
@@ -1577,28 +1578,27 @@ TEST(TestRep, OCRepRootArrayObject)
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, false);
   const char non_pretty_json[] =
-      "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
-      "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
+    "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
+    "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
   EXPECT_STREQ(non_pretty_json, json);
   free(json);
   json = NULL;
   json_size = oc_rep_to_json(rep, NULL, 0, true);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, true);
-  const char pretty_json[] =
-      "[\n"
-      "  {\n"
-      "    \"href\" : \"/light/1\",\n"
-      "    \"rep\" : {\n"
-      "      \"state\" : true\n"
-      "    }\n"
-      "  },\n"
-      "  {\n"
-      "    \"href\" : \"/count/1\",\n"
-      "    \"rep\" : {\n"
-      "      \"count\" : 100\n    }\n"
-      "  }\n"
-      "]\n";
+  const char pretty_json[] = "[\n"
+                             "  {\n"
+                             "    \"href\" : \"/light/1\",\n"
+                             "    \"rep\" : {\n"
+                             "      \"state\" : true\n"
+                             "    }\n"
+                             "  },\n"
+                             "  {\n"
+                             "    \"href\" : \"/count/1\",\n"
+                             "    \"rep\" : {\n"
+                             "      \"count\" : 100\n    }\n"
+                             "  }\n"
+                             "]\n";
   EXPECT_STREQ(pretty_json, json);
   free(json);
   json = NULL;

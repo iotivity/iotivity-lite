@@ -28,8 +28,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "timestamp.h"
-#include <stddef.h>
 #include <assert.h>
+#include <stddef.h>
 
 static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
                                         122, 153, 184, 214, 245, 275 };

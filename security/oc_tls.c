@@ -38,10 +38,11 @@
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "api/oc_session_events_internal.h"
-#include "messaging/coap/observe.h"
 #include "messaging/coap/engine.h"
+#include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
+#include "oc_audit.h"
 #include "oc_buffer.h"
 #include "oc_client_state.h"
 #include "oc_config.h"
@@ -53,7 +54,6 @@
 #include "oc_roles.h"
 #include "oc_svr.h"
 #include "oc_tls.h"
-#include "oc_audit.h"
 
 #ifdef OC_OSCORE
 #include "oc_oscore.h"
@@ -1109,16 +1109,16 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
       break;
     }
   } else if (!ciphers) {
-    OC_DBG(
-      "oc_tls_set_ciphersuites: server selecting default ciphersuite priority");
+    OC_DBG("oc_tls_set_ciphersuites: server selecting default ciphersuite "
+           "priority");
     ciphers = (int *)default_priority;
 #ifdef OC_CLIENT
     if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
       oc_sec_cred_t *cred =
         oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
       if (cred && cred->credtype == OC_CREDTYPE_PSK) {
-        OC_DBG(
-          "oc_tls_set_ciphersuites: client selecting PSK ciphersuite priority");
+        OC_DBG("oc_tls_set_ciphersuites: client selecting PSK ciphersuite "
+               "priority");
         ciphers = (int *)psk_priority;
       }
 #ifdef OC_PKI
@@ -2138,18 +2138,18 @@ read_application_data(oc_tls_peer_t *peer)
       oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
     }
-#else  /* OC_OSCORE */
-    if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
-        OC_PROCESS_ERR_FULL) {
+#else /* OC_OSCORE */
+      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
+          OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
-      oc_message_unref(msg);
+        oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
-    }
+      }
 #endif /* !OC_OSCORE */
-    }
-    OC_DBG("oc_tls: Decrypted incoming message");
-#ifndef OC_INOUT_BUFFER_SIZE
   }
+  OC_DBG("oc_tls: Decrypted incoming message");
+#ifndef OC_INOUT_BUFFER_SIZE
+}
 #endif /* !OC_INOUT_BUFFER_SIZE */
 }
 

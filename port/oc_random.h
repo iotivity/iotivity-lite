@@ -38,8 +38,7 @@
 #define OC_RANDOM_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
@@ -57,7 +56,7 @@ unsigned int oc_random_value(void);
 
 /**
  * @brief destroy the pseudo-random generator
- * 
+ *
  */
 void oc_random_destroy(void);
 

@@ -19,8 +19,8 @@
 
 #include "oscore.h"
 #include "coap.h"
-#include "oc_ri.h"
 #include "coap_signal.h"
+#include "oc_ri.h"
 
 void
 oscore_send_error(void *packet, uint8_t code, oc_endpoint_t *endpoint)

@@ -15,9 +15,9 @@
 */
 
 #define _GNU_SOURCE
-#include "oc_config.h"
-#include "ipcontext.h"
 #include "ipadapter.h"
+#include "ipcontext.h"
+#include "oc_config.h"
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif
@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <ifaddrs.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -42,7 +43,6 @@
 #include <sys/select.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
@@ -62,15 +62,12 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
 };
 
 #ifdef OC_WKCORE
-static const uint8_t ALL_COAP_NODES_LL[] = {
-  0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
-};
-static const uint8_t ALL_COAP_NODES_RL[] = {
-  0xff, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
-};
-static const uint8_t ALL_COAP_NODES_SL[] = {
-  0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFD
-};
+static const uint8_t ALL_COAP_NODES_LL[] = { 0xff, 0x02, 0, 0, 0, 0, 0, 0,
+                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
+static const uint8_t ALL_COAP_NODES_RL[] = { 0xff, 0x03, 0, 0, 0, 0, 0, 0,
+                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
+static const uint8_t ALL_COAP_NODES_SL[] = { 0xff, 0x05, 0, 0, 0, 0, 0, 0,
+                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
 #endif
 
 #define ALL_COAP_NODES_V4 0xe00001bb
@@ -340,11 +337,11 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_LL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq));
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
+             sizeof(mreq));
 
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq)) == -1) {
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
+                 sizeof(mreq)) == -1) {
     OC_ERR("joining link-local IPv6 multicast group %d", errno);
     return -1;
   }
@@ -354,11 +351,11 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_RL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq));
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
+             sizeof(mreq));
 
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq)) == -1) {
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
+                 sizeof(mreq)) == -1) {
     OC_ERR("joining realm-local IPv6 multicast group %d", errno);
     return -1;
   }
@@ -368,11 +365,11 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_SL, 16);
   mreq.ipv6mr_interface = interface_index;
 
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq));
+  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
+             sizeof(mreq));
 
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char*)&mreq,
-    sizeof(mreq)) == -1) {
+  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
+                 sizeof(mreq)) == -1) {
     OC_ERR("joining site-local IPv6 multicast group %d", errno);
     return -1;
   }
@@ -1846,7 +1843,8 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 #endif /* OC_DNS_LOOKUP */
 
 int
-set_nonblock_socket(int sockfd) {
+set_nonblock_socket(int sockfd)
+{
   int flags = fcntl(sockfd, F_GETFL, 0);
   if (flags < 0) {
     return -1;
@@ -1855,21 +1853,24 @@ set_nonblock_socket(int sockfd) {
   return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
 }
 
-void ip_context_rfds_fd_set(ip_context_t* dev,int sockfd)
+void
+ip_context_rfds_fd_set(ip_context_t *dev, int sockfd)
 {
   pthread_mutex_lock(&dev->rfds_mutex);
   FD_SET(sockfd, &dev->rfds);
   pthread_mutex_unlock(&dev->rfds_mutex);
 }
 
-void ip_context_rfds_fd_clr(ip_context_t* dev, int sockfd)
+void
+ip_context_rfds_fd_clr(ip_context_t *dev, int sockfd)
 {
   pthread_mutex_lock(&dev->rfds_mutex);
   FD_CLR(sockfd, &dev->rfds);
   pthread_mutex_unlock(&dev->rfds_mutex);
 }
 
-fd_set ip_context_rfds_fd_copy(ip_context_t* dev)
+fd_set
+ip_context_rfds_fd_copy(ip_context_t *dev)
 {
   fd_set setfds;
   pthread_mutex_lock(&dev->rfds_mutex);

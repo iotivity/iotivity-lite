@@ -45,7 +45,7 @@ cps_to_str(oc_cps_t cps)
   case OC_CPS_FAILED:
     return "failed";
   case OC_CPS_DEREGISTERING:
-	return "deregistering";
+    return "deregistering";
   default:
     break;
   }
@@ -81,7 +81,7 @@ cloud_response(oc_cloud_context_t *ctx)
   const char *cps = cps_to_str(ctx->store.cps);
   if (cps) {
     oc_rep_set_text_string(root, cps, cps);
-	OC_DBG("Creating Cloud Response: cps set to %s", cps);
+    OC_DBG("Creating Cloud Response: cps set to %s", cps);
   }
 
   oc_rep_end_root_object();
@@ -164,23 +164,24 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   case OC_CPS_READYTOREGISTER:
   case OC_CPS_FAILED:
   case OC_CPS_DEREGISTERING:
-	  request_invalid_in_state = false;
+    request_invalid_in_state = false;
     break;
   case OC_CPS_REGISTERING:
   case OC_CPS_REGISTERED: {
-	// Update allowed but only for a "cis" of empty string
-	//
-	char* cis;
-	size_t cis_len = 0;
-	oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER, &cis, &cis_len);
-	if (cis_len == 0) {
-		request_invalid_in_state = false;
-	}
+    // Update allowed but only for a "cis" of empty string
+    //
+    char *cis;
+    size_t cis_len = 0;
+    oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER, &cis,
+                      &cis_len);
+    if (cis_len == 0) {
+      request_invalid_in_state = false;
+    }
   }
   }
   if (request_invalid_in_state) {
-	oc_send_response(request, OC_STATUS_BAD_REQUEST);
-	return;
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
 
   char *cps;

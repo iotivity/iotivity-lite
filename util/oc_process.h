@@ -45,8 +45,7 @@
 #include "util/pt/pt.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifndef NULL
@@ -428,7 +427,7 @@ extern struct oc_process *oc_process_current;
 #define OC_PROCESS_CONTEXT_BEGIN(p)                                            \
   {                                                                            \
     struct oc_process *tmp_current = OC_PROCESS_CURRENT();                     \
-  oc_process_current = p
+    oc_process_current = p
 
 /**
  * End a context switch

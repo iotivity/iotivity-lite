@@ -17,11 +17,11 @@
 
 #ifdef OC_SECURITY
 
-#include <stdlib.h>
-#include <stdbool.h>
 #include "oc_audit.h"
 #include "oc_ael.h"
 #include "port/oc_log.h"
+#include <stdbool.h>
+#include <stdlib.h>
 
 void
 oc_audit_log(size_t device, const char *aeid, const char *message,

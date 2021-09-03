@@ -20,8 +20,8 @@
 #define CONFIG_H
 
 /* Time resolution */
-#include <stdint.h>
 #include <TimeLib.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +31,7 @@ extern "C" {
 #define OCF_PORT_UNSECURED (56789)
 #define OCF_PORT_SECURED (42536)
 /** Multicast IP address.*/
-#define OCF_IPv4_MULTICAST      "224.0.1.187"
+#define OCF_IPv4_MULTICAST "224.0.1.187"
 
 typedef uint32_t oc_clock_time_t;
 
@@ -45,12 +45,13 @@ typedef uint32_t oc_clock_time_t;
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
 
-
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_BLOCK_WISE
-#define OC_COLLECTIONS // why? i got this error: api/oc_ri.c:1064:10: error: 'resource_is_collection' undeclared (first use in this function)
-#else /* OC_DYNAMIC_ALLOCATION */
+#define OC_COLLECTIONS // why? i got this error: api/oc_ri.c:1064:10: error:
+                       // 'resource_is_collection' undeclared (first use in this
+                       // function)
+#else                  /* OC_DYNAMIC_ALLOCATION */
 
 #define OC_BYTES_POOL_SIZE (2000)
 #define OC_INTS_POOL_SIZE (100)
@@ -86,7 +87,6 @@ typedef uint32_t oc_clock_time_t;
 
 /* Maximum number of concurrent (D)TLS sessions */
 #define OC_MAX_TLS_PEERS (1)
-
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 

@@ -18,8 +18,7 @@
 #define OC_SVR_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 void oc_sec_create_svr(void);

@@ -33,8 +33,8 @@
 #include "util/oc_memb.h"
 #include <stdlib.h>
 #ifdef OC_OSCORE
-#include <ctype.h>
 #include "oc_oscore_context.h"
+#include <ctype.h>
 #endif /* OC_OSCORE */
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"

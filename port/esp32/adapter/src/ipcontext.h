@@ -20,86 +20,84 @@
 #define IPCONTEXT_H
 
 #include "oc_endpoint.h"
+#include "vfs_pipe.h"
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include "vfs_pipe.h"
 
 #ifdef __cplusplus
-extern "C"
+extern "C" {
+#endif
+
+typedef enum {
+  ADAPTER_STATUS_NONE = 0, /* Nothing happens */
+  ADAPTER_STATUS_ACCEPT,   /* Receiving no meaningful data */
+  ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
+  ADAPTER_STATUS_ERROR     /* Error */
+} adapter_receive_state_t;
+
+#ifdef OC_TCP
+typedef struct tcp_context_t
 {
-#endif
-
-  typedef enum
-  {
-    ADAPTER_STATUS_NONE = 0, /* Nothing happens */
-    ADAPTER_STATUS_ACCEPT,   /* Receiving no meaningful data */
-    ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
-    ADAPTER_STATUS_ERROR     /* Error */
-  } adapter_receive_state_t;
-
-#ifdef OC_TCP
-  typedef struct tcp_context_t
-  {
-    struct sockaddr_storage server;
-    int server_sock;
-    uint16_t port;
+  struct sockaddr_storage server;
+  int server_sock;
+  uint16_t port;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure;
-    int secure_sock;
-    uint16_t tls_port;
+  struct sockaddr_storage secure;
+  int secure_sock;
+  uint16_t tls_port;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    struct sockaddr_storage server4;
-    int server4_sock;
-    uint16_t port4;
+  struct sockaddr_storage server4;
+  int server4_sock;
+  uint16_t port4;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure4;
-    int secure4_sock;
-    uint16_t tls4_port;
+  struct sockaddr_storage secure4;
+  int secure4_sock;
+  uint16_t tls4_port;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-    int connect_pipe[2];
-    pthread_mutex_t mutex;
-  } tcp_context_t;
+  int connect_pipe[2];
+  pthread_mutex_t mutex;
+} tcp_context_t;
 #endif
 
-  typedef struct ip_context_t
-  {
-    struct ip_context_t *next;
-    OC_LIST_STRUCT(eps);
-    struct sockaddr_storage mcast;
-    struct sockaddr_storage server;
-    int mcast_sock;
-    int server_sock;
-    uint16_t port;
+typedef struct ip_context_t
+{
+  struct ip_context_t *next;
+  OC_LIST_STRUCT(eps);
+  struct sockaddr_storage mcast;
+  struct sockaddr_storage server;
+  int mcast_sock;
+  int server_sock;
+  uint16_t port;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure;
-    int secure_sock;
-    uint16_t dtls_port;
+  struct sockaddr_storage secure;
+  int secure_sock;
+  uint16_t dtls_port;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-    struct sockaddr_storage mcast4;
-    struct sockaddr_storage server4;
-    int mcast4_sock;
-    int server4_sock;
-    uint16_t port4;
+  struct sockaddr_storage mcast4;
+  struct sockaddr_storage server4;
+  int mcast4_sock;
+  int server4_sock;
+  uint16_t port4;
 #ifdef OC_SECURITY
-    struct sockaddr_storage secure4;
-    int secure4_sock;
-    uint16_t dtls4_port;
+  struct sockaddr_storage secure4;
+  int secure4_sock;
+  uint16_t dtls4_port;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #ifdef OC_TCP
-    tcp_context_t tcp;
+  tcp_context_t tcp;
 #endif
-    pthread_t event_thread;
-    int terminate;
-    size_t device;
-    fd_set rfds;
-    int shutdown_pipe[2];
-  } ip_context_t;
+  pthread_t event_thread;
+  int terminate;
+  size_t device;
+  fd_set rfds;
+  int shutdown_pipe[2];
+} ip_context_t;
 
 #ifdef __cplusplus
 }

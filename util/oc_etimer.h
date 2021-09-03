@@ -58,8 +58,7 @@
 #include "oc_timer.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
