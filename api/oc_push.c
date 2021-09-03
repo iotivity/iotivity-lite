@@ -63,7 +63,7 @@ OC_PROCESS(oc_push_process, "Push Notification handler");
 
 
 /**
- * @brief callback to be used to set existing `notification selector` with received Resource representation
+ * @brief				callback to be used to set existing `notification selector` with received Resource representation
  *
  * @param resource
  * @param rep			Resource representation structure
@@ -82,60 +82,60 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	while (rep != NULL) {
 		switch (rep->type) {
 		case OC_REP_STRING:
+			/* oic.r.notificationselector:phref */
 			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "phref", 5) == 0)
 			{
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
+			/* oic.r.pushproxy:pushtarget */
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
 				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
+			/* oic.r.pushproxy:pushqif */
 			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
 			{
 				oc_new_string(&ns_instance->pushqif, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
 			break;
 		case OC_REP_STRING_ARRAY:
-			/*
-			 * FIXME4ME 코드 다시 손볼것...
-			 */
+			/* oic.r.notificationselector:prt */
 			if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "prt", 3) == 0)
 			{
-//				oc_new_string_array(&ns_instance->prt, rep->value.array.size);
 				oc_new_string_array(&ns_instance->prt, oc_string_array_get_allocated_size(rep->value.array));
-				oc_array_t *array_item = &rep->value.array;
-				for (int i=0; i < rep->value.array.size; i++)
+
+				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					oc_string_array_add_item(ns_instance->prt, array_item->ptr);
-					array_item = array_item->next;
+					oc_string_array_add_item(ns_instance->prt, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
+			/* oic.r.notificationselector:pif */
 			else if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "pif", 3) == 0)
 			{
-//				oc_new_string_array(&ns_instance->pif, rep->value.array.size);
 				oc_new_string_array(&ns_instance->pif, oc_string_array_get_allocated_size(rep->value.array));
-				oc_array_t *array_item = &rep->value.array;
-				for (int i=0; i < rep->value.array.size; i++)
+
+				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					oc_string_array_add_item(ns_instance->pif, array_item->ptr);
-					array_item = array_item->next;
+					oc_string_array_add_item(ns_instance->pif, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
+			/*  oic.r.pushproxy:sourcert  */
 			else if (oc_string_len(rep->name) == 8 && memcmp(oc_string(rep->name), "sourcert", 8) == 0)
 			{
-//				oc_new_string_array(&ns_instance->sourcert, rep->value.array.size);
 				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
-				oc_array_t *array_item = &rep->value.array;
-				for (int i=0; i < rep->value.array.size; i++) {
-					oc_string_array_add_item(ns_instance->sourcert, array_item->ptr);
-					array_item = array_item->next;
+
+				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+				{
+					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
 				/*
-				 * TODO4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면 bad request 에러를 리턴해야 함 (shall)
+				 * TODO4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면
+				 * bad request 에러를 리턴해야 함 (shall)
 				 */
 			}
 			break;
 		case OC_REP_INT:
+			/* oic.r.pushproxy:state */
 			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
 			{
 				ns_instance->state = rep->value.integer;
@@ -414,7 +414,7 @@ void init_pushconf_resource(size_t device_index)
 
 /**
  *
- * @brief	GET callback for Push Receiver Resource
+ * @brief				GET callback for Push Receiver Resource
  *
  * @param request
  * @param iface_mask
@@ -460,7 +460,10 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 				}
 				break;
 			}
-			recvs_instance = recvs_instance->next;
+			else
+			{
+				recvs_instance = recvs_instance->next;
+			}
 		}
 		oc_rep_close_array(root, receivers);
 		break;
@@ -482,7 +485,7 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
  * @brief		free memory allocated for "receivers[i].rts" array Property
  * @param rcvs	receiver object array
  */
-void _free_recvs_obj_array(struct oc_mmem *rcvs)
+void _free_recvs_obj_array(oc_array_t *rcvs)
 {
 //	int recv_len = sizeof(oc_recv_t);
 //	int arr_len = rcvs->size/recv_len;
@@ -508,6 +511,21 @@ void _free_recvs_obj_array(struct oc_mmem *rcvs)
 
 
 
+int _get_obj_array_len(oc_rep_t *obj_list)
+{
+	int n = 0;
+	oc_rep_t *obj = obj_list;
+
+	while (obj)
+	{
+		n++;
+		obj = obj->next;
+	}
+
+	return n;
+}
+
+
 
 /**
  *
@@ -522,13 +540,14 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	oc_rep_t *rep = request->request_payload;
 
 	/* look up target receivers of target Push Receiver Resource */
-	oc_recvs_t *recvs_instance = oc_list_head(recvs_list);
+	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
 	while (recvs_instance)
 	{
 		if (recvs_instance->resource == request->resource)
 		{
 			/* if there is already configured `receivers` object array, reset it.. */
-			if (recvs_instance->receivers->size)
+//			if (recvs_instance->receivers->size)
+			if (OC_MMEM_PTR(recvs_instance->receivers) != NULL)
 			{
 				_free_recvs_obj_array(recvs_instance->receivers);
 				oc_mmem_free(recvs_instance->receivers, BYTE_POOL);
@@ -558,21 +577,26 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				}
 				else
 				{
-					/*
-					 * TODO4ME print error!
-					 */
+					OC_ERR("oc_memb_alloc() error!");
 					return;
 				}
 			}
 
 			/* (re)allocate memory for `rts` property */
-			int obj_arr_len = oc_list_length(&rep->value.object_array);
+//			int obj_arr_len = oc_list_length(&rep->value.object_array);
+
+
+			int obj_arr_len = _get_obj_array_len(rep->value.object_array);
 			oc_mmem_alloc(recvs_instance->receivers, sizeof(oc_recv_t)*obj_arr_len, BYTE_POOL);
+			if (OC_MMEM_PTR(recvs_instance->receivers) == NULL)
+			{
+				OC_ERR("oc_mmem_alloc() error!");
+				return;
+			}
+
 			oc_recv_t *recv_array = (oc_recv_t *)recvs_instance->receivers;
 			oc_rep_t *rep_obj = rep->value.object_array;
 			oc_rep_t *rep_obj_value;
-
-//			oc_rep_t *obj = rep->value.object_array;
 
 			/* replace `receivers` obj array with new one */
 			for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
@@ -655,7 +679,11 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 		/* create Push Notification Resource per each Device */
 		for (int i=0; i<device_count; i++) {
-			init_push_resources(i);
+			/*
+			 * TODO4ME push 관련 리소스 초기화를 oc_core_add_new_device()에서 수행하도록 바꿀것
+			 */
+			init_pushconf_resource(i);
+			init_pushreceiver_resource(i);
 		}
 
 		OC_PROCESS_YIELD();

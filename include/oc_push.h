@@ -76,7 +76,7 @@ typedef struct oc_recvs
 {
 	struct oc_ns *next;
 	oc_resource_t *resource;
-	struct oc_mmem *receivers;
+	oc_array_t *receivers;
 //	OC_LIST_STRUCT(receivers);
 } oc_recvs_t;
 
