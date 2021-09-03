@@ -22,8 +22,8 @@
  * app_init
  *  initializes the oic/p and oic/d values.
  * register_resources
- *  function that registers all endpoints, e.g. sets the RETRIEVE/UPDATE handlers
- *  for each end point
+ *  function that registers all endpoints, e.g. sets the RETRIEVE/UPDATE
+ * handlers for each end point
  *
  * main
  *  starts the stack, with the registered resources.
@@ -128,9 +128,8 @@
  *    GET to /d2dserverlist
  *    delete a local device (one by one) that is proxied, example:
  *    DELETE to /d2dserverlist?di=e0bdc937-cb27-421c-af98-db809a426861
- *    rescan the network (e.g. update endpoints towards the proxied local devices),
- *    example:
- *      UPDATE to /d2dserverlist?scan=1
+ *    rescan the network (e.g. update endpoints towards the proxied local
+ * devices), example: UPDATE to /d2dserverlist?scan=1
  *
  * TODO:
  * - save the d2dserverlist to disk, read at startup
