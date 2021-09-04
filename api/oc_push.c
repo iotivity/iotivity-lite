@@ -25,6 +25,7 @@
 #include "oc_events.h"
 #include "oc_rep.h"
 #include "oc_endpoint.h"
+#include "oc_ri.h"
 #include "util/oc_process.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
@@ -437,6 +438,29 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 		{
 			if (recvs_instance->resource == request->resource)
 			{
+#if 0
+				oc_recv_t *recvs = (oc_recv_t *)OC_MMEM_PTR(recvs_instance->receivers);
+				int arr_len = recvs_instance->receivers->size/sizeof(oc_recv_t);
+
+				for (int i=0; i<arr_len; i++)
+				{
+					/* == open new receiver object == */
+					oc_rep_object_array_begin_item(receivers);
+					/* receiver:uri */
+					oc_rep_set_text_string(receivers, uri, oc_string(recvs[i].uri));
+
+					/* receiver:rts[] */
+					oc_rep_open_array(receivers, rts);
+					for (char j=0; j < oc_string_array_get_allocated_size(recvs[i].rts); j++)
+					{
+						oc_rep_add_text_string(rts, oc_string_array_get_item(recvs[i].rts, j));
+					}
+					oc_rep_close_array(receivers, rts);
+
+					/* == close object == */
+					oc_rep_object_array_end_item(receivers);
+				}
+#endif
 				oc_recv_t *recvs = (oc_recv_t *)OC_MMEM_PTR(recvs_instance->receivers);
 				int arr_len = recvs_instance->receivers->size/sizeof(oc_recv_t);
 
@@ -526,6 +550,36 @@ int _get_obj_array_len(oc_rep_t *obj_list)
 }
 
 
+/**
+ * @brief					try to find `receiver` object which has `uri` as its `uri` Property
+ *
+ * @param recvs_list
+ * @param uri
+ * @param uri_len
+ * @return
+ * 							NULL: not found,
+ * 							not NULL: found
+ */
+oc_recv_t * _find_recv_by_uri(oc_list_t recvs_list, const char *uri, int uri_len)
+{
+	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recvs_list);
+
+	while (recv)
+	{
+		if (!strncmp(oc_string(recv->uri), uri, uri_len))
+		{
+			break;
+		}
+		else
+		{
+			recv = recv->next;
+		}
+	}
+
+	return recv;
+}
+
+
 
 /**
  *
@@ -537,21 +591,49 @@ int _get_obj_array_len(oc_rep_t *obj_list)
  */
 void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	char *uri_param = NULL;
+	int uri_param_len = -1;
+	oc_recv_t *recv_obj = NULL;
+	oc_recvs_t *recvs_instance = NULL;
 	oc_rep_t *rep = request->request_payload;
 
+	/* try to get "receiveruri" parameter */
+	if (request->query)
+	{
+		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
+	}
+
 	/* look up target receivers of target Push Receiver Resource */
-	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
+	recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
 	while (recvs_instance)
 	{
 		if (recvs_instance->resource == request->resource)
 		{
+			if (uri_param_len != -1)
+			{
+				/* if `receiveruri` param is provided.. just replace it with new one */
+				recv_obj = _find_recv_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
+				if (recv_obj){
+
+				}
+			}
+			else
+			{
+				/* if `receiveruri` param is not provided.. replace existing `receivers` object array with new one.. */
+
+			}
+
+
+#if 0
 			/* if there is already configured `receivers` object array, reset it.. */
-//			if (recvs_instance->receivers->size)
 			if (OC_MMEM_PTR(recvs_instance->receivers) != NULL)
 			{
 				_free_recvs_obj_array(recvs_instance->receivers);
 				oc_mmem_free(recvs_instance->receivers, BYTE_POOL);
 			}
+#endif
+
+
 			break;
 		}
 		else
@@ -577,7 +659,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				}
 				else
 				{
-					OC_ERR("oc_memb_alloc() error!");
+					P_ERR("oc_memb_alloc() error!");
 					return;
 				}
 			}
@@ -590,7 +672,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 			oc_mmem_alloc(recvs_instance->receivers, sizeof(oc_recv_t)*obj_arr_len, BYTE_POOL);
 			if (OC_MMEM_PTR(recvs_instance->receivers) == NULL)
 			{
-				OC_ERR("oc_mmem_alloc() error!");
+				P_ERR("oc_mmem_alloc() error!");
 				return;
 			}
 

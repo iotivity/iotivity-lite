@@ -23,7 +23,19 @@
 #include "oc_config.h"
 #include "oc_helpers.h"
 #include "oc_memb.h"
+#include "port/oc_log.h"
 #include "util/oc_process.h"
+
+
+#ifdef PUSH_DEBUG
+#define P_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
+#define P_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
+#define P_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
+#else
+#define P_DBG(...)
+#define P_WRN(...)
+#define P_ERR(...)
+#endif
 
 
 #ifdef __cplusplus
@@ -63,7 +75,7 @@ typedef struct oc_ns
  */
 typedef struct oc_recv
 {
-//	oc_recv_t *next;
+	oc_recv_t *next;
 	oc_string_t uri;
 	oc_string_array_t rts;
 } oc_recv_t;
@@ -76,7 +88,8 @@ typedef struct oc_recvs
 {
 	struct oc_ns *next;
 	oc_resource_t *resource;
-	oc_array_t *receivers;
+	oc_list_t receivers;
+//	oc_array_t *receivers;
 //	OC_LIST_STRUCT(receivers);
 } oc_recvs_t;
 
