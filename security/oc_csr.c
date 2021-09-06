@@ -22,6 +22,11 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 
+// Send CSR as a separate response if we are a server, since this is
+// better behaved on lossy networks. Send it as usual if we are a client
+// because the client CoAP lib does not have access to separate responses.
+#if defined(OC_SERVER)
+
 static oc_separate_response_t csr_response;
 
 struct csr_callback_params
@@ -82,6 +87,35 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   params->iface_mask = iface_mask;
   oc_set_delayed_callback(params, generate_csr, 1);
 }
+
+#elif defined(OC_CLIENT) // #if defined(OC_SERVER)
+void
+get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
+  (void)data;
+
+  size_t device = request->resource->device;
+
+  unsigned char csr[4096];
+
+  int ret = oc_certs_generate_csr(device, csr, OC_PDU_SIZE);
+  if (ret != 0) {
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    return;
+  }
+
+  oc_rep_start_root_object();
+  if (iface_mask & OC_IF_BASELINE) {
+    oc_process_baseline_interface(
+      oc_core_get_resource_by_index(OCF_SEC_CSR, device));
+  }
+  oc_rep_set_text_string(root, csr, (const char *)csr);
+  oc_rep_set_text_string(root, encoding, "oic.sec.encoding.pem");
+  oc_rep_end_root_object();
+
+  oc_send_response(request, OC_STATUS_OK);
+}
+#endif // #if defined(OC_SERVER)
 
 #else  /* OC_PKI */
 typedef int dummy_declaration;
