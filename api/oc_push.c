@@ -48,6 +48,10 @@ OC_LIST(ns_list);
  */
 OC_MEMB(recvs_instance_memb, oc_recvs_t, 1);
 
+
+OC_MEMB(recv_instance_memb, oc_recv_t, 1);
+
+
 /**
  * @brief	`recvs_list` keeps real data of all Receiver object in Push Receiver Resource
  * 			(it includes all Receiver objects of Resource of all Devices)
@@ -461,21 +465,27 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 					oc_rep_object_array_end_item(receivers);
 				}
 #endif
-				oc_recv_t *recvs = (oc_recv_t *)OC_MMEM_PTR(recvs_instance->receivers);
-				int arr_len = recvs_instance->receivers->size/sizeof(oc_recv_t);
+//				oc_recv_t *recvs = (oc_recv_t *)OC_MMEM_PTR(recvs_instance->receivers);
 
-				for (int i=0; i<arr_len; i++)
+//				int arr_len = recvs_instance->receivers->size/sizeof(oc_recv_t);
+
+//				for (int i=0; i<arr_len; i++)
+				oc_recv_t *recv_obj = (oc_recv_t *)oc_list_head(recvs_instance->receivers);
+				while (recv_obj)
 				{
 					/* == open new receiver object == */
 					oc_rep_object_array_begin_item(receivers);
 					/* receiver:uri */
-					oc_rep_set_text_string(receivers, uri, oc_string(recvs[i].uri));
+//					oc_rep_set_text_string(receivers, uri, oc_string(recvs[i].uri));
+					oc_rep_set_text_string(receivers, uri, oc_string(recv_obj->uri));
 
 					/* receiver:rts[] */
 					oc_rep_open_array(receivers, rts);
-					for (char j=0; j < oc_string_array_get_allocated_size(recvs[i].rts); j++)
+//					for (char j=0; j < oc_string_array_get_allocated_size(recvs[i].rts); j++)
+					for (char j=0; j < oc_string_array_get_allocated_size(recv_obj->rts); j++)
 					{
-						oc_rep_add_text_string(rts, oc_string_array_get_item(recvs[i].rts, j));
+//						oc_rep_add_text_string(rts, oc_string_array_get_item(recvs[i].rts, j));
+						oc_rep_add_text_string(rts, oc_string_array_get_item(recv_obj->rts, j));
 					}
 					oc_rep_close_array(receivers, rts);
 
@@ -553,16 +563,16 @@ int _get_obj_array_len(oc_rep_t *obj_list)
 /**
  * @brief					try to find `receiver` object which has `uri` as its `uri` Property
  *
- * @param recvs_list
+ * @param recv_obj_list
  * @param uri
  * @param uri_len
  * @return
  * 							NULL: not found,
  * 							not NULL: found
  */
-oc_recv_t * _find_recv_by_uri(oc_list_t recvs_list, const char *uri, int uri_len)
+oc_recv_t * _find_recv_by_uri(oc_list_t recv_obj_list, const char *uri, int uri_len)
 {
-	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recvs_list);
+	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recv_obj_list);
 
 	while (recv)
 	{
@@ -581,6 +591,26 @@ oc_recv_t * _find_recv_by_uri(oc_list_t recvs_list, const char *uri, int uri_len
 
 
 
+void _purge_recv_obj_list(oc_list_t recv_obj_list)
+{
+//	oc_list_t list = recv_obj_list;
+	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+
+	while (recv_obj)
+	{
+		oc_free_string(&recv_obj->uri);
+		oc_free_string_array(&recv_obj->rts);
+		oc_memb_free(&recv_instance_memb, recv_obj);
+
+		recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+	}
+
+	return;
+}
+
+
+
+
 /**
  *
  * @brief	POST callback for Push Receiver Resource
@@ -591,16 +621,21 @@ oc_recv_t * _find_recv_by_uri(oc_list_t recvs_list, const char *uri, int uri_len
  */
 void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-	char *uri_param = NULL;
-	int uri_param_len = -1;
-	oc_recv_t *recv_obj = NULL;
-	oc_recvs_t *recvs_instance = NULL;
+	char *uri_param;
+	int uri_param_len;
+	oc_recv_t *recv_obj;
+	oc_recvs_t *recvs_instance;
 	oc_rep_t *rep = request->request_payload;
 
 	/* try to get "receiveruri" parameter */
 	if (request->query)
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
+		p_dbg("received query string: %s\n", request->query);
+	}
+	else
+	{
+		p_dbg("request->query is NULL\n");
 	}
 
 	/* look up target receivers of target Push Receiver Resource */
@@ -609,20 +644,124 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		if (recvs_instance->resource == request->resource)
 		{
+//			if (uri_param_len != -1)
+//			{
+//				/* if `receiveruri` param is provided..
+//				 * just replace existing receiver obj which has it with new one */
+//				recv_obj = _find_recv_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
+//				if (recv_obj){
+//
+//				}
+//			}
+//			else
+//			{
+//				/* if `receiveruri` param is not provided.. replace existing `receivers` object array with new one.. */
+//
+//			}
+
 			if (uri_param_len != -1)
 			{
-				/* if `receiveruri` param is provided.. just replace it with new one */
+				/* if `receiveruri` param is provided..
+				 * just replace existing receiver obj which has it with new one */
 				recv_obj = _find_recv_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
-				if (recv_obj){
+				if (recv_obj)
+				{
+					while (rep)
+					{
+						switch (rep->type)
+						{
+						case OC_REP_STRING:
+							/*
+							 * TODO4ME 2021/9/7 from here...
+							 */
+							break;
+						case OC_REP_STRING_ARRAY:
 
+							break;
+						default:
+							p_err("something wrong, unexpected Property type: %d\n", rep->type);
+							return;
+						}
+						rep = rep->next;
+					}
+				}
+				else
+				{
+#ifdef PUSH_DEBUG
+					oc_string_t uri;
+					oc_new_string(&uri, uri_param, uri_param_len);
+					p_err("can't find receiver object which has uri(%s)\n", oc_string(uri));
+					oc_free_string(&uri);
+#endif
+					return;
 				}
 			}
 			else
 			{
-				/* if `receiveruri` param is not provided.. replace existing `receivers` object array with new one.. */
+				/* if `receiveruri` param is not provided..
+				 * replace whole existing `receivers` object array with new one.. */
+
+				/* remove existing receivers object array */
+				_purge_recv_obj_list(recvs_instance->receivers);
+
+				/* add new receivers object array */
+				while (rep)
+				{
+					switch (rep->type)
+					{
+					case OC_REP_OBJECT_ARRAY:
+						int obj_arr_len = _get_obj_array_len(rep->value.object_array);
+
+						/*
+						 * TODO4ME 2021/9/7 from here
+						 */
+						oc_recv_t *recv_array = (oc_recv_t *)recvs_instance->receivers;
+						oc_rep_t *rep_obj = rep->value.object_array;
+						oc_rep_t *rep_obj_value;
+
+						/* replace `receivers` obj array with new one */
+						for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
+						{
+							rep_obj_value = rep_obj->value.object;
+
+							while (rep_obj_value)
+							{
+								switch (rep_obj_value->type)
+								{
+								case OC_REP_STRING:
+									if (!strcmp("uri", oc_string(rep_obj_value->name)))
+									{
+										oc_new_string(&recv_array[i].uri, oc_string(rep_obj_value->value.string),
+												oc_string_len(rep_obj_value->value.string));
+									}
+									break;
+								case OC_REP_STRING_ARRAY:
+									if (!strcmp("rts", oc_string(rep_obj_value->name)))
+									{
+										oc_new_string_array(&recv_array[i].rts,
+												oc_string_array_get_allocated_size(rep_obj_value->value.array));
+										for (int j=0; j<oc_string_array_get_allocated_size(rep_obj_value->value.array); j++)
+										{
+											oc_string_array_add_item(recv_array[i].rts,
+													oc_string_array_get_item(rep_obj_value->value.array, j));
+										}
+									}
+									break;
+								default:
+									break;
+								}
+								rep_obj_value = rep_obj_value->next;
+							}
+						} /* for */
+						break;
+					default:
+						p_err("something wrong, unexpected Property type: %d\n", rep->type);
+						return;
+					}
+					rep = rep->next;
+				}
 
 			}
-
 
 #if 0
 			/* if there is already configured `receivers` object array, reset it.. */
@@ -642,6 +781,13 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 		}
 	}
 
+
+
+
+
+
+
+
 	while (rep)
 	{
 		switch (rep->type)
@@ -659,7 +805,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				}
 				else
 				{
-					P_ERR("oc_memb_alloc() error!");
+					p_err("oc_memb_alloc() error!");
 					return;
 				}
 			}
@@ -672,7 +818,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 			oc_mmem_alloc(recvs_instance->receivers, sizeof(oc_recv_t)*obj_arr_len, BYTE_POOL);
 			if (OC_MMEM_PTR(recvs_instance->receivers) == NULL)
 			{
-				P_ERR("oc_mmem_alloc() error!");
+				p_err("oc_mmem_alloc() error!");
 				return;
 			}
 
@@ -746,8 +892,28 @@ void init_pushreceiver_resource(size_t device_index)
 	oc_resource_set_request_handler(push_recv, OC_POST, post_pushrecv, NULL);
 
 	oc_add_resource(push_recv);
+
+	/*
+	 * add struct for `receivers` object list for this Resource to the list
+	 */
+	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_memb_alloc(&recvs_instance_memb);
+	if (recvs_instance) {
+		recvs_instance->resource = push_recv;
+		oc_list_init(recvs_instance->receivers);
+		oc_list_add(recvs_list, recvs_instance);
+	}
+	else
+	{
+		p_err("oc_memb_alloc() error!");
+	}
 }
 
+
+void oc_push_list_init()
+{
+	oc_list_init(ns_list);
+	oc_list_init(recvs_list);
+}
 
 
 OC_PROCESS_THREAD(oc_push_process, ev, data)
@@ -776,7 +942,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			/*
 			 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
 			 */
-			/* TODO4ME from here.. 2021/8/30  */
+			/* TODO4ME 2021/8/30 from here.. */
 			/*
 			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
@@ -814,7 +980,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 void oc_resource_state_changed(const char *uri, size_t device_index)
 {
 	if (!oc_process_is_running(&oc_push_process)) {
-		OC_DBG("oc_push_process is not running!\n");
+		p_dbg("oc_push_process is not running!\n");
 		return;
 	}
 

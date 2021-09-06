@@ -26,15 +26,19 @@
 #include "port/oc_log.h"
 #include "util/oc_process.h"
 
+/*
+ * TODO4ME remove later..
+ */
+#define PUSH_DEBUG
 
 #ifdef PUSH_DEBUG
 #define P_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
 #define P_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
 #define P_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
 #else
-#define P_DBG(...)
-#define P_WRN(...)
-#define P_ERR(...)
+#define p_dbg(...)
+#define p_wrn(...)
+#define p_err(...)
 #endif
 
 
@@ -95,6 +99,8 @@ typedef struct oc_recvs
 
 
 OC_PROCESS_NAME(oc_push_process);
+
+void oc_push_list_init();
 
 
 #ifdef __cplusplus
