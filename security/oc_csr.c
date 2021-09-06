@@ -35,10 +35,10 @@ struct csr_callback_params
   oc_interface_mask_t iface_mask;
 };
 
-oc_event_callback_retval_t generate_csr(void *data)
+oc_event_callback_retval_t
+generate_csr(void *data)
 {
-  if (csr_response.active)
-  {
+  if (csr_response.active) {
     struct csr_callback_params *params = data;
     size_t device = params->device;
     unsigned char *csr = malloc(1024);
@@ -82,7 +82,8 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   oc_indicate_separate_response(request, &csr_response);
-  struct csr_callback_params *params = malloc(sizeof(struct csr_callback_params));
+  struct csr_callback_params *params =
+    malloc(sizeof(struct csr_callback_params));
   params->device = request->resource->device;
   params->iface_mask = iface_mask;
   oc_set_delayed_callback(params, generate_csr, 1);
@@ -115,7 +116,7 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_send_response(request, OC_STATUS_OK);
 }
-#endif // #if defined(OC_SERVER)
+#endif                   // #if defined(OC_SERVER)
 
 #else  /* OC_PKI */
 typedef int dummy_declaration;

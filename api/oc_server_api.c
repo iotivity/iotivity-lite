@@ -530,8 +530,8 @@ oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
   coap_separate_t *cur = oc_list_head(handle->requests);
   handle->response_state = oc_blockwise_alloc_response_buffer(
-    oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-    cur->method, OC_BLOCKWISE_SERVER);
+    oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint, cur->method,
+    OC_BLOCKWISE_SERVER);
 #ifdef OC_BLOCK_WISE
   oc_rep_new(handle->response_state->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */

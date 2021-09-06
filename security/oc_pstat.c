@@ -132,7 +132,8 @@ valid_transition(size_t device, oc_dostype_t state)
   return true;
 }
 
-static oc_event_callback_retval_t close_all_tls_sessions(void *data)
+static oc_event_callback_retval_t
+close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
@@ -210,10 +211,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     if (fp->cb != NULL) {
       if (self_reset) {
         oc_close_all_tls_sessions_for_device(device);
-      }
-      else
-      {
-        oc_set_delayed_callback((void*) device, close_all_tls_sessions, 0);
+      } else {
+        oc_set_delayed_callback((void *)device, close_all_tls_sessions, 0);
       }
       memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
       OC_DBG("oc_pstat: invoking the factory presets callback");
