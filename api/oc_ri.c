@@ -220,7 +220,7 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
     /* there is no value */
     *key = start;
     *key_len = (current - start);
-    next_pos = *key_len + 1;
+    //next_pos = *key_len + 1;
   }
 
   return next_pos;
