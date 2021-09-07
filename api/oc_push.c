@@ -477,7 +477,7 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 					oc_rep_object_array_begin_item(receivers);
 					/* receiver:uri */
 //					oc_rep_set_text_string(receivers, uri, oc_string(recvs[i].uri));
-					oc_rep_set_text_string(receivers, uri, oc_string(recv_obj->uri));
+					oc_rep_set_text_string(receivers, uri, oc_string(recv_obj->receiveruri));
 
 					/* receiver:rts[] */
 					oc_rep_open_array(receivers, rts);
@@ -537,7 +537,7 @@ void _free_recvs_obj_array(oc_array_t *rcvs)
 	for (int i=0; i<arr_len; i++)
 	{
 		oc_free_string_array(&rcvs_array[i].rts);
-		oc_free_string(&rcvs_array[i].uri);
+		oc_free_string(&rcvs_array[i].receiveruri);
 	}
 
 	return;
@@ -545,6 +545,12 @@ void _free_recvs_obj_array(oc_array_t *rcvs)
 
 
 
+/**
+ * @brief				get length of payload list (oc_rep_t list)
+ *
+ * @param obj_list	payload list
+ * @return				number of payload list member
+ */
 int _get_obj_array_len(oc_rep_t *obj_list)
 {
 	int n = 0;
@@ -570,13 +576,13 @@ int _get_obj_array_len(oc_rep_t *obj_list)
  * 							NULL: not found,
  * 							not NULL: found
  */
-oc_recv_t * _find_recv_by_uri(oc_list_t recv_obj_list, const char *uri, int uri_len)
+oc_recv_t * _find_recv_obj_by_uri(oc_list_t recv_obj_list, const char *uri, int uri_len)
 {
 	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recv_obj_list);
 
 	while (recv)
 	{
-		if (!strncmp(oc_string(recv->uri), uri, uri_len))
+		if (!strncmp(oc_string(recv->receiveruri), uri, uri_len))
 		{
 			break;
 		}
@@ -598,7 +604,7 @@ void _purge_recv_obj_list(oc_list_t recv_obj_list)
 
 	while (recv_obj)
 	{
-		oc_free_string(&recv_obj->uri);
+		oc_free_string(&recv_obj->receiveruri);
 		oc_free_string_array(&recv_obj->rts);
 		oc_memb_free(&recv_instance_memb, recv_obj);
 
@@ -608,6 +614,183 @@ void _purge_recv_obj_list(oc_list_t recv_obj_list)
 	return;
 }
 
+
+
+
+
+
+
+/**
+ * @brief				update existing receiver object with new payload
+ *
+ * @param recv_obj	existing receiver object
+ * @param rep			new payload with new receiver object
+ */
+void _update_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
+{
+	while (rep)
+	{
+		switch (rep->type)
+		{
+		case OC_REP_STRING:
+			if (!strcmp(oc_string(rep->name), "receiveruri"))
+			{
+				oc_free_string(&recv_obj->receiveruri);
+				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
+									oc_string_len(rep->value.string));
+			}
+			break;
+		case OC_REP_STRING_ARRAY:
+			if (!strcmp(oc_string(rep->name), "rts"))
+			{
+				oc_free_string_array(&recv_obj->rts);
+				int len = oc_string_array_get_allocated_size(rep->value.array);
+				oc_new_string_array(&recv_obj->rts, len);
+
+				for (int i=0; i < len; i++)
+				{
+					oc_string_array_add_item(recv_obj->rts, oc_string_array_get_item(rep->value.array, i));
+				}
+			}
+			break;
+		default:
+			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			return;
+		}
+		rep = rep->next;
+	}
+
+	return;
+}
+
+
+
+
+void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
+{
+	while (rep)
+	{
+		switch (rep->type)
+		{
+		case OC_REP_STRING:
+			if (!strcmp(oc_string(rep->name), "receiveruri"))
+			{
+//				oc_free_string(&recv_obj->receiveruri);
+				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
+									oc_string_len(rep->value.string));
+			}
+			break;
+		case OC_REP_STRING_ARRAY:
+			if (!strcmp(oc_string(rep->name), "rts"))
+			{
+//				oc_free_string_array(&recv_obj->rts);
+				int len = oc_string_array_get_allocated_size(rep->value.array);
+				oc_new_string_array(&recv_obj->rts, len);
+
+				for (int i=0; i < len; i++)
+				{
+					oc_string_array_add_item(recv_obj->rts, oc_string_array_get_item(rep->value.array, i));
+				}
+			}
+			break;
+		default:
+			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			return;
+		}
+		rep = rep->next;
+	}
+
+	return;
+}
+
+
+
+
+/**
+ * @brief					create new receiver object
+ *
+ * @param recv_obj_list	receiver object list
+ * @param rep				new payload with new receiver object list
+ */
+void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_rep_t *rep)
+{
+	int obj_arr_len;
+	oc_rep_t *rep_obj;
+	oc_rep_t *rep_obj_value;
+	oc_recv_t *recv_obj_instance;
+
+	/* remove existing receivers object array */
+	_purge_recv_obj_list(recv_obj_list);
+
+	/* add new receivers object array */
+	while (rep)
+	{
+		switch (rep->type)
+		{
+		case OC_REP_OBJECT_ARRAY:
+			obj_arr_len = _get_obj_array_len(rep->value.object_array);
+
+//			oc_recv_t *recv_array = (oc_recv_t *)recvs_instance->receivers;
+			rep_obj = rep->value.object_array;
+
+			/* replace `receivers` obj array with new one */
+			for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
+			{
+				recv_obj_instance = (oc_recv_t *)oc_memb_alloc(&recv_instance_memb);
+				if (recv_obj_instance)
+				{
+//					rep_obj_value = rep_obj->value.object;
+					_create_recv_obj(recv_obj_instance, rep_obj->value.object);
+
+#if 0
+					while (rep_obj_value)
+					{
+						switch (rep_obj_value->type)
+						{
+						case OC_REP_STRING:
+							if (!strcmp("receiveruri", oc_string(rep_obj_value->name)))
+							{
+								oc_new_string(&recv_obj_instance->receiveruri,
+										oc_string(rep_obj_value->value.string),
+										oc_string_len(rep_obj_value->value.string));
+							}
+							break;
+						case OC_REP_STRING_ARRAY:
+							if (!strcmp("rts", oc_string(rep_obj_value->name)))
+							{
+								oc_new_string_array(&recv_obj_instance->rts,
+										oc_string_array_get_allocated_size(rep_obj_value->value.array));
+								for (int j = 0; j < oc_string_array_get_allocated_size(rep_obj_value->value.array); j++)
+								{
+									oc_string_array_add_item(recv_obj_instance->rts,
+											oc_string_array_get_item(rep_obj_value->value.array, j));
+								}
+							}
+							break;
+						default:
+							p_err("something wrong, unexpected Property type: %d\n", rep_obj_value->type);
+							break;
+						}
+						rep_obj_value = rep_obj_value->next;
+					} /* while (rep_obj_value) */
+#endif
+				}
+				else
+				{
+					p_err("oc_memb_alloc() error!\n");
+					break;
+				}
+			} /* for */
+			break;
+		default:
+			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			return;
+		}
+		rep = rep->next;
+	} /* while */
+
+	return;
+}
 
 
 
@@ -644,46 +827,16 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		if (recvs_instance->resource == request->resource)
 		{
-//			if (uri_param_len != -1)
-//			{
-//				/* if `receiveruri` param is provided..
-//				 * just replace existing receiver obj which has it with new one */
-//				recv_obj = _find_recv_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
-//				if (recv_obj){
-//
-//				}
-//			}
-//			else
-//			{
-//				/* if `receiveruri` param is not provided.. replace existing `receivers` object array with new one.. */
-//
-//			}
+			p_dbg("receivers obj array instance for target resource (%s) is found!\n", oc_sting(request->resource->uri));
 
 			if (uri_param_len != -1)
 			{
 				/* if `receiveruri` param is provided..
 				 * just replace existing receiver obj which has it with new one */
-				recv_obj = _find_recv_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
+				recv_obj = _find_recv_obj_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
 				if (recv_obj)
 				{
-					while (rep)
-					{
-						switch (rep->type)
-						{
-						case OC_REP_STRING:
-							/*
-							 * TODO4ME 2021/9/7 from here...
-							 */
-							break;
-						case OC_REP_STRING_ARRAY:
-
-							break;
-						default:
-							p_err("something wrong, unexpected Property type: %d\n", rep->type);
-							return;
-						}
-						rep = rep->next;
-					}
+					_update_recv_obj(recv_obj, rep);
 				}
 				else
 				{
@@ -700,79 +853,9 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 			{
 				/* if `receiveruri` param is not provided..
 				 * replace whole existing `receivers` object array with new one.. */
-
-				/* remove existing receivers object array */
-				_purge_recv_obj_list(recvs_instance->receivers);
-
-				/* add new receivers object array */
-				while (rep)
-				{
-					switch (rep->type)
-					{
-					case OC_REP_OBJECT_ARRAY:
-						int obj_arr_len = _get_obj_array_len(rep->value.object_array);
-
-						/*
-						 * TODO4ME 2021/9/7 from here
-						 */
-						oc_recv_t *recv_array = (oc_recv_t *)recvs_instance->receivers;
-						oc_rep_t *rep_obj = rep->value.object_array;
-						oc_rep_t *rep_obj_value;
-
-						/* replace `receivers` obj array with new one */
-						for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
-						{
-							rep_obj_value = rep_obj->value.object;
-
-							while (rep_obj_value)
-							{
-								switch (rep_obj_value->type)
-								{
-								case OC_REP_STRING:
-									if (!strcmp("uri", oc_string(rep_obj_value->name)))
-									{
-										oc_new_string(&recv_array[i].uri, oc_string(rep_obj_value->value.string),
-												oc_string_len(rep_obj_value->value.string));
-									}
-									break;
-								case OC_REP_STRING_ARRAY:
-									if (!strcmp("rts", oc_string(rep_obj_value->name)))
-									{
-										oc_new_string_array(&recv_array[i].rts,
-												oc_string_array_get_allocated_size(rep_obj_value->value.array));
-										for (int j=0; j<oc_string_array_get_allocated_size(rep_obj_value->value.array); j++)
-										{
-											oc_string_array_add_item(recv_array[i].rts,
-													oc_string_array_get_item(rep_obj_value->value.array, j));
-										}
-									}
-									break;
-								default:
-									break;
-								}
-								rep_obj_value = rep_obj_value->next;
-							}
-						} /* for */
-						break;
-					default:
-						p_err("something wrong, unexpected Property type: %d\n", rep->type);
-						return;
-					}
-					rep = rep->next;
-				}
+				_replace_recv_obj_array(recvs_instance->receivers, rep);
 
 			}
-
-#if 0
-			/* if there is already configured `receivers` object array, reset it.. */
-			if (OC_MMEM_PTR(recvs_instance->receivers) != NULL)
-			{
-				_free_recvs_obj_array(recvs_instance->receivers);
-				oc_mmem_free(recvs_instance->receivers, BYTE_POOL);
-			}
-#endif
-
-
 			break;
 		}
 		else
@@ -781,13 +864,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 		}
 	}
 
-
-
-
-
-
-
-
+#if 0
 	while (rep)
 	{
 		switch (rep->type)
@@ -838,7 +915,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 					case OC_REP_STRING:
 						if (!strcmp("uri", oc_string(rep_obj_value->name)))
 						{
-							oc_new_string(&recv_array[i].uri, oc_string(rep_obj_value->value.string),
+							oc_new_string(&recv_array[i].receiveruri, oc_string(rep_obj_value->value.string),
 												oc_string_len(rep_obj_value->value.string));
 						}
 						break;
@@ -866,6 +943,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 		}
 		rep = rep->next;
 	} /* while (rep) */
+#endif
 
 	return;
 }
@@ -904,7 +982,7 @@ void init_pushreceiver_resource(size_t device_index)
 	}
 	else
 	{
-		p_err("oc_memb_alloc() error!");
+		p_err("oc_memb_alloc() error!\n");
 	}
 }
 

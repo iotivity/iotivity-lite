@@ -23,11 +23,12 @@
 #include "oc_config.h"
 #include "oc_helpers.h"
 #include "oc_memb.h"
+#include "oc_rep.h"
 #include "port/oc_log.h"
 #include "util/oc_process.h"
 
 /*
- * TODO4ME remove later..
+ * TODO4ME remove later...
  */
 #define PUSH_DEBUG
 
@@ -75,13 +76,16 @@ typedef struct oc_ns
 
 
 /*
- * structure for member of "oic.r.pushreceiver:receivers" array
+ * structure for member of "oic.r.pushreceiver:receivers" object array
  */
 typedef struct oc_recv
 {
-	oc_recv_t *next;
-	oc_string_t uri;
+	struct oc_recv *next;
+	oc_string_t receiveruri;
 	oc_string_array_t rts;
+	/*
+	 * TODO4ME endpoint Property를 추가할 것, 실제 request 보낼때 필요함
+	 */
 } oc_recv_t;
 
 
@@ -90,12 +94,27 @@ typedef struct oc_recv
  */
 typedef struct oc_recvs
 {
-	struct oc_ns *next;
+	struct oc_recvs *next;
 	oc_resource_t *resource;
 	oc_list_t receivers;
 //	oc_array_t *receivers;
 //	OC_LIST_STRUCT(receivers);
 } oc_recvs_t;
+
+
+
+/*
+ * object used to store Resource pushed to "oic.r.pshreceiver:receivers[i].receiveruri"
+ */
+typedef struct oc_pshd_rsc
+{
+	struct oc_pshd_rsc *next;
+	oc_resource_t *resource;
+	oc_rep_t **property_list;
+	/*
+	 * TODO4ME 2021/9/7 from here...
+	 */
+} oc_pshd_rsc_t;
 
 
 OC_PROCESS_NAME(oc_push_process);
