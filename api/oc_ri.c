@@ -182,8 +182,12 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
   size_t i = 0;
   char *start = (char *)query, *current, *current2,
        *end = (char *)query + query_len;
-  current = start;
 
+  if (start == NULL) {
+    return next_pos;
+  }
+
+  current = start;
   while (i < (n - 1) && current != NULL) {
     current = memchr(start, '&', end - start);
     if (current == NULL) {
@@ -220,7 +224,7 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
     /* there is no value */
     *key = start;
     *key_len = (current - start);
-    //next_pos = *key_len + 1;
+    next_pos = *key_len + 1;
   }
 
   return next_pos;
