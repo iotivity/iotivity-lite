@@ -29,6 +29,7 @@ int quit = 0;
 static bool state = false;
 int power;
 oc_string_t name;
+bool g_binaryswitch_value = false;
 
 static int
 app_init(void)
@@ -40,6 +41,80 @@ app_init(void)
   return ret;
 }
 
+static void
+get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
+                 void *user_data)
+{
+  (void)user_data; /* not used */
+  PRINT("get_binaryswitch: interface %d\n", interfaces);
+  oc_rep_start_root_object();
+  switch (interfaces) {
+  case OC_IF_BASELINE:
+    PRINT("   Adding Baseline info\n");
+    oc_process_baseline_interface(request->resource);
+    /* fall through */
+  case OC_IF_A:
+    /* property "value" */
+    oc_rep_set_boolean(root, value, g_binaryswitch_value);
+    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    break;
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+static void
+post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
+                  void *user_data)
+{
+  (void)interfaces;
+  (void)user_data;
+  bool error_state = false;
+  PRINT("post_binaryswitch:\n");
+  oc_rep_t *rep = request->request_payload;
+  /* loop over the request document to check if all inputs are ok */
+  while (rep != NULL) {
+    PRINT("key: (check) %s \n", oc_string(rep->name));
+    if (memcmp(oc_string(rep->name), "value", 5) == 0) {
+      /* property "value" of type boolean exist in payload */
+      if (rep->type != OC_REP_BOOL) {
+        error_state = true;
+        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+      }
+    }
+
+    rep = rep->next;
+  }
+  /* if the input is ok, then process the input document and assign the global
+   * variables */
+  if (error_state == false) {
+    /* loop over all the properties in the input document */
+    oc_rep_t *rep = request->request_payload;
+    while (rep != NULL) {
+      PRINT("key: (assign) %s \n", oc_string(rep->name));
+      /* no error: assign the variables */
+      if (memcmp(oc_string(rep->name), "value", 5) == 0) {
+        /* assign "value" */
+        g_binaryswitch_value = rep->value.boolean;
+      }
+      rep = rep->next;
+    }
+    /* set the response */
+    PRINT("Set response \n");
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, value, g_binaryswitch_value);
+    oc_rep_end_root_object();
+
+    oc_send_response(request, OC_STATUS_CHANGED);
+  } else {
+    /* TODO: add error response, if any */
+    // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+    oc_send_diagnostic_message(request, "Test Diagnostic Response", 24,
+                               OC_STATUS_BAD_REQUEST);
+  }
+}
 static void
 get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
           void *user_data)
@@ -122,6 +197,18 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_PUT, put_light, NULL);
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
+
+  oc_resource_t *res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_discoverable(res_binaryswitch, true);
+  oc_resource_set_periodic_observable(res_binaryswitch, 1);
+  oc_resource_set_request_handler(res_binaryswitch, OC_GET, get_binaryswitch,
+                                  NULL);
+  oc_resource_set_request_handler(res_binaryswitch, OC_POST, post_binaryswitch,
+                                  NULL);
+  oc_add_resource(res_binaryswitch);
 }
 
 static void
