@@ -106,15 +106,12 @@ typedef struct oc_recvs
 /*
  * object used to store Resource pushed to "oic.r.pshreceiver:receivers[i].receiveruri"
  */
-typedef struct oc_pshd_rsc
+typedef struct oc_pushd_rsc
 {
-	struct oc_pshd_rsc *next;
+	struct oc_pushd_rsc *next;
 	oc_resource_t *resource;
-	oc_rep_t **property_list;
-	/*
-	 * TODO4ME 2021/9/7 from here...
-	 */
-} oc_pshd_rsc_t;
+	oc_rep_t *rep;
+} oc_pushd_rsc_t;
 
 
 OC_PROCESS_NAME(oc_push_process);

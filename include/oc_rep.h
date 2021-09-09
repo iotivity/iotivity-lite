@@ -971,6 +971,12 @@ int oc_parse_rep(const uint8_t *payload, int payload_size,
 
 void oc_free_rep(oc_rep_t *rep);
 
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+oc_rep_t *oc_alloc_rep();
+#endif
+
+
 /**
  * Read an integer from an `oc_rep_t`
  *

@@ -74,6 +74,7 @@ oc_rep_get_encoded_payload_size(void)
   return (int)size;
 }
 
+
 static oc_rep_t *
 _alloc_rep(void)
 {
@@ -86,6 +87,15 @@ _alloc_rep(void)
 #endif
   return rep;
 }
+
+
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+oc_rep_t *oc_alloc_rep()
+{
+	return _alloc_rep();
+}
+#endif
+
 
 static void
 _free_rep(oc_rep_t *rep_value)
