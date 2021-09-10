@@ -33,9 +33,9 @@
 #define PUSH_DEBUG
 
 #ifdef PUSH_DEBUG
-#define P_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
-#define P_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
-#define P_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
+#define p_dbg(...) OC_LOG("DEBUG", __VA_ARGS__)
+#define p_wrn(...) OC_LOG("WARNING", __VA_ARGS__)
+#define p_err(...) OC_LOG("ERROR", __VA_ARGS__)
 #else
 #define p_dbg(...)
 #define p_wrn(...)
@@ -106,12 +106,12 @@ typedef struct oc_recvs
 /*
  * object used to store Resource pushed to "oic.r.pshreceiver:receivers[i].receiveruri"
  */
-typedef struct oc_pushd_rsc
+typedef struct oc_pushd_rsc_rep
 {
 	struct oc_pushd_rsc *next;
 	oc_resource_t *resource;
 	oc_rep_t *rep;
-} oc_pushd_rsc_t;
+} oc_pushd_rsc_rep_t;
 
 
 OC_PROCESS_NAME(oc_push_process);

@@ -46,17 +46,16 @@ OC_LIST(ns_list);
 
 
 
-
 /**
  * @brief	memory block definition for storing new Receiver object array of Push Receiver Resource
  */
 OC_MEMB(recvs_instance_memb, oc_recvs_t, 1);
 
-
 /**
  * @brief	memory block definition for storing new Receiver object of Receiver object array
  */
 OC_MEMB(recv_instance_memb, oc_recv_t, 1);
+
 
 
 /**
@@ -69,15 +68,22 @@ OC_LIST(recvs_list);
 
 
 
+/**
+ * @brief	memory block definition for storing properties representation of pushed resource
+ */
+OC_MEMB(rep_instance_memb, oc_rep_t, 1);
 
-OC_MEMB(rep_obj_instance_memb, oc_rep_t, 1);
+/**
+ * @brief	memory block definition for storing pushed resource representation list
+ */
+OC_MEMB(pushd_rsc_rep_instance_memb, oc_pushd_rsc_rep_t, 1);
+
+
 
 /**
  * @brief	`pushed_rsc_list` keeps Resource representation of Pushed Resources
  */
-OC_LIST(pushd_rsc_list);
-
-
+OC_LIST(pushd_rsc_rep_list);
 
 
 
@@ -155,8 +161,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
 				/*
-				 * TODO4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면
-				 * bad request 에러를 리턴해야 함 (shall)
+				 * TODO4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
 				 */
 			}
 			break;
@@ -438,6 +443,28 @@ void init_pushconf_resource(size_t device_index)
 
 
 
+
+void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+
+}
+
+
+
+
+void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+	oc_rep_set_pool(&rep_instance_memb);
+
+	/*
+	 * TODO4ME _create_pushd_rsc_rep(new_rep, org_rep) 이용...
+	 */
+
+}
+
+
+
+
 /**
  *
  * @brief				GET callback for Push Receiver Resource
@@ -591,18 +618,20 @@ int _get_obj_array_len(oc_rep_t *obj_list)
 
 
 /**
- * @brief					try to find `receiver` object which has `uri` as its `uri` Property
+ * @brief						try to find `receiver` object which has `uri` as its `uri` Property
  *
- * @param recv_obj_list
+ * @param recvs_instance
  * @param uri
  * @param uri_len
  * @return
- * 							NULL: not found,
- * 							not NULL: found
+ * 		NULL: not found,
+ * 		not NULL: found
  */
-oc_recv_t * _find_recv_obj_by_uri(oc_list_t recv_obj_list, const char *uri, int uri_len)
+//oc_recv_t * _find_recv_obj_by_uri(oc_list_t recv_obj_list, const char *uri, int uri_len)
+oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len)
 {
-	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recv_obj_list);
+//	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recv_obj_list);
+	oc_recv_t *recv = (oc_recv_t *)oc_list_head(recvs_instance->receivers);
 
 	while (recv)
 	{
@@ -622,61 +651,74 @@ oc_recv_t * _find_recv_obj_by_uri(oc_list_t recv_obj_list, const char *uri, int 
 
 
 
-
-oc_pushd_rsc_t * _find_pushd_rsc_by_uri(const char *uri, size_t device_index)
+/**
+ * @brief
+ *
+ * @param uri
+ * @param device_index
+ * @return
+ */
+oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t uri, size_t device_index)
 {
-	oc_pushd_rsc_t *pushd_rsc = (oc_pushd_rsc_t *)oc_list_head(pushd_rsc_list);
+	oc_pushd_rsc_rep_t *pushd_rsc_rep = (oc_pushd_rsc_rep_t *)oc_list_head(pushd_rsc_rep_list);
 
-	while (pushd_rsc)
+	while (pushd_rsc_rep)
 	{
-		if (!strcmp(oc_string(pushd_rsc->resource->uri), uri)
-				&& (pushd_rsc->resource->device == device_index))
+		if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(uri))
+				&& (pushd_rsc_rep->resource->device == device_index))
 		{
 			break;
 		}
 		else
 		{
-			pushd_rsc = pushd_rsc->next;
+			pushd_rsc_rep = pushd_rsc_rep->next;
 		}
 	}
 
-	return pushd_rsc;
+	return pushd_rsc_rep;
 }
 
 
 
 
-
+/**
+ * @brief					purge app resource and resource representation container
+ * 							accessed through `uri` in device whose index is `device_index`
+ *
+ * @param uri				URI to app resource to be purged
+ * @param device_index	index of device where the target resource resides
+ */
 void _purge_pushd_rsc(oc_string_t uri, size_t device_index)
 {
-	oc_pushd_rsc_t *pushd_rsc = _find_pushd_rsc_by_uri(uri, device_index);
+	oc_resource_t *pushd_rsc = oc_ri_get_app_resource_by_uri(oc_string(uri), oc_string_len(uri), device_index);
+	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(uri, device_index);
 
-	oc_rep_set_pool(&rep_obj_instance_memb);
-
-	/*
-	 * step 1. purge `rep`
-	 */
-	if (!pushd_rsc)
+	if (pushd_rsc_rep)
 	{
-		return;
+		/* step 1. purge `rep` */
+		oc_rep_set_pool(&rep_instance_memb);
+		oc_free_rep(pushd_rsc_rep->rep);
+
+		/* step 2. remove pushed resource representation from `pushed_rsc_rep_list` */
+		oc_list_remove(pushd_rsc_rep_list, pushd_rsc_rep);
+		oc_memb_free(&pushd_rsc_rep_instance_memb, pushd_rsc_rep);
 	}
 	else
 	{
-		oc_free_rep(pushd_rsc->rep);
-
+		p_err("can't find resource representation for pushed resource (%s)...\n", oc_string(uri));
+		return;
 	}
 
-
-
-
-	/*
-	 * step 2. remove pushed resource from `pushed_rsc_list`
-	 */
-
-	/*
-	 * step 3. remove pushed Resource from `app_resources`
-	 */
-	oc_delete_resource();
+	if (pushd_rsc)
+	{
+		/* step 3. remove pushed Resource from `app_resources` */
+		oc_delete_resource(pushd_rsc);
+	}
+	else
+	{
+		p_err("can't find pushed resource (%s)...\n", oc_string(uri));
+		return;
+	}
 
 	return;
 }
@@ -755,8 +797,9 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 
 /**
+ * @brief				create app resource and `oc_pushd_rsc_t` corresponding to pushed resource
  *
- * @param recv_obj	receiver object that points created resource
+ * @param recv_obj	receiver object that points pushed resource
  * @param resource	Push Receiver resource
  */
 void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
@@ -769,25 +812,27 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 //	oc_resource_set_default_interface(push_recv, OC_IF_RW);
 	oc_resource_set_discoverable(pushd_rsc, true);
 
-	oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushrecv, NULL);
-//	oc_resource_set_request_handler(push_recv, OC_POST, post_pushrecv, NULL);
+	/*
+	 * TODO4ME 2021/9/11 resume here...
+	 */
+	oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushd_rsc, NULL);
+	oc_resource_set_request_handler(pushd_rsc, OC_POST, post_pushd_rsc, NULL);
 //	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
 
-	oc_add_resource(push_recv);
+	oc_add_resource(pushd_rsc);
 
 
-	/*
-	 * TODO4ME 2021/9/10 from here...
-	 */
-
-	oc_rep_set_pool(&rep_obj_instance_memb);
-
-
-
-
-
-
-
+	/* create resource representation container for this resource */
+	oc_pushd_rsc_rep_t *pushd_rsc_rep_instance = (oc_pushd_rsc_rep_t *)oc_memb_alloc(&pushd_rsc_rep_instance_memb);
+	if (pushd_rsc_rep_instance) {
+		pushd_rsc_rep_instance->resource = pushd_rsc;
+		pushd_rsc_rep_instance->rep = NULL;
+		oc_list_add(pushd_rsc_rep_list, pushd_rsc_rep_instance);
+	}
+	else
+	{
+		p_err("oc_memb_alloc() error!\n");
+	}
 }
 
 
@@ -800,23 +845,27 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
  * @param recv_obj_list		receiver object array
  * @param device_index		index of device where the Push Resource resides
  */
-void _purge_recv_obj_list(oc_list_t recv_obj_list, size_t device_index)
+//void _purge_recv_obj_list(oc_list_t recv_obj_list, size_t device_index)
+void _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 {
 	/*
 	 * TODO4ME oc_free_rep()를 참고해서 다시 작성해 볼것
 	 */
-	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+//	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recvs_instance->receivers);
 
 	while (recv_obj)
 	{
 		/* delete app resource pointed by `receiveruri` first.. */
-		_purge_pushd_rsc(recv_obj->receiveruri, device_index);
+//		_purge_pushd_rsc(recv_obj->receiveruri, device_index);
+		_purge_pushd_rsc(recv_obj->receiveruri, recvs_instance->resource->device);
 
 		oc_free_string(&recv_obj->receiveruri);
 		oc_free_string_array(&recv_obj->rts);
 		oc_memb_free(&recv_instance_memb, recv_obj);
 
-		recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+//		recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
+		recv_obj = (oc_recv_t *)oc_list_pop(recvs_instance->receivers);
 	}
 
 	return;
@@ -835,7 +884,8 @@ void _purge_recv_obj_list(oc_list_t recv_obj_list, size_t device_index)
  * @param resource	app resource pointed by `recv_obj:receiveruri`
  * @param rep			payload representation of new receiver object
  */
-void _update_recv_obj(oc_recv_t *recv_obj, oc_resource_t *resource, oc_rep_t *rep)
+//void _update_recv_obj(oc_recv_t *recv_obj, oc_resource_t *resource, oc_rep_t *rep)
+void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
 	while (rep)
 	{
@@ -848,8 +898,10 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_resource_t *resource, oc_rep_t *re
 				 * update URI of Resource pointed by previous `receiveruri` */
 				if (strcmp(oc_string(recv_obj->receiveruri), oc_string(rep->value.string)))
 				{
-					oc_free_string(&resource->uri);
-					oc_store_uri(oc_string(rep->value.string), &resource->uri);
+//					oc_free_string(&resource->uri);
+					oc_free_string(&recvs_instance->resource->uri);
+//					oc_store_uri(oc_string(rep->value.string), &resource->uri);
+					oc_store_uri(oc_string(rep->value.string), &recvs_instance->resource->uri);
 				}
 
 				oc_free_string(&recv_obj->receiveruri);
@@ -888,8 +940,16 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_resource_t *resource, oc_rep_t *re
  * @param recv_obj	pointer for new receiver object
  * @param rep			received new receiver object object
  */
-void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
+//void _create_recv_obj(oc_list_t recv_obj_list, oc_rep_t *rep)
+void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
+	oc_recv_t *recv_obj = (oc_recv_t *)oc_memb_alloc(&recv_instance_memb);
+	if (!recv_obj)
+	{
+		p_err("oc_memb_alloc() error!\n");
+		return;
+	}
+
 	while (rep)
 	{
 		switch (rep->type)
@@ -897,7 +957,6 @@ void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
 		case OC_REP_STRING:
 			if (!strcmp(oc_string(rep->name), "receiveruri"))
 			{
-//				oc_free_string(&recv_obj->receiveruri);
 				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
 									oc_string_len(rep->value.string));
 			}
@@ -905,7 +964,6 @@ void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
 		case OC_REP_STRING_ARRAY:
 			if (!strcmp(oc_string(rep->name), "rts"))
 			{
-//				oc_free_string_array(&recv_obj->rts);
 				int len = oc_string_array_get_allocated_size(rep->value.array);
 				oc_new_string_array(&recv_obj->rts, len);
 
@@ -922,6 +980,13 @@ void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
 		rep = rep->next;
 	}
 
+//	oc_list_add(recv_obj_list, recv_obj);
+	oc_list_add(recvs_instance->receivers, recv_obj);
+
+	/* create app resource corresponding to receiver object */
+//	_create_pushd_rsc(recv_obj, recv_obj_list);
+	_create_pushd_rsc(recv_obj, recvs_instance->resource);
+
 	return;
 }
 
@@ -935,7 +1000,8 @@ void _create_recv_obj(oc_recv_t *recv_obj, oc_rep_t *rep)
  * @param resource		Push Receiver resource
  * @param rep				payload representation of new receiver object array
  */
-void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_resource_t *resource, oc_rep_t *rep)
+//void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_resource_t *resource, oc_rep_t *rep)
+void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
 	int obj_arr_len;
 	oc_rep_t *rep_obj;
@@ -943,7 +1009,8 @@ void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_resource_t *resource, o
 	oc_recv_t *recv_obj_instance;
 
 	/* remove existing receivers object array */
-	_purge_recv_obj_list(recv_obj_list, resource->device);
+//	_purge_recv_obj_list(recv_obj_list, resource->device);
+	_purge_recv_obj_list(recvs_instance);
 
 	/* add new receivers object array */
 	while (rep)
@@ -957,17 +1024,8 @@ void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_resource_t *resource, o
 			/* replace `receivers` obj array with new one */
 			for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
 			{
-				recv_obj_instance = (oc_recv_t *)oc_memb_alloc(&recv_instance_memb);
-				if (recv_obj_instance)
-				{
-					_create_recv_obj(recv_obj_instance, rep_obj->value.object);
-					oc_list_add(recv_obj_list, recv_obj_instance);
-				}
-				else
-				{
-					p_err("oc_memb_alloc() error!\n");
-//					break;
-				}
+//				_create_recv_obj(recv_obj_list, rep_obj->value.object);
+				_create_recv_obj(recvs_instance, rep_obj->value.object);
 			} /* for */
 			break;
 		default:
@@ -1020,12 +1078,14 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 			if (uri_param_len != -1)
 			{
-				recv_obj = _find_recv_obj_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
+//				recv_obj = _find_recv_obj_by_uri(recvs_instance->receivers, uri_param, uri_param_len);
+				recv_obj = _find_recv_obj_by_uri(recvs_instance, uri_param, uri_param_len);
 				if (recv_obj)
 				{
 					/* if the given `receiveruri` parameter is in existing receivers array,
 					 * just update existing receiver object */
-					_update_recv_obj(recv_obj, recvs_instance->resource, rep);
+//					_update_recv_obj(recv_obj, recvs_instance->resource, rep);
+					_update_recv_obj(recv_obj, recvs_instance, rep);
 				}
 				else
 				{
@@ -1037,20 +1097,13 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 					p_err("can't find receiver object which has uri(%s)\n creating new receiver obj...", oc_string(uri));
 					oc_free_string(&uri);
 #endif
-					recv_obj  = (oc_recv_t *)oc_memb_alloc(&recv_instance_memb);
-					if (recv_obj)
-					{
-						_create_recv_obj(recv_obj, rep);
-						/*
-						 * TODO4ME 2021/9/10 from here...
-						 */
-						_create_pushd_rsc(recv_obj, recvs_instance->resource);
-					}
-					else
-					{
-						p_err("oc_memb_alloc() error!\n");
-					}
-					oc_list_add(recvs_instance->receivers, recv_obj);
+
+					/* create corresponding receiver object */
+//					_create_recv_obj(recvs_instance->receivers, rep);
+					_create_recv_obj(recvs_instance, rep);
+
+					/* create app resource corresponding to receiver object */
+//					_create_pushd_rsc(recv_obj, recvs_instance->resource);
 
 //					result = OC_STATUS_NOT_FOUND;
 				}
@@ -1059,8 +1112,8 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 			{
 				/* if `receiveruri` param is not provided..
 				 * replace whole existing `receivers` object array with new one.. */
-				_replace_recv_obj_array(recvs_instance->receivers, recvs_instance->resource, rep);
-
+//				_replace_recv_obj_array(recvs_instance->receivers, recvs_instance->resource, rep);
+				_replace_recv_obj_array(recvs_instance, rep);
 			}
 			break;
 		}
@@ -1216,7 +1269,7 @@ void oc_push_list_init()
 {
 	oc_list_init(ns_list);
 	oc_list_init(recvs_list);
-	oc_list_init(pushd_rsc_list);
+	oc_list_init(pushd_rsc_rep_list);
 }
 
 
@@ -1246,7 +1299,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			/*
 			 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
 			 */
-			/* TODO4ME 2021/8/30 from here.. */
+			/* TODO4ME 2021/8/30 resume here.. */
 			/*
 			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
