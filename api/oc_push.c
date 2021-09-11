@@ -446,7 +446,40 @@ void init_pushconf_resource(size_t device_index)
 
 void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	int result = OC_STATUS_OK;
+	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
 
+	if (!pushd_rsc_rep)
+	{
+		p_err("something wrong, can't find resource representation for pushed resource (%s)...\n",
+				oc_string(request->resource->uri));
+		return;
+	}
+
+	if (pushd_rsc_rep->rep)
+	{
+		oc_rep_begin_root_object();
+		switch (iface_mask)
+		{
+		case OC_IF_BASELINE:
+			oc_process_baseline_interface(request->resource);
+		case OC_IF_R:
+		case OC_IF_RW:
+			break;
+		default:
+			break;
+		}
+		oc_rep_end_root_object();
+
+		oc_send_response(request, result);
+	}
+	else
+	{
+		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built\n",
+				oc_string(request->resource->uri));
+	}
+
+	return;
 }
 
 
@@ -477,7 +510,7 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 {
 	int result = OC_STATUS_OK;
 
-	oc_rep_start_root_object();
+	oc_rep_begin_root_object();
 	switch (iface_mask)
 	{
 	case OC_IF_BASELINE:
