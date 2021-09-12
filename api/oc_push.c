@@ -443,6 +443,225 @@ void init_pushconf_resource(size_t device_index)
 
 
 
+void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
+{
+	CborEncoder child;
+	oc_rep_t *obj;
+
+	if (!rep)
+		return;
+
+	switch (rep->type)
+	{
+	case OC_REP_NIL:
+		break;
+
+	case OC_REP_INT:
+		/* oc_rep_set_int(object, key, value) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		g_err |= cbor_encode_int(parent, rep->value.integer);
+		break;
+
+	case OC_REP_DOUBLE:
+		/* oc_rep_set_double(object, key, value) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		g_err |= cbor_encode_double(parent, rep->value.double_p);
+		break;
+
+	case OC_REP_BOOL:
+		/* oc_rep_set_boolean(object, key, value) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		g_err |= cbor_encode_boolean(parent, rep->value.boolean);
+		break;
+
+	case OC_REP_BYTE_STRING_ARRAY:
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* oc_rep_add_byte_string(xxxx, str); */
+	   for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+	   {
+	   	g_err |= cbor_encode_byte_string(&child, oc_string_array_get_item(rep->value.array, i),
+	   												strlen(oc_string_array_get_item(rep->value.array, i)));
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_STRING_ARRAY:
+//		oc_rep_start_root_object();
+//		oc_rep_open_array(root, quotes);
+//		oc_rep_add_text_string(quotes, str0);
+//		oc_rep_add_text_string(quotes, str1);
+//		oc_rep_add_text_string(quotes, str2);
+//		oc_rep_add_text_string(quotes, str3);
+//		oc_rep_close_array(root, quotes);
+//		oc_rep_end_root_object();
+
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* oc_rep_add_text_string(xxxx, str); */
+	   for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+	   {
+	      if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
+	        g_err |= cbor_encode_text_string(&child, oc_string_array_get_item(rep->value.array, i),
+	      		  	  	  	  	  	  	  	  	  	  strlen(oc_string_array_get_item(rep->value.array, i)));
+	      } else {
+	        g_err |= cbor_encode_text_string(&child, "", 0);
+	      }
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_BOOL_ARRAY:
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* oc_rep_add_boolean(xxxx, value); */
+	   for (int i=0; i<rep->value.array.size; i++)
+	   {
+	   	g_err |= cbor_encode_boolean(&child, ((char *)(rep->value.array.ptr))[i]);
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_DOUBLE_ARRAY:
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* oc_rep_add_double(xxxx, value); */
+	   for (int i=0; i<rep->value.array.size; i++)
+	   {
+	   	g_err |= cbor_encode_double(&child, ((double *)(rep->value.array.ptr))[i]);
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_INT_ARRAY:
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* oc_rep_add_int(xxxx, value); */
+	   for (int i=0; i<rep->value.array.size; i++)
+	   {
+	   	g_err |= cbor_encode_int(&child, ((int64_t *)(rep->value.array.ptr))[i]);
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_BYTE_STRING:
+		/* oc_rep_set_byte_string(object, key, value, length) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		g_err |= cbor_encode_byte_string(parent, oc_string(rep->value.string), oc_string_len(rep->value.string));
+		break;
+
+	case OC_REP_STRING:
+		/* oc_rep_set_text_string(object, key, value) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		if ((const char *)oc_string(rep->value.string) != NULL) {
+			g_err |= cbor_encode_text_string(parent, oc_string(rep->value.string), oc_string_len(rep->value.string));
+		} else {
+			g_err |= cbor_encode_text_string(parent, "", 0);
+		}
+		break;
+
+	case OC_REP_OBJECT:
+//		oc_rep_start_root_object();
+//		oc_rep_set_object(root, my_object);
+//		oc_rep_set_int(my_object, a, 1);
+//		oc_rep_set_boolean(my_object, b, false);
+//		oc_rep_set_text_string(my_object, c, "three");
+//		oc_rep_close_object(root, my_object);
+//		oc_rep_end_root_object();
+
+		/* oc_rep_open_object(parent, key) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+		g_err |= cbor_encoder_create_map(parent, &child, CborIndefiniteLength);
+
+		_build_rep_payload(&child, rep->value.object);
+
+	   /* oc_rep_close_object(parent, key) */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	case OC_REP_OBJECT_ARRAY:
+//		 oc_rep_start_root_object();
+//		 oc_rep_set_array(root, space2001);
+//
+//		 oc_rep_object_array_begin_item(space2001);
+//		 oc_rep_set_text_string(space2001, name, "Dave Bowman");
+//		 oc_rep_set_text_string(space2001, job, "astronaut");
+//		 oc_rep_object_array_end_item(space2001);
+//
+//		 oc_rep_object_array_begin_item(space2001);
+//		 oc_rep_set_text_string(space2001, name, "Frank Poole");
+//		 oc_rep_set_text_string(space2001, job, "astronaut");
+//		 oc_rep_object_array_end_item(space2001);
+//
+//		 oc_rep_object_array_begin_item(space2001);
+//		 oc_rep_set_text_string(space2001, name, "Hal 9000");
+//		 oc_rep_set_text_string(space2001, job, "AI computer");
+//		 oc_rep_object_array_end_item(space2001);
+//
+//		 oc_rep_close_array(root, space2001);
+//		 oc_rep_end_root_object();
+
+		/* oc_rep_open_array(root, xxxx) */
+		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
+	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
+
+	   /* recurse remaining objects... */
+	   /*
+	    * oc_rep_object_array_begin_item(xxxx)
+	    * ...
+	    * oc_rep_object_array_end_item(xxxx)
+	    */
+	   obj = rep->value.object_array;
+	   while (obj)
+	   {
+			do
+			{
+				/* oc_rep_object_array_begin_item(key) */
+				CborEncoder obj_map;
+				g_err |= cbor_encoder_create_map(&child, &obj_map, CborIndefiniteLength);
+
+				_build_rep_payload(&obj_map, obj->value.object);
+
+				/* oc_rep_object_array_end_item(key) */
+				g_err |= cbor_encoder_close_container(&child, &obj_map);
+			} while (0);
+			obj = obj->next;
+	   }
+
+	   /* oc_rep_close_array(root, xxxx); */
+	   g_err |= cbor_encoder_close_container(parent, &child);
+		break;
+
+	default:
+		break;
+	}
+
+	_build_rep_payload(parent, rep->next);
+
+	return;
+}
+
+
 
 void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
@@ -465,6 +684,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 			oc_process_baseline_interface(request->resource);
 		case OC_IF_R:
 		case OC_IF_RW:
+			_build_rep_payload(&root_map, pushd_rsc_rep->rep);
 			break;
 		default:
 			break;
@@ -485,14 +705,18 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 
 
+
+
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
 	oc_rep_set_pool(&rep_instance_memb);
 
 	/*
+	 * TODO4ME 2021/9/12 resume here...
+	 */
+	/*
 	 * TODO4ME _create_pushd_rsc_rep(new_rep, org_rep) 이용...
 	 */
-
 }
 
 
@@ -800,15 +1024,15 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 		break;
 	case OC_REP_BOOL_ARRAY:
 		oc_new_bool_array(&(*new_rep)->value.array, oc_bool_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*BYTE_POOL);
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(uint8_t));
 		break;
 	case OC_REP_DOUBLE_ARRAY:
 		oc_new_double_array(&(*new_rep)->value.array, oc_double_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*DOUBLE_POOL);
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(double));
 		break;
 	case OC_REP_INT_ARRAY:
 		oc_new_int_array(&(*new_rep)->value.array, oc_int_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*INT_POOL);
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(int64_t));
 		break;
 	case OC_REP_BYTE_STRING:
 	case OC_REP_STRING:
