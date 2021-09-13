@@ -62,7 +62,7 @@ OC_MEMB(recv_instance_memb, oc_recv_t, 1);
  * @brief	`recvs_list` keeps real data of all Receiver object in Push Receiver Resource
  * 			(it includes all Receiver objects of Resource of all Devices)
  *
- * 			each list member is instance of `oc_recv_t`
+ * 			each list member is instance of `oc_recvs_t`
  */
 OC_LIST(recvs_list);
 
@@ -420,7 +420,7 @@ static void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask,
 void init_pushconf_resource(size_t device_index)
 {
 	/* create Push Configuration Resource */
-	oc_resource_t *push_conf = oc_new_collection("Push Configuration", "/pushconfig", 2, device_index);
+	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_PATH, 2, device_index);
 	oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
 	oc_resource_bind_resource_interface(push_conf, OC_IF_LL | /*OC_IF_B | */ OC_IF_CREATE | OC_IF_BASELINE);
 	oc_resource_set_default_interface(push_conf, OC_IF_LL);
@@ -705,18 +705,125 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 
 
+char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
+{
+	char result = 1;
+	int rt_len, rts_len;
+	int i, j;
+
+	if (!recv_obj || !rep)
+		return 0;
+
+	rts_len = oc_string_array_get_allocated_size(recv_obj->rts);
+	while (rep)
+	{
+		if ((rep->type == OC_REP_STRING_ARRAY) && !strcmp(oc_string(rep->name), "rt"))
+		{
+			rt_len = oc_string_array_get_allocated_size(rep->value.array);
+			for (i=0; i<rt_len; i++)
+			{
+				for (j=0; j<rts_len; j++)
+				{
+					if (!strcmp(oc_string_array_get_item(rep->value.array, i), oc_string_array_get_item(recv_obj->rts, j)))
+						break;
+				}
+				if (j == rts_len)
+				{
+					result = 0;
+					break;
+				}
+			}
+//			if (i == rt_len)
+//				result = 1;
+			break;
+		}
+		rep = rep->next;
+	}
+
+	return result;
+}
+
+
 
 
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-	oc_rep_set_pool(&rep_instance_memb);
+	int result = OC_STATUS_OK;
+	oc_rep_t *rep = request->request_payload;
+	oc_pushd_rsc_rep_t *pushd_rsc_rep;
+	oc_recvs_t *recvs_instance;
+	oc_recv_t *recv_obj;
 
-	/*
-	 * TODO4ME 2021/9/12 resume here...
-	 */
-	/*
-	 * TODO4ME _create_pushd_rsc_rep(new_rep, org_rep) 이용...
-	 */
+	recvs_instance = _find_recvs_by_device(request->resource->device);
+	if (recvs_instance)
+	{
+//		recv_obj = _find_recv_obj_by_uri(recvs_instance, oc_string(request->resource->uri), oc_string_len(request->resource->uri));
+		recv_obj = _find_recv_obj_by_uri2(recvs_instance, request->resource->uri);
+		if (!recv_obj)
+		{
+			p_err("can't find receiver object for (%s)\n", oc_string(request->resource->uri));
+			return;
+		}
+	}
+	else
+	{
+		p_err("can't find push receiver properties (%s) in device (%d)\n", oc_string(request->resource->uri), request->resource->device);
+		return;
+	}
+
+
+	if (!_check_pushd_rsc_rt(recv_obj, rep))
+	{
+		p_err("pushed resource type(s) is not in \"rts\" of push recerver object\n");
+		result = OC_STATUS_FORBIDDEN;
+	}
+	else
+	{
+		while (rep)
+		{
+			switch (rep->type)
+			{
+			case OC_REP_STRING_ARRAY:
+				break;
+			case OC_REP_OBJECT:
+				/*
+				 * TODO4ME 2021/9/13 resume here...
+				 */
+			default:
+				break;
+			}
+
+			rep = rep->next;
+		}
+
+
+
+
+		pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
+
+		if (pushd_rsc_rep)
+		{
+			oc_rep_set_pool(&rep_instance_memb);
+
+			_purge_
+
+			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep))
+			{
+				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
+						os_string(request->resource->uri));
+				result = OC_STATUS_INTERNAL_SERVER_ERROR;
+			}
+		}
+		else
+		{
+			p_err("something wrong!, can't find corresponding pushed resource representation instance (%s) \n",
+					os_string(request->resource->uri));
+			result = OC_STATUS_NOT_FOUND;
+		}
+	}
+
+	oc_send_response(request, result);
+	return;
 }
 
 
@@ -874,6 +981,8 @@ int _get_obj_array_len(oc_rep_t *obj_list)
 }
 
 
+
+
 /**
  * @brief						try to find `receiver` object which has `uri` as its `uri` Property
  *
@@ -904,6 +1013,29 @@ oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, i
 
 	return recv;
 }
+
+
+
+
+oc_recvs_t * _find_recvs_by_device(size_t device_index)
+{
+	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
+
+	while (recvs_instance)
+	{
+		if (recvs_instance->resource->device == device_index)
+		{
+			break;
+		}
+		else
+		{
+			recvs_instance = recvs_instance->next;
+		}
+	}
+
+	return recvs_instance;
+}
+
 
 
 
@@ -1050,6 +1182,30 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 	return (*new_rep);
 }
+
+
+
+
+/**
+ * @brief				update app resource correspon
+ *
+ * @param resource
+ * @param rep
+ */
+void _update_pushd_rsc(oc_resource_t *resource, oc_rep_t *rep)
+{
+
+
+	while (rep)
+	{
+		switch (rep->type)
+		{
+
+		}
+	}
+
+}
+
 
 
 
@@ -1493,7 +1649,7 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 void init_pushreceiver_resource(size_t device_index)
 {
 	/* create Push Receiver Resource */
-	oc_resource_t *push_recv = oc_new_resource("Push Receiver", "/pushreceivers", 1, device_index);
+	oc_resource_t *push_recv = oc_new_resource("Push Receiver", PUSHRECVS_PATH, 1, device_index);
 
 	oc_resource_bind_resource_type(push_recv, "oic.r.pushreceiver");
 	oc_resource_bind_resource_interface(push_recv, OC_IF_RW | OC_IF_BASELINE);

@@ -49,6 +49,13 @@ extern "C"
 #endif
 
 
+#define PUSHCONF_PATH "/pushconfig"
+#define PUSHRECVS_PATH "/pushreceivers"
+
+#define _find_recv_obj_by_uri2(recvs_instance, uri_string) \
+	_find_recv_obj_by_uri((recvs_instance), oc_string(uri_string), oc_string_len(uri_string))
+
+
 typedef enum {
 	OC_PP_WFP,
 	OC_PP_WFU,
