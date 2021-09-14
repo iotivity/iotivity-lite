@@ -417,7 +417,7 @@ static void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask,
  *
  * @param device_index	device index
  */
-void init_pushconf_resource(size_t device_index)
+void oc_create_pushconf_resource(size_t device_index)
 {
 	/* create Push Configuration Resource */
 	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_PATH, 2, device_index);
@@ -663,6 +663,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 
 
 
+
 void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
 	int result = OC_STATUS_OK;
@@ -695,7 +696,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	}
 	else
 	{
-		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built\n",
+		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built yet!\n",
 				oc_string(request->resource->uri));
 	}
 
@@ -704,17 +705,29 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 
 
-
+/**
+ * @brief				check if "rt" of pushed resource is part of configured "rts"
+ *
+ * @param recv_obj
+ * @param rep
+ * @return	not 0: found
+ * 			0: not found
+ */
 char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 {
-	char result = 1;
+	char result = 0;
 	int rt_len, rts_len;
 	int i, j;
 
 	if (!recv_obj || !rep)
-		return 0;
+		return result;
 
 	rts_len = oc_string_array_get_allocated_size(recv_obj->rts);
+
+	/* if "rts" is empty, any pushed resource can be accepted... */
+	if (!rts_len)
+		return 1;
+
 	while (rep)
 	{
 		if ((rep->type == OC_REP_STRING_ARRAY) && !strcmp(oc_string(rep->name), "rt"))
@@ -729,12 +742,12 @@ char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 				}
 				if (j == rts_len)
 				{
-					result = 0;
+//					result = 0;
 					break;
 				}
 			}
-//			if (i == rt_len)
-//				result = 1;
+			if (i == rt_len)
+				result = 1;
 			break;
 		}
 		rep = rep->next;
@@ -767,11 +780,11 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 	}
 	else
 	{
-		p_err("can't find push receiver properties (%s) in device (%d)\n", oc_string(request->resource->uri), request->resource->device);
+		p_err("can't find push receiver properties for (%s) in device (%d)\n", oc_string(request->resource->uri), request->resource->device);
 		return;
 	}
 
-
+	/* check if rt of pushed resource is part of configured rts */
 	if (!_check_pushd_rsc_rt(recv_obj, rep))
 	{
 		p_err("pushed resource type(s) is not in \"rts\" of push recerver object\n");
@@ -784,41 +797,55 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			switch (rep->type)
 			{
 			case OC_REP_STRING_ARRAY:
+				if (!strcmp(oc_string(rep->name), "rt"))
+				{
+					/* update rt */
+					oc_free_string_array(&request->resource->types);
+					oc_new_string_array(&request->resource->types, oc_string_array_get_allocated_size(rep->value.array));
+					for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+					{
+						oc_string_array_add_item(request->resource->types, oc_string_array_get_item(rep->value.array, i));
+					}
+				}
+				else if (!strcmp(oc_string(rep->name), "if"))
+				{
+					/* update if */
+					request->resource->interfaces = 0;
+					for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+					{
+						request->resource->interfaces |=
+								oc_ri_get_interface_mask(oc_string_array_get_item(rep->value.array, i),
+																strlen(oc_string_array_get_item(rep->value.array, i)));
+					}
+				}
 				break;
 			case OC_REP_OBJECT:
-				/*
-				 * TODO4ME 2021/9/13 resume here...
-				 */
+				if (!strcmp(oc_string(rep->name), "rep"))
+				{
+					pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
+					if (pushd_rsc_rep)
+					{
+						oc_rep_set_pool(&rep_instance_memb);
+						oc_free_rep(pushd_rsc_rep->rep);
+						if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
+						{
+							p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
+									os_string(request->resource->uri));
+							result = OC_STATUS_INTERNAL_SERVER_ERROR;
+						}
+					}
+					else
+					{
+						p_err("something wrong!, can't find corresponding pushed resource representation instance for (%s) \n",
+								os_string(request->resource->uri));
+						result = OC_STATUS_NOT_FOUND;
+					}
+				}
+				break;
 			default:
 				break;
 			}
-
 			rep = rep->next;
-		}
-
-
-
-
-		pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
-
-		if (pushd_rsc_rep)
-		{
-			oc_rep_set_pool(&rep_instance_memb);
-
-			_purge_
-
-			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep))
-			{
-				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
-						os_string(request->resource->uri));
-				result = OC_STATUS_INTERNAL_SERVER_ERROR;
-			}
-		}
-		else
-		{
-			p_err("something wrong!, can't find corresponding pushed resource representation instance (%s) \n",
-					os_string(request->resource->uri));
-			result = OC_STATUS_NOT_FOUND;
 		}
 	}
 
@@ -1220,14 +1247,11 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 	/* create Push Receiver Resource */
 	oc_resource_t *pushd_rsc = oc_new_resource("Pushed Resource", oc_string(recv_obj->receiveruri), 1, resource->device);
 
-//	oc_resource_bind_resource_type(push_recv, "oic.r.pushreceiver");
-//	oc_resource_bind_resource_interface(push_recv, OC_IF_RW | OC_IF_BASELINE);
-//	oc_resource_set_default_interface(push_recv, OC_IF_RW);
+	oc_resource_bind_resource_type(pushd_rsc, "");
+	oc_resource_bind_resource_interface(pushd_rsc, OC_IF_RW | OC_IF_BASELINE);
+	oc_resource_set_default_interface(pushd_rsc, OC_IF_RW);
 	oc_resource_set_discoverable(pushd_rsc, true);
 
-	/*
-	 * TODO4ME 2021/9/11 resume here...
-	 */
 	oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushd_rsc, NULL);
 	oc_resource_set_request_handler(pushd_rsc, OC_POST, post_pushd_rsc, NULL);
 //	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
@@ -1646,7 +1670,7 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
  *
  * @param device_index
  */
-void init_pushreceiver_resource(size_t device_index)
+void oc_create_pushreceiver_resource(size_t device_index)
 {
 	/* create Push Receiver Resource */
 	oc_resource_t *push_recv = oc_new_resource("Push Receiver", PUSHRECVS_PATH, 1, device_index);
@@ -1693,16 +1717,15 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 	OC_PROCESS_BEGIN();
 
 	do {
-		int device_count = oc_core_get_num_devices();
 
+#if 0
+		int device_count = oc_core_get_num_devices();
 		/* create Push Notification Resource per each Device */
 		for (int i=0; i<device_count; i++) {
-			/*
-			 * TODO4ME push 관련 리소스 초기화를 oc_core_add_new_device()에서 수행하도록 바꿀것
-			 */
 			init_pushconf_resource(i);
 			init_pushreceiver_resource(i);
 		}
+#endif
 
 		OC_PROCESS_YIELD();
 
@@ -1751,6 +1774,9 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 {
 	/*
 	 * TODO4ME 여기서 변동이 생긴 resource가 부합되는 notification selector가 있는지 확인해야 한다
+	 */
+	/*
+	 * TODO4ME 2021/9/15 resume here...
 	 */
 
 	if (!oc_process_is_running(&oc_push_process)) {

@@ -401,6 +401,11 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+  oc_create_pushconf_resource(device_count);
+  oc_create_pushreceiver_resource(device_count);
+#endif
+
   oc_device_info[device_count].data = data;
 
   if (oc_connectivity_init(device_count) < 0) {

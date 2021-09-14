@@ -24,6 +24,7 @@
 #include "oc_helpers.h"
 #include "oc_memb.h"
 #include "oc_rep.h"
+#include "oc_endpoint.h"
 #include "port/oc_log.h"
 #include "util/oc_process.h"
 
@@ -90,6 +91,7 @@ typedef struct oc_recv
 	struct oc_recv *next;
 	oc_string_t receiveruri;
 	oc_string_array_t rts;
+	oc_endpoint_t ep;
 	/*
 	 * TODO4ME endpoint Property를 추가할 것, 실제 request 보낼때 필요함
 	 */
@@ -124,6 +126,8 @@ typedef struct oc_pushd_rsc_rep
 OC_PROCESS_NAME(oc_push_process);
 
 void oc_push_list_init();
+void oc_create_pushconf_resource(size_t device_index);
+void oc_create_pushreceiver_resource(size_t device_index);
 
 
 #ifdef __cplusplus
