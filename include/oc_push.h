@@ -72,9 +72,12 @@ typedef struct oc_ns
 {
 	struct oc_ns *next;
 	oc_resource_t *resource;
-	oc_string_t phref;
-	oc_string_array_t prt;
-	oc_string_array_t pif;
+	/* notificaiton selector */
+	oc_string_t phref;		/* optional */
+	oc_string_array_t prt;	/* optional */
+	oc_string_array_t pif;	/* optional */
+//	oc_interface_mask_t pif;	/* optional */
+	/* push proxy */
 	oc_string_t pushtarget;
 	oc_string_t pushqif;
 	oc_string_array_t sourcert;

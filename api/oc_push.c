@@ -94,6 +94,51 @@ OC_PROCESS(oc_push_process, "Push Notification handler");
 
 
 
+
+
+oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
+{
+	oc_interface_mask_t iface = 0;
+
+	if (!strcmp(ifstr, "oic.if.baseline"))
+	{
+		iface = OC_IF_BASELINE;
+	}
+	else if (!strcmp(ifstr, "oic.if.ll"))
+	{
+		iface = OC_IF_LL;
+	}
+	else if (!strcmp(ifstr, "oic.if.b"))
+	{
+		iface = OC_IF_B;
+	}
+	else if (!strcmp(ifstr, "oic.if.r"))
+	{
+		iface = OC_IF_R;
+	}
+	else if (!strcmp(ifstr, "oic.if.rw"))
+	{
+		iface = OC_IF_RW;
+	}
+	else if (!strcmp(ifstr, "oic.if.a"))
+	{
+		iface = OC_IF_A;
+	}
+	else if (!strcmp(ifstr, "oic.if.s"))
+	{
+		iface = OC_IF_S;
+	}
+	else if (!strcmp(ifstr, "oic.if.create"))
+	{
+		iface = OC_IF_CREATE;
+	}
+
+	return iface;
+}
+
+
+
+
 /**
  * @brief				callback to be used to set existing `notification selector` with received Resource representation
  *
@@ -290,6 +335,7 @@ void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_d
 }
 
 
+
 /**
  *
  * @brief callback for getting & creating new `Notification Selector + Push Proxy` Resource instance
@@ -304,7 +350,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 	if (ns_instance) {
 		ns_instance->resource = oc_new_resource(NULL, href, oc_string_array_get_allocated_size(*types), device);
 		if (ns_instance->resource) {
-			size_t i;
+			int i;
 			for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
 				const char *rt = oc_string_array_get_item(*types, i);
 				oc_resource_bind_resource_type(ns_instance->resource, rt);
@@ -420,7 +466,7 @@ static void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask,
 void oc_create_pushconf_resource(size_t device_index)
 {
 	/* create Push Configuration Resource */
-	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_PATH, 2, device_index);
+	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_PATH, 1, device_index);
 	oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
 	oc_resource_bind_resource_interface(push_conf, OC_IF_LL | /*OC_IF_B | */ OC_IF_CREATE | OC_IF_BASELINE);
 	oc_resource_set_default_interface(push_conf, OC_IF_LL);
@@ -667,7 +713,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
 	int result = OC_STATUS_OK;
-	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
+	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&request->resource->uri, request->resource->device);
 
 	if (!pushd_rsc_rep)
 	{
@@ -822,7 +868,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			case OC_REP_OBJECT:
 				if (!strcmp(oc_string(rep->name), "rep"))
 				{
-					pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(request->resource->uri, request->resource->device);
+					pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&request->resource->uri, request->resource->device);
 					if (pushd_rsc_rep)
 					{
 						oc_rep_set_pool(&rep_instance_memb);
@@ -1074,13 +1120,13 @@ oc_recvs_t * _find_recvs_by_device(size_t device_index)
  * @param device_index
  * @return
  */
-oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t uri, size_t device_index)
+oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t *uri, size_t device_index)
 {
 	oc_pushd_rsc_rep_t *pushd_rsc_rep = (oc_pushd_rsc_rep_t *)oc_list_head(pushd_rsc_rep_list);
 
 	while (pushd_rsc_rep)
 	{
-		if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(uri))
+		if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri))
 				&& (pushd_rsc_rep->resource->device == device_index))
 		{
 			break;
@@ -1104,9 +1150,9 @@ oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t uri, size_t device_i
  * @param uri				URI to app resource to be purged
  * @param device_index	index of device where the target resource resides
  */
-void _purge_pushd_rsc(oc_string_t uri, size_t device_index)
+void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 {
-	oc_resource_t *pushd_rsc = oc_ri_get_app_resource_by_uri(oc_string(uri), oc_string_len(uri), device_index);
+	oc_resource_t *pushd_rsc = oc_ri_get_app_resource_by_uri(oc_string(*uri), oc_string_len(*uri), device_index);
 	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(uri, device_index);
 
 	if (pushd_rsc_rep)
@@ -1295,7 +1341,7 @@ void _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 	{
 		/* delete app resource pointed by `receiveruri` first.. */
 //		_purge_pushd_rsc(recv_obj->receiveruri, device_index);
-		_purge_pushd_rsc(recv_obj->receiveruri, recvs_instance->resource->device);
+		_purge_pushd_rsc(&recv_obj->receiveruri, recvs_instance->resource->device);
 
 		oc_free_string(&recv_obj->receiveruri);
 		oc_free_string_array(&recv_obj->rts);
@@ -1765,6 +1811,48 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 
 
+
+/**
+ * @brief			check if source array is part of target array
+ * @param target
+ * @param source
+ * @return
+ * 			0: source is not part of target
+ * 			1: source is part of target
+ */
+char _check_string_array_inclusion(oc_string_array_t *target, oc_string_array_t *source)
+{
+	int i, j;
+	int src_len, tgt_len;
+	int result = 0;
+
+	tgt_len = oc_string_array_get_allocated_size(*target);
+	src_len = oc_string_array_get_allocated_size(*source);
+
+	if (!tgt_len || !src_len)
+	{
+		p_dbg("source or target string array is empty!\n");
+		return result;
+	}
+
+	for (i=0; i<src_len; i++)
+	{
+		for (j=0; j<tgt_len; j++)
+		{
+			if (!strcmp(oc_string_array_get_item(*source, i), oc_string_array_get_item(*target, j)))
+				break;
+		}
+		if (j == tgt_len)
+			break;
+	}
+	if (i == src_len)
+		result = 1;
+
+	return result;
+}
+
+
+
 /**
  *
  * @brief re-schedule push process
@@ -1775,10 +1863,121 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 	/*
 	 * TODO4ME 여기서 변동이 생긴 resource가 부합되는 notification selector가 있는지 확인해야 한다
 	 */
-	/*
-	 * TODO4ME 2021/9/15 resume here...
-	 */
+	oc_resource_t *resource = oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
+	char all_matched = 1;
 
+	if (!resource)
+	{
+		p_err("there is no resource for (%s) @device (%d)\n", uri, device_index);
+		return;
+	}
+
+	for ( ; ns_instance; ns_instance = ns_instance->next)
+	{
+		if (ns_instance->resource->device != device_index)
+			continue;
+
+		if (oc_string(ns_instance->phref))
+		{
+			if (strcmp(oc_string(ns_instance->phref), uri))
+//				all_matched = 1;
+//			else
+				all_matched = 0;
+		}
+		if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
+		{
+			if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types))
+//				all_matched = (all_matched)? 1:0;
+//			else
+				all_matched = 0;
+		}
+		if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
+		{
+			oc_interface_mask_t pif = 0;
+			for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->pif); i++)
+			{
+				pif |= _get_ifmask_from_ifstr(oc_string_array_get_item(ns_instance->pif, i));
+			}
+
+			if ((pif & resource->interfaces) != resource->interfaces)
+//				all_matched = (all_matched)? 1:0;
+//			else
+				all_matched = 0;
+		}
+
+		if (all_matched)
+		{
+			if (!oc_process_is_running(&oc_push_process)) {
+				p_dbg("oc_push_process is not running!\n");
+				return;
+			}
+
+			/* Resource which is just updated */
+			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
+					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
+
+			/*
+			 * TODO4ME 2021/9/17 resume here... selector 매칭이 여러개 될 때를 대비해서 oc_events에 루프를 다 돈 결과물을 한번에 전달할 수 있도록 수정하자...
+			 */
+			_oc_signal_event_loop();
+		}
+
+
+
+
+//		/* if phref is configured... */
+//		if (oc_string(ns_instance->phref))
+//		{
+//			if (!strcmp(oc_string(ns_instance->phref), uri))
+//			{
+//				/* if phref is matched, check prt... */
+//				if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
+//				{
+//					if (_check_string_array_inclusion(&ns_instance->prt, &resource->types))
+//					{
+//						/* if phref, prt are matched, check pif... */
+//						if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
+//						{
+//							all_matched = 1;
+//						}
+//
+//					}
+//				}
+//				{
+////					all_matched = 0;
+//					continue;
+//				}
+//				else
+//				{
+//					/* if phref, prt are matched, check pif... */
+////					if (!_check_string_array_inclusion(&ns_instance->pif, &resource->in))
+//					{
+//
+//					}
+//				}
+//			}
+//		}
+//		/* if prt is configure... */
+//		else if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
+//		{
+//
+//		}
+//		/* if pif is configured... */
+//		else if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
+//		{
+//		}
+
+	}
+
+	/* if there is no notification selector matching this resource, no action happens... */
+//	if (!ns_instance)
+//	{
+//		p_err("there is no notification selector for resource (%s) @device (%d)\n", uri, device_index);
+//		return;
+//	}
+
+#if 0
 	if (!oc_process_is_running(&oc_push_process)) {
 		p_dbg("oc_push_process is not running!\n");
 		return;
@@ -1790,6 +1989,7 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 //	oc_process_poll(&oc_push_process);
 
 	_oc_signal_event_loop();
+#endif
 
 	return;
 }
