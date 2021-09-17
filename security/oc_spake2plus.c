@@ -61,22 +61,23 @@ calculate_pA(mbedtls_ecp_point *pA, const mbedtls_mpi *a, const mbedtls_ecp_poin
   mbedtls_mpi one;
   mbedtls_ecp_point M;
   mbedtls_ecp_group grp;
+	int ret;
 
   mbedtls_mpi_init(&one);
-
+  mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_point_init(&M);
 
-  mbedtls_ecp_group_init(&grp);
-  mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
-
-  mbedtls_ecp_point_read_binary(&grp, &M, bytes_M, sizeof(bytes_M));
-
-	mbedtls_mpi_read_string(&one, 10, "1");
+	// MBEDTLS_MPI_CHK sets ret to the return value of f and goes to cleanup if ret is nonzero
+  MBEDTLS_MPI_CHK( mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1) );
+  MBEDTLS_MPI_CHK( mbedtls_ecp_point_read_binary(&grp, &M, bytes_M, sizeof(bytes_M)) );
+	MBEDTLS_MPI_CHK( mbedtls_mpi_read_string(&one, 10, "1") );
 
 	// pA = 1 * pubA + w0 * M
-  mbedtls_ecp_muladd(&grp, pA, &one, pubA, w0, &M);
+  MBEDTLS_MPI_CHK( mbedtls_ecp_muladd(&grp, pA, &one, pubA, w0, &M) );
 
+cleanup:
 	mbedtls_mpi_free(&one);
 	mbedtls_ecp_point_free(&M);
 	mbedtls_ecp_group_free(&grp);
+	return ret;
 }
