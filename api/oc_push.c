@@ -27,6 +27,7 @@
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "oc_core_res.h"
+#include "oc_signal_event_loop.h"
 #include "util/oc_process.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
@@ -167,7 +168,11 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			/* oic.r.pushproxy:pushtarget */
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
-				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
+//				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
+				if (oc_string_to_endpoint(&rep->value.string, ns_instance->pushtarget, &ns_instance->targetpath) < 0)
+				{
+					p_err("oic.r.pushproxy:pushtarget parsing fail! (%s)\n", oc_string(rep->value.string));
+				}
 			}
 			/* oic.r.pushproxy:pushqif */
 			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
@@ -279,7 +284,14 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		}
 
 		/* pushtarget */
-		oc_rep_set_text_string(root, pushtarget, oc_string(ns_instance->pushtarget));
+		oc_string_t ep, full_uri;
+		oc_endpoint_to_string(ns_instance->pushtarget, &ep);
+		oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
+
+		oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
+
+		oc_free_string(&ep);
+		oc_free_string(&full_uri);
 
 		/* pushqif */
 		oc_rep_set_text_string(root, pushqif, oc_string(ns_instance->pushqif));
@@ -1787,6 +1799,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
 			 */
 
+
 //			if (!is_resource_found())
 //				return;
 //
@@ -1813,12 +1826,12 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 
 /**
- * @brief			check if source array is part of target array
+ * @brief			check if any of source array is part of target array
  * @param target
  * @param source
  * @return
- * 			0: source is not part of target
- * 			1: source is part of target
+ * 			0: any of source is not part of target
+ * 			1: any of source is part of target
  */
 char _check_string_array_inclusion(oc_string_array_t *target, oc_string_array_t *source)
 {
@@ -1840,13 +1853,19 @@ char _check_string_array_inclusion(oc_string_array_t *target, oc_string_array_t 
 		for (j=0; j<tgt_len; j++)
 		{
 			if (!strcmp(oc_string_array_get_item(*source, i), oc_string_array_get_item(*target, j)))
+			{
+				result = 1;
 				break;
+			}
 		}
-		if (j == tgt_len)
+		if (result)
 			break;
+//		if (j == tgt_len)
+//			break;
+
 	}
-	if (i == src_len)
-		result = 1;
+//	if (i == src_len)
+//		result = 1;
 
 	return result;
 }
@@ -1870,6 +1889,11 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 	if (!resource)
 	{
 		p_err("there is no resource for (%s) @device (%d)\n", uri, device_index);
+		return;
+	}
+	if (!(resource->properties & OC_PUSHABLE))
+	{
+		p_err("resource (%s) @device (%d) is not pushable!\n", uri, device_index);
 		return;
 	}
 
@@ -1900,7 +1924,8 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 				pif |= _get_ifmask_from_ifstr(oc_string_array_get_item(ns_instance->pif, i));
 			}
 
-			if ((pif & resource->interfaces) != resource->interfaces)
+			if (!(pif & resource->interfaces))
+//			if ((pif & resource->interfaces) != resource->interfaces)
 //				all_matched = (all_matched)? 1:0;
 //			else
 				all_matched = 0;
@@ -1913,60 +1938,58 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 				return;
 			}
 
-			/* Resource which is just updated */
+			/*
+			 * TODO4ME 2021/9/17, event의 data에 저장할 내용을 ns_instance로 바꿀것
+			 */
+			/* post "event" for Resource which has just been updated */
 			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
 					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
 
-			/*
-			 * TODO4ME 2021/9/17 resume here... selector 매칭이 여러개 될 때를 대비해서 oc_events에 루프를 다 돈 결과물을 한번에 전달할 수 있도록 수정하자...
-			 */
-			_oc_signal_event_loop();
 		}
 
+#if 0
+		/* if phref is configured... */
+		if (oc_string(ns_instance->phref))
+		{
+			if (!strcmp(oc_string(ns_instance->phref), uri))
+			{
+				/* if phref is matched, check prt... */
+				if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
+				{
+					if (_check_string_array_inclusion(&ns_instance->prt, &resource->types))
+					{
+						/* if phref, prt are matched, check pif... */
+						if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
+						{
+							all_matched = 1;
+						}
 
+					}
+				}
+				{
+//					all_matched = 0;
+					continue;
+				}
+				else
+				{
+					/* if phref, prt are matched, check pif... */
+//					if (!_check_string_array_inclusion(&ns_instance->pif, &resource->in))
+					{
 
+					}
+				}
+			}
+		}
+		/* if prt is configure... */
+		else if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
+		{
 
-//		/* if phref is configured... */
-//		if (oc_string(ns_instance->phref))
-//		{
-//			if (!strcmp(oc_string(ns_instance->phref), uri))
-//			{
-//				/* if phref is matched, check prt... */
-//				if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
-//				{
-//					if (_check_string_array_inclusion(&ns_instance->prt, &resource->types))
-//					{
-//						/* if phref, prt are matched, check pif... */
-//						if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
-//						{
-//							all_matched = 1;
-//						}
-//
-//					}
-//				}
-//				{
-////					all_matched = 0;
-//					continue;
-//				}
-//				else
-//				{
-//					/* if phref, prt are matched, check pif... */
-////					if (!_check_string_array_inclusion(&ns_instance->pif, &resource->in))
-//					{
-//
-//					}
-//				}
-//			}
-//		}
-//		/* if prt is configure... */
-//		else if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
-//		{
-//
-//		}
-//		/* if pif is configured... */
-//		else if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
-//		{
-//		}
+		}
+		/* if pif is configured... */
+		else if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
+		{
+		}
+#endif
 
 	}
 
@@ -1976,6 +1999,8 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 //		p_err("there is no notification selector for resource (%s) @device (%d)\n", uri, device_index);
 //		return;
 //	}
+
+	_oc_signal_event_loop();
 
 #if 0
 	if (!oc_process_is_running(&oc_push_process)) {
