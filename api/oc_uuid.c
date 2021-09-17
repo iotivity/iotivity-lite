@@ -29,15 +29,17 @@
 void
 oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 {
+  if (str == NULL) {
+    return;
+  }
+  memset(uuid, 0, sizeof(*uuid));
   if (str[0] == '*' && strlen(str) == 1) {
-    memset(uuid->id, 0, 16);
     uuid->id[0] = '*';
     return;
   }
   int i, j = 0, k = 1;
   uint8_t c = 0;
-
-  for (i = 0; i < 36; i++) {
+  for (i = 0; i < 36 && i < (int)strlen(str); i++) {
     if (str[i] == '-')
       continue;
     else if (isalpha((int)str[i])) {
