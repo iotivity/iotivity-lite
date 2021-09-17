@@ -120,6 +120,7 @@ target_sources(iotivity-common INTERFACE
     ${PROJECT_SOURCE_DIR}/security/oc_roles.c
     ${PROJECT_SOURCE_DIR}/security/oc_sdi.c
     ${PROJECT_SOURCE_DIR}/security/oc_sp.c
+    ${PROJECT_SOURCE_DIR}/security/oc_spake2plus.c
     ${PROJECT_SOURCE_DIR}/security/oc_store.c
     ${PROJECT_SOURCE_DIR}/security/oc_svr.c
     ${PROJECT_SOURCE_DIR}/security/oc_tls.c
