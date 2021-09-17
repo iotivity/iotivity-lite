@@ -180,6 +180,7 @@ validate_against_test_vector()
   mbedtls_ecp_group_init(&grp);
   MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
 
+	// Check that X = x*P + w0*M
 	mbedtls_mpi x, w0;
 	mbedtls_mpi_init(&x);
 	mbedtls_mpi_init(&w0);
@@ -196,8 +197,27 @@ validate_against_test_vector()
 	// X = pubA + w0*M
 	MBEDTLS_MPI_CHK(calculate_pA(&X, &pubA, &w0));
 	MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &X, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+
 	// check the value of X is correct
 	assert(memcmp(bytes_X, cmpbuf, cmplen) == 0);
+
+	// Check that Y = y*P + w0*N
+	mbedtls_mpi y;
+	mbedtls_mpi_init(&y);
+
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&y, bytes_y, sizeof(bytes_y)));
+
+	mbedtls_ecp_point Y, pubB;
+	mbedtls_ecp_point_init(&Y);
+	mbedtls_ecp_point_init(&pubB);
+	// pubB = y*P
+	MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubB, &y, &grp.G, NULL, NULL));
+
+	// Y = pubB + w0*N
+	MBEDTLS_MPI_CHK(calculate_pB(&Y, &pubB, &w0));
+	MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &Y, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+	// check the value of Y is correct
+	assert(memcmp(bytes_Y, cmpbuf, cmplen) == 0);
 cleanup:
 	return ret;
 }
