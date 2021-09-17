@@ -3,6 +3,7 @@
 #include "mbedtls/bignum.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#include <assert.h>
 
 static mbedtls_entropy_context entropy_ctx;
 static mbedtls_ctr_drbg_context ctr_drbg_ctx;
@@ -57,8 +58,9 @@ free_context(void)
 // mbedtls_ecp_gen_keypair(&grp, a, &pubA, mbedtls_ctr_drbg_random,
 //                        &ctr_drbg_ctx);
 
+// pA = pubA + w0 * M
 static int
-calculate_pA(mbedtls_ecp_point *pA, const mbedtls_mpi *a,
+calculate_pA(mbedtls_ecp_point *pA, 
              const mbedtls_ecp_point *pubA, const mbedtls_mpi *w0)
 {
   mbedtls_mpi one;
@@ -87,8 +89,9 @@ cleanup:
   return ret;
 }
 
+// pB = pubB + w0 * N
 static int
-calculate_pB(mbedtls_ecp_point *pB, const mbedtls_mpi *b,
+calculate_pB(mbedtls_ecp_point *pB, 
              const mbedtls_ecp_point *pubB, const mbedtls_mpi *w0)
 {
   mbedtls_mpi one;
@@ -115,11 +118,12 @@ cleanup:
   return ret;
 }
 
-static int
+int
 validate_against_test_vector()
 {
-	// Test Vector values from Spake2+ draft.
-	// Using third set, as we only have easy access to the server (e.g. device) identity.
+  // Test Vector values from Spake2+ draft.
+  // Using third set, as we only have easy access to the server (e.g. device)
+  // identity.
   char Context[] = "SPAKE2+-P256-SHA256-HKDF draft-01";
   char A[] = "";
   char B[] = "server";
@@ -155,16 +159,45 @@ validate_against_test_vector()
                         0x64, 0x20, 0x43, 0xc1, 0xb2, 0xb7, 0x99, 0x2c, 0xf2,
                         0xd4, 0xde };
 
-  uint8_t bytes_y = { 0x39, 0x39, 0x7f, 0xbe, 0x6d, 0xb4, 0x7e, 0x9f,
-                      0xbd, 0x1a, 0x26, 0x3d, 0x79, 0xf5, 0xd0, 0xaa,
-                      0xa4, 0x4d, 0xf2, 0x6c, 0xe7, 0x55, 0xf7, 0x8e,
-                      0x09, 0x26, 0x44, 0xb4, 0x34, 0x53, 0x3a, 0x42 };
-  uint8_t bytes_Y = { 0x04, 0xd1, 0xbe, 0xe3, 0x12, 0x0f, 0xd8, 0x7e, 0x86,
-                      0xfe, 0x18, 0x9c, 0xb9, 0x52, 0xdc, 0x68, 0x88, 0x23,
-                      0x08, 0x0e, 0x62, 0x52, 0x4d, 0xd2, 0xc0, 0x8d, 0xff,
-                      0xe3, 0xd2, 0x2a, 0x0a, 0x89, 0x86, 0xaa, 0x64, 0xc9,
-                      0xfe, 0x01, 0x91, 0x03, 0x3c, 0xaf, 0xbc, 0x9b, 0xca,
-                      0xef, 0xc8, 0xe2, 0xba, 0x8b, 0xa8, 0x60, 0xcd, 0x12,
-                      0x7a, 0xf9, 0xef, 0xdd, 0x7f, 0x1c, 0x3a, 0x41, 0x92,
-                      0x0f, 0xe8 };
+  uint8_t bytes_y[] = { 0x39, 0x39, 0x7f, 0xbe, 0x6d, 0xb4, 0x7e, 0x9f,
+                        0xbd, 0x1a, 0x26, 0x3d, 0x79, 0xf5, 0xd0, 0xaa,
+                        0xa4, 0x4d, 0xf2, 0x6c, 0xe7, 0x55, 0xf7, 0x8e,
+                        0x09, 0x26, 0x44, 0xb4, 0x34, 0x53, 0x3a, 0x42 };
+  uint8_t bytes_Y[] = { 0x04, 0xd1, 0xbe, 0xe3, 0x12, 0x0f, 0xd8, 0x7e, 0x86,
+                        0xfe, 0x18, 0x9c, 0xb9, 0x52, 0xdc, 0x68, 0x88, 0x23,
+                        0x08, 0x0e, 0x62, 0x52, 0x4d, 0xd2, 0xc0, 0x8d, 0xff,
+                        0xe3, 0xd2, 0x2a, 0x0a, 0x89, 0x86, 0xaa, 0x64, 0xc9,
+                        0xfe, 0x01, 0x91, 0x03, 0x3c, 0xaf, 0xbc, 0x9b, 0xca,
+                        0xef, 0xc8, 0xe2, 0xba, 0x8b, 0xa8, 0x60, 0xcd, 0x12,
+                        0x7a, 0xf9, 0xef, 0xdd, 0x7f, 0x1c, 0x3a, 0x41, 0x92,
+                        0x0f, 0xe8 };
+
+	uint8_t cmpbuf[128];
+	size_t cmplen;
+	int ret;
+
+  mbedtls_ecp_group grp;
+  mbedtls_ecp_group_init(&grp);
+  MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
+
+	mbedtls_mpi x, w0;
+	mbedtls_mpi_init(&x);
+	mbedtls_mpi_init(&w0);
+
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&x, bytes_x, sizeof(bytes_x)));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&w0, bytes_w0, sizeof(bytes_w0)));
+
+	mbedtls_ecp_point X, pubA;
+	mbedtls_ecp_point_init(&X);
+	mbedtls_ecp_point_init(&pubA);
+	// pubA = x*P (P is the generator group element, mbedtls uses G)
+	MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubA, &x, &grp.G, NULL, NULL));
+
+	// X = pubA + w0*M
+	MBEDTLS_MPI_CHK(calculate_pA(&X, &pubA, &w0));
+	MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &X, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+	// check the value of X is correct
+	assert(memcmp(bytes_X, cmpbuf, cmplen) == 0);
+cleanup:
+	return ret;
 }

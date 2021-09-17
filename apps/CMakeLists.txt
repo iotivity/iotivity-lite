@@ -38,6 +38,15 @@ if(UNIX)
         )
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
     endif()
+    
+    add_executable(spaketest
+        ${PROJECT_SOURCE_DIR}/spaketest.c
+        ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
+    )
+    target_link_libraries(spaketest
+        iotivity-server-client
+    )
+
 elseif(WIN32)
     add_executable(simpleserver
         ${PROJECT_SOURCE_DIR}/simpleserver_windows.c
