@@ -34,13 +34,20 @@
 #define PUSH_DEBUG
 
 #ifdef PUSH_DEBUG
-#define p_dbg(...) OC_LOG("DEBUG", __VA_ARGS__)
-#define p_wrn(...) OC_LOG("WARNING", __VA_ARGS__)
-#define p_err(...) OC_LOG("ERROR", __VA_ARGS__)
+	#define PRINT(...) printf(__VA_ARGS__)
+	#define OC_LOG(level, ...)                                                     \
+			do {                                                                         \
+				PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
+				PRINT(__VA_ARGS__);                                                        \
+				PRINT("\n");                                                               \
+			} while (0)
+	#define p_dbg(...) OC_LOG("DEBUG", __VA_ARGS__)
+	#define p_wrn(...) OC_LOG("WARNING", __VA_ARGS__)
+	#define p_err(...) OC_LOG("ERROR", __VA_ARGS__)
 #else
-#define p_dbg(...)
-#define p_wrn(...)
-#define p_err(...)
+	#define p_dbg(...)
+	#define p_wrn(...)
+	#define p_err(...)
 #endif
 
 

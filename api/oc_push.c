@@ -1771,6 +1771,7 @@ void oc_push_list_init()
 OC_PROCESS_THREAD(oc_push_process, ev, data)
 {
 	oc_resource_t *src_rsc;
+	oc_ns_t *ns_instance;
 
 	OC_PROCESS_BEGIN();
 
@@ -1789,7 +1790,10 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 		/* send UPDATE to target server */
 		if (ev == oc_events[PUSH_RSC_STATE_CHANGED]) {
-			src_rsc = (oc_resource_t *)data;
+//			src_rsc = (oc_resource_t *)data;
+			ns_instance = (oc_ns_t *)data;
+			src_rsc = ns_instance->resource;
+
 			/*
 			 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
 			 */
@@ -1942,8 +1946,9 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 			 * TODO4ME 2021/9/17, event의 data에 저장할 내용을 ns_instance로 바꿀것
 			 */
 			/* post "event" for Resource which has just been updated */
-			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
-					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
+			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
+//			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
+//					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
 
 		}
 
