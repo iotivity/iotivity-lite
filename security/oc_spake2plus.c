@@ -58,35 +58,43 @@ free_context(void)
 // mbedtls_ecp_gen_keypair(&grp, a, &pubA, mbedtls_ctr_drbg_random,
 //                        &ctr_drbg_ctx);
 
-// pA = pubA + w0 * M
-static int
-calculate_pA(mbedtls_ecp_point *pA, 
-             const mbedtls_ecp_point *pubA, const mbedtls_mpi *w0)
+// pX = pubX + wX * L
+static int calculate_pX(mbedtls_ecp_point *pX, 
+             const mbedtls_ecp_point *pubX, const mbedtls_mpi *wX, const uint8_t bytes_L[], size_t len_L)
 {
   mbedtls_mpi one;
-  mbedtls_ecp_point M;
+  mbedtls_ecp_point L;
   mbedtls_ecp_group grp;
   int ret;
 
   mbedtls_mpi_init(&one);
   mbedtls_ecp_group_init(&grp);
-  mbedtls_ecp_point_init(&M);
+  mbedtls_ecp_point_init(&L);
 
   // MBEDTLS_MPI_CHK sets ret to the return value of f and goes to cleanup if
   // ret is nonzero
   MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
   MBEDTLS_MPI_CHK(
-    mbedtls_ecp_point_read_binary(&grp, &M, bytes_M, sizeof(bytes_M)));
+    mbedtls_ecp_point_read_binary(&grp, &L, bytes_L, len_L));
   MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(&one, 10, "1"));
 
   // pA = 1 * pubA + w0 * M
-  MBEDTLS_MPI_CHK(mbedtls_ecp_muladd(&grp, pA, &one, pubA, w0, &M));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_muladd(&grp, pX, &one, pubX, wX, &L));
 
 cleanup:
   mbedtls_mpi_free(&one);
-  mbedtls_ecp_point_free(&M);
+  mbedtls_ecp_point_free(&L);
   mbedtls_ecp_group_free(&grp);
   return ret;
+  
+}
+
+// pA = pubA + w0 * M
+static int
+calculate_pA(mbedtls_ecp_point *pA, 
+             const mbedtls_ecp_point *pubA, const mbedtls_mpi *w0)
+{
+  return calculate_pX(pA, pubA, w0, bytes_M, sizeof(bytes_M));
 }
 
 // pB = pubB + w0 * N
@@ -94,28 +102,7 @@ static int
 calculate_pB(mbedtls_ecp_point *pB, 
              const mbedtls_ecp_point *pubB, const mbedtls_mpi *w0)
 {
-  mbedtls_mpi one;
-  mbedtls_ecp_point N;
-  mbedtls_ecp_group grp;
-  int ret;
-
-  mbedtls_mpi_init(&one);
-  mbedtls_ecp_group_init(&grp);
-  mbedtls_ecp_point_init(&N);
-
-  MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
-  MBEDTLS_MPI_CHK(
-    mbedtls_ecp_point_read_binary(&grp, &N, bytes_N, sizeof(bytes_N)));
-  MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(&one, 10, "1"));
-
-  // pB = 1 * pubB + w0 * N
-  MBEDTLS_MPI_CHK(mbedtls_ecp_muladd(&grp, pB, &one, pubB, w0, &N));
-
-cleanup:
-  mbedtls_mpi_free(&one);
-  mbedtls_ecp_point_free(&N);
-  mbedtls_ecp_group_free(&grp);
-  return ret;
+    return calculate_pX(pB, pubB, w0, bytes_N, sizeof(bytes_N));
 }
 
 int
