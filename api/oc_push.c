@@ -169,9 +169,14 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
 //				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
-				if (oc_string_to_endpoint(&rep->value.string, ns_instance->pushtarget, &ns_instance->targetpath) < 0)
+				if (oc_string_to_endpoint(&rep->value.string, ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
 				{
 					p_err("oic.r.pushproxy:pushtarget parsing fail! (%s)\n", oc_string(rep->value.string));
+				}
+				else
+				{
+					p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (%s)\n",
+							oc_string(ns_instance->targetpath));
 				}
 			}
 			/* oic.r.pushproxy:pushqif */
@@ -285,7 +290,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 
 		/* pushtarget */
 		oc_string_t ep, full_uri;
-		oc_endpoint_to_string(ns_instance->pushtarget, &ep);
+		oc_endpoint_to_string(ns_instance->pushtarget_ep, &ep);
 		oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
 
 		oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
@@ -819,7 +824,7 @@ char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-	int result = OC_STATUS_OK;
+	int result = OC_STATUS_CHANGED;
 	oc_rep_t *rep = request->request_payload;
 	oc_pushd_rsc_rep_t *pushd_rsc_rep;
 	oc_recvs_t *recvs_instance;
@@ -1768,6 +1773,19 @@ void oc_push_list_init()
 }
 
 
+
+void response_to_push_rsc(oc_client_response_t *data)
+{
+	PRINT("\n UPDATE pushed receiver \n");
+	if (data->code == OC_STATUS_CHANGED)
+		PRINT("POST response OK\n");
+	else
+		PRINT("POST response code %d\n", data->code);
+}
+
+
+
+
 OC_PROCESS_THREAD(oc_push_process, ev, data)
 {
 	oc_resource_t *src_rsc;
@@ -1794,14 +1812,35 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			ns_instance = (oc_ns_t *)data;
 			src_rsc = ns_instance->resource;
 
+			if (!ns_instance || !src_rsc) {
+				p_err("something wrong! ns_instance or source resource is NULL!\n");
+				break;
+			}
+
 			/*
 			 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
 			 */
-			/* TODO4ME 2021/8/30 resume here.. */
 			/*
 			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
 			 */
+			/*
+			 * TODO4ME 2021/9/19 resume here..
+			 */
+			if (oc_init_post(oc_string(ns_instance->targetpath), ns_instance->pushtarget_ep,
+									"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
+			{
+				src_rsc->payload_builder();
+
+				if (oc_do_post())
+					PRINT("Sent POST request\n\n");
+				else
+					PRINT("Could not send POST\n\n");
+			}
+			else
+			{
+				PRINT("Could not init POST\n\n");
+			}
 
 
 //			if (!is_resource_found())
@@ -1942,9 +1981,6 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 				return;
 			}
 
-			/*
-			 * TODO4ME 2021/9/17, event의 data에 저장할 내용을 ns_instance로 바꿀것
-			 */
 			/* post "event" for Resource which has just been updated */
 			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
 //			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],

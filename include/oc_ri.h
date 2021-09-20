@@ -226,7 +226,7 @@ struct oc_resource_s
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
 #if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
-  oc_payload_callback_t payload_handler;
+  oc_payload_callback_t payload_builder;
 #endif
 #endif /* OC_COLLECTIONS */
   uint16_t observe_period_seconds;
