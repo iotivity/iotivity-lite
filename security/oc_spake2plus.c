@@ -108,9 +108,9 @@ calculate_pB(mbedtls_ecp_point *pB, const mbedtls_ecp_point *pubB,
 // generic formula for
 // J = f * (K - g * L)
 static int
-calculate_JfKgL(mbedtls_ecp_point *J, const mbedtls_ecp_point *K,
-                const mbedtls_ecp_point *L, const mbedtls_mpi *f,
-                const mbedtls_mpi *g)
+calculate_JfKgL(mbedtls_ecp_point *J, const mbedtls_mpi *f,
+                const mbedtls_ecp_point *K, const mbedtls_mpi *g,
+                const mbedtls_ecp_point *L)
 {
   int ret;
   mbedtls_mpi negative_g, zero, one;
@@ -144,6 +144,31 @@ cleanup:
   mbedtls_mpi_free(&one);
   mbedtls_ecp_point_free(&K_minus_g_L);
   mbedtls_ecp_group_free(&grp);
+  return ret;
+}
+
+// Z = h*x*(Y - w0*N)
+static int
+calculate_Za(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
+             const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
+{
+  int ret;
+
+  mbedtls_ecp_point N;
+  mbedtls_ecp_point_init(&N);
+
+  mbedtls_ecp_group grp;
+  mbedtls_ecp_group_init(&grp);
+
+  MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
+  MBEDTLS_MPI_CHK(
+    mbedtls_ecp_point_read_binary(&grp, &N, bytes_N, sizeof(bytes_N)));
+
+  // For the secp256r1 curve, h is 1, so we don't need to do anything
+  MBEDTLS_MPI_CHK(calculate_JfKgL(Z, x, Y, w0, &N));
+
+cleanup:
+  mbedtls_ecp_point_free(&N);
   return ret;
 }
 
@@ -278,6 +303,12 @@ validate_against_test_vector()
                                    &cmplen, cmpbuf, sizeof(cmpbuf)));
   // check the value of Y is NOT correct
   assert(memcmp(bytes_Y, cmpbuf, cmplen) != 0);
+
+  // ================================
+  // Check that party A can calculate
+  // the shared secret key material
+  // ================================
+
 cleanup:
   return ret;
 }
