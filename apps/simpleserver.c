@@ -198,7 +198,8 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_light, NULL);
   oc_add_resource(res);
 
-  oc_resource_t *res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  oc_resource_t *res_binaryswitch =
+    oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
   oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
