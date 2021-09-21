@@ -44,6 +44,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
 
+// The maximum size of a response to an OBSERVE request, in bytes
+#define OC_MAX_OBSERVE_SIZE 512
+
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
    memory allocation

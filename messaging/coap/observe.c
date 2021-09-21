@@ -652,9 +652,9 @@ coap_notify_observers(oc_resource_t *resource,
 #endif /* OC_BLOCK_WISE */
 
 #ifndef OC_DYNAMIC_ALLOCATION
-    uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+    uint8_t buffer[OC_MAX_OBSERVE_SIZE];
 #else  /* !OC_DYNAMIC_ALLOCATION */
-    uint8_t *buffer = malloc(OC_MAX_APP_DATA_SIZE);
+    uint8_t *buffer = malloc(OC_MAX_OBSERVE_SIZE);
     if (!buffer) {
       OC_WRN("coap_notify_observers: out of memory allocating buffer");
       goto leave_notify_observers;
@@ -669,7 +669,7 @@ coap_notify_observers(oc_resource_t *resource,
       OC_DBG("coap_notify_observers: Issue GET request to resource %s\n\n",
              oc_string(resource->uri));
       response_buffer.buffer = buffer;
-      response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
+      response_buffer.buffer_size = OC_MAX_OBSERVE_SIZE;
       response.response_buffer = &response_buffer;
       request.resource = resource;
       request.response = &response;

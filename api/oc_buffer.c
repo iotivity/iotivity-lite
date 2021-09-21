@@ -54,6 +54,7 @@ allocate_message(struct oc_memb *pool)
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
     message->data = malloc(OC_PDU_SIZE);
     if (!message->data) {
+      OC_ERR("Out of memory, cannot allocate message");
       oc_memb_free(pool, message);
       return NULL;
     }
