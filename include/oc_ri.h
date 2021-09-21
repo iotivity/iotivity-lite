@@ -165,7 +165,6 @@ typedef struct oc_response_t
  *
  */
 typedef enum {
-
   OC_IF_BASELINE = 1 << 1,       ///< oic.if.baseline
   OC_IF_LL = 1 << 2,             ///< oic.if.ll
   OC_IF_B = 1 << 3,              ///< oic.if.b
