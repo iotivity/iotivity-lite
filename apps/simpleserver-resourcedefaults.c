@@ -47,7 +47,6 @@
  *     checks the input data
  *     if input data is correct
  *       updates the global variables
- *
  */
 /*
  tool_version          : 20200103
@@ -104,12 +103,12 @@ int g_binaryswitch_startup_storage_status =
 static char *g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value =
   "value"; /* the name for the attribute */
 bool g_binaryswitch_startup_value = false;
-  /* current value of property "value" The status of the switch. */ /* registration
-                                                                       data
-                                                                       variables
-                                                                       for the
-                                                                       resources
-                                                                     */
+/* current value of property "value" The status of the switch. */ /* registration
+                                                                     data
+                                                                     variables
+                                                                     for the
+                                                                     resources
+                                                                   */
 
 /* global resource variables for path: /binaryswitch_both */
 static char *g_binaryswitch_both_RESOURCE_ENDPOINT =
