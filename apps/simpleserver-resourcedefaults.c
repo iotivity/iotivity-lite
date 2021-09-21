@@ -47,7 +47,6 @@
  *     checks the input data
  *     if input data is correct
  *       updates the global variables
- *
  */
 /*
  tool_version          : 20200103
