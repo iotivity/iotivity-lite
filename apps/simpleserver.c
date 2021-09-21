@@ -64,7 +64,7 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
-
+ 
 static void
 post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
                   void *user_data)
