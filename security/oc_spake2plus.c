@@ -128,6 +128,7 @@ calculate_JfKgL(mbedtls_ecp_point *J, const mbedtls_mpi *f,
   // negative_g = -g
   MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(&zero, 10, "0"));
   MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&negative_g, &zero, g));
+  MBEDTLS_MPI_CHK(mbedtls_mpi_mod_mpi(&negative_g, &negative_g, &grp.N));
 
   // K_minus_g_L = K - g * L
   MBEDTLS_MPI_CHK(mbedtls_mpi_read_string(&one, 10, "1"));
@@ -136,7 +137,9 @@ calculate_JfKgL(mbedtls_ecp_point *J, const mbedtls_mpi *f,
 
   // J = f * (K_minus_g_L)
   MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, J, f, &K_minus_g_L,
-                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+                                  // TODO this segfaults, find out why
+                                  // mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+                                  NULL, NULL));
 
 cleanup:
   mbedtls_mpi_free(&negative_g);
