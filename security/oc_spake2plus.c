@@ -137,9 +137,7 @@ calculate_JfKgL(mbedtls_ecp_point *J, const mbedtls_mpi *f,
 
   // J = f * (K_minus_g_L)
   MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, J, f, &K_minus_g_L,
-                                  // TODO this segfaults, find out why
-                                  // mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
-                                  NULL, NULL));
+                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
 cleanup:
   mbedtls_mpi_free(&negative_g);
@@ -257,6 +255,9 @@ validate_against_test_vector()
   mbedtls_ecp_group grp;
   mbedtls_ecp_group_init(&grp);
   MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
+
+  // initialize rng
+  init_context();
 
   // =========================
   // Check that X = x*P + w0*M
