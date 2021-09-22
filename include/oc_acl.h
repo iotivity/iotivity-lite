@@ -42,7 +42,7 @@ typedef struct oc_sec_acl_s
  *
  */
 typedef enum {
-  OC_CONN_AUTH_CRYPT = 0, ///< auth-crypt, authenticated and encrypted
+  OC_CONN_AUTH_CRYPT =  0, ///< auth-crypt, authenticated and encrypted
   OC_CONN_ANON_CLEAR      ///< anon-clear, not authenticated and not encrypted
 } oc_ace_connection_type_t;
 
