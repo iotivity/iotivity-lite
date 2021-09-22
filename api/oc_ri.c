@@ -66,7 +66,7 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 #include "oc_push.h"
 #endif
 
@@ -352,7 +352,7 @@ oc_ri_init(void)
 
   oc_list_init(timed_callbacks);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_push_list_init();
 #endif
 

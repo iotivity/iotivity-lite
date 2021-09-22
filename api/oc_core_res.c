@@ -49,6 +49,11 @@ static bool announce_con_res = false;
 static int res_latency = 0;
 static size_t device_count = 0;
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#include "oc_push.h"
+#endif
+
+
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
    Update OC_NAMELEN_CON_RES if changing the value.
@@ -401,7 +406,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_create_pushconf_resource(device_count);
   oc_create_pushreceiver_resource(device_count);
 #endif

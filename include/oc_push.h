@@ -20,34 +20,43 @@
 #ifndef OC_PUSH_H
 #define OC_PUSH_H
 
+#include <stdio.h>
+
 #include "oc_config.h"
 #include "oc_helpers.h"
-#include "oc_memb.h"
 #include "oc_rep.h"
+#include "oc_ri.h"
 #include "oc_endpoint.h"
 #include "port/oc_log.h"
+#include "util/oc_memb.h"
 #include "util/oc_process.h"
 
 /*
  * TODO4ME remove later...
  */
-#define PUSH_DEBUG
+//#define OC_PUSHDEBUG
 
-#if defined(PUSH_DEBUG) || defind(OC_DEBUG)
-	#define PRINT(...) printf(__VA_ARGS__)
-	#define OC_LOG(level, ...)                                                     \
-			do {                                                                         \
-				PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
-				PRINT(__VA_ARGS__);                                                        \
-				PRINT("\n");                                                               \
-			} while (0)
-	#define p_dbg(...) OC_LOG("DEBUG", __VA_ARGS__)
-	#define p_wrn(...) OC_LOG("WARNING", __VA_ARGS__)
-	#define p_err(...) OC_LOG("ERROR", __VA_ARGS__)
+#if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
+#ifndef OC_DEBUG
+#define oc_print(...) printf(__VA_ARGS__)
+#define oc_log(level, ...)                                                     \
+		do {                                                                         \
+			oc_print("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
+			oc_print(__VA_ARGS__);                                                        \
+			oc_print("\n");                                                               \
+		} while (0)
+#define p_dbg(...) oc_log("DEBUG", __VA_ARGS__)
+#define p_wrn(...) oc_log("WARNING", __VA_ARGS__)
+#define p_err(...) oc_log("ERROR", __VA_ARGS__)
 #else
-	#define p_dbg(...)
-	#define p_wrn(...)
-	#define p_err(...)
+#define p_dbg(...) OC_LOG("DEBUG", __VA_ARGS__)
+#define p_wrn(...) OC_LOG("WARNING", __VA_ARGS__)
+#define p_err(...) OC_LOG("ERROR", __VA_ARGS__)
+#endif
+#else
+#define p_dbg(...)
+#define p_wrn(...)
+#define p_err(...)
 #endif
 
 
@@ -59,9 +68,6 @@ extern "C"
 
 #define PUSHCONF_PATH "/pushconfig"
 #define PUSHRECVS_PATH "/pushreceivers"
-
-#define _find_recv_obj_by_uri2(recvs_instance, uri_string) \
-	_find_recv_obj_by_uri((recvs_instance), oc_string(uri_string), oc_string_len(uri_string))
 
 
 typedef enum {
@@ -103,9 +109,6 @@ typedef struct oc_recv
 	oc_string_t receiveruri;
 	oc_string_array_t rts;
 	oc_endpoint_t ep;
-	/*
-	 * TODO4ME endpoint Property를 추가할 것, 실제 request 보낼때 필요함
-	 */
 } oc_recv_t;
 
 
@@ -128,7 +131,7 @@ typedef struct oc_recvs
  */
 typedef struct oc_pushd_rsc_rep
 {
-	struct oc_pushd_rsc *next;
+	struct oc_pushd_rsc_rep *next;
 	oc_resource_t *resource;
 	oc_rep_t *rep;
 } oc_pushd_rsc_rep_t;
@@ -139,6 +142,12 @@ OC_PROCESS_NAME(oc_push_process);
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
+oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len);
+
+#define _find_recv_obj_by_uri2(recvs_instance, uri_string) \
+	(_find_recv_obj_by_uri((recvs_instance), oc_string(uri_string), oc_string_len(uri_string)))
+
+
 
 
 #ifdef __cplusplus

@@ -35,12 +35,12 @@ typedef enum { OC_GET = 1, OC_POST, OC_PUT, OC_DELETE, OC_FETCH } oc_method_t;
 /*
  * TODO4ME remove later...
  */
-#define OC_PUSH
+//#define OC_PUSH
 
 typedef enum {
   OC_DISCOVERABLE = (1 << 0),
   OC_OBSERVABLE = (1 << 1),
-#ifdef OC_PUSH
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   OC_PUSHABLE = (1 << 2),
 #endif
   OC_SECURE = (1 << 4),
@@ -188,7 +188,7 @@ typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
 typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
                                        void *);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 typedef void (*oc_payload_callback_t)();
 #endif
 
@@ -225,7 +225,7 @@ struct oc_resource_s
   uint8_t num_observers;
 #ifdef OC_COLLECTIONS
   uint8_t num_links;
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_payload_callback_t payload_builder;
 #endif
 #endif /* OC_COLLECTIONS */

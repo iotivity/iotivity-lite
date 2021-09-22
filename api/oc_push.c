@@ -19,7 +19,7 @@
 
 #include "oc_push.h"
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 
 #include "oc_api.h"
 #include "oc_events.h"
@@ -191,7 +191,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_new_string_array(&ns_instance->prt, oc_string_array_get_allocated_size(rep->value.array));
 
-				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
 					oc_string_array_add_item(ns_instance->prt, oc_string_array_get_item(rep->value.array, i));
 				}
@@ -201,7 +201,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_new_string_array(&ns_instance->pif, oc_string_array_get_allocated_size(rep->value.array));
 
-				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
 					oc_string_array_add_item(ns_instance->pif, oc_string_array_get_item(rep->value.array, i));
 				}
@@ -211,7 +211,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
 
-				for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
@@ -270,7 +270,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		if (oc_string_array_get_allocated_size(ns_instance->prt))
 		{
 			oc_rep_set_array(root, prt);
-			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->prt); i++)
+			for (int i=0; i < (int)oc_string_array_get_allocated_size(ns_instance->prt); i++)
 			{
 				oc_rep_add_text_string(prt, oc_string_array_get_item(ns_instance->prt, i));
 			}
@@ -281,7 +281,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		if (oc_string_array_get_allocated_size(ns_instance->pif))
 		{
 			oc_rep_set_array(root, pif);
-			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->pif); i++)
+			for (int i=0; i < (int)oc_string_array_get_allocated_size(ns_instance->pif); i++)
 			{
 				oc_rep_add_text_string(pif, oc_string_array_get_item(ns_instance->pif, i));
 			}
@@ -305,7 +305,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		if (oc_string_array_get_allocated_size(ns_instance->sourcert))
 		{
 			oc_rep_set_array(root, sourcert);
-			for (char i=0; i < oc_string_array_get_allocated_size(ns_instance->sourcert); i++)
+			for (int i=0; i < (int)oc_string_array_get_allocated_size(ns_instance->sourcert); i++)
 			{
 				oc_rep_add_text_string(sourcert, oc_string_array_get_item(ns_instance->sourcert, i));
 			}
@@ -347,7 +347,9 @@ void get_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_da
  */
 void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
-	set_ns_properties(request->resource, iface_mask, user_data);
+	(void)iface_mask;
+
+	set_ns_properties(request->resource, request->request_payload, user_data);
 	oc_send_response(request, OC_STATUS_CHANGED);
 }
 
@@ -368,7 +370,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 		ns_instance->resource = oc_new_resource(NULL, href, oc_string_array_get_allocated_size(*types), device);
 		if (ns_instance->resource) {
 			int i;
-			for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
+			for (i = 0; i < (int)oc_string_array_get_allocated_size(*types); i++) {
 				const char *rt = oc_string_array_get_item(*types, i);
 				oc_resource_bind_resource_type(ns_instance->resource, rt);
 			}
@@ -543,9 +545,9 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
 
 	   /* oc_rep_add_byte_string(xxxx, str); */
-	   for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+	   for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 	   {
-	   	g_err |= cbor_encode_byte_string(&child, oc_string_array_get_item(rep->value.array, i),
+	   	g_err |= cbor_encode_byte_string(&child, (const uint8_t *)oc_string_array_get_item(rep->value.array, i),
 	   												strlen(oc_string_array_get_item(rep->value.array, i)));
 	   }
 
@@ -568,7 +570,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
 
 	   /* oc_rep_add_text_string(xxxx, str); */
-	   for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+	   for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 	   {
 	      if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
 	        g_err |= cbor_encode_text_string(&child, oc_string_array_get_item(rep->value.array, i),
@@ -588,7 +590,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
 
 	   /* oc_rep_add_boolean(xxxx, value); */
-	   for (int i=0; i<rep->value.array.size; i++)
+	   for (int i=0; i<(int)rep->value.array.size; i++)
 	   {
 	   	g_err |= cbor_encode_boolean(&child, ((char *)(rep->value.array.ptr))[i]);
 	   }
@@ -603,7 +605,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
 
 	   /* oc_rep_add_double(xxxx, value); */
-	   for (int i=0; i<rep->value.array.size; i++)
+	   for (int i=0; i<(int)rep->value.array.size; i++)
 	   {
 	   	g_err |= cbor_encode_double(&child, ((double *)(rep->value.array.ptr))[i]);
 	   }
@@ -618,7 +620,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	   g_err |= cbor_encoder_create_array(parent, &child, CborIndefiniteLength);
 
 	   /* oc_rep_add_int(xxxx, value); */
-	   for (int i=0; i<rep->value.array.size; i++)
+	   for (int i=0; i<(int)rep->value.array.size; i++)
 	   {
 	   	g_err |= cbor_encode_int(&child, ((int64_t *)(rep->value.array.ptr))[i]);
 	   }
@@ -630,7 +632,7 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	case OC_REP_BYTE_STRING:
 		/* oc_rep_set_byte_string(object, key, value, length) */
 		g_err |= cbor_encode_text_string(parent, oc_string(rep->name), oc_string_len(rep->name));
-		g_err |= cbor_encode_byte_string(parent, oc_string(rep->value.string), oc_string_len(rep->value.string));
+		g_err |= cbor_encode_byte_string(parent, (const uint8_t *)oc_string(rep->value.string), oc_string_len(rep->value.string));
 		break;
 
 	case OC_REP_STRING:
@@ -727,8 +729,39 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 
 
 
+/**
+ * @brief
+ *
+ * @param uri
+ * @param device_index
+ * @return
+ */
+oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t *uri, size_t device_index)
+{
+	oc_pushd_rsc_rep_t *pushd_rsc_rep = (oc_pushd_rsc_rep_t *)(oc_list_head(pushd_rsc_rep_list));
+
+	while (pushd_rsc_rep)
+	{
+		if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri))
+				&& (pushd_rsc_rep->resource->device == device_index))
+		{
+			break;
+		}
+		else
+		{
+			pushd_rsc_rep = pushd_rsc_rep->next;
+		}
+	}
+
+	return pushd_rsc_rep;
+}
+
+
+
 void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	(void)user_data;
+
 	int result = OC_STATUS_OK;
 	oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&request->resource->uri, request->resource->device);
 
@@ -746,6 +779,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 		{
 		case OC_IF_BASELINE:
 			oc_process_baseline_interface(request->resource);
+			/* fall through */
 		case OC_IF_R:
 		case OC_IF_RW:
 			_build_rep_payload(&root_map, pushd_rsc_rep->rep);
@@ -822,8 +856,108 @@ char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 
 
 
+
+oc_recvs_t * _find_recvs_by_device(size_t device_index)
+{
+	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
+
+	while (recvs_instance)
+	{
+		if (recvs_instance->resource->device == device_index)
+		{
+			break;
+		}
+		else
+		{
+			recvs_instance = recvs_instance->next;
+		}
+	}
+
+	return recvs_instance;
+}
+
+
+
+
+
+/**
+ * @brief				oc_rep_set_pool() should be called before calling this func
+ *
+ * @param new_rep
+ * @param org_rep
+ */
+void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
+{
+	if (!org_rep)
+		return org_rep;
+
+	*new_rep = oc_alloc_rep();
+
+	(*new_rep)->next = _create_pushd_rsc_rep(&((*new_rep)->next), org_rep->next);
+
+	(*new_rep)->type = org_rep->type;
+	oc_new_string(&((*new_rep)->name), oc_string(org_rep->name), oc_string_len(org_rep->name));
+
+
+	switch (org_rep->type)
+	{
+	case OC_REP_NIL:
+		break;
+	case OC_REP_INT:
+		(*new_rep)->value.integer= org_rep->value.integer;
+		break;
+	case OC_REP_DOUBLE:
+		(*new_rep)->value.double_p= org_rep->value.double_p;
+		break;
+	case OC_REP_BOOL:
+		(*new_rep)->value.boolean = org_rep->value.boolean;
+		break;
+	case OC_REP_BYTE_STRING_ARRAY:
+	case OC_REP_STRING_ARRAY:
+		oc_new_string_array(&(*new_rep)->value.array, oc_string_array_get_allocated_size(org_rep->value.array));
+		for (int i=0; i<(int)oc_string_array_get_allocated_size(org_rep->value.array); i++)
+		{
+			oc_string_array_add_item((*new_rep)->value.array, oc_string_array_get_item(org_rep->value.array, i));
+		}
+		break;
+	case OC_REP_BOOL_ARRAY:
+		oc_new_bool_array(&(*new_rep)->value.array, oc_bool_array_size(org_rep->value.array));
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(uint8_t));
+		break;
+	case OC_REP_DOUBLE_ARRAY:
+		oc_new_double_array(&(*new_rep)->value.array, oc_double_array_size(org_rep->value.array));
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(double));
+		break;
+	case OC_REP_INT_ARRAY:
+		oc_new_int_array(&(*new_rep)->value.array, oc_int_array_size(org_rep->value.array));
+		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(int64_t));
+		break;
+	case OC_REP_BYTE_STRING:
+	case OC_REP_STRING:
+		oc_new_string(&((*new_rep)->value.string), oc_string(org_rep->value.string), oc_string_len(org_rep->value.string));
+		break;
+	case OC_REP_OBJECT:
+		(*new_rep)->value.object = _create_pushd_rsc_rep(&((*new_rep)->value.object), org_rep->value.object);
+		break;
+	case OC_REP_OBJECT_ARRAY:
+		(*new_rep)->value.object_array = _create_pushd_rsc_rep(&((*new_rep)->value.object_array), org_rep->value.object_array);
+		break;
+	default:
+		break;
+	}
+
+	return (*new_rep);
+}
+
+
+
+
+
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	(void)iface_mask;
+	(void)user_data;
+
 	int result = OC_STATUS_CHANGED;
 	oc_rep_t *rep = request->request_payload;
 	oc_pushd_rsc_rep_t *pushd_rsc_rep;
@@ -865,7 +999,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 					/* update rt */
 					oc_free_string_array(&request->resource->types);
 					oc_new_string_array(&request->resource->types, oc_string_array_get_allocated_size(rep->value.array));
-					for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+					for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 					{
 						oc_string_array_add_item(request->resource->types, oc_string_array_get_item(rep->value.array, i));
 					}
@@ -874,7 +1008,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 				{
 					/* update if */
 					request->resource->interfaces = 0;
-					for (int i=0; i<oc_string_array_get_allocated_size(rep->value.array); i++)
+					for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 					{
 						request->resource->interfaces |=
 								oc_ri_get_interface_mask(oc_string_array_get_item(rep->value.array, i),
@@ -893,14 +1027,14 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 						if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
 						{
 							p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
-									os_string(request->resource->uri));
+									oc_string(request->resource->uri));
 							result = OC_STATUS_INTERNAL_SERVER_ERROR;
 						}
 					}
 					else
 					{
 						p_err("something wrong!, can't find corresponding pushed resource representation instance for (%s) \n",
-								os_string(request->resource->uri));
+								oc_string(request->resource->uri));
 						result = OC_STATUS_NOT_FOUND;
 					}
 				}
@@ -929,6 +1063,8 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
  */
 void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	(void)user_data;
+
 	int result = OC_STATUS_OK;
 
 	oc_rep_begin_root_object();
@@ -936,6 +1072,7 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 	{
 	case OC_IF_BASELINE:
 		oc_process_baseline_interface(request->resource);
+		/* fall through */
 	case OC_IF_RW:
 		/*
 		 * `receivers` object array
@@ -986,7 +1123,7 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 					/* receiver:rts[] */
 					oc_rep_open_array(receivers, rts);
 //					for (char j=0; j < oc_string_array_get_allocated_size(recvs[i].rts); j++)
-					for (char j=0; j < oc_string_array_get_allocated_size(recv_obj->rts); j++)
+					for (int j=0; j < (int)oc_string_array_get_allocated_size(recv_obj->rts); j++)
 					{
 //						oc_rep_add_text_string(rts, oc_string_array_get_item(recvs[i].rts, j));
 						oc_rep_add_text_string(rts, oc_string_array_get_item(recv_obj->rts, j));
@@ -1107,55 +1244,12 @@ oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, i
 
 
 
-oc_recvs_t * _find_recvs_by_device(size_t device_index)
-{
-	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
-
-	while (recvs_instance)
-	{
-		if (recvs_instance->resource->device == device_index)
-		{
-			break;
-		}
-		else
-		{
-			recvs_instance = recvs_instance->next;
-		}
-	}
-
-	return recvs_instance;
-}
 
 
 
 
 
-/**
- * @brief
- *
- * @param uri
- * @param device_index
- * @return
- */
-oc_pushd_rsc_rep_t * _find_pushd_rsc_rep_by_uri(oc_string_t *uri, size_t device_index)
-{
-	oc_pushd_rsc_rep_t *pushd_rsc_rep = (oc_pushd_rsc_rep_t *)oc_list_head(pushd_rsc_rep_list);
 
-	while (pushd_rsc_rep)
-	{
-		if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri))
-				&& (pushd_rsc_rep->resource->device == device_index))
-		{
-			break;
-		}
-		else
-		{
-			pushd_rsc_rep = pushd_rsc_rep->next;
-		}
-	}
-
-	return pushd_rsc_rep;
-}
 
 
 
@@ -1184,7 +1278,7 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 	}
 	else
 	{
-		p_err("can't find resource representation for pushed resource (%s)...\n", oc_string(uri));
+		p_err("can't find resource representation for pushed resource (%s)...\n", oc_string(*uri));
 		return;
 	}
 
@@ -1195,7 +1289,7 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 	}
 	else
 	{
-		p_err("can't find pushed resource (%s)...\n", oc_string(uri));
+		p_err("can't find pushed resource (%s)...\n", oc_string(*uri));
 		return;
 	}
 
@@ -1204,74 +1298,6 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 
 
 
-/**
- * @brief				oc_rep_set_pool() should be called before calling this func
- *
- * @param new_rep
- * @param org_rep
- */
-void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
-{
-	if (!org_rep)
-		return org_rep;
-
-	*new_rep = oc_alloc_rep();
-
-	(*new_rep)->next = _create_pushd_rsc_rep(&((*new_rep)->next), org_rep->next);
-
-	(*new_rep)->type = org_rep->type;
-	oc_new_string((*new_rep)->name, oc_string(org_rep->name), oc_string_len(org_rep->name));
-
-
-	switch (org_rep->type)
-	{
-	case OC_REP_NIL:
-		break;
-	case OC_REP_INT:
-		(*new_rep)->value.integer= org_rep->value.integer;
-		break;
-	case OC_REP_DOUBLE:
-		(*new_rep)->value.double_p= org_rep->value.double_p;
-		break;
-	case OC_REP_BOOL:
-		(*new_rep)->value.boolean = org_rep->value.boolean;
-		break;
-	case OC_REP_BYTE_STRING_ARRAY:
-	case OC_REP_STRING_ARRAY:
-		oc_new_string_array(&(*new_rep)->value.array, oc_string_array_get_allocated_size(org_rep->value.array));
-		for (int i=0; i<oc_string_array_get_allocated_size(org_rep->value.array); i++)
-		{
-			oc_string_array_add_item((*new_rep)->value.array, oc_string_array_get_item(org_rep->value.array, i));
-		}
-		break;
-	case OC_REP_BOOL_ARRAY:
-		oc_new_bool_array(&(*new_rep)->value.array, oc_bool_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(uint8_t));
-		break;
-	case OC_REP_DOUBLE_ARRAY:
-		oc_new_double_array(&(*new_rep)->value.array, oc_double_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(double));
-		break;
-	case OC_REP_INT_ARRAY:
-		oc_new_int_array(&(*new_rep)->value.array, oc_int_array_size(org_rep->value.array));
-		memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr, org_rep->value.array.size*sizeof(int64_t));
-		break;
-	case OC_REP_BYTE_STRING:
-	case OC_REP_STRING:
-		oc_new_string((*new_rep)->value.string, oc_string(org_rep->value.string), oc_string_len(org_rep->value.string));
-		break;
-	case OC_REP_OBJECT:
-		(*new_rep)->value.object = _create_pushd_rsc_rep(&((*new_rep)->value.object), org_rep->value.object);
-		break;
-	case OC_REP_OBJECT_ARRAY:
-		(*new_rep)->value.object_array = _create_pushd_rsc_rep(&((*new_rep)->value.object_array), org_rep->value.object_array);
-		break;
-	default:
-		break;
-	}
-
-	return (*new_rep);
-}
 
 
 
@@ -1282,19 +1308,19 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
  * @param resource
  * @param rep
  */
-void _update_pushd_rsc(oc_resource_t *resource, oc_rep_t *rep)
-{
-
-
-	while (rep)
-	{
-		switch (rep->type)
-		{
-
-		}
-	}
-
-}
+//void _update_pushd_rsc(oc_resource_t *resource, oc_rep_t *rep)
+//{
+//
+//
+//	while (rep)
+//	{
+//		switch (rep->type)
+//		{
+//
+//		}
+//	}
+//
+//}
 
 
 
@@ -1505,8 +1531,8 @@ void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
 	int obj_arr_len;
 	oc_rep_t *rep_obj;
-	oc_rep_t *rep_obj_value;
-	oc_recv_t *recv_obj_instance;
+//	oc_rep_t *rep_obj_value;
+//	oc_recv_t *recv_obj_instance;
 
 	/* remove existing receivers object array */
 //	_purge_recv_obj_list(recv_obj_list, resource->device);
@@ -1550,6 +1576,9 @@ void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
  */
 void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
+	(void)iface_mask;
+	(void)user_data;
+
 	char *uri_param;
 	int uri_param_len = -1;
 	oc_recv_t *recv_obj;
@@ -1574,7 +1603,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		if (recvs_instance->resource == request->resource)
 		{
-			p_dbg("receivers obj array instance for target resource (%s) is found!\n", oc_sting(request->resource->uri));
+			p_dbg("receivers obj array instance for target resource (%s) is found!\n", oc_string(request->resource->uri));
 
 			if (uri_param_len != -1)
 			{
@@ -1591,7 +1620,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				{
 					/* if the given `receiveruri` parameter is not in existing receivers array,
 					 * add new receiver object to the receivers array */
-#ifdef PUSH_DEBUG
+#ifdef OC_PUSHDEBUG
 					oc_string_t uri;
 					oc_new_string(&uri, uri_param, uri_param_len);
 					p_err("can't find receiver object which has uri(%s)\n creating new receiver obj...", oc_string(uri));
@@ -1719,10 +1748,10 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
  * @param iface_mask
  * @param user_data
  */
-void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
-{
-
-}
+//void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+//{
+//
+//}
 
 
 
@@ -1745,7 +1774,10 @@ void oc_create_pushreceiver_resource(size_t device_index)
 
 	oc_resource_set_request_handler(push_recv, OC_GET, get_pushrecv, NULL);
 	oc_resource_set_request_handler(push_recv, OC_POST, post_pushrecv, NULL);
-	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
+	/*
+	 * TODO4ME <2021/9/22> is DELETE necessary??
+	 */
+//	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
 
 	oc_add_resource(push_recv);
 
@@ -1823,9 +1855,6 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			/*
 			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
-			 */
-			/*
-			 * TODO4ME 2021/9/19 resume here..
 			 */
 			if (oc_init_post(oc_string(ns_instance->targetpath), ns_instance->pushtarget_ep,
 									"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
@@ -1922,9 +1951,6 @@ char _check_string_array_inclusion(oc_string_array_t *target, oc_string_array_t 
  */
 void oc_resource_state_changed(const char *uri, size_t device_index)
 {
-	/*
-	 * TODO4ME 여기서 변동이 생긴 resource가 부합되는 notification selector가 있는지 확인해야 한다
-	 */
 	oc_resource_t *resource = oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
 	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
 	char all_matched = 1;
@@ -1962,7 +1988,7 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 		if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
 		{
 			oc_interface_mask_t pif = 0;
-			for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->pif); i++)
+			for (int i=0; i<(int)oc_string_array_get_allocated_size(ns_instance->pif); i++)
 			{
 				pif |= _get_ifmask_from_ifstr(oc_string_array_get_item(ns_instance->pif, i));
 			}
@@ -2065,4 +2091,4 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 
 
 
-#endif /* OC_PUSH && OC_SERVER && OC_CLIENT */
+#endif /* OC_PUSH && OC_SERVER && OC_CLIENT && OC_DYNAMIC_ALLOCATION && OC_COLLECTIONS_IF_CREATE */
