@@ -54,7 +54,7 @@ typedef enum {
   OC_ACE_NO_WC = 0,             ///< no wild card
   OC_ACE_WC_ALL = 0x111,        ///< all
   OC_ACE_WC_ALL_SECURED = 0x01, ///< Secured
-  OC_ACE_WC_ALL_PUBLIC =  0x10,  ///< public
+  OC_ACE_WC_ALL_PUBLIC = 0x10,  ///< public
 } oc_ace_wildcard_t;
 
 /**
