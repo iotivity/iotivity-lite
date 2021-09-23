@@ -151,7 +151,6 @@ cleanup:
 // Z = h*x*(Y - w0*N)
 // also works for:
 // V = h*w1*(Y - w0*N)
-// Z = h*y*(X - w0*M)
 static int
 calculate_ZV_N(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
              const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
@@ -173,6 +172,30 @@ calculate_ZV_N(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
 
 cleanup:
   mbedtls_ecp_point_free(&N);
+  return ret;
+}
+// Z = h*y*(X - w0*M)
+static int
+calculate_Z_M(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
+             const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
+{
+  int ret;
+
+  mbedtls_ecp_point M;
+  mbedtls_ecp_point_init(&M);
+
+  mbedtls_ecp_group grp;
+  mbedtls_ecp_group_init(&grp);
+
+  MBEDTLS_MPI_CHK(mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1));
+  MBEDTLS_MPI_CHK(
+    mbedtls_ecp_point_read_binary(&grp, &M, bytes_M, sizeof(bytes_M)));
+
+  // For the secp256r1 curve, h is 1, so we don't need to do anything
+  MBEDTLS_MPI_CHK(calculate_JfKgL(Z, x, Y, w0, &M));
+
+cleanup:
+  mbedtls_ecp_point_free(&M);
   return ret;
 }
 
@@ -338,14 +361,28 @@ validate_against_test_vector()
   mbedtls_ecp_point_init(&Z);
 
   // Z = h*x*(Y - w0*N)
-  printf("Calculating Z...\n");
   MBEDTLS_MPI_CHK(calculate_ZV_N(&Z, &x, &Y, &w0));
 
-  printf("Comparing Z...\n");
   MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_Z, cmpbuf, cmplen) == 0);
 
+  mbedtls_ecp_point V;
+  mbedtls_ecp_point_init(&V);
+
+  mbedtls_mpi w1;
+  mbedtls_mpi_init(&w1);
+  mbedtls_mpi_read_binary(&w1, bytes_w1, sizeof(bytes_w1));
+
   // V = h*w1*(Y - w0*N)
+  MBEDTLS_MPI_CHK(calculate_ZV_N(&V, &w1, &Y, &w0));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
+
+  // ================================
+  // Check that party B can calculate
+  // the shared secret key material
+  // ================================
+
 
 cleanup:
   return ret;
