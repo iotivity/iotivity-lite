@@ -383,6 +383,20 @@ validate_against_test_vector()
   // the shared secret key material
   // ================================
 
+  // Z = h*y*(X - w0*M)
+  MBEDTLS_MPI_CHK(calculate_Z_M(&Z, &y, &X, &w0));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  assert(memcmp(bytes_Z, cmpbuf, cmplen) == 0);
+
+  // V = h*y*L, where L = w1*P
+  mbedtls_ecp_point L;
+  mbedtls_ecp_point_init(&L);
+
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G, NULL, NULL));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &V, &y, &L, NULL, NULL));
+
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
 
 cleanup:
   return ret;
