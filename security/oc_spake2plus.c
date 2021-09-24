@@ -331,6 +331,8 @@ validate_against_test_vector()
                         0x4e, 0x3b, 0x1f, 0x31, 0x8d, 0x76, 0xe3, 0x6f, 0xea,
                         0x99, 0x66 };
 
+  uint8_t Ka[] = {0xec, 0x8d, 0x19, 0xb8, 0x07, 0xff, 0xb1, 0xd1, 0xee, 0xa8, 0x1a, 0x93, 0xba, 0x35, 0xcd, 0xfe};
+  uint8_t Ke[] = {0x2e, 0xa4, 0x0e, 0x4b, 0xad, 0xfa, 0x54, 0x52, 0xb5, 0x74, 0x4d, 0xc5, 0x98, 0x3e, 0x99, 0xba};
   uint8_t cmpbuf[128];
   size_t cmplen;
   int ret;
@@ -493,10 +495,19 @@ validate_against_test_vector()
   // w0
   ttlen += encode_mpi(&w0, ttbuf + ttlen);
 
-  for (size_t i = 0; i < ttlen; i++) {
-    printf("%02x", ttbuf[i]);
-  }
-  printf("\n");
+  // ====================
+  // Calculate Key & Key 
+  //     Confirmation
+  // ====================
+  uint8_t Ka_Ke[32];
+
+  mbedtls_sha256(ttbuf, ttlen, Ka_Ke, 0);
+  // first half of Ka_Ke
+  assert(memcmp(Ka, Ka_Ke, 16) == 0);
+  // second half of Ka_Ke
+  assert(memcmp(Ke, Ka_Ke + 16, 16) == 0);
+
+  mbedtls_md_hmac(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), Ka, sizeof(Ka), ttbuf, ttlen, Ka_Ke, 0);
 
 cleanup:
   return ret;
