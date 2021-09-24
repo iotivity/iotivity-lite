@@ -199,6 +199,67 @@ cleanup:
   return ret;
 }
 
+// encode value as zero-padded little endian bytes
+// returns number of bytes written (always 8)
+// buffer must be able to fit 8 bytes
+size_t encode_uint(uint64_t value, uint8_t *buffer)
+{
+  buffer[0] = (value >>  0) & 0xff;
+  buffer[1] = (value >>  8) & 0xff;
+  buffer[2] = (value >> 16) & 0xff;
+  buffer[3] = (value >> 24) & 0xff;
+  buffer[4] = (value >> 32) & 0xff;
+  buffer[5] = (value >> 40) & 0xff;
+  buffer[6] = (value >> 48) & 0xff;
+  buffer[7] = (value >> 56) & 0xff;
+  return 8;
+}
+
+// encode string as length followed by bytes
+// returns number of bytes written
+size_t encode_string(const char *str, uint8_t *buffer)
+{
+  size_t len = encode_uint(strlen(str), buffer);
+  memcpy(buffer + len, str, strlen(str));
+  return len + strlen(str);
+}
+
+// encode point as length followed by bytes
+// returns number of bytes written
+size_t encode_point(mbedtls_ecp_group *grp, const mbedtls_ecp_point *point, uint8_t *buffer)
+{
+  size_t len_point = 0;
+  size_t len_len = 0;
+  uint8_t point_buf[65];
+  int ret;
+  ret = mbedtls_ecp_point_write_binary(grp, point, MBEDTLS_ECP_PF_UNCOMPRESSED, &len_point, point_buf, sizeof(point_buf));
+  assert(ret == 0);
+
+  len_len = encode_uint(len_point, buffer);
+  memcpy(buffer + len_len, point_buf, len_point);
+  return len_len + len_point;
+}
+
+// encode mpi as length followed by bytes
+// returns number of bytes written
+size_t encode_mpi(mbedtls_mpi *mpi, uint8_t *buffer)
+{
+  size_t len_mpi = 0;
+  size_t len_len = 0;
+  uint8_t mpi_buf[64];
+  int ret;
+
+  len_mpi = mbedtls_mpi_size(mpi);
+
+  // hmm, this is big endian. is that ok?
+  ret = mbedtls_mpi_write_binary(mpi, mpi_buf, len_mpi);
+  assert(ret == 0);
+
+  len_len = encode_uint(len_mpi, buffer);
+  memcpy(buffer + len_len, mpi_buf, len_mpi);
+  return len_len + len_mpi;
+}
+
 int
 validate_against_test_vector()
 {
@@ -398,6 +459,30 @@ validate_against_test_vector()
   MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
 
+  // ====================
+  // Calculate transcript
+  // ====================
+
+  uint8_t ttbuf[2048];
+  size_t ttlen = 0;
+  // len(Context)
+  ttlen += encode_uint(strlen(Context), ttbuf + ttlen);
+  // Context
+  memcpy(ttbuf + ttlen, Context, strlen(Context));
+  ttlen += strlen(Context);
+  // len(A)
+  ttlen += encode_uint(strlen(A), ttbuf + ttlen);
+  // A
+  memcpy(ttbuf + ttlen, A, strlen(A));
+  ttlen += strlen(A);
+  // len(B)
+  ttlen += encode_uint(strlen(B), ttbuf + ttlen);
+  // B
+  memcpy(ttbuf + ttlen, B, strlen(B));
+  ttlen += strlen(B);
+  // len(M)
+  // TODO function that takes an ECP point and encodes its len & bytes
+  // TODO function that takes an MPI and encodes its len & bytes
 cleanup:
   return ret;
 }
