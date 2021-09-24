@@ -654,6 +654,15 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -713,7 +722,7 @@ main(int argc, char *argv[])
       oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
     }
   }
-
+  display_device_uuid();
   run();
 
   oc_cloud_manager_stop(ctx);
