@@ -1662,6 +1662,15 @@ oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
   PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 /**
  * main application.
  * intializes the global variables
@@ -1812,6 +1821,7 @@ main(int argc, char *argv[])
 
   oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
   PRINT(" UUID: '%s'\n", proxy_di);
+  display_device_uuid();
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
 
 #ifdef RESET
