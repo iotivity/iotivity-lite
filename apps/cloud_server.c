@@ -54,9 +54,19 @@ init(void)
   return 0;
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 static void
 run(void)
 {
+  display_device_uuid();
   while (quit != 1) {
     oc_clock_time_t next_event = oc_main_poll();
     if (next_event == 0) {
