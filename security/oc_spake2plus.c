@@ -296,7 +296,7 @@ validate_against_test_vector()
   mbedtls_ecp_point_init(&X);
   mbedtls_ecp_point_init(&pubA);
   // pubA = x*P (P is the generator group element, mbedtls uses G)
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubA, &x, &grp.G, NULL, NULL));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubA, &x, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // X = pubA + w0*M
   MBEDTLS_MPI_CHK(calculate_pA(&X, &pubA, &w0));
@@ -318,7 +318,7 @@ validate_against_test_vector()
   mbedtls_ecp_point_init(&Y);
   mbedtls_ecp_point_init(&pubB);
   // pubB = y*P
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubB, &y, &grp.G, NULL, NULL));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubB, &y, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // Y = pubB + w0*N
   MBEDTLS_MPI_CHK(calculate_pB(&Y, &pubB, &w0));
@@ -342,7 +342,7 @@ validate_against_test_vector()
   bytes_y[5]--;
 
   // pubB = y*P
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &bad_pubB, &bad_y, &grp.G, NULL, NULL));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &bad_pubB, &bad_y, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // Y = pubB + w0*N
   MBEDTLS_MPI_CHK(calculate_pB(&bad_Y, &bad_pubB, &w0));
@@ -392,8 +392,8 @@ validate_against_test_vector()
   mbedtls_ecp_point L;
   mbedtls_ecp_point_init(&L);
 
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G, NULL, NULL));
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &V, &y, &L, NULL, NULL));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &V, &y, &L, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
