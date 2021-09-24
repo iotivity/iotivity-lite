@@ -1,21 +1,25 @@
-/*
-// Copyright (c) 2021 ETRI
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-//   Created on: Aug 23, 2021
-//       Author: jclee
-*/
+/****************************************************************************
+ *
+ * Copyright 2021 ETRI All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * Created on: Aug 23, 2021,
+ * 				Author: jclee
+ *
+ *
+ ****************************************************************************/
+
 
 #include "oc_push.h"
 
@@ -1787,6 +1791,8 @@ void oc_create_pushreceiver_resource(size_t device_index)
 	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_memb_alloc(&recvs_instance_memb);
 	if (recvs_instance) {
 		recvs_instance->resource = push_recv;
+		recvs_instance->receivers_list = NULL;
+		recvs_instance->receivers = (oc_list_t)&recvs_instance->receivers_list;
 		oc_list_init(recvs_instance->receivers);
 		oc_list_add(recvs_list, recvs_instance);
 	}

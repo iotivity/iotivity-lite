@@ -69,7 +69,9 @@ extern "C"
 #define PUSHCONF_PATH "/pushconfig"
 #define PUSHRECVS_PATH "/pushreceivers"
 
-
+/*
+ * TODO4ME <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
+ */
 typedef enum {
 	OC_PP_WFP,
 	OC_PP_WFU,
@@ -119,6 +121,7 @@ typedef struct oc_recvs
 {
 	struct oc_recvs *next;
 	oc_resource_t *resource;
+	void *receivers_list;
 	oc_list_t receivers;
 //	oc_array_t *receivers;
 //	OC_LIST_STRUCT(receivers);

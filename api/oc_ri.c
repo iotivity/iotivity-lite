@@ -269,6 +269,10 @@ start_processes(void)
   /*
    * TODO4ME oc_push_process 시작 추가할 것
    */
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_process_start(&oc_push_process, NULL);
+#endif
+
 }
 
 static void
@@ -294,6 +298,10 @@ stop_processes(void)
   /*
    * TODO4ME oc_push_process 중지 추가할 것
    */
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+  oc_process_exit(&oc_push_process);
+#endif
+
 }
 
 #ifdef OC_SERVER
