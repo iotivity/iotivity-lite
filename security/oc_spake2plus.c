@@ -251,7 +251,6 @@ size_t encode_mpi(mbedtls_mpi *mpi, uint8_t *buffer)
 
   len_mpi = mbedtls_mpi_size(mpi);
 
-  // hmm, this is big endian. is that ok?
   ret = mbedtls_mpi_write_binary(mpi, mpi_buf, len_mpi);
   assert(ret == 0);
 
@@ -465,24 +464,40 @@ validate_against_test_vector()
 
   uint8_t ttbuf[2048];
   size_t ttlen = 0;
-  // len(Context)
-  ttlen += encode_uint(strlen(Context), ttbuf + ttlen);
   // Context
-  memcpy(ttbuf + ttlen, Context, strlen(Context));
-  ttlen += strlen(Context);
-  // len(A)
-  ttlen += encode_uint(strlen(A), ttbuf + ttlen);
+  ttlen += encode_string(Context, ttbuf + ttlen);
   // A
-  memcpy(ttbuf + ttlen, A, strlen(A));
-  ttlen += strlen(A);
-  // len(B)
-  ttlen += encode_uint(strlen(B), ttbuf + ttlen);
+  ttlen += encode_string(A, ttbuf + ttlen);
   // B
-  memcpy(ttbuf + ttlen, B, strlen(B));
-  ttlen += strlen(B);
-  // len(M)
-  // TODO function that takes an ECP point and encodes its len & bytes
-  // TODO function that takes an MPI and encodes its len & bytes
+  ttlen += encode_string(B, ttbuf + ttlen);
+  // M
+  mbedtls_ecp_point M;
+  mbedtls_ecp_point_init(&M);
+  MBEDTLS_MPI_CHK(
+    mbedtls_ecp_point_read_binary(&grp, &M, bytes_M, sizeof(bytes_M)));
+  ttlen += encode_point(&grp, &M, ttbuf + ttlen);
+  // N
+  mbedtls_ecp_point N;
+  mbedtls_ecp_point_init(&N);
+  MBEDTLS_MPI_CHK(
+    mbedtls_ecp_point_read_binary(&grp, &N, bytes_N, sizeof(bytes_N)));
+  ttlen += encode_point(&grp, &N, ttbuf + ttlen);
+  // X
+  ttlen += encode_point(&grp, &X, ttbuf + ttlen);
+  // Y
+  ttlen += encode_point(&grp, &Y, ttbuf + ttlen);
+  // Z
+  ttlen += encode_point(&grp, &Z, ttbuf + ttlen);
+  // V
+  ttlen += encode_point(&grp, &V, ttbuf + ttlen);
+  // w0
+  ttlen += encode_mpi(&w0, ttbuf + ttlen);
+
+  for (size_t i = 0; i < ttlen; i++) {
+    printf("%02x", ttbuf[i]);
+  }
+  printf("\n");
+
 cleanup:
   return ret;
 }
