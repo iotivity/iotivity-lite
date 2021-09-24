@@ -78,7 +78,7 @@ typedef struct
    * @see oc_set_introspection_data
    */
   int (*init)(void);
-  
+
   /**
    * Function to signal the event loop
    * so that incomming events are being processed.
@@ -251,7 +251,6 @@ typedef void (*oc_add_device_cb_t)(void *data);
  * @see oc_storage_config
  */
 int oc_main_init(const oc_handler_t *handler);
-
 
 /**
  * poll to process tasks
@@ -795,7 +794,7 @@ void oc_device_bind_resource_type(size_t device, const char *type);
 
 /**
  * @brief Sets the tag value for tag "tag-pos-desc" on the resource
- * 
+ *
  * @param resource the resource
  * @param pos the descriptive text for the tag
  */
@@ -804,7 +803,7 @@ void oc_resource_tag_pos_desc(oc_resource_t *resource,
 
 /**
  * @brief Sets the value for the relative position "tag-pos-rel" tag
- * 
+ *
  * @param resource the resource to apply the tag too.
  * @param x the x value in 3D space
  * @param y the y value in 3D space
@@ -815,7 +814,7 @@ void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
 
 /**
  * @brief Sets the tag value for the relatvie position "tag_func_rel" tag
- * 
+ *
  * @param resource the resource to apply the tag too.
  * @param func the function description
  */
@@ -823,7 +822,7 @@ void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
 
 /**
  * @brief sets the value of the "tag_locn" tag
- * 
+ *
  * @param resource the resource to apply the tag too.
  * @param locn the location
  */
@@ -1050,7 +1049,7 @@ bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
 /**
- * Callback invoked to retrieve an resource 
+ * Callback invoked to retrieve an resource
  */
 typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
                                                      oc_string_array_t *,
@@ -1060,18 +1059,19 @@ typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
 
 /**
  * Callback invoked to delete an resource
- *  
+ *
  */
 typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
 
 /**
  * @brief adds the resource type factory
- * 
+ *
  * @param rt the resource type
  * @param get_instance creates the instance of the resource type
- * @param free_instance sets callback to free the created instance of the resource tupe
- * @return true 
- * @return false 
+ * @param free_instance sets callback to free the created instance of the
+ * resource tupe
+ * @return true
+ * @return false
  */
 bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
@@ -1175,12 +1175,14 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
 
 /**
  * @brief sets the callback properties for set properties and get properties
- * 
+ *
  * @param resource the resource for the callback data
  * @param get_properties callback function for retrieving the properties
- * @param get_props_user_data the user data for the get_properties callback function
+ * @param get_props_user_data the user data for the get_properties callback
+ * function
  * @param set_properties callback function for setting the properties
- * @param set_props_user_data the user data for the set_properties callback function
+ * @param set_props_user_data the user data for the set_properties callback
+ * function
  */
 void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_get_properties_cb_t get_properties,
@@ -1188,11 +1190,10 @@ void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_set_properties_cb_t set_properties,
                                     void *set_props_user_data);
 
-
 /**
  * @brief sets the support of the secure multicast feature
- * 
- * @param resource the resource 
+ *
+ * @param resource the resource
  * @param supported true: supported
  */
 void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
@@ -1230,7 +1231,7 @@ bool oc_delete_resource(oc_resource_t *resource);
  *
  * @param[in] resource the resource to delete
  */
-void oc_delayed_delete_resource(oc_resource_t* resource);
+void oc_delayed_delete_resource(oc_resource_t *resource);
 
 /**
   @brief Callback for change notifications from the oic.wk.con resource.
@@ -1370,6 +1371,18 @@ bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
 int oc_get_query_value(oc_request_t *request, const char *key, char **value);
 
 /**
+ * Checks if a query parameter 'key' exist in the URL query parameter
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ * @param[in] key the key being searched for
+ *
+ * @return
+ *   - 1 exist
+ *   - -1 does not exist
+ */
+int oc_query_value_exists(oc_request_t *request, const char *key);
+
+/**
  * Called after the response to a GET, PUT, POST or DELETE call has been
  * prepared completed
  *
@@ -1389,13 +1402,13 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code);
 
 /**
  * @brief retrieve the payload from the request, no processing
- * 
+ *
  * @param request the request
  * @param payload the payload of the request
  * @param size the size in bytes of the payload
  * @param content_format the content format of the payload
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
                                 size_t *size,
@@ -1403,7 +1416,7 @@ bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
 
 /**
  * @brief send the request, no processing
- * 
+ *
  * @param request the request to send
  * @param payload the payload for the request
  * @param size the payload size
@@ -1416,13 +1429,13 @@ void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
 
 /**
  * @brief retrieve the response payload, without processing
- * 
+ *
  * @param response the response
  * @param payload the payload of the response
  * @param size the size of the payload
  * @param content_format the content format of the payload
  * @return true - retrieved payload
- * @return false 
+ * @return false
  */
 bool oc_get_response_payload_raw(oc_client_response_t *response,
                                  const uint8_t **payload, size_t *size,
@@ -1430,7 +1443,7 @@ bool oc_get_response_payload_raw(oc_client_response_t *response,
 
 /**
  * @brief send a diagnostic payload
- * 
+ *
  * @param request the request
  * @param msg the message in ascii
  * @param msg_len the lenght of the message
@@ -1441,12 +1454,12 @@ void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
 
 /**
  * @brief retrieve the diagnostic payload from a response
- * 
+ *
  * @param response the response to get the diagnostic payload from
  * @param msg the diagnotic payload
  * @param size the size of the diagnostic payload
  * @return true - retrieved payload
- * @return false 
+ * @return false
  */
 bool oc_get_diagnostic_message(oc_client_response_t *response, const char **msg,
                                size_t *size);
@@ -1948,7 +1961,7 @@ bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
 /**
  * invoke multicast discovery of devices
  *
- * @param[in] uri the uri for multicast command to be used 
+ * @param[in] uri the uri for multicast command to be used
  * @param[in] query the query of the multicast command
  * @param[in] handler function invoked once the client has received the servers
  *                     response to the discovery request
@@ -1964,7 +1977,7 @@ bool oc_do_ip_multicast(const char *uri, const char *query,
 /**
  * invoke multicast discovery of devices on IPV6 realm local scope
  *
- * @param[in] uri the uri for multicast command to be used 
+ * @param[in] uri the uri for multicast command to be used
  * @param[in] query the query of the multicast command
  * @param[in] handler function invoked once the client has received the servers
  *                     response to the discovery request
@@ -1981,7 +1994,7 @@ bool oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
 /**
  * invoke multicast discovery of devices on IPV6 site local scope
  *
- * @param[in] uri the uri for multicast command to be used 
+ * @param[in] uri the uri for multicast command to be used
  * @param[in] query the query of the multicast command
  * @param[in] handler function invoked once the client has received the servers
  *                     response to the discovery request
@@ -2004,19 +2017,19 @@ void oc_stop_multicast(oc_client_response_t *response);
 
 /**
  * @brief initialize the multicast update
- * 
+ *
  * @param uri the uri to be used
  * @param query the query of uri
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool oc_init_multicast_update(const char *uri, const char *query);
 
 /**
  * @brief initiate the multicast update
- * 
- * @return true 
- * @return false 
+ *
+ * @return true
+ * @return false
  */
 bool oc_do_multicast_update(void);
 
@@ -2033,7 +2046,7 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 /**
  * @brief close the tls session on the indicated endpoint
- * 
+ *
  * @param endpoint endpoint indicating a session
  */
 void oc_close_session(oc_endpoint_t *endpoint);
@@ -2045,43 +2058,44 @@ void oc_close_session(oc_endpoint_t *endpoint);
 */
 typedef struct oc_role_t
 {
-  struct oc_role_t *next; 
+  struct oc_role_t *next;
   oc_string_t role;
   oc_string_t authority;
 } oc_role_t;
 
 /**
  * @brief retrieve all roles
- * 
- * @return oc_role_t* 
+ *
+ * @return oc_role_t*
  */
 oc_role_t *oc_get_all_roles(void);
 
 /**
  * @brief assert the specific role
- * 
+ *
  * @param role the role
  * @param authority the authority
  * @param endpoint endpoint identifying the connection
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool oc_assert_role(const char *role, const char *authority,
                     oc_endpoint_t *endpoint, oc_response_handler_t handler,
                     void *user_data);
 
 /**
- * @brief set automatic role assertion (e.g. for all endpoints with a connection)
- * 
- * @param auto_assert 
+ * @brief set automatic role assertion (e.g. for all endpoints with a
+ * connection)
+ *
+ * @param auto_assert
  */
 void oc_auto_assert_roles(bool auto_assert);
 
 /**
  * @brief assert all the roles for a specific endpoint
- * 
+ *
  * @param endpoint identifying the connection
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
@@ -2092,14 +2106,14 @@ void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
 #ifdef OC_TCP
 /**
  * @brief send CoAP ping over the TCP connection
- * 
+ *
  * @param custody custody on/off
  * @param endpoint endpoint to be used
  * @param timeout_seconds timeout for the ping
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
 bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,

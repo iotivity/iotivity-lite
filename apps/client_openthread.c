@@ -14,18 +14,18 @@
 // limitations under the License.
 */
 
+#include <examples/platforms/platform.h>
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/openthread.h>
-#include <examples/platforms/platform.h>
 
 #ifdef OC_RETARGET
 #include <openthread/platform/uart.h>
 #endif
 
 #include "oc_api.h"
-#include "port/oc_assert.h"
 #include "oc_instance.h"
+#include "port/oc_assert.h"
 
 otInstance *ot_instance;
 

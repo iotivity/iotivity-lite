@@ -104,16 +104,15 @@ typedef struct oc_credprov_ctx_t
   oc_role_t *roles;
 } oc_credprov_ctx_t;
 
-
 /* Context to be maintained over installing a trust anchor
  * sequence
  */
 typedef struct oc_trustanchor_ctx_t
 {
-  struct oc_trustanchor_ctx_t* next;
+  struct oc_trustanchor_ctx_t *next;
   oc_status_cb_t cb;
-  oc_device_t* device1;
-  oc_switch_dos_ctx_t* switch_dos;
+  oc_device_t *device1;
+  oc_switch_dos_ctx_t *switch_dos;
   char *trustanchor;
   size_t trustanchor_size;
   char trustanchor_subject[64];

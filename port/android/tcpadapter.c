@@ -700,7 +700,8 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 #endif /* OC_IPV4 */
 
 static int
-set_nonblock_socket(int sockfd) {
+set_nonblock_socket(int sockfd)
+{
   int flags = fcntl(sockfd, F_GETFL, 0);
   if (flags < 0) {
     return -1;

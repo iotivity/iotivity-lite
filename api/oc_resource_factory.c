@@ -30,11 +30,11 @@ gen_random_uri(char *uri, size_t uri_length)
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   uri[0] = '/';
   size_t i = 1;
-  while (i < uri_length-1) {
+  while (i < uri_length - 1) {
     unsigned int r = oc_random_value() % strlen(alpha);
     uri[i++] = alpha[r];
   }
-  uri[uri_length-1] = '\0';
+  uri[uri_length - 1] = '\0';
 }
 
 oc_rt_created_t *
@@ -100,11 +100,11 @@ oc_fi_factory_free_all_created_resources(void)
   }
 }
 
-oc_rt_created_t*
-oc_rt_get_factory_create_for_resource(oc_resource_t* resource)
+oc_rt_created_t *
+oc_rt_get_factory_create_for_resource(oc_resource_t *resource)
 {
   oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
-  while(rtc) {
+  while (rtc) {
     if (rtc->resource == resource) {
       return rtc;
     }

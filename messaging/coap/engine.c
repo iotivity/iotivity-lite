@@ -56,8 +56,8 @@
 #include "oc_buffer.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_tls.h"
 #include "security/oc_audit.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
@@ -350,7 +350,8 @@ coap_receive(oc_message_t *msg)
           }
 
           if (!request_buffer && block1_num == 0) {
-            if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE) {
+            if (oc_drop_command(msg->endpoint.device) &&
+                message->code >= COAP_GET && message->code <= COAP_DELETE) {
               OC_WRN("cannot process new request during closing TLS sessions");
               goto init_reset_message;
             }
@@ -409,8 +410,10 @@ coap_receive(oc_message_t *msg)
 
           if (response_buffer && (response_buffer->next_block_offset -
                                   block2_offset) > block2_size) {
-            // UDP transfer can duplicate messages and we want to avoid terminate BWT, so we drop the message. 
-            OC_DBG("dropped message because message was already provided for block2");
+            // UDP transfer can duplicate messages and we want to avoid
+            // terminate BWT, so we drop the message.
+            OC_DBG("dropped message because message was already provided for "
+                   "block2");
             coap_clear_transaction(transaction);
             return 0;
           }
@@ -459,8 +462,11 @@ coap_receive(oc_message_t *msg)
                   message->uri_query, message->uri_query_len,
                   OC_BLOCKWISE_SERVER);
                 if (!request_buffer) {
-                  if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE)  {
-                    OC_WRN("cannot process new request during closing TLS sessions");
+                  if (oc_drop_command(msg->endpoint.device) &&
+                      message->code >= COAP_GET &&
+                      message->code <= COAP_DELETE) {
+                    OC_WRN("cannot process new request during closing TLS "
+                           "sessions");
                     goto init_reset_message;
                   }
                   request_buffer = oc_blockwise_alloc_request_buffer(
@@ -489,7 +495,8 @@ coap_receive(oc_message_t *msg)
           goto init_reset_message;
         } else {
           OC_DBG("no block options; processing regular request");
-          if (oc_drop_command(msg->endpoint.device) && message->code >= COAP_GET && message->code <= COAP_DELETE)  {
+          if (oc_drop_command(msg->endpoint.device) &&
+              message->code >= COAP_GET && message->code <= COAP_DELETE) {
             OC_WRN("cannot process new request during closing TLS sessions");
             goto init_reset_message;
           }

@@ -20,8 +20,8 @@
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
-#include "oc_rep.h"
 #include "oc_config.h"
+#include "oc_rep.h"
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -32,6 +32,18 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
 #endif
 
 #define CLOUD_STORE_NAME "cloud"
+#define CLOUD_CI_SERVER ci_server
+#define CLOUD_SID sid
+#define CLOUD_AUTH_PROVIDER auth_provider
+#define CLOUD_UID uid
+#define CLOUD_ACCESS_TOKEN access_token
+#define CLOUD_REFRESH_TOKEN refresh_token
+#define CLOUD_EXPIRES_IN expires_in
+#define CLOUD_STATUS status
+#define CLOUD_CPS cps
+
+#define CLOUD_STR(s) #s
+#define CLOUD_XSTR(s) CLOUD_STR(s)
 
 #define CLOUD_TAG_MAX (32)
 
@@ -48,6 +60,24 @@ cloud_store_load(oc_cloud_store_t *store)
 }
 
 static void
+rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
+{
+  g_err |= cbor_encode_text_string(object_map, key, strlen(key));
+  if ((const char *)value != NULL) {
+    g_err |= cbor_encode_text_string(object_map, value, strlen(value));
+  } else {
+    g_err |= cbor_encode_text_string(object_map, "", 0);
+  }
+}
+
+static void
+rep_set_int(CborEncoder *object_map, const char *key, int64_t value)
+{
+  g_err |= cbor_encode_text_string(object_map, key, strlen(key));
+  g_err |= cbor_encode_int(object_map, value);
+}
+
+static void
 gen_cloud_tag(const char *name, size_t device, char *cloud_tag)
 {
   int cloud_tag_len =
@@ -60,16 +90,19 @@ gen_cloud_tag(const char *name, size_t device, char *cloud_tag)
 static void
 encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
 {
-  oc_rep_set_text_string(*object, ci_server, oc_string(store->ci_server));
-  oc_rep_set_text_string(*object, auth_provider,
-                         oc_string(store->auth_provider));
-  oc_rep_set_text_string(*object, uid, oc_string(store->uid));
-  oc_rep_set_text_string(*object, sid, oc_string(store->sid));
-  oc_rep_set_text_string(*object, access_token, oc_string(store->access_token));
-  oc_rep_set_text_string(*object, refresh_token,
-                         oc_string(store->refresh_token));
-  oc_rep_set_int(*object, status, store->status);
-  oc_rep_set_int(*object, cps, store->cps);
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_CI_SERVER),
+                      oc_string(store->ci_server));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
+                      oc_string(store->auth_provider));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_UID), oc_string(store->uid));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_SID), oc_string(store->sid));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
+                      oc_string(store->access_token));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
+                      oc_string(store->refresh_token));
+  rep_set_int(object_map, CLOUD_XSTR(CLOUD_STATUS), store->status);
+  rep_set_int(object_map, CLOUD_XSTR(CLOUD_CPS), store->cps);
+  rep_set_int(object_map, CLOUD_XSTR(CLOUD_EXPIRES_IN), store->expires_in);
 }
 
 static void
@@ -130,6 +163,7 @@ cloud_store_dump_handler(void *data)
 void
 cloud_store_dump_async(const oc_cloud_store_t *store)
 {
+  oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
   _oc_signal_event_loop();
 }
@@ -144,25 +178,34 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
     len = oc_string_len(t->name);
     switch (t->type) {
     case OC_REP_STRING:
-      if (len == 9 && memcmp(oc_string(t->name), "ci_server", 9) == 0) {
+      if (len == strlen(CLOUD_XSTR(CLOUD_CI_SERVER)) &&
+          memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CI_SERVER),
+                 strlen(CLOUD_XSTR(CLOUD_CI_SERVER))) == 0) {
         cloud_set_string(&store->ci_server, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == 3 && memcmp(oc_string(t->name), "sid", 3) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_SID)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_SID),
+                        strlen(CLOUD_XSTR(CLOUD_SID))) == 0) {
         cloud_set_string(&store->sid, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == 13 &&
-                 memcmp(oc_string(t->name), "auth_provider", 13) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_AUTH_PROVIDER)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
+                        strlen(CLOUD_XSTR(CLOUD_AUTH_PROVIDER))) == 0) {
         cloud_set_string(&store->auth_provider, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == 3 && memcmp(oc_string(t->name), "uid", 3) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_UID)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_UID),
+                        strlen(CLOUD_XSTR(CLOUD_UID))) == 0) {
         cloud_set_string(&store->uid, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == 12 &&
-                 memcmp(oc_string(t->name), "access_token", 12) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_ACCESS_TOKEN)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
+                        strlen(CLOUD_XSTR(CLOUD_ACCESS_TOKEN))) == 0) {
         cloud_set_string(&store->access_token, oc_string(t->value.string),
                          oc_string_len(t->value.string));
-      } else if (len == 13 &&
-                 memcmp(oc_string(t->name), "refresh_token", 13) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_REFRESH_TOKEN)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
+                        strlen(CLOUD_XSTR(CLOUD_REFRESH_TOKEN))) == 0) {
         cloud_set_string(&store->refresh_token, oc_string(t->value.string),
                          oc_string_len(t->value.string));
       } else {
@@ -171,10 +214,18 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
       }
       break;
     case OC_REP_INT:
-      if (len == 6 && memcmp(oc_string(t->name), "status", 6) == 0) {
+      if (len == strlen(CLOUD_XSTR(CLOUD_STATUS)) &&
+          memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_STATUS),
+                 strlen(CLOUD_XSTR(CLOUD_STATUS))) == 0) {
         store->status = (uint8_t)t->value.integer;
-      } else if (len == 3 && memcmp(oc_string(t->name), "cps", 3) == 0) {
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_CPS)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_CPS),
+                        strlen(CLOUD_XSTR(CLOUD_CPS))) == 0) {
         store->cps = (uint8_t)t->value.integer;
+      } else if (len == strlen(CLOUD_XSTR(CLOUD_EXPIRES_IN)) &&
+                 memcmp(oc_string(t->name), CLOUD_XSTR(CLOUD_EXPIRES_IN),
+                        strlen(CLOUD_XSTR(CLOUD_EXPIRES_IN))) == 0) {
+        store->expires_in = t->value.integer;
       } else {
         OC_ERR("[CLOUD_STORE] Unknown property %s", oc_string(t->name));
         return -1;
@@ -199,6 +250,7 @@ cloud_store_deinit(oc_cloud_store_t *store)
   cloud_set_string(&store->refresh_token, NULL, 0);
   cloud_set_string(&store->sid, NULL, 0);
   store->status = 0;
+  store->expires_in = 0;
 }
 
 static int
@@ -259,6 +311,7 @@ cloud_store_initialize(oc_cloud_store_t *store)
   cloud_set_string(&store->refresh_token, NULL, 0);
   cloud_set_string(&store->sid, "00000000-0000-0000-0000-000000000000", 36);
   store->status = 0;
+  store->expires_in = 0;
 }
 #else  /* OC_CLOUD*/
 typedef int dummy_declaration;

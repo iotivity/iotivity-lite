@@ -54,8 +54,7 @@
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct coap_observer

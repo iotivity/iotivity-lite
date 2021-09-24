@@ -37,14 +37,14 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_ael.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
+#include "security/oc_sp.h"
 #include "security/oc_store.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
-#include "security/oc_sp.h"
-#include "security/oc_ael.h"
 #ifdef OC_PKI
 #include "security/oc_keypair.h"
 #endif /* OC_PKI */
@@ -90,17 +90,15 @@ oc_get_factory_presets_cb(void)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_buffer_settings.h"
-#ifdef OC_OSCORE
-static size_t _OC_MTU_SIZE = 1024 + 2 * COAP_MAX_HEADER_SIZE;
-#elif OC_INOUT_BUFFER_SIZE
+#ifdef OC_INOUT_BUFFER_SIZE
 static size_t _OC_MTU_SIZE = OC_INOUT_BUFFER_SIZE;
-#else  /* OC_OSCORE */
+#else  /* OC_INOUT_BUFFER_SIZE */
 static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
-#endif /* !OC_OSCORE */
+#endif /* !OC_INOUT_BUFFER_SIZE */
 #ifdef OC_APP_DATA_BUFFER_SIZE
-static size_t _OC_MAX_APP_DATA_SIZE = 8192;
+static size_t _OC_MAX_APP_DATA_SIZE = 7168;
 #else                                /* OC_APP_DATA_BUFFER_SIZE */
-static size_t _OC_MAX_APP_DATA_SIZE = 8192;
+static size_t _OC_MAX_APP_DATA_SIZE = 7168;
 #endif                               /* !OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
@@ -282,13 +280,13 @@ oc_main_init(const oc_handler_t *handler)
 #endif
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-// initialize cloud after load pstat
+  // initialize cloud after load pstat
   oc_cloud_init();
   OC_DBG("oc_main_init(): loading cloud");
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #ifdef OC_SERVER
-// initialize after cloud because their can be registered to cloud.
+  // initialize after cloud because their can be registered to cloud.
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
 #endif
@@ -365,7 +363,7 @@ oc_main_shutdown(void)
   free(drop_commands);
   drop_commands = NULL;
 #else
-  memset(drop_commands, 0, sizeof(bool)*OC_MAX_NUM_DEVICES);
+  memset(drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
 #endif
 
   app_callbacks = NULL;

@@ -29,11 +29,11 @@ extern "C" {
 
 /**
  * @brief credential type information
- * 
+ *
  */
 typedef enum oc_sec_credtype_t {
-  OC_CREDTYPE_NULL = 0,                   ///< no credential
-  OC_CREDTYPE_PSK = 1,                    ///< PSK (personal)
+  OC_CREDTYPE_NULL = 0, ///< no credential
+  OC_CREDTYPE_PSK = 1,  ///< PSK (personal)
   OC_CREDTYPE_CERT = 8,
   OC_CREDTYPE_OSCORE = 64,
   OC_CREDTYPE_OSCORE_MCAST_CLIENT = 128,
@@ -42,32 +42,34 @@ typedef enum oc_sec_credtype_t {
 
 /**
  * @brief credential usage
- * 
+ *
  */
 typedef enum oc_sec_credusage_t {
   OC_CREDUSAGE_NULL = 0,               ///< no usage
   OC_CREDUSAGE_TRUSTCA = 1 << 1,       ///< trust anchor oic.sec.cred.trustca
   OC_CREDUSAGE_IDENTITY_CERT = 1 << 2, ///< Certificate oic.sec.cred.cert
-  OC_CREDUSAGE_ROLE_CERT = 1 << 3,     ///< Role Certificate oic.sec.cred.rolecert
-  OC_CREDUSAGE_MFG_TRUSTCA = 1 << 4,   ///< Manufacturer Trust CA oic.sec.cred.mfgtrustca
-  OC_CREDUSAGE_MFG_CERT = 1 << 5       ///< Manufacturer CA oic.sec.cred.mfgcert
+  OC_CREDUSAGE_ROLE_CERT = 1 << 3, ///< Role Certificate oic.sec.cred.rolecert
+  OC_CREDUSAGE_MFG_TRUSTCA =
+    1 << 4, ///< Manufacturer Trust CA oic.sec.cred.mfgtrustca
+  OC_CREDUSAGE_MFG_CERT = 1 << 5 ///< Manufacturer CA oic.sec.cred.mfgcert
 } oc_sec_credusage_t;
 
 /**
  * @brief Security encoding information
- * 
+ *
  */
 typedef enum oc_sec_encoding_t {
-  OC_ENCODING_UNSUPPORTED = 0,    ///< not supported
-  OC_ENCODING_BASE64,             ///< oic.sec.encoding.base64
-  OC_ENCODING_RAW,                ///< oic.sec.encoding.raw
-  OC_ENCODING_PEM,                ///< oic.sec.encoding.pem
-  OC_ENCODING_HANDLE              ///< oic.sec.encoding.handle – Data is contained in a storage sub-system referenced using a handle
+  OC_ENCODING_UNSUPPORTED = 0, ///< not supported
+  OC_ENCODING_BASE64,          ///< oic.sec.encoding.base64
+  OC_ENCODING_RAW,             ///< oic.sec.encoding.raw
+  OC_ENCODING_PEM,             ///< oic.sec.encoding.pem
+  OC_ENCODING_HANDLE ///< oic.sec.encoding.handle – Data is contained in a
+                     ///< storage sub-system referenced using a handle
 } oc_sec_encoding_t;
 
 /**
  * @brief credential data info
- * 
+ *
  */
 typedef struct oc_cred_data_t
 {
@@ -77,46 +79,46 @@ typedef struct oc_cred_data_t
 
 /**
  * @brief security credential information
- * 
+ *
  */
 typedef struct oc_sec_cred_t
 {
-  struct oc_sec_cred_t *next;   ///< pointer to the next credential
+  struct oc_sec_cred_t *next; ///< pointer to the next credential
   struct
   {
-    oc_string_t role;           ///< role 
-    oc_string_t authority;      ///< authority
+    oc_string_t role;      ///< role
+    oc_string_t authority; ///< authority
   } role;
-  oc_cred_data_t privatedata;   ///< private data
+  oc_cred_data_t privatedata; ///< private data
 #ifdef OC_PKI
   oc_cred_data_t publicdata;    ///< public data
   oc_sec_credusage_t credusage; ///< credential usage
   struct oc_sec_cred_t *chain;  ///< chain of credentials
   struct oc_sec_cred_t *child;  ///< credential child
   void *ctx;                    ///< security context
-#endif /* OC_PKI */
+#endif                          /* OC_PKI */
 #ifdef OC_OSCORE
-  void *oscore_ctx;             ///< oscore security contex
-#endif /* OC_OSCORE */
-  int credid;                   ///< credential id
-  oc_sec_credtype_t credtype;   ///< credential type
-  oc_uuid_t subjectuuid;        ///< subject uuid
-  bool owner_cred;              ///< owner 
+  void *oscore_ctx;           ///< oscore security contex
+#endif                        /* OC_OSCORE */
+  int credid;                 ///< credential id
+  oc_sec_credtype_t credtype; ///< credential type
+  oc_uuid_t subjectuuid;      ///< subject uuid
+  bool owner_cred;            ///< owner
 } oc_sec_cred_t;
 
 /**
  * @brief credential and rowner information
- * 
+ *
  */
 typedef struct oc_sec_creds_t
 {
-  OC_LIST_STRUCT(creds);  ///< list of credentials
-  oc_uuid_t rowneruuid;   ///< row owner uuid
+  OC_LIST_STRUCT(creds); ///< list of credentials
+  oc_uuid_t rowneruuid;  ///< row owner uuid
 } oc_sec_creds_t;
 
 /**
  * @brief read credential usaga
- * 
+ *
  * @param credusage credential usage as type
  * @return const char* credential usage as string
  */
@@ -124,7 +126,7 @@ const char *oc_cred_read_credusage(oc_sec_credusage_t credusage);
 
 /**
  * @brief read credential encoding
- * 
+ *
  * @param encoding credential encoding as type
  * @return const char* credential encoding as string
  */
@@ -132,7 +134,7 @@ const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
 
 /**
  * @brief parse credential string to type
- * 
+ *
  * @param credusage_string credential usage as string
  * @return oc_sec_credusage_t credential usage type
  */
@@ -140,7 +142,7 @@ oc_sec_credusage_t oc_cred_parse_credusage(oc_string_t *credusage_string);
 
 /**
  * @brief parse credential encoding string to type
- * 
+ *
  * @param encoding_string credential encoding string
  * @return oc_sec_encoding_t credential encoding type
  */
@@ -148,7 +150,7 @@ oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
 
 /**
  * @brief credential type to string
- * 
+ *
  * @param credtype the credential type as type
  * @return const char* credential type as string
  */

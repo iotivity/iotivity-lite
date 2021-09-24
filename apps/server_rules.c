@@ -18,8 +18,8 @@
 
 #include "oc_api.h"
 #include "oc_collection.h"
-#include "oc_ri.h"
 #include "oc_core_res.h"
+#include "oc_ri.h"
 #include "port/oc_clock.h"
 #include <signal.h>
 

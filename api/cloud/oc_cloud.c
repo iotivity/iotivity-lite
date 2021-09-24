@@ -19,17 +19,17 @@
 
 #ifdef OC_CLOUD
 
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
-#include "api/oc_server_api_internal.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_tls.h"
 #include "security/oc_pstat.h"
+#include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
 OC_LIST(cloud_context_list);
@@ -128,7 +128,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
-  cloud_store_dump(&ctx->store);
+  cloud_store_dump_async(&ctx->store);
 }
 
 int
@@ -197,9 +197,9 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
 {
 
   if (data->ci_server_len == 0) {
-	OC_DBG("[Cloud] got forced deregister via provisioning of empty cis\n");
-	oc_cloud_reset_context(0);
-	return;
+    OC_DBG("[Cloud] got forced deregister via provisioning of empty cis\n");
+    oc_cloud_reset_context(0);
+    return;
   }
 
   cloud_close_endpoint(ctx->cloud_ep);
@@ -226,7 +226,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
-	  cloud_reconnect(ctx);
+    cloud_reconnect(ctx);
   }
 }
 
@@ -240,11 +240,8 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
     OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
     ctx->cloud_ep_state = state;
     if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
-      if ((ctx->store.status == OC_CLOUD_INITIALIZED) ||
-        ((ctx->store.status & OC_CLOUD_REGISTERED) != 0)) {
+      if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
         cloud_manager_restart(ctx);
-      } else {
-        cloud_manager_stop(ctx);
       }
     }
   }
@@ -294,7 +291,8 @@ cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps)
 }
 
 void
-cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps, oc_cloud_error_t error)
+cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
+                             oc_cloud_error_t error)
 {
   if ((error != ctx->last_error) || (cps != ctx->store.cps)) {
     ctx->store.cps = cps;
@@ -390,7 +388,7 @@ oc_cloud_init(void)
       cloud_store_initialize(&ctx->store);
     }
 #endif
-	ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
+    ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
     oc_list_add(cloud_context_list, ctx);
 
     ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);

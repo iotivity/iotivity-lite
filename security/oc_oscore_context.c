@@ -16,13 +16,13 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 #include "oc_oscore_context.h"
-#include "oc_oscore_crypto.h"
 #include "messaging/coap/transactions.h"
-#include "oc_client_state.h"
-#include "oc_store.h"
 #include "oc_api.h"
-#include "oc_rep.h"
+#include "oc_client_state.h"
 #include "oc_cred.h"
+#include "oc_oscore_crypto.h"
+#include "oc_rep.h"
+#include "oc_store.h"
 #include "port/oc_log.h"
 OC_LIST(contexts);
 OC_MEMB(ctx_s, oc_oscore_context_t, 1);

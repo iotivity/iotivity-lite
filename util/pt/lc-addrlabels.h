@@ -60,8 +60,7 @@
 #define LC_ADDRLABELS_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /** \hideinitializer */

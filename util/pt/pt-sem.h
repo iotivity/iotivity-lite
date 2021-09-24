@@ -162,8 +162,7 @@ PT_THREAD(driver_thread(struct pt *pt))
 #include "pt.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 struct pt_sem

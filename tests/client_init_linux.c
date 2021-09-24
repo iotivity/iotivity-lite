@@ -29,8 +29,8 @@ app_init(void)
   ret = oc_init_platform("Intel", NULL, NULL);
   ASSERT(ret == 0);
 
-  ret = oc_add_device("/oic/d", "oic.d.test-client-init", "Client init test", "1.0", "1.0",
-                       NULL, NULL);
+  ret = oc_add_device("/oic/d", "oic.d.test-client-init", "Client init test",
+                      "1.0", "1.0", NULL, NULL);
   return ret;
 }
 
@@ -49,11 +49,9 @@ main(void)
 {
   int init;
 
-  oc_handler_t handler = {
-    .init = app_init,
-    .signal_event_loop = signal_event_loop,
-    .requests_entry = issue_requests
-  };
+  oc_handler_t handler = { .init = app_init,
+                           .signal_event_loop = signal_event_loop,
+                           .requests_entry = issue_requests };
 
   init = oc_main_init(&handler);
   ASSERT(init == 0);

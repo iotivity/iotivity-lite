@@ -20,8 +20,8 @@
 
 #include "oc_api.h"
 #include "oc_pki.h"
-#include <signal.h>
 #include <inttypes.h>
+#include <signal.h>
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
@@ -271,8 +271,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   }
 
   if (!more) {
-    PRINT(
-      "\nDiscovered resources on the Cloud.. You may now issue requests...\n");
+    PRINT("\nDiscovered resources on the Cloud.. You may now issue "
+          "requests...\n");
     display_menu();
   }
   return OC_CONTINUE_DISCOVERY;

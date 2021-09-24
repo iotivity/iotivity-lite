@@ -19,8 +19,8 @@
  ******************************************************************/
 
 #include <cstdlib>
-#include <string>
 #include <gtest/gtest.h>
+#include <string>
 
 extern "C" {
 #include "port/oc_storage.h"

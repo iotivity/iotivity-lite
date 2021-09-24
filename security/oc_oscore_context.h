@@ -17,12 +17,12 @@
 #ifndef OC_OSCORE_CONTEXT_H
 #define OC_OSCORE_CONTEXT_H
 
-#include <stddef.h>
-#include <inttypes.h>
-#include <stdbool.h>
-#include "oc_uuid.h"
 #include "messaging/coap/oscore_constants.h"
 #include "oc_helpers.h"
+#include "oc_uuid.h"
+#include <inttypes.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

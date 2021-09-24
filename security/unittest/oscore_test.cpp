@@ -16,14 +16,14 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include <cstdlib>
-#include "gtest/gtest.h"
-#include "oc_helpers.h"
-#include "messaging/coap/oscore.h"
 #include "messaging/coap/coap.h"
-#include "security/oc_oscore_crypto.h"
+#include "messaging/coap/oscore.h"
+#include "oc_helpers.h"
 #include "security/oc_oscore.h"
 #include "security/oc_oscore_context.h"
+#include "security/oc_oscore_crypto.h"
+#include "gtest/gtest.h"
+#include <cstdlib>
 
 class TestOSCORE : public testing::Test {
 protected:
@@ -774,9 +774,8 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(buffer, buffer_len, testvec, &testvec_len),
     0);
-  EXPECT_STREQ(
-    testvec,
-    "440271c30000b932396c6f63616c686f737463091400ff4ed339a5a379b0b8bc731fffb0");
+  EXPECT_STREQ(testvec, "440271c30000b932396c6f63616c686f737463091400ff4ed339a5"
+                        "a379b0b8bc731fffb0");
 }
 
 /* C.6.  Test Vector 6: OSCORE Request, Client */

@@ -71,6 +71,14 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
   return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
+int
+oc_query_value_exists(oc_request_t *request, const char *key)
+{
+  if (!request)
+    return -1;
+  return oc_ri_query_exists(request->query, request->query_len, key);
+}
+
 static int
 response_length(void)
 {
@@ -167,20 +175,26 @@ oc_process_baseline_interface(oc_resource_t *resource)
     const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
     if (desc) {
       /* tag-pos-desc will be handled as a string */
+      // clang-format off
       oc_rep_set_text_string(root, tag-pos-desc, desc);
+      // clang-format on
     }
   }
   if (resource->tag_func_desc > 0) {
     const char *func = oc_enum_to_str(resource->tag_func_desc);
     if (func) {
       /* tag-pos-desc will be handled as a string */
+      // clang-format off
       oc_rep_set_text_string(root, tag-func-desc, func);
+      // clang-format on
     }
   }
   if (resource->tag_locn > 0) {
     const char *locn = oc_enum_locn_to_str(resource->tag_locn);
     if (locn) {
+      // clang-format off
       oc_rep_set_text_string(root, tag-locn, locn);
+      // clang-format on
     }
   }
   double *pos = resource->tag_pos_rel;
@@ -318,8 +332,8 @@ oc_new_collection(const char *name, const char *uri, uint8_t num_resource_types,
   if (collection) {
     collection->interfaces = OC_IF_BASELINE | OC_IF_LL | OC_IF_B;
     collection->default_interface = OC_IF_LL;
-    oc_populate_resource_object(collection, name, uri,
-                                num_resource_types, device);
+    oc_populate_resource_object(collection, name, uri, num_resource_types,
+                                device);
   }
   return collection;
 }
@@ -514,8 +528,12 @@ oc_indicate_separate_response(oc_request_t *request,
 void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
+  coap_separate_t *cur = oc_list_head(handle->requests);
+  handle->response_state = oc_blockwise_alloc_response_buffer(
+    oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint, cur->method,
+    OC_BLOCKWISE_SERVER);
 #ifdef OC_BLOCK_WISE
-  oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new(handle->response_state->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
   oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
 #endif /* !OC_BLOCK_WISE */
@@ -526,9 +544,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
                           oc_status_t response_code)
 {
   oc_response_buffer_t response_buffer;
-  response_buffer.buffer = handle->buffer;
-  if (handle->len != 0)
-    response_buffer.response_length = handle->len;
+  response_buffer.buffer = handle->response_state->buffer;
+  if (handle->response_state->payload_size != 0)
+    response_buffer.response_length = handle->response_state->payload_size;
   else
     response_buffer.response_length = response_length();
 
@@ -594,7 +612,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         } else
 #endif /* OC_BLOCK_WISE */
           if (response_buffer.response_length > 0) {
-          coap_set_payload(response, handle->buffer,
+          coap_set_payload(response, handle->response_state->buffer,
                            response_buffer.response_length);
         }
         coap_set_status_code(response, response_buffer.code);
@@ -619,9 +637,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
     cur = next;
   }
   handle->active = 0;
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(handle->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_blockwise_free_response_buffer(handle->response_state);
 }
 
 int
