@@ -489,7 +489,7 @@ static void post_pushconf(oc_request_t *request, oc_interface_mask_t iface_mask,
 void oc_create_pushconf_resource(size_t device_index)
 {
 	/* create Push Configuration Resource */
-	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_PATH, 1, device_index);
+	oc_resource_t *push_conf = oc_new_collection("Push Configuration", PUSHCONF_RSC_PATH, 1, device_index);
 	oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
 	oc_resource_bind_resource_interface(push_conf, OC_IF_LL | /*OC_IF_B | */ OC_IF_CREATE | OC_IF_BASELINE);
 	oc_resource_set_default_interface(push_conf, OC_IF_LL);
@@ -1769,7 +1769,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 void oc_create_pushreceiver_resource(size_t device_index)
 {
 	/* create Push Receiver Resource */
-	oc_resource_t *push_recv = oc_new_resource("Push Receiver", PUSHRECVS_PATH, 1, device_index);
+	oc_resource_t *push_recv = oc_new_resource("Push Receiver", PUSHRECVS_RSC_PATH, 1, device_index);
 
 	oc_resource_bind_resource_type(push_recv, "oic.r.pushreceiver");
 	oc_resource_bind_resource_interface(push_recv, OC_IF_RW | OC_IF_BASELINE);

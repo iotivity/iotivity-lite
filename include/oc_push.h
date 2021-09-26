@@ -66,8 +66,13 @@ extern "C"
 #endif
 
 
-#define PUSHCONF_PATH "/pushconfig"
-#define PUSHRECVS_PATH "/pushreceivers"
+#define PUSHCONF_RSC_PATH "/pushconfig"
+#define PUSHCONF_RSC_TYPE "oic.r.pushconfiguration"
+#define PUSHCONF_RSC_NAME "Push Configuration"
+
+#define PUSHRECVS_RSC_PATH "/pushreceivers"
+#define PUSHRECVS_RSC_TYPE "oic.r.pushreceiver"
+#define PUSHRECVS_RSC_NAME "Push Receiver Configuration"
 
 /*
  * TODO4ME <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
