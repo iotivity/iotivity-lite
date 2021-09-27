@@ -65,7 +65,7 @@ static char *g_dali_RESOURCE_PROPERTY_NAME_tbus = "tbus"; /* the name for the at
 int g_dali_tbus[MAX_ARRAY];
 size_t g_dali_tbus_array_size;
 
-/* global property variables for path: "/DaliConf" */
+/* global property variables for path: "/dali_conf" */
 static char *g_config_RESOURCE_PROPERTY_NAME_bus = "bus"; /* the name for the attribute */
 int g_config_bus = 2; /* current value of property "bus" assign the bus identifier. */
 static char *g_config_RESOURCE_PROPERTY_NAME_src = "src"; /* the name for the attribute */
@@ -1058,7 +1058,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data
 }
 
 /**
-* get method for "/DaliConf" resource.
+* get method for "/dali_conf" resource.
 * function is called to intialize the return values of the GET method.
 * initialisation of the returned values are done from the global property values.
 * Resource Description:
@@ -1125,7 +1125,7 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces, void *use
 }
 
 /**
-* post method for "/DaliConf" resource.
+* post method for "/dali_conf" resource.
 * The function has as input the request body, which are the input values of the POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property values.
@@ -1465,7 +1465,7 @@ register_resources(void)
   oc_add_resource(res_dali);
   PRINT("\tDali resource added.\n");
 
-  oc_resource_t *dali_config = oc_new_resource(NULL, "/DaliConf", 1, 0);
+  oc_resource_t *dali_config = oc_new_resource(NULL, "/dali_conf", 1, 0);
   oc_resource_bind_resource_type(dali_config, "oic.r.dali.conf");
 
   
@@ -1701,8 +1701,8 @@ main(void)
                                           register_resources };
 
   oc_set_con_res_announced(true);
-  // max app data size set to 13k large enough to hold full IDD
-  oc_set_max_app_data_size(13312);
+  // max app data size set to 14.5k large enough to hold full IDD
+  oc_set_max_app_data_size(14500);
 
 #ifdef OC_STORAGE
   oc_storage_config("./server_certification_tests_creds");
