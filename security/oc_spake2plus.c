@@ -3,6 +3,7 @@
 #include "mbedtls/bignum.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#include "mbedtls/hkdf.h"
 #include <assert.h>
 
 static mbedtls_entropy_context entropy_ctx;
@@ -153,7 +154,7 @@ cleanup:
 // V = h*w1*(Y - w0*N)
 static int
 calculate_ZV_N(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
-             const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
+               const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
 {
   int ret;
 
@@ -177,7 +178,7 @@ cleanup:
 // Z = h*y*(X - w0*M)
 static int
 calculate_Z_M(mbedtls_ecp_point *Z, const mbedtls_mpi *x,
-             const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
+              const mbedtls_ecp_point *Y, const mbedtls_mpi *w0)
 {
   int ret;
 
@@ -202,10 +203,11 @@ cleanup:
 // encode value as zero-padded little endian bytes
 // returns number of bytes written (always 8)
 // buffer must be able to fit 8 bytes
-size_t encode_uint(uint64_t value, uint8_t *buffer)
+size_t
+encode_uint(uint64_t value, uint8_t *buffer)
 {
-  buffer[0] = (value >>  0) & 0xff;
-  buffer[1] = (value >>  8) & 0xff;
+  buffer[0] = (value >> 0) & 0xff;
+  buffer[1] = (value >> 8) & 0xff;
   buffer[2] = (value >> 16) & 0xff;
   buffer[3] = (value >> 24) & 0xff;
   buffer[4] = (value >> 32) & 0xff;
@@ -217,7 +219,8 @@ size_t encode_uint(uint64_t value, uint8_t *buffer)
 
 // encode string as length followed by bytes
 // returns number of bytes written
-size_t encode_string(const char *str, uint8_t *buffer)
+size_t
+encode_string(const char *str, uint8_t *buffer)
 {
   size_t len = encode_uint(strlen(str), buffer);
   memcpy(buffer + len, str, strlen(str));
@@ -226,13 +229,17 @@ size_t encode_string(const char *str, uint8_t *buffer)
 
 // encode point as length followed by bytes
 // returns number of bytes written
-size_t encode_point(mbedtls_ecp_group *grp, const mbedtls_ecp_point *point, uint8_t *buffer)
+size_t
+encode_point(mbedtls_ecp_group *grp, const mbedtls_ecp_point *point,
+             uint8_t *buffer)
 {
   size_t len_point = 0;
   size_t len_len = 0;
   uint8_t point_buf[65];
   int ret;
-  ret = mbedtls_ecp_point_write_binary(grp, point, MBEDTLS_ECP_PF_UNCOMPRESSED, &len_point, point_buf, sizeof(point_buf));
+  ret =
+    mbedtls_ecp_point_write_binary(grp, point, MBEDTLS_ECP_PF_UNCOMPRESSED,
+                                   &len_point, point_buf, sizeof(point_buf));
   assert(ret == 0);
 
   len_len = encode_uint(len_point, buffer);
@@ -242,7 +249,8 @@ size_t encode_point(mbedtls_ecp_group *grp, const mbedtls_ecp_point *point, uint
 
 // encode mpi as length followed by bytes
 // returns number of bytes written
-size_t encode_mpi(mbedtls_mpi *mpi, uint8_t *buffer)
+size_t
+encode_mpi(mbedtls_mpi *mpi, uint8_t *buffer)
 {
   size_t len_mpi = 0;
   size_t len_len = 0;
@@ -331,8 +339,25 @@ validate_against_test_vector()
                         0x4e, 0x3b, 0x1f, 0x31, 0x8d, 0x76, 0xe3, 0x6f, 0xea,
                         0x99, 0x66 };
 
-  uint8_t Ka[] = {0xec, 0x8d, 0x19, 0xb8, 0x07, 0xff, 0xb1, 0xd1, 0xee, 0xa8, 0x1a, 0x93, 0xba, 0x35, 0xcd, 0xfe};
-  uint8_t Ke[] = {0x2e, 0xa4, 0x0e, 0x4b, 0xad, 0xfa, 0x54, 0x52, 0xb5, 0x74, 0x4d, 0xc5, 0x98, 0x3e, 0x99, 0xba};
+  uint8_t Ka[] = { 0xec, 0x8d, 0x19, 0xb8, 0x07, 0xff, 0xb1, 0xd1,
+                   0xee, 0xa8, 0x1a, 0x93, 0xba, 0x35, 0xcd, 0xfe };
+  uint8_t Ke[] = { 0x2e, 0xa4, 0x0e, 0x4b, 0xad, 0xfa, 0x54, 0x52,
+                   0xb5, 0x74, 0x4d, 0xc5, 0x98, 0x3e, 0x99, 0xba };
+
+  uint8_t KcA[] = { 0x66, 0xde, 0x53, 0x4d, 0x9b, 0xf1, 0xe4, 0x4e,
+                    0x96, 0xa5, 0x3a, 0x4b, 0x48, 0xd6, 0xb3, 0x53 };
+  uint8_t KcB[] = { 0x49, 0x45, 0xc3, 0x8b, 0xb4, 0x76, 0xcb, 0x0f,
+                    0x34, 0x7f, 0x32, 0x22, 0xbe, 0x9b, 0x64, 0xa2 };
+
+  uint8_t cA[] = { 0xe5, 0x64, 0xc9, 0x3b, 0x30, 0x15, 0xef, 0xb9,
+                   0x46, 0xdc, 0x16, 0xd6, 0x42, 0xbb, 0xe7, 0xd1,
+                   0xc8, 0xda, 0x5b, 0xe1, 0x64, 0xed, 0x9f, 0xc3,
+                   0xba, 0xe4, 0xe0, 0xff, 0x86, 0xe1, 0xbd, 0x3c };
+  uint8_t cB[] = { 0x07, 0x2a, 0x94, 0xd9, 0xa5, 0x4e, 0xdc, 0x20,
+                   0x1d, 0x88, 0x91, 0x53, 0x4c, 0x23, 0x17, 0xca,
+                   0xdf, 0x3e, 0xa3, 0x79, 0x28, 0x27, 0xf4, 0x79,
+                   0xe8, 0x73, 0xf9, 0x3e, 0x90, 0xf2, 0x15, 0x52 };
+
   uint8_t cmpbuf[128];
   size_t cmplen;
   int ret;
@@ -358,7 +383,8 @@ validate_against_test_vector()
   mbedtls_ecp_point_init(&X);
   mbedtls_ecp_point_init(&pubA);
   // pubA = x*P (P is the generator group element, mbedtls uses G)
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubA, &x, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubA, &x, &grp.G,
+                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // X = pubA + w0*M
   MBEDTLS_MPI_CHK(calculate_pA(&X, &pubA, &w0));
@@ -380,7 +406,8 @@ validate_against_test_vector()
   mbedtls_ecp_point_init(&Y);
   mbedtls_ecp_point_init(&pubB);
   // pubB = y*P
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubB, &y, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &pubB, &y, &grp.G,
+                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // Y = pubB + w0*N
   MBEDTLS_MPI_CHK(calculate_pB(&Y, &pubB, &w0));
@@ -404,7 +431,8 @@ validate_against_test_vector()
   bytes_y[5]--;
 
   // pubB = y*P
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &bad_pubB, &bad_y, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &bad_pubB, &bad_y, &grp.G,
+                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
   // Y = pubB + w0*N
   MBEDTLS_MPI_CHK(calculate_pB(&bad_Y, &bad_pubB, &w0));
@@ -425,7 +453,8 @@ validate_against_test_vector()
   // Z = h*x*(Y - w0*N)
   MBEDTLS_MPI_CHK(calculate_ZV_N(&Z, &x, &Y, &w0));
 
-  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(
+    &grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_Z, cmpbuf, cmplen) == 0);
 
   mbedtls_ecp_point V;
@@ -437,7 +466,8 @@ validate_against_test_vector()
 
   // V = h*w1*(Y - w0*N)
   MBEDTLS_MPI_CHK(calculate_ZV_N(&V, &w1, &Y, &w0));
-  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(
+    &grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
 
   // ================================
@@ -447,17 +477,21 @@ validate_against_test_vector()
 
   // Z = h*y*(X - w0*M)
   MBEDTLS_MPI_CHK(calculate_Z_M(&Z, &y, &X, &w0));
-  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(
+    &grp, &Z, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_Z, cmpbuf, cmplen) == 0);
 
   // V = h*y*L, where L = w1*P
   mbedtls_ecp_point L;
   mbedtls_ecp_point_init(&L);
 
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
-  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &V, &y, &L, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_mul(&grp, &L, &w1, &grp.G,
+                                  mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
+  MBEDTLS_MPI_CHK(
+    mbedtls_ecp_mul(&grp, &V, &y, &L, mbedtls_ctr_drbg_random, &ctr_drbg_ctx));
 
-  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(&grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
+  MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(
+    &grp, &V, MBEDTLS_ECP_PF_UNCOMPRESSED, &cmplen, cmpbuf, sizeof(cmpbuf)));
   assert(memcmp(bytes_V, cmpbuf, cmplen) == 0);
 
   // ====================
@@ -495,10 +529,10 @@ validate_against_test_vector()
   // w0
   ttlen += encode_mpi(&w0, ttbuf + ttlen);
 
-  // ====================
-  // Calculate Key & Key 
+  // ===================
+  // Calculate Key & Key
   //     Confirmation
-  // ====================
+  // ===================
   uint8_t Ka_Ke[32];
 
   mbedtls_sha256(ttbuf, ttlen, Ka_Ke, 0);
@@ -507,7 +541,26 @@ validate_against_test_vector()
   // second half of Ka_Ke
   assert(memcmp(Ke, Ka_Ke + 16, 16) == 0);
 
-  mbedtls_md_hmac(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), Ka, sizeof(Ka), ttbuf, ttlen, Ka_Ke, 0);
+  // Calculate KcA, KcB
+
+  // |KcA| + |KcB| = 16 bytes
+  uint8_t KcA_KcB[32];
+  mbedtls_hkdf(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), NULL, 0, Ka,
+               sizeof(Ka), "ConfirmationKeys", strlen("ConfirmationKeys"),
+               KcA_KcB, 32);
+
+  assert(memcmp(KcA, KcA_KcB, 16) == 0);
+  assert(memcmp(KcB, KcA_KcB + 16, 16) == 0);
+
+  // Calculate cA and cB
+  uint8_t test_cA[32];
+  uint8_t test_cB[32];
+  mbedtls_md_hmac(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), KcA,
+                  sizeof(KcA), bytes_Y, sizeof(bytes_Y), test_cA);
+  mbedtls_md_hmac(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), KcB,
+                  sizeof(KcB), bytes_X, sizeof(bytes_X), test_cB);
+  assert(memcmp(cA, test_cA, 32) == 0);
+  assert(memcmp(cB, test_cB, 32) == 0);
 
 cleanup:
   return ret;

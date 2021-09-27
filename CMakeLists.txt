@@ -11,6 +11,10 @@ if(OC_REAPPLY_MBEDTLS_PATCHES)
     )
 endif()
 
+# Enable missing algoritms
+# TODO add this to Makefiles, or regenerate mbedtls patches
+add_compile_definitions(MBEDTLS_HKDF_C)
+
 # Do not build anything except for the library
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
