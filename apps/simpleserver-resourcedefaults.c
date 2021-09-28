@@ -70,6 +70,13 @@ static CONDITION_VARIABLE cv; /* event loop variable */
 static CRITICAL_SECTION cs;   /* event loop variable */
 #endif
 
+#ifdef  __linux__
+#include <pthread.h>
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+struct timespec ts;
+#endif /* __linux__ */
+
 #define btoa(x) ((x) ? "true" : "false")
 
 #define MAX_STRING 30         /* max size of the strings. */
@@ -1245,11 +1252,13 @@ int
 main(void)
 {
   int init;
-  oc_clock_time_t next_event;
+  
 
+#ifdef WIN32
   /* windows specific */
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
+#endif
   /* install Ctrl-C */
   signal(SIGINT, handle_signal);
 
@@ -1274,9 +1283,12 @@ main(void)
   /* initializes the handlers structure */
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = 0 };
+                                        .register_resources = register_resources
+#ifdef OC_CLIENT
+                                        ,
+                                        .requests_entry = 0
+#endif 
+};
 
   // oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
@@ -1291,6 +1303,7 @@ main(void)
   PRINT("OCF server \"server_lite_4209\" running, waiting on incoming "
         "connections.\n");
 
+  oc_clock_time_t next_event;
 #ifdef WIN32
   /* windows specific loop */
   while (quit != 1) {
@@ -1304,6 +1317,20 @@ main(void)
           &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
+  }
+#endif
+#ifdef __linux__
+  while (quit != 1) {
+    next_event = oc_main_poll();
+    pthread_mutex_lock(&mutex);
+    if (next_event == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      pthread_cond_timedwait(&cv, &mutex, &ts);
+    }
+    pthread_mutex_unlock(&mutex);
   }
 #endif
 

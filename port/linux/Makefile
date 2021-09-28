@@ -114,7 +114,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 simpleserver-resourcedefaults
 
 ifeq ($(V6DNS),1)
 	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
@@ -367,6 +367,10 @@ secure_mcast_server2: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_se
 simpleserver_pki: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver_pki.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+simpleserver-resourcedefaults: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_pki.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/simpleserver-resourcedefaults.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 simpleclient: libiotivity-lite-client.a $(ROOT_DIR)/apps/simpleclient.c
 	@mkdir -p $@_creds
