@@ -1,95 +1,179 @@
 {
-    "schemes":[
-        "http"
+  "schemes":[
+    "http"
   ],
   "swagger":"2.0",
   "consumes":[
-        "application/json"
+    "application/json"
   ],
   "paths":{
-      "/oc/con": {
-        "get": {
-          "description": "",
-          "parameters": [
-            {
-              "$ref": "#/parameters/interface-rw"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description" : "",
-              "schema": {
-                "$ref": "#/definitions/Configuration"
-              }
-            }
+    "/dali_conf":{
+      "get":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/interface-rw"
           }
-        },
-        "post": {
-          "description": "",
-          "parameters": [
-            {
-              "$ref": "#/parameters/interface-rw"
-            },
-            {
-              "name": "body",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/ConfigurationUpdate"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "",
-              "schema": {
-                "$ref": "#/definitions/ConfigurationUpdate"
-              }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/d22"
             }
           }
         }
       },
-        "/platform?if=oic.if.ll":{
-            "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/slinks"
+      "post":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/interface-rw"
+          },
+          {
+            "in":"body",
+            "name":"body",
+            "required":true,
+            "schema":{
+              "$ref":"#/definitions/d21"
+            }
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/d22"
+            }
+          }
+        }
+      }
+    },
+    "/dali":{
+      "get":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/p_w"
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/d11"
+            }
+          }
+        }
+      },
+      "post":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/p_w"
+          },
+          {
+            "in":"body",
+            "name":"body",
+            "required":true,
+            "schema":{
+              "$ref":"#/definitions/d12"
+            }
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/d12"
+            }
+          }
+        }
+      }
+    },
+    "/oc/con":{
+      "get":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/interface-rw"
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/Configuration"
+            }
+          }
+        }
+      },
+      "post":{
+        "description":"",
+        "parameters":[
+          {
+            "$ref":"#/parameters/interface-rw"
+          },
+          {
+            "name":"body",
+            "in":"body",
+            "required":true,
+            "schema":{
+              "$ref":"#/definitions/ConfigurationUpdate"
+            }
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"",
+            "schema":{
+              "$ref":"#/definitions/ConfigurationUpdate"
+            }
+          }
+        }
+      }
+    },
+    "/platform?if=oic.if.ll":{
+      "get":{
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/slinks"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-all40"
+          {
+            "$ref":"#/parameters/interface-all40"
           }
         ],
         "description":""
       }
     },
     "/temp":{
-            "post":{
-                "responses":{
-                    "403":{
-                        "schema":{
-                            "$ref":"#/definitions/Temperature"
+      "post":{
+        "responses":{
+          "403":{
+            "schema":{
+              "$ref":"#/definitions/Temperature"
             },
             "description":""
           },
           "200":{
-                        "schema":{
-                            "$ref":"#/definitions/Temperature"
+            "schema":{
+              "$ref":"#/definitions/Temperature"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface"
+          {
+            "$ref":"#/parameters/interface"
           },
           {
-                        "schema":{
-                            "$ref":"#/definitions/Temperature"
+            "schema":{
+              "$ref":"#/definitions/Temperature"
             },
             "in":"body",
             "required":true,
@@ -99,48 +183,48 @@
         "description":""
       },
       "get":{
-                "responses":{
-                    "403":{
-                        "schema":{
-                            "$ref":"#/definitions/Temperature"
+        "responses":{
+          "403":{
+            "schema":{
+              "$ref":"#/definitions/Temperature"
             },
             "description":""
           },
           "200":{
-                        "schema":{
-                            "$ref":"#/definitions/Temperature"
+            "schema":{
+              "$ref":"#/definitions/Temperature"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface"
+          {
+            "$ref":"#/parameters/interface"
           },
           {
-                        "$ref":"#/parameters/unit"
+            "$ref":"#/parameters/unit"
           }
         ],
         "description":""
       }
     },
     "/switch":{
-            "post":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/BinarySwitch"
+      "post":{
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/BinarySwitch"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface10"
+          {
+            "$ref":"#/parameters/interface10"
           },
           {
-                        "schema":{
-                            "$ref":"#/definitions/BinarySwitch"
+            "schema":{
+              "$ref":"#/definitions/BinarySwitch"
             },
             "in":"body",
             "required":true,
@@ -150,45 +234,45 @@
         "description":""
       },
       "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/BinarySwitch"
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/BinarySwitch"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface10"
+          {
+            "$ref":"#/parameters/interface10"
           }
         ],
         "description":""
       }
     },
     "/platform?if=oic.if.b":{
-            "post":{
-                "responses":{
-                    "403":{
-                        "schema":{
-                            "$ref":"#/definitions/sbatch-retrieve"
+      "post":{
+        "responses":{
+          "403":{
+            "schema":{
+              "$ref":"#/definitions/sbatch-retrieve"
             },
             "description":""
           },
           "200":{
-                        "schema":{
-                            "$ref":"#/definitions/sbatch-retrieve"
+            "schema":{
+              "$ref":"#/definitions/sbatch-retrieve"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-all40"
+          {
+            "$ref":"#/parameters/interface-all40"
           },
           {
-                        "schema":{
-                            "$ref":"#/definitions/sbatch-update"
+            "schema":{
+              "$ref":"#/definitions/sbatch-update"
             },
             "in":"body",
             "required":true,
@@ -198,63 +282,63 @@
         "description":""
       },
       "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/sbatch-retrieve"
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/sbatch-retrieve"
             },
             "description":""
           },
           "404":{
-                        "schema":{
-                            "$ref":"#/definitions/sbatch-retrieve"
+            "schema":{
+              "$ref":"#/definitions/sbatch-retrieve"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-all40"
+          {
+            "$ref":"#/parameters/interface-all40"
           }
         ],
         "description":""
       }
     },
     "/oic/p":{
-            "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/Platform"
+      "get":{
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/Platform"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface30"
+          {
+            "$ref":"#/parameters/interface30"
           }
         ],
         "description":""
       }
     },
     "/oic/mnt":{
-            "post":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/mnt"
+      "post":{
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/mnt"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-rw"
+          {
+            "$ref":"#/parameters/interface-rw"
           },
           {
-                        "schema":{
-                            "$ref":"#/definitions/mnt-update"
+            "schema":{
+              "$ref":"#/definitions/mnt-update"
             },
             "in":"body",
             "required":true,
@@ -264,39 +348,39 @@
         "description":""
       },
       "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/mnt"
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/mnt"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-rw"
+          {
+            "$ref":"#/parameters/interface-rw"
           }
         ],
         "description":""
       }
     },
     "/platform?if=oic.if.baseline":{
-            "post":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/sbaseline"
+      "post":{
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/sbaseline"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-all40"
+          {
+            "$ref":"#/parameters/interface-all40"
           },
           {
-                        "schema":{
-                            "$ref":"#/definitions/sbaseline-update"
+            "schema":{
+              "$ref":"#/definitions/sbaseline-update"
             },
             "in":"body",
             "required":true,
@@ -306,17 +390,17 @@
         "description":""
       },
       "get":{
-                "responses":{
-                    "200":{
-                        "schema":{
-                            "$ref":"#/definitions/sbaseline"
+        "responses":{
+          "200":{
+            "schema":{
+              "$ref":"#/definitions/sbaseline"
             },
             "description":""
           }
         },
         "parameters":[
-                    {
-                        "$ref":"#/parameters/interface-all40"
+          {
+            "$ref":"#/parameters/interface-all40"
           }
         ],
         "description":""
@@ -324,25 +408,161 @@
     }
   },
   "definitions":{
-        "sbatch-update":{
-            "minItems":1,
+    "d11": {
+      "properties": {
+        "if": {
+          "items": {
+            "enum": [
+              "oic.if.baseline",
+              "oic.if.w"
+            ],
+            "type": "string"
+          },
+          "minItems": 2,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rt": {
+          "default": [
+            "oic.r.dali"
+          ],
+          "items": {
+            "enum": [
+              "oic.r.dali"
+            ],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "minItems": 1,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object"
+    },
+    "d12": {
+      "properties": {
+        "pld": {
+          "items": {
+            "description": "",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "pld_s": {
+          "type": "integer"
+        },
+        "prio": {
+          "default": 0,
+          "type": "integer"
+        },
+        "src": {
+          "type": "integer"
+        },
+        "st": {
+          "default": false,
+          "type": "boolean"
+        },
+        "tbus": {
+          "default": [
+            0
+          ],
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "pld",
+        "pld_s"
+      ],
+      "type": "object"
+    },
+    "d21": {
+      "properties": {
+        "bus": {
+          "type": "integer"
+        },
+        "src": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "d22": {
+      "properties": {
+        "bus": {
+          "type": "integer"
+        },
+        "if": {
+          "items": {
+            "enum": [
+              "oic.if.rw",
+              "oic.if.baseline"
+            ],
+            "type": "string"
+          },
+          "minItems": 2,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rt": {
+          "default": [
+            "oic.r.dali.conf"
+          ],
+          "items": {
+            "enum": [
+              "oic.r.dali.conf"
+            ],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "minItems": 1,
+          "readOnly": true,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "src": {
+          "type": "integer"
+        },
+        "ver": {
+          "enum": [
+            1,
+            2
+          ],
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ver"
+      ],
+      "type": "object"
+    },
+    "sbatch-update":{
+      "minItems":1,
       "items":{
-                "required":[
-                    "href",
+        "required":[
+          "href",
           "rep"
         ],
         "properties":{
-                    "href":{
-                        "format":"uri",
+          "href":{
+            "format":"uri",
             "type":"string",
             "maxLength":256,
             "description":""
           },
           "rep":{
-                        "type":"object",
+            "type":"object",
             "anyOf":[
-                            {
-                                "$ref":"#/definitions/BinarySwitch"
+              {
+                "$ref":"#/definitions/BinarySwitch"
               }
             ]
           }
@@ -355,12 +575,12 @@
       "title":"Collection Batch Update Format"
     },
     "BinarySwitch":{
-            "properties":{
-                "rt":{
-                    "minItems":1,
+      "properties":{
+        "rt":{
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.r.switch.binary"
+            "enum":[
+              "oic.r.switch.binary"
             ],
             "type":"string",
             "maxLength":64
@@ -369,15 +589,15 @@
           "uniqueItems":true,
           "readOnly":true,
           "default":[
-                        "oic.r.switch.binary"
+            "oic.r.switch.binary"
           ],
           "type":"array"
         },
         "if":{
-                    "minItems":2,
+          "minItems":2,
           "items":{
-                        "enum":[
-                            "oic.if.a",
+            "enum":[
+              "oic.if.a",
               "oic.if.baseline"
             ],
             "type":"string"
@@ -388,14 +608,14 @@
           "type":"array"
         },
         "value":{
-                    "type":"boolean",
+          "type":"boolean",
           "description":""
         },
         "tag-pos-desc":{
-                    "description":"",
+          "description":"",
           "type":"string",
           "enum":[
-                        "unknown",
+            "unknown",
             "top",
             "bottom",
             "left",
@@ -413,38 +633,38 @@
           "readOnly":true
         },
         "tag-func-desc":{
-                    "readOnly":true,
+          "readOnly":true,
           "type":"string",
           "description":""
         },
         "tag-pos-rel":{
-                    "type":"array",
+          "type":"array",
           "readOnly":true,
           "description":"",
           "minItems":3,
           "maxItems":3,
           "items":{
-                        "type":"number",
+            "type":"number",
             "minimum":-1,
             "maximum":1
           }
         }
       },
       "required":[
-                "value"
+        "value"
       ],
       "type":"object"
     },
     "sbaseline-update":{
-            "additionalProperties":true
+      "additionalProperties":true
     },
     "sbaseline":{
-            "properties":{
-                "rt":{
-                    "minItems":1,
+      "properties":{
+        "rt":{
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.wk.col"
+            "enum":[
+              "oic.wk.col"
             ],
             "type":"string",
             "maxLength":64
@@ -453,14 +673,14 @@
           "uniqueItems":true,
           "readOnly":true,
           "default":[
-                        "oic.wk.col"
+            "oic.wk.col"
           ],
           "type":"array"
         },
         "rts-m":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64
           },
           "description":"",
@@ -469,13 +689,13 @@
           "type":"array"
         },
         "links":{
-                    "items":{
-                        "properties":{
-                            "tag-pos-desc":{
-                                "description":"",
+          "items":{
+            "properties":{
+              "tag-pos-desc":{
+                "description":"",
                 "type":"string",
                 "enum":[
-                                    "unknown",
+                  "unknown",
                   "top",
                   "bottom",
                   "left",
@@ -498,22 +718,22 @@
                 "description":""
               },
               "p":{
-                                "properties":{
-                                    "bm":{
-                                        "type":"integer",
+                "properties":{
+                  "bm":{
+                    "type":"integer",
                     "description":""
                   }
                 },
                 "type":"object",
                 "required":[
-                                    "bm"
+                  "bm"
                 ],
                 "description":""
               },
               "tag-pos-rel":{
-                                "minItems":3,
+                "minItems":3,
                 "items":{
-                                    "minimum":-1,
+                  "minimum":-1,
                   "maximum":1,
                   "type":"number"
                 },
@@ -523,20 +743,20 @@
                 "type":"array"
               },
               "title":{
-                                "type":"string",
+                "type":"string",
                 "maxLength":64,
                 "description":""
               },
               "tag-func-desc":{
-                                "readOnly":true,
+                "readOnly":true,
                 "type":"string",
                 "description":""
               },
               "if":{
-                                "minItems":1,
+                "minItems":1,
                 "items":{
-                                    "enum":[
-                                        "oic.if.baseline",
+                  "enum":[
+                    "oic.if.baseline",
                     "oic.if.ll",
                     "oic.if.b",
                     "oic.if.rw",
@@ -553,21 +773,21 @@
                 "type":"array"
               },
               "rel":{
-                                "minItems":1,
+                "minItems":1,
                 "items":{
-                                    "type":"string",
+                  "type":"string",
                   "maxLength":64
                 },
                 "type":"array",
                 "default":[
-                                    "hosts"
+                  "hosts"
                 ],
                 "description":""
               },
               "type":{
-                                "minItems":1,
+                "minItems":1,
                 "items":{
-                                    "type":"string",
+                  "type":"string",
                   "maxLength":64
                 },
                 "type":"array",
@@ -575,9 +795,9 @@
                 "description":""
               },
               "rt":{
-                                "minItems":1,
+                "minItems":1,
                 "items":{
-                                    "type":"string",
+                  "type":"string",
                   "maxLength":64
                 },
                 "description":"",
@@ -586,21 +806,21 @@
                 "type":"array"
               },
               "href":{
-                                "format":"uri",
+                "format":"uri",
                 "type":"string",
                 "maxLength":256,
                 "description":""
               },
               "eps":{
-                                "items":{
-                                    "properties":{
-                                        "ep":{
-                                            "format":"uri",
+                "items":{
+                  "properties":{
+                    "ep":{
+                      "format":"uri",
                       "type":"string",
                       "description":""
                     },
                     "pri":{
-                                            "minimum":1,
+                      "minimum":1,
                       "type":"integer",
                       "description":""
                     }
@@ -611,17 +831,17 @@
                 "description":""
               },
               "di":{
-                                "type":"string",
+                "type":"string",
                 "pattern":"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
                 "description":""
               },
               "ins":{
-                                "type":"integer",
+                "type":"integer",
                 "description":""
               }
             },
             "required":[
-                            "href",
+              "href",
               "rt",
               "if"
             ],
@@ -631,9 +851,9 @@
           "description":""
         },
         "rts":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64
           },
           "description":"",
@@ -642,10 +862,10 @@
           "type":"array"
         },
         "if":{
-                    "minItems":2,
+          "minItems":2,
           "items":{
-                        "enum":[
-                            "oic.if.ll",
+            "enum":[
+              "oic.if.ll",
               "oic.if.create",
               "oic.if.b",
               "oic.if.baseline"
@@ -660,24 +880,24 @@
           "type":"array"
         },
         "x.org.openconnectivity.bl":{
-                    "type":"integer"
+          "type":"integer"
         }
       },
       "type":"object",
       "additionalProperties":true,
       "required":[
-                "rt",
+        "rt",
         "if",
         "links"
       ]
     },
     "Temperature":{
-            "properties":{
-                "rt":{
-                    "minItems":1,
+      "properties":{
+        "rt":{
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.r.temperature"
+            "enum":[
+              "oic.r.temperature"
             ],
             "type":"string",
             "maxLength":64
@@ -686,13 +906,13 @@
           "uniqueItems":true,
           "readOnly":true,
           "default":[
-                        "oic.r.temperature"
+            "oic.r.temperature"
           ],
           "type":"array"
         },
         "units":{
-                    "enum":[
-                        "C",
+          "enum":[
+            "C",
             "F",
             "K"
           ],
@@ -700,9 +920,9 @@
           "description":""
         },
         "range":{
-                    "minItems":2,
+          "minItems":2,
           "items":{
-                        "type":"number"
+            "type":"number"
           },
           "description":"",
           "readOnly":true,
@@ -710,10 +930,10 @@
           "type":"array"
         },
         "if":{
-                    "minItems":2,
+          "minItems":2,
           "items":{
-                        "enum":[
-                            "oic.if.a",
+            "enum":[
+              "oic.if.a",
               "oic.if.s",
               "oic.if.baseline"
             ],
@@ -727,14 +947,14 @@
           "type":"array"
         },
         "temperature":{
-                    "type":"number",
+          "type":"number",
           "description":""
         },
         "tag-pos-desc":{
-                    "description":"",
+          "description":"",
           "type":"string",
           "enum":[
-                        "unknown",
+            "unknown",
             "top",
             "bottom",
             "left",
@@ -752,29 +972,29 @@
           "readOnly":true
         },
         "tag-func-desc":{
-                    "readOnly":true,
+          "readOnly":true,
           "type":"string",
           "description":""
         }
       },
       "required":[
-                "temperature"
+        "temperature"
       ],
       "type":"object"
     },
     "Platform":{
-            "properties":{
-                "id":{
-                    "type":"string",
+      "properties":{
+        "id":{
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "if":{
-                    "minItems":2,
+          "minItems":2,
           "items":{
-                        "enum":[
-                            "oic.if.r",
+            "enum":[
+              "oic.if.r",
               "oic.if.baseline"
             ],
             "type":"string",
@@ -786,21 +1006,21 @@
           "type":"array"
         },
         "n":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnmn":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnnct":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "minimum":1,
+            "minimum":1,
             "type":"integer",
             "description":""
           },
@@ -809,35 +1029,35 @@
           "description":""
         },
         "mnml":{
-                    "format":"uri",
+          "format":"uri",
           "type":"string",
           "readOnly":true,
           "maxLength":256,
           "description":""
         },
         "mnsel":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnpv":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnfv":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "rt":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.wk.p"
+            "enum":[
+              "oic.wk.p"
             ],
             "type":"string",
             "maxLength":64
@@ -846,54 +1066,54 @@
           "uniqueItems":true,
           "readOnly":true,
           "default":[
-                        "oic.wk.p"
+            "oic.wk.p"
           ],
           "type":"array"
         },
         "mnos":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnhw":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "vid":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "mnmo":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":128,
           "description":""
         },
         "mndt":{
-                    "readOnly":true,
+          "readOnly":true,
           "type":"string",
           "pattern":"^([0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|2[0-9]|1[0-9]|0[1-9])$",
           "description":""
         },
         "pi":{
-                    "readOnly":true,
+          "readOnly":true,
           "type":"string",
           "pattern":"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
           "description":""
         },
         "st":{
-                    "format":"date-time",
+          "format":"date-time",
           "readOnly":true,
           "type":"string",
           "description":""
         },
         "mnsl":{
-                    "format":"uri",
+          "format":"uri",
           "type":"string",
           "readOnly":true,
           "maxLength":256,
@@ -901,19 +1121,19 @@
         }
       },
       "required":[
-                "pi",
+        "pi",
         "mnmn"
       ],
       "type":"object"
     },
     "slinks":{
-            "items":{
-                "properties":{
-                    "tag-pos-desc":{
-                        "description":"",
+      "items":{
+        "properties":{
+          "tag-pos-desc":{
+            "description":"",
             "type":"string",
             "enum":[
-                            "unknown",
+              "unknown",
               "top",
               "bottom",
               "left",
@@ -936,22 +1156,22 @@
             "description":""
           },
           "p":{
-                        "properties":{
-                            "bm":{
-                                "type":"integer",
+            "properties":{
+              "bm":{
+                "type":"integer",
                 "description":""
               }
             },
             "type":"object",
             "required":[
-                            "bm"
+              "bm"
             ],
             "description":""
           },
           "tag-pos-rel":{
-                        "minItems":3,
+            "minItems":3,
             "items":{
-                            "minimum":-1,
+              "minimum":-1,
               "maximum":1,
               "type":"number"
             },
@@ -961,20 +1181,20 @@
             "type":"array"
           },
           "title":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64,
             "description":""
           },
           "tag-func-desc":{
-                        "readOnly":true,
+            "readOnly":true,
             "type":"string",
             "description":""
           },
           "if":{
-                        "minItems":1,
+            "minItems":1,
             "items":{
-                            "enum":[
-                                "oic.if.baseline",
+              "enum":[
+                "oic.if.baseline",
                 "oic.if.ll",
                 "oic.if.b",
                 "oic.if.rw",
@@ -991,21 +1211,21 @@
             "type":"array"
           },
           "rel":{
-                        "minItems":1,
+            "minItems":1,
             "items":{
-                            "type":"string",
+              "type":"string",
               "maxLength":64
             },
             "type":"array",
             "default":[
-                            "hosts"
+              "hosts"
             ],
             "description":""
           },
           "type":{
-                        "minItems":1,
+            "minItems":1,
             "items":{
-                            "type":"string",
+              "type":"string",
               "maxLength":64
             },
             "type":"array",
@@ -1013,9 +1233,9 @@
             "description":""
           },
           "rt":{
-                        "minItems":1,
+            "minItems":1,
             "items":{
-                            "type":"string",
+              "type":"string",
               "maxLength":64
             },
             "description":"",
@@ -1024,21 +1244,21 @@
             "type":"array"
           },
           "href":{
-                        "format":"uri",
+            "format":"uri",
             "type":"string",
             "maxLength":256,
             "description":""
           },
           "eps":{
-                        "items":{
-                            "properties":{
-                                "ep":{
-                                    "format":"uri",
+            "items":{
+              "properties":{
+                "ep":{
+                  "format":"uri",
                   "type":"string",
                   "description":""
                 },
                 "pri":{
-                                    "minimum":1,
+                  "minimum":1,
                   "type":"integer",
                   "description":""
                 }
@@ -1049,17 +1269,17 @@
             "description":""
           },
           "di":{
-                        "type":"string",
+            "type":"string",
             "pattern":"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
             "description":""
           },
           "ins":{
-                        "type":"integer",
+            "type":"integer",
             "description":""
           }
         },
         "required":[
-                    "href",
+          "href",
           "rt",
           "if"
         ],
@@ -1068,36 +1288,36 @@
       "type":"array"
     },
     "mnt":{
-            "anyOf":[
-                {
-                    "required":[
-                        "fr"
+      "anyOf":[
+        {
+          "required":[
+            "fr"
           ]
         },
         {
-                    "required":[
-                        "rb"
+          "required":[
+            "rb"
           ]
         },
         {
-                    "required":[
-                        "err"
+          "required":[
+            "err"
           ]
         }
       ],
       "properties":{
-                "err":{
-                    "type":"integer",
+        "err":{
+          "type":"integer",
           "minimum":399,
           "readOnly":true,
           "maximum":599,
           "description":""
         },
         "rt":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.wk.mnt"
+            "enum":[
+              "oic.wk.mnt"
             ],
             "type":"string",
             "maxLength":64
@@ -1106,35 +1326,35 @@
           "uniqueItems":true,
           "readOnly":true,
           "default":[
-                        "oic.wk.mnt"
+            "oic.wk.mnt"
           ],
           "type":"array"
         },
         "id":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "n":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "rb":{
-                    "type":"boolean",
+          "type":"boolean",
           "description":""
         },
         "fr":{
-                    "type":"boolean",
+          "type":"boolean",
           "description":""
         },
         "if":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.if.rw",
+            "enum":[
+              "oic.if.rw",
               "oic.if.baseline"
             ],
             "type":"string",
@@ -1149,51 +1369,51 @@
       "type":"object"
     },
     "mnt-update":{
-            "anyOf":[
-                {
-                    "required":[
-                        "fr"
+      "anyOf":[
+        {
+          "required":[
+            "fr"
           ]
         },
         {
-                    "required":[
-                        "rb"
+          "required":[
+            "rb"
           ]
         }
       ],
       "properties":{
-                "rb":{
-                    "type":"boolean",
+        "rb":{
+          "type":"boolean",
           "description":""
         },
         "n":{
-                    "type":"string",
+          "type":"string",
           "readOnly":true,
           "maxLength":64,
           "description":""
         },
         "fr":{
-                    "type":"boolean",
+          "type":"boolean",
           "description":""
         }
       },
       "type":"object"
     },
     "sbatch-retrieve":{
-            "minItems":1,
+      "minItems":1,
       "items":{
-                "properties":{
-                    "href":{
-                        "format":"uri",
+        "properties":{
+          "href":{
+            "format":"uri",
             "type":"string",
             "maxLength":256,
             "description":""
           },
           "rep":{
-                        "type":"object",
+            "type":"object",
             "anyOf":[
-                            {
-                                "$ref":"#/definitions/BinarySwitch"
+              {
+                "$ref":"#/definitions/BinarySwitch"
               }
             ]
           }
@@ -1201,16 +1421,16 @@
         "type":"object",
         "additionalProperties":true,
         "required":[
-                    "href",
+          "href",
           "rep"
         ]
       },
       "type":"array"
     },
     "oic.core.rt":{
-            "minItems":1,
+      "minItems":1,
       "items":{
-                "type":"string",
+        "type":"string",
         "maxLength":64
       },
       "description":"",
@@ -1219,10 +1439,10 @@
       "type":"array"
     },
     "oic.core.rt-col":{
-            "minItems":1,
+      "minItems":1,
       "items":{
-                "enum":[
-                    "oic.wk.col"
+        "enum":[
+          "oic.wk.col"
         ],
         "type":"string",
         "maxLength":64
@@ -1233,12 +1453,12 @@
       "type":"array"
     },
     "oic.oic-link":{
-            "properties":{
-                "tag-pos-desc":{
-                    "description":"",
+      "properties":{
+        "tag-pos-desc":{
+          "description":"",
           "type":"string",
           "enum":[
-                        "unknown",
+            "unknown",
             "top",
             "bottom",
             "left",
@@ -1261,22 +1481,22 @@
           "description":""
         },
         "p":{
-                    "properties":{
-                        "bm":{
-                            "type":"integer",
+          "properties":{
+            "bm":{
+              "type":"integer",
               "description":""
             }
           },
           "type":"object",
           "required":[
-                        "bm"
+            "bm"
           ],
           "description":""
         },
         "tag-pos-rel":{
-                    "minItems":3,
+          "minItems":3,
           "items":{
-                        "minimum":-1,
+            "minimum":-1,
             "maximum":1,
             "type":"number"
           },
@@ -1286,20 +1506,20 @@
           "type":"array"
         },
         "title":{
-                    "type":"string",
+          "type":"string",
           "maxLength":64,
           "description":""
         },
         "tag-func-desc":{
-                    "readOnly":true,
+          "readOnly":true,
           "type":"string",
           "description":""
         },
         "if":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "enum":[
-                            "oic.if.baseline",
+            "enum":[
+              "oic.if.baseline",
               "oic.if.ll",
               "oic.if.b",
               "oic.if.rw",
@@ -1316,21 +1536,21 @@
           "type":"array"
         },
         "rel":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64
           },
           "type":"array",
           "default":[
-                        "hosts"
+            "hosts"
           ],
           "description":""
         },
         "type":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64
           },
           "type":"array",
@@ -1338,9 +1558,9 @@
           "description":""
         },
         "rt":{
-                    "minItems":1,
+          "minItems":1,
           "items":{
-                        "type":"string",
+            "type":"string",
             "maxLength":64
           },
           "description":"",
@@ -1349,21 +1569,21 @@
           "type":"array"
         },
         "href":{
-                    "format":"uri",
+          "format":"uri",
           "type":"string",
           "maxLength":256,
           "description":""
         },
         "eps":{
-                    "items":{
-                        "properties":{
-                            "ep":{
-                                "format":"uri",
+          "items":{
+            "properties":{
+              "ep":{
+                "format":"uri",
                 "type":"string",
                 "description":""
               },
               "pri":{
-                                "minimum":1,
+                "minimum":1,
                 "type":"integer",
                 "description":""
               }
@@ -1379,71 +1599,79 @@
           "description":""
         },
         "ins":{
-                    "type":"integer",
+          "type":"integer",
           "description":""
         }
       },
       "required":[
-                "href",
+        "href",
         "rt",
         "if"
       ],
       "type":"object"
     },
-      "Configuration": {
-        "properties": {
-          "rt":  {
-            "description": "",
-            "items": {
-              "enum": ["oic.wk.con"],
-              "type": "string",
-              "maxLength": 64
-            },
-            "minItems": 1,
-            "uniqueItems": true,
-            "readOnly": true,
-            "type": "array",
-            "default": ["oic.wk.con"]
+    "Configuration":{
+      "properties":{
+        "rt":{
+          "description":"",
+          "items":{
+            "enum":[
+              "oic.wk.con"
+            ],
+            "type":"string",
+            "maxLength":64
           },
-          "n": {
-              "type": "string",
-              "readOnly": true,
-              "maxLength": 64,
-              "description": ""
-          },
-          "if" : {
-            "description": "",
-            "items": {
-              "enum": [
-                "oic.if.baseline",
-                "oic.if.rw"
-              ],
-              "type": "string",
-              "maxLength": 64
-            },
-            "minItems": 1,
-            "uniqueItems": true,
-            "readOnly": true,
-            "type": "array"
-          }
+          "minItems":1,
+          "uniqueItems":true,
+          "readOnly":true,
+          "type":"array",
+          "default":[
+            "oic.wk.con"
+          ]
         },
-        "type" : "object",
-        "required": ["n"]
+        "n":{
+          "type":"string",
+          "readOnly":true,
+          "maxLength":64,
+          "description":""
+        },
+        "if":{
+          "description":"",
+          "items":{
+            "enum":[
+              "oic.if.baseline",
+              "oic.if.rw"
+            ],
+            "type":"string",
+            "maxLength":64
+          },
+          "minItems":1,
+          "uniqueItems":true,
+          "readOnly":true,
+          "type":"array"
+        }
       },
-      "ConfigurationUpdate" : {
-        "properties": {
-          "n": {
-            "description": "",
-            "maxLength": 64,
-            "type": "string"
-          }
-        },
-        "required": ["n"],
-        "type" : "object"
-      }
+      "type":"object",
+      "required":[
+        "n"
+      ]
+    },
+    "ConfigurationUpdate":{
+      "properties":{
+        "n":{
+          "description":"",
+          "maxLength":64,
+          "type":"string"
+        }
+      },
+      "required":[
+        "n"
+      ],
+      "type":"object"
+    }
   },
   "info":{
-        "version":"20190215",
+    "version":"20190215",
     "title":"serverlite",
     "termsOfService":"",
     "license":{
@@ -1453,9 +1681,9 @@
     }
   },
   "parameters":{
-        "unit":{
-            "enum":[
-                "C",
+    "unit":{
+      "enum":[
+        "C",
         "F",
         "K"
       ],
@@ -1464,9 +1692,18 @@
       "description":"",
       "type":"string"
     },
+    "p_w": {
+      "enum": [
+        "oic.if.baseline",
+        "oic.if.w"
+      ],
+      "in": "query",
+      "name": "if",
+      "type": "string"
+    },
     "interface10":{
-            "enum":[
-                "oic.if.a",
+      "enum":[
+        "oic.if.a",
         "oic.if.baseline"
       ],
       "type":"string",
@@ -1474,8 +1711,8 @@
       "name":"if"
     },
     "interface30":{
-            "enum":[
-                "oic.if.r",
+      "enum":[
+        "oic.if.r",
         "oic.if.baseline"
       ],
       "type":"string",
@@ -1483,8 +1720,8 @@
       "name":"if"
     },
     "interface-rw":{
-            "enum":[
-                "oic.if.rw",
+      "enum":[
+        "oic.if.rw",
         "oic.if.baseline"
       ],
       "type":"string",
@@ -1492,8 +1729,8 @@
       "name":"if"
     },
     "interface":{
-            "enum":[
-                "oic.if.a",
+      "enum":[
+        "oic.if.a",
         "oic.if.s",
         "oic.if.baseline"
       ],
@@ -1502,7 +1739,7 @@
       "name":"if"
     },
     "interface-all40":{
-            "enum":[
+      "enum":[
         "oic.if.ll",
         "oic.if.create",
         "oic.if.b",
@@ -1513,8 +1750,8 @@
       "name":"if"
     },
     "platforminterface-all":{
-            "enum":[
-                "oic.if.baseline"
+      "enum":[
+        "oic.if.baseline"
       ],
       "type":"string",
       "in":"query",
@@ -1522,6 +1759,6 @@
     }
   },
   "produces":[
-        "application/json"
+    "application/json"
   ]
 }
