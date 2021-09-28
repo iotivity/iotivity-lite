@@ -70,7 +70,7 @@ static CONDITION_VARIABLE cv; /* event loop variable */
 static CRITICAL_SECTION cs;   /* event loop variable */
 #endif
 
-#ifdef  __linux__
+#ifdef __linux__
 #include <pthread.h>
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -1252,7 +1252,6 @@ int
 main(void)
 {
   int init;
-  
 
 #ifdef WIN32
   /* windows specific */
@@ -1287,8 +1286,8 @@ main(void)
 #ifdef OC_CLIENT
                                         ,
                                         .requests_entry = 0
-#endif 
-};
+#endif
+  };
 
   // oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
