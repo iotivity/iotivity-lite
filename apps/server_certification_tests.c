@@ -94,6 +94,8 @@ const char *key_certificate = "pki_certs/certification_tests_key.pem";
 const char *subca_certificate = "pki_certs/certification_tests_subca1.pem";
 const char *rootca_certificate = "pki_certs/certification_tests_rootca1.pem";
 
+oc_string_array_t my_supportedactions;
+
 oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
 
 #define SCANF(...)                                                             \
@@ -1416,6 +1418,111 @@ get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   }
 }
 
+bool
+verify_action_in_supported_set(char *action, unsigned int action_len)
+{
+  bool rc = false;
+  size_t i;
+
+  for (i = 0; i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
+    const char *sv = oc_string_array_get_item(my_supportedactions, i);
+    PRINT("Action compare. Supported action %s against received action %s \n", sv, action);
+    if (strlen(sv) == action_len && memcmp(sv, action, action_len) == 0) {
+      rc = true;
+      break;
+    }
+  }
+
+  return rc;
+}
+
+static void
+get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
+                  void *user_data)
+{
+  (void)user_data;
+
+  /* Check if query string includes action selectio, it is does, reject the
+   * request. */
+  char *action = NULL;
+  int action_len = -1;
+  oc_init_query_iterator();
+  oc_iterate_query_get_values(request, "action", &action, &action_len);
+
+  if (action_len > 0) {
+    // An action parm was received
+    //
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  PRINT("GET_remotecontrol:\n");
+  oc_rep_start_root_object();
+  switch (iface_mask) {
+  case OC_IF_BASELINE:
+    oc_process_baseline_interface(request->resource);
+  /* fall through */
+  case OC_IF_A:
+    oc_rep_set_key(oc_rep_object(root), "supportedactions");
+    oc_rep_begin_array(oc_rep_object(root), supportedactions);
+    for (size_t i = 0;
+         i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
+      oc_rep_add_text_string(supportedactions,
+                             oc_string_array_get_item(my_supportedactions, i));
+    }
+    oc_rep_end_array(oc_rep_object(root), supportedactions);
+    oc_rep_end_root_object();
+    break;
+  default:
+    break;
+  }
+  oc_rep_end_root_object();
+  oc_send_response(request, OC_STATUS_OK);
+}
+
+static void
+post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
+                   void *user_data)
+{
+  (void)iface_mask;
+  (void)user_data;
+  PRINT("POST_remotecontrol:\n");
+
+  /* Check if query string includes action selection. */
+  char *action = NULL;
+  int action_len = -1;
+  oc_init_query_iterator();
+  oc_iterate_query_get_values(request, "action", &action, &action_len);
+
+  if (action_len > 0) {
+    PRINT("POST action length = %d \n", action_len);
+    PRINT("POST action string actual size %d \n", strlen(action));
+    PRINT("POST action received raw = %s \n", action);
+
+    // Validate that the action requests is in the set
+    //
+    action[action_len] = '\0';
+    bool valid_action = verify_action_in_supported_set(action, action_len);
+
+    // Build response with selected action
+    //
+    if (valid_action) {
+      oc_rep_start_root_object();
+      oc_rep_set_key(oc_rep_object(root), "selectedactions");
+      oc_rep_begin_array(oc_rep_object(root), selectedactions);
+      oc_rep_add_text_string(selectedactions, action);
+      oc_rep_end_array(oc_rep_object(root), selectedactions);
+      oc_rep_end_root_object();
+      oc_send_response(request, OC_STATUS_CHANGED);
+    } else {
+      oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    }
+  } else {
+    PRINT("POST no action received \n");
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  }
+}
+
 static void
 register_resources(void)
 {
@@ -1448,7 +1555,17 @@ register_resources(void)
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
-
+  
+  oc_resource_t *remotecontrol = oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
+  oc_resource_bind_resource_type(remotecontrol, "oic.r.remotecontrol");
+  oc_resource_bind_resource_interface(remotecontrol, OC_IF_A);
+  oc_resource_set_default_interface(remotecontrol, OC_IF_A);
+  oc_resource_set_discoverable(remotecontrol, true);
+  oc_resource_set_request_handler(remotecontrol, OC_GET, get_remotecontrol, NULL);
+  oc_resource_set_request_handler(remotecontrol, OC_POST, post_remotecontrol, NULL);
+  oc_add_resource(remotecontrol);
+  PRINT("\t Remotecontrol resource added\n");
+ 
   oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
   oc_resource_bind_resource_type(res_dali, "oic.r.dali");
   oc_resource_bind_resource_interface(res_dali, OC_IF_BASELINE ); /* oic.if.baseline */
@@ -1701,8 +1818,8 @@ main(void)
                                           register_resources };
 
   oc_set_con_res_announced(true);
-  // max app data size set to 14.5k large enough to hold full IDD
-  oc_set_max_app_data_size(14500);
+  // max app data size set to 16k large enough to hold full IDD
+  oc_set_max_app_data_size(16384);
 
 #ifdef OC_STORAGE
   oc_storage_config("./server_certification_tests_creds");
