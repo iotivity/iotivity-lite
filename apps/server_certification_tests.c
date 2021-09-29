@@ -509,6 +509,27 @@ app_init(void)
   err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
   PRINT("\tSwitch device added.\n");
+  
+  oc_new_string_array(&my_supportedactions, (size_t)19);
+  oc_string_array_add_item(my_supportedactions, "arrowup");
+  oc_string_array_add_item(my_supportedactions, "arrowdown");
+  oc_string_array_add_item(my_supportedactions, "arrowleft");
+  oc_string_array_add_item(my_supportedactions, "arrowright");
+  oc_string_array_add_item(my_supportedactions, "enter");
+  oc_string_array_add_item(my_supportedactions, "return");
+  oc_string_array_add_item(my_supportedactions, "exit");
+  oc_string_array_add_item(my_supportedactions, "home");
+  oc_string_array_add_item(my_supportedactions, "1");
+  oc_string_array_add_item(my_supportedactions, "2");
+  oc_string_array_add_item(my_supportedactions, "3");
+  oc_string_array_add_item(my_supportedactions, "4");
+  oc_string_array_add_item(my_supportedactions, "5");
+  oc_string_array_add_item(my_supportedactions, "6");
+  oc_string_array_add_item(my_supportedactions, "7");
+  oc_string_array_add_item(my_supportedactions, "8");
+  oc_string_array_add_item(my_supportedactions, "9");
+  oc_string_array_add_item(my_supportedactions, "0");
+  oc_string_array_add_item(my_supportedactions, "-");
 #if defined(OC_IDD_API)
   FILE *fp;
   uint8_t *buffer;
