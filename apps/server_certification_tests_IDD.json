@@ -465,12 +465,6 @@
           "maxLength":64,
           "description":""
         },
-        "id":{
-          "type":"string",
-          "readOnly":true,
-          "maxLength":64,
-          "description":""
-        },
         "if": {
           "description": "The OCF Interface set supported by this Resource.",
           "items": {
