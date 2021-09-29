@@ -31,7 +31,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.light", "Room1 lights", "ocf.2.2.2",
+  ret |= oc_add_device("/oic/d", "oic.d.light", "Room1 lights", "ocf.2.2.4",
                        "ocf.res.1.0.0", NULL, NULL);
   return ret;
 }

@@ -158,7 +158,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.2",
+  ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.4",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
   oc_device_bind_resource_type(0, "oic.d.ams");
   oc_device_bind_resource_type(0, "oic.d.cms");
