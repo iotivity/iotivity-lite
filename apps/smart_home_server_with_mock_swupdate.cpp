@@ -119,7 +119,7 @@ app_init(void)
 {
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.2.2",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.2.4",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   return err;
 }

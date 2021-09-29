@@ -35,7 +35,7 @@
 static const size_t DEVICE = 0;
 
 // define application specific values.
-static const char *spec_version = "ocf.2.2.2";
+static const char *spec_version = "ocf.2.2.4";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
 static const char *deivce_uri = "/oic/d";
