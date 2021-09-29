@@ -20,8 +20,6 @@
 #include "oc_ri.h"
 #include "separate.h"
 #include "util/oc_list.h"
-#include "oc_ri.h"
-#include "oc_blockwise.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +29,12 @@ struct oc_separate_response_s
 {
   OC_LIST_STRUCT(requests);
   int active;
-  oc_blockwise_state_t *response_state;
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer;
+#else  /* OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  size_t len;
 };
 
 struct oc_response_buffer_s
