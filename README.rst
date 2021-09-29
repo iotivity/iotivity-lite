@@ -163,6 +163,8 @@ Please check here for build instructions:
 
 - `Windows <https://iotivity.org/documentation/building-iotivity-windows>`_
 
+- `CMake (Linux & Windows) <https://github.com/iotivity/iotivity-lite/wiki/Building-using-CMake-(Windows-&-Linux)>`_
+
 - `Android <https://iotivity.org/documentation/building-iotivity-android>`_
 
 - `Java language bindings <https://iotivity.org/java-language-bindings>`_
