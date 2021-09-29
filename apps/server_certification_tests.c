@@ -509,7 +509,7 @@ app_init(void)
   err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
   PRINT("\tSwitch device added.\n");
-  
+
   oc_new_string_array(&my_supportedactions, (size_t)19);
   oc_string_array_add_item(my_supportedactions, "arrowup");
   oc_string_array_add_item(my_supportedactions, "arrowdown");
@@ -1480,9 +1480,11 @@ verify_action_in_supported_set(char *action, unsigned int action_len)
   bool rc = false;
   size_t i;
 
-  for (i = 0; i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
+  for (i = 0; i < oc_string_array_get_allocated_size(my_supportedactions);
+       i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    PRINT("Action compare. Supported action %s against received action %s \n", sv, action);
+    PRINT("Action compare. Supported action %s against received action %s \n",
+          sv, action);
     if (strlen(sv) == action_len && memcmp(sv, action, action_len) == 0) {
       rc = true;
       break;
@@ -1611,17 +1613,20 @@ register_resources(void)
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
   PRINT("\tSwitch resource added.\n");
-  
-  oc_resource_t *remotecontrol = oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
+
+  oc_resource_t *remotecontrol =
+    oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
   oc_resource_bind_resource_type(remotecontrol, "oic.r.remotecontrol");
   oc_resource_bind_resource_interface(remotecontrol, OC_IF_A);
   oc_resource_set_default_interface(remotecontrol, OC_IF_A);
   oc_resource_set_discoverable(remotecontrol, true);
-  oc_resource_set_request_handler(remotecontrol, OC_GET, get_remotecontrol, NULL);
-  oc_resource_set_request_handler(remotecontrol, OC_POST, post_remotecontrol, NULL);
+  oc_resource_set_request_handler(remotecontrol, OC_GET, get_remotecontrol,
+                                  NULL);
+  oc_resource_set_request_handler(remotecontrol, OC_POST, post_remotecontrol,
+                                  NULL);
   oc_add_resource(remotecontrol);
   PRINT("\t Remotecontrol resource added\n");
- 
+
   oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
   oc_resource_bind_resource_type(res_dali, "oic.r.dali");
   oc_resource_bind_resource_interface(res_dali,
