@@ -7,6 +7,30 @@
     "application/json"
   ],
   "paths":{
+    "/remotecontrol":{
+        "get":{
+            "description":"",
+            "parameters": [{"$ref": "#/parameters/interface10"}],
+            "responses": {
+                "200": {
+                    "description": "",
+                    "schema": {"$ref": "#/definitions/RemoteControl"}
+                }
+            }
+        },
+        "post":{
+            "description":"","parameters": [
+              {"$ref": "#/parameters/interface10"},
+              {"$ref": "#/parameters/keypress"}
+            ],
+            "responses": {
+                "200": {
+                    "description": "",
+                    "schema": {"$ref": "#/definitions/RemoteControlUpdateResponse"}
+                }
+            }
+        }
+    },
     "/dali_conf":{
       "get":{
         "description":"",
@@ -408,6 +432,74 @@
     }
   },
   "definitions":{
+    "RemoteControl" : {
+      "properties": {
+        "rt": {
+          "description": "The Resource Type.",
+          "items": {
+            "enum": ["oic.r.remotecontrol"],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "default": ["oic.r.remotecontrol"],
+          "minItems": 1,
+          "uniqueItems": true,
+          "readOnly": true,
+          "type": "array"
+        },
+        "supportedactions": {
+            "type": "array",
+            "minItems": 1,
+            "readOnly": true,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": ["arrowup","arrowdown","arrowleft","arrowright","enter","return","exit","home",
+                "1","2","3","4","5","6","7","8","9","0","-"]
+            },
+            "description": "The list of of supported remote control key values."
+        },
+        "n": {
+          "type":"string",
+          "readOnly":true,
+          "maxLength":64,
+          "description":""
+        },
+        "if": {
+          "description": "The OCF Interface set supported by this Resource.",
+          "items": {
+            "enum": [
+              "oic.if.a",
+              "oic.if.baseline"
+            ],
+            "type": "string"
+          },
+          "minItems": 2,
+          "uniqueItems": true,
+          "readOnly": true,
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "required": ["supportedactions"]
+    },
+    "RemoteControlUpdateResponse": {
+      "properties": {
+        "selectedactions": {
+          "type": "array",
+          "minItems": 1,
+          "readOnly": true,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["arrowup","arrowdown","arrowleft","arrowright","enter","return","exit","home",
+              "1","2","3","4","5","6","7","8","9","0","-"]
+          },
+          "description": "The list of of actions selected by a Client in the UPDATE."
+        }
+      },
+      "type": "object"
+    },
     "d11": {
       "properties": {
         "if": {
@@ -1681,6 +1773,18 @@
     }
   },
   "parameters":{
+    "keypress": {
+        "name": "action",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "enum": ["arrowup","arrowdown","arrowleft","arrowright","enter","return","exit","home",
+          "1","2","3","4","5","6","7","8","9","0","-"],
+        "x-example":
+          {
+            "action": "arrowup"
+          }
+    },
     "unit":{
       "enum":[
         "C",
