@@ -98,7 +98,7 @@ typedef struct oc_ns
 	oc_string_array_t pif;	/* optional */
 	/* push proxy */
 //	oc_string_t pushtarget;
-	oc_endpoint_t *pushtarget_ep;	/* full URI (e.g. coaps://[fe80::b1d6]:1122/myLightSwitch), oc_endpoint_t type */
+	oc_endpoint_t pushtarget_ep;	/* full URI (e.g. coaps://[fe80::b1d6]:1122/myLightSwitch), oc_endpoint_t type */
 	oc_string_t targetpath; /* path in target server (e.g. /myLightSwitch) */
 	oc_string_t pushqif;
 	oc_string_array_t sourcert;

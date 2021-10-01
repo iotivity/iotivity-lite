@@ -173,14 +173,16 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
 //				oc_new_string(&ns_instance->pushtarget, oc_string(rep->value.string), oc_string_len(rep->value.string));
-				if (oc_string_to_endpoint(&rep->value.string, ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
+				if (oc_string_to_endpoint(&rep->value.string, &ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
 				{
 					p_err("oic.r.pushproxy:pushtarget parsing fail! (%s)\n", oc_string(rep->value.string));
 				}
 				else
 				{
-					p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (%s)\n",
-							oc_string(ns_instance->targetpath));
+					if (oc_string(ns_instance->targetpath))
+					{
+						p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (%s)\n", oc_string(ns_instance->targetpath));
+					}
 				}
 			}
 			/* oic.r.pushproxy:pushqif */
@@ -294,7 +296,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 
 		/* pushtarget */
 		oc_string_t ep, full_uri;
-		oc_endpoint_to_string(ns_instance->pushtarget_ep, &ep);
+		oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep);
 		oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
 
 		oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
@@ -1862,7 +1864,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
 			 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
 			 */
-			if (oc_init_post(oc_string(ns_instance->targetpath), ns_instance->pushtarget_ep,
+			if (oc_init_post(oc_string(ns_instance->targetpath), &ns_instance->pushtarget_ep,
 									"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
 			{
 				src_rsc->payload_builder();
