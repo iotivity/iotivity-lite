@@ -122,6 +122,18 @@ register_resources(void)
   oc_add_resource(res);
 }
 
+
+#ifdef OC_SECURITY
+void
+random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+{
+  (void)data;
+  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+}
+#endif /* OC_SECURITY */
+
+
+
 static void
 signal_event_loop(void)
 {
@@ -158,6 +170,10 @@ main(void)
 #ifdef OC_STORAGE
   oc_storage_config("./simpleserver_creds");
 #endif /* OC_STORAGE */
+
+#ifdef OC_SECURITY
+  oc_set_random_pin_callback(random_pin_cb, NULL);
+#endif
 
   init = oc_main_init(&handler);
   if (init < 0)
