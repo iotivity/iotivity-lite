@@ -15,19 +15,45 @@
 */
 /**
   @file
+
+  generic logging functions:
+  - OC_LOGipaddr
+    prints the endpoint information to stdout
+  - OC_LOGbytes
+    prints the bytes to stdout
+  - OC_DBG
+    prints information as Debug level
+  - OC_WRN
+    prints information as Warning level
+  - OC_ERR
+    prints information as Error level
+
+  compile flags:
+  - OC_DEBUG
+    enables output of logging functions
+  - OC_NO_LOG_BYTES
+    disables output of OC_LOGbytes logging function
+    if OC_DEBUG is enabled.
 */
 #ifndef OC_LOG_H
 #define OC_LOG_H
 
 #include <stdio.h>
+#include <string.h>
+#ifdef WIN32
+#define __FILENAME__                                                           \
+  (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#else
+#define __FILENAME__                                                           \
+  (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
 
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
 #endif
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #ifdef __ANDROID__
@@ -116,7 +142,7 @@ extern "C"
     }                                                                          \
   } while (0)
 
-#define IPADDR_BUFF_SIZE    64 // max size : scheme://[ipv6]:port = 59 bytes
+#define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6]:port = 59 bytes
 
 #define SNPRINTFipaddr(str, size, endpoint)                                    \
   do {                                                                         \
@@ -130,12 +156,13 @@ extern "C"
     memset(str, 0, size);                                                      \
     if ((endpoint).flags & IPV4) {                                             \
       SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                       \
-            ((endpoint).addr.ipv4.address)[0],                                 \
-            ((endpoint).addr.ipv4.address)[1],                                 \
-            ((endpoint).addr.ipv4.address)[2],                                 \
-            ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);     \
+               ((endpoint).addr.ipv4.address)[0],                              \
+               ((endpoint).addr.ipv4.address)[1],                              \
+               ((endpoint).addr.ipv4.address)[2],                              \
+               ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);  \
     } else {                                                                   \
-      SNPRINTF(str, size,                                                      \
+      SNPRINTF(                                                                \
+        str, size,                                                             \
         "%s://"                                                                \
         "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
         "%02x%02x]:%d",                                                        \
@@ -158,41 +185,50 @@ extern "C"
     char *beg = (buff);                                                        \
     char *end = (buff) + (size);                                               \
     for (size_t i = 0; beg <= (end - 3) && i < (len); i++) {                   \
-      beg += (i == 0) ? SPRINTF(beg, "%02x", data[i]) :                        \
-                        SPRINTF(beg, ":%02x", data[i]);                        \
+      beg += (i == 0) ? SPRINTF(beg, "%02x", data[i])                          \
+                      : SPRINTF(beg, ":%02x", data[i]);                        \
     }                                                                          \
   } while (0)
 
 #ifdef OC_DEBUG
 #ifdef __ANDROID__
-#define OC_LOG(level, ...)          android_log(level, __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define OC_LOGipaddr(endpoint)      android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
-#define OC_LOGbytes(bytes, length)  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
-#else  /* ! __ANDROID */
+#define OC_LOG(level, ...)                                                     \
+  android_log(level, __FILE__, __func__, __LINE__, __VA_ARGS__)
+#define OC_LOGipaddr(endpoint)                                                 \
+  android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
+#define OC_LOGbytes(bytes, length)                                             \
+  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
+#else /* ! __ANDROID */
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \
-    PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
+    PRINT("%s: %s <%s:%d>: ", level, __FILENAME__, __func__, __LINE__);        \
     PRINT(__VA_ARGS__);                                                        \
     PRINT("\n");                                                               \
   } while (0)
+
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
-    PRINT("DEBUG: %s <%s:%d>: ", __FILE__, __func__, __LINE__);                \
+    PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
     PRINTipaddr(endpoint);                                                     \
     PRINT("\n");                                                               \
   } while (0)
+
+#ifndef OC_NO_LOG_BYTES
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
-    PRINT("DEBUG: %s <%s:%d>: ", __FILE__, __func__, __LINE__);                \
+    PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
     uint16_t i;                                                                \
     for (i = 0; i < length; i++)                                               \
       PRINT(" %02X", bytes[i]);                                                \
     PRINT("\n");                                                               \
   } while (0)
+#else
+#endif /* NO_LOG_BYTES */
 #endif /* __ANDROID__ */
-#define OC_DBG(...) OC_LOG("DEBUG", __VA_ARGS__)
-#define OC_WRN(...) OC_LOG("WARNING", __VA_ARGS__)
-#define OC_ERR(...) OC_LOG("ERROR", __VA_ARGS__)
+
+#define OC_DBG(...) OC_LOG("D", __VA_ARGS__)
+#define OC_WRN(...) OC_LOG("W", __VA_ARGS__)
+#define OC_ERR(...) OC_LOG("E", __VA_ARGS__)
 #else
 #define OC_LOG(...)
 #define OC_DBG(...)

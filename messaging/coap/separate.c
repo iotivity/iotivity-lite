@@ -180,9 +180,6 @@ coap_separate_resume(void *response, coap_separate_t *separate_store,
   if (separate_store->token_len) {
     coap_set_token(response, separate_store->token, separate_store->token_len);
   }
-  if (separate_store->observe == 0) {
-    coap_set_header_observe(response, 0);
-  }
 }
 /*---------------------------------------------------------------------------*/
 void

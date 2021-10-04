@@ -621,7 +621,7 @@ int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 #ifdef OC_OSCORE
 /**
  * @brief provision pairwise oscore contexts
- * 
+ *
  * @param uuid1 uuid of the first device to pair
  * @param uuid2 uuid of the second device to pair
  * @param cb callback invoked to indicate the success or failure of the
@@ -629,7 +629,7 @@ int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
  * @param data context pointer that is passed to the
  *                 oc_obt_status_cb_t. The pointer must remain valid till the
  *                 end of the oc_obt_status_cb_t function
- * @return int 
+ * @return int
  *   - `0` on success
  *   - `-1` on failure
  */
@@ -640,7 +640,7 @@ int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
 
 /**
  * @brief provision the oscore client group on the device
- * 
+ *
  * @param uuid uuid of the device to provision
  * @param desc the group description
  * @param cb callback invoked to indicate the success or failure of the
@@ -648,7 +648,7 @@ int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
  * @param data  context pointer that is passed to the
  *                 oc_obt_status_cb_t. The pointer must remain valid till the
  *                 end of the oc_obt_status_cb_t function
- * @return int 
+ * @return int
  *   - `0` on success
  *   - `-1` on failure
  */
@@ -659,16 +659,16 @@ int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
 
 /**
  * @brief provision the group contenxt on the devic
- * 
+ *
  * @param uuid uuid of the device to provision
- * @param subjectuuid the subject 
+ * @param subjectuuid the subject
  * @param desc the description
  * @param cb callback invoked to indicate the success or failure of the
  *               oscore group provisioning
  * @param data context pointer that is passed to the
  *                 oc_obt_status_cb_t. The pointer must remain valid till the
  *                 end of the oc_obt_status_cb_t function
- * @return int 
+ * @return int
  *   - `0` on success
  *   - `-1` on failure
  */
@@ -721,12 +721,11 @@ int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
 int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
-
 #ifdef OC_OSCORE
 /**
- * Internal obt function to add a certificate credential to be used by the OBT CA.
- * function set the certificate so that the OBT CMS can use this 
- * certificate as intermediate CA.
+ * Internal obt function to add a certificate credential to be used by the OBT
+ * CA. function set the certificate so that the OBT CMS can use this certificate
+ * as intermediate CA.
  *
  * @param device the device to assign the certificate to
  * @param cert the certificate data
@@ -743,11 +742,11 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
  * @see oc_obt_add_roleid
  * @see oc_obt_free_roleid
  */
-int oc_obt_pki_add_identity_cert(size_t device, const unsigned char* cert,
-  size_t cert_size, const unsigned char* key,
-  size_t key_size, oc_sec_credusage_t credusage);
- #endif /* OC_OSCORE */
-
+ 
+int oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
+                                 size_t cert_size, const unsigned char *key,
+                                 size_t key_size, oc_sec_credusage_t credusage);
+#endif /* OC_OSCORE */
 /**
  * Provision a role certificate to a Client application.
  *
@@ -826,8 +825,6 @@ oc_role_t *oc_obt_add_roleid(oc_role_t *roles, const char *role,
  */
 void oc_obt_free_roleid(oc_role_t *roles);
 
-
-
 /**
  * Provision a trust anchor for an cloud enabled server.
  *
@@ -850,9 +847,9 @@ void oc_obt_free_roleid(oc_role_t *roles);
  * @see oc_obt_add_roleid
  * @see oc_obt_free_roleid
  */
-int oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, char* subject, oc_uuid_t* uuid,
-  oc_obt_status_cb_t cb, void* data);
-
+int oc_obt_provision_trust_anchor(char *certificate, size_t certificate_size,
+                                  char *subject, oc_uuid_t *uuid,
+                                  oc_obt_status_cb_t cb, void *data);
 
 /* Provision access-control entries (ace2) */
 /**
@@ -1273,10 +1270,10 @@ int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
-  const char* url, const char* at, const char* apn,
-  const char* cis, const char* sid,
-  oc_response_handler_t cb, void* user_data);
+int oc_obt_update_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+                                    const char *at, const char *apn,
+                                    const char *cis, const char *sid,
+                                    oc_response_handler_t cb, void *user_data);
 
 /**
  * sets the data (POST) for the oic.r.coapcloudconf resource
@@ -1293,8 +1290,9 @@ int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid,
-  const char* url, oc_response_handler_t cb, void* user_data);
+int oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+                                      oc_response_handler_t cb,
+                                      void *user_data);
 
 /**
  * sets the secure domain info

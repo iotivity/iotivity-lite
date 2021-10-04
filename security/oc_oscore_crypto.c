@@ -16,10 +16,10 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include "messaging/coap/oscore_constants.h"
 #include "oc_oscore_crypto.h"
-#include "mbedtls/md.h"
 #include "mbedtls/ccm.h"
+#include "mbedtls/md.h"
+#include "messaging/coap/oscore_constants.h"
 #include "oc_rep.h"
 
 #define HMAC_SHA256_HASHLEN (32)

@@ -22,8 +22,7 @@
 #include "security/oc_tls.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Used on the server-side for handling role assertions via /oic/sec/roles */

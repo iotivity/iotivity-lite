@@ -22,8 +22,7 @@
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 
-class TestCloudManager : public testing::Test
-{
+class TestCloudManager : public testing::Test {
 public:
   static oc_handler_t s_handler;
   static oc_cloud_context_t s_context;

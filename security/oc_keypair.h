@@ -22,8 +22,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define OC_ECDSA_PUBKEY_SIZE (91)

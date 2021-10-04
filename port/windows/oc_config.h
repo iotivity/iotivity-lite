@@ -29,6 +29,9 @@ typedef uint64_t oc_clock_time_t;
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
 
+// The maximum size of a response to an OBSERVE request, in bytes.
+#define OC_MAX_OBSERVE_SIZE 512
+
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"
 #endif /* OC_DYNAMIC_ALLOCATION */

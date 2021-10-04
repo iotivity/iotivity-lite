@@ -28,7 +28,7 @@ void ocInstanceInit(const oc_handler_t *handler);
 void ocInstanceSignal();
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif

@@ -17,12 +17,12 @@
 #include "oc_introspection.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
-#include "oc_config.h"
 
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
@@ -51,8 +51,7 @@ oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   long rr = oc_storage_write(idd_tag, IDD, IDD_size);
-  PRINT("\tIntrospection data set written data size: %d [bytes]\n",
-        (int)rr);
+  PRINT("\tIntrospection data set written data size: %d [bytes]\n", (int)rr);
 }
 #endif /*OC_IDD_API*/
 

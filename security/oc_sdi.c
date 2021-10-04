@@ -113,7 +113,7 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
         }
         if (oc_string_len(rep->value.string) > 0) {
           oc_new_string(&s->name, oc_string(rep->value.string),
-              oc_string_len(rep->value.string));
+                        oc_string_len(rep->value.string));
         }
         suc = true;
       } else {

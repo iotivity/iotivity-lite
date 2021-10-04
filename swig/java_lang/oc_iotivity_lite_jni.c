@@ -18,8 +18,8 @@
 #include "port/oc_log.h"
 #include "port/oc_storage.h"
 #include <assert.h>
-#include <stdlib.h>
 #include <jni.h>
+#include <stdlib.h>
 
 #define JNI_CURRENT_VERSION JNI_VERSION_1_6
 
@@ -341,9 +341,9 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
   OC_DBG("JNI: %s with path %s\n", __func__, path);
   oc_storage_config(path);
 #else
-  OC_DBG(
-    "JNI: OC_SECURITY disabled ignore call to oc_storage_config with path %s\n",
-    path);
+  OC_DBG("JNI: OC_SECURITY disabled ignore call to oc_storage_config with path "
+         "%s\n",
+         path);
 #endif /* OC_SECURITY */
 
   // Cleanup

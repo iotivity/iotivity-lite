@@ -23,17 +23,16 @@
 #include "util/oc_process.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief network events
- * 
+ *
  */
 typedef enum {
-  NETWORK_INTERFACE_DOWN,  ///< network interface down
-  NETWORK_INTERFACE_UP     ///< network interface up
+  NETWORK_INTERFACE_DOWN, ///< network interface down
+  NETWORK_INTERFACE_UP    ///< network interface up
 } oc_interface_event_t;
 
 /**
@@ -52,7 +51,7 @@ typedef struct oc_network_interface_cb
   interface_event_handler_t handler;
 } oc_network_interface_cb_t;
 
-/** 
+/**
  * @brief process network events
  */
 OC_PROCESS_NAME(oc_network_events);
@@ -61,14 +60,14 @@ typedef struct oc_message_s oc_message_t;
 
 /**
  * @brief receive network event
- * 
+ *
  * @param message the network message
  */
 void oc_network_event(oc_message_t *message);
 
 /**
  * @brief initiate network event
- * 
+ *
  * @param event the event
  */
 void oc_network_interface_event(oc_interface_event_t event);

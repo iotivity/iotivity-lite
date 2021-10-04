@@ -23,8 +23,7 @@
 #include "oc_cloud_internal.h"
 #include "oc_endpoint.h"
 
-class TestCloudAccess : public testing::Test
-{
+class TestCloudAccess : public testing::Test {
 public:
   static oc_handler_t s_handler;
   static oc_endpoint_t s_endpoint;

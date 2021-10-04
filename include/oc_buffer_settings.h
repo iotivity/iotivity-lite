@@ -22,42 +22,41 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /**
  * @brief sets the size of the MTU to be used
- * 
- * @param mtu_size size in bytes 
+ *
+ * @param mtu_size size in bytes
  * @return int 0-success
  */
 int oc_set_mtu_size(size_t mtu_size);
 
 /**
  * @brief retrieve the currently used MTU size
- * 
+ *
  * @return long the MTU size in bytes
  */
 long oc_get_mtu_size(void);
 
 /**
  * @brief set max application data size (e.g. buffer size of the messages)
- * 
+ *
  * @param size size in bytes
  */
 void oc_set_max_app_data_size(size_t size);
 
 /**
  * @brief retrieve the max application data size
- * 
+ *
  * @return long size in bytes
  */
 long oc_get_max_app_data_size(void);
 
 /**
  * @brief retrieve the block size
- * 
+ *
  * @return long the block size in bytes
  */
 long oc_get_block_size(void);

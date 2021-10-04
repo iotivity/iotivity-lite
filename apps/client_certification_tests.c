@@ -16,10 +16,10 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_swupdate.h"
 #include "oc_introspection.h"
 #include "oc_obt.h"
 #include "oc_pki.h"
+#include "oc_swupdate.h"
 #include "port/oc_clock.h"
 #include <pthread.h>
 #include <signal.h>
@@ -80,7 +80,7 @@ static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.2",
+  ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.4",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
 #if defined(OC_IDD_API)

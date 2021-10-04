@@ -18,8 +18,8 @@
  *
  ******************************************************************/
 
-#include <cstdlib>
 #include "gtest/gtest.h"
+#include <cstdlib>
 
 #include "oc_uuid.h"
 #include "port/oc_random.h"
@@ -105,7 +105,8 @@ TEST(UUIDGeneration, NonWildcardUUID)
  * o  Set all the other bits to randomly (or pseudo-randomly) chosen
  *    values.
  */
-TEST(UUIDGeneration, GenerateType4UUID) {
+TEST(UUIDGeneration, GenerateType4UUID)
+{
   // Type 4 uuid uses iotivities psudo random number generator.
   oc_random_init();
   oc_uuid_t uuid;

@@ -20,8 +20,8 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
-#include <signal.h>
 #include <inttypes.h>
+#include <signal.h>
 
 static int quit;
 
@@ -334,7 +334,6 @@ typedef struct oc_switch_t
   bool state;
 } oc_switch_t;
 
-
 #ifdef OC_COLLECTIONS_IF_CREATE
 
 OC_MEMB(switch_s, oc_switch_t, 1);
@@ -430,7 +429,7 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 static void
 delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
-            void *user_data)
+               void *user_data)
 {
   OC_DBG("%s", __func__);
   (void)request;
@@ -449,16 +448,17 @@ delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
  *    the second element (id=2) because the next id in order should be 3.
  *    Since it is 5 and the list is ordered we know 3 is free to use.
  */
-static oc_switch_t* get_next_free_position()
+static oc_switch_t *
+get_next_free_position()
 {
-  oc_switch_t* item = oc_list_head(switches);
+  oc_switch_t *item = oc_list_head(switches);
   if (!item || item->id != 1) {
     return NULL;
   }
 
-  for(uint16_t id = 1;
-    oc_list_item_next(item) != NULL && ((oc_switch_t*)oc_list_item_next(item))->id == ++id;
-    item = oc_list_item_next(item)) {
+  for (uint16_t id = 1; oc_list_item_next(item) != NULL &&
+                        ((oc_switch_t *)oc_list_item_next(item))->id == ++id;
+       item = oc_list_item_next(item)) {
     ;
   }
 
@@ -466,14 +466,14 @@ static oc_switch_t* get_next_free_position()
 }
 
 static oc_event_callback_retval_t
-register_to_cloud(void* res)
+register_to_cloud(void *res)
 {
-  oc_resource_t* r = (oc_resource_t*)res;
+  oc_resource_t *r = (oc_resource_t *)res;
   oc_cloud_add_resource(r);
   return OC_EVENT_DONE;
 }
 
-static oc_resource_t*
+static oc_resource_t *
 get_switch_instance(const char *href, oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
@@ -486,9 +486,11 @@ get_switch_instance(const char *href, oc_string_array_t *types,
     if (prev) {
       cswitch_id = prev->id + 1;
     }
-    const size_t href_size = sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
+    const size_t href_size =
+      sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
     char cswitch_href[href_size];
-    snprintf(cswitch_href, sizeof(cswitch_href), "/switches/%u", (unsigned)cswitch_id);
+    snprintf(cswitch_href, sizeof(cswitch_href), "/switches/%u",
+             (unsigned)cswitch_id);
 
     cswitch->resource = oc_new_resource(
       NULL, cswitch_href, oc_string_array_get_allocated_size(*types), device);
@@ -504,8 +506,8 @@ get_switch_instance(const char *href, oc_string_array_t *types,
       oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
       oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
                                       cswitch);
-      oc_resource_set_request_handler(cswitch->resource, OC_DELETE, delete_cswitch,
-                                      cswitch);
+      oc_resource_set_request_handler(cswitch->resource, OC_DELETE,
+                                      delete_cswitch, cswitch);
       oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
                                       cswitch);
       oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
@@ -542,7 +544,7 @@ free_switch_instance(oc_resource_t *resource)
 static void
 register_collection(void)
 {
-  oc_resource_t* col = oc_new_collection(NULL, "/switches", 1, 0);
+  oc_resource_t *col = oc_new_collection(NULL, "/switches", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
@@ -569,7 +571,7 @@ register_collection(void)
 static void
 register_con()
 {
-  oc_resource_t* con_res = oc_core_get_resource_by_index(OCF_CON, 0);
+  oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, 0);
   oc_cloud_add_resource(con_res);
 }
 
@@ -632,7 +634,7 @@ factory_presets_cb(size_t device, void *data)
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
   // preserve name after factory reset
-  oc_device_info_t* dev = oc_core_get_device_info(device);
+  oc_device_info_t *dev = oc_core_get_device_info(device);
   oc_free_string(&dev->name);
   oc_new_string(&dev->name, device_name, strlen(device_name));
 
@@ -650,6 +652,15 @@ factory_presets_cb(size_t device, void *data)
     return;
   }
 #endif /* OC_SECURITY && OC_PKI */
+}
+
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
 }
 
 int
@@ -711,7 +722,7 @@ main(int argc, char *argv[])
       oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
     }
   }
-
+  display_device_uuid();
   run();
 
   oc_cloud_manager_stop(ctx);

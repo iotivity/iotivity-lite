@@ -33,7 +33,7 @@ ocInstanceInit(const oc_handler_t *handler)
 {
   ocInstance *instance = NULL;
 
-  instance = new(&sOcInstanceRaw) ocInstance();
+  instance = new (&sOcInstanceRaw) ocInstance();
 
   oc_assert(instance);
 
@@ -55,9 +55,9 @@ ocInstance::GetInstance()
   return sInstance;
 }
 
-ocInstance::ocInstance() :
-    mPollRequest(ot::Instance::Get(), &ocInstance::HandlePollRequest, this),
-    mPollTimer(ot::Instance::Get(), &ocInstance::HandlePollTimer, this)
+ocInstance::ocInstance()
+  : mPollRequest(ot::Instance::Get(), &ocInstance::HandlePollRequest, this)
+  , mPollTimer(ot::Instance::Get(), &ocInstance::HandlePollTimer, this)
 {
   sInstance = this;
 
@@ -93,7 +93,7 @@ ocInstance::onPollRequest()
 
   OC_DBG("Poll %lu", time);
 
-  if (time){
+  if (time) {
     mPollTimer.StartAt(time, 0);
   } else {
     mPollTimer.Stop();
@@ -105,4 +105,3 @@ ocInstance::onPollTimer()
 {
   onPollRequest();
 }
-

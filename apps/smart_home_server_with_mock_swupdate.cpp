@@ -32,7 +32,6 @@ static bool switch_state;
 #ifdef OC_SOFTWARE_UPDATE
 #include <iostream>
 
-
 #ifdef BOOST_FOR_URL_VALIDATION
 #include <boost/network/uri.hpp>
 using namespace boost::network;
@@ -44,8 +43,9 @@ int
 validate_purl(const char *purl)
 {
 #ifdef BOOST_FOR_URL_VALIDATION
-  /* code based on boost and (https://github.com/cpp-netlib/uri 
-   renable: also modify the port/linux makefile target: smart_home_server_with_mock_swupdate 
+  /* code based on boost and (https://github.com/cpp-netlib/uri
+   renable: also modify the port/linux makefile target:
+   smart_home_server_with_mock_swupdate
   */
   uri::uri instance(purl);
   if (instance.is_valid() == 0) {
@@ -53,8 +53,9 @@ validate_purl(const char *purl)
   }
   return 0;
 #else
-  /* https://stackoverflow.com/questions/38608116/how-to-check-a-specified-string-is-a-valid-url-or-not-using-c-code/38608262 
-    uses regex pattern: "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+  /* https://stackoverflow.com/questions/38608116/how-to-check-a-specified-string-is-a-valid-url-or-not-using-c-code/38608262
+    uses regex pattern:
+    "https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
     this gives issues with escape sequences, hence removed the following issues:
     unknown escape sequence: '\/' [-Werror]
     unknown escape sequence: '\/' [-Werror]
@@ -64,7 +65,9 @@ validate_purl(const char *purl)
     unknown escape sequence: '\+' [-Werror]
   */
   // regex pattern
-  std::string pattern = "https?://(www.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,4}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)";
+  std::string pattern = "https?://"
+                        "(www.)?[-a-zA-Z0-9@:%._+~#=]{2,256}.[a-z]{2,4}\b([-a-"
+                        "zA-Z0-9@:%_+.~#?&//=]*)";
   // Construct regex object
   std::regex url_regex(pattern);
 
@@ -116,7 +119,7 @@ app_init(void)
 {
   int err = oc_init_platform("Intel", NULL, NULL);
 
-  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.2.2",
+  err |= oc_add_device("/oic/d", "oic.d.switch", "binary_switch", "ocf.2.2.4",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
   return err;
 }

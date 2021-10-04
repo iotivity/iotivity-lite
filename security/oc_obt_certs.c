@@ -570,9 +570,8 @@ oc_obt_generate_self_signed_root_cert(const char *subject_name,
   }
   /* keyUsage: keyCertSign (5), cRLSign and digitalSignature(0) */
   ret = mbedtls_x509write_crt_set_key_usage(
-    &cert,
-    MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN |
-      MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
+    &cert, MBEDTLS_X509_KU_KEY_CERT_SIGN | MBEDTLS_X509_KU_CRL_SIGN |
+             MBEDTLS_X509_KU_DIGITAL_SIGNATURE);
   if (ret < 0) {
     OC_ERR("error writing root cert keyUsage %d", ret);
     goto exit;
