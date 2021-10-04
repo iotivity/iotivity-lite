@@ -538,23 +538,28 @@ oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
   oc_event_callback_t *event_cb =
     (oc_event_callback_t *)oc_list_head(timed_callbacks);
 
+  bool want_to_delete_currently_processed_event_cb = false;
   while (event_cb != NULL) {
     if (event_cb->data == cb_data && event_cb->callback == event_callback) {
       if (currently_processed_event_cb == event_cb) {
-        // We can't remove the currently processed delayed callback because when
-        // the callback returns OC_EVENT_DONE, a double release occurs. So we
-        // set up the flag to remove it, and when it's over, we've removed it.
-        currently_processed_event_cb_delete = true;
+        want_to_delete_currently_processed_event_cb = true;
       } else {
         OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
         oc_etimer_stop(&event_cb->timer);
         OC_PROCESS_CONTEXT_END(&timed_callback_events);
         oc_list_remove(timed_callbacks, event_cb);
         oc_memb_free(&event_callbacks_s, event_cb);
+        want_to_delete_currently_processed_event_cb = false;
         break;
       }
     }
     event_cb = event_cb->next;
+  }
+  if (want_to_delete_currently_processed_event_cb) {
+    // We can't remove the currently processed delayed callback because when
+    // the callback returns OC_EVENT_DONE, a double release occurs. So we
+    // set up the flag to remove it, and when it's over, we've removed it.
+    currently_processed_event_cb_delete = true;
   }
 }
 
