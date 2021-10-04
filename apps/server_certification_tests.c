@@ -827,7 +827,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (bad_request) {
     error_state = true;
   }
-
+  long tmp_size;
   if (error_state == false) {
       switch (iface_mask) {
           case OC_IF_STARTUP: {
@@ -835,22 +835,25 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
             oc_storage_write("g_switch_storage_status",
                        (uint8_t *)&g_switch_storage_status,
                        sizeof(g_switch_storage_status));
-            oc_storage_write("g_switch_value",
-                             (uint8_t *)&state,
-                             sizeof(g_switch_value));
+            tmp_size = oc_storage_write("g_switch_value",
+                                        (uint8_t *)&state,
+                                        sizeof(state));
+            PRINT("storage (startup)  property 'value' : %s (%ld)\n", btoa(state), tmp_size);
             oc_rep_start_root_object();
-            oc_rep_set_boolean(root, value, g_switch_value);
+            oc_rep_set_boolean(root, value, state);
             oc_rep_end_root_object();
             break;
           }
           case OC_IF_STARTUP_REVERT: {
             g_switch_storage_status = 2;
+            g_switch_value = state;
             oc_storage_write("g_switch_storage_status",
                        (uint8_t *)&g_switch_storage_status,
                        sizeof(g_switch_storage_status));
-            oc_storage_write("g_switch_value",
-                             (uint8_t *)&state,
-                             sizeof(g_switch_value));
+            tmp_size = oc_storage_write("g_switch_value",
+                                        (uint8_t *)&state,
+                                        sizeof(state));
+            PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n", btoa(state), tmp_size);
             oc_rep_start_root_object();
             oc_rep_set_boolean(root, value, g_switch_value);
             oc_rep_end_root_object();
@@ -858,10 +861,12 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
           }
           default: {
             if (g_switch_storage_status == 2) {
-                oc_storage_write("g_switch_value",
-                                 (uint8_t *)&state,
-                                 sizeof(g_switch_value));
+                tmp_size = oc_storage_write("g_switch_value",
+                                            (uint8_t *)&state,
+                                            sizeof(state));
+                PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n", btoa(state), tmp_size);
             }
+            g_switch_value = state;
             oc_rep_start_root_object();
             oc_rep_set_boolean(root, value, g_switch_value);
             oc_rep_end_root_object();
@@ -1970,8 +1975,6 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  initialize_variables();
-
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
@@ -1984,6 +1987,7 @@ main(void)
 #ifdef OC_STORAGE
   oc_storage_config("./server_certification_tests_creds");
 #endif /* OC_STORAGE */
+  initialize_variables();
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
