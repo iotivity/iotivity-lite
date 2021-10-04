@@ -604,7 +604,7 @@ int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t c
 }
 %}
 
-
+#ifdef OC_OSCORE
 %ignore oc_obt_pki_add_identity_cert;
 %rename(addIdentityCertificate) jni_oc_obt_pki_add_identity_cert;
 
@@ -631,7 +631,7 @@ int jni_oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
   return return_value;
 }
 %}
-
+#endif /* OC_OSCORE */
 
 
 %ignore oc_obt_provision_role_certificate;
@@ -657,15 +657,18 @@ int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt
 
 
 %ignore oc_obt_provision_trust_anchor;
-%rename(provisionTrustAnchor) jni_obt_provision_trust_anchor;
+%rename(provisionTrustAnchor) jni_oc_obt_provision_trust_anchor;
+
+%apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
+
 %inline %{
-int jni_oc_obt_provision_trust_anchor(char* certificate, size_t certificate_size, char* subject, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+int jni_oc_obt_provision_trust_anchor(const unsigned char *cert, size_t cert_size, char* subject, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  int return_value = oc_obt_provision_trust_anchor(certificate, certificate_size, subject, uuid, callback, jcb);
+  int return_value = oc_obt_provision_trust_anchor(cert, cert_size, subject, uuid, callback, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
@@ -1091,17 +1094,76 @@ int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
 }
 %}
 
+
+/* Code and typemaps for mapping the oc_do_get, oc_do_delete, oc_init_put, oc_init_post, oc_do_observe,
+ * and oc_do_ip_multicast to the java OCResponseHandler */
+%{
+void jni_oc_response_handler2(oc_client_response_t *response)
+{
+  OC_DBG("JNI: %s\n", __func__);
+  jni_callback_data *data = (jni_callback_data *)response->user_data;
+
+  jint getEnvResult = 0;
+  data->jenv = get_jni_env(&getEnvResult);
+  assert(data->jenv);
+
+  assert(cls_OCResponseHandler);
+  const jmethodID mid_handler = JCALL3(GetMethodID,
+                                       (data->jenv),
+                                       cls_OCResponseHandler,
+                                       "handler",
+                                       "(Lorg/iotivity/OCClientResponse;)V");
+  assert(mid_handler);
+
+  jobject jresponse = NULL;
+  if (response) {
+    assert(cls_OCClientResponse);
+    const jmethodID mid_OCClientResponse_init = JCALL3(GetMethodID,
+                                                       (data->jenv),
+                                                       cls_OCClientResponse,
+                                                       "<init>",
+                                                       "(JZ)V");
+    assert(mid_OCClientResponse_init);
+    jresponse = JCALL4(NewObject, (data->jenv),
+                       cls_OCClientResponse,
+                       mid_OCClientResponse_init,
+                       (jlong)response,
+                       false);
+  }
+
+  JCALL3(CallVoidMethod, (data->jenv), data->jcb_obj, mid_handler, jresponse);
+
+  release_jni_env(getEnvResult);
+}
+%}
+
+
+%typemap(jni)    oc_response_handler_t handler "jobject";
+%typemap(jtype)  oc_response_handler_t handler "OCResponseHandler";
+%typemap(jstype) oc_response_handler_t handler "OCResponseHandler";
+%typemap(javain) oc_response_handler_t handler "$javainput";
+%typemap(in,numinputs=1) (oc_response_handler_t handler, jni_callback_data *jcb) {
+  jni_callback_data *user_data = (jni_callback_data *)malloc(sizeof *user_data);
+  user_data->jenv = jenv;
+  user_data->jcb_obj = JCALL1(NewGlobalRef, jenv, $input);
+  // TODO figure out the lifetime of the oc_response_handler_t
+  user_data->cb_valid = OC_CALLBACK_VALID_UNKNOWN;
+  jni_list_add(user_data);
+  $1 = jni_oc_response_handler2;
+  $2 = user_data;
+}
+
 %ignore oc_obt_retrieve_cloud_conf_device;
 %rename(RetrieveCloudConfDevice) jni_oc_obt_retrieve_cloud_conf_device;
 %inline %{
 int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url, 
-  oc_response_handler_t callback, jni_callback_data* jcb)
+  oc_response_handler_t handler, jni_callback_data* jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  int return_value = oc_obt_retrieve_cloud_conf_device(uuid, url, callback, jcb);
+  int return_value = oc_obt_retrieve_cloud_conf_device(uuid, url, handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
@@ -1118,13 +1180,13 @@ int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url,
 int jni_oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
   const char* url, const char* at, const char* apn,
   const char* cis, const char* sid, 
-  oc_response_handler_t callback, jni_callback_data* jcb)
+  oc_response_handler_t handler, jni_callback_data* jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  int return_value = oc_obt_update_cloud_conf_device(uuid, url, at, apn, cis, sid, callback, jcb);
+  int return_value = oc_obt_update_cloud_conf_device(uuid, url, at, apn, cis, sid, handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;

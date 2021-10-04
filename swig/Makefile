@@ -72,19 +72,23 @@ endif
 ifeq ($(CLOUD),1)
 	TCP=1
 	EXTRA_FLAG += -DOC_CLOUD
+	SWIG_CFLAG += -DOC_CLOUD
 	CLOUD_OBJ_DIR = $(PORT_OBJ_DIR)cloud/*.o
 endif
 
 ifneq ($(SECURE),0)
 	EXTRA_FLAG += -DOC_SECURITY
+	SWIG_CFLAG += -DOC_SECURITY
 endif
 
 ifeq ($(IDD), 1)
 	EXTRA_FLAG += -DOC_IDD_API
+	SWIG_CFLAG += -DOC_IDD_API
 endif
 
 ifneq ($(PKI),0)
 	EXTRA_FLAG += -DOC_PKI
+	SWIG_CFLAG += -DOC_PKI
 endif
 
 ifeq ($(TCP),1)

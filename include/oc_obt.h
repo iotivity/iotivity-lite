@@ -617,6 +617,8 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
+
+#ifdef OC_OSCORE
 /**
  * @brief provision pairwise oscore contexts
  * 
@@ -675,6 +677,9 @@ int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
                                                  const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
+
+#endif /* OC_OSCORE */
+
 /**
  * Provision identity certificates
  *
@@ -717,6 +722,7 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
 
+#ifdef OC_OSCORE
 /**
  * Internal obt function to add a certificate credential to be used by the OBT CA.
  * function set the certificate so that the OBT CMS can use this 
@@ -740,6 +746,7 @@ int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
 int oc_obt_pki_add_identity_cert(size_t device, const unsigned char* cert,
   size_t cert_size, const unsigned char* key,
   size_t key_size, oc_sec_credusage_t credusage);
+ #endif /* OC_OSCORE */
 
 /**
  * Provision a role certificate to a Client application.
