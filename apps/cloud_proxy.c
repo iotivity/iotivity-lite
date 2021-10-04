@@ -1010,9 +1010,8 @@ get_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
@@ -1083,9 +1082,8 @@ post_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
@@ -1186,9 +1184,8 @@ delete_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
@@ -1662,6 +1659,15 @@ oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
   PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 }
 
+void
+display_device_uuid(void)
+{
+  char buffer[OC_UUID_LEN];
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+
+  PRINT("Started device with ID: %s\n", buffer);
+}
+
 /**
  * main application.
  * intializes the global variables
@@ -1812,6 +1818,7 @@ main(int argc, char *argv[])
 
   oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
   PRINT(" UUID: '%s'\n", proxy_di);
+  display_device_uuid();
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
 
 #ifdef RESET
