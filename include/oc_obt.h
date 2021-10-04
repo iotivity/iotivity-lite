@@ -617,7 +617,6 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
-
 #ifdef OC_OSCORE
 /**
  * @brief provision pairwise oscore contexts

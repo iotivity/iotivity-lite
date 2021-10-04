@@ -212,7 +212,6 @@ register_resources(void)
   oc_add_resource(res_binaryswitch);
 }
 
-
 #ifdef OC_SECURITY
 void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
@@ -221,8 +220,6 @@ random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
   PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
-
-
 
 static void
 signal_event_loop(void)
