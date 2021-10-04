@@ -244,7 +244,7 @@
         },
         "parameters":[
           {
-            "$ref":"#/parameters/interface10"
+            "$ref":"#/parameters/interface_startup"
           },
           {
             "schema":{
@@ -268,7 +268,7 @@
         },
         "parameters":[
           {
-            "$ref":"#/parameters/interface10"
+            "$ref":"#/parameters/interface_startup"
           }
         ],
         "description":""
@@ -686,11 +686,13 @@
           "type":"array"
         },
         "if":{
-          "minItems":2,
+          "minItems":4,
           "items":{
             "enum":[
               "oic.if.a",
-              "oic.if.baseline"
+              "oic.if.baseline",
+              "oic.if.startup",
+              "oic.if.startup.revert"
             ],
             "type":"string"
           },
@@ -854,7 +856,9 @@
                     "oic.if.rw",
                     "oic.if.r",
                     "oic.if.a",
-                    "oic.if.s"
+                    "oic.if.s",
+                    "oic.if.startup",
+                    "oic.if.startup.revert"
                   ],
                   "type":"string",
                   "maxLength":64
@@ -1292,7 +1296,9 @@
                 "oic.if.rw",
                 "oic.if.r",
                 "oic.if.a",
-                "oic.if.s"
+                "oic.if.s",
+                "oic.if.startup",
+                "oic.if.startup.revert"
               ],
               "type":"string",
               "maxLength":64
@@ -1804,6 +1810,17 @@
       "in": "query",
       "name": "if",
       "type": "string"
+    },
+    "interface_startup":{
+      "enum":[
+        "oic.if.a",
+        "oic.if.baseline",
+        "oic.if.startup",
+        "oic.if.startup.revert"
+      ],
+      "type":"string",
+      "in":"query",
+      "name":"if"
     },
     "interface10":{
       "enum":[
