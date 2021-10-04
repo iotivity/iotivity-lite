@@ -407,6 +407,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 /**
  *
  * @brief callback for freeing existing notification selector
+ * 		(this callback is called when target resource pointed by `link` is deleted by calling `oc_delete_resource()`)
  *
  */
 void free_ns_instance(oc_resource_t *resource)

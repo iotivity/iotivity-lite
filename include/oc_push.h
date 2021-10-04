@@ -126,6 +126,9 @@ typedef struct oc_recvs
 {
 	struct oc_recvs *next;
 	oc_resource_t *resource;
+	/*
+	 * FIXME4ME OC_LIST_STRUCT() 사용해서 다시 짤것
+	 */
 	void *receivers_list;
 	oc_list_t receivers;
 //	oc_array_t *receivers;
