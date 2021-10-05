@@ -83,6 +83,8 @@ OC_LIST(timed_callbacks);
 OC_MEMB(event_callbacks_s, oc_event_callback_t,
         1 + OCF_D * OC_MAX_NUM_DEVICES + OC_MAX_APP_RESOURCES +
           OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
+static oc_event_callback_t *currently_processed_event_cb;
+static bool currently_processed_event_cb_delete;
 
 OC_PROCESS(timed_callback_events, "OC timed callbacks");
 
@@ -536,16 +538,28 @@ oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
   oc_event_callback_t *event_cb =
     (oc_event_callback_t *)oc_list_head(timed_callbacks);
 
+  bool want_to_delete_currently_processed_event_cb = false;
   while (event_cb != NULL) {
     if (event_cb->data == cb_data && event_cb->callback == event_callback) {
-      OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
-      oc_etimer_stop(&event_cb->timer);
-      OC_PROCESS_CONTEXT_END(&timed_callback_events);
-      oc_list_remove(timed_callbacks, event_cb);
-      oc_memb_free(&event_callbacks_s, event_cb);
-      break;
+      if (currently_processed_event_cb == event_cb) {
+        want_to_delete_currently_processed_event_cb = true;
+      } else {
+        OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+        oc_etimer_stop(&event_cb->timer);
+        OC_PROCESS_CONTEXT_END(&timed_callback_events);
+        oc_list_remove(timed_callbacks, event_cb);
+        oc_memb_free(&event_callbacks_s, event_cb);
+        want_to_delete_currently_processed_event_cb = false;
+        break;
+      }
     }
     event_cb = event_cb->next;
+  }
+  if (want_to_delete_currently_processed_event_cb) {
+    // We can't remove the currently processed delayed callback because when
+    // the callback returns OC_EVENT_DONE, a double release occurs. So we
+    // set up the flag to remove it, and when it's over, we've removed it.
+    currently_processed_event_cb_delete = true;
   }
 }
 
@@ -576,9 +590,11 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
 
   while (event_cb != NULL) {
     next = event_cb->next;
-
     if (oc_etimer_expired(&event_cb->timer)) {
-      if (event_cb->callback(event_cb->data) == OC_EVENT_DONE) {
+      currently_processed_event_cb = event_cb;
+      currently_processed_event_cb_delete = false;
+      if ((event_cb->callback(event_cb->data) == OC_EVENT_DONE) ||
+          currently_processed_event_cb_delete) {
         oc_list_remove(list, event_cb);
         oc_memb_free(cb_pool, event_cb);
         event_cb = oc_list_head(list);
@@ -594,6 +610,8 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
 
     event_cb = next;
   }
+  currently_processed_event_cb = NULL;
+  currently_processed_event_cb_delete = false;
 }
 
 static void

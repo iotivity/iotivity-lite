@@ -42,6 +42,7 @@
 #define PING_DELAY_ON_TIMEOUT (PING_DELAY / 5)
 
 static void cloud_start_process(oc_cloud_context_t *ctx);
+static oc_event_callback_retval_t reconnect(void *data);
 static oc_event_callback_retval_t cloud_register(void *data);
 static oc_event_callback_retval_t cloud_login(void *data);
 static oc_event_callback_retval_t refresh_token(void *data);
@@ -73,6 +74,7 @@ void
 cloud_manager_stop(oc_cloud_context_t *ctx)
 {
   OC_DBG("[CM] cloud_manager_stop\n");
+  oc_remove_delayed_callback(ctx, reconnect);
   oc_remove_delayed_callback(ctx, cloud_register);
   oc_remove_delayed_callback(ctx, cloud_login);
   oc_remove_delayed_callback(ctx, send_ping);
@@ -88,11 +90,13 @@ reset_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
   oc_set_delayed_callback(cb_data, callback, seconds);
 }
 
-static void
-reconnect(oc_cloud_context_t *ctx)
+static oc_event_callback_retval_t
+reconnect(void *data)
 {
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
   reset_delayed_callback(ctx, callback_handler, 0);
   cloud_reconnect(ctx);
+  return OC_EVENT_DONE;
 }
 
 static bool
@@ -432,7 +436,7 @@ cloud_login(void *data)
                               message_timeout[ctx->retry_count]);
       ctx->retry_count++;
     } else {
-      reconnect(ctx);
+      reset_delayed_callback(ctx, reconnect, 0);
     }
   }
 
@@ -574,7 +578,7 @@ refresh_token(void *data)
 
     ctx->retry_refresh_token_count++;
   } else {
-    reconnect(ctx);
+    reset_delayed_callback(ctx, reconnect, 0);
   }
 
   return OC_EVENT_DONE;
@@ -620,7 +624,7 @@ send_ping(void *data)
     }
     ctx->retry_count++;
   } else {
-    reconnect(ctx);
+    reset_delayed_callback(ctx, reconnect, 0);
   }
 
   return OC_EVENT_DONE;
