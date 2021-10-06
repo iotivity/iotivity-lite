@@ -1722,7 +1722,9 @@ register_resources(void)
   oc_resource_bind_resource_interface(res_dali, OC_IF_W); /* oic.if.w */
   oc_resource_set_default_interface(res_dali, OC_IF_BASELINE);
   oc_resource_set_discoverable(res_dali, true);
+#ifdef OC_OSCORE
   oc_resource_set_secure_mcast(res_dali, true);
+#endif /* OC_OSCORE */
   oc_resource_set_periodic_observable(res_dali, 1);
   oc_resource_set_request_handler(res_dali, OC_GET, get_dali, NULL);
   oc_resource_set_request_handler(res_dali, OC_POST, post_dali, NULL);
