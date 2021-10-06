@@ -434,8 +434,11 @@ post_resource(bool tcp, bool mcast)
           ep = ep->next;
         }
         if ((!mcast && oc_init_post(res[c]->uri, ep, NULL, &POST_handler,
-                                    HIGH_QOS, NULL)) ||
-            (mcast && oc_init_multicast_update(res[c]->uri, NULL))) {
+                                    HIGH_QOS, NULL)) 
+#ifdef OC_OSCORE
+            || (mcast && oc_init_multicast_update(res[c]->uri, NULL))
+#endif /* OC_OSCORE */
+        ) {
           oc_rep_start_root_object();
           if (s == 0) {
             oc_rep_set_boolean(root, value, true);
@@ -443,8 +446,11 @@ post_resource(bool tcp, bool mcast)
             oc_rep_set_boolean(root, value, false);
           }
           oc_rep_end_root_object();
-          if ((!mcast && !oc_do_post()) ||
-              (mcast && !oc_do_multicast_update())) {
+          if ((!mcast && !oc_do_post()) 
+#ifdef OC_OSCORE
+              || (mcast && !oc_do_multicast_update())
+#endif /* OC_OSCORE */
+          ) {
             PRINT("\nERROR: Could not issue POST request\n");
           }
         } else {
