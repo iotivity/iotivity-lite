@@ -433,8 +433,8 @@ post_resource(bool tcp, bool mcast)
         while (ep && (tcp && !(ep->flags & TCP))) {
           ep = ep->next;
         }
-        if ((!mcast && oc_init_post(res[c]->uri, ep, NULL, &POST_handler,
-                                    HIGH_QOS, NULL)) 
+        if ((!mcast &&
+             oc_init_post(res[c]->uri, ep, NULL, &POST_handler, HIGH_QOS, NULL))
 #ifdef OC_OSCORE
             || (mcast && oc_init_multicast_update(res[c]->uri, NULL))
 #endif /* OC_OSCORE */
@@ -446,7 +446,7 @@ post_resource(bool tcp, bool mcast)
             oc_rep_set_boolean(root, value, false);
           }
           oc_rep_end_root_object();
-          if ((!mcast && !oc_do_post()) 
+          if ((!mcast && !oc_do_post())
 #ifdef OC_OSCORE
               || (mcast && !oc_do_multicast_update())
 #endif /* OC_OSCORE */
