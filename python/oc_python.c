@@ -871,43 +871,43 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
       } else if (ac->subject_type == OC_SUBJECT_CONN) {
         PRINT("[C]connection type: ");
         if (ac->subject.conn == OC_CONN_AUTH_CRYPT) {
-          PRINT("[C]auth-crypt\n");
+          PRINT("auth-crypt\n");
         } else {
-          PRINT("[C]anon-clear\n");
+          PRINT("anon-clear\n");
         }
       }
       PRINT("[C]Permissions: ");
       if (ac->permission & OC_PERM_CREATE) {
-        PRINT("[C] C ");
+        PRINT("C ");
       }
       if (ac->permission & OC_PERM_RETRIEVE) {
-        PRINT("[C] R ");
+        PRINT("R ");
       }
       if (ac->permission & OC_PERM_UPDATE) {
-        PRINT("[C] U ");
+        PRINT("U ");
       }
       if (ac->permission & OC_PERM_DELETE) {
-        PRINT("[C] D ");
+        PRINT("D ");
       }
       if (ac->permission & OC_PERM_NOTIFY) {
-        PRINT("[C] N ");
+        PRINT("N ");
       }
-      PRINT("[C]\n");
+      PRINT("\n");
       PRINT("[C]Resources: ");
       oc_ace_res_t *res = oc_list_head(ac->resources);
       while (res) {
         if (oc_string_len(res->href) > 0) {
-          PRINT("[C] %s ", oc_string(res->href));
+          PRINT("%s ", oc_string(res->href));
         } else if (res->wildcard != 0) {
           switch (res->wildcard) {
           case OC_ACE_WC_ALL:
-            PRINT("[C] * ");
+            PRINT("* ");
             break;
           case OC_ACE_WC_ALL_SECURED:
-            PRINT("[C] + ");
+            PRINT("+ ");
             break;
           case OC_ACE_WC_ALL_PUBLIC:
-            PRINT("[C] - ");
+            PRINT("- ");
             break;
           default:
             break;
@@ -916,7 +916,7 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
         res = res->next;
       }
       ac = ac->next;
-      PRINT("[C]\n-----\n");
+      PRINT("\n-----\n");
     }
     PRINT("[C]\n################################################\n");
 
@@ -925,6 +925,30 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
   } else {
     PRINT("[C]\nERROR RETRIEving /oic/sec/acl2\n");
   }
+}
+
+void py_retrieve_acl2(char* uuid) 
+{
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  if (device == NULL) {
+    device = py_getdevice_from_uuid(uuid, 0);
+  }
+  if (device == NULL) {
+    PRINT("[C] py_retrieve_acl2 ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_retrieve_acl2: name = %s ",device->device_name);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_retrieve_acl(&device->uuid, retrieve_acl2_rsrc_cb, NULL);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued request to retrieve ACL2\n");
+  } else {
+    PRINT("[C]\nERROR issuing request to retrieve ACL2\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+
 }
 
 static void
@@ -1952,6 +1976,9 @@ void py_provision_ace_cloud_access(char* uuid )
   oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_href(res, "/CoapCloudConfResURI");
   oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+
+  oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
 
   oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
   oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
