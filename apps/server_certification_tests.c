@@ -1740,7 +1740,7 @@ register_resources(void)
   oc_resource_bind_resource_interface(dali_config, OC_IF_RW); /* oic.if.rw */
   oc_resource_bind_resource_interface(dali_config,
                                       OC_IF_BASELINE); /* oic.if.baseline */
-  oc_resource_set_default_interface(dali_config, OC_IF_RW);
+  oc_resource_set_default_interface(dali_config, OC_IF_BASELINE);
   oc_resource_set_discoverable(dali_config, true);
   /* periodic observable
      to be used when one wants to send an event per time slice

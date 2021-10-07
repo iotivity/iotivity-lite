@@ -94,7 +94,7 @@
         "description":"",
         "parameters":[
           {
-            "$ref":"#/parameters/p_w"
+            "$ref":"#/parameters/if-baseline"
           },
           {
             "in":"body",
@@ -594,8 +594,8 @@
         "if": {
           "items": {
             "enum": [
-              "oic.if.rw",
-              "oic.if.baseline"
+              "oic.if.baseline",
+              "oic.if.rw"
             ],
             "type": "string"
           },
@@ -1870,7 +1870,7 @@
       "in":"query",
       "name":"if"
     },
-    "platforminterface-all":{
+    "if-baseline":{
       "enum":[
         "oic.if.baseline"
       ],
