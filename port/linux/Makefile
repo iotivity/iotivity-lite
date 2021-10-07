@@ -83,6 +83,11 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
+PYTHON_DIR=../../python
+#SRC_PYTHON=../../python/oc_python.c 
+SRC_PYTHON=$(wildcard $(PYTHON_DIR)/*.c)
+#PYTHON=oc_python.c
+
 ifeq ($(PKI),1)
 	CTIMESTAMP=../../api/c-timestamp/timestamp_tm.c
 endif
@@ -110,6 +115,11 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
+OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
+
+$(info    OBJ_PYTHON is $(OBJ_PYTHON))
+$(info    SRC_PYTHON is $(SRC_PYTHON))
+
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
@@ -310,6 +320,10 @@ obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
+$(OBJ_PYTHON) : $(SRC_PYTHON)
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
+
 obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
@@ -325,6 +339,10 @@ libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 
 libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
+
+libiotivity-lite-client-python.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON) $(LIBS)
+	cp $@ ../../python
 
 libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
