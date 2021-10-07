@@ -875,9 +875,9 @@ signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
 time.sleep(1)
 
-my_iotivity.test_security()
+#my_iotivity.test_security()
 
-#my_iotivity.test_discovery()
+my_iotivity.test_discovery()
 
 my_iotivity.quit()    
 
