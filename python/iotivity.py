@@ -592,9 +592,9 @@ class Iotivity():
     def discover_unowned(self):
         print("discover_unowned ")
         # OBT application
-        #ret = self.lib.discover_unowned_devices(c_int(0x02))
+        ret = self.lib.discover_unowned_devices(c_int(0x02))
         #ret = self.lib.discover_unowned_devices(c_int(0x03))
-        ret = self.lib.discover_unowned_devices(c_int(0x05))
+        #ret = self.lib.discover_unowned_devices(c_int(0x05))
         time.sleep(3)
         # python callback application
         #ret = self.lib.oc_obt_discover_unowned_devices(unowned_device_cb, None)
@@ -630,9 +630,9 @@ class Iotivity():
 
     def discover_owned(self):
         print("discover_owned ")
-        #ret = self.lib.discover_owned_devices(c_int(0x02))
+        ret = self.lib.discover_owned_devices(c_int(0x02))
         #ret = self.lib.discover_owned_devices(c_int(0x03))
-        ret = self.lib.discover_owned_devices(c_int(0x05))
+        #ret = self.lib.discover_owned_devices(c_int(0x05))
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
         print("discover_owned- done")
@@ -801,8 +801,13 @@ class Iotivity():
 
     def discover_resources(self, myuuid):
         self.lib.py_discover_resources.argtypes = [String]
-        self.lib.py_discover_resourcesrestype = None
+        self.lib.py_discover_resources.restype = None
         self.lib.py_discover_resources(myuuid)
+
+    def retrieve_acl2(self, myuuid): 
+        self.lib.py_retrieve_acl2.argtypes = [String]
+        self.lib.py_retrieve_acl2.restype = None
+        self.lib.py_retrieve_acl2(myuuid)
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
@@ -843,6 +848,9 @@ class Iotivity():
         self.discover_resources(my_uuid)
 
         time.sleep(3)
+        self.retrieve_acl2(my_uuid)
+
+        time.sleep(3)
         self.offboard_all_owned()
 
 
@@ -867,9 +875,9 @@ signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
 time.sleep(1)
 
-#my_iotivity.test_security()
+my_iotivity.test_security()
 
-my_iotivity.test_discovery()
+#my_iotivity.test_discovery()
 
 my_iotivity.quit()    
 
