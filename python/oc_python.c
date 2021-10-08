@@ -2303,6 +2303,21 @@ post_response_cloud_config(oc_client_response_t* data)
   }
 }
 
+void py_provision_cloud_config_info(char* uuid, char* cloud_access_token, char* cloud_apn, char* cloud_cis, char* cloud_id)
+{
+  oc_uuid_t device_uuid;
+  oc_str_to_uuid(uuid, &device_uuid);
+
+  char res_url[64] = "/CoapCloudConfResURI";
+
+  otb_mutex_lock(app_sync_lock);
+ 
+    oc_obt_update_cloud_conf_device(&device_uuid, res_url,
+      cloud_access_token, cloud_apn, cloud_cis, cloud_id,
+      post_response_cloud_config, NULL);
+  
+  otb_mutex_unlock(app_sync_lock);
+}
 
 static void
 set_cloud_info(void)
@@ -2436,6 +2451,30 @@ void trustanchorcb(int status, void* data)
   }
 }
 
+void py_provision_cloud_trust_anchor(char* uuid, char* cloud_id, char* cloud_trust_anchor)
+{
+  oc_uuid_t device_uuid;
+  oc_str_to_uuid(uuid, &device_uuid);
+
+  size_t cert_len = 545;
+
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  if (device == NULL) {
+    device = py_getdevice_from_uuid(uuid, 0);
+  }
+  if (device == NULL) {
+    PRINT("[C] py_provision_cloud_trust_anchor ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_provision_cloud_trust_anchor: name = %s ",device->device_name);
+
+  otb_mutex_lock(app_sync_lock);
+  int retcode = oc_obt_provision_trust_anchor(cloud_trust_anchor, cert_len, cloud_id, &device_uuid,
+    trustanchorcb, NULL);
+  PRINT("[C]sending message: %d\n", retcode);
+  otb_mutex_unlock(app_sync_lock);
+
+}
 
 static void
 set_cloud_trust_anchor(void)

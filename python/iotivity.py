@@ -57,6 +57,8 @@ import time
 
 import json
 
+import requests
+
 
 _int_types = (c_int16, c_int32)
 if hasattr(ctypes, "c_int64"):
@@ -809,6 +811,16 @@ class Iotivity():
         self.lib.py_retrieve_acl2.restype = None
         self.lib.py_retrieve_acl2(myuuid)
 
+    def provision_cloud_trust_anchor(self, myuuid, cloud_id, cloud_trust_anchor): 
+        self.lib.py_provision_cloud_trust_anchor.argtypes = [String, String, String]
+        self.lib.py_provision_cloud_trust_anchor.restype = None
+        self.lib.py_provision_cloud_trust_anchor(myuuid, cloud_id, cloud_trust_anchor)
+
+    def provision_cloud_config_info(self, myuuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id): 
+        self.lib.py_provision_cloud_config_info.argtypes = [String, String, String, String, String]
+        self.lib.py_provision_cloud_config_info.restype = None
+        self.lib.py_provision_cloud_config_info(myuuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
         self.discover_resources(myuuid)
@@ -830,19 +842,32 @@ class Iotivity():
 
 
     def test_security(self):
+        url = 'https://192.168.202.112:8443/.well-known/cloud-configuration'
+        r = requests.get(url, verify=False)
+
+        content = r.json()
+        cloud_id = content['cloudId']
+        cloud_trust_anchor = content['cloudCertificateAuthorities']
+        cloud_apn = content['cloudAuthorizationProvider']
+        cloud_cis = content['cloudUrl']
+        cloud_access_token = "test"
+
         self.discover_all()
+
         print ("sleeping after discovery issued..")
         time.sleep(3)
         self.onboard_all_unowned()
 
         time.sleep(3)
         my_iotivity.provision_ace_all()
+
         time.sleep(3)
         my_iotivity.provision_id_cert_all()
+
         time.sleep(3)
         my_uuid = self.get_owned_uuid(0)
-        self.provision_role_cert(my_uuid, "my_role", "my_auth")
-        self.provision_role_cert(my_uuid, "my_2nd_role", None)
+        # self.provision_role_cert(my_uuid, "my_role", "my_auth")
+        # self.provision_role_cert(my_uuid, "my_2nd_role", None)
 
         time.sleep(3)
         self.discover_resources(my_uuid)
@@ -851,7 +876,13 @@ class Iotivity():
         self.retrieve_acl2(my_uuid)
 
         time.sleep(3)
-        self.offboard_all_owned()
+        my_iotivity.provision_cloud_trust_anchor(my_uuid, cloud_id, cloud_trust_anchor)
+
+        time.sleep(3)
+        my_iotivity.provision_cloud_config_info(my_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+
+        # time.sleep(3)
+        # self.offboard_all_owned()
 
 
     def test_discovery(self):
@@ -875,9 +906,9 @@ signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 # need this sleep, because it takes a while to start Iotivity in C in a Thread
 time.sleep(1)
 
-#my_iotivity.test_security()
+my_iotivity.test_security()
 
-my_iotivity.test_discovery()
+#my_iotivity.test_discovery()
 
 my_iotivity.quit()    
 
