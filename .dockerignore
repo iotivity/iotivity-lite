@@ -1,0 +1,6 @@
+Dockerfile.*
+.github/
+images/
+swig/
+tests/
+.clang-format
