@@ -83,7 +83,8 @@ DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
-PYTHON_DIR=../../python
+
+PYTHON_DIR=../../web_obt
 #SRC_PYTHON=../../python/oc_python.c 
 SRC_PYTHON=$(wildcard $(PYTHON_DIR)/*.c)
 #PYTHON=oc_python.c
@@ -112,7 +113,7 @@ CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestand
 CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
-OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
+OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_otm_streamlined_onboarding.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
@@ -124,7 +125,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 simpleserver_raspberry_pi
 
 ifeq ($(V6DNS),1)
 	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
@@ -148,10 +149,6 @@ endif
 
 
 
-ifeq ($(WKCORE),1)
-	CFLAGS += -DOC_WKCORE
-endif
-
 ifeq ($(CLOUD),1)
 #	UNIT_TESTS += cloudtest
 endif
@@ -159,7 +156,7 @@ ifeq ($(CLOUD),1)
 	CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
-	SAMPLES += cloud_client cloud_server cloud_tests cloud_proxy
+	SAMPLES += cloud_client cloud_server cloud_tests
 endif
 
 OBT = onboarding_tool
@@ -221,6 +218,20 @@ endif
 
 ifeq ($(JAVA),1)
 	SWIG = swig
+endif
+
+# DPP-baesd Streamlined Onboarding applications
+SO_DPP_SAMPLES = speaker_server speaker_client dpp_diplomat
+SO_DPP_OBJ = obj/ocf_dpp.o
+ifeq ($(SO_DPP),1)
+	SAMPLES += $(SO_DPP_SAMPLES)
+	SRC += $(addprefix ../../security/,oc_streamlined_onboarding.c oc_obt_otm_streamlined_onboarding.c)
+	EXTRA_CFLAGS += -DOC_SO -DCONFIG_OCF_ONBOARDING
+	LIBS += -lwpa_client
+endif
+
+ifeq ($(CROSS),1)
+	export CC = arm-linux-gnueabihf-gcc
 endif
 
 CFLAGS += $(EXTRA_CFLAGS)
@@ -296,7 +307,6 @@ copy_idd_files:
 	@cp ../../apps/server_certification_tests_IDD.cbor .
 	@cp ../../apps/client_certification_tests_IDD.cbor .
 	@cp ../../apps/server_rules_IDD.cbor .
-	@cp ../../apps/cloud_proxy_IDD.cbor .
 
 ${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
 
@@ -320,6 +330,10 @@ obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
+#obj/python/%.o: %.c
+#	@mkdir -p ${@D}
+#	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
+
 $(OBJ_PYTHON) : $(SRC_PYTHON)
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
@@ -340,12 +354,12 @@ libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
 libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-libiotivity-lite-client-python.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON) $(LIBS)
-	cp $@ ../../python
-
 libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+
+libiotivity-lite-client-python.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON) $(LIBS)
+	cp $@ ../../web_obt
 
 libiotivity-lite-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
@@ -373,6 +387,10 @@ temp_sensor: libiotivity-lite-client.a $(ROOT_DIR)/apps/temp_sensor_client_linux
 simpleserver: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+simpleserver_raspberry_pi: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_raspberry_pi.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/simpleserver_raspberry_pi.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 secure_mcast_server1: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server1.c
 	@mkdir -p $@_creds
@@ -450,10 +468,6 @@ cloud_tests: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_certificati
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/cloud_certification_tests.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD} ${LIBS}
 
-cloud_proxy: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/cloud_proxy.c copy_pki_certs copy_idd_files
-	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/cloud_proxy.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${CFLAGS_CLOUD}  ${LIBS}
-
 ${OBT}: libiotivity-lite-client.a $(ROOT_DIR)/onboarding_tool/obtmain.c copy_pki_certs
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../onboarding_tool/obtmain.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
@@ -465,6 +479,21 @@ server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_mult
 client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+$(SO_DPP_OBJ): $(ROOT_DIR)/apps/streamlined_onboarding/ocf_dpp.c
+	${CC} -o $@ -c $^ ${CFLAGS} ${SECURITY_HEADERS} ${LIBS}
+
+speaker_server: $(ROOT_DIR)/apps/streamlined_onboarding/wifi_speaker/speaker_server.c libiotivity-lite-server.a $(SO_DPP_OBJ)
+	@mkdir -p $@_creds
+	${CC} -o $@ $^ -DOC_SERVER ${CFLAGS} -I$(ROOT_DIR)/apps/streamlined_onboarding/include/ ${LIBS}
+
+speaker_client: $(ROOT_DIR)/apps/streamlined_onboarding/wifi_speaker/speaker_client.c libiotivity-lite-client.a $(SO_DPP_OBJ)
+	@mkdir -p $@_creds
+	${CC} -o $@ $^ -DOC_CLIENT ${CFLAGS} -I$(ROOT_DIR)/apps/streamlined_onboarding/include/ ${LIBS}
+
+dpp_diplomat: $(ROOT_DIR)/apps/streamlined_onboarding/dpp_diplomat/dpp_diplomat.c libiotivity-lite-server.a $(SO_DPP_OBJ)
+	@mkdir -p $@_creds
+	${CC} -o $@ $^ -DOC_SERVER ${CFLAGS} -I$(ROOT_DIR)/apps/streamlined_onboarding/include/ ${LIBS}
 
 iotivity-lite-server.pc: iotivity-lite-server.pc.in
 	$(SED) > $@ < $< \
