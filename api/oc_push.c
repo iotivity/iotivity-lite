@@ -423,6 +423,9 @@ void free_ns_instance(oc_resource_t *resource)
 			oc_memb_free(&ns_instance_memb, ns_instance);
 			return;
 		}
+		/*
+		 * FIXME4ME ????
+		 */
 		ns_instance = ns_instance->next;
 	}
 }
