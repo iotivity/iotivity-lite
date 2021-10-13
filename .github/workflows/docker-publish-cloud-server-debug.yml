@@ -8,10 +8,10 @@ name: Create and publish a cloud-server-debug image
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - '*'
-      
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/cloud-server-debug
@@ -44,7 +44,6 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-            type=sha,prefix={{branch}}-
      
       - name: Build and push cloud-server-debug docker image
         uses: docker/build-push-action@v2

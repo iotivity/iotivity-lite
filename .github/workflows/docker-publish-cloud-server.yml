@@ -8,7 +8,7 @@ name: Create and publish a cloud-server image
 on:
   push:
     branches:
-      - main
+      - master
     tags:
       - '*'
 
@@ -44,7 +44,6 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-            type=sha,event=tag,prefix={{branch}}-
 
       - name: Build and push cloud-server docker image
         uses: docker/build-push-action@v2
