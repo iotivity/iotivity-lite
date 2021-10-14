@@ -177,7 +177,7 @@ struct doxm_response_data {
   oc_interface_mask_t iface_mask;
 } doxm_response_data;
 
-oc_trigger_t handle_doxm_separate_response(void *data)
+oc_event_callback_retval_t handle_doxm_separate_response(void *data)
 {
   if (doxm_separate_response.active) {
     oc_set_separate_response_buffer(&doxm_separate_response);
