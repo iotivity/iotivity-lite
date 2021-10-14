@@ -132,6 +132,13 @@ oc_set_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
 }
 
 void
+oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback, uint16_t miliseconds)
+{
+  oc_clock_time_t ticks = miliseconds * OC_CLOCK_SECOND / 1000;
+  oc_ri_add_timed_event_callback_ticks(cb_data, callback, ticks);
+}
+
+void
 oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
 {
   oc_ri_remove_timed_event_callback(cb_data, callback);
