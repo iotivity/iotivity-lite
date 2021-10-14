@@ -2159,7 +2159,7 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
  *
  * @param[in] cb_data user defined context pointer that is passed to the
  *                    oc_trigger_t callback
- * @param[in] callback the callback invoked after the set number of seconds
+ * @param[in] callback the callback invoked after the set number of miliseconds
  * @param[in] miliseconds the number of miliseconds to wait till the callback is invoked
  */
 void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback, uint16_t miliseconds);

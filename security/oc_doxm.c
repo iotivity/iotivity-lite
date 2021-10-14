@@ -46,6 +46,7 @@ typedef struct oc_doxm_owned_cb_s
 
 OC_LIST(oc_doxm_owned_cb_list_t);
 OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
+static oc_separate_response_t doxm_separate_response;
 
 void
 oc_sec_doxm_free(void)
@@ -171,6 +172,16 @@ oc_sec_get_doxm(size_t device)
   return &doxm[device];
 }
 
+oc_trigger_t handle_doxm_separate_response(void *data)
+{
+  if (doxm_separate_response.active) {
+    oc_set_separate_response_buffer(&doxm_separate_response);
+    oc_sec_encode_doxm();
+    oc_send_separate_response(&doxm_separate_response, OC_STATUS_OK);
+  }
+  return OC_EVENT_DONE;
+}
+
 void
 get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
@@ -191,8 +202,17 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         oc_ignore_request(request);
       }
     } else {
-      oc_sec_encode_doxm(device, iface_mask, false);
-      oc_send_response(request, OC_STATUS_OK);
+      // delay response to multicast requests, to prevent congestion
+      // during discovery in large networks
+      if (request->origin && (request->origin->flags & MULTICAST) == 1) {
+        oc_indicate_separate_response(request, &doxm_separate_response);
+        uint16_t jitter = oc_random_value() % OC_MULTICAST_RESPONSE_JITTER_MS;
+        oc_set_delayed_callback_ms(NULL, handle_doxm_separate_response, jitter);
+      } else {
+        // respond to unicasts immediately
+        oc_sec_encode_doxm(device, iface_mask, false);
+        oc_send_response(request, OC_STATUS_OK);
+      }
     }
   } break;
   default:
