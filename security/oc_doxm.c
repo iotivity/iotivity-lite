@@ -209,7 +209,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     } else {
       // delay response to multicast requests, to prevent congestion
       // during discovery in large networks
-      if (request->origin && (request->origin->flags & MULTICAST) == 1) {
+      if (request->origin && (request->origin->flags & MULTICAST)) {
         oc_indicate_separate_response(request, &doxm_separate_response);
         doxm_response_data.device = device;
         doxm_response_data.iface_mask = iface_mask;
