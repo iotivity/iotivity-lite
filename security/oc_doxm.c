@@ -172,11 +172,16 @@ oc_sec_get_doxm(size_t device)
   return &doxm[device];
 }
 
+struct doxm_response_data {
+  size_t device;
+  oc_interface_mask_t iface_mask;
+} doxm_response_data;
+
 oc_trigger_t handle_doxm_separate_response(void *data)
 {
   if (doxm_separate_response.active) {
     oc_set_separate_response_buffer(&doxm_separate_response);
-    oc_sec_encode_doxm();
+    oc_sec_encode_doxm(doxm_response_data.device, doxm_response_data.iface_mask, false);
     oc_send_separate_response(&doxm_separate_response, OC_STATUS_OK);
   }
   return OC_EVENT_DONE;
@@ -206,6 +211,8 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       // during discovery in large networks
       if (request->origin && (request->origin->flags & MULTICAST) == 1) {
         oc_indicate_separate_response(request, &doxm_separate_response);
+        doxm_response_data.device = device;
+        doxm_response_data.iface_mask = iface_mask;
         uint16_t jitter = oc_random_value() % OC_MULTICAST_RESPONSE_JITTER_MS;
         oc_set_delayed_callback_ms(NULL, handle_doxm_separate_response, jitter);
       } else {
