@@ -196,16 +196,32 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
+
+    char *q2;
+    int ql2 = oc_get_query_value(request, "deviceuuid", &q2);
+
     size_t device = request->resource->device;
+
+    oc_device_info_t *di = oc_core_get_device_info(device);
+    char device_uuid[OC_UUID_LEN] = { 0 };
+    oc_uuid_to_str(&di->di, device_uuid, OC_UUID_LEN);
+
     if (ql > 0 &&
         ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
          (doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+        // reply with BAD_REQUEST if ownership status does not match query
+        // of unicast request
         request->response->response_buffer->code =
           oc_status_code(OC_STATUS_BAD_REQUEST);
       } else {
+        // ignore if ownership status does not match query of multicast request
         oc_ignore_request(request);
       }
+    // q2 is not null terminated, so we subtract 1 from the comparison length
+    } else if(ql2 > 0 && strncasecmp(q2, device_uuid, OC_UUID_LEN - 1) != 0) {
+      // ignore if deviceuuid does not match query
+      oc_ignore_request(request);
     } else {
       // delay response to multicast requests, to prevent congestion
       // during discovery in large networks
