@@ -145,7 +145,8 @@ oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
 
 
 /**
- * @brief				callback to be used to set existing `notification selector` with received Resource representation
+ * @brief				callback to be called to set existing (or just created by `get_ns_instance()`)
+ * 						user-defined data structure for `notification selector` with received Resource representation
  *
  * @param resource
  * @param rep			Resource representation structure
@@ -182,6 +183,11 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					if (oc_string(ns_instance->targetpath))
 					{
 						p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (%s)\n", oc_string(ns_instance->targetpath));
+					}
+					else
+					{
+						p_err("path part of \"pushtarget\" should not be NULL!!\n");
+						return false;
 					}
 				}
 			}
@@ -245,7 +251,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 /**
  *
- * @brief callback to be used to prepare `notification selector` from existing Resource representation
+ * @brief 					callback to be called to fill the contents of `notification selector` from existing user-defined data structure (`oc_ns_t`)
  *
  * @param resource
  * @param iface_mask		interface to be used to send response
@@ -297,7 +303,10 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		/* pushtarget */
 		oc_string_t ep, full_uri;
 		oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep);
-		oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
+		if (oc_string(ns_instance->targetpath))
+			oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
+		else
+			oc_new_string(&full_uri, oc_string(ep), oc_string_len(ep));
 
 		oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
 
