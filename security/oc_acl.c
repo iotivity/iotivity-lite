@@ -368,25 +368,22 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       since this also a discovery resource.
   */
   if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
-       (
-        (oc_string_len(resource->uri) == 8 &&
-         memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
-        (oc_string_len(resource->uri) == 6 &&
-         memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
-        (oc_string_len(resource->uri) == 6 &&
-         memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))
-      ){
+      ((oc_string_len(resource->uri) == 8 &&
+        memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
+       (oc_string_len(resource->uri) == 6 &&
+        memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
     return true;
   }
 
 #ifdef OC_WKCORE
-  if ( method == OC_GET &&
-        (oc_string_len(resource->uri) == 17 &&
-         memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0)) {
+  if (method == OC_GET &&
+      (oc_string_len(resource->uri) == 17 &&
+       memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0)) {
     return true;
   }
 #endif
-
 
   /* Requests over unsecured channel prior to DOC */
   if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
