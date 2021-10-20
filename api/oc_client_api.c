@@ -634,8 +634,8 @@ dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
     return false;
   }
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", endpoint, OC_GET, query, handler, LOW_QOS, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", endpoint, OC_GET,
+                                             query, handler, qos, user_data);
 
   if (cb) {
     cb->discovery = true;
