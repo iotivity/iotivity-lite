@@ -165,7 +165,7 @@
 /* perform discovery using /oic/sec/doxm, which generates significantly less
  * traffic when compared to /oic/res discovery
  */
-#define OC_DOXM_UUID_FILTER
+//#define OC_DOXM_UUID_FILTER
 
 #ifdef __linux__
 /* linux specific code */
