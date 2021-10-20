@@ -1451,7 +1451,8 @@ doxm_discovery_cb(oc_client_response_t *response)
 {
   // a device has responded to the (potentially) UUID-filtered multicast DOXM
   // request. all we need from this request is the IP address of the responder
-  oc_do_ip_discovery_all_at_endpoint(discovery, response->endpoint, response->user_data);
+  oc_do_ip_discovery_all_at_endpoint(discovery, response->endpoint,
+                                     response->user_data);
 }
 #endif
 
