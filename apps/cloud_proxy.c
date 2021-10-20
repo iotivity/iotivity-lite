@@ -165,7 +165,7 @@
 /* perform discovery using /oic/sec/doxm, which generates significantly less
  * traffic when compared to /oic/res discovery
  */
-#define DISCOVER_WITH_DOXM
+#define OC_DOXM_UUID_FILTER
 
 #ifdef __linux__
 /* linux specific code */
@@ -1445,7 +1445,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
-#ifdef DISCOVER_WITH_DOXM
+#ifdef OC_DOXM_UUID_FILTER
 static void
 doxm_discovery_cb(oc_client_response_t *response)
 {
@@ -1463,7 +1463,7 @@ doxm_discovery_cb(oc_client_response_t *response)
 void
 issue_requests(char *current_udn)
 {
-#ifdef DISCOVER_WITH_DOXM
+#ifdef OC_DOXM_UUID_FILTER
   char query[12 + OC_UUID_LEN] = "deviceuuid=";
   strcat(query, current_udn);
 
@@ -1488,7 +1488,7 @@ void
 issue_requests_all(void)
 {
   PRINT("issue_requests_all: Discovery of all devices \n");
-#ifdef DISCOVER_WITH_DOXM
+#ifdef OC_DOXM_UUID_FILTER
   oc_do_site_local_ipv6_multicast("/oic/sec/doxm", NULL, doxm_discovery_cb,
                                   NULL);
 #else
