@@ -16,11 +16,12 @@ option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
-set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security")
-set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security")
-set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications")
-set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages")
-set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API")
+set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
+set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
+set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
+set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
+set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
+set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -71,6 +72,18 @@ target_sources(iotivity-api INTERFACE
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_tm.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
 )
+
+if(OC_CLOUD_ENABLED)
+    target_sources(iotivity-api INTERFACE
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_manager.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_rd.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_resource.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_store.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/rd_client.c
+        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_apis.c
+    )
+endif()
 
 target_include_directories(iotivity-api INTERFACE
     ${PROJECT_SOURCE_DIR}/
@@ -176,6 +189,10 @@ endif()
 
 if(OC_IDD_API_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_IDD_API)
+endif()
+
+if(OC_TCP_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_TCP)
 endif()
 
 # Client and server versions of Iotivity

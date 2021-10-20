@@ -51,8 +51,8 @@ typedef struct
 {
   oc_rep_t *payload;       ///< response payload, interpreted as cbor
   const uint8_t *_payload; ///< payload buffer
-  size_t _payload_len;     ///< payload buffer lenght
-  oc_endpoint_t *endpoint; ///< endpoint on where the response has been received
+  size_t _payload_len;     ///< payload buffer length
+  oc_endpoint_t *endpoint; ///< endpoint describing the source of the response
   void *client_cb;         ///< callback for the response to the calling client
   void *user_data; ///< user data to be supplied to the callback to the client
   oc_content_format_t content_format; ///< content format of the payload

@@ -162,6 +162,11 @@
 /* proxy all discovered devices on the network, this is for easier testing*/
 //#define PROXY_ALL_DISCOVERED_DEVICES
 
+/* perform discovery using /oic/sec/doxm, which generates significantly less
+ * traffic when compared to /oic/res discovery
+ */
+//#define OC_DOXM_UUID_FILTER
+
 #ifdef __linux__
 /* linux specific code */
 #include <pthread.h>
@@ -1440,6 +1445,17 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_CONTINUE_DISCOVERY;
 }
 
+#ifdef OC_DOXM_UUID_FILTER
+static void
+doxm_discovery_cb(oc_client_response_t *response)
+{
+  // a device has responded to the (potentially) UUID-filtered multicast DOXM
+  // request. all we need from this request is the IP address of the responder
+  oc_do_ip_discovery_all_at_endpoint(discovery, response->endpoint,
+                                     response->user_data);
+}
+#endif
+
 /**
  * issue a discovery request
  *
@@ -1448,10 +1464,18 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 void
 issue_requests(char *current_udn)
 {
+#ifdef OC_DOXM_UUID_FILTER
+  char query[12 + OC_UUID_LEN] = "deviceuuid=";
+  strcat(query, current_udn);
+
+  oc_do_site_local_ipv6_multicast("/oic/sec/doxm", query, doxm_discovery_cb,
+                                  current_udn);
+#else
   oc_do_site_local_ipv6_discovery_all(&discovery, current_udn);
   oc_do_realm_local_ipv6_discovery_all(&discovery, current_udn);
 #ifdef OC_IPV4
   oc_do_ip_discovery_all(&discovery, current_udn);
+#endif
 #endif
   // oc_do_ip_discovery_all(& discovery, NULL);
   // oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
@@ -1465,10 +1489,15 @@ void
 issue_requests_all(void)
 {
   PRINT("issue_requests_all: Discovery of all devices \n");
+#ifdef OC_DOXM_UUID_FILTER
+  oc_do_site_local_ipv6_multicast("/oic/sec/doxm", NULL, doxm_discovery_cb,
+                                  NULL);
+#else
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
 #ifdef OC_IPV4
   oc_do_ip_discovery_all(&discovery, NULL);
+#endif
 #endif
   // oc_do_ip_discovery_all(& discovery, NULL);
   // oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
