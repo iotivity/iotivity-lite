@@ -23,7 +23,7 @@
    :target: https://github.com/iotivity/iotivity-lite/releases
 
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
-   :target: https://github.com/plgd-dev/cloud
+   :target: https://github.com/plgd-dev/hub
 
 .. image:: https://badges.gitter.im/ocfcloud/Lobby.svg
    :target: https://gitter.im/ocfcloud/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
