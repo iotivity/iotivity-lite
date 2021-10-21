@@ -46,7 +46,6 @@ typedef struct oc_doxm_owned_cb_s
 
 OC_LIST(oc_doxm_owned_cb_list_t);
 OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
-static oc_separate_response_t doxm_separate_response;
 
 void
 oc_sec_doxm_free(void)
@@ -172,12 +171,14 @@ oc_sec_get_doxm(size_t device)
   return &doxm[device];
 }
 
+#ifdef OC_SERVER
 struct doxm_response_data
 {
   size_t device;
   oc_interface_mask_t iface_mask;
 } doxm_response_data;
 
+static oc_separate_response_t doxm_separate_response;
 // separate response handler, used for delaying the response to the client
 // in order to avoid flooding the network when multicasts are used
 static oc_event_callback_retval_t
@@ -192,6 +193,7 @@ handle_doxm_separate_response(void *data)
   }
   return OC_EVENT_DONE;
 }
+#endif
 
 void
 get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
@@ -235,6 +237,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       oc_ignore_request(request);
 #endif
     } else {
+#ifdef OC_SERVER
       // delay response to multicast requests, to prevent congestion
       // during discovery in large networks
       if (request->origin && (request->origin->flags & MULTICAST)) {
@@ -243,7 +246,9 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         doxm_response_data.iface_mask = iface_mask;
         uint16_t jitter = oc_random_value() % OC_MULTICAST_RESPONSE_JITTER_MS;
         oc_set_delayed_callback_ms(NULL, handle_doxm_separate_response, jitter);
-      } else {
+      } else
+#endif /* OC_SERVER */
+      {
         // respond to unicasts immediately
         oc_sec_encode_doxm(device, iface_mask, false);
         oc_send_response(request, OC_STATUS_OK);
