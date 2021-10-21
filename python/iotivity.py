@@ -693,7 +693,9 @@ class Iotivity():
         else:
             self.lib.get_uuid.restype = String
             self.lib.get_uuid.errcheck = ReturnString
-        return self.lib.get_uuid(1,c_int(index))
+        uuid = self.lib.get_uuid(1,c_int(index))
+        uuid_copy = '' + uuid
+        return uuid_copy
 
     def get_unowned_uuid(self, index):
         # retrieves the uuid of the unowned device
@@ -705,8 +707,9 @@ class Iotivity():
             self.lib.get_uuid.restype = String
             self.lib.get_uuid.errcheck = ReturnString
         uuid  = self.lib.get_uuid(0,c_int(index))
+        uuid_copy = '' + uuid
         print ("get_unowned_uuid: uuid:", uuid) 
-        return uuid
+        return uuid_copy
 
 
     def get_owned_device_name(self, index):
@@ -755,6 +758,7 @@ class Iotivity():
         for device in self.unowned_devices:
             print ("onboard device :", device, self.get_device_name(device))
             self.lib.py_otm_just_works(device)
+            time.sleep(3)
 
         print ("...done.")
 
@@ -881,8 +885,8 @@ class Iotivity():
         time.sleep(3)
         my_iotivity.provision_cloud_config_info(my_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
 
-        # time.sleep(3)
-        # self.offboard_all_owned()
+        time.sleep(3)
+        self.offboard_all_owned()
 
 
     def test_discovery(self):
