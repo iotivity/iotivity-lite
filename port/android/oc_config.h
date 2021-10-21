@@ -11,6 +11,10 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
+
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
 //#define OC_SPEC_VER_OIC
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
