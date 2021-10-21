@@ -183,7 +183,7 @@ struct doxm_response_data
 static oc_event_callback_retval_t
 handle_doxm_separate_response(void *data)
 {
-  (void) data;
+  (void)data;
   if (doxm_separate_response.active) {
     oc_set_separate_response_buffer(&doxm_separate_response);
     oc_sec_encode_doxm(doxm_response_data.device, doxm_response_data.iface_mask,
