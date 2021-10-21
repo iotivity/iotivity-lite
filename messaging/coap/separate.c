@@ -87,9 +87,6 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
 
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);
-#ifdef OC_DYNAMIC_ALLOCATION
-    separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
-#endif /* OC_DYNAMIC_ALLOCATION */
   }
 
   coap_packet_t *const coap_req = (coap_packet_t *)request;
@@ -115,7 +112,7 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     oc_list_add(separate_response->requests, separate_store);
 
     /* store correct response type */
-    separate_store->type = COAP_TYPE_NON;
+    separate_store->type = COAP_TYPE_CON;
 
     memcpy(separate_store->token, coap_req->token, coap_req->token_len);
     separate_store->token_len = coap_req->token_len;

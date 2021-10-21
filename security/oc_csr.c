@@ -22,6 +22,74 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 
+// Send CSR as a separate response if we are a server, since this is
+// better behaved on lossy networks. Send it as usual if we are a client
+// because the client CoAP lib does not have access to separate responses.
+#if defined(OC_SERVER)
+
+static oc_separate_response_t csr_response;
+
+struct csr_callback_params
+{
+  size_t device;
+  oc_interface_mask_t iface_mask;
+};
+
+oc_event_callback_retval_t
+generate_csr(void *data)
+{
+  if (csr_response.active) {
+    struct csr_callback_params *params = data;
+    size_t device = params->device;
+    unsigned char *csr = malloc(1024);
+
+    oc_set_separate_response_buffer(&csr_response);
+
+    if (!csr) {
+      oc_send_separate_response(&csr_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+      free(params);
+      free(csr);
+      return OC_EVENT_DONE;
+    }
+
+    int ret = oc_certs_generate_csr(device, csr, 1024);
+
+    if (ret != 0) {
+      oc_send_separate_response(&csr_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+      free(params);
+      free(csr);
+      return OC_EVENT_DONE;
+    }
+
+    oc_rep_start_root_object();
+    if (params->iface_mask & OC_IF_BASELINE) {
+      oc_process_baseline_interface(
+        oc_core_get_resource_by_index(OCF_SEC_CSR, device));
+    }
+    oc_rep_set_text_string(root, csr, (const char *)csr);
+    oc_rep_set_text_string(root, encoding, "oic.sec.encoding.pem");
+    oc_rep_end_root_object();
+
+    oc_send_separate_response(&csr_response, OC_STATUS_OK);
+    free(params);
+    free(csr);
+  }
+  return OC_EVENT_DONE;
+}
+
+void
+get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+{
+  (void)data;
+  oc_indicate_separate_response(request, &csr_response);
+  struct csr_callback_params *params =
+    malloc(sizeof(struct csr_callback_params));
+  params->device = request->resource->device;
+  params->iface_mask = iface_mask;
+  oc_set_delayed_callback(params, generate_csr, 1);
+}
+
+#elif defined(OC_CLIENT) // #if defined(OC_SERVER)
 void
 get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
@@ -48,6 +116,7 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_send_response(request, OC_STATUS_OK);
 }
+#endif                   // #if defined(OC_SERVER)
 
 #else  /* OC_PKI */
 typedef int dummy_declaration;
