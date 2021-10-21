@@ -99,6 +99,20 @@ OC_PROCESS(oc_push_process, "Push Notification handler");
 
 
 
+char *pp_state_strs[] =
+{
+		/*OC_PP_WFP*/
+		"Wait For Provisioning",
+		/*OC_PP_WFU*/
+		"Wait For Update",
+		/*OC_PP_WFR*/
+		"Wait For Response",
+		/*OC_PP_TOUT*/
+		"Time Out",
+		/*OC_PP_ERR*/
+		"Time Out"
+};
+
 
 
 oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
@@ -163,9 +177,12 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	 */
 	oc_ns_t *ns_instance = (oc_ns_t *)data;
 	while (rep != NULL) {
+		/*
+		 * FIXME4ME make it empty if optional property is not received...
+		 */
 		switch (rep->type) {
 		case OC_REP_STRING:
-			/* oic.r.notificationselector:phref */
+			/* oic.r.notificationselector:phref (optional) */
 			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "phref", 5) == 0)
 			{
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
@@ -198,7 +215,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			}
 			break;
 		case OC_REP_STRING_ARRAY:
-			/* oic.r.notificationselector:prt */
+			/* oic.r.notificationselector:prt (optional) */
 			if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "prt", 3) == 0)
 			{
 				oc_new_string_array(&ns_instance->prt, oc_string_array_get_allocated_size(rep->value.array));
@@ -208,7 +225,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					oc_string_array_add_item(ns_instance->prt, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
-			/* oic.r.notificationselector:pif */
+			/* oic.r.notificationselector:pif (optional) */
 			else if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "pif", 3) == 0)
 			{
 				oc_new_string_array(&ns_instance->pif, oc_string_array_get_allocated_size(rep->value.array));
@@ -1355,7 +1372,10 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 	/* create Push Receiver Resource */
 	oc_resource_t *pushd_rsc = oc_new_resource("Pushed Resource", oc_string(recv_obj->receiveruri), 1, resource->device);
 
-	oc_resource_bind_resource_type(pushd_rsc, "");
+	/*
+	 * XXX, if a resource binds empty resource type (""), when a client retrieve this it may receive weird value...
+	 */
+	oc_resource_bind_resource_type(pushd_rsc, " ");
 	oc_resource_bind_resource_interface(pushd_rsc, OC_IF_RW | OC_IF_BASELINE);
 	oc_resource_set_default_interface(pushd_rsc, OC_IF_RW);
 	oc_resource_set_discoverable(pushd_rsc, true);
@@ -1609,7 +1629,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	if (request->query)
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
-		p_dbg("received query string: %s\n", request->query);
+		p_dbg("received query string: %s, found \"receiveruri\": %s \n", request->query, uri_param);
 	}
 	else
 	{
@@ -1642,7 +1662,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 #ifdef OC_PUSHDEBUG
 					oc_string_t uri;
 					oc_new_string(&uri, uri_param, uri_param_len);
-					p_err("can't find receiver object which has uri(%s)\n creating new receiver obj...", oc_string(uri));
+					p_dbg("can't find receiver object which has uri(%s), creating new receiver obj...", oc_string(uri));
 					oc_free_string(&uri);
 #endif
 
@@ -1994,7 +2014,7 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 
 		if (oc_string(ns_instance->phref))
 		{
-			if (strcmp(oc_string(ns_instance->phref), uri))
+			if (strcmp(oc_string(ns_instance->phref), "") && strcmp(oc_string(ns_instance->phref), uri))
 //				all_matched = 1;
 //			else
 				all_matched = 0;

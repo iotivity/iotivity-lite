@@ -115,7 +115,7 @@ typedef struct oc_recv
 	struct oc_recv *next;
 	oc_string_t receiveruri;
 	oc_string_array_t rts;
-	oc_endpoint_t ep;
+	oc_endpoint_t ep; /* FIXME4ME ??? never used.. */
 } oc_recv_t;
 
 
@@ -149,6 +149,8 @@ typedef struct oc_pushd_rsc_rep
 
 
 OC_PROCESS_NAME(oc_push_process);
+
+extern char *pp_state_strs[];
 
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
