@@ -385,15 +385,21 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   }
 #endif
 
-  /* GET requests to /oic/sec/doxm are always granted. 
+  /* GET requests to /oic/sec/doxm are always granted.
    * This is to ensure that multicast discovery using UUID filtered requests
    * to /oic/sec/doxm is not blocked.
+   *
+   * The security implications of allowing universal read access to
+   * /oic/sec/doxm have not been thoroughly discussed. Enabling the following
+   * define is FOR DEVELOPMENT USE ONLY.
    */
+#ifdef OC_DOXM_UUID_FILTER
   if (oc_string_len(resource->uri) == 13 && method == OC_GET &&
       memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
     OC_DBG("oc_sec_check_acl: R access granted to /doxm");
     return true;
   }
+#endif
 
   /* Requests over unsecured channel prior to DOC */
   if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {

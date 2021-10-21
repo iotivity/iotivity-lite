@@ -172,16 +172,21 @@ oc_sec_get_doxm(size_t device)
   return &doxm[device];
 }
 
-struct doxm_response_data {
+struct doxm_response_data
+{
   size_t device;
   oc_interface_mask_t iface_mask;
 } doxm_response_data;
 
-oc_event_callback_retval_t handle_doxm_separate_response(void *data)
+// separate response handler, used for delaying the response to the client
+// in order to avoid flooding the network when multicasts are used
+static oc_event_callback_retval_t
+handle_doxm_separate_response(void *data)
 {
   if (doxm_separate_response.active) {
     oc_set_separate_response_buffer(&doxm_separate_response);
-    oc_sec_encode_doxm(doxm_response_data.device, doxm_response_data.iface_mask, false);
+    oc_sec_encode_doxm(doxm_response_data.device, doxm_response_data.iface_mask,
+                       false);
     oc_send_separate_response(&doxm_separate_response, OC_STATUS_OK);
   }
   return OC_EVENT_DONE;
@@ -196,15 +201,19 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   case OC_IF_BASELINE: {
     char *q;
     int ql = oc_get_query_value(request, "owned", &q);
+    size_t device = request->resource->device;
 
+    // do not respond to /oic/sec/doxm requests if the value of the deviceuuid
+    // query parameter does not match the device's UUID
+    // FOR DEVELOPMENT USE ONLY
+#ifdef OC_DOXM_UUID_FILTER
     char *q2;
     int ql2 = oc_get_query_value(request, "deviceuuid", &q2);
-
-    size_t device = request->resource->device;
 
     oc_device_info_t *di = oc_core_get_device_info(device);
     char device_uuid[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(&di->di, device_uuid, OC_UUID_LEN);
+#endif
 
     if (ql > 0 &&
         ((doxm[device].owned == 1 && strncasecmp(q, "false", 5) == 0) ||
@@ -218,10 +227,12 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
         // ignore if ownership status does not match query of multicast request
         oc_ignore_request(request);
       }
-    // q2 is not null terminated, so we subtract 1 from the comparison length
-    } else if(ql2 > 0 && strncasecmp(q2, device_uuid, OC_UUID_LEN - 1) != 0) {
+#ifdef OC_DOXM_UUID_FILTER
+      // q2 is not null terminated, so we subtract 1 from the comparison length
+    } else if (ql2 > 0 && strncasecmp(q2, device_uuid, OC_UUID_LEN - 1) != 0) {
       // ignore if deviceuuid does not match query
       oc_ignore_request(request);
+#endif
     } else {
       // delay response to multicast requests, to prevent congestion
       // during discovery in large networks
