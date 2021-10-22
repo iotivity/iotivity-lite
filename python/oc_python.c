@@ -1994,6 +1994,39 @@ void py_provision_ace_cloud_access(char* uuid )
   }
 }
 
+void py_provision_ace_d2dserverlist(char* uuid ) 
+{
+  
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  
+  if (device == NULL){
+    PRINT("[C]py_provision_ace_cloud_access ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+
+  oc_sec_ace_t *ace = NULL;
+  ace = oc_obt_new_ace_for_subject(oc_core_get_device_id(0));
+
+  oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_href(res, "/d2dserverlist");
+  oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
+
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+  oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+  oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("[C] Successfully issued request to provision ACE /d2dserverlist\n");
+  } else {
+    PRINT("[C] ERROR issuing request to provision ACE /d2dserverlist\n");
+  }
+}
+
 static void
 provision_ace2(void)
 {
@@ -2551,8 +2584,66 @@ set_cloud_trust_anchor(void)
   otb_mutex_unlock(app_sync_lock);
 
 }
+static void
+retrieve_d2dserverlist_cb(oc_client_response_t *data)
+{
+  PRINT("[C]get response /d2dserverlist payload: \n");
+  print_rep(data->payload, false);
+}
 
+void py_retrieve_d2dserverlist(char* uuid)
+{
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  if (device == NULL) {
+    device = py_getdevice_from_uuid(uuid, 0);
+  }
+  if (device == NULL) {
+    PRINT("[C] py_retrieve_d2dserverlist ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_retrieve_d2dserverlist: name = %s ",device->device_name);
 
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_retrieve_d2dserverlist(&device->uuid, retrieve_d2dserverlist_cb, NULL);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued request to retrieve d2dserverlist\n");
+  } else {
+    PRINT("[C]\nERROR issuing request to retrieve d2dserverlist\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+post_response_d2dserverlist(oc_client_response_t* data)
+{
+  PRINT("[C]post_response_d2dserverlist:\n");
+  if (data->code == OC_STATUS_CHANGED)
+    PRINT("[C]POST response: CHANGED\n");
+  else if (data->code == OC_STATUS_CREATED)
+    PRINT("[C]POST response: CREATED\n");
+  else
+    PRINT("[C]POST response code %d\n", data->code);
+
+  if (data->payload == NULL) {
+    print_rep(data->payload, false);
+  }
+}
+
+void py_post_d2dserverlist(char* cloud_proxy_uuid, char* device_uuid)
+{
+  oc_uuid_t cloudproxyuuid;
+  oc_str_to_uuid(cloud_proxy_uuid, &cloudproxyuuid);
+
+  char res_url[64] = "/d2dserverlist";
+
+  otb_mutex_lock(app_sync_lock);
+ 
+    oc_obt_post_d2dserverlist(&cloudproxyuuid, device_uuid, 
+      res_url, post_response_d2dserverlist, NULL);
+  
+  otb_mutex_unlock(app_sync_lock);
+}
 #endif /* OC_CLOUD */
 
 void

@@ -596,8 +596,8 @@ class Iotivity():
         # OBT application
         ret = self.lib.discover_unowned_devices(c_int(0x02))
         #ret = self.lib.discover_unowned_devices(c_int(0x03))
-        #ret = self.lib.discover_unowned_devices(c_int(0x05))
-        time.sleep(3)
+        ret = self.lib.discover_unowned_devices(c_int(0x05))
+        time.sleep(10)
         # python callback application
         #ret = self.lib.oc_obt_discover_unowned_devices(unowned_device_cb, None)
         #ret = self.lib.py_discover_unowned_devices()
@@ -634,7 +634,7 @@ class Iotivity():
         print("discover_owned ")
         ret = self.lib.discover_owned_devices(c_int(0x02))
         #ret = self.lib.discover_owned_devices(c_int(0x03))
-        #ret = self.lib.discover_owned_devices(c_int(0x05))
+        ret = self.lib.discover_owned_devices(c_int(0x05))
         # call with call back in python
         #ret = self.lib.oc_obt_discover_owned_devices(owned_device_cb, None)
         print("discover_owned- done")
@@ -756,9 +756,11 @@ class Iotivity():
         self.lib.py_otm_just_works.argtypes = [String]
         self.lib.py_otm_just_works.restype = None
         for device in self.unowned_devices:
-            print ("onboard device :", device, self.get_device_name(device))
-            self.lib.py_otm_just_works(device)
-            time.sleep(3)
+            device_name = self.get_device_name(device)
+            if "proxy" in str(device_name).lower(): 
+                print ("onboard device :", device, device_name)
+                self.lib.py_otm_just_works(device)
+                time.sleep(3)
 
         print ("...done.")
 
@@ -782,10 +784,17 @@ class Iotivity():
         print( "provision_ace_cloud_access (ACL):",device_uuid)
         self.lib.py_provision_ace_cloud_access(device_uuid)
 
+    def provision_ace_d2dserverlist(self, device_uuid): 
+        self.lib.py_provision_ace_d2dserverlist.argtypes = [String]
+        self.lib.py_provision_ace_d2dserverlist.restype = None
+        print( "py_provision_ace_d2dserverlist (ACL):",device_uuid)
+        self.lib.py_provision_ace_d2dserverlist(device_uuid)
+
     def provision_ace_all(self):
         print ("provision_ace_all....")
         for device in self.owned_devices:
             self.provision_ace_cloud_access(device)
+            self.provision_ace_d2dserverlist(device)
         print ("provision_ace_all...done.")
     
     def provision_id_cert(self, device_uuid):
@@ -824,6 +833,16 @@ class Iotivity():
         self.lib.py_provision_cloud_config_info.argtypes = [String, String, String, String, String]
         self.lib.py_provision_cloud_config_info.restype = None
         self.lib.py_provision_cloud_config_info(myuuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+
+    def retrieve_d2dserverlist(self, myuuid): 
+        self.lib.py_retrieve_d2dserverlist.argtypes = [String]
+        self.lib.py_retrieve_d2dserverlist.restype = None
+        self.lib.py_retrieve_d2dserverlist(myuuid)
+
+    def post_d2dserverlist(self, myuuid, chiliuuid): 
+        self.lib.py_post_d2dserverlist.argtypes = [String, String]
+        self.lib.py_post_d2dserverlist.restype = None
+        self.lib.py_post_d2dserverlist(myuuid, chiliuuid)
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
@@ -870,6 +889,8 @@ class Iotivity():
 
         time.sleep(3)
         my_uuid = self.get_owned_uuid(0)
+        chili_uuid = self.get_unowned_uuid(0)
+
         # self.provision_role_cert(my_uuid, "my_role", "my_auth")
         # self.provision_role_cert(my_uuid, "my_2nd_role", None)
 
@@ -886,7 +907,13 @@ class Iotivity():
         my_iotivity.provision_cloud_config_info(my_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
 
         time.sleep(3)
-        self.offboard_all_owned()
+        my_iotivity.post_d2dserverlist(my_uuid, chili_uuid)
+        
+        time.sleep(3)
+        my_iotivity.retrieve_d2dserverlist(my_uuid)
+
+        time.sleep(3)
+        # self.offboard_all_owned()
 
 
     def test_discovery(self):
