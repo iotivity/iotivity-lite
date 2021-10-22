@@ -157,6 +157,8 @@ void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
 oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len);
 
+void oc_resource_state_changed(const char *uri, size_t device_index);
+
 #define _find_recv_obj_by_uri2(recvs_instance, uri_string) \
 	(_find_recv_obj_by_uri((recvs_instance), oc_string(uri_string), oc_string_len(uri_string)))
 

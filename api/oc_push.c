@@ -449,9 +449,6 @@ void free_ns_instance(oc_resource_t *resource)
 			oc_memb_free(&ns_instance_memb, ns_instance);
 			return;
 		}
-		/*
-		 * FIXME4ME ????
-		 */
 		ns_instance = ns_instance->next;
 	}
 }
@@ -1052,6 +1049,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 					}
 				}
 				break;
+#if 0
 			case OC_REP_OBJECT:
 				if (!strcmp(oc_string(rep->name), "rep"))
 				{
@@ -1075,12 +1073,40 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 					}
 				}
 				break;
+#endif
 			default:
 				break;
 			}
 			rep = rep->next;
 		}
+
+		/* reset rep pointer */
+//		rep = request->request_payload;
+
+		/* store received "oic.r.pushpayload" resource contents */
+		pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&request->resource->uri, request->resource->device);
+		if (pushd_rsc_rep)
+		{
+			oc_rep_set_pool(&rep_instance_memb);
+			oc_free_rep(pushd_rsc_rep->rep);
+			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
+			{
+				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
+						oc_string(request->resource->uri));
+				result = OC_STATUS_INTERNAL_SERVER_ERROR;
+			}
+		}
+		else
+		{
+			p_err("something wrong!, can't find corresponding pushed resource representation instance for (%s) \n",
+					oc_string(request->resource->uri));
+			result = OC_STATUS_NOT_FOUND;
+		}
 	}
+
+	/*
+	 * TODO4ME print received pushpayload resource contents
+	 */
 
 	oc_send_response(request, result);
 	return;
@@ -1900,6 +1926,13 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			if (oc_init_post(oc_string(ns_instance->targetpath), &ns_instance->pushtarget_ep,
 									"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
 			{
+				/*
+				 * TODO4ME add other properties than "rep" object of "oic.r.pushpayload" Resource here.
+				 * payload_builder() only adds contents of "rep" object.
+				 *
+				 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
+				 * they should be added here...
+				 */
 				src_rsc->payload_builder();
 
 				if (oc_do_post())
