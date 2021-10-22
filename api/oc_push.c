@@ -1889,6 +1889,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 {
 	oc_resource_t *src_rsc;
 	oc_ns_t *ns_instance;
+	char di[OC_UUID_LEN];
 
 	OC_PROCESS_BEGIN();
 
@@ -1911,8 +1912,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			ns_instance = (oc_ns_t *)data;
 			src_rsc = ns_instance->resource;
 
-			if (!ns_instance || !src_rsc) {
-				p_err("something wrong! ns_instance or source resource is NULL!\n");
+			if (!ns_instance || !src_rsc || !ns_instance->user_data) {
+				p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!\n");
 				break;
 			}
 
@@ -1933,7 +1934,33 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 				 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
 				 * they should be added here...
 				 */
-				src_rsc->payload_builder();
+				oc_rep_begin_root_object();
+
+				/* anchor */
+				oc_uuid_to_str(oc_core_get_device_id(ns_instance->resource->device), di, OC_UUID_LEN);
+				oc_rep_set_text_string(root, anchor, di);
+
+				/* href (option) */
+				if (oc_string(ns_instance->phref) && strcmp(oc_string(ns_instance->phref), ""))
+				{
+					oc_rep_set_text_string(root, href, oc_string(ns_instance->phref));
+				}
+
+				/*
+				 * TODO4ME <2021/10/22> resume here...
+				 */
+				/* rt (array) */
+
+
+				/* if (array) */
+
+
+				oc_rep_open_object(root, rep);
+//				src_rsc->payload_builder();
+				((oc_resource_t *)ns_instance->user_data)->payload_builder();
+				oc_rep_close_object(root, rep);
+
+				oc_rep_end_root_object();
 
 				if (oc_do_post())
 					PRINT("Sent POST request\n\n");
@@ -2080,6 +2107,10 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 				p_dbg("oc_push_process is not running!\n");
 				return;
 			}
+
+			/* resource is necessary to identify which resource is being pushed..,
+			 * before sending update to target server */
+			ns_instance->user_data = resource;
 
 			/* post "event" for Resource which has just been updated */
 			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);

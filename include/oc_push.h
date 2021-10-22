@@ -104,6 +104,7 @@ typedef struct oc_ns
 	oc_string_array_t sourcert;
 //	oc_list_t endpoints;
 	oc_pp_state_t state;
+	void *user_data;
 } oc_ns_t;
 
 
