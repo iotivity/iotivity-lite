@@ -1221,6 +1221,12 @@ int oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
 int oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid,
   const char* url, oc_response_handler_t cb, void* user_data);
 
+int oc_obt_retrieve_d2dserverlist(oc_uuid_t* uuid, 
+  oc_response_handler_t cb, void *data);
+
+int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* device_uuid, 
+  const char* url, oc_response_handler_t cb, void* user_data);
+
 /**
  * sets the secure domain info
  *
