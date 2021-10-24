@@ -114,7 +114,9 @@ char *pp_state_strs[] =
 };
 
 
-
+/*
+ * FIXME4ME use `oc_ri_get_interface_mask()` instead of this...
+ */
 oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
 {
 	oc_interface_mask_t iface = 0;
@@ -549,6 +551,9 @@ void _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 	if (!rep)
 		return;
 
+	/*
+	 * FIXME4ME should I check if rep->name is NULL?
+	 */
 	switch (rep->type)
 	{
 	case OC_REP_NIL:
@@ -985,6 +990,74 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 
 
+void print_pushd_rsc(oc_rep_t *payload)
+{
+	PRINT("\nGET_pushconf_oic_if_b:\n");
+	oc_rep_t *rep = payload;
+
+	if (!rep) {
+		PRINT("no data!\n");
+		return;
+	}
+
+
+	while (rep != NULL)
+	{
+		switch (rep->type)
+		{
+		case OC_REP_STRING:
+			PRINT("\t\tkey: %s value: %s\n", oc_string(rep->name),
+					oc_string(rep->value.string));
+			break;
+		case OC_REP_OBJECT:
+		{
+			PRINT("\t\tkey: %s value: { \n", oc_string(rep->name));
+			oc_rep_t *obj_rep = rep->value.object;
+			while (obj_rep != NULL)
+			{
+				switch (obj_rep->type)
+				{
+				case OC_REP_BOOL:
+					PRINT("\t\t\t %s : %d \n", oc_string(obj_rep->name), obj_rep->value.boolean);
+					break;
+				case OC_REP_INT:
+					PRINT("\t\t\t %s : %lld \n", oc_string(obj_rep->name), obj_rep->value.integer);
+					break;
+				case OC_REP_STRING:
+					PRINT("\t\t\t %s : %s \n", oc_string(obj_rep->name), oc_string(obj_rep->value.string));
+					break;
+				case OC_REP_STRING_ARRAY:
+				{
+					PRINT("\t\t\t %s [ \n", oc_string(obj_rep->name));
+					int i;
+					for (i = 0; i < (int) oc_string_array_get_allocated_size(obj_rep->value.array); i++)
+					{
+						PRINT("\t\t\t\t %s \n", oc_string_array_get_item(obj_rep->value.array, i));
+					}
+					PRINT("\t\t\t ]\n");
+				}
+				break;
+				default:
+					PRINT("\t\t\t %s : \n", oc_string(obj_rep->name));
+					break;
+				}
+				obj_rep = obj_rep->next;
+			}
+			PRINT("\t\t }\n\n");
+		}
+		break;
+		default:
+			PRINT("\t\t|___ key: %s value: \n", oc_string(rep->name));
+			//				PRINT("no matched type\n");
+			break;
+		}
+		rep = rep->next;
+	}
+}
+
+
+
+
 
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
@@ -1095,6 +1168,13 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 						oc_string(request->resource->uri));
 				result = OC_STATUS_INTERNAL_SERVER_ERROR;
 			}
+			else
+			{
+				/*
+				 * TODO4ME print received pushpayload resource contents
+				 */
+				print_pushd_rsc(pushd_rsc_rep->rep);
+			}
 		}
 		else
 		{
@@ -1104,9 +1184,6 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 		}
 	}
 
-	/*
-	 * TODO4ME print received pushpayload resource contents
-	 */
 
 	oc_send_response(request, result);
 	return;
@@ -1875,11 +1952,11 @@ void oc_push_list_init()
 
 void response_to_push_rsc(oc_client_response_t *data)
 {
-	PRINT("\n UPDATE pushed receiver \n");
+	p_dbg("\n UPDATE pushed receiver \n");
 	if (data->code == OC_STATUS_CHANGED)
-		PRINT("POST response OK\n");
+		p_dbg("POST response OK\n");
 	else
-		PRINT("POST response code %d\n", data->code);
+		p_err("POST response code %d\n", data->code);
 }
 
 
@@ -1908,11 +1985,10 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 		/* send UPDATE to target server */
 		if (ev == oc_events[PUSH_RSC_STATE_CHANGED]) {
-//			src_rsc = (oc_resource_t *)data;
 			ns_instance = (oc_ns_t *)data;
-			src_rsc = ns_instance->resource;
+			src_rsc = (oc_resource_t *)ns_instance->user_data;
 
-			if (!ns_instance || !src_rsc || !ns_instance->user_data) {
+			if (!ns_instance || !src_rsc /*|| !ns_instance->user_data*/) {
 				p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!\n");
 				break;
 			}
@@ -1934,6 +2010,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 				 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
 				 * they should be added here...
 				 */
+//				oc_resource_t *org_rsc;
+
 				oc_rep_begin_root_object();
 
 				/* anchor */
@@ -1950,26 +2028,30 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 				 * TODO4ME <2021/10/22> resume here...
 				 */
 				/* rt (array) */
-
+				oc_rep_open_array(root, rt);
+				for (size_t i=0; i<oc_string_array_get_allocated_size(src_rsc->types); i++)
+				{
+					oc_rep_add_text_string(rt, oc_string_array_get_item(src_rsc->types, i));
+				}
+				oc_rep_close_array(root, rt);
 
 				/* if (array) */
+				oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces);
 
-
-				oc_rep_open_object(root, rep);
-//				src_rsc->payload_builder();
-				((oc_resource_t *)ns_instance->user_data)->payload_builder();
-				oc_rep_close_object(root, rep);
+//				oc_rep_open_object(root, rep);
+				src_rsc->payload_builder();
+//				oc_rep_close_object(root, rep);
 
 				oc_rep_end_root_object();
 
 				if (oc_do_post())
-					PRINT("Sent POST request\n\n");
+					p_dbg("Sent POST request\n\n");
 				else
-					PRINT("Could not send POST\n\n");
+					p_err("Could not send POST\n\n");
 			}
 			else
 			{
-				PRINT("Could not init POST\n\n");
+				p_err("Could not init POST\n\n");
 			}
 
 
