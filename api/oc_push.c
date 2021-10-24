@@ -992,7 +992,7 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 void print_pushd_rsc(oc_rep_t *payload)
 {
-	PRINT("\nGET_pushconf_oic_if_b:\n");
+	PRINT("\n%s:\n", __func__);
 	oc_rep_t *rep = payload;
 
 	if (!rep) {
@@ -1044,6 +1044,17 @@ void print_pushd_rsc(oc_rep_t *payload)
 				obj_rep = obj_rep->next;
 			}
 			PRINT("\t\t }\n\n");
+		}
+		break;
+		case OC_REP_STRING_ARRAY:
+		{
+			PRINT("\t\t %s [ \n", oc_string(rep->name));
+			int i;
+			for (i = 0; i < (int) oc_string_array_get_allocated_size(rep->value.array); i++)
+			{
+				PRINT("\t\t\t %s \n", oc_string_array_get_item(rep->value.array, i));
+			}
+			PRINT("\t\t ]\n");
 		}
 		break;
 		default:
@@ -1162,7 +1173,8 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 		{
 			oc_rep_set_pool(&rep_instance_memb);
 			oc_free_rep(pushd_rsc_rep->rep);
-			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
+//			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
+			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, request->request_payload))
 			{
 				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
 						oc_string(request->resource->uri));
@@ -1970,7 +1982,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 	OC_PROCESS_BEGIN();
 
-	do {
+	while (1) {
 
 #if 0
 		int device_count = oc_core_get_num_devices();
@@ -2072,7 +2084,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 		}
 
-	} while(0);
+	}
 
 	OC_PROCESS_END();
 }
