@@ -147,6 +147,7 @@ Other information sources
 - `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
 - `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
 - `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
+- `plgd testing <https://plgd.dev/developer-guide/testing/>`_
 - `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 
 
