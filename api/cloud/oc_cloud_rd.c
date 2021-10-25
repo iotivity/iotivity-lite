@@ -286,11 +286,23 @@ oc_cloud_delete_resource(oc_resource_t *res)
   }
   oc_link_t *publish =
     rd_link_remove_by_resource(&ctx->rd_publish_resources, res);
-  if (publish != NULL) {
-    oc_delete_link(publish);
-  }
+  oc_delete_link(publish);
+
   oc_link_t *published =
     rd_link_remove_by_resource(&ctx->rd_published_resources, res);
+
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(res->device);
+  if (pstat->s == OC_DOS_RESET || pstat->s == OC_DOS_RFOTM) {
+    oc_delete_link(published);
+
+    oc_link_t *delete =
+      rd_link_remove_by_resource(&ctx->rd_delete_resources, res);
+    oc_delete_link(delete);
+    return;
+  }
+#endif /* OC_SECURITY */
+
   if (published != NULL) {
     if (published->resource) {
       published->resource = NULL;
