@@ -90,7 +90,6 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
 {
 
   if (!buffer) {
-    OC_ERR("buffer is NULL");
     return;
   }
 
