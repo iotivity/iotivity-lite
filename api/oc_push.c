@@ -1973,6 +1973,90 @@ void response_to_push_rsc(oc_client_response_t *data)
 
 
 
+/*
+ * XXX alternative implementation (not using proto-thread)
+ */
+void push_update(oc_ns_t *ns_instance)
+{
+	oc_resource_t *src_rsc;
+	char di[OC_UUID_LEN];
+
+	src_rsc = (oc_resource_t *)ns_instance->user_data;
+
+	if (!ns_instance || !src_rsc) {
+		p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!\n");
+		return;
+	}
+
+	if (!src_rsc->payload_builder)
+	{
+		p_err("payload_builder() of source resource is NULL!\n");
+		return;
+	}
+
+	/*
+	 * client에서 POST 하는 루틴 참조할 것 (client_multithread_linux.c 참고)
+	 */
+	/*
+	 * 1. find `notification selector` which monitors `src_rsc` from `ns_col_list`
+	 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
+	 */
+	if (oc_init_post(oc_string(ns_instance->targetpath), &ns_instance->pushtarget_ep,
+							"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
+	{
+		/*
+		 * TODO4ME add other properties than "rep" object of "oic.r.pushpayload" Resource here.
+		 * payload_builder() only adds contents of "rep" object.
+		 *
+		 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
+		 * they should be added here...
+		 */
+//				oc_resource_t *org_rsc;
+
+		oc_rep_begin_root_object();
+
+		/* anchor */
+		oc_uuid_to_str(oc_core_get_device_id(ns_instance->resource->device), di, OC_UUID_LEN);
+		oc_rep_set_text_string(root, anchor, di);
+
+		/* href (option) */
+		if (oc_string(ns_instance->phref) && strcmp(oc_string(ns_instance->phref), ""))
+		{
+			oc_rep_set_text_string(root, href, oc_string(ns_instance->phref));
+		}
+
+		/* rt (array) */
+		oc_rep_open_array(root, rt);
+		for (size_t i=0; i<oc_string_array_get_allocated_size(src_rsc->types); i++)
+		{
+			oc_rep_add_text_string(rt, oc_string_array_get_item(src_rsc->types, i));
+		}
+		oc_rep_close_array(root, rt);
+
+		/* if (array) */
+		oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces);
+
+//				oc_rep_open_object(root, rep);
+		src_rsc->payload_builder();
+//				oc_rep_close_object(root, rep);
+
+		oc_rep_end_root_object();
+
+		if (oc_do_post())
+			p_dbg("Sent POST request\n\n");
+		else
+			p_err("Could not send POST\n\n");
+	}
+	else
+	{
+		p_err("Could not init POST\n\n");
+	}
+
+}
+
+
+
+
 
 OC_PROCESS_THREAD(oc_push_process, ev, data)
 {
@@ -2036,9 +2120,6 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 					oc_rep_set_text_string(root, href, oc_string(ns_instance->phref));
 				}
 
-				/*
-				 * TODO4ME <2021/10/22> resume here...
-				 */
 				/* rt (array) */
 				oc_rep_open_array(root, rt);
 				for (size_t i=0; i<oc_string_array_get_allocated_size(src_rsc->types); i++)
@@ -2207,11 +2288,12 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 			ns_instance->user_data = resource;
 
 			/* post "event" for Resource which has just been updated */
-			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
-//			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED],
-//					oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index));
+			push_update(ns_instance);
+//			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
 
 		}
+
+		all_matched = 1;
 
 #if 0
 		/* if phref is configured... */
@@ -2266,7 +2348,11 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 //		return;
 //	}
 
-	_oc_signal_event_loop();
+
+//	_oc_signal_event_loop();
+
+
+
 
 #if 0
 	if (!oc_process_is_running(&oc_push_process)) {
