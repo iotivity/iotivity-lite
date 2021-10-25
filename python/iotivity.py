@@ -756,6 +756,21 @@ class Iotivity():
         self.lib.py_otm_just_works.argtypes = [String]
         self.lib.py_otm_just_works.restype = None
         for device in self.unowned_devices:
+            print ("onboard device :", device, self.get_device_name(device))
+            self.lib.py_otm_just_works(device)
+            time.sleep(3)
+
+        print ("...done.")
+
+    def onboard_cloud_proxy(self):
+        print ("onboard_cloud_proxy: listing NOT onboarded devices in C:")
+        self.list_unowned_devices()
+
+
+        print ("onboarding...")
+        self.lib.py_otm_just_works.argtypes = [String]
+        self.lib.py_otm_just_works.restype = None
+        for device in self.unowned_devices:
             device_name = self.get_device_name(device)
             if "proxy" in str(device_name).lower(): 
                 print ("onboard device :", device, device_name)
@@ -764,7 +779,23 @@ class Iotivity():
 
         print ("...done.")
 
-    
+    def onboard_chili(self):
+        print ("onboard_chili: listing NOT onboarded devices in C:")
+        self.list_unowned_devices()
+
+
+        print ("onboarding...")
+        self.lib.py_otm_just_works.argtypes = [String]
+        self.lib.py_otm_just_works.restype = None
+        for device in self.unowned_devices:
+            device_name = self.get_device_name(device)
+            if "cascoda" in str(device_name).lower(): 
+                print ("onboard device :", device, device_name)
+                self.lib.py_otm_just_works(device)
+                time.sleep(3)
+
+        print ("...done.")
+
     def offboard_all_owned(self):
         print ("listing onboarded devices:")
         self.list_owned_devices()
@@ -790,12 +821,29 @@ class Iotivity():
         print( "py_provision_ace_d2dserverlist (ACL):",device_uuid)
         self.lib.py_provision_ace_d2dserverlist(device_uuid)
 
+    def provision_ace_device_resources(self, chili_uuid, cloud_proxy_uuid): 
+        # Grant cloud_proxy (aka subject) access to all Chili resources
+        self.lib.py_provision_ace_device_resources.argtypes = [String, String]
+        self.lib.py_provision_ace_device_resources.restype = None
+        print( "py_provision_ace_device_resources (ACL): from",chili_uuid, "to", cloud_proxy_uuid)
+        self.lib.py_provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+
     def provision_ace_all(self):
         print ("provision_ace_all....")
         for device in self.owned_devices:
             self.provision_ace_cloud_access(device)
-            self.provision_ace_d2dserverlist(device)
         print ("provision_ace_all...done.")
+
+    def provision_ace_cloud_proxy(self, cloud_proxy_uuid):
+        print ("provision_ace_cloud_proxy....")
+        self.provision_ace_cloud_access(cloud_proxy_uuid)
+        self.provision_ace_d2dserverlist(cloud_proxy_uuid)
+        print ("provision_ace_cloud_proxy...done.")
+
+    def provision_ace_chili(self, chili_uuid, cloud_proxy_uuid):
+        print ("provision_ace_chili....")
+        self.provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+        print ("provision_ace_chili...done.")
     
     def provision_id_cert(self, device_uuid):
         self.lib.py_provision_id_cert.argtypes = [String]
@@ -879,40 +927,46 @@ class Iotivity():
 
         print ("sleeping after discovery issued..")
         time.sleep(3)
-        self.onboard_all_unowned()
+        self.onboard_cloud_proxy()
 
         time.sleep(3)
-        my_iotivity.provision_ace_all()
+        self.onboard_chili()
 
         time.sleep(3)
         my_iotivity.provision_id_cert_all()
 
         time.sleep(3)
-        my_uuid = self.get_owned_uuid(0)
-        chili_uuid = self.get_unowned_uuid(0)
+        cloud_proxy_uuid = self.get_owned_uuid(0)
+        chili_uuid = self.get_owned_uuid(1)
 
         # self.provision_role_cert(my_uuid, "my_role", "my_auth")
         # self.provision_role_cert(my_uuid, "my_2nd_role", None)
 
         time.sleep(3)
-        self.discover_resources(my_uuid)
+        my_iotivity.provision_ace_cloud_proxy(cloud_proxy_uuid)
 
         time.sleep(3)
-        self.retrieve_acl2(my_uuid)
+        my_iotivity.provision_ace_chili(chili_uuid, cloud_proxy_uuid)
 
         time.sleep(3)
-        my_iotivity.provision_cloud_trust_anchor(my_uuid, cloud_id, cloud_trust_anchor)
+        self.discover_resources(cloud_proxy_uuid)
 
         time.sleep(3)
-        my_iotivity.provision_cloud_config_info(my_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+        self.retrieve_acl2(cloud_proxy_uuid)
 
         time.sleep(3)
-        my_iotivity.post_d2dserverlist(my_uuid, chili_uuid)
+        my_iotivity.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_id, cloud_trust_anchor)
+
+        time.sleep(3)
+        my_iotivity.provision_cloud_config_info(cloud_proxy_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+
+        time.sleep(3)
+        my_iotivity.post_d2dserverlist(cloud_proxy_uuid, chili_uuid)
         
         time.sleep(3)
-        my_iotivity.retrieve_d2dserverlist(my_uuid)
+        my_iotivity.retrieve_d2dserverlist(cloud_proxy_uuid)
 
-        time.sleep(3)
+        time.sleep(10)
         # self.offboard_all_owned()
 
 
