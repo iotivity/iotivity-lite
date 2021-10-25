@@ -2000,7 +2000,7 @@ void py_provision_ace_d2dserverlist(char* uuid )
   device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   
   if (device == NULL){
-    PRINT("[C]py_provision_ace_cloud_access ERROR: Invalid uuid\n");
+    PRINT("[C]py_provision_ace_d2dserverlist ERROR: Invalid uuid\n");
     return;
   }
   PRINT("[C] py_provision_ace: name = %s ",device->device_name);
@@ -2024,6 +2024,40 @@ void py_provision_ace_d2dserverlist(char* uuid )
     PRINT("[C] Successfully issued request to provision ACE /d2dserverlist\n");
   } else {
     PRINT("[C] ERROR issuing request to provision ACE /d2dserverlist\n");
+  }
+}
+
+void py_provision_ace_device_resources(char* device_uuid, char* subject_uuid)
+{
+  
+  device_handle_t *device = py_getdevice_from_uuid(device_uuid, 1);
+
+  oc_uuid_t subjectuuid;
+  oc_str_to_uuid(subject_uuid, &subjectuuid);
+  
+  if (device == NULL){
+    PRINT("[C]py_provision_ace_device_resources ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+
+  oc_sec_ace_t *ace = NULL;
+  ace = oc_obt_new_ace_for_subject(&subjectuuid);
+
+  oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
+
+  oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+  oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret =
+    oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
+  otb_mutex_unlock(app_sync_lock);
+  if (ret >= 0) {
+    PRINT("[C] Successfully issued request to provision ACE\n");
+  } else {
+    PRINT("[C] ERROR issuing request to provision ACE\n");
   }
 }
 
