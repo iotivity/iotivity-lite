@@ -389,6 +389,16 @@ void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_d
 
 
 
+void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+	(void)iface_mask;
+
+	oc_delete_resource(request->resource);
+	oc_send_response(request, OC_STATUS_DELETED);
+}
+
+
+
 /**
  *
  * @brief callback for getting & creating new `Notification Selector + Push Proxy` Resource instance
@@ -413,6 +423,7 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 			oc_resource_set_default_interface(ns_instance->resource, OC_IF_RW);
 			oc_resource_set_request_handler(ns_instance->resource, OC_GET, get_ns, ns_instance);
 			oc_resource_set_request_handler(ns_instance->resource, OC_POST, post_ns, ns_instance);
+			oc_resource_set_request_handler(ns_instance->resource, OC_DELETE, delete_ns, ns_instance);
 			oc_resource_set_properties_cbs(ns_instance->resource, get_ns_properties, ns_instance,
 														set_ns_properties, ns_instance);
 			oc_add_resource(ns_instance->resource);
@@ -841,7 +852,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 
 /**
- * @brief				check if "rt" of pushed resource is part of configured "rts"
+ * @brief				check if "rt" of pushed resource is part of "rts" (all value of "rt" should be part of "rts")
  *
  * @param recv_obj
  * @param rep
@@ -859,8 +870,8 @@ char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 
 	rts_len = oc_string_array_get_allocated_size(recv_obj->rts);
 
-	/* if "rts" is empty, any pushed resource can be accepted... */
-	if (!rts_len)
+	/* if "rts" is not configured (""), any pushed resource can be accepted... */
+	if ((rts_len == 1) && !strcmp(oc_string_array_get_item(recv_obj->rts, 0), ""))
 		return 1;
 
 	while (rep)
@@ -877,7 +888,6 @@ char _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 				}
 				if (j == rts_len)
 				{
-//					result = 0;
 					break;
 				}
 			}
@@ -992,24 +1002,50 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 void print_pushd_rsc(oc_rep_t *payload)
 {
-	PRINT("\n%s:\n", __func__);
+	static int depth = 0;
+	char depth_prefix[1024];
 	oc_rep_t *rep = payload;
+	int i;
+
+	depth++;
+	for (i=0; i<depth; i++)
+	{
+		depth_prefix[i] = '\t';
+	}
+	depth_prefix[i] = '\0';
 
 	if (!rep) {
-		PRINT("no data!\n");
+		p_dbg("no data!\n");
+		depth--;
 		return;
 	}
-
 
 	while (rep != NULL)
 	{
 		switch (rep->type)
 		{
-		case OC_REP_STRING:
-			PRINT("\t\tkey: %s value: %s\n", oc_string(rep->name),
-					oc_string(rep->value.string));
+		case OC_REP_BOOL:
+			PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name), rep->value.boolean);
 			break;
+		case OC_REP_INT:
+			PRINT("%s%s: %lld\n", depth_prefix, oc_string(rep->name), rep->value.integer);
+			break;
+		case OC_REP_STRING:
+			PRINT("%s%s: %s\n", depth_prefix, oc_string(rep->name), oc_string(rep->value.string));
+			break;
+		case OC_REP_STRING_ARRAY:
+			PRINT("%s%s: [\n", depth_prefix, oc_string(rep->name));
+			for (i = 0; i < (int) oc_string_array_get_allocated_size(rep->value.array); i++)
+			{
+				PRINT("%s\t%s \n", depth_prefix, oc_string_array_get_item(rep->value.array, i));
+			}
+			PRINT("%s]\n", depth_prefix);
+		break;
 		case OC_REP_OBJECT:
+			PRINT("%s%s: { \n", depth_prefix, oc_string(rep->name));
+			print_pushd_rsc(rep->value.object);
+			PRINT("%s}\n", depth_prefix);
+#if 0
 		{
 			PRINT("\t\tkey: %s value: { \n", oc_string(rep->name));
 			oc_rep_t *obj_rep = rep->value.object;
@@ -1045,7 +1081,10 @@ void print_pushd_rsc(oc_rep_t *payload)
 			}
 			PRINT("\t\t }\n\n");
 		}
+#endif
 		break;
+
+#if 0
 		case OC_REP_STRING_ARRAY:
 		{
 			PRINT("\t\t %s [ \n", oc_string(rep->name));
@@ -1057,13 +1096,14 @@ void print_pushd_rsc(oc_rep_t *payload)
 			PRINT("\t\t ]\n");
 		}
 		break;
+#endif
 		default:
-			PRINT("\t\t|___ key: %s value: \n", oc_string(rep->name));
-			//				PRINT("no matched type\n");
+			PRINT("%s%s: ???\n", oc_string(rep->name));
 			break;
 		}
 		rep = rep->next;
 	}
+	depth--;
 }
 
 
@@ -1094,7 +1134,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 	}
 	else
 	{
-		p_err("can't find push receiver properties for (%s) in device (%d)\n", oc_string(request->resource->uri), request->resource->device);
+		p_err("can't find push receiver properties for (%s) in device (%d), the target resource may not be a \"push receiver resource\"\n", oc_string(request->resource->uri), request->resource->device);
 		return;
 	}
 
@@ -1185,6 +1225,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 				/*
 				 * TODO4ME print received pushpayload resource contents
 				 */
+				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
 				print_pushd_rsc(pushd_rsc_rep->rep);
 			}
 		}
@@ -1497,6 +1538,9 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 
 	oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushd_rsc, NULL);
 	oc_resource_set_request_handler(pushd_rsc, OC_POST, post_pushd_rsc, NULL);
+	/*
+	 * TODO4ME, when this pushed resource is deleted.. delete corresponding "receiver" object from receivers array of push receiver resource
+	 */
 //	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
 
 	oc_add_resource(pushd_rsc);
@@ -1780,6 +1824,11 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 					p_dbg("can't find receiver object which has uri(%s), creating new receiver obj...", oc_string(uri));
 					oc_free_string(&uri);
 #endif
+
+					/*
+					 * FIXME4ME if there is already NORMAL resource whose path is same as requested target uri,
+					 * just ignore this request and return error!
+					 */
 
 					/* create corresponding receiver object */
 //					_create_recv_obj(recvs_instance->receivers, rep);
