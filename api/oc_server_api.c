@@ -536,12 +536,8 @@ oc_indicate_separate_response(oc_request_t *request,
 void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
-  coap_separate_t *cur = oc_list_head(handle->requests);
-  handle->response_state = oc_blockwise_alloc_response_buffer(
-    oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint, cur->method,
-    OC_BLOCKWISE_SERVER);
 #ifdef OC_BLOCK_WISE
-  oc_rep_new(handle->response_state->buffer, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
   oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
 #endif /* !OC_BLOCK_WISE */
@@ -552,9 +548,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
                           oc_status_t response_code)
 {
   oc_response_buffer_t response_buffer;
-  response_buffer.buffer = handle->response_state->buffer;
-  if (handle->response_state->payload_size != 0)
-    response_buffer.response_length = handle->response_state->payload_size;
+  response_buffer.buffer = handle->buffer;
+  if (handle->len != 0)
+    response_buffer.response_length = handle->len;
   else
     response_buffer.response_length = response_length();
 
@@ -620,7 +616,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
         } else
 #endif /* OC_BLOCK_WISE */
           if (response_buffer.response_length > 0) {
-          coap_set_payload(response, handle->response_state->buffer,
+          coap_set_payload(response, handle->buffer,
                            response_buffer.response_length);
         }
         coap_set_status_code(response, response_buffer.code);
@@ -645,7 +641,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
     cur = next;
   }
   handle->active = 0;
-  oc_blockwise_free_response_buffer(handle->response_state);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(handle->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 int
