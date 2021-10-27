@@ -392,6 +392,9 @@ void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_d
 void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
 	(void)iface_mask;
+	(void)user_data;
+
+	p_dbg("\t|_______ delete notification selector (%s)\n!", oc_string(request->resource->uri));
 
 	oc_delete_resource(request->resource);
 	oc_send_response(request, OC_STATUS_DELETED);
@@ -452,13 +455,34 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 void free_ns_instance(oc_resource_t *resource)
 {
 	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
+	oc_endpoint_t *ep;
+
+	p_dbg("|______ delete ns_instance for resource (%s)\n", oc_string(resource->uri));
 
 	while (ns_instance)
 	{
 		if (ns_instance->resource == resource)
 		{
-			oc_delete_resource(resource);
+//			oc_delete_resource(resource);
+
 			oc_list_remove(ns_list, ns_instance);
+
+			/* free each field of ns_instance */
+			oc_free_string(&ns_instance->phref);
+			oc_free_string_array(&ns_instance->prt);
+			oc_free_string_array(&ns_instance->pif);
+
+			ep = ns_instance->pushtarget_ep.next;
+			while (ep)
+			{
+				oc_free_endpoint(ep);
+				ep = ep->next;
+			}
+
+			oc_free_string(&ns_instance->targetpath);
+			oc_free_string(&ns_instance->pushqif);
+			oc_free_string_array(&ns_instance->sourcert);
+
 			oc_memb_free(&ns_instance_memb, ns_instance);
 			return;
 		}
