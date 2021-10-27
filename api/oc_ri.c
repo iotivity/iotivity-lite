@@ -937,7 +937,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   coap_get_header_content_format(request, &cf);
 
   /* Read the accept CoAP option in the request */
-  oc_content_format_t accept = 0;
+  unsigned int accept = 0;
   coap_get_header_accept(request, &accept);
 
   if (uri_query_len) {
