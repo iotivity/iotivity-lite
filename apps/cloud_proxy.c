@@ -1015,9 +1015,8 @@ get_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
@@ -1088,9 +1087,8 @@ post_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
@@ -1191,9 +1189,8 @@ delete_local_resource_response(oc_client_response_t *data)
   print_rep(value_list, false);
   free(value_list);
 
-  memcpy(delay_response->response_state->buffer, data->_payload,
-         (int)data->_payload_len);
-  delay_response->response_state->payload_size = data->_payload_len;
+  memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
+  delay_response->len = data->_payload_len;
 
   oc_send_separate_response(delay_response, data->code);
 
