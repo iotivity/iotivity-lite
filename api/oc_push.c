@@ -1461,15 +1461,6 @@ oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, i
 
 
 
-
-
-
-
-
-
-
-
-
 /**
  * @brief					purge app resource and resource representation container
  * 							accessed through `uri` in device whose index is `device_index`
@@ -1757,7 +1748,6 @@ void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 //	oc_recv_t *recv_obj_instance;
 
 	/* remove existing receivers object array */
-//	_purge_recv_obj_list(recv_obj_list, resource->device);
 	_purge_recv_obj_list(recvs_instance);
 
 	/* add new receivers object array */
@@ -1969,16 +1959,90 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 
 /**
- * @briefe
+ * @brief
  *
  * @param request
  * @param iface_mask
  * @param user_data
  */
-//void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
-//{
-//
-//}
+void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+	(void)iface_mask;
+	(void)user_data;
+
+	char *uri_param;
+	int uri_param_len = -1;
+	oc_recv_t *recv_obj;
+	oc_recvs_t *recvs_instance;
+	int result = OC_STATUS_DELETED;
+
+	/* try to get "receiveruri" parameter */
+	if (request->query)
+	{
+		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
+		p_dbg("received query string: %s, found \"receiveruri\": %s \n", request->query, uri_param);
+	}
+	else
+	{
+		p_dbg("request->query is NULL\n");
+	}
+
+	/* look up target receivers of target Push Receiver Resource */
+	recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
+	while (recvs_instance)
+	{
+		if (recvs_instance->resource == request->resource)
+		{
+			p_dbg("receivers obj array instance for target resource (%s) is found!\n", oc_string(request->resource->uri));
+
+			if (uri_param_len != -1)
+			{
+				recv_obj = _find_recv_obj_by_uri(recvs_instance, uri_param, uri_param_len);
+				if (recv_obj)
+				{
+					oc_list_remove(recvs_instance->receivers, recv_obj);
+
+					/* delete associated resource */
+					_purge_pushd_rsc(&recv_obj->receiveruri, recvs_instance->resource->device);
+
+					/* free memory */
+					oc_free_string(&recv_obj->receiveruri);
+					oc_free_string_array(&recv_obj->rts);
+					oc_memb_free(&recv_instance_memb, recv_obj);
+				}
+				else
+				{
+					/* if the given `receiveruri` parameter is not in existing receivers array,
+					 * add new receiver object to the receivers array */
+#ifdef OC_PUSHDEBUG
+					oc_string_t uri;
+					oc_new_string(&uri, uri_param, uri_param_len);
+					p_dbg("can't find receiver object which has uri(%s), ignore it...", oc_string(uri));
+					oc_free_string(&uri);
+#endif
+					result = OC_STATUS_NOT_FOUND;
+				}
+			}
+			else
+			{
+				/* if `receiveruri` param is not provided..
+				 * remove whole existing `receivers` object array */
+				_purge_recv_obj_list(recvs_instance);
+			}
+
+			break;
+		}
+
+		recvs_instance = recvs_instance->next;
+	}
+
+	oc_send_response(request, result);
+
+	return;
+}
+
+
+
 
 
 
@@ -2001,6 +2065,8 @@ void oc_create_pushreceiver_resource(size_t device_index)
 
 	oc_resource_set_request_handler(push_recv, OC_GET, get_pushrecv, NULL);
 	oc_resource_set_request_handler(push_recv, OC_POST, post_pushrecv, NULL);
+	oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv, NULL);
+
 	/*
 	 * TODO4ME <2021/9/22> is DELETE necessary??
 	 */
@@ -2014,9 +2080,15 @@ void oc_create_pushreceiver_resource(size_t device_index)
 	oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_memb_alloc(&recvs_instance_memb);
 	if (recvs_instance) {
 		recvs_instance->resource = push_recv;
+
+		OC_LIST_STRUCT_INIT(recvs_instance, receivers);
+
+#if 0
 		recvs_instance->receivers_list = NULL;
 		recvs_instance->receivers = (oc_list_t)&recvs_instance->receivers_list;
 		oc_list_init(recvs_instance->receivers);
+#endif
+
 		oc_list_add(recvs_list, recvs_instance);
 	}
 	else
@@ -2075,7 +2147,7 @@ void push_update(oc_ns_t *ns_instance)
 	 * 2. post UPDATE by using URI, endpoint (use oc_sting_to_endpoint())
 	 */
 	if (oc_init_post(oc_string(ns_instance->targetpath), &ns_instance->pushtarget_ep,
-							"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
+							"if=oic.if.rw", &response_to_push_rsc, HIGH_QOS, NULL))
 	{
 		/*
 		 * TODO4ME add other properties than "rep" object of "oic.r.pushpayload" Resource here.
@@ -2084,8 +2156,6 @@ void push_update(oc_ns_t *ns_instance)
 		 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
 		 * they should be added here...
 		 */
-//				oc_resource_t *org_rsc;
-
 		oc_rep_begin_root_object();
 
 		/* anchor */
@@ -2109,9 +2179,8 @@ void push_update(oc_ns_t *ns_instance)
 		/* if (array) */
 		oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces);
 
-//				oc_rep_open_object(root, rep);
+		/* build rep object */
 		src_rsc->payload_builder();
-//				oc_rep_close_object(root, rep);
 
 		oc_rep_end_root_object();
 

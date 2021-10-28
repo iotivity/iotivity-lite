@@ -130,10 +130,13 @@ typedef struct oc_recvs
 	/*
 	 * FIXME4ME OC_LIST_STRUCT() 사용해서 다시 짤것
 	 */
+	OC_LIST_STRUCT(receivers);
+
+#if 0
 	void *receivers_list;
 	oc_list_t receivers;
-//	oc_array_t *receivers;
-//	OC_LIST_STRUCT(receivers);
+#endif
+
 } oc_recvs_t;
 
 
