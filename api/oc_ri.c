@@ -482,14 +482,28 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (resource->num_observers > 0) {
     coap_remove_observer_by_resource(resource);
   }
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_remove_discovery_batch_observers_by_resource(resource);
+#endif
 
-#if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
-  defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_SERVER)
+#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
   if (rtc != NULL) {
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+    oc_resource_t *collection = (oc_resource_t *)rtc->collection;
+#endif /* OC_RES_BATCH_SUPPORT */
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+    coap_notify_discovery_batch_observers(collection);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
   }
-#endif
+#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  oc_notify_observers_delayed(
+    oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+#endif /* OC_SERVER */
 
   oc_ri_free_resource_properties(resource);
   oc_memb_free(&app_resources_s, resource);
@@ -622,16 +636,6 @@ check_event_callbacks(void)
 #endif /* OC_SERVER */
   poll_event_callback_timers(timed_callbacks, &event_callbacks_s);
 }
-
-#ifdef OC_SERVER
-static oc_event_callback_retval_t
-oc_observe_notification_delayed(void *data)
-{
-  (void)data;
-  coap_notify_observers((oc_resource_t *)data, NULL, NULL);
-  return OC_EVENT_DONE;
-}
-#endif
 
 #ifdef OC_SERVER
 static oc_event_callback_retval_t
@@ -1352,8 +1356,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
           resource_defaults_data,
           &oc_observe_notification_resource_defaults_delayed, 0);
       } else {
-        oc_ri_add_timed_event_callback_ticks(
-          cur_resource, &oc_observe_notification_delayed, 0);
+        oc_notify_observers_delayed(cur_resource, 0);
       }
     }
 

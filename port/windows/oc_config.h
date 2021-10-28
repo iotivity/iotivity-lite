@@ -33,7 +33,10 @@ typedef uint64_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 // The maximum size of a response to an OBSERVE request, in bytes.
-#define OC_MAX_OBSERVE_SIZE 512
+//#define OC_MAX_OBSERVE_SIZE 512
+
+/* Add support observable for oic/res */
+#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"

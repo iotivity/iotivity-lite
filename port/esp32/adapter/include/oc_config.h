@@ -40,6 +40,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_DNS_CACHE
 //#define OC_DNS_LOOKUP_IPV6
 
+/* Add support observable for oic/res */
+#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS

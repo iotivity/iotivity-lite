@@ -40,5 +40,10 @@ typedef void (*oc_delete_resource_cb_t)(oc_resource_t *resource);
 void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
 
 #endif /* OC_CLOUD */
+#ifdef OC_RES_BATCH_SUPPORT
+void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
+                                            oc_resource_t *resource,
+                                            oc_endpoint_t *endpoint);
+#endif /* OC_RES_BATCH_SUPPORT */
 
 #endif /* OC_SERVER_API_INTERNAL_H */

@@ -41,7 +41,10 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE
 
 // The maximum size of a response to an OBSERVE request, in bytes.
-#define OC_MAX_OBSERVE_SIZE 512
+//#define OC_MAX_OBSERVE_SIZE 512
+
+/* Add support observable for oic/res */
+#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic

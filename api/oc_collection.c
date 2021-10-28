@@ -1013,6 +1013,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
         request->resource, request->response->response_buffer, iface_mask);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+      coap_notify_discovery_batch_observers(request->resource);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
     } else if (iface_mask == OC_IF_B) {
       oc_set_delayed_callback(request->resource, batch_notify_collection, 0);
     }

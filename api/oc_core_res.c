@@ -228,15 +228,6 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-#if defined(OC_SERVER) && defined(OC_CLOUD)
-static oc_event_callback_retval_t
-oc_core_con_notify_observers_delayed(void *data)
-{
-  oc_notify_observers((oc_resource_t *)data);
-  return OC_EVENT_DONE;
-}
-#endif /* OC_SERVER && OC_CLOUD */
-
 static void
 oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
@@ -260,11 +251,9 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_set_text_string(root, n, oc_string(oc_device_info[device].name));
       oc_rep_end_root_object();
 
-#if defined(OC_SERVER) && defined(OC_CLOUD)
-      oc_resource_t *device_resource =
-        oc_core_get_resource_by_index(OCF_D, device);
-      oc_set_delayed_callback(device_resource,
-                              oc_core_con_notify_observers_delayed, 0);
+#if defined(OC_SERVER)
+      oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_D, device),
+                                  0);
 #endif /* OC_SERVER && OC_CLOUD */
 
       changed = true;
@@ -587,6 +576,9 @@ oc_core_get_platform_info(void)
 oc_resource_t *
 oc_core_get_resource_by_index(int type, size_t device)
 {
+  if (core_resources == NULL) {
+    return NULL;
+  }
   if (type == OCF_P) {
     return &core_resources[0];
   }
