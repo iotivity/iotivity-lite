@@ -114,7 +114,6 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 %rename (rdPublishResources) oc_cloud_context_t::rd_publish_resources;
 %rename (rdPublishedResources) oc_cloud_context_t::rd_published_resources;
 %rename (rdDeleteResources) oc_cloud_context_t::rd_delete_resources;
-%rename (rdDeleteAll) oc_cloud_context_t::rd_delete_all;
 %ignore oc_cloud_context_t::cps;
 %rename (cloudConf) oc_cloud_context_t::cloud_conf;
 %rename (cloudManager) oc_cloud_context_t::cloud_manager;
