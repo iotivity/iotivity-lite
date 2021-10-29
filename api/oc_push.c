@@ -115,6 +115,13 @@ char *pp_state_strs[] =
 
 
 /*
+ * if this callback function is provided by user, it will called whenever new push is arrived...
+ */
+void (*oc_push_arrived)(oc_pushd_rsc_rep_t *) = NULL;
+
+
+
+/*
  * FIXME4ME use `oc_ri_get_interface_mask()` instead of this...
  */
 oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
@@ -1027,6 +1034,8 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 void print_pushd_rsc(oc_rep_t *payload)
 {
 	static int depth = 0;
+	char prefix_width = 3;
+	char *prefix_str = "   ";
 	char depth_prefix[1024];
 	oc_rep_t *rep = payload;
 	int i;
@@ -1034,9 +1043,11 @@ void print_pushd_rsc(oc_rep_t *payload)
 	depth++;
 	for (i=0; i<depth; i++)
 	{
-		depth_prefix[i] = '\t';
+//		depth_prefix[i] = '\t';
+		strcpy(depth_prefix+(i*prefix_width), prefix_str);
 	}
-	depth_prefix[i] = '\0';
+//	depth_prefix[i] = '\0';
+	depth_prefix[i*prefix_width] = '\0';
 
 	if (!rep) {
 		p_dbg("no data!\n");
@@ -1055,18 +1066,18 @@ void print_pushd_rsc(oc_rep_t *payload)
 			PRINT("%s%s: %lld\n", depth_prefix, oc_string(rep->name), rep->value.integer);
 			break;
 		case OC_REP_STRING:
-			PRINT("%s%s: %s\n", depth_prefix, oc_string(rep->name), oc_string(rep->value.string));
+			PRINT("%s%s: \"%s\"\n", depth_prefix, oc_string(rep->name), oc_string(rep->value.string));
 			break;
 		case OC_REP_STRING_ARRAY:
-			PRINT("%s%s: [\n", depth_prefix, oc_string(rep->name));
+			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
 			for (i = 0; i < (int) oc_string_array_get_allocated_size(rep->value.array); i++)
 			{
-				PRINT("%s\t%s \n", depth_prefix, oc_string_array_get_item(rep->value.array, i));
+				PRINT("%s%s\"%s\"\n", depth_prefix, prefix_str, oc_string_array_get_item(rep->value.array, i));
 			}
 			PRINT("%s]\n", depth_prefix);
 		break;
 		case OC_REP_OBJECT:
-			PRINT("%s%s: { \n", depth_prefix, oc_string(rep->name));
+			PRINT("%s%s: \n%s{ \n", depth_prefix, oc_string(rep->name), depth_prefix);
 			print_pushd_rsc(rep->value.object);
 			PRINT("%s}\n", depth_prefix);
 #if 0
@@ -1231,13 +1242,17 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 		/* reset rep pointer */
 //		rep = request->request_payload;
 
-		/* store received "oic.r.pushpayload" resource contents */
+		/*
+		 *
+		 * store received "oic.r.pushpayload" resource contents
+		 *
+		 */
 		pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&request->resource->uri, request->resource->device);
 		if (pushd_rsc_rep)
 		{
 			oc_rep_set_pool(&rep_instance_memb);
 			oc_free_rep(pushd_rsc_rep->rep);
-//			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, rep->value.object))
+
 			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, request->request_payload))
 			{
 				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
@@ -1251,6 +1266,13 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 				 */
 				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
 				print_pushd_rsc(pushd_rsc_rep->rep);
+
+				/*
+				 * XXX
+				 * if user callback is registered.. call it.
+				 */
+				if (oc_push_arrived)
+					oc_push_arrived(pushd_rsc_rep);
 			}
 		}
 		else

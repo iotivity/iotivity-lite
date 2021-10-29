@@ -156,6 +156,10 @@ OC_PROCESS_NAME(oc_push_process);
 
 extern char *pp_state_strs[];
 
+/* if this callback function is provided by user, it will called
+ * whenever new push is arrived... */
+extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
+
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
