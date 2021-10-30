@@ -127,9 +127,6 @@ typedef struct oc_recvs
 {
 	struct oc_recvs *next;
 	oc_resource_t *resource;
-	/*
-	 * FIXME4ME OC_LIST_STRUCT() 사용해서 다시 짤것
-	 */
 	OC_LIST_STRUCT(receivers);
 
 #if 0
@@ -157,13 +154,14 @@ OC_PROCESS_NAME(oc_push_process);
 extern char *pp_state_strs[];
 
 /* if this callback function is provided by user, it will called
- * whenever new push is arrived... */
+ * whenever new push notification arrives... */
 extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
 
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
 oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len);
+void print_pushd_rsc(oc_rep_t *payload);
 
 void oc_resource_state_changed(const char *uri, size_t device_index);
 

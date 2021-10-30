@@ -875,6 +875,10 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built yet!\n",
 				oc_string(request->resource->uri));
+		/*
+		 * FIXME4ME send response here too!!!
+		 */
+		oc_send_response(request, OC_STATUS_NOT_FOUND);
 	}
 
 	return;
@@ -1038,6 +1042,7 @@ void print_pushd_rsc(oc_rep_t *payload)
 	char *prefix_str = "   ";
 	char depth_prefix[1024];
 	oc_rep_t *rep = payload;
+	oc_rep_t *obj;
 	int i;
 
 	depth++;
@@ -1055,6 +1060,9 @@ void print_pushd_rsc(oc_rep_t *payload)
 		return;
 	}
 
+	/*
+	 * FIXME4ME add handling codes for other types.. e.g.) OC_REP_OBJECT_ARRAY...
+	 */
 	while (rep != NULL)
 	{
 		switch (rep->type)
@@ -1062,12 +1070,15 @@ void print_pushd_rsc(oc_rep_t *payload)
 		case OC_REP_BOOL:
 			PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name), rep->value.boolean);
 			break;
+
 		case OC_REP_INT:
 			PRINT("%s%s: %lld\n", depth_prefix, oc_string(rep->name), rep->value.integer);
 			break;
+
 		case OC_REP_STRING:
 			PRINT("%s%s: \"%s\"\n", depth_prefix, oc_string(rep->name), oc_string(rep->value.string));
 			break;
+
 		case OC_REP_STRING_ARRAY:
 			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
 			for (i = 0; i < (int) oc_string_array_get_allocated_size(rep->value.array); i++)
@@ -1075,11 +1086,26 @@ void print_pushd_rsc(oc_rep_t *payload)
 				PRINT("%s%s\"%s\"\n", depth_prefix, prefix_str, oc_string_array_get_item(rep->value.array, i));
 			}
 			PRINT("%s]\n", depth_prefix);
-		break;
+			break;
+
 		case OC_REP_OBJECT:
+		case OC_REP_NIL:
 			PRINT("%s%s: \n%s{ \n", depth_prefix, oc_string(rep->name), depth_prefix);
 			print_pushd_rsc(rep->value.object);
 			PRINT("%s}\n", depth_prefix);
+			break;
+
+		case OC_REP_OBJECT_ARRAY:
+			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+			obj = rep->value.object_array;
+			while (obj)
+			{
+				print_pushd_rsc(obj->value.object);
+				obj = obj->next;
+			}
+			PRINT("%s]\n", depth_prefix);
+			break;
+
 #if 0
 		{
 			PRINT("\t\tkey: %s value: { \n", oc_string(rep->name));
@@ -1117,7 +1143,7 @@ void print_pushd_rsc(oc_rep_t *payload)
 			PRINT("\t\t }\n\n");
 		}
 #endif
-		break;
+
 
 #if 0
 		case OC_REP_STRING_ARRAY:
@@ -1132,8 +1158,9 @@ void print_pushd_rsc(oc_rep_t *payload)
 		}
 		break;
 #endif
+
 		default:
-			PRINT("%s%s: ???\n", oc_string(rep->name));
+			PRINT("%s%s: unknown type: %d ???\n", depth_prefix, oc_string(rep->name), rep->type);
 			break;
 		}
 		rep = rep->next;
@@ -1370,13 +1397,14 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 
 					/* == close object == */
 					oc_rep_object_array_end_item(receivers);
+
+					recv_obj = recv_obj->next;
 				}
+
 				break;
 			}
-			else
-			{
-				recvs_instance = recvs_instance->next;
-			}
+
+			recvs_instance = recvs_instance->next;
 		}
 		oc_rep_close_array(root, receivers);
 		break;
@@ -1660,6 +1688,9 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 				if (strcmp(oc_string(recv_obj->receiveruri), oc_string(rep->value.string)))
 				{
 //					oc_free_string(&resource->uri);
+					/*
+					 * FIXME4ME not recvs_instance!, but recv_obj !!
+					 */
 					oc_free_string(&recvs_instance->resource->uri);
 //					oc_store_uri(oc_string(rep->value.string), &resource->uri);
 					oc_store_uri(oc_string(rep->value.string), &recvs_instance->resource->uri);
@@ -1814,7 +1845,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	(void)user_data;
 
 	char *uri_param;
-	int uri_param_len = -1;
+ 	int uri_param_len = -1;
 	oc_recv_t *recv_obj;
 	oc_recvs_t *recvs_instance;
 	oc_rep_t *rep = request->request_payload;
@@ -1845,6 +1876,10 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				recv_obj = _find_recv_obj_by_uri(recvs_instance, uri_param, uri_param_len);
 				if (recv_obj)
 				{
+					/*
+					 * TODO4ME <2021/10/30> resume here..
+					 */
+
 					/* if the given `receiveruri` parameter is in existing receivers array,
 					 * just update existing receiver object */
 //					_update_recv_obj(recv_obj, recvs_instance->resource, rep);
