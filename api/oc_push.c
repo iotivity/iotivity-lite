@@ -254,7 +254,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
 				/*
-				 * TODO4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
+				 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
 				 */
 			}
 			break;
@@ -1035,7 +1035,7 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 
 
-void print_pushd_rsc(oc_rep_t *payload)
+void oc_print_pushd_rsc(oc_rep_t *payload)
 {
 	static int depth = 0;
 	char prefix_width = 3;
@@ -1060,9 +1060,6 @@ void print_pushd_rsc(oc_rep_t *payload)
 		return;
 	}
 
-	/*
-	 * FIXME4ME add handling codes for other types.. e.g.) OC_REP_OBJECT_ARRAY...
-	 */
 	while (rep != NULL)
 	{
 		switch (rep->type)
@@ -1071,8 +1068,39 @@ void print_pushd_rsc(oc_rep_t *payload)
 			PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name), rep->value.boolean);
 			break;
 
+		case OC_REP_BOOL_ARRAY:
+			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+			for (i = 0; i < (int) oc_bool_array_size(rep->value.array); i++)
+			{
+				PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str, oc_bool_array(rep->value.array)[i]);
+			}
+			PRINT("%s]\n", depth_prefix);
+			break;
+
 		case OC_REP_INT:
 			PRINT("%s%s: %lld\n", depth_prefix, oc_string(rep->name), rep->value.integer);
+			break;
+
+		case OC_REP_INT_ARRAY:
+			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+			for (i = 0; i < (int) oc_int_array_size(rep->value.array); i++)
+			{
+				PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str, oc_int_array(rep->value.array)[i]);
+			}
+			PRINT("%s]\n", depth_prefix);
+			break;
+
+		case OC_REP_DOUBLE:
+			PRINT("%s%s: %f\n", depth_prefix, oc_string(rep->name), rep->value.double_p);
+			break;
+
+		case OC_REP_DOUBLE_ARRAY:
+			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+			for (i = 0; i < (int) oc_double_array_size(rep->value.array); i++)
+			{
+				PRINT("%s%s\"%f\"\n", depth_prefix, prefix_str, oc_double_array(rep->value.array)[i]);
+			}
+			PRINT("%s]\n", depth_prefix);
 			break;
 
 		case OC_REP_STRING:
@@ -1089,20 +1117,28 @@ void print_pushd_rsc(oc_rep_t *payload)
 			break;
 
 		case OC_REP_OBJECT:
-		case OC_REP_NIL:
 			PRINT("%s%s: \n%s{ \n", depth_prefix, oc_string(rep->name), depth_prefix);
-			print_pushd_rsc(rep->value.object);
+			oc_print_pushd_rsc(rep->value.object);
 			PRINT("%s}\n", depth_prefix);
 			break;
 
 		case OC_REP_OBJECT_ARRAY:
+		case OC_REP_NIL:
 			PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+			depth++;
 			obj = rep->value.object_array;
 			while (obj)
 			{
-				print_pushd_rsc(obj->value.object);
+				PRINT("%s%s{\n", depth_prefix, prefix_str);
+				oc_print_pushd_rsc(obj->value.object);
 				obj = obj->next;
+				PRINT("%s%s}", depth_prefix, prefix_str);
+				if (obj)
+					PRINT(",\n");
+				else
+					PRINT("\n");
 			}
+			depth--;
 			PRINT("%s]\n", depth_prefix);
 			break;
 
@@ -1288,11 +1324,8 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			}
 			else
 			{
-				/*
-				 * TODO4ME print received pushpayload resource contents
-				 */
 				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
-				print_pushd_rsc(pushd_rsc_rep->rep);
+				oc_print_pushd_rsc(pushd_rsc_rep->rep);
 
 				/*
 				 * XXX
@@ -1676,6 +1709,8 @@ void _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 //void _update_recv_obj(oc_recv_t *recv_obj, oc_resource_t *resource, oc_rep_t *rep)
 void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
+	oc_pushd_rsc_rep_t *pushd_rsc_rep;
+
 	while (rep)
 	{
 		switch (rep->type)
@@ -1683,24 +1718,32 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 		case OC_REP_STRING:
 			if (!strcmp(oc_string(rep->name), "receiveruri"))
 			{
+				p_dbg("|_______ target receiveruri:%s, new receiveruri:%s\n", oc_string(recv_obj->receiveruri), oc_string(rep->value.string));
 				/* if `receiveruri' is different from existing `receiveruri`,
 				 * update URI of Resource pointed by previous `receiveruri` */
 				if (strcmp(oc_string(recv_obj->receiveruri), oc_string(rep->value.string)))
 				{
-//					oc_free_string(&resource->uri);
-					/*
-					 * FIXME4ME not recvs_instance!, but recv_obj !!
-					 */
+					pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(&recv_obj->receiveruri, recvs_instance->resource->device);
+
+					if (pushd_rsc_rep)
+					{
+						p_dbg("|_______ pushed resource representation (%s) is found\n", oc_string(pushd_rsc_rep->resource->uri));
+
+						oc_free_string(&pushd_rsc_rep->resource->uri);
+						oc_store_uri(oc_string(rep->value.string), &pushd_rsc_rep->resource->uri);
+					}
+
+#if 0
 					oc_free_string(&recvs_instance->resource->uri);
-//					oc_store_uri(oc_string(rep->value.string), &resource->uri);
 					oc_store_uri(oc_string(rep->value.string), &recvs_instance->resource->uri);
+#endif
 				}
 
 				oc_free_string(&recv_obj->receiveruri);
-				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
-									oc_string_len(rep->value.string));
+				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
 			break;
+
 		case OC_REP_STRING_ARRAY:
 			if (!strcmp(oc_string(rep->name), "rts"))
 			{
@@ -1714,6 +1757,7 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 				}
 			}
 			break;
+
 		default:
 			p_err("something wrong, unexpected Property type: %d\n", rep->type);
 			return;
@@ -1855,7 +1899,8 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	if (request->query)
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
-		p_dbg("received query string: %s, found \"receiveruri\": %s \n", request->query, uri_param);
+		if (uri_param_len != -1)
+			p_dbg("received query string: %.*s, found \"receiveruri\": %.*s \n", request->query_len, request->query, uri_param_len, uri_param);
 	}
 	else
 	{
@@ -1868,7 +1913,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		if (recvs_instance->resource == request->resource)
 		{
-			p_dbg("receivers obj array instance for target resource (%s) is found!\n", oc_string(request->resource->uri));
+			p_dbg("receivers obj array instance (%s) in Device (%d) is found!\n", oc_string(request->resource->uri), request->resource->device);
 
 			if (uri_param_len != -1)
 			{
@@ -1876,9 +1921,6 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				recv_obj = _find_recv_obj_by_uri(recvs_instance, uri_param, uri_param_len);
 				if (recv_obj)
 				{
-					/*
-					 * TODO4ME <2021/10/30> resume here..
-					 */
 
 					/* if the given `receiveruri` parameter is in existing receivers array,
 					 * just update existing receiver object */
@@ -1890,16 +1932,23 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 					/* if the given `receiveruri` parameter is not in existing receivers array,
 					 * add new receiver object to the receivers array */
 #ifdef OC_PUSHDEBUG
-					oc_string_t uri;
-					oc_new_string(&uri, uri_param, uri_param_len);
-					p_dbg("can't find receiver object which has uri(%s), creating new receiver obj...", oc_string(uri));
-					oc_free_string(&uri);
+//					oc_string_t uri;
+//					oc_new_string(&uri, uri_param, uri_param_len);
+					p_dbg("can't find receiver object which has uri(%.*s), creating new receiver obj...", uri_param_len, uri_param);
+//					oc_free_string(&uri);
 #endif
 
 					/*
-					 * FIXME4ME if there is already NORMAL resource whose path is same as requested target uri,
+					 * if there is already NORMAL resource whose path is same as requested target uri,
 					 * just ignore this request and return error!
 					 */
+//					char uri_str[1024];
+//					sprintf(uri_str, "%.*s", uri_param_len, uri_param);
+					if (oc_ri_get_app_resource_by_uri(uri_param, uri_param_len, recvs_instance->resource->device))
+					{
+						result = OC_STATUS_FORBIDDEN;
+						goto exit;
+					}
 
 					/* create corresponding receiver object */
 //					_create_recv_obj(recvs_instance->receivers, rep);
@@ -2007,6 +2056,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	} /* while (rep) */
 #endif
 
+exit:
 	oc_send_response(request, result);
 
 	return;
@@ -2037,7 +2087,8 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 	if (request->query)
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
-		p_dbg("received query string: %s, found \"receiveruri\": %s \n", request->query, uri_param);
+		if (uri_param_len != -1)
+			p_dbg("received query string: %.*s, found \"receiveruri\": %.*s \n", request->query_len, request->query, uri_param_len, uri_param);
 	}
 	else
 	{
@@ -2072,10 +2123,10 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 					/* if the given `receiveruri` parameter is not in existing receivers array,
 					 * add new receiver object to the receivers array */
 #ifdef OC_PUSHDEBUG
-					oc_string_t uri;
-					oc_new_string(&uri, uri_param, uri_param_len);
-					p_dbg("can't find receiver object which has uri(%s), ignore it...", oc_string(uri));
-					oc_free_string(&uri);
+//					oc_string_t uri;
+//					oc_new_string(&uri, uri_param, uri_param_len);
+					p_dbg("can't find receiver object which has uri(.*%s), ignore it...", uri_param_len, uri_param);
+//					oc_free_string(&uri);
 #endif
 					result = OC_STATUS_NOT_FOUND;
 				}
@@ -2207,8 +2258,8 @@ void push_update(oc_ns_t *ns_instance)
 							"if=oic.if.rw", &response_to_push_rsc, HIGH_QOS, NULL))
 	{
 		/*
-		 * TODO4ME add other properties than "rep" object of "oic.r.pushpayload" Resource here.
-		 * payload_builder() only adds contents of "rep" object.
+		 * add other properties than "rep" object of "oic.r.pushpayload" Resource here.
+		 * payload_builder() only "rep" object.
 		 *
 		 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
 		 * they should be added here...
@@ -2299,8 +2350,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 									"if=oic.if.rw", &response_to_push_rsc, LOW_QOS, NULL))
 			{
 				/*
-				 * TODO4ME add other properties than "rep" object of "oic.r.pushpayload" Resource here.
-				 * payload_builder() only adds contents of "rep" object.
+				 * add other properties than "rep" object of "oic.r.pushpayload" Resource here.
+				 * payload_builder() only adds "rep" object.
 				 *
 				 * payload_builder() doesn't need to have "oc_rep_start_root_object()" and "oc_rep_end_root_object()"
 				 * they should be added here...

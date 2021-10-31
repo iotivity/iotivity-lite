@@ -75,7 +75,7 @@ extern "C"
 #define PUSHRECVS_RSC_NAME "Push Receiver Configuration"
 
 /*
- * TODO4ME <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
+ * FIXME4ME <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
  */
 typedef enum {
 	OC_PP_WFP,
@@ -116,7 +116,6 @@ typedef struct oc_recv
 	struct oc_recv *next;
 	oc_string_t receiveruri;
 	oc_string_array_t rts;
-	oc_endpoint_t ep; /* FIXME4ME ??? never used.. */
 } oc_recv_t;
 
 
@@ -161,7 +160,7 @@ void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
 oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len);
-void print_pushd_rsc(oc_rep_t *payload);
+void oc_print_pushd_rsc(oc_rep_t *payload);
 
 void oc_resource_state_changed(const char *uri, size_t device_index);
 
