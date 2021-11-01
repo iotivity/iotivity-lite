@@ -98,6 +98,7 @@ typedef struct oc_ns
 	oc_string_array_t pif;	/* optional */
 	/* push proxy */
 //	oc_string_t pushtarget;
+	oc_string_t pushtarget_di; /* device id of target (e.g. ocf://17087f8c-13e3-4849-4258-65af2a47df63 */
 	oc_endpoint_t pushtarget_ep;	/* full URI (e.g. coaps://[fe80::b1d6]:1122/myLightSwitch), oc_endpoint_t type */
 	oc_string_t targetpath; /* path in target server (e.g. /myLightSwitch) */
 	oc_string_t pushqif;
@@ -151,10 +152,16 @@ typedef struct oc_pushd_rsc_rep
 OC_PROCESS_NAME(oc_push_process);
 
 extern char *pp_state_strs[];
+extern char *cli_status_strs[];
 
 /* if this callback function is provided by user, it will called
  * whenever new push notification arrives... */
 extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
+
+
+#define cli_statusstr(i) (cli_status_strs[i])
+#define pp_statestr(i) (pp_state_strs[i])
+
 
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
