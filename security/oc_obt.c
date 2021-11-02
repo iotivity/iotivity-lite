@@ -3411,7 +3411,7 @@ int oc_obt_retrieve_d2dserverlist(oc_uuid_t* uuid,
   return 0;
 }
 
-int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* device_uuid, 
+int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* query, 
   const char* url, oc_response_handler_t cb, void* user_data)
 {
   oc_device_t* cloud_proxy = oc_obt_get_owned_device_handle(uuid);
@@ -3429,12 +3429,9 @@ int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* device_uuid,
     return -1;
   }
 
-  char query[4 + OC_UUID_LEN] = "di=";
-  strcat(query, device_uuid);
-
   if (oc_init_post(url, ep, query, cb, LOW_QOS, user_data)) {
     if (oc_do_post())
-      PRINT("Sent POST request %s!\n", url);
+      PRINT("Sent POST request %s?%s\n", url, query);
     else {
       PRINT("Could not send POST request\n");
       return -1;
