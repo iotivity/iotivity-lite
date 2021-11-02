@@ -3390,8 +3390,9 @@ oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
   return err;
 }
 
-int oc_obt_retrieve_d2dserverlist(oc_uuid_t* uuid, 
-  oc_response_handler_t cb, void *data)
+int
+oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
+                              void *data)
 {
   if (!oc_obt_is_owned_device(uuid)) {
     return -1;
@@ -3411,19 +3412,19 @@ int oc_obt_retrieve_d2dserverlist(oc_uuid_t* uuid,
   return 0;
 }
 
-int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* query, 
-  const char* url, oc_response_handler_t cb, void* user_data)
+int
+oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *query, const char *url,
+                          oc_response_handler_t cb, void *user_data)
 {
-  oc_device_t* cloud_proxy = oc_obt_get_owned_device_handle(uuid);
-  if (cloud_proxy == NULL)
-  {
+  oc_device_t *cloud_proxy = oc_obt_get_owned_device_handle(uuid);
+  if (cloud_proxy == NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
     PRINT("Could not find cloud_proxy from udn %s\n", di);
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
-  oc_endpoint_t* ep = oc_obt_get_secure_endpoint(cloud_proxy->endpoint);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(cloud_proxy->endpoint);
   if (ep == NULL) {
     PRINT("Could not find ep from cloud_proxy \n");
     return -1;
@@ -3436,8 +3437,7 @@ int oc_obt_post_d2dserverlist(oc_uuid_t* uuid, char* query,
       PRINT("Could not send POST request\n");
       return -1;
     }
-  }
-  else {
+  } else {
     PRINT("Could not init POST request\n");
     return -1;
   }
