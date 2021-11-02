@@ -485,7 +485,7 @@ void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user
 	(void)iface_mask;
 	(void)user_data;
 
-	p_dbg("notification selector (\"%s\") is deleted\n!", oc_string(request->resource->uri));
+	p_dbg("notification selector (\"%s\") is deleted!\n", oc_string(request->resource->uri));
 
 	oc_delete_resource(request->resource);
 	oc_send_response(request, OC_STATUS_DELETED);
@@ -1526,8 +1526,8 @@ void get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *u
 				{
 					/* == open new receiver object == */
 					oc_rep_object_array_begin_item(receivers);
-					/* receiver:uri */
-					oc_rep_set_text_string(receivers, uri, oc_string(recv_obj->receiveruri));
+					/* receiver:receiveruri */
+					oc_rep_set_text_string(receivers, receiveruri, oc_string(recv_obj->receiveruri));
 
 					/* receiver:rts[] */
 					oc_rep_open_array(receivers, rts);
