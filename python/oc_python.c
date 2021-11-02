@@ -420,6 +420,13 @@ empty_device_list(oc_list_t list)
 * CB function on getting the device data.
 * generic callback for owned/unowned devices
 */
+bool cb_result = false;
+bool get_cb_result(){
+  bool result_to_return = cb_result;
+  cb_result = false;
+  return result_to_return;
+}
+
 static void
 get_device(oc_client_response_t *data)
 {
@@ -724,9 +731,11 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
     PRINT("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
     oc_list_add(owned_devices, device);
     inform_python();
+    cb_result = true;
   } else {
     oc_memb_free(&device_handles, device);
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
+    cb_result = false;
   }
 }
 
@@ -922,8 +931,10 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
 
     /* Freeing the ACL structure */
     oc_obt_free_acl(acl);
+    cb_result = true;
   } else {
-    PRINT("[C]\nERROR RETRIEving /oic/sec/acl2\n");
+    PRINT("[C]\nERROR RETRIEVING /oic/sec/acl2\n");
+    cb_result = false;
   }
 }
 
@@ -1224,13 +1235,19 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   char di[37];
   oc_uuid_to_str(uuid, di, 37);
 
-  oc_memb_free(&device_handles, data);
-
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
     inform_python();
+
+    device_handle_t *device = py_getdevice_from_uuid(di, 1);
+    oc_list_remove(owned_devices, device);
+    oc_memb_free(&device_handles, data);
+
+    cb_result = true;
   } else {
     PRINT("[C]\nERROR performing hard RESET to device %s\n", di);
+    oc_memb_free(&device_handles, data);
+    cb_result = false;
   }
 }
 
@@ -1363,7 +1380,6 @@ void py_reset_device(char* uuid)
     oc_obt_device_hard_reset(&device->uuid, reset_device_cb, device);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued request to perform hard RESET\n");
-    oc_list_remove(owned_devices, device);
   } else {
     PRINT("[C]\nERROR issuing request to perform hard RESET\n");
   }
@@ -1417,8 +1433,10 @@ provision_id_cert_cb(int status, void *data)
   (void)data;
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned identity certificate\n");
+    cb_result = true;
   } else {
     PRINT("[C]\nERROR provisioning identity certificate\n");
+    cb_result = false;
   }
 }
 
@@ -1954,8 +1972,10 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned ACE to device %s\n", di);
+    cb_result = true;
   } else {
     PRINT("[C]\nERROR provisioning ACE to device %s\n", di);
+    cb_result = false;
   }
 }
 
@@ -1968,7 +1988,7 @@ void py_provision_ace_cloud_access(char* uuid )
     PRINT("[C]py_provision_ace_cloud_access ERROR: Invalid uuid\n");
     return;
   }
-  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+  PRINT("[C] py_provision_ace: name = %s \n",device->device_name);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_connection(OC_CONN_AUTH_CRYPT);
@@ -2003,7 +2023,7 @@ void py_provision_ace_d2dserverlist(char* uuid )
     PRINT("[C]py_provision_ace_d2dserverlist ERROR: Invalid uuid\n");
     return;
   }
-  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+  PRINT("[C] py_provision_ace: name = %s \n",device->device_name);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(oc_core_get_device_id(0));
@@ -2039,10 +2059,14 @@ void py_provision_ace_device_resources(char* device_uuid, char* subject_uuid)
     PRINT("[C]py_provision_ace_device_resources ERROR: Invalid uuid\n");
     return;
   }
-  PRINT("[C] py_provision_ace: name = %s ",device->device_name);
+  PRINT("[C] py_provision_ace: name = %s \n",device->device_name);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(&subjectuuid);
+
+  oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
+  oc_obt_ace_resource_set_href(res, "/binaryswitch");
+  oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
 
   oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
@@ -2358,12 +2382,18 @@ static void
 post_response_cloud_config(oc_client_response_t* data)
 {
   PRINT("[C]post_response_cloud_config:\n");
-  if (data->code == OC_STATUS_CHANGED)
+  if (data->code == OC_STATUS_CHANGED) {
     PRINT("[C]POST response: CHANGED\n");
-  else if (data->code == OC_STATUS_CREATED)
+    cb_result = true; 
+  }
+  else if (data->code == OC_STATUS_CREATED) {
     PRINT("[C]POST response: CREATED\n");
-  else
+    cb_result = true; 
+  }
+  else {
     PRINT("[C]POST response code %d\n", data->code);
+    cb_result = false; 
+  }
 
   if (data->payload != NULL) {
     print_rep(data->payload, false);
@@ -2512,9 +2542,11 @@ void trustanchorcb(int status, void* data)
   (void)data;
   if (status >= 0) {
     PRINT("[C]\nSuccessfully installed trust anchor for cloud\n");
+    cb_result = true;
   }
   else {
     PRINT("[C]\nERROR installing trust anchor %d\n", status);
+    cb_result = false;
   }
 }
 
@@ -2621,8 +2653,15 @@ set_cloud_trust_anchor(void)
 static void
 retrieve_d2dserverlist_cb(oc_client_response_t *data)
 {
-  PRINT("[C]get response /d2dserverlist payload: \n");
-  print_rep(data->payload, false);
+  if (data->payload != NULL) {
+    PRINT("[C]get response /d2dserverlist payload: \n");
+    print_rep(data->payload, false);
+    cb_result = true;
+  }
+  else {
+    PRINT ("[C]ERROR RETRIEVING /d2dserverlist\n");
+    cb_result = false;
+  }
 }
 
 void py_retrieve_d2dserverlist(char* uuid)
@@ -2652,19 +2691,25 @@ static void
 post_response_d2dserverlist(oc_client_response_t* data)
 {
   PRINT("[C]post_response_d2dserverlist:\n");
-  if (data->code == OC_STATUS_CHANGED)
+  if (data->code == OC_STATUS_CHANGED) {
     PRINT("[C]POST response: CHANGED\n");
-  else if (data->code == OC_STATUS_CREATED)
+    cb_result = true; 
+  }
+  else if (data->code == OC_STATUS_CREATED) {
     PRINT("[C]POST response: CREATED\n");
-  else
+    cb_result = true; 
+  }
+  else {
     PRINT("[C]POST response code %d\n", data->code);
+    cb_result = false; 
+  }
 
-  if (data->payload == NULL) {
+  if (data->payload != NULL) {
     print_rep(data->payload, false);
   }
 }
 
-void py_post_d2dserverlist(char* cloud_proxy_uuid, char* device_uuid)
+void py_post_d2dserverlist(char* cloud_proxy_uuid, char* query)
 {
   oc_uuid_t cloudproxyuuid;
   oc_str_to_uuid(cloud_proxy_uuid, &cloudproxyuuid);
@@ -2673,7 +2718,7 @@ void py_post_d2dserverlist(char* cloud_proxy_uuid, char* device_uuid)
 
   otb_mutex_lock(app_sync_lock);
  
-    oc_obt_post_d2dserverlist(&cloudproxyuuid, device_uuid, 
+    oc_obt_post_d2dserverlist(&cloudproxyuuid, query, 
       res_url, post_response_d2dserverlist, NULL);
   
   otb_mutex_unlock(app_sync_lock);
@@ -2735,78 +2780,86 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   char strinterfaces[200]=" ";
   char json[1024]="";
 
-  strcat(json, "{\"uri\" : \"");
-  strcat(json,uri);
-  strcat(json,"\",");
+  if (uri) {
+    strcat(json, "{\"uri\" : \"");
+    strcat(json,uri);
+    strcat(json,"\",");
 
-  strcat(json,"\"types\": [");
-  int array_size = (int)oc_string_array_get_allocated_size(types);
-  for (int i = 0; i < array_size; i++) {
-    char *t = oc_string_array_get_item(types,i);
-    strcat(strtypes,"\"");
-    strcat(strtypes,t);
-    strcat(strtypes,"\"");
-    if (i < array_size-1) {
-      strcat(strtypes,",");
+    strcat(json,"\"types\": [");
+    int array_size = (int)oc_string_array_get_allocated_size(types);
+    for (int i = 0; i < array_size; i++) {
+      char *t = oc_string_array_get_item(types,i);
+      strcat(strtypes,"\"");
+      strcat(strtypes,t);
+      strcat(strtypes,"\"");
+      if (i < array_size-1) {
+        strcat(strtypes,",");
+      }
     }
-  }
-  strcat(json, strtypes);
-  strcat(json,"],");
+    strcat(json, strtypes);
+    strcat(json,"],");
 
-  strcat(json,"\"if\": [");
-  bool comma= false;
+    strcat(json,"\"if\": [");
+    bool comma= false;
 
-  //PRINT ("  %d", if)
-  if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
-    strcat(strinterfaces,"\"oic.r.baseline\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.rw\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_R) == OC_IF_R) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.r\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_S) == OC_IF_S) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.s\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_A) == OC_IF_A ) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.a\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE ) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.create\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_LL) == OC_IF_LL ) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.ll\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_B) == OC_IF_B ) {
-    if (comma) strcat(strinterfaces,",");
-    strcat(strinterfaces,"\"oic.r.b\"");
-    comma = true;
-  }
-  strcat(json, strinterfaces);
-  strcat(json,"]");
-  strcat(json,"}");
+    //PRINT ("  %d", if)
+    if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
+      strcat(strinterfaces,"\"oic.r.baseline\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.rw\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_R) == OC_IF_R) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.r\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_S) == OC_IF_S) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.s\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_A) == OC_IF_A ) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.a\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE ) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.create\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_LL) == OC_IF_LL ) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.ll\"");
+      comma = true;
+    }
+    if ((iface_mask & OC_IF_B) == OC_IF_B ) {
+      if (comma) strcat(strinterfaces,",");
+      strcat(strinterfaces,"\"oic.r.b\"");
+      comma = true;
+    }
+    strcat(json, strinterfaces);
+    strcat(json,"]");
+    strcat(json,"}");
 
-  //PRINT("[C]anchor %s, uri : %s\n", anchor, uri);
-  inform_resource_python(anchor, uri, strtypes, json);
-  if (!more) {
-    PRINT("[C]----End of discovery response---\n");
+    //PRINT("[C]anchor %s, uri : %s\n", anchor, uri);
+    inform_resource_python(anchor, uri, strtypes, json);
+    if (!more) {
+      PRINT("[C]----End of discovery response---\n");
+      cb_result = true;
+      return OC_STOP_DISCOVERY;
+    }
+    return OC_CONTINUE_DISCOVERY;
+  }
+  else {
+    PRINT("[C]\nERROR DISCOVERING RESOURCES\n");
+    cb_result = false;
     return OC_STOP_DISCOVERY;
   }
-  return OC_CONTINUE_DISCOVERY;
 }
 
 void py_discover_resources(char* uuid) 
