@@ -24,7 +24,7 @@ if(UNIX)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleclient
-        iotivity-server-client
+        iotivity-client
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 
@@ -37,6 +37,17 @@ if(UNIX)
             iotivity-server-client
         )
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
+    endif()
+
+    if(OC_TCP_ENABLED AND OC_CLOUD_ENABLED)
+        add_executable(cloud_proxy
+            ${PROJECT_SOURCE_DIR}/cloud_proxy.c
+            ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
+        )
+        target_link_libraries(cloud_proxy
+            iotivity-server-client
+        )
+        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_creds)
     endif()
 elseif(WIN32)
     add_executable(simpleserver

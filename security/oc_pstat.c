@@ -184,9 +184,6 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #endif /* OC_PKI */
     oc_sec_sp_default(device);
 #ifdef OC_SERVER
-#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
-    oc_rt_factory_free_created_resources(device);
-#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
     coap_remove_observers_on_dos_change(device, true);
 #endif /* OC_SERVER */
     ps->p = false;
@@ -391,8 +388,18 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
   }
   memmove(&pstat[device], ps, sizeof(oc_sec_pstat_t));
 #ifdef OC_SERVER
-  if (ps->s == OC_DOS_RFNOP) {
+  switch (ps->s) {
+  case OC_DOS_RESET:
+  case OC_DOS_RFOTM:
+#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
+    oc_rt_factory_free_created_resources(device);
+#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
+    break;
+  case OC_DOS_RFNOP:
     coap_remove_observers_on_dos_change(device, false);
+    break;
+  default:
+    break;
   }
 #endif /* OC_SERVER */
   OC_DBG("oc_pstat: leaving pstat_handle_state");

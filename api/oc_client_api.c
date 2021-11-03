@@ -627,15 +627,15 @@ oc_do_ip_multicast(const char *uri, const char *query,
 static bool
 dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
                       oc_client_handler_t handler, oc_endpoint_t *endpoint,
-                      void *user_data)
+                      oc_qos_t qos, void *user_data)
 {
   if (!endpoint) {
     OC_ERR("require valid endpoint");
     return false;
   }
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/oic/res", endpoint, OC_GET, query, handler, LOW_QOS, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", endpoint, OC_GET,
+                                             query, handler, qos, user_data);
 
   if (cb) {
     cb->discovery = true;
@@ -671,7 +671,7 @@ multi_scope_ipv6_discovery(oc_client_cb_t *cb4, uint8_t scope,
   oc_make_ipv6_endpoint(mcast, IPV6 | DISCOVERY, 5683, 0xff, scope, 0, 0, 0, 0,
                         0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58);
   mcast.addr.ipv6.scope = 0;
-  return dispatch_ip_discovery(cb4, query, handler, &mcast, user_data);
+  return dispatch_ip_discovery(cb4, query, handler, &mcast, LOW_QOS, user_data);
 }
 
 bool
@@ -775,7 +775,8 @@ oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
   oc_client_handler_t handlers;
   handlers.discovery_all = handler;
   handlers.discovery = NULL;
-  return dispatch_ip_discovery(NULL, NULL, handlers, endpoint, user_data);
+  return dispatch_ip_discovery(NULL, NULL, handlers, endpoint, HIGH_QOS,
+                               user_data);
 }
 
 bool
@@ -791,7 +792,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
     oc_concat_strings(&uri_query, "rt=", rt);
   }
   bool status = dispatch_ip_discovery(NULL, oc_string(uri_query), handlers,
-                                      endpoint, user_data);
+                                      endpoint, HIGH_QOS, user_data);
   oc_free_string(&uri_query);
 
   return status;

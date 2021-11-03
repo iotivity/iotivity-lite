@@ -530,6 +530,7 @@ free_switch_instance(oc_resource_t *resource)
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
     if (cswitch->resource == resource) {
+      oc_cloud_delete_resource(resource);
       oc_delete_resource(resource);
       oc_list_remove(switches, cswitch);
       oc_memb_free(&switch_s, cswitch);
