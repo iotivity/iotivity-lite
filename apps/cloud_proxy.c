@@ -866,10 +866,10 @@ register_resources(void)
   oc_add_resource(res_d2dserverlist);
   oc_cloud_add_resource(res_d2dserverlist);
 
-  oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
+  oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, 0);
   oc_resource_set_observable(device_resource, false);
 
-  oc_resource_t *platform_resource = oc_core_get_resource_by_index(OCF_P, DEVICE);
+  oc_resource_t *platform_resource = oc_core_get_resource_by_index(OCF_P, 0);
   oc_resource_set_observable(platform_resource, false);
 }
 
