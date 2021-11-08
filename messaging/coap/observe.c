@@ -450,7 +450,7 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
           response_state = oc_blockwise_alloc_response_buffer(
             oc_string(obs->resource->uri) + 1,
             oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
-            OC_BLOCKWISE_SERVER);
+            OC_BLOCKWISE_SERVER, response->response_buffer->response_length);
           if (!response_state) {
             OC_ERR("send_notification: cannot allocate response buffer");
             return -1;
@@ -566,23 +566,34 @@ coap_notify_collection_baseline(oc_collection_t *collection)
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
+  response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MAX_OBSERVE_SIZE;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
   request.resource = (oc_resource_t *)collection;
 
   oc_handle_collection_request(OC_GET, &request, OC_IF_BASELINE, NULL);
+#ifdef OC_DYNAMIC_ALLOCATION
+  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
+#endif
   coap_notify_collection_observers(request.resource, &response_buffer,
                                    OC_IF_BASELINE);
 
 #ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -601,8 +612,10 @@ coap_notify_collection_batch(oc_collection_t *collection)
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
@@ -610,14 +623,22 @@ coap_notify_collection_batch(oc_collection_t *collection)
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
   request.resource = (oc_resource_t *)collection;
 
   oc_handle_collection_request(OC_GET, &request, OC_IF_B, NULL);
+#ifdef OC_DYNAMIC_ALLOCATION
+  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
+#endif
   coap_notify_collection_observers(request.resource, &response_buffer, OC_IF_B);
 
 #ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -637,8 +658,10 @@ coap_notify_collection_links_list(oc_collection_t *collection)
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
@@ -646,15 +669,23 @@ coap_notify_collection_links_list(oc_collection_t *collection)
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
   request.resource = (oc_resource_t *)collection;
 
   oc_handle_collection_request(OC_GET, &request, OC_IF_LL, NULL);
+#ifdef OC_DYNAMIC_ALLOCATION
+  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
+#endif
   coap_notify_collection_observers(request.resource, &response_buffer,
                                    OC_IF_LL);
 
 #ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -676,8 +707,10 @@ coap_notify_collections(oc_resource_t *resource)
 
   int num_links = 0;
 
-  oc_request_t request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
   response.separate_response = 0;
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
@@ -685,7 +718,11 @@ coap_notify_collections(oc_resource_t *resource)
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
   oc_collection_t *collection = NULL;
 
@@ -704,6 +741,7 @@ coap_notify_collections(oc_resource_t *resource)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -779,6 +817,9 @@ fill_response(oc_resource_t *resource, oc_endpoint_t *endpoint,
     OC_DBG("fill_response: Resource ignored request");
     return -1;
   } // response_buf->code == OC_IGNORE
+  response->response_buffer->buffer_size = oc_rep_get_encoded_payload_size();
+  response->response_buffer->buffer =
+    oc_rep_shrink_encoder_buf(response->response_buffer->buffer);
   return 0;
 }
 
@@ -815,14 +856,17 @@ coap_notify_observers_internal(oc_resource_t *resource,
 #else  /* !OC_DYNAMIC_ALLOCATION */
     uint8_t *buffer = malloc(OC_MAX_OBSERVE_SIZE);
     if (!buffer) {
-      OC_WRN("coap_notify_observers_internal: out of memory allocating buffer");
-      goto leave_notify_observers;
+      OC_WRN("coap_notify_observers: out of memory allocating buffer");
+      return 0;
     } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-    oc_response_t response = { 0 };
-    oc_response_buffer_t response_buffer = { 0 };
-    response.response_buffer = response_buf;
+    oc_request_t request;
+    memset(&request, 0, sizeof(request));
+    oc_response_t response;
+    memset(&response, 0, sizeof(response));
+    response.separate_response = 0;
+    oc_response_buffer_t response_buffer;
     if (!response_buf && resource) {
       OC_DBG(
         "coap_notify_observers_internal: Issue GET request to resource %s\n\n",
@@ -861,6 +905,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
     } // iterate over observers
   leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
+    buffer = response_buffer.buffer;
     if (buffer) {
       free(buffer);
     }
@@ -892,16 +937,15 @@ notify_resource_defaults_observer(oc_resource_t *resource,
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MAX_OBSERVE_SIZE);
   if (!buffer) {
-    OC_WRN(
-      "notify_resource_defaults_observer: out of memory allocating buffer");
-    goto leave_notify_observers;
+    OC_WRN("coap_notify_observers: out of memory allocating buffer");
+    return;
   } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG(
-    "notify_resource_defaults_observer: Issue GET request to resource %s\n\n",
-    oc_string(resource->uri));
-  oc_response_t response = { 0 };
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MAX_OBSERVE_SIZE;
@@ -1004,6 +1048,9 @@ process_batch_observers(void *data)
       }
       o = next;
     }
+#ifdef OC_DYNAMIC_ALLOCATION
+    buffer = response_buffer.buffer;
+#endif
     int size_after = oc_rep_get_encoded_payload_size();
     if (size_before == size_after) {
       OC_DBG("process_batch_observers: acls(%d) drop observations\n\n");

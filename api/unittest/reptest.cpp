@@ -1605,3 +1605,47 @@ TEST(TestRep, OCRepRootArrayObject)
 
   oc_free_rep(rep);
 }
+
+TEST(TestRep, OCRepEncodedPayloadRealloc)
+{
+  /* buffer for oc_rep_t */
+  uint8_t *b = (uint8_t *)malloc(0);
+  oc_rep_new_realloc(&b, 0);
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_text_string(root, "hello", "world");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_double(root, "double", 3.14);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_boolean(root, "bool", true);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_int(root, "int", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_uint(root, "uint", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  uint8_t byte_string[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+  oc_rep_set_byte_string(root, byte_string_key, byte_string,
+                         sizeof(byte_string));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  int fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+  oc_rep_set_key(oc_rep_object(root), "fibonacci");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_begin_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
+    oc_rep_add_int(fibonacci, fib[i]);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  oc_rep_end_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+  oc_rep_set_double_array(
+    root, math_constants, math_constants,
+    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  b = oc_rep_shrink_encoder_buf(b);
+  EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
+  free(b);
+}

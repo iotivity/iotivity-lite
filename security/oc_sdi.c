@@ -44,11 +44,11 @@ void
 oc_sec_sdi_free(void)
 {
   size_t device;
-
+#ifdef OC_DYNAMIC_ALLOCATION
   if (!sdi) {
     return;
   }
-
+#endif
   for (device = 0; device < oc_core_get_num_devices(); device++) {
     if (oc_string_len(sdi[device].name) > 0) {
       oc_free_string(&(sdi[device].name));
@@ -65,10 +65,11 @@ oc_sec_sdi_free(void)
 void
 oc_sec_sdi_default(size_t device)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
   if (!sdi) {
     return;
   }
-
+#endif
   sdi[device].priv = false;
   memset(&(sdi[device].uuid), 0, sizeof(oc_uuid_t));
   if (oc_string_len(sdi[device].name) > 0) {
