@@ -388,10 +388,6 @@ simpleserver: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/simpleserver.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
 
-simpleserver_raspberry_pi: libiotivity-lite-server.a $(ROOT_DIR)/apps/simpleserver_raspberry_pi.c
-	@mkdir -p $@_creds
-	${CC} -o $@ ../../apps/simpleserver_raspberry_pi.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
-
 secure_mcast_server1: libiotivity-lite-server.a $(ROOT_DIR)/apps/secure_mcast_server1.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/secure_mcast_server1.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS}  ${LIBS}
