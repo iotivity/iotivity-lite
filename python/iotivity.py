@@ -730,6 +730,10 @@ class Iotivity():
         print ("oc_device_bind_resource_type-cms-done", ret)
         print("oc_init_platform-done",ret)
         #self.lib.display_device_uuid();
+    
+    def get_result(self): 
+        self.lib.get_cb_result.restype = bool
+        return self.lib.get_cb_result()
 
 
     def purge_device_array(self,uuid):
