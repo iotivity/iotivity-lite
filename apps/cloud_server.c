@@ -642,16 +642,37 @@ factory_presets_cb(size_t device, void *data)
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    PRINT("ERROR: unable to read pki_certs/cloudca.pem\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    PRINT("ERROR installing root ca\n");
     return;
   }
+
+  unsigned char mfg_crt[4096];
+  size_t mfg_crt_len = 4096;
+  if (read_pem("pki_certs/mfgcrt.pem", (char *)mfg_crt, &mfg_crt_len) < 0) {
+    PRINT("ERROR: unable to read pki_certs/mfgcrt.pem\n");
+    return;
+  }
+  unsigned char mfg_key[4096];
+  size_t mfg_key_len = 4096;
+  if (read_pem("pki_certs/mfgkey.pem", (char *)mfg_key, &mfg_key_len) < 0) {
+    PRINT("ERROR: unable to read pki_certs/mfgkey.pem\n");
+    return;
+  }
+  int mfg_credid =
+    oc_pki_add_mfg_cert(0, (const unsigned char *)mfg_crt, mfg_crt_len,
+                        (const unsigned char *)mfg_key, mfg_key_len);
+  if (mfg_credid < 0) {
+    PRINT("ERROR installing manufacturer certificate\n");
+    return;
+  }
+  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, mfg_credid);
 #endif /* OC_SECURITY && OC_PKI */
 }
 
