@@ -9,13 +9,20 @@ on:
   push:
 
 env:
-  TAG_NAME: cloud-server-debug:debug
-  CONTAINER_NAME: cloud-server
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
 
 jobs:
   plgd-hub-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: cloud-server-debug
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: cloud-server-debug:debug
+          - name: cloud-server-discovery-resource-observable-debug
+            file: docker/apps/Dockerfile.cloud-server-discovery-resource-observable-debug
+            tag: cloud-server-discovery-resource-observable-debug:debug
 
     steps:
       - name: Checkout repository
@@ -26,26 +33,23 @@ jobs:
         with:
           context: .
           push: false
-          file: ./docker/apps/Dockerfile.cloud-server-debug
-          tags: ${{ env.TAG_NAME }}
+          file: ${{ matrix.file }}
+          tags: ${{ matrix.tag }}
       
       - name: Pull plgd hub tests image
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
       - name: Run cloud server container
-        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp --name ${{ env.CONTAINER_NAME }} ${{ env.TAG_NAME }} devsim-`hostname`
+        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp --name ${{ matrix.name }} ${{ matrix.tag }} devsim-`hostname`
 
       - name: Run plgd hub tests image
         run: docker run --rm --network=host ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
       - name: Collect cloud server logs when the test fails
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: cloud-server-log
-          path: "./data/0.log"
+        run: cat /tmp/0.log
 
       - name: Remove cloud server container
-        run: docker rm -f ${{ env.CONTAINER_NAME }}
+        run: docker rm -f ${{ matrix.name }}
       
 
