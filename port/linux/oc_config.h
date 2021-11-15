@@ -40,7 +40,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_RES_BATCH_SUPPORT
 
 /* Add support observable for oic/res */
-#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
