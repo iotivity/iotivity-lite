@@ -630,7 +630,7 @@ class Iotivity():
         my_uri = str(uri)[2:-1]
 
  
-        if 'resources' in self.debug:
+        if self.debug is not None and 'resources' in self.debug:
             print(colored("          Resource Event          \n",'green',attrs=['underline']))
             print(colored("UUID:{}, \nURI:{}",'green').format(uuid_new,my_uri))
         my_str = str(myjson)[2:-1]
@@ -654,14 +654,14 @@ class Iotivity():
             #don't add duplicate rsources lists
             if uuid_new not in self.resourcelist:
                 self.resourcelist[uuid_new] = mylist
-        if 'resources' in self.debug:
+        if self.debug is not None and 'resources' in self.debug:
             print(colored(" -----resourcelist {}",'cyan').format(mylist))
 
         #Look for zero length uri...this means discovery is complete
         if len(my_uri) <=0:
             resource_event.set()
             print("ALL resources gathered");
-        if 'resources' in self.debug:
+        if self.debug is not None and 'resources' in self.debug:
             print(colored("Resources {}",'yellow').format(self.resourcelist))
 
 
@@ -1063,12 +1063,6 @@ class Iotivity():
 
         print ("...done.")
 
-        for device in self.unowned_devices:
-            print ("onboard device :", device, self.get_device_name(device))
-            self.lib.py_otm_just_works(device)
-
-        print ("...done.")
-
 
     def onboard_device(self,device):
         print("Onboarding device: {}".format(device))
@@ -1245,9 +1239,6 @@ class Iotivity():
         else: 
             print (f"Provisioning ACE device resources (ACL) failed for: {chili_uuid} {chili_name}")
         time.sleep(3)
-        for device in self.owned_devices:
-            print ("offboard device :", device)
-            self.lib.py_reset_device(device)
         print ("...done.")
 
 
@@ -1354,10 +1345,10 @@ class Iotivity():
         time.sleep(1)
         try:
             ret = {myuuid:self.resourcelist[myuuid]}
+            print("RET:{}".format(ret))
+            return ret 
         except Exception as e:
             print("Exception: {} Re-trying resource discovery".format(e))
-        print("RET:{}".format(ret))
-        return ret 
 
     def retrieve_acl2(self, myuuid): 
         self.lib.py_retrieve_acl2.argtypes = [String]
@@ -1576,6 +1567,8 @@ class Iotivity():
             time.sleep(3)
             sys.exit(1)
 
+        self.list_owned_devices()
+
         self.provision_id_cert_all()
 
         cloud_proxy_uuid = self.get_owned_uuid(0)
@@ -1655,18 +1648,18 @@ class Iotivity():
         self.offboard_all_owned()
 
 
+if __name__ == "__main__": 
+    my_iotivity = Iotivity()
+    signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 
-#my_iotivity = Iotivity()
-#signal.signal(signal.SIGINT, my_iotivity.sig_handler)
+    # need this sleep, because it takes a while to start Iotivity in C in a Thread
+    time.sleep(1)
 
-# need this sleep, because it takes a while to start Iotivity in C in a Thread
-#time.sleep(1)
+    my_iotivity.test_security()
 
-#my_iotivity.test_security()
+    #my_iotivity.test_discovery()
 
-#my_iotivity.test_discovery()
-
-#my_iotivity.quit()    
+    #my_iotivity.quit()    
 
 
 
