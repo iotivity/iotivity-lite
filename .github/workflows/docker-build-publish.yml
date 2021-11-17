@@ -14,7 +14,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/cloud-server
 
 jobs:
   build-and-push-image:
@@ -49,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ matrix.name }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
           tags: |
             type=schedule
             type=ref,event=branch
