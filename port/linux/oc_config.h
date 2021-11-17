@@ -38,6 +38,10 @@ typedef uint64_t oc_clock_time_t;
 //#define OC_MNT or run "make" with MNT=1
 /* Add batch interface support to /oic/res */
 #define OC_RES_BATCH_SUPPORT
+
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_CACHE
@@ -49,7 +53,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE
 
 // The maximum size of a response to an OBSERVE request, in bytes
-#define OC_MAX_OBSERVE_SIZE 512
+//#define OC_MAX_OBSERVE_SIZE 512
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic

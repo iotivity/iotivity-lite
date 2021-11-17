@@ -74,6 +74,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href,
     buffer->endpoint.next = NULL;
     oc_new_string(&buffer->href, href, href_len);
     buffer->next = NULL;
+    buffer->finish_cb = NULL;
 #ifdef OC_CLIENT
     buffer->mid = 0;
     buffer->client_cb = NULL;
@@ -108,7 +109,11 @@ oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
   }
   buffer->buffer = NULL;
 #endif
+  oc_blockwise_finish_cb_t *finish_cb = buffer->finish_cb;
   oc_memb_free(pool, buffer);
+  if (finish_cb) {
+    finish_cb();
+  }
 }
 
 static oc_event_callback_retval_t

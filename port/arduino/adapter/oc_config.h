@@ -45,6 +45,9 @@ typedef uint32_t oc_clock_time_t;
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
 
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_BLOCK_WISE

@@ -38,6 +38,8 @@ typedef enum {
   OC_BLOCKWISE_SERVER      ///< server
 } oc_blockwise_role_t;
 
+typedef void oc_blockwise_finish_cb_t(void);
+
 typedef struct oc_blockwise_state_s
 {
   struct oc_blockwise_state_s *next;
@@ -57,6 +59,7 @@ typedef struct oc_blockwise_state_s
   uint8_t buffer[OC_MAX_APP_DATA_SIZE]; ///< the buffer
 #endif                   /* !OC_DYNAMIC_ALLOCATION */
   oc_string_t uri_query; ///< the query
+  oc_blockwise_finish_cb_t *finish_cb;
 #ifdef OC_CLIENT
   uint8_t token[COAP_TOKEN_LEN]; ///< the token
   uint8_t token_len;             ///< token lenght

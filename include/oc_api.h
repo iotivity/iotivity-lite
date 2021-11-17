@@ -1577,6 +1577,30 @@ void oc_send_separate_response(oc_separate_response_t *handle,
  */
 int oc_notify_observers(oc_resource_t *resource);
 
+/**
+ * Schedule notify all observers to invoke after a set number of seconds.
+ *
+ * @note no need to call oc_notify_observers about resource changes that
+ *       result from a PUT, or POST oc_request_callback_t.
+ *
+ * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] seconds the number of seconds to wait till the callback is invoked
+ */
+void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
+
+/**
+ * Schedule notify all observers to invoke after a set number of milliseconds.
+ *
+ * @note no need to call oc_notify_observers about resource changes that
+ *       result from a PUT, or POST oc_request_callback_t.
+ *
+ * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] miliseconds the number of miliseconds to wait till the callback is
+ * invoked
+ */
+void oc_notify_observers_delayed_ms(oc_resource_t *resource,
+                                    uint16_t miliseconds);
+
 #ifdef __cplusplus
 }
 #endif
