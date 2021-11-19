@@ -313,7 +313,6 @@ python_exit(int signal)
   signal_event_loop();
 }
 
-
 /**
  * the event thread (windows or linux)
  *
