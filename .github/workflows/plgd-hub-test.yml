@@ -47,7 +47,7 @@ jobs:
 
       - name: Collect cloud server logs when the test fails
         if: ${{ failure() }}
-        run: cat /tmp/0.log
+        run: cat `pwd`/data/0.log
 
       - name: Remove cloud server container
         run: docker rm -f ${{ matrix.name }}
