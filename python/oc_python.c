@@ -92,162 +92,181 @@ static struct timespec ts;
 #endif
 static int quit = 0;
 
+/**
+ * callback prototype to inform python layer that the onboarded/unonboarded list
+ * have changed
+ *
+ */
+typedef void (*changedCB)(char *uuid, char *state, char *event);
+typedef void (*diplomatCB)(char *anchor, char *uri, char *state, char *event,
+                           char *target, char *target_cred);
+typedef void (*resourceCB)(char *anchor, char *uri, char *types,
+                           char *interfaces);
+typedef void (*clientCB)(char *uuid, char *state, char *event);
 
 /**
-* callback prototype to inform python layer that the onboarded/unonboarded list have changed
-*
-*/
-typedef void (*changedCB) (char* uuid, char* state, char* event);
-typedef void (*diplomatCB) (char* anchor, char* uri, char* state, char* event, char* target, char* target_cred);
-typedef void (*resourceCB) (char* anchor, char* uri, char* types, char* interfaces);
-typedef void (*clientCB) (char* uuid, char* state, char* event);
-
-/**
-* structure with the callback
-*
-*/
+ * structure with the callback
+ *
+ */
 struct py_cb_struct
 {
-    changedCB changedFCB;
-    diplomatCB diplomatFCB;
-    resourceCB resourceFCB;
-    clientCB clientFCB;
+  changedCB changedFCB;
+  diplomatCB diplomatFCB;
+  resourceCB resourceFCB;
+  clientCB clientFCB;
 };
 
 /**
-* declaration of the callback
-*
-*/
-struct py_cb_struct my_CBFunctions; 
+ * declaration of the callback
+ *
+ */
+struct py_cb_struct my_CBFunctions;
 
 /**
  * Function to return response strings
  *
  */
 
-
-static inline char *stringFromResponse(int code)
+static inline char *
+stringFromResponse(int code)
 {
-    static char *strings[] = {  "STATUS_OK", 
-				  "STATUS_CREATED"
-				  "STATUS_CHANGED",
-				  "STATUS_DELETED",
-				  "STATUS_NOT_MODIFIED",
-				  "STATUS_BAD_REQUEST",
-				  "STATUS_UNAUTHORIZED",
-				  "STATUS_BAD_OPTION",
-				  "STATUS_FORBIDDEN",
-				  "STATUS_NOT_FOUND",
-				  "STATUS_METHOD_NOT_ALLOWED",
-				  "STATUS_NOT_ACCEPTABLE",
-				  "STATUS_REQUEST_ENTITY_TOO_LARGE",
-				  "STATUS_UNSUPPORTED_MEDIA_TYPE",
-				  "STATUS_INTERNAL_SERVER_ERROR",
-				  "STATUS_NOT_IMPLEMENTED",
-				  "STATUS_BAD_GATEWAY",
-				  "STATUS_SERVICE_UNAVAILABLE",
-				  "STATUS_GATEWAY_TIMEOUT",
-				  "STATUS_PROXYING_NOT_SUPPORTED",
-				  "__NUM_STATUS_CODES__",
-				  "IGNORE",
-				  "PING_TIMEOUT" };
-    return strings[code];
-}
-
-
-/**
-* function to install callbacks, called from python
-*
-*/
-void install_changedCB(changedCB changedCB) {
-   PRINT("[C]install_changedCB\n");
-   my_CBFunctions.changedFCB = changedCB;
+  static char *strings[] = { "STATUS_OK",
+                             "STATUS_CREATED"
+                             "STATUS_CHANGED",
+                             "STATUS_DELETED",
+                             "STATUS_NOT_MODIFIED",
+                             "STATUS_BAD_REQUEST",
+                             "STATUS_UNAUTHORIZED",
+                             "STATUS_BAD_OPTION",
+                             "STATUS_FORBIDDEN",
+                             "STATUS_NOT_FOUND",
+                             "STATUS_METHOD_NOT_ALLOWED",
+                             "STATUS_NOT_ACCEPTABLE",
+                             "STATUS_REQUEST_ENTITY_TOO_LARGE",
+                             "STATUS_UNSUPPORTED_MEDIA_TYPE",
+                             "STATUS_INTERNAL_SERVER_ERROR",
+                             "STATUS_NOT_IMPLEMENTED",
+                             "STATUS_BAD_GATEWAY",
+                             "STATUS_SERVICE_UNAVAILABLE",
+                             "STATUS_GATEWAY_TIMEOUT",
+                             "STATUS_PROXYING_NOT_SUPPORTED",
+                             "__NUM_STATUS_CODES__",
+                             "IGNORE",
+                             "PING_TIMEOUT" };
+  return strings[code];
 }
 
 /**
-* function to install diplomat callbacks, called from python
-*
-*/
-void install_diplomatCB(diplomatCB diplomatCB) {
-   PRINT("[C]install_diplomatCB\n");
-   my_CBFunctions.diplomatFCB = diplomatCB;
-}
-
-/**
-* function to install resource callbacks, called from python
-*
-*/
-void install_resourceCB(resourceCB resourceCB) {
-   PRINT("[C]install_resourceCB\n");
-   my_CBFunctions.resourceFCB = resourceCB;
-}
-/**
-* function to install client callbacks, called from python
-*
-*/
-void install_clientCB(clientCB clientCB) {
-   PRINT("[C]install_clientCB\n");
-   my_CBFunctions.clientFCB = clientCB;
-}
-
-/**
-* function to call the callback to python.
-*
-*/
-void inform_python(const char* uuid, const char* state, const char* event)
-{
-  //PRINT("[C]inform_python %p\n",my_CBFunctions.changedFCB);
-  if (my_CBFunctions.changedFCB != NULL) {
-    my_CBFunctions.changedFCB((char*)uuid,(char*)state,(char*)event);
-  }
-}
-
-void inform_resource_python(const char* anchor, const char* uri, const char* types, const char* interfaces)
-{
-  //PRINT("[C]inform_resource_python %p %s %s [%s] [%s]\n",my_CBFunctions.resourceFCB, anchor, uri, types, interfaces);
-  if (my_CBFunctions.resourceFCB != NULL) {
-    my_CBFunctions.resourceFCB((char*)anchor, (char*)uri, (char*)types, (char*)interfaces);
-  }
-}
-
-/**
-* function to print the returned cbor as JSON
-*
-*/
+ * function to install callbacks, called from python
+ *
+ */
 void
-print_rep(oc_rep_t* rep, bool pretty_print)
+install_changedCB(changedCB changedCB)
 {
-  char* json;
+  PRINT("[C]install_changedCB\n");
+  my_CBFunctions.changedFCB = changedCB;
+}
+
+/**
+ * function to install diplomat callbacks, called from python
+ *
+ */
+void
+install_diplomatCB(diplomatCB diplomatCB)
+{
+  PRINT("[C]install_diplomatCB\n");
+  my_CBFunctions.diplomatFCB = diplomatCB;
+}
+
+/**
+ * function to install resource callbacks, called from python
+ *
+ */
+void
+install_resourceCB(resourceCB resourceCB)
+{
+  PRINT("[C]install_resourceCB\n");
+  my_CBFunctions.resourceFCB = resourceCB;
+}
+/**
+ * function to install client callbacks, called from python
+ *
+ */
+void
+install_clientCB(clientCB clientCB)
+{
+  PRINT("[C]install_clientCB\n");
+  my_CBFunctions.clientFCB = clientCB;
+}
+
+/**
+ * function to call the callback to python.
+ *
+ */
+void
+inform_python(const char *uuid, const char *state, const char *event)
+{
+  // PRINT("[C]inform_python %p\n",my_CBFunctions.changedFCB);
+  if (my_CBFunctions.changedFCB != NULL) {
+    my_CBFunctions.changedFCB((char *)uuid, (char *)state, (char *)event);
+  }
+}
+
+void
+inform_resource_python(const char *anchor, const char *uri, const char *types,
+                       const char *interfaces)
+{
+  // PRINT("[C]inform_resource_python %p %s %s [%s]
+  // [%s]\n",my_CBFunctions.resourceFCB, anchor, uri, types, interfaces);
+  if (my_CBFunctions.resourceFCB != NULL) {
+    my_CBFunctions.resourceFCB((char *)anchor, (char *)uri, (char *)types,
+                               (char *)interfaces);
+  }
+}
+
+/**
+ * function to print the returned cbor as JSON
+ *
+ */
+void
+print_rep(oc_rep_t *rep, bool pretty_print)
+{
+  char *json;
   size_t json_size;
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
-  json = (char*)malloc(json_size + 1);
+  json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, pretty_print);
   printf("%s\n", json);
   free(json);
 }
 /* function to call the callback for diplomats to python.
-*
-*/
-void inform_diplomat_python(const char* anchor, const char* uri, const char* state, const char* event, const char* target, const char* target_cred)
+ *
+ */
+void
+inform_diplomat_python(const char *anchor, const char *uri, const char *state,
+                       const char *event, const char *target,
+                       const char *target_cred)
 {
-  PRINT("[C]inform_python %p\n",my_CBFunctions.diplomatFCB);
+  PRINT("[C]inform_python %p\n", my_CBFunctions.diplomatFCB);
   if (my_CBFunctions.diplomatFCB != NULL) {
-    my_CBFunctions.diplomatFCB((char*)anchor,(char*)uri,(char*)state,(char*)event,(char*)target,(char*)target_cred);
+    my_CBFunctions.diplomatFCB((char *)anchor, (char *)uri, (char *)state,
+                               (char *)event, (char *)target,
+                               (char *)target_cred);
   }
 }
 
 /**
-* function to call the callback for clients to python.
-*
-*/
-void inform_client_python(const char* uuid, const char* state, const char* event)
+ * function to call the callback for clients to python.
+ *
+ */
+void
+inform_client_python(const char *uuid, const char *state, const char *event)
 {
-  PRINT("[C]inform_python %p\n",my_CBFunctions.clientFCB);
+  PRINT("[C]inform_python %p\n", my_CBFunctions.clientFCB);
   if (my_CBFunctions.clientFCB != NULL) {
-    my_CBFunctions.clientFCB((char*)uuid,(char*)state,(char*)event);
+    my_CBFunctions.clientFCB((char *)uuid, (char *)state, (char *)event);
   }
 }
-
 
 /**
  * function to convert the uuid to the device handle
@@ -277,12 +296,12 @@ py_getdevice_from_uuid(char *uuid, int owned)
 }
 
 /**
-* start the application, e.g. the OBT/client
-*/
+ * start the application, e.g. the OBT/client
+ */
 static int
 app_init(void)
 {
-  //PRINT("[C]app_init\n");
+  // PRINT("[C]app_init\n");
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.dots", "OBT", "ocf.2.2.2",
                        "ocf.res.1.0.0,ocf.sh.1.0.0", NULL, NULL);
@@ -403,14 +422,14 @@ is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 }
 
 static device_handle_t *
-get_obt_device(oc_uuid_t *uuid,const char *device_name)
+get_obt_device(oc_uuid_t *uuid, const char *device_name)
 {
-     device_handle_t *device;
-    device = oc_memb_alloc(&device_handles);
-    if (!device) {
-      return false;
-    }
-    memcpy(device->uuid.id, uuid->id, 16);
+  device_handle_t *device;
+  device = oc_memb_alloc(&device_handles);
+  if (!device) {
+    return false;
+  }
+  memcpy(device->uuid.id, uuid->id, 16);
   if (device_name) {
     size_t len = strlen(device_name);
     len = (len > 63) ? 63 : len;
@@ -488,18 +507,18 @@ get_device(oc_client_response_t *data)
       n_len = 0;
     }
 
-    PRINT("[C] adding device to list.%s.%s\n",di, n);
+    PRINT("[C] adding device to list.%s.%s\n", di, n);
     add_device_to_list(&uuid, n, data->user_data);
 
     bool owned = oc_obt_is_owned_device(&uuid);
-    char* state = "";
-    if (owned){
-	state="owned";
-    }else{
-	state="unowned";
+    char *state = "";
+    if (owned) {
+      state = "owned";
+    } else {
+      state = "unowned";
     }
     PRINT("[C] adding device to list...\n");
-    inform_python(di,state,NULL);
+    inform_python(di, state, NULL);
   }
 }
 
@@ -599,20 +618,19 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python(NULL,NULL,NULL);
+    inform_python(NULL, NULL, NULL);
   } else {
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
   }
 }
 
-
 void
-py_otm_rdp(char* uuid, char* pin)
+py_otm_rdp(char *uuid, char *pin)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c=-1;
+  int i = 0, c = -1;
 
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -624,15 +642,15 @@ py_otm_rdp(char* uuid, char* pin)
     i++;
     device = device->next;
   }
-  if (c == -1)
-  {
+  if (c == -1) {
     PRINT("[C] ERROR: Invalid uuid\n");
     return;
   }
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_perform_random_pin_otm(
-    &devices[c]->uuid, (const unsigned char *)pin, strlen((const char *)pin), otm_rdp_cb, devices[c]);
+    &devices[c]->uuid, (const unsigned char *)pin, strlen((const char *)pin),
+    otm_rdp_cb, devices[c]);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued request to perform Random PIN OTM\n");
     /* Having issued an OTM request, remove this item from the unowned device
@@ -654,22 +672,21 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("[C]\nSuccessfully requested device %s to generate a Random PIN\n", di);
-    inform_python(di,"unowned","random_pin_request");
+    PRINT("[C]\nSuccessfully requested device %s to generate a Random PIN\n",
+          di);
+    inform_python(di, "unowned", "random_pin_request");
   } else {
     PRINT("[C]\nERROR requesting device %s to generate a Random PIN\n", di);
-    inform_python(di,"unowned","random_pin_request_error");
+    inform_python(di, "unowned", "random_pin_request_error");
   }
 }
 
-
-	
 void
-py_request_random_pin(char* uuid)
+py_request_random_pin(char *uuid)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c=-1;
+  int i = 0, c = -1;
 
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -681,8 +698,7 @@ py_request_random_pin(char* uuid)
     i++;
     device = device->next;
   }
-  if (c == -1)
-  {
+  if (c == -1) {
     PRINT("[C] ERROR: Invalid uuid\n");
     return;
   }
@@ -711,7 +727,7 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python(NULL,NULL,NULL);
+    inform_python(NULL, NULL, NULL);
   } else {
     PRINT("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&device_handles, device);
@@ -731,7 +747,7 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
     oc_list_add(owned_devices, device);
-    inform_python(NULL,NULL,NULL);
+    inform_python(NULL, NULL, NULL);
     cb_result = true;
   } else {
     oc_memb_free(&device_handles, device);
@@ -741,7 +757,8 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 // function to list the unowned devices in iotivity (printed in C)
-void py_list_unowned_devices(void)
+void
+py_list_unowned_devices(void)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   int i = 0;
@@ -757,7 +774,8 @@ void py_list_unowned_devices(void)
 }
 
 // function to list the owned devices in iotivity (printed in C)
-void py_list_owned_devices(void)
+void
+py_list_owned_devices(void)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   int i = 0;
@@ -804,15 +822,13 @@ py_otm_just_works(char *uuid)
      * list
      */
     oc_list_remove(unowned_devices, devices[c]);
-    inform_python(NULL,NULL,NULL);
+    inform_python(NULL, NULL, NULL);
   } else {
     PRINT("[C] ERROR issuing request to perform ownership transfer\n");
   }
 
   otb_mutex_unlock(app_sync_lock);
 }
-
-
 
 static void
 retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
@@ -918,7 +934,6 @@ py_retrieve_acl2(char *uuid)
   otb_mutex_unlock(app_sync_lock);
 }
 
-
 void
 display_cred_rsrc(oc_sec_creds_t *creds)
 {
@@ -979,7 +994,6 @@ retrieve_own_creds(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-
 void
 delete_ace_by_aceid_cb(int status, void *data)
 {
@@ -990,7 +1004,6 @@ delete_ace_by_aceid_cb(int status, void *data)
     PRINT("[C]\nERROR DELETing ace\n");
   }
 }
-
 
 void
 delete_cred_by_credid_cb(int status, void *data)
@@ -1003,7 +1016,6 @@ delete_cred_by_credid_cb(int status, void *data)
   }
 }
 
-
 /**
  * function to handle the reset
  *
@@ -1013,19 +1025,19 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[37];
-  char* state = "";
+  char *state = "";
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
-    inform_python(NULL,NULL,NULL);
+    inform_python(NULL, NULL, NULL);
 
     device_handle_t *device = py_getdevice_from_uuid(di, 1);
     oc_list_remove(owned_devices, device);
     oc_memb_free(&device_handles, data);
 
     state = "reset";
-    inform_python(di,state,NULL);
+    inform_python(di, state, NULL);
     cb_result = true;
   } else {
     PRINT("[C]\nERROR performing hard RESET to device %s\n", di);
@@ -1166,7 +1178,6 @@ py_reset_device(char *uuid)
   otb_mutex_unlock(app_sync_lock);
 }
 
-
 #ifdef OC_PKI
 static void
 provision_id_cert_cb(int status, void *data)
@@ -1180,7 +1191,6 @@ provision_id_cert_cb(int status, void *data)
     cb_result = false;
   }
 }
-
 
 void
 py_provision_id_cert(char *uuid)
@@ -1244,7 +1254,6 @@ py_provision_role_cert(char *uuid, char *role, char *auth)
   otb_mutex_unlock(app_sync_lock);
 }
 
-
 void
 provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 {
@@ -1270,13 +1279,12 @@ provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, 37);
 
   if (status >= 0) {
-    PRINT("[C]\nSuccessfully provisioned group OSCORE context to device %s\n", di);
+    PRINT("[C]\nSuccessfully provisioned group OSCORE context to device %s\n",
+          di);
   } else {
     PRINT("[C]\nERROR provisioning group OSCORE context to device %s\n", di);
   }
 }
-
-
 
 void
 provision_oscore_contexts_cb(int status, void *data)
@@ -1291,7 +1299,8 @@ provision_oscore_contexts_cb(int status, void *data)
 
 #endif /* OC_OSCORE */
 
-static void provision_credentials_cb(int status, void *data)
+static void
+provision_credentials_cb(int status, void *data)
 {
   (void)data;
   if (status >= 0) {
@@ -1301,11 +1310,10 @@ static void provision_credentials_cb(int status, void *data)
   }
 }
 
-
 void
-py_provision_pairwise_credentials(char* uuid1, char* uuid2)
+py_provision_pairwise_credentials(char *uuid1, char *uuid2)
 {
-  PRINT("[C] Source %s, Target %s",uuid1,uuid2);
+  PRINT("[C] Source %s, Target %s", uuid1, uuid2);
   if (oc_list_length(owned_devices) == 0) {
     PRINT("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
@@ -1313,14 +1321,12 @@ py_provision_pairwise_credentials(char* uuid1, char* uuid2)
 
   device_handle_t *device1 = py_getdevice_from_uuid(uuid1, 1);
   device_handle_t *device2 = py_getdevice_from_uuid(uuid2, 1);
-  if (device1 == NULL)
-  {
-    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid1 %s \n",uuid1);
+  if (device1 == NULL) {
+    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid1 %s \n", uuid1);
     return;
   }
-  if (device2 == NULL)
- {
-    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid2 %s \n",uuid2);
+  if (device2 == NULL) {
+    PRINT("[C]py_provision_role_cert ERROR: Invalid uuid2 %s \n", uuid2);
     return;
   }
 
@@ -1349,7 +1355,6 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
     PRINT("[C]\nERROR provisioning ACE to device %s\n", di);
   }
 }
-
 
 static void
 provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
@@ -1473,42 +1478,44 @@ py_provision_ace_device_resources(char *device_uuid, char *subject_uuid)
   }
 }
 
-void py_provision_ace2(char* target, char* subject, char* href, char* crudn ) 
+void
+py_provision_ace2(char *target, char *subject, char *href, char *crudn)
 {
-  PRINT("[C] Provision ACE2: %s,%s,%s,%s\n",target,subject,href,crudn); 
+  PRINT("[C] Provision ACE2: %s,%s,%s,%s\n", target, subject, href, crudn);
   device_handle_t *device = py_getdevice_from_uuid(target, 1);
   device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
 
-    /*check if subject is OBT device*/	  
-    oc_uuid_t *obt_uuid = oc_core_get_device_id(0);
-    char di[OC_UUID_LEN];
-    oc_uuid_to_str(obt_uuid, di, OC_UUID_LEN);
-    if(strncmp(di,subject,OC_UUID_LEN)==0){
-	subject_device = get_obt_device(obt_uuid,"OBT");
-	if (subject_device == NULL){
-		    PRINT("[C]py_provision_ace_access ERROR: Invalid OBT subject uuid\n");
-		    return;
-	  }
-     }
-  
-  if (device == NULL){
+  /*check if subject is OBT device*/
+  oc_uuid_t *obt_uuid = oc_core_get_device_id(0);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(obt_uuid, di, OC_UUID_LEN);
+  if (strncmp(di, subject, OC_UUID_LEN) == 0) {
+    subject_device = get_obt_device(obt_uuid, "OBT");
+    if (subject_device == NULL) {
+      PRINT("[C]py_provision_ace_access ERROR: Invalid OBT subject uuid\n");
+      return;
+    }
+  }
+
+  if (device == NULL) {
     PRINT("[C]py_provision_ace_access ERROR: Invalid uuid\n");
     return;
   }
-  if (subject_device == NULL){
-	  
+  if (subject_device == NULL) {
+
     PRINT("[C]py_provision_ace_access ERROR: Invalid subject uuid\n");
     return;
   }
-  if (crudn[0] == '\0'){
+  if (crudn[0] == '\0') {
     PRINT("[C]py_provision_ace_access ERROR: No CRUDN provided\n");
     return;
   }
-  if (href[0] == '\0'){
+  if (href[0] == '\0') {
     PRINT("[C]py_provision_ace_access ERROR: No resource href provided\n");
     return;
   }
-  PRINT("[C] py_provision_ace: name = %s  href = %s",device->device_name,href,crudn);
+  PRINT("[C] py_provision_ace: name = %s  href = %s", device->device_name, href,
+        crudn);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
@@ -1516,32 +1523,30 @@ void py_provision_ace2(char* target, char* subject, char* href, char* crudn )
   oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_href(res, href);
   oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
-  char* crudn_array = strtok(crudn,"|");
+  char *crudn_array = strtok(crudn, "|");
 
-  while(crudn_array != NULL){
-	PRINT("- %s\n", crudn_array);
-	if (strcmp(crudn_array,"create") ==0){
-	  	oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
-	}
-	if (strcmp(crudn_array,"retrieve") ==0){
-		oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
-	}
-	if (strcmp(crudn_array,"update") ==0){
-		oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
-	}
-	if (strcmp(crudn_array,"delete") ==0){
-	  	oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
-	}
-	if (strcmp(crudn_array,"notify") ==0){
-	  	oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
-	}
-	crudn_array = strtok(NULL,"|");
+  while (crudn_array != NULL) {
+    PRINT("- %s\n", crudn_array);
+    if (strcmp(crudn_array, "create") == 0) {
+      oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
+    }
+    if (strcmp(crudn_array, "retrieve") == 0) {
+      oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
+    }
+    if (strcmp(crudn_array, "update") == 0) {
+      oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+    }
+    if (strcmp(crudn_array, "delete") == 0) {
+      oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+    }
+    if (strcmp(crudn_array, "notify") == 0) {
+      oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
+    }
+    crudn_array = strtok(NULL, "|");
   }
 
-
   otb_mutex_lock(app_sync_lock);
-  int ret =
-    oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
+  int ret = oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     PRINT("[C] Successfully issued request to provision ACE\n");
@@ -1549,8 +1554,6 @@ void py_provision_ace2(char* target, char* subject, char* href, char* crudn )
     PRINT("[C] ERROR issuing request to provision ACE\n");
   }
 }
-
-
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 int
@@ -1677,8 +1680,6 @@ py_provision_cloud_config_info(char *uuid, char *cloud_access_token,
 
   otb_mutex_unlock(app_sync_lock);
 }
-
-
 
 void
 trustanchorcb(int status, void *data)
@@ -1958,17 +1959,15 @@ py_discover_resources(char *uuid)
     PRINT("[C]\nERROR issuing resource discovery request\n");
   }
   otb_mutex_unlock(app_sync_lock);
-
 }
 
+void
+py_post(char *uri, int value)
+{
+  PRINT("[C] POST_light: %s-> %d\n", uri, value);
+  // int uri_len = strlen(uri);
 
-
-
-void py_post(char* uri, int value){
-  PRINT("[C] POST_light: %s-> %d\n",uri,value);
-  //int uri_len = strlen(uri);
-  
-  //static oc_endpoint_t *light_server;
+  // static oc_endpoint_t *light_server;
   /*
   if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
@@ -1993,21 +1992,21 @@ display_device_uuid()
   PRINT("[C] OBT Started device with ID: %s\n", buffer);
 }
 
-
-char*
+char *
 py_get_obt_uuid()
 {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  char *uuid = malloc (sizeof (char) * OC_UUID_LEN);
-  strncpy(uuid,buffer,OC_UUID_LEN);
+  char *uuid = malloc(sizeof(char) * OC_UUID_LEN);
+  strncpy(uuid, buffer, OC_UUID_LEN);
   return uuid;
 }
 
-void test_print(void)
+void
+test_print(void)
 {
-	PRINT("[C] test_print\n");
+  PRINT("[C] test_print\n");
 }
 
 #ifdef OC_SO
@@ -2021,16 +2020,17 @@ so_otm_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
-    inform_diplomat_python("","","","so_otm:true",di,"");
+    inform_diplomat_python("", "", "", "so_otm:true", di, "");
     // oc_list_add(owned_devices, device);
   } else {
     // oc_memb_free(&device_handles, device);
     PRINT("\nERROR performing ownership transfer on device %s\n", di);
-    inform_diplomat_python("","","","so_otm:false",di,"");
+    inform_diplomat_python("", "", "", "so_otm:false", di, "");
   }
 }
 static void
-streamlined_onboarding_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+streamlined_onboarding_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps,
+                                    void *data)
 {
   (void)eps;
   char di[OC_UUID_LEN];
@@ -2041,9 +2041,11 @@ streamlined_onboarding_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *d
   }
   // TODO: This should first prompt for user confirmation before onboarding
 
-  int ret = oc_obt_perform_streamlined_otm(uuid, (const unsigned char *)data, strlen(data), so_otm_cb, NULL);
+  int ret = oc_obt_perform_streamlined_otm(uuid, (const unsigned char *)data,
+                                           strlen(data), so_otm_cb, NULL);
   if (ret >= 0) {
-    PRINT("Successfully issued request to perform Streamlined Onboarding OTM\n");
+    PRINT(
+      "Successfully issued request to perform Streamlined Onboarding OTM\n");
   }
 }
 static void
@@ -2051,7 +2053,8 @@ perform_streamlined_discovery(oc_so_info_t *so_info)
 {
   if (so_info != NULL) {
     char *cred = calloc(OC_SO_MAX_CRED_LEN, 1);
-    PRINT("Onboarding device with UUID %s and cred %s\n", so_info->uuid, so_info->cred);
+    PRINT("Onboarding device with UUID %s and cred %s\n", so_info->uuid,
+          so_info->cred);
     memcpy(cred, so_info->cred, strlen(so_info->cred));
     PRINT("After Memcopy\n");
 
@@ -2059,30 +2062,31 @@ perform_streamlined_discovery(oc_so_info_t *so_info)
     PRINT("AFTER TIMESPEC\n");
     nanosleep(&onboarding_wait, &onboarding_wait);
     PRINT("AFTER SLEEP\n");
-	//
-    oc_obt_discover_unowned_devices(streamlined_onboarding_discovery_cb, so_info->uuid, cred);
-    //so_info = so_info->next;
+    //
+    oc_obt_discover_unowned_devices(streamlined_onboarding_discovery_cb,
+                                    so_info->uuid, cred);
+    // so_info = so_info->next;
   }
   oc_so_info_free(so_info);
 }
 static void
 observe_diplomat_cb(oc_client_response_t *data)
 {
-  PRINT("Observe Diplomat: CODE %d\n",data->code);
+  PRINT("Observe Diplomat: CODE %d\n", data->code);
   if (data->code > 4) {
     PRINT("Observe GET failed with code %d\n", data->code);
-    //char* c = (char *) data->code;
+    // char* c = (char *) data->code;
     char code[40];
-    snprintf(code,sizeof(code),"observe_fail:%d",data->code);
-    inform_diplomat_python("","","",code,"","");
+    snprintf(code, sizeof(code), "observe_fail:%d", data->code);
+    inform_diplomat_python("", "", "", code, "", "");
     return;
   }
   oc_rep_t *rep = data->payload;
   oc_rep_t *so_info_rep_array = NULL;
-  if(rep == NULL){
-	char* error = "observe_fail:nopayload";
-        inform_diplomat_python("","","",error,"","");
-	return;
+  if (rep == NULL) {
+    char *error = "observe_fail:nopayload";
+    inform_diplomat_python("", "", "", error, "", "");
+    return;
   }
   while (rep != NULL) {
     PRINT("key %s", oc_string(rep->name));
@@ -2090,12 +2094,13 @@ observe_diplomat_cb(oc_client_response_t *data)
     case OC_REP_OBJECT_ARRAY:
       if (oc_rep_get_object_array(rep, "soinfo", &so_info_rep_array)) {
         oc_so_info_t *so_info = oc_so_parse_rep_array(so_info_rep_array);
-        PRINT("Onboarding device with UUID %s and cred %s\n", so_info->uuid, so_info->cred);
-	char target_uuid[OC_UUID_LEN];
-        snprintf(target_uuid,sizeof(target_uuid),"%s",so_info->uuid);
-	inform_diplomat_python("","","","",target_uuid,"");
+        PRINT("Onboarding device with UUID %s and cred %s\n", so_info->uuid,
+              so_info->cred);
+        char target_uuid[OC_UUID_LEN];
+        snprintf(target_uuid, sizeof(target_uuid), "%s", so_info->uuid);
+        inform_diplomat_python("", "", "", "", target_uuid, "");
         perform_streamlined_discovery(so_info);
-	break;
+        break;
       }
       break;
     default:
@@ -2108,10 +2113,10 @@ observe_diplomat_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
+                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                   oc_resource_properties_t bm, void *user_data)
 {
-  PRINT("[C] Diplomat discovery requested\n");	
+  PRINT("[C] Diplomat discovery requested\n");
   (void)anchor;
   (void)iface_mask;
   (void)bm;
@@ -2126,22 +2131,23 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(diplomat_uri, uri, uri_len);
       diplomat_uri[uri_len] = '\0';
 
-    PRINT("Resource %s anchor: %s hosted at endpoints:\n", diplomat_uri,anchor);
+      PRINT("Resource %s anchor: %s hosted at endpoints:\n", diplomat_uri,
+            anchor);
 
-    char di[OC_UUID_LEN];
-    strncpy(di, anchor+6,OC_UUID_LEN);
-    oc_uuid_t uuid;
-    oc_str_to_uuid(di, &uuid);
+      char di[OC_UUID_LEN];
+      strncpy(di, anchor + 6, OC_UUID_LEN);
+      oc_uuid_t uuid;
+      oc_str_to_uuid(di, &uuid);
 
-    bool owned = oc_obt_is_owned_device(&uuid);
-    char* state = "";
-    if (owned){
-	state="owned";
-    }else{
-	state="unowned";
-    }
+      bool owned = oc_obt_is_owned_device(&uuid);
+      char *state = "";
+      if (owned) {
+        state = "owned";
+      } else {
+        state = "unowned";
+      }
 
-    inform_diplomat_python(anchor,diplomat_uri,state,NULL,NULL,NULL);
+      inform_diplomat_python(anchor, diplomat_uri, state, NULL, NULL, NULL);
 
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
@@ -2149,7 +2155,8 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
         PRINT("\n");
         ep = ep->next;
       }
-      oc_do_observe(diplomat_uri, diplomat_ep, NULL, &observe_diplomat_cb, HIGH_QOS, NULL);
+      oc_do_observe(diplomat_uri, diplomat_ep, NULL, &observe_diplomat_cb,
+                    HIGH_QOS, NULL);
       PRINT("[C] Sent OBSERVE request\n");
       return OC_STOP_DISCOVERY;
     }
@@ -2167,27 +2174,25 @@ discover_diplomat_for_observe(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-
-void 
-py_diplomat_set_observe(char* state)
+void
+py_diplomat_set_observe(char *state)
 {
-   PRINT("[C] %s",state);
+  PRINT("[C] %s", state);
 }
 
-
 void
-py_diplomat_stop_observe(char* uuid)
+py_diplomat_stop_observe(char *uuid)
 {
   (void)uuid;
   PRINT("Stopping OBSERVE\n");
-  //oc_stop_observe(a_light, light_server);
+  // oc_stop_observe(a_light, light_server);
 }
 
 void
 py_discover_diplomat_for_observe(void)
 {
   otb_mutex_lock(app_sync_lock);
-  oc_do_ip_discovery("oic.r.diplomat", &diplomat_discovery, NULL); 
+  oc_do_ip_discovery("oic.r.diplomat", &diplomat_discovery, NULL);
   otb_mutex_unlock(app_sync_lock);
 }
 #endif /* OC_SO */
@@ -2202,27 +2207,26 @@ static int power;
 static oc_string_t name;
 static bool discovered;
 
-
 static void
 post_light_response_cb(oc_client_response_t *data)
 {
   if (data->code > OC_STATUS_CHANGED) {
     OC_ERR("POST returned unexpected response code %d\n", data->code);
   }
-  //external_cb(&my_state);
-  //my_state.error_state = false;
+  // external_cb(&my_state);
+  // my_state.error_state = false;
 }
 static void
 get_light_cb(oc_client_response_t *data)
 {
   PRINT("GET_light:\n");
   oc_rep_t *rep = data->payload;
-  
+
   if (data->code > 4) {
     PRINT("GET failed with code %d\n", data->code);
-    //char* c = (char *) data->code;
+    // char* c = (char *) data->code;
     char code[40];
-    snprintf(code,sizeof(code),"observe_fail:%d",data->code);
+    snprintf(code, sizeof(code), "observe_fail:%d", data->code);
     return;
   }
   while (rep != NULL) {
@@ -2239,7 +2243,8 @@ get_light_cb(oc_client_response_t *data)
     case OC_REP_STRING:
       PRINT("%s\n", oc_string(rep->value.string));
       oc_free_string(&name);
-    //  oc_new_string(&name, oc_string(rep->value.string), oc_string_len(rep->value.string));
+      //  oc_new_string(&name, oc_string(rep->value.string),
+      //  oc_string_len(rep->value.string));
       break;
     default:
       break;
@@ -2249,8 +2254,8 @@ get_light_cb(oc_client_response_t *data)
 }
 static oc_discovery_flags_t
 discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
+             oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+             oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
   (void)user_data;
@@ -2275,18 +2280,16 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
         ep = ep->next;
       }
 
-
       return OC_STOP_DISCOVERY;
     }
   }
   return OC_CONTINUE_DISCOVERY;
 }
 
-
 static oc_discovery_flags_t
 doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, void *user_data)
+                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                  oc_resource_properties_t bm, void *user_data)
 {
 
   (void)anchor;
@@ -2298,12 +2301,12 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
   PRINT("DOXM CB\n");
-      oc_endpoint_t *ep = endpoint;
-      while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
-        ep = ep->next;
-      }
+  oc_endpoint_t *ep = endpoint;
+  while (ep != NULL) {
+    PRINTipaddr(*ep);
+    PRINT("\n");
+    ep = ep->next;
+  }
   /*
   if (oc_rep_get_int_array(data->payload, "oxms", &oxms, &oxms_len)) {
     size_t i;
@@ -2315,10 +2318,8 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_STOP_DISCOVERY;
 }
 
-
-
-void 
-discover_doxm( void )
+void
+discover_doxm(void)
 {
   otb_mutex_lock(app_sync_lock);
   if (!oc_do_ip_discovery("oic.r.doxm", &doxm_discovery_cb, NULL)) {
@@ -2327,59 +2328,60 @@ discover_doxm( void )
   otb_mutex_unlock(app_sync_lock);
 
   /*
-  PRINT("[C] Discover Doxm %s\n",uuid);	
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL)) {
-	  PRINT("[C] doxm return\n");
+  PRINT("[C] Discover Doxm %s\n",uuid);
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL))
+  { PRINT("[C] doxm return\n");
   }
   */
 }
 
 void
-discover_resource(char *rt, char* uuid)
+discover_resource(char *rt, char *uuid)
 {
-  PRINT("[C] rt:%s uuid:%s\n",rt,uuid);
+  PRINT("[C] rt:%s uuid:%s\n", rt, uuid);
   oc_do_ip_discovery(rt, &discovery_cb, NULL);
   oc_do_get(a_light, light_server, NULL, &get_light_cb, LOW_QOS, NULL);
-  PRINT("[C] rt:%s uuid:%s\n",rt,uuid);
+  PRINT("[C] rt:%s uuid:%s\n", rt, uuid);
 }
 
 void
 change_light(int value)
 {
-  PRINT("[C] POST_light: %d\n",value);
+  PRINT("[C] POST_light: %d\n", value);
   //(void)value;
   bool light_cmd;
-  if (value==1){
-	  light_cmd=true;
-  }else{
-	  light_cmd=false;
+  if (value == 1) {
+    light_cmd = true;
+  } else {
+    light_cmd = false;
   }
   /*
   PRINT("SETTING LIGHT\n");
     otb_mutex_lock(app_sync_lock);
-	if (!oc_do_ip_discovery("core.light", &discovery_cb, NULL)) {
-	PRINT("Failed to discover Devices\n");
-	}
-	else{
-	  PRINT("Discovered device\n");
-	}
-	if(!discovered){
-		return;
-	}
+  if (!oc_do_ip_discovery("core.light", &discovery_cb, NULL)) {
+  PRINT("Failed to discover Devices\n");
+  }
+  else{
+    PRINT("Discovered device\n");
+  }
+  if(!discovered){
+    return;
+  }
     otb_mutex_unlock(app_sync_lock);
     */
-  if (oc_init_post(a_light, light_server, NULL, &post_light_response_cb, LOW_QOS, NULL)) {
+  if (oc_init_post(a_light, light_server, NULL, &post_light_response_cb,
+                   LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, light_cmd);
-    //oc_rep_set_int(root, power, 55);
+    // oc_rep_set_int(root, power, 55);
     oc_rep_end_root_object();
     if (oc_do_post())
       PRINT("Sent POST request\n");
     else
       PRINT("Could not send POST request\n");
- } else{
+  } else {
     PRINT("Could not init POST request\n");
- }
+  }
 }
 #endif /*OC Client*/
 
@@ -2440,13 +2442,11 @@ python_main(void)
   }
 #endif
 
-
   display_device_uuid();
-
 
   while (quit != 1) {
     sleep(5);
-  }  
+  }
 
 #if defined(_WIN32)
   WaitForSingleObject(event_thread, INFINITE);
