@@ -276,6 +276,9 @@ py_getdevice_from_uuid(char *uuid, int owned)
   return NULL;
 }
 
+/**
+* start the application, e.g. the OBT/client
+*/
 static int
 app_init(void)
 {
