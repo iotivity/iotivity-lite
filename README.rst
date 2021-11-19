@@ -133,6 +133,12 @@ port/<OS>/*
 
 apps/*
   contains sample OCF applications.
+  
+python/*
+  contains python binding using ctypes.
+
+python/obt_web/*
+  contains webbased onboarding tool based on python bindings and web technology.
 
 swig/*
   contains instructions and code to build Java language bindings using
@@ -143,12 +149,13 @@ Other information sources
 
 
 - `IoTivity.org <https://iotivity.org/>`_
+- `C API documentation (Doxygen) <https://iotivity.github.io/iotivity-lite-doxygen/>`_
+- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 - `OCF GitHub <https://github.com/openconnectivityfoundation>`_
 - `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
 - `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
 - `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
 - `plgd testing <https://plgd.dev/developer-guide/testing/>`_
-- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 
 
 Build instructions
@@ -169,6 +176,9 @@ Please check here for build instructions:
 - `Android <https://iotivity.org/documentation/building-iotivity-android>`_
 
 - `Java language bindings <https://iotivity.org/java-language-bindings>`_
+
+- `Python language bindings <https://github.com/iotivity/iotivity-lite/tree/master/python>`_
+
 
 Onboarding and Provisioning
 ----------------------------
@@ -258,7 +268,7 @@ discover each other and run without difficulty.
 Send Feedback
 -------------------------------------------------
 Questions
-`IoTivity-Lite Developer Mailing List <https://iotivity.groups.io/g/iotivity-dev>`_
+`raise questions/issues through Github issues <https://github.com/iotivity/iotivity-lite/issues>`_
 
 Bugs
 `Github issues <https://github.com/iotivity/iotivity-lite/issues>`_
