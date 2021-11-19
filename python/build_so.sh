@@ -3,7 +3,7 @@ echo `pwd`
 cd ../port/linux
 #make clean
 make CLOUD=1 CLIENT=1 PKI=1 SECURE=1 libiotivity-lite-client-python.so
-#Uncomment for stremalined onboarding
+#Uncomment for streamlined onboarding
 #make OC_SO=1 SO_DPP=1 CLOUD=1 CLIENT=1 PKI=1 SECURE=1 libiotivity-lite-client-python.so
 cd  ../../python
 #mkdir pki_certs
