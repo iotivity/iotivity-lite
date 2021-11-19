@@ -150,12 +150,12 @@ Other information sources
 
 - `IoTivity.org <https://iotivity.org/>`_
 - `C API documentation (Doxygen) <https://iotivity.github.io/iotivity-lite-doxygen/>`_
+- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 - `OCF GitHub <https://github.com/openconnectivityfoundation>`_
 - `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
 - `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
 - `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
 - `plgd testing <https://plgd.dev/developer-guide/testing/>`_
-- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 
 
 Build instructions
@@ -176,6 +176,8 @@ Please check here for build instructions:
 - `Android <https://iotivity.org/documentation/building-iotivity-android>`_
 
 - `Java language bindings <https://iotivity.org/java-language-bindings>`_
+
+- `Python language bindings <https://github.com/iotivity/iotivity-lite/tree/master/python>`_
 
 
 Onboarding and Provisioning
