@@ -1175,6 +1175,9 @@ void oc_print_pushd_rsc(oc_rep_t *payload)
 		return;
 	}
 
+	if (depth == 1)
+		PRINT("\n\n");
+
 	while (rep != NULL)
 	{
 		switch (rep->type)
@@ -1439,8 +1442,10 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			}
 			else
 			{
+#ifdef OC_PUSHDEBUG
 				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
 				oc_print_pushd_rsc(pushd_rsc_rep->rep);
+#endif
 
 				/*
 				 * XXX
