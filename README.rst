@@ -153,7 +153,7 @@ Other information sources
 - `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 - `OCF GitHub <https://github.com/openconnectivityfoundation>`_
 - `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
-- `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
+- `OCF data models <https://openconnectivityfoundation.github.io/devicemodels/docs/index.html>`_
 - `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
 - `plgd testing <https://plgd.dev/developer-guide/testing/>`_
 
@@ -167,15 +167,15 @@ Grab source and dependencies using:
 
 Please check here for build instructions:
 
-- `Linux <https://iotivity.org/documentation/building-iotivity-linux>`_
+- `Linux <https://iotivity.org/build_linux/>`_
 
-- `Windows <https://iotivity.org/documentation/building-iotivity-windows>`_
+- `Windows <https://iotivity.org/build_windows/>`_
 
 - `CMake (Linux & Windows) <https://github.com/iotivity/iotivity-lite/wiki/Building-using-CMake-(Windows-&-Linux)>`_
 
-- `Android <https://iotivity.org/documentation/building-iotivity-android>`_
+- `Android <https://iotivity.org/build_android/>`_
 
-- `Java language bindings <https://iotivity.org/java-language-bindings>`_
+- `Java language bindings <https://iotivity.org/build_java/>`_
 
 - `Python language bindings <https://github.com/iotivity/iotivity-lite/tree/master/python>`_
 
