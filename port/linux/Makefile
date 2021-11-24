@@ -223,6 +223,10 @@ ifeq ($(JAVA),1)
 	SWIG = swig
 endif
 
+ifeq ($(OICRES_OBSERVABLE),1)
+	EXTRA_CFLAGS += -DOC_DISCOVERY_RESOURCE_OBSERVABLE
+endif
+
 # DPP-baesd Streamlined Onboarding applications
 SO_DPP_SAMPLES = speaker_server speaker_client dpp_diplomat
 SO_DPP_OBJ = obj/ocf_dpp.o
