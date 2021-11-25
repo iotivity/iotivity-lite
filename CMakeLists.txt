@@ -22,6 +22,7 @@ set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
 set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
 set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
 set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
+set(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED OFF CACHE BOOL "Enable observation over oic/res resource.")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -193,6 +194,10 @@ endif()
 
 if(OC_TCP_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_TCP)
+endif()
+
+if(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_DISCOVERY_RESOURCE_OBSERVABLE)
 endif()
 
 # Client and server versions of Iotivity

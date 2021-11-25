@@ -39,7 +39,7 @@ typedef uint64_t oc_clock_time_t;
 /* Add batch interface support to /oic/res */
 #define OC_RES_BATCH_SUPPORT
 
-/* Add support observable for oic/res */
+/* Add support observable for oic/res or run "make" with OICRES_OBSERVABLE=1*/
 //#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Add support for dns lookup to the endpoint */
