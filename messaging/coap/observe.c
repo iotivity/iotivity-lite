@@ -245,7 +245,11 @@ coap_remove_observer(coap_observer_t *o)
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
     &o->endpoint, OC_GET, query, (query) ? strlen(query) : 0,
     OC_BLOCKWISE_SERVER);
-  if (response_state) {
+  // If response_state->payload_size == 0 it means, that this blockwise state
+  // doesn't belong to the observer. Because the observer always sets
+  // payload_size to greater than 0. The payload_size with 0 happens when the
+  // client sends a cancelation request to cancel observation.
+  if (response_state && response_state->payload_size > 0) {
     response_state->ref_count = 0;
   }
 #endif /* OC_BLOCK_WISE */
