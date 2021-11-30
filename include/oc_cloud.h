@@ -105,7 +105,6 @@ typedef struct oc_cloud_context_t
   oc_link_t *rd_publish_resources;   /**< Resource links to publish */
   oc_link_t *rd_published_resources; /**< Resource links already published */
   oc_link_t *rd_delete_resources;    /**< Resource links to delete */
-  bool rd_delete_all;
 
   oc_resource_t *cloud_conf;
 
