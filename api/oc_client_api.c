@@ -149,11 +149,19 @@ prepare_coap_request(oc_client_cb_t *cb)
       OC_ERR("request_buffer is NULL");
       return false;
     }
-#ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_APP_DATA_BUFFER_POOL
+    if (request_buffer->block) {
+      oc_rep_new(request_buffer->buffer, request_buffer->buffer_size);
+    } else
+#endif
+    {
+      oc_rep_new_realloc(&request_buffer->buffer, request_buffer->buffer_size,
+                         OC_MAX_APP_DATA_SIZE);
+    }
+#else  /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
     oc_rep_new(request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || !OC_REP_ENCODING_REALLOC */
     request_buffer->mid = cb->mid;
     request_buffer->client_cb = cb;
   }

@@ -56,6 +56,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href,
     if (app_buffer) {
       buffer->block = app_buffer;
       buffer->buffer = app_buffer->buffer;
+      buffer->buffer_size = OC_APP_DATA_BUFFER_SIZE;
     }
 #endif /* OC_APP_DATA_BUFFER_POOL */
     if (!buffer->buffer) {

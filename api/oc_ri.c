@@ -1065,8 +1065,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  */
 #ifdef OC_BLOCK_WISE
 #ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_REP_ENCODING_REALLOC
   bool response_state_allocated = false;
-  bool rep_realloc_created = false;
+#endif /* OC_REP_ENCODING_REALLOC */
+  bool REP_ENCODING_REALLOC_created = false;
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (cur_resource && !bad_request) {
     if (!(*response_state)) {
@@ -1078,9 +1080,14 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         OC_ERR("failure to alloc response state");
         bad_request = true;
       } else {
-#ifdef OC_DYNAMIC_ALLOCATION
-        response_state_allocated = true;
-#endif /* OC_DYNAMIC_ALLOCATION */
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_APP_DATA_BUFFER_POOL
+        if (!request_buffer->block)
+#endif /* OC_APP_DATA_BUFFER_POOL */
+        {
+          response_state_allocated = true;
+        }
+#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
         if (uri_query_len > 0) {
           oc_new_string(&(*response_state)->uri_query, uri_query,
                         uri_query_len);
@@ -1104,16 +1111,17 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * points to memory allocated in the messaging layer for the "CoAP
      * Transaction" to service this request.
      */
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
     if (response_state_allocated) {
-      oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size);
-      rep_realloc_created = true;
+      oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
+                         OC_MAX_APP_DATA_SIZE);
+      REP_ENCODING_REALLOC_created = true;
     } else {
       oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
     }
-#else  /* OC_DYNAMIC_ALLOCATION */
+#else  /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || !OC_REP_ENCODING_REALLOC */
 
 #ifdef OC_SECURITY
     /* If cur_resource is a coaps:// resource, then query ACL to check if
@@ -1161,7 +1169,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   *request_state = NULL;
 #ifdef OC_DYNAMIC_ALLOCATION
   // for realloc we need reassign memory again.
-  if (rep_realloc_created) {
+  if (REP_ENCODING_REALLOC_created) {
     response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
     if (response_state && (*response_state)) {
       (*response_state)->buffer = response_buffer.buffer;

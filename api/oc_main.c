@@ -97,10 +97,14 @@ static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
 #endif /* !OC_INOUT_BUFFER_SIZE */
 #ifdef OC_APP_DATA_BUFFER_SIZE
 static size_t _OC_MAX_APP_DATA_SIZE = 7168;
-static size_t _OC_MIN_APP_DATA_SIZE = _OC_MAX_APP_DATA_SIZE;
-#else                                /* OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_MIN_APP_DATA_SIZE = 7168;
+#else /* OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_MAX_APP_DATA_SIZE = 7168;
-static size_t _OC_MIN_APP_DATA_SIZE = 128;
+#ifdef OC_REP_ENCODING_REALLOC
+static size_t _OC_MIN_APP_DATA_SIZE = 256;
+#else                                /* OC_REP_ENCODING_REALLOC */
+static size_t _OC_MIN_APP_DATA_SIZE = 7168;
+#endif                               /* !OC_REP_ENCODING_REALLOC */
 #endif                               /* !OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
@@ -156,9 +160,9 @@ oc_get_max_app_data_size(void)
 void
 oc_set_min_app_data_size(size_t size)
 {
-#ifdef OC_APP_DATA_BUFFER_SIZE
+#if defined(OC_APP_DATA_BUFFER_SIZE) || !defined(OC_REP_ENCODING_REALLOC)
   return;
-#endif /* OC_APP_DATA_BUFFER_SIZE */
+#endif /* OC_APP_DATA_BUFFER_SIZE || !OC_REP_ENCODING_REALLOC */
   _OC_MIN_APP_DATA_SIZE = size;
 }
 

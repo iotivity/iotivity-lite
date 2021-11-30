@@ -1606,11 +1606,12 @@ TEST(TestRep, OCRepRootArrayObject)
   oc_free_rep(rep);
 }
 
+#ifdef OC_REP_ENCODING_REALLOC
 TEST(TestRep, OCRepEncodedPayloadRealloc)
 {
   /* buffer for oc_rep_t */
   uint8_t *b = (uint8_t *)malloc(0);
-  oc_rep_new_realloc(&b, 0);
+  oc_rep_new_realloc(&b, 0, 1024);
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_text_string(root, "hello", "world");
@@ -1649,3 +1650,4 @@ TEST(TestRep, OCRepEncodedPayloadRealloc)
   EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
   free(b);
 }
+#endif /* OC_REP_ENCODING_REALLOC */

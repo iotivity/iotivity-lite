@@ -41,8 +41,9 @@ extern int g_err;
  *
  * @param[in] payload double pointer to payload buffer
  * @param[in] size size of the payload buffer
+ * @param[in] max_size maximum size the encoder buffer
  */
-void oc_rep_new_realloc(uint8_t **payload, int size);
+void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
 
 /**
  * Initialize the buffer used to hold the cbor encoded data without
@@ -54,6 +55,16 @@ void oc_rep_new_realloc(uint8_t **payload, int size);
  * @param[in] size size of the payload buffer
  */
 void oc_rep_new(uint8_t *payload, int size);
+
+/**
+ * Get the size of the encoder buffer.
+ *
+ * @return
+ *  - the size of the encoder buffer.
+ *
+ * @see oc_rep_new_realloc
+ */
+int oc_rep_get_encoder_buffer_size(void);
 
 /**
  * Get the size of the cbor encoded data.

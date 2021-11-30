@@ -38,6 +38,9 @@ typedef uint64_t oc_clock_time_t;
 /* Add support observable for oic/res */
 //#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
+/* Enable reallocation during encoding the representation to cbor */
+//#define OC_REP_ENCODING_REALLOC
+
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"
 #endif /* OC_DYNAMIC_ALLOCATION */

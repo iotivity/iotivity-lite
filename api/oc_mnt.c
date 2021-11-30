@@ -62,13 +62,14 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 
   if (success) {
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
     oc_rep_new_realloc(&request->response->response_buffer->buffer,
-                       request->response->response_buffer->buffer_size);
-#else  /* OC_DYNAMIC_ALLOCATION */
+                       request->response->response_buffer->buffer_size,
+                       OC_MAX_APP_DATA_SIZE);
+#else  /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
     oc_rep_new(request->response->response_buffer->buffer,
                request->response->response_buffer->buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || !OC_REP_ENCODING_REALLOC */
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, fr, false);
     oc_rep_end_root_object();
