@@ -106,11 +106,7 @@ oc_dump_sw(size_t device)
   uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[OC_MIN_APP_DATA_SIZE];
   oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);

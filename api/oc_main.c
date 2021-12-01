@@ -145,6 +145,9 @@ oc_set_max_app_data_size(size_t size)
   return;
 #endif /* OC_APP_DATA_BUFFER_SIZE */
   _OC_MAX_APP_DATA_SIZE = size;
+#ifndef OC_REP_ENCODING_REALLOC
+  _OC_MIN_APP_DATA_SIZE = size;
+#endif /* !OC_REP_ENCODING_REALLOC */
 #ifndef OC_BLOCK_WISE
   _OC_BLOCK_SIZE = size;
   _OC_MTU_SIZE = size + COAP_MAX_HEADER_SIZE;

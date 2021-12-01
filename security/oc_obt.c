@@ -258,11 +258,7 @@ oc_obt_dump_state(void)
   if (!buf)
     return;
 #ifdef OC_DYNAMIC_ALLOCATION
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* OC_DYNAMIC_ALLOCATION */
   oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */

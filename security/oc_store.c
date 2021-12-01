@@ -191,11 +191,7 @@ oc_sec_dump_sp(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -274,11 +270,7 @@ oc_sec_dump_ecdsa_keypair(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -385,11 +377,7 @@ oc_sec_dump_pstat(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -418,11 +406,7 @@ oc_sec_dump_cred(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -451,11 +435,7 @@ oc_sec_dump_doxm(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -484,11 +464,7 @@ oc_sec_dump_acl(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -578,11 +554,7 @@ oc_sec_dump_unique_ids(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -622,11 +594,7 @@ oc_sec_dump_ael(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
@@ -736,11 +704,7 @@ oc_sec_dump_sdi(size_t device)
   uint8_t *oc_store_buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!oc_store_buf)
     return;
-#ifdef OC_REP_ENCODING_REALLOC
   oc_rep_new_realloc(&oc_store_buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_REP_ENCODING_REALLOC */
-  oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_REP_ENCODING_REALLOC */
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */

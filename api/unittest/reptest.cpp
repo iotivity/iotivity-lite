@@ -1606,7 +1606,6 @@ TEST(TestRep, OCRepRootArrayObject)
   oc_free_rep(rep);
 }
 
-#ifdef OC_REP_ENCODING_REALLOC
 TEST(TestRep, OCRepEncodedPayloadRealloc)
 {
   /* buffer for oc_rep_t */
@@ -1650,4 +1649,3 @@ TEST(TestRep, OCRepEncodedPayloadRealloc)
   EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
   free(b);
 }
-#endif /* OC_REP_ENCODING_REALLOC */

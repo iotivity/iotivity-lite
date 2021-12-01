@@ -28,12 +28,12 @@ static struct oc_memb *rep_objects;
 CborEncoder g_encoder, root_map, links_array;
 CborError g_err;
 static uint8_t *g_buf;
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
 static bool g_enable_realloc;
 static size_t g_buf_size;
 static size_t g_buf_max_size;
 static uint8_t **g_buf_ptr;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC  */
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 static CborEncoder *
 convert_offset_to_ptr(CborEncoder *encoder)
@@ -42,11 +42,11 @@ convert_offset_to_ptr(CborEncoder *encoder)
     return encoder;
   }
   encoder->data.ptr = g_buf + (intptr_t)encoder->data.ptr;
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
   encoder->end = g_buf ? g_buf + g_buf_size : NULL;
-#else  /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#else  /* OC_DYNAMIC_ALLOCATION */
   encoder->end = g_buf + (intptr_t)encoder->end;
-#endif /* !(OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC) */
+#endif /* !OC_DYNAMIC_ALLOCATION */
   return encoder;
 }
 
@@ -61,7 +61,7 @@ convert_ptr_to_offset(CborEncoder *encoder)
   return encoder;
 }
 
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
 static size_t
 oc_rep_encoder_get_extra_bytes_needed(CborEncoder *encoder)
 {
@@ -93,7 +93,7 @@ realloc_buffer(size_t needed)
   return CborNoError;
 }
 
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_rep_set_pool(struct oc_memb *rep_objects_pool)
@@ -106,17 +106,17 @@ oc_rep_new(uint8_t *out_payload, int size)
 {
   g_err = CborNoError;
   g_buf = out_payload;
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
   g_enable_realloc = false;
   g_buf_size = size;
   g_buf_ptr = NULL;
   g_buf_max_size = size;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
   cbor_encoder_init(&g_encoder, out_payload, size, 0);
   convert_ptr_to_offset(&g_encoder);
 }
 
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
 void
 oc_rep_new_realloc(uint8_t **out_payload, int size, int max_size)
 {
@@ -129,7 +129,7 @@ oc_rep_new_realloc(uint8_t **out_payload, int size, int max_size)
   cbor_encoder_init(&g_encoder, g_buf, size, 0);
   convert_ptr_to_offset(&g_encoder);
 }
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 CborError
 oc_rep_get_cbor_errno(void)
@@ -143,20 +143,20 @@ oc_rep_get_encoder_buf(void)
   return g_buf;
 }
 
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
 int
 oc_rep_get_encoder_buffer_size(void)
 {
   return (int)g_buf_size;
 }
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 uint8_t *
 oc_rep_shrink_encoder_buf(uint8_t *buf)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return buf;
-#else  /* ! OC_DYNAMIC_ALLOCATION || !OC_REP_ENCODING_REALLOC */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   if (!g_enable_realloc || !buf || !g_buf_ptr || buf != g_buf)
     return buf;
   int size = oc_rep_get_encoded_payload_size();
@@ -173,7 +173,7 @@ oc_rep_shrink_encoder_buf(uint8_t *buf)
   *g_buf_ptr = tmp;
   g_buf = tmp;
   return tmp;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
@@ -183,7 +183,7 @@ oc_rep_encode_raw(const uint8_t *data, size_t len)
     OC_WRN("encoder has not set end pointer.");
     return;
   }
-#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_DYNAMIC_ALLOCATION
   size_t needed = g_buf_size - (size_t)g_encoder.data.ptr;
   if (needed < len) {
     if (!g_enable_realloc) {
@@ -194,7 +194,7 @@ oc_rep_encode_raw(const uint8_t *data, size_t len)
     }
     realloc_buffer(g_buf_size - (size_t)g_encoder.data.ptr);
   }
-#else  /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#else  /* OC_DYNAMIC_ALLOCATION */
   intptr_t needed = (intptr_t)g_encoder.end - (intptr_t)g_encoder.data.ptr;
   if (needed < (intptr_t)len) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
@@ -202,7 +202,7 @@ oc_rep_encode_raw(const uint8_t *data, size_t len)
            (int)needed);
     return;
   }
-#endif /* !(OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC) */
+#endif /* !OC_DYNAMIC_ALLOCATION */
   convert_offset_to_ptr(&g_encoder);
   memcpy(g_encoder.data.ptr, data, len);
   g_encoder.data.ptr = g_encoder.data.ptr + len;
@@ -1165,10 +1165,9 @@ CborError
 oc_rep_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder,
                           size_t length)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encoder_create_map_internal(encoder, mapEncoder, length);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevMapEncoder;
   memcpy(&prevMapEncoder, mapEncoder, sizeof(prevMapEncoder));
   CborEncoder prevEncoder;
@@ -1185,7 +1184,7 @@ oc_rep_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder,
     return oc_rep_encoder_create_map_internal(encoder, mapEncoder, length);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1204,10 +1203,9 @@ CborError
 oc_rep_encoder_close_container(CborEncoder *encoder,
                                CborEncoder *containerEncoder)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encoder_close_container_internal(encoder, containerEncoder);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevContainerEncoder;
   memcpy(&prevContainerEncoder, containerEncoder, sizeof(prevContainerEncoder));
   CborEncoder prevEncoder;
@@ -1225,7 +1223,7 @@ oc_rep_encoder_close_container(CborEncoder *encoder,
     return oc_rep_encoder_close_container_internal(encoder, containerEncoder);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1242,10 +1240,9 @@ CborError
 oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
                           size_t length)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_text_string_internal(encoder, string, length);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_text_string_internal(encoder, string, length);
@@ -1258,7 +1255,7 @@ oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
     return oc_rep_encode_text_string_internal(encoder, string, length);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1273,10 +1270,9 @@ oc_rep_encode_double_internal(CborEncoder *encoder, double value)
 CborError
 oc_rep_encode_double(CborEncoder *encoder, double value)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_double_internal(encoder, value);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_double_internal(encoder, value);
@@ -1289,7 +1285,7 @@ oc_rep_encode_double(CborEncoder *encoder, double value)
     return oc_rep_encode_double_internal(encoder, value);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1304,10 +1300,9 @@ oc_rep_encode_boolean_internal(CborEncoder *encoder, bool value)
 CborError
 oc_rep_encode_boolean(CborEncoder *encoder, bool value)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_boolean_internal(encoder, value);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_boolean_internal(encoder, value);
@@ -1320,7 +1315,7 @@ oc_rep_encode_boolean(CborEncoder *encoder, bool value)
     return oc_rep_encode_boolean_internal(encoder, value);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1335,10 +1330,9 @@ oc_rep_encode_int_internal(CborEncoder *encoder, int64_t value)
 CborError
 oc_rep_encode_int(CborEncoder *encoder, int64_t value)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_int_internal(encoder, value);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_int_internal(encoder, value);
@@ -1351,7 +1345,7 @@ oc_rep_encode_int(CborEncoder *encoder, int64_t value)
     return oc_rep_encode_int_internal(encoder, value);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1366,10 +1360,9 @@ oc_rep_encode_uint_internal(CborEncoder *encoder, uint64_t value)
 CborError
 oc_rep_encode_uint(CborEncoder *encoder, uint64_t value)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_uint_internal(encoder, value);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_uint_internal(encoder, value);
@@ -1382,7 +1375,7 @@ oc_rep_encode_uint(CborEncoder *encoder, uint64_t value)
     return oc_rep_encode_uint_internal(encoder, value);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1399,10 +1392,9 @@ CborError
 oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
                           size_t length)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_byte_string_internal(encoder, string, length);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_byte_string_internal(encoder, string, length);
@@ -1415,7 +1407,7 @@ oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
     return oc_rep_encode_byte_string_internal(encoder, string, length);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1434,10 +1426,9 @@ CborError
 oc_rep_encoder_create_array(CborEncoder *encoder, CborEncoder *arrayEncoder,
                             size_t length)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encoder_create_array_internal(encoder, arrayEncoder, length);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborEncoder prevArrayEncoder;
@@ -1454,7 +1445,7 @@ oc_rep_encoder_create_array(CborEncoder *encoder, CborEncoder *arrayEncoder,
     return oc_rep_encoder_create_array_internal(encoder, arrayEncoder, length);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static CborError
@@ -1471,10 +1462,9 @@ CborError
 oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
                              const void *value)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC)
+#ifndef OC_DYNAMIC_ALLOCATION
   return oc_rep_encode_floating_point_internal(encoder, fpType, value);
-#else  /* !defined(OC_DYNAMIC_ALLOCATION) || !defined(OC_REP_ENCODING_REALLOC) \
-        */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   CborEncoder prevEncoder;
   memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err = oc_rep_encode_floating_point_internal(encoder, fpType, value);
@@ -1487,5 +1477,5 @@ oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
     return oc_rep_encode_floating_point_internal(encoder, fpType, value);
   }
   return err;
-#endif /* OC_DYNAMIC_ALLOCATION && OC_REP_ENCODING_REALLOC */
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
