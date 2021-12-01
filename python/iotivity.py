@@ -1520,20 +1520,96 @@ class Iotivity():
         while True:
             time.sleep(3)
 
+    def request_plgd_AC(self): 
+        """
+        Send HTTP request to retrieve plgd cloud authorization code (AC)\n
+        Which is required to connect devices to the cloud\n
+        """
+
+        # Request headers
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-GB,en;q=0.5',
+            'cookie': r'auth0=s%3AE_c76OViM2U_Wvtwe2309lDKVuJnwOS8.m7ZmpkCbDDQOFEyN%2BWqWCAwvCMRf1fTaxcO3MjouIew; Path=/; did=s%3Av0%3A8f49a340-494d-11ec-bb8b-c57d74a4869b%3A2b9a8182034024fca85e8227563d104a45663b15ab1df740cf6d9a920569de89.22ypAeUAeEKOm8UjiEWW8TsiZnBRW1wxfN24UTMZNvo',
+            'referer': 'https://cloud.cascoda.com/',
+            'sec-fetch-dest': 'iframe',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'cross-site',
+            'upgrade-insecure-requests': '1',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36',
+        }
+
+        # Destination url
+        url = 'https://auth.plgd.cloud/authorize?response_type=code&client_id=cYN3p6lwNcNlOvvUhz55KvDZLQbJeDr5&scope=offline_access&audience=https://try.plgd.cloud&redirect_uri=https://cloud.cascoda.com/things&device_id=dddc2744-7c67-4ed8-b109-98494ca9c4e9'
+
+        # Send request
+        r = requests.get(url, verify=False, allow_redirects=False, headers=headers, timeout=3)
+
+        # Handle response
+        hd = dict(r.headers)
+
+        # Extract AC
+        location = hd['Location']
+
+        AC_pos = location.find('code=')
+        AC = location[AC_pos + 5:]
+        print(AC)
+
+        # Extract auth0 cookie for next request
+        set_cookie = hd['Set-Cookie']
+
+        auth0_start = set_cookie.find('auth0=')
+        auth0_end = set_cookie.find(';', auth0_start)
+        auth0 = set_cookie[auth0_start: auth0_end]
+        print(auth0)
+
+        # Save auth0 cookie in this script
+        with open('iotivity.py', 'r+') as script: 
+            content = script.read()
+            script.seek(0)
+
+            auth0_original_start = content.find('auth0=')
+            auth0_original_end = content.find(';', auth0_original_start)
+
+            content = content[: auth0_original_start] + auth0 + content[auth0_original_end:]
+
+            script.write(content)
+            script.truncate()
+
+        return AC
+
+    def plgd_cloud_conf_download(self, url): 
+        cloud_configurations = dict.fromkeys(["cloud_id", "cloud_trust_anchor", "cloud_apn", "cloud_cis", "cloud_access_token"])
+
+        r = requests.get(url, verify=False, timeout=5)
+        content = r.json()
+
+        if "cascoda" in url: 
+            cloud_configurations["cloud_id"] = content["id"]
+            cloud_configurations["cloud_trust_anchor"] = content["certificateAuthorities"]
+            cloud_configurations["cloud_apn"] = "plgd.web"
+            cloud_configurations["cloud_cis"] = content["coapGateway"]
+            cloud_configurations["cloud_access_token"] = self.request_plgd_AC()
+        else: 
+            cloud_configurations["cloud_id"] = content["cloudId"]
+            cloud_configurations["cloud_trust_anchor"] = content["cloudCertificateAuthorities"]
+            cloud_configurations["cloud_apn"] = content["cloudAuthorizationProvider"]
+            cloud_configurations["cloud_cis"] = content["cloudUrl"]
+            cloud_configurations["cloud_access_token"] = "test"
+        
+        return cloud_configurations
 
     def test_security(self):
         very_start_time = time.time()
-        expected_devices = 13
+        expected_devices = 1
 
-        url = 'https://192.168.202.112:8443/.well-known/cloud-configuration'
-        r = requests.get(url, verify=False)
-
-        content = r.json()
-        cloud_id = content['cloudId']
-        cloud_trust_anchor = content['cloudCertificateAuthorities']
-        cloud_apn = content['cloudAuthorizationProvider']
-        cloud_cis = content['cloudUrl']
-        cloud_access_token = "test"
+        try: 
+            url = "https://192.168.202.112:8443/.well-known/cloud-configuration"
+            cloud_configurations = self.plgd_cloud_conf_download(url) # To do: Make url configurable
+        except: 
+            url = "https://cloud.cascoda.com/.well-known/hub-configuration"
+            cloud_configurations = self.plgd_cloud_conf_download(url)
 
         run_count = 0
         nr_owned = 0
@@ -1579,9 +1655,9 @@ class Iotivity():
 
         self.retrieve_acl2(cloud_proxy_uuid)
 
-        self.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_id, cloud_trust_anchor)
+        self.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_configurations["cloud_id"], cloud_configurations["cloud_trust_anchor"])
 
-        self.provision_cloud_config_info(cloud_proxy_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+        self.provision_cloud_config_info(cloud_proxy_uuid, cloud_configurations["cloud_access_token"], cloud_configurations["cloud_apn"], cloud_configurations["cloud_cis"], cloud_configurations["cloud_id"])
 
         for i in range(1, self.get_nr_owned_devices()): 
             chili_uuid = self.get_owned_uuid(i)
