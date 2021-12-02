@@ -26,6 +26,9 @@ EXTRA_CFLAGS =
 ifeq ($(ASAN),1)
 	EXTRA_CFLAGS += -fsanitize=address
 endif
+ifeq ($(TSAN),1)
+	EXTRA_CFLAGS += -fsanitize=thread
+endif
 
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
@@ -85,7 +88,7 @@ CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_c
 
 
 PYTHON_DIR=../../python
-#SRC_PYTHON=../../python/oc_python.c 
+#SRC_PYTHON=../../python/oc_python.c
 SRC_PYTHON=$(wildcard $(PYTHON_DIR)/*.c)
 #PYTHON=oc_python.c
 
@@ -125,7 +128,7 @@ VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../.
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 
+	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2
 
 ifeq ($(V6DNS),1)
 	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
