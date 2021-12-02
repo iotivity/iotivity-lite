@@ -1541,7 +1541,7 @@ class Iotivity():
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'accept-encoding': 'gzip, deflate, br',
             'accept-language': 'en-GB,en;q=0.5',
-            'cookie': r'auth0=s%3AE_c76OViM2U_Wvtwe2309lDKVuJnwOS8.m7ZmpkCbDDQOFEyN%2BWqWCAwvCMRf1fTaxcO3MjouIew; Path=/; did=s%3Av0%3A8f49a340-494d-11ec-bb8b-c57d74a4869b%3A2b9a8182034024fca85e8227563d104a45663b15ab1df740cf6d9a920569de89.22ypAeUAeEKOm8UjiEWW8TsiZnBRW1wxfN24UTMZNvo',
+            'cookie': r'auth0=s%3AaiAajKng50ZWCW6kXx3A4ppet43V6qVJ.8TzO9jDzrdPZB7%2FqUvYIBSfi3FJHQZSNdeLAT7Q3a4g; Path=/; did=s%3Av0%3A8f49a340-494d-11ec-bb8b-c57d74a4869b%3A2b9a8182034024fca85e8227563d104a45663b15ab1df740cf6d9a920569de89.22ypAeUAeEKOm8UjiEWW8TsiZnBRW1wxfN24UTMZNvo',
             'referer': 'https://cloud.cascoda.com/',
             'sec-fetch-dest': 'iframe',
             'sec-fetch-mode': 'navigate',
@@ -1688,7 +1688,8 @@ class Iotivity():
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
 
         while True: 
-            pass
+            time.sleep(60)
+            self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
 
     def test_get(self): 
         self.list_owned_devices()
