@@ -1495,6 +1495,16 @@ class Iotivity():
             print (f"Posting /d2dserverlist failed for: {myuuid} {device_name}")
         time.sleep(1)
 
+    def general_get(self, uuid, uri): 
+        self.lib.py_general_get.argtypes = [String, String]
+        self.lib.py_general_get.restype = None
+        self.lib.py_general_get(uuid, uri)
+
+    def general_post(self, uuid, query, uri, payload_property, payload_value, payload_type): 
+        self.lib.py_general_post.argtypes = [String, String, String, String, String, String]
+        self.lib.py_general_post.restype = None
+        self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
         self.discover_resources(myuuid)
@@ -1600,7 +1610,7 @@ class Iotivity():
         
         return cloud_configurations
 
-    def test_security(self):
+    def test_cascoda(self):
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1680,6 +1690,69 @@ class Iotivity():
         while True: 
             pass
 
+    def test_get(self): 
+        self.list_owned_devices()
+        device_uuid = input("Please enter uuid: ")
+        uri = input("Please enter request uri: ")
+
+        self.general_get(device_uuid, uri)
+
+    def test_post(self): 
+        self.list_owned_devices()
+        device_uuid = input("Please enter uuid: ")
+        uri = input("Please enter request uri: ")
+        query = input("Please enter request query: ")
+        payload_property = input("Please enter target property: ")
+        payload_value = input("Please enter new value of target property: ")
+
+        if payload_value.lower() == "true": 
+            payload_value = "1"
+            payload_type = "bool"
+        elif payload_value.lower() == "false": 
+            payload_value = "0"
+            payload_type = "bool"
+        else: 
+            try: 
+                test_int = int(payload_value)
+                payload_type = "int"
+            except ValueError: 
+                payload_type = "str"
+
+        if len(query) == 0: 
+            query = None
+
+        self.general_post(device_uuid, query, uri, payload_property, payload_value, payload_type)
+
+    def test_getpost(self): 
+        self.discover_all()
+        self.onboard_all_unowned()
+
+        self.list_owned_devices()
+
+        obt_uuid = self.get_obt_uuid()
+
+        for i in range(0, self.get_nr_owned_devices()): 
+            device_uuid = self.get_owned_uuid(i)
+
+            self.provision_id_cert_all()
+
+            self.provision_ace_chili(device_uuid, obt_uuid)
+            time.sleep(5)
+
+            self.retrieve_acl2(device_uuid)
+            time.sleep(5)
+
+        while True: 
+            type = input("Please enter type of request (get or post): ")
+
+            if type == "get": 
+                self.test_get()
+            elif type == "post": 
+                self.test_post()
+            else: 
+                print("Invalid input!")
+            
+            time.sleep(3)
 
     def get_doxm(self,uuid):
             device = self.get_device(uuid)
@@ -1731,7 +1804,9 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    my_iotivity.test_security()
+    my_iotivity.test_cascoda()
+
+    # my_iotivity.test_getpost()
 
     #my_iotivity.test_discovery()
 
