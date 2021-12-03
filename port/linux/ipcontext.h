@@ -102,7 +102,7 @@ typedef struct ip_context_t
   pthread_mutex_t rfds_mutex;
   fd_set rfds;
   int shutdown_pipe[2];
-  ATOMIC uint8_t flags;
+  OC_ATOMIC int32_t flags;
 } ip_context_t;
 
 /**

@@ -19,25 +19,36 @@
 #ifndef OC_ATOMIC_H
 #define OC_ATOMIC_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifdef __linux__
 
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+#if defined(__GNUC__) && defined(__GNUC_MINOR__) &&                            \
+  (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
 
-#define ATOMIC
+#define OC_ATOMIC
 
-#define ATOMIC_LOAD(x) __atomic_load_n(&(x), __ATOMIC_SEQ_CST)
+#define OC_ATOMIC_LOAD32(x) __atomic_load_n(&(x), __ATOMIC_SEQ_CST)
 
-#define ATOMIC_STORE(x, val) __atomic_store_n(&(x), (val), __ATOMIC_SEQ_CST)
+#define OC_ATOMIC_STORE32(x, val)                                              \
+  __atomic_store_n(&(x), (val), __ATOMIC_SEQ_CST)
 
-#define ATOMIC_INCREMENT(x) __atomic_add_fetch(&(x), 1, __ATOMIC_SEQ_CST)
+#define OC_ATOMIC_INCREMENT32(x) __atomic_add_fetch(&(x), 1, __ATOMIC_SEQ_CST)
 
-#define ATOMIC_DECREMENT(x) __atomic_sub_fetch(&(x), 1, __ATOMIC_SEQ_CST)
+#define OC_ATOMIC_DECREMENT32(x) __atomic_sub_fetch(&(x), 1, __ATOMIC_SEQ_CST)
 
-#define ATOMIC_COMPARE_AND_SWAP(x, expected, desired, result)                  \
+// Function compares the contents of x with the contents of expected. If equal,
+// the operation is a read-modify-write operation that writes desired into x.
+// If they are not equal, the operation is a read and the current contents of
+// x are written into expected.
+//
+// If desired is written into x then result is set to true. Otherwise, result
+// is set to false.
+#define OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)             \
   do {                                                                         \
     (result) = __atomic_compare_exchange(&(x), &(expected), &(desired), false, \
                                          __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);  \
@@ -47,34 +58,55 @@ extern "C" {
 
 #endif // __linux__
 
+#if defined(_WIN32) || defined(_WIN64)
+
+#if _MSC_VER
+
+#define OC_ATOMIC
+
+#define OC_ATOMIC_LOAD32(x) _InterlockedOr((&x), 0)
+
+#define OC_ATOMIC_STORE32(x, val) _InterlockedExchange((&x), val)
+
+#define OC_ATOMIC_INCREMENT32(x) _InterlockedIncrement((&x))
+
+// Copy the semantics of the Unix version of OC_ATOMIC_COMPARE_AND_SWAP32
+// using Windows intrinsics.
+#define OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)             \
+  do {                                                                         \
+    int32_t _oc_compare_and_swap_initial =                                     \
+      _InterlockedCompareExchange(&(x), (desired), (expected));                \
+    (result) = ((expected) == _oc_compare_and_swap_initial);                   \
+    (expected) = _oc_compare_and_swap_initial;                                 \
+  } while (0)
+
+#endif // _MSC_VER
+
+#endif // defined(_WIN32) || defined(_WIN64)
+
 // fallback to volatile on platforms without atomic support
-#ifndef ATOMIC
+#ifndef OC_ATOMIC
 
-#define ATOMIC volatile
+#pragma message(                                                               \
+  "Please check whether volatile guarantees atomicity on your platform, if yes \
+then you can disable this warning, if not then please add implementation of \
+atomics for your platform to this file")
 
-#warning                                                                       \
-  "Please implement atomicity on your platform, volatile does not guarantee correct memory ordering"
+#define OC_ATOMIC_NOT_SUPPORTED
 
-#define ATOMIC_LOAD(x) (x)
+#define OC_ATOMIC volatile
 
-#define ATOMIC_STORE(x, val) (x) = (val)
+#define OC_ATOMIC_LOAD32(x) (x)
 
-#define ATOMIC_INCREMENT(x) ++(x)
+#define OC_ATOMIC_STORE32(x, val) (x) = (val)
 
-#define ATOMIC_DECREMENT(x) --(x)
+#define OC_ATOMIC_INCREMENT32(x) ++(x)
 
-// Simulate behavior of GCC's __atomic_compare_exchange
-//
-// This function implements a non-atomic compare and exchange operation with
-// the same parameters as GCC's __atomic_compare_exchange builtin.
-// This compares the contents of x with the contents of expected. If equal,
-// the operation is a read-modify-write operation that writes desired into x.
-// If they are not equal, the operation is a read and the current contents of
-// x are written into expected.
-//
-// If desired is written into x then result is set to true. Otherwise, result
-// is set to false.
-#define ATOMIC_COMPARE_AND_SWAP(x, expected, desired, result)                  \
+#define OC_ATOMIC_DECREMENT32(x) --(x)
+
+// Copy the semantics of the Unix version of OC_ATOMIC_COMPARE_AND_SWAP32
+// using non-atomic operations.
+#define OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)             \
   do {                                                                         \
     if ((x) == (expected)) {                                                   \
       (x) = (desired);                                                         \
