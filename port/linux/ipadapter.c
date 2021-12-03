@@ -27,6 +27,7 @@
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_atomic.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -609,10 +610,20 @@ oc_connectivity_get_endpoints(size_t device)
     return NULL;
   }
 
-  if (oc_list_length(dev->eps) == 0) {
-    oc_network_event_handler_mutex_lock();
+  bool refresh = false;
+  bool swapped = false;
+  uint8_t expected = ATOMIC_LOAD(dev->flags);
+  while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
+    uint8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    ATOMIC_COMPARE_AND_SWAP(dev->flags, expected, desired, swapped);
+    if (swapped) {
+      refresh = true;
+      break;
+    }
+  }
+
+  if (refresh || oc_list_length(dev->eps) == 0) {
     refresh_endpoints_list(dev);
-    oc_network_event_handler_mutex_unlock();
   }
 
   return oc_list_head(dev->eps);
@@ -706,9 +717,18 @@ process_interface_change_event(void)
   if (if_state_changed) {
     for (i = 0; i < num_devices; i++) {
       ip_context_t *dev = get_ip_context_for_device(i);
-      oc_network_event_handler_mutex_lock();
-      refresh_endpoints_list(dev);
-      oc_network_event_handler_mutex_unlock();
+      if (dev == NULL) {
+        continue;
+      }
+      bool swapped = false;
+      uint8_t expected = ATOMIC_LOAD(dev->flags);
+      while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
+        uint8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        ATOMIC_COMPARE_AND_SWAP(dev->flags, expected, desired, swapped);
+        if (swapped) {
+          break;
+        }
+      }
     }
   }
 
