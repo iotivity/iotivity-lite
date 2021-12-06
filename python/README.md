@@ -8,7 +8,6 @@ The python code uses the device to interact with other OCF devices on the networ
 
 Only tested on Linux based systems.
 
-
 ## Build Shared Library
 
 run the following command from this folder:
@@ -19,4 +18,3 @@ run the following command from this folder:
 
 This command builds the shared library and copies the library to this folder.
 Hence the python code can be used directly from this folder.
-

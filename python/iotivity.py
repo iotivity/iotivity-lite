@@ -1495,6 +1495,16 @@ class Iotivity():
             print (f"Posting /d2dserverlist failed for: {myuuid} {device_name}")
         time.sleep(1)
 
+    def general_get(self, uuid, uri): 
+        self.lib.py_general_get.argtypes = [String, String]
+        self.lib.py_general_get.restype = None
+        self.lib.py_general_get(uuid, uri)
+
+    def general_post(self, uuid, query, uri, payload_property, payload_value, payload_type): 
+        self.lib.py_general_post.argtypes = [String, String, String, String, String, String]
+        self.lib.py_general_post.restype = None
+        self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
         self.discover_resources(myuuid)
@@ -1520,20 +1530,90 @@ class Iotivity():
         while True:
             time.sleep(3)
 
+    def request_plgd_AC(self): 
+        """
+        Send HTTP request to retrieve plgd cloud authorization code (AC)\n
+        Which is required to connect devices to the cloud\n
+        """
 
-    def test_security(self):
-        very_start_time = time.time()
-        expected_devices = 13
+        # Request headers
+        headers = {}
+        with open("plgd_headers.config", "r") as f: 
+            lines = f.read().splitlines()
+            for line in lines: 
+                (key, value) = line.split(": ", 1)
+                headers[key] = value
 
-        url = 'https://192.168.202.112:8443/.well-known/cloud-configuration'
-        r = requests.get(url, verify=False)
+        # Destination url
+        url = 'https://auth.plgd.cloud/authorize?response_type=code&client_id=cYN3p6lwNcNlOvvUhz55KvDZLQbJeDr5&scope=offline_access&audience=https://try.plgd.cloud&redirect_uri=https://cloud.cascoda.com/things&device_id=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 
+        # Send request
+        r = requests.get(url, verify=False, allow_redirects=False, headers=headers, timeout=3)
+
+        # Handle response
+        hd = dict(r.headers)
+
+        # Extract AC
+        location = hd['Location']
+
+        AC_pos = location.find('code=')
+        AC = location[AC_pos + 5:]
+        print("Authorization Code (AC)=" + AC)
+
+        # Extract auth0 cookie for next request
+        set_cookie = hd['Set-Cookie']
+
+        auth0_start = set_cookie.find('auth0=')
+        auth0_end = set_cookie.find(';', auth0_start)
+        auth0 = set_cookie[auth0_start: auth0_end]
+        print(auth0)
+
+        # Save auth0 cookie in this script
+        with open('plgd_headers.config', 'r+') as f: 
+            content = f.read()
+            f.seek(0)
+
+            auth0_original_start = content.find('auth0=')
+            auth0_original_end = content.find(';', auth0_original_start)
+
+            content = content[: auth0_original_start] + auth0 + content[auth0_original_end:]
+
+            f.write(content)
+            f.truncate()
+
+        return AC
+
+    def plgd_cloud_conf_download(self, url): 
+        cloud_configurations = dict.fromkeys(["cloud_id", "cloud_trust_anchor", "cloud_apn", "cloud_cis", "cloud_access_token"])
+
+        r = requests.get(url, verify=False, timeout=5)
         content = r.json()
-        cloud_id = content['cloudId']
-        cloud_trust_anchor = content['cloudCertificateAuthorities']
-        cloud_apn = content['cloudAuthorizationProvider']
-        cloud_cis = content['cloudUrl']
-        cloud_access_token = "test"
+
+        if "cascoda" in url: 
+            cloud_configurations["cloud_id"] = content["id"]
+            cloud_configurations["cloud_trust_anchor"] = content["certificateAuthorities"]
+            cloud_configurations["cloud_apn"] = "plgd.web"
+            cloud_configurations["cloud_cis"] = content["coapGateway"]
+            cloud_configurations["cloud_access_token"] = self.request_plgd_AC()
+        else: 
+            cloud_configurations["cloud_id"] = content["cloudId"]
+            cloud_configurations["cloud_trust_anchor"] = content["cloudCertificateAuthorities"]
+            cloud_configurations["cloud_apn"] = content["cloudAuthorizationProvider"]
+            cloud_configurations["cloud_cis"] = content["cloudUrl"]
+            cloud_configurations["cloud_access_token"] = "test"
+        
+        return cloud_configurations
+
+    def test_cascoda(self):
+        very_start_time = time.time()
+        expected_devices = 1
+
+        try: 
+            url = "https://192.168.202.112:8443/.well-known/cloud-configuration"
+            cloud_configurations = self.plgd_cloud_conf_download(url) # To do: Make url configurable
+        except: 
+            url = "https://cloud.cascoda.com/.well-known/hub-configuration"
+            cloud_configurations = self.plgd_cloud_conf_download(url)
 
         run_count = 0
         nr_owned = 0
@@ -1579,9 +1659,9 @@ class Iotivity():
 
         self.retrieve_acl2(cloud_proxy_uuid)
 
-        self.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_id, cloud_trust_anchor)
+        self.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_configurations["cloud_id"], cloud_configurations["cloud_trust_anchor"])
 
-        self.provision_cloud_config_info(cloud_proxy_uuid, cloud_access_token, cloud_apn, cloud_cis, cloud_id)
+        self.provision_cloud_config_info(cloud_proxy_uuid, cloud_configurations["cloud_access_token"], cloud_configurations["cloud_apn"], cloud_configurations["cloud_cis"], cloud_configurations["cloud_id"])
 
         for i in range(1, self.get_nr_owned_devices()): 
             chili_uuid = self.get_owned_uuid(i)
@@ -1602,8 +1682,72 @@ class Iotivity():
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
 
         while True: 
-            pass
+            time.sleep(60)
+            self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
 
+    def test_get(self): 
+        self.list_owned_devices()
+        device_uuid = input("Please enter uuid: ")
+        uri = input("Please enter request uri: ")
+
+        self.general_get(device_uuid, uri)
+
+    def test_post(self): 
+        self.list_owned_devices()
+        device_uuid = input("Please enter uuid: ")
+        uri = input("Please enter request uri: ")
+        query = input("Please enter request query: ")
+        payload_property = input("Please enter target property: ")
+        payload_value = input("Please enter new value of target property: ")
+
+        if payload_value.lower() == "true": 
+            payload_value = "1"
+            payload_type = "bool"
+        elif payload_value.lower() == "false": 
+            payload_value = "0"
+            payload_type = "bool"
+        else: 
+            try: 
+                test_int = int(payload_value)
+                payload_type = "int"
+            except ValueError: 
+                payload_type = "str"
+
+        if len(query) == 0: 
+            query = None
+
+        self.general_post(device_uuid, query, uri, payload_property, payload_value, payload_type)
+
+    def test_getpost(self): 
+        self.discover_all()
+        self.onboard_all_unowned()
+
+        self.list_owned_devices()
+
+        obt_uuid = self.get_obt_uuid()
+
+        for i in range(0, self.get_nr_owned_devices()): 
+            device_uuid = self.get_owned_uuid(i)
+
+            self.provision_id_cert_all()
+
+            self.provision_ace_chili(device_uuid, obt_uuid)
+            time.sleep(5)
+
+            self.retrieve_acl2(device_uuid)
+            time.sleep(5)
+
+        while True: 
+            type = input("Please enter type of request (get or post): ")
+
+            if type == "get": 
+                self.test_get()
+            elif type == "post": 
+                self.test_post()
+            else: 
+                print("Invalid input!")
+            
+            time.sleep(3)
 
     def get_doxm(self,uuid):
             device = self.get_device(uuid)
@@ -1655,7 +1799,9 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    my_iotivity.test_security()
+    my_iotivity.test_cascoda()
+
+    # my_iotivity.test_getpost()
 
     #my_iotivity.test_discovery()
 

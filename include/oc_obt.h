@@ -1307,6 +1307,14 @@ int oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *device_uuid,
                               const char *url, oc_response_handler_t cb,
                               void *user_data);
 
+int oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
+                       void *data);
+
+int oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
+                        oc_response_handler_t cb, void *user_data,
+                        char *payload_property, char *payload_value,
+                        char *payload_type);
+
 /**
  * sets the secure domain info
  *

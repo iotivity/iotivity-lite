@@ -1458,10 +1458,6 @@ py_provision_ace_device_resources(char *device_uuid, char *subject_uuid)
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(&subjectuuid);
 
-  oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
-  oc_obt_ace_resource_set_href(res, "/binaryswitch");
-  oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
-
   oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
 
@@ -1793,6 +1789,77 @@ py_post_d2dserverlist(char *cloud_proxy_uuid, char *query)
   otb_mutex_unlock(app_sync_lock);
 }
 #endif /* OC_CLOUD */
+
+static void
+py_general_get_cb(oc_client_response_t *data)
+{
+  if (data->payload != NULL) {
+    PRINT("[C]get response payload: \n");
+    print_rep(data->payload, false);
+    cb_result = true;
+  } else {
+    PRINT("[C]ERROR PERFORMING GET\n");
+    cb_result = false;
+  }
+}
+
+void
+py_general_get(char *uuid, char *uri)
+{
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  if (device == NULL) {
+    device = py_getdevice_from_uuid(uuid, 0);
+  }
+  if (device == NULL) {
+    PRINT("[C] py_general_get ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_general_get: name = %s \n", device->device_name);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_general_get(&device->uuid, uri, py_general_get_cb, NULL);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued GET request\n");
+  } else {
+    PRINT("[C]\nERROR issuing GET request\n");
+  }
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+py_general_post_cb(oc_client_response_t *data)
+{
+  PRINT("[C]py_general_post_cb:\n");
+  if (data->code == OC_STATUS_CHANGED) {
+    PRINT("[C]POST response: CHANGED\n");
+    cb_result = true;
+  } else if (data->code == OC_STATUS_CREATED) {
+    PRINT("[C]POST response: CREATED\n");
+    cb_result = true;
+  } else {
+    PRINT("[C]POST response code %d\n", data->code);
+    cb_result = false;
+  }
+
+  if (data->payload != NULL) {
+    print_rep(data->payload, false);
+  }
+}
+
+void
+py_general_post(char *uuid, char *query, char *url, char *payload_property,
+                char *payload_value, char *payload_type)
+{
+  oc_uuid_t deviceuuid;
+  oc_str_to_uuid(uuid, &deviceuuid);
+
+  otb_mutex_lock(app_sync_lock);
+
+  oc_obt_general_post(&deviceuuid, query, url, py_general_post_cb, NULL,
+                      payload_property, payload_value, payload_type);
+
+  otb_mutex_unlock(app_sync_lock);
+}
 
 void
 factory_presets_cb(size_t device, void *data)
