@@ -1537,21 +1537,15 @@ class Iotivity():
         """
 
         # Request headers
-        headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'accept-encoding': 'gzip, deflate, br',
-            'accept-language': 'en-GB,en;q=0.5',
-            'cookie': r'auth0=s%3AaiAajKng50ZWCW6kXx3A4ppet43V6qVJ.8TzO9jDzrdPZB7%2FqUvYIBSfi3FJHQZSNdeLAT7Q3a4g; Path=/; did=s%3Av0%3A8f49a340-494d-11ec-bb8b-c57d74a4869b%3A2b9a8182034024fca85e8227563d104a45663b15ab1df740cf6d9a920569de89.22ypAeUAeEKOm8UjiEWW8TsiZnBRW1wxfN24UTMZNvo',
-            'referer': 'https://cloud.cascoda.com/',
-            'sec-fetch-dest': 'iframe',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'cross-site',
-            'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36',
-        }
+        headers = {}
+        with open("plgd_headers.config", "r") as f: 
+            lines = f.read().splitlines()
+            for line in lines: 
+                (key, value) = line.split(": ", 1)
+                headers[key] = value
 
         # Destination url
-        url = 'https://auth.plgd.cloud/authorize?response_type=code&client_id=cYN3p6lwNcNlOvvUhz55KvDZLQbJeDr5&scope=offline_access&audience=https://try.plgd.cloud&redirect_uri=https://cloud.cascoda.com/things&device_id=dddc2744-7c67-4ed8-b109-98494ca9c4e9'
+        url = 'https://auth.plgd.cloud/authorize?response_type=code&client_id=cYN3p6lwNcNlOvvUhz55KvDZLQbJeDr5&scope=offline_access&audience=https://try.plgd.cloud&redirect_uri=https://cloud.cascoda.com/things&device_id=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 
         # Send request
         r = requests.get(url, verify=False, allow_redirects=False, headers=headers, timeout=3)
@@ -1564,7 +1558,7 @@ class Iotivity():
 
         AC_pos = location.find('code=')
         AC = location[AC_pos + 5:]
-        print(AC)
+        print("Authorization Code (AC)=" + AC)
 
         # Extract auth0 cookie for next request
         set_cookie = hd['Set-Cookie']
@@ -1575,17 +1569,17 @@ class Iotivity():
         print(auth0)
 
         # Save auth0 cookie in this script
-        with open('iotivity.py', 'r+') as script: 
-            content = script.read()
-            script.seek(0)
+        with open('plgd_headers.config', 'r+') as f: 
+            content = f.read()
+            f.seek(0)
 
             auth0_original_start = content.find('auth0=')
             auth0_original_end = content.find(';', auth0_original_start)
 
             content = content[: auth0_original_start] + auth0 + content[auth0_original_end:]
 
-            script.write(content)
-            script.truncate()
+            f.write(content)
+            f.truncate()
 
         return AC
 
