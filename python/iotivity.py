@@ -734,6 +734,10 @@ class Iotivity():
     def get_result(self): 
         self.lib.get_cb_result.restype = bool
         return self.lib.get_cb_result()
+    
+    def get_response_payload(self): 
+        self.lib.get_response_payload.restype = String
+        return self.lib.get_response_payload()
 
 
     def purge_device_array(self,uuid):
@@ -1498,12 +1502,60 @@ class Iotivity():
     def general_get(self, uuid, uri): 
         self.lib.py_general_get.argtypes = [String, String]
         self.lib.py_general_get.restype = None
-        self.lib.py_general_get(uuid, uri)
+
+        run_count = 0
+        result = False
+        response_payload = ""
+        while run_count < 5 and not result: 
+            run_count += 1
+            self.lib.py_general_get(uuid, uri)
+
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+        if result: 
+            response_payload = self.get_response_payload()
+            print (f"Sending GET request succeeded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Sending GET request failed")
+        time.sleep(1)
+        return result, response_payload
 
     def general_post(self, uuid, query, uri, payload_property, payload_value, payload_type): 
         self.lib.py_general_post.argtypes = [String, String, String, String, String, String]
         self.lib.py_general_post.restype = None
-        self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
+        run_count = 0
+        result = False
+        response_payload = ""
+        while run_count < 5 and not result: 
+            run_count += 1
+            self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+        if result: 
+            response_payload = self.get_response_payload()
+            print (f"Sending POST request succeeded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Sending POST request failed")
+        time.sleep(1)
+        return result, response_payload
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
@@ -1805,9 +1857,9 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    my_iotivity.test_cascoda()
+    # my_iotivity.test_cascoda()
 
-    # my_iotivity.test_getpost()
+    my_iotivity.test_getpost()
 
     #my_iotivity.test_discovery()
 

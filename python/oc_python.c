@@ -239,6 +239,27 @@ print_rep(oc_rep_t *rep, bool pretty_print)
   printf("%s\n", json);
   free(json);
 }
+
+char *response_payload;
+char *
+get_response_payload()
+{
+  return response_payload;
+}
+
+/**
+ * function to save the returned cbor as JSON
+ *
+ */
+void
+save_rep(oc_rep_t *rep, bool pretty_print)
+{
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
+  response_payload = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, response_payload, json_size + 1, pretty_print);
+}
+
 /* function to call the callback for diplomats to python.
  *
  */
@@ -1796,6 +1817,7 @@ py_general_get_cb(oc_client_response_t *data)
   if (data->payload != NULL) {
     PRINT("[C]get response payload: \n");
     print_rep(data->payload, false);
+    save_rep(data->payload, false);
     cb_result = true;
   } else {
     PRINT("[C]ERROR PERFORMING GET\n");
@@ -1843,6 +1865,7 @@ py_general_post_cb(oc_client_response_t *data)
 
   if (data->payload != NULL) {
     print_rep(data->payload, false);
+    save_rep(data->payload, false);
   }
 }
 

@@ -118,37 +118,37 @@ class FormUi:
             values=values
         )
         self.combobox.current(0)
-        self.combobox.grid(column=1, row=0, sticky=(W, E))
+        self.combobox.grid(column=1, row=0, sticky=W)
+
+        my_width = 60
 
         # Create a text field to enter the request URL
         self.URL = tk.StringVar()
         ttk.Label(self.frame, text='Request URL:').grid(column=0, row=2, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.URL, width=25).grid(
-            column=1, row=2, sticky=(W, E))
+        ttk.Entry(self.frame, textvariable=self.URL, width=my_width).grid(
+            column=1, row=2, sticky=W)
         self.URL.set('oic/d')
 
         # Create a text field to enter POST query
         self.query = tk.StringVar()
         ttk.Label(self.frame, text='Request Query:').grid(column=0, row=3, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.query, width=25).grid(
-            column=1, row=3, sticky=(W, E))
+        ttk.Entry(self.frame, textvariable=self.query, width=my_width).grid(
+            column=1, row=3, sticky=W)
         self.query.set('')
 
         # Create a text field to enter POST payload property
         self.payload_property = tk.StringVar()
         ttk.Label(self.frame, text='Payload property:').grid(column=0, row=4, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.payload_property, width=25).grid(
-            column=1, row=4, sticky=(W, E))
+        ttk.Entry(self.frame, textvariable=self.payload_property, width=my_width).grid(
+            column=1, row=4, sticky=W)
         self.payload_property.set('')
 
         # Create a text field to enter Post payload value
         self.payload_value = tk.StringVar()
         ttk.Label(self.frame, text='Payload value:').grid(column=0, row=5, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.payload_value, width=25).grid(
-            column=1, row=5, sticky=(W, E))
+        ttk.Entry(self.frame, textvariable=self.payload_value, width=my_width).grid(
+            column=1, row=5, sticky=W)
         self.payload_value.set('')
-
-        my_width = 60
 
         row_index = 10
         row_index += 1
@@ -174,12 +174,35 @@ class FormUi:
         tk.Label(self.frame, text='Discovered:').grid(column=0, row=row_index, sticky=W)
         # len_max = len(random_string())
         self.l1 = tk.Listbox(self.frame, height=3, width=my_width, exportselection=False)
-        self.l1.grid(column=1, row=row_index, sticky=W)
+        self.l1.grid(column=1, row=row_index, sticky=(W, E))
 
         row_index += 3
         # Add a button to publish the message as cbor
         self.button_clear = ttk.Button(self.frame, text='Clear', command=self.submit_clear)
         self.button_clear.grid(column=0, row=row_index, sticky=W)
+
+    def discover_devices(self): 
+        my_iotivity.discover_all()
+        my_iotivity.onboard_all_unowned()
+        my_iotivity.list_owned_devices()
+        obt_uuid = my_iotivity.get_obt_uuid()
+
+        for i in range(0, my_iotivity.get_nr_owned_devices()): 
+            device_uuid = my_iotivity.get_owned_uuid(i)
+            device_name = my_iotivity.get_device_name(device_uuid)
+            device_info = f"{device_uuid} - {device_name}"
+            discovered_devices = app.form.l1.get(0, END)
+            
+            if device_info not in discovered_devices:
+                app.form.l1.insert(END, device_info)
+
+                my_iotivity.provision_id_cert(device_uuid)
+
+                my_iotivity.provision_ace_chili(device_uuid, obt_uuid)
+                time.sleep(5)
+
+                my_iotivity.retrieve_acl2(device_uuid)
+                time.sleep(5)
 
     def send_request(self): 
         if self.l1.curselection() == (): 
@@ -190,8 +213,19 @@ class FormUi:
         device_uuid = my_iotivity.get_owned_uuid(device_index)
 
         if self.request_type.get() == 'GET': 
-            my_iotivity.general_get(device_uuid, self.URL.get())
+            request_url = self.URL.get()
+
+            result, response_payload = my_iotivity.general_get(device_uuid, request_url)
+
+            if result: 
+                logger.log(logging.INFO, f"GET {request_url} succeeded")
+                show_window_with_text(f"POST {request_url} response payload", response_payload)
+            else: 
+                logger.log(logging.INFO, f"GET {request_url} failed")
         elif self.request_type.get() == 'POST': 
+            request_query = self.query.get()
+            request_url = self.URL.get()
+            payload_property_str = self.payload_property.get()
             payload_value_str = self.payload_value.get()
 
             # Determine payload type
@@ -208,63 +242,19 @@ class FormUi:
                 except ValueError: 
                     payload_type = "str"
 
-            my_iotivity.general_post(device_uuid, self.query.get(), self.URL.get(), self.payload_property.get(), payload_value_str, payload_type)
+            result, response_payload = my_iotivity.general_post(device_uuid, request_query, request_url, payload_property_str, payload_value_str, payload_type)
 
-    def discover_devices(self): 
-        my_iotivity.discover_all()
-        my_iotivity.onboard_all_unowned()
-
-        my_iotivity.list_owned_devices()
-
-        my_iotivity.provision_id_cert_all()
-
-        obt_uuid = my_iotivity.get_obt_uuid()
-
-        for i in range(0, my_iotivity.get_nr_owned_devices()): 
-            device_uuid = my_iotivity.get_owned_uuid(i)
-            device_name = my_iotivity.get_device_name(device_uuid)
-            device_info = f"{device_uuid} - {device_name}"
-
-            discovered_devices = app.form.l1.get(0, END)
-            if device_info not in discovered_devices:
-                app.form.l1.insert(END, device_info)
-
-            my_iotivity.provision_ace_chili(device_uuid, obt_uuid)
-            time.sleep(5)
-
-            my_iotivity.retrieve_acl2(device_uuid)
-            time.sleep(5)
-
-
-
-    def submit_P(self):
-        """ get the oic/p data
-           will set a sequence of actions in play:
-           - get oic/p from the device (with UDN) from the list
-           - show the response in a popup window
-        """
-        # get the selected value of the listbox
-        if self.l1.curselection() == ():
-            return
-        index = int(self.l1.curselection()[0])
-        value = self.l1.get(index)
-        print("You selected item ", index, value)
-
-        cbor_data = None
-        my_qos = self.level.get()
-        my_qos_int = int(my_qos)
-        my_retain = self.btn_var.get()
-        retain_flag = False
-        if my_retain == "1":
-            print("retain is true")
-            retain_flag = True
-        # /oic/res
-        # publish_url(self.app.client, self.app.client.my_udn, value, "/oic/p", "R", cb="oic_p_cb")
+            if result: 
+                logger.log(logging.INFO, f"POST {request_url} succeeded")
+                show_window_with_text(f"POST {request_url} response payload", response_payload)
+            else: 
+                logger.log(logging.INFO, f"POST {request_url} failed")
 
     def submit_clear(self):
         """ clear the discovered device list
         """
-        print("Clear - delete all entries")
+        print("Clear - delete all devices")
+        logger.log(logging.INFO, "Clear - offboard all devices")
         self.l1.delete(0, END)
         my_iotivity.offboard_all_owned()
 
@@ -331,6 +321,9 @@ def main():
     global app
     root = tk.Tk()
     app = App(root)
+
+    logging.basicConfig(level=logging.DEBUG)
+    logger.log(logging.INFO, "Onboarding tool started with UUID: " + my_iotivity.get_obt_uuid())
 
     # app.root.config(menu=menubar)
     app.root.mainloop()
