@@ -42,6 +42,8 @@
 
 #ifndef OC_PROCESS_H
 #define OC_PROCESS_H
+
+#include "util/oc_atomic.h"
 #include "util/pt/pt.h"
 
 #ifdef __cplusplus
@@ -323,7 +325,7 @@ struct oc_process
 #endif
   PT_THREAD((*thread)(struct pt *, oc_process_event_t, oc_process_data_t));
   struct pt pt;
-  unsigned char state, needspoll;
+  OC_ATOMIC unsigned char needspoll, state;
 };
 
 /**
