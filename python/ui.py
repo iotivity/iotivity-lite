@@ -1,0 +1,341 @@
+import time
+import queue
+import signal
+import logging
+import os
+import sys
+
+import json
+from json.decoder import JSONDecodeError
+
+import tkinter as tk
+from tkinter.constants import END
+from tkinter.scrolledtext import ScrolledText
+from tkinter import ttk, VERTICAL, HORIZONTAL, N, S, E, W
+
+# currentdir = os.path.dirname(os.path.realpath(__file__))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.append(parentdir)
+import iotivity
+
+logger = logging.getLogger(__name__)
+
+app = None
+
+my_iotivity = iotivity.Iotivity()
+
+def show_window_with_text(window_name, my_text):
+    """ call back for the IDD file request
+    Args:
+        client (class): mqtt client
+        userdata (not used): not used
+        message (class): received mqtt message
+        udn (string): udn, the responder udn
+    """
+    window = tk.Toplevel()
+    window.title(window_name)
+    text_area = ScrolledText(window, wrap=tk.WORD, width=80, height=50)
+    text_area.grid(column=0, pady=10, padx=10)
+    text_area.insert(tk.INSERT, my_text)
+    text_area.configure(state='disabled')
+
+
+class QueueHandler(logging.Handler):
+    """Class to send logging records to a queue
+    It can be used from different threads
+    The ConsoleUi class polls this queue to display records in a ScrolledText widget
+    """
+    # Example from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
+    # (https://stackoverflow.com/questions/13318742/python-logging-to-tkinter-text-widget) is not thread safe!
+    # See https://stackoverflow.com/questions/43909849/tkinter-python-crashes-on-new-thread-trying-to-log-on-main-thread
+
+    def __init__(self, log_queue):
+        super().__init__()
+        self.log_queue = log_queue
+
+    def emit(self, record):
+        self.log_queue.put(record)
+
+
+class ConsoleUi:
+    """Poll messages from a logging queue and display them in a scrolled text widget"""
+
+    def __init__(self, frame):
+        self.frame = frame
+        # Create a ScrolledText wdiget
+        self.scrolled_text = ScrolledText(frame, state='disabled', height=40)
+        self.scrolled_text.grid(row=0, column=0, sticky=(N, S, W, E))
+        self.scrolled_text.configure(font='TkFixedFont')
+        self.scrolled_text.tag_config('INFO', foreground='black')
+        self.scrolled_text.tag_config('DEBUG', foreground='gray')
+        self.scrolled_text.tag_config('WARNING', foreground='orange')
+        self.scrolled_text.tag_config('ERROR', foreground='red')
+        self.scrolled_text.tag_config('CRITICAL', foreground='red', underline=1)
+        # Create a logging handler using a queue
+        self.log_queue = queue.Queue()
+        self.queue_handler = QueueHandler(self.log_queue)
+        formatter = logging.Formatter('%(asctime)s: %(message)s')
+        self.queue_handler.setFormatter(formatter)
+        logger.addHandler(self.queue_handler)
+        # Start polling messages from the queue
+        self.frame.after(100, self.poll_log_queue)
+
+    def display(self, record):
+        msg = self.queue_handler.format(record)
+        self.scrolled_text.configure(state='normal')
+        self.scrolled_text.insert(tk.END, msg + '\n', record.levelname)
+        self.scrolled_text.configure(state='disabled')
+        # Autoscroll to the bottom
+        self.scrolled_text.yview(tk.END)
+
+    def poll_log_queue(self):
+        # Check every 100ms if there is a new message in the queue to display
+        while True:
+            try:
+                record = self.log_queue.get(block=False)
+            except queue.Empty:
+                break
+            else:
+                self.display(record)
+        self.frame.after(100, self.poll_log_queue)
+
+
+class FormUi:
+
+    def __init__(self, frame):
+        self.frame = frame
+
+        # Create a combobbox to select the request type
+        values = ['GET', 'POST']
+        self.request_type = tk.StringVar()
+        ttk.Label(self.frame, text='Request Type:').grid(
+            column=0, row=0, sticky=W)
+        self.combobox = ttk.Combobox(
+            self.frame,
+            textvariable=self.request_type,
+            width=25,
+            state='readonly',
+            values=values
+        )
+        self.combobox.current(0)
+        self.combobox.grid(column=1, row=0, sticky=(W, E))
+
+        # Create a text field to enter the request URL
+        self.URL = tk.StringVar()
+        ttk.Label(self.frame, text='Request URL:').grid(column=0, row=2, sticky=W)
+        ttk.Entry(self.frame, textvariable=self.URL, width=25).grid(
+            column=1, row=2, sticky=(W, E))
+        self.URL.set('oic/d')
+
+        # Create a text field to enter POST query
+        self.query = tk.StringVar()
+        ttk.Label(self.frame, text='Request Query:').grid(column=0, row=3, sticky=W)
+        ttk.Entry(self.frame, textvariable=self.query, width=25).grid(
+            column=1, row=3, sticky=(W, E))
+        self.query.set('')
+
+        # Create a text field to enter POST payload property
+        self.payload_property = tk.StringVar()
+        ttk.Label(self.frame, text='Payload property:').grid(column=0, row=4, sticky=W)
+        ttk.Entry(self.frame, textvariable=self.payload_property, width=25).grid(
+            column=1, row=4, sticky=(W, E))
+        self.payload_property.set('')
+
+        # Create a text field to enter Post payload value
+        self.payload_value = tk.StringVar()
+        ttk.Label(self.frame, text='Payload value:').grid(column=0, row=5, sticky=W)
+        ttk.Entry(self.frame, textvariable=self.payload_value, width=25).grid(
+            column=1, row=5, sticky=(W, E))
+        self.payload_value.set('')
+
+        my_width = 60
+
+        row_index = 10
+        row_index += 1
+
+        # Add a button to publish the message as cbor
+        tk.Label(self.frame, text=' ').grid(column=0, row=row_index, sticky=W)
+        self.button = ttk.Button(
+            self.frame, text='Send Request', command=self.send_request)
+        self.button.grid(column=1, row=row_index, sticky=W)
+
+        row_index += 1
+        ttk.Label(self.frame, text='   ').grid(column=0, row=row_index, sticky=W)
+
+        row_index += 1
+        # Add a button to do discovery
+        tk.Label(self.frame, text='Device Discovery:').grid(column=0, row=row_index, sticky=W)
+        self.button = ttk.Button(
+            self.frame, text='Discover', command=self.discover_devices)
+        self.button.grid(column=1, row=row_index, sticky=W)
+
+        row_index += 1
+        # list box section
+        tk.Label(self.frame, text='Discovered:').grid(column=0, row=row_index, sticky=W)
+        # len_max = len(random_string())
+        self.l1 = tk.Listbox(self.frame, height=3, width=my_width, exportselection=False)
+        self.l1.grid(column=1, row=row_index, sticky=W)
+
+        row_index += 3
+        # Add a button to publish the message as cbor
+        self.button_clear = ttk.Button(self.frame, text='Clear', command=self.submit_clear)
+        self.button_clear.grid(column=0, row=row_index, sticky=W)
+
+    def send_request(self): 
+        if self.l1.curselection() == (): 
+            print("No device selected!")
+            return
+
+        device_index = int(self.l1.curselection()[0])
+        device_uuid = my_iotivity.get_owned_uuid(device_index)
+
+        if self.request_type.get() == 'GET': 
+            my_iotivity.general_get(device_uuid, self.URL.get())
+        elif self.request_type.get() == 'POST': 
+            payload_value_str = self.payload_value.get()
+
+            # Determine payload type
+            if payload_value_str.lower() == "true": 
+                payload_value_str = "1"
+                payload_type = "bool"
+            elif payload_value_str.lower() == "false": 
+                payload_value_str = "0"
+                payload_type = "bool"
+            else: 
+                try: 
+                    test_int = int(payload_value_str)
+                    payload_type = "int"
+                except ValueError: 
+                    payload_type = "str"
+
+            my_iotivity.general_post(device_uuid, self.query.get(), self.URL.get(), self.payload_property.get(), payload_value_str, payload_type)
+
+    def discover_devices(self): 
+        my_iotivity.discover_all()
+        my_iotivity.onboard_all_unowned()
+
+        my_iotivity.list_owned_devices()
+
+        my_iotivity.provision_id_cert_all()
+
+        obt_uuid = my_iotivity.get_obt_uuid()
+
+        for i in range(0, my_iotivity.get_nr_owned_devices()): 
+            device_uuid = my_iotivity.get_owned_uuid(i)
+            device_name = my_iotivity.get_device_name(device_uuid)
+            device_info = f"{device_uuid} - {device_name}"
+
+            discovered_devices = app.form.l1.get(0, END)
+            if device_info not in discovered_devices:
+                app.form.l1.insert(END, device_info)
+
+            my_iotivity.provision_ace_chili(device_uuid, obt_uuid)
+            time.sleep(5)
+
+            my_iotivity.retrieve_acl2(device_uuid)
+            time.sleep(5)
+
+
+
+    def submit_P(self):
+        """ get the oic/p data
+           will set a sequence of actions in play:
+           - get oic/p from the device (with UDN) from the list
+           - show the response in a popup window
+        """
+        # get the selected value of the listbox
+        if self.l1.curselection() == ():
+            return
+        index = int(self.l1.curselection()[0])
+        value = self.l1.get(index)
+        print("You selected item ", index, value)
+
+        cbor_data = None
+        my_qos = self.level.get()
+        my_qos_int = int(my_qos)
+        my_retain = self.btn_var.get()
+        retain_flag = False
+        if my_retain == "1":
+            print("retain is true")
+            retain_flag = True
+        # /oic/res
+        # publish_url(self.app.client, self.app.client.my_udn, value, "/oic/p", "R", cb="oic_p_cb")
+
+    def submit_clear(self):
+        """ clear the discovered device list
+        """
+        print("Clear - delete all entries")
+        self.l1.delete(0, END)
+        my_iotivity.offboard_all_owned()
+
+class App:
+
+    def __init__(self, root):
+        """ create the application, having 3 panes.
+        """
+        self.root = root
+        root.title('OBT GUI')
+
+        menubar = tk.Menu(root)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Config", command=donothing)
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=root.quit)
+
+        helpmenu = tk.Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="About...", command=donothing)
+
+        root.config(menu=menubar)
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
+
+        # Create the panes and frames
+        vertical_pane = ttk.PanedWindow(self.root, orient=VERTICAL)
+        vertical_pane.grid(row=0, column=0, sticky="nsew")
+        # vertical_pane.grid(row=1, column=1, sticky="nsew")
+        horizontal_pane = ttk.PanedWindow(vertical_pane, orient=HORIZONTAL)
+
+        vertical_pane.add(horizontal_pane)
+        form_frame = ttk.Labelframe(
+            horizontal_pane, text="Publish Information")
+        form_frame.columnconfigure(1, weight=1)
+        horizontal_pane.add(form_frame, weight=1)
+
+        console_frame = ttk.Labelframe(horizontal_pane, text="Console")
+        console_frame.columnconfigure(0, weight=1)
+        console_frame.rowconfigure(0, weight=1)
+        horizontal_pane.add(console_frame, weight=1)
+
+        # Initialize all frames
+        self.form = FormUi(form_frame)
+        self.form.app = self
+        self.console = ConsoleUi(console_frame)
+        self.console.app = self
+        self.root.protocol('WM_DELETE_WINDOW', self.quit)
+        self.root.bind('<Control-q>', self.quit)
+        signal.signal(signal.SIGINT, self.quit)
+
+    def quit(self, *args):
+        """ quit function for the app
+        """
+        my_iotivity.offboard_all_owned()
+        self.root.destroy()
+
+def donothing():
+    filewin = tk.Toplevel(app.root)
+    button = tk.Button(filewin, text="Do nothing button")
+    button.pack()
+
+def main():
+    # initalize the GUI application
+    global app
+    root = tk.Tk()
+    app = App(root)
+
+    # app.root.config(menu=menubar)
+    app.root.mainloop()
+
+    my_iotivity.quit() 
+
+if __name__ == '__main__':
+    main()
