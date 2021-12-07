@@ -50,9 +50,15 @@ extern "C" {
 // is set to false.
 #define OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)             \
   do {                                                                         \
-    (result) = __atomic_compare_exchange(&(x), &(expected), &(desired), false, \
-                                         __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);  \
+    (result) = __atomic_compare_exchange_n(                                    \
+      &(x), &(expected), desired, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);  \
   } while (0)
+
+// aliases for compatibility
+#define OC_ATOMIC_LOAD8(x) OC_ATOMIC_LOAD32(x)
+#define OC_ATOMIC_STORE8(x, val) OC_ATOMIC_STORE32(x, val)
+#define OC_ATOMIC_COMPARE_AND_SWAP8(x, expected, desired, result)              \
+  OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)
 
 #endif // __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
 
@@ -62,13 +68,29 @@ extern "C" {
 
 #if _MSC_VER
 
+#include <intrin.h>
+
 #define OC_ATOMIC
 
+#define OC_ATOMIC_LOAD8(x) _InterlockedOr8((&x), 0)
 #define OC_ATOMIC_LOAD32(x) _InterlockedOr((&x), 0)
 
+#define OC_ATOMIC_STORE8(x, val) _InterlockedExchange8((&x), val)
 #define OC_ATOMIC_STORE32(x, val) _InterlockedExchange((&x), val)
 
 #define OC_ATOMIC_INCREMENT32(x) _InterlockedIncrement((&x))
+
+#define OC_ATOMIC_DECREMENT32(x) _InterlockedDecrement((&x))
+
+#define OC_ATOMIC_COMPARE_AND_SWAP8(x, expected, desired, result)              \
+  do {                                                                         \
+    char _oc_compare_and_swap_initial =                                        \
+      _InterlockedCompareExchange8(&(x), (desired), (expected));               \
+    (result) = ((expected) == _oc_compare_and_swap_initial);                   \
+    if (!result) {                                                             \
+      (expected) = _oc_compare_and_swap_initial;                               \
+    }                                                                          \
+  } while (0)
 
 // Copy the semantics of the Unix version of OC_ATOMIC_COMPARE_AND_SWAP32
 // using Windows intrinsics.
@@ -77,7 +99,9 @@ extern "C" {
     int32_t _oc_compare_and_swap_initial =                                     \
       _InterlockedCompareExchange(&(x), (desired), (expected));                \
     (result) = ((expected) == _oc_compare_and_swap_initial);                   \
-    (expected) = _oc_compare_and_swap_initial;                                 \
+    if (!result) {                                                             \
+      (expected) = _oc_compare_and_swap_initial;                               \
+    }                                                                          \
   } while (0)
 
 #endif // _MSC_VER
@@ -116,6 +140,12 @@ atomics for your platform to this file")
       (result) = false;                                                        \
     }                                                                          \
   } while (0)
+
+// aliases for compatibility
+#define OC_ATOMIC_LOAD8(x) OC_ATOMIC_LOAD32(x)
+#define OC_ATOMIC_STORE8(x, val) OC_ATOMIC_STORE32(x, val)
+#define OC_ATOMIC_COMPARE_AND_SWAP8(x, expected, desired, result)              \
+  OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)
 
 #endif
 
