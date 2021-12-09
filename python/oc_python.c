@@ -1826,7 +1826,7 @@ py_general_get_cb(oc_client_response_t *data)
 }
 
 void
-py_general_get(char *uuid, char *uri)
+py_general_get(char *uuid, char *url)
 {
   device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
@@ -1839,7 +1839,7 @@ py_general_get(char *uuid, char *uri)
   PRINT("[C] py_general_get: name = %s \n", device->device_name);
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_general_get(&device->uuid, uri, py_general_get_cb, NULL);
+  int ret = oc_obt_general_get(&device->uuid, url, py_general_get_cb, NULL);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued GET request\n");
   } else {

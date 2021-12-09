@@ -3447,7 +3447,7 @@ oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *query, const char *url,
 
 /* General GET and POST */
 int
-oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
+oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
                    void *data)
 {
   if (!oc_obt_is_owned_device(uuid)) {
@@ -3465,7 +3465,7 @@ oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
 
   oc_tls_select_psk_ciphersuite();
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get(uri, ep, NULL, cb, HIGH_QOS, data)) {
+  if (oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
     return 0;
   }
 

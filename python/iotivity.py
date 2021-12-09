@@ -781,7 +781,7 @@ class Iotivity():
     def discover_all(self):
         self.discover_unowned()
         self.discover_owned()
-        time.sleep(5)
+        time.sleep(20)
         self.list_owned_devices()
         self.list_unowned_devices()
 
@@ -1500,7 +1500,7 @@ class Iotivity():
             print (f"Posting /d2dserverlist failed for: {myuuid} {device_name}")
         time.sleep(1)
 
-    def general_get(self, uuid, uri): 
+    def general_get(self, uuid, url): 
         self.lib.py_general_get.argtypes = [String, String]
         self.lib.py_general_get.restype = None
 
@@ -1509,7 +1509,7 @@ class Iotivity():
         response_payload = ""
         while run_count < 5 and not result: 
             run_count += 1
-            self.lib.py_general_get(uuid, uri)
+            self.lib.py_general_get(uuid, url)
 
             start_time = time.time()
             timeout = 10
@@ -1529,7 +1529,7 @@ class Iotivity():
         time.sleep(1)
         return result, response_payload
 
-    def general_post(self, uuid, query, uri, payload_properties, payload_values, payload_types): 
+    def general_post(self, uuid, query, url, payload_properties, payload_values, payload_types): 
         self.lib.py_general_post.argtypes = [String, String, String, POINTER(c_char_p), POINTER(c_char_p), POINTER(c_char_p), c_int]
         self.lib.py_general_post.restype = None
 
@@ -1551,7 +1551,7 @@ class Iotivity():
         while run_count < 5 and not result: 
             run_count += 1
 
-            self.lib.py_general_post(uuid, query, uri, properties_ptr, values_ptr, types_ptr, list_size)
+            self.lib.py_general_post(uuid, query, url, properties_ptr, values_ptr, types_ptr, list_size)
 
             start_time = time.time()
             timeout = 10
@@ -1760,7 +1760,7 @@ class Iotivity():
     def test_get(self): 
         self.list_owned_devices()
         device_uuid = input("Please enter uuid: ")
-        url = input("Please enter request uri: ")
+        url = input("Please enter request url: ")
 
         self.general_get(device_uuid, url)
 
