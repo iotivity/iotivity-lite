@@ -14,9 +14,9 @@ from tkinter.constants import END
 from tkinter.scrolledtext import ScrolledText
 from tkinter import ttk, VERTICAL, HORIZONTAL, N, S, E, W
 
-# currentdir = os.path.dirname(os.path.realpath(__file__))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.append(parentdir)
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
 import iotivity
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class FormUi:
         ttk.Label(self.frame, text='Request Payload:').grid(column=0, row=6, sticky=W)
         ttk.Entry(self.frame, textvariable=self.payload_json, width=my_width).grid(
             column=1, row=6, sticky=(W, E))
-        self.payload_json.set('{"value": true}')
+        self.payload_json.set('{"property1": new_value1, "property2: new_value2"}')
 
         row_index = 10
         row_index += 1
