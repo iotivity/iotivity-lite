@@ -3447,7 +3447,7 @@ oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *query, const char *url,
 
 /* General GET and POST */
 int
-oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
+oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
                    void *data)
 {
   if (!oc_obt_is_owned_device(uuid)) {
@@ -3465,7 +3465,7 @@ oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
 
   oc_tls_select_psk_ciphersuite();
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get(uri, ep, NULL, cb, HIGH_QOS, data)) {
+  if (oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
     return 0;
   }
 
@@ -3475,8 +3475,8 @@ oc_obt_general_get(oc_uuid_t *uuid, char *uri, oc_response_handler_t cb,
 int
 oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
                     oc_response_handler_t cb, void *user_data,
-                    char *payload_property, char *payload_value,
-                    char *payload_type)
+                    char **payload_properties, char **payload_values,
+                    char **payload_types, int array_size)
 {
   oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
   if (device == NULL) {
@@ -3493,29 +3493,36 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
   }
 
   if (oc_init_post(url, ep, query, cb, HIGH_QOS, user_data)) {
-
     oc_rep_start_root_object();
-    if (strstr(payload_type, "bool") != NULL) {
-      int payload_int = strtol(payload_value, NULL, 10);
-      bool payload_bool = (payload_int ? true : false);
+    for (int i = 0; i < array_size; i++) {
+      if (strstr(payload_types[i], "bool") != NULL) {
+        int payload_int = strtol(payload_values[i], NULL, 10);
+        bool payload_bool = (payload_int ? true : false);
 
-      cbor_encode_text_string(&root_map, payload_property,
-                              strlen(payload_property));
-      cbor_encode_boolean(&root_map, payload_bool);
-    } else if (strstr(payload_type, "int") != NULL) {
-      int payload_int = strtol(payload_value, NULL, 10);
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_boolean(&root_map, payload_bool);
+      } else if (strstr(payload_types[i], "int") != NULL) {
+        int payload_int = strtol(payload_values[i], NULL, 10);
 
-      cbor_encode_text_string(&root_map, payload_property,
-                              strlen(payload_property));
-      cbor_encode_int(&root_map, payload_int);
-    } else if (strstr(payload_type, "int") != NULL) {
-      cbor_encode_text_string(&root_map, payload_property,
-                              strlen(payload_property));
-      if ((const char *)payload_value != NULL) {
-        cbor_encode_text_string(&root_map, payload_value,
-                                strlen(payload_value));
-      } else {
-        cbor_encode_text_string(&root_map, "", 0);
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_int(&root_map, payload_int);
+      } else if (strstr(payload_types[i], "float") != NULL) {
+        double payload_double = strtod(payload_values[i], NULL);
+
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_double(&root_map, payload_double);
+      } else if (strstr(payload_types[i], "str") != NULL) {
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        if ((const char *)payload_values[i] != NULL) {
+          cbor_encode_text_string(&root_map, payload_values[i],
+                                  strlen(payload_values[i]));
+        } else {
+          cbor_encode_text_string(&root_map, "", 0);
+        }
       }
     }
     oc_rep_end_root_object();

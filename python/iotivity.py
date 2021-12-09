@@ -48,6 +48,7 @@ from os import listdir
 from os.path import isfile, join
 from shutil import copyfile
 from  collections import OrderedDict
+from typing import List
 from termcolor import colored
 
 import numpy.ctypeslib as ctl
@@ -734,6 +735,10 @@ class Iotivity():
     def get_result(self): 
         self.lib.get_cb_result.restype = bool
         return self.lib.get_cb_result()
+    
+    def get_response_payload(self): 
+        self.lib.get_response_payload.restype = String
+        return self.lib.get_response_payload()
 
 
     def purge_device_array(self,uuid):
@@ -1495,15 +1500,76 @@ class Iotivity():
             print (f"Posting /d2dserverlist failed for: {myuuid} {device_name}")
         time.sleep(1)
 
-    def general_get(self, uuid, uri): 
+    def general_get(self, uuid, url): 
         self.lib.py_general_get.argtypes = [String, String]
         self.lib.py_general_get.restype = None
-        self.lib.py_general_get(uuid, uri)
 
-    def general_post(self, uuid, query, uri, payload_property, payload_value, payload_type): 
-        self.lib.py_general_post.argtypes = [String, String, String, String, String, String]
+        run_count = 0
+        result = False
+        response_payload = ""
+        while run_count < 5 and not result: 
+            run_count += 1
+            self.lib.py_general_get(uuid, url)
+
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+        if result: 
+            response_payload = self.get_response_payload()
+            print (f"Sending GET request succeeded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Sending GET request failed")
+        time.sleep(1)
+        return result, response_payload
+
+    def general_post(self, uuid, query, url, payload_properties, payload_values, payload_types): 
+        self.lib.py_general_post.argtypes = [String, String, String, POINTER(c_char_p), POINTER(c_char_p), POINTER(c_char_p), c_int]
         self.lib.py_general_post.restype = None
-        self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
+        list_size = len(payload_properties)
+        for i in range(list_size): 
+            payload_properties[i] = c_char_p(payload_properties[i].encode())
+        for i in range(list_size): 
+            payload_values[i] = c_char_p(payload_values[i].encode())
+        for i in range(list_size): 
+            payload_types[i] = c_char_p(payload_types[i].encode())
+
+        properties_ptr = (c_char_p * len(payload_properties))(*payload_properties)
+        values_ptr = (c_char_p * len(payload_values))(*payload_values)
+        types_ptr = (c_char_p * len(payload_types))(*payload_types)
+
+        run_count = 0
+        result = False
+        response_payload = ""
+        while run_count < 5 and not result: 
+            run_count += 1
+
+            self.lib.py_general_post(uuid, query, url, properties_ptr, values_ptr, types_ptr, list_size)
+
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+        if result: 
+            response_payload = self.get_response_payload()
+            print (f"Sending POST request succeeded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Sending POST request failed")
+        time.sleep(1)
+        return result, response_payload
 
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
@@ -1688,35 +1754,44 @@ class Iotivity():
     def test_get(self): 
         self.list_owned_devices()
         device_uuid = input("Please enter uuid: ")
-        uri = input("Please enter request uri: ")
+        url = input("Please enter request url: ")
 
-        self.general_get(device_uuid, uri)
+        self.general_get(device_uuid, url)
 
     def test_post(self): 
         self.list_owned_devices()
         device_uuid = input("Please enter uuid: ")
-        uri = input("Please enter request uri: ")
+        url = input("Please enter request url: ")
         query = input("Please enter request query: ")
-        payload_property = input("Please enter target property: ")
-        payload_value = input("Please enter new value of target property: ")
+        payload = input("Please enter request payload: ")
 
-        if payload_value.lower() == "true": 
-            payload_value = "1"
-            payload_type = "bool"
-        elif payload_value.lower() == "false": 
-            payload_value = "0"
-            payload_type = "bool"
-        else: 
-            try: 
-                test_int = int(payload_value)
-                payload_type = "int"
-            except ValueError: 
-                payload_type = "str"
+        payload_property_list = payload_value_list = payload_type_list = []
+        if payload: 
+            payload_json = json.loads(payload)
+                
+            payload_property_list = list(payload_json.keys())
+            payload_value_list = list(payload_json.values())
+            payload_type_list = []
 
-        if len(query) == 0: 
-            query = None
+            for i in range(len(payload_value_list)): 
+                # Determine payload type
+                if isinstance(payload_value_list[i], bool): 
+                    payload_value_list[i] = "1" if payload_value_list[i] else "0"
+                    payload_type_list.append("bool")
+                elif isinstance(payload_value_list[i], int): 
+                    payload_value_list[i] = str(payload_value_list[i])
+                    payload_type_list.append("int")
+                elif isinstance(payload_value_list[i], float): 
+                    payload_value_list[i] = str(payload_value_list[i])
+                    payload_type_list.append("float")
+                elif isinstance(payload_value_list[i], str): 
+                    payload_type_list.append("str")
+                else: 
+                    print(f"Unrecognised payload type! ")
+                    return
 
-        self.general_post(device_uuid, query, uri, payload_property, payload_value, payload_type)
+        self.general_post(device_uuid, query, url, payload_property_list, payload_value_list, payload_type_list)
+
 
     def test_getpost(self): 
         self.discover_all()
@@ -1799,9 +1874,9 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    my_iotivity.test_cascoda()
+    # my_iotivity.test_cascoda()
 
-    # my_iotivity.test_getpost()
+    my_iotivity.test_getpost()
 
     #my_iotivity.test_discovery()
 

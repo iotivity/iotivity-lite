@@ -239,6 +239,27 @@ print_rep(oc_rep_t *rep, bool pretty_print)
   printf("%s\n", json);
   free(json);
 }
+
+char *response_payload;
+char *
+get_response_payload()
+{
+  return response_payload;
+}
+
+/**
+ * function to save the returned cbor as JSON
+ *
+ */
+void
+save_rep(oc_rep_t *rep, bool pretty_print)
+{
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
+  response_payload = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, response_payload, json_size + 1, pretty_print);
+}
+
 /* function to call the callback for diplomats to python.
  *
  */
@@ -1796,6 +1817,7 @@ py_general_get_cb(oc_client_response_t *data)
   if (data->payload != NULL) {
     PRINT("[C]get response payload: \n");
     print_rep(data->payload, false);
+    save_rep(data->payload, false);
     cb_result = true;
   } else {
     PRINT("[C]ERROR PERFORMING GET\n");
@@ -1804,7 +1826,7 @@ py_general_get_cb(oc_client_response_t *data)
 }
 
 void
-py_general_get(char *uuid, char *uri)
+py_general_get(char *uuid, char *url)
 {
   device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
@@ -1817,7 +1839,7 @@ py_general_get(char *uuid, char *uri)
   PRINT("[C] py_general_get: name = %s \n", device->device_name);
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_general_get(&device->uuid, uri, py_general_get_cb, NULL);
+  int ret = oc_obt_general_get(&device->uuid, url, py_general_get_cb, NULL);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued GET request\n");
   } else {
@@ -1843,12 +1865,13 @@ py_general_post_cb(oc_client_response_t *data)
 
   if (data->payload != NULL) {
     print_rep(data->payload, false);
+    save_rep(data->payload, false);
   }
 }
 
 void
-py_general_post(char *uuid, char *query, char *url, char *payload_property,
-                char *payload_value, char *payload_type)
+py_general_post(char *uuid, char *query, char *url, char **payload_properties,
+                char **payload_values, char **payload_types, int array_size)
 {
   oc_uuid_t deviceuuid;
   oc_str_to_uuid(uuid, &deviceuuid);
@@ -1856,7 +1879,7 @@ py_general_post(char *uuid, char *query, char *url, char *payload_property,
   otb_mutex_lock(app_sync_lock);
 
   oc_obt_general_post(&deviceuuid, query, url, py_general_post_cb, NULL,
-                      payload_property, payload_value, payload_type);
+                      payload_properties, payload_values, payload_types, array_size);
 
   otb_mutex_unlock(app_sync_lock);
 }
