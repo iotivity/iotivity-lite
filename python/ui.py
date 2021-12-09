@@ -1,3 +1,4 @@
+from ctypes import sizeof
 import time
 import queue
 import signal
@@ -126,29 +127,22 @@ class FormUi:
         self.URL = tk.StringVar()
         ttk.Label(self.frame, text='Request URL:').grid(column=0, row=2, sticky=W)
         ttk.Entry(self.frame, textvariable=self.URL, width=my_width).grid(
-            column=1, row=2, sticky=W)
+            column=1, row=2, sticky=(W, E))
         self.URL.set('oic/d')
 
         # Create a text field to enter POST query
         self.query = tk.StringVar()
         ttk.Label(self.frame, text='Request Query:').grid(column=0, row=3, sticky=W)
         ttk.Entry(self.frame, textvariable=self.query, width=my_width).grid(
-            column=1, row=3, sticky=W)
+            column=1, row=3, sticky=(W, E))
         self.query.set('')
 
-        # Create a text field to enter POST payload property
-        self.payload_property = tk.StringVar()
-        ttk.Label(self.frame, text='Payload property:').grid(column=0, row=4, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.payload_property, width=my_width).grid(
-            column=1, row=4, sticky=W)
-        self.payload_property.set('')
-
-        # Create a text field to enter Post payload value
-        self.payload_value = tk.StringVar()
-        ttk.Label(self.frame, text='Payload value:').grid(column=0, row=5, sticky=W)
-        ttk.Entry(self.frame, textvariable=self.payload_value, width=my_width).grid(
-            column=1, row=5, sticky=W)
-        self.payload_value.set('')
+        # Create a text field to enter Payload as json
+        self.payload_json = tk.StringVar()
+        ttk.Label(self.frame, text='Request Payload:').grid(column=0, row=6, sticky=W)
+        ttk.Entry(self.frame, textvariable=self.payload_json, width=my_width).grid(
+            column=1, row=6, sticky=(W, E))
+        self.payload_json.set('{"value": true}')
 
         row_index = 10
         row_index += 1
@@ -182,17 +176,32 @@ class FormUi:
         self.button_clear.grid(column=0, row=row_index, sticky=W)
 
     def discover_devices(self): 
+        logger.log(logging.INFO, f"Doing device discovery")
         my_iotivity.discover_all()
+
+        nr_unowned = my_iotivity.get_nr_unowned_devices()
+        logger.log(logging.INFO, f"{nr_unowned} devices discovered: ")
+
+        for i in range(nr_unowned):
+            unowned_uuid = my_iotivity.get_unowned_uuid(i)
+            unowned_name = my_iotivity.get_device_name(unowned_uuid)
+            logger.log(logging.INFO, f"Unowned No.{i}: {unowned_uuid} - {unowned_name}")
+
+        logger.log(logging.INFO, f"Onboarding all devices")
         my_iotivity.onboard_all_unowned()
         my_iotivity.list_owned_devices()
+        nr_owned = my_iotivity.get_nr_owned_devices()
+        logger.log(logging.INFO, f"{nr_owned}/{nr_unowned} devices onboarded")
+
         obt_uuid = my_iotivity.get_obt_uuid()
 
         for i in range(0, my_iotivity.get_nr_owned_devices()): 
             device_uuid = my_iotivity.get_owned_uuid(i)
             device_name = my_iotivity.get_device_name(device_uuid)
             device_info = f"{device_uuid} - {device_name}"
+            logger.log(logging.INFO, f"Provisioning device No.{i}: {device_info}")
+
             discovered_devices = app.form.l1.get(0, END)
-            
             if device_info not in discovered_devices:
                 app.form.l1.insert(END, device_info)
 
@@ -225,24 +234,35 @@ class FormUi:
         elif self.request_type.get() == 'POST': 
             request_query = self.query.get()
             request_url = self.URL.get()
-            payload_property_str = self.payload_property.get()
-            payload_value_str = self.payload_value.get()
 
-            # Determine payload type
-            if payload_value_str.lower() == "true": 
-                payload_value_str = "1"
-                payload_type = "bool"
-            elif payload_value_str.lower() == "false": 
-                payload_value_str = "0"
-                payload_type = "bool"
-            else: 
-                try: 
-                    test_int = int(payload_value_str)
-                    payload_type = "int"
-                except ValueError: 
-                    payload_type = "str"
+            payload_json_str = self.payload_json.get()
+            payload_property_list = payload_value_list = payload_type_list = []
+            
+            if payload_json_str: 
+                json_data = json.loads(payload_json_str)
+                
+                payload_property_list = list(json_data.keys())
+                payload_value_list = list(json_data.values())
+                payload_type_list = []
 
-            result, response_payload = my_iotivity.general_post(device_uuid, request_query, request_url, payload_property_str, payload_value_str, payload_type)
+                for i in range(len(payload_value_list)): 
+                    # Determine payload type
+                    if isinstance(payload_value_list[i], bool): 
+                        payload_value_list[i] = "1" if payload_value_list[i] else "0"
+                        payload_type_list.append("bool")
+                    elif isinstance(payload_value_list[i], int): 
+                        payload_value_list[i] = str(payload_value_list[i])
+                        payload_type_list.append("int")
+                    elif isinstance(payload_value_list[i], float): 
+                        payload_value_list[i] = str(payload_value_list[i])
+                        payload_type_list.append("float")
+                    elif isinstance(payload_value_list[i], str): 
+                        payload_type_list.append("str")
+                    else: 
+                        logger.log(logging.INFO, f"Unrecognised payload type! ")
+                        return
+
+            result, response_payload = my_iotivity.general_post(device_uuid, request_query, request_url, payload_property_list, payload_value_list, payload_type_list)
 
             if result: 
                 logger.log(logging.INFO, f"POST {request_url} succeeded")

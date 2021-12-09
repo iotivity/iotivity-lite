@@ -48,6 +48,7 @@ from os import listdir
 from os.path import isfile, join
 from shutil import copyfile
 from  collections import OrderedDict
+from typing import List
 from termcolor import colored
 
 import numpy.ctypeslib as ctl
@@ -780,7 +781,7 @@ class Iotivity():
     def discover_all(self):
         self.discover_unowned()
         self.discover_owned()
-        time.sleep(20)
+        time.sleep(5)
         self.list_owned_devices()
         self.list_unowned_devices()
 
@@ -1528,16 +1529,29 @@ class Iotivity():
         time.sleep(1)
         return result, response_payload
 
-    def general_post(self, uuid, query, uri, payload_property, payload_value, payload_type): 
-        self.lib.py_general_post.argtypes = [String, String, String, String, String, String]
+    def general_post(self, uuid, query, uri, payload_properties, payload_values, payload_types): 
+        self.lib.py_general_post.argtypes = [String, String, String, POINTER(c_char_p), POINTER(c_char_p), POINTER(c_char_p), c_int]
         self.lib.py_general_post.restype = None
+
+        list_size = len(payload_properties)
+        for i in range(list_size): 
+            payload_properties[i] = c_char_p(payload_properties[i].encode())
+        for i in range(list_size): 
+            payload_values[i] = c_char_p(payload_values[i].encode())
+        for i in range(list_size): 
+            payload_types[i] = c_char_p(payload_types[i].encode())
+
+        properties_ptr = (c_char_p * len(payload_properties))(*payload_properties)
+        values_ptr = (c_char_p * len(payload_values))(*payload_values)
+        types_ptr = (c_char_p * len(payload_types))(*payload_types)
 
         run_count = 0
         result = False
         response_payload = ""
         while run_count < 5 and not result: 
             run_count += 1
-            self.lib.py_general_post(uuid, query, uri, payload_property, payload_value, payload_type)
+
+            self.lib.py_general_post(uuid, query, uri, properties_ptr, values_ptr, types_ptr, list_size)
 
             start_time = time.time()
             timeout = 10
@@ -1746,35 +1760,44 @@ class Iotivity():
     def test_get(self): 
         self.list_owned_devices()
         device_uuid = input("Please enter uuid: ")
-        uri = input("Please enter request uri: ")
+        url = input("Please enter request uri: ")
 
-        self.general_get(device_uuid, uri)
+        self.general_get(device_uuid, url)
 
     def test_post(self): 
         self.list_owned_devices()
         device_uuid = input("Please enter uuid: ")
-        uri = input("Please enter request uri: ")
+        url = input("Please enter request url: ")
         query = input("Please enter request query: ")
-        payload_property = input("Please enter target property: ")
-        payload_value = input("Please enter new value of target property: ")
+        payload = input("Please enter request payload: ")
 
-        if payload_value.lower() == "true": 
-            payload_value = "1"
-            payload_type = "bool"
-        elif payload_value.lower() == "false": 
-            payload_value = "0"
-            payload_type = "bool"
-        else: 
-            try: 
-                test_int = int(payload_value)
-                payload_type = "int"
-            except ValueError: 
-                payload_type = "str"
+        payload_property_list = payload_value_list = payload_type_list = []
+        if payload: 
+            payload_json = json.loads(payload)
+                
+            payload_property_list = list(payload_json.keys())
+            payload_value_list = list(payload_json.values())
+            payload_type_list = []
 
-        if len(query) == 0: 
-            query = None
+            for i in range(len(payload_value_list)): 
+                # Determine payload type
+                if isinstance(payload_value_list[i], bool): 
+                    payload_value_list[i] = "1" if payload_value_list[i] else "0"
+                    payload_type_list.append("bool")
+                elif isinstance(payload_value_list[i], int): 
+                    payload_value_list[i] = str(payload_value_list[i])
+                    payload_type_list.append("int")
+                elif isinstance(payload_value_list[i], float): 
+                    payload_value_list[i] = str(payload_value_list[i])
+                    payload_type_list.append("float")
+                elif isinstance(payload_value_list[i], str): 
+                    payload_type_list.append("str")
+                else: 
+                    print(f"Unrecognised payload type! ")
+                    return
 
-        self.general_post(device_uuid, query, uri, payload_property, payload_value, payload_type)
+        self.general_post(device_uuid, query, url, payload_property_list, payload_value_list, payload_type_list)
+
 
     def test_getpost(self): 
         self.discover_all()
