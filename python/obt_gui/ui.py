@@ -165,7 +165,7 @@ class FormUi:
         ttk.Label(self.frame, text='Request Payload:').grid(column=0, row=6, sticky=W)
         ttk.Entry(self.frame, textvariable=self.payload_json, width=my_width).grid(
             column=1, row=6, sticky=(W, E))
-        self.payload_json.set('{"property1": new_value1, "property2: new_value2"}')
+        self.payload_json.set('{"property1": new_value1, "property2": new_value2}')
 
         row_index = 10
         row_index += 1
@@ -251,7 +251,7 @@ class FormUi:
 
             if result: 
                 logger.log(logging.INFO, f"GET {request_url} succeeded")
-                show_window_with_text(f"POST {request_url} response payload", response_payload)
+                show_window_with_text(f"{self.request_type.get()} {request_url} response payload", response_payload)
             else: 
                 logger.log(logging.INFO, f"GET {request_url} failed")
         elif self.request_type.get() == 'POST': 
