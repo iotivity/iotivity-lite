@@ -781,7 +781,7 @@ class Iotivity():
     def discover_all(self):
         self.discover_unowned()
         self.discover_owned()
-        time.sleep(20)
+        time.sleep(5)
         self.list_owned_devices()
         self.list_unowned_devices()
 
@@ -988,6 +988,8 @@ class Iotivity():
             if result: 
                 print (f"Onboarding succeeded for: {device} {device_name}")
                 print (f"Time taken: {time_taken:.3} seconds")
+
+                self.unowned_devices.remove(device)
             else: 
                 print (f"Onboarding failed for: {device} {device_name}")
             time.sleep(1)
@@ -1023,6 +1025,8 @@ class Iotivity():
                 if result: 
                     print (f"Onboarding succeeded for: {device} {device_name}")
                     print (f"Time taken: {time_taken:.3} seconds")
+
+                    self.unowned_devices.remove(device)
                 else: 
                     print (f"Onboarding failed for: {device} {device_name}")
                 time.sleep(1)
@@ -1062,6 +1066,8 @@ class Iotivity():
                 if result: 
                     print (f"Onboarding succeeded for: {device} {device_name}")
                     print (f"Time taken: {time_taken:.3} seconds")
+
+                    self.unowned_devices.remove(device)
                 else: 
                     print (f"Onboarding failed for: {device} {device_name}")
                 time.sleep(1)
@@ -1147,6 +1153,8 @@ class Iotivity():
             if result: 
                 print (f"Offboarding succeeded for: {device} {device_name}")
                 print (f"Time taken: {time_taken:.3} seconds")
+
+                self.owned_devices.remove(device)
             else: 
                 print (f"Offboarding failed for: {device} {device_name}")
             time.sleep(1)
