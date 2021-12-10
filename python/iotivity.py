@@ -781,7 +781,7 @@ class Iotivity():
     def discover_all(self):
         self.discover_unowned()
         self.discover_owned()
-        time.sleep(5)
+        time.sleep(20)
         self.list_owned_devices()
         self.list_unowned_devices()
 
