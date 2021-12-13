@@ -23,6 +23,7 @@
 #include "oc_pki.h"
 #include "port/oc_clock.h"
 #include "rd_client.h"
+#include "util/oc_atomic.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -44,7 +45,7 @@ static pthread_mutex_t app_sync_lock;
 static oc_resource_t *res1;
 
 static struct timespec ts;
-static int quit;
+static OC_ATOMIC uint8_t quit;
 
 #define ACCESS_TOKEN_KEY "accesstoken"
 #define REFRESH_TOKEN_KEY "refreshtoken"
@@ -155,11 +156,12 @@ cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 static void
 cloud_refresh_token(void)
 {
+  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
+    pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  pthread_mutex_lock(&app_sync_lock);
   int ret = oc_cloud_refresh_token(ctx, cloud_refresh_token_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
@@ -203,11 +205,12 @@ cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 static void
 cloud_deregister(void)
 {
+  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
+    pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  pthread_mutex_lock(&app_sync_lock);
   int ret = oc_cloud_deregister(ctx, cloud_deregister_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
@@ -247,11 +250,12 @@ cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 static void
 cloud_logout(void)
 {
+  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
+    pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  pthread_mutex_lock(&app_sync_lock);
   int ret = oc_cloud_logout(ctx, cloud_logout_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
@@ -288,11 +292,12 @@ cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 static void
 cloud_login(void)
 {
+  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
+    pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  pthread_mutex_lock(&app_sync_lock);
   int ret = oc_cloud_login(ctx, cloud_login_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
@@ -326,11 +331,12 @@ cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 static void
 cloud_register(void)
 {
+  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx) {
+    pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  pthread_mutex_lock(&app_sync_lock);
   oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
   int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
@@ -474,7 +480,7 @@ handle_signal(int signal)
 {
   (void)signal;
   signal_event_loop();
-  quit = 1;
+  OC_ATOMIC_STORE8(quit, 1);
 }
 
 #ifdef OC_SECURITY
@@ -600,21 +606,6 @@ ocf_event_thread(void *data)
   oc_storage_config("./cloud_tests_creds");
 #endif /* OC_STORAGE */
 
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
-    printf("pthread_mutex_init(mutex) failed!\n");
-    return NULL;
-  }
-
-  if (pthread_mutex_init(&app_sync_lock, NULL) < 0) {
-    printf("pthread_mutex_init(app_sync_lock) failed!\n");
-    return NULL;
-  }
-
-  if (pthread_cond_init(&cv, NULL) < 0) {
-    printf("pthread_cond_init failed!\n");
-    return NULL;
-  }
-
   oc_set_con_res_announced(false);
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 #ifdef OC_SECURITY
@@ -626,7 +617,7 @@ ocf_event_thread(void *data)
     return NULL;
 
   oc_clock_time_t next_event;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     pthread_mutex_lock(&app_sync_lock);
     next_event = oc_main_poll();
     pthread_mutex_unlock(&app_sync_lock);
@@ -673,6 +664,21 @@ main(int argc, char *argv[])
     PRINT("deviceID: %s\n", argv[6]);
   }
 
+  if (pthread_mutex_init(&mutex, NULL) < 0) {
+    printf("pthread_mutex_init(mutex) failed!\n");
+    return -1;
+  }
+
+  if (pthread_mutex_init(&app_sync_lock, NULL) < 0) {
+    printf("pthread_mutex_init(app_sync_lock) failed!\n");
+    return -1;
+  }
+
+  if (pthread_cond_init(&cv, NULL) < 0) {
+    printf("pthread_cond_init failed!\n");
+    return -1;
+  }
+
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -684,7 +690,7 @@ main(int argc, char *argv[])
   }
 
   int c;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
     SCANF("%d", &c);
     switch (c) {
