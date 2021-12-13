@@ -20,6 +20,7 @@
 #define IPCONTEXT_H
 
 #include "oc_endpoint.h"
+#include "util/oc_atomic.h"
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/select.h>
@@ -61,10 +62,15 @@ typedef struct tcp_context_t
 } tcp_context_t;
 #endif
 
+typedef enum {
+  IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST =
+    1 << 0, ///< used to signal that endpoint list needs to be refreshed
+} ip_context_flags_t;
+
 typedef struct ip_context_t
 {
   struct ip_context_t *next;
-  OC_LIST_STRUCT(eps);
+  OC_LIST_STRUCT(eps); /// < not thread-safe, must be used only from main thread
   struct sockaddr_storage mcast;
   struct sockaddr_storage server;
   int mcast_sock;
@@ -96,6 +102,7 @@ typedef struct ip_context_t
   pthread_mutex_t rfds_mutex;
   fd_set rfds;
   int shutdown_pipe[2];
+  OC_ATOMIC int32_t flags;
 } ip_context_t;
 
 /**
