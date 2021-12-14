@@ -965,6 +965,8 @@ class Iotivity():
         self.lib.py_otm_just_works.argtypes = [String]
         self.lib.py_otm_just_works.restype = None
 
+        onboarded_devices = []
+
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
             print ("Onboarding device :", device, device_name)
@@ -988,15 +990,26 @@ class Iotivity():
             if result: 
                 print (f"Onboarding succeeded for: {device} {device_name}")
                 print (f"Time taken: {time_taken:.3} seconds")
+
+                onboarded_devices.append(device)
             else: 
                 print (f"Onboarding failed for: {device} {device_name}")
             time.sleep(1)
+        
+        for device in onboarded_devices: 
+            self.unowned_devices.remove(device)
 
         print ("...done.")
 
     def onboard_cloud_proxy(self):
         print ("onboard_cloud_proxy: listing NOT onboarded devices in C:")
         self.list_unowned_devices()
+
+        print ("onboarding...")
+        self.lib.py_otm_just_works.argtypes = [String]
+        self.lib.py_otm_just_works.restype = None
+
+        onboarded_devices = []
 
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
@@ -1023,9 +1036,14 @@ class Iotivity():
                 if result: 
                     print (f"Onboarding succeeded for: {device} {device_name}")
                     print (f"Time taken: {time_taken:.3} seconds")
+
+                    onboarded_devices.append(device)
                 else: 
                     print (f"Onboarding failed for: {device} {device_name}")
                 time.sleep(1)
+        
+        for device in onboarded_devices: 
+            self.unowned_devices.remove(device)
 
         print ("...done.")
 
@@ -1036,6 +1054,8 @@ class Iotivity():
         print ("onboarding...")
         self.lib.py_otm_just_works.argtypes = [String]
         self.lib.py_otm_just_works.restype = None
+
+        onboarded_devices = []
 
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
@@ -1062,9 +1082,14 @@ class Iotivity():
                 if result: 
                     print (f"Onboarding succeeded for: {device} {device_name}")
                     print (f"Time taken: {time_taken:.3} seconds")
+
+                    onboarded_devices.append(device)
                 else: 
                     print (f"Onboarding failed for: {device} {device_name}")
                 time.sleep(1)
+        
+        for device in onboarded_devices: 
+            self.unowned_devices.remove(device)
 
         print ("...done.")
 
@@ -1123,6 +1148,8 @@ class Iotivity():
         self.lib.py_reset_device.argtypes = [String]
         self.lib.py_reset_device.restype = None
 
+        offboarded_devices = []
+
         for device in self.owned_devices:
             device_name = self.get_device_name(device)
 
@@ -1147,9 +1174,15 @@ class Iotivity():
             if result: 
                 print (f"Offboarding succeeded for: {device} {device_name}")
                 print (f"Time taken: {time_taken:.3} seconds")
+
+                offboarded_devices.append(device)
             else: 
                 print (f"Offboarding failed for: {device} {device_name}")
             time.sleep(1)
+
+        for device in offboarded_devices: 
+            self.owned_devices.remove(device)
+
         print ("...done.")
 
 
