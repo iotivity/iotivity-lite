@@ -31,7 +31,7 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (1)
 
-/* Common paramters */
+/* Common parameters */
 //#define OC_BLOCK_WISE_SET_MTU (80)
 
 /* Maximum size of request/response PDUs */
@@ -47,6 +47,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_DEVICES (1)
 
 #define OC_MAX_NUM_ENDPOINTS (4)
+
+/* Maximum size of uri for a collection resource */
+//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 /* Security layer */
 /* Maximum number of authorized clients */
