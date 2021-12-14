@@ -231,10 +231,6 @@ class FormUi:
                 my_iotivity.provision_id_cert(device_uuid)
 
                 my_iotivity.provision_ace_chili(device_uuid, obt_uuid)
-                time.sleep(5)
-
-                my_iotivity.retrieve_acl2(device_uuid)
-                time.sleep(5)
 
     def send_request(self): 
         if self.l1.curselection() == (): 
