@@ -158,7 +158,37 @@ void
 oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
 {
   oc_collection_t *c = (oc_collection_t *)collection;
-  oc_list_add(c->links, link);
+
+  if (link->resource != NULL && oc_string_len(link->resource->uri) > 0) {
+    const char *link_uri = oc_string(link->resource->uri);
+    const size_t link_uri_len = oc_string_len(link->resource->uri);
+    // Find position to insert to keep the list sorted by primarily by href
+    // length and secondarily by href value.
+    // Keeping the links ordered like this enables use to use O(n) algorithm
+    // to find a unique index for a new link.
+    // Example of list sorted in this order:
+    // ["/lights", "/switch", "/lights/1", "/lights/2", "/lights/10"]
+    oc_link_t *next = oc_list_head(c->links), *prev = NULL;
+    while (next != NULL) {
+      if ((next->resource != NULL) &&
+          (oc_string_len(next->resource->uri) > 0)) {
+        // primary order by length
+        if (link_uri_len < oc_string_len(next->resource->uri)) {
+          break;
+        }
+        // secondary order by value
+        if (link_uri_len == oc_string_len(next->resource->uri) &&
+            strcmp(link_uri, oc_string(next->resource->uri)) < 0) {
+          break;
+        }
+      }
+      prev = next;
+      next = next->next;
+    }
+    oc_list_insert(c->links, prev, link);
+  } else {
+    oc_list_push(c->links, link);
+  }
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
