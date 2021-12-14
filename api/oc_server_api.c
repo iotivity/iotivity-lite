@@ -600,7 +600,8 @@ oc_send_separate_response(oc_separate_response_t *handle,
           }
           response_state = oc_blockwise_alloc_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, OC_BLOCKWISE_SERVER);
+            cur->method, OC_BLOCKWISE_SERVER,
+            (uint32_t)response_buffer.response_length);
           if (!response_state) {
             goto next_separate_request;
           }

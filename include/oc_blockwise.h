@@ -55,6 +55,7 @@ typedef struct oc_blockwise_state_s
   void *block;
 #endif /* OC_APP_DATA_BUFFER_POOL */
   uint8_t *buffer;
+  uint32_t buffer_size;
 #else                    /* OC_DYNAMIC_ALLOCATION */
   uint8_t buffer[OC_MAX_APP_DATA_SIZE]; ///< the buffer
 #endif                   /* !OC_DYNAMIC_ALLOCATION */
@@ -180,12 +181,13 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer(
  * @param href_len the href length
  * @param endpoint the endpoint
  * @param method method
- * @param role the role (clien or server)
+ * @param role the role (client or server)
+ * @param buffer_size the buffer size for allocation
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
   const char *href, size_t href_len, oc_endpoint_t *endpoint,
-  oc_method_t method, oc_blockwise_role_t role);
+  oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size);
 
 /**
  * @brief allocate the response buffer
@@ -194,12 +196,13 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
  * @param href_len the href length
  * @param endpoint the endpoint
  * @param method method
- * @param role the role (clien or server)
+ * @param role the role (client or server)
+ * @param buffer_size the buffer size for allocation
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
   const char *href, size_t href_len, oc_endpoint_t *endpoint,
-  oc_method_t method, oc_blockwise_role_t role);
+  oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size);
 
 /**
  * @brief free the request buffer

@@ -23,6 +23,7 @@ set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
 set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
 set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
 set(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED OFF CACHE BOOL "Enable observation over oic/res resource.")
+set(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED OFF CACHE BOOL "Enable realloc during encoding the representation.")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -198,6 +199,10 @@ endif()
 
 if(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_DISCOVERY_RESOURCE_OBSERVABLE)
+endif()
+
+if(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_REP_ENCODING_REALLOC)
 endif()
 
 # Client and server versions of Iotivity
