@@ -54,7 +54,7 @@ struct oc_collection_s
   struct oc_resource_s res;
   OC_LIST_STRUCT(mandatory_rts);
   OC_LIST_STRUCT(supported_rts);
-  OC_LIST_STRUCT(links);
+  OC_LIST_STRUCT(links); ///< list of links ordered by href length and value
 };
 
 void oc_link_set_interfaces(oc_link_t *link,
