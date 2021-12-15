@@ -36,7 +36,6 @@ extern "C" {
 #ifndef OC_MAX_APP_DATA_SIZE
 #error "Set OC_MAX_APP_DATA_SIZE in oc_config.h"
 #endif /* !OC_MAX_APP_DATA_SIZE */
-#define OC_MIN_APP_DATA_SIZE OC_MAX_APP_DATA_SIZE
 
 #ifdef OC_BLOCK_WISE_SET_MTU
 #define OC_BLOCK_WISE
@@ -100,7 +99,6 @@ extern "C" {
 #endif /* !OC_TCP */
 #define OC_BLOCK_SIZE (oc_get_block_size())
 #define OC_MAX_APP_DATA_SIZE (oc_get_max_app_data_size())
-#define OC_MIN_APP_DATA_SIZE (oc_get_min_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 struct oc_message_s

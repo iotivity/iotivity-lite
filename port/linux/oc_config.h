@@ -47,17 +47,13 @@ typedef uint64_t oc_clock_time_t;
 #define OC_DNS_CACHE
 //#define OC_DNS_LOOKUP_IPV6
 
-// The maximum size of a response to an OBSERVE request, in bytes
-//#define OC_MAX_OBSERVE_SIZE 512
-
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
 
-/* Enable reallocation during encoding the representation to cbor or run "make"
- * with REP_ENCODING_REALLOC=1 */
-//#define OC_REP_ENCODING_REALLOC
+// The maximum size of a response to an OBSERVE request, in bytes
+//#define OC_MAX_OBSERVE_SIZE 512
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
@@ -111,8 +107,6 @@ typedef uint64_t oc_clock_time_t;
 
 /* Maximum number of callbacks for connection of session */
 #define OC_MAX_SESSION_EVENT_CBS (2)
-
-#define OC_MAX_DOXM_OWNED_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 

@@ -23,16 +23,12 @@ jobs:
         include:
           - name: cloud-server
             file: docker/apps/Dockerfile.cloud-server
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=0 OSCORE=0 ASAN=0"
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0"
           - name: cloud-server-discovery-resource-observable
-            file: docker/apps/Dockerfile.cloud-server
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=0 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0"
+            file: docker/apps/Dockerfile.cloud-server-discovery-resource-observable
           - name: cloud-server-discovery-resource-observable-debug
-            file: docker/apps/Dockerfile.cloud-server-debug
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0"
+            file: docker/apps/Dockerfile.cloud-server-discovery-resource-observable-debug
     permissions:
       contents: read
       packages: write
@@ -76,5 +72,3 @@ jobs:
           file: ${{ matrix.file }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BUILD_ARGS=${{ matrix.args }}

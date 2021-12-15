@@ -54,11 +54,7 @@ typedef uint32_t oc_clock_time_t;
 #define OC_COLLECTIONS // why? i got this error: api/oc_ri.c:1064:10: error:
                        // 'resource_is_collection' undeclared (first use in this
                        // function)
-
-/* Enable reallocation during encoding the representation to cbor */
-//#define OC_REP_ENCODING_REALLOC
-
-#else /* OC_DYNAMIC_ALLOCATION */
+#else                  /* OC_DYNAMIC_ALLOCATION */
 
 #define OC_BYTES_POOL_SIZE (2000)
 #define OC_INTS_POOL_SIZE (100)

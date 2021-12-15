@@ -355,15 +355,10 @@ coap_receive(oc_message_t *msg)
               OC_WRN("cannot process new request during closing TLS sessions");
               goto init_reset_message;
             }
-            uint32_t buffer_size = OC_MAX_APP_DATA_SIZE;
-            if (coap_get_header_size1(message, &buffer_size) &&
-                buffer_size == 0) {
-              buffer_size = OC_MAX_APP_DATA_SIZE;
-            }
             OC_DBG("creating new block-wise request buffer");
             request_buffer = oc_blockwise_alloc_request_buffer(
               href, href_len, &msg->endpoint, message->code,
-              OC_BLOCKWISE_SERVER, buffer_size);
+              OC_BLOCKWISE_SERVER);
 
             if (request_buffer) {
               if (message->uri_query_len > 0) {
@@ -474,15 +469,9 @@ coap_receive(oc_message_t *msg)
                            "sessions");
                     goto init_reset_message;
                   }
-                  uint32_t buffer_size = OC_MAX_APP_DATA_SIZE;
-                  if (coap_get_header_size2(message, &buffer_size) &&
-                      (buffer_size == 0)) {
-                    buffer_size = OC_MAX_APP_DATA_SIZE;
-                  }
-
                   request_buffer = oc_blockwise_alloc_request_buffer(
                     href, href_len, &msg->endpoint, message->code,
-                    OC_BLOCKWISE_SERVER, buffer_size);
+                    OC_BLOCKWISE_SERVER);
 
                   if (!(request_buffer && oc_blockwise_handle_block(
                                             request_buffer, 0, incoming_block,
@@ -530,14 +519,10 @@ coap_receive(oc_message_t *msg)
                 oc_blockwise_free_request_buffer(request_buffer);
                 request_buffer = NULL;
               }
-              uint32_t buffer_size = OC_MAX_APP_DATA_SIZE;
-              if (coap_get_header_size1(message, &buffer_size) &&
-                  buffer_size == 0) {
-                buffer_size = OC_MAX_APP_DATA_SIZE;
-              }
+
               request_buffer = oc_blockwise_alloc_request_buffer(
                 href, href_len, &msg->endpoint, message->code,
-                OC_BLOCKWISE_SERVER, buffer_size);
+                OC_BLOCKWISE_SERVER);
 
               if (!(request_buffer &&
                     oc_blockwise_handle_block(request_buffer, 0, incoming_block,
@@ -747,11 +732,9 @@ coap_receive(oc_message_t *msg)
         response_buffer = oc_blockwise_find_response_buffer_by_client_cb(
           &msg->endpoint, client_cb);
         if (!response_buffer) {
-          uint32_t buffer_size = OC_MAX_APP_DATA_SIZE;
           response_buffer = oc_blockwise_alloc_response_buffer(
             oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-            &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT,
-            buffer_size);
+            &msg->endpoint, client_cb->method, OC_BLOCKWISE_CLIENT);
           if (response_buffer) {
             OC_DBG("created new response buffer for uri %s",
                    oc_string(response_buffer->href));

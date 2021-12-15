@@ -58,7 +58,6 @@ allocate_message(struct oc_memb *pool)
       oc_memb_free(pool, message);
       return NULL;
     }
-    memset(message->data, 0, OC_PDU_SIZE);
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
     message->pool = pool;
     message->length = 0;
