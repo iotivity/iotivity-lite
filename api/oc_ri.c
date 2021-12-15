@@ -1137,7 +1137,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
       if (resource_is_collection) {
-        oc_handle_collection_request(method, &request_obj, iface_mask, NULL);
+        if (!oc_handle_collection_request(method, &request_obj, iface_mask,
+                                          NULL)) {
+          OC_WRN("ocri: failed to handle collection request");
+          bad_request = true;
+        }
       } else
 #endif /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
