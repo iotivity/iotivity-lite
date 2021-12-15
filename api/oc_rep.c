@@ -160,7 +160,8 @@ oc_rep_shrink_encoder_buf(uint8_t *buf)
   if (!g_enable_realloc || !buf || !g_buf_ptr || buf != g_buf)
     return buf;
   int size = oc_rep_get_encoded_payload_size();
-  if (size < 0) {
+  if (size <= 0) {
+    // if the size is 0, then it means that the encoder was not used at all
     return buf;
   }
   uint8_t *tmp = (uint8_t *)realloc(buf, size);
