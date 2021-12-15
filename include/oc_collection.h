@@ -20,6 +20,7 @@
 #define OC_COLLECTION_H
 
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
@@ -60,6 +61,7 @@ struct oc_collection_s
 void oc_link_set_interfaces(oc_link_t *link,
                             oc_interface_mask_t new_interfaces);
 
+OC_NO_DISCARD_RETURN
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t iface_mask,
                                   oc_resource_t *notify_resource);

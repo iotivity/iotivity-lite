@@ -578,15 +578,22 @@ coap_notify_collection_baseline(oc_collection_t *collection)
 
   request.resource = (oc_resource_t *)collection;
 
-  oc_handle_collection_request(OC_GET, &request, OC_IF_BASELINE, NULL);
+  int err = 0;
+  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_BASELINE, NULL)) {
+    OC_WRN(
+      "coap_notify_collection_baseline: failed to handle collection request");
+    err = -1;
+    goto cleanup;
+  }
   coap_notify_collection_observers(request.resource, &response_buffer,
                                    OC_IF_BASELINE);
 
+cleanup:
 #ifdef OC_DYNAMIC_ALLOCATION
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return 0;
+  return err;
 }
 
 int
@@ -614,14 +621,20 @@ coap_notify_collection_batch(oc_collection_t *collection)
 
   request.resource = (oc_resource_t *)collection;
 
-  oc_handle_collection_request(OC_GET, &request, OC_IF_B, NULL);
+  int err = 0;
+  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, NULL)) {
+    OC_WRN("coap_notify_collection_batch: failed to handle collection request");
+    err = -1;
+    goto cleanup;
+  }
   coap_notify_collection_observers(request.resource, &response_buffer, OC_IF_B);
 
+cleanup:
 #ifdef OC_DYNAMIC_ALLOCATION
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return 0;
+  return err;
 }
 
 int
@@ -650,15 +663,22 @@ coap_notify_collection_links_list(oc_collection_t *collection)
 
   request.resource = (oc_resource_t *)collection;
 
-  oc_handle_collection_request(OC_GET, &request, OC_IF_LL, NULL);
+  int err = 0;
+  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_LL, NULL)) {
+    OC_WRN(
+      "coap_notify_collection_links_list: failed to handle collection request");
+    err = -1;
+    goto cleanup;
+  }
   coap_notify_collection_observers(request.resource, &response_buffer,
                                    OC_IF_LL);
 
+cleanup:
 #ifdef OC_DYNAMIC_ALLOCATION
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return 0;
+  return err;
 }
 
 static int
@@ -673,8 +693,6 @@ coap_notify_collections(oc_resource_t *resource)
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-
-  int num_links = 0;
 
   oc_request_t request = { 0 };
   oc_response_t response = { 0 };
@@ -697,7 +715,10 @@ coap_notify_collections(oc_resource_t *resource)
 
     request.resource = (oc_resource_t *)collection;
 
-    oc_handle_collection_request(OC_GET, &request, OC_IF_B, resource);
+    if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, resource)) {
+      OC_WRN("coap_notify_collections: failed to handle collection request");
+      continue;
+    }
 
     coap_notify_collection_observers(request.resource, &response_buffer,
                                      OC_IF_B);
@@ -707,7 +728,7 @@ coap_notify_collections(oc_resource_t *resource)
   if (buffer)
     free(buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  return num_links;
+  return 0;
 }
 #endif /* OC_COLLECTIONS */
 
@@ -873,7 +894,10 @@ coap_notify_observers_internal(oc_resource_t *resource,
 #ifdef OC_COLLECTIONS
   int num_links = 0;
   if (resource->num_links > 0) {
-    num_links = coap_notify_collections(resource);
+    int notify = coap_notify_collections(resource);
+    if (notify >= 0) {
+      num_links = notify;
+    }
   }
   return resource->num_observers + num_links;
 #else  /* OC_COLLECTIONS */
