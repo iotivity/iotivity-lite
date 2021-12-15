@@ -885,8 +885,11 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                 if ((link->resource != (oc_resource_t *)collection) &&
                     oc_check_if_collection(link->resource)) {
                   request->resource = link->resource;
-                  oc_handle_collection_request(
-                    method, request, link->resource->default_interface, NULL);
+                  if (!oc_handle_collection_request(
+                        method, request, link->resource->default_interface,
+                        NULL)) {
+                    return false;
+                  }
                   request->resource = (oc_resource_t *)collection;
                 } else {
                   oc_interface_mask_t req_iface =
@@ -982,6 +985,13 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   int code = oc_status_code(OC_STATUS_BAD_REQUEST);
 
   int size = oc_rep_get_encoded_payload_size();
+  if (size == -1) {
+    OC_ERR("failed to handle collection(%s) request: payload too large",
+           oc_string_len(collection->res.uri) > 0
+             ? oc_string(collection->res.uri)
+             : "");
+    return false;
+  }
 
   if (ecode < oc_status_code(OC_STATUS_BAD_REQUEST) &&
       pcode < oc_status_code(OC_STATUS_BAD_REQUEST)) {
