@@ -19,20 +19,10 @@ jobs:
         include:
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0"
+            tag: cloud-server-debug:debug
           - name: cloud-server-discovery-resource-observable-debug
-            file: docker/apps/Dockerfile.cloud-server-debug
-            tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0"
-          - name: cloud-server-rep-realloc-debug
-            file: docker/apps/Dockerfile.cloud-server-debug
-            tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug
-            file: docker/apps/Dockerfile.cloud-server-debug
-            tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0"
+            file: docker/apps/Dockerfile.cloud-server-discovery-resource-observable-debug
+            tag: cloud-server-discovery-resource-observable-debug:debug
 
     steps:
       - name: Checkout repository
@@ -43,8 +33,6 @@ jobs:
         with:
           context: .
           push: false
-          build-args: |
-            BUILD_ARGS=${{ matrix.args }}
           file: ${{ matrix.file }}
           tags: ${{ matrix.tag }}
       

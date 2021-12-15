@@ -475,7 +475,7 @@ oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
   while (doxm_cb_item) {
     if (cb == doxm_cb_item->cb && user_data == doxm_cb_item->user_data) {
       oc_list_remove(oc_doxm_owned_cb_list_t, doxm_cb_item);
-      oc_memb_free(&oc_doxm_owned_cb_s, doxm_cb_item);
+      free(doxm_cb_item);
       break;
     }
     doxm_cb_item = doxm_cb_item->next;
@@ -485,13 +485,9 @@ oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 bool
 oc_is_owned_device(size_t device_index)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
   if (doxm) {
     return doxm[device_index].owned;
   }
   return false;
-#else  /* OC_DYNAMIC_ALLOCATION */
-  return doxm[device_index].owned;
-#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 #endif /* OC_SECURITY */

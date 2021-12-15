@@ -144,24 +144,13 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
-      cb->method, OC_BLOCKWISE_CLIENT, OC_MIN_APP_DATA_SIZE);
+      cb->method, OC_BLOCKWISE_CLIENT);
     if (!request_buffer) {
       OC_ERR("request_buffer is NULL");
       return false;
     }
-#ifdef OC_DYNAMIC_ALLOCATION
-#ifdef OC_APP_DATA_BUFFER_POOL
-    if (request_buffer->block) {
-      oc_rep_new(request_buffer->buffer, request_buffer->buffer_size);
-    } else
-#endif
-    {
-      oc_rep_new_realloc(&request_buffer->buffer, request_buffer->buffer_size,
-                         OC_MAX_APP_DATA_SIZE);
-    }
-#else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* !OC_DYNAMIC_ALLOCATION */
+    oc_rep_new(request_buffer->buffer, OC_MAX_APP_DATA_SIZE);
+
     request_buffer->mid = cb->mid;
     request_buffer->client_cb = cb;
   }

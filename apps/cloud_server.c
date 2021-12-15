@@ -732,8 +732,7 @@ main(int argc, char *argv[])
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
-  oc_set_max_app_data_size(8 * 1024);
-  oc_set_min_app_data_size(512);
+
   ret = oc_main_init(&handler);
   if (ret < 0)
     return ret;

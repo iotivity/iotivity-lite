@@ -55,21 +55,6 @@ void oc_set_max_app_data_size(size_t size);
 long oc_get_max_app_data_size(void);
 
 /**
- * @brief set min application data size (e.g. initialization buffer size of the
- * messages)
- *
- * @param size size in bytes
- */
-void oc_set_min_app_data_size(size_t size);
-
-/**
- * @brief retrieve the min application data size
- *
- * @return long size in bytes
- */
-long oc_get_min_app_data_size(void);
-
-/**
  * @brief retrieve the block size
  *
  * @return long the block size in bytes
