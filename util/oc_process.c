@@ -77,7 +77,7 @@ static struct event_data events[OC_PROCESS_NUMEVENTS];
 oc_process_num_events_t process_maxevents;
 #endif
 
-static OC_ATOMIC unsigned char g_poll_requested;
+static OC_ATOMIC_INT8_T g_poll_requested;
 
 #define OC_PROCESS_STATE_NONE 0
 #define OC_PROCESS_STATE_RUNNING 1
@@ -131,7 +131,7 @@ exit_process(struct oc_process *p, struct oc_process *fromprocess)
     return;
   }
 
-  unsigned char state = OC_ATOMIC_LOAD8(p->state);
+  int8_t state = OC_ATOMIC_LOAD8(p->state);
   while (state != OC_PROCESS_STATE_NONE) {
     /* Process was running */
     bool swapped;
@@ -186,7 +186,7 @@ call_process(struct oc_process *p, oc_process_event_t ev,
     return;
   }
 
-  unsigned char state = OC_ATOMIC_LOAD8(p->state);
+  int8_t state = OC_ATOMIC_LOAD8(p->state);
   while ((state & OC_PROCESS_STATE_RUNNING) != 0) {
     bool swapped;
     OC_ATOMIC_COMPARE_AND_SWAP8(p->state, state, OC_PROCESS_STATE_CALLED,
@@ -253,7 +253,7 @@ do_poll(void)
   /* Call the processes that needs to be polled. */
   for (p = oc_process_list; p != NULL; p = p->next) {
     bool exchanged;
-    char expected = 1;
+    int8_t expected = 1;
     OC_ATOMIC_COMPARE_AND_SWAP8(p->needspoll, expected, 0, exchanged);
     if (exchanged) {
       OC_ATOMIC_STORE8(p->state, OC_PROCESS_STATE_RUNNING);

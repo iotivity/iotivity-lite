@@ -49,7 +49,7 @@ static oc_platform_info_t oc_platform_info;
 
 static bool announce_con_res = false;
 static int res_latency = 0;
-static OC_ATOMIC uint32_t g_device_count = 0;
+static OC_ATOMIC_UINT32_T g_device_count = 0;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.

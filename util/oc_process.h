@@ -325,7 +325,7 @@ struct oc_process
 #endif
   PT_THREAD((*thread)(struct pt *, oc_process_event_t, oc_process_data_t));
   struct pt pt;
-  OC_ATOMIC unsigned char needspoll, state;
+  OC_ATOMIC_INT8_T needspoll, state;
 };
 
 /**

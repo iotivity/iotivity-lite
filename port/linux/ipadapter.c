@@ -612,9 +612,9 @@ oc_connectivity_get_endpoints(size_t device)
 
   bool refresh = false;
   bool swapped = false;
-  uint8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+  int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
   while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
-    uint8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    int8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
     OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
     if (swapped) {
       refresh = true;
@@ -721,9 +721,9 @@ process_interface_change_event(void)
         continue;
       }
       bool swapped = false;
-      uint8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+      int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
       while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
-        uint8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        int8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
         OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
         if (swapped) {
           break;
