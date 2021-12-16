@@ -44,6 +44,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
 
+// TODO this should probably go in CMakeCache
+#define OC_SPAKE2PLUS
+
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
    memory allocation

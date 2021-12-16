@@ -45,6 +45,17 @@ typedef struct
   oc_uuid_t deviceuuid;
   oc_uuid_t devowneruuid;
   oc_uuid_t rowneruuid;
+#ifdef OC_SPAKE2PLUS
+  oc_string_t obtshare;
+  oc_string_t deviceshare;
+  oc_string_t obtcheck;
+  oc_string_t devicecheck;
+
+  oc_string_t spakecontext;
+
+  oc_string_t spakesalt;
+  int spakeiterations;
+#endif
 } oc_sec_doxm_t;
 
 void oc_sec_doxm_init(void);

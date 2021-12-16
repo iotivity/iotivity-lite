@@ -129,6 +129,30 @@ oc_sec_doxm_default(size_t device)
   oc_device_info_t *d = oc_core_get_device_info(device);
   oc_gen_uuid(&doxm[device].deviceuuid);
   memcpy(d->di.id, doxm[device].deviceuuid.id, 16);
+#ifdef OC_SPAKE2PLUS
+  oc_free_string(&doxm[device].obtshare);
+  oc_new_string(&doxm[device].obtshare, "", 0);
+
+  oc_new_string(&doxm[device].deviceshare, "", 0);
+  oc_free_string(&doxm[device].deviceshare);
+
+  oc_new_string(&doxm[device].obtcheck, "", 0);
+  oc_free_string(&doxm[device].obtcheck);
+
+  oc_new_string(&doxm[device].devicecheck, "", 0);
+  oc_free_string(&doxm[device].devicecheck);
+
+  oc_string_t spakecontext;
+  char * spctx = "OCF Spake2plus,Version:1.0";
+  oc_free_string(&doxm[device].spakecontext);
+  oc_new_string(&doxm[device].spakecontext, spctx, strlen(spctx));
+
+  oc_string_t spakesalt;
+  oc_free_string(&doxm[device].obtshare);
+  oc_new_string(&doxm[device].obtshare, "", 0);
+
+  int spakeiterations = 0;
+#endif
   oc_sec_dump_doxm(device);
 }
 
