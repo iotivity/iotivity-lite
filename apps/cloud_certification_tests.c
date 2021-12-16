@@ -45,7 +45,7 @@ static pthread_mutex_t app_sync_lock;
 static oc_resource_t *res1;
 
 static struct timespec ts;
-static OC_ATOMIC uint8_t quit;
+static OC_ATOMIC_INT8_T quit;
 
 #define ACCESS_TOKEN_KEY "accesstoken"
 #define REFRESH_TOKEN_KEY "refreshtoken"

@@ -97,12 +97,12 @@ typedef struct ip_context_t
   tcp_context_t tcp;
 #endif
   pthread_t event_thread;
-  OC_ATOMIC uint8_t terminate;
+  OC_ATOMIC_INT8_T terminate;
   size_t device;
   pthread_mutex_t rfds_mutex;
   fd_set rfds;
   int shutdown_pipe[2];
-  OC_ATOMIC uint8_t flags;
+  OC_ATOMIC_INT8_T flags;
 } ip_context_t;
 
 /**
