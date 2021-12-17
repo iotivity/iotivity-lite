@@ -186,6 +186,21 @@ oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
   /* rowneruuid */
   oc_uuid_to_str(&doxm[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
+  /* obtshare */
+  oc_rep_set_text_string(root, obtshare, oc_string(doxm[device].obtshare));
+  /* deviceshare */
+  oc_rep_set_text_string(root, deviceshare,
+                         oc_string(doxm[device].deviceshare));
+  /* obtcheck */
+  oc_rep_set_text_string(root, obtcheck, oc_string(doxm[device].obtcheck));
+  /* devicecheck */
+  oc_rep_set_text_string(root, devicecheck,
+                         oc_string(doxm[device].devicecheck));
+  /* spakecontext */
+  oc_rep_set_text_string(root, spakecontext,
+                         oc_string(doxm[device].spakecontext));
+  /* spakeiterations */
+  oc_rep_set_int(root, spakeiterations, doxm[device].spakeiterations);
   oc_rep_end_root_object();
 }
 
@@ -254,6 +269,7 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
       }
       break;
     /* oxmsel and sct */
+    /* spakeiterations */
     case OC_REP_INT:
       if (len == 6 && memcmp(oc_string(t->name), "oxmsel", 6) == 0) {
         if (!from_storage) {
@@ -281,6 +297,16 @@ oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
         }
       } else if (from_storage && len == 3 &&
                  memcmp(oc_string(t->name), "sct", 3) == 0) {
+      } else if (len == 15 &&
+                 memcmp(oc_string(t->name), "spakeiterations", 15) == 0) {
+        if (ps->s != OC_DOS_RFOTM) {
+          OC_ERR("oc_doxm: Can set spakeiterations property only in RFOTM");
+          return false;
+        }
+        if (!doc) {
+          OC_ERR("oc_doxm: cannot set sct property outside DOC");
+          return false;
+        }
       } else {
         OC_ERR("oc_doxm: Unknown property %s", oc_string(t->name));
         return false;
