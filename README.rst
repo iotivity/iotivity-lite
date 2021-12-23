@@ -32,7 +32,7 @@
 Introduction
 ------------
 
-IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Core Framework <https://iotivity.org/SIPD/>`_.
+IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Secure IP Device Framework <https://iotivity.org/SIPD/>`_.
 
 The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. 
 The Open Connectivity Foundation (OCF), a group of industry leaders have created a `(ISO/IEC) <https://www.iso.org/standard/53238.html>`_ standard specification and certification program to address these challenges.
@@ -42,9 +42,9 @@ The Open Connectivity Foundation (OCF), a group of industry leaders have created
    :alt: Architecture
    :align: center
 
-The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
-IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. 
-The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
+The OCF Secure IP Device Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
+IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://github.com/openconnectivityfoundation/IoTDataModels>`_ spanning an array of usage verticals. 
+The OCF Secure IP Device Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
 
 Please review the following `specifications <https://openconnectivity.org/developer/specifications/>`_ for more details:
 
@@ -88,8 +88,7 @@ security/*
   contains resource handlers that implement the OCF security model.
 
 utils/*
-  contains a few primitive building blocks used internally by the core
-  framework.
+  contains a few primitive building blocks used internally by the OCF Secure IP Device Framework.
 
 onboarding_tool/*
   contains the sample onboarding tool (OBT).

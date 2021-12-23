@@ -766,7 +766,7 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
  * Resource Types starting with `oic` are reserved for a OCF defined Resource
  * Types.  Developers are strongly encouraged to try and use an OCF defined
  * Resource Type vs. creating their own. A repository of OCF defined resources
- * can be found on oneiota.org.
+ * can be found on https://github.com/openconnectivityfoundation/IoTDataModels.
  *
  * Multi-value "rt" Resource means a resource with multiple Resource Types. i.e.
  * oc_resource_bind_resource_type() is called multiple times for a single
