@@ -47,6 +47,9 @@ typedef uint64_t oc_clock_time_t;
 #define OC_DNS_CACHE
 //#define OC_DNS_LOOKUP_IPV6
 
+/* Maximum size of uri for a collection resource */
+//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
@@ -70,7 +73,7 @@ typedef uint64_t oc_clock_time_t;
 
 #define OC_MAX_NUM_COLLECTIONS (1)
 
-/* Common paramters */
+/* Common parameters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
 #define OC_BLOCK_WISE_SET_MTU (700)
 
