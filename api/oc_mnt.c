@@ -62,11 +62,21 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 
   if (success) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_rep_new_realloc(&request->response->response_buffer->buffer,
+                       request->response->response_buffer->buffer_size,
+                       OC_MAX_APP_DATA_SIZE);
+#else  /* OC_DYNAMIC_ALLOCATION */
     oc_rep_new(request->response->response_buffer->buffer,
-               OC_MAX_APP_DATA_SIZE);
+               request->response->response_buffer->buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, fr, false);
     oc_rep_end_root_object();
+#ifdef OC_DYNAMIC_ALLOCATION
+    request->response->response_buffer->buffer =
+      oc_rep_shrink_encoder_buf(request->response->response_buffer->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
     oc_send_response(request, OC_STATUS_CHANGED);
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);

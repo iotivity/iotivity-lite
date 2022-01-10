@@ -43,6 +43,30 @@ jobs:
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
             args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=1"
+          - name: cloud-server-debug-rep-encoding-realloc
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=0 REP_ENCODING_REALLOC=1"
+          - name: cloud-server-debug-rep-encoding-realloc-asan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=1 TSAN=0 REP_ENCODING_REALLOC=1"
+          - name: cloud-server-debug-rep-encoding-realloc-tsan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=1 REP_ENCODING_REALLOC=1"
+          - name: cloud-server-discovery-resource-observable-debug-rep-encoding-realloc
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=0 REP_ENCODING_REALLOC=1"
+          - name: cloud-server-discovery-resource-observable-debug-rep-encoding-realloc-asan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=1 TSAN=0 REP_ENCODING_REALLOC=1"
+          - name: cloud-server-discovery-resource-observable-debug-rep-encoding-realloc-tsan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=1 REP_ENCODING_REALLOC=1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -56,7 +80,6 @@ jobs:
           tags: ${{ matrix.tag }}
           build-args: |
             BUILD_ARGS=${{ matrix.args }}
-
       - name: Pull plgd device tests image
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 

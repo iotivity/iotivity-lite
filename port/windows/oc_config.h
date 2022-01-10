@@ -41,6 +41,9 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum size of uri for a collection resource */
 //#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
+/* Enable reallocation during encoding the representation to cbor */
+//#define OC_REP_ENCODING_REALLOC
+
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"
 #endif /* OC_DYNAMIC_ALLOCATION */
