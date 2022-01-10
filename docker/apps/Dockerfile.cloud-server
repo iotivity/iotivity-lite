@@ -1,9 +1,9 @@
 FROM alpine:3.12 AS build
-
+ARG BUILD_ARGS
 RUN apk add --no-cache curl git build-base gcc linux-headers patch
 COPY ./  /iotivity-lite/
 RUN cd /iotivity-lite/ && git submodule update --recursive
-RUN make -C /iotivity-lite/port/linux CLOUD=1 SECURE=1 CREATE=1 MNT=1 OSCORE=0 DEBUG=0 ASAN=0 cloud_server
+RUN make -C /iotivity-lite/port/linux $BUILD_ARGS cloud_server
 
 FROM alpine:3.12 AS service
 RUN apk add --no-cache bash

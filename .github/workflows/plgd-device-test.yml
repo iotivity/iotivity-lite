@@ -21,15 +21,32 @@ jobs:
         include:
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            tag: cloud-server-debug:debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=0"
+          - name: cloud-server-debug-asan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=1 TSAN=0"
+          - name: cloud-server-debug-tsan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=1"
           - name: cloud-server-discovery-resource-observable-debug
-            file: docker/apps/Dockerfile.cloud-server-discovery-resource-observable-debug
-            tag: cloud-server-discovery-resource-observable-debug:debug
-
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=0"
+          - name: cloud-server-discovery-resource-observable-debug-asan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=1 TSAN=0"
+          - name: cloud-server-discovery-resource-observable-debug-tsan
+            file: docker/apps/Dockerfile.cloud-server-debug
+            tag: dbg
+            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-     
+
       - name: Build cloud server docker image
         uses: docker/build-push-action@v2
         with:
@@ -37,7 +54,9 @@ jobs:
           push: false
           file: ${{ matrix.file }}
           tags: ${{ matrix.tag }}
-      
+          build-args: |
+            BUILD_ARGS=${{ matrix.args }}
+
       - name: Pull plgd device tests image
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
@@ -60,7 +79,15 @@ jobs:
         if: ${{ failure() }}
         run: cat `pwd`/data/0.log
 
+      - name: Collect sanitizers cloud server logs when the test fails
+        if: ${{ failure() }}
+        run: |
+          if ls `pwd`/data/0.asan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/0.asan.log*; \
+          fi
+          if ls `pwd`/data/0.tsan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/0.tsan.log*; \
+          fi
+
       - name: Remove cloud server container
         run: docker rm -f ${{ matrix.name }}
-      
-
