@@ -60,12 +60,12 @@ jobs:
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
             args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=0"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug
-            file: docker/apps/Dockerfile.cloud-server-debug-asan
+          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-asan
+            file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
             args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=1 TSAN=0"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug
-            file: docker/apps/Dockerfile.cloud-server-debug-tsan
+          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
+            file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
             args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=1"
 
