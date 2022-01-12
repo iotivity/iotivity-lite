@@ -62,19 +62,19 @@ cloud_store_load(oc_cloud_store_t *store)
 static void
 rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
 {
-  g_err |= cbor_encode_text_string(object_map, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object_map, key, strlen(key));
   if ((const char *)value != NULL) {
-    g_err |= cbor_encode_text_string(object_map, value, strlen(value));
+    g_err |= oc_rep_encode_text_string(object_map, value, strlen(value));
   } else {
-    g_err |= cbor_encode_text_string(object_map, "", 0);
+    g_err |= oc_rep_encode_text_string(object_map, "", 0);
   }
 }
 
 static void
 rep_set_int(CborEncoder *object_map, const char *key, int64_t value)
 {
-  g_err |= cbor_encode_text_string(object_map, key, strlen(key));
-  g_err |= cbor_encode_int(object_map, value);
+  g_err |= oc_rep_encode_text_string(object_map, key, strlen(key));
+  g_err |= oc_rep_encode_int(object_map, value);
 }
 
 static void
@@ -121,16 +121,20 @@ cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!buf)
     return -1;
+  oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+  uint8_t buf[OC_MIN_APP_DATA_SIZE];
+  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-  oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
   // Dumping cloud and accesspoint information.
   cloud_store_encode(store);
+#ifdef OC_DYNAMIC_ALLOCATION
+  buf = oc_rep_shrink_encoder_buf(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
   long size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     size = oc_storage_write(store_name, buf, size);
