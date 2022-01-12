@@ -342,6 +342,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
       return NULL;
     }
 #endif /* !OC_DYNAMIC_ALLOCATION */
+    if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
+      OC_ERR("limit of value type of g_device_count reached");
+      return NULL;
+    }
     OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count, device_count + 1,
                                  exchanged);
   }
