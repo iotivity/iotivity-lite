@@ -612,10 +612,10 @@ oc_connectivity_get_endpoints(size_t device)
 
   bool refresh = false;
   bool swapped = false;
-  int expected = OC_ATOMIC_LOAD32(dev->flags);
+  int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
   while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
-    int desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
-    OC_ATOMIC_COMPARE_AND_SWAP32(dev->flags, expected, desired, swapped);
+    int8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
     if (swapped) {
       refresh = true;
       break;
@@ -721,10 +721,10 @@ process_interface_change_event(void)
         continue;
       }
       bool swapped = false;
-      int expected = OC_ATOMIC_LOAD32(dev->flags);
+      int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
       while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
-        int desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
-        OC_ATOMIC_COMPARE_AND_SWAP32(dev->flags, expected, desired, swapped);
+        int8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
         if (swapped) {
           break;
         }
@@ -946,7 +946,7 @@ network_event_thread(void *data)
 
   int i, n;
 
-  while (dev->terminate != 1) {
+  while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     setfds = ip_context_rfds_fd_copy(dev);
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
@@ -958,7 +958,7 @@ network_event_thread(void *data)
       }
     }
 
-    if (dev->terminate) {
+    if (OC_ATOMIC_LOAD8(dev->terminate)) {
       break;
     }
 
@@ -1677,7 +1677,7 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
-  dev->terminate = 1;
+  OC_ATOMIC_STORE8(dev->terminate, 1);
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
     OC_WRN("cannot wakeup network thread");
   }

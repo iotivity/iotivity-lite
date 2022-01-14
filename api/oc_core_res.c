@@ -24,6 +24,7 @@
 #include "oc_discovery.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
+#include "util/oc_atomic.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
@@ -33,6 +34,7 @@
 
 #include "port/oc_assert.h"
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "oc_endpoint.h"
@@ -47,7 +49,7 @@ static oc_platform_info_t oc_platform_info;
 
 static bool announce_con_res = false;
 static int res_latency = 0;
-static size_t device_count = 0;
+static OC_ATOMIC_UINT32_T g_device_count = 0;
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
@@ -86,9 +88,10 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 void
 oc_core_shutdown(void)
 {
-  size_t i;
+  uint32_t i;
   oc_free_string(&(oc_platform_info.mfg_name));
 
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
 #ifdef OC_DYNAMIC_ALLOCATION
   if (oc_device_info) {
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -114,7 +117,7 @@ oc_core_shutdown(void)
     core_resources = NULL;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  device_count = 0;
+  OC_ATOMIC_STORE32(g_device_count, 0);
 }
 
 void
@@ -296,7 +299,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 size_t
 oc_core_get_num_devices(void)
 {
-  return device_count;
+  return OC_ATOMIC_LOAD32(g_device_count);
 }
 
 bool
@@ -329,12 +332,25 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        oc_core_add_device_cb_t add_device_cb, void *data)
 {
   (void)data;
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+  bool exchanged = false;
+  while (!exchanged) {
 #ifndef OC_DYNAMIC_ALLOCATION
-  if (device_count == OC_MAX_NUM_DEVICES) {
-    OC_ERR("device limit reached");
-    return NULL;
+    if (device_count == OC_MAX_NUM_DEVICES) {
+      OC_ERR("device limit reached");
+      return NULL;
+    }
+#endif /* !OC_DYNAMIC_ALLOCATION */
+    if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
+      OC_ERR("limit of value type of g_device_count reached");
+      return NULL;
+    }
+    OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count, device_count + 1,
+                                 exchanged);
   }
-#else /* !OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_DYNAMIC_ALLOCATION
   size_t new_num = 1 + OCF_D * (device_count + 1);
   core_resources =
     (oc_resource_t *)realloc(core_resources, new_num * sizeof(oc_resource_t));
@@ -412,9 +428,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     oc_abort("error initializing connectivity for device");
   }
 
-  device_count++;
-
-  return &oc_device_info[device_count - 1];
+  return &oc_device_info[device_count];
 }
 
 static void
@@ -552,7 +566,7 @@ oc_core_populate_resource(int core_resource, size_t device_index,
 oc_uuid_t *
 oc_core_get_device_id(size_t device)
 {
-  if (device >= device_count) {
+  if (device >= OC_ATOMIC_LOAD32(g_device_count)) {
     return NULL;
   }
   return &oc_device_info[device].di;
@@ -561,7 +575,7 @@ oc_core_get_device_id(size_t device)
 oc_device_info_t *
 oc_core_get_device_info(size_t device)
 {
-  if (device >= device_count) {
+  if (device >= OC_ATOMIC_LOAD32(g_device_count)) {
     return NULL;
   }
   return &oc_device_info[device];
