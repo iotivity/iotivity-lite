@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
-project(iotivity-lite)
+project(iotivity-lite VERSION 2.2.5)
 
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
@@ -224,6 +224,13 @@ target_link_libraries(iotivity-client PUBLIC
     iotivity-common
     iotivity-api
 )
+if(BUILD_SHARED_LIBS)
+    set_target_properties(iotivity-client
+        PROPERTIES
+        VERSION "${PROJECT_VERSION}"
+        SOVERSION "${PROJECT_VERSION_MAJOR}"
+    )
+endif()
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
@@ -234,6 +241,13 @@ target_link_libraries(iotivity-server PUBLIC
     iotivity-common
     iotivity-api
 )
+if(BUILD_SHARED_LIBS)
+    set_target_properties(iotivity-server
+        PROPERTIES
+        VERSION "${PROJECT_VERSION}"
+        SOVERSION "${PROJECT_VERSION_MAJOR}"
+    )
+endif()
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
@@ -244,7 +258,13 @@ target_link_libraries(iotivity-server-client PUBLIC
     iotivity-common
     iotivity-api
 )
-
+if(BUILD_SHARED_LIBS)
+    set_target_properties(iotivity-server-client
+        PROPERTIES
+        VERSION "${PROJECT_VERSION}"
+        SOVERSION "${PROJECT_VERSION_MAJOR}"
+    )
+endif()
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     # Add clang-format target
