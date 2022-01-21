@@ -15,6 +15,7 @@ endif()
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
@@ -28,6 +29,14 @@ set(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED OFF CACHE BOOL "Enable realloc du
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
     set(libs ${libs} mbedtls-plat)
+endif()
+
+if(BUILD_SHARED_LIBS)
+    set(USE_STATIC_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS static library." FORCE)
+    set(USE_SHARED_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS shared library." FORCE)
+else()
+    set(USE_STATIC_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS static library." FORCE)
+    set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS shared library." FORCE)
 endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
@@ -210,25 +219,31 @@ add_library(iotivity-client)
 target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
 target_link_libraries(iotivity-client PRIVATE
     iotivity-coap
+)
+target_link_libraries(iotivity-client PUBLIC
+    iotivity-common
     iotivity-api
 )
-target_link_libraries(iotivity-client PUBLIC iotivity-common)
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
 target_link_libraries(iotivity-server PRIVATE
     iotivity-coap
+)
+target_link_libraries(iotivity-server PUBLIC
+    iotivity-common
     iotivity-api
 )
-target_link_libraries(iotivity-server PUBLIC iotivity-common)
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
 target_link_libraries(iotivity-server-client PRIVATE
     iotivity-coap
+)
+target_link_libraries(iotivity-server-client PUBLIC
+    iotivity-common
     iotivity-api
 )
-target_link_libraries(iotivity-server-client PUBLIC iotivity-common)
 
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
