@@ -11,3 +11,8 @@ add_library(tinycbor-master
 target_include_directories(tinycbor-master PUBLIC
     ${PROJECT_SOURCE_DIR}/tinycbor/src
 )
+
+install(DIRECTORY tinycbor/src/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/deps/tinycbor/src COMPONENT dev
+    FILES_MATCHING PATTERN "*.h"
+)

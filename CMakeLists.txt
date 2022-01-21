@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.10)
 project(iotivity-lite VERSION 2.2.5)
 
+include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
+
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
@@ -177,6 +179,12 @@ target_include_directories(iotivity-coap INTERFACE
 
 target_link_libraries(iotivity-coap INTERFACE iotivity-port)
 
+install(DIRECTORY messaging/coap/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/messaging/coap COMPONENT dev
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "unittest" EXCLUDE
+)
+
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     target_compile_definitions(mbedcrypto PUBLIC OC_DYNAMIC_ALLOCATION)
 endif()
@@ -231,6 +239,11 @@ if(BUILD_SHARED_LIBS)
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
+install(TARGETS iotivity-client EXPORT iotivity-clientTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+)
 
 add_library(iotivity-server)
 target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
@@ -248,6 +261,11 @@ if(BUILD_SHARED_LIBS)
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
+install(TARGETS iotivity-server EXPORT iotivity-serverTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+)
 
 add_library(iotivity-server-client)
 target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
@@ -265,6 +283,20 @@ if(BUILD_SHARED_LIBS)
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
+install(TARGETS iotivity-server-client EXPORT iotivity-server-clientTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+)
+# install headers
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+    FILES_MATCHING PATTERN "*.h"
+)
+install(DIRECTORY util
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite
+    FILES_MATCHING PATTERN "*.h"
+)
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     # Add clang-format target

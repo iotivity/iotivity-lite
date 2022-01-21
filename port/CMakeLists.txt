@@ -44,4 +44,19 @@ if(UNIX OR WIN32)
     elseif(WIN32)
         target_link_libraries(iotivity-port INTERFACE bcrypt iphlpapi)
     endif()
+    
+    # Install headers
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        FILES_MATCHING PATTERN "*.h"
+    )
+    if(UNIX)
+        install(FILES linux/oc_config.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        )
+    elseif(WIN32)
+        install(FILES windows/oc_config.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        )
+    endif()
 endif()
