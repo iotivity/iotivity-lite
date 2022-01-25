@@ -6,7 +6,7 @@ if(UNIX)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleserver
-        iotivity-server-client
+        iotivity-lite-client-server
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_creds)
 
@@ -15,7 +15,7 @@ if(UNIX)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleserver_pki
-        iotivity-server-client
+        iotivity-lite-client-server
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_pki_creds)
 
@@ -24,7 +24,7 @@ if(UNIX)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleclient
-        iotivity-server-client
+        iotivity-lite-client-server
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 
@@ -34,7 +34,7 @@ if(UNIX)
             ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
         )
         target_link_libraries(device_builder_server
-            iotivity-server-client
+            iotivity-lite-client-server
         )
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
     endif()
@@ -45,7 +45,7 @@ if(UNIX)
             ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
         )
         target_link_libraries(cloud_proxy
-            iotivity-server-client
+            iotivity-lite-client-server
         )
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_creds)
     endif()
@@ -55,7 +55,7 @@ elseif(WIN32)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleserver
-        iotivity-server-client
+        iotivity-lite-client-server
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleserver_creds)
 
@@ -64,7 +64,7 @@ elseif(WIN32)
         ${iotivity-lite_SOURCE_DIR}/api/oc_introspection.c
     )
     target_link_libraries(simpleclient
-        iotivity-server-client
+        iotivity-lite-client-server
     )
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/simpleclient_creds)
 endif()

@@ -223,67 +223,67 @@ if(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED)
 endif()
 
 # Client and server versions of Iotivity
-add_library(iotivity-client)
-target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
-target_link_libraries(iotivity-client PRIVATE
+add_library(iotivity-lite-client)
+target_compile_definitions(iotivity-lite-client PUBLIC OC_CLIENT)
+target_link_libraries(iotivity-lite-client PRIVATE
     iotivity-coap
 )
-target_link_libraries(iotivity-client PUBLIC
+target_link_libraries(iotivity-lite-client PUBLIC
     iotivity-common
     iotivity-api
 )
 if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-client
+    set_target_properties(iotivity-lite-client
         PROPERTIES
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
-install(TARGETS iotivity-client EXPORT iotivity-clientTargets
+install(TARGETS iotivity-lite-client EXPORT iotivity-lite-clientTargets
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
 )
 
-add_library(iotivity-server)
-target_compile_definitions(iotivity-server PUBLIC OC_SERVER)
-target_link_libraries(iotivity-server PRIVATE
+add_library(iotivity-lite-server)
+target_compile_definitions(iotivity-lite-server PUBLIC OC_SERVER)
+target_link_libraries(iotivity-lite-server PRIVATE
     iotivity-coap
 )
-target_link_libraries(iotivity-server PUBLIC
+target_link_libraries(iotivity-lite-server PUBLIC
     iotivity-common
     iotivity-api
 )
 if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-server
+    set_target_properties(iotivity-lite-server
         PROPERTIES
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
-install(TARGETS iotivity-server EXPORT iotivity-serverTargets
+install(TARGETS iotivity-lite-server EXPORT iotivity-lite-serverTargets
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
 )
 
-add_library(iotivity-server-client)
-target_compile_definitions(iotivity-server-client PUBLIC OC_SERVER OC_CLIENT)
-target_link_libraries(iotivity-server-client PRIVATE
+add_library(iotivity-lite-client-server)
+target_compile_definitions(iotivity-lite-client-server PUBLIC OC_SERVER OC_CLIENT)
+target_link_libraries(iotivity-lite-client-server PRIVATE
     iotivity-coap
 )
-target_link_libraries(iotivity-server-client PUBLIC
+target_link_libraries(iotivity-lite-client-server PUBLIC
     iotivity-common
     iotivity-api
 )
 if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-server-client
+    set_target_properties(iotivity-lite-client-server
         PROPERTIES
         VERSION "${PROJECT_VERSION}"
         SOVERSION "${PROJECT_VERSION_MAJOR}"
     )
 endif()
-install(TARGETS iotivity-server-client EXPORT iotivity-server-clientTargets
+install(TARGETS iotivity-lite-client-server EXPORT iotivity-lite-client-serverTargets
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
