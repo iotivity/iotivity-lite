@@ -185,16 +185,27 @@ install(DIRECTORY messaging/coap/
     PATTERN "unittest" EXCLUDE
 )
 
+set(PUBLIC_LINK_LIBS "")
+if(BUILD_SHARED_LIBS)
+    list(APPEND PUBLIC_LINK_LIBS "mbedtls")
+    list(APPEND PUBLIC_LINK_LIBS "mbedcrypto")
+    list(APPEND PUBLIC_LINK_LIBS "mbedx509")
+endif()
+
+set(PUBLIC_COMPILER_DEFS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     target_compile_definitions(mbedcrypto PUBLIC OC_DYNAMIC_ALLOCATION)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_DYNAMIC_ALLOCATION")
 endif()
 
 if(OC_SECURITY_ENABLED)
     target_compile_definitions(mbedcrypto PUBLIC OC_SECURITY)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_SECURITY")
 endif()
 
 if(OC_PKI_ENABLED)
     target_compile_definitions(mbedcrypto PUBLIC OC_PKI)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_PKI")
 endif()
 
 if(OC_DEBUG_ENABLED)
@@ -204,6 +215,7 @@ endif()
 
 if(OC_CLOUD_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_CLOUD)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_CLOUD")
 endif()
 
 if(OC_IDD_API_ENABLED)
@@ -212,6 +224,7 @@ endif()
 
 if(OC_TCP_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_TCP)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_TCP")
 endif()
 
 if(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED)

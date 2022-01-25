@@ -59,4 +59,32 @@ if(UNIX OR WIN32)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
         )
     endif()
+    
+    ######## Generate pkg-config and cmake files ########
+    foreach(lib IN LISTS PUBLIC_LINK_LIBS)
+        string(APPEND extra_libs "-l${lib} ")
+    endforeach()
+    foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
+        string(APPEND extra_cflags "-D${cflag} ")
+    endforeach()
+
+    # Generate pkg-config files
+    set(prefix ${CMAKE_INSTALL_PREFIX})
+    set(exec_prefix "\${prefix}")
+    set(libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    set(version ${iotivity-lite_VERSION})
+
+    set(PKG_CONFIG_FILES
+        iotivity-lite-client.pc
+        iotivity-lite-server.pc
+        iotivity-lite-client-server.pc)
+    foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
+        configure_file(
+            "linux/${pkg-config-file}.in"
+            ${pkg-config-file}
+            @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pkg-config-file}
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    endforeach()
 endif()
