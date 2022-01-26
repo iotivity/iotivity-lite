@@ -155,7 +155,7 @@ app_init(void)
      can be OCF1.3.1 or OCF2.0.0 (or even higher)
      supplied values are for OCF1.3.1 */
   ret |= oc_add_device("/oic/d", "oic.d.stb", "Set Top Box",
-                       "ocf.2.2.4",                   /* icv value */
+                       "ocf.2.2.5",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
   strcpy(rule, "(switch:value = true)");
