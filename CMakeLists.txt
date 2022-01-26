@@ -3,20 +3,6 @@ project(iotivity-lite VERSION 2.2.5)
 
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
-# Patch mbedtls
-set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
-if(OC_REAPPLY_MBEDTLS_PATCHES)
-    include(mbedtls-patch.cmake)
-    set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL 
-        "By default, mbedTLS patches are applied upon the first CMake Configure. Set this to ON to reapply the patches on the next configure."
-         FORCE
-    )
-endif()
-
-# Do not build anything except for the library
-option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
-option(ENABLE_TESTING "Build mbed TLS tests." OFF)
-
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
@@ -34,31 +20,6 @@ set(OC_SOFTWARE_UPDATE_ENABLED OFF CACHE BOOL "Enable software update resource."
 set(OC_WKCORE_ENABLED OFF CACHE BOOL "Enable well-known core resource.")
 set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore support.")
 set(OC_IPV4_ENABLED OFF CACHE BOOL "Enable IPv4 support.")
-
-# If an mbedtls platform layer is defined, add it to the mbedtls list of libs
-if(TARGET mbedtls-plat)
-    set(libs ${libs} mbedtls-plat)
-endif()
-
-if(BUILD_SHARED_LIBS)
-    set(USE_STATIC_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS static library." FORCE)
-    set(USE_SHARED_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS shared library." FORCE)
-else()
-    set(USE_STATIC_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS static library." FORCE)
-    set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS shared library." FORCE)
-endif()
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
-
-target_include_directories(mbedcrypto PUBLIC
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
-)
-
-if(TARGET mbedcrypto-plat)
-	target_link_libraries(mbedcrypto mbedcrypto-plat)
-endif()
 
 
 # Iotivity API
@@ -111,19 +72,14 @@ target_include_directories(iotivity-api INTERFACE
     ${PROJECT_SOURCE_DIR}/api/c-timestamp
     ${PROJECT_SOURCE_DIR}/include
 )
-
-# Core functions used by Iotivity
-add_library(iotivity-common INTERFACE)
-
-
 # do not treat warnings as errors on Windows
 # block should be defined after the target library
 if(MSVC)
-    target_compile_options(mbedtls PRIVATE /W1 /WX-)
-    target_compile_options(mbedx509 PRIVATE /W1 /WX-)
-    target_compile_options(mbedcrypto PRIVATE /W1 /WX-)
     target_compile_options(iotivity-api INTERFACE /W1 /WX-)
 endif()
+
+# Core functions used by Iotivity
+add_library(iotivity-common INTERFACE)
 
 target_sources(iotivity-common INTERFACE
     # Utilities that are used deep within Iotivity
@@ -201,23 +157,22 @@ endif()
 
 set(PUBLIC_COMPILER_DEFS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
-    target_compile_definitions(mbedcrypto PUBLIC OC_DYNAMIC_ALLOCATION)
+    target_compile_definitions(iotivity-common INTERFACE OC_DYNAMIC_ALLOCATION)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_DYNAMIC_ALLOCATION")
 endif()
 
 if(OC_SECURITY_ENABLED)
-    target_compile_definitions(mbedcrypto PUBLIC OC_SECURITY)
+    target_compile_definitions(iotivity-common INTERFACE OC_SECURITY)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_SECURITY")
 endif()
 
 if(OC_PKI_ENABLED)
-    target_compile_definitions(mbedcrypto PUBLIC OC_PKI)
+    target_compile_definitions(iotivity-common INTERFACE OC_PKI)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_PKI")
 endif()
 
 if(OC_DEBUG_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_DEBUG)
-    target_compile_definitions(mbedcrypto PUBLIC OC_DEBUG)
 endif()
 
 if(OC_CLOUD_ENABLED)

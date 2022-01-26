@@ -1,13 +1,13 @@
 # This CMakeLists can only build the port for Linux & Windows
 if(UNIX OR WIN32)
-	project(iotivity-lite-port)
+    project(iotivity-lite-port)
 
-	# Detect the platform and pick the right port
-	if(UNIX)
+    # Detect the platform and pick the right port
+    if(UNIX)
         set(PORT_DIR ${PROJECT_SOURCE_DIR}/linux)
-	elseif(WIN32)
+    elseif(WIN32)
         set(PORT_DIR ${PROJECT_SOURCE_DIR}/windows)
-	endif()
+    endif()
 
 
     add_library(iotivity-port INTERFACE)
@@ -17,11 +17,6 @@ if(UNIX OR WIN32)
         ${PROJECT_SOURCE_DIR}
     )
 
-    target_include_directories(mbedcrypto PUBLIC
-        ${PORT_DIR}
-        ${PROJECT_SOURCE_DIR}
-    )
-    
     target_sources(iotivity-port INTERFACE
         ${PORT_DIR}/abort.c
         ${PORT_DIR}/clock.c
