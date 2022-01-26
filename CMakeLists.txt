@@ -23,10 +23,17 @@ set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
 set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
 set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
+set(OC_DEBUG_TLS_ENABLED OFF CACHE BOOL "Enable TLS debug messages.")
 set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
 set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
 set(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED OFF CACHE BOOL "Enable observation over oic/res resource.")
 set(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED OFF CACHE BOOL "Enable realloc during encoding the representation.")
+set(OC_COLLECTIONS_IF_CREATE_ENABLED OFF CACHE BOOL "Enable RT factory for collections.")
+set(OC_MNT_ENABLED OFF CACHE BOOL "Enable maintenance resource.")
+set(OC_SOFTWARE_UPDATE_ENABLED OFF CACHE BOOL "Enable software update resource.")
+set(OC_WKCORE_ENABLED OFF CACHE BOOL "Enable well-known core resource.")
+set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore support.")
+set(OC_IPV4_ENABLED OFF CACHE BOOL "Enable IPv4 support.")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -233,6 +240,36 @@ endif()
 
 if(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_REP_ENCODING_REALLOC)
+endif()
+
+if(OC_COLLECTIONS_IF_CREATE_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_COLLECTIONS_IF_CREATE)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_COLLECTIONS_IF_CREATE")
+endif()
+
+if(OC_MNT_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_MNT)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_MNT")
+endif()
+
+if(OC_SOFTWARE_UPDATE_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_SOFTWARE_UPDATE)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_SOFTWARE_UPDATE")
+endif()
+
+if(OC_WKCORE_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_WKCORE)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_WKCORE")
+endif()
+
+if(OC_OSCORE_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_OSCORE)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_OSCORE")
+endif()
+
+if(OC_IPV4_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_IPV4)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_IPV4")
 endif()
 
 # Client and server versions of Iotivity
