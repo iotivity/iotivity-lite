@@ -1172,7 +1172,7 @@ oc_rep_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder,
   CborEncoder prevMapEncoder;
   memcpy(&prevMapEncoder, mapEncoder, sizeof(prevMapEncoder));
   CborEncoder prevEncoder;
-  memcpy(&prevEncoder, encoder, sizeof(encoder));
+  memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
   CborError err =
     oc_rep_encoder_create_map_internal(encoder, mapEncoder, length);
   if (err == CborErrorOutOfMemory) {
@@ -1181,7 +1181,7 @@ oc_rep_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder,
       return err;
     }
     memcpy(mapEncoder, &prevMapEncoder, sizeof(prevMapEncoder));
-    memcpy(encoder, &prevEncoder, sizeof(encoder));
+    memcpy(encoder, &prevEncoder, sizeof(prevEncoder));
     return oc_rep_encoder_create_map_internal(encoder, mapEncoder, length);
   }
   return err;
