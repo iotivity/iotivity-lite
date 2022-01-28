@@ -420,7 +420,7 @@ app_init(void)
      can be ocf.2.2.0 (or even higher)
      supplied values are for ocf.2.2.0 */
   ret |= oc_add_device("/oic/d", "oic.d.cloudproxy", "cloud_proxy",
-                       "ocf.2.2.4",                   /* icv value */
+                       "ocf.2.2.5",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
 
