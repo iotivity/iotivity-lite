@@ -142,6 +142,8 @@ CborError oc_rep_encoder_create_array(CborEncoder *encoder,
 CborError oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
                                        const void *value);
 
+CborError oc_rep_encode_null(CborEncoder *encoder);
+
 /**
  * Get a pointer to the cbor object with the given `name`
  *

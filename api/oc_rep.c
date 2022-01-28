@@ -1480,3 +1480,33 @@ oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
   return err;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+CborError
+oc_rep_encode_null_internal(CborEncoder *encoder)
+{
+  convert_offset_to_ptr(encoder);
+  CborError err = cbor_encode_null(encoder);
+  convert_ptr_to_offset(encoder);
+  return err;
+}
+
+CborError
+oc_rep_encode_null(CborEncoder *encoder)
+{
+#ifndef OC_DYNAMIC_ALLOCATION
+  return oc_rep_encode_null_internal(encoder);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  CborEncoder prevEncoder;
+  memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
+  CborError err = oc_rep_encode_null_internal(encoder);
+  if (err == CborErrorOutOfMemory) {
+    err = realloc_buffer(oc_rep_encoder_get_extra_bytes_needed(encoder));
+    if (err != CborNoError) {
+      return err;
+    }
+    memcpy(encoder, &prevEncoder, sizeof(prevEncoder));
+    return oc_rep_encode_null_internal(encoder);
+  }
+  return err;
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
