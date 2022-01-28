@@ -216,14 +216,13 @@ oc_rep_get_encoded_payload_size(void)
 {
   convert_offset_to_ptr(&g_encoder);
   size_t size = cbor_encoder_get_buffer_size(&g_encoder, g_buf);
-#ifdef OC_DEBUG
   size_t needed = cbor_encoder_get_extra_bytes_needed(&g_encoder);
-#endif
   convert_ptr_to_offset(&g_encoder);
   if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
            "accomodate a larger payload(+%d)",
            (int)needed);
+    (void)needed;
   }
   if (g_err != CborNoError)
     return -1;
