@@ -1086,7 +1086,7 @@ void oc_free_rep(oc_rep_t *rep);
  *
  * @param rep oc_rep_t to check for null value
  * @param key the key name for the null value
- * @param value the return null check value
+ * @param is_null the return null check value
  *
  * @return true if key and value are found and returned.
  *

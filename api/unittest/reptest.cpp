@@ -63,50 +63,50 @@ TEST(TestRep, RepToJson_null)
  */
 TEST(TestRep, OCRepSetGetNull)
 {
-    /*buffer for oc_rep_t */
-    uint8_t buf[1024];
-    oc_rep_new(&buf[0], 1024);
+  /*buffer for oc_rep_t */
+  uint8_t buf[1024];
+  oc_rep_new(&buf[0], 1024);
 
-    /* add null value to root object */
-    oc_rep_start_root_object();
-    oc_rep_set_null(root, nothing);
-    oc_rep_end_root_object();
+  /* add null value to root object */
+  oc_rep_start_root_object();
+  oc_rep_set_null(root, nothing);
+  oc_rep_end_root_object();
 
-    /* convert CborEncoder to oc_rep_t */
-    const uint8_t *payload = oc_rep_get_encoder_buf();
-    int payload_len = oc_rep_get_encoded_payload_size();
-    EXPECT_NE(payload_len, -1);
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(payload, payload_len, &rep);
-    ASSERT_TRUE(rep != NULL);
+  /* convert CborEncoder to oc_rep_t */
+  const uint8_t *payload = oc_rep_get_encoder_buf();
+  int payload_len = oc_rep_get_encoded_payload_size();
+  EXPECT_NE(payload_len, -1);
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+  oc_rep_set_pool(&rep_objects);
+  oc_rep_t *rep = NULL;
+  oc_parse_rep(payload, payload_len, &rep);
+  ASSERT_TRUE(rep != NULL);
 
-    bool is_null = false;
-    EXPECT_TRUE(oc_rep_is_null(rep, "nothing", &is_null));
-    EXPECT_TRUE(is_null);
-    /* error handling */
-    EXPECT_FALSE(oc_rep_is_null(NULL, "nothing", &is_null));
-    EXPECT_FALSE(oc_rep_is_null(rep, NULL, &is_null));
-    EXPECT_FALSE(oc_rep_is_null(rep, "nothing", NULL));
-    EXPECT_FALSE(oc_rep_is_null(rep, "not_the_key", &is_null));
+  bool is_null = false;
+  EXPECT_TRUE(oc_rep_is_null(rep, "nothing", &is_null));
+  EXPECT_TRUE(is_null);
+  /* error handling */
+  EXPECT_FALSE(oc_rep_is_null(NULL, "nothing", &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep, NULL, &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep, "nothing", NULL));
+  EXPECT_FALSE(oc_rep_is_null(rep, "not_the_key", &is_null));
 
-    char *json;
-    size_t json_size;
-    json_size = oc_rep_to_json(rep, NULL, 0, false);
-    json = (char *)malloc(json_size + 1);
-    oc_rep_to_json(rep, json, json_size + 1, false);
-    EXPECT_STREQ("{\"nothing\":null}", json);
-    free(json);
-    json = NULL;
-    json_size = oc_rep_to_json(rep, NULL, 0, true);
-    json = (char *)malloc(json_size + 1);
-    oc_rep_to_json(rep, json, json_size + 1, true);
-    EXPECT_STREQ("{\n  \"nothing\" : null\n}\n", json);
-    free(json);
-    json = NULL;
+  char *json;
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, false);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, false);
+  EXPECT_STREQ("{\"nothing\":null}", json);
+  free(json);
+  json = NULL;
+  json_size = oc_rep_to_json(rep, NULL, 0, true);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, true);
+  EXPECT_STREQ("{\n  \"nothing\" : null\n}\n", json);
+  free(json);
+  json = NULL;
 
-    oc_free_rep(rep);
+  oc_free_rep(rep);
 }
 
 TEST(TestRep, OCRepSetGetDouble)

@@ -596,8 +596,8 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
       OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
       case OC_REP_NIL:
-          **(bool **)value = true;
-          break;
+        **(bool **)value = true;
+        break;
       case OC_REP_INT:
         **(int64_t **)value = rep_value->value.integer;
         break;
