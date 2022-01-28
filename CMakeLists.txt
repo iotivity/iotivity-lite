@@ -5,7 +5,7 @@ project(iotivity-lite)
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
     include(mbedtls-patch.cmake)
-    set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL 
+    set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL
         "By default, mbedTLS patches are applied upon the first CMake Configure. Set this to ON to reapply the patches on the next configure."
          FORCE
     )
@@ -25,6 +25,27 @@ set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary 
 set(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED OFF CACHE BOOL "Enable observation over oic/res resource.")
 set(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED OFF CACHE BOOL "Enable realloc during encoding the representation.")
 
+set(CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
+
+# enable clang-tidy before defining targets you want to run analysis on
+macro(enable_clang_tidy)
+    if(UNIX AND CLANG_TIDY_ENABLED)
+        # use clang-tidy during compilation if its available
+        find_program(CLANG_TIDY_BIN clang-tidy)
+        if(CLANG_TIDY_BIN)
+            message(STATUS "clang-tidy enabled and found at ${CLANG_TIDY_BIN}")
+            set(CMAKE_C_CLANG_TIDY ${CLANG_TIDY_BIN})
+            set(CMAKE_CXX_CLANG_TIDY ${CMAKE_C_CLANG_TIDY})
+        endif()
+    endif()
+endmacro()
+
+# disable clang-tidy before defining targets you want to skip analysis on
+macro(disable_clang_tidy)
+    set(CMAKE_C_CLANG_TIDY "")
+    set(CMAKE_CXX_CLANG_TIDY "")
+endmacro()
+
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
     set(libs ${libs} mbedtls-plat)
@@ -42,6 +63,7 @@ if(TARGET mbedcrypto-plat)
 	target_link_libraries(mbedcrypto mbedcrypto-plat)
 endif()
 
+enable_clang_tidy()
 
 # Iotivity API
 add_library(iotivity-api INTERFACE)
@@ -242,4 +264,6 @@ endif()
 add_subdirectory(port)
 add_subdirectory(apps)
 add_subdirectory(onboarding_tool)
+
+disable_clang_tidy()
 add_subdirectory(deps)
