@@ -595,6 +595,9 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
         (rep_value->type == type)) {
       OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
+      case OC_REP_NIL:
+          **(bool **)value = true;
+          break;
       case OC_REP_INT:
         **(int64_t **)value = rep_value->value.integer;
         break;
@@ -642,6 +645,17 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
   }
 
   return false;
+}
+
+bool
+oc_rep_is_null(oc_rep_t *rep, const char *key, bool *is_null)
+{
+  if (!is_null) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+  return oc_rep_get_value(rep, OC_REP_NIL, key, (void **)&is_null,
+                          (size_t *)NULL);
 }
 
 bool

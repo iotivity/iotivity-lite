@@ -313,6 +313,31 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
   } while (0)
 
 /**
+ * Add an null `value` to the cbor `object` under the `key` name
+ * Example:
+ *
+ * To build the an object with the following cbor value
+ *
+ *     {
+ *       "nothing": null
+ *     }
+ *
+ * The following code could be used:
+ * ~~~{.c}
+ *     oc_rep_begin_root_object();
+ *     oc_rep_set_null(root, nothing);
+ *     oc_rep_end_root_object();
+ * ~~~
+ *
+ * @see oc_rep_is_nul
+ */
+#define oc_rep_set_null(object, key)                                           \
+  do {                                                                         \
+    g_err |= oc_rep_encode_text_string(&object##_map, #key, strlen(#key));     \
+    g_err |= oc_rep_encode_null(&object##_map);                                \
+  } while (0)
+
+/**
  * This macro has been replaced with oc_rep_begin_array
  *
  * @see oc_rep_start_array
@@ -1047,6 +1072,27 @@ int oc_parse_rep(const uint8_t *payload, int payload_size,
                  oc_rep_t **value_list);
 
 void oc_free_rep(oc_rep_t *rep);
+
+/**
+ * Check for a null value from an `oc_rep_t`
+ *
+ * Example:
+ * ~~~{.c}
+ *         bool is_null = false;
+ *         if( true == oc_rep_is_null(rep, "nothing", &is_null)) {
+ *             printf("Nothing is: %s\n", is_null ? "null": "not null");
+ *         }
+ * ~~~
+ *
+ * @param rep oc_rep_t to check for null value
+ * @param key the key name for the null value
+ * @param value the return null check value
+ *
+ * @return true if key and value are found and returned.
+ *
+ * @see oc_rep_set_null
+ */
+bool oc_rep_is_null(oc_rep_t *rep, const char *key, bool *is_null);
 
 /**
  * Read an integer from an `oc_rep_t`
