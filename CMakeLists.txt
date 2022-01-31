@@ -203,25 +203,22 @@ endif()
 
 ######## Compose static and shared libraries ########
 # Client
-add_library(client-static STATIC
+set(client-lib-obj
     $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
+if(OC_SECURITY_ENABLED)
+    list(APPEND client-lib-obj $<TARGET_OBJECTS:mbedtls>)
+endif()
+add_library(client-static STATIC ${client-lib-obj})
 set_target_properties(client-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
 )
 
-add_library(client-shared SHARED
-    $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
-    $<TARGET_OBJECTS:client-obj>
-)
+add_library(client-shared SHARED ${client-lib-obj})
 target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
-if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-shared PRIVATE mbedtls mbedcrypto mbedx509)
-endif()
 set_target_properties(client-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -237,6 +234,9 @@ set(server-lib-obj
 if(OC_CLOUD_ENABLED)
     list(APPEND server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
 endif()
+if(OC_SECURITY_ENABLED)
+    list(APPEND server-lib-obj $<TARGET_OBJECTS:mbedtls>)
+endif()
 
 add_library(server-static STATIC ${server-lib-obj})
 set_target_properties(server-static PROPERTIES
@@ -246,9 +246,6 @@ set_target_properties(server-static PROPERTIES
 
 add_library(server-shared SHARED ${server-lib-obj})
 target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
-if(OC_SECURITY_ENABLED)
-    target_link_libraries(server-shared PRIVATE mbedtls mbedcrypto mbedx509)
-endif()
 set_target_properties(server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -264,6 +261,9 @@ set(client-server-lib-obj
 if(OC_CLOUD_ENABLED)
     list(APPEND client-server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
 endif()
+if(OC_SECURITY_ENABLED)
+    list(APPEND client-server-lib-obj $<TARGET_OBJECTS:mbedtls>)
+endif()
 add_library(client-server-static STATIC ${client-server-lib-obj})
 set_target_properties(client-server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
@@ -272,9 +272,6 @@ set_target_properties(client-server-static PROPERTIES
 
 add_library(client-server-shared SHARED ${client-server-lib-obj})
 target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
-if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-server-shared PRIVATE mbedtls mbedcrypto mbedx509)
-endif()
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
