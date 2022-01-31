@@ -12,7 +12,7 @@ endif()
 
 message("iotivity patch utils found")
 
-set(IOTIVITY_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(IOTIVITY_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(MBEDTLS_SRC_DIR "${IOTIVITY_SRC_DIR}/deps/mbedtls")
 set(IOTIVITY_PATCH_DIR "${IOTIVITY_SRC_DIR}/patches")
 

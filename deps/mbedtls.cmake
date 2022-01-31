@@ -9,7 +9,7 @@ set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS shared library." F
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
-    include(mbedtls-patch.cmake)
+    include(${PROJECT_SOURCE_DIR}/deps/mbedtls-patch.cmake)
     set(OC_REAPPLY_MBEDTLS_PATCHES OFF CACHE BOOL
         "By default, mbedTLS patches are applied upon the first CMake Configure. Set this to ON to reapply the patches on the next configure."
          FORCE
