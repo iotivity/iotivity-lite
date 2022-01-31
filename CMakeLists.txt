@@ -113,6 +113,19 @@ file(GLOB SRC_SERVER
 
 file(GLOB SRC_CLIENT ${SRC_SERVER})
 
+# Detect the platform and pick the right port
+if(UNIX)
+    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/linux)
+    file(GLOB PORT_SRC port/linux/*.c)
+elseif(WIN32)
+    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/windows)
+    file(GLOB PORT_SRC port/windows/*.c)
+else()
+    message(ERROR "Can build only on Linux and Windows!")
+endif()
+list(APPEND SRC_SERVER ${PORT_SRC})
+list(APPEND SRC_CLIENT ${PORT_SRC})
+
 if(OC_SECURITY_ENABLED)
     file(GLOB SRC_SECURITY
         ${PROJECT_SOURCE_DIR}/security/oc_*.c
@@ -152,10 +165,8 @@ if(OC_SECURITY_ENABLED)
 endif()
 
 ######## Object libraries ########
-include(port/CMakeLists.txt)
 include(deps/CMakeLists.txt)
 
-get_target_property(PORT_DIR iotivity-port INCLUDE_DIRECTORIES)
 get_target_property(MBEDTLS_DIR mbedtls INCLUDE_DIRECTORIES)
 
 add_library(common-obj OBJECT ${SRC_COMMON})
@@ -184,7 +195,6 @@ endif()
 # Client
 add_library(client-static STATIC
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:iotivity-port>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
@@ -195,7 +205,6 @@ set_target_properties(client-static PROPERTIES
 
 add_library(client-shared SHARED
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:iotivity-port>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
@@ -209,7 +218,6 @@ set_target_properties(client-shared PROPERTIES
 # Server
 set(server-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:iotivity-port>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:server-obj>
 )
@@ -234,7 +242,6 @@ set_target_properties(server-shared PROPERTIES
 # Client-Server
 set(client-server-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:iotivity-port>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-server-obj>
 )
@@ -255,6 +262,34 @@ set_target_properties(client-server-shared PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
+######## Generate pkg-config and cmake files ########
+foreach(lib IN LISTS PUBLIC_LINK_LIBS)
+    string(APPEND extra_libs "-l${lib} ")
+endforeach()
+foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
+    string(APPEND extra_cflags "-D${cflag} ")
+endforeach()
+
+# Generate pkg-config files
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix "\${prefix}")
+set(libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(version ${iotivity-lite_VERSION})
+
+set(PKG_CONFIG_FILES
+    iotivity-lite-client.pc
+    iotivity-lite-server.pc
+    iotivity-lite-client-server.pc)
+foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
+    configure_file(
+        "${PROJECT_SOURCE_DIR}/port/linux/${pkg-config-file}.in"
+        ${pkg-config-file}
+        @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pkg-config-file}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT dev)
+endforeach()
+
 ######## Installation ########
 # Libraries
 install(TARGETS
@@ -271,6 +306,13 @@ install(TARGETS
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
+)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/port
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+    FILES_MATCHING PATTERN "*.h"
+)
+install(FILES ${PORT_DIR}/oc_config.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
 )
 install(DIRECTORY util
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
