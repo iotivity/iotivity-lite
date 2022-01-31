@@ -278,6 +278,73 @@ set_target_properties(client-server-shared PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
+######## Units tests (UNIX only) ########
+include(CTest)
+if(BUILD_TESTING AND UNIX)
+    enable_language(CXX)
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+    list(APPEND TEST_COMPILE_OPTIONS "-Wall" "-Wextra" "-fpermissive")
+    list(APPEND TEST_LINK_LIBS client-server-static gtest_main Threads::Threads)
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
+        list(APPEND TEST_LINK_LIBS gcov)
+    endif()
+
+    # Build googletest
+    add_subdirectory(${PROJECT_SOURCE_DIR}/deps/gtest gtest)
+
+    # Helper macro to build unit test
+    macro(package_add_test TESTNAME)
+        add_executable(${TESTNAME} ${ARGN})
+        target_compile_options(${TESTNAME} PRIVATE ${TEST_COMPILE_OPTIONS})
+        target_compile_features(${TESTNAME} PRIVATE cxx_nullptr)
+        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILER_DEFS} "OC_CLIENT" "OC_SERVER")
+        target_include_directories(${TESTNAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
+        target_include_directories(${TESTNAME} PRIVATE
+            ${PROJECT_SOURCE_DIR}
+            ${PROJECT_SOURCE_DIR}/include
+            ${PORT_DIR}
+            ${PROJECT_SOURCE_DIR}/messaging/coap
+        )
+        if(OC_SECURITY_ENABLED)
+            target_include_directories(${TESTNAME} PRIVATE
+                ${PROJECT_SOURCE_DIR}/security
+                ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
+            )
+        endif()
+        if(OC_CLOUD_ENABLED)
+            target_include_directories(${TESTNAME} PRIVATE ${PROJECT_SOURCE_DIR}/api/cloud)
+        endif()
+        target_link_libraries(${TESTNAME} PRIVATE ${TEST_LINK_LIBS})
+        add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
+        set_target_properties(${TESTNAME} PROPERTIES FOLDER unittests)
+    endmacro()
+
+    # Unit tests
+    file(GLOB SRC_APITEST api/unittest/*.cpp)
+    package_add_test(apitest ${SRC_APITEST})
+
+    file(GLOB SRC_PLATFORMTEST port/unittest/*.cpp)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_test)
+    package_add_test(platformtest ${SRC_PLATFORMTEST})
+
+    file(GLOB SRC_MESSAGINGTEST messaging/coap/unittest/*.cpp)
+    package_add_test(messagingtest ${SRC_MESSAGINGTEST})
+
+    if(OC_SECURITY_ENABLED)
+        file(GLOB SRC_SECURITYTEST security/unittest/*.cpp)
+        package_add_test(securitytest ${SRC_SECURITYTEST})
+    endif()
+
+# Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f
+#    if(OC_CLOUD_ENABLED)
+#        file(GLOB SRC_CLOUDTEST api/cloud/unittest/*.cpp)
+#        package_add_test(cloudtest ${SRC_CLOUDTEST})
+#    endif()
+endif()
+
 ######## Generate pkg-config and cmake files ########
 foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
     string(APPEND extra_cflags "-D${cflag} ")
