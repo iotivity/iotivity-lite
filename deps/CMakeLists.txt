@@ -4,13 +4,9 @@
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
-if(BUILD_SHARED_LIBS)
-    set(USE_STATIC_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS static library." FORCE)
-    set(USE_SHARED_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS shared library." FORCE)
-else()
-    set(USE_STATIC_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS static library." FORCE)
-    set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS shared library." FORCE)
-endif()
+# Build static library only
+set(USE_STATIC_MBEDTLS_LIBRARY ON CACHE BOOL "Build mbed TLS static library." FORCE)
+set(USE_SHARED_MBEDTLS_LIBRARY OFF CACHE BOOL "Build mbed TLS shared library." FORCE)
 
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")

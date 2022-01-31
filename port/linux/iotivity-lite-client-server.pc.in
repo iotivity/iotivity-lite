@@ -22,4 +22,4 @@ Description: Iotivity lite client and server library
 Version: @version@
 Libs.private: -lm -pthread
 Cflags: -I${includedir}/iotivity-lite -DOC_CLIENT -DOC_SERVER @extra_cflags@
-Libs: -L${libdir} -liotivity-lite-client-server @extra_libs@
+Libs: -L${libdir} -liotivity-lite-client-server

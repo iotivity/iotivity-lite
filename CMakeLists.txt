@@ -149,7 +149,6 @@ if(OC_CLOUD_ENABLED)
 endif()
 
 ######## Define link dependencies ########
-set(PUBLIC_LINK_LIBS "")
 set(PRIVATE_LINK_LIBS "")
 if(MSVC)
     list(APPEND PRIVATE_LINK_LIBS iphlpapi.lib psapi.lib ws2_32.lib)
@@ -158,10 +157,6 @@ elseif(WIN32)
 else()
     find_package(Threads REQUIRED)
     list(APPEND PRIVATE_LINK_LIBS Threads::Threads)
-endif()
-
-if(OC_SECURITY_ENABLED)
-    list(APPEND PUBLIC_LINK_LIBS mbedtls mbedcrypto mbedx509)
 endif()
 
 ######## Object libraries ########
@@ -208,7 +203,7 @@ add_library(client-shared SHARED
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
-target_link_libraries(client-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
 set_target_properties(client-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -232,7 +227,7 @@ set_target_properties(server-static PROPERTIES
 )
 
 add_library(server-shared SHARED ${server-lib-obj})
-target_link_libraries(server-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 set_target_properties(server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -255,7 +250,7 @@ set_target_properties(client-server-static PROPERTIES
 )
 
 add_library(client-server-shared SHARED ${client-server-lib-obj})
-target_link_libraries(client-server-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
@@ -263,9 +258,6 @@ set_target_properties(client-server-shared PROPERTIES
 )
 
 ######## Generate pkg-config and cmake files ########
-foreach(lib IN LISTS PUBLIC_LINK_LIBS)
-    string(APPEND extra_libs "-l${lib} ")
-endforeach()
 foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
     string(APPEND extra_cflags "-D${cflag} ")
 endforeach()
