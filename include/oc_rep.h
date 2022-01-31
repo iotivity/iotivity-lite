@@ -329,7 +329,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  *     oc_rep_end_root_object();
  * ~~~
  *
- * @see oc_rep_is_nul
+ * @see oc_rep_is_null
  */
 #define oc_rep_set_null(object, key)                                           \
   do {                                                                         \
