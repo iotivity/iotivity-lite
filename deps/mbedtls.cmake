@@ -1,5 +1,3 @@
-### mbedtls
-
 # Do not build anything except for the library
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
@@ -65,23 +63,3 @@ endif()
 if(TARGET mbedcrypto-plat)
     target_link_libraries(mbedcrypto mbedcrypto-plat)
 endif()
-
-### tinycbor
-add_library(tinycbor-master OBJECT
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborerrorstrings.c
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder.c
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder_close_container_checked.c
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborpretty.c
-)
-
-target_include_directories(tinycbor-master PUBLIC
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src
-)
-
-target_compile_definitions(tinycbor-master PUBLIC ${PUBLIC_COMPILER_DEFS})
-
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/deps/tinycbor/src COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
-)

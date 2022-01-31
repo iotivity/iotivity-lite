@@ -160,9 +160,12 @@ else()
 endif()
 
 ######## Object libraries ########
-include(deps/CMakeLists.txt)
+include(deps/tinycbor.cmake)
 
-get_target_property(MBEDTLS_DIR mbedtls INCLUDE_DIRECTORIES)
+if(OC_SECURITY_ENABLED)
+    include(deps/mbedtls.cmake)
+    get_target_property(MBEDTLS_DIR mbedtls INCLUDE_DIRECTORIES)
+endif()
 
 add_library(common-obj OBJECT ${SRC_COMMON})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
@@ -170,20 +173,32 @@ target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SO
 
 add_library(client-obj OBJECT ${SRC_CLIENT})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT")
-target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-obj PRIVATE ${MBEDTLS_DIR})
+endif()
 
 add_library(server-obj OBJECT ${SRC_SERVER})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_SERVER")
-target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+if(OC_SECURITY_ENABLED)
+    target_include_directories(server-obj PRIVATE ${MBEDTLS_DIR})
+endif()
 
 add_library(client-server-obj OBJECT ${SRC_CLIENT})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT" "OC_SERVER")
-target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-server-obj PRIVATE ${MBEDTLS_DIR})
+endif()
 
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${SRC_CLOUD})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
-    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+    if(OC_SECURITY_ENABLED)
+        target_include_directories(cloud-obj PRIVATE ${MBEDTLS_DIR})
+    endif()
 endif()
 
 ######## Compose static and shared libraries ########
