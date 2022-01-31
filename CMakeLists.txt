@@ -219,6 +219,9 @@ add_library(client-shared SHARED
     $<TARGET_OBJECTS:client-obj>
 )
 target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
+if(OC_SECURITY_ENABLED)
+    target_link_libraries(client-shared PRIVATE mbedtls mbedcrypto mbedx509)
+endif()
 set_target_properties(client-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -243,6 +246,9 @@ set_target_properties(server-static PROPERTIES
 
 add_library(server-shared SHARED ${server-lib-obj})
 target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+if(OC_SECURITY_ENABLED)
+    target_link_libraries(server-shared PRIVATE mbedtls mbedcrypto mbedx509)
+endif()
 set_target_properties(server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -266,6 +272,9 @@ set_target_properties(client-server-static PROPERTIES
 
 add_library(client-server-shared SHARED ${client-server-lib-obj})
 target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+if(OC_SECURITY_ENABLED)
+    target_link_libraries(client-server-shared PRIVATE mbedtls mbedcrypto mbedx509)
+endif()
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
