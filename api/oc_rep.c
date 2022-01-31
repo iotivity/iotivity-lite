@@ -594,6 +594,9 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
         (rep_value->type == type)) {
       OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
+      case OC_REP_NIL:
+        **(bool **)value = true;
+        break;
       case OC_REP_INT:
         **(int64_t **)value = rep_value->value.integer;
         break;
@@ -641,6 +644,17 @@ oc_rep_get_value(oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
   }
 
   return false;
+}
+
+bool
+oc_rep_is_null(oc_rep_t *rep, const char *key, bool *is_null)
+{
+  if (!is_null) {
+    OC_ERR("Error of input parameters");
+    return false;
+  }
+  return oc_rep_get_value(rep, OC_REP_NIL, key, (void **)&is_null,
+                          (size_t *)NULL);
 }
 
 bool
@@ -1475,6 +1489,36 @@ oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
     }
     memcpy(encoder, &prevEncoder, sizeof(prevEncoder));
     return oc_rep_encode_floating_point_internal(encoder, fpType, value);
+  }
+  return err;
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+CborError
+oc_rep_encode_null_internal(CborEncoder *encoder)
+{
+  convert_offset_to_ptr(encoder);
+  CborError err = cbor_encode_null(encoder);
+  convert_ptr_to_offset(encoder);
+  return err;
+}
+
+CborError
+oc_rep_encode_null(CborEncoder *encoder)
+{
+#ifndef OC_DYNAMIC_ALLOCATION
+  return oc_rep_encode_null_internal(encoder);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  CborEncoder prevEncoder;
+  memcpy(&prevEncoder, encoder, sizeof(prevEncoder));
+  CborError err = oc_rep_encode_null_internal(encoder);
+  if (err == CborErrorOutOfMemory) {
+    err = realloc_buffer(oc_rep_encoder_get_extra_bytes_needed(encoder));
+    if (err != CborNoError) {
+      return err;
+    }
+    memcpy(encoder, &prevEncoder, sizeof(prevEncoder));
+    return oc_rep_encode_null_internal(encoder);
   }
   return err;
 #endif /* OC_DYNAMIC_ALLOCATION */
