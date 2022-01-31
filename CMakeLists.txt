@@ -19,6 +19,7 @@ set(OC_SOFTWARE_UPDATE_ENABLED OFF CACHE BOOL "Enable software update resource."
 set(OC_WKCORE_ENABLED OFF CACHE BOOL "Enable well-known core resource.")
 set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore support.")
 set(OC_IPV4_ENABLED OFF CACHE BOOL "Enable IPv4 support.")
+set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 
 
 # Iotivity API
@@ -154,6 +155,7 @@ if(BUILD_SHARED_LIBS)
     list(APPEND PUBLIC_LINK_LIBS "mbedx509")
 endif()
 
+set(PRIVATE_COMPILER_DEFS "")
 set(PUBLIC_COMPILER_DEFS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_DYNAMIC_ALLOCATION)
@@ -224,6 +226,10 @@ endif()
 if(OC_IPV4_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_IPV4)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_IPV4")
+endif()
+
+if(OC_DNS_LOOKUP_IPV6_ENABLED)
+    list(APPEND PRIVATE_COMPILER_DEFS "OC_DNS_LOOKUP_IPV6")
 endif()
 
 # Client and server versions of Iotivity
