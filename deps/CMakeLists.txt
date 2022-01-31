@@ -86,6 +86,8 @@ target_include_directories(tinycbor-master INTERFACE
     ${PROJECT_SOURCE_DIR}/tinycbor/src
 )
 
+target_compile_definitions(tinycbor-master PUBLIC PUBLIC_COMPILER_DEFS)
+
 install(DIRECTORY tinycbor/src/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/deps/tinycbor/src COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
