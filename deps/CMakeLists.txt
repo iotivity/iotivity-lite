@@ -1,5 +1,3 @@
-project(iotivity-deps)
-
 ### mbedtls
 
 # Do not build anything except for the library
@@ -29,7 +27,7 @@ if(TARGET mbedtls-plat)
     set(libs ${libs} mbedtls-plat)
 endif()
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/mbedtls)
+add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 
 # do not treat warnings as errors on Windows
 # block should be defined after the target library
@@ -56,15 +54,15 @@ if(OC_DEBUG_ENABLED)
 endif()
 
 target_include_directories(mbedcrypto PUBLIC
-    ${PROJECT_SOURCE_DIR}/..
-    ${PROJECT_SOURCE_DIR}/../include
-    ${PROJECT_SOURCE_DIR}/mbedtls/include
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
 
 if(UNIX)
-    target_include_directories(mbedcrypto PUBLIC ${PROJECT_SOURCE_DIR}/../port/linux)
+    target_include_directories(mbedcrypto PUBLIC ${PROJECT_SOURCE_DIR}/port/linux)
 elseif(WIN32)
-    target_include_directories(mbedcrypto PUBLIC ${PROJECT_SOURCE_DIR}/../port/windows)
+    target_include_directories(mbedcrypto PUBLIC ${PROJECT_SOURCE_DIR}/port/windows)
 endif()
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
@@ -73,22 +71,21 @@ if(TARGET mbedcrypto-plat)
 endif()
 
 ### tinycbor
-add_library(tinycbor-master INTERFACE)
-target_sources(tinycbor-master INTERFACE
-    ${PROJECT_SOURCE_DIR}/tinycbor/src/cborerrorstrings.c
-    ${PROJECT_SOURCE_DIR}/tinycbor/src/cborencoder.c
-    ${PROJECT_SOURCE_DIR}/tinycbor/src/cborencoder_close_container_checked.c
-    ${PROJECT_SOURCE_DIR}/tinycbor/src/cborparser.c
-    ${PROJECT_SOURCE_DIR}/tinycbor/src/cborpretty.c
+add_library(tinycbor-master OBJECT
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborerrorstrings.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder_close_container_checked.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborpretty.c
 )
 
-target_include_directories(tinycbor-master INTERFACE
-    ${PROJECT_SOURCE_DIR}/tinycbor/src
+target_include_directories(tinycbor-master PUBLIC
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src
 )
 
-target_compile_definitions(tinycbor-master PUBLIC PUBLIC_COMPILER_DEFS)
+target_compile_definitions(tinycbor-master PUBLIC ${PUBLIC_COMPILER_DEFS})
 
-install(DIRECTORY tinycbor/src/
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/deps/tinycbor/src COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
 )
