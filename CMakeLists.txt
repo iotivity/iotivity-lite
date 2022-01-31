@@ -3,7 +3,7 @@ project(iotivity-lite VERSION 2.2.5)
 
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
+######## Build configuration options ########
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
@@ -21,210 +21,70 @@ set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore support.")
 set(OC_IPV4_ENABLED OFF CACHE BOOL "Enable IPv4 support.")
 set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Iotivity API
-add_library(iotivity-api INTERFACE)
-
-target_sources(iotivity-api INTERFACE
-    ${PROJECT_SOURCE_DIR}/api/oc_base64.c
-    ${PROJECT_SOURCE_DIR}/api/oc_blockwise.c
-    ${PROJECT_SOURCE_DIR}/api/oc_buffer.c
-    ${PROJECT_SOURCE_DIR}/api/oc_client_api.c
-    ${PROJECT_SOURCE_DIR}/api/oc_clock.c
-    ${PROJECT_SOURCE_DIR}/api/oc_collection.c
-    ${PROJECT_SOURCE_DIR}/api/oc_core_res.c
-    ${PROJECT_SOURCE_DIR}/api/oc_discovery.c
-    ${PROJECT_SOURCE_DIR}/api/oc_endpoint.c
-    ${PROJECT_SOURCE_DIR}/api/oc_enums.c
-    ${PROJECT_SOURCE_DIR}/api/oc_helpers.c
-    ${PROJECT_SOURCE_DIR}/api/oc_main.c
-    ${PROJECT_SOURCE_DIR}/api/oc_mnt.c
-    ${PROJECT_SOURCE_DIR}/api/oc_network_events.c
-    ${PROJECT_SOURCE_DIR}/api/oc_rep.c
-    ${PROJECT_SOURCE_DIR}/api/oc_resource_factory.c
-    ${PROJECT_SOURCE_DIR}/api/oc_ri.c
-    ${PROJECT_SOURCE_DIR}/api/oc_server_api.c
-    ${PROJECT_SOURCE_DIR}/api/oc_session_events.c
-    ${PROJECT_SOURCE_DIR}/api/oc_swupdate.c
-    ${PROJECT_SOURCE_DIR}/api/oc_uuid.c
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_compare.c
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_tm.c
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
-)
-
-if(OC_CLOUD_ENABLED)
-    target_sources(iotivity-api INTERFACE
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_manager.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_rd.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_resource.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_store.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/rd_client.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_apis.c
-    )
-endif()
-
-target_include_directories(iotivity-api INTERFACE
-    ${PROJECT_SOURCE_DIR}/
-    ${PROJECT_SOURCE_DIR}/api
-    ${PROJECT_SOURCE_DIR}/api/c-timestamp
-    ${PROJECT_SOURCE_DIR}/include
-)
-# do not treat warnings as errors on Windows
-# block should be defined after the target library
-if(MSVC)
-    target_compile_options(iotivity-api INTERFACE /W1 /WX-)
-endif()
-
-# Core functions used by Iotivity
-add_library(iotivity-common INTERFACE)
-
-target_sources(iotivity-common INTERFACE
-    # Utilities that are used deep within Iotivity
-    ${PROJECT_SOURCE_DIR}/util/oc_etimer.c
-    ${PROJECT_SOURCE_DIR}/util/oc_list.c
-    ${PROJECT_SOURCE_DIR}/util/oc_memb.c
-    ${PROJECT_SOURCE_DIR}/util/oc_mem_trace.c
-    ${PROJECT_SOURCE_DIR}/util/oc_mmem.c
-    ${PROJECT_SOURCE_DIR}/util/oc_process.c
-    ${PROJECT_SOURCE_DIR}/util/oc_timer.c
-    # Security
-    ${PROJECT_SOURCE_DIR}/security/oc_acl.c
-    ${PROJECT_SOURCE_DIR}/security/oc_ael.c
-    ${PROJECT_SOURCE_DIR}/security/oc_audit.c
-    ${PROJECT_SOURCE_DIR}/security/oc_certs.c
-    ${PROJECT_SOURCE_DIR}/security/oc_cred.c
-    ${PROJECT_SOURCE_DIR}/security/oc_csr.c
-    ${PROJECT_SOURCE_DIR}/security/oc_doxm.c
-    ${PROJECT_SOURCE_DIR}/security/oc_keypair.c
-    ${PROJECT_SOURCE_DIR}/security/oc_obt.c
-    ${PROJECT_SOURCE_DIR}/security/oc_obt_certs.c
-    ${PROJECT_SOURCE_DIR}/security/oc_obt_otm_cert.c
-    ${PROJECT_SOURCE_DIR}/security/oc_obt_otm_justworks.c
-    ${PROJECT_SOURCE_DIR}/security/oc_obt_otm_randompin.c
-    ${PROJECT_SOURCE_DIR}/security/oc_pki.c
-    ${PROJECT_SOURCE_DIR}/security/oc_pstat.c
-    ${PROJECT_SOURCE_DIR}/security/oc_roles.c
-    ${PROJECT_SOURCE_DIR}/security/oc_sdi.c
-    ${PROJECT_SOURCE_DIR}/security/oc_sp.c
-    ${PROJECT_SOURCE_DIR}/security/oc_store.c
-    ${PROJECT_SOURCE_DIR}/security/oc_svr.c
-    ${PROJECT_SOURCE_DIR}/security/oc_tls.c
-
-)
-
-target_include_directories(iotivity-common INTERFACE
-    ${PROJECT_SOURCE_DIR}/
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src
-    ${PROJECT_SOURCE_DIR}/security
-)
-
-target_link_libraries(iotivity-common INTERFACE iotivity-port mbedtls tinycbor-master)
-
-# Iotivity's implementation of CoAP
-add_library(iotivity-coap INTERFACE)
-
-target_sources(iotivity-coap INTERFACE
-    ${PROJECT_SOURCE_DIR}/messaging/coap/coap.c
-    ${PROJECT_SOURCE_DIR}/messaging/coap/coap_signal.c
-    ${PROJECT_SOURCE_DIR}/messaging/coap/engine.c
-    ${PROJECT_SOURCE_DIR}/messaging/coap/observe.c
-    ${PROJECT_SOURCE_DIR}/messaging/coap/separate.c
-    ${PROJECT_SOURCE_DIR}/messaging/coap/transactions.c
-)
-
-target_include_directories(iotivity-coap INTERFACE
-    ${PROJECT_SOURCE_DIR}/messaging/coap/
-)
-
-target_link_libraries(iotivity-coap INTERFACE iotivity-port)
-
-install(DIRECTORY messaging/coap/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/messaging/coap COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "unittest" EXCLUDE
-)
-
-set(PUBLIC_LINK_LIBS "")
-if(BUILD_SHARED_LIBS)
-    list(APPEND PUBLIC_LINK_LIBS "mbedtls")
-    list(APPEND PUBLIC_LINK_LIBS "mbedcrypto")
-    list(APPEND PUBLIC_LINK_LIBS "mbedx509")
-endif()
-
+######## Define compiler flags ########
 set(PRIVATE_COMPILER_DEFS "")
 set(PUBLIC_COMPILER_DEFS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_DYNAMIC_ALLOCATION)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_DYNAMIC_ALLOCATION")
 endif()
 
 if(OC_SECURITY_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_SECURITY)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_SECURITY")
 endif()
 
 if(OC_PKI_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_PKI)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_PKI")
 endif()
 
 if(OC_DEBUG_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_DEBUG)
+    list(APPEND PRIVATE_COMPILER_DEFS "OC_DEBUG")
 endif()
 
 if(OC_CLOUD_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_CLOUD)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_CLOUD")
+    set(OC_TCP_ENABLED ON)
+    set(OC_IPV4_ENABLED ON)
 endif()
 
 if(OC_IDD_API_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_IDD_API)
+    list(APPEND PUBLIC_COMPILER_DEFS "OC_IDD_API")
 endif()
 
 if(OC_TCP_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_TCP)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_TCP")
 endif()
 
 if(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_DISCOVERY_RESOURCE_OBSERVABLE)
+    list(APPEND PRIVATE_COMPILER_DEFS "OC_DISCOVERY_RESOURCE_OBSERVABLE")
 endif()
 
 if(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_REP_ENCODING_REALLOC)
+    list(APPEND PRIVATE_COMPILER_DEFS "OC_REP_ENCODING_REALLOC")
 endif()
 
 if(OC_COLLECTIONS_IF_CREATE_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_COLLECTIONS_IF_CREATE)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_COLLECTIONS_IF_CREATE")
 endif()
 
 if(OC_MNT_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_MNT)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_MNT")
 endif()
 
 if(OC_SOFTWARE_UPDATE_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_SOFTWARE_UPDATE)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_SOFTWARE_UPDATE")
 endif()
 
 if(OC_WKCORE_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_WKCORE)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_WKCORE")
 endif()
 
 if(OC_OSCORE_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_OSCORE)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_OSCORE")
 endif()
 
 if(OC_IPV4_ENABLED)
-    target_compile_definitions(iotivity-common INTERFACE OC_IPV4)
     list(APPEND PUBLIC_COMPILER_DEFS "OC_IPV4")
 endif()
 
@@ -232,82 +92,197 @@ if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND PRIVATE_COMPILER_DEFS "OC_DNS_LOOKUP_IPV6")
 endif()
 
-# Client and server versions of Iotivity
-add_library(iotivity-lite-client)
-target_compile_definitions(iotivity-lite-client PUBLIC OC_CLIENT)
-target_link_libraries(iotivity-lite-client PRIVATE
-    iotivity-coap
-)
-target_link_libraries(iotivity-lite-client PUBLIC
-    iotivity-common
-    iotivity-api
-)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-lite-client
-        PROPERTIES
-        VERSION "${PROJECT_VERSION}"
-        SOVERSION "${PROJECT_VERSION_MAJOR}"
-    )
-endif()
-install(TARGETS iotivity-lite-client EXPORT iotivity-lite-clientTargets
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+######## Gather source files ########
+file(GLOB SRC_COMMON
+    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
+    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
+    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
+    ${PROJECT_SOURCE_DIR}/util/*.c
 )
 
-add_library(iotivity-lite-server)
-target_compile_definitions(iotivity-lite-server PUBLIC OC_SERVER)
-target_link_libraries(iotivity-lite-server PRIVATE
-    iotivity-coap
-)
-target_link_libraries(iotivity-lite-server PUBLIC
-    iotivity-common
-    iotivity-api
-)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-lite-server
-        PROPERTIES
-        VERSION "${PROJECT_VERSION}"
-        SOVERSION "${PROJECT_VERSION_MAJOR}"
+if(OC_PKI_ENABLED)
+    list(APPEND SRC_COMMON
+        ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_tm.c
     )
 endif()
-install(TARGETS iotivity-lite-server EXPORT iotivity-lite-serverTargets
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+
+file(GLOB SRC_SERVER
+    ${PROJECT_SOURCE_DIR}/messaging/coap/*.c
+    ${PROJECT_SOURCE_DIR}/api/*.c
 )
 
-add_library(iotivity-lite-client-server)
-target_compile_definitions(iotivity-lite-client-server PUBLIC OC_SERVER OC_CLIENT)
-target_link_libraries(iotivity-lite-client-server PRIVATE
-    iotivity-coap
-)
-target_link_libraries(iotivity-lite-client-server PUBLIC
-    iotivity-common
-    iotivity-api
-)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(iotivity-lite-client-server
-        PROPERTIES
-        VERSION "${PROJECT_VERSION}"
-        SOVERSION "${PROJECT_VERSION_MAJOR}"
+file(GLOB SRC_CLIENT ${SRC_SERVER})
+
+if(OC_SECURITY_ENABLED)
+    file(GLOB SRC_SECURITY
+        ${PROJECT_SOURCE_DIR}/security/oc_*.c
     )
+    list(REMOVE_ITEM SRC_SECURITY
+        ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
+    )
+    list(APPEND SRC_SERVER ${SRC_SECURITY})
+    list(APPEND SRC_CLIENT ${SRC_SECURITY})
+    if(OC_DYNAMIC_ALLOCATION_ENABLED)
+        file(GLOB SRC_OBT
+            ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
+            )
+        list(APPEND SRC_CLIENT ${SRC_OBT})
+    endif()
 endif()
-install(TARGETS iotivity-lite-client-server EXPORT iotivity-lite-client-serverTargets
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT runtime
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+
+if(OC_CLOUD_ENABLED)
+    file(GLOB SRC_CLOUD api/cloud/*.c)
+    set(CLOUD_INCLUDE_DIRS api/cloud)
+endif()
+
+######## Define link dependencies ########
+set(PUBLIC_LINK_LIBS "")
+set(PRIVATE_LINK_LIBS "")
+if(MSVC)
+    list(APPEND PRIVATE_LINK_LIBS iphlpapi.lib psapi.lib ws2_32.lib)
+elseif(WIN32)
+    list(APPEND PRIVATE_LINK_LIBS iphlpapi psapi wsock32 ws2_32)
+else()
+    find_package(Threads REQUIRED)
+    list(APPEND PRIVATE_LINK_LIBS Threads::Threads)
+endif()
+
+if(OC_SECURITY_ENABLED)
+    list(APPEND PUBLIC_LINK_LIBS mbedtls mbedcrypto mbedx509)
+endif()
+
+######## Object libraries ########
+include(port/CMakeLists.txt)
+include(deps/CMakeLists.txt)
+
+get_target_property(PORT_DIR iotivity-port INCLUDE_DIRECTORIES)
+get_target_property(MBEDTLS_DIR mbedtls INCLUDE_DIRECTORIES)
+
+add_library(common-obj OBJECT ${SRC_COMMON})
+target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
+target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+
+add_library(client-obj OBJECT ${SRC_CLIENT})
+target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT")
+target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+
+add_library(server-obj OBJECT ${SRC_SERVER})
+target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_SERVER")
+target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+
+add_library(client-server-obj OBJECT ${SRC_CLIENT})
+target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT" "OC_SERVER")
+target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+
+if(OC_CLOUD_ENABLED)
+    add_library(cloud-obj OBJECT ${SRC_CLOUD})
+    target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
+    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${MBEDTLS_DIR} ${PORT_DIR})
+endif()
+
+######## Compose static and shared libraries ########
+# Client
+add_library(client-static STATIC
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:iotivity-port>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:client-obj>
 )
-# install headers
+set_target_properties(client-static PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client"
+    VERSION ${PROJECT_VERSION}
+)
+
+add_library(client-shared SHARED
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:iotivity-port>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:client-obj>
+)
+target_link_libraries(client-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+set_target_properties(client-shared PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client"
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+# Server
+set(server-lib-obj
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:iotivity-port>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:server-obj>
+)
+if(OC_CLOUD_ENABLED)
+    list(APPEND server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
+endif()
+
+add_library(server-static STATIC ${server-lib-obj})
+set_target_properties(server-static PROPERTIES
+    OUTPUT_NAME "iotivity-lite-server"
+    VERSION ${PROJECT_VERSION}
+)
+
+add_library(server-shared SHARED ${server-lib-obj})
+target_link_libraries(server-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+set_target_properties(server-shared PROPERTIES
+    OUTPUT_NAME "iotivity-lite-server"
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+# Client-Server
+set(client-server-lib-obj
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:iotivity-port>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:client-server-obj>
+)
+if(OC_CLOUD_ENABLED)
+    list(APPEND client-server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
+endif()
+add_library(client-server-static STATIC ${client-server-lib-obj})
+set_target_properties(client-server-static PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client-server"
+    VERSION ${PROJECT_VERSION}
+)
+
+add_library(client-server-shared SHARED ${client-server-lib-obj})
+target_link_libraries(client-server-shared PUBLIC ${PUBLIC_LINK_LIBS} PRIVATE ${PRIVATE_LINK_LIBS})
+set_target_properties(client-server-shared PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client-server"
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+######## Installation ########
+# Libraries
+install(TARGETS
+    client-static client-shared
+    server-static server-shared
+    client-server-static client-server-shared
+    EXPORT iotivity-lite_TARGETS
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+)
+
+# Header files
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
 )
 install(DIRECTORY util
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
 )
+install(DIRECTORY messaging/coap/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/messaging/coap COMPONENT dev
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "unittest" EXCLUDE
+)
 
+######## Code formatting ########
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     # Add clang-format target
     add_custom_target(format
@@ -315,8 +290,3 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 endif()
-
-add_subdirectory(port)
-add_subdirectory(apps)
-add_subdirectory(onboarding_tool)
-add_subdirectory(deps)
