@@ -1,6 +1,6 @@
 # This CMakeLists can only build the port for Linux & Windows
 if(NOT (UNIX OR WIN32))
-    message(ERROR "Can build only on Linux and windows")
+    message(ERROR "Can build only on Linux and Windows")
 endif()
 # Detect the platform and pick the right port
 if(UNIX)
@@ -11,12 +11,8 @@ elseif(WIN32)
     file(GLOB PORT_SRC port/windows/*.c)
 endif()
 
-add_library(iotivity-port OBJECT
-    ${PORT_SRC}
-)
-
-target_compile_definitions(iotivity-port PRIVATE ${PUBLIC_COMPILER_DEFS})
-
+add_library(iotivity-port OBJECT ${PORT_SRC})
+target_compile_definitions(iotivity-port PUBLIC ${PUBLIC_COMPILER_DEFS})
 target_include_directories(iotivity-port PRIVATE
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include
