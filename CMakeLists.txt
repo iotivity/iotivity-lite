@@ -535,3 +535,6 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 endif()
+
+######## Others ########
+add_subdirectory(onboarding_tool)
