@@ -150,6 +150,13 @@ endif()
 
 ######## Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
+
+include(CheckLibraryExists)
+check_library_exists(m ceil "" HAVE_LIB_M)
+if(HAVE_LIB_M)
+    list(APPEND PRIVATE_LINK_LIBS m)
+endif(HAVE_LIB_M)
+
 if(MSVC)
     list(APPEND PRIVATE_LINK_LIBS iphlpapi.lib psapi.lib ws2_32.lib)
 elseif(WIN32)
