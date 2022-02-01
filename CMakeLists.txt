@@ -24,76 +24,76 @@ set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 ######## Define compiler flags ########
-set(PRIVATE_COMPILER_DEFS "")
-set(PUBLIC_COMPILER_DEFS "")
+set(PRIVATE_COMPILE_DEFINITIONS "")
+set(PUBLIC_COMPILE_DEFINITIONS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_DYNAMIC_ALLOCATION")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
 endif()
 
 if(OC_SECURITY_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_SECURITY")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_SECURITY")
 endif()
 
 if(OC_PKI_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_PKI")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PKI")
 endif()
 
 if(OC_DEBUG_ENABLED)
-    list(APPEND PRIVATE_COMPILER_DEFS "OC_DEBUG")
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DEBUG")
 endif()
 
 if(OC_CLOUD_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_CLOUD")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_CLOUD")
     set(OC_TCP_ENABLED ON)
     set(OC_IPV4_ENABLED ON)
 endif()
 
 if(OC_IDD_API_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_IDD_API")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_IDD_API")
 endif()
 
 if(OC_TCP_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_TCP")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_TCP")
 endif()
 
 if(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED)
-    list(APPEND PRIVATE_COMPILER_DEFS "OC_DISCOVERY_RESOURCE_OBSERVABLE")
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DISCOVERY_RESOURCE_OBSERVABLE")
 endif()
 
 if(OC_REPRESENTATION_REALLOC_ENCODING_ENABLED)
-    list(APPEND PRIVATE_COMPILER_DEFS "OC_REP_ENCODING_REALLOC")
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_REP_ENCODING_REALLOC")
 endif()
 
 if(OC_COLLECTIONS_IF_CREATE_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_COLLECTIONS_IF_CREATE")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_COLLECTIONS_IF_CREATE")
 endif()
 
 if(OC_MNT_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_MNT")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_MNT")
 endif()
 
 if(OC_SOFTWARE_UPDATE_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_SOFTWARE_UPDATE")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_SOFTWARE_UPDATE")
 endif()
 
 if(OC_WKCORE_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_WKCORE")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_WKCORE")
 endif()
 
 if(OC_OSCORE_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_OSCORE")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_OSCORE")
 endif()
 
 if(OC_IPV4_ENABLED)
-    list(APPEND PUBLIC_COMPILER_DEFS "OC_IPV4")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_IPV4")
 endif()
 
 if(OC_DNS_LOOKUP_IPV6_ENABLED)
-    list(APPEND PRIVATE_COMPILER_DEFS "OC_DNS_LOOKUP_IPV6")
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
 endif()
 
 ######## Gather source files ########
-file(GLOB SRC_COMMON
+file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
@@ -101,51 +101,51 @@ file(GLOB SRC_COMMON
 )
 
 if(OC_PKI_ENABLED)
-    list(APPEND SRC_COMMON
+    list(APPEND COMMON_SRC
         ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_tm.c
     )
 endif()
 
-file(GLOB SRC_SERVER
+file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/messaging/coap/*.c
     ${PROJECT_SOURCE_DIR}/api/*.c
 )
 
-file(GLOB SRC_CLIENT ${SRC_SERVER})
+set(CLIENT_SRC ${SERVER_SRC})
 
 # Detect the platform and pick the right port
 if(UNIX)
-    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/linux)
     file(GLOB PORT_SRC port/linux/*.c)
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/linux)
 elseif(WIN32)
-    set(PORT_DIR ${PROJECT_SOURCE_DIR}/port/windows)
     file(GLOB PORT_SRC port/windows/*.c)
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/windows)
 else()
     message(ERROR "Can build only on Linux and Windows!")
 endif()
-list(APPEND SRC_SERVER ${PORT_SRC})
-list(APPEND SRC_CLIENT ${PORT_SRC})
+list(APPEND SERVER_SRC ${PORT_SRC})
+list(APPEND CLIENT_SRC ${PORT_SRC})
 
 if(OC_SECURITY_ENABLED)
-    file(GLOB SRC_SECURITY
+    file(GLOB SECURITY_SRC
         ${PROJECT_SOURCE_DIR}/security/oc_*.c
     )
-    list(REMOVE_ITEM SRC_SECURITY
+    list(REMOVE_ITEM SECURITY_SRC
         ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
     )
-    list(APPEND SRC_SERVER ${SRC_SECURITY})
-    list(APPEND SRC_CLIENT ${SRC_SECURITY})
+    list(APPEND SERVER_SRC ${SECURITY_SRC})
+    list(APPEND CLIENT_SRC ${SECURITY_SRC})
     if(OC_DYNAMIC_ALLOCATION_ENABLED)
-        file(GLOB SRC_OBT
+        file(GLOB OBT_SRC
             ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
             )
-        list(APPEND SRC_CLIENT ${SRC_OBT})
+        list(APPEND CLIENT_SRC ${OBT_SRC})
     endif()
 endif()
 
 if(OC_CLOUD_ENABLED)
-    file(GLOB SRC_CLOUD api/cloud/*.c)
-    set(CLOUD_INCLUDE_DIRS api/cloud)
+    file(GLOB CLOUD_SRC api/cloud/*.c)
+    set(CLOUD_INCLUDE_DIR api/cloud)
 endif()
 
 ######## Define link dependencies ########
@@ -171,40 +171,40 @@ include(deps/tinycbor.cmake)
 
 if(OC_SECURITY_ENABLED)
     include(deps/mbedtls.cmake)
-    get_target_property(MBEDTLS_DIR mbedtls INCLUDE_DIRECTORIES)
+    get_target_property(MBEDTLS_INCLUDE_DIR mbedtls INCLUDE_DIRECTORIES)
 endif()
 
-add_library(common-obj OBJECT ${SRC_COMMON})
-target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
-target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+add_library(common-obj OBJECT ${COMMON_SRC})
+target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
 
-add_library(client-obj OBJECT ${SRC_CLIENT})
-target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT")
-target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+add_library(client-obj OBJECT ${CLIENT_SRC})
+target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
+target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-obj PRIVATE ${MBEDTLS_DIR})
+    target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
-add_library(server-obj OBJECT ${SRC_SERVER})
-target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_SERVER")
-target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+add_library(server-obj OBJECT ${SERVER_SRC})
+target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
+target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
-    target_include_directories(server-obj PRIVATE ${MBEDTLS_DIR})
+    target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
-add_library(client-server-obj OBJECT ${SRC_CLIENT})
-target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS} "OC_CLIENT" "OC_SERVER")
-target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+add_library(client-server-obj OBJECT ${CLIENT_SRC})
+target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
+target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-server-obj PRIVATE ${MBEDTLS_DIR})
+    target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
 if(OC_CLOUD_ENABLED)
-    add_library(cloud-obj OBJECT ${SRC_CLOUD})
-    target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILER_DEFS} PUBLIC ${PUBLIC_COMPILER_DEFS})
-    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_DIR})
+    add_library(cloud-obj OBJECT ${CLOUD_SRC})
+    target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
     if(OC_SECURITY_ENABLED)
-        target_include_directories(cloud-obj PRIVATE ${MBEDTLS_DIR})
+        target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
     endif()
 endif()
 
@@ -221,7 +221,7 @@ endif()
 add_library(client-static STATIC ${client-lib-obj})
 target_link_libraries(client-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_CLIENT>
 )
 target_include_directories(client-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
@@ -233,7 +233,7 @@ set_target_properties(client-static PROPERTIES
 add_library(client-shared SHARED ${client-lib-obj})
 target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_CLIENT>
 )
 target_include_directories(client-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
@@ -259,7 +259,7 @@ endif()
 add_library(server-static STATIC ${server-lib-obj})
 target_link_libraries(server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(server-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_SERVER>
 )
 target_include_directories(server-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
@@ -271,7 +271,7 @@ set_target_properties(server-static PROPERTIES
 add_library(server-shared SHARED ${server-lib-obj})
 target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(server-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_SERVER>
 )
 target_include_directories(server-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
@@ -296,7 +296,7 @@ endif()
 add_library(client-server-static STATIC ${client-server-lib-obj})
 target_link_libraries(client-server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_CLIENT>
     $<INSTALL_INTERFACE:OC_SERVER>
 )
@@ -309,7 +309,7 @@ set_target_properties(client-server-static PROPERTIES
 add_library(client-server-shared SHARED ${client-server-lib-obj})
 target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
     $<INSTALL_INTERFACE:OC_CLIENT>
     $<INSTALL_INTERFACE:OC_SERVER>
 )
@@ -342,12 +342,12 @@ if(BUILD_TESTING AND UNIX)
         add_executable(${TESTNAME} ${ARGN})
         target_compile_options(${TESTNAME} PRIVATE ${TEST_COMPILE_OPTIONS})
         target_compile_features(${TESTNAME} PRIVATE cxx_nullptr)
-        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILER_DEFS} "OC_CLIENT" "OC_SERVER")
+        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
         target_include_directories(${TESTNAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
         target_include_directories(${TESTNAME} PRIVATE
             ${PROJECT_SOURCE_DIR}
             ${PROJECT_SOURCE_DIR}/include
-            ${PORT_DIR}
+            ${PORT_INCLUDE_DIR}
             ${PROJECT_SOURCE_DIR}/messaging/coap
         )
         if(OC_SECURITY_ENABLED)
@@ -365,30 +365,30 @@ if(BUILD_TESTING AND UNIX)
     endmacro()
 
     # Unit tests
-    file(GLOB SRC_APITEST api/unittest/*.cpp)
-    package_add_test(apitest ${SRC_APITEST})
+    file(GLOB APITEST_SRC api/unittest/*.cpp)
+    package_add_test(apitest ${APITEST_SRC})
 
-    file(GLOB SRC_PLATFORMTEST port/unittest/*.cpp)
+    file(GLOB PLATFORMTEST_SRC port/unittest/*.cpp)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_test)
-    package_add_test(platformtest ${SRC_PLATFORMTEST})
+    package_add_test(platformtest ${PLATFORMTEST_SRC})
 
-    file(GLOB SRC_MESSAGINGTEST messaging/coap/unittest/*.cpp)
-    package_add_test(messagingtest ${SRC_MESSAGINGTEST})
+    file(GLOB MESSAGINGTEST_SRC messaging/coap/unittest/*.cpp)
+    package_add_test(messagingtest ${MESSAGINGTEST_SRC})
 
     if(OC_SECURITY_ENABLED)
-        file(GLOB SRC_SECURITYTEST security/unittest/*.cpp)
-        package_add_test(securitytest ${SRC_SECURITYTEST})
+        file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)
+        package_add_test(securitytest ${SECURITYTEST_SRC})
     endif()
 
 # Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f
 #    if(OC_CLOUD_ENABLED)
-#        file(GLOB SRC_CLOUDTEST api/cloud/unittest/*.cpp)
-#        package_add_test(cloudtest ${SRC_CLOUDTEST})
+#        file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
+#        package_add_test(cloudtest ${CLOUDTEST_SRC})
 #    endif()
 endif()
 
 ######## Generate pkg-config and cmake package files ########
-foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
+foreach(cflag IN LISTS PUBLIC_COMPILE_DEFINITIONS)
     string(APPEND extra_cflags "-D${cflag} ")
 endforeach()
 
@@ -468,7 +468,7 @@ install(DIRECTORY ${PROJECT_SOURCE_DIR}/port
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
 )
-install(FILES ${PORT_DIR}/oc_config.h
+install(FILES ${PORT_INCLUDE_DIR}/oc_config.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
 )
 install(DIRECTORY util
