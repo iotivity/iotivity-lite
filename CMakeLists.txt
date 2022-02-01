@@ -145,7 +145,7 @@ endif()
 
 if(OC_CLOUD_ENABLED)
     file(GLOB CLOUD_SRC api/cloud/*.c)
-    set(CLOUD_INCLUDE_DIR api/cloud)
+    set(CLOUD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/api/cloud)
 endif()
 
 ######## Define link dependencies ########
@@ -221,10 +221,16 @@ endif()
 add_library(client-static STATIC ${client-lib-obj})
 target_link_libraries(client-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_CLIENT>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
 )
-target_include_directories(client-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(client-static PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-static PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
 set_target_properties(client-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -233,10 +239,16 @@ set_target_properties(client-static PROPERTIES
 add_library(client-shared SHARED ${client-lib-obj})
 target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_CLIENT>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
 )
-target_include_directories(client-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(client-shared PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
 set_target_properties(client-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -259,10 +271,19 @@ endif()
 add_library(server-static STATIC ${server-lib-obj})
 target_link_libraries(server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(server-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_SERVER>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
 )
-target_include_directories(server-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(server-static PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(server-static PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
+if(OC_CLOUD_ENABLED)
+    target_include_directories(server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+endif()
 set_target_properties(server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -271,10 +292,19 @@ set_target_properties(server-static PROPERTIES
 add_library(server-shared SHARED ${server-lib-obj})
 target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(server-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_SERVER>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
 )
-target_include_directories(server-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(server-shared PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
+if(OC_CLOUD_ENABLED)
+    target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+endif()
 set_target_properties(server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -296,11 +326,19 @@ endif()
 add_library(client-server-static STATIC ${client-server-lib-obj})
 target_link_libraries(client-server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-static PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_CLIENT>
-    $<INSTALL_INTERFACE:OC_SERVER>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
 )
-target_include_directories(client-server-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(client-server-static PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
+if(OC_CLOUD_ENABLED)
+    target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+endif()
 set_target_properties(client-server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
@@ -309,11 +347,19 @@ set_target_properties(client-server-static PROPERTIES
 add_library(client-server-shared SHARED ${client-server-lib-obj})
 target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-shared PUBLIC
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS}>
-    $<INSTALL_INTERFACE:OC_CLIENT>
-    $<INSTALL_INTERFACE:OC_SERVER>
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
 )
-target_include_directories(client-server-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
+target_include_directories(client-server-shared PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
+if(OC_CLOUD_ENABLED)
+    target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+endif()
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
