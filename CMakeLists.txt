@@ -219,6 +219,12 @@ if(OC_SECURITY_ENABLED)
     list(APPEND client-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
 add_library(client-static STATIC ${client-lib-obj})
+target_link_libraries(client-static PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-static PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_CLIENT>
+)
+target_include_directories(client-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(client-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -226,6 +232,11 @@ set_target_properties(client-static PROPERTIES
 
 add_library(client-shared SHARED ${client-lib-obj})
 target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-shared PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_CLIENT>
+)
+target_include_directories(client-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(client-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client"
     VERSION ${PROJECT_VERSION}
@@ -246,6 +257,12 @@ if(OC_SECURITY_ENABLED)
 endif()
 
 add_library(server-static STATIC ${server-lib-obj})
+target_link_libraries(server-static PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(server-static PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_SERVER>
+)
+target_include_directories(server-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -253,6 +270,11 @@ set_target_properties(server-static PROPERTIES
 
 add_library(server-shared SHARED ${server-lib-obj})
 target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(server-shared PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_SERVER>
+)
+target_include_directories(server-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-server"
     VERSION ${PROJECT_VERSION}
@@ -272,6 +294,13 @@ if(OC_SECURITY_ENABLED)
     list(APPEND client-server-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
 add_library(client-server-static STATIC ${client-server-lib-obj})
+target_link_libraries(client-server-static PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-server-static PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_CLIENT>
+    $<INSTALL_INTERFACE:OC_SERVER>
+)
+target_include_directories(client-server-static PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(client-server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
@@ -279,6 +308,12 @@ set_target_properties(client-server-static PROPERTIES
 
 add_library(client-server-shared SHARED ${client-server-lib-obj})
 target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-server-shared PUBLIC
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILER_DEFS}>
+    $<INSTALL_INTERFACE:OC_CLIENT>
+    $<INSTALL_INTERFACE:OC_SERVER>
+)
+target_include_directories(client-server-shared PUBLIC $<INSTALL_INTERFACE:include/iotivity-lite>)
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
     VERSION ${PROJECT_VERSION}
