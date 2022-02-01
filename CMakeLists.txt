@@ -387,7 +387,7 @@ if(BUILD_TESTING AND UNIX)
 #    endif()
 endif()
 
-######## Generate pkg-config and cmake files ########
+######## Generate pkg-config and cmake package files ########
 foreach(cflag IN LISTS PUBLIC_COMPILER_DEFS)
     string(APPEND extra_cflags "-D${cflag} ")
 endforeach()
@@ -408,9 +408,17 @@ foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
         "${PROJECT_SOURCE_DIR}/port/linux/${pkg-config-file}.in"
         ${pkg-config-file}
         @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pkg-config-file}
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT dev)
 endforeach()
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(iotivity-liteConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite
+)
+write_basic_package_version_file(iotivity-liteConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
 
 ######## Installation ########
 # Libraries
@@ -418,10 +426,37 @@ install(TARGETS
     client-static client-shared
     server-static server-shared
     client-server-static client-server-shared
-    EXPORT iotivity-lite_TARGETS
+    EXPORT iotivity-liteTARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev
+)
+
+# pkg-config files
+foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pkg-config-file}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig COMPONENT dev)
+endforeach()
+
+# CMake package
+if(WIN32 AND NOT CYGWIN)
+    set(TARGETS_INSTALL_DIR CMake)
+else()
+    set(TARGETS_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite)
+endif()
+install(EXPORT iotivity-liteTARGETS
+    FILE
+        iotivity-liteTargets.cmake
+    NAMESPACE
+        iotivity-lite::
+    DESTINATION
+        ${TARGETS_INSTALL_DIR}
+    COMPONENT dev
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfigVersion.cmake
+    DESTINATION ${TARGETS_INSTALL_DIR}
 )
 
 # Header files
