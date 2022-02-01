@@ -538,3 +538,4 @@ endif()
 
 ######## Others ########
 add_subdirectory(onboarding_tool)
+add_subdirectory(apps)
