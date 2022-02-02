@@ -4,6 +4,7 @@ project(iotivity-lite VERSION 2.2.5)
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
 ######## Build configuration options ########
+set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
@@ -537,5 +538,7 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 ######## Others ########
-add_subdirectory(onboarding_tool)
-add_subdirectory(apps)
+if(BUILD_EXAMPLE_APPLICATIONS)
+    add_subdirectory(onboarding_tool)
+    add_subdirectory(apps)
+endif()
