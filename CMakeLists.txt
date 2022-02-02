@@ -149,6 +149,8 @@ if(OC_CLOUD_ENABLED)
     set(CLOUD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/api/cloud)
 endif()
 
+file(GLOB PYTHON_SRC python/*.c)
+
 ######## Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
 
@@ -207,6 +209,13 @@ if(OC_CLOUD_ENABLED)
     if(OC_SECURITY_ENABLED)
         target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
     endif()
+endif()
+
+add_library(python-obj OBJECT ${PYTHON_SRC})
+target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
+target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+if(OC_SECURITY_ENABLED)
+    target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
 ######## Compose static and shared libraries ########
@@ -363,6 +372,35 @@ if(OC_CLOUD_ENABLED)
 endif()
 set_target_properties(client-server-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server"
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
+
+# Python client
+set(client-python-lib-obj
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:client-obj>
+    $<TARGET_OBJECTS:python-obj>
+)
+if(OC_SECURITY_ENABLED)
+    list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
+endif()
+add_library(client-python-shared SHARED ${client-python-lib-obj})
+target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-python-shared PUBLIC
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+)
+target_include_directories(client-python-shared PUBLIC
+    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-python-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+endif()
+set_target_properties(client-python-shared PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client-python"
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
