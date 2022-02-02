@@ -19,12 +19,12 @@
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
-#include "rd_client.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 
 #ifdef OC_CLOUD
+#include "rd_client.h"
 #include "oc_cloud.h"
 #endif
 
