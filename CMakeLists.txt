@@ -544,6 +544,11 @@ endforeach()
 # CMake package
 if(WIN32 AND NOT CYGWIN)
     set(TARGETS_INSTALL_DIR CMake)
+
+    # Add windows registry setting so cmake can find from installed location
+    set(CMAKE_PACKAGE_REGISTRY_KEY "HKCU\\\\Software\\\\Kitware\\\\CMake\\\\Packages\\\\iotivity-lite")
+    file(MD5 "${CMAKE_BINARY_DIR}/iotivity-liteConfig.cmake" INSTALL_HASH)
+    install(CODE "execute_process(COMMAND reg add ${CMAKE_PACKAGE_REGISTRY_KEY} /v ${INSTALL_HASH} /t REG_SZ /d \"${CMAKE_INSTALL_PREFIX}\" /f)" COMPONENT dev)
 else()
     set(TARGETS_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite)
 endif()
@@ -559,7 +564,7 @@ install(EXPORT iotivity-liteTARGETS
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfigVersion.cmake
-    DESTINATION ${TARGETS_INSTALL_DIR}
+    DESTINATION ${TARGETS_INSTALL_DIR} COMPONENT dev
 )
 
 # Header files
