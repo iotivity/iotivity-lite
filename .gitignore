@@ -106,6 +106,8 @@ service/resource-directory/client/unittest/obj
 #vscode setting files
 .vscode
 
+.clant-tidy
+
 build
 
 python/plgd_headers.config
