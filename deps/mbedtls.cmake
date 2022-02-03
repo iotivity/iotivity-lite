@@ -9,12 +9,11 @@ if(OC_REAPPLY_MBEDTLS_PATCHES)
 endif()
 
 file(GLOB MBEDTLS_SRC
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/[a-l]*.c
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/md*.c
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/[n-x]*.c
+    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/*.c
 )
 list(REMOVE_ITEM MBEDTLS_SRC
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/certs.c
+    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/memory_buffer_alloc.c
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/x509_crl.c
 )
 add_library(mbedtls OBJECT ${MBEDTLS_SRC})
