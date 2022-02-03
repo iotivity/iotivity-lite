@@ -131,16 +131,16 @@ if(OC_SECURITY_ENABLED)
     file(GLOB SECURITY_SRC
         ${PROJECT_SOURCE_DIR}/security/oc_*.c
     )
-    list(REMOVE_ITEM SECURITY_SRC
+    file(GLOB SECURITY_OBT_SRC
         ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
+    )
+    list(REMOVE_ITEM SECURITY_SRC
+        ${SECURITY_OBT_SRC}
     )
     list(APPEND SERVER_SRC ${SECURITY_SRC})
     list(APPEND CLIENT_SRC ${SECURITY_SRC})
     if(OC_DYNAMIC_ALLOCATION_ENABLED)
-        file(GLOB OBT_SRC
-            ${PROJECT_SOURCE_DIR}/security/oc_obt*.c
-            )
-        list(APPEND CLIENT_SRC ${OBT_SRC})
+        list(APPEND CLIENT_SRC ${SECURITY_OBT_SRC})
     endif()
 endif()
 
