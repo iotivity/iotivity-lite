@@ -24,6 +24,10 @@ set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
+
+include(tools/clang-tidy.cmake)
+
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
@@ -176,6 +180,9 @@ if(OC_SECURITY_ENABLED)
     include(deps/mbedtls.cmake)
     get_target_property(MBEDTLS_INCLUDE_DIR mbedtls INCLUDE_DIRECTORIES)
 endif()
+
+# enable clang-tidy for iotivity targets
+enable_clang_tidy()
 
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
@@ -419,6 +426,9 @@ if(BUILD_TESTING AND UNIX)
         list(APPEND TEST_LINK_LIBS gcov)
     endif()
 
+    # Disable clang-tidy for gtest
+    disable_clang_tidy()
+
     # Build googletest
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/gtest gtest)
 
@@ -470,6 +480,9 @@ if(BUILD_TESTING AND UNIX)
 #        file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
 #        package_add_test(cloudtest ${CLOUDTEST_SRC})
 #    endif()
+
+    # reenable clang-tidy for any remaining targets
+    enable_clang_tidy()
 endif()
 
 ######## Generate pkg-config and cmake package files ########
