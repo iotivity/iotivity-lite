@@ -359,10 +359,13 @@ update_mcast_socket(SOCKET mcast_sock, int sa_family, ifaddr_t *ifaddr_list)
   for (ifaddr = ifaddr_list; ifaddr; ifaddr = ifaddr->next) {
     if (sa_family == AF_INET6 && ifaddr->addr.ss_family == AF_INET6) {
       ret += add_mcast_sock_to_ipv6_mcast_group(mcast_sock, ifaddr->if_index);
-    } else if (sa_family == AF_INET && ifaddr->addr.ss_family == AF_INET) {
+    }
+#ifdef OC_IPV4
+    if (sa_family == AF_INET && ifaddr->addr.ss_family == AF_INET) {
       struct sockaddr_in *a = (struct sockaddr_in *)&ifaddr->addr;
       ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr);
     }
+#endif
   }
 
   if (!ifaddr_supplied) {
