@@ -186,25 +186,25 @@ enable_clang_tidy()
 
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
-target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
-target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
-target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
-target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
 endif()
@@ -212,7 +212,7 @@ endif()
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
-    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PORT_INCLUDE_DIR})
+    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
     if(OC_SECURITY_ENABLED)
         target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIR})
     endif()
@@ -242,7 +242,7 @@ target_compile_definitions(client-static PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
 )
 target_include_directories(client-static PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
@@ -260,7 +260,7 @@ target_compile_definitions(client-shared PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
 )
 target_include_directories(client-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
@@ -292,7 +292,7 @@ target_compile_definitions(server-static PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
 )
 target_include_directories(server-static PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
@@ -313,7 +313,7 @@ target_compile_definitions(server-shared PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
 )
 target_include_directories(server-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
@@ -347,7 +347,7 @@ target_compile_definitions(client-server-static PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
 )
 target_include_directories(client-server-static PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
@@ -368,7 +368,7 @@ target_compile_definitions(client-server-shared PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
 )
 target_include_directories(client-server-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
 if(OC_SECURITY_ENABLED)
