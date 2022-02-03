@@ -249,7 +249,7 @@ if(OC_SECURITY_ENABLED)
     target_include_directories(client-static PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
 endif()
 set_target_properties(client-static PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client"
+    OUTPUT_NAME "iotivity-lite-client-static"
     VERSION ${PROJECT_VERSION}
 )
 
@@ -302,7 +302,7 @@ if(OC_CLOUD_ENABLED)
     target_include_directories(server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
 endif()
 set_target_properties(server-static PROPERTIES
-    OUTPUT_NAME "iotivity-lite-server"
+    OUTPUT_NAME "iotivity-lite-server-static"
     VERSION ${PROJECT_VERSION}
 )
 
@@ -357,7 +357,7 @@ if(OC_CLOUD_ENABLED)
     target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
 endif()
 set_target_properties(client-server-static PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client-server"
+    OUTPUT_NAME "iotivity-lite-client-server-static"
     VERSION ${PROJECT_VERSION}
 )
 
