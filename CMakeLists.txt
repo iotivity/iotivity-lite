@@ -257,24 +257,27 @@ set_target_properties(client-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-add_library(client-shared SHARED ${client-lib-obj})
-target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
-target_compile_definitions(client-shared PUBLIC
-    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-)
-target_include_directories(client-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include/iotivity-lite>
-)
-if(OC_SECURITY_ENABLED)
-    target_include_directories(client-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+if(NOT MSVC)
+    # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
+    add_library(client-shared SHARED ${client-lib-obj})
+    target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
+    target_compile_definitions(client-shared PUBLIC
+        $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+        $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    )
+    target_include_directories(client-shared PUBLIC
+        $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include/iotivity-lite>
+    )
+    if(OC_SECURITY_ENABLED)
+        target_include_directories(client-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+    endif()
+    set_target_properties(client-shared PROPERTIES
+        OUTPUT_NAME "iotivity-lite-client"
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
 endif()
-set_target_properties(client-shared PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client"
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-)
 
 # Server
 set(server-lib-obj
@@ -310,27 +313,30 @@ set_target_properties(server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-add_library(server-shared SHARED ${server-lib-obj})
-target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
-target_compile_definitions(server-shared PUBLIC
-    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
-)
-target_include_directories(server-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include/iotivity-lite>
-)
-if(OC_SECURITY_ENABLED)
-    target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+if(NOT MSVC)
+    # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
+    add_library(server-shared SHARED ${server-lib-obj})
+    target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+    target_compile_definitions(server-shared PUBLIC
+        $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
+        $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_SERVER>
+    )
+    target_include_directories(server-shared PUBLIC
+        $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include/iotivity-lite>
+    )
+    if(OC_SECURITY_ENABLED)
+        target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+    endif()
+    if(OC_CLOUD_ENABLED)
+        target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+    endif()
+    set_target_properties(server-shared PROPERTIES
+        OUTPUT_NAME "iotivity-lite-server"
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
 endif()
-if(OC_CLOUD_ENABLED)
-    target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
-endif()
-set_target_properties(server-shared PROPERTIES
-    OUTPUT_NAME "iotivity-lite-server"
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-)
 
 # Client-Server
 set(client-server-lib-obj
@@ -365,27 +371,30 @@ set_target_properties(client-server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-add_library(client-server-shared SHARED ${client-server-lib-obj})
-target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
-target_compile_definitions(client-server-shared PUBLIC
-    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
-)
-target_include_directories(client-server-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include/iotivity-lite>
-)
-if(OC_SECURITY_ENABLED)
-    target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+if(NOT MSVC)
+    # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
+    add_library(client-server-shared SHARED ${server-lib-obj})
+    target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
+    target_compile_definitions(client-server-shared PUBLIC
+        $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
+        $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
+    )
+    target_include_directories(client-server-shared PUBLIC
+        $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include/iotivity-lite>
+    )
+    if(OC_SECURITY_ENABLED)
+        target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
+    endif()
+    if(OC_CLOUD_ENABLED)
+        target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+    endif()
+    set_target_properties(client-server-shared PROPERTIES
+        OUTPUT_NAME "iotivity-lite-client-server"
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
 endif()
-if(OC_CLOUD_ENABLED)
-    target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
-endif()
-set_target_properties(client-server-shared PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client-server"
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-)
 
 # Python client
 if(UNIX)
@@ -417,6 +426,7 @@ if(UNIX)
         SOVERSION ${PROJECT_VERSION_MAJOR}
     )
 endif()
+
 ######## Units tests (UNIX only) ########
 include(CTest)
 if(BUILD_TESTING AND UNIX)
@@ -525,10 +535,20 @@ write_basic_package_version_file(iotivity-liteConfigVersion.cmake
 
 ######## Installation ########
 # Libraries
-install(TARGETS
+set(INSTALL_TARGETS
     client-static client-shared
     server-static server-shared
     client-server-static client-server-shared
+)
+if(MSVC)
+    # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
+    set(INSTALL_TARGETS
+        client-static
+        server-static
+        client-server-static
+    )
+endif()
+install(TARGETS ${INSTALL_TARGETS}
     EXPORT iotivity-liteTARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib
