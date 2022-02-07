@@ -373,7 +373,7 @@ set_target_properties(client-server-static PROPERTIES
 
 if(NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
-    add_library(client-server-shared SHARED ${server-lib-obj})
+    add_library(client-server-shared SHARED ${client-server-lib-obj})
     target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
     target_compile_definitions(client-server-shared PUBLIC
         $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT;OC_SERVER>
