@@ -285,9 +285,6 @@ set(server-lib-obj
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:server-obj>
 )
-if(OC_CLOUD_ENABLED)
-    list(APPEND server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
-endif()
 if(OC_SECURITY_ENABLED)
     list(APPEND server-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
@@ -304,9 +301,6 @@ target_include_directories(server-static PUBLIC
 )
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-static PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
-endif()
-if(OC_CLOUD_ENABLED)
-    target_include_directories(server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
 endif()
 set_target_properties(server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-server-static"
@@ -327,9 +321,6 @@ if(NOT MSVC)
     )
     if(OC_SECURITY_ENABLED)
         target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIR}>)
-    endif()
-    if(OC_CLOUD_ENABLED)
-        target_include_directories(server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
     endif()
     set_target_properties(server-shared PROPERTIES
         OUTPUT_NAME "iotivity-lite-server"
