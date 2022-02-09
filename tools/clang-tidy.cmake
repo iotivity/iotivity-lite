@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.10)
 
 include_guard(GLOBAL)
 
-if(UNIX AND CLANG_TIDY_ENABLED)
+if(UNIX AND OC_CLANG_TIDY_ENABLED)
     file(GLOB iotivity_directories LIST_DIRECTORIES true "${PROJECT_SOURCE_DIR}/*")
 
     set(iotivity_dirnames "")
@@ -42,8 +42,8 @@ if(UNIX AND CLANG_TIDY_ENABLED)
 endif()
 
 # enable clang-tidy before defining targets you want to run analysis on
-macro(enable_clang_tidy)
-    if(UNIX AND CLANG_TIDY_ENABLED)
+macro(oc_enable_clang_tidy)
+    if(UNIX AND OC_CLANG_TIDY_ENABLED)
         # use clang-tidy during compilation if its available
         find_program(CLANG_TIDY_BIN clang-tidy)
         if(CLANG_TIDY_BIN)
@@ -56,7 +56,7 @@ macro(enable_clang_tidy)
 endmacro()
 
 # disable clang-tidy before defining targets you want to skip analysis on
-macro(disable_clang_tidy)
+macro(oc_disable_clang_tidy)
     set(CMAKE_C_CLANG_TIDY "")
     set(CMAKE_CXX_CLANG_TIDY "")
 endmacro()

@@ -24,7 +24,7 @@ set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
+set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 
 include(tools/clang-tidy.cmake)
 
@@ -184,7 +184,7 @@ if(OC_SECURITY_ENABLED)
 endif()
 
 # enable clang-tidy for iotivity targets
-enable_clang_tidy()
+oc_enable_clang_tidy()
 
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
@@ -451,7 +451,7 @@ if(BUILD_TESTING AND UNIX)
     endif()
 
     # Disable clang-tidy for gtest
-    disable_clang_tidy()
+    oc_disable_clang_tidy()
 
     # Build googletest
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/gtest gtest)
@@ -506,7 +506,7 @@ if(BUILD_TESTING AND UNIX)
 #    endif()
 
     # reenable clang-tidy for any remaining targets
-    enable_clang_tidy()
+    oc_enable_clang_tidy()
 endif()
 
 ######## Generate pkg-config and cmake package files ########
