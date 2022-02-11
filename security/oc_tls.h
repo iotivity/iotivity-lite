@@ -73,13 +73,63 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const uint8_t *obt_uuid, const size_t obt_uuid_len,
                              uint8_t *key, const size_t key_len);
 
+/**
+ * @brief Create a new peer or get an existing peer for endpoint.
+ *
+ * @note If a peer for the given endpoint already exists then no new peer is
+ * created and the existing one is used instead.
+ *
+ * @param endpoint the endpoint
+ * @param role MBEDTLS_SSL_IS_CLIENT or MBEDTLS_SSL_IS_SERVER
+ * @return peer for given endpoint on success
+ * @return NULL on error
+ */
+oc_tls_peer_t *oc_tls_add_peer(oc_endpoint_t *endpoint, int role);
+
+/**
+ * @brief Remove and deallocate the peer for the endpoint.
+ *
+ * @param endpoint the endpoint
+ */
 void oc_tls_remove_peer(oc_endpoint_t *endpoint);
-size_t oc_tls_send_message(oc_message_t *message);
-oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
+
+/**
+ * @brief Get the peer for the endpoint.
+ *
+ * @param endpoint the endpoint
+ * @return peer for the endpoint if it exists
+ * @return NULL if no peer exists for the endpoint
+ */
 oc_tls_peer_t *oc_tls_get_peer(oc_endpoint_t *endpoint);
-bool oc_tls_connected(oc_endpoint_t *endpoint);
-bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
+
+/**
+ * @brief Get uuid of the peer for the endpoint.
+ *
+ * @param endpoint the endpoint
+ * @return uuid of the peer for the endpoint
+ * @return NULL if no peer exists for the endpoint
+ */
+oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
+
+/**
+ * @brief Count the number of peers in the device.
+ *
+ * @param device the device
+ * @return int number of peers
+ */
 int oc_tls_num_peers(size_t device);
+
+/**
+ * @brief Check if the endpoint has a connected peer.
+ *
+ * @param endpoint the endpoint
+ * @return true if connected peer exists
+ * @return false if no connected peer exists
+ */
+bool oc_tls_connected(oc_endpoint_t *endpoint);
+
+size_t oc_tls_send_message(oc_message_t *message);
+bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
 
 /* Public APIs for selecting certificate credentials */
 void oc_tls_select_cert_ciphersuite(void);
