@@ -1367,7 +1367,7 @@ oc_tls_num_peers(size_t device)
   return num_peers;
 }
 
-static oc_tls_peer_t *
+oc_tls_peer_t *
 oc_tls_add_peer(oc_endpoint_t *endpoint, int role)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
