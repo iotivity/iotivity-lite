@@ -23,7 +23,7 @@ target_include_directories(mbedtls PRIVATE
     ${PORT_INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
-target_compile_definitions(mbedtls PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} PRIVATE __OC_RANDOM)
+target_compile_definitions(mbedtls PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} __OC_RANDOM)
 # do not treat warnings as errors on Windows
 if(MSVC)
     target_compile_options(mbedtls PRIVATE /W1 /WX-)
