@@ -52,6 +52,14 @@ typedef enum {
 
 extern oc_process_event_t oc_events[];
 
+/**
+ * @brief convert oc_events_t value to oc_process_event_t value
+ *
+ * @param event value to convert
+ * @return corresponding oc_process_event_t value
+ */
+oc_process_event_t oc_event_to_oc_process_event(oc_events_t event);
+
 #ifdef __cplusplus
 }
 #endif

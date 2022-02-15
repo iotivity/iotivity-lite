@@ -30,6 +30,7 @@
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
 
+#include "port/oc_assert.h"
 #include "port/oc_random.h"
 
 #include "oc_buffer.h"
@@ -340,10 +341,16 @@ oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 static void
 allocate_events(void)
 {
-  int i = 0;
-  for (i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
+  for (int i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
     oc_events[i] = oc_process_alloc_event();
   }
+}
+
+oc_process_event_t
+oc_event_to_oc_process_event(oc_events_t event)
+{
+  oc_assert(event < __NUM_OC_EVENT_TYPES__);
+  return oc_events[event];
 }
 
 static void
