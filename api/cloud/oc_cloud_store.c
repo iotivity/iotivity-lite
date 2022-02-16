@@ -308,7 +308,7 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 void
 cloud_store_initialize(oc_cloud_store_t *store)
 {
-  cloud_set_string(&store->ci_server, "coaps+tcp://127.0.0.1", 21);
+  cloud_set_string(&store->ci_server, NULL, 0);
   cloud_set_string(&store->auth_provider, NULL, 0);
   cloud_set_string(&store->uid, NULL, 0);
   cloud_set_string(&store->access_token, NULL, 0);
