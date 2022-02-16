@@ -246,7 +246,7 @@ cloud_deregistered_internal(oc_client_response_t *data)
     ctx->store.status |= OC_CLOUD_FAILURE;
   }
 
-  ctx->store.cps = OC_CPS_READYTOREGISTER;
+  ctx->store.cps = OC_CPS_UNINITIALIZED;
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);

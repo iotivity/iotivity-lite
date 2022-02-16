@@ -123,7 +123,8 @@ cloud_start_process(oc_cloud_context_t *ctx)
   ctx->retry_count = 0;
   ctx->retry_refresh_token_count = 0;
 
-  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+  if (ctx->store.status == OC_CLOUD_INITIALIZED &&
+      ctx->store.cps == OC_CPS_READYTOREGISTER) {
     reset_delayed_callback(ctx, cloud_register, message_timeout[0]);
   } else if (ctx->store.status & OC_CLOUD_REGISTERED) {
     if (cloud_is_permanent_access_token(ctx->store.expires_in)) {
