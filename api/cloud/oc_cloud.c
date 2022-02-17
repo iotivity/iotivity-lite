@@ -409,7 +409,7 @@ oc_cloud_shutdown(void)
     if (ctx) {
       cloud_rd_deinit(ctx);
       cloud_manager_stop(ctx);
-      cloud_store_deinit(&ctx->store);
+      cloud_store_initialize(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
       oc_list_remove(cloud_context_list, ctx);

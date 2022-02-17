@@ -244,19 +244,6 @@ cloud_store_decode(oc_rep_t *rep, oc_cloud_store_t *store)
   return 0;
 }
 
-void
-cloud_store_deinit(oc_cloud_store_t *store)
-{
-  cloud_set_string(&store->ci_server, NULL, 0);
-  cloud_set_string(&store->auth_provider, NULL, 0);
-  cloud_set_string(&store->uid, NULL, 0);
-  cloud_set_string(&store->access_token, NULL, 0);
-  cloud_set_string(&store->refresh_token, NULL, 0);
-  cloud_set_string(&store->sid, NULL, 0);
-  store->status = 0;
-  store->expires_in = 0;
-}
-
 static int
 cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 {
@@ -308,12 +295,12 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 void
 cloud_store_initialize(oc_cloud_store_t *store)
 {
-  cloud_set_string(&store->ci_server, "coaps+tcp://127.0.0.1", 21);
+  cloud_set_string(&store->ci_server, NULL, 0);
   cloud_set_string(&store->auth_provider, NULL, 0);
   cloud_set_string(&store->uid, NULL, 0);
   cloud_set_string(&store->access_token, NULL, 0);
   cloud_set_string(&store->refresh_token, NULL, 0);
-  cloud_set_string(&store->sid, "00000000-0000-0000-0000-000000000000", 36);
+  cloud_set_string(&store->sid, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
 }
