@@ -124,10 +124,12 @@ cloud_start_process(oc_cloud_context_t *ctx)
   ctx->retry_count = 0;
   ctx->retry_refresh_token_count = 0;
 
+#ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
   if (pstat->s != OC_DOS_RFNOP && pstat->s != OC_DOS_RFPRO) {
     return;
   }
+#endif
 
   if (ctx->store.status == OC_CLOUD_INITIALIZED &&
       ctx->store.cps == OC_CPS_READYTOREGISTER) {
