@@ -168,6 +168,9 @@ close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
+  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+    coap_status_code = COAP_NO_ERROR;
+  }
   oc_set_drop_commands(device, false);
   return OC_EVENT_DONE;
 }

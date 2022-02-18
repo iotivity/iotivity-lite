@@ -45,6 +45,7 @@
 
 #include "util/oc_atomic.h"
 #include "util/pt/pt.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -525,6 +526,16 @@ int oc_process_is_running(struct oc_process *p);
  * processed.
  */
 int oc_process_nevents(void);
+
+#ifdef OC_SECURITY
+/**
+ * Check if closing of all tls sessions is currently scheduled by the process.
+ *
+ * \return true closing of all tls is sessions is scheduled by the process
+ * \return false otherwise
+ */
+bool oc_process_is_closing_all_tls_sessions();
+#endif /* OC_SECURITY */
 
 /** @} */
 

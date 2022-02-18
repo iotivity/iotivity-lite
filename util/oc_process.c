@@ -41,6 +41,11 @@
 #include <stdlib.h>
 #include <string.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
+#ifdef OC_SECURITY
+#include "api/oc_events.h"       // oc_event_to_oc_process_event
+#include "messaging/coap/coap.h" // coap_status_code
+
+#endif /* OC_SECURITY */
 
 /*
  * Pointer to the currently running process structure.
@@ -61,7 +66,7 @@ struct event_data
 };
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static unsigned long OC_PROCESS_NUMEVENTS = 10;
+static oc_process_num_events_t OC_PROCESS_NUMEVENTS = 10;
 #else /* OC_DYNAMIC_ALLOCATION */
 #define OC_PROCESS_NUMEVENTS 10
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -342,6 +347,27 @@ oc_process_nevents(void)
 {
   return nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
+/*---------------------------------------------------------------------------*/
+#ifdef OC_SECURITY
+bool
+oc_process_is_closing_all_tls_sessions()
+{
+  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+    return true;
+  }
+
+  const oc_process_event_t tls_close =
+    oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS);
+  for (oc_process_num_events_t i = 0; i < nevents; ++i) {
+    oc_process_num_events_t index =
+      (oc_process_num_events_t)(fevent + i) % OC_PROCESS_NUMEVENTS;
+    if (events[index].ev == tls_close) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif /* OC_SECURITY */
 /*---------------------------------------------------------------------------*/
 int
 oc_process_post(struct oc_process *p, oc_process_event_t ev,
