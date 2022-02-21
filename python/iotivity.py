@@ -1139,6 +1139,7 @@ class Iotivity():
                 del self.resourcelist[device]
                 break
         self.purge_device_array(device)
+        self.owned_devices.remove(device)
     
     def offboard_all_owned(self):
         print ("listing onboarded devices:")
@@ -1157,7 +1158,7 @@ class Iotivity():
 
             run_count = 0
             result = False
-            while run_count < 5 and not result: 
+            while run_count < 1 and not result: 
                 run_count += 1
                 self.lib.py_reset_device(device)
 
@@ -1587,7 +1588,7 @@ class Iotivity():
             self.lib.py_general_post(uuid, query, url, properties_ptr, values_ptr, types_ptr, list_size)
 
             start_time = time.time()
-            timeout = 10
+            timeout = 30
             time.sleep(1)
             while True: 
                 result = self.get_result()
