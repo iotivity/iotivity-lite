@@ -137,6 +137,9 @@ close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
+  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+    coap_status_code = COAP_NO_ERROR;
+  }
   return OC_EVENT_DONE;
 }
 
@@ -205,9 +208,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       goto pstat_state_error;
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
+    coap_status_t status_code = CLOSE_ALL_TLS_SESSIONS;
     if (fp->cb != NULL) {
       if (self_reset) {
         oc_close_all_tls_sessions_for_device(device);
+        status_code = COAP_NO_ERROR;
       } else {
         oc_set_delayed_callback((void *)device, close_all_tls_sessions, 0);
       }
@@ -217,7 +222,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       OC_DBG("oc_pstat: returned from the factory presets callback");
       memcpy(ps, &pstat[device], sizeof(oc_sec_pstat_t));
     }
-    coap_status_code = CLOSE_ALL_TLS_SESSIONS;
+    coap_status_code = status_code;
     ps->p = false;
   } break;
   case OC_DOS_RFPRO: {

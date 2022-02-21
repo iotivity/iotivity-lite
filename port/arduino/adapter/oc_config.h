@@ -48,13 +48,20 @@ typedef uint32_t oc_clock_time_t;
 /* Add support observable for oic/res */
 //#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
+/* Maximum size of uri for a collection resource */
+//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_BLOCK_WISE
 #define OC_COLLECTIONS // why? i got this error: api/oc_ri.c:1064:10: error:
                        // 'resource_is_collection' undeclared (first use in this
                        // function)
-#else                  /* OC_DYNAMIC_ALLOCATION */
+
+/* Enable reallocation during encoding the representation to cbor */
+//#define OC_REP_ENCODING_REALLOC
+
+#else /* OC_DYNAMIC_ALLOCATION */
 
 #define OC_BYTES_POOL_SIZE (2000)
 #define OC_INTS_POOL_SIZE (100)
@@ -64,7 +71,7 @@ typedef uint32_t oc_clock_time_t;
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (4)
 
-/* Common paramters */
+/* Common parameters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
 #define OC_BLOCK_WISE_SET_MTU (700)
 

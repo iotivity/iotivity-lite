@@ -330,14 +330,13 @@ typedef struct oc_switch_t
 {
   struct oc_switch_t *next;
   oc_resource_t *resource;
-  uint16_t id;
   bool state;
 } oc_switch_t;
 
 #ifdef OC_COLLECTIONS_IF_CREATE
 
 OC_MEMB(switch_s, oc_switch_t, 1);
-OC_LIST(switches); // list of switch instances ordered by id
+OC_LIST(switches);
 
 static bool
 set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
@@ -440,31 +439,6 @@ delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_DELETED);
 }
 
-/**
- *  Get pointer to the first element that either has no following element
- *  or the following element has an id with larger increment than 1
- *
- *  Example: list of three elements with ids 1, 2 and 5, it will return
- *    the second element (id=2) because the next id in order should be 3.
- *    Since it is 5 and the list is ordered we know 3 is free to use.
- */
-static oc_switch_t *
-get_next_free_position()
-{
-  oc_switch_t *item = oc_list_head(switches);
-  if (!item || item->id != 1) {
-    return NULL;
-  }
-
-  for (uint16_t id = 1; oc_list_item_next(item) != NULL &&
-                        ((oc_switch_t *)oc_list_item_next(item))->id == ++id;
-       item = oc_list_item_next(item)) {
-    ;
-  }
-
-  return item;
-}
-
 static oc_event_callback_retval_t
 register_to_cloud(void *res)
 {
@@ -478,24 +452,11 @@ get_switch_instance(const char *href, oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
 {
-  (void)href;
   oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
   if (cswitch) {
-    uint16_t cswitch_id = 1;
-    oc_switch_t *prev = get_next_free_position();
-    if (prev) {
-      cswitch_id = prev->id + 1;
-    }
-    const size_t href_size =
-      sizeof("/switches/") + 5; // 5 = max number of digits in uint16_t value
-    char cswitch_href[href_size];
-    snprintf(cswitch_href, sizeof(cswitch_href), "/switches/%u",
-             (unsigned)cswitch_id);
-
     cswitch->resource = oc_new_resource(
-      NULL, cswitch_href, oc_string_array_get_allocated_size(*types), device);
+      NULL, href, oc_string_array_get_allocated_size(*types), device);
     if (cswitch->resource) {
-      cswitch->id = cswitch_id;
       size_t i;
       for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
         const char *rt = oc_string_array_get_item(*types, i);
@@ -514,7 +475,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
                                      cswitch, set_switch_properties, cswitch);
       oc_add_resource(cswitch->resource);
       oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
-      oc_list_insert(switches, prev, cswitch);
+      oc_list_add(switches, cswitch);
       return cswitch->resource;
     } else {
       oc_memb_free(&switch_s, cswitch);
@@ -530,6 +491,7 @@ free_switch_instance(oc_resource_t *resource)
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
     if (cswitch->resource == resource) {
+      oc_remove_delayed_callback(cswitch->resource, register_to_cloud);
       oc_cloud_delete_resource(resource);
       oc_delete_resource(resource);
       oc_list_remove(switches, cswitch);
@@ -732,7 +694,8 @@ main(int argc, char *argv[])
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
-
+  oc_set_max_app_data_size(8 * 1024);
+  oc_set_min_app_data_size(512);
   ret = oc_main_init(&handler);
   if (ret < 0)
     return ret;

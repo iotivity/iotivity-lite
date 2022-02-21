@@ -30,6 +30,7 @@
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
 
+#include "port/oc_assert.h"
 #include "port/oc_random.h"
 
 #include "oc_buffer.h"
@@ -340,10 +341,16 @@ oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 static void
 allocate_events(void)
 {
-  int i = 0;
-  for (i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
+  for (int i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
     oc_events[i] = oc_process_alloc_event();
   }
+}
+
+oc_process_event_t
+oc_event_to_oc_process_event(oc_events_t event)
+{
+  oc_assert(event < __NUM_OC_EVENT_TYPES__);
+  return oc_events[event];
 }
 
 static void
@@ -909,9 +916,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    * oc_parse_rep()
    *  in order to reducing peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
    */
-  response_buffer.code = 0;
-  response_buffer.response_length = 0;
-  response_buffer.content_format = 0;
+  memset(&response_buffer, 0, sizeof(response_buffer));
 
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
@@ -1066,21 +1071,34 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 /* Alloc response_state. It also affects request_obj.response.
  */
 #ifdef OC_BLOCK_WISE
+#ifdef OC_DYNAMIC_ALLOCATION
+  bool response_state_allocated = false;
+  bool enable_realloc_rep = false;
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (cur_resource && !bad_request) {
     if (!(*response_state)) {
       OC_DBG("creating new block-wise response state");
       *response_state = oc_blockwise_alloc_response_buffer(
-        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER);
+        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
+        OC_MIN_APP_DATA_SIZE);
       if (!(*response_state)) {
         OC_ERR("failure to alloc response state");
         bad_request = true;
       } else {
+#ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_APP_DATA_BUFFER_POOL
+        if (!request_buffer->block)
+#endif /* OC_APP_DATA_BUFFER_POOL */
+        {
+          response_state_allocated = true;
+        }
+#endif /* OC_DYNAMIC_ALLOCATION */
         if (uri_query_len > 0) {
           oc_new_string(&(*response_state)->uri_query, uri_query,
                         uri_query_len);
         }
         response_buffer.buffer = (*response_state)->buffer;
-        response_buffer.buffer_size = OC_MAX_APP_DATA_SIZE;
+        response_buffer.buffer_size = OC_MIN_APP_DATA_SIZE;
       }
     }
   }
@@ -1090,6 +1108,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* !OC_BLOCK_WISE */
 
   if (cur_resource && !bad_request) {
+
     /* Process a request against a valid resource, request payload, and
      * interface.
      */
@@ -1097,7 +1116,17 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
      * points to memory allocated in the messaging layer for the "CoAP
      * Transaction" to service this request.
      */
+#ifdef OC_DYNAMIC_ALLOCATION
+    if (response_state_allocated) {
+      oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
+                         OC_MAX_APP_DATA_SIZE);
+      enable_realloc_rep = true;
+    } else {
+      oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    }
+#else  /* OC_DYNAMIC_ALLOCATION */
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
     /* If cur_resource is a coaps:// resource, then query ACL to check if
@@ -1115,7 +1144,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
  */
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
       if (resource_is_collection) {
-        oc_handle_collection_request(method, &request_obj, iface_mask, NULL);
+        if (!oc_handle_collection_request(method, &request_obj, iface_mask,
+                                          NULL)) {
+          OC_WRN("ocri: failed to handle collection request");
+          bad_request = true;
+        }
       } else
 #endif /* OC_COLLECTIONS && OC_SERVER */
         /* If cur_resource is a non-collection resource, invoke
@@ -1143,6 +1176,15 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #if defined(OC_BLOCK_WISE)
   oc_blockwise_free_request_buffer(*request_state);
   *request_state = NULL;
+#ifdef OC_DYNAMIC_ALLOCATION
+  // for realloc we need reassign memory again.
+  if (enable_realloc_rep) {
+    response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
+    if (response_state && (*response_state)) {
+      (*response_state)->buffer = response_buffer.buffer;
+    }
+  }
+#endif
 #endif
 
   if (request_obj.request_payload) {
