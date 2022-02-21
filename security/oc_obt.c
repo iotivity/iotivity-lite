@@ -3523,6 +3523,19 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
         } else {
           cbor_encode_text_string(&root_map, "", 0);
         }
+      } else if (strstr(payload_types[i], "bytes") != NULL) {
+        int byte_string_len = (strlen(payload_values[i])  + 1) / 2;
+        unsigned char payload_byte_string[byte_string_len];
+
+        char *pos = payload_values[i];
+        for (int j = 0; j < byte_string_len; j++) {
+          sscanf(pos, "%2hhx", &payload_byte_string[j]);
+          pos += 2;
+        }
+
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_byte_string(&root_map, payload_byte_string, byte_string_len);
       }
     }
     oc_rep_end_root_object();

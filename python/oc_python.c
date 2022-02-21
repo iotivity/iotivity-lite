@@ -1873,14 +1873,14 @@ void
 py_general_post(char *uuid, char *query, char *url, char **payload_properties,
                 char **payload_values, char **payload_types, int array_size)
 {
+  cb_result = false;
   oc_uuid_t deviceuuid;
   oc_str_to_uuid(uuid, &deviceuuid);
 
   otb_mutex_lock(app_sync_lock);
 
   oc_obt_general_post(&deviceuuid, query, url, py_general_post_cb, NULL,
-                      payload_properties, payload_values, payload_types,
-                      array_size);
+                      payload_properties, payload_values, payload_types, array_size);
 
   otb_mutex_unlock(app_sync_lock);
 }
