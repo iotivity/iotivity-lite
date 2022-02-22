@@ -3531,7 +3531,7 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
         }
       } else if (strstr(payload_types[i], "bytes") != NULL) {
         int byte_string_len = (strlen(payload_values[i])  + 1) / 2;
-        unsigned char payload_byte_string[byte_string_len];
+        unsigned char payload_byte_string[10240];
 
         char *pos = payload_values[i];
         for (int j = 0; j < byte_string_len; j++) {

@@ -1156,21 +1156,18 @@ class Iotivity():
 
             print ("Offboarding device :", device, device_name)
 
-            run_count = 0
             result = False
-            while run_count < 1 and not result: 
-                run_count += 1
-                self.lib.py_reset_device(device)
+            self.lib.py_reset_device(device)
 
-                start_time = time.time()
-                timeout = 10
-                time.sleep(1)
-                while True: 
-                    result = self.get_result()
-                    end_time = time.time()
-                    if result or end_time > start_time + timeout: 
-                        time_taken = end_time - start_time
-                        break
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
 
             if result: 
                 print (f"Offboarding succeeded for: {device} {device_name}")
