@@ -24,6 +24,7 @@
 #ifndef OC_UUID_H
 #define OC_UUID_H
 
+#include "oc_export.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -59,6 +60,7 @@ typedef struct
  * @param[in] str the UUID string
  * @param[out] uuid the oc_uuid_t to hold the UUID bits.
  */
+OC_API
 void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
 
 /**
@@ -84,6 +86,7 @@ void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
  * @param [in] buflen The size of the input buffer.
  *                    Recommend always using OC_UUID_LEN for buflen.
  */
+OC_API
 void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
 /**
  * Generate a random Universally Unique IDentifier (UUID)
@@ -100,6 +103,7 @@ void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
  *
  * @param[out] uuid the randomly generated UUID
  */
+OC_API
 void oc_gen_uuid(oc_uuid_t *uuid);
 
 #ifdef __cplusplus

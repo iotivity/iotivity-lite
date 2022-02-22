@@ -22,6 +22,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_obt.h"
+#include "oc_python.h"
 #include "port/oc_clock.h"
 #include "security/oc_obt_internal.h"
 
@@ -29,10 +30,10 @@
 #include "oc_streamlined_onboarding.h"
 #endif
 
-#include <unistd.h>
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
+#include <unistd.h>
 #include <pthread.h>
 #else
 #error "Unsupported OS"
@@ -46,14 +47,6 @@
 #define MAX_NUM_RESOURCES (100)
 #define MAX_NUM_RT (50)
 #define MAX_URI_LENGTH (30)
-
-/* Structure in app to track currently discovered owned/unowned devices */
-typedef struct device_handle_t
-{
-  struct device_handle_t *next;
-  oc_uuid_t uuid;
-  char device_name[64];
-} device_handle_t;
 
 /* Pool of device handles */
 OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
@@ -91,18 +84,6 @@ static pthread_cond_t cv;
 static struct timespec ts;
 #endif
 static int quit = 0;
-
-/**
- * callback prototype to inform python layer that the onboarded/unonboarded list
- * have changed
- *
- */
-typedef void (*changedCB)(char *uuid, char *state, char *event);
-typedef void (*diplomatCB)(char *anchor, char *uri, char *state, char *event,
-                           char *target, char *target_cred);
-typedef void (*resourceCB)(char *anchor, char *uri, char *types,
-                           char *interfaces);
-typedef void (*clientCB)(char *uuid, char *state, char *event);
 
 /**
  * structure with the callback
@@ -156,10 +137,6 @@ stringFromResponse(int code)
   return strings[code];
 }
 
-/**
- * function to install callbacks, called from python
- *
- */
 void
 install_changedCB(changedCB changedCB)
 {
@@ -167,10 +144,6 @@ install_changedCB(changedCB changedCB)
   my_CBFunctions.changedFCB = changedCB;
 }
 
-/**
- * function to install diplomat callbacks, called from python
- *
- */
 void
 install_diplomatCB(diplomatCB diplomatCB)
 {
@@ -178,20 +151,13 @@ install_diplomatCB(diplomatCB diplomatCB)
   my_CBFunctions.diplomatFCB = diplomatCB;
 }
 
-/**
- * function to install resource callbacks, called from python
- *
- */
 void
 install_resourceCB(resourceCB resourceCB)
 {
   PRINT("[C]install_resourceCB\n");
   my_CBFunctions.resourceFCB = resourceCB;
 }
-/**
- * function to install client callbacks, called from python
- *
- */
+
 void
 install_clientCB(clientCB clientCB)
 {
@@ -199,10 +165,6 @@ install_clientCB(clientCB clientCB)
   my_CBFunctions.clientFCB = clientCB;
 }
 
-/**
- * function to call the callback to python.
- *
- */
 void
 inform_python(const char *uuid, const char *state, const char *event)
 {
@@ -224,10 +186,6 @@ inform_resource_python(const char *anchor, const char *uri, const char *types,
   }
 }
 
-/**
- * function to print the returned cbor as JSON
- *
- */
 void
 print_rep(oc_rep_t *rep, bool pretty_print)
 {
@@ -247,10 +205,6 @@ get_response_payload()
   return response_payload;
 }
 
-/**
- * function to save the returned cbor as JSON
- *
- */
 void
 save_rep(oc_rep_t *rep, bool pretty_print)
 {
@@ -260,9 +214,6 @@ save_rep(oc_rep_t *rep, bool pretty_print)
   oc_rep_to_json(rep, response_payload, json_size + 1, pretty_print);
 }
 
-/* function to call the callback for diplomats to python.
- *
- */
 void
 inform_diplomat_python(const char *anchor, const char *uri, const char *state,
                        const char *event, const char *target,
@@ -276,10 +227,6 @@ inform_diplomat_python(const char *anchor, const char *uri, const char *state,
   }
 }
 
-/**
- * function to call the callback for clients to python.
- *
- */
 void
 inform_client_python(const char *uuid, const char *state, const char *event)
 {
@@ -289,10 +236,6 @@ inform_client_python(const char *uuid, const char *state, const char *event)
   }
 }
 
-/**
- * function to convert the uuid to the device handle
- *
- */
 device_handle_t *
 py_getdevice_from_uuid(char *uuid, int owned)
 {
@@ -360,10 +303,6 @@ signal_event_loop(void)
 #endif
 }
 
-/**
- * function to quit the event loop
- *
- */
 void
 python_exit(int signal)
 {
@@ -500,10 +439,7 @@ empty_device_list(oc_list_t list)
 /* End of app utility functions */
 
 /* App invocations of oc_obt APIs */
-/**
- * CB function on getting the device data.
- * generic callback for owned/unowned devices
- */
+
 bool cb_result = false;
 bool
 get_cb_result()
@@ -777,7 +713,6 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-// function to list the unowned devices in iotivity (printed in C)
 void
 py_list_unowned_devices(void)
 {
@@ -794,7 +729,6 @@ py_list_unowned_devices(void)
   }
 }
 
-// function to list the owned devices in iotivity (printed in C)
 void
 py_list_owned_devices(void)
 {
@@ -1039,7 +973,6 @@ delete_cred_by_credid_cb(int status, void *data)
 
 /**
  * function to handle the reset
- *
  */
 static void
 reset_device_cb(oc_uuid_t *uuid, int status, void *data)
@@ -1067,20 +1000,12 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   }
 }
 
-/**
- * function to retrieve the # owned devices
- *
- */
 int
 py_get_nr_owned_devices(void)
 {
   return (oc_list_length(owned_devices));
 }
 
-/**
- * function to retrieve the uuid of the owned/unowned device
- *
- */
 char xx_di[OC_UUID_LEN];
 char *
 get_uuid(int owned, int index)
@@ -1104,10 +1029,6 @@ get_uuid(int owned, int index)
   return " empty ";
 }
 
-/**
- * function to retrieve the device name of the owned/unowned device
- *
- */
 char *
 get_device_name(int owned, int index)
 {
@@ -1131,10 +1052,6 @@ get_device_name(int owned, int index)
   return " empty ";
 }
 
-/**
- * function to retrieve the device name belonging to the uuid
- *
- */
 char *
 get_device_name_from_uuid(char *uuid)
 {
@@ -1165,20 +1082,12 @@ get_device_name_from_uuid(char *uuid)
   return " empty ";
 }
 
-/**
- * function to retrieve the number of unowned device
- *
- */
 int
 py_get_nr_unowned_devices(void)
 {
   return (oc_list_length(unowned_devices));
 }
 
-/**
- * function to reset the owned device
- *
- */
 void
 py_reset_device(char *uuid)
 {
@@ -2536,7 +2445,11 @@ python_main(void)
   display_device_uuid();
 
   while (quit != 1) {
+#if defined(_WIN32)
+    Sleep(5000);
+#elif defined(__linux__)
     sleep(5);
+#endif
   }
 
 #if defined(_WIN32)

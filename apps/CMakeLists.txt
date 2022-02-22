@@ -123,19 +123,19 @@ if(UNIX)
         )
         target_link_libraries(cloud_server client-server-static)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/cloud_server_creds)
-        
+
         add_executable(cloud_client
             ${PROJECT_SOURCE_DIR}/cloud_client.c
         )
         target_link_libraries(cloud_client client-server-static)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/cloud_client_creds)
-        
+
         add_executable(cloud_proxy
             ${PROJECT_SOURCE_DIR}/cloud_proxy.c
         )
         target_link_libraries(cloud_proxy client-server-static)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/cloud_proxy_creds)
-        
+
         add_executable(cloud_tests
             ${PROJECT_SOURCE_DIR}/cloud_certification_tests.c
         )
