@@ -1,8 +1,7 @@
-# This is a basic workflow to help you get started with Actions
+# Build on Linux with CMake and execute tests
 
 name: CI-cmake building linux
 
-# Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -13,29 +12,30 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "check_code_style"
-   cmake_linux_secured:
-    # The type of runner that the job will run on
+   cmake_linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # secure with IPv4
+          - args: "-DOC_IPV4_ENABLED=ON"
+          # insecure with IPv4
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
       - uses: actions/checkout@v2
+        with:
+          submodules: "true"
 
-
-      # Runs a set of commands using the runners shell
-      - name: cmake secured
+      - name: build
         run: |
-          # https://github.com/actions/checkout/issues/81
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
-          # create the make files in a subfolder
           mkdir linuxbuild
           cd linuxbuild
-          cmake ../.
+          cmake ../. ${{ matrix.args }} -DBUILD_TESTING=ON
           make all
-          
+
+      - name: test
+        run: |
+          cd linuxbuild
+          ctest --verbose
