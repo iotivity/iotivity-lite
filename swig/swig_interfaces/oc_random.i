@@ -20,4 +20,5 @@
 %rename (randomValue) oc_random_value;
 %rename (destroy) oc_random_destroy;
 
+#define OC_API
 %include "port/oc_random.h"
