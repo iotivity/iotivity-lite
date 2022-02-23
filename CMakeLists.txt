@@ -1,6 +1,15 @@
 cmake_minimum_required (VERSION 3.10)
 project(iotivity-lite)
 
+set(CMAKE_BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../build_${PROJECT_NAME}_${CMAKE_BUILD_TYPE})
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "Path to libraries and binaries" FORCE)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_INSTALL_PREFIX}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_INSTALL_PREFIX}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
 # Patch mbedtls
 set(OC_REAPPLY_MBEDTLS_PATCHES ON CACHE BOOL "")
 if(OC_REAPPLY_MBEDTLS_PATCHES)
@@ -16,12 +25,13 @@ option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
-set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
-set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
-set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
-set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
-set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
-set(OC_TCP_ENABLED ON CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
+set(OC_SECURITY_ENABLED OFF CACHE BOOL "Enable security")
+set(OC_PKI_ENABLED OFF CACHE BOOL "Enable PKI security")
+set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications")
+set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages")
+set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API")
+set(OC_TCP_ENABLED ON CACHE BOOL "Enable tcp")
+set(OC_IPV4_ENABLED ON CACHE BOOL "Enable ipv4")
 
 # If an mbedtls platform layer is defined, add it to the mbedtls list of libs
 if(TARGET mbedtls-plat)
@@ -73,24 +83,14 @@ target_sources(iotivity-api INTERFACE
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
 )
 
-if(OC_CLOUD_ENABLED)
-    target_sources(iotivity-api INTERFACE
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_manager.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_rd.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_resource.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_store.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/rd_client.c
-        ${PROJECT_SOURCE_DIR}/api/cloud/oc_cloud_apis.c
-    )
-endif()
-
 target_include_directories(iotivity-api INTERFACE
     ${PROJECT_SOURCE_DIR}/
     ${PROJECT_SOURCE_DIR}/api
     ${PROJECT_SOURCE_DIR}/api/c-timestamp
     ${PROJECT_SOURCE_DIR}/include
 )
+
+target_link_libraries(iotivity-api INTERFACE json-parser)
 
 # Core functions used by Iotivity
 add_library(iotivity-common INTERFACE)
@@ -195,6 +195,10 @@ if(OC_TCP_ENABLED)
     target_compile_definitions(iotivity-common INTERFACE OC_TCP)
 endif()
 
+if(OC_IPV4_ENABLED)
+    target_compile_definitions(iotivity-common INTERFACE OC_IPV4)
+endif()
+
 # Client and server versions of Iotivity
 add_library(iotivity-client)
 target_compile_definitions(iotivity-client PUBLIC OC_CLIENT)
@@ -231,5 +235,5 @@ endif()
 
 add_subdirectory(port)
 add_subdirectory(apps)
-add_subdirectory(onboarding_tool)
+#add_subdirectory(onboarding_tool)
 add_subdirectory(deps)

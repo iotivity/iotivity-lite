@@ -11,3 +11,11 @@ add_library(tinycbor-master
 target_include_directories(tinycbor-master PUBLIC
     ${PROJECT_SOURCE_DIR}/tinycbor/src
 )
+
+add_library(json-parser
+    ${PROJECT_SOURCE_DIR}/json-parser/json.c
+)
+
+target_include_directories(json-parser PUBLIC
+    ${PROJECT_SOURCE_DIR}/json-parser
+)

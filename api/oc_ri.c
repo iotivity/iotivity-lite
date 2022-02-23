@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <string.h>
 
+
 #include "util/oc_etimer.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -26,6 +27,10 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+
+#include "deps/json-parser/json.h"
+//#include "cborjson.h"
+
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
@@ -845,6 +850,129 @@ oc_ri_audit_log(oc_method_t method, oc_resource_t *resource,
                (const char **)aux, idx);
 }
 #endif /* OC_SECURITY */
+/*
+static void print_depth_shift(int depth)
+{
+    int j;
+    for (j=0; j < depth; j++) {
+        printf(" ");
+    }
+}*/
+
+static CborError process_value(json_value* value, int depth, CborEncoder* currentEncoder);
+
+static CborError process_object(json_value* value, int depth, CborEncoder* currentEncoder)
+{
+    CborError err = CborNoError;
+    int length, x;
+    if (value == NULL) {
+        return err;
+    }
+    length = value->u.object.length;
+    for (x = 0; x < length; x++) {
+        //print_depth_shift(depth);
+        const char* key = value->u.object.values[x].name;
+        //printf("object[%d].name = %s\n", x, value->u.object.values[x].name);
+        err |= cbor_encode_text_stringz(currentEncoder, key);
+        err |= process_value(value->u.object.values[x].value, depth+1, currentEncoder);
+    }
+
+    return err;
+}
+
+static CborError process_array(json_value* value, int depth, CborEncoder* currentEncoder)
+{
+    CborError err = CborNoError;
+    int length, x;
+    if (value == NULL) {
+        return err;
+    }
+    length = value->u.array.length;
+    //printf("array\n");
+    for (x = 0; x < length; x++) {
+        err |= process_value(value->u.array.values[x], depth, currentEncoder);
+    }
+
+    return err;
+}
+
+static CborError process_value(json_value* value, int depth, CborEncoder* currentEncoder)
+{
+    CborError err = CborNoError;
+    
+    if (value == NULL) {
+        return err;
+    }
+
+    /*if (value->type != json_object) {
+        print_depth_shift(depth);
+    }*/
+
+    switch (value->type) {
+        case json_none:
+        {
+            //printf("none\n");
+            err |= CborErrorUnsupportedType;
+            break;
+        }
+        case json_null:
+        {
+            //printf("null\n");
+            err |= cbor_encode_null(currentEncoder);
+            break;
+        }
+        case json_object:
+        {
+            size_t size = (size_t) (value->u.object.length);
+            //printf("Create map encoder with size %zu\n", size);
+            CborEncoder mapEncoder;
+            err |= cbor_encoder_create_map(currentEncoder, &mapEncoder, size);
+            err |= process_object(value, depth+1, &mapEncoder);
+            cbor_encoder_close_container(currentEncoder, &mapEncoder);
+            //printf("Map closed\n");
+            break;
+        }
+        case json_array:
+        {
+            size_t size = (size_t) (value->u.array.length);
+            //printf("Create array encoder with size %zu\n", size);
+            CborEncoder arrayEncoder;
+            err |= cbor_encoder_create_array(currentEncoder, &arrayEncoder, size);
+            err |= process_array(value, depth+1, &arrayEncoder);
+            cbor_encoder_close_container(currentEncoder, &arrayEncoder);
+            //printf("Array closed\n");
+            break;
+        }
+        case json_integer:
+        {
+            //printf("int: %10ld\n", (long)value->u.integer);
+            err |= cbor_encode_int(currentEncoder, (int64_t)value->u.integer);
+            break;
+        }
+        case json_double:
+        {
+            //printf("double: %f\n", value->u.dbl);
+            err |= cbor_encode_double(currentEncoder, value->u.dbl);
+            break;
+        }
+        case json_string:
+        {
+            //printf("string: %s\n", value->u.string.ptr);
+            err|= cbor_encode_text_stringz(currentEncoder, value->u.string.ptr);
+            break;
+        }
+        case json_boolean:
+        {
+            bool val = value->u.boolean ? true : false;
+            //printf("bool: %d\n", value->u.boolean);
+            err |= cbor_encode_boolean(currentEncoder, val);
+            break;
+        }
+    }
+
+    return err;
+}
+
 
 #ifdef OC_BLOCK_WISE
 bool
@@ -954,7 +1082,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 
   /* Obtain handle to buffer containing the serialized payload */
-  const uint8_t *payload = NULL;
+  /*const*/ uint8_t *payload = NULL;
   int payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (*request_state) {
@@ -981,24 +1109,77 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
 
-  if (payload_len > 0 &&
-      (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR)) {
-    /* Attempt to parse request payload using tinyCBOR via oc_rep helper
-     * functions. The result of this parse is a tree of oc_rep_t structures
-     * which will reflect the schema of the payload.
-     * Any failures while parsing the payload is viewed as an erroneous
-     * request and results in a 4.00 response being sent.
-     */
-    int parse_error =
-      oc_parse_rep(payload, payload_len, &request_obj.request_payload);
-    if (parse_error != 0) {
-      OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
-             parse_error);
-      if (parse_error == CborErrorUnexpectedEOF)
-        entity_too_large = true;
-      bad_request = true;
+  if (payload_len > 0) {
+
+      if (cf == TEXT_PLAIN) {
+          char* const payload_string = (char*) payload;
+          /*printf("############ PAYLOAD BEFORE CBOR ENCODING\n");
+          printf("payload = %s, size = %zu\n", payload_string, strlen(payload_string));*/
+
+          json_value* json_payload = json_parse(payload_string, payload_len);
+          if (json_payload) {
+              //printf("Payload parsed successfully!\n");
+              oc_rep_new(payload, payload_len);
+              g_err |= process_value(json_payload, 0, &g_encoder);
+              coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+              //coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+              cf = APPLICATION_VND_OCF_CBOR;
+              request_obj.content_format = cf;
+              
+              /*char* const encoded_payload_string = (char*) payload;
+              printf("############ PAYLOAD AFTER CBOR ENCODING\n");
+              printf("payload = %s, size = %zu\n", encoded_payload_string, strlen(encoded_payload_string));
+
+             // verify
+             FILE* out = NULL;
+             CborValue cbor_value;
+             CborParser cbor_parser;
+             CborError err = cbor_parser_init(payload, payload_len, 0, &cbor_parser, &cbor_value);
+             err |= cbor_value_to_json(out, &cbor_value, 0);
+             
+             if (err == CborNoError) {
+                 if (out) {
+                     char str[50];
+                     if (fgets(str, 50, out) != NULL) {
+                         printf("Decoded payload = %s", str);
+                     } else {
+                         puts("fgets return null ptr");
+                     }
+                 } else {
+                     puts("out is null");
+                 }
+             } else {
+                 printf("Erreur when decoding the cbor payload!");
+             }*/
+              
+          } else {
+              printf("Parsing payload failed!\n");
+          }
+          
+          json_value_free(json_payload);
+   
+      }
+
+      if (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR) {
+        /* Attempt to parse request payload using tinyCBOR via oc_rep helper
+         * functions. The result of this parse is a tree of oc_rep_t structures
+         * which will reflect the schema of the payload.
+         * Any failures while parsing the payload is viewed as an erroneous
+         * request and results in a 4.00 response being sent.
+         */
+        int parse_error =
+          oc_parse_rep(payload, payload_len, &request_obj.request_payload);
+        if (parse_error != 0) {
+          OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
+                 parse_error);
+          if (parse_error == CborErrorUnexpectedEOF)
+            entity_too_large = true;
+          bad_request = true;
+        }
     }
+
   }
+
 
   oc_resource_t *resource, *cur_resource = NULL;
 

@@ -44,4 +44,14 @@ if(UNIX OR WIN32)
     elseif(WIN32)
         target_link_libraries(iotivity-port INTERFACE bcrypt iphlpapi)
     endif()
+
+    message("PORT_DIR = ${PORT_DIR}")
+    file(COPY ${PORT_DIR}/server_introspection.cbor
+        DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/)
+    #add_custom_command(
+            #TARGET iotivity-lite POST_BUILD
+            #COMMAND ${CMAKE_COMMAND} -E copy
+                    #${PORT_DIR}/server_introspection.cbor
+                    #${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/server_introspection.cbor)
+
 endif()

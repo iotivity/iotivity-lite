@@ -7,3 +7,6 @@
 [submodule "deps/gtest"]
 	path = deps/gtest
 	url = https://github.com/google/googletest.git
+[submodule "deps/json-parser"]
+	path = deps/json-parser
+	url = https://github.com/json-parser/json-parser

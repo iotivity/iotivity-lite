@@ -37,6 +37,7 @@ if(UNIX)
             iotivity-server-client
         )
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
+        file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/device_builder_server_creds)
     endif()
 
     if(OC_TCP_ENABLED AND OC_CLOUD_ENABLED)
@@ -77,3 +78,4 @@ add_custom_target(copy-pki-certs ALL
 )
 
 add_dependencies(iotivity-port copy-pki-credentials)
+
