@@ -27,6 +27,7 @@
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_atomic.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -609,10 +610,20 @@ oc_connectivity_get_endpoints(size_t device)
     return NULL;
   }
 
-  if (oc_list_length(dev->eps) == 0) {
-    oc_network_event_handler_mutex_lock();
+  bool refresh = false;
+  bool swapped = false;
+  int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+  while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
+    int8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
+    if (swapped) {
+      refresh = true;
+      break;
+    }
+  }
+
+  if (refresh || oc_list_length(dev->eps) == 0) {
     refresh_endpoints_list(dev);
-    oc_network_event_handler_mutex_unlock();
   }
 
   return oc_list_head(dev->eps);
@@ -706,9 +717,18 @@ process_interface_change_event(void)
   if (if_state_changed) {
     for (i = 0; i < num_devices; i++) {
       ip_context_t *dev = get_ip_context_for_device(i);
-      oc_network_event_handler_mutex_lock();
-      refresh_endpoints_list(dev);
-      oc_network_event_handler_mutex_unlock();
+      if (dev == NULL) {
+        continue;
+      }
+      bool swapped = false;
+      int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+      while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
+        int8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
+        if (swapped) {
+          break;
+        }
+      }
     }
   }
 
@@ -926,7 +946,7 @@ network_event_thread(void *data)
 
   int i, n;
 
-  while (dev->terminate != 1) {
+  while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     setfds = ip_context_rfds_fd_copy(dev);
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
@@ -938,7 +958,7 @@ network_event_thread(void *data)
       }
     }
 
-    if (dev->terminate) {
+    if (OC_ATOMIC_LOAD8(dev->terminate)) {
       break;
     }
 
@@ -1657,7 +1677,7 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
-  dev->terminate = 1;
+  OC_ATOMIC_STORE8(dev->terminate, 1);
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
     OC_WRN("cannot wakeup network thread");
   }

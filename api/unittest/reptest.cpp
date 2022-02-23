@@ -61,6 +61,54 @@ TEST(TestRep, RepToJson_null)
  * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
  * and oc_parse_rep
  */
+TEST(TestRep, OCRepSetGetNull)
+{
+  /*buffer for oc_rep_t */
+  uint8_t buf[1024];
+  oc_rep_new(&buf[0], 1024);
+
+  /* add null value to root object */
+  oc_rep_start_root_object();
+  oc_rep_set_null(root, nothing);
+  oc_rep_end_root_object();
+
+  /* convert CborEncoder to oc_rep_t */
+  const uint8_t *payload = oc_rep_get_encoder_buf();
+  int payload_len = oc_rep_get_encoded_payload_size();
+  EXPECT_NE(payload_len, -1);
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+  oc_rep_set_pool(&rep_objects);
+  oc_rep_t *rep = NULL;
+  oc_parse_rep(payload, payload_len, &rep);
+  ASSERT_TRUE(rep != NULL);
+
+  bool is_null = false;
+  EXPECT_TRUE(oc_rep_is_null(rep, "nothing", &is_null));
+  EXPECT_TRUE(is_null);
+  /* error handling */
+  EXPECT_FALSE(oc_rep_is_null(NULL, "nothing", &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep, NULL, &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep, "nothing", NULL));
+  EXPECT_FALSE(oc_rep_is_null(rep, "not_the_key", &is_null));
+
+  char *json;
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, false);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, false);
+  EXPECT_STREQ("{\"nothing\":null}", json);
+  free(json);
+  json = NULL;
+  json_size = oc_rep_to_json(rep, NULL, 0, true);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, true);
+  EXPECT_STREQ("{\n  \"nothing\" : null\n}\n", json);
+  free(json);
+  json = NULL;
+
+  oc_free_rep(rep);
+}
+
 TEST(TestRep, OCRepSetGetDouble)
 {
 
@@ -1604,4 +1652,48 @@ TEST(TestRep, OCRepRootArrayObject)
   json = NULL;
 
   oc_free_rep(rep);
+}
+
+TEST(TestRep, OCRepEncodedPayloadRealloc)
+{
+  /* buffer for oc_rep_t */
+  uint8_t *b = (uint8_t *)malloc(0);
+  oc_rep_new_realloc(&b, 0, 1024);
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_text_string(root, "hello", "world");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_double(root, "double", 3.14);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_boolean(root, "bool", true);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_int(root, "int", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_uint(root, "uint", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  uint8_t byte_string[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+  oc_rep_set_byte_string(root, byte_string_key, byte_string,
+                         sizeof(byte_string));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  int fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+  oc_rep_set_key(oc_rep_object(root), "fibonacci");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_begin_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
+    oc_rep_add_int(fibonacci, fib[i]);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  oc_rep_end_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+  oc_rep_set_double_array(
+    root, math_constants, math_constants,
+    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  b = oc_rep_shrink_encoder_buf(b);
+  EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
+  free(b);
 }

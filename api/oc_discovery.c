@@ -618,7 +618,11 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
     if (oc_check_if_collection(resource)) {
-      oc_handle_collection_request(OC_GET, &rest_request, OC_IF_LL, NULL);
+      if (!oc_handle_collection_request(OC_GET, &rest_request, OC_IF_LL,
+                                        NULL)) {
+        OC_WRN("failed to process batch response: failed to handle collection "
+               "request");
+      }
     } else
 #endif /* OC_SERVER && OC_COLLECTIONS */
     {
@@ -636,6 +640,14 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 #ifdef OC_SECURITY
   }
 #endif /* OC_SECURITY */
+}
+
+void
+oc_discovery_create_batch_for_resource(CborEncoder *links_array,
+                                       oc_resource_t *resource,
+                                       oc_endpoint_t *endpoint)
+{
+  process_batch_response(links_array, resource, endpoint);
 }
 
 static void
@@ -748,7 +760,11 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   } break;
 #ifdef OC_RES_BATCH_SUPPORT
   case OC_IF_B: {
-    if (request->origin && request->origin->flags & SECURED) {
+    if (request->origin
+#ifdef OC_SECURITY
+        && request->origin->flags & SECURED
+#endif /* OC_SECURITY */
+    ) {
       CborEncoder encoder;
       oc_rep_start_links_array();
       memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
@@ -926,7 +942,11 @@ oc_create_discovery_resource(int resource_idx, size_t device)
                             OC_IF_B |
 #endif /* OC_RES_BATCH_SUPPORT */
                               OC_IF_LL | OC_IF_BASELINE,
-                            OC_IF_LL, OC_DISCOVERABLE,
+                            OC_IF_LL,
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+                            OC_OBSERVABLE |
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+                              OC_DISCOVERABLE,
                             oc_core_discovery_handler, 0, 0, 0, 1,
                             "oic.wk.res");
 }

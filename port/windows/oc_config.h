@@ -13,6 +13,9 @@ typedef uint64_t oc_clock_time_t;
 /* Sets one clock tick to 1 ms */
 #define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
 
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (300)
@@ -30,7 +33,16 @@ typedef uint64_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 // The maximum size of a response to an OBSERVE request, in bytes.
-#define OC_MAX_OBSERVE_SIZE 512
+//#define OC_MAX_OBSERVE_SIZE 512
+
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
+/* Enable reallocation during encoding the representation to cbor */
+//#define OC_REP_ENCODING_REALLOC
+
+/* Maximum size of uri for a collection resource */
+//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"

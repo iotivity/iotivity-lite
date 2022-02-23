@@ -121,6 +121,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
 {
   oc_assert(ctx != NULL);
 
+  cloud_rd_reset_context(ctx);
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
@@ -408,7 +409,7 @@ oc_cloud_shutdown(void)
     if (ctx) {
       cloud_rd_deinit(ctx);
       cloud_manager_stop(ctx);
-      cloud_store_deinit(&ctx->store);
+      cloud_store_initialize(&ctx->store);
       cloud_close_endpoint(ctx->cloud_ep);
       oc_free_endpoint(ctx->cloud_ep);
       oc_list_remove(cloud_context_list, ctx);

@@ -28,6 +28,7 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #ifdef OC_SECURITY
+#include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 #include <stdint.h>
@@ -123,7 +124,15 @@ cloud_start_process(oc_cloud_context_t *ctx)
   ctx->retry_count = 0;
   ctx->retry_refresh_token_count = 0;
 
-  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
+  if (pstat->s != OC_DOS_RFNOP && pstat->s != OC_DOS_RFPRO) {
+    return;
+  }
+#endif
+
+  if (ctx->store.status == OC_CLOUD_INITIALIZED &&
+      ctx->store.cps == OC_CPS_READYTOREGISTER) {
     reset_delayed_callback(ctx, cloud_register, message_timeout[0]);
   } else if (ctx->store.status & OC_CLOUD_REGISTERED) {
     if (cloud_is_permanent_access_token(ctx->store.expires_in)) {

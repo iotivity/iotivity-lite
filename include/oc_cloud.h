@@ -105,7 +105,6 @@ typedef struct oc_cloud_context_t
   oc_link_t *rd_publish_resources;   /**< Resource links to publish */
   oc_link_t *rd_published_resources; /**< Resource links already published */
   oc_link_t *rd_delete_resources;    /**< Resource links to delete */
-  bool rd_delete_all;
 
   oc_resource_t *cloud_conf;
 
@@ -136,9 +135,32 @@ int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
 void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
                                           uint32_t ttl);
 
+/**
+ * @brief Publish resource to cloud.
+ *
+ * Function checks that resource is contained in list of published or to-be
+ * published resources. If it is, the function does nothing. If it is not, then
+ * the resource is added to the to-be published resources list and a publish
+ * request with this list is sent to the cloud server.
+ *
+ * @param resource the resource to be published
+ */
 int oc_cloud_add_resource(oc_resource_t *resource);
+
+/**
+ * @brief Unpublish resource from cloud.
+ *
+ * @param resource the resource to be unpublished
+ */
 void oc_cloud_delete_resource(oc_resource_t *resource);
+
+/**
+ * @brief Republish previously published devices.
+ *
+ * @param device the device index
+ */
 int oc_cloud_publish_resources(size_t device);
+
 int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
                                 oc_discovery_all_handler_t handler,
                                 void *user_data);

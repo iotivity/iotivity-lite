@@ -420,7 +420,7 @@ app_init(void)
      can be ocf.2.2.0 (or even higher)
      supplied values are for ocf.2.2.0 */
   ret |= oc_add_device("/oic/d", "oic.d.cloudproxy", "cloud_proxy",
-                       "ocf.2.2.4",                   /* icv value */
+                       "ocf.2.2.5",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
 
@@ -865,6 +865,12 @@ register_resources(void)
   // only local device registration
   oc_add_resource(res_d2dserverlist);
   oc_cloud_add_resource(res_d2dserverlist);
+
+  oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, 0);
+  oc_resource_set_observable(device_resource, false);
+
+  oc_resource_t *platform_resource = oc_core_get_resource_by_index(OCF_P, 0);
+  oc_resource_set_observable(platform_resource, false);
 }
 
 #ifdef OC_SECURITY

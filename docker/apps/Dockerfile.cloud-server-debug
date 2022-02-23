@@ -1,0 +1,13 @@
+FROM ubuntu:20.04 AS service
+ARG BUILD_ARGS
+RUN apt-get update -y && \
+	apt-get install -y bash curl gdb git-core g++ ca-certificates patch make --no-install-recommends
+COPY ./  /iotivity-lite/
+RUN cd /iotivity-lite/ && git submodule update --recursive
+RUN make -C /iotivity-lite/port/linux $BUILD_ARGS cloud_server
+RUN cp /iotivity-lite/port/linux/cloud_server /iotivity-lite/port/linux/service
+COPY /docker/logbt /usr/local/bin/logbt
+RUN logbt --version
+COPY /docker/run.sh /usr/local/bin/run.sh
+ENV NUM_DEVICES=1
+ENTRYPOINT ["/usr/local/bin/run.sh"]

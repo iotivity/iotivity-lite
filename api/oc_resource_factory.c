@@ -19,11 +19,18 @@
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
 #include "api/oc_resource_factory.h"
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
 
 OC_MEMB(rtc_s, oc_rt_created_t, 1);
 OC_LIST(created_res);
 
-void
+#ifndef OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE
+#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE 64
+#endif
+
+static void
 gen_random_uri(char *uri, size_t uri_length)
 {
   const char *alpha =
@@ -37,6 +44,117 @@ gen_random_uri(char *uri, size_t uri_length)
   uri[uri_length - 1] = '\0';
 }
 
+/**
+ * @brief Find lowest possible unused index value for link in collection.
+ *
+ * Links in collection have default uris in the format
+ * "{$collection uri}/${index}", where index is an integer value >= 1.
+ * Collection keeps a list of its links and the list is ordered by the link uri
+ * (primarily by length and secondarily by value). With this ordering only a
+ * single iteration through the list is required to find the lowest unused index
+ * value.
+ *
+ * @param collection collection with links
+ *
+ * @return 0            on failure
+ *         1..UINT_MAX  on success
+ */
+static unsigned
+find_collection_unique_instance_index(oc_collection_t *collection)
+{
+  // 2 = "/" and at least one char for index
+  const size_t max_collection_uri_len =
+    OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE - 2;
+  const size_t collection_uri_len = oc_string_len(collection->res.uri);
+  if ((collection_uri_len == 0) ||
+      (collection_uri_len >= max_collection_uri_len)) {
+    return 0;
+  }
+  const char *collection_uri = oc_string(collection->res.uri);
+
+  unsigned index = 1;
+  for (oc_link_t *link = oc_list_head(collection->links); link != NULL;
+       link = link->next) {
+    if ((link->resource == NULL) || (oc_string_len(link->resource->uri) == 0)) {
+      continue;
+    }
+
+    const size_t link_uri_len = oc_string_len(link->resource->uri);
+    // default uri is in the form "${collection href}/${index}" -> length must
+    // be at least len(${collection href}) + 2
+    if (link_uri_len < collection_uri_len + 2) {
+      continue;
+    }
+
+    const char *link_uri = oc_string(link->resource->uri);
+    // default uri is prefixed by "${collection href}/"
+    if ((strncmp(link_uri, collection_uri, collection_uri_len) != 0) ||
+        (link_uri[collection_uri_len] != '/')) {
+      continue;
+    }
+
+    // move past the "${collection href}/" prefix to the part with numeric index
+    const char *link_index_str = link_uri + collection_uri_len + 1;
+    char *end;
+    long link_index = strtol(link_index_str, &end, 10);
+    if (end[0] != '\0' || link_index == LONG_MAX || link_index == LONG_MIN) {
+      continue;
+    }
+
+    // index should have been next value but it is not, since collection->links
+    // is ordered it means that it was skipped and we can use it
+    if (link_index != (long)index) {
+      return index;
+    }
+
+    // overflow
+    if (index == UINT_MAX) {
+      return 0;
+    }
+    ++index;
+  }
+
+  return index;
+}
+
+/**
+ * @brief Write default uri for the newly created resource.
+ *
+ * Function tries to create uri for the newly created resource in collection
+ * in the format ${collection uri}/${index}, where ${index} is the lowest
+ * numerical value not used by some other resource in the collection.
+ *
+ * @param collection collection of the resource
+ * @param uri output buffer for the uri
+ * @param uri_size size of the output buffer
+ *
+ * @return true  uri was successfully generated
+ *         false otherwise
+ */
+static bool
+get_collection_instance_uri(oc_collection_t *collection, char *uri,
+                            size_t uri_size)
+{
+  unsigned index = find_collection_unique_instance_index(collection);
+  if (index == 0) {
+    return false;
+  }
+  strncpy(uri, oc_string(collection->res.uri),
+          oc_string_len(collection->res.uri));
+  uri[oc_string_len(collection->res.uri)] = '/';
+  unsigned len = oc_string_len(collection->res.uri) + 1;
+
+  int written = snprintf(NULL, 0, "%d", index);
+  if ((written <= 0) || (len + (unsigned)written + 1 > uri_size)) {
+    // cannot fit the index converted to string into uri
+    return false;
+  }
+
+  written = snprintf(uri + len, uri_size - len, "%d", index);
+  // check for truncation by snprintf
+  return (written > 0) && ((unsigned)written <= uri_size - len);
+}
+
 oc_rt_created_t *
 oc_rt_factory_create_resource(oc_collection_t *collection,
                               oc_string_array_t *rtypes,
@@ -44,13 +162,17 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
                               oc_interface_mask_t interfaces,
                               oc_rt_factory_t *rf, size_t device)
 {
-  char href[32];
-  gen_random_uri(href, sizeof(href));
-
   oc_rt_created_t *rtc = (oc_rt_created_t *)oc_memb_alloc(&rtc_s);
 
   if (!rtc) {
     return NULL;
+  }
+
+  char href[OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE];
+  bool ok = get_collection_instance_uri(collection, href, sizeof(href));
+  if (!ok) {
+    // fallback to max 32 char long random uri
+    gen_random_uri(href, sizeof(href) > 32 ? 32 : sizeof(href));
   }
 
   oc_resource_t *resource =

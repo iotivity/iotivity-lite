@@ -766,7 +766,7 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
  * Resource Types starting with `oic` are reserved for a OCF defined Resource
  * Types.  Developers are strongly encouraged to try and use an OCF defined
  * Resource Type vs. creating their own. A repository of OCF defined resources
- * can be found on oneiota.org.
+ * can be found on https://github.com/openconnectivityfoundation/IoTDataModels.
  *
  * Multi-value "rt" Resource means a resource with multiple Resource Types. i.e.
  * oc_resource_bind_resource_type() is called multiple times for a single
@@ -1577,6 +1577,30 @@ void oc_send_separate_response(oc_separate_response_t *handle,
  */
 int oc_notify_observers(oc_resource_t *resource);
 
+/**
+ * Schedule notify all observers to invoke after a set number of seconds.
+ *
+ * @note no need to call oc_notify_observers about resource changes that
+ *       result from a PUT, or POST oc_request_callback_t.
+ *
+ * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] seconds the number of seconds to wait till the callback is invoked
+ */
+void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
+
+/**
+ * Schedule notify all observers to invoke after a set number of milliseconds.
+ *
+ * @note no need to call oc_notify_observers about resource changes that
+ *       result from a PUT, or POST oc_request_callback_t.
+ *
+ * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] miliseconds the number of miliseconds to wait till the callback is
+ * invoked
+ */
+void oc_notify_observers_delayed_ms(oc_resource_t *resource,
+                                    uint16_t miliseconds);
+
 #ifdef __cplusplus
 }
 #endif
@@ -2153,6 +2177,18 @@ void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
  */
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
+
+/**
+ * Schedule a callback to be invoked after a set number of miliseconds.
+ *
+ * @param[in] cb_data user defined context pointer that is passed to the
+ *                    oc_trigger_t callback
+ * @param[in] callback the callback invoked after the set number of miliseconds
+ * @param[in] miliseconds the number of miliseconds to wait till the callback is
+ * invoked
+ */
+void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                                uint16_t miliseconds);
 
 /**
  * used to cancel a delayed callback

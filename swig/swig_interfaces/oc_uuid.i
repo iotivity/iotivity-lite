@@ -97,4 +97,5 @@ oc_uuid_t * jni_gen_uuid()
 }
 %}
 
+#define OC_API
 %include oc_uuid.h

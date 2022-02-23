@@ -11,6 +11,10 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
+
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
 //#define OC_SPEC_VER_OIC
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
@@ -31,13 +35,22 @@ typedef uint64_t oc_clock_time_t;
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
 
+/* Maximum size of uri for a collection resource */
+//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
 
 // The maximum size of a response to an OBSERVE request, in bytes.
-#define OC_MAX_OBSERVE_SIZE 512
+//#define OC_MAX_OBSERVE_SIZE 512
+
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
+/* Enable reallocation during encoding the representation to cbor */
+//#define OC_REP_ENCODING_REALLOC
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
@@ -54,7 +67,7 @@ typedef uint64_t oc_clock_time_t;
 
 #define OC_MAX_NUM_COLLECTIONS (1)
 
-/* Common paramters */
+/* Common parameters */
 /* Prescriptive lower layers MTU size, enable block-wise transfers */
 #define OC_BLOCK_WISE_SET_MTU (700)
 

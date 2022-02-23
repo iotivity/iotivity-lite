@@ -254,11 +254,14 @@ free_device(void *data)
 static void
 oc_obt_dump_state(void)
 {
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
+  uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!buf)
     return;
-
-  oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_start_root_object();
 #ifdef OC_PKI
   oc_rep_set_byte_string(root, private_key, private_key, private_key_size);
@@ -271,6 +274,9 @@ oc_obt_dump_state(void)
 #endif /* OC_OSCORE */
   oc_rep_end_root_object();
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  buf = oc_rep_shrink_encoder_buf(buf);
+#endif /* OC_DYNAMIC_ALLOCATION */
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_obt: dumped current state: size %d", size);
@@ -3388,6 +3394,157 @@ oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
   }
 
   return err;
+}
+
+int
+oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
+                              void *data)
+{
+  if (!oc_obt_is_owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (!device) {
+    return -1;
+  }
+
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_get("/d2dserverlist", ep, NULL, cb, LOW_QOS, data)) {
+    return 0;
+  }
+
+  return 0;
+}
+
+int
+oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *query, const char *url,
+                          oc_response_handler_t cb, void *user_data)
+{
+  oc_device_t *cloud_proxy = oc_obt_get_owned_device_handle(uuid);
+  if (cloud_proxy == NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+    PRINT("Could not find cloud_proxy from udn %s\n", di);
+    return -1;
+  }
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(cloud_proxy->endpoint);
+  if (ep == NULL) {
+    PRINT("Could not find ep from cloud_proxy \n");
+    return -1;
+  }
+
+  if (oc_init_post(url, ep, query, cb, LOW_QOS, user_data)) {
+    if (oc_do_post())
+      PRINT("Sent POST request %s?%s\n", url, query);
+    else {
+      PRINT("Could not send POST request\n");
+      return -1;
+    }
+  } else {
+    PRINT("Could not init POST request\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+/* General GET and POST */
+int
+oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
+                   void *data)
+{
+  if (!oc_obt_is_owned_device(uuid)) {
+    return -1;
+  }
+
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (!device) {
+    return -1;
+  }
+
+  char di[37];
+  oc_uuid_to_str(&(device->uuid), di, OC_UUID_LEN);
+  PRINT("[C] Target uuid = %s \n", di);
+
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
+    return 0;
+  }
+
+  return 0;
+}
+
+int
+oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
+                    oc_response_handler_t cb, void *user_data,
+                    char **payload_properties, char **payload_values,
+                    char **payload_types, int array_size)
+{
+  oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
+  if (device == NULL) {
+    char di[OC_UUID_LEN];
+    oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+    PRINT("Could not find device from udn %s\n", di);
+    return -1;
+  }
+  oc_tls_select_psk_ciphersuite();
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (ep == NULL) {
+    PRINT("Could not find ep from device \n");
+    return -1;
+  }
+
+  if (oc_init_post(url, ep, query, cb, HIGH_QOS, user_data)) {
+    oc_rep_start_root_object();
+    for (int i = 0; i < array_size; i++) {
+      if (strstr(payload_types[i], "bool") != NULL) {
+        int payload_int = strtol(payload_values[i], NULL, 10);
+        bool payload_bool = (payload_int ? true : false);
+
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_boolean(&root_map, payload_bool);
+      } else if (strstr(payload_types[i], "int") != NULL) {
+        int payload_int = strtol(payload_values[i], NULL, 10);
+
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_int(&root_map, payload_int);
+      } else if (strstr(payload_types[i], "float") != NULL) {
+        double payload_double = strtod(payload_values[i], NULL);
+
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        cbor_encode_double(&root_map, payload_double);
+      } else if (strstr(payload_types[i], "str") != NULL) {
+        cbor_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        if ((const char *)payload_values[i] != NULL) {
+          cbor_encode_text_string(&root_map, payload_values[i],
+                                  strlen(payload_values[i]));
+        } else {
+          cbor_encode_text_string(&root_map, "", 0);
+        }
+      }
+    }
+    oc_rep_end_root_object();
+
+    if (oc_do_post())
+      PRINT("\n\n\nSent POST request %s?%s\n\n\n", url, query);
+    else {
+      PRINT("Could not send POST request\n");
+      return -1;
+    }
+  } else {
+    PRINT("Could not init POST request\n");
+    return -1;
+  }
+
+  return 0;
 }
 
 void

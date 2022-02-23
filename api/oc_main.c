@@ -97,8 +97,14 @@ static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
 #endif /* !OC_INOUT_BUFFER_SIZE */
 #ifdef OC_APP_DATA_BUFFER_SIZE
 static size_t _OC_MAX_APP_DATA_SIZE = 7168;
-#else                                /* OC_APP_DATA_BUFFER_SIZE */
+static size_t _OC_MIN_APP_DATA_SIZE = 7168;
+#else /* OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_MAX_APP_DATA_SIZE = 7168;
+#ifdef OC_REP_ENCODING_REALLOC
+static size_t _OC_MIN_APP_DATA_SIZE = 256;
+#else                                /* OC_REP_ENCODING_REALLOC */
+static size_t _OC_MIN_APP_DATA_SIZE = 7168;
+#endif                               /* !OC_REP_ENCODING_REALLOC */
 #endif                               /* !OC_APP_DATA_BUFFER_SIZE */
 static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
@@ -139,6 +145,9 @@ oc_set_max_app_data_size(size_t size)
   return;
 #endif /* OC_APP_DATA_BUFFER_SIZE */
   _OC_MAX_APP_DATA_SIZE = size;
+#ifndef OC_REP_ENCODING_REALLOC
+  _OC_MIN_APP_DATA_SIZE = size;
+#endif /* !OC_REP_ENCODING_REALLOC */
 #ifndef OC_BLOCK_WISE
   _OC_BLOCK_SIZE = size;
   _OC_MTU_SIZE = size + COAP_MAX_HEADER_SIZE;
@@ -149,6 +158,21 @@ long
 oc_get_max_app_data_size(void)
 {
   return (long)_OC_MAX_APP_DATA_SIZE;
+}
+
+void
+oc_set_min_app_data_size(size_t size)
+{
+#if defined(OC_APP_DATA_BUFFER_SIZE) || !defined(OC_REP_ENCODING_REALLOC)
+  return;
+#endif /* OC_APP_DATA_BUFFER_SIZE || !OC_REP_ENCODING_REALLOC */
+  _OC_MIN_APP_DATA_SIZE = size;
+}
+
+long
+oc_get_min_app_data_size(void)
+{
+  return (long)_OC_MIN_APP_DATA_SIZE;
 }
 
 long
@@ -181,6 +205,20 @@ oc_set_max_app_data_size(size_t size)
 
 long
 oc_get_max_app_data_size(void)
+{
+  OC_WRN("Dynamic memory not available");
+  return -1;
+}
+
+void
+oc_set_min_app_data_size(size_t size)
+{
+  (void)size;
+  OC_WRN("Dynamic memory not available");
+}
+
+long
+oc_get_min_app_data_size(void)
 {
   OC_WRN("Dynamic memory not available");
   return -1;

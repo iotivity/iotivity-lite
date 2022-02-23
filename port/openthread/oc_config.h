@@ -36,7 +36,7 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (1)
 
-/* Common paramters */
+/* Common parameters */
 /* Maximum size of request/response PDUs */
 #define OC_MAX_APP_DATA_SIZE (600)
 
@@ -63,6 +63,9 @@ typedef uint64_t oc_clock_time_t;
 
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
+
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* library features that require persistent storage */
 #ifdef OC_SECURITY

@@ -132,6 +132,14 @@ oc_set_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
 }
 
 void
+oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                           uint16_t miliseconds)
+{
+  oc_clock_time_t ticks = miliseconds * OC_CLOCK_SECOND / 1000;
+  oc_ri_add_timed_event_callback_ticks(cb_data, callback, ticks);
+}
+
+void
 oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
 {
   oc_ri_remove_timed_event_callback(cb_data, callback);
@@ -305,6 +313,13 @@ oc_populate_resource_object(oc_resource_t *resource, const char *name,
 #ifdef OC_SECURITY
   resource->properties |= OC_SECURE;
 #endif /* OC_SECURITY */
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_notify_discovery_batch_observers(resource);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_RES, device),
+                              0);
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 }
 
 oc_resource_t *
@@ -585,7 +600,8 @@ oc_send_separate_response(oc_separate_response_t *handle,
           }
           response_state = oc_blockwise_alloc_response_buffer(
             oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, OC_BLOCKWISE_SERVER);
+            cur->method, OC_BLOCKWISE_SERVER,
+            (uint32_t)response_buffer.response_length);
           if (!response_state) {
             goto next_separate_request;
           }
@@ -643,4 +659,41 @@ oc_notify_observers(oc_resource_t *resource)
 {
   return coap_notify_observers(resource, NULL, NULL);
 }
+
+static oc_event_callback_retval_t
+oc_observe_notification_delayed(void *data)
+{
+  (void)data;
+  coap_notify_observers((oc_resource_t *)data, NULL, NULL);
+  return OC_EVENT_DONE;
+}
+
+static void
+oc_notify_observers_delayed_ticks(oc_resource_t *resource,
+                                  oc_clock_time_t ticks)
+{
+  if (resource == NULL) {
+    return;
+  }
+  if (!coap_want_be_notified(resource)) {
+    return;
+  }
+  oc_remove_delayed_callback(resource, &oc_observe_notification_delayed);
+  oc_set_delayed_callback(resource, &oc_observe_notification_delayed, ticks);
+}
+
+void
+oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds)
+{
+  oc_clock_time_t ticks = seconds * OC_CLOCK_SECOND;
+  oc_notify_observers_delayed_ticks(resource, ticks);
+}
+
+void
+oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t miliseconds)
+{
+  oc_clock_time_t ticks = miliseconds * OC_CLOCK_SECOND / 1000;
+  oc_notify_observers_delayed_ticks(resource, ticks);
+}
+
 #endif /* OC_SERVER */

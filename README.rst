@@ -23,7 +23,7 @@
    :target: https://github.com/iotivity/iotivity-lite/releases
 
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
-   :target: https://github.com/plgd-dev/cloud
+   :target: https://github.com/plgd-dev/hub
 
 .. image:: https://badges.gitter.im/ocfcloud/Lobby.svg
    :target: https://gitter.im/ocfcloud/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
@@ -32,7 +32,7 @@
 Introduction
 ------------
 
-IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Core Framework <https://iotivity.org/documentation/ocf-core-framework>`_.
+IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Secure IP Device Framework <https://iotivity.org/SIPD/>`_.
 
 The challenge for the IoT ecosystem is to ensure that devices can connect securely and reliably to the Internet and to each other. 
 The Open Connectivity Foundation (OCF), a group of industry leaders have created a `(ISO/IEC) <https://www.iso.org/standard/53238.html>`_ standard specification and certification program to address these challenges.
@@ -42,9 +42,9 @@ The Open Connectivity Foundation (OCF), a group of industry leaders have created
    :alt: Architecture
    :align: center
 
-The OCF Core Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
-IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_ spanning an array of usage verticals. 
-The OCF Core Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
+The OCF Secure IP Device Framework provides a versatile communications layer with best-in-class security for Device-to-Device (D2D) and Device-to-Cloud (D2C) connectivity over IP. 
+IoT interoperability is achieved through the use of consensus-derived, industry standard `data models <https://github.com/openconnectivityfoundation/IoTDataModels>`_ spanning an array of usage verticals. 
+The OCF Secure IP Device Framework may be harnessed alongside other IoT technologies in a synergistic fashion to lend a comprehensive and robust IoT solution.
 
 Please review the following `specifications <https://openconnectivity.org/developer/specifications/>`_ for more details:
 
@@ -88,8 +88,7 @@ security/*
   contains resource handlers that implement the OCF security model.
 
 utils/*
-  contains a few primitive building blocks used internally by the core
-  framework.
+  contains a few primitive building blocks used internally by the OCF Secure IP Device Framework.
 
 onboarding_tool/*
   contains the sample onboarding tool (OBT).
@@ -133,6 +132,12 @@ port/<OS>/*
 
 apps/*
   contains sample OCF applications.
+  
+python/*
+  contains python binding using ctypes.
+
+python/obt_web/*
+  contains webbased onboarding tool based on python bindings and web technology.
 
 swig/*
   contains instructions and code to build Java language bindings using
@@ -143,11 +148,13 @@ Other information sources
 
 
 - `IoTivity.org <https://iotivity.org/>`_
+- `C API documentation (Doxygen) <https://iotivity.github.io/iotivity-lite-doxygen/>`_
+- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
 - `OCF GitHub <https://github.com/openconnectivityfoundation>`_
 - `OCF Specifications <https://openconnectivity.org/developer/specifications/>`_
-- `oneIOTa data models <https://openconnectivity.org/developer/oneiota-data-model-tool>`_
+- `OCF data models <https://openconnectivityfoundation.github.io/devicemodels/docs/index.html>`_
 - `plgd (OCF compliant Cloud implementation) <https://plgd.dev/>`_
-- `Wiki <https://github.com/iotivity/iotivity-lite/wiki>`_
+- `plgd testing <https://plgd.dev/developer-guide/testing/>`_
 
 
 Build instructions
@@ -159,15 +166,18 @@ Grab source and dependencies using:
 
 Please check here for build instructions:
 
-- `Linux <https://iotivity.org/documentation/building-iotivity-linux>`_
+- `Linux <https://iotivity.org/build_linux/>`_
 
-- `Windows <https://iotivity.org/documentation/building-iotivity-windows>`_
+- `Windows <https://iotivity.org/build_windows/>`_
 
 - `CMake (Linux & Windows) <https://github.com/iotivity/iotivity-lite/wiki/Building-using-CMake-(Windows-&-Linux)>`_
 
-- `Android <https://iotivity.org/documentation/building-iotivity-android>`_
+- `Android <https://iotivity.org/build_android/>`_
 
-- `Java language bindings <https://iotivity.org/java-language-bindings>`_
+- `Java language bindings <https://iotivity.org/build_java/>`_
+
+- `Python language bindings <https://github.com/iotivity/iotivity-lite/tree/master/python>`_
+
 
 Onboarding and Provisioning
 ----------------------------
@@ -257,7 +267,7 @@ discover each other and run without difficulty.
 Send Feedback
 -------------------------------------------------
 Questions
-`IoTivity-Lite Developer Mailing List <https://iotivity.groups.io/g/iotivity-dev>`_
+`raise questions/issues through Github issues <https://github.com/iotivity/iotivity-lite/issues>`_
 
 Bugs
 `Github issues <https://github.com/iotivity/iotivity-lite/issues>`_

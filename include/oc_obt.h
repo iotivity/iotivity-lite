@@ -1293,6 +1293,28 @@ int oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
                                       oc_response_handler_t cb,
                                       void *user_data);
 
+int oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
+                                  void *data);
+
+int oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *device_uuid,
+                              const char *url, oc_response_handler_t cb,
+                              void *user_data);
+
+int oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
+                                  void *data);
+
+int oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *device_uuid,
+                              const char *url, oc_response_handler_t cb,
+                              void *user_data);
+
+int oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
+                       void *data);
+
+int oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
+                        oc_response_handler_t cb, void *user_data,
+                        char **payload_properties, char **payload_values,
+                        char **payload_types, int array_size);
+
 /**
  * sets the secure domain info
  *

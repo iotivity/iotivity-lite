@@ -76,7 +76,6 @@ void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
 void cloud_store_dump_async(const oc_cloud_store_t *store);
 void cloud_store_load(oc_cloud_store_t *store);
 void cloud_store_dump(const oc_cloud_store_t *store);
-void cloud_store_deinit(oc_cloud_store_t *store);
 void cloud_store_initialize(oc_cloud_store_t *store);
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
@@ -144,7 +143,27 @@ bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
  * @param ctx Cloud context, must not be NULL
  */
 void cloud_rd_manager_status_changed(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Deallocate all resource directory context member variables.
+ *
+ * Deallocate the list of to be published resources, the list of published
+ * resources and the list of to be deleted resources. Remove delayed callback
+ * that republishes resources (if it's active).
+ *
+ * @param ctx Cloud context, must not be NULL
+ */
 void cloud_rd_deinit(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Reset resource directory context member variables.
+ *
+ * Items in the list of published resources are moved to the list of to be
+ * published resources. The list of to be deleted resources is cleared.
+ *
+ * @param ctx Cloud context, must not be NULL
+ */
+void cloud_rd_reset_context(oc_cloud_context_t *ctx);
 
 void cloud_manager_start(oc_cloud_context_t *ctx);
 void cloud_manager_stop(oc_cloud_context_t *ctx);

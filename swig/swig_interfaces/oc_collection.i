@@ -65,5 +65,6 @@ typedef struct oc_collection_s oc_collection_t;
 %rename(getLinkByUri) oc_get_link_by_uri;
 %rename(checkIfCollection) oc_check_if_collection;
 %rename(collectionAdd) oc_collection_add;
+#define OC_NO_DISCARD_RETURN
 %include "oc_collection.h"
 /*******************End oc_collection.h*********************/
