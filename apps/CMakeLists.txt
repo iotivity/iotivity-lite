@@ -149,6 +149,7 @@ if(UNIX)
         )
         target_link_libraries(device_builder_server client-server-static)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
+        file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/device_builder_server_creds)
     endif()
 elseif(WIN32)
     add_executable(simpleserver
@@ -172,16 +173,5 @@ add_custom_target(copy-pki-certs ALL
 )
 add_dependencies(client-server-static copy-pki-certs)
 
-if(OC_IDD_API_ENABLED)
-    # copy introspection files, used by certification applications.
-    add_custom_target(copy-idd-files ALL
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${PROJECT_SOURCE_DIR}/server_certification_tests_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/client_certification_tests_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/server_rules_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/cloud_proxy_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/smart_home_server_linux_IDD.cbor
-        ${PROJECT_BINARY_DIR}
-    )
-    add_dependencies(client-server-static copy-idd-files)
-endif()
+add_dependencies(iotivity-port copy-pki-credentials)
+

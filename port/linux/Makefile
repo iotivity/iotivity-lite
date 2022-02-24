@@ -85,6 +85,7 @@ DTLS= 	aes.c		aesni.c 	arc4.c  	asn1parse.c	asn1write.c	base64.c	\
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborparser.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
+JSON= ../../deps/json-parser/json.c
 
 
 PYTHON_DIR=../../python
@@ -98,7 +99,7 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
-SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
+SRC_COMMON=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP} ${JSON}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
@@ -110,6 +111,7 @@ HEADERS_UTIL = $(wildcard ../../util/*.h)
 HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(wildcard ../../port/*.h)
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
+HEADERS_JSON = $(wildcard ../../deps/json-parser/*.h)
 
 CFLAGS_CLOUD=-I../../api/cloud
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../api -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
@@ -119,12 +121,7 @@ OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_otm_streamlined_onboarding.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
-OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
-
-$(info    OBJ_PYTHON is $(OBJ_PYTHON))
-$(info    SRC_PYTHON is $(SRC_PYTHON))
-
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
+VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/json-parser/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
@@ -590,6 +587,7 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -m 644 $(HEADERS_UTIL_PT) $(includedir)/iotivity-lite/util/pt
 	$(INSTALL) -m 644 $(HEADERS_COAP) $(includedir)/iotivity-lite/messaging/coap
 	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-lite/deps/tinycbor/src
+	$(INSTALL) -m 644 $(HEADERS_JSON) $(includedir)/iotivity-lite/deps/json-parser
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
 # Installing the samples
