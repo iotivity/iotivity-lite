@@ -3505,9 +3505,9 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
         int payload_int = strtol(payload_values[i], NULL, 10);
         bool payload_bool = (payload_int ? true : false);
 
-        g_err |= oc_rep_encode_text_string(&root_map, payload_properties[i],
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
                                 strlen(payload_properties[i]));
-        g_err |= oc_rep_encode_boolean(&root_map, payload_bool);
+        oc_rep_encode_boolean(&root_map, payload_bool);
 
       } else if (strstr(payload_types[i], "int") != NULL) {
         int payload_int = strtol(payload_values[i], NULL, 10);
