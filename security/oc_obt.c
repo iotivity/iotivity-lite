@@ -3505,30 +3505,44 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
         int payload_int = strtol(payload_values[i], NULL, 10);
         bool payload_bool = (payload_int ? true : false);
 
-        cbor_encode_text_string(&root_map, payload_properties[i],
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
                                 strlen(payload_properties[i]));
-        cbor_encode_boolean(&root_map, payload_bool);
+        oc_rep_encode_boolean(&root_map, payload_bool);
+
       } else if (strstr(payload_types[i], "int") != NULL) {
         int payload_int = strtol(payload_values[i], NULL, 10);
 
-        cbor_encode_text_string(&root_map, payload_properties[i],
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
                                 strlen(payload_properties[i]));
-        cbor_encode_int(&root_map, payload_int);
+        oc_rep_encode_int(&root_map, payload_int);
       } else if (strstr(payload_types[i], "float") != NULL) {
         double payload_double = strtod(payload_values[i], NULL);
 
-        cbor_encode_text_string(&root_map, payload_properties[i],
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
                                 strlen(payload_properties[i]));
-        cbor_encode_double(&root_map, payload_double);
+        oc_rep_encode_double(&root_map, payload_double);
       } else if (strstr(payload_types[i], "str") != NULL) {
-        cbor_encode_text_string(&root_map, payload_properties[i],
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
                                 strlen(payload_properties[i]));
         if ((const char *)payload_values[i] != NULL) {
-          cbor_encode_text_string(&root_map, payload_values[i],
+          oc_rep_encode_text_string(&root_map, payload_values[i],
                                   strlen(payload_values[i]));
         } else {
-          cbor_encode_text_string(&root_map, "", 0);
+          oc_rep_encode_text_string(&root_map, "", 0);
         }
+      } else if (strstr(payload_types[i], "bytes") != NULL) {
+        int byte_string_len = (strlen(payload_values[i])  + 1) / 2;
+        unsigned char payload_byte_string[10240];
+
+        char *pos = payload_values[i];
+        for (int j = 0; j < byte_string_len; j++) {
+          sscanf(pos, "%2hhx", &payload_byte_string[j]);
+          pos += 2;
+        }
+
+        oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+        oc_rep_encode_byte_string(&root_map, payload_byte_string, byte_string_len);
       }
     }
     oc_rep_end_root_object();
