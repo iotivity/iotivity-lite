@@ -153,9 +153,7 @@ if(OC_CLOUD_ENABLED)
     set(CLOUD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/api/cloud)
 endif()
 
-if(UNIX)
-    file(GLOB PYTHON_SRC python/*.c)
-endif()
+file(GLOB PYTHON_SRC python/*.c)
 
 ######## Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
@@ -220,13 +218,13 @@ if(OC_CLOUD_ENABLED)
     endif()
 endif()
 
-if(UNIX)
-    add_library(python-obj OBJECT ${PYTHON_SRC})
-    target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
-    target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-    if(OC_SECURITY_ENABLED)
-        target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
-    endif()
+add_library(python-obj OBJECT ${PYTHON_SRC})
+target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
+set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
+set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+if(OC_SECURITY_ENABLED)
+    target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
 
 ######## Compose static and shared libraries ########
@@ -406,35 +404,33 @@ if(NOT MSVC)
 endif()
 
 # Python client
-if(UNIX)
-    set(client-python-lib-obj
-        $<TARGET_OBJECTS:common-obj>
-        $<TARGET_OBJECTS:tinycbor-master>
-        $<TARGET_OBJECTS:client-obj>
-        $<TARGET_OBJECTS:python-obj>
-    )
-    if(OC_SECURITY_ENABLED)
-        list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
-    endif()
-    add_library(client-python-shared SHARED ${client-python-lib-obj})
-    target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
-    target_compile_definitions(client-python-shared PUBLIC
-        $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-        $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-    )
-    target_include_directories(client-python-shared PUBLIC
-        $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-        $<INSTALL_INTERFACE:include/iotivity-lite>
-    )
-    if(OC_SECURITY_ENABLED)
-        target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
-    endif()
-    set_target_properties(client-python-shared PROPERTIES
-        OUTPUT_NAME "iotivity-lite-client-python"
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR}
-    )
+set(client-python-lib-obj
+    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:client-obj>
+    $<TARGET_OBJECTS:python-obj>
+)
+if(OC_SECURITY_ENABLED)
+    list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
+add_library(client-python-shared SHARED ${client-python-lib-obj})
+target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
+target_compile_definitions(client-python-shared PUBLIC
+    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+)
+target_include_directories(client-python-shared PUBLIC
+    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include/iotivity-lite>
+)
+if(OC_SECURITY_ENABLED)
+    target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+endif()
+set_target_properties(client-python-shared PROPERTIES
+    OUTPUT_NAME "iotivity-lite-client-python"
+    VERSION ${PROJECT_VERSION}
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
 
 ######## Units tests (UNIX only) ########
 include(CTest)

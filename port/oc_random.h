@@ -37,6 +37,8 @@
 #ifndef OC_RANDOM_H
 #define OC_RANDOM_H
 
+#include "oc_export.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +47,7 @@ extern "C" {
  * @brief Initialize the pseudo-random generator.
  *
  */
+OC_API
 void oc_random_init(void);
 
 /**
@@ -52,12 +55,14 @@ void oc_random_init(void);
  *
  * @return A pseudo-random number.
  */
+OC_API
 unsigned int oc_random_value(void);
 
 /**
  * @brief destroy the pseudo-random generator
  *
  */
+OC_API
 void oc_random_destroy(void);
 
 #ifdef __cplusplus
