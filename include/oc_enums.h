@@ -178,12 +178,37 @@ typedef enum oc_locn_t {
   OCF_LOCN_YARD
 } oc_locn_t;
 
+/**
+ * @brief convert enum value to string
+ *
+ * @param val the enum value
+ * @return const char* the string
+ */
 const char *oc_enum_to_str(oc_enum_t val);
 
+/**
+ * @brief convert the position description enum value to string
+ *
+ * @param pos the enum value of the position description
+ * @return const char* the string
+ */
 const char *oc_enum_pos_desc_to_str(oc_pos_description_t pos);
 
+/**
+ * @brief convert the location enum value to string
+ *
+ * @param locn the location enum value
+ * @return const char* the string
+ */
 const char *oc_enum_locn_to_str(oc_locn_t locn);
 
+/**
+ * @brief convert a string to the location enum value
+ *
+ * @param locn_str the input string
+ * @param oc_defined value to check if the conversion is successfull
+ * @return oc_locn_t the location value
+ */
 oc_locn_t oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined);
 
 #ifdef __cplusplus
