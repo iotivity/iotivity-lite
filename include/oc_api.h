@@ -826,7 +826,7 @@ void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
  * @param resource the resource to apply the tag too.
  * @param locn the location
  */
-void oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn);
+void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
 
 /**
  * Helper function used when responding to a GET request to add Common

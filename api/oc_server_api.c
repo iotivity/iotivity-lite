@@ -166,7 +166,7 @@ oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func)
 }
 
 void
-oc_resource_tag_locn(oc_resource_t *resource, oc_enum_t locn)
+oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn)
 {
   resource->tag_locn = locn;
 }
