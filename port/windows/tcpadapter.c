@@ -128,25 +128,24 @@ get_interface_index(SOCKET sock)
   }
 
   ifaddr_t *ifaddr_list = get_network_addresses();
-  ifaddr_t *interface;
+  ifaddr_t *iface;
 
-  for (interface = ifaddr_list; interface != NULL;
-       interface = interface->next) {
-    if (addr.ss_family == interface->addr.ss_family) {
+  for (iface = ifaddr_list; iface != NULL; iface = iface->next) {
+    if (addr.ss_family == iface->addr.ss_family) {
       if (addr.ss_family == AF_INET6) {
-        struct sockaddr_in6 *a = (struct sockaddr_in6 *)&interface->addr;
+        struct sockaddr_in6 *a = (struct sockaddr_in6 *)&iface->addr;
         struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
         if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
-          interface_index = interface->if_index;
+          interface_index = iface->if_index;
           break;
         }
       }
 #ifdef OC_IPV4
       else if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *a = (struct sockaddr_in *)&interface->addr;
+        struct sockaddr_in *a = (struct sockaddr_in *)&iface->addr;
         struct sockaddr_in *b = (struct sockaddr_in *)&addr;
         if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
-          interface_index = interface->if_index;
+          interface_index = iface->if_index;
           break;
         }
       }

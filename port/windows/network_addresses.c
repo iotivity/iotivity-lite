@@ -44,8 +44,8 @@ get_network_addresses()
   ifaddr_t *ifaddr_list = NULL;
   ULONG family = AF_INET6;
   int i, max_retries = 5;
-  IP_ADAPTER_ADDRESSES *interface_list = NULL;
-  IP_ADAPTER_ADDRESSES *interface = NULL;
+  IP_ADAPTER_ADDRESSES *iface_list = NULL;
+  IP_ADAPTER_ADDRESSES *iface = NULL;
   ULONG out_buf_len = 8000;
 
 #ifdef OC_IPV4
@@ -54,8 +54,8 @@ get_network_addresses()
 
   for (i = 0; i < max_retries; i++) {
     DWORD dwRetVal = 0;
-    interface_list = calloc(1, out_buf_len);
-    if (interface_list == NULL) {
+    iface_list = calloc(1, out_buf_len);
+    if (iface_list == NULL) {
       OC_ERR("not enough memory to run GetAdaptersAddresses");
       return NULL;
     }
@@ -63,37 +63,36 @@ get_network_addresses()
       GetAdaptersAddresses(family,
                            GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST |
                              GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
-                           NULL, interface_list, &out_buf_len);
+                           NULL, iface_list, &out_buf_len);
     if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
       OC_ERR("retry GetAdaptersAddresses with out_buf_len=%d", out_buf_len);
-      free(interface_list);
-      interface_list = NULL;
+      free(iface_list);
+      iface_list = NULL;
       continue;
     }
     break;
   }
 
-  if (interface_list == NULL) {
+  if (iface_list == NULL) {
     OC_ERR("failed to run GetAdaptersAddresses");
     return NULL;
   }
 
-  for (interface = interface_list; interface != NULL;
-       interface = interface->Next) {
+  for (iface = iface_list; iface != NULL; iface = iface->Next) {
     IP_ADAPTER_UNICAST_ADDRESS *address = NULL;
-    if (IfOperStatusUp != interface->OperStatus ||
-        interface->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
+    if (IfOperStatusUp != iface->OperStatus ||
+        iface->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
       continue;
     }
 
 #ifdef OC_DEBUG
-    if (interface->FriendlyName) {
-      OC_DBG("processing interface %ws:", interface->FriendlyName);
+    if (iface->FriendlyName) {
+      OC_DBG("processing iface %ws:", iface->FriendlyName);
     }
 #endif /* OC_DEBUG */
 /* Process all IPv4 addresses on this interface. */
 #ifdef OC_IPV4
-    for (address = interface->FirstUnicastAddress; address;
+    for (address = iface->FirstUnicastAddress; address;
          address = address->Next) {
       ifaddr_t *ifaddr = NULL;
       if (address->Address.lpSockaddr->sa_family == AF_INET) {
@@ -105,7 +104,7 @@ get_network_addresses()
           goto cleanup;
         }
         memcpy(&ifaddr->addr, addr, sizeof(struct sockaddr_in));
-        ifaddr->if_index = interface->IfIndex;
+        ifaddr->if_index = iface->IfIndex;
         ifaddr->next = ifaddr_list;
         ifaddr_list = ifaddr;
       }
@@ -113,7 +112,7 @@ get_network_addresses()
 #endif /* OC_IPV4 */
     /* Process all IPv6 addresses on this interface. */
     struct sockaddr_in6 *v6addr = NULL;
-    for (address = interface->FirstUnicastAddress; address;
+    for (address = iface->FirstUnicastAddress; address;
          address = address->Next) {
       if (address->Address.lpSockaddr->sa_family == AF_INET6) {
         struct sockaddr_in6 *addr =
@@ -172,13 +171,13 @@ get_network_addresses()
       goto cleanup;
     }
     memcpy(&ifaddr->addr, v6addr, sizeof(struct sockaddr_in6));
-    ifaddr->if_index = interface->Ipv6IfIndex;
+    ifaddr->if_index = iface->Ipv6IfIndex;
     ifaddr->next = ifaddr_list;
     ifaddr_list = ifaddr;
   }
 
 cleanup:
-  free(interface_list);
+  free(iface_list);
 
   return ifaddr_list;
 }
