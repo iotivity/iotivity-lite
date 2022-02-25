@@ -157,6 +157,12 @@ if(BUILD_TESTING)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
 endif()
 
+if(MINGW)
+    # Windows Vista or later
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "WINVER=0x0600")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "_WIN32_WINNT=0x0600")
+endif()
+
 ######## Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
