@@ -1434,6 +1434,9 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			oc_rep_set_pool(&rep_instance_memb);
 			oc_free_rep(pushd_rsc_rep->rep);
 
+			/*
+			 * FIXME4ME skip "rt" and "if" property in the payload ("oic.r.pushpayload") because "rt" and "if" are already processed above...
+			 */
 			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, request->request_payload))
 			{
 				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
