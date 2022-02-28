@@ -4,6 +4,9 @@ add_library(tinycbor-master OBJECT
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder_close_container_checked.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborpretty.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cbortojson.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser_dup_string.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborpretty_stdio.c
 )
 
 target_include_directories(tinycbor-master PUBLIC

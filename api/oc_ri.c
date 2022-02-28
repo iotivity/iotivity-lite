@@ -23,6 +23,8 @@
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
 
+#include "ausy_encoder.h"
+
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -990,23 +992,41 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
 
-  if (payload_len > 0 &&
-      (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR)) {
-    /* Attempt to parse request payload using tinyCBOR via oc_rep helper
-     * functions. The result of this parse is a tree of oc_rep_t structures
-     * which will reflect the schema of the payload.
-     * Any failures while parsing the payload is viewed as an erroneous
-     * request and results in a 4.00 response being sent.
-     */
-    int parse_error =
-      oc_parse_rep(payload, payload_len, &request_obj.request_payload);
-    if (parse_error != 0) {
-      OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
-             parse_error);
-      if (parse_error == CborErrorUnexpectedEOF)
-        entity_too_large = true;
-      bad_request = true;
-    }
+  if (payload_len > 0)
+  {
+      if (cf != APPLICATION_CBOR && cf != APPLICATION_VND_OCF_CBOR)
+      {
+          const bool success = ausy_encode_payload_2_cbor(payload, payload_len, cf);
+          if (success)
+          {
+              coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+              //coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+              cf = APPLICATION_VND_OCF_CBOR;
+              request_obj.content_format = cf;
+          }
+          else
+          {
+              OC_ERR("ocri: error encoding payload to cbor format!\n");
+          }
+      }
+      
+      if (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR) {
+        /* Attempt to parse request payload using tinyCBOR via oc_rep helper
+         * functions. The result of this parse is a tree of oc_rep_t structures
+         * which will reflect the schema of the payload.
+         * Any failures while parsing the payload is viewed as an erroneous
+         * request and results in a 4.00 response being sent.
+         */
+        int parse_error =
+          oc_parse_rep(payload, payload_len, &request_obj.request_payload);
+        if (parse_error != 0) {
+          OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
+                 parse_error);
+          if (parse_error == CborErrorUnexpectedEOF)
+            entity_too_large = true;
+          bad_request = true;
+        }
+      }
   }
 
   oc_resource_t *resource, *cur_resource = NULL;

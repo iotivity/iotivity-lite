@@ -28,6 +28,15 @@ set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during comp
 
 include(tools/clang-tidy.cmake)
 
+# FIX Could NOT find Threads (missing: Threads_FOUND)
+if (UNIX)
+    set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+    set(CMAKE_HAVE_THREADS_LIBRARY 1)
+    set(CMAKE_USE_WIN32_THREADS_INIT 0)
+    set(CMAKE_USE_PTHREADS_INIT 1)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+endif()
+
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
@@ -158,11 +167,11 @@ file(GLOB PYTHON_SRC python/*.c)
 ######## Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
 
-include(CheckLibraryExists)
-check_library_exists(m ceil "" HAVE_LIB_M)
-if(HAVE_LIB_M)
+#include(CheckLibraryExists)
+#check_library_exists(m ceil "" HAVE_LIB_M)
+#if(HAVE_LIB_M)
     list(APPEND PRIVATE_LINK_LIBS m)
-endif(HAVE_LIB_M)
+#endif(HAVE_LIB_M)
 
 if(MSVC)
     list(APPEND PRIVATE_LINK_LIBS iphlpapi.lib psapi.lib ws2_32.lib)
@@ -175,6 +184,7 @@ endif()
 
 ######## Object libraries ########
 include(deps/tinycbor.cmake)
+include(deps/json-parser.cmake)
 
 if(OC_SECURITY_ENABLED)
     include(deps/mbedtls.cmake)
@@ -232,6 +242,7 @@ endif()
 set(client-lib-obj
     $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:json-parser>
     $<TARGET_OBJECTS:client-obj>
 )
 if(OC_SECURITY_ENABLED)
@@ -287,6 +298,7 @@ endif()
 set(server-lib-obj
     $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:json-parser>
     $<TARGET_OBJECTS:server-obj>
 )
 if(OC_SECURITY_ENABLED)
@@ -343,6 +355,7 @@ endif()
 set(client-server-lib-obj
     $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:tinycbor-master>
+    $<TARGET_OBJECTS:json-parser>
     $<TARGET_OBJECTS:client-server-obj>
 )
 if(OC_CLOUD_ENABLED)
