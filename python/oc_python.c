@@ -1737,6 +1737,7 @@ py_general_get_cb(oc_client_response_t *data)
 void
 py_general_get(char *uuid, char *url)
 {
+  cb_result = false;
   device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
