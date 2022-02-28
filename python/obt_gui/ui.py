@@ -198,23 +198,32 @@ class FormUi:
         self.button_clear = ttk.Button(self.frame, text='Clear', command=self.submit_clear)
         self.button_clear.grid(column=0, row=row_index, sticky=W)
 
+    def update_display(self): 
+        time.sleep(0.1)
+        app.root.update()
+
     def discover_devices(self): 
         logger.log(logging.INFO, f"Doing device discovery")
+        self.update_display()
         my_iotivity.discover_all()
 
         nr_unowned = my_iotivity.get_nr_unowned_devices()
         logger.log(logging.INFO, f"{nr_unowned} devices discovered: ")
+        self.update_display()
 
         for i in range(nr_unowned):
             unowned_uuid = my_iotivity.get_unowned_uuid(i)
             unowned_name = my_iotivity.get_device_name(unowned_uuid)
             logger.log(logging.INFO, f"Unowned No.{i}: {unowned_uuid} - {unowned_name}")
+            self.update_display()
 
         logger.log(logging.INFO, f"Onboarding all devices")
+        self.update_display()
         my_iotivity.onboard_all_unowned()
         my_iotivity.list_owned_devices()
         nr_owned = my_iotivity.get_nr_owned_devices()
         logger.log(logging.INFO, f"{nr_owned}/{nr_unowned} devices onboarded")
+        self.update_display()
 
         obt_uuid = my_iotivity.get_obt_uuid()
 
@@ -223,6 +232,7 @@ class FormUi:
             device_name = my_iotivity.get_device_name(device_uuid)
             device_info = f"{device_uuid} - {device_name}"
             logger.log(logging.INFO, f"Provisioning device No.{i}: {device_info}")
+            self.update_display()
 
             discovered_devices = app.form.l1.get(0, END)
             if device_info not in discovered_devices:
@@ -247,9 +257,11 @@ class FormUi:
 
             if result: 
                 logger.log(logging.INFO, f"GET {request_url} succeeded")
+                self.update_display()
                 show_window_with_text(f"{self.request_type.get()} {request_url} response payload", response_payload)
             else: 
                 logger.log(logging.INFO, f"GET {request_url} failed")
+                self.update_display()
         elif self.request_type.get() == 'POST': 
             request_query = self.query.get()
             request_url = self.URL.get()
@@ -279,21 +291,25 @@ class FormUi:
                         payload_type_list.append("str")
                     else: 
                         logger.log(logging.INFO, f"Unrecognised payload type! ")
+                        self.update_display()
                         return
 
             result, response_payload = my_iotivity.general_post(device_uuid, request_query, request_url, payload_property_list, payload_value_list, payload_type_list)
 
             if result: 
                 logger.log(logging.INFO, f"POST {request_url} succeeded")
+                self.update_display()
                 show_window_with_text(f"POST {request_url} response payload", response_payload)
             else: 
                 logger.log(logging.INFO, f"POST {request_url} failed")
+                self.update_display()
 
     def submit_clear(self):
         """ clear the discovered device list
         """
         print("Clear - delete all devices")
         logger.log(logging.INFO, "Clear - offboard all devices")
+        self.update_display()
         self.l1.delete(0, END)
         my_iotivity.offboard_all_owned()
 
