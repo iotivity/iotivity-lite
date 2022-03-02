@@ -128,7 +128,7 @@ DTLS= \
 	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c			\
 	ecjpake.c	ecp.c		ecp_curves.c			entropy.c	entropy_poll.c	\
 	error.c		gcm.c		havege.c	hmac_drbg.c	md.c		md2.c			\
-	md4.c		md5.c		md_wrap.c	oid.c		padlock.c	pem.c			\
+	md4.c		md5.c		oid.c		padlock.c	pem.c			            \
 	pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	pkwrite.c		\
 	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	sha512.c		\
 	threading.c	timing.c	version.c	version_features.c		xtea.c			\
@@ -136,7 +136,7 @@ DTLS= \
 	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c				\
 	ssl_srv.c	ssl_ticket.c			ssl_tls.c	rsa_internal.c				\
 	x509write_csr.c			x509write_crt.c			x509_create.c				\
-	x509_csr.c	platform_util.c
+	x509_csr.c	platform_util.c ssl_msg.c constant_time.c
 
 DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
 
