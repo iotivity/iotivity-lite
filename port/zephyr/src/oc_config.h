@@ -30,7 +30,15 @@ typedef uint64_t oc_clock_time_t;
 /* Server-side parameters */
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (1)
+#ifdef OC_DYNAMIC_ALLOCATION
+#define OC_COLLECTIONS
+#define OC_BLOCK_WISE
 
+/* Enable reallocation during encoding the representation to cbor or run "make"
+ * with REP_ENCODING_REALLOC=1 */
+//#define OC_REP_ENCODING_REALLOC
+
+#else /* OC_DYNAMIC_ALLOCATION */
 /* Common parameters */
 //#define OC_BLOCK_WISE_SET_MTU (80)
 
@@ -57,6 +65,8 @@ typedef uint64_t oc_clock_time_t;
 
 /* Maximum number of concurrent DTLS sessions */
 #define OC_MAX_DTLS_PEERS (1)
+
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
