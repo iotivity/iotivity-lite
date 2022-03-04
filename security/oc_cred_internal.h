@@ -55,8 +55,6 @@ oc_sec_cred_t *oc_sec_find_cred(oc_uuid_t *subjectuuid,
                                 oc_sec_credtype_t credtype,
                                 oc_sec_credusage_t credusage, size_t device);
 oc_sec_cred_t *oc_sec_find_role_cred(const char *role, const char *authority);
-oc_sec_creds_t *oc_sec_get_creds(size_t device);
-oc_sec_cred_t *oc_sec_get_cred_by_credid(int credid, size_t device);
 oc_sec_cred_t *oc_sec_allocate_cred(oc_uuid_t *subjectuuid,
                                     oc_sec_credtype_t credtype,
                                     oc_sec_credusage_t credusage,
