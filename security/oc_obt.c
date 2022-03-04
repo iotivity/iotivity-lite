@@ -3459,8 +3459,7 @@ oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
   oc_device_t *device;
   if (!oc_obt_is_owned_device(uuid)) {
     device = oc_obt_get_cached_device_handle(uuid);
-  }
-  else {
+  } else {
     device = oc_obt_get_owned_device_handle(uuid);
   }
   if (!device) {
@@ -3476,8 +3475,7 @@ oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
   oc_endpoint_t *ep;
   if (!oc_obt_is_owned_device(uuid)) {
     ep = oc_obt_get_unsecure_endpoint(device->endpoint);
-  }
-  else {
+  } else {
     ep = oc_obt_get_secure_endpoint(device->endpoint);
   }
   if (oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
