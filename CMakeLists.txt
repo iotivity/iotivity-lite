@@ -149,6 +149,9 @@ if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
 endif()
 
+######## Target dependencies ########
+set(TARGET_DEPENDENCIES "")
+
 ######## Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
@@ -240,6 +243,7 @@ add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
 target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+add_dependencies(common-obj ${TARGET_DEPENDENCIES})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
@@ -248,6 +252,7 @@ target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SO
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
+add_dependencies(client-obj ${TARGET_DEPENDENCIES})
 
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
@@ -256,6 +261,7 @@ target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SO
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
+add_dependencies(server-obj ${TARGET_DEPENDENCIES})
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
@@ -264,6 +270,7 @@ target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PRO
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
+add_dependencies(client-server-obj ${TARGET_DEPENDENCIES})
 
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
