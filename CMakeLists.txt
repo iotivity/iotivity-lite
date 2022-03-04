@@ -180,8 +180,31 @@ if(UNIX)
 elseif(WIN32)
     file(GLOB PORT_SRC port/windows/*.c)
     set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/windows)
+elseif(DEFINED ZEPHYR_BASE)
+    # Set the Zephyr CMake task zephyr_interface as dependency.
+    # Zephyr generates some platform headers in that CMake task which needs to be completed
+    # before iotivity-lite compilation can start or the headers can not be found.
+    list(APPEND TARGET_DEPENDENCIES zephyr_interface)
+
+    # Set the Zephyr include directories globally.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_include_directories_for_lang(C includes)
+    get_property(zephyr_include_dirs TARGET zephyr_interface PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+    include_directories(${zephyr_include_dirs})
+
+    # Add Zephyr compile definitions.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_definitions_for_lang(C definitions)
+    get_property(zephyr_compile_defs TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_DEFINITIONS)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS ${zephyr_compile_defs})
+
+    # Add Zephyr compile options.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_options_for_lang(C options)
+    get_property(zephyr_compile_opts TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_OPTIONS)
+    list(APPEND PRIVATE_COMPILE_OPTIONS ${zephyr_compile_opts})
+
+    file(GLOB PORT_SRC port/zephyr/src/*.c)
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/zephyr/src)
 else()
-    message(FATAL_ERROR "Can determine the port to use!")
+    message(FATAL_ERROR "Cannot determine the port to use!")
 endif()
 list(APPEND SERVER_SRC ${PORT_SRC})
 list(APPEND CLIENT_SRC ${PORT_SRC})
