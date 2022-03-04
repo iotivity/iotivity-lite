@@ -37,6 +37,7 @@
 #include "oc_endpoint.h"
 
 #ifdef OC_SECURITY
+#include <strings.h>
 #include "security/oc_pstat.h"
 #include "security/oc_sdi.h"
 #include "security/oc_tls.h"
