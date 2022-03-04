@@ -195,6 +195,7 @@ elseif(DEFINED ZEPHYR_BASE)
     # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_definitions_for_lang(C definitions)
     get_property(zephyr_compile_defs TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_DEFINITIONS)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS ${zephyr_compile_defs})
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS CBOR_NO_FLOATING_POINT)
 
     # Add Zephyr compile options.
     # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_options_for_lang(C options)
