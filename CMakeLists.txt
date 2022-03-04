@@ -309,7 +309,7 @@ set_target_properties(client-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(client-shared SHARED ${client-lib-obj})
     target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -365,7 +365,7 @@ set_target_properties(server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(server-shared SHARED ${server-lib-obj})
     target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -426,7 +426,7 @@ set_target_properties(client-server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(client-server-shared SHARED ${client-server-lib-obj})
     target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -596,7 +596,7 @@ set(INSTALL_TARGETS
     server-static server-shared
     client-server-static client-server-shared
 )
-if(MSVC)
+if(NOT TARGET_SUPPORTS_SHARED_LIBS OR MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     set(INSTALL_TARGETS
         client-static
