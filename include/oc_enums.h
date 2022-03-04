@@ -22,6 +22,10 @@ extern "C" {
 
 #include "oc_helpers.h"
 
+/**
+ * @brief generic enum values for resources that convey string enums
+ * 
+ */
 typedef enum oc_enum_t {
   OC_ENUM_ABORTED = 1,
   OC_ENUM_ACTIVE,
@@ -98,6 +102,10 @@ typedef enum oc_enum_t {
   OC_ENUM_ZIGZAG
 } oc_enum_t;
 
+/**
+ * @brief enum of position tags
+ * 
+ */
 typedef enum oc_pos_description_t {
   OC_POS_UNKNOWN = 1,
   OC_POS_TOP,
@@ -115,6 +123,10 @@ typedef enum oc_pos_description_t {
   OC_POS_BOTTOMCENTRE
 } oc_pos_description_t;
 
+/**
+ * @brief enum of location tags
+ * 
+ */
 typedef enum oc_locn_t {
   OCF_LOCN_UNKNOWN = 1,
   OCF_LOCN_ATTIC,
