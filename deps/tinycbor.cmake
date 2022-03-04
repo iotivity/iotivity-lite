@@ -2,7 +2,9 @@ add_library(tinycbor-master OBJECT
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborerrorstrings.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder_close_container_checked.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborencoder_float.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
+    ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborparser_float.c
     ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/cborpretty.c
 )
 
