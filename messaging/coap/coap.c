@@ -1197,8 +1197,8 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
     if (coap_pkt->payload_len > 0) {
       *option = 0xFF;
       ++option;
+      memmove(option, coap_pkt->payload, coap_pkt->payload_len);
     }
-    memmove(option, coap_pkt->payload, coap_pkt->payload_len);
     OC_DBG("Serialized payload:");
     OC_LOGbytes(option, coap_pkt->payload_len);
   } else {
