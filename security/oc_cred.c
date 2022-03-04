@@ -53,6 +53,22 @@ static const char *allowed_roles[] = { "oic.role.owner" };
 static const int allowed_roles_num = sizeof(allowed_roles) / sizeof(char *);
 #endif
 
+// https://openconnectivity.org/specs/OCF_Security_Specification_v2.2.5.pdf
+// 13.3.3.1 Symmetric key formatting
+#define SYMMETRIC_KEY_128BIT_LEN 16
+#define SYMMETRIC_KEY_256BIT_LEN 32
+
+static int
+check_symmetric_key_length(int key_size)
+{
+  if (key_size != SYMMETRIC_KEY_128BIT_LEN &&
+      key_size != SYMMETRIC_KEY_256BIT_LEN) {
+    OC_ERR("oc_cred: invalid PSK length(%d)", key_size);
+    return -1;
+  }
+  return 0;
+}
+
 oc_sec_creds_t *
 oc_sec_get_creds(size_t device)
 {
@@ -552,13 +568,18 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
       uint8_t key[64];
       memcpy(key, privatedata, privatedata_size);
       int key_size = oc_base64_decode(key, privatedata_size);
-      if (key_size < 0) {
+      if (check_symmetric_key_length(key_size)) {
         oc_sec_remove_cred(cred, device);
         goto add_new_cred_error;
       }
       oc_new_string(&cred->privatedata.data, (const char *)key, key_size);
       privatedata_encoding = OC_ENCODING_RAW;
     } else {
+      if (credtype == OC_CREDTYPE_PSK &&
+          check_symmetric_key_length(privatedata_size)) {
+        oc_sec_remove_cred(cred, device);
+        goto add_new_cred_error;
+      }
       oc_new_string(&cred->privatedata.data, (const char *)privatedata,
                     privatedata_size);
     }

@@ -637,9 +637,11 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       OC_DBG("oc_tls: Found peer credential");
       memcpy(peer->uuid.id, identity, 16);
       OC_DBG("oc_tls: Setting the key:");
-      OC_LOGbytes(oc_string(cred->privatedata.data), 16);
-      if (mbedtls_ssl_set_hs_psk(
-            ssl, oc_cast(cred->privatedata.data, const uint8_t), 16) != 0) {
+      OC_LOGbytes(oc_string(cred->privatedata.data),
+                  oc_string_len(cred->privatedata.data));
+      if (mbedtls_ssl_set_hs_psk(ssl,
+                                 oc_cast(cred->privatedata.data, const uint8_t),
+                                 oc_string_len(cred->privatedata.data)) != 0) {
         return -1;
       }
       OC_DBG("oc_tls: Set peer credential to SSL handle");

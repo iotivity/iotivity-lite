@@ -29,9 +29,9 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   size_t device = request->resource->device;
 
-  unsigned char csr[4096];
+  unsigned char csr[512];
 
-  int ret = oc_certs_generate_csr(device, csr, OC_PDU_SIZE);
+  int ret = oc_certs_generate_csr(device, csr, sizeof(csr));
   if (ret != 0) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
