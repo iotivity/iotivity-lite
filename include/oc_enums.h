@@ -24,7 +24,7 @@ extern "C" {
 
 /**
  * @brief generic enum values for resources that convey string enums
- * 
+ *
  */
 typedef enum oc_enum_t {
   OC_ENUM_ABORTED = 1,
@@ -104,7 +104,7 @@ typedef enum oc_enum_t {
 
 /**
  * @brief enum of position tags
- * 
+ *
  */
 typedef enum oc_pos_description_t {
   OC_POS_UNKNOWN = 1,
@@ -125,7 +125,7 @@ typedef enum oc_pos_description_t {
 
 /**
  * @brief enum of location tags
- * 
+ *
  */
 typedef enum oc_locn_t {
   OCF_LOCN_UNKNOWN = 1,
