@@ -36,5 +36,7 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  k_sleep(t);
+  k_timeout_t kt;
+  kt.ticks = t;
+  k_sleep(kt);
 }
