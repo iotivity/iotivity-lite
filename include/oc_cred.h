@@ -19,6 +19,7 @@
 #ifndef OC_CRED_COMMON_H
 #define OC_CRED_COMMON_H
 
+#include "oc_export.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "util/oc_list.h"
@@ -122,6 +123,7 @@ typedef struct oc_sec_creds_t
  * @param credusage credential usage as type
  * @return const char* credential usage as string
  */
+OC_API
 const char *oc_cred_read_credusage(oc_sec_credusage_t credusage);
 
 /**
@@ -130,6 +132,7 @@ const char *oc_cred_read_credusage(oc_sec_credusage_t credusage);
  * @param encoding credential encoding as type
  * @return const char* credential encoding as string
  */
+OC_API
 const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
 
 /**
@@ -138,6 +141,7 @@ const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
  * @param credusage_string credential usage as string
  * @return oc_sec_credusage_t credential usage type
  */
+OC_API
 oc_sec_credusage_t oc_cred_parse_credusage(oc_string_t *credusage_string);
 
 /**
@@ -146,6 +150,7 @@ oc_sec_credusage_t oc_cred_parse_credusage(oc_string_t *credusage_string);
  * @param encoding_string credential encoding string
  * @return oc_sec_encoding_t credential encoding type
  */
+OC_API
 oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
 
 /**
@@ -154,7 +159,38 @@ oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
  * @param credtype the credential type as type
  * @return const char* credential type as string
  */
+OC_API
 const char *oc_cred_credtype_string(oc_sec_credtype_t credtype);
+
+/**
+ * @brief get all credentials of given device
+ *
+ * @param device index of the device
+ * @return oc_sec_creds_t* list of credentials
+ */
+OC_API
+oc_sec_creds_t *oc_sec_get_creds(size_t device);
+
+/**
+ * @brief get credential by credid from given device
+ *
+ * @param credid credential id
+ * @param device index of the device
+ * @return oc_sec_cred_t* found credential or NULL
+ */
+OC_API
+oc_sec_cred_t *oc_sec_get_cred_by_credid(int credid, size_t device);
+
+/**
+ * @brief remove credential with credid from given device
+ *
+ * @param credid credential id
+ * @param device index of the device
+ * @return bool true credential with given id was found and removed
+ * @return bool false otherwise
+ */
+OC_API
+bool oc_sec_remove_cred_by_credid(int credid, size_t device);
 
 #ifdef __cplusplus
 }

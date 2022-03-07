@@ -201,7 +201,7 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
   oc_memb_free(&creds, cred);
 }
 
-static bool
+bool
 oc_sec_remove_cred_by_credid(int credid, size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
