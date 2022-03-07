@@ -19,9 +19,6 @@
 .. image:: https://github.com/iotivity/iotivity-lite/actions/workflows/check-format.yml/badge.svg
    :target: https://github.com/iotivity/iotivity-lite/actions/workflows/check-format.yml
    
-.. image:: https://img.shields.io/github/v/release/iotivity/iotivity-lite
-   :target: https://github.com/iotivity/iotivity-lite/releases
-
 .. image:: https://img.shields.io/badge/works%20with-plgd%2Fcloud-success.svg
    :target: https://github.com/plgd-dev/hub
 
