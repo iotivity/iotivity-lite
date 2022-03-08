@@ -68,6 +68,9 @@ typedef uint64_t oc_clock_time_t;
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
 
