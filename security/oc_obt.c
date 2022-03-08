@@ -3523,11 +3523,15 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
                                   strlen(payload_properties[i]));
         oc_rep_encode_int(&root_map, payload_int);
       } else if (strstr(payload_types[i], "float") != NULL) {
+#ifndef CBOR_NO_FLOATING_POINT
         double payload_double = strtod(payload_values[i], NULL);
 
         oc_rep_encode_text_string(&root_map, payload_properties[i],
                                   strlen(payload_properties[i]));
         oc_rep_encode_double(&root_map, payload_double);
+#else
+        PRINT("Device does not support float data type.\n");
+#endif
       } else if (strstr(payload_types[i], "str") != NULL) {
         oc_rep_encode_text_string(&root_map, payload_properties[i],
                                   strlen(payload_properties[i]));
