@@ -18,10 +18,13 @@
 #include "port/oc_storage.h"
 
 #ifdef OC_STORAGE
+#include "port/oc_assert.h"
+#include "port/oc_log.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #define STORE_PATH_SIZE 64
 
@@ -64,24 +67,53 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   return size;
 }
 
+static long
+write_and_flush(FILE *fp, uint8_t *buf, size_t size)
+{
+  oc_assert(fp != NULL);
+  errno = 0;
+  size_t wsize = fwrite(buf, 1, size, fp);
+  if (wsize < size && ferror(fp) != 0) {
+    OC_ERR("failed to write to storage file");
+    return -errno;
+  }
+  if (fflush(fp) != 0) {
+    OC_ERR("failed to flush storage file");
+    return -errno;
+  }
+  if (fsync(fileno(fp)) != 0) {
+    OC_ERR("failed to sync storage file");
+    return -errno;
+  }
+  return (long)wsize;
+}
+
 long
 oc_storage_write(const char *store, uint8_t *buf, size_t size)
 {
-  FILE *fp;
   size_t store_len = strlen(store);
-
-  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE)) {
     return -ENOENT;
+  }
 
   store_path[store_path_len] = '/';
   strncpy(store_path + store_path_len + 1, store, store_len);
   store_path[1 + store_path_len + store_len] = '\0';
-  fp = fopen(store_path, "wb");
-  if (!fp)
-    return -EINVAL;
 
-  size = fwrite(buf, 1, size, fp);
-  fclose(fp);
-  return size;
+  while (true) {
+    FILE *fp = fopen(store_path, "wb");
+    if (!fp) {
+      return -EINVAL;
+    }
+
+    long ret = write_and_flush(fp, buf, size);
+    if (fclose(fp) != 0) {
+      OC_ERR("failed to close storage file");
+    }
+    if (ret < 0 && (ret == -EAGAIN || ret == -EINTR)) {
+      continue;
+    }
+    return ret;
+  }
 }
 #endif /* OC_STORAGE */
