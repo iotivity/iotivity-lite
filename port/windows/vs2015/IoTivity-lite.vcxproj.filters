@@ -103,9 +103,6 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\md.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\md_wrap.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\md2.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
@@ -347,6 +344,12 @@
       <Filter>Security</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_csr.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\ssl_msg.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\constant_time.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_create.c">

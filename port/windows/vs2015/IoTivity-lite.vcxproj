@@ -368,7 +368,6 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\md2.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\md4.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\md5.c" />
-    <ClCompile Include="..\..\..\deps\mbedtls\library\md_wrap.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\net_sockets.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\oid.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\padlock.c" />
@@ -405,6 +404,8 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_create.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_crt.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_csr.c" />
+    <ClCompile Include="..\..\..\deps\mbedtls\library\ssl_msg.c" />
+    <ClCompile Include="..\..\..\deps\mbedtls\library\constant_time.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\xtea.c" />
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborencoder.c" />
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborencoder_close_container_checked.c" />
