@@ -636,6 +636,36 @@ void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
  */
 bool oc_is_owned_device(size_t device_index);
 
+/**
+ * Callback to filter out unsupported ownership methods when they are evaluated.
+ *
+ * For example, if you want to support only the manufacturer certificate based
+ * owner transfer method, you will set oxms[0] to OC_OXMTYPE_MFG_CERT and
+ * *num_oxms to 1.
+ *
+ * @param[in] device_index of the logical device that changed ownership
+ * @param[inout] oxms array of supported ownership types(oc_sec_doxmtype_t).
+ * Filters out non-supported methods.
+ * @param[inout] num_oxms number of supported ownership methods.
+ * @param[in] user_data context pointer
+ */
+typedef void (*oc_select_oxms_cb_t)(size_t device_index, int *oxms,
+                                    int *num_oxms, void *user_data);
+
+/**
+ * Sets the callback to filter out unsupported ownership methods.
+ *
+ * The function can be used to set or unset the callback. For example,
+ * if you want to support only the manufacturer certificate based owner transfer
+ * method.
+ *
+ * @param callback The callback to register or NULL to unset it. If the function
+ *                 is invoked a second time, then the previously set callback is
+ *                 simply replaced.
+ * @param[in] user_data context pointer
+ */
+void oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data);
+
 /* Server side */
 /**
   @defgroup doc_module_tag_server_side Server side

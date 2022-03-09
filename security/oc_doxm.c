@@ -47,6 +47,19 @@ typedef struct oc_doxm_owned_cb_s
 OC_LIST(oc_doxm_owned_cb_list_t);
 OC_MEMB(oc_doxm_owned_cb_s, oc_doxm_owned_cb_t, OC_MAX_DOXM_OWNED_CBS);
 
+static void
+default_select_oxms_cb(size_t device_index, int *oxms, int *num_oxms,
+                       void *user_data)
+{
+  (void)device_index;
+  (void)oxms;
+  (void)num_oxms;
+  (void)user_data;
+}
+
+static oc_select_oxms_cb_t oc_select_oxms_cb;
+static void *oc_select_oxms_cb_user_data;
+
 void
 oc_sec_doxm_free(void)
 {
@@ -73,6 +86,7 @@ oc_sec_doxm_init(void)
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
+  oc_set_select_oxms_cb(NULL, NULL);
 }
 
 static void
@@ -90,6 +104,8 @@ evaluate_supported_oxms(size_t device)
     doxm[device].oxms[doxm[device].num_oxms++] = OC_OXMTYPE_MFG_CERT;
   }
 #endif /* OC_PKI */
+  oc_select_oxms_cb(device, doxm[device].oxms, &doxm[device].num_oxms,
+                    oc_select_oxms_cb_user_data);
 }
 
 void
@@ -453,6 +469,17 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   } else {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
+}
+
+void
+oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data)
+{
+  if (callback == NULL) {
+    callback = default_select_oxms_cb;
+    user_data = NULL;
+  }
+  oc_select_oxms_cb = callback;
+  oc_select_oxms_cb_user_data = user_data;
 }
 
 void

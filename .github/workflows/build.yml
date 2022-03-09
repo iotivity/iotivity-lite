@@ -79,6 +79,7 @@ jobs:
       - name: make secured with Java
         run: |
           # the setup
+          sudo apt-get update -y
           sudo apt-get -y install make autoconf swig default-jdk
           swig -version
           java -version
@@ -105,6 +106,7 @@ jobs:
       - name: make secured with Java
         run: |
           # the setup
+          sudo apt-get update -y
           sudo apt-get -y install make autoconf swig default-jdk
           swig -version
           java -version
