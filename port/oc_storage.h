@@ -50,7 +50,8 @@ long oc_storage_read(const char *store, uint8_t *buf, size_t size);
  * @param store the store (file path)
  * @param buf the buffer to write
  * @param size the size of the buffer to write
- * @return long amount of bytes written
+ * @return long >= 0 amount of bytes written on success
+ * @return long < 0 on failure
  */
 long oc_storage_write(const char *store, uint8_t *buf, size_t size);
 
