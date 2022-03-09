@@ -24,6 +24,8 @@
 #include "oc_uuid.h"
 #include "util/oc_list.h"
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -161,6 +163,20 @@ oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
  */
 OC_API
 const char *oc_cred_credtype_string(oc_sec_credtype_t credtype);
+
+/**
+ * @brief parse credentials from a payload
+ *
+ * @param rep payload to parse
+ * @param resource resource of the credentials
+ * @param endpoint endpoint of the credentials owner
+ * @param dumpToStorage dump the parsed credentials to storage
+ * @return int -1 on failure
+ * @return int 0 payload was successfully parsed
+ */
+OC_API
+int oc_sec_parse_cred(oc_rep_t *rep, oc_resource_t *resource,
+                      oc_endpoint_t *endpoint, bool dumpToStorage);
 
 /**
  * @brief get all credentials of given device

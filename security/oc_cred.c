@@ -1377,62 +1377,87 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
+int
+oc_sec_parse_cred(oc_rep_t *rep, oc_resource_t *resource,
+                  oc_endpoint_t *endpoint, bool dumpToStorage)
+{
+  bool roles_resource = false;
+  oc_tls_peer_t *client = NULL;
+
+#ifdef OC_PKI
+#define OIC_SEC_ROLES "/oic/sec/roles"
+  if (oc_string_len(resource->uri) == strlen(OIC_SEC_ROLES) &&
+      memcmp(oc_string(resource->uri), OIC_SEC_ROLES, strlen(OIC_SEC_ROLES)) ==
+        0) {
+    roles_resource = true;
+    client = oc_tls_get_peer(endpoint);
+  }
+#endif /* OC_PKI */
+
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(resource->device);
+  oc_sec_cred_t *owner = NULL;
+  bool success = oc_sec_decode_cred(rep, &owner, false, roles_resource, client,
+                                    resource->device);
+#define FIELD_ARRAY_SIZE(type, field)                                          \
+  sizeof(((type *)NULL)->field) / sizeof(((type *)NULL)->field[0])
+
+  const size_t uuid_size = FIELD_ARRAY_SIZE(oc_uuid_t, id);
+
+#undef FIELD_ARRAY_SIZE
+  if (!roles_resource && success && owner &&
+      memcmp(owner->subjectuuid.id, devices[resource->device].rowneruuid.id,
+             uuid_size) == 0) {
+    char owneruuid[OC_UUID_LEN], deviceuuid[OC_UUID_LEN];
+    oc_uuid_to_str(&doxm->deviceuuid, deviceuuid, sizeof(deviceuuid));
+    oc_uuid_to_str(&owner->subjectuuid, owneruuid, sizeof(owneruuid));
+    oc_alloc_string(&owner->privatedata.data, uuid_size + 1);
+    if (doxm->oxmsel == OC_OXMTYPE_JW) {
+      success = oc_sec_derive_owner_psk(
+        endpoint, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
+        doxm->deviceuuid.id, uuid_size, owner->subjectuuid.id, uuid_size,
+        oc_cast(owner->privatedata.data, uint8_t), uuid_size);
+    } else if (doxm->oxmsel == OC_OXMTYPE_RDP) {
+      success = oc_sec_derive_owner_psk(
+        endpoint, (const uint8_t *)OXM_RANDOM_DEVICE_PIN,
+        strlen(OXM_RANDOM_DEVICE_PIN), doxm->deviceuuid.id, uuid_size,
+        owner->subjectuuid.id, uuid_size,
+        oc_cast(owner->privatedata.data, uint8_t), uuid_size);
+    }
+#ifdef OC_PKI
+    else if (doxm->oxmsel == OC_OXMTYPE_MFG_CERT) {
+      success = oc_sec_derive_owner_psk(
+        endpoint, (const uint8_t *)OXM_MANUFACTURER_CERTIFICATE,
+        strlen(OXM_MANUFACTURER_CERTIFICATE), doxm->deviceuuid.id, uuid_size,
+        owner->subjectuuid.id, uuid_size,
+        oc_cast(owner->privatedata.data, uint8_t), uuid_size);
+    }
+#endif /* OC_PKI */
+    owner->privatedata.encoding = OC_ENCODING_RAW;
+  }
+
+  if (!success) {
+    if (owner) {
+      oc_sec_remove_cred_by_credid(owner->credid, resource->device);
+    }
+    return -1;
+  }
+  if (dumpToStorage) {
+    oc_sec_dump_cred(resource->device);
+  }
+  return 0;
+}
+
 void
 post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
 
-  bool roles_resource = false;
-  oc_tls_peer_t *client = NULL;
-
-#ifdef OC_PKI
-  if (oc_string_len(request->resource->uri) == 14 &&
-      memcmp(oc_string(request->resource->uri), "/oic/sec/roles", 14) == 0) {
-    roles_resource = true;
-    client = oc_tls_get_peer(request->origin);
-  }
-#endif /* OC_PKI */
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(request->resource->device);
-  oc_sec_cred_t *owner = NULL;
   bool success =
-    oc_sec_decode_cred(request->request_payload, &owner, false, roles_resource,
-                       client, request->resource->device);
-  if (!roles_resource && success && owner &&
-      memcmp(owner->subjectuuid.id,
-             devices[request->resource->device].rowneruuid.id, 16) == 0) {
-    char owneruuid[37], deviceuuid[37];
-    oc_uuid_to_str(&doxm->deviceuuid, deviceuuid, 37);
-    oc_uuid_to_str(&owner->subjectuuid, owneruuid, 37);
-    oc_alloc_string(&owner->privatedata.data, 17);
-    if (doxm->oxmsel == OC_OXMTYPE_JW) {
-      success = oc_sec_derive_owner_psk(
-        request->origin, (const uint8_t *)OXM_JUST_WORKS,
-        strlen(OXM_JUST_WORKS), doxm->deviceuuid.id, 16, owner->subjectuuid.id,
-        16, oc_cast(owner->privatedata.data, uint8_t), 16);
-    } else if (doxm->oxmsel == OC_OXMTYPE_RDP) {
-      success = oc_sec_derive_owner_psk(
-        request->origin, (const uint8_t *)OXM_RANDOM_DEVICE_PIN,
-        strlen(OXM_RANDOM_DEVICE_PIN), doxm->deviceuuid.id, 16,
-        owner->subjectuuid.id, 16, oc_cast(owner->privatedata.data, uint8_t),
-        16);
-    }
-#ifdef OC_PKI
-    else if (doxm->oxmsel == OC_OXMTYPE_MFG_CERT) {
-      success = oc_sec_derive_owner_psk(
-        request->origin, (const uint8_t *)OXM_MANUFACTURER_CERTIFICATE,
-        strlen(OXM_MANUFACTURER_CERTIFICATE), doxm->deviceuuid.id, 16,
-        owner->subjectuuid.id, 16, oc_cast(owner->privatedata.data, uint8_t),
-        16);
-    }
-#endif /* OC_PKI */
-    owner->privatedata.encoding = OC_ENCODING_RAW;
-  }
+    oc_sec_parse_cred(request->request_payload, request->resource,
+                      request->origin, /*dumpToStorage*/ false) == 0;
+
   if (!success) {
-    if (owner) {
-      oc_sec_remove_cred_by_credid(owner->credid, request->resource->device);
-    }
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   } else {
     oc_send_response(request, OC_STATUS_CHANGED);
