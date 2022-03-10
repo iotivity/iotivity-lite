@@ -24,7 +24,7 @@
 #endif /* OC_CLOUD && OC_SERVER */
 
 #ifdef OC_SECURITY
-#include "security/oc_store.h"
+#include "oc_store.h"
 #endif /* OC_SECURITY */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)

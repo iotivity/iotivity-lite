@@ -22,13 +22,13 @@
 
 #include "oc_core_res.h"
 #include "oc_obt.h"
+#include "oc_store.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi.h"
-#include "security/oc_store.h"
 #include "security/oc_tls.h"
 
 /* Manufacturer certificate-based ownership transfer */

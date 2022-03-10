@@ -15,7 +15,6 @@
 */
 
 #ifdef OC_SECURITY
-#include "oc_store.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"
 #include "oc_core_res.h"
@@ -25,6 +24,7 @@
 #include "oc_pstat.h"
 #include "oc_sdi.h"
 #include "oc_sp.h"
+#include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_storage.h"
 #include <oc_config.h>
