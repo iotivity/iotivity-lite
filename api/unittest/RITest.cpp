@@ -35,7 +35,11 @@
 
 class TestOcRi : public testing::Test {
 protected:
-  virtual void SetUp() { oc_ri_init(); }
+  virtual void SetUp()
+  {
+    oc_ri_init();
+    oc_network_event_handler_mutex_init();
+  }
   virtual void TearDown() { oc_ri_shutdown(); }
 };
 

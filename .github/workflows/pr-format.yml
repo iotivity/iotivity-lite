@@ -25,7 +25,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           path: iotivity-lite
           ref: ${{ fromJSON(steps.get_branch.outputs.data).repository.pullRequest.headRefName }}

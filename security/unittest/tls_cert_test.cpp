@@ -274,6 +274,7 @@ protected:
   {
     oc_core_init();
     oc_random_init();
+    oc_network_event_handler_mutex_init();
     oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                            "ocf.res.1.0.0", NULL, NULL);
     oc_sec_cred_init();
@@ -294,8 +295,9 @@ protected:
 
   void TearDown() override
   {
-    oc_sec_cred_free();
     oc_connectivity_shutdown(device_);
+    oc_network_event_handler_mutex_destroy();
+    oc_sec_cred_free();
     oc_random_destroy();
     oc_core_shutdown();
   }

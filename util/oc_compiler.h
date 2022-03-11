@@ -19,6 +19,10 @@
 #ifndef OC_COMPILER
 #define OC_COMPILER
 
+#if defined(__MINGW32__) && (!defined(__GNUC__) || __GNUC__ < 9)
+#error "Unsupported compiler on MinGW platform"
+#endif /* __MINGW32__ && (!__GNUC__ || __GNUC__ < 9) */
+
 #if defined(__clang__) || defined(__GNUC__)
 #define OC_NO_DISCARD_RETURN __attribute__((warn_unused_result))
 #else

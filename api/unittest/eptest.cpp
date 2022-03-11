@@ -20,8 +20,16 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 
+#ifdef _WIN32
+#include <WinSock2.h>
+#endif /* _WIN32 */
+
 TEST(OCEndpoints, StringToEndpoint)
 {
+#ifdef _WIN32
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif /* _WIN32 */
 #ifdef OC_IPV4
   const char *spu0[1] = { "coaps://10.211.55.3:56789/a/light" };
   for (int i = 0; i < 1; i++) {
@@ -225,6 +233,9 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
   }
 #endif
+#ifdef _WIN32
+  WSACleanup();
+#endif /* _WIN32 */
 }
 
 TEST(OCEndpoints, EndpointStringParsePath)

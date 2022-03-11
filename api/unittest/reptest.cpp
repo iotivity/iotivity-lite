@@ -270,13 +270,13 @@ TEST(TestRep, OCRepSetGetUint)
   EXPECT_EQ(OC_REP_INT, rep->type);
   int64_t ultimate_answer_out = 0;
   EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
-  EXPECT_EQ(42u, (uint)ultimate_answer_out);
+  EXPECT_EQ(42u, (unsigned)ultimate_answer_out);
   int64_t larger_than_int_out = 0;
   EXPECT_TRUE(oc_rep_get_int(rep, "larger_than_int", &larger_than_int_out));
-  EXPECT_EQ(3000000000u, (uint)larger_than_int_out);
+  EXPECT_EQ(3000000000u, (unsigned)larger_than_int_out);
   int64_t zero_out = -1;
   EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
-  EXPECT_EQ(0u, (uint)zero_out);
+  EXPECT_EQ(0u, (unsigned)zero_out);
   /* check error handling */
   EXPECT_FALSE(oc_rep_get_int(NULL, "zero", &zero_out));
   EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
@@ -526,15 +526,14 @@ TEST(TestRep, OCRepSetGetByteString)
   free(json);
   json = NULL;
 
-  char too_small[28];
   EXPECT_LT(28, oc_rep_to_json(rep, NULL, 0, false));
-  EXPECT_LT(28, oc_rep_to_json(rep, too_small, 28, false));
+  char too_small[28];
+  EXPECT_LT(28, oc_rep_to_json(rep, too_small, sizeof(too_small), false));
   // Decoding of byte string is an all or nothing action. Since there
   // is not enough room in the too_small output buffer nothing is placed in the
   // buffer and remaining space is left empty.
   const char too_small_json[] = "{\"test_byte_string\":\"";
   EXPECT_STREQ(too_small_json, too_small);
-
   oc_free_rep(rep);
 }
 
