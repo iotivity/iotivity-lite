@@ -31,7 +31,7 @@ ifeq ($(TSAN),1)
 endif
 
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
-GTEST_DIR = $(ROOT_DIR)/deps/gtest
+GTEST_DIR = $(ROOT_DIR)/deps/gtest/googletest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 GTEST = gtest_build
