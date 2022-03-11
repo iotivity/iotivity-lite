@@ -165,18 +165,31 @@ OC_API
 const char *oc_cred_credtype_string(oc_sec_credtype_t credtype);
 
 /**
- * @brief parse credentials from a payload
+ * @brief Callback invoked with a created / updated credential
+ *
+ * @param cred New or updated credential
+ * @param user_data User data passed from the caller
+ */
+typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_cred_t *cred, void *user_data);
+
+/**
+ * @brief parse payload and add/update credentials
  *
  * @param rep payload to parse
  * @param resource resource of the credentials
  * @param endpoint endpoint of the credentials owner
  * @param dumpToStorage dump the parsed credentials to storage
+ * @param on_apply_cred_cb callback invoked when a new credential is added or
+ * updated
+ * @param on_apply_cred_data user data passed to the on_apply_cred_cb function
  * @return int -1 on failure
  * @return int 0 payload was successfully parsed
  */
 OC_API
-int oc_sec_parse_cred(oc_rep_t *rep, oc_resource_t *resource,
-                      oc_endpoint_t *endpoint, bool dumpToStorage);
+int oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
+                      oc_endpoint_t *endpoint, bool dumpToStorage,
+                      oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
+                      void *on_apply_cred_data);
 
 /**
  * @brief get all credentials of given device

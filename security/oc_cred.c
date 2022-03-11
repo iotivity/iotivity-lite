@@ -956,7 +956,9 @@ dump_cred(void *data)
 
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
-                   bool roles_resource, oc_tls_peer_t *client, size_t device)
+                   bool roles_resource, oc_tls_peer_t *client, size_t device,
+                   oc_sec_on_apply_cred_cb_t oc_apply_cred_cb,
+                   void *on_apply_cred_data)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
@@ -1246,6 +1248,9 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 *owner = cr;
                 (*owner)->owner_cred = true;
               }
+              if (oc_apply_cred_cb) {
+                oc_apply_cred_cb(cr, on_apply_cred_data);
+              }
             }
           }
           creds_array = creds_array->next;
@@ -1378,8 +1383,10 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 int
-oc_sec_parse_cred(oc_rep_t *rep, oc_resource_t *resource,
-                  oc_endpoint_t *endpoint, bool dumpToStorage)
+oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
+                  oc_endpoint_t *endpoint, bool dumpToStorage,
+                  oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
+                  void *on_apply_cred_data)
 {
   bool roles_resource = false;
   oc_tls_peer_t *client = NULL;
@@ -1396,8 +1403,9 @@ oc_sec_parse_cred(oc_rep_t *rep, oc_resource_t *resource,
 
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(resource->device);
   oc_sec_cred_t *owner = NULL;
-  bool success = oc_sec_decode_cred(rep, &owner, false, roles_resource, client,
-                                    resource->device);
+  bool success =
+    oc_sec_decode_cred(rep, &owner, false, roles_resource, client,
+                       resource->device, on_apply_cred_cb, on_apply_cred_data);
 #define FIELD_ARRAY_SIZE(type, field)                                          \
   sizeof(((type *)NULL)->field) / sizeof(((type *)NULL)->field[0])
 
@@ -1453,9 +1461,10 @@ post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
 
-  bool success =
-    oc_sec_parse_cred(request->request_payload, request->resource,
-                      request->origin, /*dumpToStorage*/ false) == 0;
+  bool success = oc_sec_apply_cred(request->request_payload, request->resource,
+                                   request->origin, /*dumpToStorage*/ false,
+                                   /*on_apply_cred_cb*/ NULL,
+                                   /*on_apply_cred_data*/ NULL) == 0;
 
   if (!success) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
