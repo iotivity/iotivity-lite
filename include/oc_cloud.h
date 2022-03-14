@@ -24,6 +24,7 @@
 #define OC_CLOUD_H
 
 #include "oc_client_state.h"
+#include "oc_export.h"
 #include "oc_ri.h"
 #include "oc_session_events.h"
 
@@ -114,6 +115,7 @@ typedef struct oc_cloud_context_t
 /**
  * @brief Get cloud context for device.
  */
+OC_API
 oc_cloud_context_t *oc_cloud_get_context(size_t device);
 
 /**
@@ -125,6 +127,7 @@ oc_cloud_context_t *oc_cloud_get_context(size_t device);
  * @return int 0 on success
  * @return int -1 on error
  */
+OC_API
 int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 /**
@@ -135,21 +138,29 @@ int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
  * @return int 0 on success
  * @return int -1 on error
  */
+OC_API
 int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
 /**
  * @brief Restart cloud registration process with the current configuration.
  *
  * @param ctx cloud context (cannot be NULL)
  */
+OC_API
 void oc_cloud_manager_restart(oc_cloud_context_t *ctx);
 
+OC_API
 int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+OC_API
 int oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+OC_API
 int oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+OC_API
 int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+OC_API
 int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 
+OC_API
 int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
 
 /**
@@ -158,6 +169,7 @@ int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
  * @param ctx Cloud context to update, must not be NULL.
  * @param ttl Time to live value in seconds.
  */
+OC_API
 void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
                                           uint32_t ttl);
 
@@ -171,6 +183,7 @@ void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
  *
  * @param resource the resource to be published
  */
+OC_API
 int oc_cloud_add_resource(oc_resource_t *resource);
 
 /**
@@ -178,6 +191,7 @@ int oc_cloud_add_resource(oc_resource_t *resource);
  *
  * @param resource the resource to be unpublished
  */
+OC_API
 void oc_cloud_delete_resource(oc_resource_t *resource);
 
 /**
@@ -185,12 +199,15 @@ void oc_cloud_delete_resource(oc_resource_t *resource);
  *
  * @param device the device index
  */
+OC_API
 int oc_cloud_publish_resources(size_t device);
 
+OC_API
 int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
                                 oc_discovery_all_handler_t handler,
                                 void *user_data);
 
+OC_API
 int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,
                                      const char *access_token,
