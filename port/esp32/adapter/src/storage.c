@@ -97,6 +97,8 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
     return -EINVAL;
   }
 
+  nvs_close(handle);
+
   return size;
 }
 #endif /* OC_SECURITY */
