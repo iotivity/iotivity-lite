@@ -34,7 +34,7 @@ static bool path_set = false;
 int
 oc_storage_config(const char *store)
 {
-  LOG_DBG("oc_storage_config: %s", store_path);
+  LOG_DBG("oc_storage_config: %s", store);
   store_path_len = strlen(store);
   if (store_path_len >= STORE_PATH_SIZE)
     return -ENOENT;
