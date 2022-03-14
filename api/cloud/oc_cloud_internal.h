@@ -85,7 +85,6 @@ void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
                                   oc_cloud_error_t error);
 void cloud_update_by_resource(oc_cloud_context_t *ctx,
                               const cloud_conf_update_t *data);
-void cloud_reconnect(oc_cloud_context_t *ctx);
 
 bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
                            const char *auth_code, const char *uid,

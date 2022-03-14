@@ -186,7 +186,7 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   cloud_store_dump_async(&ctx->store);
 
   if (ctx->cloud_manager) {
-    cloud_reconnect(ctx);
+    oc_cloud_manager_restart(ctx);
   }
 
   return 0;
@@ -227,7 +227,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
-    cloud_reconnect(ctx);
+    oc_cloud_manager_restart(ctx);
   }
 }
 
@@ -303,9 +303,9 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
 }
 
 void
-cloud_reconnect(oc_cloud_context_t *ctx)
+oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
-  OC_DBG("[CM] cloud_reconnect\n");
+  OC_DBG("[CM] oc_cloud_manager_restart\n");
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
     cloud_close_endpoint(ctx->cloud_ep);

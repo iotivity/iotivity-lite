@@ -111,11 +111,37 @@ typedef struct oc_cloud_context_t
   bool cloud_manager;
 } oc_cloud_context_t;
 
+/**
+ * @brief Get cloud context for device.
+ */
 oc_cloud_context_t *oc_cloud_get_context(size_t device);
 
+/**
+ * @brief Start cloud registration process.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param cb callback function invoked on status change (cannot be NULL)
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
+/**
+ * @brief Stop cloud registration process, remove related pending delayed
+ * callbacks and clean-up data.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
+/**
+ * @brief Restart cloud registration process with the current configuration.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ */
+void oc_cloud_manager_restart(oc_cloud_context_t *ctx);
 
 int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
 int oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);

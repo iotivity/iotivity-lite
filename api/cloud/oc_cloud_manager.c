@@ -96,7 +96,7 @@ reconnect(void *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
   reset_delayed_callback(ctx, callback_handler, 0);
-  cloud_reconnect(ctx);
+  oc_cloud_manager_restart(ctx);
   return OC_EVENT_DONE;
 }
 
