@@ -189,7 +189,11 @@ elseif(DEFINED ZEPHYR_BASE)
     # Set the Zephyr include directories globally.
     # Taken from zephyr/cmake/extensions.cmake: zephyr_get_include_directories_for_lang(C includes)
     get_property(zephyr_include_dirs TARGET zephyr_interface PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
-    include_directories(${zephyr_include_dirs})
+    get_property(posix_subsys_include_dirs TARGET posix_subsys PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+    # The Zephyr IP subsystem provides helper functions for IPv6 multicast functions in the
+    # subsys/net/ip/ipv6.h header file. But this header file is not provided by any Zephyr CMake target.
+    set(net_ip_subsys_include_dirs ${ZEPHYR_BASE}/subsys/net/ip)
+    include_directories(${zephyr_include_dirs} ${posix_subsys_include_dirs} ${net_ip_subsys_include_dirs})
 
     # Add Zephyr compile definitions.
     # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_definitions_for_lang(C definitions)
