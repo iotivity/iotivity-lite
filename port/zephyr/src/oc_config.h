@@ -27,9 +27,26 @@ typedef uint64_t oc_clock_time_t;
 #define OC_INTS_POOL_SIZE (16)
 #define OC_DOUBLES_POOL_SIZE (16)
 
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
+/* Max inactivity timeout before tearing down DTLS connection */
+#define OC_DTLS_INACTIVITY_TIMEOUT (10)
+
+/* Add support for passing network up/down events to the app */
+#define OC_NETWORK_MONITOR
+/* Add support for passing TCP/TLS/DTLS session connection events to the app */
+#define OC_SESSION_EVENTS
+/* Add request history for deduplicate UDP/DTLS messages */
+#define OC_REQUEST_HISTORY
+
+/* Add support observable for oic/res */
+//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+
 /* Server-side parameters */
 /* Maximum number of server resources */
 #define OC_MAX_APP_RESOURCES (1)
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #define OC_COLLECTIONS
 #define OC_BLOCK_WISE
@@ -67,18 +84,6 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_DTLS_PEERS (1)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
-/* jitter added to response to some multicast requests */
-#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
-
-/* Max inactivity timeout before tearing down DTLS connection */
-#define OC_DTLS_INACTIVITY_TIMEOUT (10)
-
-/* Add request history for deduplicate UDP/DTLS messages */
-#define OC_REQUEST_HISTORY
-
-/* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* library features that require persistent storage */
 #ifdef OC_SECURITY
