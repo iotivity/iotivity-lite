@@ -898,7 +898,9 @@ oc_sec_acl_default(size_t device)
 }
 
 bool
-oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
+oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
+                  oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
+                  void *on_apply_ace_data)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   oc_rep_t *t = rep;
@@ -1088,6 +1090,15 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device)
           resources = resources->next;
         }
 
+        if (on_apply_ace_cb != NULL) {
+          oc_sec_ace_t *ace = oc_sec_acl_find_subject(
+            NULL, subject_type, &subject, aceid, permission, device);
+
+          if (ace != NULL) {
+            on_apply_ace_cb(aclist[device].rowneruuid, ace, on_apply_ace_data);
+          }
+        }
+
         if (subject_type == OC_SUBJECT_ROLE) {
           oc_free_string(&subject.role.role);
           oc_free_string(&subject.role.authority);
@@ -1123,13 +1134,28 @@ oc_sec_acl_add_bootsrap_acl(size_t device)
 #endif
 }
 
+int
+oc_sec_apply_acl(oc_rep_t *rep, size_t device, bool dumpToStorage,
+                 oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
+                 void *on_apply_ace_data)
+{
+  if (oc_sec_decode_acl(rep, false, device, on_apply_ace_cb,
+                        on_apply_ace_data)) {
+    if (dumpToStorage) {
+      oc_sec_dump_acl(device);
+    }
+    return 0;
+  }
+  return -1;
+}
+
 void
 post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
   if (oc_sec_decode_acl(request->request_payload, false,
-                        request->resource->device)) {
+                        request->resource->device, NULL, NULL)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_acl(request->resource->device);
   } else {

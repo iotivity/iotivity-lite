@@ -362,7 +362,7 @@ oc_sec_load_acl(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(oc_store_buf, (int)ret, &rep);
-    oc_sec_decode_acl(rep, true, device);
+    oc_sec_decode_acl(rep, true, device, NULL, NULL);
     oc_free_rep(rep);
   }
 #ifndef OC_APP_DATA_STORAGE_BUFFER
