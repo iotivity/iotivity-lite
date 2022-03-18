@@ -21,7 +21,7 @@
 #include <stdint.h>
 typedef uint64_t oc_clock_time_t;
 #include <zephyr.h>
-#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
+#define OC_CLOCK_CONF_TICKS_PER_SECOND (CONFIG_SYS_CLOCK_TICKS_PER_SEC)
 
 #define OC_BYTES_POOL_SIZE (1024)
 #define OC_INTS_POOL_SIZE (16)
