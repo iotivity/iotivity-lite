@@ -25,10 +25,10 @@
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
 #include "oc_obt.h"
+#include "oc_store.h"
 #include "security/oc_certs.h"
 #include "security/oc_keypair.h"
 #include "security/oc_obt_internal.h"
-#include "security/oc_store.h"
 
 int
 oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,

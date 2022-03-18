@@ -27,6 +27,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 
 #include "oc_core_res.h"
 #include "oc_obt.h"
+#include "oc_store.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_certs.h"
 #include "security/oc_cred_internal.h"
@@ -35,7 +36,6 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi.h"
-#include "security/oc_store.h"
 #include "security/oc_tls.h"
 #include <stdlib.h>
 
