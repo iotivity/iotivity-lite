@@ -1235,10 +1235,9 @@ oc_connectivity_init(size_t device)
   // Initialize secure IPv6 socket
   memset(&dev->secure, 0, sizeof(struct sockaddr_storage));
   addr = (struct sockaddr_in6 *)&dev->secure;
-  // TODO: The following 3 lines cause a "Unaligned memory access" CPU fault
-//  addr->sin6_family = AF_INET6;
-//  addr->sin6_port = 0;
-//  addr->sin6_addr = in6addr_any;
+  addr->sin6_family = AF_INET6;
+  addr->sin6_port = 0;
+  addr->sin6_addr = in6addr_any;
 
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (dev->secure_sock < 0) {
