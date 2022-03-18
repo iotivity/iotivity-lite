@@ -76,6 +76,7 @@ typedef struct ip_context_t
   int mcast_sock;
   int server_sock;
   uint16_t port;
+  uint16_t padding;
 #ifdef OC_SECURITY
   struct sockaddr_storage secure;
   int secure_sock;
