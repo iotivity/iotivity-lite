@@ -57,7 +57,8 @@ typedef uint64_t oc_clock_time_t;
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* Common parameters */
-//#define OC_BLOCK_WISE_SET_MTU (80)
+/* Prescriptive lower layers MTU size, enable block-wise transfers */
+#define OC_BLOCK_WISE_SET_MTU (700)
 
 /* Maximum size of request/response PDUs */
 #define OC_MAX_APP_DATA_SIZE (600)
@@ -81,7 +82,18 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_SUBJECTS (1)
 
 /* Maximum number of concurrent DTLS sessions */
-#define OC_MAX_DTLS_PEERS (1)
+#define OC_MAX_TLS_PEERS (1)
+
+/* Maximum number of interfaces for IP adapter */
+#define OC_MAX_IP_INTERFACES (2)
+
+/* Maximum number of callbacks for Network interface event monitoring */
+#define OC_MAX_NETWORK_INTERFACE_CBS (2)
+
+/* Maximum number of callbacks for connection of session */
+#define OC_MAX_SESSION_EVENT_CBS (2)
+
+#define OC_MAX_DOXM_OWNED_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
