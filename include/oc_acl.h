@@ -19,9 +19,13 @@
 #ifndef OC_ACL_COMMON_H
 #define OC_ACL_COMMON_H
 
+#include "oc_export.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "util/oc_list.h"
+
+#include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,6 +126,42 @@ typedef struct oc_sec_ace_t
   int aceid;                          ///< ACE identifier
   oc_ace_permissions_t permission;    ///< permissions
 } oc_sec_ace_t;
+
+/**
+ * @brief Get access control list of device
+ *
+ * @param device Index of the device
+ * @return oc_sec_creds_t* Access control list
+ */
+OC_API
+oc_sec_acl_t *oc_sec_get_acl(size_t device);
+
+/**
+ * @brief Callback invoked with a created / updated access control entry
+ *
+ * @param rowneruuid Uuid of the resource owner
+ * @param ace New or updated access control entry
+ * @param user_data User data passed from the caller
+ */
+typedef void (*oc_sec_on_apply_acl_cb_t)(oc_uuid_t rowneruuid,
+                                         oc_sec_ace_t *ace, void *user_data);
+
+/**
+ * @brief Parse payload and add/update access control list
+ *
+ * @param rep Payload to parse
+ * @param device Index of the device
+ * @param dumpToStorage Dump the parsed credentials to storage
+ * @param on_apply_ace_cb Callback invoked when a new access control entry is
+ * added or updated
+ * @param on_apply_ace_data User data passed to the on_apply_ace_cb function
+ * @return int -1 On failure
+ * @return int 0 Payload was successfully parsed
+ */
+OC_API
+int oc_sec_apply_acl(oc_rep_t *rep, size_t device, bool dumpToStorage,
+                     oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
+                     void *on_apply_ace_data);
 
 #ifdef __cplusplus
 }
