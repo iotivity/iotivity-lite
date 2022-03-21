@@ -77,6 +77,7 @@ void cloud_store_dump_async(const oc_cloud_store_t *store);
 void cloud_store_load(oc_cloud_store_t *store);
 void cloud_store_dump(const oc_cloud_store_t *store);
 void cloud_store_initialize(oc_cloud_store_t *store);
+void cloud_store_deinitialize(oc_cloud_store_t *store);
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);

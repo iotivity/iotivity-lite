@@ -221,6 +221,7 @@ TEST(OCEndpoints, StringToEndpoint)
     memset(&ep, 0, sizeof(oc_endpoint_t));
     int ret = oc_string_to_endpoint(&s, &ep, NULL);
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
+    oc_free_string(&s);
   }
 #endif
 }
@@ -309,6 +310,8 @@ TEST(OCEndpoints, EndpointStringParsePath)
     default:
       break;
     }
+    oc_free_string(&s);
+    oc_free_string(&path);
   }
 
   // paths with expected errors

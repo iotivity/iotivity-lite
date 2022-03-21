@@ -48,90 +48,72 @@ onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 
 TEST_F(TestOcRi, GetAppResourceByUri_P)
 {
-  oc_resource_t *res;
-
-  res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
-  oc_ri_add_resource(res);
+  bool add_check = oc_ri_add_resource(res);
+  EXPECT_TRUE(add_check);
 
   res = oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
-  EXPECT_NE(res, NULL);
-  oc_ri_delete_resource(res);
+  EXPECT_NE(nullptr, res);
+  bool del_check = oc_ri_delete_resource(res);
+  EXPECT_TRUE(del_check);
 }
 
 TEST_F(TestOcRi, GetAppResourceByUri_N)
 {
-  oc_resource_t *res;
-
-  res = oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
-  EXPECT_EQ(res, NULL);
+  oc_resource_t *res =
+    oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
+  EXPECT_EQ(nullptr, res);
 }
 
 TEST_F(TestOcRi, RiGetAppResource_P)
 {
-  oc_resource_t *res;
-
-  res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
-  oc_ri_add_resource(res);
+  bool add_check = oc_ri_add_resource(res);
+  EXPECT_TRUE(add_check);
   res = oc_ri_get_app_resources();
-  EXPECT_NE(0, res);
-  oc_ri_delete_resource(res);
+  EXPECT_NE(nullptr, res);
+  bool del_check = oc_ri_delete_resource(res);
+  EXPECT_TRUE(del_check);
 }
 
 TEST_F(TestOcRi, RiGetAppResource_N)
 {
-  oc_resource_t *res;
-
-  res = oc_ri_get_app_resources();
-  EXPECT_EQ(0, res);
+  oc_resource_t *res = oc_ri_get_app_resources();
+  EXPECT_EQ(nullptr, res);
 }
 
 TEST_F(TestOcRi, RiAllocResource_P)
 {
-  oc_resource_t *res;
-
-  res = oc_ri_alloc_resource();
-  EXPECT_NE(0, res);
-  oc_ri_delete_resource(res);
-}
-
-TEST_F(TestOcRi, RiDeleteResource_P)
-{
-  oc_resource_t *res;
-  bool del_check;
-
-  res = oc_ri_alloc_resource();
-  del_check = oc_ri_delete_resource(res);
-  EXPECT_EQ(del_check, 1);
+  oc_resource_t *res = oc_ri_alloc_resource();
+  EXPECT_NE(nullptr, res);
+  oc_ri_dealloc_resource(res);
 }
 
 TEST_F(TestOcRi, RiFreeResourceProperties_P)
 {
-  oc_resource_t *res;
-
-  res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
   oc_ri_free_resource_properties(res);
   EXPECT_EQ(0, oc_string_len(res->name));
-  oc_ri_delete_resource(res);
+  bool del_check = oc_ri_delete_resource(res);
+  EXPECT_EQ(true, del_check);
 }
 
 TEST_F(TestOcRi, RiAddResource_P)
 {
-  oc_resource_t *res;
-  bool res_check;
-
-  res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
-  res_check = oc_ri_add_resource(res);
-  EXPECT_EQ(res_check, 1);
-  oc_ri_delete_resource(res);
+  bool add_check = oc_ri_add_resource(res);
+  EXPECT_EQ(true, add_check);
+  bool del_check = oc_ri_delete_resource(res);
+  EXPECT_EQ(true, del_check);
 }
 
 TEST_F(TestOcRi, RIGetQueryValue_P)

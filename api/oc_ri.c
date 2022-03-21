@@ -463,10 +463,22 @@ oc_ri_alloc_resource(void)
   return oc_memb_alloc(&app_resources_s);
 }
 
-oc_resource_defaults_data_t *
+void
+oc_ri_dealloc_resource(oc_resource_t *resource)
+{
+  oc_memb_free(&app_resources_s, resource);
+}
+
+static oc_resource_defaults_data_t *
 oc_ri_alloc_resource_defaults(void)
 {
   return oc_memb_alloc(&resource_default_s);
+}
+
+static void
+oc_ri_dealloc_resource_defaults(oc_resource_defaults_data_t *data)
+{
+  oc_memb_free(&resource_default_s, data);
 }
 
 bool
@@ -475,45 +487,45 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
-  /**
-   * Prevent double deallocation: oc_rt_factory_free_created_resource
-   * called below will invoke the delete handler of the resource which will
-   * invoke this function again. We use the list of resources to check
-   * whether the resource exists and when it doesn't we assume that
-   * a deallocation of the resource was already invoked and skip this one.
-   */
-  if (oc_list_remove2(app_resources, resource) == NULL) {
-    return true;
-  }
-
-  if (resource->num_observers > 0) {
-    coap_remove_observer_by_resource(resource);
-  }
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_remove_discovery_batch_observers_by_resource(resource);
-#endif
-
-#if defined(OC_SERVER)
 #if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
   if (rtc != NULL) {
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
     oc_resource_t *collection = (oc_resource_t *)rtc->collection;
-#endif /* OC_RES_BATCH_SUPPORT */
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+    /* For dynamically created resources invoke the created instance destructor
+     * and return. The destructor invokes at the end oc_delete_resource again,
+     * but the resource will no longer be in the list of created resources so
+     * this if-branch will be skipped and normal resource deallocation will be
+     * executed. */
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
     coap_notify_discovery_batch_observers(collection);
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+    return true;
   }
 #endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
+
+  if (resource->num_observers > 0) {
+    int removed_num = coap_remove_observer_by_resource(resource);
+    OC_DBG("removing resource observers: removed(%d) vs expected(%d)",
+           removed_num, resource->num_observers);
+#ifndef OC_DEBUG
+    (void)removed_num;
+#endif
+  }
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_remove_discovery_batch_observers_by_resource(resource);
+#endif
+
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
   oc_notify_observers_delayed(
     oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
-#endif /* OC_SERVER */
 
+  oc_list_remove(app_resources, resource);
   oc_ri_free_resource_properties(resource);
-  oc_memb_free(&app_resources_s, resource);
+  oc_ri_dealloc_resource(resource);
   return true;
 }
 
@@ -652,6 +664,7 @@ oc_observe_notification_resource_defaults_delayed(void *data)
     (oc_resource_defaults_data_t *)data;
   notify_resource_defaults_observer(resource_defaults_data->resource,
                                     resource_defaults_data->iface_mask, NULL);
+  oc_ri_dealloc_resource_defaults(resource_defaults_data);
   return OC_EVENT_DONE;
 }
 #endif
