@@ -669,7 +669,10 @@ class Iotivity():
     def __init__(self,debug=None):
         print ("loading ...")
         resource_mutex.acquire()
-        libname = 'libiotivity-lite-client-python.so'
+        if sys.platform == 'linux':
+            libname = 'libiotivity-lite-client-python.so'
+        else:
+            libname = 'iotivity-lite-client-python.dll'
         libdir = os.path.dirname(__file__) 
         self.lib=ctl.load_library(libname, libdir)
         # python list of copied unowned devices on the local network
@@ -685,16 +688,16 @@ class Iotivity():
         print (self.lib)
         print ("...")
         self.debug=debug
-        self.lib.oc_set_con_res_announced(c_bool(False));
-        print("oc_set_con_res_announced - done")
-        self.lib.oc_set_max_app_data_size(c_size_t(16384));
-        print("oc_set_max_app_data_size- done")
-        value = self.lib.oc_get_max_app_data_size()
-        print("oc_get_max_app_data_size :", value)
+        #self.lib.oc_set_con_res_announced(c_bool(False));
+        #print("oc_set_con_res_announced - done")
+        #self.lib.oc_set_max_app_data_size(c_size_t(16384));
+        #print("oc_set_max_app_data_size- done")
+        #value = self.lib.oc_get_max_app_data_size()
+        #print("oc_get_max_app_data_size :", value)
         self.changedCB = CHANGED_CALLBACK(self.changedCB)
         self.lib.install_changedCB(self.changedCB)
-        ret = self.lib.oc_storage_config("./onboarding_tool_creds");
-        print("oc_storage_config : {}".format(ret))
+        #ret = self.lib.oc_storage_config("./onboarding_tool_creds");
+        #print("oc_storage_config : {}".format(ret))
 
         self.resourceCB = RESOURCE_CALLBACK(self.resourceCB)
         self.lib.install_resourceCB(self.resourceCB)
