@@ -24,6 +24,57 @@ set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(OC_ASAN_ENABLED OFF CACHE BOOL "Enable address sanitizer build.")
+set(OC_LSAN_ENABLED OFF CACHE BOOL "Enable leak sanitizer build.")
+set(OC_TSAN_ENABLED OFF CACHE BOOL "Enable thread sanitizer build.")
+set(OC_MSAN_ENABLED OFF CACHE BOOL "Enable memory sanitizer build. (clang on Linux only)")
+set(OC_UBSAN_ENABLED OFF CACHE BOOL "Enable undefined behaviour sanitizer build.")
+
+if(UNIX)
+    if(OC_ASAN_ENABLED)
+        message(STATUS "Address sanitizer enabled")
+        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address)
+    endif()
+
+    if(OC_LSAN_ENABLED)
+        message(STATUS "Leak sanitizer enabled")
+        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=leak -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=leak)
+    endif()
+
+    if(OC_TSAN_ENABLED)
+        message(STATUS "Thread sanitizer enabled")
+        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=thread -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=thread)
+    endif()
+
+    if(OC_UBSAN_ENABLED)
+        message(STATUS "Undefined behaviour sanitizer enabled")
+        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=undefined)
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # using clang
+        if(OC_MSAN_ENABLED)
+            message(STATUS "Memory sanitizer enabled")
+            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=memory -fno-omit-frame-pointer)
+            add_link_options(-fsanitize=memory)
+        endif()
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # using GCC
+    endif()
+
+    if(OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED OR OC_MSAN_ENABLED)
+        # to get good stacktraces don't use -O2 or -O3 for sanitized optimized build
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O1")
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1")
+        set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O1")
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O1")
+    endif()
+endif()
+
 set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 
 include(tools/clang-tidy.cmake)
@@ -441,7 +492,7 @@ if(BUILD_TESTING AND UNIX)
     set(CMAKE_CXX_EXTENSIONS OFF)
     list(APPEND TEST_COMPILE_OPTIONS "-Wall" "-Wextra" "-fpermissive")
     list(APPEND TEST_LINK_LIBS client-server-static gtest_main Threads::Threads)
-    if(CMAKE_COMPILER_IS_GNUCXX)
+    if(CMAKE_COMPILER_IS_GNUCXX AND NOT (OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
         list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
         list(APPEND TEST_LINK_LIBS gcov)
     endif()
