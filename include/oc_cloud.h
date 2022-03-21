@@ -109,6 +109,8 @@ typedef struct oc_cloud_context_t
 
   oc_resource_t *cloud_conf;
 
+  int selected_identity_cred_id; /**< Selected identity cert chain. -1(default)
+                                    means any*/
   bool cloud_manager;
 } oc_cloud_context_t;
 
@@ -213,6 +215,24 @@ int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *access_token,
                                      const char *server_id,
                                      const char *auth_provider);
+/**
+ * @brief Set identity certificate chain to establish TLS connection.
+ *
+ * @param ctx Cloud context to update, must not be NULL.
+ * @param selected_identity_cred_id Selected identity certificate chain id.
+ * -1(default) means any.
+ */
+OC_API
+void oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
+                                      int selected_identity_cred_id);
+/**
+ * @brief Get selected identity certificate chain to establish TLS connection.
+ *
+ * @param ctx Cloud context to update, must not be NULL.
+ * @return Selected identity certificate chain id. -1 means any.
+ */
+OC_API
+int oc_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx);
 
 #ifdef __cplusplus
 }

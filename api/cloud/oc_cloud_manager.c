@@ -312,7 +312,8 @@ cloud_register(void *data)
           cloud_access_register(
             ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-            ctx->device, cloud_register_handler, data)) {
+            ctx->device, ctx->selected_identity_cred_id, cloud_register_handler,
+            data)) {
         cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
       } else {
         // While retrying, keep last error (clec) to CLOUD_OK
@@ -436,6 +437,7 @@ cloud_login(void *data)
       if ((conv_cloud_endpoint(ctx) != 0) ||
           !cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
                               oc_string(ctx->store.access_token), ctx->device,
+                              ctx->selected_identity_cred_id,
                               cloud_login_handler, ctx)) {
         // While retrying, keep last error (clec) to CLOUD_OK
         cloud_set_last_error(ctx, CLOUD_OK);
@@ -579,7 +581,7 @@ refresh_token(void *data)
         !cloud_access_refresh_access_token(
           ctx->cloud_ep, oc_string(ctx->store.uid),
           oc_string(ctx->store.refresh_token), ctx->device,
-          refresh_token_handler, ctx)) {
+          ctx->selected_identity_cred_id, refresh_token_handler, ctx)) {
       cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     }
     oc_set_delayed_callback(ctx, refresh_token,

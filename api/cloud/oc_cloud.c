@@ -129,6 +129,7 @@ oc_cloud_clear_context(oc_cloud_context_t *ctx)
   cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
+  ctx->selected_identity_cred_id = -1;
   cloud_store_dump_async(&ctx->store);
 }
 
@@ -303,6 +304,18 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
 }
 
 void
+oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx, int cred_id)
+{
+  ctx->selected_identity_cred_id = cred_id;
+}
+
+int
+oc_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
+{
+  return ctx->selected_identity_cred_id;
+}
+
+void
 oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
   OC_DBG("[CM] oc_cloud_manager_restart\n");
@@ -378,6 +391,7 @@ oc_cloud_init(void)
     ctx->device = device;
     ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
     ctx->cloud_ep = oc_new_endpoint();
+    ctx->selected_identity_cred_id = -1;
     cloud_store_load(&ctx->store);
     ctx->store.status &=
       ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |

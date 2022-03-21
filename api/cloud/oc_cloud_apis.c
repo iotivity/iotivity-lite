@@ -108,7 +108,8 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
           cloud_access_register(
             ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
             oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-            ctx->device, oc_cloud_register_handler, p)) {
+            ctx->device, ctx->selected_identity_cred_id,
+            oc_cloud_register_handler, p)) {
         cannotConnect = false;
         ctx->store.cps = OC_CPS_REGISTERING;
       }
@@ -148,6 +149,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
       if (conv_cloud_endpoint(ctx) == 0 &&
           cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token), ctx->device,
+                             ctx->selected_identity_cred_id,
                              oc_cloud_login_handler, p)) {
         cannotConnect = false;
       }
@@ -220,6 +222,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     if (conv_cloud_endpoint(ctx) == 0 &&
         cloud_access_logout(ctx->cloud_ep, oc_string(ctx->store.uid),
                             oc_string(ctx->store.access_token), 0,
+                            ctx->selected_identity_cred_id,
                             cloud_logout_internal, p)) {
       cannotConnect = false;
     }
@@ -295,7 +298,8 @@ cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
     if (cloud_access_deregister(
           ctx->cloud_ep, oc_string(ctx->store.uid),
           useAccessToken ? oc_string(ctx->store.access_token) : NULL,
-          ctx->device, cloud_deregistered_internal, p)) {
+          ctx->device, ctx->selected_identity_cred_id,
+          cloud_deregistered_internal, p)) {
       cannotConnect = false;
     }
   }
@@ -432,7 +436,7 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
         cloud_access_refresh_access_token(
           ctx->cloud_ep, oc_string(ctx->store.uid),
           oc_string(ctx->store.refresh_token), ctx->device,
-          oc_cloud_refresh_token_handler, p)) {
+          ctx->selected_identity_cred_id, oc_cloud_refresh_token_handler, p)) {
       cannotConnect = false;
     }
     if (cannotConnect) {
@@ -469,6 +473,7 @@ bool
 cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
                       const char *auth_code, const char *uid,
                       const char *access_token, size_t device,
+                      int selected_identity_cred_id,
                       oc_response_handler_t handler, void *user_data)
 {
 #ifdef OC_SECURITY
@@ -487,7 +492,10 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
+    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
   }
+#else
+  (void)selected_identity_cred_id;
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
@@ -549,6 +557,7 @@ cloud_access_deregister_query(const char *uid, const char *access_token,
 bool
 cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
                         const char *access_token, size_t device,
+                        int selected_identity_cred_id,
                         oc_response_handler_t handler, void *user_data)
 {
 #ifdef OC_SECURITY
@@ -566,7 +575,10 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
+    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
   }
+#else
+  (void)selected_identity_cred_id;
 #endif /* OC_SECURITY */
 
   oc_string_t query = cloud_access_deregister_query(uid, access_token, device);
@@ -579,6 +591,7 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
 static bool
 cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
                        const char *access_token, size_t device, bool is_sign_in,
+                       int selected_identity_cred_id,
                        oc_response_handler_t handler, void *user_data)
 {
 #ifdef OC_SECURITY
@@ -596,7 +609,10 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
+    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
   }
+#else
+  (void)selected_identity_cred_id;
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
@@ -621,24 +637,27 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
 bool
 cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
                    const char *access_token, size_t device,
-                   oc_response_handler_t handler, void *user_data)
+                   int selected_identity_cred_id, oc_response_handler_t handler,
+                   void *user_data)
 {
   return cloud_access_login_out(endpoint, uid, access_token, device, true,
-                                handler, user_data);
+                                selected_identity_cred_id, handler, user_data);
 }
 
 bool
 cloud_access_logout(oc_endpoint_t *endpoint, const char *uid,
                     const char *access_token, size_t device,
+                    int selected_identity_cred_id,
                     oc_response_handler_t handler, void *user_data)
 {
   return cloud_access_login_out(endpoint, uid, access_token, device, false,
-                                handler, user_data);
+                                selected_identity_cred_id, handler, user_data);
 }
 
 bool
 cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
                                   const char *refresh_token, size_t device,
+                                  int selected_identity_cred_id,
                                   oc_response_handler_t handler,
                                   void *user_data)
 {
@@ -657,7 +676,10 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 #ifdef OC_SECURITY
   if (!oc_tls_connected(endpoint)) {
     oc_tls_select_cloud_ciphersuite();
+    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
   }
+#else
+  (void)selected_identity_cred_id;
 #endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
