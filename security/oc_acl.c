@@ -1135,15 +1135,12 @@ oc_sec_acl_add_bootsrap_acl(size_t device)
 }
 
 int
-oc_sec_apply_acl(oc_rep_t *rep, size_t device, bool dumpToStorage,
+oc_sec_apply_acl(oc_rep_t *rep, size_t device,
                  oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                  void *on_apply_ace_data)
 {
   if (oc_sec_decode_acl(rep, false, device, on_apply_ace_cb,
                         on_apply_ace_data)) {
-    if (dumpToStorage) {
-      oc_sec_dump_acl(device);
-    }
     return 0;
   }
   return -1;

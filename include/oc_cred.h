@@ -178,7 +178,6 @@ typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_cred_t *cred, void *user_data);
  * @param rep payload to parse
  * @param resource resource of the credentials
  * @param endpoint endpoint of the credentials owner
- * @param dumpToStorage dump the parsed credentials to storage
  * @param on_apply_cred_cb callback invoked when a new credential is added or
  * updated
  * @param on_apply_cred_data user data passed to the on_apply_cred_cb function
@@ -187,7 +186,7 @@ typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_cred_t *cred, void *user_data);
  */
 OC_API
 int oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
-                      oc_endpoint_t *endpoint, bool dumpToStorage,
+                      oc_endpoint_t *endpoint,
                       oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                       void *on_apply_cred_data);
 
