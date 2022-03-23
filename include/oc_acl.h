@@ -151,7 +151,6 @@ typedef void (*oc_sec_on_apply_acl_cb_t)(oc_uuid_t rowneruuid,
  *
  * @param rep Payload to parse
  * @param device Index of the device
- * @param dumpToStorage Dump the parsed credentials to storage
  * @param on_apply_ace_cb Callback invoked when a new access control entry is
  * added or updated
  * @param on_apply_ace_data User data passed to the on_apply_ace_cb function
@@ -159,7 +158,7 @@ typedef void (*oc_sec_on_apply_acl_cb_t)(oc_uuid_t rowneruuid,
  * @return int 0 Payload was successfully parsed
  */
 OC_API
-int oc_sec_apply_acl(oc_rep_t *rep, size_t device, bool dumpToStorage,
+int oc_sec_apply_acl(oc_rep_t *rep, size_t device,
                      oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                      void *on_apply_ace_data);
 

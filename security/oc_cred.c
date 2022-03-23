@@ -1384,7 +1384,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
 int
 oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
-                  oc_endpoint_t *endpoint, bool dumpToStorage,
+                  oc_endpoint_t *endpoint,
                   oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                   void *on_apply_cred_data)
 {
@@ -1449,9 +1449,6 @@ oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
     }
     return -1;
   }
-  if (dumpToStorage) {
-    oc_sec_dump_cred(resource->device);
-  }
   return 0;
 }
 
@@ -1462,7 +1459,7 @@ post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)data;
 
   bool success = oc_sec_apply_cred(request->request_payload, request->resource,
-                                   request->origin, /*dumpToStorage*/ false,
+                                   request->origin,
                                    /*on_apply_cred_cb*/ NULL,
                                    /*on_apply_cred_data*/ NULL) == 0;
 
