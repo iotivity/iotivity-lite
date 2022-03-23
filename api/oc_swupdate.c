@@ -230,6 +230,7 @@ oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
 {
   oc_sec_pstat_set_current_mode(device, 0);
   oc_swupdate_t *s = &sw[device];
+  oc_free_string(&s->nv);
   s->swupdateaction = OC_SWUPDATE_IDLE;
   s->swupdatestate = OC_SWUPDATE_STATE_IDLE;
   s->swupdateresult = result;
