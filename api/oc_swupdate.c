@@ -179,10 +179,17 @@ oc_swupdate_notify_new_version_available(size_t device, const char *version,
   oc_new_string(&s->nv, version, strlen(version));
   s->swupdatestate = OC_SWUPDATE_STATE_NSA;
   s->swupdateresult = result;
+  if(result != OC_SWUPDATE_RESULT_SUCCESS)
+  {
+    s->swupdateaction = OC_SWUPDATE_IDLE;
+  }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
+  if(result == OC_SWUPDATE_RESULT_SUCCESS)
+  {
+    oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
+  }
 }
 
 void
@@ -201,10 +208,17 @@ oc_swupdate_notify_downloaded(size_t device, const char *version,
 #endif /* OC_SERVER */
   s->swupdatestate = OC_SWUPDATE_STATE_SVA;
   s->swupdateresult = result;
+  if(result != OC_SWUPDATE_RESULT_SUCCESS)
+  {
+    s->swupdateaction = OC_SWUPDATE_IDLE;
+  }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
+  if(result == OC_SWUPDATE_RESULT_SUCCESS)
+  {
+    oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
+  }
 }
 
 void
