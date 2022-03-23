@@ -508,10 +508,6 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     if (oc_string_len(rep->name) == 4 &&
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
       if (rep->type != OC_REP_STRING) {
-
-        error_state = true;
-      }
-      if (oc_string_len(rep->value.string) >= 63) {
         error_state = true;
       }
       purl = oc_string(rep->value.string);
