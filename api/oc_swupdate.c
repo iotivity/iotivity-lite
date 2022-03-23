@@ -527,10 +527,10 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
       if (rep->type != OC_REP_STRING) {
         error_state = true;
       }
-      if (oc_string_len(rep->value.string) >= 63) {
-        error_state = true;
-      }
       action = str_to_action(oc_string(rep->value.string));
+      if(action > OC_SWUPDATE_UPGRADE) {
+          error_state = true;
+      }
     }
     if (oc_string_len(rep->name) == 14 &&
         memcmp(oc_string(rep->name), "swupdateresult", 14) == 0) {
