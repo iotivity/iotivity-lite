@@ -172,10 +172,11 @@ void
 oc_swupdate_notify_new_version_available(size_t device, const char *version,
                                          oc_swupdate_result_t result)
 {
-  (void)version;
   OC_DBG("new software version %s available for device %zd", version, device);
   oc_sec_pstat_set_current_mode(device, OC_DPM_NSA);
   oc_swupdate_t *s = &sw[device];
+  oc_free_string(&s->nv);
+  oc_new_string(&s->nv, version, strlen(version));
   s->swupdatestate = OC_SWUPDATE_STATE_NSA;
   s->swupdateresult = result;
 #ifdef OC_SERVER
