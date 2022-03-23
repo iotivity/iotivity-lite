@@ -200,7 +200,12 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
 void
 oc_rt_factory_free_created_resource(oc_rt_created_t *rtc, oc_rt_factory_t *rf)
 {
-  oc_list_remove(created_res, rtc);
+  if (oc_list_remove2(created_res, rtc) == NULL) {
+    /* protection against cyclical call of oc_rt_factory_free_created_resource
+     * from rf->free_instance */
+    return;
+  }
+
   oc_link_t *link =
     oc_get_link_by_uri(rtc->collection, oc_string(rtc->resource->uri),
                        oc_string_len(rtc->resource->uri));
@@ -215,10 +220,11 @@ oc_rt_factory_free_created_resource(oc_rt_created_t *rtc, oc_rt_factory_t *rf)
 void
 oc_fi_factory_free_all_created_resources(void)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_pop(created_res);
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res), *next;
   while (rtc) {
+    next = rtc->next;
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
-    rtc = (oc_rt_created_t *)oc_list_pop(created_res);
+    rtc = next;
   }
 }
 

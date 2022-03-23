@@ -142,7 +142,7 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize] = '\0';
+    buf[bufSize - 1] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_NE(-1, outputLength) << "Failed to Base64 decode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
@@ -173,7 +173,7 @@ TEST(B64Test, DecodeInputMissingPadding)
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize] = '\0';
+    buf[bufSize - 1] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
@@ -205,7 +205,7 @@ TEST(B64Test, DecodeInputInvalidCharacters)
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize] = '\0';
+    buf[bufSize - 1] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
@@ -234,7 +234,7 @@ TEST(B64Test, DecodeInputInvalidPadding)
 
   for (size_t i = 0; i < inputArraySize; ++i) {
     strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize] = '\0';
+    buf[bufSize - 1] = '\0';
     outputLength = oc_base64_decode(buf, strlen((const char *)buf));
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";

@@ -1659,6 +1659,7 @@ minimal_factory_presets_cb(size_t device, void *data)
 {
   (void)device;
   (void)data;
+#if defined(OC_SECURITY) && defined(OC_PKI)
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
@@ -1672,6 +1673,7 @@ minimal_factory_presets_cb(size_t device, void *data)
     PRINT("ERROR installing root cert\n");
     return;
   }
+#endif /* OC_SECURITY && OC_PKI */
 }
 
 /**
@@ -1854,7 +1856,9 @@ main(int argc, char *argv[])
   oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
   PRINT(" UUID: '%s'\n", proxy_di);
   display_device_uuid();
+#ifdef OC_SECURITY
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
+#endif /* OC_SECURITY */
 
 #ifdef RESET
   // reset the device, for easier debugging.

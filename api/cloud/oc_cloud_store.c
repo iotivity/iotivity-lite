@@ -295,15 +295,23 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 void
 cloud_store_initialize(oc_cloud_store_t *store)
 {
+  cloud_store_deinitialize(store);
 #define DEFAULT_CLOUD_CIS "coaps+tcp://127.0.0.1"
   cloud_set_string(&store->ci_server, DEFAULT_CLOUD_CIS,
                    strlen(DEFAULT_CLOUD_CIS));
+#define DEFAULT_CLOUD_SID "00000000-0000-0000-0000-000000000000"
+  cloud_set_string(&store->sid, DEFAULT_CLOUD_SID, strlen(DEFAULT_CLOUD_SID));
+}
+
+void
+cloud_store_deinitialize(oc_cloud_store_t *store)
+{
+  cloud_set_string(&store->ci_server, NULL, 0);
   cloud_set_string(&store->auth_provider, NULL, 0);
   cloud_set_string(&store->uid, NULL, 0);
   cloud_set_string(&store->access_token, NULL, 0);
   cloud_set_string(&store->refresh_token, NULL, 0);
-#define DEFAULT_CLOUD_SID "00000000-0000-0000-0000-000000000000"
-  cloud_set_string(&store->sid, DEFAULT_CLOUD_SID, strlen(DEFAULT_CLOUD_SID));
+  cloud_set_string(&store->sid, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
 }

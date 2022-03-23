@@ -25,6 +25,7 @@
 #include "oc_rep.h"
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -311,7 +312,7 @@ struct oc_resource_s
   double tag_pos_rel[3];                 ///< tag relative position [x,y,z]
   oc_pos_description_t tag_pos_desc; ///< tag (value) for position description
   oc_enum_t tag_func_desc;           ///< tag (value) for function description
-  oc_locn_t tag_locn;                ///< tag (value) for location desciption
+  oc_locn_t tag_locn;                ///< tag (value) for location description
   uint8_t num_observers;             ///< amount of observers
 #ifdef OC_COLLECTIONS
   uint8_t num_links;               ///< number of links in the collection
@@ -416,11 +417,19 @@ oc_resource_t *oc_ri_get_app_resources(void);
 
 #ifdef OC_SERVER
 /**
- * @brief allocate a resource strucutre
+ * @brief allocate a resource structure
  *
  * @return oc_resource_t*
  */
 oc_resource_t *oc_ri_alloc_resource(void);
+
+/**
+ * @brief deallocate a resource structure
+ *
+ * @param resource the resource to be deallocated
+ */
+void oc_ri_dealloc_resource(oc_resource_t *resource);
+
 /**
  * @brief add resource to the system
  *
