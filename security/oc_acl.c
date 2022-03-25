@@ -1116,21 +1116,21 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
 }
 
 void
-oc_sec_acl_add_bootsrap_acl(size_t device)
+oc_sec_acl_add_bootstrap_acl(size_t device)
 {
   oc_ace_subject_t _anon_clear;
   memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
   _anon_clear.conn = OC_CONN_ANON_CLEAR;
 
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/res", 0,
-                        device);
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/d", 0,
-                        device);
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2, "/oic/p", 0,
-                        device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
+                        "/oic/res", OC_ACE_NO_WC, device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
+                        "/oic/d", OC_ACE_NO_WC, device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
+                        "/oic/p", OC_ACE_NO_WC, device);
 #ifdef OC_WKCORE
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, 2,
-                        "/.well-known/core", 0, device);
+  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
+                        "/.well-known/core", OC_ACE_NO_WC, device);
 #endif
 }
 
