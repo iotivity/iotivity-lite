@@ -3610,7 +3610,7 @@ oc_obt_init(void)
     ps->isop = true;
     ps->s = OC_DOS_RFNOP;
 
-    oc_sec_acl_add_bootsrap_acl(0);
+    oc_sec_acl_add_bootstrap_acl(0);
 
     oc_gen_uuid(&sdi->uuid);
     oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));

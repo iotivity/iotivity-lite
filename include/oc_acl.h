@@ -128,13 +128,21 @@ typedef struct oc_sec_ace_t
 } oc_sec_ace_t;
 
 /**
- * @brief Get access control list of device
+ * @brief Get access control list of a device
  *
  * @param device Index of the device
  * @return oc_sec_creds_t* Access control list
  */
 OC_API
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
+
+/**
+ * @brief Add initial access control list for core resources of a device
+ *
+ * @param device Index of the device
+ */
+OC_API
+void oc_sec_acl_add_bootstrap_acl(size_t device);
 
 /**
  * @brief Callback invoked with a created / updated access control entry
