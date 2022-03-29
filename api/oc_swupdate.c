@@ -179,15 +179,13 @@ oc_swupdate_notify_new_version_available(size_t device, const char *version,
   oc_new_string(&s->nv, version, strlen(version));
   s->swupdatestate = OC_SWUPDATE_STATE_NSA;
   s->swupdateresult = result;
-  if(result != OC_SWUPDATE_RESULT_SUCCESS)
-  {
+  if(result != OC_SWUPDATE_RESULT_SUCCESS) {
     s->swupdateaction = OC_SWUPDATE_IDLE;
   }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  if(result == OC_SWUPDATE_RESULT_SUCCESS)
-  {
+  if(result == OC_SWUPDATE_RESULT_SUCCESS) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
   }
 }
@@ -208,15 +206,13 @@ oc_swupdate_notify_downloaded(size_t device, const char *version,
 #endif /* OC_SERVER */
   s->swupdatestate = OC_SWUPDATE_STATE_SVA;
   s->swupdateresult = result;
-  if(result != OC_SWUPDATE_RESULT_SUCCESS)
-  {
+  if(result != OC_SWUPDATE_RESULT_SUCCESS) {
     s->swupdateaction = OC_SWUPDATE_IDLE;
   }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  if(result == OC_SWUPDATE_RESULT_SUCCESS)
-  {
+  if(result == OC_SWUPDATE_RESULT_SUCCESS) {
     oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
   }
 }
@@ -529,7 +525,7 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
       }
       action = str_to_action(oc_string(rep->value.string));
       if(action > OC_SWUPDATE_UPGRADE) {
-          error_state = true;
+        error_state = true;
       }
     }
     if (oc_string_len(rep->name) == 14 &&
@@ -564,7 +560,8 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     rep = rep->next;
   }
 
-  if (!error_state && purl && (!cb || !cb->validate_purl || (cb->validate_purl(purl) < 0))) {
+  if (!error_state && purl &&
+      (!cb || !cb->validate_purl || (cb->validate_purl(purl) < 0))) {
     error_state = true;
   }
   if (action != OC_SWUPDATE_IDLE && action <= OC_SWUPDATE_UPGRADE && !ut) {
@@ -611,8 +608,8 @@ oc_create_swupdate_resource(size_t device)
 {
   oc_core_populate_resource(OCF_SW_UPDATE, device, "oic/swu",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                            OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_swu,
-                            0, post_swu, 0, 1, "oic.r.softwareupdate");
+                            OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
+                            get_swu, 0, post_swu, 0, 1, "oic.r.softwareupdate");
 }
 #else  /* OC_SOFTWARE_UPDATE */
 typedef int dummy_declaration;
