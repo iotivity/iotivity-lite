@@ -107,6 +107,7 @@ typedef struct oc_sec_cred_t
   oc_sec_credtype_t credtype; ///< credential type
   oc_uuid_t subjectuuid;      ///< subject uuid
   bool owner_cred;            ///< owner
+  oc_string_t tag;            ///< custom user tag
 } oc_sec_cred_t;
 
 /**

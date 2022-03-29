@@ -205,6 +205,7 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
     }
   }
 #endif /* OC_PKI */
+  oc_free_string(&cred->tag);
   oc_memb_free(&creds, cred);
 }
 
@@ -354,7 +355,6 @@ check_uuid_from_cert_raw(size_t publicdata_size, const uint8_t *publicdata,
 
   return res;
 }
-#endif
 
 static const oc_uuid_t *
 get_device_uuid(size_t device)
@@ -362,6 +362,8 @@ get_device_uuid(size_t device)
   oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   return doxm ? &doxm->deviceuuid : NULL;
 }
+
+#endif /* OC_PKI */
 
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
@@ -371,12 +373,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
                     size_t privatedata_size, const uint8_t *privatedata,
                     oc_sec_encoding_t publicdata_encoding,
                     size_t publicdata_size, const uint8_t *publicdata,
-                    const char *role, const char *authority)
+                    const char *role, const char *authority, const char *tag)
 {
   (void)publicdata_encoding;
   (void)publicdata;
   (void)publicdata_size;
-  (void)get_device_uuid;
 #ifdef OC_PKI
   oc_string_t public_key;
   memset(&public_key, 0, sizeof(oc_string_t));
@@ -619,6 +620,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   /* credusage */
   cred->credusage = credusage;
 #endif /* OC_PKI */
+
+  /* tag */
+  if (tag) {
+    oc_new_string(&cred->tag, tag, strlen(tag));
+  }
 
 #ifdef OC_PKI
   if (cred->credtype == OC_CREDTYPE_CERT) {
@@ -869,6 +875,9 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
     }
     if (persist) {
       oc_rep_set_boolean(creds, owner_cred, cr->owner_cred);
+      if (oc_string_len(cr->tag) > 0) {
+        oc_rep_set_text_string(creds, tag, oc_string(cr->tag));
+      }
     }
 #endif /* OC_PKI */
     oc_rep_object_array_end_item(creds);
@@ -1034,6 +1043,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
           uint64_t ssn = 0;
 #endif /* OC_OSCORE */
           bool owner_cred = false;
+          char *tag = NULL;
           bool non_empty = false;
           while (cred != NULL) {
             non_empty = true;
@@ -1048,7 +1058,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 credtype = cred->value.integer;
               }
               break;
-            /* subjectuuid and credusage */
+            /* subjectuuid, credusage and tag */
             case OC_REP_STRING:
               if (len == 11 &&
                   memcmp(oc_string(cred->name), "subjectuuid", 11) == 0) {
@@ -1060,6 +1070,10 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 credusage = oc_cred_parse_credusage(&cred->value.string);
               }
 #endif /* OC_PKI */
+              else if (len == 3 &&
+                       memcmp(oc_string(cred->name), "tag", 3) == 0) {
+                tag = oc_string(cred->value.string);
+              }
               break;
             /* publicdata, privatedata, roleid, oscore */
             case OC_REP_OBJECT: {
@@ -1227,7 +1241,7 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
 #else  /* OC_PKI */
               0, 0, NULL,
 #endif /* !OC_PKI */
-              role, authority);
+              role, authority, tag);
 
             if (credid == -1) {
               return false;

@@ -452,7 +452,7 @@ oc_obt_generate_identity_cert(const char *subject_name,
     ret = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_CERT,
                               OC_CREDUSAGE_IDENTITY_CERT, "*", 0, 0, NULL,
                               OC_ENCODING_PEM, strlen(cert_pem),
-                              (uint8_t *)cert_pem, NULL, NULL);
+                              (uint8_t *)cert_pem, NULL, NULL, NULL);
 
     if (ret == -1) {
       OC_ERR("error writing own identity cert into /oic/sec/cred");
@@ -588,7 +588,7 @@ oc_obt_generate_self_signed_root_cert(const char *subject_name,
 
   ret = oc_sec_add_new_cred(
     0, false, NULL, -1, OC_CREDTYPE_CERT, OC_CREDUSAGE_TRUSTCA, "*", 0, 0, NULL,
-    OC_ENCODING_PEM, strlen(cert_pem), (uint8_t *)cert_pem, NULL, NULL);
+    OC_ENCODING_PEM, strlen(cert_pem), (uint8_t *)cert_pem, NULL, NULL, NULL);
 
   if (ret == -1) {
     OC_ERR("could not write root cert into /oic/sec/cred");

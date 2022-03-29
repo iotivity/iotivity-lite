@@ -28,15 +28,13 @@ extern "C" {
 
 struct oc_tls_peer_t;
 
-int oc_sec_add_new_cred(size_t device, bool roles_resource,
-                        struct oc_tls_peer_t *client, int credid,
-                        oc_sec_credtype_t credtype,
-                        oc_sec_credusage_t credusage, const char *subject,
-                        oc_sec_encoding_t privatedata_encoding,
-                        size_t privatedata_size, const uint8_t *privatedata,
-                        oc_sec_encoding_t publicdata_encoding,
-                        size_t publicdata_size, const uint8_t *publicdata,
-                        const char *role, const char *authority);
+int oc_sec_add_new_cred(
+  size_t device, bool roles_resource, struct oc_tls_peer_t *client, int credid,
+  oc_sec_credtype_t credtype, oc_sec_credusage_t credusage, const char *subject,
+  oc_sec_encoding_t privatedata_encoding, size_t privatedata_size,
+  const uint8_t *privatedata, oc_sec_encoding_t publicdata_encoding,
+  size_t publicdata_size, const uint8_t *publicdata, const char *role,
+  const char *authority, const char *tag);
 
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
