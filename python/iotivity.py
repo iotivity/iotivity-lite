@@ -1701,7 +1701,7 @@ class Iotivity():
         
         return cloud_configurations
 
-    def test_cascoda(self):
+    def proxy_to_cloud(self):
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1759,6 +1759,78 @@ class Iotivity():
         self.provision_cloud_trust_anchor(cloud_proxy_uuid, cloud_configurations["cloud_id"], cloud_configurations["cloud_trust_anchor"])
 
         self.provision_cloud_config_info(cloud_proxy_uuid, cloud_configurations["cloud_access_token"], cloud_configurations["cloud_apn"], cloud_configurations["cloud_cis"], cloud_configurations["cloud_id"])
+
+        for i in range(1, self.get_nr_owned_devices()): 
+            chili_uuid = self.get_owned_uuid(i)
+
+            self.provision_ace_chili(chili_uuid, cloud_proxy_uuid)
+            time.sleep(5)
+
+            self.retrieve_acl2(chili_uuid)
+            time.sleep(5)
+
+            self.post_d2dserverlist(cloud_proxy_uuid, "di=" + chili_uuid)
+            time.sleep(10)
+
+            # self.retrieve_d2dserverlist(cloud_proxy_uuid)
+            # time.sleep(5)
+
+        proxy_time = time.time() - very_start_time
+        print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
+
+        while True: 
+            time.sleep(60)
+            self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
+
+    def proxy_to_mqtt(self): 
+        very_start_time = time.time()
+        expected_devices = 1
+
+        run_count = 0
+        nr_owned = 0
+        while run_count < 5 and nr_owned < expected_devices: 
+            run_count += 1
+
+            start_time = time.time()
+            timeout = 20
+
+            self.discover_all()
+
+            self.onboard_cloud_proxy()
+
+            self.onboard_chili()
+
+            time.sleep(1)
+            while True: 
+                nr_owned = self.get_nr_owned_devices()
+                end_time = time.time()
+                if nr_owned >= expected_devices or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+            time.sleep(1)
+
+        if nr_owned >= expected_devices: 
+            print (f"Discovery and onboarding succeeded, {nr_owned}/{expected_devices} devices onboarded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Discovery and onboarding failed, {nr_owned}/{expected_devices} devices onboarded")
+            self.offboard_all_owned()
+            time.sleep(3)
+            sys.exit(1)
+
+        self.list_owned_devices()
+
+        self.provision_id_cert_all()
+
+        cloud_proxy_uuid = self.get_owned_uuid(0)
+
+        self.provision_ace_cloud_proxy(cloud_proxy_uuid)
+
+        self.discover_resources(cloud_proxy_uuid)
+
+        self.retrieve_acl2(cloud_proxy_uuid)
+
+        self.general_post(cloud_proxy_uuid, "", "mqttconf", ["server", "port"], ["test.mosquitto.org", "1883"], ["str", "int"])
 
         for i in range(1, self.get_nr_owned_devices()): 
             chili_uuid = self.get_owned_uuid(i)
@@ -1905,13 +1977,15 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    # my_iotivity.test_cascoda()
+    # my_iotivity.proxy_to_cloud()
 
-    my_iotivity.test_getpost()
+    my_iotivity.proxy_to_mqtt()
 
-    #my_iotivity.test_discovery()
+    # my_iotivity.test_getpost()
 
-    #my_iotivity.quit()    
+    # my_iotivity.test_discovery()
+
+    # my_iotivity.quit()    
 
 
 
