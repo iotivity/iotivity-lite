@@ -125,6 +125,7 @@ typedef struct oc_sec_ace_t
   oc_ace_subject_t subject;           ///< subject
   int aceid;                          ///< ACE identifier
   oc_ace_permissions_t permission;    ///< permissions
+  oc_string_t tag;                    ///< custom user tag
 } oc_sec_ace_t;
 
 /**
