@@ -1001,8 +1001,13 @@ class Iotivity():
 
         print ("...done.")
 
-    def onboard_cloud_proxy(self):
-        print ("onboard_cloud_proxy: listing NOT onboarded devices in C:")
+    def onboard_all_with_name(self, name_str):
+        """
+        
+        Onboard all unowned devices that contains a certain string in their name (case insensitive)
+
+        """
+        print ("onboard_all_with_name: listing NOT onboarded devices in C:")
         self.list_unowned_devices()
 
         print ("onboarding...")
@@ -1014,7 +1019,7 @@ class Iotivity():
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
 
-            if "proxy" in str(device_name).lower(): 
+            if name_str.lower() in str(device_name).lower(): 
                 print ("Onboarding device :", device, device_name)
 
                 run_count = 0
@@ -1046,53 +1051,6 @@ class Iotivity():
             self.unowned_devices.remove(device)
 
         print ("...done.")
-
-    def onboard_chili(self):
-        print ("onboard_chili: listing NOT onboarded devices in C:")
-        self.list_unowned_devices()
-
-        print ("onboarding...")
-        self.lib.py_otm_just_works.argtypes = [String]
-        self.lib.py_otm_just_works.restype = None
-
-        onboarded_devices = []
-
-        for device in self.unowned_devices:
-            device_name = self.get_device_name(device)
-
-            if "cascoda" in str(device_name).lower(): 
-                print ("Onboarding device :", device, device_name)
-
-                run_count = 0
-                result = False
-                while run_count < 5 and not result: 
-                    run_count += 1
-                    self.lib.py_otm_just_works(device)
-
-                    start_time = time.time()
-                    timeout = 10
-                    time.sleep(1)
-                    while True: 
-                        result = self.get_result()
-                        end_time = time.time()
-                        if result or end_time > start_time + timeout: 
-                            time_taken = end_time - start_time
-                            break
-
-                if result: 
-                    print (f"Onboarding succeeded for: {device} {device_name}")
-                    print (f"Time taken: {time_taken:.3} seconds")
-
-                    onboarded_devices.append(device)
-                else: 
-                    print (f"Onboarding failed for: {device} {device_name}")
-                time.sleep(1)
-        
-        for device in onboarded_devices: 
-            self.unowned_devices.remove(device)
-
-        print ("...done.")
-
 
     def onboard_device(self,device):
         print("Onboarding device: {}".format(device))
@@ -1722,9 +1680,9 @@ class Iotivity():
 
             self.discover_all()
 
-            self.onboard_cloud_proxy()
+            self.onboard_all_with_name("proxy")
 
-            self.onboard_chili()
+            self.onboard_all_with_name("cascoda")
 
             time.sleep(1)
             while True: 
@@ -1796,9 +1754,9 @@ class Iotivity():
 
             self.discover_all()
 
-            self.onboard_cloud_proxy()
+            self.onboard_all_with_name("proxy")
 
-            self.onboard_chili()
+            self.onboard_all_with_name("cascoda")
 
             time.sleep(1)
             while True: 
