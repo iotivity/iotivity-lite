@@ -121,7 +121,7 @@ typedef struct oc_sec_creds_t
 } oc_sec_creds_t;
 
 /**
- * @brief read credential usaga
+ * @brief read credential usage
  *
  * @param credusage credential usage as type
  * @return const char* credential usage as string
@@ -167,7 +167,7 @@ const char *oc_cred_credtype_string(oc_sec_credtype_t credtype);
 
 typedef struct oc_sec_on_apply_cred_data_t
 {
-  oc_sec_cred_t *cred; ///< New or updated credential
+  oc_sec_cred_t *cred; ///< new or updated credential
   const oc_sec_cred_t
     *replaced;  ///< in case of modification of an existing credential this is
                 ///< the original credential that has been replaced; the
@@ -179,10 +179,10 @@ typedef struct oc_sec_on_apply_cred_data_t
 } oc_sec_on_apply_cred_data_t;
 
 /**
- * @brief Callback invoked with a created / updated credential
+ * @brief callback invoked with a created / updated credential
  *
- * @param data Data with new/updated credential data
- * @param user_data User data passed from the caller
+ * @param data data with new/updated credential data
+ * @param user_data user data passed from the caller
  */
 typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_on_apply_cred_data_t data,
                                           void *user_data);
