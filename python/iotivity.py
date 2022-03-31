@@ -1172,18 +1172,18 @@ class Iotivity():
             print (f"Provisioning ACE cloud access failed for: {device_uuid} {device_name}")
         time.sleep(1)
 
-    def provision_ace_d2dserverlist(self, device_uuid): 
-        self.lib.py_provision_ace_cloud_access.argtypes = [String]
-        self.lib.py_provision_ace_cloud_access.restype = None
+    def py_provision_ace_to_obt(self, device_uuid, res_uri): 
+        self.lib.py_provision_ace_to_obt.argtypes = [String, String]
+        self.lib.py_provision_ace_to_obt.restype = None
 
         device_name = self.get_device_name(device_uuid)
-        print( "provision_ace_d2dserverlist (ACL):",device_uuid)
+        print( "py_provision_ace_to_obt (ACL):",device_uuid)
         
         run_count = 0
         result = False
-        while run_count < 5 and not result: 
+        while run_count < 1 and not result: 
             run_count += 1
-            self.lib.py_provision_ace_d2dserverlist(device_uuid)
+            self.lib.py_provision_ace_to_obt(device_uuid, res_uri)
 
             start_time = time.time()
             timeout = 10
@@ -1196,10 +1196,10 @@ class Iotivity():
                     break
 
         if result: 
-            print (f"Provisioning ACE /d2dserverlist succeeded for: {device_uuid} {device_name}")
+            print (f"Provisioning ACE {res_uri} succeeded for: {device_uuid} {device_name}")
             print (f"Time taken: {time_taken:.3} seconds")
         else: 
-            print (f"Provisioning ACE /d2dserverlist failed for: {device_uuid} {device_name}")
+            print (f"Provisioning ACE {res_uri} failed for: {device_uuid} {device_name}")
         time.sleep(1)
 
     def provision_ace_device_resources(self, chili_uuid, proxy_uuid): 
@@ -1258,11 +1258,17 @@ class Iotivity():
             self.provision_ace_cloud_access(device)
         print ("provision_ace_all...done.")
 
-    def provision_ace_proxy(self, proxy_uuid):
-        print ("provision_ace_proxy....")
-        self.provision_ace_cloud_access(proxy_uuid)
-        self.provision_ace_d2dserverlist(proxy_uuid)
-        print ("provision_ace_proxy...done.")
+    def provision_ace_cloud_proxy(self, cloud_proxy_uuid):
+        print ("provision_ace_cloud_proxy....")
+        self.provision_ace_cloud_access(cloud_proxy_uuid)
+        self.py_provision_ace_to_obt(cloud_proxy_uuid, "/d2dserverlist")
+        print ("provision_ace_cloud_proxy...done.")
+
+    def provision_ace_mqtt_proxy(self, mqtt_proxy_uuid):
+        print ("provision_ace_mqtt_proxy....")
+        self.py_provision_ace_to_obt(mqtt_proxy_uuid, "/mqttconf")
+        self.py_provision_ace_to_obt(mqtt_proxy_uuid, "/d2dserverlist")
+        print ("provision_ace_mqtt_proxy...done.")
 
     def provision_ace_chili(self, chili_uuid, proxy_uuid):
         print ("provision_ace_chili....")
@@ -1708,7 +1714,7 @@ class Iotivity():
 
         cloud_proxy_uuid = self.get_owned_uuid(0)
 
-        self.provision_ace_proxy(cloud_proxy_uuid)
+        self.provision_ace_cloud_proxy(cloud_proxy_uuid)
 
         self.discover_resources(cloud_proxy_uuid)
 
@@ -1782,7 +1788,7 @@ class Iotivity():
 
         mqtt_proxy_uuid = self.get_owned_uuid(0)
 
-        self.provision_ace_proxy(mqtt_proxy_uuid)
+        self.provision_ace_mqtt_proxy(mqtt_proxy_uuid)
 
         self.discover_resources(mqtt_proxy_uuid)
 

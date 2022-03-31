@@ -251,7 +251,7 @@ OC_API
 void py_provision_ace_cloud_access(char *uuid);
 
 OC_API
-void py_provision_ace_d2dserverlist(char *uuid);
+void py_provision_ace_to_obt(char *uuid, char *res_uri);
 
 OC_API
 void py_provision_ace_device_resources(char *device_uuid, char *subject_uuid);
