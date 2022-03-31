@@ -1202,21 +1202,21 @@ class Iotivity():
             print (f"Provisioning ACE /d2dserverlist failed for: {device_uuid} {device_name}")
         time.sleep(1)
 
-    def provision_ace_device_resources(self, chili_uuid, cloud_proxy_uuid): 
-        # Grant cloud_proxy (aka subject) access to all Chili resources
+    def provision_ace_device_resources(self, chili_uuid, proxy_uuid): 
+        # Grant proxy (aka subject) access to all Chili resources
         self.lib.py_provision_ace_device_resources.argtypes = [String, String]
         self.lib.py_provision_ace_device_resources.restype = None
-        self.lib.py_provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+        self.lib.py_provision_ace_device_resources(chili_uuid, proxy_uuid)
 
         chili_name = self.get_device_name(chili_uuid)
-        cloud_proxy_name = self.get_device_name(cloud_proxy_uuid)
+        proxy_name = self.get_device_name(proxy_uuid)
         print (f"py_provision_ace_device_resources (ACL) for: {chili_uuid} {chili_name}")
         
         run_count = 0
         result = False
         while run_count < 5 and not result: 
             run_count += 1
-            self.lib.py_provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+            self.lib.py_provision_ace_device_resources(chili_uuid, proxy_uuid)
 
             start_time = time.time()
             timeout = 30
@@ -1258,15 +1258,15 @@ class Iotivity():
             self.provision_ace_cloud_access(device)
         print ("provision_ace_all...done.")
 
-    def provision_ace_cloud_proxy(self, cloud_proxy_uuid):
-        print ("provision_ace_cloud_proxy....")
-        self.provision_ace_cloud_access(cloud_proxy_uuid)
-        self.provision_ace_d2dserverlist(cloud_proxy_uuid)
-        print ("provision_ace_cloud_proxy...done.")
+    def provision_ace_proxy(self, proxy_uuid):
+        print ("provision_ace_proxy....")
+        self.provision_ace_cloud_access(proxy_uuid)
+        self.provision_ace_d2dserverlist(proxy_uuid)
+        print ("provision_ace_proxy...done.")
 
-    def provision_ace_chili(self, chili_uuid, cloud_proxy_uuid):
+    def provision_ace_chili(self, chili_uuid, proxy_uuid):
         print ("provision_ace_chili....")
-        self.provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+        self.provision_ace_device_resources(chili_uuid, proxy_uuid)
         print ("provision_ace_chili...done.")
     
     def provision_id_cert(self, device_uuid):
@@ -1708,7 +1708,7 @@ class Iotivity():
 
         cloud_proxy_uuid = self.get_owned_uuid(0)
 
-        self.provision_ace_cloud_proxy(cloud_proxy_uuid)
+        self.provision_ace_proxy(cloud_proxy_uuid)
 
         self.discover_resources(cloud_proxy_uuid)
 
@@ -1780,29 +1780,29 @@ class Iotivity():
 
         self.provision_id_cert_all()
 
-        cloud_proxy_uuid = self.get_owned_uuid(0)
+        mqtt_proxy_uuid = self.get_owned_uuid(0)
 
-        self.provision_ace_cloud_proxy(cloud_proxy_uuid)
+        self.provision_ace_proxy(mqtt_proxy_uuid)
 
-        self.discover_resources(cloud_proxy_uuid)
+        self.discover_resources(mqtt_proxy_uuid)
 
-        self.retrieve_acl2(cloud_proxy_uuid)
+        self.retrieve_acl2(mqtt_proxy_uuid)
 
-        self.general_post(cloud_proxy_uuid, "", "mqttconf", ["server", "port"], ["test.mosquitto.org", "1883"], ["str", "int"])
+        self.general_post(mqtt_proxy_uuid, "", "mqttconf", ["server", "port"], ["test.mosquitto.org", "1883"], ["str", "int"])
 
         for i in range(1, self.get_nr_owned_devices()): 
             chili_uuid = self.get_owned_uuid(i)
 
-            self.provision_ace_chili(chili_uuid, cloud_proxy_uuid)
+            self.provision_ace_chili(chili_uuid, mqtt_proxy_uuid)
             time.sleep(5)
 
             self.retrieve_acl2(chili_uuid)
             time.sleep(5)
 
-            self.post_d2dserverlist(cloud_proxy_uuid, "di=" + chili_uuid)
+            self.post_d2dserverlist(mqtt_proxy_uuid, "di=" + chili_uuid)
             time.sleep(10)
 
-            # self.retrieve_d2dserverlist(cloud_proxy_uuid)
+            # self.retrieve_d2dserverlist(mqtt_proxy_uuid)
             # time.sleep(5)
 
         proxy_time = time.time() - very_start_time
@@ -1810,7 +1810,7 @@ class Iotivity():
 
         while True: 
             time.sleep(60)
-            self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
+            self.post_d2dserverlist(mqtt_proxy_uuid, "scan=1")
 
     def test_get(self): 
         self.list_owned_devices()
