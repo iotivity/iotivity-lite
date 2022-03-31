@@ -141,7 +141,7 @@ class FormUi:
             state='readonly',
             values=values
         )
-        self.combobox.current(1)
+        self.combobox.current(0)
         self.combobox.grid(column=1, row=0, sticky=W)
 
         my_width = 60
@@ -151,7 +151,7 @@ class FormUi:
         ttk.Label(self.frame, text='Request URL:').grid(column=0, row=2, sticky=W)
         ttk.Entry(self.frame, textvariable=self.URL, width=my_width).grid(
             column=1, row=2, sticky=(W, E))
-        self.URL.set('mqttconf')
+        self.URL.set('oic/d')
 
         # Create a text field to enter POST query
         self.query = tk.StringVar()
@@ -165,7 +165,7 @@ class FormUi:
         ttk.Label(self.frame, text='Request Payload:').grid(column=0, row=6, sticky=W)
         ttk.Entry(self.frame, textvariable=self.payload_json, width=my_width).grid(
             column=1, row=6, sticky=(W, E))
-        self.payload_json.set('{"server": "test.mosquitto.org", "port": 1883}')
+        self.payload_json.set('{"property1": new_value1, "property2": new_value2}')
 
         row_index = 10
         row_index += 1
@@ -230,12 +230,6 @@ class FormUi:
         for i in range(0, my_iotivity.get_nr_owned_devices()): 
             device_uuid = my_iotivity.get_owned_uuid(i)
             device_name = my_iotivity.get_device_name(device_uuid)
-            if "proxy" in device_name: 
-                proxy_uuid = device_uuid
-
-        for i in range(0, my_iotivity.get_nr_owned_devices()): 
-            device_uuid = my_iotivity.get_owned_uuid(i)
-            device_name = my_iotivity.get_device_name(device_uuid)
             device_info = f"{device_uuid} - {device_name}"
             logger.log(logging.INFO, f"Provisioning device No.{i}: {device_info}")
             self.update_display()
@@ -247,9 +241,6 @@ class FormUi:
                 my_iotivity.provision_id_cert(device_uuid)
 
                 my_iotivity.provision_ace_chili(device_uuid, obt_uuid)
-
-                if not "proxy" in device_name: 
-                    my_iotivity.provision_ace_chili(device_uuid, proxy_uuid)
 
     def send_request(self): 
         if self.l1.curselection() == (): 
