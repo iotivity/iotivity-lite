@@ -1181,7 +1181,7 @@ class Iotivity():
         
         run_count = 0
         result = False
-        while run_count < 1 and not result: 
+        while run_count < 5 and not result: 
             run_count += 1
             self.lib.py_provision_ace_to_obt(device_uuid, res_uri)
 
