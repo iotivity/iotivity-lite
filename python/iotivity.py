@@ -1004,8 +1004,13 @@ class Iotivity():
 
         print ("...done.")
 
-    def onboard_cloud_proxy(self):
-        print ("onboard_cloud_proxy: listing NOT onboarded devices in C:")
+    def onboard_all_with_name(self, name_str):
+        """
+        
+        Onboard all unowned devices that contains a certain string in their name (case insensitive)
+
+        """
+        print ("onboard_all_with_name: listing NOT onboarded devices in C:")
         self.list_unowned_devices()
 
         print ("onboarding...")
@@ -1017,7 +1022,7 @@ class Iotivity():
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
 
-            if "proxy" in str(device_name).lower(): 
+            if name_str.lower() in str(device_name).lower(): 
                 print ("Onboarding device :", device, device_name)
 
                 run_count = 0
@@ -1049,53 +1054,6 @@ class Iotivity():
             self.unowned_devices.remove(device)
 
         print ("...done.")
-
-    def onboard_chili(self):
-        print ("onboard_chili: listing NOT onboarded devices in C:")
-        self.list_unowned_devices()
-
-        print ("onboarding...")
-        self.lib.py_otm_just_works.argtypes = [String]
-        self.lib.py_otm_just_works.restype = None
-
-        onboarded_devices = []
-
-        for device in self.unowned_devices:
-            device_name = self.get_device_name(device)
-
-            if "cascoda" in str(device_name).lower(): 
-                print ("Onboarding device :", device, device_name)
-
-                run_count = 0
-                result = False
-                while run_count < 5 and not result: 
-                    run_count += 1
-                    self.lib.py_otm_just_works(device)
-
-                    start_time = time.time()
-                    timeout = 10
-                    time.sleep(1)
-                    while True: 
-                        result = self.get_result()
-                        end_time = time.time()
-                        if result or end_time > start_time + timeout: 
-                            time_taken = end_time - start_time
-                            break
-
-                if result: 
-                    print (f"Onboarding succeeded for: {device} {device_name}")
-                    print (f"Time taken: {time_taken:.3} seconds")
-
-                    onboarded_devices.append(device)
-                else: 
-                    print (f"Onboarding failed for: {device} {device_name}")
-                time.sleep(1)
-        
-        for device in onboarded_devices: 
-            self.unowned_devices.remove(device)
-
-        print ("...done.")
-
 
     def onboard_device(self,device):
         print("Onboarding device: {}".format(device))
@@ -1217,18 +1175,18 @@ class Iotivity():
             print (f"Provisioning ACE cloud access failed for: {device_uuid} {device_name}")
         time.sleep(1)
 
-    def provision_ace_d2dserverlist(self, device_uuid): 
-        self.lib.py_provision_ace_cloud_access.argtypes = [String]
-        self.lib.py_provision_ace_cloud_access.restype = None
+    def py_provision_ace_to_obt(self, device_uuid, res_uri): 
+        self.lib.py_provision_ace_to_obt.argtypes = [String, String]
+        self.lib.py_provision_ace_to_obt.restype = None
 
         device_name = self.get_device_name(device_uuid)
-        print( "provision_ace_d2dserverlist (ACL):",device_uuid)
+        print( "py_provision_ace_to_obt (ACL):",device_uuid)
         
         run_count = 0
         result = False
         while run_count < 5 and not result: 
             run_count += 1
-            self.lib.py_provision_ace_d2dserverlist(device_uuid)
+            self.lib.py_provision_ace_to_obt(device_uuid, res_uri)
 
             start_time = time.time()
             timeout = 10
@@ -1241,27 +1199,27 @@ class Iotivity():
                     break
 
         if result: 
-            print (f"Provisioning ACE /d2dserverlist succeeded for: {device_uuid} {device_name}")
+            print (f"Provisioning ACE {res_uri} succeeded for: {device_uuid} {device_name}")
             print (f"Time taken: {time_taken:.3} seconds")
         else: 
-            print (f"Provisioning ACE /d2dserverlist failed for: {device_uuid} {device_name}")
+            print (f"Provisioning ACE {res_uri} failed for: {device_uuid} {device_name}")
         time.sleep(1)
 
-    def provision_ace_device_resources(self, chili_uuid, cloud_proxy_uuid): 
-        # Grant cloud_proxy (aka subject) access to all Chili resources
+    def provision_ace_device_resources(self, chili_uuid, proxy_uuid): 
+        # Grant proxy (aka subject) access to all Chili resources
         self.lib.py_provision_ace_device_resources.argtypes = [String, String]
         self.lib.py_provision_ace_device_resources.restype = None
-        self.lib.py_provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+        self.lib.py_provision_ace_device_resources(chili_uuid, proxy_uuid)
 
         chili_name = self.get_device_name(chili_uuid)
-        cloud_proxy_name = self.get_device_name(cloud_proxy_uuid)
+        proxy_name = self.get_device_name(proxy_uuid)
         print (f"py_provision_ace_device_resources (ACL) for: {chili_uuid} {chili_name}")
         
         run_count = 0
         result = False
         while run_count < 5 and not result: 
             run_count += 1
-            self.lib.py_provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+            self.lib.py_provision_ace_device_resources(chili_uuid, proxy_uuid)
 
             start_time = time.time()
             timeout = 30
@@ -1306,12 +1264,18 @@ class Iotivity():
     def provision_ace_cloud_proxy(self, cloud_proxy_uuid):
         print ("provision_ace_cloud_proxy....")
         self.provision_ace_cloud_access(cloud_proxy_uuid)
-        self.provision_ace_d2dserverlist(cloud_proxy_uuid)
+        self.py_provision_ace_to_obt(cloud_proxy_uuid, "/d2dserverlist")
         print ("provision_ace_cloud_proxy...done.")
 
-    def provision_ace_chili(self, chili_uuid, cloud_proxy_uuid):
+    def provision_ace_mqtt_proxy(self, mqtt_proxy_uuid):
+        print ("provision_ace_mqtt_proxy....")
+        self.py_provision_ace_to_obt(mqtt_proxy_uuid, "/mqttconf")
+        self.py_provision_ace_to_obt(mqtt_proxy_uuid, "/d2dserverlist")
+        print ("provision_ace_mqtt_proxy...done.")
+
+    def provision_ace_chili(self, chili_uuid, proxy_uuid):
         print ("provision_ace_chili....")
-        self.provision_ace_device_resources(chili_uuid, cloud_proxy_uuid)
+        self.provision_ace_device_resources(chili_uuid, proxy_uuid)
         print ("provision_ace_chili...done.")
     
     def provision_id_cert(self, device_uuid):
@@ -1704,7 +1668,7 @@ class Iotivity():
         
         return cloud_configurations
 
-    def test_cascoda(self):
+    def proxy_to_cloud(self):
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1725,9 +1689,9 @@ class Iotivity():
 
             self.discover_all()
 
-            self.onboard_cloud_proxy()
+            self.onboard_all_with_name("proxy")
 
-            self.onboard_chili()
+            self.onboard_all_with_name("cascoda")
 
             time.sleep(1)
             while True: 
@@ -1784,6 +1748,78 @@ class Iotivity():
         while True: 
             time.sleep(60)
             self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
+
+    def proxy_to_mqtt(self): 
+        very_start_time = time.time()
+        expected_devices = 1
+
+        run_count = 0
+        nr_owned = 0
+        while run_count < 5 and nr_owned < expected_devices: 
+            run_count += 1
+
+            start_time = time.time()
+            timeout = 20
+
+            self.discover_all()
+
+            self.onboard_all_with_name("proxy")
+
+            self.onboard_all_with_name("cascoda")
+
+            time.sleep(1)
+            while True: 
+                nr_owned = self.get_nr_owned_devices()
+                end_time = time.time()
+                if nr_owned >= expected_devices or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+            time.sleep(1)
+
+        if nr_owned >= expected_devices: 
+            print (f"Discovery and onboarding succeeded, {nr_owned}/{expected_devices} devices onboarded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Discovery and onboarding failed, {nr_owned}/{expected_devices} devices onboarded")
+            self.offboard_all_owned()
+            time.sleep(3)
+            sys.exit(1)
+
+        self.list_owned_devices()
+
+        self.provision_id_cert_all()
+
+        mqtt_proxy_uuid = self.get_owned_uuid(0)
+
+        self.provision_ace_mqtt_proxy(mqtt_proxy_uuid)
+
+        self.discover_resources(mqtt_proxy_uuid)
+
+        self.retrieve_acl2(mqtt_proxy_uuid)
+
+        self.general_post(mqtt_proxy_uuid, "", "mqttconf", ["server", "port"], ["test.mosquitto.org", "1883"], ["str", "int"])
+
+        for i in range(1, self.get_nr_owned_devices()): 
+            chili_uuid = self.get_owned_uuid(i)
+
+            self.provision_ace_chili(chili_uuid, mqtt_proxy_uuid)
+            time.sleep(5)
+
+            self.retrieve_acl2(chili_uuid)
+            time.sleep(5)
+
+            self.post_d2dserverlist(mqtt_proxy_uuid, "di=" + chili_uuid)
+            time.sleep(10)
+
+            # self.retrieve_d2dserverlist(mqtt_proxy_uuid)
+            # time.sleep(5)
+
+        proxy_time = time.time() - very_start_time
+        print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
+
+        while True: 
+            time.sleep(60)
+            self.post_d2dserverlist(mqtt_proxy_uuid, "scan=1")
 
     def test_get(self): 
         self.list_owned_devices()
@@ -1908,13 +1944,15 @@ if __name__ == "__main__":
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    # my_iotivity.test_cascoda()
+    # my_iotivity.proxy_to_cloud()
 
-    my_iotivity.test_getpost()
+    my_iotivity.proxy_to_mqtt()
 
-    #my_iotivity.test_discovery()
+    # my_iotivity.test_getpost()
 
-    #my_iotivity.quit()    
+    # my_iotivity.test_discovery()
+
+    # my_iotivity.quit()    
 
 
 
