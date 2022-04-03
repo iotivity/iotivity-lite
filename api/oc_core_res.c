@@ -728,7 +728,7 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   }
 #endif /* OC_SECURITY */
 #ifdef OC_SOFTWARE_UPDATE
-  else if ((strlen(uri) - skip) == 7 && memcmp(uri + skip, "oc/swu", 7) == 0) {
+  else if ((strlen(uri) - skip) == 6 && memcmp(uri + skip, "oc/swu", 6) == 0) {
     type = OCF_SW_UPDATE;
   }
 #endif /* OC_SOFTWARE_UPDATE */
