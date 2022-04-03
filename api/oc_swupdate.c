@@ -467,7 +467,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
 }
 
 /**
- * post method for "/oic/swu" resource.
+ * post method for "/oc/swu" resource.
  * The function has as input the request body, which are the input values of the
  * POST method.
  * The input values (as a set) are checked if all supplied values are correct.
@@ -583,7 +583,7 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 }
 
 /**
- * get method for "/oic/swu" resource.
+ * get method for "/oc/swu" resource.
  * function is called to intialize the return values of the GET method.
  * initialisation of the returned values are done from the global property
  * values.
@@ -606,7 +606,7 @@ get_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 void
 oc_create_swupdate_resource(size_t device)
 {
-  oc_core_populate_resource(OCF_SW_UPDATE, device, "oic/swu",
+  oc_core_populate_resource(OCF_SW_UPDATE, device, "oc/swu",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                             OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
                             get_swu, 0, post_swu, 0, 1, "oic.r.softwareupdate");
