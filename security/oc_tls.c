@@ -632,7 +632,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       identity_len -= 17;
     }
     oc_sec_cred_t *cred =
-      oc_sec_find_cred((oc_uuid_t *)identity, OC_CREDTYPE_PSK,
+      oc_sec_find_cred(NULL, (oc_uuid_t *)identity, OC_CREDTYPE_PSK,
                        OC_CREDUSAGE_NULL, peer->endpoint.device);
     if (cred) {
       OC_DBG("oc_tls: Found peer credential");
@@ -1384,7 +1384,7 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 #ifdef OC_CLIENT
     if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
       oc_sec_cred_t *cred =
-        oc_sec_find_creds_for_subject(&endpoint->di, NULL, endpoint->device);
+        oc_sec_find_creds_for_subject(NULL, &endpoint->di, endpoint->device);
       if (cred && cred->credtype == OC_CREDTYPE_PSK) {
         OC_DBG("oc_tls_set_ciphersuites: client selecting PSK ciphersuite "
                "priority");

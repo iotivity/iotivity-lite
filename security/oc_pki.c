@@ -229,7 +229,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
     device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
     oc_string(subjectuuid), OC_ENCODING_RAW, private_key_size,
     privkbuf + (200 - private_key_size), OC_ENCODING_PEM, c_size - 1,
-    (const uint8_t *)cert, NULL, NULL, NULL);
+    (const uint8_t *)cert, NULL, NULL, NULL, NULL);
 
   if (credid != -1) {
     OC_DBG("added new identity cert chain to /oic/sec/cred");
@@ -330,7 +330,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   ret = oc_sec_add_new_cred(
     device, false, NULL, -1, OC_CREDTYPE_CERT, credusage, "*", 0, 0, NULL,
-    OC_ENCODING_PEM, c_size - 1, (const uint8_t *)cert, NULL, NULL, NULL);
+    OC_ENCODING_PEM, c_size - 1, (const uint8_t *)cert, NULL, NULL, NULL, NULL);
   if (ret != -1) {
     OC_DBG("added new trust anchor entry to /oic/sec/cred");
     oc_sec_dump_cred(device);
