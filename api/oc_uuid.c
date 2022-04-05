@@ -138,3 +138,9 @@ oc_gen_uuid(oc_uuid_t *uuid)
   uuid->id[6] &= 0x0f;
   uuid->id[6] |= 0x40;
 }
+
+bool
+oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second)
+{
+  return memcmp(first.id, second.id, OC_UUID_ID_SIZE) == 0;
+}

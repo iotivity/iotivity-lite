@@ -66,6 +66,7 @@ TEST(OCEndpoints, StringToEndpoint)
 
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
     // EXPECT_EQ(ret, 0) << "spu1[" << i << "] " << spu1[i];
+    (void)ret;
 
     switch (i) {
     case 0:

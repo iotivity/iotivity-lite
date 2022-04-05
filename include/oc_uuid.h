@@ -25,6 +25,7 @@
 #define OC_UUID_H
 
 #include "oc_export.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -39,9 +40,14 @@ extern "C" {
  */
 #define OC_UUID_LEN (37)
 
+/**
+ * Size of the integer array representation of a UUID.
+ */
+#define OC_UUID_ID_SIZE (16)
+
 typedef struct
 {
-  uint8_t id[16];
+  uint8_t id[OC_UUID_ID_SIZE];
 } oc_uuid_t;
 
 /**
@@ -69,8 +75,8 @@ void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
  * The string representation of the UUID will be as specified in RFC 4122.
  *
  * @note oc_uuid_to_str has a special case that does not conform to RFC 4122
- *       if the first byte of oc_uuid_t is set to '*' (0x2A) this will return a
- *       string "*".
+ *       if the first byte of oc_uuid_t is set to '*' (0x2A) this will return
+ *       a string "*".
  *
  * Example
  * ```
@@ -105,6 +111,17 @@ void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
  */
 OC_API
 void oc_gen_uuid(oc_uuid_t *uuid);
+
+/**
+ * @brief Compare two uuid values.
+ *
+ * @param first A uuid value (cannot be NULL)
+ * @param second A uuid value (cannot be NULL)
+ * @return true If the two uuid values are equal
+ * @return false Otherwise
+ */
+OC_API
+bool oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second);
 
 #ifdef __cplusplus
 }
