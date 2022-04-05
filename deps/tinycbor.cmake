@@ -14,7 +14,9 @@ target_include_directories(tinycbor-master PUBLIC
 
 target_compile_definitions(tinycbor-master PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} PRIVATE ${PRIVATE_COMPILE_DEFINITIONS})
 target_compile_options(tinycbor-master PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-add_dependencies(tinycbor-master ${TARGET_DEPENDENCIES})
+if(TARGET_DEPENDENCIES)
+    add_dependencies(tinycbor-master ${TARGET_DEPENDENCIES})
+endif()
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/deps/tinycbor/src/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/deps/tinycbor/src COMPONENT dev
