@@ -13,9 +13,13 @@ file(GLOB MBEDTLS_SRC
 )
 list(REMOVE_ITEM MBEDTLS_SRC
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/certs.c
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/memory_buffer_alloc.c
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/x509_crl.c
 )
+if(OC_DYNAMIC_ALLOCATION_ENABLED)
+    list(REMOVE_ITEM MBEDTLS_SRC
+        ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/memory_buffer_alloc.c
+    )
+endif()
 add_library(mbedtls OBJECT ${MBEDTLS_SRC})
 target_include_directories(mbedtls PRIVATE
     ${PROJECT_SOURCE_DIR}
@@ -24,7 +28,11 @@ target_include_directories(mbedtls PRIVATE
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
 )
 target_compile_definitions(mbedtls PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} __OC_RANDOM)
+target_compile_options(mbedtls PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 # do not treat warnings as errors on Windows
 if(MSVC)
     target_compile_options(mbedtls PRIVATE /W1 /WX-)
+endif()
+if(TARGET_DEPENDENCIES)
+    add_dependencies(mbedtls ${TARGET_DEPENDENCIES})
 endif()

@@ -82,6 +82,7 @@ include(tools/clang-tidy.cmake)
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
+set(PRIVATE_COMPILE_OPTIONS "")
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
 endif()
@@ -148,6 +149,9 @@ if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
 endif()
 
+######## Target dependencies ########
+set(TARGET_DEPENDENCIES "")
+
 ######## Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
@@ -176,8 +180,45 @@ if(UNIX)
 elseif(WIN32)
     file(GLOB PORT_SRC port/windows/*.c)
     set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/windows)
+elseif(DEFINED ZEPHYR_BASE)
+    # Set the Zephyr CMake task zephyr_interface as dependency.
+    # Zephyr generates some platform headers in that CMake task which needs to be completed
+    # before iotivity-lite compilation can start or the headers can not be found.
+    list(APPEND TARGET_DEPENDENCIES zephyr_interface)
+
+    # Set the Zephyr include directories globally.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_include_directories_for_lang(C includes)
+    get_property(zephyr_include_dirs TARGET zephyr_interface PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+    get_property(posix_subsys_include_dirs TARGET posix_subsys PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+    # The Zephyr IP subsystem provides helper functions for IPv6 multicast functions in the
+    # subsys/net/ip/ipv6.h header file. But this header file is not provided by any Zephyr CMake target.
+    set(net_ip_subsys_include_dirs ${ZEPHYR_BASE}/subsys/net/ip)
+    include_directories(${zephyr_include_dirs} ${posix_subsys_include_dirs} ${net_ip_subsys_include_dirs})
+
+    # Add Zephyr compile definitions.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_definitions_for_lang(C definitions)
+    get_property(zephyr_compile_defs TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_DEFINITIONS)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS ${zephyr_compile_defs})
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS CBOR_NO_FLOATING_POINT)
+
+    # Add Zephyr compile options.
+    # Taken from zephyr/cmake/extensions.cmake: zephyr_get_compile_options_for_lang(C options)
+    get_property(zephyr_compile_opts TARGET zephyr_interface PROPERTY INTERFACE_COMPILE_OPTIONS)
+    list(APPEND PRIVATE_COMPILE_OPTIONS ${zephyr_compile_opts})
+
+    file(GLOB PORT_SRC port/zephyr/src/[a-r]*.c)
+    if(CONFIG_FILE_SYSTEM)
+        message(STATUS "Using file system storage.")
+        list(APPEND PORT_SRC port/zephyr/src/storage_fs.c)
+    elseif(CONFIG_FLASH)
+        message(STATUS "Using raw flash storage.")
+        list(APPEND PORT_SRC port/zephyr/src/storage_flash.c)
+    else()
+        message(FATAL_ERROR "Cannot determine the storage technology to use!")
+    endif()
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/zephyr/src)
 else()
-    message(ERROR "Can build only on Linux and Windows!")
+    message(FATAL_ERROR "Cannot determine the port to use!")
 endif()
 list(APPEND SERVER_SRC ${PORT_SRC})
 list(APPEND CLIENT_SRC ${PORT_SRC})
@@ -237,32 +278,49 @@ oc_enable_clang_tidy()
 
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+if(TARGET_DEPENDENCIES)
+    add_dependencies(common-obj ${TARGET_DEPENDENCIES})
+endif()
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
+target_compile_options(client-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
+if(TARGET_DEPENDENCIES)
+    add_dependencies(client-obj ${TARGET_DEPENDENCIES})
+endif()
 
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
+target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
+if(TARGET_DEPENDENCIES)
+    add_dependencies(server-obj ${TARGET_DEPENDENCIES})
+endif()
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
+target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+endif()
+if(TARGET_DEPENDENCIES)
+    add_dependencies(client-server-obj ${TARGET_DEPENDENCIES})
 endif()
 
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+    target_compile_options(cloud-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
     if(OC_SECURITY_ENABLED)
         target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
@@ -271,6 +329,7 @@ endif()
 
 add_library(python-obj OBJECT ${PYTHON_SRC})
 target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
+target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
 set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
@@ -309,7 +368,7 @@ set_target_properties(client-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(client-shared SHARED ${client-lib-obj})
     target_link_libraries(client-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -365,7 +424,7 @@ set_target_properties(server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(server-shared SHARED ${server-lib-obj})
     target_link_libraries(server-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -426,7 +485,7 @@ set_target_properties(client-server-static PROPERTIES
     VERSION ${PROJECT_VERSION}
 )
 
-if(NOT MSVC)
+if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     add_library(client-server-shared SHARED ${client-server-lib-obj})
     target_link_libraries(client-server-shared PRIVATE ${PRIVATE_LINK_LIBS})
@@ -596,7 +655,7 @@ set(INSTALL_TARGETS
     server-static server-shared
     client-server-static client-server-shared
 )
-if(MSVC)
+if(NOT TARGET_SUPPORTS_SHARED_LIBS OR MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     set(INSTALL_TARGETS
         client-static
