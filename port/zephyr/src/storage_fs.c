@@ -63,18 +63,18 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 
   int rc = fs_open(&file, store_path, FS_O_READ);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot open %s: %d", store_path, rc);
-      return -EINVAL;
+    LOG_ERR("oc_storage_read: Cannot open %s: %d", store_path, rc);
+    return -EINVAL;
   }
   rc = fs_read(&file, buf, size);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot read %s: %d", store_path, rc);
-      fs_close(&file);
-      return -EINVAL;
+    LOG_ERR("oc_storage_read: Cannot read %s: %d", store_path, rc);
+    fs_close(&file);
+    return -EINVAL;
   }
   rc = fs_close(&file);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot close %s: %d", store_path, rc);
+    LOG_ERR("oc_storage_read: Cannot close %s: %d", store_path, rc);
   }
   return size;
 }
@@ -97,18 +97,18 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
 
   int rc = fs_open(&file, store_path, FS_O_CREATE | FS_O_RDWR);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot open %s: %d", store_path, rc);
-      return -EINVAL;
+    LOG_ERR("oc_storage_read: Cannot open %s: %d", store_path, rc);
+    return -EINVAL;
   }
   rc = fs_write(&file, buf, size);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot write %s: %d", store_path, rc);
-      fs_close(&file);
-      return -EINVAL;
+    LOG_ERR("oc_storage_read: Cannot write %s: %d", store_path, rc);
+    fs_close(&file);
+    return -EINVAL;
   }
   rc = fs_close(&file);
   if (rc < 0) {
-      LOG_ERR("oc_storage_read: Cannot close %s: %d", store_path, rc);
+    LOG_ERR("oc_storage_read: Cannot close %s: %d", store_path, rc);
   }
   return size;
 }
