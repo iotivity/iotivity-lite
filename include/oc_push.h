@@ -81,8 +81,10 @@ typedef enum {
 	OC_PP_WFP,
 	OC_PP_WFU,
 	OC_PP_WFR,
-	OC_PP_TOUT,
-	OC_PP_ERR
+	OC_PP_WFUM,
+	OC_PP_WFRM,
+	OC_PP_ERR,
+	OC_PP_TOUT
 } oc_pp_state_t;
 
 /*
@@ -103,8 +105,8 @@ typedef struct oc_ns
 	oc_string_t targetpath; /* path in target server (e.g. /myLightSwitch) */
 	oc_string_t pushqif;
 	oc_string_array_t sourcert;
-//	oc_list_t endpoints;
-	oc_pp_state_t state;
+//	oc_pp_state_t state;
+	oc_string_t state;
 	void *user_data;
 } oc_ns_t;
 
@@ -159,8 +161,19 @@ extern char *cli_status_strs[];
 extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
 
 
-#define cli_statusstr(i) (cli_status_strs[i])
-#define pp_statestr(i) (pp_state_strs[i])
+#define cli_statusstr(i) (cli_status_strs[(i)])
+#define pp_statestr(i) (pp_state_strs[(i)])
+
+/**
+ * @param state		oc_string_t pointer
+ * @param new_state	c string pointer
+ */
+#define pp_update_state(state, new_state) \
+{ \
+	oc_free_string((state)); \
+	oc_new_string((state), (new_state), strlen((new_state))); \
+}
+
 
 
 void oc_push_list_init();

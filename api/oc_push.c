@@ -101,11 +101,13 @@ OC_PROCESS(oc_push_process, "Push Notification handler");
 
 char *pp_state_strs[] =
 {
-		"\"Wait For Provisioning\"",    /*OC_PP_WFP*/
-		"\"Wait For Update\"",          /*OC_PP_WFU*/
-		"\"Wait For Response\"",        /*OC_PP_WFR*/
-		"\"Time Out\"",                 /*OC_PP_TOUT*/
-		"\"ERROR\""                     /*OC_PP_ERR*/
+		"waitingforprovisioning",			/*OC_PP_WFP*/
+		"waitingforupdate",					/*OC_PP_WFU*/
+		"waitingforresponse",				/*OC_PP_WFR*/
+		"waitingforupdatemitigation",		/*OC_PP_WFUM*/
+		"waitingforresponsemitigation",	/*OC_PP_WFRM*/
+		"error",									/*OC_PP_ERR*/
+		"timeout"								/*OC_PP_TOUT*/
 };
 
 
@@ -321,8 +323,10 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
 			{
 				p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
-				ns_instance->state = rep->value.integer;
+						oc_string(ns_instance->state), oc_string(rep->value.string));
+//						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
+				pp_update_state(&ns_instance->state, oc_string(rep->value.string));
+//				ns_instance->state = rep->value.integer;
 			}
 			break;
 
@@ -333,8 +337,14 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	}
 
 	p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-			pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
-	ns_instance->state = OC_PP_WFU;
+			oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
+//			pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
+	pp_update_state(&ns_instance->state, pp_statestr(OC_PP_WFU));
+//	ns_instance->state = OC_PP_WFU;
+
+	/*
+	 * xxx4me <2022/4/6> resume here
+	 */
 
 	result = true;
 
@@ -589,6 +599,7 @@ void free_ns_instance(oc_resource_t *resource)
 				ep = ep->next;
 			}
 
+			/* todo4me state 문자열도 메모리 해제 */
 			oc_free_string(&ns_instance->targetpath);
 			oc_free_string(&ns_instance->pushqif);
 			oc_free_string_array(&ns_instance->sourcert);
