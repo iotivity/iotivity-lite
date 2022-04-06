@@ -1,0 +1,329 @@
+/******************************************************************
+ *
+ * Copyright (c) 2022 Daniel Adam
+ * Copyright (c) 2020 Intel Corporation
+ * Copyright (c) 2018 Samsung Electronics
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************/
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+#include "gtest/gtest.h"
+
+#include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_cred.h"
+#include "oc_cred_internal.h"
+#include "oc_pki.h"
+#include "security/oc_tls.h"
+
+#include <cstdio>
+#include <string>
+#include <stdexcept>
+
+class Certificate {
+public:
+  Certificate() = default;
+
+  bool Load(const std::string &path);
+
+  static bool ReadPemFile(std::string &file_path, char *buffer,
+                          size_t *buffer_len);
+
+  std::string path_{};
+  char data_[8192]{};
+  size_t dataLen_{ 0 };
+};
+
+bool
+Certificate::Load(const std::string &path)
+{
+  path_ = path;
+  dataLen_ = sizeof(data_);
+  return Certificate::ReadPemFile(path_, data_, &dataLen_);
+}
+
+bool
+Certificate::ReadPemFile(std::string &file_path, char *buffer,
+                         size_t *buffer_len)
+{
+  FILE *fp = fopen(file_path.c_str(), "r");
+  if (fp == nullptr) {
+    printf("%s:%d\n", __func__, __LINE__);
+    return false;
+  }
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    printf("%s:%d\n", __func__, __LINE__);
+    fclose(fp);
+    return false;
+  }
+  long pem_len = ftell(fp);
+  if (pem_len < 0) {
+    printf("%s:%d\n", __func__, __LINE__);
+    fclose(fp);
+    return false;
+  }
+  if (pem_len >= (long)*buffer_len) {
+    printf("%s:%d\n", __func__, __LINE__);
+    fclose(fp);
+    return false;
+  }
+  if (fseek(fp, 0, SEEK_SET) != 0) {
+    printf("%s:%d\n", __func__, __LINE__);
+    fclose(fp);
+    return false;
+  }
+  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+    printf("%s:%d\n", __func__, __LINE__);
+    fclose(fp);
+    return false;
+  }
+  fclose(fp);
+  buffer[pem_len] = '\0';
+  *buffer_len = (size_t)pem_len;
+  return true;
+}
+
+class CertificateKey {
+public:
+  CertificateKey() = default;
+
+  bool Load(const std::string &path);
+
+  std::string path_{};
+  char data_[4096]{};
+  size_t dataLen_{ 0 };
+};
+
+bool
+CertificateKey::Load(const std::string &path)
+{
+  path_ = path;
+  dataLen_ = sizeof(data_);
+  return Certificate::ReadPemFile(path_, data_, &dataLen_);
+}
+
+class IdentityCertificate {
+public:
+  IdentityCertificate() = default;
+
+  bool Add(size_t device);
+  bool Load(const std::string &certificatePath, const std::string &keyPath);
+  bool LoadAndAdd(const std::string &certificatePath,
+                  const std::string &keyPath, size_t device);
+
+  int credid_{ -1 };
+  Certificate cert_;
+  CertificateKey key_;
+};
+
+bool
+IdentityCertificate::Load(const std::string &certificatePath,
+                          const std::string &keyPath)
+{
+  return cert_.Load(certificatePath) && key_.Load(keyPath);
+}
+
+bool
+IdentityCertificate::Add(size_t device)
+{
+  if (cert_.dataLen_ == 0 || key_.dataLen_ == 0) {
+    return false;
+  }
+  if (credid_ != -1) {
+    return false;
+  }
+
+  int credid = oc_pki_add_mfg_cert(
+    device, reinterpret_cast<const unsigned char *>(cert_.data_),
+    cert_.dataLen_, reinterpret_cast<const unsigned char *>(key_.data_),
+    key_.dataLen_);
+  if (credid < 0) {
+    return false;
+  }
+  credid_ = credid;
+  return true;
+}
+
+bool
+IdentityCertificate::LoadAndAdd(const std::string &certificatePath,
+                                const std::string &keyPath, size_t device)
+{
+  if (!cert_.Load(certificatePath) || !key_.Load(keyPath)) {
+    return false;
+  }
+  return Add(device);
+}
+
+class IntermediateCertificate {
+public:
+  IntermediateCertificate() = default;
+
+  bool Add(size_t device, int entity_credid);
+  bool Load(const std::string &path);
+  bool LoadAndAdd(const std::string &path, size_t device, int entity_credid);
+
+  int credid_{ -1 };
+  Certificate cert_;
+};
+
+bool
+IntermediateCertificate::Add(size_t device, int entity_credid)
+{
+  if (cert_.dataLen_ == 0) {
+    return false;
+  }
+  if (credid_ != -1) {
+    return false;
+  }
+  if (entity_credid == -1) {
+    return false;
+  }
+
+  int credid = oc_pki_add_mfg_intermediate_cert(
+    device, entity_credid, reinterpret_cast<const unsigned char *>(cert_.data_),
+    cert_.dataLen_);
+  if (credid < 0) {
+    return false;
+  }
+  credid_ = credid;
+  return true;
+}
+
+bool
+IntermediateCertificate::Load(const std::string &path)
+{
+  return cert_.Load(path);
+}
+
+bool
+IntermediateCertificate::LoadAndAdd(const std::string &path, size_t device,
+                                    int entity_credid)
+{
+  if (!cert_.Load(path)) {
+    return false;
+  }
+  return Add(device, entity_credid);
+}
+
+class TrustAnchor {
+public:
+  TrustAnchor() = default;
+
+  bool Add(size_t device);
+  bool Load(const std::string &path);
+  bool LoadAndAdd(const std::string &path, size_t device);
+
+  int credid_{ -1 };
+  Certificate cert_;
+};
+
+bool
+TrustAnchor::Add(size_t device)
+{
+  if (cert_.dataLen_ == 0) {
+    return false;
+  }
+  if (credid_ != -1) {
+    return false;
+  }
+
+  int credid = oc_pki_add_mfg_trust_anchor(
+    device, reinterpret_cast<const unsigned char *>(cert_.data_),
+    cert_.dataLen_);
+  if (credid < 0) {
+    return false;
+  }
+  credid_ = credid;
+  return true;
+}
+
+bool
+TrustAnchor::Load(const std::string &path)
+{
+  return cert_.Load(path);
+}
+
+bool
+TrustAnchor::LoadAndAdd(const std::string &path, size_t device)
+{
+  if (!cert_.Load(path)) {
+    return false;
+  }
+  return Add(device);
+}
+
+class TestTlsCertificates : public testing::Test {
+protected:
+  void SetUp() override
+  {
+    oc_core_init();
+    oc_random_init();
+    oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                           "ocf.res.1.0.0", NULL, NULL);
+    oc_sec_cred_init();
+
+    device_ = oc_core_get_num_devices() - 1;
+    EXPECT_GE(device_, 0);
+    EXPECT_TRUE(
+      idcert1_.LoadAndAdd("pki_certs/ee.pem", "pki_certs/key.pem", device_));
+    EXPECT_TRUE(
+      subca1_.LoadAndAdd("pki_certs/subca1.pem", device_, idcert1_.credid_));
+    EXPECT_TRUE(idcert2_.LoadAndAdd("pki_certs/certification_tests_ee.pem",
+                                    "pki_certs/certification_tests_key.pem",
+                                    device_));
+    EXPECT_TRUE(rootca1_.LoadAndAdd("pki_certs/rootca1.pem", device_));
+    EXPECT_TRUE(rootca2_.LoadAndAdd("pki_certs/rootca2.pem", device_));
+  }
+
+  void TearDown() override
+  {
+    oc_sec_cred_free();
+    oc_connectivity_shutdown(device_);
+    oc_random_destroy();
+    oc_core_shutdown();
+  }
+
+protected:
+  int device_{ -1 };
+  IdentityCertificate idcert1_;
+  IdentityCertificate idcert2_;
+  IntermediateCertificate subca1_;
+  TrustAnchor rootca1_;
+  TrustAnchor rootca2_;
+};
+
+TEST_F(TestTlsCertificates, AddAndRemoveIdentityCertificates)
+{
+  EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert1_.credid_, device_));
+  EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert2_.credid_, device_));
+  EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
+}
+
+/*
+TEST_F(TestTlsCertificates, AddTrustedRoot)
+{
+  int rootca1_credid = oc_pki_add_mfg_trust_anchor(
+    0, reinterpret_cast<const unsigned char *>(rootca1.data_),
+    rootca1.dataLen_);
+  EXPECT_GE(rootca1_credid, 0);
+
+  // TODO: check ca_certs vs. trust_anchors size
+}
+*/
+
+#endif /* OC_SECURITY && OC_PKI */

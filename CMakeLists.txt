@@ -544,6 +544,10 @@ if(BUILD_TESTING AND UNIX)
     if(OC_SECURITY_ENABLED)
         file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)
         package_add_test(securitytest ${SECURITYTEST_SRC})
+
+        file(COPY ${PROJECT_SOURCE_DIR}/apps/pki_certs
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+        )
     endif()
 
 # Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f

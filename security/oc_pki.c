@@ -119,7 +119,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
 
   if (ret > 0) {
     OC_DBG("added intermediate CA cert to /oic/sec/cred");
-    oc_tls_refresh_identity_certs();
+    oc_tls_add_new_identity_certs();
     return credid;
   }
   OC_ERR("could not add intermediate CA cert to /oic/sec/cred");
