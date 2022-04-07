@@ -560,11 +560,13 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     rep = rep->next;
   }
 
-  if (!error_state && purl &&
-      (!cb || !cb->validate_purl || (cb->validate_purl(purl) < 0))) {
+  if (action >= OC_SWUPDATE_UPGRADE || !purl || !ut) {
     error_state = true;
   }
-  if (action != OC_SWUPDATE_IDLE && action <= OC_SWUPDATE_UPGRADE && !ut) {
+  if (action != OC_SWUPDATE_IDLE && action <= OC_SWUPDATE_UPGRADE && !purl) {
+    error_state = true;
+  }
+  if (purl && (!cb || !cb->validate_purl || (cb->validate_purl(purl) < 0))) {
     error_state = true;
   }
   /* if the input is ok, then process the input document and assign the global
