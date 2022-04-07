@@ -116,6 +116,34 @@ extern "C" {
 
 #endif // defined(_WIN32) || defined(_WIN64)
 
+#if defined(__ZEPHYR__)
+
+#include <sys/atomic.h>
+
+#define OC_ATOMIC
+#define OC_ATOMIC_INT8_T atomic_t
+#define OC_ATOMIC_UINT8_T atomic_t
+#define OC_ATOMIC_INT32_T atomic_t
+#define OC_ATOMIC_UINT32_T atomic_t
+
+#define OC_ATOMIC_LOAD32(x) atomic_get(&(x))
+#define OC_ATOMIC_STORE32(x, val) atomic_set(&(x), (val))
+#define OC_ATOMIC_INCREMENT32(x) atomic_inc(&(x))
+#define OC_ATOMIC_DECREMENT32(x) atomic_dec(&(x))
+
+#define OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)             \
+  do {                                                                         \
+    (result) = atomic_cas(&(x), expected, desired);                            \
+  } while (0)
+
+// aliases for compatibility
+#define OC_ATOMIC_LOAD8(x) OC_ATOMIC_LOAD32(x)
+#define OC_ATOMIC_STORE8(x, val) OC_ATOMIC_STORE32(x, val)
+#define OC_ATOMIC_COMPARE_AND_SWAP8(x, expected, desired, result)              \
+  OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)
+
+#endif // defined(__ZEPHYR__)
+
 // fallback to volatile on platforms without atomic support
 #ifndef OC_ATOMIC
 
