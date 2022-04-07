@@ -18,7 +18,7 @@
  *
  ******************************************************************/
 
-#if defined(OC_SECURITY) && defined(OC_PKI)
+#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_TEST)
 
 #include "gtest/gtest.h"
 
@@ -305,7 +305,7 @@ protected:
   TrustAnchor rootca2_;
 };
 
-TEST_F(TestTlsCertificates, AddAndRemoveIdentityCertificates)
+TEST_F(TestTlsCertificates, RemoveIdentityCertificates)
 {
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
   EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert1_.credid_, device_));
@@ -314,16 +314,13 @@ TEST_F(TestTlsCertificates, AddAndRemoveIdentityCertificates)
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
 }
 
-/*
-TEST_F(TestTlsCertificates, AddTrustedRoot)
+TEST_F(TestTlsCertificates, RemoveTrustAnchors)
 {
-  int rootca1_credid = oc_pki_add_mfg_trust_anchor(
-    0, reinterpret_cast<const unsigned char *>(rootca1.data_),
-    rootca1.dataLen_);
-  EXPECT_GE(rootca1_credid, 0);
-
-  // TODO: check ca_certs vs. trust_anchors size
+  EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca1_.credid_, device_));
+  EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca2_.credid_, device_));
+  EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
 }
-*/
 
-#endif /* OC_SECURITY && OC_PKI */
+#endif /* OC_SECURITY && OC_PKI && OC_TEST */

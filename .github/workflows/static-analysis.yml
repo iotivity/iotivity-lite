@@ -21,8 +21,9 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y clang-tidy
+
       - name: Build with clang-tidy
         run: |
           mkdir linuxbuild && cd linuxbuild
-          cmake -DOC_CLANG_TIDY_ENABLED=ON ..
+          cmake -DOC_IPV4_ENABLED=ON -DOC_CLANG_TIDY_ENABLED=ON -DBUILD_TESTING=OFF ..
           make all

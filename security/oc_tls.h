@@ -156,14 +156,15 @@ int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
                   unsigned int c, uint8_t *key, uint32_t key_len);
 
 /**
- * @brief Internal interface for adding new identity certificate chains.
+ * @brief Internal interface for examining credentials for new identity
+ * certificate chains.
  *
  * Iterate over all credentials, check if a credential is associated with a leaf
  * identity certificate. If the identity certificate doesn't exist in the global
  * list of identity certificates then create a new identity certificate item and
  * add it to the list.
  */
-void oc_tls_add_new_identity_certs(void);
+void oc_tls_resolve_new_identity_certs(void);
 
 /**
  * @brief Remove certificate associated with the credential from the global list
@@ -176,18 +177,25 @@ void oc_tls_add_new_identity_certs(void);
 bool oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
 
 /**
- * @brief Check global lists of credentials and identity certificates that they
- * contain the same items.
+ * @brief Internal interface for examining credentials for new trust anchors.
+ */
+void oc_tls_resolve_new_trust_anchors(void);
+
+/**
+ * @brief Remove certificate associated with the credential from the global
+ * lists of leaf trust anchors.
  *
- * @return true if the lists of identity certificates are consistent with each
- * other
+ * They are two lists that contain trust anchors: a simple linked list and a
+ * mbedtls chain. The trust anchor is removed from the linked list in a standard
+ * way. The mbedtls chain is thrown away fully and reloaded from the linked
+ * list.
+ *
+ * @param cred credential associated with the trust anchor to remove
+ * @return true trust anchor was found, removed the global linked list and the
+ * global mbedtls trust anchor chain was reloaded
  * @return false otherwise
  */
-bool oc_tls_validate_identity_certs_consistency(void);
-
-/* Internal interface for refreshing trust anchor credentials */
-void oc_tls_add_new_trust_anchors(void);
-void oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
+bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
 
 /**
  * @brief Get mbedtls container with trust anchors used globally by the
@@ -197,6 +205,28 @@ void oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
  * anchors
  */
 mbedtls_x509_crt *oc_tls_get_trust_anchors(void);
+
+#ifdef OC_TEST
+/**
+ * @brief Check global lists of credentials and identity certificates that they
+ * contain the same items.
+ *
+ * @return true if the lists of identity certificates are consistent with each
+ * other
+ * @return false otherwise
+ */
+bool oc_tls_validate_identity_certs_consistency(void);
+
+/**
+ * @brief Check global lists of credentials and trust anchors that they
+ * contain the same items.
+ *
+ * @return true if the lists of trust anchors are consistent with each
+ * other
+ * @return false otherwise
+ */
+bool oc_tls_validate_trust_anchors_consistency(void);
+#endif /* OC_TEST */
 
 #ifdef __cplusplus
 }
