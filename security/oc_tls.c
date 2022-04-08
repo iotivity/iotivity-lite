@@ -114,8 +114,10 @@ typedef struct oc_x509_cacrt_t
   mbedtls_x509_crt *cert;
 } oc_x509_cacrt_t;
 
-OC_MEMB(ca_certs_s, oc_x509_cacrt_t, OC_MAX_NUM_DEVICES);
-OC_LIST(ca_certs);
+OC_MEMB(g_ca_certs_s, oc_x509_cacrt_t, OC_MAX_NUM_DEVICES);
+OC_LIST(g_ca_certs);
+
+static mbedtls_x509_crt g_trust_anchors;
 
 typedef struct oc_x509_crt_t
 {
@@ -128,10 +130,9 @@ typedef struct oc_x509_crt_t
 } oc_x509_crt_t;
 
 #include "oc_certs.h"
-OC_MEMB(identity_certs_s, oc_x509_crt_t, 2 * OC_MAX_NUM_DEVICES);
-OC_LIST(identity_certs);
+OC_MEMB(g_identity_certs_s, oc_x509_crt_t, 2 * OC_MAX_NUM_DEVICES);
+OC_LIST(g_identity_certs);
 
-mbedtls_x509_crt trust_anchors;
 #endif /* OC_PKI */
 
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -234,7 +235,7 @@ static const int cert_priority[5] = {
 mbedtls_x509_crt *
 oc_tls_get_trust_anchors(void)
 {
-  return &trust_anchors;
+  return &g_trust_anchors;
 }
 #endif /* OC_PKI */
 
@@ -413,7 +414,7 @@ oc_tls_is_pin_otm_supported(size_t device)
 bool
 oc_tls_is_cert_otm_supported(size_t device)
 {
-  oc_x509_crt_t *crt = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  oc_x509_crt_t *crt = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (crt) {
     if (crt->device == device &&
         crt->cred->credusage == OC_CREDUSAGE_MFG_CERT) {
@@ -702,7 +703,7 @@ typedef bool (*check_if_known_cert_cb)(oc_sec_cred_t *cred);
 typedef void (*add_new_cert_cb)(oc_sec_cred_t *cred, size_t device);
 
 static void
-oc_tls_refresh_certs(oc_sec_credusage_t credusage,
+oc_tls_add_new_certs(oc_sec_credusage_t credusage,
                      check_if_known_cert_cb is_known_cert,
                      add_new_cert_cb add_new_cert)
 {
@@ -711,7 +712,7 @@ oc_tls_refresh_certs(oc_sec_credusage_t credusage,
     oc_sec_creds_t *creds = oc_sec_get_creds(device);
     oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
     for (; cred != NULL; cred = cred->next) {
-      /* Pick all "leaf" certficiates with matching credusage */
+      /* Pick all "leaf" certificates with matching credusage */
       if ((cred->credusage & credusage) != 0 && !cred->child) {
 
         if (is_known_cert(cred)) {
@@ -727,7 +728,7 @@ oc_tls_refresh_certs(oc_sec_credusage_t credusage,
 static bool
 is_known_identity_cert(oc_sec_cred_t *cred)
 {
-  oc_x509_crt_t *certs = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  oc_x509_crt_t *certs = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
 
   /* Look for a matching end-entity cert chain */
   for (; certs != NULL; certs = certs->next) {
@@ -825,7 +826,7 @@ next_cred_in_chain:
 static void
 add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
 {
-  oc_x509_crt_t *cert = oc_memb_alloc(&identity_certs_s);
+  oc_x509_crt_t *cert = oc_memb_alloc(&g_identity_certs_s);
   if (!cert) {
     OC_WRN("could not allocate memory for identity cert");
     return;
@@ -859,6 +860,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
         goto add_new_identity_cert_error;
       }
     }
+    OC_DBG("identity cert for credential(credid=%d) parsed", cred->credid);
     cred = cred->chain;
   }
 
@@ -872,7 +874,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
   OC_DBG("adding new identity cert chain of size %d", chain_length);
 #endif /* OC_DEBUG */
 
-  oc_list_add(identity_certs, cert);
+  oc_list_add(g_identity_certs, cert);
 
   return;
 
@@ -880,54 +882,308 @@ add_new_identity_cert_error:
   OC_ERR("error adding identity cert");
   mbedtls_x509_crt_free(&cert->cert);
   mbedtls_pk_free(&cert->pk);
-  oc_memb_free(&identity_certs_s, cert);
+  oc_memb_free(&g_identity_certs_s, cert);
 }
 
 void
-oc_tls_refresh_identity_certs(void)
+oc_tls_resolve_new_identity_certs(void)
 {
-  OC_DBG("refreshing identity certs");
-  oc_tls_refresh_certs(OC_CREDUSAGE_MFG_CERT | OC_CREDUSAGE_IDENTITY_CERT,
+  OC_DBG("resolving new identity certs");
+  oc_tls_add_new_certs(OC_CREDUSAGE_MFG_CERT | OC_CREDUSAGE_IDENTITY_CERT,
                        is_known_identity_cert, add_new_identity_cert);
 }
 
-void
-oc_tls_remove_identity_cert(oc_sec_cred_t *cred)
+static oc_x509_crt_t *
+oc_tls_find_identity_cert(const oc_sec_cred_t *cred)
 {
-  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL && cert->cred != cred) {
     cert = cert->next;
   }
-  if (cert) {
-    oc_list_remove(identity_certs, cert);
-    mbedtls_x509_crt_free(&cert->cert);
-    mbedtls_pk_free(&cert->pk);
-    oc_memb_free(&identity_certs_s, cert);
-  }
+  return cert;
 }
 
-void
-oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
+bool
+oc_tls_remove_identity_cert(oc_sec_cred_t *cred)
 {
-  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
-  while (cert && cert->cred != cred) {
+  oc_x509_crt_t *cert = oc_tls_find_identity_cert(cred);
+  if (!cert) {
+    return false;
+  }
+  OC_DBG("identity cert for credential(credid=%d) removed", cred->credid);
+  oc_list_remove(g_identity_certs, cert);
+  mbedtls_x509_crt_free(&cert->cert);
+  mbedtls_pk_free(&cert->pk);
+  oc_memb_free(&g_identity_certs_s, cert);
+  return true;
+}
+
+static oc_x509_cacrt_t *
+oc_tls_find_trust_anchor_for_cred(const oc_sec_cred_t *cred)
+{
+  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  while (cert != NULL && cert->cred != cred) {
     cert = cert->next;
   }
-  if (cert) {
-    oc_list_remove(ca_certs, cert);
-    oc_memb_free(&ca_certs_s, cert);
-  }
-  mbedtls_x509_crt_free(&trust_anchors);
-  mbedtls_x509_crt_init(&trust_anchors);
-  oc_tls_refresh_trust_anchors();
+  return cert;
 }
+
+static int
+oc_tls_reload_trust_anchors()
+{
+  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  while (cert != NULL) {
+    int ret = mbedtls_x509_crt_parse(
+      &g_trust_anchors,
+      (const unsigned char *)oc_string(cert->cred->publicdata.data),
+      oc_string_len(cert->cred->publicdata.data) + 1);
+    if (ret != 0) {
+      OC_WRN("could not parse an trustca/mfgtrustca root certificate %d", ret);
+      return -1;
+    }
+
+    mbedtls_x509_crt *c = &g_trust_anchors;
+#ifdef OC_DEBUG
+    int chain_length = 1;
+#endif /* OC_DEBUG */
+    while (c->next) {
+#ifdef OC_DEBUG
+      ++chain_length;
+#endif /* OC_DEBUG */
+      c = c->next;
+    }
+    cert->cert = c;
+#ifdef OC_DEBUG
+    char buf[256];
+    if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
+      OC_DBG("trust anchor(serial: %s) added to chain", buf);
+    }
+    OC_DBG("trust anchor chain is now of size %d", chain_length);
+#endif /* OC_DEBUG */
+
+    cert = cert->next;
+  }
+  return 0;
+}
+
+bool
+oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
+{
+  oc_x509_cacrt_t *cert = oc_tls_find_trust_anchor_for_cred(cred);
+  if (cert == NULL) {
+    return false;
+  }
+  oc_list_remove(g_ca_certs, cert);
+  oc_memb_free(&g_ca_certs_s, cert);
+  OC_DBG("trust anchor for credential(credid=%d) removed from ca certs",
+         cred->credid);
+  mbedtls_x509_crt_free(&g_trust_anchors);
+  mbedtls_x509_crt_init(&g_trust_anchors);
+  OC_DBG("trust anchor chain cleared");
+  return oc_tls_reload_trust_anchors() == 0;
+}
+
+#ifdef OC_TEST
+
+static oc_sec_cred_t *
+oc_tls_find_cert_cred(size_t device, oc_sec_cred_t *cert_cred)
+{
+  if (cert_cred == NULL) {
+    return NULL;
+  }
+  oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  for (oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
+       cred != NULL; cred = cred->next) {
+    if (cert_cred == cred) {
+      return cred;
+    }
+  }
+  return NULL;
+}
+
+static bool
+oc_tls_validate_identity_certs_consistency_for_device(size_t device)
+{
+  // check device credentials and list of identity certs equivalence
+  // - all credentials for identity certificates are contained in the list of
+  // identity certificates
+  oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  for (oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
+       cred != NULL; cred = cred->next) {
+    /* Get leaf identity / mfg certificates */
+    if ((cred->credusage &
+         (OC_CREDUSAGE_MFG_CERT | OC_CREDUSAGE_IDENTITY_CERT)) != 0 &&
+        !cred->child) {
+      OC_DBG("search for identity cert for cred(%d)", cred->credid);
+      oc_x509_crt_t *cert = oc_tls_find_identity_cert(cred);
+      if (cert == NULL) {
+        OC_DBG("\tidentity not found");
+        return false;
+      }
+      OC_DBG("\tidentity cert(%p) found", cert);
+    }
+  }
+
+  // - all identity certificates have a credential
+  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
+  while (cert != NULL) {
+    OC_DBG("search for cred for identity cert(%p)", cert);
+    oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
+    if (cred == NULL) {
+      OC_DBG("\tcred not found");
+      return false;
+    }
+    OC_DBG("\tcred(%d) found", cred->credid);
+    cert = cert->next;
+  }
+
+  return true;
+}
+
+bool
+oc_tls_validate_identity_certs_consistency()
+{
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+    if (!oc_tls_validate_identity_certs_consistency_for_device(device)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static oc_x509_cacrt_t *
+oc_tls_find_ca_cert(mbedtls_x509_crt *cert)
+{
+  if (cert == NULL) {
+    return NULL;
+  }
+  oc_x509_cacrt_t *c = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  while (c != NULL) {
+    if (c->cert == cert) {
+      return c;
+    }
+    c = c->next;
+  }
+  return NULL;
+}
+
+static mbedtls_x509_crt *
+oc_tls_find_trust_anchor(oc_x509_cacrt_t *cacert)
+{
+  if (cacert == NULL) {
+    return NULL;
+  }
+
+  mbedtls_x509_crt *c = &g_trust_anchors;
+  while (c != NULL) {
+    if (c == cacert->cert) {
+      return c;
+    }
+    c = c->next;
+  }
+  return NULL;
+}
+
+static bool
+oc_tls_trust_anchors_is_empty()
+{
+  mbedtls_x509_crt crt;
+  memset(&crt, 0, sizeof(mbedtls_x509_crt));
+  return memcmp(&g_trust_anchors, &crt, sizeof(mbedtls_x509_crt)) == 0;
+}
+
+bool
+oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
+{
+  // We have 3 containers that should contain the same trust anchors:
+  // - global list of credentials (creds)
+  // - global list of trust anchors (g_ca_certs)
+  // - mbedtls container of trust anchors (g_trust_anchors)
+
+  // - check that the g_ca_certs list contains all trust anchors from the creds
+  // list
+  oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  for (oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
+       cred != NULL; cred = cred->next) {
+    /* Get leaf trust anchors */
+    if ((cred->credusage & (OC_CREDUSAGE_TRUSTCA | OC_CREDUSAGE_MFG_TRUSTCA)) !=
+          0 &&
+        !cred->child) {
+      OC_DBG("search for trust anchor for cred(%d)", cred->credid);
+      oc_x509_cacrt_t *cert = oc_tls_find_trust_anchor_for_cred(cred);
+      if (cert == NULL) {
+        OC_DBG("\ttrust anchor not found");
+        return false;
+      }
+      OC_DBG("\ttrust anchor(%p) found", cert);
+    }
+  }
+
+  // - check that the creds list contains all trust anchors from the g_ca_certs
+  // list
+  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  while (cert != NULL) {
+    OC_DBG("search for cred for trust anchor(%p)", cert);
+    oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
+    if (cred == NULL) {
+      OC_DBG("\tcred not found");
+      return false;
+    }
+    OC_DBG("\tcred(%d) found", cred->credid);
+    cert = cert->next;
+  }
+
+  // - check that the g_ca_certs list contains all trust anchors from the
+  // g_trust_anchors container
+  if (!oc_tls_trust_anchors_is_empty()) {
+    mbedtls_x509_crt *c = &g_trust_anchors;
+    while (c != NULL) {
+      OC_DBG("search for trust anchor for mbedtls trust anchor(%p)", c);
+      cert = oc_tls_find_ca_cert(c);
+      if (cert == NULL) {
+        OC_DBG("\ttrust anchor not found");
+        return false;
+      }
+      OC_DBG("\ttrust anchor(%p) found", cert);
+      c = c->next;
+    }
+  }
+
+  // - check that the g_trust_anchors container contains all trust anchors from
+  // the g_ca_certs list
+  cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  while (cert != NULL) {
+    OC_DBG("search for mbedtls trust anchor for trust anchor(%p)", cert);
+    mbedtls_x509_crt *c = oc_tls_find_trust_anchor(cert);
+    if (c == NULL) {
+      OC_DBG("\tmbedtls trust anchor not found");
+      return false;
+    }
+    OC_DBG("\tmbedtls trust anchor(%p) found", c);
+    cert = cert->next;
+  }
+
+  return true;
+}
+
+bool
+oc_tls_validate_trust_anchors_consistency(void)
+{
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+    if (!oc_tls_validate_trust_anchors_consistency_for_device(device)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+#endif /* OC_TEST */
 
 static int
 oc_tls_configure_end_entity_cert_chain(mbedtls_ssl_config *conf, size_t device,
                                        oc_sec_credusage_t credusage, int credid)
 {
-  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(identity_certs);
-
+  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
     if (cert->device == device && cert->cred->credusage == credusage &&
         (credid == -1 || cert->cred->credid == credid)) {
@@ -964,7 +1220,7 @@ oc_tls_load_identity_cert_chain(mbedtls_ssl_config *conf, size_t device,
 static bool
 is_known_trust_anchor(oc_sec_cred_t *cred)
 {
-  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
+  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
 
   for (; cert != NULL; cert = cert->next) {
     if (cert->cred == cred) {
@@ -978,16 +1234,15 @@ is_known_trust_anchor(oc_sec_cred_t *cred)
 static void
 add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
 {
-  (void)device;
   int ret = mbedtls_x509_crt_parse(
-    &trust_anchors, (const unsigned char *)oc_string(cred->publicdata.data),
+    &g_trust_anchors, (const unsigned char *)oc_string(cred->publicdata.data),
     oc_string_len(cred->publicdata.data) + 1);
   if (ret != 0) {
     OC_WRN("could not parse an trustca/mfgtrustca root certificate %d", ret);
     return;
   }
 
-  oc_x509_cacrt_t *cert = oc_memb_alloc(&ca_certs_s);
+  oc_x509_cacrt_t *cert = oc_memb_alloc(&g_ca_certs_s);
   if (!cert) {
     OC_WRN("could not allocate memory for new trust anchor");
     return;
@@ -995,22 +1250,34 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
 
   cert->device = device;
   cert->cred = cred;
-  mbedtls_x509_crt *c = &trust_anchors;
+  mbedtls_x509_crt *c = &g_trust_anchors;
+#ifdef OC_DEBUG
+  int chain_length = 1;
+#endif /* OC_DEBUG */
   while (c->next) {
+#ifdef OC_DEBUG
+    ++chain_length;
+#endif /* OC_DEBUG */
     c = c->next;
   }
   cert->cert = c;
+#ifdef OC_DEBUG
+  char buf[256];
+  if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
+    OC_DBG("trust anchor(serial: %s) added to chain", buf);
+  }
+  OC_DBG("trust anchor chain is now of size %d", chain_length);
+#endif /* OC_DEBUG */
 
-  oc_list_add(ca_certs, cert);
-
-  OC_DBG("adding new trust anchor");
+  oc_list_add(g_ca_certs, cert);
+  OC_DBG("appended new trust anchor to ca certs");
 }
 
 void
-oc_tls_refresh_trust_anchors(void)
+oc_tls_resolve_new_trust_anchors(void)
 {
-  OC_DBG("refreshing trust anchors");
-  oc_tls_refresh_certs(OC_CREDUSAGE_MFG_TRUSTCA | OC_CREDUSAGE_TRUSTCA,
+  OC_DBG("adding new trust anchors");
+  oc_tls_add_new_certs(OC_CREDUSAGE_MFG_TRUSTCA | OC_CREDUSAGE_TRUSTCA,
                        is_known_trust_anchor, add_new_trust_anchor);
 }
 
@@ -1047,7 +1314,7 @@ oc_tls_select_identity_cert_chain(int credid)
 static oc_x509_crt_t *
 get_identity_cert_for_session(const mbedtls_ssl_config *conf)
 {
-  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(identity_certs);
+  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
     if (&cert->cert == conf->key_cert->cert) {
       return cert;
@@ -1063,7 +1330,7 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, oc_endpoint_t *endpoint)
 {
   (void)endpoint;
 #ifdef OC_PKI
-  mbedtls_ssl_conf_ca_chain(conf, &trust_anchors, NULL);
+  mbedtls_ssl_conf_ca_chain(conf, &g_trust_anchors, NULL);
 #ifdef OC_CLIENT
   bool loaded_chain = false;
 #endif /* OC_CLIENT */
@@ -1183,7 +1450,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       }
     } else {
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
-        oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
+        oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
         while (ca_cert) {
           if (ca_cert->device == id_cert->device &&
               ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA &&
@@ -1243,7 +1510,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 
       OC_DBG(
         "looking for a matching trustca entry currently tracked by oc_tls");
-      oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(ca_certs);
+      oc_x509_cacrt_t *ca_cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
       for (; ca_cert != NULL && ca_cert->device == id_cert->device &&
              ca_cert->cred->credusage == OC_CREDUSAGE_TRUSTCA;
            ca_cert = ca_cert->next) {
@@ -1480,19 +1747,19 @@ oc_tls_shutdown(void)
     p = oc_list_pop(tls_peers);
   }
 #ifdef OC_PKI
-  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_pop(identity_certs);
+  oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_pop(g_identity_certs);
   while (cert != NULL) {
     mbedtls_x509_crt_free(&cert->cert);
     mbedtls_pk_free(&cert->pk);
-    oc_memb_free(&identity_certs_s, cert);
-    cert = (oc_x509_crt_t *)oc_list_pop(identity_certs);
+    oc_memb_free(&g_identity_certs_s, cert);
+    cert = (oc_x509_crt_t *)oc_list_pop(g_identity_certs);
   }
-  oc_x509_cacrt_t *ca = (oc_x509_cacrt_t *)oc_list_pop(ca_certs);
+  oc_x509_cacrt_t *ca = (oc_x509_cacrt_t *)oc_list_pop(g_ca_certs);
   while (ca) {
-    oc_memb_free(&ca_certs_s, ca);
-    ca = (oc_x509_cacrt_t *)oc_list_pop(ca_certs);
+    oc_memb_free(&g_ca_certs_s, ca);
+    ca = (oc_x509_cacrt_t *)oc_list_pop(g_ca_certs);
   }
-  mbedtls_x509_crt_free(&trust_anchors);
+  mbedtls_x509_crt_free(&g_trust_anchors);
 #endif /* OC_PKI */
   mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&cookie_ctx);
@@ -1529,7 +1796,7 @@ oc_tls_init_context(void)
   }
 
 #ifdef OC_PKI
-  mbedtls_x509_crt_init(&trust_anchors);
+  mbedtls_x509_crt_init(&g_trust_anchors);
 #endif /* OC_PKI */
 
   return 0;

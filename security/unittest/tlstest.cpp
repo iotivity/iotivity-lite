@@ -18,6 +18,8 @@
  *
  ******************************************************************/
 
+#if defined(OC_TCP) && defined(OC_SECURITY)
+
 #include "gtest/gtest.h"
 #include <cstdlib>
 
@@ -62,17 +64,14 @@ protected:
   }
 };
 
-#if defined(OC_TCP) && defined(OC_SECURITY)
 TEST_F(TestTlsConnection, InitTlsTest_P)
 {
-
   int errorCode = oc_tls_init_context();
   EXPECT_EQ(0, errorCode) << "Failed to init TLS Connection";
 }
 
 TEST_F(TestTlsConnection, InitTlsTestTwice_P)
 {
-
   int errorCode = oc_tls_init_context();
   ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
   oc_tls_shutdown();
@@ -82,7 +81,6 @@ TEST_F(TestTlsConnection, InitTlsTestTwice_P)
 
 TEST_F(TestTlsConnection, TlsConnectionTest_N)
 {
-
   int errorCode = oc_tls_init_context();
   ASSERT_EQ(0, errorCode) << "Failed to init TLS Connection";
   oc_endpoint_t *endpoint = oc_new_endpoint();
@@ -91,4 +89,4 @@ TEST_F(TestTlsConnection, TlsConnectionTest_N)
   oc_free_endpoint(endpoint);
 }
 
-#endif
+#endif /* OC_TCP && OC_SECURITY */

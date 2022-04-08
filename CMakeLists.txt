@@ -148,6 +148,10 @@ if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
 endif()
 
+if(BUILD_TESTING)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
+endif()
+
 ######## Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
@@ -508,7 +512,7 @@ if(BUILD_TESTING AND UNIX)
         add_executable(${TESTNAME} ${ARGN})
         target_compile_options(${TESTNAME} PRIVATE ${TEST_COMPILE_OPTIONS})
         target_compile_features(${TESTNAME} PRIVATE cxx_nullptr)
-        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
+        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER" "OC_TEST")
         target_include_directories(${TESTNAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
         target_include_directories(${TESTNAME} PRIVATE
             ${PROJECT_SOURCE_DIR}
@@ -544,6 +548,10 @@ if(BUILD_TESTING AND UNIX)
     if(OC_SECURITY_ENABLED)
         file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)
         package_add_test(securitytest ${SECURITYTEST_SRC})
+
+        file(COPY ${PROJECT_SOURCE_DIR}/apps/pki_certs
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+        )
     endif()
 
 # Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f

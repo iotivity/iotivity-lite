@@ -192,9 +192,16 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
   if (cred->credtype == OC_CREDTYPE_CERT) {
     if (cred->credusage != OC_CREDUSAGE_TRUSTCA &&
         cred->credusage != OC_CREDUSAGE_MFG_TRUSTCA) {
-      oc_tls_remove_identity_cert(cred);
+      if (!oc_tls_remove_identity_cert(cred)) {
+        OC_ERR(
+          "oc_cred: failed to remove identity certificate for credential(%d)",
+          cred->credid);
+      }
     } else {
-      oc_tls_remove_trust_anchor(cred);
+      if (!oc_tls_remove_trust_anchor(cred)) {
+        OC_ERR("oc_cred: failed to remove trust anchor for credential(%d)",
+               cred->credid);
+      }
     }
   }
 #endif /* OC_PKI */
@@ -617,11 +624,11 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   if (cred->credtype == OC_CREDTYPE_CERT) {
     if (cred->credusage == OC_CREDUSAGE_MFG_CERT ||
         cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
-      oc_tls_refresh_identity_certs();
+      oc_tls_resolve_new_identity_certs();
     }
     if (cred->credusage == OC_CREDUSAGE_MFG_TRUSTCA ||
         cred->credusage == OC_CREDUSAGE_TRUSTCA) {
-      oc_tls_refresh_trust_anchors();
+      oc_tls_resolve_new_trust_anchors();
     }
 #if defined(OC_PKI) && defined(OC_CLIENT)
     if (!roles_resource && credusage == OC_CREDUSAGE_ROLE_CERT &&
