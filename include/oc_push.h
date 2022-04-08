@@ -165,13 +165,13 @@ extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
 #define pp_statestr(i) (pp_state_strs[(i)])
 
 /**
- * @param state		oc_string_t pointer
- * @param new_state	c string pointer
+ * @param state		oc_string_t
+ * @param new_state	char *
  */
 #define pp_update_state(state, new_state) \
 { \
-	oc_free_string((state)); \
-	oc_new_string((state), (new_state), strlen((new_state))); \
+	oc_free_string(&(state)); \
+	oc_new_string(&(state), (new_state), strlen((new_state))); \
 }
 
 

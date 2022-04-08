@@ -325,7 +325,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 						oc_string(ns_instance->state), oc_string(rep->value.string));
 //						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
-				pp_update_state(&ns_instance->state, oc_string(rep->value.string));
+				pp_update_state(ns_instance->state, oc_string(rep->value.string));
 //				ns_instance->state = rep->value.integer;
 			}
 			break;
@@ -339,12 +339,8 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 			oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
 //			pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
-	pp_update_state(&ns_instance->state, pp_statestr(OC_PP_WFU));
+	pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
 //	ns_instance->state = OC_PP_WFU;
-
-	/*
-	 * xxx4me <2022/4/6> resume here
-	 */
 
 	result = true;
 
@@ -448,7 +444,8 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		/*
 		 * state
 		 */
-		oc_rep_set_int(root, state, ns_instance->state);
+//		oc_rep_set_int(root, state, ns_instance->state);
+		oc_rep_set_text_string(root, state, oc_string(ns_instance->state));
 
 		break;
 	default:
@@ -533,7 +530,8 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 
 			p_dbg("new link (\"%s\") and corresponding resource for \"%s\" collection is created\n", oc_string(ns_instance->resource->uri), PUSHCONF_RSC_PATH);
 
-			ns_instance->state = OC_PP_WFP;
+//			ns_instance->state = OC_PP_WFP;
+			oc_new_string(&ns_instance->state, pp_statestr(OC_PP_WFP), strlen(pp_statestr(OC_PP_WFP)));
 
 			p_dbg("state of Push Proxy (\"%s\") is initialized (%s)\n", oc_string(ns_instance->resource->uri), pp_statestr(OC_PP_WFP));
 
@@ -599,10 +597,11 @@ void free_ns_instance(oc_resource_t *resource)
 				ep = ep->next;
 			}
 
-			/* todo4me state 문자열도 메모리 해제 */
 			oc_free_string(&ns_instance->targetpath);
 			oc_free_string(&ns_instance->pushqif);
 			oc_free_string_array(&ns_instance->sourcert);
+
+			oc_free_string(&ns_instance->state);
 
 			oc_memb_free(&ns_instance_memb, ns_instance);
 			return;
@@ -2346,14 +2345,18 @@ void response_to_push_rsc(oc_client_response_t *data)
 	if (data->code == OC_STATUS_SERVICE_UNAVAILABLE)
 	{
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-				pp_statestr(ns_instance->state), pp_statestr(OC_PP_TOUT));
-			ns_instance->state = OC_PP_TOUT;
+				oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT));
+//				pp_statestr(ns_instance->state), pp_statestr(OC_PP_TOUT));
+			pp_update_state(ns_instance->state, pp_statestr(OC_PP_TOUT));
+//			ns_instance->state = OC_PP_TOUT;
 	}
 	else
 	{
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-				pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
-		ns_instance->state = OC_PP_WFU;
+				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
+//				pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
+		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
+//		ns_instance->state = OC_PP_WFU;
 	}
 
 	/*
@@ -2459,8 +2462,10 @@ void push_update(oc_ns_t *ns_instance)
 			oc_free_string(&full_uri);
 #endif
 			p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-					pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFR));
-			ns_instance->state = OC_PP_WFR;
+					oc_string(ns_instance->state), pp_statestr(OC_PP_WFR));
+//					pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFR));
+			pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFR));
+//			ns_instance->state = OC_PP_WFR;
 		}
 		else
 		{
