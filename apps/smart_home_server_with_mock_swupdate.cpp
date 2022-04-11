@@ -221,7 +221,7 @@ void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", pin_len, pin);
+  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
