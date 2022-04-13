@@ -24,6 +24,7 @@
 #include "oc_enums.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
+#include "oc_server_api_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
 #endif /* OC_SECURITY */
@@ -599,7 +600,7 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 #endif /* OC_SECURITY */
     oc_rep_start_object((links_array), links);
 
-    char href[OC_UUID_LEN + 6 + 256];
+    char href[OC_MAX_OCF_URI_SIZE];
     memcpy(href, "ocf://", 6);
     oc_uuid_to_str(oc_core_get_device_id(resource->device), href + 6,
                    OC_UUID_LEN);
