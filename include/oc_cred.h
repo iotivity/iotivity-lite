@@ -107,6 +107,7 @@ typedef struct oc_sec_cred_t
   oc_sec_credtype_t credtype; ///< credential type
   oc_uuid_t subjectuuid;      ///< subject uuid
   bool owner_cred;            ///< owner
+  oc_string_t tag;            ///< custom user tag
 } oc_sec_cred_t;
 
 /**
@@ -164,13 +165,27 @@ oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
 OC_API
 const char *oc_cred_credtype_string(oc_sec_credtype_t credtype);
 
+typedef struct oc_sec_on_apply_cred_data_t
+{
+  oc_sec_cred_t *cred; ///< New or updated credential
+  const oc_sec_cred_t
+    *replaced;  ///< in case of modification of an existing credential this is
+                ///< the original credential that has been replaced; the
+                ///< credential will be deallocated after the call of
+                ///< oc_sec_on_apply_cred_cb_t from oc_sec_apply_cred
+  bool created; ///< true if a new credential was created; false if credential
+                ///< replaced an already existing credential or it was a
+                ///< duplicate and the operation was skipped
+} oc_sec_on_apply_cred_data_t;
+
 /**
  * @brief Callback invoked with a created / updated credential
  *
- * @param cred New or updated credential
+ * @param data Data with new/updated credential data
  * @param user_data User data passed from the caller
  */
-typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_cred_t *cred, void *user_data);
+typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_on_apply_cred_data_t data,
+                                          void *user_data);
 
 /**
  * @brief parse payload and add/update credentials
@@ -198,6 +213,15 @@ int oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
  */
 OC_API
 oc_sec_creds_t *oc_sec_get_creds(size_t device);
+
+/**
+ * @brief remove credential from given device
+ *
+ * @param cred credential to remove
+ * @param device index of the device
+ */
+OC_API
+void oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device);
 
 /**
  * @brief get credential by credid from given device

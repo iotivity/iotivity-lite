@@ -864,7 +864,10 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
   if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
     return false;
   }
-  oc_sec_cred_t *cr = oc_sec_find_role_cred(role, authority);
+  oc_sec_cred_t *cr = oc_sec_find_role_cred(
+    /*start*/ NULL, role, authority,
+    /*tag*/ NULL); // ignore tag, we want to serialize only the
+                   // [role,authority] pairs
   if (cr) {
     oc_tls_select_cert_ciphersuite();
     if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
@@ -899,8 +902,10 @@ oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
       oc_rep_set_array(root, roles);
 
       while (roles) {
-        oc_sec_cred_t *cr = oc_sec_find_role_cred(oc_string(roles->role),
-                                                  oc_string(roles->authority));
+        oc_sec_cred_t *cr = oc_sec_find_role_cred(
+          /*start*/ NULL, oc_string(roles->role), oc_string(roles->authority),
+          /*tag*/ NULL); // ignore tag, we want to serialize only the
+                         // [role,authority] pairs
         if (cr) {
           serialize_role_credential(&roles_array, cr);
         }

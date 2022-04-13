@@ -42,16 +42,16 @@ TEST(UUIDGeneration, WildcardStrToUUID)
   oc_str_to_uuid(u, &uuid);
   oc_uuid_t wc = { { 0 } };
   wc.id[0] = '*';
-  EXPECT_EQ(memcmp(wc.id, uuid.id, 16), 0);
+  EXPECT_EQ(memcmp(wc.id, uuid.id, OC_UUID_ID_SIZE), 0);
 }
 
 TEST(UUIDGeneration, WildcardUUIDToStr)
 {
   const char *u = "*";
-  char wc[37];
+  char wc[OC_UUID_LEN];
   oc_uuid_t uuid = { { 0 } };
   uuid.id[0] = '*';
-  oc_uuid_to_str(&uuid, wc, 37);
+  oc_uuid_to_str(&uuid, wc, OC_UUID_LEN);
   EXPECT_EQ(strlen(u), strlen(wc));
   EXPECT_EQ(memcmp(u, wc, strlen(u)), 0);
 }
@@ -59,7 +59,7 @@ TEST(UUIDGeneration, WildcardUUIDToStr)
 TEST(UUIDGeneration, NonWildcardUUID)
 {
   const char *u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
-  char nonwc[37];
+  char nonwc[OC_UUID_LEN];
   oc_uuid_t uuid;
   oc_str_to_uuid(u, &uuid);
 
@@ -80,7 +80,7 @@ TEST(UUIDGeneration, NonWildcardUUID)
   EXPECT_EQ(0x41, uuid.id[14]);
   EXPECT_EQ(0xd7, uuid.id[15]);
 
-  oc_uuid_to_str(&uuid, nonwc, 37);
+  oc_uuid_to_str(&uuid, nonwc, sizeof(nonwc));
   EXPECT_EQ(strlen(u), strlen(nonwc));
   EXPECT_EQ(memcmp(u, nonwc, strlen(u)), 0);
   EXPECT_STREQ(u, nonwc);
@@ -127,4 +127,51 @@ TEST(UUIDGeneration, GenerateType4UUID)
   EXPECT_EQ('-', uuid_str[18]);
   EXPECT_EQ('-', uuid_str[23]);
   oc_random_destroy();
+}
+
+TEST(UUIDComparison, EmptyUUID)
+{
+  oc_uuid_t first;
+  memset(&first, 0, sizeof(oc_uuid_t));
+  oc_uuid_t second;
+  memset(&second, 0, sizeof(oc_uuid_t));
+  EXPECT_TRUE(oc_uuid_is_equal(first, second));
+  EXPECT_TRUE(oc_uuid_is_equal(second, first));
+}
+
+TEST(UUIDComparison, EmptyAndNonEmptyUUID)
+{
+  oc_uuid_t uuid;
+  oc_str_to_uuid(UUID, &uuid);
+  oc_uuid_t empty;
+  memset(&empty, 0, sizeof(oc_uuid_t));
+  EXPECT_FALSE(oc_uuid_is_equal(uuid, empty));
+  EXPECT_FALSE(oc_uuid_is_equal(empty, uuid));
+}
+
+TEST(UUIDComparison, CopyUUID)
+{
+  oc_uuid_t uuid;
+  oc_str_to_uuid(UUID, &uuid);
+  oc_uuid_t uuid_copy = uuid;
+  EXPECT_TRUE(oc_uuid_is_equal(uuid, uuid_copy));
+  EXPECT_TRUE(oc_uuid_is_equal(uuid_copy, uuid));
+}
+
+TEST(UUIDComparison, NonEmptyUUID)
+{
+  const char uuid_str[OC_UUID_LEN] = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
+  oc_uuid_t uuid;
+  oc_str_to_uuid(uuid_str, &uuid);
+
+  oc_random_init();
+  oc_uuid_t gen_uuid;
+  char gen_uuid_str[OC_UUID_LEN];
+  do {
+    oc_gen_uuid(&gen_uuid);
+    oc_uuid_to_str(&gen_uuid, gen_uuid_str, sizeof(gen_uuid_str));
+  } while (memcmp(gen_uuid_str, uuid_str, sizeof(gen_uuid_str)) == 0);
+
+  EXPECT_FALSE(oc_uuid_is_equal(uuid, gen_uuid));
+  EXPECT_FALSE(oc_uuid_is_equal(gen_uuid, uuid));
 }

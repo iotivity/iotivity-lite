@@ -496,12 +496,19 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     } while (match);
 
     if (peer && oc_tls_uses_psk_cred(peer)) {
-      oc_sec_cred_t *role_cred = oc_sec_find_cred(
-        uuid, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, endpoint->device);
-      if (role_cred && oc_string_len(role_cred->role.role) > 0) {
-        permission |= get_role_permissions(role_cred, resource,
-                                           endpoint->device, is_DCR, is_public);
-      }
+      oc_sec_cred_t *role_cred = NULL;
+      do {
+        role_cred = oc_sec_find_cred(role_cred, uuid, OC_CREDTYPE_PSK,
+                                     OC_CREDUSAGE_NULL, endpoint->device);
+        if (role_cred == NULL) {
+          break;
+        }
+        if (oc_string_len(role_cred->role.role) > 0) {
+          permission |= get_role_permissions(
+            role_cred, resource, endpoint->device, is_DCR, is_public);
+        }
+        role_cred = role_cred->next;
+      } while (role_cred != NULL);
     }
 #ifdef OC_PKI
     else {

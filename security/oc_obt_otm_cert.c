@@ -355,7 +355,7 @@ obt_cert_9(oc_client_response_t *data)
 
   int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
                                    OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
-                                   16, key, 0, 0, NULL, NULL, NULL);
+                                   16, key, 0, 0, NULL, NULL, NULL, NULL, NULL);
 
   if (credid == -1) {
     goto err_obt_cert_9;
