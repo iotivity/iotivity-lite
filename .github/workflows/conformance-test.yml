@@ -1,0 +1,23 @@
+name: OCF Conformance Test
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "*"
+  pull_request:
+  
+jobs:
+  test:
+    runs-on: [self-hosted, windows, ctt]
+    steps:
+      - name: Get commit SHA
+        id: commit
+        run: |
+          if ("${{github.event_name}}" -eq "pull_request") {
+            echo "::set-output name=sha::${{github.event.pull_request.head.sha}}"
+          } else {
+            echo "::set-output name=sha::${{github.sha}}"
+          }
+      - name: Client Tests
+        run: python ../../github_run_ci.py --commit ${{steps.commit.outputs.sha}}
