@@ -149,6 +149,7 @@ void oc_sec_remove_ace(oc_sec_ace_t *ace, size_t device);
 /**
  * @brief Get access control entry with given aceid from given device
  *
+ * @param aceid Access control entry id
  * @param device Index of the device
  * @return Access control list
  */
