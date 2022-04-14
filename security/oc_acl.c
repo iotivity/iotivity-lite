@@ -661,6 +661,11 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
     oc_rep_close_array(aclist2, resources);
     oc_rep_set_uint(aclist2, permission, sub->permission);
     oc_rep_set_int(aclist2, aceid, sub->aceid);
+    if (to_storage) {
+      if (oc_string_len(sub->tag) > 0) {
+        oc_rep_set_text_string(aclist2, tag, oc_string(sub->tag));
+      }
+    }
     oc_rep_object_array_end_item(aclist2);
     sub = sub->next;
   }
@@ -672,39 +677,15 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
   return true;
 }
 
-static oc_ace_res_t *
-oc_sec_ace_get_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
-                   const char *href, oc_ace_wildcard_t wildcard, int aceid,
-                   uint16_t permission, size_t device, bool create)
+static oc_sec_ace_t *
+oc_sec_add_new_ace(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
+                   int aceid, uint16_t permission, const char *tag,
+                   size_t device)
 {
-  oc_sec_ace_t *ace =
-    oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
-  oc_ace_res_t *res = NULL;
-
-  if (ace) {
-    goto got_ace;
-  }
-
-  if (create) {
-    goto new_ace;
-  }
-
-  goto done;
-
-got_ace:
-  res = oc_sec_ace_find_resource(NULL, ace, href, wildcard);
-  if (!res && create) {
-    goto new_res;
-  }
-
-  goto done;
-
-new_ace:
-  ace = oc_memb_alloc(&ace_l);
-
+  oc_sec_ace_t *ace = oc_memb_alloc(&ace_l);
   if (!ace) {
     OC_WRN("insufficient memory to add new ACE");
-    goto done;
+    return NULL;
   }
 
   OC_LIST_STRUCT_INIT(ace, resources);
@@ -744,55 +725,116 @@ new_ace:
   }
 
   ace->permission = permission;
-
-  oc_list_add(aclist[device].subjects, ace);
-
-new_res:
-  res = oc_memb_alloc(&res_l);
-  if (res) {
-    res->wildcard = 0;
-    if (wildcard != OC_ACE_NO_WC) {
-      res->wildcard = wildcard;
-    }
-#ifdef OC_DEBUG
-    switch (res->wildcard) {
-    case OC_ACE_WC_ALL_SECURED:
-      OC_DBG("Adding wildcard resource + with permission %d", permission);
-      break;
-    case OC_ACE_WC_ALL_PUBLIC:
-      OC_DBG("Adding wildcard resource - with permission %d", permission);
-      break;
-    case OC_ACE_WC_ALL:
-      OC_DBG("Adding wildcard resource * with permission %d", permission);
-      break;
-    default:
-      break;
-    }
-#endif /* OC_DEBUG */
-
-    if (href) {
-      oc_new_string(&res->href, href, strlen(href));
-      OC_DBG("Adding resource %s with permission %d", href, permission);
-    }
-
-    oc_list_add(ace->resources, res);
-  } else {
-    OC_WRN("insufficient memory to add new resource to ACE");
+  if (tag) {
+    oc_new_string(&ace->tag, tag, strlen(tag));
   }
 
-done:
+  oc_list_add(aclist[device].subjects, ace);
+  return ace;
+}
+
+static oc_ace_res_t *
+oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
+                       uint16_t permission)
+{
+  oc_ace_res_t *res = oc_memb_alloc(&res_l);
+  if (!res) {
+    OC_WRN("insufficient memory to add new resource to ACE");
+    return NULL;
+  }
+  res->wildcard = 0;
+  if (wildcard != OC_ACE_NO_WC) {
+    res->wildcard = wildcard;
+  }
+#ifdef OC_DEBUG
+  switch (res->wildcard) {
+  case OC_ACE_WC_ALL_SECURED:
+    OC_DBG("Adding wildcard resource + with permission %d", permission);
+    break;
+  case OC_ACE_WC_ALL_PUBLIC:
+    OC_DBG("Adding wildcard resource - with permission %d", permission);
+    break;
+  case OC_ACE_WC_ALL:
+    OC_DBG("Adding wildcard resource * with permission %d", permission);
+    break;
+  default:
+    break;
+  }
+#else  /* !OC_DEBUG */
+  (void)permission;
+#endif /* OC_DEBUG */
+
+  if (href) {
+    oc_new_string(&res->href, href, strlen(href));
+    OC_DBG("Adding resource %s with permission %d", href, permission);
+  }
   return res;
 }
 
+typedef struct oc_ace_res_data_t
+{
+  oc_ace_res_t *res;
+  bool created;
+} oc_ace_res_data_t;
+
+static oc_ace_res_data_t
+oc_sec_ace_get_res(oc_sec_ace_t *ace, const char *href,
+                   oc_ace_wildcard_t wildcard, uint16_t permission, bool create)
+{
+  oc_assert(ace != NULL);
+  oc_ace_res_t *res = oc_sec_ace_find_resource(NULL, ace, href, wildcard);
+  if (res) {
+    oc_ace_res_data_t data = { res, false };
+    return data;
+  }
+  if (create) {
+    res = oc_sec_add_new_ace_res(href, wildcard, permission);
+  }
+  if (!res) {
+    oc_ace_res_data_t data = { NULL, false };
+    return data;
+  }
+  oc_list_add(ace->resources, res);
+  oc_ace_res_data_t data = { res, true };
+  return data;
+}
+
+typedef struct oc_sec_ace_update_data_t
+{
+  oc_sec_ace_t *ace;
+  bool created;
+  bool created_resource;
+} oc_sec_ace_update_data_t;
+
 static bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
-                      int aceid, uint16_t permission, const char *href,
-                      oc_ace_wildcard_t wildcard, size_t device)
+                      int aceid, uint16_t permission, const char *tag,
+                      const char *href, oc_ace_wildcard_t wildcard,
+                      size_t device, oc_sec_ace_update_data_t *data)
 {
-  if (oc_sec_ace_get_res(type, subject, href, wildcard, aceid, permission,
-                         device, true))
-    return true;
-  return false;
+  oc_sec_ace_t *ace =
+    oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
+  bool created = false;
+  if (!ace) {
+    ace = oc_sec_add_new_ace(type, subject, aceid, permission, tag, device);
+    if (!ace) {
+      return false;
+    }
+    created = true;
+  }
+  oc_ace_res_data_t res_data =
+    oc_sec_ace_get_res(ace, href, wildcard, permission, true);
+  if (res_data.res == NULL) {
+    oc_sec_remove_ace(ace, device);
+    return false;
+  }
+
+  if (data) {
+    data->ace = ace;
+    data->created = created;
+    data->created_resource = res_data.created;
+  }
+  return true;
 }
 
 static void
@@ -819,25 +861,62 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
   }
 }
 
-static bool
-oc_acl_remove_ace(int aceid, size_t device)
+static void
+oc_acl_free_ace(oc_sec_ace_t *ace, size_t device)
+{
+  oc_ace_free_resources(device, &ace, NULL);
+  if (ace->subject_type == OC_SUBJECT_ROLE) {
+    oc_free_string(&ace->subject.role.role);
+    oc_free_string(&ace->subject.role.authority);
+  }
+  oc_free_string(&ace->tag);
+  oc_memb_free(&ace_l, ace);
+}
+
+oc_sec_ace_t *
+oc_sec_get_ace_by_aceid(int aceid, size_t device)
+{
+  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
+  while (ace != NULL) {
+    if (ace->aceid == aceid) {
+      return ace;
+    }
+    ace = ace->next;
+  }
+  return NULL;
+}
+
+static oc_sec_ace_t *
+oc_acl_remove_ace_from_device(oc_sec_ace_t *ace, size_t device)
+{
+  return oc_list_remove2(aclist[device].subjects, ace);
+}
+
+static oc_sec_ace_t *
+oc_acl_remove_ace_from_device_by_aceid(int aceid, size_t device)
+{
+  oc_sec_ace_t *ace = oc_sec_get_ace_by_aceid(aceid, device);
+  if (ace) {
+    return oc_acl_remove_ace_from_device(ace, device);
+  }
+  return false;
+}
+
+void
+oc_sec_remove_ace(oc_sec_ace_t *ace, size_t device)
+{
+  oc_acl_remove_ace_from_device(ace, device);
+  oc_acl_free_ace(ace, device);
+}
+
+bool
+oc_sec_remove_ace_by_aceid(int aceid, size_t device)
 {
   bool removed = false;
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects), *next = 0;
-  while (ace != NULL) {
-    next = ace->next;
-    if (ace->aceid == aceid) {
-      oc_list_remove(aclist[device].subjects, ace);
-      oc_ace_free_resources(device, &ace, NULL);
-      if (ace->subject_type == OC_SUBJECT_ROLE) {
-        oc_free_string(&ace->subject.role.role);
-        oc_free_string(&ace->subject.role.authority);
-      }
-      oc_memb_free(&ace_l, ace);
-      removed = true;
-      break;
-    }
-    ace = next;
+  oc_sec_ace_t *ace = oc_acl_remove_ace_from_device_by_aceid(aceid, device);
+  if (ace != NULL) {
+    oc_acl_free_ace(ace, device);
+    removed = true;
   }
   return removed;
 }
@@ -848,12 +927,7 @@ oc_sec_clear_acl(size_t device)
   oc_sec_acl_t *acl_d = &aclist[device];
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
   while (ace != NULL) {
-    oc_ace_free_resources(device, &ace, NULL);
-    if (ace->subject_type == OC_SUBJECT_ROLE) {
-      oc_free_string(&ace->subject.role.role);
-      oc_free_string(&ace->subject.role.authority);
-    }
-    oc_memb_free(&ace_l, ace);
+    oc_acl_free_ace(ace, device);
     ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
   }
 }
@@ -890,9 +964,8 @@ oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
     perm |= OC_PERM_CREATE;
   }
 
-  oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm, href, 0, device);
-
-  return true;
+  return oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm, NULL, href,
+                               0, device, NULL);
 }
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
@@ -952,6 +1025,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
         oc_ace_subject_type_t subject_type = 0;
         uint16_t permission = 0;
         int aceid = -1;
+        char *tag = NULL;
         oc_rep_t *resources = 0;
         memset(&subject, 0, sizeof(oc_ace_subject_t));
         oc_rep_t *ace = aclist2->value.object;
@@ -965,6 +1039,12 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
             } else if (len == 5 &&
                        memcmp(oc_string(ace->name), "aceid", 5) == 0) {
               aceid = (int)ace->value.integer;
+            }
+            break;
+
+          case OC_REP_STRING:
+            if (len == 3 && memcmp(oc_string(ace->name), "tag", 3) == 0) {
+              tag = oc_string(ace->value.string);
             }
             break;
           case OC_REP_OBJECT_ARRAY:
@@ -1011,8 +1091,12 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
           ace = ace->next;
         }
 
+        oc_sec_ace_t *upd_ace = NULL;
+        oc_sec_ace_t *replaced_ace = NULL;
+        bool created = false;
+        bool created_resource = false;
         if (aceid != -1 && !unique_aceid(aceid, device)) {
-          oc_acl_remove_ace(aceid, device);
+          replaced_ace = oc_acl_remove_ace_from_device_by_aceid(aceid, device);
         }
 
         while (resources != NULL) {
@@ -1066,8 +1150,16 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
             resource = resource->next;
           }
 
-          oc_sec_ace_update_res(subject_type, &subject, aceid, permission, href,
-                                wc, device);
+          oc_sec_ace_update_data_t ace_upd = { NULL, false, false };
+          if (oc_sec_ace_update_res(subject_type, &subject, aceid, permission,
+                                    tag, href, wc, device, &ace_upd)) {
+            upd_ace = ace_upd.ace;
+            created |= ace_upd.created;
+            created_resource |= ace_upd.created_resource;
+          } else {
+            OC_WRN("failed to create resource(href:%s wildcard:%d)",
+                   href != NULL ? href : "", wc);
+          }
 
           /* The following code block attaches "coap" endpoints to
                    resources linked to an anon-clear ACE. This logic is being
@@ -1098,12 +1190,16 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
         }
 
         if (on_apply_ace_cb != NULL) {
-          oc_sec_ace_t *ace = oc_sec_acl_find_subject(
-            NULL, subject_type, &subject, aceid, permission, device);
-
-          if (ace != NULL) {
-            on_apply_ace_cb(aclist[device].rowneruuid, ace, on_apply_ace_data);
+          if (upd_ace != NULL) {
+            oc_sec_on_apply_acl_data_t acl_data = { aclist[device].rowneruuid,
+                                                    upd_ace, replaced_ace,
+                                                    created, created_resource };
+            on_apply_ace_cb(acl_data, on_apply_ace_data);
           }
+        }
+
+        if (replaced_ace) {
+          oc_acl_free_ace(replaced_ace, device);
         }
 
         if (subject_type == OC_SUBJECT_ROLE) {
@@ -1122,23 +1218,41 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
   return true;
 }
 
-void
+bool
 oc_sec_acl_add_bootstrap_acl(size_t device)
 {
   oc_ace_subject_t _anon_clear;
   memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
   _anon_clear.conn = OC_CONN_ANON_CLEAR;
 
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
-                        "/oic/res", OC_ACE_NO_WC, device);
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
-                        "/oic/d", OC_ACE_NO_WC, device);
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
-                        "/oic/p", OC_ACE_NO_WC, device);
+  bool ret = true;
+  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
+                             OC_PERM_RETRIEVE, NULL, "/oic/res", OC_ACE_NO_WC,
+                             device, NULL)) {
+    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/res");
+    ret = false;
+  }
+  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
+                             OC_PERM_RETRIEVE, NULL, "/oic/d", OC_ACE_NO_WC,
+                             device, NULL)) {
+    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/d");
+    ret = false;
+  }
+  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
+                             OC_PERM_RETRIEVE, NULL, "/oic/p", OC_ACE_NO_WC,
+                             device, NULL)) {
+    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/p");
+    ret = false;
+  }
 #ifdef OC_WKCORE
-  oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, OC_PERM_RETRIEVE,
-                        "/.well-known/core", OC_ACE_NO_WC, device);
+  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
+                             OC_PERM_RETRIEVE, NULL, "/.well-known/core",
+                             OC_ACE_NO_WC, device, NULL)) {
+    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/.well-known/core");
+    ret = false;
+  }
 #endif
+  return ret;
 }
 
 int
@@ -1187,7 +1301,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   if (ret != -1) {
     aceid = (int)strtoul(query_param, NULL, 10);
     if (aceid != 0) {
-      if (oc_acl_remove_ace(aceid, request->resource->device)) {
+      if (oc_sec_remove_ace_by_aceid(aceid, request->resource->device)) {
         success = true;
       }
     }

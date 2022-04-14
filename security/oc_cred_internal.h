@@ -54,7 +54,7 @@ void oc_sec_encode_cred(bool persist, size_t device,
 bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                         bool roles_resource, struct oc_tls_peer_t *client,
                         size_t device,
-                        oc_sec_on_apply_cred_cb_t oc_apply_cred_cb,
+                        oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                         void *on_apply_cred_data);
 /**
  * @brief Allocate and initialize a new credential and append it to global list
