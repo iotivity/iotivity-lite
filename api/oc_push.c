@@ -35,6 +35,7 @@
 #include "util/oc_process.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
+#include <arpa/inet.h>
 
 /**
  * @brief	memory block for storing new collection member of Push Configuration Resource
@@ -137,6 +138,17 @@ char *cli_status_strs[] =
 };
 
 
+/*
+ * mandatory property of oic.r.pushporxy, oic.r.pushreceivers
+ */
+enum {
+	PP_PUSHTARGET = 0x01,
+	PP_SOURCERT = 0x02,
+	PR_RECEIVERS = 0x01,
+	PR_RECEIVERURI = 0x02,
+	PR_RTS = 0x04
+};
+
 
 /*
  * if this callback function is provided by user, it will called whenever new push is arrived...
@@ -205,6 +217,8 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
 	(void)resource;
 	bool result = false;
+	bool is_null_pushtarget = false;
+	char mandatory_properties_check = 0;
 
 	/*
 	 * `data` is set when new Notification Selector Resource is created
@@ -212,9 +226,6 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	 */
 	oc_ns_t *ns_instance = (oc_ns_t *)data;
 	while (rep != NULL) {
-		/*
-		 * FIXME4ME make it empty if optional property is not received...
-		 */
 		switch (rep->type) {
 		case OC_REP_STRING:
 			/*
@@ -228,7 +239,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
 			/*
-			 * oic.r.pushproxy:pushtarget
+			 * oic.r.pushproxy:pushtarget (mandatory)
 			 */
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
@@ -237,14 +248,32 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 				if (oc_string_to_endpoint(&rep->value.string, &ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
 				{
-					p_err("ns_instance->pushtarget_ep (%s) parsing fail!\n", oc_string(rep->value.string));
-					goto exit;
+					/* NULL pushtarget ("") is still acceptable... */
+					if (!strcmp(oc_string(rep->value.string), ""))
+					{
+						p_dbg("NULL \"pushtarget\" is received, still stay in \"waitforprovisioning\" state...\n");
+
+						/* clear endpoint */
+						memset((void *)(&ns_instance->pushtarget_ep), 0, sizeof(ns_instance->pushtarget_ep));
+
+						/* clear target path */
+						oc_new_string(&ns_instance->targetpath, "", strlen(""));
+
+						is_null_pushtarget = true;
+						mandatory_properties_check |= PP_PUSHTARGET;
+					}
+					else
+					{
+						p_err("ns_instance->pushtarget_ep (%s) parsing fail!\n", oc_string(rep->value.string));
+						goto exit;
+					}
 				}
 				else
 				{
 					if (oc_string_len(ns_instance->targetpath))
 					{
 						p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")\n", oc_string(ns_instance->targetpath));
+						mandatory_properties_check |= PP_PUSHTARGET;
 					}
 					else
 					{
@@ -254,7 +283,8 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				}
 			}
 			/*
-			 * oic.r.pushproxy:pushqif
+			 * FIXME4ME <2022/04/17> deprecated property, remove later...
+			 * oic.r.pushproxy:pushqif (optional)
 			 */
 			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
 			{
@@ -297,7 +327,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				}
 			}
 			/*
-			 * oic.r.pushproxy:sourcert
+			 * oic.r.pushproxy:sourcert (mandatory)
 			 */
 			else if (oc_string_len(rep->name) == 8 && memcmp(oc_string(rep->name), "sourcert", 8) == 0)
 			{
@@ -308,11 +338,18 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
+					/*
+					 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
+					 */
+					if (strcmp(oc_string_array_get_item(rep->value.array, i), "oic.r.pushpayload"))
+					{
+						oc_free_string_array(&ns_instance->sourcert);
+						goto exit;
+					}
+
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
-				/*
-				 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
-				 */
+				mandatory_properties_check |= PP_SOURCERT;
 			}
 			break;
 
@@ -336,11 +373,22 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 		rep = rep->next;
 	}
 
-	p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-			oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
-//			pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
-	pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
-//	ns_instance->state = OC_PP_WFU;
+#if 0
+	if ((mandatory_properties_check & (PP_PUSHTARGET | PP_SOURCERT)) != (PP_PUSHTARGET | PP_SOURCERT))
+	{
+		p_err("mandatory properties of Push Proxy Resources are not provided!\n");
+		goto exit;
+	}
+#endif
+
+	if (!is_null_pushtarget)
+	{
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
+//		pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
+		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
+//		ns_instance->state = OC_PP_WFU;
+	}
 
 	result = true;
 
@@ -412,15 +460,40 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 //		oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
 
 		oc_string_t ep, full_uri;
-		oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep);
-		if (oc_string_len(ns_instance->targetpath))
-			oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
+		/*
+		 * fixme4me <2022/4/17> handle the case when "pushtarget" is NULL string...
+		 */
+		/*
+		 * testcode
+		 */
+//		if (!inet_ntop(AF_INET6, ns_instance->pushtarget_ep.addr.ipv6.address, address, 1000))
+//			p_dbg("inet_ntop failed\n");
+//		else
+//			p_dbg("inet_ntop success: %s\n", address);
+
+		if (oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep) < 0)
+		{
+			/* handle NULL pushtarget... */
+			char ipv6addrstr[50], ipv4addrstr[50];
+			inet_ntop(AF_INET6, ns_instance->pushtarget_ep.addr.ipv6.address, ipv6addrstr, 50);
+			inet_ntop(AF_INET, ns_instance->pushtarget_ep.addr.ipv4.address, ipv4addrstr, 50);
+
+			if (!strcmp(ipv6addrstr, "::") && !strcmp(ipv4addrstr, "0.0.0.0"))
+			{
+				oc_new_string(&full_uri, "", strlen(""));
+			}
+		}
 		else
-			oc_new_string(&full_uri, oc_string(ep), oc_string_len(ep));
+		{
+			if (oc_string_len(ns_instance->targetpath))
+				oc_concat_strings(&full_uri, oc_string(ep), oc_string(ns_instance->targetpath));
+			else
+				oc_new_string(&full_uri, oc_string(ep), oc_string_len(ep));
+
+			oc_free_string(&ep);
+		}
 
 		oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
-
-		oc_free_string(&ep);
 		oc_free_string(&full_uri);
 
 		/*
@@ -2344,28 +2417,31 @@ void response_to_push_rsc(oc_client_response_t *data)
 
 	if (data->code == OC_STATUS_SERVICE_UNAVAILABLE)
 	{
+		/*
+		 * TODO4ME <2022/4/17> if update request fails... retry to resolve endpoint of target device ID...
+		 */
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT));
 //				pp_statestr(ns_instance->state), pp_statestr(OC_PP_TOUT));
 			pp_update_state(ns_instance->state, pp_statestr(OC_PP_TOUT));
 //			ns_instance->state = OC_PP_TOUT;
 	}
-	else
+	else if (data->code == OC_STATUS_CHANGED)
 	{
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
-//				pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
 		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
-//		ns_instance->state = OC_PP_WFU;
+	}
+	else
+	{
+		/*
+		 * FIXME4ME <2022/4/17> check condition to enter ERR
+		 */
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+				oc_string(ns_instance->state), pp_statestr(OC_PP_ERR));
+			pp_update_state(ns_instance->state, pp_statestr(OC_PP_ERR));
 	}
 
-	/*
-	 * FIXME4ME if update request fails... retry to resolve endpoint of target device ID...
-	 */
-//	if (data->code != OC_STATUS_CHANGED)
-//	{
-//
-//	}
 
 
 #if 0
@@ -2673,6 +2749,10 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 		if (ns_instance->resource->device != device_index)
 			continue;
 
+		/* if push proxy is not in "wait for update" state, just skip it... */
+		if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)))
+			continue;
+
 		if (oc_string(ns_instance->phref))
 		{
 			if (strcmp(oc_string(ns_instance->phref), "") && strcmp(oc_string(ns_instance->phref), uri))
@@ -2716,8 +2796,10 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 //			oc_process_post(&oc_push_process, oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
 
 		}
-
-		all_matched = 1;
+		else
+		{
+			all_matched = 1;
+		}
 
 #if 0
 		/* if phref is configured... */
