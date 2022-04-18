@@ -201,6 +201,18 @@ oc_interface_mask_t _get_ifmask_from_ifstr(char *ifstr)
 }
 
 
+bool _is_null_pushtarget(oc_ns_t *ns_instance)
+{
+	char ipv6addrstr[50], ipv4addrstr[50];
+
+	inet_ntop(AF_INET6, ns_instance->pushtarget_ep.addr.ipv6.address, ipv6addrstr, 50);
+	inet_ntop(AF_INET, ns_instance->pushtarget_ep.addr.ipv4.address, ipv4addrstr, 50);
+
+	if (!strcmp(ipv6addrstr, "::") && !strcmp(ipv4addrstr, "0.0.0.0"))
+		return true;
+
+	return false;
+}
 
 
 /**
@@ -217,8 +229,8 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
 	(void)resource;
 	bool result = false;
-	bool is_null_pushtarget = false;
-	char mandatory_properties_check = 0;
+//	bool is_null_pushtarget = false;
+//	char mandatory_properties_check = 0;
 
 	/*
 	 * `data` is set when new Notification Selector Resource is created
@@ -233,52 +245,75 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "phref", 5) == 0)
 			{
-				if (oc_string_len(ns_instance->phref))
-					oc_free_string(&ns_instance->phref);
-
+				oc_free_string(&ns_instance->phref);
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
+				p_dbg("oic.r.pushproxy:phref (%s)\n", oc_string(rep->value.string));
 			}
 			/*
 			 * oic.r.pushproxy:pushtarget (mandatory)
 			 */
 			else if (oc_string_len(rep->name) == 10 && memcmp(oc_string(rep->name), "pushtarget", 10) == 0)
 			{
-				if (oc_string_len(ns_instance->targetpath))
-					oc_free_string(&ns_instance->targetpath);
-
-				if (oc_string_to_endpoint(&rep->value.string, &ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
+				if (!strcmp(oc_string(rep->value.string), ""))
 				{
 					/* NULL pushtarget ("") is still acceptable... */
-					if (!strcmp(oc_string(rep->value.string), ""))
-					{
-						p_dbg("NULL \"pushtarget\" is received, still stay in \"waitforprovisioning\" state...\n");
+					p_dbg("NULL \"pushtarget\" is received, still stay in \"waitforprovisioning\" state...\n");
 
-						/* clear endpoint */
-						memset((void *)(&ns_instance->pushtarget_ep), 0, sizeof(ns_instance->pushtarget_ep));
+					/* clear endpoint */
+					memset((void *)(&ns_instance->pushtarget_ep), 0, sizeof(ns_instance->pushtarget_ep));
 
-						/* clear target path */
-						oc_new_string(&ns_instance->targetpath, "", strlen(""));
+					/* clear target path */
+					oc_free_string(&ns_instance->targetpath);
+					oc_new_string(&ns_instance->targetpath, "", strlen(""));
 
-						is_null_pushtarget = true;
-						mandatory_properties_check |= PP_PUSHTARGET;
-					}
-					else
-					{
-						p_err("ns_instance->pushtarget_ep (%s) parsing fail!\n", oc_string(rep->value.string));
-						goto exit;
-					}
+//					is_null_pushtarget = true;
+//					mandatory_properties_check |= PP_PUSHTARGET;
 				}
 				else
 				{
-					if (oc_string_len(ns_instance->targetpath))
+					/* if non-NULL pushtarget.. */
+					oc_endpoint_t *new_ep;
+					oc_string_t new_targetpath;
+
+					new_ep = oc_new_endpoint();
+					oc_init_string(new_targetpath);
+
+					p_dbg("oic.r.pushproxy:pushtarget (%s)\n", oc_string(rep->value.string));
+
+//					if (oc_string_to_endpoint(&rep->value.string, &ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
+					if (oc_string_to_endpoint(&rep->value.string, new_ep, &new_targetpath) < 0)
 					{
-						p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")\n", oc_string(ns_instance->targetpath));
-						mandatory_properties_check |= PP_PUSHTARGET;
+						p_err("oic.r.pushproxy:pushtarget (%s) parsing failed!\n", oc_string(rep->value.string));
+
+						oc_free_endpoint(new_ep);
+						oc_free_string(&new_targetpath);
+
+						goto exit;
 					}
 					else
 					{
-						p_err("path part of \"pushtarget\" should not be NULL!!\n");
-						goto exit;
+						oc_free_string(&ns_instance->targetpath);
+
+						/* update with new values... */
+						oc_endpoint_copy(&ns_instance->pushtarget_ep, new_ep);
+						oc_new_string(&ns_instance->targetpath, oc_string(new_targetpath), oc_string_len(new_targetpath));
+
+						p_dbg("oic.r.pushproxy:pushtarget (%s)\n", oc_string(rep->value.string));
+
+						/* return memory */
+						oc_free_endpoint(new_ep);
+						oc_free_string(&new_targetpath);
+
+						if (oc_string_len(ns_instance->targetpath))
+						{
+							p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")\n", oc_string(ns_instance->targetpath));
+//							mandatory_properties_check |= PP_PUSHTARGET;
+						}
+						else
+						{
+							p_err("path part of \"pushtarget\" should not be NULL!!\n");
+							goto exit;
+						}
 					}
 				}
 			}
@@ -288,9 +323,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
 			{
-				if (oc_string_len(ns_instance->pushqif))
-					oc_free_string(&ns_instance->pushqif);
-
+				oc_free_string(&ns_instance->pushqif);
 				oc_new_string(&ns_instance->pushqif, oc_string(rep->value.string), oc_string_len(rep->value.string));
 			}
 			break;
@@ -301,13 +334,17 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "prt", 3) == 0)
 			{
-				if (oc_string_array_get_allocated_size(ns_instance->prt))
+				/*
+				 * fixme4me <2022/4/18> ""를 넘겨줬을때 prt 내용 삭제하도록 수정
+				 */
+//				if (oc_string_array_get_allocated_size(ns_instance->prt))
 					oc_free_string_array(&ns_instance->prt);
 
 				oc_new_string_array(&ns_instance->prt, oc_string_array_get_allocated_size(rep->value.array));
 
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
+					p_dbg("oic.r.pushproxy:prt (%s)\n", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->prt, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
@@ -316,13 +353,14 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			else if (oc_string_len(rep->name) == 3 && memcmp(oc_string(rep->name), "pif", 3) == 0)
 			{
-				if (oc_string_array_get_allocated_size(ns_instance->pif))
+//				if (oc_string_array_get_allocated_size(ns_instance->pif))
 					oc_free_string_array(&ns_instance->pif);
 
 				oc_new_string_array(&ns_instance->pif, oc_string_array_get_allocated_size(rep->value.array));
 
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
+					p_dbg("oic.r.pushproxy:pif (%s)\n", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->pif, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
@@ -331,25 +369,33 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			else if (oc_string_len(rep->name) == 8 && memcmp(oc_string(rep->name), "sourcert", 8) == 0)
 			{
-				if (oc_string_array_get_allocated_size(ns_instance->sourcert))
-					oc_free_string_array(&ns_instance->sourcert);
+//				if (oc_string_array_get_allocated_size(ns_instance->sourcert))
+//					oc_free_string_array(&ns_instance->sourcert);
 
-				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
+//				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
 
+				/*
+				 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
+				 */
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					/*
-					 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
-					 */
 					if (strcmp(oc_string_array_get_item(rep->value.array, i), "oic.r.pushpayload"))
 					{
-						oc_free_string_array(&ns_instance->sourcert);
+//						oc_free_string_array(&ns_instance->sourcert);
+						p_err("illegal oic.r.pushproxy:sourcert value (%s)!\n", oc_string_array_get_item(rep->value.array, i));
 						goto exit;
 					}
+				}
 
+				oc_free_string_array(&ns_instance->sourcert);
+				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
+				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
+				{
+					p_dbg("oic.r.pushproxy:sourcert (%s)\n", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
-				mandatory_properties_check |= PP_SOURCERT;
+
+//				mandatory_properties_check |= PP_SOURCERT;
 			}
 			break;
 
@@ -381,13 +427,19 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	}
 #endif
 
-	if (!is_null_pushtarget)
+//	if (!is_null_pushtarget)
+	if (!_is_null_pushtarget(ns_instance))
 	{
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
 //		pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
 		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
 //		ns_instance->state = OC_PP_WFU;
+	}
+	else
+	{
+		p_dbg("pushtarget of Push Proxy (\"%s\") is still NULL, Push Proxy is in (\"%s\")\n",
+				oc_string(ns_instance->resource->uri), oc_string(ns_instance->state));
 	}
 
 	result = true;
@@ -474,11 +526,17 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 		if (oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep) < 0)
 		{
 			/* handle NULL pushtarget... */
+#if 0
 			char ipv6addrstr[50], ipv4addrstr[50];
 			inet_ntop(AF_INET6, ns_instance->pushtarget_ep.addr.ipv6.address, ipv6addrstr, 50);
 			inet_ntop(AF_INET, ns_instance->pushtarget_ep.addr.ipv4.address, ipv4addrstr, 50);
 
 			if (!strcmp(ipv6addrstr, "::") && !strcmp(ipv4addrstr, "0.0.0.0"))
+			{
+				oc_new_string(&full_uri, "", strlen(""));
+			}
+#endif
+			if (_is_null_pushtarget(ns_instance))
 			{
 				oc_new_string(&full_uri, "", strlen(""));
 			}
@@ -554,8 +612,13 @@ void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_d
 {
 	(void)iface_mask;
 
-	set_ns_properties(request->resource, request->request_payload, user_data);
-	oc_send_response(request, OC_STATUS_CHANGED);
+	p_dbg("trying to update notification selector (\"%s\")... \n", oc_string(request->resource->uri));
+
+	if (set_ns_properties(request->resource, request->request_payload, user_data))
+		oc_send_response(request, OC_STATUS_CHANGED);
+	else
+		oc_send_response(request, OC_STATUS_BAD_REQUEST);
+
 }
 
 
@@ -565,10 +628,13 @@ void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user
 	(void)iface_mask;
 	(void)user_data;
 
-	p_dbg("notification selector (\"%s\") is deleted!\n", oc_string(request->resource->uri));
+	p_dbg("trying to delete notification selector (\"%s\")... \n", oc_string(request->resource->uri));
 
-	oc_delete_resource(request->resource);
-	oc_send_response(request, OC_STATUS_DELETED);
+	if (oc_delete_resource(request->resource))
+		oc_send_response(request, OC_STATUS_DELETED);
+	else
+		oc_send_response(request, OC_STATUS_BAD_REQUEST);
+
 
 }
 

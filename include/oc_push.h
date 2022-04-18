@@ -175,6 +175,13 @@ extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
 }
 
 
+#define oc_init_string(str) \
+{ \
+	(str).size = 0; \
+	(str).ptr = NULL; \
+	(str).next = NULL; \
+}
+
 
 void oc_push_list_init();
 void oc_create_pushconf_resource(size_t device_index);
