@@ -172,16 +172,22 @@ void
 oc_swupdate_notify_new_version_available(size_t device, const char *version,
                                          oc_swupdate_result_t result)
 {
-  (void)version;
   OC_DBG("new software version %s available for device %zd", version, device);
   oc_sec_pstat_set_current_mode(device, OC_DPM_NSA);
   oc_swupdate_t *s = &sw[device];
+  oc_free_string(&s->nv);
+  oc_new_string(&s->nv, version, strlen(version));
   s->swupdatestate = OC_SWUPDATE_STATE_NSA;
   s->swupdateresult = result;
+  if (result != OC_SWUPDATE_RESULT_SUCCESS) {
+    s->swupdateaction = OC_SWUPDATE_IDLE;
+  }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
+  if (result == OC_SWUPDATE_RESULT_SUCCESS) {
+    oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
+  }
 }
 
 void
@@ -200,10 +206,15 @@ oc_swupdate_notify_downloaded(size_t device, const char *version,
 #endif /* OC_SERVER */
   s->swupdatestate = OC_SWUPDATE_STATE_SVA;
   s->swupdateresult = result;
+  if (result != OC_SWUPDATE_RESULT_SUCCESS) {
+    s->swupdateaction = OC_SWUPDATE_IDLE;
+  }
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
-  oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
+  if (result == OC_SWUPDATE_RESULT_SUCCESS) {
+    oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
+  }
 }
 
 void
@@ -229,6 +240,7 @@ oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
 {
   oc_sec_pstat_set_current_mode(device, 0);
   oc_swupdate_t *s = &sw[device];
+  oc_free_string(&s->nv);
   s->swupdateaction = OC_SWUPDATE_IDLE;
   s->swupdatestate = OC_SWUPDATE_STATE_IDLE;
   s->swupdateresult = result;
@@ -455,7 +467,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
 }
 
 /**
- * post method for "/sw" resource.
+ * post method for "/oc/swu" resource.
  * The function has as input the request body, which are the input values of the
  * POST method.
  * The input values (as a set) are checked if all supplied values are correct.
@@ -467,7 +479,7 @@ oc_swupdate_decode(oc_rep_t *rep, size_t device)
  * @param requestRep the request representation.
  */
 static void
-post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
   (void)interfaces;
   (void)user_data;
@@ -492,10 +504,6 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     if (oc_string_len(rep->name) == 4 &&
         memcmp(oc_string(rep->name), "purl", 4) == 0) {
       if (rep->type != OC_REP_STRING) {
-
-        error_state = true;
-      }
-      if (oc_string_len(rep->value.string) >= 63) {
         error_state = true;
       }
       purl = oc_string(rep->value.string);
@@ -515,10 +523,10 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
       if (rep->type != OC_REP_STRING) {
         error_state = true;
       }
-      if (oc_string_len(rep->value.string) >= 63) {
+      action = str_to_action(oc_string(rep->value.string));
+      if (action > OC_SWUPDATE_UPGRADE) {
         error_state = true;
       }
-      action = str_to_action(oc_string(rep->value.string));
     }
     if (oc_string_len(rep->name) == 14 &&
         memcmp(oc_string(rep->name), "swupdateresult", 14) == 0) {
@@ -577,7 +585,7 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 }
 
 /**
- * get method for "/sw" resource.
+ * get method for "/oc/swu" resource.
  * function is called to intialize the return values of the GET method.
  * initialisation of the returned values are done from the global property
  * values.
@@ -590,7 +598,7 @@ post_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
  */
 
 static void
-get_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
+get_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
   (void)user_data;
   oc_swupdate_encode(interfaces, request->resource->device);
@@ -600,10 +608,10 @@ get_sw(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 void
 oc_create_swupdate_resource(size_t device)
 {
-  oc_core_populate_resource(OCF_SW_UPDATE, device, "sw",
+  oc_core_populate_resource(OCF_SW_UPDATE, device, "oc/swu",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                            OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_sw,
-                            0, post_sw, 0, 1, "oic.r.softwareupdate");
+                            OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE,
+                            get_swu, 0, post_swu, 0, 1, "oic.r.softwareupdate");
 }
 #else  /* OC_SOFTWARE_UPDATE */
 typedef int dummy_declaration;
