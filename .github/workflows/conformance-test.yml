@@ -22,7 +22,7 @@ jobs:
       - name: Test
         run: python ../../github_run_ci.py --commit ${{steps.commit.outputs.sha}}
       - name: Folder content
-        run: ls -al
+        run: Get-ChildItem
       - uses: actions/upload-artifact@v3
         with:
           name: CTT Logs
