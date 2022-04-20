@@ -101,8 +101,8 @@ typedef uint32_t oc_clock_time_t;
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 /* Wipe device name during reset, when oic/con is enabled */
-/* Default: Keep name */
-#define OC_WIPE_NAME (0)
+/* Default: Wipe name */
+#define OC_WIPE_NAME (1)
 
 #ifdef __cplusplus
 }
