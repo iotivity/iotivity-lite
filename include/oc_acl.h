@@ -125,6 +125,7 @@ typedef struct oc_sec_ace_t
   oc_ace_subject_t subject;           ///< subject
   int aceid;                          ///< ACE identifier
   oc_ace_permissions_t permission;    ///< permissions
+  oc_string_t tag;                    ///< custom user tag
 } oc_sec_ace_t;
 
 /**
@@ -137,22 +138,68 @@ OC_API
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
 
 /**
- * @brief Add initial access control list for core resources of a device
+ * @brief Remove access control entry from given device
  *
+ * @param ace Access control entry to remove
  * @param device Index of the device
  */
 OC_API
-void oc_sec_acl_add_bootstrap_acl(size_t device);
+void oc_sec_remove_ace(oc_sec_ace_t *ace, size_t device);
+
+/**
+ * @brief Get access control entry with given aceid from given device
+ *
+ * @param aceid Access control entry id
+ * @param device Index of the device
+ * @return Access control list
+ */
+OC_API
+oc_sec_ace_t *oc_sec_get_ace_by_aceid(int aceid, size_t device);
+
+/**
+ * @brief Remove access control entry with aceid from given device
+ *
+ * @param aceid Access control entry id
+ * @param device Index of the device
+ * @return true Access control entry with given id was found and removed
+ * @return false Otherwise
+ */
+OC_API
+bool oc_sec_remove_ace_by_aceid(int aceid, size_t device);
+
+/**
+ * @brief Add initial access control list for core resources of a device
+ *
+ * @param device Index of the device
+ * @return true On success
+ * @return false On failure
+ */
+OC_API
+bool oc_sec_acl_add_bootstrap_acl(size_t device);
+
+typedef struct oc_sec_on_apply_acl_data_t
+{
+  oc_uuid_t rowneruuid; ///< Uuid of the resource owner
+  oc_sec_ace_t *ace;    ///< New or updated access control entry
+  const oc_sec_ace_t
+    *replaced_ace;       ///< In case of replacement of an existing ACE this is
+                         ///< the original ACE that was replaced; the
+                         ///< ACE will be deallocated after the call of
+                         ///< oc_sec_on_apply_acl_cb_t from oc_sec_apply_acl
+  bool created;          ///< True if a new ACE was created; False if the ACE
+                         ///< replaced an already existing ACE or it was a
+                         ///< duplicate and the operation was skipped
+  bool created_resource; ///< At least one new resource was created in the ACE
+} oc_sec_on_apply_acl_data_t;
 
 /**
  * @brief Callback invoked with a created / updated access control entry
  *
- * @param rowneruuid Uuid of the resource owner
- * @param ace New or updated access control entry
+ * @param data Data with new/updated ACL data
  * @param user_data User data passed from the caller
  */
-typedef void (*oc_sec_on_apply_acl_cb_t)(oc_uuid_t rowneruuid,
-                                         oc_sec_ace_t *ace, void *user_data);
+typedef void (*oc_sec_on_apply_acl_cb_t)(oc_sec_on_apply_acl_data_t data,
+                                         void *user_data);
 
 /**
  * @brief Parse payload and add/update access control list
@@ -162,8 +209,8 @@ typedef void (*oc_sec_on_apply_acl_cb_t)(oc_uuid_t rowneruuid,
  * @param on_apply_ace_cb Callback invoked when a new access control entry is
  * added or updated
  * @param on_apply_ace_data User data passed to the on_apply_ace_cb function
- * @return int -1 On failure
- * @return int 0 Payload was successfully parsed
+ * @return -1 On failure
+ * @return 0 Payload was successfully parsed
  */
 OC_API
 int oc_sec_apply_acl(oc_rep_t *rep, size_t device,

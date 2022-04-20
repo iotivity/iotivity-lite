@@ -96,8 +96,9 @@ oc_sec_get_cred_by_credid(int credid, size_t device)
 {
   oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
-    if (cred->credid == credid)
+    if (cred->credid == credid) {
       return cred;
+    }
     cred = cred->next;
   }
   return NULL;
@@ -213,8 +214,7 @@ get_new_credid(bool roles_resource, oc_tls_peer_t *client, size_t device)
 static oc_sec_cred_t *
 oc_sec_remove_cred_from_device(oc_sec_cred_t *cred, size_t device)
 {
-  oc_list_remove(devices[device].creds, cred);
-  return cred;
+  return oc_list_remove2(devices[device].creds, cred);
 }
 
 static oc_sec_cred_t *
@@ -277,13 +277,10 @@ oc_sec_remove_cred(oc_sec_cred_t *cred, size_t device)
 bool
 oc_sec_remove_cred_by_credid(int credid, size_t device)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
-  while (cred != NULL) {
-    if (cred->credid == credid) {
-      oc_sec_remove_cred(cred, device);
-      return true;
-    }
-    cred = cred->next;
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
+  if (cred != NULL) {
+    oc_sec_remove_cred(cred, device);
+    return true;
   }
   return false;
 }
@@ -1125,7 +1122,7 @@ dump_cred(void *data)
 bool
 oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                    bool roles_resource, oc_tls_peer_t *client, size_t device,
-                   oc_sec_on_apply_cred_cb_t oc_apply_cred_cb,
+                   oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                    void *on_apply_cred_data)
 {
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
@@ -1425,13 +1422,13 @@ oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
                 *owner = cr;
                 (*owner)->owner_cred = true;
               }
-              if (oc_apply_cred_cb) {
+              if (on_apply_cred_cb) {
                 oc_sec_on_apply_cred_data_t cred_data = {
                   cr,
                   add_cred_data.replaced_cred,
                   add_cred_data.created,
                 };
-                oc_apply_cred_cb(cred_data, on_apply_cred_data);
+                on_apply_cred_cb(cred_data, on_apply_cred_data);
               }
             }
             if (add_cred_data.replaced_cred) {
