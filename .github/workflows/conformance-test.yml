@@ -19,5 +19,11 @@ jobs:
           } else {
             echo "::set-output name=sha::${{github.sha}}"
           }
-      - name: Client Tests
+      - name: Test
         run: python ../../github_run_ci.py --commit ${{steps.commit.outputs.sha}}
+      - name: Folder content
+        run: ls -al
+      - uses: actions/upload-artifact@v3
+        with:
+          name: CTT Logs
+          path: results/CTT_Logs_Archive.zip
