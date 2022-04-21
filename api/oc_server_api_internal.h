@@ -41,6 +41,14 @@ void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
 
 #endif /* OC_CLOUD */
 #ifdef OC_RES_BATCH_SUPPORT
+/**
+ * The OCF URI is specified in the following form:
+ * ocf://<authority>/<path>?<query>
+ * https://openconnectivity.org/specs/OCF_Core_Specification_v2.2.5.pdf
+ * section 6.2.2:
+ */
+#define OC_MAX_OCF_URI_SIZE (OC_UUID_LEN + 6 + 256)
+
 void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
                                             oc_resource_t *resource,
                                             oc_endpoint_t *endpoint);
