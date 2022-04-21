@@ -75,7 +75,7 @@ extern "C"
 #define PUSHRECVS_RSC_NAME "Push Receiver Configuration"
 
 /*
- * FIXME4ME <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
+ * FIXME4ME<done> <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
  */
 typedef enum {
 	OC_PP_WFP,

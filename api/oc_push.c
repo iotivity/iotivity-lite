@@ -318,7 +318,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				}
 			}
 			/*
-			 * FIXME4ME <2022/04/17> deprecated property, remove later...
+			 * TODO4ME <2022/04/17> deprecated property, remove later...
 			 * oic.r.pushproxy:pushqif (optional)
 			 */
 			else if (oc_string_len(rep->name) == 7 && memcmp(oc_string(rep->name), "pushqif", 7) == 0)
@@ -375,7 +375,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 //				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
 
 				/*
-				 * FIXME4ME 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
+				 * FIXME4ME<done> 만약 config client가 sourcert를 oic.r.pushpayload 이외의 것으로 설정하려 하면  bad request 에러를 리턴해야 함 (shall)
 				 */
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
@@ -513,7 +513,7 @@ void get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask, 
 
 		oc_string_t ep, full_uri;
 		/*
-		 * fixme4me <2022/4/17> handle the case when "pushtarget" is NULL string...
+		 * FIXME4ME<done> <2022/4/17> handle the case when "pushtarget" is NULL string...
 		 */
 		/*
 		 * testcode
@@ -1136,7 +1136,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built yet!\n",
 				oc_string(request->resource->uri));
 		/*
-		 * FIXME4ME send response here too!!!
+		 * FIXME4ME<done> send response here too!!!
 		 */
 		oc_send_response(request, OC_STATUS_NOT_FOUND);
 	}
@@ -1223,7 +1223,6 @@ oc_recvs_t * _find_recvs_by_device(size_t device_index)
 
 
 
-
 /**
  * @brief				oc_rep_set_pool() should be called before calling this func
  *
@@ -1241,7 +1240,6 @@ void * _create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
 
 	(*new_rep)->type = org_rep->type;
 	oc_new_string(&((*new_rep)->name), oc_string(org_rep->name), oc_string_len(org_rep->name));
-
 
 	switch (org_rep->type)
 	{
@@ -1474,6 +1472,28 @@ void oc_print_pushd_rsc(oc_rep_t *payload)
 
 
 
+oc_rep_t * _rep_list_remove(oc_rep_t **rep_list, oc_rep_t **item)
+{
+	oc_rep_t **l, *removed_item;
+
+	for (l = (oc_rep_t**) rep_list; *l != NULL; l = &(*l)->next)
+	{
+		if (*l == *item)
+		{
+			*l = (*l)->next;
+
+			removed_item = *item;
+			*item = (*item)->next;
+			removed_item->next = NULL;
+			return removed_item;
+		}
+	}
+
+	return NULL;
+}
+
+
+
 
 void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
@@ -1482,6 +1502,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 
 	int result = OC_STATUS_CHANGED;
 	oc_rep_t *rep = request->request_payload;
+	oc_rep_t *common_property;
 	oc_pushd_rsc_rep_t *pushd_rsc_rep;
 	oc_recvs_t *recvs_instance;
 	oc_recv_t *recv_obj;
@@ -1513,6 +1534,10 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 	{
 		while (rep)
 		{
+			/*
+			 * FIXME4ME<done> <2022/4/20> skip "rt" (array), "if" (array), "n" (optional), "id" (optional) common property in the payload ("oic.r.pushpayload")
+			 * because "rt" and "if" are already processed here...
+			 */
 			switch (rep->type)
 			{
 			case OC_REP_STRING_ARRAY:
@@ -1525,6 +1550,16 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 					{
 						oc_string_array_add_item(request->resource->types, oc_string_array_get_item(rep->value.array, i));
 					}
+
+					/*
+					 * remove rep from list..
+					 * - remove rep from list and move pointer to the next rep...
+					 * - removed rep is handed over as return value
+					 */
+					common_property = _rep_list_remove(&request->request_payload, &rep);
+					oc_free_rep(common_property);
+					continue;
+
 				}
 				else if (!strcmp(oc_string(rep->name), "if"))
 				{
@@ -1536,6 +1571,22 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 								oc_ri_get_interface_mask(oc_string_array_get_item(rep->value.array, i),
 																strlen(oc_string_array_get_item(rep->value.array, i)));
 					}
+
+					common_property = _rep_list_remove(&request->request_payload, &rep);
+					oc_free_rep(common_property);
+					continue;
+				}
+				break;
+			case OC_REP_STRING:
+				if (!strcmp(oc_string(rep->name), "n"))
+				{
+					/* update name */
+					oc_free_string(&request->resource->name);
+					oc_new_string(&request->resource->name, oc_string(rep->value.string), oc_string_len(rep->value.string));
+
+					common_property = _rep_list_remove(&request->request_payload, &rep);
+					oc_free_rep(common_property);
+					continue;
 				}
 				break;
 #if 0
@@ -1583,9 +1634,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			oc_rep_set_pool(&rep_instance_memb);
 			oc_free_rep(pushd_rsc_rep->rep);
 
-			/*
-			 * FIXME4ME skip "rt" and "if" property in the payload ("oic.r.pushpayload") because "rt" and "if" are already processed above...
-			 */
+
 			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, request->request_payload))
 			{
 				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
@@ -1595,15 +1644,15 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 			else
 			{
 #ifdef OC_PUSHDEBUG
-				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
-				oc_print_pushd_rsc(pushd_rsc_rep->rep);
+//				PRINT("\npushed target resource: %s\n", oc_string(pushd_rsc_rep->resource->uri));
+//				oc_print_pushd_rsc(pushd_rsc_rep->rep);
 #endif
 
-				/*
-				 * XXX
-				 * if user callback is registered.. call it.
-				 */
 				if (oc_push_arrived)
+					/*
+					 * TODO4ME <2022/4/20>, protect this call with thread lock...
+					 * pthread_mutex_lock(&app_mutex);
+					 */
 					oc_push_arrived(pushd_rsc_rep);
 			}
 		}
@@ -2501,7 +2550,7 @@ void response_to_push_rsc(oc_client_response_t *data)
 	else
 	{
 		/*
-		 * FIXME4ME <2022/4/17> check condition to enter ERR
+		 * FIXME4ME<done> <2022/4/17> check condition to enter ERR
 		 */
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_ERR));
