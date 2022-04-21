@@ -25,5 +25,5 @@ jobs:
         run: Get-ChildItem
       - uses: actions/upload-artifact@v3
         with:
-          name: CTT Logs
-          path: results/CTT_Logs_Archive.zip
+          name: logs
+          path: results/*.octt
