@@ -634,8 +634,6 @@ void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user
 		oc_send_response(request, OC_STATUS_DELETED);
 	else
 		oc_send_response(request, OC_STATUS_BAD_REQUEST);
-
-
 }
 
 
@@ -1650,8 +1648,8 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 
 				if (oc_push_arrived)
 					/*
-					 * TODO4ME <2022/4/20>, protect this call with thread lock...
-					 * pthread_mutex_lock(&app_mutex);
+					 * TODO4ME<done> <2022/4/20>, protect this call with thread lock...
+					 * don't need this.. because 네트워크 이벤트가 발생했을때 그 처리를 보호하는 mutex가 network layer에서 동작하고 있음
 					 */
 					oc_push_arrived(pushd_rsc_rep);
 			}
@@ -1890,6 +1888,7 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 	if (pushd_rsc)
 	{
 		/* step 3. remove pushed Resource from `app_resources` */
+		p_dbg("purge pushed resource (%s)...\n", oc_string(*uri));
 		oc_delete_resource(pushd_rsc);
 	}
 	else
@@ -1991,13 +1990,15 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 void _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 {
 	/*
-	 * TODO4ME oc_free_rep()를 참고해서 다시 작성해 볼것
+	 * TODO4ME rewrite this func (refer to oc_free_rep())
 	 */
 //	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recv_obj_list);
 	oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recvs_instance->receivers);
 
 	while (recv_obj)
 	{
+		p_dbg("purge receiver obj for ( %s (device: %d) )... \n", oc_string(recv_obj->receiveruri), recvs_instance->resource->device);
+
 		/* delete app resource pointed by `receiveruri` first.. */
 //		_purge_pushd_rsc(recv_obj->receiveruri, device_index);
 		_purge_pushd_rsc(&recv_obj->receiveruri, recvs_instance->resource->device);
@@ -2378,7 +2379,7 @@ exit:
 
 
 /**
- * @brief
+ * @brief DELETE callback for Push Receiver Resource
  *
  * @param request
  * @param iface_mask
@@ -2512,6 +2513,7 @@ void oc_create_pushreceiver_resource(size_t device_index)
 	{
 		p_err("oc_new_resource() error!\n");
 	}
+
 }
 
 
@@ -2522,6 +2524,23 @@ void oc_push_list_init()
 	oc_list_init(pushd_rsc_rep_list);
 }
 
+
+/*
+ * clean up push related data structure
+ * - for push configuration Resource: they are cleaned when all app Resources are removed (see oc_main_shutdown())
+ * - for push receivers Resource: free in this function
+ */
+void oc_push_free()
+{
+	oc_recvs_t *recvs_instance;
+
+	p_dbg("begin to free push receiver list!!!\n");
+
+	for (recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list); recvs_instance; recvs_instance = recvs_instance->next)
+	{
+		_purge_recv_obj_list(recvs_instance);
+	}
+}
 
 
 void response_to_push_rsc(oc_client_response_t *data)

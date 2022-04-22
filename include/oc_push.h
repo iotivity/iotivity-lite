@@ -184,6 +184,7 @@ extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
 
 
 void oc_push_list_init();
+void oc_push_free();
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
 oc_recv_t * _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len);
