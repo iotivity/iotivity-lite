@@ -205,14 +205,6 @@ oc_rt_factory_free_created_resource(oc_rt_created_t *rtc, oc_rt_factory_t *rf)
      * from rf->free_instance */
     return;
   }
-
-  oc_link_t *link =
-    oc_get_link_by_uri(rtc->collection, oc_string(rtc->resource->uri),
-                       oc_string_len(rtc->resource->uri));
-  if (link) {
-    oc_collection_remove_link((oc_resource_t *)rtc->collection, link);
-    oc_delete_link(link);
-  }
   rf->free_instance(rtc->resource);
   oc_memb_free(&rtc_s, rtc);
 }
