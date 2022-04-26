@@ -229,6 +229,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
 	(void)resource;
 	bool result = false;
+	bool pushtarget_is_updated = false;
 //	bool is_null_pushtarget = false;
 //	char mandatory_properties_check = 0;
 
@@ -307,6 +308,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 						if (oc_string_len(ns_instance->targetpath))
 						{
 							p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")\n", oc_string(ns_instance->targetpath));
+							pushtarget_is_updated = true;
 //							mandatory_properties_check |= PP_PUSHTARGET;
 						}
 						else
@@ -325,6 +327,23 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_free_string(&ns_instance->pushqif);
 				oc_new_string(&ns_instance->pushqif, oc_string(rep->value.string), oc_string_len(rep->value.string));
+			}
+			/*
+			 * oic.r.pushproxy:state (RETRIEVE:mandatory, UPDATE:optional)
+			 */
+			else if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
+			{
+				/* "waitingforupdate" is only acceptable value */
+				if (strcmp(oc_string(rep->value.string), pp_statestr(OC_PP_WFU)))
+				{
+					p_err("only \"waitingforupdate\" is allowed to reset \"state\"");
+					goto exit;
+				}
+				p_dbg("state of Push Proxy (\"%s\") is reset (%s => %s)\n", oc_string(ns_instance->resource->uri),
+						oc_string(ns_instance->state), oc_string(rep->value.string));
+//						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
+				pp_update_state(ns_instance->state, oc_string(rep->value.string));
+//				ns_instance->state = rep->value.integer;
 			}
 			break;
 
@@ -399,21 +418,8 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			}
 			break;
 
-		case OC_REP_INT:
-			/*
-			 * oic.r.pushproxy:state (RETRIEVE:mandatory, UPDATE:optional)
-			 */
-			if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
-			{
-				p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
-						oc_string(ns_instance->state), oc_string(rep->value.string));
-//						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
-				pp_update_state(ns_instance->state, oc_string(rep->value.string));
-//				ns_instance->state = rep->value.integer;
-			}
-			break;
-
 		default:
+			p_err("not supported Property (\"%s\")\n", oc_string(rep->name));
 			break;
 		}
 		rep = rep->next;
@@ -427,8 +433,14 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	}
 #endif
 
-//	if (!is_null_pushtarget)
-	if (!_is_null_pushtarget(ns_instance))
+	/*
+	 * FIXME4ME <2022/4/26> re-check condition which lets state move from "err"/"tout" to "wfu"
+	 * - only configurator can change "state" when it is in "err"/"tout" state
+	 */
+	if ( /* !_is_null_pushtarget(ns_instance) */ pushtarget_is_updated
+			&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR))
+			&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT))
+			&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)))
 	{
 		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
@@ -438,7 +450,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	}
 	else
 	{
-		p_dbg("pushtarget of Push Proxy (\"%s\") is still NULL, Push Proxy is in (\"%s\")\n",
+		p_dbg("pushtarget of Push Proxy (\"%s\") is still NULL, or Push Proxy is already in (\"%s\")\n",
 				oc_string(ns_instance->resource->uri), oc_string(ns_instance->state));
 	}
 
