@@ -1004,13 +1004,15 @@ class Iotivity():
 
         print ("...done.")
 
-    def onboard_all_with_name(self, name_str):
+    def onboard_all_with_names(self, names_list):
         """
         
-        Onboard all unowned devices that contains a certain string in their name (case insensitive)
+        Onboard all unowned devices that contains certain substrings in their name (not case sensitive)
+
+        names_list: A list of all the target substrings
 
         """
-        print ("onboard_all_with_name: listing NOT onboarded devices in C:")
+        print ("onboard_all_with_names: listing NOT onboarded devices in C:")
         self.list_unowned_devices()
 
         print ("onboarding...")
@@ -1022,33 +1024,35 @@ class Iotivity():
         for device in self.unowned_devices:
             device_name = self.get_device_name(device)
 
-            if name_str.lower() in str(device_name).lower(): 
-                print ("Onboarding device :", device, device_name)
+            for target_name in names_list: 
+                if target_name.lower() in str(device_name).lower(): 
+                    print ("Onboarding device :", device, device_name)
 
-                run_count = 0
-                result = False
-                while run_count < 5 and not result: 
-                    run_count += 1
-                    self.lib.py_otm_just_works(device)
+                    run_count = 0
+                    result = False
+                    while run_count < 5 and not result: 
+                        run_count += 1
+                        self.lib.py_otm_just_works(device)
 
-                    start_time = time.time()
-                    timeout = 10
+                        start_time = time.time()
+                        timeout = 10
+                        time.sleep(1)
+                        while True: 
+                            result = self.get_result()
+                            end_time = time.time()
+                            if result or end_time > start_time + timeout: 
+                                time_taken = end_time - start_time
+                                break
+
+                    if result: 
+                        print (f"Onboarding succeeded for: {device} {device_name}")
+                        print (f"Time taken: {time_taken:.3} seconds")
+
+                        onboarded_devices.append(device)
+                    else: 
+                        print (f"Onboarding failed for: {device} {device_name}")
                     time.sleep(1)
-                    while True: 
-                        result = self.get_result()
-                        end_time = time.time()
-                        if result or end_time > start_time + timeout: 
-                            time_taken = end_time - start_time
-                            break
-
-                if result: 
-                    print (f"Onboarding succeeded for: {device} {device_name}")
-                    print (f"Time taken: {time_taken:.3} seconds")
-
-                    onboarded_devices.append(device)
-                else: 
-                    print (f"Onboarding failed for: {device} {device_name}")
-                time.sleep(1)
+                    break
         
         for device in onboarded_devices: 
             self.unowned_devices.remove(device)
@@ -1668,7 +1672,7 @@ class Iotivity():
         
         return cloud_configurations
 
-    def proxy_to_cloud(self):
+    def proxy_to_cloud(self, target_names):
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1689,9 +1693,12 @@ class Iotivity():
 
             self.discover_all()
 
-            self.onboard_all_with_name("proxy")
+            self.onboard_all_with_names(["proxy"])
 
-            self.onboard_all_with_name("cascoda")
+            if target_names is None: 
+                self.onboard_all_unowned()
+            else: 
+                self.onboard_all_with_names(target_names)
 
             time.sleep(1)
             while True: 
@@ -1749,7 +1756,7 @@ class Iotivity():
             time.sleep(60)
             self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
 
-    def proxy_to_mqtt(self): 
+    def proxy_to_mqtt(self, target_names): 
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1763,9 +1770,12 @@ class Iotivity():
 
             self.discover_all()
 
-            self.onboard_all_with_name("proxy")
+            self.onboard_all_with_names(["proxy"])
 
-            self.onboard_all_with_name("cascoda")
+            if target_names is None: 
+                self.onboard_all_unowned()
+            else: 
+                self.onboard_all_with_names(target_names)
 
             time.sleep(1)
             while True: 
@@ -1863,9 +1873,13 @@ class Iotivity():
         self.general_post(device_uuid, query, url, payload_property_list, payload_value_list, payload_type_list)
 
 
-    def test_getpost(self): 
+    def test_getpost(self, target_names): 
         self.discover_all()
-        self.onboard_all_unowned()
+
+        if target_names is None: 
+            self.onboard_all_unowned()
+        else: 
+            self.onboard_all_with_names(target_names)
 
         self.list_owned_devices()
 
@@ -1938,21 +1952,27 @@ class Iotivity():
 
 
 if __name__ == "__main__": 
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-f', '--function', required=True, default=None, metavar='', help='Function to run. Available functions include:\nproxy_to_cloud, proxy_to_mqtt, test_getpost, test_discovery')
+    parser.add_argument('-n', '--name', action='append', required=False, default=None, metavar='', help='Substrings of device names to onboard (not case sensitive)\n    e.g. Pass "sensor" to onboard all devices that has "sensor" in their name.\nMultiple arguments allowed\n    e.g. -n sensor -n actuator\nDefault: Onboard all unowned devices')
+
+    args = parser.parse_args()
+
     my_iotivity = Iotivity()
     signal.signal(signal.SIGINT, my_iotivity.sig_handler)
 
     # need this sleep, because it takes a while to start Iotivity in C in a Thread
     time.sleep(1)
 
-    # my_iotivity.proxy_to_cloud()
-
-    my_iotivity.proxy_to_mqtt()
+    if args.function == 'proxy_to_cloud': 
+        my_iotivity.proxy_to_cloud(args.name)
+    elif args.function == 'proxy_to_mqtt': 
+        my_iotivity.proxy_to_mqtt(args.name)
 
     # my_iotivity.test_getpost()
-
     # my_iotivity.test_discovery()
 
-    # my_iotivity.quit()    
+    my_iotivity.quit()    
 
 
 
