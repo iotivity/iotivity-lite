@@ -1672,7 +1672,7 @@ class Iotivity():
         
         return cloud_configurations
 
-    def proxy_to_cloud(self, target_names, periodic): 
+    def proxy_to_cloud(self, target_names): 
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1752,12 +1752,11 @@ class Iotivity():
         proxy_time = time.time() - very_start_time
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
 
-        if periodic is not None: 
-            while True: 
-                time.sleep(60)
-                self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
+        while True: 
+            time.sleep(60)
+            self.post_d2dserverlist(cloud_proxy_uuid, "scan=1")
 
-    def proxy_to_mqtt(self, target_names, periodic, mqtt_server, mqtt_port): 
+    def proxy_to_mqtt(self, target_names, mqtt_server, mqtt_port): 
         very_start_time = time.time()
         expected_devices = 1
 
@@ -1827,11 +1826,6 @@ class Iotivity():
 
         proxy_time = time.time() - very_start_time
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
-
-        if periodic is not None: 
-            while True: 
-                time.sleep(60)
-                self.post_d2dserverlist(mqtt_proxy_uuid, "scan=1")
 
     def test_get(self): 
         self.list_owned_devices()
@@ -1957,7 +1951,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-f', '--function', required=True, default=None, metavar='', help='Function to run. Available functions include:\nproxy_to_cloud, proxy_to_mqtt, test_getpost, test_discovery')
     parser.add_argument('-n', '--name', action='append', required=False, default=None, metavar='', help='Substrings of device names to onboard (not case sensitive)\n    e.g. Pass "sensor" to onboard all devices that has "sensor" in their name.\nMultiple arguments allowed\n    e.g. -n sensor -n actuator\nDefault: Onboard all unowned devices')
-    parser.add_argument('-p', '--periodic', required=False, default=None, metavar='', nargs='?', const=1, help='Enable periodic requests to rediscover owned devices (in case they have been rebooted)\nDefault: No periodic requests')
     parser.add_argument('-ms', '--mqttServer', required=False, default='localhost', metavar='', help='MQTT-proxy specific:\nAddress of target MQTT server\n    e.g. test.mosquitto.org, 192.168.202.76\nDefault: localhost')
     parser.add_argument('-mp', '--mqttPort', required=False, default='1883', metavar='', help='MQTT-proxy specific:\nTarget MQTT port number\nDefault: 1883')
 
@@ -1970,9 +1963,9 @@ if __name__ == "__main__":
     time.sleep(1)
 
     if args.function == 'proxy_to_cloud': 
-        my_iotivity.proxy_to_cloud(args.name, args.periodic)
+        my_iotivity.proxy_to_cloud(args.name)
     elif args.function == 'proxy_to_mqtt': 
-        my_iotivity.proxy_to_mqtt(args.name, args.periodic, args.mqttServer, args.mqttPort)
+        my_iotivity.proxy_to_mqtt(args.name, args.mqttServer, args.mqttPort)
 
     # my_iotivity.test_getpost()
     # my_iotivity.test_discovery()
