@@ -1573,6 +1573,35 @@ class Iotivity():
         time.sleep(1)
         return result, response_payload
 
+    def general_delete(self, uuid, query, url): 
+        self.lib.py_general_delete.argtypes = [String, String, String]
+        self.lib.py_general_delete.restype = None
+
+        run_count = 0
+        result = False
+        response_payload = ""
+        while run_count < 5 and not result: 
+            run_count += 1
+            self.lib.py_general_delete(uuid, query, url)
+
+            start_time = time.time()
+            timeout = 10
+            time.sleep(1)
+            while True: 
+                result = self.get_result()
+                end_time = time.time()
+                if result or end_time > start_time + timeout: 
+                    time_taken = end_time - start_time
+                    break
+        if result: 
+            response_payload = self.get_response_payload()
+            print (f"Sending DELETE request succeeded")
+            print (f"Time taken: {time_taken:.3} seconds")
+        else: 
+            print (f"Sending DELETE request failed")
+        time.sleep(1)
+        return result, response_payload
+
     def get_idd(self, myuuid):
         print("get_idd ", myuuid)
         self.discover_resources(myuuid)
@@ -1826,6 +1855,11 @@ class Iotivity():
 
         proxy_time = time.time() - very_start_time
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
+
+        while True: 
+            cmd = input("Type 'add' to add & proxy new devices\n")
+            if "add" in cmd: 
+                self.proxy_to_mqtt(self, target_names, mqtt_server, mqtt_port)
 
     def test_get(self): 
         self.list_owned_devices()
