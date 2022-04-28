@@ -333,12 +333,21 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			 */
 			else if (oc_string_len(rep->name) == 5 && memcmp(oc_string(rep->name), "state", 5) == 0)
 			{
+				/* state can be modified only if Push Proxy is in "tout" or "err" state */
+				if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR))
+						&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT)))
+				{
+					p_err("state can be modified only if Push Proxy is in \"tout\" or \"err\" state");
+					goto exit;
+				}
+
 				/* "waitingforupdate" is only acceptable value */
 				if (strcmp(oc_string(rep->value.string), pp_statestr(OC_PP_WFU)))
 				{
 					p_err("only \"waitingforupdate\" is allowed to reset \"state\"");
 					goto exit;
 				}
+
 				p_dbg("state of Push Proxy (\"%s\") is reset (%s => %s)\n", oc_string(ns_instance->resource->uri),
 						oc_string(ns_instance->state), oc_string(rep->value.string));
 //						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
@@ -2875,7 +2884,7 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 {
 	oc_resource_t *resource = oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
 	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
-	char all_matched = 1;
+	char all_matched = 0x7;
 
 	p_dbg("resource \"%s\"@device(%d) is updated!\n", uri, device_index);
 
@@ -2904,11 +2913,22 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 			if (strcmp(oc_string(ns_instance->phref), "") && strcmp(oc_string(ns_instance->phref), uri))
 				all_matched = 0;
 		}
+		else
+		{
+			all_matched &= 0x6;
+		}
+
 		if (oc_string_array_get_allocated_size(ns_instance->prt)>0)
 		{
 			if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types))
 				all_matched = 0;
 		}
+		else
+		{
+			all_matched &= 0x5;
+		}
+
+
 		if (oc_string_array_get_allocated_size(ns_instance->pif)>0)
 		{
 			oc_interface_mask_t pif = 0;
@@ -2922,6 +2942,10 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 //				all_matched = (all_matched)? 1:0;
 //			else
 				all_matched = 0;
+		}
+		else
+		{
+			all_matched &= 0x3;
 		}
 
 		if (all_matched)
