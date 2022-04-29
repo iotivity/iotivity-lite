@@ -1856,16 +1856,17 @@ class Iotivity():
         proxy_time = time.time() - very_start_time
         print (f"Total time taken to proxy all devices to the cloud: {proxy_time:.3} seconds")
 
-        while True: 
-            cmd = input("To take further actions, enter one of the following commands:\nadd:  add & proxy new devices\nexit: offboard all devices and exit\n")
-            if "add" in cmd.lower(): 
-                self.proxy_to_mqtt(target_names, mqtt_server, mqtt_port)
-            if "exit" in cmd.lower(): 
-                self.general_delete(mqtt_proxy_uuid, "delete=all", "d2dserverlist")
-                self.offboard_all_owned()
-                time.sleep(10)
-                self.quit()
-                sys.exit()
+        if __name__ == "__main__": 
+            while True: 
+                cmd = input("To take further actions, enter one of the following commands:\nadd : discover & proxy new devices\nexit: offboard all devices and exit\n")
+                if "add" in cmd.lower(): 
+                    self.proxy_to_mqtt(target_names, mqtt_server, mqtt_port)
+                if "exit" in cmd.lower(): 
+                    self.general_delete(mqtt_proxy_uuid, "delete=all", "d2dserverlist")
+                    self.offboard_all_owned()
+                    time.sleep(10)
+                    self.quit()
+                    sys.exit()
 
     def test_get(self): 
         self.list_owned_devices()
