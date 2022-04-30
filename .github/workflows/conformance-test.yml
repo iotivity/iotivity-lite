@@ -9,7 +9,7 @@ on:
     tags:
       - "*"
     issue_comment:
-      types: [edited]
+      types: [edited, reopened]
   
 jobs:
   comment:
