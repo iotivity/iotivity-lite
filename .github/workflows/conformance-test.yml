@@ -79,7 +79,7 @@ jobs:
           name: logs
           path: results/*.octt
       - name: Add reaction
-        if: (success() || failure()) && contains(github.event.comment.body, '[x] <!-- ctt-trigger -->')
+        if: always() && contains(github.event.comment.body, '[x] <!-- ctt-trigger -->')
         uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ github.event.comment.id }}
