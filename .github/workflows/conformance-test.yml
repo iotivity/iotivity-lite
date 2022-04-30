@@ -8,8 +8,8 @@ on:
       - master
     tags:
       - "*"
-    issue_comment:
-      types: [edited, reopened]
+  issue_comment:
+    types: [edited, reopened]
   
 jobs:
   comment:
