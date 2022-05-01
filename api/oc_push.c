@@ -248,7 +248,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			{
 				oc_free_string(&ns_instance->phref);
 				oc_new_string(&ns_instance->phref, oc_string(rep->value.string), oc_string_len(rep->value.string));
-				p_dbg("oic.r.pushproxy:phref (%s)\n", oc_string(rep->value.string));
+				p_dbg("oic.r.pushproxy:phref (%s)", oc_string(rep->value.string));
 			}
 			/*
 			 * oic.r.pushproxy:pushtarget (mandatory)
@@ -258,7 +258,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				if (!strcmp(oc_string(rep->value.string), ""))
 				{
 					/* NULL pushtarget ("") is still acceptable... */
-					p_dbg("NULL \"pushtarget\" is received, still stay in \"waitforprovisioning\" state...\n");
+					p_dbg("NULL \"pushtarget\" is received, still stay in \"waitforprovisioning\" state...");
 
 					/* clear endpoint */
 					memset((void *)(&ns_instance->pushtarget_ep), 0, sizeof(ns_instance->pushtarget_ep));
@@ -279,12 +279,12 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					new_ep = oc_new_endpoint();
 					oc_init_string(new_targetpath);
 
-					p_dbg("oic.r.pushproxy:pushtarget (%s)\n", oc_string(rep->value.string));
+					p_dbg("oic.r.pushproxy:pushtarget (%s)", oc_string(rep->value.string));
 
 //					if (oc_string_to_endpoint(&rep->value.string, &ns_instance->pushtarget_ep, &ns_instance->targetpath) < 0)
 					if (oc_string_to_endpoint(&rep->value.string, new_ep, &new_targetpath) < 0)
 					{
-						p_err("oic.r.pushproxy:pushtarget (%s) parsing failed!\n", oc_string(rep->value.string));
+						p_err("oic.r.pushproxy:pushtarget (%s) parsing failed!", oc_string(rep->value.string));
 
 						oc_free_endpoint(new_ep);
 						oc_free_string(&new_targetpath);
@@ -299,7 +299,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 						oc_endpoint_copy(&ns_instance->pushtarget_ep, new_ep);
 						oc_new_string(&ns_instance->targetpath, oc_string(new_targetpath), oc_string_len(new_targetpath));
 
-						p_dbg("oic.r.pushproxy:pushtarget (%s)\n", oc_string(rep->value.string));
+						p_dbg("oic.r.pushproxy:pushtarget (%s)", oc_string(rep->value.string));
 
 						/* return memory */
 						oc_free_endpoint(new_ep);
@@ -307,13 +307,13 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 						if (oc_string_len(ns_instance->targetpath))
 						{
-							p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")\n", oc_string(ns_instance->targetpath));
+							p_dbg("oic.r.pushproxy:pushtarget parsing is successful! targetpath (\"%s\")", oc_string(ns_instance->targetpath));
 							pushtarget_is_updated = true;
 //							mandatory_properties_check |= PP_PUSHTARGET;
 						}
 						else
 						{
-							p_err("path part of \"pushtarget\" should not be NULL!!\n");
+							p_err("path part of \"pushtarget\" should not be NULL!!");
 							goto exit;
 						}
 					}
@@ -348,7 +348,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					goto exit;
 				}
 
-				p_dbg("state of Push Proxy (\"%s\") is reset (%s => %s)\n", oc_string(ns_instance->resource->uri),
+				p_dbg("state of Push Proxy (\"%s\") is reset (%s => %s)", oc_string(ns_instance->resource->uri),
 						oc_string(ns_instance->state), oc_string(rep->value.string));
 //						pp_statestr(ns_instance->state), pp_statestr(rep->value.integer));
 				pp_update_state(ns_instance->state, oc_string(rep->value.string));
@@ -372,7 +372,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					p_dbg("oic.r.pushproxy:prt (%s)\n", oc_string_array_get_item(rep->value.array, i));
+					p_dbg("oic.r.pushproxy:prt (%s)", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->prt, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
@@ -388,7 +388,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					p_dbg("oic.r.pushproxy:pif (%s)\n", oc_string_array_get_item(rep->value.array, i));
+					p_dbg("oic.r.pushproxy:pif (%s)", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->pif, oc_string_array_get_item(rep->value.array, i));
 				}
 			}
@@ -410,7 +410,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 					if (strcmp(oc_string_array_get_item(rep->value.array, i), "oic.r.pushpayload"))
 					{
 //						oc_free_string_array(&ns_instance->sourcert);
-						p_err("illegal oic.r.pushproxy:sourcert value (%s)!\n", oc_string_array_get_item(rep->value.array, i));
+						p_err("illegal oic.r.pushproxy:sourcert value (%s)!", oc_string_array_get_item(rep->value.array, i));
 						goto exit;
 					}
 				}
@@ -419,7 +419,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 				oc_new_string_array(&ns_instance->sourcert, oc_string_array_get_allocated_size(rep->value.array));
 				for (int i=0; i<(int)oc_string_array_get_allocated_size(rep->value.array); i++)
 				{
-					p_dbg("oic.r.pushproxy:sourcert (%s)\n", oc_string_array_get_item(rep->value.array, i));
+					p_dbg("oic.r.pushproxy:sourcert (%s)", oc_string_array_get_item(rep->value.array, i));
 					oc_string_array_add_item(ns_instance->sourcert, oc_string_array_get_item(rep->value.array, i));
 				}
 
@@ -428,7 +428,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			break;
 
 		default:
-			p_err("not supported Property (\"%s\")\n", oc_string(rep->name));
+			p_err("not supported Property (\"%s\")", oc_string(rep->name));
 			break;
 		}
 		rep = rep->next;
@@ -451,7 +451,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 			&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT))
 			&& strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)))
 	{
-		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
 //		pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFU));
 		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
@@ -459,7 +459,7 @@ bool set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 	}
 	else
 	{
-		p_dbg("pushtarget of Push Proxy (\"%s\") is still NULL, or Push Proxy is already in (\"%s\")\n",
+		p_dbg("pushtarget of Push Proxy (\"%s\") is still NULL, or Push Proxy is already in (\"%s\")",
 				oc_string(ns_instance->resource->uri), oc_string(ns_instance->state));
 	}
 
@@ -633,7 +633,7 @@ void post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_d
 {
 	(void)iface_mask;
 
-	p_dbg("trying to update notification selector (\"%s\")... \n", oc_string(request->resource->uri));
+	p_dbg("trying to update notification selector (\"%s\")... ", oc_string(request->resource->uri));
 
 	if (set_ns_properties(request->resource, request->request_payload, user_data))
 		oc_send_response(request, OC_STATUS_CHANGED);
@@ -649,7 +649,7 @@ void delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user
 	(void)iface_mask;
 	(void)user_data;
 
-	p_dbg("trying to delete notification selector (\"%s\")... \n", oc_string(request->resource->uri));
+	p_dbg("trying to delete notification selector (\"%s\")... ", oc_string(request->resource->uri));
 
 	if (oc_delete_resource(request->resource))
 		oc_send_response(request, OC_STATUS_DELETED);
@@ -686,12 +686,12 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 			oc_resource_set_properties_cbs(ns_instance->resource, get_ns_properties, ns_instance, set_ns_properties, ns_instance);
 			oc_add_resource(ns_instance->resource);
 
-			p_dbg("new link (\"%s\") and corresponding resource for \"%s\" collection is created\n", oc_string(ns_instance->resource->uri), PUSHCONF_RSC_PATH);
+			p_dbg("new link (\"%s\") and corresponding resource for \"%s\" collection is created", oc_string(ns_instance->resource->uri), PUSHCONF_RSC_PATH);
 
 //			ns_instance->state = OC_PP_WFP;
 			oc_new_string(&ns_instance->state, pp_statestr(OC_PP_WFP), strlen(pp_statestr(OC_PP_WFP)));
 
-			p_dbg("state of Push Proxy (\"%s\") is initialized (%s)\n", oc_string(ns_instance->resource->uri), pp_statestr(OC_PP_WFP));
+			p_dbg("state of Push Proxy (\"%s\") is initialized (%s)", oc_string(ns_instance->resource->uri), pp_statestr(OC_PP_WFP));
 
 #if 0
 			p_dbg("rt: { ");
@@ -709,13 +709,13 @@ oc_resource_t *get_ns_instance(const char *href, oc_string_array_t *types,
 			oc_list_add(ns_list, ns_instance);
 			return ns_instance->resource;
 		} else {
-			p_err("oc_new_resource() error!\n");
+			p_err("oc_new_resource() error!");
 			oc_memb_free(&ns_instance_memb, ns_instance);
 		}
 	}
 	else
 	{
-		p_err("oc_memb_alloc() error!\n");
+		p_err("oc_memb_alloc() error!");
 	}
 
 	return NULL;
@@ -733,7 +733,7 @@ void free_ns_instance(oc_resource_t *resource)
 	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
 	oc_endpoint_t *ep;
 
-	p_dbg("delete ns_instance for resource (\"%s\")...\n", oc_string(resource->uri));
+	p_dbg("delete ns_instance for resource (\"%s\")...", oc_string(resource->uri));
 
 	while (ns_instance)
 	{
@@ -854,7 +854,7 @@ void oc_create_pushconf_resource(size_t device_index)
 	}
 	else
 	{
-		p_err("oc_new_collection() error!\n");
+		p_err("oc_new_collection() error!");
 	}
 }
 
@@ -1126,7 +1126,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 	if (!pushd_rsc_rep)
 	{
-		p_err("something wrong, can't find resource representation for pushed resource (%s)...\n",
+		p_err("something wrong, can't find resource representation for pushed resource (%s)...",
 				oc_string(request->resource->uri));
 		return;
 	}
@@ -1152,7 +1152,7 @@ void get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	}
 	else
 	{
-		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built yet!\n",
+		p_err("resource representation for pushed resource (%s) is found, but no resource representation for it is built yet!",
 				oc_string(request->resource->uri));
 		/*
 		 * FIXME4ME<done> send response here too!!!
@@ -1336,7 +1336,7 @@ void oc_print_pushd_rsc(oc_rep_t *payload)
 	depth_prefix[i*prefix_width] = '\0';
 
 	if (!rep) {
-		p_dbg("no data!\n");
+		p_dbg("no data!");
 		depth--;
 		return;
 	}
@@ -1533,20 +1533,20 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 		recv_obj = _find_recv_obj_by_uri2(recvs_instance, request->resource->uri);
 		if (!recv_obj)
 		{
-			p_err("can't find receiver object for (%s)\n", oc_string(request->resource->uri));
+			p_err("can't find receiver object for (%s)", oc_string(request->resource->uri));
 			return;
 		}
 	}
 	else
 	{
-		p_err("can't find push receiver properties for (%s) in device (%d), the target resource may not be a \"push receiver resource\"\n", oc_string(request->resource->uri), request->resource->device);
+		p_err("can't find push receiver properties for (%s) in device (%d), the target resource may not be a \"push receiver resource\"", oc_string(request->resource->uri), request->resource->device);
 		return;
 	}
 
 	/* check if rt of pushed resource is part of configured rts */
 	if (!_check_pushd_rsc_rt(recv_obj, rep))
 	{
-		p_err("pushed resource type(s) is not in \"rts\" of push recerver object\n");
+		p_err("pushed resource type(s) is not in \"rts\" of push recerver object");
 		result = OC_STATUS_FORBIDDEN;
 	}
 	else
@@ -1656,7 +1656,7 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 
 			if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep, request->request_payload))
 			{
-				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! \n",
+				p_err("something wrong!, creating corresponding pushed resource representation faild (%s) ! ",
 						oc_string(request->resource->uri));
 				result = OC_STATUS_INTERNAL_SERVER_ERROR;
 			}
@@ -1677,12 +1677,23 @@ void post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask, void 
 		}
 		else
 		{
-			p_err("something wrong!, can't find corresponding pushed resource representation instance for (%s) \n",
+			p_err("something wrong!, can't find corresponding pushed resource representation instance for (%s) ",
 					oc_string(request->resource->uri));
 			result = OC_STATUS_NOT_FOUND;
 		}
 	}
 
+	if (result == OC_STATUS_CHANGED)
+	{
+		/*
+		 * if this is the first push to this target Resource... make it discoverable
+		 */
+		if (!(pushd_rsc_rep->resource->properties & OC_DISCOVERABLE))
+		{
+			p_dbg("this is the first push to (%s), from now on it will be discoverable...", oc_string(pushd_rsc_rep->resource->uri));
+			oc_resource_set_discoverable(pushd_rsc_rep->resource, true);
+		}
+	}
 
 	oc_send_response(request, result);
 	return;
@@ -1902,19 +1913,19 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 	}
 	else
 	{
-		p_err("can't find resource representation for pushed resource (%s)...\n", oc_string(*uri));
+		p_err("can't find resource representation for pushed resource (%s)...", oc_string(*uri));
 		return;
 	}
 
 	if (pushd_rsc)
 	{
 		/* step 3. remove pushed Resource from `app_resources` */
-		p_dbg("purge pushed resource (%s)...\n", oc_string(*uri));
+		p_dbg("purge pushed resource (%s)...", oc_string(*uri));
 		oc_delete_resource(pushd_rsc);
 	}
 	else
 	{
-		p_err("can't find pushed resource (%s)...\n", oc_string(*uri));
+		p_err("can't find pushed resource (%s)...", oc_string(*uri));
 		return;
 	}
 
@@ -1956,8 +1967,11 @@ void _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
  * @param recv_obj	receiver object that points pushed resource
  * @param resource	Push Receiver resource
  */
-void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
+//void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
+bool _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 {
+	bool result = true;
+
 	/* create Push Receiver Resource */
 	oc_resource_t *pushd_rsc = oc_new_resource("Pushed Resource", oc_string(recv_obj->receiveruri), 1, resource->device);
 
@@ -1969,7 +1983,12 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 		oc_resource_bind_resource_type(pushd_rsc, " ");
 		oc_resource_bind_resource_interface(pushd_rsc, OC_IF_RW | OC_IF_BASELINE);
 		oc_resource_set_default_interface(pushd_rsc, OC_IF_RW);
+		/*
+		 * initially this resource should not be discoverable...
+		 * once any resource is pushed to this resource, it will be discoverable...
+		 */
 		oc_resource_set_discoverable(pushd_rsc, true);
+//		oc_resource_set_discoverable(pushd_rsc, false);
 
 		oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushd_rsc, NULL);
 		oc_resource_set_request_handler(pushd_rsc, OC_POST, post_pushd_rsc, NULL);
@@ -1978,7 +1997,8 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 		 * => this is done in delete_pushrecv() (delete handler of pushreceiver resource)
 		 */
 
-		oc_add_resource(pushd_rsc);
+		if (!oc_add_resource(pushd_rsc))
+			result = false;
 
 		/* create resource representation container for this resource */
 		oc_pushd_rsc_rep_t *pushd_rsc_rep_instance = (oc_pushd_rsc_rep_t *)oc_memb_alloc(&pushd_rsc_rep_instance_memb);
@@ -1989,13 +2009,17 @@ void _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 		}
 		else
 		{
-			p_err("oc_memb_alloc() error!\n");
+			p_err("oc_memb_alloc() error!");
+			result = false;
 		}
 	}
 	else
 	{
-		p_err("oc_new_resource() error!\n");
+		p_err("oc_new_resource() error!");
+		result = false;
 	}
+
+	return result;
 }
 
 
@@ -2018,7 +2042,7 @@ void _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 
 	while (recv_obj)
 	{
-		p_dbg("purge receiver obj for ( %s (device: %d) )... \n", oc_string(recv_obj->receiveruri), recvs_instance->resource->device);
+		p_dbg("purge receiver obj for ( %s (device: %d) )... ", oc_string(recv_obj->receiveruri), recvs_instance->resource->device);
 
 		/* delete app resource pointed by `receiveruri` first.. */
 //		_purge_pushd_rsc(recv_obj->receiveruri, device_index);
@@ -2059,7 +2083,7 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 		case OC_REP_STRING:
 			if (!strcmp(oc_string(rep->name), "receiveruri"))
 			{
-				p_dbg("target receiveruri: \"%s\", new receiveruri: \"%s\"\n", oc_string(recv_obj->receiveruri), oc_string(rep->value.string));
+				p_dbg("target receiveruri: \"%s\", new receiveruri: \"%s\"", oc_string(recv_obj->receiveruri), oc_string(rep->value.string));
 				/* if `receiveruri' is different from existing `receiveruri`,
 				 * update URI of Resource pointed by previous `receiveruri` */
 				if (strcmp(oc_string(recv_obj->receiveruri), oc_string(rep->value.string)))
@@ -2068,7 +2092,7 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 
 					if (pushd_rsc_rep)
 					{
-						p_dbg("pushed resource representation (\"%s\") is found\n", oc_string(pushd_rsc_rep->resource->uri));
+						p_dbg("pushed resource representation (\"%s\") is found", oc_string(pushd_rsc_rep->resource->uri));
 
 						oc_free_string(&pushd_rsc_rep->resource->uri);
 						oc_store_uri(oc_string(rep->value.string), &pushd_rsc_rep->resource->uri);
@@ -2100,7 +2124,7 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
 			break;
 
 		default:
-			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			p_err("something wrong, unexpected Property type: %d", rep->type);
 			return;
 		}
 		rep = rep->next;
@@ -2118,13 +2142,18 @@ void _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t 
  * @param rep			received new receiver object object
  */
 //void _create_recv_obj(oc_list_t recv_obj_list, oc_rep_t *rep)
-void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
+//void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
+bool _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
+	bool result = false;
+	char mandatory_property_check = 0;
 	oc_recv_t *recv_obj = (oc_recv_t *)oc_memb_alloc(&recv_instance_memb);
+
 	if (!recv_obj)
 	{
-		p_err("oc_memb_alloc() error!\n");
-		return;
+		p_err("oc_memb_alloc() error!");
+//		return;
+		return result;
 	}
 
 	while (rep)
@@ -2135,6 +2164,7 @@ void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 			if (!strcmp(oc_string(rep->name), "receiveruri"))
 			{
 				oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string), oc_string_len(rep->value.string));
+				mandatory_property_check |= 0x1;
 			}
 			break;
 
@@ -2148,24 +2178,32 @@ void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 				{
 					oc_string_array_add_item(recv_obj->rts, oc_string_array_get_item(rep->value.array, i));
 				}
+
+				mandatory_property_check |= 0x2;
 			}
 			break;
 
 		default:
-			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			p_err("something wrong, unexpected Property type: %d", rep->type);
 			break;
 		}
 		rep = rep->next;
 	}
 
+	if (mandatory_property_check != 0x3)
+		return result;
+	else
+		result = true;
+
 	oc_list_add(recvs_instance->receivers, recv_obj);
 
 	/* create app resource corresponding to receiver object */
 //	_create_pushd_rsc(recv_obj, recv_obj_list);
-	p_dbg("new app resource for new receiver obj (\"%s\") is created...\n", oc_string(recv_obj->receiveruri));
-	_create_pushd_rsc(recv_obj, recvs_instance->resource);
+	p_dbg("new app resource for new receiver obj (\"%s\") is created...", oc_string(recv_obj->receiveruri));
+	if (_create_pushd_rsc(recv_obj, recvs_instance->resource))
+		result = true;
 
-	return;
+	return result;
 }
 
 
@@ -2179,10 +2217,12 @@ void _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
  * @param rep				payload representation of new receiver object array
  */
 //void _replace_recv_obj_array(oc_list_t recv_obj_list, oc_resource_t *resource, oc_rep_t *rep)
-void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
+//void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
+bool _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
 	int obj_arr_len;
 	oc_rep_t *rep_obj;
+	bool result = true;
 //	oc_rep_t *rep_obj_value;
 //	oc_recv_t *recv_obj_instance;
 
@@ -2202,19 +2242,20 @@ void _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 			for (int i=0; i<obj_arr_len; i++, rep_obj=rep_obj->next)
 			{
 //				_create_recv_obj(recv_obj_list, rep_obj->value.object);
-				_create_recv_obj(recvs_instance, rep_obj->value.object);
+				if (!_create_recv_obj(recvs_instance, rep_obj->value.object))
+					result = false;
 			} /* for */
 			break;
 
 		default:
-			p_err("something wrong, unexpected Property type: %d\n", rep->type);
+			p_err("something wrong, unexpected Property type: %d", rep->type);
 			break;
 		}
 
 		rep = rep->next;
 	} /* while */
 
-	return;
+	return result;
 }
 
 
@@ -2244,11 +2285,11 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
 		if (uri_param_len != -1)
-			p_dbg("received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" \n", request->query_len, request->query, uri_param_len, uri_param);
+			p_dbg("received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ", request->query_len, request->query, uri_param_len, uri_param);
 	}
 	else
 	{
-		p_dbg("request->query is NULL\n");
+		p_dbg("request->query is NULL");
 	}
 
 	/* look up target receivers of target Push Receiver Resource */
@@ -2257,7 +2298,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 	{
 		if (recvs_instance->resource == request->resource)
 		{
-			p_dbg("receivers obj array instance \"%s\"@Device(%d) is found!\n", oc_string(request->resource->uri), request->resource->device);
+			p_dbg("receivers obj array instance \"%s\"@Device(%d) is found!", oc_string(request->resource->uri), request->resource->device);
 
 			if (uri_param_len != -1)
 			{
@@ -2268,7 +2309,7 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 
 					/* if the given `receiveruri` parameter is in existing receivers array,
 					 * just update existing receiver object */
-					p_dbg("existing receiver obj (\"%.*s\") is found, update it...\n", uri_param_len, uri_param);
+					p_dbg("existing receiver obj (\"%.*s\") is found, update it...", uri_param_len, uri_param);
 //					_update_recv_obj(recv_obj, recvs_instance->resource, rep);
 					_update_recv_obj(recv_obj, recvs_instance, rep);
 				}
@@ -2284,14 +2325,18 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 					 */
 					if (oc_ri_get_app_resource_by_uri(uri_param, uri_param_len, recvs_instance->resource->device))
 					{
-						p_dbg("can't create receiver obj whose receiveruri is same as existing app resource (\"%.*s\")...", uri_param_len, uri_param);
+						p_err("can't create receiver obj because its receiveruri is same as existing app resource (\"%.*s\")...", uri_param_len, uri_param);
 						result = OC_STATUS_FORBIDDEN;
 						goto exit;
 					}
 
 					/* create corresponding receiver object */
 //					_create_recv_obj(recvs_instance->receivers, rep);
-					_create_recv_obj(recvs_instance, rep);
+					if (!_create_recv_obj(recvs_instance, rep))
+					{
+						p_err("failed to create receiver obj whose receiveruri is (\"%.*s\")...", uri_param_len, uri_param);
+						result = OC_STATUS_BAD_REQUEST;
+					}
 				}
 			}
 			else
@@ -2300,7 +2345,12 @@ void post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void *
 				 * replace whole existing `receivers` object array with new one.. */
 //				_replace_recv_obj_array(recvs_instance->receivers, recvs_instance->resource, rep);
 				p_dbg("replace existing receiver obj array with new ones...");
-				_replace_recv_obj_array(recvs_instance, rep);
+				if (!_replace_recv_obj_array(recvs_instance, rep))
+				{
+					p_err("failed to replace existing whole receiver objs...");
+					result = OC_STATUS_BAD_REQUEST;
+				}
+
 			}
 
 			break;
@@ -2422,11 +2472,11 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 	{
 		uri_param_len = oc_ri_get_query_value(request->query, request->query_len, "receiveruri", &uri_param);
 		if (uri_param_len != -1)
-			p_dbg("received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" \n", request->query_len, request->query, uri_param_len, uri_param);
+			p_dbg("received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ", request->query_len, request->query, uri_param_len, uri_param);
 	}
 	else
 	{
-		p_dbg("request->query is NULL\n");
+		p_dbg("request->query is NULL");
 	}
 
 	/* look up target receivers of target Push Receiver Resource */
@@ -2435,7 +2485,7 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 	{
 		if (recvs_instance->resource == request->resource)
 		{
-			p_dbg("receivers obj array instance of push receiver resource (\"%s\") is found!\n", oc_string(request->resource->uri));
+			p_dbg("receivers obj array instance of push receiver resource (\"%s\") is found!", oc_string(request->resource->uri));
 
 			if (uri_param_len != -1)
 			{
@@ -2444,11 +2494,11 @@ void delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask, void
 				{
 					/* remove receiver obj from array */
 					oc_list_remove(recvs_instance->receivers, recv_obj);
-					p_dbg("receiver obj is removed from array\n");
+					p_dbg("receiver obj is removed from array");
 
 					/* delete associated resource... */
 					_purge_pushd_rsc(&recv_obj->receiveruri, recvs_instance->resource->device);
-					p_dbg("app resource corresponding to the receiver obj is removed\n");
+					p_dbg("app resource corresponding to the receiver obj is removed");
 
 					/* free memory */
 					oc_free_string(&recv_obj->receiveruri);
@@ -2527,12 +2577,12 @@ void oc_create_pushreceiver_resource(size_t device_index)
 		}
 		else
 		{
-			p_err("oc_memb_alloc() error!\n");
+			p_err("oc_memb_alloc() error!");
 		}
 	}
 	else
 	{
-		p_err("oc_new_resource() error!\n");
+		p_err("oc_new_resource() error!");
 	}
 
 }
@@ -2555,7 +2605,7 @@ void oc_push_free()
 {
 	oc_recvs_t *recvs_instance;
 
-	p_dbg("begin to free push receiver list!!!\n");
+	p_dbg("begin to free push receiver list!!!");
 
 	for (recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list); recvs_instance; recvs_instance = recvs_instance->next)
 	{
@@ -2568,14 +2618,14 @@ void response_to_push_rsc(oc_client_response_t *data)
 {
 	oc_ns_t *ns_instance = (oc_ns_t *)data->user_data;
 
-	p_dbg("\n   => return status code: [ %s ] \n\n", cli_statusstr(data->code));
+	p_dbg("\n   => return status code: [ %s ]", cli_statusstr(data->code));
 
 	if (data->code == OC_STATUS_SERVICE_UNAVAILABLE)
 	{
 		/*
 		 * TODO4ME <2022/4/17> if update request fails... retry to resolve endpoint of target device ID...
 		 */
-		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT));
 //				pp_statestr(ns_instance->state), pp_statestr(OC_PP_TOUT));
 			pp_update_state(ns_instance->state, pp_statestr(OC_PP_TOUT));
@@ -2583,7 +2633,7 @@ void response_to_push_rsc(oc_client_response_t *data)
 	}
 	else if (data->code == OC_STATUS_CHANGED)
 	{
-		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
 		pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFU));
 	}
@@ -2592,7 +2642,7 @@ void response_to_push_rsc(oc_client_response_t *data)
 		/*
 		 * FIXME4ME<done> <2022/4/17> check condition to enter ERR
 		 */
-		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+		p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)", oc_string(ns_instance->resource->uri),
 				oc_string(ns_instance->state), pp_statestr(OC_PP_ERR));
 			pp_update_state(ns_instance->state, pp_statestr(OC_PP_ERR));
 	}
@@ -2616,18 +2666,18 @@ void response_to_push_rsc(oc_client_response_t *data)
 void push_update(oc_ns_t *ns_instance)
 {
 	oc_resource_t *src_rsc;
-	char di[OC_UUID_LEN];
+	char di[OC_UUID_LEN + 10];
 
 	src_rsc = (oc_resource_t *)ns_instance->user_data;
 
 	if (!ns_instance || !src_rsc) {
-		p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!\n");
+		p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!");
 		return;
 	}
 
 	if (!src_rsc->payload_builder)
 	{
-		p_err("payload_builder() of source resource is NULL!\n");
+		p_err("payload_builder() of source resource is NULL!");
 		return;
 	}
 
@@ -2651,7 +2701,8 @@ void push_update(oc_ns_t *ns_instance)
 		oc_rep_begin_root_object();
 
 		/* anchor */
-		oc_uuid_to_str(oc_core_get_device_id(ns_instance->resource->device), di, OC_UUID_LEN);
+		sprintf(di, "ocf://");
+		oc_uuid_to_str(oc_core_get_device_id(ns_instance->resource->device), di+6, OC_UUID_LEN);
 		oc_rep_set_text_string(root, anchor, di);
 
 		/* href (option) */
@@ -2688,11 +2739,11 @@ void push_update(oc_ns_t *ns_instance)
 			else
 				oc_new_string(&full_uri, oc_string(ep), oc_string_len(ep));
 
-			p_dbg("push \"%s\" ====> \"%s\"\n", oc_string(src_rsc->uri), oc_string(full_uri));
+			p_dbg("push \"%s\" ====> \"%s\"", oc_string(src_rsc->uri), oc_string(full_uri));
 			oc_free_string(&ep);
 			oc_free_string(&full_uri);
 #endif
-			p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)\n", oc_string(ns_instance->resource->uri),
+			p_dbg("state of Push Proxy (\"%s\") is changed (%s => %s)", oc_string(ns_instance->resource->uri),
 					oc_string(ns_instance->state), pp_statestr(OC_PP_WFR));
 //					pp_statestr(ns_instance->state), pp_statestr(OC_PP_WFR));
 			pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFR));
@@ -2700,12 +2751,12 @@ void push_update(oc_ns_t *ns_instance)
 		}
 		else
 		{
-			p_err("Could not send POST\n");
+			p_err("Could not send POST");
 		}
 	}
 	else
 	{
-		p_err("Could not init POST\n\n");
+		p_err("Could not init POST");
 	}
 
 }
@@ -2741,7 +2792,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 			src_rsc = (oc_resource_t *)ns_instance->user_data;
 
 			if (!ns_instance || !src_rsc /*|| !ns_instance->user_data*/) {
-				p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!\n");
+				p_err("something wrong! corresponding notification selector source resource is NULL, or updated resource is NULL!");
 				break;
 			}
 
@@ -2794,13 +2845,13 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 				oc_rep_end_root_object();
 
 				if (oc_do_post())
-					p_dbg("Sent POST request\n\n");
+					p_dbg("Sent POST request");
 				else
-					p_err("Could not send POST\n\n");
+					p_err("Could not send POST");
 			}
 			else
 			{
-				p_err("Could not init POST\n\n");
+				p_err("Could not init POST");
 			}
 
 
@@ -2848,7 +2899,7 @@ char _check_string_array_inclusion(oc_string_array_t *target, oc_string_array_t 
 
 	if (!tgt_len || !src_len)
 	{
-		p_dbg("source or target string array is empty!\n");
+		p_dbg("source or target string array is empty!");
 		return result;
 	}
 
@@ -2886,16 +2937,16 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 	oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
 	char all_matched = 0x7;
 
-	p_dbg("resource \"%s\"@device(%d) is updated!\n", uri, device_index);
+	p_dbg("resource \"%s\"@device(%d) is updated!", uri, device_index);
 
 	if (!resource)
 	{
-		p_err("there is no resource for \"%s\"@device(%d)\n", uri, device_index);
+		p_err("there is no resource for \"%s\"@device(%d)", uri, device_index);
 		return;
 	}
 	if (!(resource->properties & OC_PUSHABLE))
 	{
-		p_err("resource \"%s\"@device (%d) is not pushable!\n", uri, device_index);
+		p_err("resource \"%s\"@device (%d) is not pushable!", uri, device_index);
 		return;
 	}
 
@@ -2951,11 +3002,11 @@ void oc_resource_state_changed(const char *uri, size_t device_index)
 		if (all_matched)
 		{
 			if (!oc_process_is_running(&oc_push_process)) {
-				p_dbg("oc_push_process is not running!\n");
+				p_dbg("oc_push_process is not running!");
 				return;
 			}
 
-			p_dbg("resource \"%s\" matches notification selector \"%s\"!\n", oc_string(resource->uri), oc_string(ns_instance->resource->uri));
+			p_dbg("resource \"%s\" matches notification selector \"%s\"!", oc_string(resource->uri), oc_string(ns_instance->resource->uri));
 
 			/* resource is necessary to identify which resource is being pushed..,
 			 * before sending update to target server */
