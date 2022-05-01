@@ -26,7 +26,7 @@
    :target: https://gitter.im/ocfcloud/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
    
 
-Introductionn
+Introduction
 ------------
 
 IoTivity-Lite is an open-source, reference implementation of the `Open Connectivity Foundation <https://openconnectivity.org/>`_ (OCF) standards for the Internet of Things (IoT). Specifically, the stack realizes all the functionalities of the `OCF Secure IP Device Framework <https://iotivity.org/SIPD/>`_.
