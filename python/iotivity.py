@@ -1990,7 +1990,7 @@ class Iotivity():
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-f', '--function', required=True, default=None, metavar='', help='Function to run. Available functions include:\nproxy_to_cloud, proxy_to_mqtt, test_getpost, test_discovery')
+    parser.add_argument('-f', '--function', required=True, default=None, metavar='', help='Function to run. Available functions include:\nproxy_to_cloud, proxy_to_mqtt')
     parser.add_argument('-n', '--name', action='append', required=False, default=None, metavar='', help='Substrings of device names to onboard (not case sensitive)\n    e.g. Pass "sensor" to onboard all devices that has "sensor" in their name.\nMultiple arguments allowed\n    e.g. -n sensor -n actuator\nDefault: Onboard all unowned devices')
     parser.add_argument('-ms', '--mqttServer', required=False, default='localhost', metavar='', help='MQTT-proxy specific:\nAddress of target MQTT server\n    e.g. test.mosquitto.org, 192.168.202.76\nDefault: localhost')
     parser.add_argument('-mp', '--mqttPort', required=False, default='1883', metavar='', help='MQTT-proxy specific:\nTarget MQTT port number\nDefault: 1883')

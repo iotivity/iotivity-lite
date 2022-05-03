@@ -286,7 +286,6 @@ class App:
     def quit(self, *args):
         """ quit function for the app
         """
-        my_iotivity.general_delete(my_iotivity.get_owned_uuid(0), "delete=all", "d2dserverlist")
         my_iotivity.offboard_all_owned()
         self.root.destroy()
 
