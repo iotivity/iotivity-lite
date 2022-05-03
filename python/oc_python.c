@@ -1846,7 +1846,8 @@ py_general_delete(char *uuid, char *query, char *url)
   PRINT("[C] py_general_delete: name = %s \n", device->device_name);
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_general_delete(&device->uuid, query, url, py_general_delete_cb, NULL);
+  int ret = oc_obt_general_delete(&device->uuid, query, url,
+                                  py_general_delete_cb, NULL);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued DELETE request\n");
   } else {

@@ -3570,8 +3570,8 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
 }
 
 int
-oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url, oc_response_handler_t cb,
-                   void *data)
+oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url,
+                      oc_response_handler_t cb, void *data)
 {
   oc_device_t *device;
   if (!oc_obt_is_owned_device(uuid)) {

@@ -1315,7 +1315,8 @@ int oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
                         char **payload_properties, char **payload_values,
                         char **payload_types, int array_size);
 
-int oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url, oc_response_handler_t cb, void *data);
+int oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url,
+                          oc_response_handler_t cb, void *data);
 
 /**
  * sets the secure domain info
