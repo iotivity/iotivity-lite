@@ -82,9 +82,10 @@ extern "C" {
 enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
 
 #define SET_OPTION(packet, opt)                                                \
-  ((packet)->options[opt / OPTION_MAP_SIZE] |= 1 << (opt % OPTION_MAP_SIZE))
+  ((packet)->options[(opt) / OPTION_MAP_SIZE] |= 1 << ((opt) % OPTION_MAP_SIZE))
 #define IS_OPTION(packet, opt)                                                 \
-  ((packet)->options[opt / OPTION_MAP_SIZE] & (1 << (opt % OPTION_MAP_SIZE)))
+  ((packet)->options[(opt) / OPTION_MAP_SIZE] &                                \
+   (1 << ((opt) % OPTION_MAP_SIZE)))
 
 /* enum value for coap transport type  */
 typedef enum { COAP_TRANSPORT_UDP, COAP_TRANSPORT_TCP } coap_transport_type_t;

@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -152,7 +153,7 @@ parse_payload(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      printf("%lld\n", rep->value.integer);
+      printf("%" PRId64 "\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:

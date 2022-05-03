@@ -375,9 +375,9 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
 #define oc_ri_add_timed_event_callback_seconds(cb_data, event_callback,        \
                                                seconds)                        \
   do {                                                                         \
-    oc_ri_add_timed_event_callback_ticks(                                      \
-      cb_data, event_callback,                                                 \
-      (oc_clock_time_t)seconds *(oc_clock_time_t)OC_CLOCK_SECOND);             \
+    oc_ri_add_timed_event_callback_ticks(cb_data, event_callback,              \
+                                         (oc_clock_time_t)(seconds) *          \
+                                           (oc_clock_time_t)OC_CLOCK_SECOND);  \
   } while (0)
 
 /**

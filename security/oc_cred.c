@@ -1589,7 +1589,7 @@ oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
     oc_sec_decode_cred(rep, &owner, false, roles_resource, client,
                        resource->device, on_apply_cred_cb, on_apply_cred_data);
 #define FIELD_ARRAY_SIZE(type, field)                                          \
-  sizeof(((type *)NULL)->field) / sizeof(((type *)NULL)->field[0])
+  (sizeof(((type *)NULL)->field) / sizeof(((type *)NULL)->field[0]))
 
   const size_t uuid_size = FIELD_ARRAY_SIZE(oc_uuid_t, id);
 

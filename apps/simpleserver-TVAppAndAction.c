@@ -264,7 +264,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   if (action_len > 0) {
     PRINT("POST action length = %d \n", action_len);
-    PRINT("POST action string actual size %d \n", strlen(action));
+    PRINT("POST action string actual size %zu \n", strlen(action));
     PRINT("POST action received raw = %s \n", action);
 
     // Validate that the action requests is in the set

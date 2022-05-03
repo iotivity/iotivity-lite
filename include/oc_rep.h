@@ -278,7 +278,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
     g_err |= oc_rep_encode_text_string(&object##_map, #key, strlen(#key));     \
-    if ((const char *)value != NULL) {                                         \
+    if ((const char *)(value) != NULL) {                                       \
       g_err |= oc_rep_encode_text_string(&object##_map, value, strlen(value)); \
     } else {                                                                   \
       g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
@@ -528,7 +528,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  */
 #define oc_rep_add_text_string(parent, value)                                  \
   do {                                                                         \
-    if ((const char *)value != NULL) {                                         \
+    if ((const char *)(value) != NULL) {                                       \
       g_err |=                                                                 \
         oc_rep_encode_text_string(&parent##_array, value, strlen(value));      \
     } else {                                                                   \
@@ -538,7 +538,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
 
 #define oc_rep_set_value_text_string(parent, value)                            \
   do {                                                                         \
-    if ((const char *)value != NULL) {                                         \
+    if ((const char *)(value) != NULL) {                                       \
       g_err |= oc_rep_encode_text_string(&parent##_map, value, strlen(value)); \
     } else {                                                                   \
       g_err |= oc_rep_encode_text_string(&parent##_map, "", 0);                \
@@ -673,7 +673,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  * @see oc_rep_begin_array
  */
 #define oc_rep_set_key(parent, key)                                            \
-  if ((const char *)key != NULL)                                               \
+  if ((const char *)(key) != NULL)                                             \
   g_err |= oc_rep_encode_text_string(parent, key, strlen(key))
 
 /**
@@ -867,8 +867,8 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
     g_err |=                                                                   \
       oc_rep_encoder_create_array(&object##_map, &key##_value_array, length);  \
     int i;                                                                     \
-    for (i = 0; i < length; i++) {                                             \
-      g_err |= oc_rep_encode_int(&key##_value_array, values[i]);               \
+    for (i = 0; i < (length); i++) {                                           \
+      g_err |= oc_rep_encode_int(&key##_value_array, (values)[i]);             \
     }                                                                          \
     g_err |=                                                                   \
       oc_rep_encoder_close_container(&object##_map, &key##_value_array);       \
@@ -906,8 +906,8 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
     g_err |=                                                                   \
       oc_rep_encoder_create_array(&object##_map, &key##_value_array, length);  \
     int i;                                                                     \
-    for (i = 0; i < length; i++) {                                             \
-      g_err |= oc_rep_encode_boolean(&key##_value_array, values[i]);           \
+    for (i = 0; i < (length); i++) {                                           \
+      g_err |= oc_rep_encode_boolean(&key##_value_array, (values)[i]);         \
     }                                                                          \
     g_err |=                                                                   \
       oc_rep_encoder_close_container(&object##_map, &key##_value_array);       \
@@ -946,9 +946,9 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
     g_err |=                                                                   \
       oc_rep_encoder_create_array(&object##_map, &key##_value_array, length);  \
     int i;                                                                     \
-    for (i = 0; i < length; i++) {                                             \
+    for (i = 0; i < (length); i++) {                                           \
       g_err |= oc_rep_encode_floating_point(&key##_value_array,                \
-                                            CborDoubleType, &values[i]);       \
+                                            CborDoubleType, &(values)[i]);     \
     }                                                                          \
     g_err |=                                                                   \
       oc_rep_encoder_close_container(&object##_map, &key##_value_array);       \
