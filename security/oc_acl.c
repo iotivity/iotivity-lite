@@ -142,7 +142,8 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
 static oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
                         oc_ace_subject_t *subject, int aceid,
-                        uint16_t permission, size_t device)
+                        uint16_t permission, const char *tag, bool match_tag,
+                        size_t device)
 {
   oc_sec_ace_t *ace = start;
   if (!ace) {
@@ -150,12 +151,25 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
   } else {
     ace = ace->next;
   }
+  size_t tag_len = tag != NULL ? strlen(tag) : 0;
   while (ace != NULL) {
     if (aceid != -1 && ace->aceid != aceid) {
       goto next_ace;
     }
     if (permission != 0 && ace->permission != permission) {
       goto next_ace;
+    }
+    if (match_tag) {
+      if (tag == NULL) {
+        if (oc_string(ace->tag) != NULL) {
+          goto next_ace;
+        }
+      } else {
+        if (oc_string(ace->tag) == NULL || oc_string_len(ace->tag) != tag_len ||
+            memcmp(oc_string(ace->tag), tag, oc_string_len(ace->tag)) != 0) {
+          goto next_ace;
+        }
+      }
     }
     if (ace->subject_type == type) {
       switch (type) {
@@ -301,8 +315,9 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
   oc_sec_ace_t *match = NULL;
   do {
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
-                                    (oc_ace_subject_t *)&role_cred->role, -1, 0,
-                                    device);
+                                    (oc_ace_subject_t *)&role_cred->role,
+                                    /*aceid*/ -1, /*permission*/ 0,
+                                    /*tag*/ NULL, /*match_tag*/ false, device);
 
     if (match) {
       permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
@@ -484,9 +499,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   oc_sec_ace_t *match = NULL;
   if (uuid) {
     do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_UUID,
-                                      (oc_ace_subject_t *)uuid, -1, 0,
-                                      endpoint->device);
+      match = oc_sec_acl_find_subject(
+        match, OC_SUBJECT_UUID, (oc_ace_subject_t *)uuid, /*aceid*/ -1,
+        /*permission*/ 0, /*tag*/ NULL, /*match_tag*/ false, endpoint->device);
 
       if (match) {
         permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
@@ -540,8 +555,10 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
     _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
     do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt, -1,
-                                      0, endpoint->device);
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt,
+                                      /*aceid*/ -1, /*permission*/ 0,
+                                      /*tag*/ NULL, /*match_tag*/ false,
+                                      endpoint->device);
       if (match) {
         permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
@@ -557,8 +574,10 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
     _anon_clear.conn = OC_CONN_ANON_CLEAR;
     do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear, -1,
-                                      0, endpoint->device);
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear,
+                                      /*aceid*/ -1, /*permission*/ 0,
+                                      /*tag*/ NULL, /*match_tag*/ false,
+                                      endpoint->device);
       if (match) {
         permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
         OC_DBG("oc_check_acl: Found ACE with permission %d for anon-clear "
@@ -812,8 +831,8 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       const char *href, oc_ace_wildcard_t wildcard,
                       size_t device, oc_sec_ace_update_data_t *data)
 {
-  oc_sec_ace_t *ace =
-    oc_sec_acl_find_subject(NULL, type, subject, aceid, permission, device);
+  oc_sec_ace_t *ace = oc_sec_acl_find_subject(
+    NULL, type, subject, aceid, permission, tag, /*match_tag*/ true, device);
   bool created = false;
   if (!ace) {
     ace = oc_sec_add_new_ace(type, subject, aceid, permission, tag, device);

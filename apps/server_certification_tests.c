@@ -19,6 +19,7 @@
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
+#include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1093,7 +1094,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (integer) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_pld_array_size; j++) {
-              PRINT(" integer %lld ", temp_integer[j]);
+              PRINT(" integer %" PRId64 " ", temp_integer[j]);
               g_dali_pld[j] = (uint8_t)temp_integer[j];
             }
           }
@@ -1144,7 +1145,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (integer) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
-              PRINT(" integer %lld ", temp_integer[j]);
+              PRINT(" integer %" PRId64 " ", temp_integer[j]);
               g_dali_tbus[j] = temp_integer[j];
             }
           }
@@ -1639,7 +1640,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   if (action_len > 0) {
     PRINT("POST action length = %d \n", action_len);
-    PRINT("POST action string actual size %d \n", strlen(action));
+    PRINT("POST action string actual size %zu \n", strlen(action));
     PRINT("POST action received raw = %s \n", action);
 
     // Validate that the action requests is in the set

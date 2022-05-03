@@ -2434,7 +2434,7 @@ oc_tls_recv_message(oc_message_t *message)
     oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
     OC_DBG("oc_tls: Received message from device %s", u);
     if (peer->endpoint.flags & TCP) {
-      OC_DBG("oc_tls_recv_message_tcp: %d %ld", (int)message->length, peer);
+      OC_DBG("oc_tls_recv_message_tcp: %zu %p", message->length, peer);
     }
 #endif /* OC_DEBUG */
 

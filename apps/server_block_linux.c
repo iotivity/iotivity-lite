@@ -16,7 +16,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
-
+#include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -84,7 +84,7 @@ post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
     case OC_REP_INT_ARRAY: {
       int64_t *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        PRINT("(%d %lld) ", i, arr[i]);
+        PRINT("(%d %" PRId64 ") ", i, arr[i]);
       }
       PRINT("\n");
     } break;

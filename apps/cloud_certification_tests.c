@@ -76,9 +76,11 @@ display_menu(void)
   PRINT("[7] Send Ping\n");
   PRINT("[8] Unpublish switch resource\n");
   PRINT("[9] Publish switch resource\n");
+  PRINT("[10] Create switch resource\n");
+  PRINT("[11] Delete switch resource\n");
   PRINT("-----------------------------------------------\n");
   PRINT("-----------------------------------------------\n");
-  PRINT("[10] Exit\n");
+  PRINT("[12] Exit\n");
   PRINT("################################################\n");
   PRINT("\nSelect option: \n");
 }
@@ -393,7 +395,7 @@ static void
 get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
-  (void)user_data;
+  struct switch_t *state = (struct switch_t *)user_data;
   PRINT("GET_switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
@@ -401,7 +403,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_process_baseline_interface(request->resource);
   /* fall through */
   case OC_IF_A:
-    oc_rep_set_boolean(root, value, bswitch.state);
+    oc_rep_set_boolean(root, value, state->state);
     break;
   default:
     break;
@@ -416,7 +418,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
   (void)iface_mask;
-  (void)user_data;
+  struct switch_t *s = (struct switch_t *)user_data;
   PRINT("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
@@ -438,11 +440,11 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   if (!bad_request) {
-    bswitch.state = state;
+    s->state = state;
   }
 
   oc_rep_start_root_object();
-  oc_rep_set_boolean(root, value, bswitch.state);
+  oc_rep_set_boolean(root, value, s->state);
   oc_rep_end_root_object();
 
   if (!bad_request) {
@@ -461,10 +463,39 @@ register_resources(void)
   oc_resource_set_default_interface(res1, OC_IF_A);
   oc_resource_set_discoverable(res1, true);
   oc_resource_set_observable(res1, true);
-  oc_resource_set_request_handler(res1, OC_GET, get_switch, NULL);
-  oc_resource_set_request_handler(res1, OC_POST, post_switch, NULL);
+  oc_resource_set_request_handler(res1, OC_GET, get_switch, &bswitch);
+  oc_resource_set_request_handler(res1, OC_POST, post_switch, &bswitch);
   oc_cloud_add_resource(res1); /* Publish resource to the Cloud RD */
   oc_add_resource(res1);
+}
+
+static oc_resource_t *reg_resource = NULL;
+static struct switch_t reg_bswitch = { 0 };
+
+static void
+add_resource(void)
+{
+  if (reg_resource != NULL) {
+    return;
+  }
+  reg_resource = oc_new_resource(NULL, "/addDeleteResource", 1, 0);
+  oc_resource_bind_resource_type(reg_resource, "oic.r.switch.binary");
+  oc_resource_set_discoverable(reg_resource, true);
+  oc_resource_set_observable(reg_resource, true);
+  oc_resource_set_request_handler(reg_resource, OC_GET, get_switch,
+                                  &reg_bswitch);
+  oc_resource_set_request_handler(reg_resource, OC_POST, post_switch,
+                                  &reg_bswitch);
+  oc_cloud_add_resource(reg_resource); /* Publish resource to the Cloud RD */
+  oc_add_resource(reg_resource);
+}
+
+static void
+delete_resource(void)
+{
+  oc_cloud_delete_resource(reg_resource); /* Publish resource to the Cloud RD */
+  oc_delete_resource(reg_resource);
+  reg_resource = NULL;
 }
 
 static void
@@ -724,6 +755,12 @@ main(int argc, char *argv[])
       oc_cloud_add_resource(res1);
       break;
     case 10:
+      add_resource();
+      break;
+    case 11:
+      delete_resource();
+      break;
+    case 12:
       handle_signal(0);
       break;
     default:

@@ -487,24 +487,33 @@ oc_ri_delete_resource(oc_resource_t *resource)
   if (!resource)
     return false;
 
-#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_COLLECTIONS)
+#if defined(OC_COLLECTIONS_IF_CREATE)
   oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
   if (rtc != NULL) {
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-    oc_resource_t *collection = (oc_resource_t *)rtc->collection;
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
     /* For dynamically created resources invoke the created instance destructor
      * and return. The destructor invokes at the end oc_delete_resource again,
      * but the resource will no longer be in the list of created resources so
      * this if-branch will be skipped and normal resource deallocation will be
      * executed. */
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-    coap_notify_discovery_batch_observers(collection);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
     return true;
   }
-#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
+#endif /* (OC_COLLECTIONS_IF_CREATE) */
+
+  // remove the resource from the collections
+  oc_collection_t *collection =
+    oc_get_next_collection_with_link(resource, NULL);
+  while (collection != NULL) {
+    oc_link_t *link = oc_get_link_by_uri(collection, oc_string(resource->uri),
+                                         oc_string_len(resource->uri));
+    if (link != NULL) {
+      oc_collection_remove_link(&collection->res, link);
+      oc_delete_link(link);
+    }
+    collection = oc_get_next_collection_with_link(resource, collection);
+  }
+#endif /* (OC_COLLECTIONS) */
 
   if (resource->num_observers > 0) {
     int removed_num = coap_remove_observer_by_resource(resource);

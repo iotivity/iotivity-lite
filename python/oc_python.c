@@ -38,6 +38,7 @@
 #else
 #error "Unsupported OS"
 #endif
+#include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
 
@@ -78,8 +79,8 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 
 /* OS specific definition for lock/unlock */
-#define otb_mutex_lock(m) pthread_mutex_lock(&m)
-#define otb_mutex_unlock(m) pthread_mutex_unlock(&m)
+#define otb_mutex_lock(m) pthread_mutex_lock(&(m))
+#define otb_mutex_unlock(m) pthread_mutex_unlock(&(m))
 
 static struct timespec ts;
 #endif
@@ -1448,8 +1449,8 @@ py_provision_ace2(char *target, char *subject, char *href, char *crudn)
     PRINT("[C]py_provision_ace_access ERROR: No resource href provided\n");
     return;
   }
-  PRINT("[C] py_provision_ace: name = %s  href = %s", device->device_name, href,
-        crudn);
+  PRINT("[C] py_provision_ace: name = %s  href = %s crudn=%s",
+        device->device_name, href, crudn);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
@@ -2299,7 +2300,7 @@ get_light_cb(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%lld\n", rep->value.integer);
+      PRINT("%" PRId64 "\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:

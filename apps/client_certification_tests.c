@@ -820,9 +820,9 @@ post_cloud_configuration_resource(bool tcp)
       char cis_value[1000];
       char sid_value[1000];
       PRINT("Provide cis value:\n");
-      SCANF("%s", &cis_value);
+      SCANF("%s", cis_value);
       PRINT("Provide sid value:\n");
-      SCANF("%s", &sid_value);
+      SCANF("%s", sid_value);
       oc_endpoint_t *ep = cloudconf_resource->endpoint;
       while (ep && (tcp && !(ep->flags & TCP))) {
         ep = ep->next;

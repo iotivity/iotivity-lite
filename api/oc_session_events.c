@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_signal_event_loop.h"
+#include "util/oc_atomic.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
@@ -30,41 +31,59 @@
 #endif /* OC_SERVER */
 
 #ifdef OC_TCP
-OC_LIST(session_start_events);
-OC_LIST(session_end_events);
+OC_LIST(g_session_start_events);
+OC_LIST(g_session_end_events);
 
-static int SESSION_STATE_FREE_DELAY_SECS;
-static bool session_end_ref = false;
+static int g_session_state_free_delay_secs;
+static OC_ATOMIC_UINT8_T g_session_end_ref = 0;
+
+static int
+get_session_start_events_count()
+{
+  oc_network_event_handler_mutex_lock();
+  int count = oc_list_length(g_session_start_events);
+  oc_network_event_handler_mutex_unlock();
+  return count;
+}
+
+static int
+get_session_end_events_count()
+{
+  oc_network_event_handler_mutex_lock();
+  int count = oc_list_length(g_session_end_events);
+  oc_network_event_handler_mutex_unlock();
+  return count;
+}
 
 static oc_event_callback_retval_t
 free_session_state_delayed(void *data)
 {
   (void)data;
-  session_end_ref = true;
+  OC_ATOMIC_STORE8(g_session_end_ref, 1);
   oc_endpoint_t *session_event = NULL;
   do {
     oc_network_event_handler_mutex_lock();
-    session_event = (oc_endpoint_t *)oc_list_pop(session_end_events);
+    session_event = (oc_endpoint_t *)oc_list_pop(g_session_end_events);
     oc_network_event_handler_mutex_unlock();
     if (session_event) {
       oc_handle_session(session_event, OC_SESSION_DISCONNECTED);
       oc_free_endpoint(session_event);
     }
-  } while (oc_list_length(session_end_events) > 0);
-  session_end_ref = false;
+  } while (get_session_end_events_count() > 0);
+  OC_ATOMIC_STORE8(g_session_end_ref, 0);
   return OC_EVENT_DONE;
 }
 
 bool
 oc_session_events_is_ongoing(void)
 {
-  return session_end_ref;
+  return OC_ATOMIC_LOAD8(g_session_end_ref) == 1;
 }
 
 void
 oc_session_events_set_event_delay(int secs)
 {
-  SESSION_STATE_FREE_DELAY_SECS = secs;
+  g_session_state_free_delay_secs = secs;
 }
 
 static void
@@ -73,17 +92,17 @@ oc_process_session_event(void)
   oc_endpoint_t *session_event = NULL;
   do {
     oc_network_event_handler_mutex_lock();
-    session_event = (oc_endpoint_t *)oc_list_pop(session_start_events);
+    session_event = (oc_endpoint_t *)oc_list_pop(g_session_start_events);
     oc_network_event_handler_mutex_unlock();
     if (session_event) {
       oc_handle_session(session_event, OC_SESSION_CONNECTED);
       oc_free_endpoint(session_event);
     }
-  } while (oc_list_length(session_start_events) > 0);
+  } while (get_session_start_events_count() > 0);
 
-  if (oc_list_length(session_end_events) > 0) {
+  if (get_session_end_events_count() > 0) {
     oc_set_delayed_callback(NULL, &free_session_state_delayed,
-                            (uint16_t)SESSION_STATE_FREE_DELAY_SECS);
+                            (uint16_t)g_session_state_free_delay_secs);
   }
 }
 
@@ -112,7 +131,7 @@ oc_session_start_event(oc_endpoint_t *endpoint)
   ep->next = NULL;
 
   oc_network_event_handler_mutex_lock();
-  oc_list_add(session_start_events, ep);
+  oc_list_add(g_session_start_events, ep);
   oc_network_event_handler_mutex_unlock();
 
   oc_process_poll(&(oc_session_events));
@@ -131,7 +150,7 @@ oc_session_end_event(oc_endpoint_t *endpoint)
   ep->next = NULL;
 
   oc_network_event_handler_mutex_lock();
-  oc_list_add(session_end_events, ep);
+  oc_list_add(g_session_end_events, ep);
   oc_network_event_handler_mutex_unlock();
 
   oc_process_poll(&(oc_session_events));

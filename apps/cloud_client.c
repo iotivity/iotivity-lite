@@ -91,8 +91,8 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 
 /* OS specific definition for lock/unlock */
-#define otb_mutex_lock(m) pthread_mutex_lock(&m)
-#define otb_mutex_unlock(m) pthread_mutex_unlock(&m)
+#define otb_mutex_lock(m) pthread_mutex_lock(&(m))
+#define otb_mutex_unlock(m) pthread_mutex_unlock(&(m))
 
 static struct timespec ts;
 #endif

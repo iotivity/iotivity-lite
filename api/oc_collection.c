@@ -193,6 +193,9 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
     oc_string_array_add_item(link->rel, "self");
   }
   oc_set_delayed_callback(collection, links_list_notify_collection, 0);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_notify_discovery_batch_observers(collection);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 }
 
 void
@@ -202,6 +205,9 @@ oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link)
     oc_collection_t *c = (oc_collection_t *)collection;
     oc_list_remove(c->links, link);
     oc_set_delayed_callback(collection, links_list_notify_collection, 0);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+    coap_notify_discovery_batch_observers(collection);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
   }
 }
 
@@ -1053,9 +1059,6 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
         request->resource, request->response->response_buffer, iface_mask);
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-      coap_notify_discovery_batch_observers(request->resource);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
     } else if (iface_mask == OC_IF_B) {
       oc_set_delayed_callback(request->resource, batch_notify_collection, 0);
     }

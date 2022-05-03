@@ -137,8 +137,8 @@ typedef uint64_t oc_clock_time_t;
 // #define OC_WKCORE
 
 /* Wipe device name during reset, when oic/con is enabled */
-/* Default: Keep name */
-#define OC_WIPE_NAME (0)
+/* Default: Wipe name */
+#define OC_WIPE_NAME (1)
 
 #ifdef __cplusplus
 }
