@@ -1325,8 +1325,11 @@ py_provision_ace_cloud_access(char *uuid)
   oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
 
+  oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
   oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
   oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+  oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+  oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
@@ -1357,9 +1360,11 @@ py_provision_ace_to_obt(char *uuid, char *res_uri)
   oc_obt_ace_resource_set_href(res, res_uri);
   oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
 
+  oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
   oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
   oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
   oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+  oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
@@ -1392,8 +1397,11 @@ py_provision_ace_device_resources(char *device_uuid, char *subject_uuid)
   oc_ace_res_t *res_wc = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_wc(res_wc, OC_ACE_WC_ALL);
 
+  oc_obt_ace_add_permission(ace, OC_PERM_CREATE);
   oc_obt_ace_add_permission(ace, OC_PERM_RETRIEVE);
   oc_obt_ace_add_permission(ace, OC_PERM_UPDATE);
+  oc_obt_ace_add_permission(ace, OC_PERM_DELETE);
+  oc_obt_ace_add_permission(ace, OC_PERM_NOTIFY);
 
   otb_mutex_lock(app_sync_lock);
   int ret = oc_obt_provision_ace(&device->uuid, ace, provision_ace2_cb, NULL);
@@ -1769,6 +1777,9 @@ py_general_post_cb(oc_client_response_t *data)
   } else if (data->code == OC_STATUS_CREATED) {
     PRINT("[C]POST response: CREATED\n");
     cb_result = true;
+  } else if (data->code == OC_STATUS_OK) {
+    PRINT("[C]POST response: OK\n");
+    cb_result = true;
   } else {
     PRINT("[C]POST response code %d\n", data->code);
     cb_result = false;
@@ -1794,6 +1805,55 @@ py_general_post(char *uuid, char *query, char *url, char **payload_properties,
                       payload_properties, payload_values, payload_types,
                       array_size);
 
+  otb_mutex_unlock(app_sync_lock);
+}
+
+static void
+py_general_delete_cb(oc_client_response_t *data)
+{
+  PRINT("[C]py_general_delete_cb:\n");
+  if (data->code == OC_STATUS_CHANGED) {
+    PRINT("[C]DELETE response: CHANGED\n");
+    cb_result = true;
+  } else if (data->code == OC_STATUS_CREATED) {
+    PRINT("[C]DELETE response: CREATED\n");
+    cb_result = true;
+  } else if (data->code == OC_STATUS_OK) {
+    PRINT("[C]DELETE response: OK\n");
+    cb_result = true;
+  } else {
+    PRINT("[C]DELETE response code %d\n", data->code);
+    cb_result = false;
+  }
+
+  if (data->payload != NULL) {
+    print_rep(data->payload, false);
+    save_rep(data->payload, false);
+  }
+}
+
+void
+py_general_delete(char *uuid, char *query, char *url)
+{
+  cb_result = false;
+  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  if (device == NULL) {
+    device = py_getdevice_from_uuid(uuid, 0);
+  }
+  if (device == NULL) {
+    PRINT("[C] py_general_delete ERROR: Invalid uuid\n");
+    return;
+  }
+  PRINT("[C] py_general_delete: name = %s \n", device->device_name);
+
+  otb_mutex_lock(app_sync_lock);
+  int ret = oc_obt_general_delete(&device->uuid, query, url,
+                                  py_general_delete_cb, NULL);
+  if (ret >= 0) {
+    PRINT("[C]\nSuccessfully issued DELETE request\n");
+  } else {
+    PRINT("[C]\nERROR issuing DELETE request\n");
+  }
   otb_mutex_unlock(app_sync_lock);
 }
 
