@@ -130,7 +130,7 @@ class FormUi:
         self.frame = frame
 
         # Create a combobbox to select the request type
-        values = ['GET', 'POST']
+        values = ['GET', 'POST', 'DELETE']
         self.request_type = tk.StringVar()
         ttk.Label(self.frame, text='Request Type:').grid(
             column=0, row=0, sticky=W)
@@ -302,6 +302,19 @@ class FormUi:
                 show_window_with_text(f"POST {request_url} response payload", response_payload)
             else: 
                 logger.log(logging.INFO, f"POST {request_url} failed")
+                self.update_display()
+        elif self.request_type.get() == 'DELETE': 
+            request_query = self.query.get()
+            request_url = self.URL.get()
+
+            result, response_payload = my_iotivity.general_delete(device_uuid, request_query, request_url)
+
+            if result: 
+                logger.log(logging.INFO, f"DELETE {request_url} succeeded")
+                self.update_display()
+                show_window_with_text(f"{self.request_type.get()} {request_url} response payload", response_payload)
+            else: 
+                logger.log(logging.INFO, f"DELETE {request_url} failed")
                 self.update_display()
 
     def submit_clear(self):

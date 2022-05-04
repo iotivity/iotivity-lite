@@ -3451,7 +3451,7 @@ oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *query, const char *url,
   return 0;
 }
 
-/* General GET and POST */
+/* General GET, POST and DELETE */
 int
 oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
                    void *data)
@@ -3564,6 +3564,39 @@ oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
   } else {
     PRINT("Could not init POST request\n");
     return -1;
+  }
+
+  return 0;
+}
+
+int
+oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url,
+                      oc_response_handler_t cb, void *data)
+{
+  oc_device_t *device;
+  if (!oc_obt_is_owned_device(uuid)) {
+    device = oc_obt_get_cached_device_handle(uuid);
+  } else {
+    device = oc_obt_get_owned_device_handle(uuid);
+  }
+  if (!device) {
+    return -1;
+  }
+
+  char di[37];
+  oc_uuid_to_str(&(device->uuid), di, OC_UUID_LEN);
+  PRINT("[C] Target uuid = %s \n", di);
+
+  oc_tls_select_psk_ciphersuite();
+
+  oc_endpoint_t *ep;
+  if (!oc_obt_is_owned_device(uuid)) {
+    ep = oc_obt_get_unsecure_endpoint(device->endpoint);
+  } else {
+    ep = oc_obt_get_secure_endpoint(device->endpoint);
+  }
+  if (oc_do_delete(url, ep, query, cb, HIGH_QOS, data)) {
+    return 0;
   }
 
   return 0;

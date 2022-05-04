@@ -301,6 +301,9 @@ void py_general_post(char *uuid, char *query, char *url,
                      char **payload_types, int array_size);
 
 OC_API
+void py_general_delete(char *uuid, char *query, char *url);
+
+OC_API
 void factory_presets_cb(size_t device, void *data);
 
 OC_API
