@@ -560,7 +560,7 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     rep = rep->next;
   }
 
-  if (action >= OC_SWUPDATE_UPGRADE || !purl || !ut) {
+  if (action > OC_SWUPDATE_UPGRADE || !purl || !ut) {
     error_state = true;
   }
   if (action != OC_SWUPDATE_IDLE && action <= OC_SWUPDATE_UPGRADE && !purl) {
