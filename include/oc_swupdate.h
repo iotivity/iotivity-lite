@@ -31,14 +31,15 @@ extern "C" {
  *
  */
 typedef enum {
-  OC_SWUPDATE_RESULT_IDLE = 0,     ///< Idle
-  OC_SWUPDATE_RESULT_SUCCESS,      ///< software update successfull
-  OC_SWUPDATE_RESULT_LESS_RAM,     ///< not enough RAM
-  OC_SWUPDATE_RESULT_LESS_FLASH,   ///< not enough FLASH
-  OC_SWUPDATE_RESULT_CONN_FAIL,    ///< connection failure
-  OC_SWUPDATE_RESULT_SVV_FAIL,     ///< version failure
-  OC_SWUPDATE_RESULT_INVALID_URL,  ///< invalid URL
-  OC_SWUPDATE_RESULT_UPGRADE_FAIL, ///< upgrade failure
+  OC_SWUPDATE_RESULT_IDLE = 0,         ///< Idle
+  OC_SWUPDATE_RESULT_SUCCESS,          ///< software update successful
+  OC_SWUPDATE_RESULT_LESS_RAM,         ///< not enough RAM
+  OC_SWUPDATE_RESULT_LESS_FLASH,       ///< not enough FLASH
+  OC_SWUPDATE_RESULT_CONN_FAIL,        ///< connection failure
+  OC_SWUPDATE_RESULT_SVV_FAIL,         ///< version failure
+  OC_SWUPDATE_RESULT_INVALID_URL,      ///< invalid URL
+  OC_SWUPDATE_RESULT_UNSUPPORTED_PROT, ///< unsupported protocol for URL
+  OC_SWUPDATE_RESULT_UPGRADE_FAIL,     ///< upgrade failure
 } oc_swupdate_result_t;
 
 /**
