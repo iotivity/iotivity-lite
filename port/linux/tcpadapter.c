@@ -515,7 +515,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+  if (select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL) == 0) {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
@@ -576,7 +576,7 @@ initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
     }
 
     socklen_t receiver_size = sizeof(*receiver);
-    int ret = 0;
+    int ret;
     if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
                             TCP_CONNECT_TIMEOUT)) == 0) {
       break;
@@ -585,6 +585,7 @@ initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
     close(sock);
     retry_cnt++;
     OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+    (void)ret;
   }
 
   if (retry_cnt >= LIMIT_RETRY_CONNECT) {
@@ -621,8 +622,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
       OC_ERR("connection was closed");
       goto oc_tcp_send_buffer_done;
     }
-    if ((send_sock = initiate_new_session_locked(dev, &message->endpoint,
-                                                 receiver)) < 0) {
+    if (initiate_new_session_locked(dev, &message->endpoint, receiver) < 0) {
       OC_ERR("could not initiate new TCP session");
       goto oc_tcp_send_buffer_done;
     }

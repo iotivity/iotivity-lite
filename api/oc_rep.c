@@ -374,10 +374,10 @@ get_tagged_value:
     *err |= cbor_value_enter_container(value, &map);
     while (!cbor_value_at_end(&map)) {
       oc_parse_rep_value(&map, obj, err);
-      (*obj)->next = 0;
-      obj = &(*obj)->next;
       if (*err != CborNoError)
         return;
+      (*obj)->next = NULL;
+      obj = &(*obj)->next;
       *err |= cbor_value_advance(&map);
     }
     cur->type = OC_REP_OBJECT;
@@ -486,28 +486,30 @@ get_tagged_value:
           *err |= CborErrorIllegalType;
           return;
         } else {
-          if ((*prev) != NULL) {
-            (*prev)->next = _alloc_rep();
-            if ((*prev)->next == NULL) {
-              *err = CborErrorOutOfMemory;
-              return;
-            }
-            prev = &(*prev)->next;
-          } else {
+          if (prev == NULL) {
+            *err = CborErrorInternalError;
+            return;
+          } else if ((*prev) == NULL) {
             *err = CborErrorOutOfMemory;
             return;
           }
+          (*prev)->next = _alloc_rep();
+          if ((*prev)->next == NULL) {
+            *err = CborErrorOutOfMemory;
+            return;
+          }
+          prev = &(*prev)->next;
         }
         (*prev)->type = OC_REP_OBJECT;
-        (*prev)->next = 0;
+        (*prev)->next = NULL;
         oc_rep_t **obj = &(*prev)->value.object;
         /* Process a series of properties that make up an object of the array */
         *err |= cbor_value_enter_container(&array, &map);
         while (!cbor_value_at_end(&map)) {
           oc_parse_rep_value(&map, obj, err);
-          obj = &(*obj)->next;
           if (*err != CborNoError)
             return;
+          obj = &(*obj)->next;
           *err |= cbor_value_advance(&map);
         }
         break;
@@ -924,8 +926,12 @@ oc_rep_to_json_format(oc_rep_t *rep, char *buf, size_t buf_size, int tab_depth,
     case OC_REP_BYTE_STRING: {
       char *byte_string = NULL;
       size_t byte_string_size;
-      oc_rep_get_byte_string(rep, oc_string(rep->name), &byte_string,
-                             &byte_string_size);
+      const char *name = oc_string(rep->name);
+      if (!oc_rep_get_byte_string(rep, name, &byte_string, &byte_string_size)) {
+        OC_ERR("failed to encode byte string(%s)",
+               name != NULL ? name : "NULL");
+        break;
+      }
       num_char_printed = oc_rep_to_json_base64_encoded_byte_string(
         buf, buf_size, byte_string, byte_string_size);
       OC_JSON_UPDATE_BUFFER_AND_TOTAL;

@@ -2361,8 +2361,7 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   (void)user_data;
   (void)types;
   (void)endpoint;
-  int uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
+  (void)uri;
   PRINT("DOXM CB\n");
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {

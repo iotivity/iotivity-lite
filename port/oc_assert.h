@@ -25,18 +25,24 @@
 extern "C" {
 #endif
 
+#ifdef __GNUC__
+#define GCC_NO_RETURN __attribute__((__noreturn__))
+#else
+#define GCC_NO_RETURN
+#endif /* __GNUC__ */
+
 /**
  * @brief abort application
  *
  */
-void abort_impl(void);
+void abort_impl(void) GCC_NO_RETURN;
 
 /**
  * @brief exit the application
  *
  * @param status the exist status
  */
-void exit_impl(int status);
+void exit_impl(int status) GCC_NO_RETURN;
 
 /**
  * @brief abort with message

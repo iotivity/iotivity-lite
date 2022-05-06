@@ -1838,6 +1838,7 @@ oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
   mbedtls_md_context_t hmacA, hmacA_next;
   va_list msg_list;
   const uint8_t *msg;
+  va_start(msg_list, num_message_fragments);
 
   mbedtls_md_init(&hmacA);
   mbedtls_md_init(&hmacA_next);
@@ -1848,7 +1849,6 @@ oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
              mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
 
   MBEDTLS_MD(mbedtls_md_hmac_starts, &hmacA, secret, secret_len);
-  va_start(msg_list, num_message_fragments);
   for (i = 0; i < num_message_fragments; i++) {
     msg = va_arg(msg_list, const uint8_t *);
     msg_len = va_arg(msg_list, size_t);
