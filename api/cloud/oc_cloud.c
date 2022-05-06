@@ -365,7 +365,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 #endif /* OC_SESSION_EVENTS */
   oc_remove_delayed_callback(ctx, restart_manager);
   oc_remove_delayed_callback(ctx, start_manager);
-  cloud_rd_deinit(ctx);
+  cloud_rd_reset_context(ctx);
   cloud_manager_stop(ctx);
   cloud_store_initialize(&ctx->store);
   cloud_close_endpoint(ctx->cloud_ep);
