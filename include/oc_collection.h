@@ -64,7 +64,7 @@ void oc_link_set_interfaces(oc_link_t *link,
 OC_NO_DISCARD_RETURN
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   oc_interface_mask_t iface_mask,
-                                  oc_resource_t *notify_resource);
+                                  const oc_resource_t *notify_resource);
 oc_collection_t *oc_collection_alloc(void);
 void oc_collection_free(oc_collection_t *collection);
 

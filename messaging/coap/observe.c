@@ -553,8 +553,8 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
 }
 
 #ifdef OC_COLLECTIONS
-int
-coap_notify_collection_observers(oc_resource_t *resource,
+void
+coap_notify_collection_observers(const oc_collection_t *collection,
                                  oc_response_buffer_t *response_buf,
                                  oc_interface_mask_t iface_mask)
 {
@@ -563,7 +563,7 @@ coap_notify_collection_observers(oc_resource_t *resource,
   /* iterate over observers */
   for (coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
        obs; obs = obs->next) {
-    if (obs->resource != resource) {
+    if (obs->resource != (const oc_resource_t *)collection) {
       continue;
     }
     if (obs->iface_mask != iface_mask) {
@@ -571,170 +571,88 @@ coap_notify_collection_observers(oc_resource_t *resource,
         continue;
       }
     }
-    if (send_notification(obs, &response, resource->uri, true, NULL)) {
+    if (send_notification(obs, &response, collection->res.uri, true, NULL)) {
       break;
     }
   }
+}
 
-  return -1;
+static int
+coap_notify_collection(oc_collection_t *collection,
+                       oc_interface_mask_t iface_mask)
+{
+#ifndef OC_DYNAMIC_ALLOCATION
+  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
+#else /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
+  if (!buffer) {
+#ifdef OC_DEBUG
+    const char *iface = get_iface_query(iface_mask);
+    OC_WRN("coap_notify_collection(%s): out of memory allocating buffer",
+           iface != NULL ? iface : "NULL");
+#endif /* OC_DEBUG */
+    return -1;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
+  oc_response_buffer_t response_buffer;
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response.response_buffer = &response_buffer;
+  request.response = &response;
+  request.request_payload = NULL;
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
+                     OC_MAX_OBSERVE_SIZE);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
+  request.resource = (oc_resource_t *)collection;
+
+  int err = 0;
+  if (!oc_handle_collection_request(OC_GET, &request, iface_mask, NULL)) {
+#ifdef OC_DEBUG
+    const char *iface = get_iface_query(iface_mask);
+    OC_WRN("coap_notify_collection(%s): failed to handle collection request",
+           iface != NULL ? iface : "NULL");
+#endif /* OC_DEBUG */
+    err = -1;
+    goto cleanup;
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
+#endif
+  coap_notify_collection_observers(collection, &response_buffer, iface_mask);
+
+cleanup:
+#ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
+  if (buffer)
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  return err;
 }
 
 int
 coap_notify_collection_baseline(oc_collection_t *collection)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
-  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
-  if (!buffer) {
-    OC_WRN("coap_notify_collection_baseline: out of memory allocating buffer");
-    return -1;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request;
-  memset(&request, 0, sizeof(request));
-  oc_response_t response;
-  memset(&response, 0, sizeof(response));
-  oc_response_buffer_t response_buffer;
-  response_buffer.buffer = buffer;
-  response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
-  response.response_buffer = &response_buffer;
-  request.response = &response;
-  request.request_payload = NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-  request.resource = (oc_resource_t *)collection;
-
-  int err = 0;
-  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_BASELINE, NULL)) {
-    OC_WRN(
-      "coap_notify_collection_baseline: failed to handle collection request");
-    err = -1;
-    goto cleanup;
-  }
-#ifdef OC_DYNAMIC_ALLOCATION
-  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-#endif
-  coap_notify_collection_observers(request.resource, &response_buffer,
-                                   OC_IF_BASELINE);
-
-cleanup:
-#ifdef OC_DYNAMIC_ALLOCATION
-  buffer = response_buffer.buffer;
-  if (buffer)
-    free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return err;
+  return coap_notify_collection(collection, OC_IF_BASELINE);
 }
 
 int
 coap_notify_collection_batch(oc_collection_t *collection)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
-  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
-  if (!buffer) {
-    OC_WRN("coap_notify_collection_batch: out of memory allocating buffer");
-    return -1;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request;
-  memset(&request, 0, sizeof(request));
-  oc_response_t response;
-  memset(&response, 0, sizeof(response));
-  oc_response_buffer_t response_buffer;
-  response_buffer.buffer = buffer;
-  response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
-  response.response_buffer = &response_buffer;
-  request.response = &response;
-  request.request_payload = NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-  request.resource = (oc_resource_t *)collection;
-
-  int err = 0;
-  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, NULL)) {
-    OC_WRN("coap_notify_collection_batch: failed to handle collection request");
-    err = -1;
-    goto cleanup;
-  }
-#ifdef OC_DYNAMIC_ALLOCATION
-  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-#endif
-  coap_notify_collection_observers(request.resource, &response_buffer, OC_IF_B);
-
-cleanup:
-#ifdef OC_DYNAMIC_ALLOCATION
-  buffer = response_buffer.buffer;
-  if (buffer)
-    free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return err;
+  return coap_notify_collection(collection, OC_IF_B);
 }
 
 int
 coap_notify_collection_links_list(oc_collection_t *collection)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
-  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
-  if (!buffer) {
-    OC_WRN(
-      "coap_notify_collection_links_list: out of memory allocating buffer");
-    return -1;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  oc_request_t request;
-  memset(&request, 0, sizeof(request));
-  oc_response_t response;
-  memset(&response, 0, sizeof(response));
-  oc_response_buffer_t response_buffer;
-  response_buffer.buffer = buffer;
-  response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
-  response.response_buffer = &response_buffer;
-  request.response = &response;
-  request.request_payload = NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-  request.resource = (oc_resource_t *)collection;
-
-  int err = 0;
-  if (!oc_handle_collection_request(OC_GET, &request, OC_IF_LL, NULL)) {
-    OC_WRN(
-      "coap_notify_collection_links_list: failed to handle collection request");
-    err = -1;
-    goto cleanup;
-  }
-#ifdef OC_DYNAMIC_ALLOCATION
-  response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-#endif
-  coap_notify_collection_observers(request.resource, &response_buffer,
-                                   OC_IF_LL);
-
-cleanup:
-#ifdef OC_DYNAMIC_ALLOCATION
-  buffer = response_buffer.buffer;
-  if (buffer)
-    free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return err;
+  return coap_notify_collection(collection, OC_IF_LL);
 }
 
 static int
@@ -783,8 +701,7 @@ coap_notify_collections(oc_resource_t *resource)
 #ifdef OC_DYNAMIC_ALLOCATION
     response_buffer.buffer_size = oc_rep_get_encoder_buffer_size();
 #endif
-    coap_notify_collection_observers(request.resource, &response_buffer,
-                                     OC_IF_B);
+    coap_notify_collection_observers(collection, &response_buffer, OC_IF_B);
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -837,12 +754,12 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
 }
 #endif /* OC_SECURITY */
 
-static int
+static bool
 fill_response(oc_resource_t *resource, oc_endpoint_t *endpoint,
               oc_interface_mask_t iface_mask, oc_response_t *response)
 {
   if (!resource || !response) {
-    return -1;
+    return false;
   }
   oc_request_t request = { 0 };
   request.resource = resource;
@@ -871,9 +788,9 @@ fill_response(oc_resource_t *resource, oc_endpoint_t *endpoint,
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (response->response_buffer->code == OC_IGNORE) {
     OC_DBG("fill_response: Resource ignored request");
-    return -1;
+    return false;
   } // response_buf->code == OC_IGNORE
-  return 0;
+  return true;
 }
 
 static int
@@ -919,7 +836,9 @@ coap_notify_observers_internal(oc_resource_t *resource,
     oc_response_buffer_t response_buffer;
     response.response_buffer = response_buf;
     bool has_response = response_buf != NULL;
+    bool update_buffer = false;
     if (!has_response) {
+      update_buffer = true;
       response_buffer.buffer = buffer;
       response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
       response.response_buffer = &response_buffer;
@@ -927,7 +846,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
         OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
                "%s\n\n",
                oc_string(resource->uri));
-        if (fill_response(resource, endpoint, iface_mask, &response)) {
+        if (!fill_response(resource, endpoint, iface_mask, &response)) {
           goto leave_notify_observers;
         }
         has_response = true;
@@ -967,7 +886,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
                oc_string(resource->uri), ep_cstr);
         oc_free_string(&ep_str);
 #endif
-        if (fill_response(resource, &obs->endpoint, iface_mask, &response)) {
+        if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
           goto leave_notify_observers;
         }
       }
@@ -977,7 +896,9 @@ coap_notify_observers_internal(oc_resource_t *resource,
     } // iterate over observers
   leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
-    buffer = response_buffer.buffer;
+    if (update_buffer) {
+      buffer = response_buffer.buffer;
+    }
     if (buffer) {
       free(buffer);
     }
@@ -1032,7 +953,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
     if (obs->iface_mask != iface_mask) {
       continue;
     }
-    if (fill_response(resource, &obs->endpoint, iface_mask, &response)) {
+    if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
       goto leave_notify_observers;
     }
     if (send_notification(obs, &response, resource->uri, true, NULL)) {
@@ -1327,7 +1248,7 @@ notify_discovery_observers(oc_resource_t *resource)
     if (iface_mask & OC_IF_B) {
       continue;
     }
-    if (fill_response(resource, &obs->endpoint, obs->iface_mask, &response)) {
+    if (!fill_response(resource, &obs->endpoint, obs->iface_mask, &response)) {
       continue;
     }
     if (send_notification(obs, &response, resource->uri, false, NULL)) {
@@ -1380,7 +1301,6 @@ coap_observe_handler(void *request, void *response, oc_resource_t *resource,
                      oc_endpoint_t *endpoint, oc_interface_mask_t iface_mask)
 #endif /* !OC_BLOCK_WISE */
 {
-  (void)iface_mask;
   coap_packet_t *const coap_req = (coap_packet_t *)request;
   coap_packet_t *const coap_res = (coap_packet_t *)response;
   int dup = -1;

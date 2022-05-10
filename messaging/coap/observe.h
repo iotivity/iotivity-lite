@@ -51,6 +51,7 @@
 #include "coap.h"
 #include "oc_ri.h"
 #include "transactions.h"
+#include "util/oc_compiler.h"
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
@@ -88,20 +89,57 @@ int coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid);
 int coap_remove_observer_by_resource(const oc_resource_t *rsc);
 void coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource);
 void coap_free_all_observers(void);
-int coap_notify_collection_observers(oc_resource_t *resource,
-                                     oc_response_buffer_t *response_buf,
-                                     oc_interface_mask_t iface_mask);
 void coap_notify_discovery_batch_observers(oc_resource_t *resource);
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           oc_endpoint_t *endpoint);
 bool coap_want_be_notified(oc_resource_t *resource);
-int coap_notify_collection_links_list(oc_collection_t *collection);
-int coap_notify_collection_batch(oc_collection_t *collection);
-int coap_notify_collection_baseline(oc_collection_t *collection);
 void notify_resource_defaults_observer(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask,
                                        oc_response_buffer_t *response_buf);
+
+/**
+ * @brief Construct observation response with OC_IF_LL interface and send it to
+ * observers.
+ *
+ * @param collection collection to observe
+ * @return 0 on success
+ * @return -1 on error
+ */
+OC_NO_DISCARD_RETURN
+int coap_notify_collection_links_list(oc_collection_t *collection);
+/**
+ * @brief Construct observation response with OC_IF_B interface and send it to
+ * observers.
+ *
+ * @param collection collection to observe
+ * @return 0 on success
+ * @return -1 on error
+ */
+OC_NO_DISCARD_RETURN
+int coap_notify_collection_batch(oc_collection_t *collection);
+/**
+ * @brief Construct observation response with OC_IF_BASELINE interface and
+ * send it to observers.
+ *
+ * @param collection collection to observe
+ * @return 0 on success
+ * @return -1 on error
+ */
+OC_NO_DISCARD_RETURN
+int coap_notify_collection_baseline(oc_collection_t *collection);
+
+/**
+ * @brief Sent notification to observers of given collection with matching
+ * interface.
+ *
+ * @param collection observed collection
+ * @param response_buf notification to send
+ * @param iface_mask interface used to construct the notification
+ */
+void coap_notify_collection_observers(const oc_collection_t *collection,
+                                      oc_response_buffer_t *response_buf,
+                                      oc_interface_mask_t iface_mask);
 
 #ifdef OC_BLOCK_WISE
 int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
