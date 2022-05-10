@@ -1,21 +1,24 @@
-/*
-// Copyright (c) 2021 ETRI
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-//  Created on: Aug 23, 2021
-//      Author: jclee
-*/
+/****************************************************************************
+ *
+ * Copyright 2021 ETRI All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * Created on: Aug 23, 2021,
+ * 				Author: jclee (rune@etri.re.kr)
+ *
+ *
+ ****************************************************************************/
 
 #ifndef OC_PUSH_H
 #define OC_PUSH_H
@@ -31,10 +34,6 @@
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
 
-/*
- * TODO4ME remove later...
- */
-//#define OC_PUSHDEBUG
 
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
 #ifndef OC_DEBUG
@@ -74,9 +73,7 @@ extern "C"
 #define PUSHRECVS_RSC_TYPE "oic.r.pushreceiver"
 #define PUSHRECVS_RSC_NAME "Push Receiver Configuration"
 
-/*
- * FIXME4ME<done> <2021/9/24> Push Proxy 관련 자료구조에서 아래 상태정보를 업데이트하도록 수정할 것
- */
+
 typedef enum {
 	OC_PP_WFP,
 	OC_PP_WFU,
@@ -99,13 +96,11 @@ typedef struct oc_ns
 	oc_string_array_t prt;	/* optional */
 	oc_string_array_t pif;	/* optional */
 	/* push proxy */
-//	oc_string_t pushtarget;
 	oc_string_t pushtarget_di; /* device id of target (e.g. ocf://17087f8c-13e3-4849-4258-65af2a47df63 */
 	oc_endpoint_t pushtarget_ep;	/* full URI (e.g. coaps://[fe80::b1d6]:1122/myLightSwitch), oc_endpoint_t type */
 	oc_string_t targetpath; /* path in target server (e.g. /myLightSwitch) */
 	oc_string_t pushqif;
 	oc_string_array_t sourcert;
-//	oc_pp_state_t state;
 	oc_string_t state;
 	void *user_data;
 } oc_ns_t;
@@ -130,12 +125,6 @@ typedef struct oc_recvs
 	struct oc_recvs *next;
 	oc_resource_t *resource;
 	OC_LIST_STRUCT(receivers);
-
-#if 0
-	void *receivers_list;
-	oc_list_t receivers;
-#endif
-
 } oc_recvs_t;
 
 

@@ -380,9 +380,6 @@ oc_main_shutdown(void)
   oc_collections_free_rt_factories();
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
-  /*
-   * FIXME4ME <2022/4/22> add push related data shutdown routine here..
-   */
 #if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_push_free();
 #endif
