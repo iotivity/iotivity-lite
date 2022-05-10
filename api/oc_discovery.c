@@ -619,8 +619,8 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
     if (oc_check_if_collection(resource)) {
-      if (!oc_handle_collection_request(OC_GET, &rest_request, OC_IF_LL,
-                                        NULL)) {
+      if (!oc_handle_collection_request(OC_GET, &rest_request,
+                                        resource->default_interface, NULL)) {
         OC_WRN("failed to process batch response: failed to handle collection "
                "request");
       }

@@ -567,7 +567,8 @@ coap_notify_collection_observers(const oc_collection_t *collection,
       continue;
     }
     if (obs->iface_mask != iface_mask) {
-      if ((obs->iface_mask | iface_mask) != OC_IF_LL) {
+      // use default interface if obs->iface_mask == 0
+      if ((obs->iface_mask | iface_mask) != collection->res.default_interface) {
         continue;
       }
     }
