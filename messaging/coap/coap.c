@@ -517,7 +517,6 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
       }
     }
 #endif /* OC_SPEC_VER_OIC */
-    current_number = OCF_OPTION_CONTENT_FORMAT_VER;
   }
 
   if (option) {

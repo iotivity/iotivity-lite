@@ -62,9 +62,9 @@ _oc_memb_alloc(
     return NULL;
   }
 
-  int i = m->num;
   void *ptr = NULL;
   if (m->num > 0) {
+    int i;
     for (i = 0; i < m->num; i++) {
       if (m->count[i] == 0) {
         /* If this block was unused, we increase the reference count to
@@ -115,13 +115,12 @@ _oc_memb_free(
   oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
 #endif
 
-  int i = m->num;
   char *ptr2 = NULL;
   if (m->num > 0) {
     /* Walk through the list of blocks and try to find the block to
        which the pointer "ptr" points to. */
     ptr2 = (char *)m->mem;
-    for (i = 0; i < m->num; ++i) {
+    for (int i = 0; i < m->num; ++i) {
       if (ptr2 == (char *)ptr) {
         /* We've found to block to which "ptr" points so we decrease the
            reference count and return the new value of it. */

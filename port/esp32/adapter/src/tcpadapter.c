@@ -489,7 +489,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
   tval.tv_sec = nsec;
   tval.tv_usec = 0;
 
-  if ((n = select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) == 0) {
+  if (select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL) == 0) {
     /* timeout */
     errno = ETIMEDOUT;
     return -1;
