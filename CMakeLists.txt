@@ -30,6 +30,10 @@ set(OC_TSAN_ENABLED OFF CACHE BOOL "Enable thread sanitizer build.")
 set(OC_MSAN_ENABLED OFF CACHE BOOL "Enable memory sanitizer build. (clang on Linux only)")
 set(OC_UBSAN_ENABLED OFF CACHE BOOL "Enable undefined behaviour sanitizer build.")
 
+if (OC_CLOUD_ENABLED AND NOT OC_PKI_ENABLED)
+    message(FATAL_ERROR "Cannot enable cloud communications without PKI security")
+endif()
+
 if(UNIX)
     if(OC_ASAN_ENABLED)
         message(STATUS "Address sanitizer enabled")

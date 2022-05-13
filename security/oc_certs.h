@@ -17,7 +17,7 @@
 #ifndef OC_CERTS_H
 #define OC_CERTS_H
 
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) && defined(OC_PKI)
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 #include "security/oc_cred_internal.h"
@@ -66,5 +66,5 @@ int oc_certs_validate_csr(const unsigned char *csr, size_t csr_len,
 #ifdef __cplusplus
 }
 #endif
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY & OC_PKI */
 #endif /* OC_CERTS_H */

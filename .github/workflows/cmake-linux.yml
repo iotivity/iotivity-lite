@@ -20,6 +20,8 @@ jobs:
         include:
           # secure with IPv4
           - args: "-DOC_IPV4_ENABLED=ON"
+          # secure without PKI, with IPv4
+          - args: "-DOC_PKI_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
           # insecure with IPv4
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
 

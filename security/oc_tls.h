@@ -197,6 +197,7 @@ void oc_tls_resolve_new_trust_anchors(void);
  */
 bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
 
+#ifdef OC_PKI
 /**
  * @brief Get mbedtls container with trust anchors used globally by the
  * application.
@@ -205,6 +206,7 @@ bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
  * anchors
  */
 mbedtls_x509_crt *oc_tls_get_trust_anchors(void);
+#endif /* OC_PKI */
 
 #ifdef OC_TEST
 /**
