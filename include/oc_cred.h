@@ -25,6 +25,8 @@
 #include "util/oc_list.h"
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -120,6 +122,39 @@ typedef struct oc_sec_creds_t
   oc_uuid_t rowneruuid;  ///< row owner uuid
 } oc_sec_creds_t;
 
+#ifdef OC_PKI
+
+/**
+ * @brief Selected certificate data used for verification.
+ */
+typedef struct oc_sec_certs_data_t
+{
+  uint64_t valid_from; ///<  UNIX timestamp (UTC +0000) from which the
+                       ///<  certificate is valid
+  uint64_t valid_to;   ///<  UNIX timestamp (UTC +0000) to which the
+                       ///<  certificate is valid
+} oc_sec_certs_data_t;
+
+/**
+ * @brief Callback function to verify a single certificate. Return true if
+ * certificate is valid, return false otherwise.
+ */
+typedef bool (*oc_verify_sec_certs_data_fn_t)(const oc_sec_certs_data_t *data);
+
+/**
+ * @brief Verify the certificate chain associated with the credential.
+ *
+ * @param cred credential associated with the certificate chain (cannot be NULL)
+ * @param verify_cert function used to verify a single certificate (cannot be
+ * NULL)
+ * @return 0 all certificates in the chain are valid
+ * @return 1 at least one certificate in the chain is not valid
+ * @return -1 on error
+ */
+OC_API
+int oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
+                                     oc_verify_sec_certs_data_fn_t verify_cert);
+
 /**
  * @brief read credential usage
  *
@@ -130,15 +165,6 @@ OC_API
 const char *oc_cred_read_credusage(oc_sec_credusage_t credusage);
 
 /**
- * @brief read credential encoding
- *
- * @param encoding credential encoding as type
- * @return const char* credential encoding as string
- */
-OC_API
-const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
-
-/**
  * @brief parse credential string to type
  *
  * @param credusage_string credential usage as string
@@ -146,6 +172,17 @@ const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
  */
 OC_API
 oc_sec_credusage_t oc_cred_parse_credusage(oc_string_t *credusage_string);
+
+#endif /* OC_PKI */
+
+/**
+ * @brief read credential encoding
+ *
+ * @param encoding credential encoding as type
+ * @return const char* credential encoding as string
+ */
+OC_API
+const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
 
 /**
  * @brief parse credential encoding string to type
