@@ -83,7 +83,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
         memcmp(id_cert->raw.p, int_ca.raw.p, int_ca.raw.len) == 0) {
       mbedtls_x509_crt_free(&id_cert_chain);
       mbedtls_x509_crt_free(&int_ca);
-      OC_DBG("found intermediate cert in cred with credid %d", credid);
+      OC_DBG("found intermediate cert in identity cred(credid=%d)", credid);
       return 0;
     }
 
@@ -118,7 +118,9 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   mbedtls_x509_crt_free(&id_cert_chain);
 
   if (ret > 0) {
-    OC_DBG("added intermediate CA cert to /oic/sec/cred");
+    OC_DBG(
+      "added intermediate CA(identity cred credid=%d) cert to /oic/sec/cred",
+      credid);
     oc_tls_resolve_new_identity_certs();
     return credid;
   }
@@ -233,7 +235,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
     (const uint8_t *)cert, NULL, NULL, NULL, NULL);
 
   if (credid != -1) {
-    OC_DBG("added new identity cert chain to /oic/sec/cred");
+    OC_DBG("added new identity cert(credid=%d) chain to /oic/sec/cred", credid);
     oc_sec_dump_cred(device);
   } else {
     OC_ERR("could not add identity cert chain to /oic/sec/cred");

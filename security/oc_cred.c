@@ -28,6 +28,7 @@
 #include "oc_roles.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -36,13 +37,16 @@
 #include "oc_oscore_context.h"
 #include <ctype.h>
 #endif /* OC_OSCORE */
+#ifdef OC_PKI
+#include "mbedtls/platform_util.h"
+#endif /* OC_PKI */
+
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 #define OXM_RANDOM_DEVICE_PIN "oic.sec.doxm.rdp"
 #define OXM_MANUFACTURER_CERTIFICATE "oic.sec.doxm.mfgcert"
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include "port/oc_assert.h"
 static oc_sec_creds_t *devices;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
@@ -51,7 +55,7 @@ static oc_sec_creds_t devices[OC_MAX_NUM_DEVICES];
 #ifdef OC_PKI
 static const char *allowed_roles[] = { "oic.role.owner" };
 static const int allowed_roles_num = sizeof(allowed_roles) / sizeof(char *);
-#endif
+#endif /* OC_PKI */
 
 // https://openconnectivity.org/specs/OCF_Security_Specification_v2.2.5.pdf
 // 13.3.3.1 Symmetric key formatting
@@ -1042,6 +1046,7 @@ oc_sec_encode_cred(bool persist, size_t device, oc_interface_mask_t iface_mask,
 }
 
 #ifdef OC_PKI
+
 oc_sec_credusage_t
 oc_cred_parse_credusage(oc_string_t *credusage_string)
 {
@@ -1068,6 +1073,150 @@ oc_cred_parse_credusage(oc_string_t *credusage_string)
   }
   return credusage;
 }
+
+static bool
+oc_cred_parse_certificate(const oc_sec_cred_t *cred, mbedtls_x509_crt *crt)
+{
+  OC_DBG("parsing credential certificate");
+  const unsigned char *cert =
+    (const unsigned char *)oc_string(cred->publicdata.data);
+  if (cert == NULL) {
+    OC_ERR("failed to get validity times from cert: %s", "empty public data");
+    return false;
+  }
+  size_t cert_size = oc_string_len(cred->publicdata.data);
+  if (cred->publicdata.encoding == OC_ENCODING_PEM) {
+    ++cert_size;
+  }
+
+  mbedtls_x509_crt_init(crt);
+  int ret = mbedtls_x509_crt_parse(crt, cert, cert_size);
+  if (ret < 0) {
+    OC_ERR("failed to parse certificate: %d", ret);
+    return false;
+  }
+  return true;
+}
+
+static uint64_t
+oc_cred_time_to_timestamp(mbedtls_x509_time time)
+{
+#define MONTHSPERYEAR 12 /* months per calendar year */
+  static const int days_offset[MONTHSPERYEAR] = {
+    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
+  };
+
+  int month = time.mon - 1;
+  long year = time.year + month / MONTHSPERYEAR;
+
+  long days = (year - 1970) * 365 + days_offset[month % MONTHSPERYEAR];
+  // leap years
+  days += (year - 1968) / 4;
+  days -= (year - 1900) / 100;
+  days += (year - 1600) / 400;
+  if ((year % 4) == 0 && ((year % 100) != 0 || (year % 400) == 0) &&
+      (month % MONTHSPERYEAR) < 2) {
+    days--;
+  }
+
+  days += time.day - 1;
+  uint64_t result = days * 24;
+  result += time.hour;
+  result *= 60;
+  result += time.min;
+  result *= 60;
+  result += time.sec;
+  return result;
+}
+
+typedef struct oc_cred_get_certificate_chain_result_t
+{
+  bool valid;
+  bool must_deallocate;
+  mbedtls_x509_crt *crt;
+} oc_cred_get_certificate_chain_result_t;
+
+static oc_cred_get_certificate_chain_result_t
+oc_cred_get_certificate_chain(const oc_sec_cred_t *cred,
+                              mbedtls_x509_crt *buffer)
+{
+  oc_cred_get_certificate_chain_result_t res = {
+    .valid = false,
+    .must_deallocate = false,
+    .crt = NULL,
+  };
+  // check global lists to avoid parsing the certificates again
+  if ((cred->credusage &
+       (OC_CREDUSAGE_MFG_CERT | OC_CREDUSAGE_IDENTITY_CERT)) != 0) {
+    OC_DBG(
+      "identity certificate for credential(credid=%d) found in global list",
+      cred->credid);
+    res.crt = oc_tls_get_identity_cert_for_cred(cred);
+  } else if ((cred->credusage &
+              (OC_CREDUSAGE_TRUSTCA | OC_CREDUSAGE_MFG_TRUSTCA)) != 0) {
+    OC_DBG("trust anchor for credential(credid=%d) found in global list",
+           cred->credid);
+    res.crt = oc_tls_get_trust_anchor_for_cred(cred);
+  }
+
+  if (res.crt == NULL) {
+    oc_assert(buffer != NULL);
+    if (!oc_cred_parse_certificate(cred, buffer)) {
+      return res;
+    }
+    res.crt = buffer;
+    res.must_deallocate = true;
+  }
+  res.valid = true;
+  return res;
+}
+
+int
+oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
+                                 oc_verify_sec_certs_data_fn_t verify_cert)
+{
+  oc_assert(cred != NULL);
+  oc_assert(verify_cert != NULL);
+
+  mbedtls_x509_crt crt;
+  oc_cred_get_certificate_chain_result_t res =
+    oc_cred_get_certificate_chain(cred, &crt);
+  if (!res.valid) {
+    return -1;
+  }
+
+  int result = 0;
+  bool is_ca =
+    (cred->credusage & (OC_CREDUSAGE_TRUSTCA | OC_CREDUSAGE_MFG_TRUSTCA)) != 0;
+  // - Identity certificates: each certificate chain is stored in a different
+  // container, so to get all data the whole container must be iterated
+  // - CAs: all CAs are linked in a single container, so we just
+  // take the single element and don't iterate further
+  for (const mbedtls_x509_crt *crt_ptr = res.crt; crt_ptr != NULL;
+       crt_ptr = crt_ptr->next) {
+
+    oc_sec_certs_data_t data = {
+      .valid_from = oc_cred_time_to_timestamp(crt_ptr->valid_from),
+      .valid_to = oc_cred_time_to_timestamp(crt_ptr->valid_to),
+    };
+
+    if (!verify_cert(&data)) {
+      result = 1;
+      goto finish;
+    }
+
+    if (is_ca) {
+      break;
+    }
+  }
+
+finish:
+  if (res.must_deallocate) {
+    mbedtls_x509_crt_free(res.crt);
+  }
+  return result;
+}
+
 #endif /* OC_PKI */
 
 oc_sec_encoding_t

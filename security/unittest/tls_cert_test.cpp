@@ -18,7 +18,7 @@
  *
  ******************************************************************/
 
-#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_TEST)
+#if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "gtest/gtest.h"
 
@@ -29,9 +29,12 @@
 #include "oc_pki.h"
 #include "security/oc_tls.h"
 
+#include <array>
 #include <cstdio>
+#include <ctime>
 #include <string>
 #include <stdexcept>
+#include <vector>
 
 class Certificate {
 public:
@@ -281,6 +284,7 @@ protected:
       idcert1_.LoadAndAdd("pki_certs/ee.pem", "pki_certs/key.pem", device_));
     EXPECT_TRUE(
       subca1_.LoadAndAdd("pki_certs/subca1.pem", device_, idcert1_.credid_));
+    EXPECT_EQ(idcert1_.credid_, subca1_.credid_);
     EXPECT_TRUE(idcert2_.LoadAndAdd("pki_certs/certification_tests_ee.pem",
                                     "pki_certs/certification_tests_key.pem",
                                     device_));
@@ -296,14 +300,20 @@ protected:
     oc_core_shutdown();
   }
 
-protected:
   int device_{ -1 };
   IdentityCertificate idcert1_;
   IdentityCertificate idcert2_;
   IntermediateCertificate subca1_;
   TrustAnchor rootca1_;
   TrustAnchor rootca2_;
+
+public:
+  static time_t now_;
 };
+
+time_t TestTlsCertificates::now_{ time(nullptr) };
+
+#ifdef OC_TEST
 
 TEST_F(TestTlsCertificates, RemoveIdentityCertificates)
 {
@@ -323,4 +333,28 @@ TEST_F(TestTlsCertificates, RemoveTrustAnchors)
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
 }
 
-#endif /* OC_SECURITY && OC_PKI && OC_TEST */
+#endif /* OC_TEST */
+
+TEST_F(TestTlsCertificates, VerifyCredCerts)
+{
+  auto verify_cert_validity = [](const oc_sec_certs_data_t *data) -> bool {
+    return (time_t)data->valid_from <= TestTlsCertificates::now_ &&
+           (time_t)data->valid_to > TestTlsCertificates::now_;
+  };
+
+  oc_sec_cred_t invalid{};
+  EXPECT_EQ((size_t)-1,
+            oc_cred_verify_certificate_chain(&invalid, verify_cert_validity));
+
+  // valid - rootca1_ valid_from: 30.11.2018, valid_to: 27.11.2028
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(rootca1_.credid_, device_);
+  EXPECT_NE(nullptr, cred);
+  EXPECT_EQ(0, oc_cred_verify_certificate_chain(cred, verify_cert_validity));
+
+  // expired - idcert1_ valid_from: 14.4.2020, valid_to: 14.5.2020
+  cred = oc_sec_get_cred_by_credid(idcert1_.credid_, device_);
+  EXPECT_NE(nullptr, cred);
+  EXPECT_EQ(1, oc_cred_verify_certificate_chain(cred, verify_cert_validity));
+}
+
+#endif /* OC_SECURITY && OC_PKI */

@@ -158,6 +158,7 @@ void oc_tls_use_pin_obt_psk_identity(void);
 int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
                   unsigned int c, uint8_t *key, uint32_t key_len);
 
+#ifdef OC_PKI
 /**
  * @brief Internal interface for examining credentials for new identity
  * certificate chains.
@@ -180,6 +181,16 @@ void oc_tls_resolve_new_identity_certs(void);
 bool oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
 
 /**
+ * @brief Get parsed mbedtls x509 certificate for given credential.
+ *
+ * @param cred credential to seach for
+ * @return mbedtls_x509_crt* parsed certificate if credential is found in global
+ * list.
+ * @return NULL otherwise
+ */
+mbedtls_x509_crt *oc_tls_get_identity_cert_for_cred(const oc_sec_cred_t *cred);
+
+/**
  * @brief Internal interface for examining credentials for new trust anchors.
  */
 void oc_tls_resolve_new_trust_anchors(void);
@@ -200,7 +211,16 @@ void oc_tls_resolve_new_trust_anchors(void);
  */
 bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
 
-#ifdef OC_PKI
+/**
+ * @brief Get parsed mbedtls x509 certificate for given credential.
+ *
+ * @param cred credential to seach for
+ * @return mbedtls_x509_crt* parsed certificate if credential is found in global
+ * list.
+ * @return NULL otherwise
+ */
+mbedtls_x509_crt *oc_tls_get_trust_anchor_for_cred(const oc_sec_cred_t *cred);
+
 /**
  * @brief Get mbedtls container with trust anchors used globally by the
  * application.
@@ -209,7 +229,6 @@ bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
  * anchors
  */
 mbedtls_x509_crt *oc_tls_get_trust_anchors(void);
-#endif /* OC_PKI */
 
 #ifdef OC_TEST
 /**
@@ -232,6 +251,8 @@ bool oc_tls_validate_identity_certs_consistency(void);
  */
 bool oc_tls_validate_trust_anchors_consistency(void);
 #endif /* OC_TEST */
+
+#endif /* OC_PKI */
 
 #ifdef __cplusplus
 }

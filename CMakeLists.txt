@@ -100,6 +100,7 @@ endif()
 
 if(OC_DEBUG_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DEBUG")
+    list(APPEND TEST_COMPILE_DEFINITIONS "OC_DEBUG")
 endif()
 
 if(OC_CLOUD_ENABLED)
@@ -516,7 +517,7 @@ if(BUILD_TESTING AND UNIX)
         add_executable(${TESTNAME} ${ARGN})
         target_compile_options(${TESTNAME} PRIVATE ${TEST_COMPILE_OPTIONS})
         target_compile_features(${TESTNAME} PRIVATE cxx_nullptr)
-        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER" "OC_TEST")
+        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} ${TEST_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER" "OC_TEST")
         target_include_directories(${TESTNAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
         target_include_directories(${TESTNAME} PRIVATE
             ${PROJECT_SOURCE_DIR}

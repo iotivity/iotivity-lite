@@ -904,6 +904,16 @@ oc_tls_find_identity_cert(const oc_sec_cred_t *cred)
   return cert;
 }
 
+mbedtls_x509_crt *
+oc_tls_get_identity_cert_for_cred(const oc_sec_cred_t *cred)
+{
+  oc_x509_crt_t *crt = oc_tls_find_identity_cert(cred);
+  if (crt == NULL) {
+    return NULL;
+  }
+  return &crt->cert;
+}
+
 bool
 oc_tls_remove_identity_cert(oc_sec_cred_t *cred)
 {
@@ -927,6 +937,16 @@ oc_tls_find_trust_anchor_for_cred(const oc_sec_cred_t *cred)
     cert = cert->next;
   }
   return cert;
+}
+
+mbedtls_x509_crt *
+oc_tls_get_trust_anchor_for_cred(const oc_sec_cred_t *cred)
+{
+  oc_x509_cacrt_t *crt = oc_tls_find_trust_anchor_for_cred(cred);
+  if (crt == NULL) {
+    return NULL;
+  }
+  return crt->cert;
 }
 
 static int
