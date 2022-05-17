@@ -68,8 +68,10 @@ OC_LIST(oc_credret_ctx_l);
 OC_MEMB(oc_creddel_ctx_m, oc_creddel_ctx_t, 1);
 OC_LIST(oc_creddel_ctx_l);
 
+#ifdef OC_PKI
 OC_MEMB(oc_installtrust_ctx_m, oc_trustanchor_ctx_t, 1);
 OC_LIST(oc_installtrust_ctx_l);
+#endif /* OC_PKI */
 
 OC_MEMB(oc_cred_m, oc_sec_cred_t, 1);
 OC_MEMB(oc_creds_m, oc_sec_creds_t, 1);
@@ -1409,27 +1411,6 @@ free_credprov_state(oc_credprov_ctx_t *p, int status)
   oc_memb_free(&oc_credprov_ctx_m, p);
 }
 
-/* Provision trust anchor sequence */
-static void
-free_trustanchor_state(oc_trustanchor_ctx_t *p, int status)
-{
-  if (!is_item_in_list(oc_installtrust_ctx_l, p)) {
-    return;
-  }
-  oc_list_remove(oc_installtrust_ctx_l, p);
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  oc_tls_close_connection(ep);
-
-  p->cb.cb(status, p->cb.data);
-  // p->cb.cb(p->cb.data);
-
-  if (p->switch_dos) {
-    free_switch_dos_state(p->switch_dos);
-    p->switch_dos = NULL;
-  }
-  oc_memb_free(&oc_installtrust_ctx_m, p);
-}
-
 static void
 free_credprov_ctx(oc_credprov_ctx_t *ctx, int status)
 {
@@ -1651,8 +1632,28 @@ oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
 /* End of provision pairwise credentials sequence */
 
 #ifdef OC_PKI
-/* Construct list of role ids to encode into a role certificate */
+/* Provision trust anchor sequence */
+static void
+free_trustanchor_state(oc_trustanchor_ctx_t *p, int status)
+{
+  if (!is_item_in_list(oc_installtrust_ctx_l, p)) {
+    return;
+  }
+  oc_list_remove(oc_installtrust_ctx_l, p);
+  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  oc_tls_close_connection(ep);
 
+  p->cb.cb(status, p->cb.data);
+  // p->cb.cb(p->cb.data);
+
+  if (p->switch_dos) {
+    free_switch_dos_state(p->switch_dos);
+    p->switch_dos = NULL;
+  }
+  oc_memb_free(&oc_installtrust_ctx_m, p);
+}
+
+/* Construct list of role ids to encode into a role certificate */
 oc_role_t *
 oc_obt_add_roleid(oc_role_t *roles, const char *role, const char *authority)
 {

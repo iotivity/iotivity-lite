@@ -518,6 +518,7 @@ oc_sec_is_duplicate_cred(oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
   return true;
 }
 
+#ifdef OC_PKI
 static oc_ecdsa_keypair_t *
 oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
                                oc_string_t public_key, size_t publicdata_size,
@@ -539,6 +540,7 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
   }
   return kp;
 }
+#endif /* OC_PKI */
 
 int
 oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
