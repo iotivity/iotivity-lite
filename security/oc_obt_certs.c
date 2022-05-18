@@ -83,7 +83,8 @@ oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
   }
 
   ret = mbedtls_pk_parse_key(&issuer_priv_key, issuer_private_key,
-                             issuer_private_key_size, 0, 0);
+                             issuer_private_key_size, 0, 0,
+                             mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing issuer's private key %d", ret);
     goto exit;
@@ -324,7 +325,8 @@ oc_obt_generate_identity_cert(const char *subject_name,
   }
 
   ret = mbedtls_pk_parse_key(&issuer_priv_key, issuer_private_key,
-                             issuer_private_key_size, 0, 0);
+                             issuer_private_key_size, 0, 0,
+                             mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing issuer's private key %d", ret);
     goto exit;
@@ -511,7 +513,8 @@ oc_obt_generate_self_signed_root_cert(const char *subject_name,
     goto exit;
   }
 
-  ret = mbedtls_pk_parse_key(&pk, private_key, private_key_size, 0, 0);
+  ret = mbedtls_pk_parse_key(&pk, private_key, private_key_size, 0, 0,
+                             mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing root cert's private key %d", ret);
     goto exit;
