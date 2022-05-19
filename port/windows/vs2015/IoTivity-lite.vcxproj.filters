@@ -7,9 +7,6 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\aesni.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\arc4.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\asn1parse.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
@@ -20,9 +17,6 @@
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\base64.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\blowfish.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\camellia.c">
@@ -94,19 +88,10 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\gcm.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\havege.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\hmac_drbg.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\md.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\md2.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\md4.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\md5.c">
@@ -202,9 +187,6 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\pkcs5.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\pkcs11.c">
-      <Filter>mbedTLS</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\pkcs12.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
@@ -271,7 +253,13 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\x509_crt.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\xtea.c">
+    <ClCompile Include="..\..\..\deps\mbedtls\library\nist_kw.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\aria.c">
+      <Filter>mbedTLS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\mbedtls\library\rsa_alt_helpers.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\messaging\coap\separate.c">
@@ -297,9 +285,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\api\oc_session_events.c">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\deps\mbedtls\library\rsa_internal.c">
-      <Filter>mbedTLS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\security\oc_certs.c">
       <Filter>Security</Filter>

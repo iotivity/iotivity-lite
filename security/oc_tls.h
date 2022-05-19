@@ -18,6 +18,7 @@
 #define OC_TLS_H
 
 #include "mbedtls/ssl.h"
+#include "mbedtls/ctr_drbg.h"
 #include "oc_uuid.h"
 #include "port/oc_connectivity.h"
 #include "security/oc_cred_internal.h"
@@ -61,6 +62,8 @@ typedef struct oc_tls_peer_t
   oc_message_t *processed_recv_message;
 #endif
 } oc_tls_peer_t;
+
+extern mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 
 int oc_tls_init_context(void);
 void oc_tls_shutdown(void);

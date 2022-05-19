@@ -19,7 +19,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "mbedtls/config.h"
+#include "mbedtls/mbedtls_config.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/md.h"
@@ -27,7 +27,7 @@
 #include "mbedtls/pkcs5.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/ssl_cookie.h"
-#include "mbedtls/ssl_internal.h"
+#include "deps/mbedtls/library/ssl_misc.h"
 #include "mbedtls/timing.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
@@ -64,7 +64,7 @@ OC_MEMB(tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
 OC_LIST(tls_peers);
 
 static mbedtls_entropy_context entropy_ctx;
-static mbedtls_ctr_drbg_context ctr_drbg_ctx;
+mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx cookie_ctx;
 static oc_random_pin_t random_pin;
 unsigned char PIN[8];
@@ -853,7 +853,8 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
       ret = mbedtls_pk_parse_key(
         &cert->pk,
         (const unsigned char *)oc_cast(cred->privatedata.data, uint8_t),
-        oc_string_len(cred->privatedata.data) + 1, NULL, 0);
+        oc_string_len(cred->privatedata.data) + 1, NULL, 0,
+        mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
       if (ret != 0) {
         OC_ERR("could not parse private key %zd",
                oc_string_len(cred->privatedata.data));
@@ -1605,7 +1606,7 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   mbedtls_ssl_conf_dbg(conf, oc_mbedtls_debug, stdout);
 #endif /* OC_DEBUG */
 
-  mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &ctr_drbg_ctx);
+  mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
   mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
@@ -1761,7 +1762,7 @@ oc_tls_shutdown(void)
   }
   mbedtls_x509_crt_free(&g_trust_anchors);
 #endif /* OC_PKI */
-  mbedtls_ctr_drbg_free(&ctr_drbg_ctx);
+  mbedtls_ctr_drbg_free(&g_oc_ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&cookie_ctx);
   mbedtls_entropy_free(&entropy_ctx);
 }
@@ -1783,15 +1784,16 @@ oc_tls_init_context(void)
 
   mbedtls_entropy_init(&entropy_ctx);
   mbedtls_ssl_cookie_init(&cookie_ctx);
-  mbedtls_ctr_drbg_init(&ctr_drbg_ctx);
-  if (mbedtls_ctr_drbg_seed(&ctr_drbg_ctx, mbedtls_entropy_func, &entropy_ctx,
+  mbedtls_ctr_drbg_init(&g_oc_ctr_drbg_ctx);
+  if (mbedtls_ctr_drbg_seed(&g_oc_ctr_drbg_ctx, mbedtls_entropy_func,
+                            &entropy_ctx,
                             (const unsigned char *)PERSONALIZATION_DATA,
                             strlen(PERSONALIZATION_DATA)) != 0) {
     OC_ERR("error initializing RNG");
     goto dtls_init_err;
   }
   if (mbedtls_ssl_cookie_setup(&cookie_ctx, mbedtls_ctr_drbg_random,
-                               &ctr_drbg_ctx) != 0) {
+                               &g_oc_ctr_drbg_ctx) != 0) {
     goto dtls_init_err;
   }
 

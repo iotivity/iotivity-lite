@@ -18,6 +18,7 @@
 #define OC_CERTS_H
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
+#include "mbedtls/mbedtls_config.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 #include "security/oc_cred_internal.h"
