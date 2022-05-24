@@ -139,6 +139,13 @@ oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
   oc_ri_add_timed_event_callback_ticks(cb_data, callback, ticks);
 }
 
+bool
+oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
+                        bool ignore_cb_data)
+{
+  return oc_ri_has_timed_event_callback(cb_data, callback, ignore_cb_data);
+}
+
 void
 oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
 {

@@ -2221,7 +2221,25 @@ void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
                                 uint16_t miliseconds);
 
 /**
- * used to cancel a delayed callback
+ * @brief Check if given delayed callback has already been scheduled.
+ *
+ * To match a delayed callback:
+ * 1) function pointers must be equal
+ * 2) the user defined context pointers must be equal or ignore_cb_data must be
+ * true
+ *
+ * @param cb_data the user defined context pointer
+ * @param callback the delayed callback to look for
+ * @param ignore_cb_data don't compare the user defined context pointers
+ * @return true matching delayed callback was found
+ * @return false otherwise
+ */
+bool oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
+                             bool ignore_cb_data);
+
+/**
+ * Cancel a scheduled delayed callback.
+ *
  * @param[in] cb_data the user defined context pointer that was passed to the
  *                   oc_sed_delayed_callback() function
  * @param[in] callback the delayed callback that is being removed

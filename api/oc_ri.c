@@ -68,26 +68,27 @@
 #endif /* OC_SECURITY */
 
 #ifdef OC_SERVER
-OC_LIST(app_resources);
-OC_LIST(observe_callbacks);
-OC_MEMB(app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
-OC_MEMB(resource_default_s, oc_resource_defaults_data_t, OC_MAX_APP_RESOURCES);
+OC_LIST(g_app_resources);
+OC_LIST(g_observe_callbacks);
+OC_MEMB(g_app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
+OC_MEMB(g_resource_default_s, oc_resource_defaults_data_t,
+        OC_MAX_APP_RESOURCES);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
-OC_LIST(client_cbs);
-OC_MEMB(client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
+OC_LIST(g_client_cbs);
+OC_MEMB(g_client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
 #endif /* OC_CLIENT */
 
-OC_LIST(timed_callbacks);
-OC_MEMB(event_callbacks_s, oc_event_callback_t,
+OC_LIST(g_timed_callbacks);
+OC_MEMB(g_event_callbacks_s, oc_event_callback_t,
         1 + OCF_D * OC_MAX_NUM_DEVICES + OC_MAX_APP_RESOURCES +
           OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
-static oc_event_callback_t *currently_processed_event_cb;
-static bool currently_processed_event_cb_delete;
+static oc_event_callback_t *g_currently_processed_event_cb;
+static bool g_currently_processed_event_cb_delete;
 
-OC_PROCESS(timed_callback_events, "OC timed callbacks");
+OC_PROCESS(g_timed_callback_events, "OC timed callbacks");
 
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler(void *data);
@@ -153,7 +154,7 @@ set_mpro_status_codes(void)
 oc_resource_t *
 oc_ri_get_app_resources(void)
 {
-  return oc_list_head(app_resources);
+  return oc_list_head(g_app_resources);
 }
 
 bool
@@ -358,7 +359,7 @@ start_processes(void)
 {
   allocate_events();
   oc_process_start(&oc_etimer_process, NULL);
-  oc_process_start(&timed_callback_events, NULL);
+  oc_process_start(&g_timed_callback_events, NULL);
   oc_process_start(&coap_engine, NULL);
   oc_process_start(&message_buffer_handler, NULL);
 
@@ -383,7 +384,7 @@ stop_processes(void)
 #endif /* OC_TCP */
   oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
-  oc_process_exit(&timed_callback_events);
+  oc_process_exit(&g_timed_callback_events);
   oc_process_exit(&coap_engine);
 
 #ifdef OC_SECURITY
@@ -442,15 +443,15 @@ oc_ri_init(void)
   set_mpro_status_codes();
 
 #ifdef OC_SERVER
-  oc_list_init(app_resources);
-  oc_list_init(observe_callbacks);
-#endif
+  oc_list_init(g_app_resources);
+  oc_list_init(g_observe_callbacks);
+#endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
-  oc_list_init(client_cbs);
-#endif
+  oc_list_init(g_client_cbs);
+#endif /* OC_CLIENT */
 
-  oc_list_init(timed_callbacks);
+  oc_list_init(g_timed_callbacks);
 
   oc_process_init();
   start_processes();
@@ -460,25 +461,25 @@ oc_ri_init(void)
 oc_resource_t *
 oc_ri_alloc_resource(void)
 {
-  return oc_memb_alloc(&app_resources_s);
+  return oc_memb_alloc(&g_app_resources_s);
 }
 
 void
 oc_ri_dealloc_resource(oc_resource_t *resource)
 {
-  oc_memb_free(&app_resources_s, resource);
+  oc_memb_free(&g_app_resources_s, resource);
 }
 
 static oc_resource_defaults_data_t *
 oc_ri_alloc_resource_defaults(void)
 {
-  return oc_memb_alloc(&resource_default_s);
+  return oc_memb_alloc(&g_resource_default_s);
 }
 
 static void
 oc_ri_dealloc_resource_defaults(oc_resource_defaults_data_t *data)
 {
-  oc_memb_free(&resource_default_s, data);
+  oc_memb_free(&g_resource_default_s, data);
 }
 
 bool
@@ -532,7 +533,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
     oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
-  oc_list_remove(app_resources, resource);
+  oc_list_remove(g_app_resources, resource);
   oc_ri_free_resource_properties(resource);
   oc_ri_dealloc_resource(resource);
   return true;
@@ -555,7 +556,7 @@ oc_ri_add_resource(oc_resource_t *resource)
     valid = false;
 
   if (valid) {
-    oc_list_add(app_resources, resource);
+    oc_list_add(g_app_resources, resource);
   }
 
   return valid;
@@ -574,23 +575,39 @@ oc_ri_free_resource_properties(oc_resource_t *resource)
   }
 }
 
+bool
+oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
+                               bool ignore_cb_data)
+{
+  const oc_event_callback_t *event_cb =
+    (oc_event_callback_t *)oc_list_head(g_timed_callbacks);
+  while (event_cb != NULL) {
+    if (event_cb->callback == event_callback &&
+        (ignore_cb_data || event_cb->data == cb_data)) {
+      return true;
+    }
+    event_cb = event_cb->next;
+  }
+  return false;
+}
+
 void
 oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
 {
   oc_event_callback_t *event_cb =
-    (oc_event_callback_t *)oc_list_head(timed_callbacks);
+    (oc_event_callback_t *)oc_list_head(g_timed_callbacks);
 
   bool want_to_delete_currently_processed_event_cb = false;
   while (event_cb != NULL) {
     if (event_cb->data == cb_data && event_cb->callback == event_callback) {
-      if (currently_processed_event_cb == event_cb) {
+      if (g_currently_processed_event_cb == event_cb) {
         want_to_delete_currently_processed_event_cb = true;
       } else {
-        OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+        OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
         oc_etimer_stop(&event_cb->timer);
-        OC_PROCESS_CONTEXT_END(&timed_callback_events);
-        oc_list_remove(timed_callbacks, event_cb);
-        oc_memb_free(&event_callbacks_s, event_cb);
+        OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+        oc_list_remove(g_timed_callbacks, event_cb);
+        oc_memb_free(&g_event_callbacks_s, event_cb);
         want_to_delete_currently_processed_event_cb = false;
         break;
       }
@@ -601,7 +618,7 @@ oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
     // We can't remove the currently processed delayed callback because when
     // the callback returns OC_EVENT_DONE, a double release occurs. So we
     // set up the flag to remove it, and when it's over, we've removed it.
-    currently_processed_event_cb_delete = true;
+    g_currently_processed_event_cb_delete = true;
   }
 }
 
@@ -610,15 +627,15 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
                                      oc_clock_time_t ticks)
 {
   oc_event_callback_t *event_cb =
-    (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
+    (oc_event_callback_t *)oc_memb_alloc(&g_event_callbacks_s);
 
   if (event_cb) {
     event_cb->data = cb_data;
     event_cb->callback = event_callback;
-    OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
     oc_etimer_set(&event_cb->timer, ticks);
-    OC_PROCESS_CONTEXT_END(&timed_callback_events);
-    oc_list_add(timed_callbacks, event_cb);
+    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    oc_list_add(g_timed_callbacks, event_cb);
   } else {
     OC_WRN("insufficient memory to add timed event callback");
   }
@@ -633,18 +650,18 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
   while (event_cb != NULL) {
     next = event_cb->next;
     if (oc_etimer_expired(&event_cb->timer)) {
-      currently_processed_event_cb = event_cb;
-      currently_processed_event_cb_delete = false;
+      g_currently_processed_event_cb = event_cb;
+      g_currently_processed_event_cb_delete = false;
       if ((event_cb->callback(event_cb->data) == OC_EVENT_DONE) ||
-          currently_processed_event_cb_delete) {
+          g_currently_processed_event_cb_delete) {
         oc_list_remove(list, event_cb);
         oc_memb_free(cb_pool, event_cb);
         event_cb = oc_list_head(list);
         continue;
       } else {
-        OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+        OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
         oc_etimer_restart(&event_cb->timer);
-        OC_PROCESS_CONTEXT_END(&timed_callback_events);
+        OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
         event_cb = oc_list_head(list);
         continue;
       }
@@ -652,17 +669,17 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
 
     event_cb = next;
   }
-  currently_processed_event_cb = NULL;
-  currently_processed_event_cb_delete = false;
+  g_currently_processed_event_cb = NULL;
+  g_currently_processed_event_cb_delete = false;
 }
 
 static void
 check_event_callbacks(void)
 {
 #ifdef OC_SERVER
-  poll_event_callback_timers(observe_callbacks, &event_callbacks_s);
+  poll_event_callback_timers(g_observe_callbacks, &g_event_callbacks_s);
 #endif /* OC_SERVER */
-  poll_event_callback_timers(timed_callbacks, &event_callbacks_s);
+  poll_event_callback_timers(g_timed_callbacks, &g_event_callbacks_s);
 }
 
 #ifdef OC_SERVER
@@ -676,9 +693,7 @@ oc_observe_notification_resource_defaults_delayed(void *data)
   oc_ri_dealloc_resource_defaults(resource_defaults_data);
   return OC_EVENT_DONE;
 }
-#endif
 
-#ifdef OC_SERVER
 static oc_event_callback_retval_t
 periodic_observe_handler(void *data)
 {
@@ -697,7 +712,7 @@ get_periodic_observe_callback(oc_resource_t *resource)
   oc_event_callback_t *event_cb;
   bool found = false;
 
-  for (event_cb = (oc_event_callback_t *)oc_list_head(observe_callbacks);
+  for (event_cb = (oc_event_callback_t *)oc_list_head(g_observe_callbacks);
        event_cb; event_cb = event_cb->next) {
     if (resource == event_cb->data) {
       found = true;
@@ -719,8 +734,8 @@ remove_periodic_observe_callback(oc_resource_t *resource)
 
   if (event_cb) {
     oc_etimer_stop(&event_cb->timer);
-    oc_list_remove(observe_callbacks, event_cb);
-    oc_memb_free(&event_callbacks_s, event_cb);
+    oc_list_remove(g_observe_callbacks, event_cb);
+    oc_memb_free(&g_event_callbacks_s, event_cb);
   }
 }
 
@@ -730,7 +745,7 @@ add_periodic_observe_callback(oc_resource_t *resource)
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
 
   if (!event_cb) {
-    event_cb = (oc_event_callback_t *)oc_memb_alloc(&event_callbacks_s);
+    event_cb = (oc_event_callback_t *)oc_memb_alloc(&g_event_callbacks_s);
 
     if (!event_cb) {
       OC_WRN("insufficient memory to add periodic observe callback");
@@ -739,37 +754,37 @@ add_periodic_observe_callback(oc_resource_t *resource)
 
     event_cb->data = resource;
     event_cb->callback = periodic_observe_handler;
-    OC_PROCESS_CONTEXT_BEGIN(&timed_callback_events);
+    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
     oc_etimer_set(&event_cb->timer,
                   resource->observe_period_seconds * OC_CLOCK_SECOND);
-    OC_PROCESS_CONTEXT_END(&timed_callback_events);
-    oc_list_add(observe_callbacks, event_cb);
+    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    oc_list_add(g_observe_callbacks, event_cb);
   }
 
   return true;
 }
-#endif
+#endif /* OC_SERVER */
 
 static void
 free_all_event_timers(void)
 {
 #ifdef OC_SERVER
   oc_event_callback_t *obs_cb =
-    (oc_event_callback_t *)oc_list_pop(observe_callbacks);
+    (oc_event_callback_t *)oc_list_pop(g_observe_callbacks);
   while (obs_cb != NULL) {
     oc_etimer_stop(&obs_cb->timer);
-    oc_list_remove(observe_callbacks, obs_cb);
-    oc_memb_free(&event_callbacks_s, obs_cb);
-    obs_cb = oc_list_pop(observe_callbacks);
+    oc_list_remove(g_observe_callbacks, obs_cb);
+    oc_memb_free(&g_event_callbacks_s, obs_cb);
+    obs_cb = oc_list_pop(g_observe_callbacks);
   }
 #endif /* OC_SERVER */
   oc_event_callback_t *event_cb =
-    (oc_event_callback_t *)oc_list_pop(timed_callbacks);
+    (oc_event_callback_t *)oc_list_pop(g_timed_callbacks);
   while (event_cb != NULL) {
     oc_etimer_stop(&event_cb->timer);
-    oc_list_remove(timed_callbacks, event_cb);
-    oc_memb_free(&event_callbacks_s, event_cb);
-    event_cb = oc_list_pop(timed_callbacks);
+    oc_list_remove(g_timed_callbacks, event_cb);
+    oc_memb_free(&g_event_callbacks_s, event_cb);
+    event_cb = oc_list_pop(g_timed_callbacks);
   }
 }
 
@@ -1455,13 +1470,13 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 static void
 free_client_cb(oc_client_cb_t *cb)
 {
-  oc_list_remove(client_cbs, cb);
+  oc_list_remove(g_client_cbs, cb);
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
   oc_free_string(&cb->uri);
   oc_free_string(&cb->query);
-  oc_memb_free(&client_cbs_s, cb);
+  oc_memb_free(&g_client_cbs_s, cb);
 }
 
 oc_event_callback_retval_t
@@ -1500,14 +1515,14 @@ notify_client_cb_503(oc_client_cb_t *cb)
 void
 oc_ri_free_client_cbs_by_mid(uint16_t mid)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs), *next;
   while (cb != NULL) {
     next = cb->next;
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         cb->mid == mid) {
       cb->ref_count = 1;
       notify_client_cb_503(cb);
-      cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       continue;
     }
     cb = next;
@@ -1517,14 +1532,14 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
 void
 oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs), *next;
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs), *next;
   while (cb != NULL) {
     next = cb->next;
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
       cb->ref_count = 1;
       notify_client_cb_503(cb);
-      cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       continue;
     }
     cb = next;
@@ -1534,7 +1549,7 @@ oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
 oc_client_cb_t *
 oc_ri_find_client_cb_by_mid(uint16_t mid)
 {
-  oc_client_cb_t *cb = oc_list_head(client_cbs);
+  oc_client_cb_t *cb = oc_list_head(g_client_cbs);
   while (cb) {
     if (cb->mid == mid)
       break;
@@ -1546,7 +1561,7 @@ oc_ri_find_client_cb_by_mid(uint16_t mid)
 oc_client_cb_t *
 oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
 {
-  oc_client_cb_t *cb = oc_list_head(client_cbs);
+  oc_client_cb_t *cb = oc_list_head(g_client_cbs);
   while (cb != NULL) {
     if (cb->token_len == token_len && memcmp(cb->token, token, token_len) == 0)
       break;
@@ -1558,7 +1573,7 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
 bool
 oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
 {
-  oc_client_cb_t *cb = oc_list_head(client_cbs);
+  oc_client_cb_t *cb = oc_list_head(g_client_cbs);
   while (cb != NULL) {
     if (cb == client_cb) {
       return true;
@@ -1731,7 +1746,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
     // Drop old observe callback and keep the last one.
     if (cb->observe_seq == 0) {
-      oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+      oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       size_t uri_len = oc_string_len(cb->uri);
 
       while (dup_cb != NULL) {
@@ -1758,7 +1773,7 @@ oc_client_cb_t *
 oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
                     oc_method_t method)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(client_cbs);
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
 
   while (cb != NULL) {
     if (oc_string_len(cb->uri) == strlen(uri) &&
@@ -1776,10 +1791,10 @@ oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
 static void
 free_all_client_cbs(void)
 {
-  oc_client_cb_t *cb = oc_list_pop(client_cbs);
+  oc_client_cb_t *cb = oc_list_pop(g_client_cbs);
   while (cb != NULL) {
     free_client_cb(cb);
-    cb = oc_list_pop(client_cbs);
+    cb = oc_list_pop(g_client_cbs);
   }
 }
 
@@ -1789,7 +1804,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
                       oc_client_handler_t handler, oc_qos_t qos,
                       void *user_data)
 {
-  oc_client_cb_t *cb = oc_memb_alloc(&client_cbs_s);
+  oc_client_cb_t *cb = oc_memb_alloc(&g_client_cbs_s);
   if (!cb) {
     OC_WRN("insufficient memory to add client callback");
     return cb;
@@ -1816,7 +1831,7 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   if (query && strlen(query) > 0) {
     oc_new_string(&cb->query, query, strlen(query));
   }
-  oc_list_add(client_cbs, cb);
+  oc_list_add(g_client_cbs, cb);
   return cb;
 }
 #endif /* OC_CLIENT */
@@ -1859,7 +1874,7 @@ oc_ri_shutdown(void)
   oc_random_destroy();
 }
 
-OC_PROCESS_THREAD(timed_callback_events, ev, data)
+OC_PROCESS_THREAD(g_timed_callback_events, ev, data)
 {
   (void)data;
   OC_PROCESS_BEGIN();

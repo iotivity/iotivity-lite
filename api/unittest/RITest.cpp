@@ -212,3 +212,29 @@ TEST_F(TestOcRi, RiCleanupCollection_P)
   res = oc_ri_get_app_resources();
   EXPECT_EQ(nullptr, res);
 }
+
+static oc_event_callback_retval_t
+test_timed_callback(void *data)
+{
+  (void)data;
+  return OC_EVENT_DONE;
+}
+
+TEST_F(TestOcRi, RiTimedCallbacks)
+{
+  EXPECT_FALSE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
+  int data;
+  oc_ri_add_timed_event_callback_seconds(&data, test_timed_callback, 0);
+
+  EXPECT_FALSE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, false));
+  EXPECT_TRUE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
+  EXPECT_TRUE(
+    oc_ri_has_timed_event_callback(&data, test_timed_callback, false));
+
+  oc_ri_remove_timed_event_callback(&data, test_timed_callback);
+  EXPECT_FALSE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
+}

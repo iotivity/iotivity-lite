@@ -381,6 +381,23 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
   } while (0)
 
 /**
+ * @brief check if the timed event callback already exists.
+ *
+ * Iterate through the list of timed event callbacks and check if a matching
+ * item is found. To match:
+ * 1) function pointers must be equal
+ * 2) the callback info pointers must be equal or ignore_cb_data must be true
+ *
+ * @param cb_data the timed event callback info
+ * @param event_callback the callback
+ * @param ignore_cb_data don't compare the timed event callback info pointers
+ * @return true matching timed event callback was found
+ * @return false otherwise
+ */
+bool oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
+                                    bool ignore_cb_data);
+
+/**
  * @brief remove the timed event callback
  *
  * @param cb_data the timed event callback info
