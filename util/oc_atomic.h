@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__MINGW32__)
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__) &&                            \
   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
@@ -66,7 +66,7 @@ extern "C" {
 
 #endif // __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
 
-#endif // __linux__
+#endif // __linux__ || __MINGW32__
 
 #if defined(_WIN32) || defined(_WIN64)
 

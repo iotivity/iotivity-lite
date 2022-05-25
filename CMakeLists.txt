@@ -157,6 +157,12 @@ if(BUILD_TESTING)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
 endif()
 
+if(MINGW)
+    # Windows Vista or later
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "WINVER=0x0600")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "_WIN32_WINNT=0x0600")
+endif()
+
 ######## Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
@@ -494,16 +500,19 @@ set_target_properties(client-python-shared PROPERTIES
 
 ######## Units tests (UNIX only) ########
 include(CTest)
-if(BUILD_TESTING AND UNIX)
+if(BUILD_TESTING AND (UNIX OR MINGW))
     enable_language(CXX)
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
     list(APPEND TEST_COMPILE_OPTIONS "-Wall" "-Wextra" "-fpermissive")
-    list(APPEND TEST_LINK_LIBS client-server-static gtest_main Threads::Threads)
-    if(CMAKE_COMPILER_IS_GNUCXX AND NOT (OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
-        list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
-        list(APPEND TEST_LINK_LIBS gcov)
+    list(APPEND TEST_LINK_LIBS client-server-static gtest_main)
+    if(UNIX)
+        list(APPEND TEST_LINK_LIBS Threads::Threads)
+        if(CMAKE_COMPILER_IS_GNUCXX AND NOT (OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
+            list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
+            list(APPEND TEST_LINK_LIBS gcov)
+        endif()
     endif()
 
     # Disable clang-tidy for gtest

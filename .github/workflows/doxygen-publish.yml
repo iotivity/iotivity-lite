@@ -15,14 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.merged }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           path: iotivity-lite
-      
+
       - uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.IOTIVITY_LITE_SSH_KEY }}
-        
+
       - name: doxygen_build_documentation
         run: |
           sudo apt-get update -y
@@ -30,7 +31,7 @@ jobs:
           doxygen --version
           cd ${{ github.workspace }}/iotivity-lite/tools
           ./build_doc.sh
-          
+
       - name: doxygen_copy-docs
         run: |
           cd ~/work
@@ -40,7 +41,7 @@ jobs:
           cp -r ${{ github.workspace }}/iotivity-lite/tools/html .
           #Rename to "docs"
           mv html docs
-          
+
       - name: doxygen_push-changes
         run: |
           cd ~/work/iotivity-lite-doxygen
