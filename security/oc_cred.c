@@ -1173,7 +1173,8 @@ oc_cred_get_certificate_chain(const oc_sec_cred_t *cred,
 
 int
 oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
-                                 oc_verify_sec_certs_data_fn_t verify_cert)
+                                 oc_verify_sec_certs_data_fn_t verify_cert,
+                                 void *user_data)
 {
   oc_assert(cred != NULL);
   oc_assert(verify_cert != NULL);
@@ -1200,7 +1201,7 @@ oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
       .valid_to = oc_cred_time_to_timestamp(crt_ptr->valid_to),
     };
 
-    if (!verify_cert(&data)) {
+    if (!verify_cert(&data, user_data)) {
       result = 1;
       goto finish;
     }
