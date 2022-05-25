@@ -139,7 +139,8 @@ typedef struct oc_sec_certs_data_t
  * @brief Callback function to verify a single certificate. Return true if
  * certificate is valid, return false otherwise.
  */
-typedef bool (*oc_verify_sec_certs_data_fn_t)(const oc_sec_certs_data_t *data);
+typedef bool (*oc_verify_sec_certs_data_fn_t)(const oc_sec_certs_data_t *data,
+                                              void *user_data);
 
 /**
  * @brief Verify the certificate chain associated with the credential.
@@ -147,13 +148,15 @@ typedef bool (*oc_verify_sec_certs_data_fn_t)(const oc_sec_certs_data_t *data);
  * @param cred credential associated with the certificate chain (cannot be NULL)
  * @param verify_cert function used to verify a single certificate (cannot be
  * NULL)
+ * @param user_data user data from the caller passed to the verify_cert callback
  * @return 0 all certificates in the chain are valid
  * @return 1 at least one certificate in the chain is not valid
  * @return -1 on error
  */
 OC_API
 int oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
-                                     oc_verify_sec_certs_data_fn_t verify_cert);
+                                     oc_verify_sec_certs_data_fn_t verify_cert,
+                                     void *user_data);
 
 /**
  * @brief read credential usage
