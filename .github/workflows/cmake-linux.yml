@@ -18,14 +18,26 @@ jobs:
     strategy:
       matrix:
         include:
-          # secure with IPv4
+          # default (secure on, pki on, dynamic allocation on, tcp off, oscore on, cloud off, maintenance resource off, software update off, well-known core resource off)
+          - args: ""
+          # ipv4 on
           - args: "-DOC_IPV4_ENABLED=ON"
-          # secure with IPv4 and static allocation
-          - args: "-DOC_IPV4_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
-          # secure without PKI, with IPv4
-          - args: "-DOC_PKI_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
-          # insecure with IPv4
+          # ipv4 on, tcp on
+          - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON"
+          # ipv4 on, tcp on, dynamic allocation off
+          - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
+          # ipv4 on, tcp on, pki off
+          - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
+          # cloud on (ipv4+tcp on), collections create on, maintenance resource on
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON"
+          # debug on, cloud on (ipv4+tcp on), software update on
+          - args: "-DOC_DEBUG_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON"
+          # debug on, well-known core resource on
+          - args: "-DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON"
+          # secure off, ipv4 on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
+          # secure off, ipv4 on, tcp on
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
 
     steps:
       - name: Checkout repository
