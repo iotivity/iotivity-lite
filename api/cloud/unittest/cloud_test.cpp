@@ -100,8 +100,8 @@ pthread_cond_t TestCloud::cv;
 
 TEST_F(TestCloud, oc_cloud_get_context)
 {
-  EXPECT_NE(NULL, oc_cloud_get_context(0));
-  EXPECT_EQ(NULL, oc_cloud_get_context(1));
+  EXPECT_NE(nullptr, oc_cloud_get_context(0));
+  EXPECT_EQ(nullptr, oc_cloud_get_context(1));
 }
 
 TEST_F(TestCloud, cloud_status)
@@ -109,7 +109,7 @@ TEST_F(TestCloud, cloud_status)
   oc_cloud_status_t status;
   memset(&status, 0, sizeof(status));
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  ASSERT_NE(NULL, ctx);
+  ASSERT_NE(nullptr, ctx);
   ctx->store.status = OC_CLOUD_INITIALIZED;
   cloud_manager_cb(ctx);
   EXPECT_EQ(ctx->store.status, status);
@@ -132,7 +132,7 @@ TEST_F(TestCloud, cloud_set_string)
 TEST_F(TestCloud, cloud_set_last_error)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  ASSERT_NE(NULL, ctx);
+  ASSERT_NE(nullptr, ctx);
 
   int err = 123;
 
@@ -143,7 +143,7 @@ TEST_F(TestCloud, cloud_set_last_error)
 TEST_F(TestCloud, cloud_update_by_resource)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  ASSERT_NE(NULL, ctx);
+  ASSERT_NE(nullptr, ctx);
   ctx->store.status = OC_CLOUD_FAILURE;
 
   cloud_conf_update_t data;

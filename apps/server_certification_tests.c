@@ -23,6 +23,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef OC_CLOUD
 #include "rd_client.h"

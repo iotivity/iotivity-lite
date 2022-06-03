@@ -20,6 +20,9 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
+#ifdef OC_DYNAMIC_ALLOCATION // need bigger OC_BYTES_POOL_SIZE for this test to
+                             // pass
+
 #include "gtest/gtest.h"
 
 #include "oc_api.h"
@@ -275,10 +278,14 @@ protected:
     oc_core_init();
     oc_random_init();
     oc_network_event_handler_mutex_init();
-    oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                           "ocf.res.1.0.0", NULL, NULL);
+    oc_tls_init_context();
+    oc_device_info_t *info =
+      oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
+                             "ocf.res.1.0.0", NULL, NULL);
+    EXPECT_NE(nullptr, info);
     oc_sec_cred_init();
 
+    EXPECT_EQ(1, oc_core_get_num_devices());
     device_ = oc_core_get_num_devices() - 1;
     EXPECT_GE(device_, 0);
     EXPECT_TRUE(
@@ -298,6 +305,7 @@ protected:
     oc_connectivity_shutdown(device_);
     oc_network_event_handler_mutex_destroy();
     oc_sec_cred_free();
+    oc_tls_shutdown();
     oc_random_destroy();
     oc_core_shutdown();
   }
@@ -362,4 +370,5 @@ TEST_F(TestTlsCertificates, VerifyCredCerts)
     1, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));
 }
 
+#endif /* OC_DYNAMIC_ALLOCATION */
 #endif /* OC_SECURITY && OC_PKI */

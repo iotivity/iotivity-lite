@@ -121,8 +121,8 @@ TEST_F(TestCloudRD, cloud_publish_p)
   // Then
   ASSERT_EQ(0, ret);
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  ASSERT_NE(NULL, ctx);
-  ASSERT_NE(NULL, ctx->rd_publish_resources);
+  ASSERT_NE(nullptr, ctx);
+  ASSERT_NE(nullptr, ctx->rd_publish_resources);
   EXPECT_EQ(res1, findResource(ctx->rd_publish_resources, res1));
 }
 
@@ -137,6 +137,6 @@ TEST_F(TestCloudRD, cloud_delete)
 
   // Then
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  ASSERT_NE(NULL, ctx);
+  ASSERT_NE(nullptr, ctx);
   EXPECT_EQ(NULL, findResource(ctx->rd_publish_resources, res1));
 }

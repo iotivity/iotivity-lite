@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 static const size_t DEVICE = 0;
@@ -45,7 +46,7 @@ typedef struct device_handle_t
 #define MAX_NUM_DEVICES (50)
 
 /* Pool of device handles */
-OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
+OC_MEMB(device_handles, device_handle_t, MAX_NUM_DEVICES);
 /* List of known un-owned devices */
 OC_LIST(unowned_devices);
 
@@ -668,7 +669,7 @@ factory_presets_cb(size_t device, void *data)
 }
 
 /* App utility functions */
-#ifdef OC_SECURITY
+#if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_SECURITY)
 static device_handle_t *
 is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 {
@@ -807,7 +808,7 @@ otm_just_works(void)
 
   pthread_mutex_unlock(&app_sync_lock);
 }
-#endif /* OC_SECURITY */
+#endif /* OC_DYNAMIC_ALLOCATION && OC_SECURITY */
 
 static void
 post_cloud_configuration_resource(bool tcp)
@@ -944,14 +945,14 @@ main(void)
     case 10:
       post_resource(false, true);
       break;
-#endif /* OC_SECURITY */
-#ifdef OC_SECURITY
+#ifdef OC_DYNAMIC_ALLOCATION
     case 11:
       oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
       break;
     case 12:
       otm_just_works();
       break;
+#endif /* OC_DYNAMIC_ALLOCATION */
 #endif /* OC_SECURITY */
     case 13:
       post_cloud_configuration_resource(false);

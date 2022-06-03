@@ -41,16 +41,15 @@
 #include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <string.h>
 
 #define MAX_NUM_DEVICES (50)
-#define MAX_NUM_RESOURCES (100)
-#define MAX_NUM_RT (50)
 #define MAX_URI_LENGTH (30)
 
 /* Pool of device handles */
-OC_MEMB(device_handles, device_handle_t, MAX_OWNED_DEVICES);
+OC_MEMB(device_handles, device_handle_t, MAX_NUM_DEVICES);
 /* List of known owned devices */
 OC_LIST(owned_devices);
 /* List of known un-owned devices */

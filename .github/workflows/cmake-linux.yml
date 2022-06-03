@@ -20,6 +20,8 @@ jobs:
         include:
           # secure with IPv4
           - args: "-DOC_IPV4_ENABLED=ON"
+          # secure with IPv4 and static allocation
+          - args: "-DOC_IPV4_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
           # secure without PKI, with IPv4
           - args: "-DOC_PKI_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
           # insecure with IPv4
