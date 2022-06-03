@@ -75,7 +75,7 @@ TEST_F(TestCoreResource, CoreDevice_P)
   addcoredevice = oc_core_add_new_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
                                          OCF_SPEC_VERSION,
                                          OCF_DATA_MODEL_VERSION, NULL, NULL);
-  ASSERT_NE(addcoredevice, NULL);
+  ASSERT_NE(addcoredevice, nullptr);
   numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
   oc_connectivity_shutdown(0);
@@ -88,6 +88,6 @@ TEST_F(TestCoreResource, CoreGetResource_P)
   char uri[] = "/oic/p";
   oc_resource_t *res = oc_core_get_resource_by_uri(uri, 0);
 
-  ASSERT_NE(res, NULL);
+  ASSERT_NE(nullptr, res);
   EXPECT_EQ(strlen(uri), oc_string_len(res->uri));
 }

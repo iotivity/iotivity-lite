@@ -51,7 +51,7 @@ static oc_handler_t handler = { .init = app_init,
 
 class TestCoapSignal : public testing::Test {
 protected:
-  static void SetUpTestCase()
+  void SetUp() override
   {
     oc_main_init(&handler);
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
@@ -60,11 +60,11 @@ protected:
         break;
       ep = ep->next;
     }
-    ASSERT_NE(NULL, ep);
+    ASSERT_NE(nullptr, ep);
     target_ep = ep;
   }
 
-  static void TearDownTestCase() { oc_main_shutdown(); }
+  void TearDown() override { oc_main_shutdown(); }
 };
 
 TEST_F(TestCoapSignal, coap_send_csm_message_P)

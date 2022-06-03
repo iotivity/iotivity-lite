@@ -1,6 +1,6 @@
 project(onboarding_tool)
 
-if(UNIX AND OC_SECURITY_ENABLED AND OC_PKI_ENABLED)
+if(UNIX AND OC_DYNAMIC_ALLOCATION_ENABLED AND OC_SECURITY_ENABLED AND OC_PKI_ENABLED)
     add_executable(onboarding_tool
         ${PROJECT_SOURCE_DIR}/obtmain.c
     )

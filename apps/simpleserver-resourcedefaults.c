@@ -58,6 +58,7 @@
 #include "oc_api.h"
 #include "port/oc_clock.h"
 #include <signal.h>
+#include <stdlib.h>
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"

@@ -11,11 +11,12 @@ endif()
 file(GLOB MBEDTLS_SRC
     ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/*.c
 )
-list(REMOVE_ITEM MBEDTLS_SRC
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/certs.c
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/memory_buffer_alloc.c
-    ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/x509_crl.c
+list(REMOVE_ITEM MBEDTLS_SRC ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/x509_crl.c
 )
+if(OC_DYNAMIC_ALLOCATION_ENABLED)
+    list(REMOVE_ITEM MBEDTLS_SRC ${PROJECT_SOURCE_DIR}/deps/mbedtls/library/memory_buffer_alloc.c)
+endif()
+
 add_library(mbedtls OBJECT ${MBEDTLS_SRC})
 target_include_directories(mbedtls PRIVATE
     ${PROJECT_SOURCE_DIR}

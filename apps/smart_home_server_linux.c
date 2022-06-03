@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"

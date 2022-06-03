@@ -22,6 +22,7 @@
 #include "oc_ri.h"
 #include "port/oc_clock.h"
 #include <signal.h>
+#include <stdlib.h>
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
@@ -407,6 +408,7 @@ post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
+#ifdef OC_COLLECTIONS
 /**
  * get method for "/scenemember1" resource.
  * function is called to intialize the return values of the GET method.
@@ -640,6 +642,7 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 
   oc_send_response(request, OC_STATUS_CHANGED);
 }
+#endif /* OC_COLLECTIONS */
 
 /**
  * Callbacks for handling Collection level Properties on Scene Collection
@@ -735,6 +738,7 @@ register_resources(void)
   oc_resource_set_request_handler(res_audio, OC_POST, post_audio, NULL);
   oc_add_resource(res_audio);
 
+#ifdef OC_COLLECTIONS
   PRINT("Register Resource with local path \"/scenemember1\"\n");
   oc_resource_t *res_scenemember1 =
     oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
@@ -868,6 +872,7 @@ register_resources(void)
   oc_collection_add_supported_rt(res_rule, "oic.r.rule.actioncollection");
 
   oc_add_collection(res_rule);
+#endif /* OC_COLLECTIONS */
 }
 
 /**

@@ -56,7 +56,7 @@ TEST(TestConnectivity_init, oc_connectivity_init)
 TEST_F(TestConnectivity, oc_connectivity_get_endpoints)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
-  EXPECT_NE(NULL, ep);
+  EXPECT_NE(nullptr, ep);
 }
 
 static void
@@ -95,7 +95,7 @@ TEST_F(TestConnectivity, handle_network_interface_event_callback)
 static void
 session_event_handler(const oc_endpoint_t *ep, oc_session_state_t state)
 {
-  EXPECT_NE(NULL, ep);
+  EXPECT_NE(nullptr, ep);
   EXPECT_EQ(OC_SESSION_CONNECTED, state);
   is_callback_received = true;
 }
@@ -152,13 +152,18 @@ TEST_F(TestConnectivity, oc_tcp_update_csm_state_P)
     ep = ep->next;
   }
 
-  ASSERT_NE(NULL, ep);
+  ASSERT_NE(nullptr, ep);
 
   oc_message_t message;
-  uint8_t *data = (uint8_t *)"connect";
   memcpy(&message.endpoint, ep, sizeof(oc_endpoint_t));
+#define MESSAGE_DATA "connect"
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *data = (uint8_t *)MESSAGE_DATA;
   message.data = data;
-  message.length = 7;
+#else
+  memcpy(message.data, (uint8_t *)MESSAGE_DATA, sizeof(MESSAGE_DATA));
+#endif
+  message.length = sizeof(MESSAGE_DATA) - 1;
   oc_send_buffer(&message);
 
   oc_tcp_update_csm_state(ep, CSM_DONE);
@@ -177,7 +182,7 @@ TEST_F(TestConnectivity, oc_tcp_update_csm_state_N)
     ep = ep->next;
   }
 
-  ASSERT_NE(NULL, ep);
+  ASSERT_NE(nullptr, ep);
 
   oc_tcp_update_csm_state(ep, CSM_DONE);
 

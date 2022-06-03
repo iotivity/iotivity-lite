@@ -267,7 +267,7 @@ TEST(OCEndpoints, EndpointStringParsePath)
     case 1:
       ret = oc_endpoint_string_parse_path(&s, &path);
       EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
-      EXPECT_EQ(path.ptr, NULL);
+      EXPECT_EQ(nullptr, path.ptr);
       break;
     case 2:
       ret = oc_endpoint_string_parse_path(&s, &path);
@@ -287,17 +287,17 @@ TEST(OCEndpoints, EndpointStringParsePath)
     case 5:
       ret = oc_endpoint_string_parse_path(&s, &path);
       EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
-      EXPECT_EQ(path.ptr, NULL);
+      EXPECT_EQ(nullptr, path.ptr);
       break;
     case 6:
       ret = oc_endpoint_string_parse_path(&s, &path);
       EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
-      EXPECT_EQ(path.ptr, NULL);
+      EXPECT_EQ(nullptr, path.ptr);
       break;
     case 7:
       ret = oc_endpoint_string_parse_path(&s, &path);
       EXPECT_EQ(-1, ret) << "spu[" << i << "] " << spu[i];
-      EXPECT_EQ(path.ptr, NULL);
+      EXPECT_EQ(nullptr, path.ptr);
       break;
     case 8:
       ret = oc_endpoint_string_parse_path(&s, &path);

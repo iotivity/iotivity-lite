@@ -837,9 +837,10 @@ coap_notify_observers_internal(oc_resource_t *resource,
     oc_response_buffer_t response_buffer;
     response.response_buffer = response_buf;
     bool has_response = response_buf != NULL;
-    bool update_buffer = false;
+#ifdef OC_DYNAMIC_ALLOCATION
+    bool update_buffer = !has_response;
+#endif /* OC_DYNAMIC_ALLOCATION */
     if (!has_response) {
-      update_buffer = true;
       response_buffer.buffer = buffer;
       response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
       response.response_buffer = &response_buffer;

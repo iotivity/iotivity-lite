@@ -166,6 +166,8 @@ TEST_F(TestOcRi, RIQueryExists_P)
   }
 }
 
+#ifdef OC_COLLECTIONS
+
 bool
 find_resource_in_collections(oc_resource_t *resource)
 {
@@ -216,6 +218,8 @@ TEST_F(TestOcRi, RiCleanupCollection_P)
   res = oc_ri_get_app_resources();
   EXPECT_EQ(nullptr, res);
 }
+
+#endif /* OC_COLLECTIONS */
 
 static oc_event_callback_retval_t
 test_timed_callback(void *data)
