@@ -17,15 +17,25 @@
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
 #include "oc_helpers.h"
+#include "port/oc_random.h"
 #include "security/oc_oscore_crypto.h"
+#include "security/oc_tls.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
 
 class TestOSCOREHKDF : public testing::Test {
 protected:
-  virtual void SetUp() {}
+  virtual void SetUp()
+  {
+    oc_random_init();
+    oc_tls_init_context();
+  }
 
-  virtual void TearDown() {}
+  virtual void TearDown()
+  {
+    oc_tls_shutdown();
+    oc_random_destroy();
+  }
 };
 
 /* Test cases from RFC 5869 */

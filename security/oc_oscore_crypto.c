@@ -25,7 +25,7 @@
 #define HMAC_SHA256_HASHLEN (32)
 #define HKDF_OUTPUT_MAXLEN (512)
 
-static void
+static int
 HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
             uint8_t data_len, uint8_t *hmac)
 {
@@ -33,14 +33,30 @@ HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
 
   mbedtls_md_context_t hmac_SHA256;
   mbedtls_md_init(&hmac_SHA256);
-  mbedtls_md_setup(&hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
-                   1);
+  int ret = 0;
+  if ((ret = mbedtls_md_setup(
+         &hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1)) != 0) {
+    OC_ERR("failed to setup message-digest context for HMAC computation: %d",
+           ret);
+    goto finish;
+  }
 
-  mbedtls_md_hmac_starts(&hmac_SHA256, key, key_len);
-  mbedtls_md_hmac_update(&hmac_SHA256, data, data_len);
-  mbedtls_md_hmac_finish(&hmac_SHA256, hmac);
+  if ((ret = mbedtls_md_hmac_starts(&hmac_SHA256, key, key_len)) != 0) {
+    OC_ERR("failed to start the HMAC computation: %d", ret);
+    goto finish;
+  }
+  if ((ret = mbedtls_md_hmac_update(&hmac_SHA256, data, data_len)) != 0) {
+    OC_ERR("failed to compute HMAC: %d", ret);
+    goto finish;
+  }
+  if ((ret = mbedtls_md_hmac_finish(&hmac_SHA256, hmac)) != 0) {
+    OC_ERR("failed to finish the HMAC computation: %d", ret);
+    goto finish;
+  }
 
+finish:
   mbedtls_md_free(&hmac_SHA256);
+  return ret;
 }
 
 static int
@@ -56,11 +72,9 @@ HKDF_Extract(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
 
   if (salt == NULL || salt_len == 0) {
     /* if salt not provided, it is set to a string of HashLen zeros. */
-    HMAC_SHA256(zeroes, 32, ikm, ikm_len, prk_buffer);
-  } else {
-    HMAC_SHA256(salt, salt_len, ikm, ikm_len, prk_buffer);
+    return HMAC_SHA256(zeroes, 32, ikm, ikm_len, prk_buffer);
   }
-  return 0;
+  return HMAC_SHA256(salt, salt_len, ikm, ikm_len, prk_buffer);
 }
 
 static int
@@ -120,8 +134,12 @@ HKDF_SHA256(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
             uint8_t okm_len)
 {
   uint8_t PRK[HMAC_SHA256_HASHLEN];
-  HKDF_Extract(salt, salt_len, ikm, ikm_len, PRK);
-  HKDF_Expand(PRK, info, info_len, okm, okm_len);
+  if (HKDF_Extract(salt, salt_len, ikm, ikm_len, PRK) != 0) {
+    return -1;
+  }
+  if (HKDF_Expand(PRK, info, info_len, okm, okm_len) != 0) {
+    return -1;
+  }
   return 0;
 }
 
