@@ -45,4 +45,4 @@ jobs:
       - name: Test
         run: |
           cd linuxbuild
-          ctest --verbose
+          ctest --verbose --label-regex "oc-unittest"

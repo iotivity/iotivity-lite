@@ -525,7 +525,8 @@ iotivity-lite-server.pc: iotivity-lite-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 iotivity-lite-client.pc: iotivity-lite-client.pc.in
 	$(SED) > $@ < $< \
@@ -534,7 +535,8 @@ iotivity-lite-client.pc: iotivity-lite-client.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 	$(SED) > $@ < $< \
@@ -543,13 +545,14 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),'
+		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch))
+MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch) $(wildcard ../../patches/make/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 

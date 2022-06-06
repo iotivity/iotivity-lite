@@ -32,6 +32,7 @@
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
 #include "oc_cloud.h"
+#include "oc_config.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
@@ -899,6 +900,7 @@ void oc_process_baseline_interface(oc_resource_t *resource);
  * @{
  */
 
+#if defined(OC_COLLECTIONS)
 /**
  * Creates a new empty collection.
  *
@@ -1107,6 +1109,7 @@ bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
 #endif    /* OC_COLLECTIONS_IF_CREATE */
+#endif    /* OC_COLLECTIONS */
 /** @} */ // end of doc_module_tag_collections
 
 /**

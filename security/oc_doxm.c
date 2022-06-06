@@ -23,6 +23,7 @@
 #include "oc_pstat.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "port/oc_assert.h"
 #include <stddef.h>
 #include <string.h>
 #ifndef _WIN32
@@ -30,7 +31,6 @@
 #endif
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include "port/oc_assert.h"
 #include <stdlib.h>
 static oc_sec_doxm_t *doxm;
 #else  /* OC_DYNAMIC_ALLOCATION */
