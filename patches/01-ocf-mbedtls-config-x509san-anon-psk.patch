@@ -473,7 +473,7 @@ index 0558ee001..b1d0f0121 100644
   * This module enables the AES-CCM ciphersuites, if other requisites are
   * enabled as well.
   */
-+#ifdef OC_PKI
++#if defined(OC_PKI) || defined(OC_OSCORE)
  #define MBEDTLS_CCM_C
 +#endif
  

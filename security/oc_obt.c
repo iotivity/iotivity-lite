@@ -310,29 +310,43 @@ oc_obt_load_state(void)
         switch (rep->type) {
 #ifdef OC_PKI
         case OC_REP_INT:
-          if (oc_string_len(rep->name) == 6 &&
-              memcmp(oc_string(rep->name), "credid", 6) == 0) {
+#define CREDID "credid"
+          if (oc_string_len(rep->name) == strlen(CREDID) &&
+              memcmp(oc_string(rep->name), CREDID, strlen(CREDID)) == 0) {
             root_cert_credid = (int)rep->value.integer;
           }
           break;
+#endif /* OC_PKI */
+#if defined(OC_PKI) || defined(OC_OSCORE)
         case OC_REP_BYTE_STRING:
-          if (oc_string_len(rep->name) == 11 &&
-              memcmp(oc_string(rep->name), "private_key", 11) == 0) {
+#ifdef OC_PKI
+#define PRIVATE_KEY "private_key"
+          if (oc_string_len(rep->name) == strlen(PRIVATE_KEY) &&
+              memcmp(oc_string(rep->name), PRIVATE_KEY, strlen(PRIVATE_KEY)) ==
+                0) {
             private_key_size = oc_string_len(rep->value.string);
             memcpy(private_key, oc_string(rep->value.string), private_key_size);
+            break;
           }
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
-          else if (oc_string_len(rep->name) == 7 &&
-                   memcmp(oc_string(rep->name), "groupid", 7) == 0) {
+#define GROUP_ID "groupid"
+          if (oc_string_len(rep->name) == strlen(GROUP_ID) &&
+              memcmp(oc_string(rep->name), GROUP_ID, strlen(GROUP_ID)) == 0) {
             memcpy(groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
-          } else if (oc_string_len(rep->name) == 12 &&
-                     memcmp(oc_string(rep->name), "group_secret", 12) == 0) {
+            break;
+          }
+#define GROUP_SECRET "group_secret"
+          if (oc_string_len(rep->name) == strlen(GROUP_SECRET) &&
+              memcmp(oc_string(rep->name), GROUP_SECRET,
+                     strlen(GROUP_SECRET)) == 0) {
             memcpy(group_secret, oc_string(rep->value.string),
                    OSCORE_MASTER_SECRET_LEN);
+            break;
           }
 #endif /* OC_OSCORE */
           break;
+#endif /* OC_PKI || OC_OSCORE */
         default:
           break;
         }
