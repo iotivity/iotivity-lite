@@ -86,9 +86,11 @@ include(tools/clang-tidy.cmake)
 # ####### Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
+set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM" "__OC_RANDOM")
 
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
 endif()
 
 if(OC_SECURITY_ENABLED)
@@ -97,10 +99,12 @@ endif()
 
 if(OC_PKI_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PKI")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_PKI")
 endif()
 
 if(OC_DEBUG_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DEBUG")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DEBUG")
     list(APPEND TEST_COMPILE_DEFINITIONS "OC_DEBUG")
 endif()
 
@@ -146,6 +150,7 @@ endif()
 
 if(OC_OSCORE_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_OSCORE")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_OSCORE")
 endif()
 
 if(OC_IPV4_ENABLED)
@@ -163,8 +168,8 @@ endif()
 
 if(MINGW)
     # Windows Vista or later
-    list(APPEND PUBLIC_COMPILE_DEFINITIONS "WINVER=0x0600")
-    list(APPEND PUBLIC_COMPILE_DEFINITIONS "_WIN32_WINNT=0x0600")
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
 endif()
 
 # ####### Gather source files ########
@@ -251,7 +256,6 @@ include(deps/tinycbor.cmake)
 
 if(OC_SECURITY_ENABLED)
     include(deps/mbedtls.cmake)
-    get_target_property(MBEDTLS_INCLUDE_DIRS mbedtls INCLUDE_DIRECTORIES)
 endif()
 
 # enable clang-tidy for iotivity targets
@@ -266,7 +270,7 @@ target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUB
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+    target_link_libraries(client-obj PRIVATE mbedtls)
 endif()
 
 add_library(server-obj OBJECT ${SERVER_SRC})
@@ -274,7 +278,7 @@ target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUB
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+    target_link_libraries(server-obj PRIVATE mbedtls)
 endif()
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
@@ -282,7 +286,7 @@ target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIO
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+    target_link_libraries(client-server-obj PRIVATE mbedtls)
 endif()
 
 if(OC_CLOUD_ENABLED)
@@ -291,7 +295,7 @@ if(OC_CLOUD_ENABLED)
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
     if(OC_SECURITY_ENABLED)
-        target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+        target_link_libraries(cloud-obj PRIVATE mbedtls)
     endif()
 endif()
 
@@ -302,7 +306,7 @@ set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+    target_link_libraries(python-obj PRIVATE mbedtls)
 endif()
 
 # ####### Compose static and shared libraries ########
@@ -312,10 +316,6 @@ set(client-lib-obj
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
-
-if(OC_SECURITY_ENABLED)
-    list(APPEND client-lib-obj $<TARGET_OBJECTS:mbedtls>)
-endif()
 
 add_library(client-static STATIC ${client-lib-obj})
 target_link_libraries(client-static PRIVATE ${PRIVATE_LINK_LIBS})
@@ -332,7 +332,7 @@ target_include_directories(client-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+    target_link_libraries(client-static PUBLIC mbedtls)
 endif()
 
 set_target_properties(client-static PROPERTIES
@@ -357,7 +357,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_include_directories(client-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+        target_link_libraries(client-shared PUBLIC mbedtls)
     endif()
 
     set_target_properties(client-shared PROPERTIES
@@ -374,10 +374,6 @@ set(server-lib-obj
     $<TARGET_OBJECTS:server-obj>
 )
 
-if(OC_SECURITY_ENABLED)
-    list(APPEND server-lib-obj $<TARGET_OBJECTS:mbedtls>)
-endif()
-
 add_library(server-static STATIC ${server-lib-obj})
 target_link_libraries(server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(server-static PUBLIC
@@ -393,7 +389,7 @@ target_include_directories(server-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(server-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+    target_link_libraries(server-static PUBLIC mbedtls)
 endif()
 
 set_target_properties(server-static PROPERTIES
@@ -418,7 +414,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_include_directories(server-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+        target_link_libraries(server-shared PUBLIC mbedtls)
     endif()
 
     set_target_properties(server-shared PROPERTIES
@@ -439,10 +435,6 @@ if(OC_CLOUD_ENABLED)
     list(APPEND client-server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
 endif()
 
-if(OC_SECURITY_ENABLED)
-    list(APPEND client-server-lib-obj $<TARGET_OBJECTS:mbedtls>)
-endif()
-
 add_library(client-server-static STATIC ${client-server-lib-obj})
 target_link_libraries(client-server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-static PUBLIC
@@ -458,7 +450,7 @@ target_include_directories(client-server-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-server-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+    target_link_libraries(client-server-static PUBLIC mbedtls)
 endif()
 
 if(OC_CLOUD_ENABLED)
@@ -487,7 +479,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_include_directories(client-server-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+        target_link_libraries(client-server-shared PUBLIC mbedtls)
     endif()
 
     if(OC_CLOUD_ENABLED)
@@ -509,10 +501,6 @@ set(client-python-lib-obj
     $<TARGET_OBJECTS:python-obj>
 )
 
-if(OC_SECURITY_ENABLED)
-    list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
-endif()
-
 add_library(client-python-shared SHARED ${client-python-lib-obj})
 target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-python-shared PUBLIC
@@ -525,7 +513,7 @@ target_include_directories(client-python-shared PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+    target_link_libraries(client-python-shared PUBLIC mbedtls)
 endif()
 
 set_target_properties(client-python-shared PROPERTIES
@@ -576,8 +564,8 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         if(OC_SECURITY_ENABLED)
             target_include_directories(${TESTNAME} PRIVATE
                 ${PROJECT_SOURCE_DIR}/security
-                ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
             )
+            list(APPEND TEST_LINK_LIBS mbedtls)
         endif()
 
         if(OC_CLOUD_ENABLED)
@@ -587,6 +575,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         target_link_libraries(${TESTNAME} PRIVATE ${TEST_LINK_LIBS})
         add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
         set_target_properties(${TESTNAME} PROPERTIES FOLDER unittests)
+        set_tests_properties(${TESTNAME} PROPERTIES LABELS oc-unittest)
     endmacro()
 
     # Unit tests
@@ -697,12 +686,9 @@ else()
 endif()
 
 install(EXPORT iotivity-liteTARGETS
-    FILE
-    iotivity-liteTargets.cmake
-    NAMESPACE
-    iotivity-lite::
-    DESTINATION
-    ${TARGETS_INSTALL_DIR}
+    FILE iotivity-liteTargets.cmake
+    NAMESPACE iotivity-lite::
+    DESTINATION ${TARGETS_INSTALL_DIR}
     COMPONENT dev
 )
 install(FILES

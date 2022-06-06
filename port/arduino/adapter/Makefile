@@ -90,7 +90,7 @@ build-$(BOARD_TAG)/libarduino-adapter.a: $(LOCAL_OBJS)
 	$(AR) rcs $@ $(LOCAL_OBJS)
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES = $(sort $(wildcard ../../../patches/*.patch))
+MBEDTLS_PATCHES = $(sort $(wildcard ../../../patches/*.patch) $(wildcard ../../patches/make/*.patch))
 MBEDTLS_ARDUINO_PATCH=../patches/mbedtls_arduino.patch
 $(MBEDTLS_PATCH_FILE):$(MBEDTLS_PATCHES) $(MBEDTLS_ARDUINO_PATCH)
 	if [ -d ${MBEDTLS_DIR} ]; then \

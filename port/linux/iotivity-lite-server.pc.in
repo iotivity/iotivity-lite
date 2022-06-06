@@ -20,6 +20,6 @@ includedir=@includedir@
 Name: iotivity-lite-server
 Description: Iotivity lite server library
 Version: @version@
-Libs.private: -lm -pthread
+Libs.private: -lm -pthread @extra_libs@
 Cflags: -I${includedir}/iotivity-lite -DOC_SERVER @extra_cflags@
-Libs: -L${libdir} -liotivity-lite-server
+Libs: -L${libdir} -liotivity-lite-server @extra_libs@

@@ -28,12 +28,12 @@
 #include "oc_roles.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "port/oc_assert.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include "port/oc_assert.h"
 static oc_sec_acl_t *aclist;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];

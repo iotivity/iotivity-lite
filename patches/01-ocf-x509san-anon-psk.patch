@@ -14,896 +14,6 @@ index ce97f6a35..3246f935a 100644
  #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) &&                 \
      ( !defined(MBEDTLS_ECDH_C) || !defined(MBEDTLS_ECDSA_C) ||          \
        !defined(MBEDTLS_X509_CRT_PARSE_C) )
-diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
-index 0558ee001..b1d0f0121 100644
---- a/include/mbedtls/mbedtls_config.h
-+++ b/include/mbedtls/mbedtls_config.h
-@@ -33,6 +33,17 @@
-  */
- //#define MBEDTLS_CONFIG_VERSION 0x03000000
- 
-+#include <oc_config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
-+
-+#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
-+#ifdef OC_PKI
-+#define MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
-+#endif
-+
-+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
-+
- /**
-  * \name SECTION: System support
-  *
-@@ -57,7 +68,7 @@
-  *
-  * Comment to disable the use of assembly code.
-  */
--#define MBEDTLS_HAVE_ASM
-+//#define MBEDTLS_HAVE_ASM
- 
- /**
-  * \def MBEDTLS_NO_UDBL_DIVISION
-@@ -118,6 +129,8 @@
-  */
- //#define MBEDTLS_HAVE_SSE2
- 
-+#ifdef OC_PKI
-+#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__) || defined(__linux) || defined(__ANDROID__)
- /**
-  * \def MBEDTLS_HAVE_TIME
-  *
-@@ -153,6 +166,8 @@
-  * MBEDTLS_PLATFORM_GMTIME_R_ALT.
-  */
- #define MBEDTLS_HAVE_TIME_DATE
-+#endif /* One of the major OSs */
-+#endif /* OC_PKI */
- 
- /**
-  * \def MBEDTLS_PLATFORM_MEMORY
-@@ -176,7 +191,7 @@
-  *
-  * Enable this layer to allow use of alternative memory allocators.
-  */
--//#define MBEDTLS_PLATFORM_MEMORY
-+#define MBEDTLS_PLATFORM_MEMORY
- 
- /**
-  * \def MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-@@ -195,7 +210,7 @@
-  * Uncomment to prevent default assignment of standard functions in the
-  * platform layer.
-  */
--//#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-+#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
- 
- /**
-  * \def MBEDTLS_PLATFORM_EXIT_ALT
-@@ -220,11 +235,11 @@
-  * Uncomment a macro to enable alternate implementation of specific base
-  * platform function
-  */
--//#define MBEDTLS_PLATFORM_EXIT_ALT
-+#define MBEDTLS_PLATFORM_EXIT_ALT
- //#define MBEDTLS_PLATFORM_TIME_ALT
- //#define MBEDTLS_PLATFORM_FPRINTF_ALT
- //#define MBEDTLS_PLATFORM_PRINTF_ALT
--//#define MBEDTLS_PLATFORM_SNPRINTF_ALT
-+#define MBEDTLS_PLATFORM_SNPRINTF_ALT
- //#define MBEDTLS_PLATFORM_VSNPRINTF_ALT
- //#define MBEDTLS_PLATFORM_NV_SEED_ALT
- //#define MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT
-@@ -487,7 +502,7 @@
-  * This option is independent of \c MBEDTLS_AES_FEWER_TABLES.
-  *
-  */
--//#define MBEDTLS_AES_ROM_TABLES
-+#define MBEDTLS_AES_ROM_TABLES
- 
- /**
-  * \def MBEDTLS_AES_FEWER_TABLES
-@@ -555,28 +570,28 @@
-  *
-  * Enable Cipher Feedback mode (CFB) for symmetric ciphers.
-  */
--#define MBEDTLS_CIPHER_MODE_CFB
-+//#define MBEDTLS_CIPHER_MODE_CFB
- 
- /**
-  * \def MBEDTLS_CIPHER_MODE_CTR
-  *
-  * Enable Counter Block Cipher mode (CTR) for symmetric ciphers.
-  */
--#define MBEDTLS_CIPHER_MODE_CTR
-+//#define MBEDTLS_CIPHER_MODE_CTR
- 
- /**
-  * \def MBEDTLS_CIPHER_MODE_OFB
-  *
-  * Enable Output Feedback mode (OFB) for symmetric ciphers.
-  */
--#define MBEDTLS_CIPHER_MODE_OFB
-+//#define MBEDTLS_CIPHER_MODE_OFB
- 
- /**
-  * \def MBEDTLS_CIPHER_MODE_XTS
-  *
-  * Enable Xor-encrypt-xor with ciphertext stealing mode (XTS) for AES.
-  */
--#define MBEDTLS_CIPHER_MODE_XTS
-+//#define MBEDTLS_CIPHER_MODE_XTS
- 
- /**
-  * \def MBEDTLS_CIPHER_NULL_CIPHER
-@@ -621,10 +636,10 @@
-  *
-  * Enable padding modes in the cipher layer.
-  */
--#define MBEDTLS_CIPHER_PADDING_PKCS7
--#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
--#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
--#define MBEDTLS_CIPHER_PADDING_ZEROS
-+//#define MBEDTLS_CIPHER_PADDING_PKCS7
-+//#define MBEDTLS_CIPHER_PADDING_ONE_AND_ZEROS
-+//#define MBEDTLS_CIPHER_PADDING_ZEROS_AND_LEN
-+//#define MBEDTLS_CIPHER_PADDING_ZEROS
- 
- /** \def MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-  *
-@@ -642,20 +657,20 @@
-  * Comment macros to disable the curve and functions for it
-  */
- /* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
--#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
--#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
- #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
--#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
--#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
--#define MBEDTLS_ECP_DP_SECP192K1_ENABLED
--#define MBEDTLS_ECP_DP_SECP224K1_ENABLED
--#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
--#define MBEDTLS_ECP_DP_BP256R1_ENABLED
--#define MBEDTLS_ECP_DP_BP384R1_ENABLED
--#define MBEDTLS_ECP_DP_BP512R1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP192K1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP224K1_ENABLED
-+//#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
-+//#define MBEDTLS_ECP_DP_BP256R1_ENABLED
-+//#define MBEDTLS_ECP_DP_BP384R1_ENABLED
-+//#define MBEDTLS_ECP_DP_BP512R1_ENABLED
- /* Montgomery curves (supporting ECP) */
--#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
--#define MBEDTLS_ECP_DP_CURVE448_ENABLED
-+//#define MBEDTLS_ECP_DP_CURVE25519_ENABLED
-+//#define MBEDTLS_ECP_DP_CURVE448_ENABLED
- 
- /**
-  * \def MBEDTLS_ECP_NIST_OPTIM
-@@ -666,7 +681,7 @@
-  *
-  * Comment this macro to disable NIST curves optimisation.
-  */
--#define MBEDTLS_ECP_NIST_OPTIM
-+//#define MBEDTLS_ECP_NIST_OPTIM
- 
- /**
-  * \def MBEDTLS_ECP_RESTARTABLE
-@@ -704,7 +719,7 @@
-  *
-  * Comment this macro to disable deterministic ECDSA.
-  */
--#define MBEDTLS_ECDSA_DETERMINISTIC
-+//#define MBEDTLS_ECDSA_DETERMINISTIC
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-@@ -753,7 +768,7 @@
-  *             See dhm.h for more details.
-  *
-  */
--#define MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
-+//#define MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
-@@ -794,7 +809,7 @@
-  *      MBEDTLS_TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256
-  */
--#define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
-+//#define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
-@@ -819,7 +834,7 @@
-  *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256
-  *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA
-  */
--#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
-+//#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
-@@ -851,7 +866,7 @@
-  *             See dhm.h for more details.
-  *
-  */
--#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
-+//#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
-@@ -874,7 +889,9 @@
-  *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
-+#endif
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-@@ -896,7 +913,9 @@
-  *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-+#endif
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-@@ -918,7 +937,9 @@
-  *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-+#endif
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
-@@ -940,7 +961,7 @@
-  *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384
-  */
--#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
-+//#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
- 
- /**
-  * \def MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
-@@ -973,7 +994,7 @@
-  *
-  * Disable if you only need to support RFC 5915 + 5480 key formats.
-  */
--#define MBEDTLS_PK_PARSE_EC_EXTENDED
-+//#define MBEDTLS_PK_PARSE_EC_EXTENDED
- 
- /**
-  * \def MBEDTLS_ERROR_STRERROR_DUMMY
-@@ -988,7 +1009,7 @@
-  * Disable if you run into name conflicts and want to really remove the
-  * mbedtls_strerror()
-  */
--#define MBEDTLS_ERROR_STRERROR_DUMMY
-+//#define MBEDTLS_ERROR_STRERROR_DUMMY
- 
- /**
-  * \def MBEDTLS_GENPRIME
-@@ -997,14 +1018,14 @@
-  *
-  * Requires: MBEDTLS_BIGNUM_C
-  */
--#define MBEDTLS_GENPRIME
-+//#define MBEDTLS_GENPRIME
- 
- /**
-  * \def MBEDTLS_FS_IO
-  *
-  * Enable functions that use the filesystem.
-  */
--#define MBEDTLS_FS_IO
-+//#define MBEDTLS_FS_IO
- 
- /**
-  * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-@@ -1117,7 +1138,7 @@
-  *
-  * Comment this macro to disable support for external private RSA keys.
-  */
--#define MBEDTLS_PK_RSA_ALT_SUPPORT
-+//#define MBEDTLS_PK_RSA_ALT_SUPPORT
- 
- /**
-  * \def MBEDTLS_PKCS1_V15
-@@ -1139,7 +1160,7 @@
-  *
-  * This enables support for RSAES-OAEP and RSASSA-PSS operations.
-  */
--#define MBEDTLS_PKCS1_V21
-+//#define MBEDTLS_PKCS1_V21
- 
- /** \def MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
-  *
-@@ -1265,7 +1286,7 @@
-  *
-  * Enable the checkup functions (*_self_test).
-  */
--#define MBEDTLS_SELF_TEST
-+//#define MBEDTLS_SELF_TEST
- 
- /**
-  * \def MBEDTLS_SHA256_SMALLER
-@@ -1371,7 +1392,7 @@
-  *
-  * Comment to disable the context serialization APIs.
-  */
--#define MBEDTLS_SSL_CONTEXT_SERIALIZATION
-+//#define MBEDTLS_SSL_CONTEXT_SERIALIZATION
- 
- /**
-  * \def MBEDTLS_SSL_DEBUG_ALL
-@@ -1403,7 +1424,7 @@
-  *
-  * Comment this macro to disable support for Encrypt-then-MAC
-  */
--#define MBEDTLS_SSL_ENCRYPT_THEN_MAC
-+//#define MBEDTLS_SSL_ENCRYPT_THEN_MAC
- 
- /** \def MBEDTLS_SSL_EXTENDED_MASTER_SECRET
-  *
-@@ -1463,7 +1484,7 @@
-  *          configuration of this extension).
-  *
-  */
--#define MBEDTLS_SSL_RENEGOTIATION
-+//#define MBEDTLS_SSL_RENEGOTIATION
- 
- /**
-  * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-@@ -1543,7 +1564,7 @@
-  *
-  * Comment this macro to disable support for ALPN.
-  */
--#define MBEDTLS_SSL_ALPN
-+//#define MBEDTLS_SSL_ALPN
- 
- /**
-  * \def MBEDTLS_SSL_DTLS_ANTI_REPLAY
-@@ -1623,7 +1644,7 @@
-  *
-  * Comment this to disable support for clients reusing the source port.
-  */
--#define MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE
-+//#define MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE
- 
- /**
-  * \def MBEDTLS_SSL_SESSION_TICKETS
-@@ -1637,7 +1658,7 @@
-  *
-  * Comment this macro to disable support for SSL session tickets
-  */
--#define MBEDTLS_SSL_SESSION_TICKETS
-+//#define MBEDTLS_SSL_SESSION_TICKETS
- 
- /**
-  * \def MBEDTLS_SSL_SERVER_NAME_INDICATION
-@@ -1648,7 +1669,7 @@
-  *
-  * Comment this macro to disable support for server name indication in SSL
-  */
--#define MBEDTLS_SSL_SERVER_NAME_INDICATION
-+//#define MBEDTLS_SSL_SERVER_NAME_INDICATION
- 
- /**
-  * \def MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH
-@@ -1788,7 +1809,7 @@
-  *
-  * Comment this to disable run-time checking and save ROM space
-  */
--#define MBEDTLS_VERSION_FEATURES
-+//#define MBEDTLS_VERSION_FEATURES
- 
- /**
-  * \def MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
-@@ -1828,7 +1849,7 @@
-  *
-  * Comment this macro to disallow using RSASSA-PSS in certificates.
-  */
--#define MBEDTLS_X509_RSASSA_PSS_SUPPORT
-+//#define MBEDTLS_X509_RSASSA_PSS_SUPPORT
- /* \} name SECTION: mbed TLS feature support */
- 
- /**
-@@ -1850,7 +1871,7 @@
-  *
-  * This modules adds support for the AES-NI instructions on x86-64
-  */
--#define MBEDTLS_AESNI_C
-+//#define MBEDTLS_AESNI_C
- 
- /**
-  * \def MBEDTLS_AES_C
-@@ -1939,7 +1960,9 @@
-  *          library/pkcs5.c
-  *          library/pkparse.c
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_ASN1_PARSE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_ASN1_WRITE_C
-@@ -1953,7 +1976,9 @@
-  *          library/x509write_crt.c
-  *          library/x509write_csr.c
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_ASN1_WRITE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_BASE64_C
-@@ -1965,7 +1990,9 @@
-  *
-  * This module is required for PEM support (required by X.509).
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_BASE64_C
-+#endif
- 
- /**
-  * \def MBEDTLS_BIGNUM_C
-@@ -2037,7 +2064,7 @@
-  *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256
-  *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256
-  */
--#define MBEDTLS_CAMELLIA_C
-+//#define MBEDTLS_CAMELLIA_C
- 
- /**
-  * \def MBEDTLS_ARIA_C
-@@ -2103,7 +2130,9 @@
-  * This module enables the AES-CCM ciphersuites, if other requisites are
-  * enabled as well.
-  */
-+#if defined(OC_PKI) || defined(OC_OSCORE)
- #define MBEDTLS_CCM_C
-+#endif
- 
- /**
-  * \def MBEDTLS_CHACHA20_C
-@@ -2112,7 +2141,7 @@
-  *
-  * Module:  library/chacha20.c
-  */
--#define MBEDTLS_CHACHA20_C
-+//#define MBEDTLS_CHACHA20_C
- 
- /**
-  * \def MBEDTLS_CHACHAPOLY_C
-@@ -2123,7 +2152,7 @@
-  *
-  * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
-  */
--#define MBEDTLS_CHACHAPOLY_C
-+//#define MBEDTLS_CHACHAPOLY_C
- 
- /**
-  * \def MBEDTLS_CIPHER_C
-@@ -2187,7 +2216,9 @@
-  *
-  * This module provides debugging functions.
-  */
-+#ifdef OC_DEBUG
- #define MBEDTLS_DEBUG_C
-+#endif
- 
- /**
-  * \def MBEDTLS_DES_C
-@@ -2203,7 +2234,7 @@
-  * \warning   DES is considered a weak cipher and its use constitutes a
-  *            security risk. We recommend considering stronger ciphers instead.
-  */
--#define MBEDTLS_DES_C
-+//#define MBEDTLS_DES_C
- 
- /**
-  * \def MBEDTLS_DHM_C
-@@ -2224,7 +2255,7 @@
-  *             See dhm.h for more details.
-  *
-  */
--#define MBEDTLS_DHM_C
-+//#define MBEDTLS_DHM_C
- 
- /**
-  * \def MBEDTLS_ECDH_C
-@@ -2257,7 +2288,9 @@
-  *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
-  *           short Weierstrass curve.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_ECDSA_C
-+#endif
- 
- /**
-  * \def MBEDTLS_ECJPAKE_C
-@@ -2316,7 +2349,9 @@
-  *
-  * This module enables mbedtls_strerror().
-  */
-+#ifdef OC_DEBUG
- #define MBEDTLS_ERROR_C
-+#endif
- 
- /**
-  * \def MBEDTLS_GCM_C
-@@ -2330,7 +2365,9 @@
-  * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
-  * requisites are enabled as well.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_GCM_C
-+#endif
- 
- /**
-  * \def MBEDTLS_HKDF_C
-@@ -2345,7 +2382,7 @@
-  * This module adds support for the Hashed Message Authentication Code
-  * (HMAC)-based key derivation function (HKDF).
-  */
--#define MBEDTLS_HKDF_C
-+//#define MBEDTLS_HKDF_C
- 
- /**
-  * \def MBEDTLS_HMAC_DRBG_C
-@@ -2359,7 +2396,7 @@
-  *
-  * Uncomment to enable the HMAC_DRBG random number geerator.
-  */
--#define MBEDTLS_HMAC_DRBG_C
-+//#define MBEDTLS_HMAC_DRBG_C
- 
- /**
-  * \def MBEDTLS_NIST_KW_C
-@@ -2405,7 +2442,7 @@
-  *            it, and considering stronger message digests instead.
-  *
-  */
--#define MBEDTLS_MD5_C
-+//#define MBEDTLS_MD5_C
- 
- /**
-  * \def MBEDTLS_MEMORY_BUFFER_ALLOC_C
-@@ -2440,7 +2477,7 @@
-  *
-  * This module provides networking routines.
-  */
--#define MBEDTLS_NET_C
-+//#define MBEDTLS_NET_C
- 
- /**
-  * \def MBEDTLS_OID_C
-@@ -2463,7 +2500,9 @@
-  *
-  * This modules translates between OIDs and internal values.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_OID_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PADLOCK_C
-@@ -2477,7 +2516,7 @@
-  *
-  * This modules adds support for the VIA PadLock on x86.
-  */
--#define MBEDTLS_PADLOCK_C
-+//#define MBEDTLS_PADLOCK_C
- 
- /**
-  * \def MBEDTLS_PEM_PARSE_C
-@@ -2495,7 +2534,9 @@
-  *
-  * This modules adds support for decoding / parsing PEM files.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_PEM_PARSE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PEM_WRITE_C
-@@ -2511,7 +2552,9 @@
-  *
-  * This modules adds support for encoding / writing PEM files.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_PEM_WRITE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PK_C
-@@ -2527,7 +2570,9 @@
-  *
-  * Uncomment to enable generic public key wrappers.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_PK_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PK_PARSE_C
-@@ -2542,7 +2587,9 @@
-  *
-  * Uncomment to enable generic public key parse functions.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_PK_PARSE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PK_WRITE_C
-@@ -2556,7 +2603,9 @@
-  *
-  * Uncomment to enable generic public key write functions.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_PK_WRITE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_PKCS5_C
-@@ -2584,7 +2633,7 @@
-  *
-  * This module enables PKCS#12 functions.
-  */
--#define MBEDTLS_PKCS12_C
-+//#define MBEDTLS_PKCS12_C
- 
- /**
-  * \def MBEDTLS_PLATFORM_C
-@@ -2614,7 +2663,7 @@
-  * Module:  library/poly1305.c
-  * Caller:  library/chachapoly.c
-  */
--#define MBEDTLS_POLY1305_C
-+//#define MBEDTLS_POLY1305_C
- 
- /**
-  * \def MBEDTLS_PSA_CRYPTO_C
-@@ -2628,7 +2677,7 @@
-  *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
-  *
-  */
--#define MBEDTLS_PSA_CRYPTO_C
-+//#define MBEDTLS_PSA_CRYPTO_C
- 
- /**
-  * \def MBEDTLS_PSA_CRYPTO_SE_C
-@@ -2657,7 +2706,7 @@
-  *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
-  *           the PSA ITS interface
-  */
--#define MBEDTLS_PSA_CRYPTO_STORAGE_C
-+//#define MBEDTLS_PSA_CRYPTO_STORAGE_C
- 
- /**
-  * \def MBEDTLS_PSA_ITS_FILE_C
-@@ -2669,7 +2718,7 @@
-  *
-  * Requires: MBEDTLS_FS_IO
-  */
--#define MBEDTLS_PSA_ITS_FILE_C
-+//#define MBEDTLS_PSA_ITS_FILE_C
- 
- /**
-  * \def MBEDTLS_RIPEMD160_C
-@@ -2680,7 +2729,7 @@
-  * Caller:  library/md.c
-  *
-  */
--#define MBEDTLS_RIPEMD160_C
-+//#define MBEDTLS_RIPEMD160_C
- 
- /**
-  * \def MBEDTLS_RSA_C
-@@ -2699,7 +2748,9 @@
-  *
-  * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_RSA_C
-+#endif
- 
- /**
-  * \def MBEDTLS_SHA1_C
-@@ -2721,7 +2772,7 @@
-  *            on it, and considering stronger message digests instead.
-  *
-  */
--#define MBEDTLS_SHA1_C
-+//#define MBEDTLS_SHA1_C
- 
- /**
-  * \def MBEDTLS_SHA224_C
-@@ -2800,7 +2851,7 @@
-  *
-  * Requires: MBEDTLS_SSL_CACHE_C
-  */
--#define MBEDTLS_SSL_CACHE_C
-+//#define MBEDTLS_SSL_CACHE_C
- 
- /**
-  * \def MBEDTLS_SSL_COOKIE_C
-@@ -2822,7 +2873,7 @@
-  *
-  * Requires: MBEDTLS_CIPHER_C
-  */
--#define MBEDTLS_SSL_TICKET_C
-+//#define MBEDTLS_SSL_TICKET_C
- 
- /**
-  * \def MBEDTLS_SSL_CLI_C
-@@ -2908,7 +2959,7 @@
-  *
-  * Module:  library/timing.c
-  */
--#define MBEDTLS_TIMING_C
-+//#define MBEDTLS_TIMING_C
- 
- /**
-  * \def MBEDTLS_VERSION_C
-@@ -2919,7 +2970,7 @@
-  *
-  * This module provides run-time version information.
-  */
--#define MBEDTLS_VERSION_C
-+//#define MBEDTLS_VERSION_C
- 
- /**
-  * \def MBEDTLS_X509_USE_C
-@@ -2936,7 +2987,9 @@
-  *
-  * This module is required for the X.509 parsing modules.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_USE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_X509_CRT_PARSE_C
-@@ -2952,7 +3005,9 @@
-  *
-  * This module is required for X.509 certificate parsing.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_CRT_PARSE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_X509_CRL_PARSE_C
-@@ -2966,7 +3021,7 @@
-  *
-  * This module is required for X.509 CRL parsing.
-  */
--#define MBEDTLS_X509_CRL_PARSE_C
-+//#define MBEDTLS_X509_CRL_PARSE_C
- 
- /**
-  * \def MBEDTLS_X509_CSR_PARSE_C
-@@ -2980,7 +3035,9 @@
-  *
-  * This module is used for reading X.509 certificate request.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_CSR_PARSE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_X509_CREATE_C
-@@ -2993,7 +3050,9 @@
-  *
-  * This module is the basis for creating X.509 certificates and CSRs.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_CREATE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_X509_CRT_WRITE_C
-@@ -3006,7 +3065,9 @@
-  *
-  * This module is required for X.509 certificate creation.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_CRT_WRITE_C
-+#endif
- 
- /**
-  * \def MBEDTLS_X509_CSR_WRITE_C
-@@ -3019,7 +3080,9 @@
-  *
-  * This module is required for X.509 certificate request writing.
-  */
-+#ifdef OC_PKI
- #define MBEDTLS_X509_CSR_WRITE_C
-+#endif
- 
- /* \} name SECTION: mbed TLS modules */
- 
-@@ -3060,7 +3123,12 @@
- //#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
- 
- /* Entropy options */
--//#define MBEDTLS_ENTROPY_MAX_SOURCES                20 /**< Maximum number of sources supported */
-+/*
-+ * You should adjust this to the exact number of sources you're using: default
-+ * is the "platform_entropy_poll" source, but you may want to add other ones
-+ * Minimum is 2 for the entropy test suite.
-+ */
-+#define MBEDTLS_ENTROPY_MAX_SOURCES                2 /**< Maximum number of sources supported */
- //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
- //#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
- 
-@@ -3069,14 +3137,19 @@
- 
- /* Platform options */
- //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
--//#define MBEDTLS_PLATFORM_STD_CALLOC        calloc /**< Default allocator to use, can be undefined */
--//#define MBEDTLS_PLATFORM_STD_FREE            free /**< Default free to use, can be undefined */
--//#define MBEDTLS_PLATFORM_STD_EXIT            exit /**< Default exit to use, can be undefined */
-+#ifdef OC_DYNAMIC_ALLOCATION
-+#include <stdlib.h>
-+#define MBEDTLS_PLATFORM_STD_CALLOC        calloc /**< Default allocator to use, can be undefined */
-+#define MBEDTLS_PLATFORM_STD_FREE            free /**< Default free to use, can be undefined */
-+#else /* OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_MEMORY_BUFFER_ALLOC_C             /**< Default allocator to use, can be undefined */
-+#endif /* !OC_DYNAMIC_ALLOCATION */
-+#define MBEDTLS_PLATFORM_STD_EXIT            oc_exit/**< Default exit to use, can be undefined */
- //#define MBEDTLS_PLATFORM_STD_TIME            time /**< Default time to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled */
- //#define MBEDTLS_PLATFORM_STD_FPRINTF      fprintf /**< Default fprintf to use, can be undefined */
- //#define MBEDTLS_PLATFORM_STD_PRINTF        printf /**< Default printf to use, can be undefined */
- /* Note: your snprintf must correctly zero-terminate the buffer! */
--//#define MBEDTLS_PLATFORM_STD_SNPRINTF    snprintf /**< Default snprintf to use, can be undefined */
-+#define MBEDTLS_PLATFORM_STD_SNPRINTF    snprintf /**< Default snprintf to use, can be undefined */
- //#define MBEDTLS_PLATFORM_STD_EXIT_SUCCESS       0 /**< Default exit value to use, can be undefined */
- //#define MBEDTLS_PLATFORM_STD_EXIT_FAILURE       1 /**< Default exit value to use, can be undefined */
- //#define MBEDTLS_PLATFORM_STD_NV_SEED_READ   mbedtls_platform_std_nv_seed_read /**< Default nv_seed_read function to use, can be undefined */
-@@ -3171,6 +3244,9 @@
-  * Uncomment to set the maximum plaintext size of the incoming I/O buffer.
-  */
- //#define MBEDTLS_SSL_IN_CONTENT_LEN              16384
-+#ifndef OC_DYNAMIC_ALLOCATION
-+#define MBEDTLS_SSL_IN_CONTENT_LEN             (OC_PDU_SIZE)
-+#endif /* !OC_DYNAMIC_ALLOCATION */
- 
- /** \def MBEDTLS_SSL_CID_IN_LEN_MAX
-  *
-@@ -3221,6 +3297,9 @@
-  * Uncomment to set the maximum plaintext size of the outgoing I/O buffer.
-  */
- //#define MBEDTLS_SSL_OUT_CONTENT_LEN             16384
-+#ifndef OC_DYNAMIC_ALLOCATION
-+#define MBEDTLS_SSL_OUT_CONTENT_LEN             (OC_PDU_SIZE)
-+#endif /* !OC_DYNAMIC_ALLOCATION */
- 
- /** \def MBEDTLS_SSL_DTLS_MAX_BUFFERING
-  *
-@@ -3240,6 +3319,7 @@
- //#define MBEDTLS_SSL_DTLS_MAX_BUFFERING             32768
- 
- //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
-+#define MBEDTLS_PSK_MAX_LEN                 32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
- //#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
- 
- /** \def MBEDTLS_TLS_EXT_CID
 diff --git a/include/mbedtls/net_sockets.h b/include/mbedtls/net_sockets.h
 index 0c754b122..a7bc61354 100644
 --- a/include/mbedtls/net_sockets.h
@@ -949,7 +59,7 @@ index 0c754b122..a7bc61354 100644
  mbedtls_net_context;
  
 diff --git a/include/mbedtls/ssl.h b/include/mbedtls/ssl.h
-index 072ebbe46..332cf064b 100644
+index 072ebbe46..c829de214 100644
 --- a/include/mbedtls/ssl.h
 +++ b/include/mbedtls/ssl.h
 @@ -581,7 +581,8 @@ union mbedtls_ssl_premaster_secret
@@ -973,12 +83,11 @@ index 072ebbe46..332cf064b 100644
  #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
      mbedtls_x509_crt_ca_cb_t MBEDTLS_PRIVATE(f_ca_cb);
      void *MBEDTLS_PRIVATE(p_ca_cb);
-@@ -2964,6 +2969,47 @@ void mbedtls_ssl_conf_ca_cb( mbedtls_ssl_config *conf,
+@@ -2964,6 +2969,45 @@ void mbedtls_ssl_conf_ca_cb( mbedtls_ssl_config *conf,
  int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
                                mbedtls_x509_crt *own_cert,
                                mbedtls_pk_context *pk_key );
 +
-+#if defined(MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE)
 +/**
 + * \brief                  Set custom EKU OIDs to be checked on certificates during TLS negotiation,
 + *                         and for selecting suitable certificates for TLS negotation.
@@ -1017,7 +126,6 @@ index 072ebbe46..332cf064b 100644
 +int mbedtls_ssl_conf_ekus( mbedtls_ssl_config *conf,
 +                           const char *client_oid, size_t client_oid_len,
 +                           const char *server_oid, size_t server_oid_len );
-+#endif /* MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE */
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
  #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
@@ -1655,7 +763,7 @@ index 40e4aaff8..d3c91b7f0 100644
  #endif /* MBEDTLS_X509_CRT_PARSE_C */
  
 diff --git a/library/ssl_srv.c b/library/ssl_srv.c
-index f34f2de30..7a623f9f7 100644
+index f34f2de30..fb89dd181 100644
 --- a/library/ssl_srv.c
 +++ b/library/ssl_srv.c
 @@ -952,7 +952,10 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
@@ -1665,7 +773,7 @@ index f34f2de30..7a623f9f7 100644
 -                                  MBEDTLS_SSL_IS_SERVER, &flags ) != 0 )
 +                                  MBEDTLS_SSL_IS_SERVER,
 +                                  ssl->conf->client_oid, ssl->conf->client_oid_len,
-+                                  ssl->conf->server_oid, ssl->conf->server_oid_len,                                                            
++                                  ssl->conf->server_oid, ssl->conf->server_oid_len,
 +                                  &flags ) != 0 )
          {
              MBEDTLS_SSL_DEBUG_MSG( 3, ( "certificate mismatch: "
@@ -1700,7 +808,7 @@ index f34f2de30..7a623f9f7 100644
          if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
                                        p, end - p) ) != 0 )
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index d868e4965..69f1e8d68 100644
+index d868e4965..382f14ae3 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
 @@ -2148,6 +2148,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl,
@@ -1708,7 +816,7 @@ index d868e4965..69f1e8d68 100644
                                        ciphersuite_info,
                                        ! ssl->conf->endpoint,
 +                                      ssl->conf->client_oid, ssl->conf->client_oid_len,
-+                                      ssl->conf->server_oid, ssl->conf->server_oid_len,                                   
++                                      ssl->conf->server_oid, ssl->conf->server_oid_len,
                                        &ssl->session_negotiate->verify_result ) != 0 )
      {
          MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad certificate (usage extensions)" ) );
@@ -1845,7 +953,7 @@ index 056bbaa78..30cca52ae 100644
  
      return( 0 );
 diff --git a/library/x509_crt.c b/library/x509_crt.c
-index c8654445d..c0d58e5ba 100644
+index c8654445d..26c0d44c7 100644
 --- a/library/x509_crt.c
 +++ b/library/x509_crt.c
 @@ -65,6 +65,7 @@
@@ -2035,7 +1143,7 @@ index c8654445d..c0d58e5ba 100644
 +                *p++ = cur->general_name.name.dns_name.p[i];
 +
 +            break;
-+ 
++
 +        case MBEDTLS_X509_GENERALNAME_DIRECTORYNAME:
 +            i = sep_len + LABEL_LEN( x509_directory_name_label );
 +            if( i >= n )
@@ -2287,7 +1395,7 @@ index 17b3e7966..2fe439095 100644
                              const char *t, size_t size )
  {
 diff --git a/programs/ssl/ssl_client2.c b/programs/ssl/ssl_client2.c
-index 57f7d8f67..b58f2af69 100644
+index 57f7d8f67..6ed2990d8 100644
 --- a/programs/ssl/ssl_client2.c
 +++ b/programs/ssl/ssl_client2.c
 @@ -102,6 +102,8 @@ int main( void )
@@ -2325,7 +1433,7 @@ index 57f7d8f67..b58f2af69 100644
 +    const char *eku_cli;        /* EKU to check for in client cert          */
 +    size_t eku_cli_len;         /* length of eku_cli                        */
 +    const char *eku_srv;        /* EKU to check for in server cert          */
-+    size_t eku_srv_len;         /* length of eku_srv                        */ 
++    size_t eku_srv_len;         /* length of eku_srv                        */
      int context_crt_cb;         /* use context-specific CRT verify callback */
      int eap_tls;                /* derive EAP-TLS keying material?          */
      int nss_keylog;             /* export NSS key log material              */
@@ -2336,7 +1444,7 @@ index 57f7d8f67..b58f2af69 100644
 +    opt.eku_cli             = DFL_EKU_CLIENT;
 +    opt.eku_cli_len         = MBEDTLS_OID_SIZE( DFL_EKU_CLIENT );
 +    opt.eku_srv             = DFL_EKU_SERVER;
-+    opt.eku_srv_len         = MBEDTLS_OID_SIZE( DFL_EKU_SERVER );    
++    opt.eku_srv_len         = MBEDTLS_OID_SIZE( DFL_EKU_SERVER );
      opt.serialize           = DFL_SERIALIZE;
      opt.context_file        = DFL_CONTEXT_FILE;
      opt.eap_tls             = DFL_EAP_TLS;
@@ -2399,15 +1507,15 @@ index 57f7d8f67..b58f2af69 100644
 +                        opt.eku_srv, opt.eku_srv_len ) ) != 0 )
 +        {
 +            mbedtls_printf( " failed\n  ! mbedtls_ssl_config_ekus returned -0x%x\n\n", -ret );
-+           goto exit;
++            goto exit;
 +        }
-+    } 
++    }
 +
      if( opt.context_crt_cb == 0 )
          mbedtls_ssl_conf_verify( &conf, my_verify, NULL );
  
 diff --git a/programs/ssl/ssl_server2.c b/programs/ssl/ssl_server2.c
-index 7cbdaf62c..2440c9717 100644
+index 7cbdaf62c..48149e0d7 100644
 --- a/programs/ssl/ssl_server2.c
 +++ b/programs/ssl/ssl_server2.c
 @@ -137,6 +137,8 @@ int main( void )
@@ -2445,7 +1553,7 @@ index 7cbdaf62c..2440c9717 100644
 +    const char *eku_cli;        /* EKU to check for in client cert          */
 +    size_t eku_cli_len;         /* length of eku_cli                        */
 +    const char *eku_srv;        /* EKU to check for in server cert          */
-+    size_t eku_srv_len;         /* length of eku_srv                        */    
++    size_t eku_srv_len;         /* length of eku_srv                        */
      int eap_tls;                /* derive EAP-TLS keying material?          */
      int nss_keylog;             /* export NSS key log material              */
      const char *nss_keylog_file; /* NSS key log file                        */
@@ -2456,7 +1564,7 @@ index 7cbdaf62c..2440c9717 100644
 +    opt.eku_cli             = DFL_EKU_CLIENT;
 +    opt.eku_cli_len         = MBEDTLS_OID_SIZE( DFL_EKU_CLIENT );
 +    opt.eku_srv             = DFL_EKU_SERVER;
-+    opt.eku_srv_len         = MBEDTLS_OID_SIZE( DFL_EKU_SERVER );   
++    opt.eku_srv_len         = MBEDTLS_OID_SIZE( DFL_EKU_SERVER );
      opt.serialize           = DFL_SERIALIZE;
      opt.context_file        = DFL_CONTEXT_FILE;
      opt.eap_tls             = DFL_EAP_TLS;
@@ -2781,3 +1889,54 @@ index 763f8684f..5e0f59073 100644
      mbedtls_x509write_crt_free( &crt );
      mbedtls_pk_free( &loaded_subject_key );
      mbedtls_pk_free( &loaded_issuer_key );
+diff --git a/tests/suites/test_suite_x509parse.data b/tests/suites/test_suite_x509parse.data
+index e21b450b9..fb0216fc9 100644
+--- a/tests/suites/test_suite_x509parse.data
++++ b/tests/suites/test_suite_x509parse.data
+@@ -1811,7 +1811,7 @@ depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
+ x509parse_crt:"3081dc3081c6a0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092A864886F70D010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a321301f301d0603551d11041630148208666f6f2e7465737482086261722e74657374301d0603551d11041630148208666f6f2e7465737482086261722e74657374300d06092a864886f70d01010b0500030200ff":"":MBEDTLS_ERR_X509_INVALID_FORMAT + MBEDTLS_ERR_ASN1_LENGTH_MISMATCH
+ 
+ X509 CRT (TBS, valid v3Ext in v3 CRT)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ x509parse_crt:"3081b93081a3a0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092A864886F70D010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa321301f301d0603551d11041630148208666f6f2e7465737482086261722e74657374300d06092a864886f70d01010b0500030200ff":"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\nsubject alt name  \:\n    dNSName \: foo.test\n    dNSName \: bar.test\n":0
+ 
+ X509 CRT ASN1 (TBS, valid v3Ext in v1 CRT)
+@@ -1881,12 +1881,12 @@ depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
+ x509parse_crt:"3081bc3081a7a0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092A864886F70D010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a321301f301d0603551d11041630148208666f6f2e7465737482086261722e74657374300d06092a864886f70d01010b0500030108":"":MBEDTLS_ERR_X509_INVALID_SIGNATURE + MBEDTLS_ERR_ASN1_INVALID_DATA
+ 
+ X509 CRT ASN1 (empty Signature)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ # signature = empty bit string in DER encoding
+ x509parse_crt:"3081bc3081a7a0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092A864886F70D010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a321301f301d0603551d11041630148208666f6f2e7465737482086261722e74657374300d06092a864886f70d01010b0500030100":"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\nsubject alt name  \:\n    dNSName \: foo.test\n    dNSName \: bar.test\n":0
+ 
+ X509 CRT ASN1 (dummy 24-bit Signature)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ # signature = bit string "011001100110111101101111"
+ x509parse_crt:"3081bf3081a7a0030201028204deadbeef300d06092a864886f70d01010b0500300c310a30080600130454657374301c170c303930313031303030303030170c303931323331323335393539300c310a30080600130454657374302a300d06092A864886F70D010101050003190030160210ffffffffffffffffffffffffffffffff0202ffffa100a200a321301f301d0603551d11041630148208666f6f2e7465737482086261722e74657374300d06092a864886f70d01010b0500030400666f6f":"cert. version     \: 3\nserial number     \: DE\:AD\:BE\:EF\nissuer name       \: ??=Test\nsubject name      \: ??=Test\nissued  on        \: 2009-01-01 00\:00\:00\nexpires on        \: 2009-12-31 23\:59\:59\nsigned using      \: RSA with SHA-256\nRSA key size      \: 128 bits\nsubject alt name  \:\n    dNSName \: foo.test\n    dNSName \: bar.test\n":0
+ 
+@@ -1969,7 +1969,7 @@ depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
+ x509parse_crt:"308203353082021da00302010202104d3ebbb8a870f9c78c55a8a7e12fd516300d06092a864886f70d01010b05003010310e300c06035504030c0564756d6d79301e170d3230303432383137343234335a170d3230303632373137343234335a3010310e300c06035504030c0564756d6d7930820122300d06092a864886f70d01010105000382010f003082010a0282010100a51b75b3f7da2d60ea1b0fc077f0dbb2bbb6fe1b474028368af8dc2664672896efff171033b0aede0b323a89d5c6db4d517404bc97b65264e41b9e9e86a6f40ace652498d4b3b859544d1bacfd7f86325503eed046f517406545c0ffb5560f83446dedce0fcafcc41ac8495488a6aa912ae45192ef7e3efa20d0f7403b0baa62c7e2e5404c620c5793623132aa20f624f08d88fbf0985af39433f5a24d0b908e5219d8ba6a404d3ee8418203b62a40c8eb18837354d50281a6a2bf5012e505c419482787b7a81e5935613ceea0c6d93e86f76282b6aa406fb3a1796c56b32e8a22afc3f7a3c9daa8f0e2846ff0d50abfc862a52f6cf0aaece6066c860376f3ed0203010001a3818a308187300c0603551d13040530030101ff30130603551d110101ff04093007820564756d6d79301206082b0601050507011f0101ff0403040100300e0603551d0f0101ff040403020184301d0603551d0e04160414e6e451ec8d19d9677b2d272a9d73b939fa2d915a301f0603551d23041830168014e6e451ec8d19d9677b2d272a9d73b939fa2d915a300d06092a864886f70d01010b0500038201010056d06047b7f48683e2347ca726997d9700b4f2cf1d8bc0ef17addac8445d38ffd7f8079055ead878b6a74c8384d0e30150c8990aa74f59cda6ebcb49465d8991ffa16a4c927a26e4639d1875a3ac396c7455c7eda40dbe66054a03d27f961c15e86bd5b06db6b26572977bcda93453b6b6a88ef96b31996a7bd17323525b33050d28deec9c33a3f9765a11fb99d0e222bd39a6db3a788474c9ca347377688f837d42f5841667bffcbe6b473e6f229f286a0829963e591a99aa7f67e9d20c36ccd2ac84cb85b7a8b3396a6cbe59a573ffff726f373197c230de5c92a52c5bc87e29c20bdf6e89609764a60c649022aabd768f3557661b083ae00e6afc8a5bf2ed":"":MBEDTLS_ERR_X509_INVALID_EXTENSIONS + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+ 
+ X509 CRT ASN1 (Unsupported critical extension recognized by callback)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ x509parse_crt_cb:"308203353082021da00302010202104d3ebbb8a870f9c78c55a8a7e12fd516300d06092a864886f70d01010b05003010310e300c06035504030c0564756d6d79301e170d3230303432383137343234335a170d3230303632373137343234335a3010310e300c06035504030c0564756d6d7930820122300d06092a864886f70d01010105000382010f003082010a0282010100a51b75b3f7da2d60ea1b0fc077f0dbb2bbb6fe1b474028368af8dc2664672896efff171033b0aede0b323a89d5c6db4d517404bc97b65264e41b9e9e86a6f40ace652498d4b3b859544d1bacfd7f86325503eed046f517406545c0ffb5560f83446dedce0fcafcc41ac8495488a6aa912ae45192ef7e3efa20d0f7403b0baa62c7e2e5404c620c5793623132aa20f624f08d88fbf0985af39433f5a24d0b908e5219d8ba6a404d3ee8418203b62a40c8eb18837354d50281a6a2bf5012e505c419482787b7a81e5935613ceea0c6d93e86f76282b6aa406fb3a1796c56b32e8a22afc3f7a3c9daa8f0e2846ff0d50abfc862a52f6cf0aaece6066c860376f3ed0203010001a3818a308187300c0603551d13040530030101ff30130603551d110101ff04093007820564756d6d79301206082b0601050507011f0101ff0403040100300e0603551d0f0101ff040403020184301d0603551d0e04160414e6e451ec8d19d9677b2d272a9d73b939fa2d915a301f0603551d23041830168014e6e451ec8d19d9677b2d272a9d73b939fa2d915a300d06092a864886f70d01010b0500038201010056d06047b7f48683e2347ca726997d9700b4f2cf1d8bc0ef17addac8445d38ffd7f8079055ead878b6a74c8384d0e30150c8990aa74f59cda6ebcb49465d8991ffa16a4c927a26e4639d1875a3ac396c7455c7eda40dbe66054a03d27f961c15e86bd5b06db6b26572977bcda93453b6b6a88ef96b31996a7bd17323525b33050d28deec9c33a3f9765a11fb99d0e222bd39a6db3a788474c9ca347377688f837d42f5841667bffcbe6b473e6f229f286a0829963e591a99aa7f67e9d20c36ccd2ac84cb85b7a8b3396a6cbe59a573ffff726f373197c230de5c92a52c5bc87e29c20bdf6e89609764a60c649022aabd768f3557661b083ae00e6afc8a5bf2ed":"cert. version     \: 3\nserial number     \: 4D\:3E\:BB\:B8\:A8\:70\:F9\:C7\:8C\:55\:A8\:A7\:E1\:2F\:D5\:16\nissuer name       \: CN=dummy\nsubject name      \: CN=dummy\nissued  on        \: 2020-04-28 17\:42\:43\nexpires on        \: 2020-06-27 17\:42\:43\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\nsubject alt name  \:\n    dNSName \: dummy\nkey usage         \: Digital Signature, Key Cert Sign\n":0
+ 
+ X509 CRT ASN1 (Unsupported critical extension not recognized by callback)
+@@ -1977,11 +1977,11 @@ depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
+ x509parse_crt_cb:"308203353082021da00302010202104d3ebbb8a870f9c78c55a8a7e12fd516300d06092a864886f70d01010b05003010310e300c06035504030c0564756d6d79301e170d3230303432383137343234335a170d3230303632373137343234335a3010310e300c06035504030c0564756d6d7930820122300d06092a864886f70d01010105000382010f003082010a0282010100a51b75b3f7da2d60ea1b0fc077f0dbb2bbb6fe1b474028368af8dc2664672896efff171033b0aede0b323a89d5c6db4d517404bc97b65264e41b9e9e86a6f40ace652498d4b3b859544d1bacfd7f86325503eed046f517406545c0ffb5560f83446dedce0fcafcc41ac8495488a6aa912ae45192ef7e3efa20d0f7403b0baa62c7e2e5404c620c5793623132aa20f624f08d88fbf0985af39433f5a24d0b908e5219d8ba6a404d3ee8418203b62a40c8eb18837354d50281a6a2bf5012e505c419482787b7a81e5935613ceea0c6d93e86f76282b6aa406fb3a1796c56b32e8a22afc3f7a3c9daa8f0e2846ff0d50abfc862a52f6cf0aaece6066c860376f3ed0203010001a3818a308187300c0603551d13040530030101ff30130603551d110101ff04093007820564756d6d79301206082b0601050507011e0101ff0403040100300e0603551d0f0101ff040403020184301d0603551d0e04160414e6e451ec8d19d9677b2d272a9d73b939fa2d915a301f0603551d23041830168014e6e451ec8d19d9677b2d272a9d73b939fa2d915a300d06092a864886f70d01010b0500038201010056d06047b7f48683e2347ca726997d9700b4f2cf1d8bc0ef17addac8445d38ffd7f8079055ead878b6a74c8384d0e30150c8990aa74f59cda6ebcb49465d8991ffa16a4c927a26e4639d1875a3ac396c7455c7eda40dbe66054a03d27f961c15e86bd5b06db6b26572977bcda93453b6b6a88ef96b31996a7bd17323525b33050d28deec9c33a3f9765a11fb99d0e222bd39a6db3a788474c9ca347377688f837d42f5841667bffcbe6b473e6f229f286a0829963e591a99aa7f67e9d20c36ccd2ac84cb85b7a8b3396a6cbe59a573ffff726f373197c230de5c92a52c5bc87e29c20bdf6e89609764a60c649022aabd768f3557661b083ae00e6afc8a5bf2ed":"":MBEDTLS_ERR_X509_INVALID_EXTENSIONS + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG
+ 
+ X509 CRT ASN1 (Unsupported non critical extension recognized by callback)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ x509parse_crt_cb:"308203353082021da00302010202104d3ebbb8a870f9c78c55a8a7e12fd516300d06092a864886f70d01010b05003010310e300c06035504030c0564756d6d79301e170d3230303432383137343234335a170d3230303632373137343234335a3010310e300c06035504030c0564756d6d7930820122300d06092a864886f70d01010105000382010f003082010a0282010100a51b75b3f7da2d60ea1b0fc077f0dbb2bbb6fe1b474028368af8dc2664672896efff171033b0aede0b323a89d5c6db4d517404bc97b65264e41b9e9e86a6f40ace652498d4b3b859544d1bacfd7f86325503eed046f517406545c0ffb5560f83446dedce0fcafcc41ac8495488a6aa912ae45192ef7e3efa20d0f7403b0baa62c7e2e5404c620c5793623132aa20f624f08d88fbf0985af39433f5a24d0b908e5219d8ba6a404d3ee8418203b62a40c8eb18837354d50281a6a2bf5012e505c419482787b7a81e5935613ceea0c6d93e86f76282b6aa406fb3a1796c56b32e8a22afc3f7a3c9daa8f0e2846ff0d50abfc862a52f6cf0aaece6066c860376f3ed0203010001a3818a308187300c0603551d13040530030101ff30130603551d110101ff04093007820564756d6d79301206082b0601050507011f0101000403040100300e0603551d0f0101ff040403020184301d0603551d0e04160414e6e451ec8d19d9677b2d272a9d73b939fa2d915a301f0603551d23041830168014e6e451ec8d19d9677b2d272a9d73b939fa2d915a300d06092a864886f70d01010b0500038201010056d06047b7f48683e2347ca726997d9700b4f2cf1d8bc0ef17addac8445d38ffd7f8079055ead878b6a74c8384d0e30150c8990aa74f59cda6ebcb49465d8991ffa16a4c927a26e4639d1875a3ac396c7455c7eda40dbe66054a03d27f961c15e86bd5b06db6b26572977bcda93453b6b6a88ef96b31996a7bd17323525b33050d28deec9c33a3f9765a11fb99d0e222bd39a6db3a788474c9ca347377688f837d42f5841667bffcbe6b473e6f229f286a0829963e591a99aa7f67e9d20c36ccd2ac84cb85b7a8b3396a6cbe59a573ffff726f373197c230de5c92a52c5bc87e29c20bdf6e89609764a60c649022aabd768f3557661b083ae00e6afc8a5bf2ed":"cert. version     \: 3\nserial number     \: 4D\:3E\:BB\:B8\:A8\:70\:F9\:C7\:8C\:55\:A8\:A7\:E1\:2F\:D5\:16\nissuer name       \: CN=dummy\nsubject name      \: CN=dummy\nissued  on        \: 2020-04-28 17\:42\:43\nexpires on        \: 2020-06-27 17\:42\:43\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\nsubject alt name  \:\n    dNSName \: dummy\nkey usage         \: Digital Signature, Key Cert Sign\n":0
+ 
+ X509 CRT ASN1 (Unsupported non critical extension not recognized by callback)
+-depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C
++depends_on:MBEDTLS_RSA_C:MBEDTLS_SHA256_C:!MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
+ x509parse_crt_cb:"308203353082021da00302010202104d3ebbb8a870f9c78c55a8a7e12fd516300d06092a864886f70d01010b05003010310e300c06035504030c0564756d6d79301e170d3230303432383137343234335a170d3230303632373137343234335a3010310e300c06035504030c0564756d6d7930820122300d06092a864886f70d01010105000382010f003082010a0282010100a51b75b3f7da2d60ea1b0fc077f0dbb2bbb6fe1b474028368af8dc2664672896efff171033b0aede0b323a89d5c6db4d517404bc97b65264e41b9e9e86a6f40ace652498d4b3b859544d1bacfd7f86325503eed046f517406545c0ffb5560f83446dedce0fcafcc41ac8495488a6aa912ae45192ef7e3efa20d0f7403b0baa62c7e2e5404c620c5793623132aa20f624f08d88fbf0985af39433f5a24d0b908e5219d8ba6a404d3ee8418203b62a40c8eb18837354d50281a6a2bf5012e505c419482787b7a81e5935613ceea0c6d93e86f76282b6aa406fb3a1796c56b32e8a22afc3f7a3c9daa8f0e2846ff0d50abfc862a52f6cf0aaece6066c860376f3ed0203010001a3818a308187300c0603551d13040530030101ff30130603551d110101ff04093007820564756d6d79301206082b0601050507011e0101000403040100300e0603551d0f0101ff040403020184301d0603551d0e04160414e6e451ec8d19d9677b2d272a9d73b939fa2d915a301f0603551d23041830168014e6e451ec8d19d9677b2d272a9d73b939fa2d915a300d06092a864886f70d01010b0500038201010056d06047b7f48683e2347ca726997d9700b4f2cf1d8bc0ef17addac8445d38ffd7f8079055ead878b6a74c8384d0e30150c8990aa74f59cda6ebcb49465d8991ffa16a4c927a26e4639d1875a3ac396c7455c7eda40dbe66054a03d27f961c15e86bd5b06db6b26572977bcda93453b6b6a88ef96b31996a7bd17323525b33050d28deec9c33a3f9765a11fb99d0e222bd39a6db3a788474c9ca347377688f837d42f5841667bffcbe6b473e6f229f286a0829963e591a99aa7f67e9d20c36ccd2ac84cb85b7a8b3396a6cbe59a573ffff726f373197c230de5c92a52c5bc87e29c20bdf6e89609764a60c649022aabd768f3557661b083ae00e6afc8a5bf2ed":"cert. version     \: 3\nserial number     \: 4D\:3E\:BB\:B8\:A8\:70\:F9\:C7\:8C\:55\:A8\:A7\:E1\:2F\:D5\:16\nissuer name       \: CN=dummy\nsubject name      \: CN=dummy\nissued  on        \: 2020-04-28 17\:42\:43\nexpires on        \: 2020-06-27 17\:42\:43\nsigned using      \: RSA with SHA-256\nRSA key size      \: 2048 bits\nbasic constraints \: CA=true\nsubject alt name  \:\n    dNSName \: dummy\nkey usage         \: Digital Signature, Key Cert Sign\n":0
+ 
+ X509 CRT ASN1 (Unsupported critical policy recognized by callback)
