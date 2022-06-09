@@ -1707,7 +1707,7 @@ static bool _create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
 		 * initially this resource should not be discoverable...
 		 * once any resource is pushed to this resource, it will be discoverable...
 		 */
-		oc_resource_set_discoverable(pushd_rsc, true);
+		oc_resource_set_discoverable(pushd_rsc, false);
 
 		oc_resource_set_request_handler(pushd_rsc, OC_GET, get_pushd_rsc, NULL);
 		oc_resource_set_request_handler(pushd_rsc, OC_POST, post_pushd_rsc, NULL);
