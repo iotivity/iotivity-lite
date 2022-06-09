@@ -15,63 +15,6 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "check_code_style"
-  make_linux_unsecured:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      #- name: Run a one-line script
-      #  run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: make unsecured
-        run: |
-          # https://github.com/actions/checkout/issues/81
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
-          cd port/linux
-          make DYNAMIC=1 IPV4=1 TCP=1 SECURE=0 test
-
-  make_linux_secured:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make secured
-        run: |
-          cd port/linux
-          make DYNAMIC=1 IPV4=1 TCP=1 SECURE=1 test
-
-  make_linux_secured_options:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make with options (including cloud)
-        run: |
-          cd port/linux
-          make TCP=1 IPV4=1 CREATE=1 MNT=1 CLOUD=1 DEBUG=0 V6DNS=0
-
   make_linux_secured_java:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -101,6 +44,7 @@ jobs:
           JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
           JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
           cd ../..
+
   make_linux_secured_java_cloud:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -155,36 +99,3 @@ jobs:
           cd port/linux
           make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
 
-  make_linux_swupdate:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make secured with software update
-        run: |
-          # the setup
-          #sudo apt-get -y install libboost-all-dev
-          # the actual build
-          cd port/linux
-          make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 SWUPDATE=1
-
-  make_linux_wkcore:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make secured with well known core discovery
-        run: |
-          # the actual build
-          cd port/linux
-          make DEBUG=1 SECURE=1 WKCORE=1
