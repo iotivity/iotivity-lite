@@ -95,6 +95,12 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 #define oc_free_string(ocstring) _oc_free_string(ocstring)
 
 /**
+ * @brief reset ocstring
+ *
+ */
+#define oc_set_string(ocstring, str, str_len) _oc_set_string(ocstring, str, str_len)
+
+/**
  * @brief free array of integers
  *
  */
@@ -260,6 +266,16 @@ void _oc_free_array(
   const char *func,
 #endif
   oc_array_t *ocarray, pool type);
+
+/**
+ * @brief reset ocstring contents
+ *
+ * @param ocstring ocstring to be reset
+ * @param str not terminated string which will replace current str
+ * @param str_len size of the string
+ */
+void
+_oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len);
 
 /**
  * @brief new array

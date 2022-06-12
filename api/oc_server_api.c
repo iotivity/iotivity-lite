@@ -418,8 +418,8 @@ oc_resource_set_discoverable(oc_resource_t *resource, bool state)
     resource->properties &= ~OC_DISCOVERABLE;
 }
 
-
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 void
 oc_resource_set_pushable(oc_resource_t *resource, bool state)
 {
@@ -429,7 +429,6 @@ oc_resource_set_pushable(oc_resource_t *resource, bool state)
     resource->properties &= ~OC_PUSHABLE;
 }
 #endif
-
 
 void
 oc_resource_set_observable(oc_resource_t *resource, bool state)
@@ -645,9 +644,9 @@ oc_send_separate_response(oc_separate_response_t *handle,
         } else
 #endif /* OC_BLOCK_WISE */
           if (response_buffer.response_length > 0) {
-          coap_set_payload(response, handle->buffer,
-                           response_buffer.response_length);
-        }
+            coap_set_payload(response, handle->buffer,
+                             response_buffer.response_length);
+          }
         coap_set_status_code(response, response_buffer.code);
         t->message->length = coap_serialize_message(response, t->message->data);
         if (t->message->length > 0) {
