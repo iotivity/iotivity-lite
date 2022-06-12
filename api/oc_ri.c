@@ -67,11 +67,11 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 OC_PROCESS_NAME(oc_push_process);
 void oc_push_list_init();
 #endif
-
 
 #ifdef OC_SERVER
 OC_LIST(app_resources);
@@ -380,10 +380,10 @@ start_processes(void)
   oc_process_start(&oc_session_events, NULL);
 #endif /* OC_TCP */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_process_start(&oc_push_process, NULL);
 #endif
-
 }
 
 static void
@@ -406,10 +406,10 @@ stop_processes(void)
 
   oc_process_exit(&message_buffer_handler);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_process_exit(&oc_push_process);
 #endif
-
 }
 
 #ifdef OC_SERVER
@@ -468,7 +468,8 @@ oc_ri_init(void)
 
   oc_list_init(timed_callbacks);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   oc_push_list_init();
 #endif
 
@@ -1198,20 +1199,20 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
          * implemented that method, then return a 4.05 response.
          */
         if (method == OC_GET && cur_resource->get_handler.cb) {
-        cur_resource->get_handler.cb(&request_obj, iface_mask,
-                                     cur_resource->get_handler.user_data);
-      } else if (method == OC_POST && cur_resource->post_handler.cb) {
-        cur_resource->post_handler.cb(&request_obj, iface_mask,
-                                      cur_resource->post_handler.user_data);
-      } else if (method == OC_PUT && cur_resource->put_handler.cb) {
-        cur_resource->put_handler.cb(&request_obj, iface_mask,
-                                     cur_resource->put_handler.user_data);
-      } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
-        cur_resource->delete_handler.cb(&request_obj, iface_mask,
-                                        cur_resource->delete_handler.user_data);
-      } else {
-        method_impl = false;
-      }
+          cur_resource->get_handler.cb(&request_obj, iface_mask,
+                                       cur_resource->get_handler.user_data);
+        } else if (method == OC_POST && cur_resource->post_handler.cb) {
+          cur_resource->post_handler.cb(&request_obj, iface_mask,
+                                        cur_resource->post_handler.user_data);
+        } else if (method == OC_PUT && cur_resource->put_handler.cb) {
+          cur_resource->put_handler.cb(&request_obj, iface_mask,
+                                       cur_resource->put_handler.user_data);
+        } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
+          cur_resource->delete_handler.cb(
+            &request_obj, iface_mask, cur_resource->delete_handler.user_data);
+        } else {
+          method_impl = false;
+        }
     }
   }
 
@@ -1413,61 +1414,61 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   } else
 #endif /* OC_SERVER */
     if (response_buffer.code == OC_IGNORE) {
-    /* If the server-side logic chooses to reject a request, it sends
-     * below a response code of IGNORE, which results in the messaging
-     * layer freeing the CoAP transaction associated with the request.
-     */
-    coap_status_code = CLEAR_TRANSACTION;
-  } else {
+      /* If the server-side logic chooses to reject a request, it sends
+       * below a response code of IGNORE, which results in the messaging
+       * layer freeing the CoAP transaction associated with the request.
+       */
+      coap_status_code = CLEAR_TRANSACTION;
+    } else {
 #ifdef OC_SERVER
-    /* If the recently handled request was a PUT/POST, it conceivably
-     * altered the resource state, so attempt to notify all observers
-     * of that resource with the change.
-     */
-    if (
+      /* If the recently handled request was a PUT/POST, it conceivably
+       * altered the resource state, so attempt to notify all observers
+       * of that resource with the change.
+       */
+      if (
 #ifdef OC_COLLECTIONS
-      !resource_is_collection &&
+        !resource_is_collection &&
 #endif /* OC_COLLECTIONS */
-      cur_resource && (method == OC_PUT || method == OC_POST) &&
-      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-      if ((iface_mask == OC_IF_STARTUP) ||
-          (iface_mask == OC_IF_STARTUP_REVERT)) {
-        oc_resource_defaults_data_t *resource_defaults_data =
-          oc_ri_alloc_resource_defaults();
-        resource_defaults_data->resource = cur_resource;
-        resource_defaults_data->iface_mask = iface_mask;
-        oc_ri_add_timed_event_callback_ticks(
-          resource_defaults_data,
-          &oc_observe_notification_resource_defaults_delayed, 0);
-      } else {
-        oc_notify_observers_delayed(cur_resource, 0);
+        cur_resource && (method == OC_PUT || method == OC_POST) &&
+        response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+        if ((iface_mask == OC_IF_STARTUP) ||
+            (iface_mask == OC_IF_STARTUP_REVERT)) {
+          oc_resource_defaults_data_t *resource_defaults_data =
+            oc_ri_alloc_resource_defaults();
+          resource_defaults_data->resource = cur_resource;
+          resource_defaults_data->iface_mask = iface_mask;
+          oc_ri_add_timed_event_callback_ticks(
+            resource_defaults_data,
+            &oc_observe_notification_resource_defaults_delayed, 0);
+        } else {
+          oc_notify_observers_delayed(cur_resource, 0);
+        }
       }
-    }
 
 #endif /* OC_SERVER */
-    if (response_buffer.response_length > 0) {
+      if (response_buffer.response_length > 0) {
 #ifdef OC_BLOCK_WISE
-      (*response_state)->payload_size = response_buffer.response_length;
+        (*response_state)->payload_size = response_buffer.response_length;
 #else  /* OC_BLOCK_WISE */
       coap_set_payload(response, response_buffer.buffer,
                        response_buffer.response_length);
 #endif /* !OC_BLOCK_WISE */
-      if (response_buffer.content_format > 0) {
-        coap_set_header_content_format(response,
-                                       response_buffer.content_format);
+        if (response_buffer.content_format > 0) {
+          coap_set_header_content_format(response,
+                                         response_buffer.content_format);
+        }
       }
-    }
 
-    if (response_buffer.code ==
-        oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
-      coap_set_header_size1(response, OC_BLOCK_SIZE);
-    }
+      if (response_buffer.code ==
+          oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
+        coap_set_header_size1(response, OC_BLOCK_SIZE);
+      }
 
-    /* response_buffer.code at this point contains a valid CoAP status
-     *  code.
-     */
-    coap_set_status_code(response, response_buffer.code);
-  }
+      /* response_buffer.code at this point contains a valid CoAP status
+       *  code.
+       */
+      coap_set_status_code(response, response_buffer.code);
+    }
   return success;
 }
 

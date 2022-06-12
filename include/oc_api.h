@@ -1134,8 +1134,8 @@ void oc_resource_make_public(oc_resource_t *resource);
  */
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 
-
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
 /**
  * Specify if a resource can be pushable.
  *
@@ -1145,7 +1145,6 @@ void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
  */
 void oc_resource_set_pushable(oc_resource_t *resource, bool state);
 #endif
-
 
 /**
  * Specify that a resource should notify clients when a property has been

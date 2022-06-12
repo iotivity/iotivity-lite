@@ -47,7 +47,8 @@ typedef enum {
   SW_UPDATE_UPGRADING,
   SW_UPDATE_DONE,
 #endif /* OC_SOFTWARE_UPDATE */
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
   PUSH_RSC_STATE_CHANGED,
 #endif /* OC_PUSH */
   __NUM_OC_EVENT_TYPES__
