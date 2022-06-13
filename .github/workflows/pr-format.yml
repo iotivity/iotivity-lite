@@ -40,7 +40,7 @@ jobs:
       - name: build-docs
         run: |
           sudo apt-get update -y
-          sudo apt-get install clang-format-6.0
+          sudo apt-get install clang-format-10
           cmake -S ${{ github.workspace }}/iotivity-lite -B ${{ github.workspace }}/build-format
           make -C ${{ github.workspace }}/build-format format
 

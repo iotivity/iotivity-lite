@@ -32,7 +32,7 @@ jobs:
       - name: format-check
         run: |
           sudo apt-get update -y
-          sudo apt-get install clang-format-6.0
+          sudo apt-get install clang-format-10
 
           mkdir build
           cd build
