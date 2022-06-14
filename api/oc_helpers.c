@@ -106,7 +106,7 @@ _oc_free_string(
 }
 
 void
-_oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len)
+oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len)
 {
   oc_free_string(ocstring);
   oc_new_string(ocstring, str, str_len);

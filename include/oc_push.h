@@ -64,24 +64,6 @@ typedef struct oc_pushd_rsc_rep
 typedef void (*oc_on_push_arrived_t)(oc_pushd_rsc_rep_t *);
 
 /**
- * @brief string representing response code
- */
-extern const char *cli_status_strs[];
-
-#if 0
-/**
- * @brief if this callback function is provided by user, it will called whenever
- * new push notification arrives...
- */
-extern void (*oc_push_arrived)(oc_pushd_rsc_rep_t *);
-#endif
-
-/**
- * @brief return response code string for `i`
- */
-#define cli_statusstr(i) (cli_status_strs[(i)])
-
-/**
  * @brief print payload of Resource in user friendly format
  */
 void oc_print_pushd_rsc(const oc_rep_t *payload);
@@ -91,7 +73,7 @@ void oc_print_pushd_rsc(const oc_rep_t *payload);
  *
  * @param[in] function name
  */
-void oc_set_on_push_arrived(oc_on_push_arrived_t *);
+void oc_set_on_push_arrived(oc_on_push_arrived_t func);
 
 /**
  * @brief application should call this function whenever the contents of
