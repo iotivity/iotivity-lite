@@ -361,6 +361,11 @@ typedef struct oc_event_callback_s
 } oc_event_callback_t;
 
 /**
+ * @brief CoAP status code string
+ */
+extern const char *cli_status_strs[];
+
+/**
  * @brief initialize the resource implementation handler
  *
  */
@@ -414,6 +419,16 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
  * @return int the CoAP status code
  */
 int oc_status_code(oc_status_t key);
+
+
+/**
+ * @brief convert the status code to string
+ *
+ * @param[in] key key the application level key of the code
+ * @return char* CoAP status code string
+ */
+const char *oc_status_to_str(oc_status_t key);
+
 
 /**
  * @brief retrieve the resource by uri and device indes

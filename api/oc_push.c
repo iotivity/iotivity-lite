@@ -173,29 +173,6 @@ const char *pp_state_strs[] = {
   "timeout"                       /*OC_PP_TOUT*/
 };
 
-const char *cli_status_strs[] = {
-  "OC_STATUS_OK",                       /* 0 */
-  "OC_STATUS_CREATED",                  /* 1 */
-  "OC_STATUS_CHANGED",                  /* 2 */
-  "OC_STATUS_DELETED",                  /* 3 */
-  "OC_STATUS_NOT_MODIFIED",             /* 4 */
-  "OC_STATUS_BAD_REQUEST",              /* 5 */
-  "OC_STATUS_UNAUTHORIZED",             /* 6 */
-  "OC_STATUS_BAD_OPTION",               /* 7 */
-  "OC_STATUS_FORBIDDEN",                /* 8 */
-  "OC_STATUS_NOT_FOUND",                /* 9 */
-  "OC_STATUS_METHOD_NOT_ALLOWED",       /* 10 */
-  "OC_STATUS_NOT_ACCEPTABLE",           /* 11 */
-  "OC_STATUS_REQUEST_ENTITY_TOO_LARGE", /* 12 */
-  "OC_STATUS_UNSUPPORTED_MEDIA_TYPE",   /* 13 */
-  "OC_STATUS_INTERNAL_SERVER_ERROR",    /* 14 */
-  "OC_STATUS_NOT_IMPLEMENTED",          /* 15 */
-  "OC_STATUS_BAD_GATEWAY",              /* 16 */
-  "OC_STATUS_SERVICE_UNAVAILABLE",      /* 17 */
-  "OC_STATUS_GATEWAY_TIMEOUT",          /* 18 */
-  "OC_STATUS_PROXYING_NOT_SUPPORTED"    /* 19 */
-};
-
 /*
  * mandatory property of oic.r.pushporxy, oic.r.pushreceivers
  */
@@ -236,7 +213,7 @@ static void (*oc_push_arrived)(oc_pushd_rsc_rep_t *) = NULL;
 
 OC_API
 void
-oc_set_on_push_arrived(oc_on_push_arrived_t *func)
+oc_set_on_push_arrived(oc_on_push_arrived_t func)
 {
   oc_push_arrived = func;
 }
@@ -385,9 +362,6 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        */
       if (oc_string_len(rep->name) == 3 &&
           memcmp(oc_string(rep->name), "prt", 3) == 0) {
-        /*
-         * fixme4me <2022/4/18> ""를 넘겨줬을때 prt 내용 삭제하도록 수정
-         */
         oc_free_string_array(&ns_instance->prt);
 
         oc_new_string_array(
@@ -1094,10 +1068,10 @@ get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
  * @return	not 0: found
  * 			0: not found
  */
-static char
+static bool
 _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 {
-  char result = 0;
+  bool result = 0;
   int rt_len, rts_len;
   int i, j;
 
@@ -1158,80 +1132,81 @@ _find_recvs_by_device(size_t device_index)
  * @param org_rep
  */
 static void *
-_create_pushd_rsc_rep(oc_rep_t **new_rep, oc_rep_t *org_rep)
+_create_pushd_rsc_rep(oc_rep_t *org_rep)
 {
   if (!org_rep)
     return org_rep;
 
-  *new_rep = oc_alloc_rep();
+  oc_rep_t *new_rep;
 
-  (*new_rep)->next = _create_pushd_rsc_rep(&((*new_rep)->next), org_rep->next);
+  new_rep = oc_alloc_rep();
 
-  (*new_rep)->type = org_rep->type;
-  oc_new_string(&((*new_rep)->name), oc_string(org_rep->name),
+  (new_rep)->next = _create_pushd_rsc_rep(org_rep->next);
+
+  (new_rep)->type = org_rep->type;
+  oc_new_string(&((new_rep)->name), oc_string(org_rep->name),
                 oc_string_len(org_rep->name));
 
   switch (org_rep->type) {
   case OC_REP_NIL:
     break;
   case OC_REP_INT:
-    (*new_rep)->value.integer = org_rep->value.integer;
+    (new_rep)->value.integer = org_rep->value.integer;
     break;
   case OC_REP_DOUBLE:
-    (*new_rep)->value.double_p = org_rep->value.double_p;
+    (new_rep)->value.double_p = org_rep->value.double_p;
     break;
   case OC_REP_BOOL:
-    (*new_rep)->value.boolean = org_rep->value.boolean;
+    (new_rep)->value.boolean = org_rep->value.boolean;
     break;
   case OC_REP_BYTE_STRING_ARRAY:
   case OC_REP_STRING_ARRAY:
     oc_new_string_array(
-      &(*new_rep)->value.array,
+      &(new_rep)->value.array,
       oc_string_array_get_allocated_size(org_rep->value.array));
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(org_rep->value.array);
          i++) {
       oc_string_array_add_item(
-        (*new_rep)->value.array,
+        (new_rep)->value.array,
         oc_string_array_get_item(org_rep->value.array, i));
     }
     break;
   case OC_REP_BOOL_ARRAY:
-    oc_new_bool_array(&(*new_rep)->value.array,
+    oc_new_bool_array(&(new_rep)->value.array,
                       oc_bool_array_size(org_rep->value.array));
-    memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(uint8_t));
     break;
   case OC_REP_DOUBLE_ARRAY:
-    oc_new_double_array(&(*new_rep)->value.array,
+    oc_new_double_array(&(new_rep)->value.array,
                         oc_double_array_size(org_rep->value.array));
-    memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(double));
     break;
   case OC_REP_INT_ARRAY:
-    oc_new_int_array(&(*new_rep)->value.array,
+    oc_new_int_array(&(new_rep)->value.array,
                      oc_int_array_size(org_rep->value.array));
-    memcpy((*new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(int64_t));
     break;
   case OC_REP_BYTE_STRING:
   case OC_REP_STRING:
-    oc_new_string(&((*new_rep)->value.string), oc_string(org_rep->value.string),
+    oc_new_string(&((new_rep)->value.string), oc_string(org_rep->value.string),
                   oc_string_len(org_rep->value.string));
     break;
   case OC_REP_OBJECT:
-    (*new_rep)->value.object =
-      _create_pushd_rsc_rep(&((*new_rep)->value.object), org_rep->value.object);
+    (new_rep)->value.object =
+      _create_pushd_rsc_rep(org_rep->value.object);
     break;
   case OC_REP_OBJECT_ARRAY:
-    (*new_rep)->value.object_array = _create_pushd_rsc_rep(
-      &((*new_rep)->value.object_array), org_rep->value.object_array);
+    (new_rep)->value.object_array = _create_pushd_rsc_rep(org_rep->value.object_array);
     break;
   default:
     break;
   }
 
-  return (*new_rep);
+  return (new_rep);
 }
 
 OC_API
@@ -1242,8 +1217,8 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   char prefix_width = 3;
   char *prefix_str = "   ";
   char depth_prefix[1024];
-  oc_rep_t *rep = payload;
-  oc_rep_t *obj;
+  const oc_rep_t *rep = payload;
+  const oc_rep_t *obj;
   int i;
 
   depth++;
@@ -1280,14 +1255,14 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
       break;
 
     case OC_REP_INT:
-      PRINT("%s%s: %lld\n", depth_prefix, oc_string(rep->name),
+      PRINT("%s%s: %ld\n", depth_prefix, oc_string(rep->name),
             rep->value.integer);
       break;
 
     case OC_REP_INT_ARRAY:
       PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str,
+        PRINT("%s%s\"%ld\"\n", depth_prefix, prefix_str,
               oc_int_array(rep->value.array)[i]);
       }
       PRINT("%s]\n", depth_prefix);
@@ -1397,7 +1372,7 @@ _rep_list_remove(oc_rep_t **rep_list, oc_rep_t **item)
 {
   oc_rep_t **l, *removed_item;
 
-  for (l = (oc_rep_t **)rep_list; *l != NULL; l = &(*l)->next) {
+  for (l = rep_list; *l != NULL; l = &(*l)->next) {
     if (*l == *item) {
       *l = (*l)->next;
 
@@ -1434,7 +1409,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
       return;
     }
   } else {
-    OC_PUSH_ERR("can't find push receiver properties for (%s) in device (%d), "
+    OC_PUSH_ERR("can't find push receiver properties for (%s) in device (%ld), "
                 "the target resource may not be a \"push receiver resource\"",
                 oc_string(request->resource->uri), request->resource->device);
     return;
@@ -1522,8 +1497,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_set_pool(&rep_instance_memb);
       oc_free_rep(pushd_rsc_rep->rep);
 
-      if (!_create_pushd_rsc_rep(&pushd_rsc_rep->rep,
-                                 request->request_payload)) {
+      if (!(pushd_rsc_rep->rep = _create_pushd_rsc_rep(request->request_payload))) {
         OC_PUSH_ERR("something wrong!, creating corresponding pushed resource "
                     "representation faild (%s) ! ",
                     oc_string(request->resource->uri));
@@ -1534,7 +1508,6 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
 // oc_string(pushd_rsc_rep->resource->uri));
 //				oc_print_pushd_rsc(pushd_rsc_rep->rep);
 #endif
-
         if (oc_push_arrived)
           oc_push_arrived(pushd_rsc_rep);
       }
@@ -1771,7 +1744,7 @@ _purge_recv_obj_list(oc_recvs_t *recvs_instance)
   oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recvs_instance->receivers);
 
   while (recv_obj) {
-    OC_PUSH_DBG("purge receiver obj for ( %s (device: %d) )... ",
+    OC_PUSH_DBG("purge receiver obj for ( %s (device: %ld) )... ",
                 oc_string(recv_obj->receiveruri),
                 recvs_instance->resource->device);
 
@@ -1988,7 +1961,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
     if (uri_param_len != -1)
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
-        request->query_len, request->query, uri_param_len, uri_param);
+        (int)request->query_len, request->query, uri_param_len, uri_param);
   } else {
     OC_PUSH_DBG("request->query is NULL");
   }
@@ -1997,7 +1970,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   recvs_instance = (oc_recvs_t *)oc_list_head(recvs_list);
   while (recvs_instance) {
     if (recvs_instance->resource == request->resource) {
-      OC_PUSH_DBG("receivers obj array instance \"%s\"@Device(%d) is found!",
+      OC_PUSH_DBG("receivers obj array instance \"%s\"@Device(%ld) is found!",
                   oc_string(request->resource->uri), request->resource->device);
 
       if (uri_param_len != -1) {
@@ -2087,7 +2060,7 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
     if (uri_param_len != -1)
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
-        request->query_len, request->query, uri_param_len, uri_param);
+        (int)request->query_len, request->query, uri_param_len, uri_param);
   } else {
     OC_PUSH_DBG("request->query is NULL");
   }
@@ -2217,7 +2190,7 @@ oc_push_free()
   while (recvs_instance) {
     next = recvs_instance->next;
     _purge_recv_obj_list(recvs_instance);
-    OC_PUSH_DBG("free push receiver Resource (device: %d)... ",
+    OC_PUSH_DBG("free push receiver Resource (device: %ld)... ",
                 recvs_instance->resource->device);
     oc_memb_free(&recvs_instance_memb, recvs_instance);
     recvs_instance = next;
@@ -2229,7 +2202,7 @@ response_to_push_rsc(oc_client_response_t *data)
 {
   oc_ns_t *ns_instance = (oc_ns_t *)data->user_data;
 
-  OC_PUSH_DBG("\n   => return status code: [ %s ]", cli_statusstr(data->code));
+  OC_PUSH_DBG("\n   => return status code: [ %s ]", oc_status_to_str(data->code));
 
   if (data->code == OC_STATUS_SERVICE_UNAVAILABLE) {
     /*
@@ -2453,13 +2426,13 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
  * 			0: any of source is not part of target
  * 			1: any of source is part of target
  */
-static char
+static bool
 _check_string_array_inclusion(oc_string_array_t *target,
                               oc_string_array_t *source)
 {
   int i, j;
   int src_len, tgt_len;
-  int result = 0;
+  bool result = 0;
 
   tgt_len = oc_string_array_get_allocated_size(*target);
   src_len = oc_string_array_get_allocated_size(*source);
@@ -2498,15 +2471,15 @@ oc_resource_state_changed(const char *uri, size_t device_index)
   oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
   char all_matched = 0x7;
 
-  OC_PUSH_DBG("resource \"%s\"@device(%d) is updated!", uri, device_index);
+  OC_PUSH_DBG("resource \"%s\"@device(%ld) is updated!", uri, device_index);
 
   if (!resource) {
-    OC_PUSH_ERR("there is no resource for \"%s\"@device(%d)", uri,
+    OC_PUSH_ERR("there is no resource for \"%s\"@device(%ld)", uri,
                 device_index);
     return;
   }
   if (!(resource->properties & OC_PUSHABLE)) {
-    OC_PUSH_ERR("resource \"%s\"@device (%d) is not pushable!", uri,
+    OC_PUSH_ERR("resource \"%s\"@device (%ld) is not pushable!", uri,
                 device_index);
     return;
   }
