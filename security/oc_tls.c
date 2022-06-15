@@ -1304,6 +1304,13 @@ oc_tls_resolve_new_trust_anchors(void)
 
 #ifdef OC_CLIENT
 void
+oc_tls_reset_ciphersuite()
+{
+  OC_DBG("oc_tls: client resets ciphersuite priority");
+  ciphers = (int *)NULL;
+}
+
+void
 oc_tls_select_cert_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting cert ciphersuite priority");
