@@ -141,6 +141,7 @@ void oc_tls_select_identity_cert_chain(int credid);
 void oc_tls_select_psk_ciphersuite(void);
 void oc_tls_select_anon_ciphersuite(void);
 void oc_tls_select_cloud_ciphersuite(void);
+void oc_tls_reset_ciphersuite(void);
 
 /* Internal interface for checking supported OTMs */
 bool oc_tls_is_pin_otm_supported(size_t device);
