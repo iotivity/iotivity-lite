@@ -46,8 +46,15 @@ jobs:
     - name: Update MinGW to 10.2
       if: ${{ matrix.config.platform == 'mingw' }}
       run: |
-        choco upgrade mingw --version=10.2.0
-        gcc -v
+        choco upgrade mingw --version=10.2.0 --force
+        if (!$?) {
+          throw "choco upgrade mingw failed"
+        }
+        $gcc_version = &gcc -v 2>&1 | Out-String
+        $gcc_version
+        if ($gcc_version -NotMatch 'gcc version 10.2.0') {
+          throw "invalid gcc version detected"
+        }
 
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -128,6 +135,7 @@ jobs:
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
             -S .
             -B build
+            -D CMAKE_VERBOSE_MAKEFILE=ON
             -D CMAKE_BUILD_TYPE=${{ matrix.config.build_type }}
             -D BUILD_TESTING=${{ matrix.config.build_testing }}
             -D OC_IPV4_ENABLED=ON
