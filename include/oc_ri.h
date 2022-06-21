@@ -361,11 +361,6 @@ typedef struct oc_event_callback_s
 } oc_event_callback_t;
 
 /**
- * @brief CoAP status code string
- */
-extern const char *cli_status_strs[];
-
-/**
  * @brief initialize the resource implementation handler
  *
  */
@@ -444,6 +439,7 @@ int oc_status_code(oc_status_t key);
  * @param[in] key key the application level key of the code
  * @return char* CoAP status code string
  */
+OC_API
 const char *oc_status_to_str(oc_status_t key);
 
 

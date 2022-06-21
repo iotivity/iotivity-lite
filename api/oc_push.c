@@ -1131,7 +1131,7 @@ _find_recvs_by_device(size_t device_index)
  * @param new_rep
  * @param org_rep
  */
-static void *
+static oc_rep_t *
 _create_pushd_rsc_rep(oc_rep_t *org_rep)
 {
   if (!org_rep)
@@ -1947,7 +1947,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)iface_mask;
   (void)user_data;
 
-  char *uri_param;
+  char *uri_param = NULL;
   int uri_param_len = -1;
   oc_recv_t *recv_obj;
   oc_recvs_t *recvs_instance;
