@@ -66,6 +66,7 @@ typedef void (*oc_on_push_arrived_t)(oc_pushd_rsc_rep_t *);
 /**
  * @brief print payload of Resource in user friendly format
  */
+OC_API
 void oc_print_pushd_rsc(const oc_rep_t *payload);
 
 /**
@@ -73,6 +74,7 @@ void oc_print_pushd_rsc(const oc_rep_t *payload);
  *
  * @param[in] function name
  */
+OC_API
 void oc_set_on_push_arrived(oc_on_push_arrived_t func);
 
 /**
@@ -84,6 +86,7 @@ void oc_set_on_push_arrived(oc_on_push_arrived_t func);
  * @param[in] device_index index of Device that updated pushable Resource
  * belongs to
  */
+OC_API
 void oc_resource_state_changed(const char *uri, size_t device_index);
 
 #ifdef __cplusplus
