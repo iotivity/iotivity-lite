@@ -109,6 +109,9 @@ oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 {
   size_t len1 = strlen(str1), len2 = strlen(str2);
   oc_alloc_string(concat, len1 + len2 + 1);
+  if (oc_string(*concat) == NULL) {
+    OC_ERR("oc_concat_strings - insufficient memory %d", len1 + len2 + 1);
+  }
   memcpy(oc_string(*concat), str1, len1);
   memcpy(oc_string(*concat) + len1, str2, len2);
   memcpy(oc_string(*concat) + len1 + len2, (const char *)"", 1);

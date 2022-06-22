@@ -19,7 +19,7 @@
 #ifdef OC_STORAGE
 
 #include <device.h>
-#include <flash.h>
+#include <drivers/flash.h>
 #include <zephyr.h>
 
 #include <errno.h>

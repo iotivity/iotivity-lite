@@ -293,9 +293,15 @@ coap_receive(oc_message_t *msg)
         OC_DBG("  method: DELETE");
         break;
       }
-      OC_DBG("  URL: %.*s", (int)message->uri_path_len, message->uri_path);
-      OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
-      OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
+      if (message->uri_path_len > 0) {
+        OC_DBG("  URL: %.*s", (int)message->uri_path_len, message->uri_path);
+      }
+      if (message->uri_query_len > 0 ) {
+        OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
+      }
+      if (message->payload_len > 0 ) {
+        OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
+      }
 #endif
       const char *href;
       size_t href_len = coap_get_header_uri_path(message, &href);

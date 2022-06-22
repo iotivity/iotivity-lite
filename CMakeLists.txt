@@ -174,13 +174,7 @@ file(GLOB SERVER_SRC
 set(CLIENT_SRC ${SERVER_SRC})
 
 # Detect the platform and pick the right port
-if(UNIX)
-    file(GLOB PORT_SRC port/linux/*.c)
-    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/linux)
-elseif(WIN32)
-    file(GLOB PORT_SRC port/windows/*.c)
-    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/windows)
-elseif(DEFINED ZEPHYR_BASE)
+if(DEFINED ZEPHYR_BASE)
     # Set the Zephyr CMake task zephyr_interface as dependency.
     # Zephyr generates some platform headers in that CMake task which needs to be completed
     # before iotivity-lite compilation can start or the headers can not be found.
@@ -209,7 +203,8 @@ elseif(DEFINED ZEPHYR_BASE)
     file(GLOB PORT_SRC port/zephyr/src/[a-r]*.c)
     if(CONFIG_FILE_SYSTEM)
         message(STATUS "Using file system storage.")
-        list(APPEND PORT_SRC port/zephyr/src/storage_fs.c)
+    #    list(APPEND PORT_SRC port/zephyr/src/storage_fs.c)
+        list(APPEND PORT_SRC port/zephyr/src/storage_flash.c)
     elseif(CONFIG_FLASH)
         message(STATUS "Using raw flash storage.")
         list(APPEND PORT_SRC port/zephyr/src/storage_flash.c)
@@ -217,6 +212,12 @@ elseif(DEFINED ZEPHYR_BASE)
         message(FATAL_ERROR "Cannot determine the storage technology to use!")
     endif()
     set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/zephyr/src)
+elseif(UNIX)
+    file(GLOB PORT_SRC port/linux/*.c)
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/linux)
+elseif(WIN32)
+    file(GLOB PORT_SRC port/windows/*.c)
+    set(PORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/port/windows)
 else()
     message(FATAL_ERROR "Cannot determine the port to use!")
 endif()
@@ -327,15 +328,15 @@ if(OC_CLOUD_ENABLED)
     endif()
 endif()
 
-add_library(python-obj OBJECT ${PYTHON_SRC})
-target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
-target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
-set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-if(OC_SECURITY_ENABLED)
-    target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
-endif()
+# add_library(python-obj OBJECT ${PYTHON_SRC})
+# target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
+# target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+# set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
+# set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+# target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+# if(OC_SECURITY_ENABLED)
+#     target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
+# endif()
 
 ######## Compose static and shared libraries ########
 # Client
@@ -513,34 +514,34 @@ if(TARGET_SUPPORTS_SHARED_LIBS AND NOT MSVC)
     )
 endif()
 
-# Python client
-set(client-python-lib-obj
-    $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
-    $<TARGET_OBJECTS:client-obj>
-    $<TARGET_OBJECTS:python-obj>
-)
-if(OC_SECURITY_ENABLED)
-    list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
-endif()
-add_library(client-python-shared SHARED ${client-python-lib-obj})
-target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
-target_compile_definitions(client-python-shared PUBLIC
-    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-)
-target_include_directories(client-python-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include/iotivity-lite>
-)
-if(OC_SECURITY_ENABLED)
-    target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
-endif()
-set_target_properties(client-python-shared PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client-python"
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-)
+# # Python client
+# set(client-python-lib-obj
+#     $<TARGET_OBJECTS:common-obj>
+#     $<TARGET_OBJECTS:tinycbor-master>
+#     $<TARGET_OBJECTS:client-obj>
+#     $<TARGET_OBJECTS:python-obj>
+# )
+# if(OC_SECURITY_ENABLED)
+#     list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
+# endif()
+# add_library(client-python-shared SHARED ${client-python-lib-obj})
+# target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
+# target_compile_definitions(client-python-shared PUBLIC
+#     $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+#     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+# )
+# target_include_directories(client-python-shared PUBLIC
+#     $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+#     $<INSTALL_INTERFACE:include/iotivity-lite>
+# )
+# if(OC_SECURITY_ENABLED)
+#     target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
+# endif()
+# set_target_properties(client-python-shared PROPERTIES
+#     OUTPUT_NAME "iotivity-lite-client-python"
+#     VERSION ${PROJECT_VERSION}
+#     SOVERSION ${PROJECT_VERSION_MAJOR}
+# )
 
 ######## Units tests (UNIX only) ########
 include(CTest)

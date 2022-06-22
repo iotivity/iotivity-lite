@@ -17,13 +17,23 @@
 #include "oc_api.h"
 
 #include <string.h>
-#include <zephyr.h>
 
-#ifdef CONFIG_NET_L2_BT
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/conn.h>
-#include <gatt/ipss.h>
-#endif
+#include <zephyr.h>
+#include <sys/printk.h>
+#include <esp_wifi.h>
+#include <esp_timer.h>
+#include <esp_event.h>
+#include <esp_system.h>
+
+#include <net/net_if.h>
+#include <net/net_core.h>
+#include <net/net_context.h>
+#include <net/net_mgmt.h>
+
+#include <logging/log.h>
+LOG_MODULE_REGISTER(esp32_wifi_sta, LOG_LEVEL_DBG);
+
+static struct net_mgmt_event_callback dhcp_cb;
 
 static struct k_sem block;
 static bool light_state = false;
@@ -122,65 +132,97 @@ signal_event_loop(void)
   k_sem_give(&block);
 }
 
-#ifdef CONFIG_NET_L2_BT
-static void
-connected(struct bt_conn *conn, u8_t err)
+static void handler_cb(struct net_mgmt_event_callback *cb,
+		    uint32_t mgmt_event, struct net_if *iface)
 {
-  PRINT("client connected\n");
+	if (mgmt_event != NET_EVENT_IPV4_DHCP_BOUND) {
+		return;
+	}
+
+	char buf[NET_IPV4_ADDR_LEN];
+
+	LOG_INF("Your address: %s",
+		log_strdup(net_addr_ntop(AF_INET,
+				   &iface->config.dhcpv4.requested_ip,
+				   buf, sizeof(buf))));
+	LOG_INF("Lease time: %u seconds",
+			iface->config.dhcpv4.lease_time);
+	LOG_INF("Subnet: %s",
+		log_strdup(net_addr_ntop(AF_INET,
+					&iface->config.ip.ipv4->netmask,
+					buf, sizeof(buf))));
+	LOG_INF("Router: %s",
+		log_strdup(net_addr_ntop(AF_INET,
+						&iface->config.ip.ipv4->gw,
+						buf, sizeof(buf))));
 }
 
-static void
-disconnected(struct bt_conn *conn, u8_t reason)
+oc_event_callback_retval_t
+heap_dbg(void *v)
 {
-  PRINT("client disconnected\n");
+  LOG_INF("heap size:%d\n", esp_get_free_heap_size());
+  return OC_EVENT_CONTINUE;
 }
-#endif
 
-void
-main(void)
+
+void main(void)
 {
-  static const oc_handler_t handler = { .init = app_init,
+    static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
                                           register_resources };
 
   k_sem_init(&block, 0, 1);
+  oc_set_min_app_data_size(128);
+  oc_set_max_app_data_size(8000);
+  heap_dbg(NULL);
+	if (oc_main_init(&handler) < 0)
+		return;
 
-#ifdef CONFIG_NET_L2_BT
-  static struct bt_conn_cb conn_callbacks = {
-    .connected = connected,
-    .disconnected = disconnected,
-  };
+	oc_clock_time_t next_event;
+  oc_set_delayed_callback(NULL, heap_dbg, 1);
 
-#ifndef CONFIG_NET_APP_AUTO_INIT
-  int err;
-  err = bt_enable(NULL);
-  if (err) {
-    OC_WRN("oc_connectivity_init: bluetooth initialization failed (%d)\n", err);
-    return;
-  }
-#endif
+	net_mgmt_init_event_callback(&dhcp_cb, handler_cb,
+				     NET_EVENT_IPV4_DHCP_BOUND);
+	net_mgmt_add_event_callback(&dhcp_cb);
+	struct net_if *iface = net_if_get_default();
+	if (!iface) {
+		LOG_ERR("wifi interface not available");
+		return;
+	}
 
-  bt_conn_cb_register(&conn_callbacks);
-  ipss_init();
-  ipss_advertise();
-#endif
+	net_dhcpv4_start(iface);
 
-  if (oc_main_init(&handler) < 0)
-    return;
+	if (!IS_ENABLED(CONFIG_ESP32_WIFI_STA_AUTO)) {
+		wifi_config_t wifi_config = {
+			.sta = {
+				.ssid = CONFIG_ESP32_WIFI_SSID,
+				.password = CONFIG_ESP32_WIFI_PASSWORD,
+			},
+		};
 
-  oc_clock_time_t next_event;
+		esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_STA);
 
-  while (true) {
-    next_event = oc_main_poll();
-    if (next_event == 0) {
-      next_event = K_TICKS_FOREVER;
-      k_sem_take(&block, K_FOREVER);
-    } else {
-      next_event -= oc_clock_time();
-      k_sem_take(&block, Z_TIMEOUT_MS(next_event));
-    }
-  }
+		ret |= esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+		ret |= esp_wifi_connect();
+		if (ret != ESP_OK) {
+			LOG_ERR("connection failed");
+			return;
+		}
+	}
 
-  oc_main_shutdown();
+
+
+	while (true) {
+		next_event = oc_main_poll();
+		if (next_event == 0) {
+			next_event = K_TICKS_FOREVER;
+			k_sem_take(&block, K_FOREVER);
+		} else {
+			next_event -= oc_clock_time();
+			k_sem_take(&block, Z_TIMEOUT_MS(next_event));
+		}
+	}
+
+	oc_main_shutdown();
 }

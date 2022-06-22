@@ -26,7 +26,7 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 #include <zephyr.h>
-#define OC_CLOCK_CONF_TICKS_PER_SECOND (CONFIG_SYS_CLOCK_TICKS_PER_SEC)
+#define OC_CLOCK_CONF_TICKS_PER_SECOND (1000)
 
 /* jitter added to response to some multicast requests */
 #define OC_MULTICAST_RESPONSE_JITTER_MS (2000)

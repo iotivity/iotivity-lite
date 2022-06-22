@@ -66,7 +66,7 @@ static const uint8_t ALL_COAP_NODES_SL[] = { 0xff, 0x05, 0, 0, 0, 0, 0, 0,
 
 #define ALL_COAP_NODES_V4 0xe00001bb
 
-#define NETWORK_THREAD_STACKSIZE (1024 + CONFIG_TEST_EXTRA_STACKSIZE)
+#define NETWORK_THREAD_STACKSIZE (4096 + CONFIG_TEST_EXTRA_STACKSIZE)
 static pthread_attr_t oc_network_thread_attr;
 K_THREAD_STACK_DEFINE(oc_network_thread_stack, NETWORK_THREAD_STACKSIZE);
 static pthread_mutex_t oc_network_mutex;
@@ -485,6 +485,7 @@ free_endpoints_list(ip_context_t *dev)
 static void
 refresh_endpoints_list(ip_context_t *dev)
 {
+  OC_DBG("refresh_endpoints_list");
   free_endpoints_list(dev);
 
   get_interface_addresses(dev, AF_INET6, dev->port, false, false);
@@ -540,6 +541,17 @@ oc_connectivity_get_endpoints(size_t device)
   return oc_list_head(dev->eps);
 }
 
+static void
+process_ip_change_event(int num_devices)
+{
+  for (int i = 0; i < num_devices; i++) {
+    ip_context_t *dev = get_ip_context_for_device(i);
+    oc_network_event_handler_mutex_lock();
+    refresh_endpoints_list(dev);
+    oc_network_event_handler_mutex_unlock();
+  }
+}
+
 /* Called after network interface up/down events.
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
@@ -563,12 +575,7 @@ process_interface_change_event(struct net_if *iface, oc_interface_event_t event)
 #endif /* OC_NETWORK_MONITOR */
   }
 
-  for (int i = 0; i < num_devices; i++) {
-    ip_context_t *dev = get_ip_context_for_device(i);
-    oc_network_event_handler_mutex_lock();
-    refresh_endpoints_list(dev);
-    oc_network_event_handler_mutex_unlock();
-  }
+  process_ip_change_event(num_devices);
 }
 
 static int
@@ -762,11 +769,14 @@ network_event_thread(void *data)
   oc_tcp_add_socks_to_fd_set(dev);
 #endif /* OC_TCP */
 
+  OC_DBG("network_event_thread: thread started");
   int i, n;
   while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     setfds = ip_context_rfds_fd_copy(dev);
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
-
+    if (n < 0) {
+      OC_ERR("network_event_thread: select returns %d, errno=%d", n, errno);
+    }
     if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
       char buf;
       // write to pipe shall not block - so read the byte we wrote
@@ -812,6 +822,7 @@ network_event_thread(void *data)
       oc_network_event(message);
     }
   }
+  OC_DBG("network_event_thread: pthread_exit");
   pthread_exit(NULL);
   return NULL;
 }
@@ -1142,13 +1153,19 @@ static void
 net_mgmt_event_if_handler(struct net_mgmt_event_callback *cb,
                           uint32_t mgmt_event, struct net_if *iface)
 {
+  OC_DBG("net_mgmt_event_if_handler event=0x%x", mgmt_event);
   switch (mgmt_event) {
+  case NET_EVENT_IPV4_ADDR_ADD:
+  case NET_EVENT_IPV6_ADDR_ADD:
+  case NET_EVENT_IPV4_DHCP_BOUND:
   case NET_EVENT_IF_UP: {
-    OC_DBG("event: NET_EVENT_IF_UP");
+    OC_DBG("event: NET_EVENT_IF_UP 0x%x", mgmt_event);
     process_interface_change_event(iface, NETWORK_INTERFACE_UP);
   } break;
+  case NET_EVENT_IPV4_ADDR_DEL:
+  case NET_EVENT_IPV6_ADDR_DEL:
   case NET_EVENT_IF_DOWN: {
-    OC_DBG("event: NET_EVENT_IF_DOWN");
+    OC_DBG("event: NET_EVENT_IF_DOWN 0x%x", mgmt_event);
     process_interface_change_event(iface, NETWORK_INTERFACE_DOWN);
   } break;
   default:
@@ -1336,7 +1353,7 @@ oc_connectivity_init(size_t device)
   if (!ifchange_initialized) {
     net_mgmt_init_event_callback(&net_mgmt_event_if_cb,
                                  net_mgmt_event_if_handler,
-                                 NET_EVENT_IF_UP | NET_EVENT_IF_DOWN);
+                                 NET_EVENT_IPV4_DHCP_BOUND | NET_EVENT_IF_UP | NET_EVENT_IF_DOWN | NET_EVENT_IPV4_ADDR_ADD | NET_EVENT_IPV4_ADDR_DEL | NET_EVENT_IPV6_ADDR_ADD | NET_EVENT_IPV6_ADDR_DEL);
     net_mgmt_add_event_callback(&net_mgmt_event_if_cb);
 #ifdef OC_NETWORK_MONITOR
     if (!check_new_ip_interfaces()) {
