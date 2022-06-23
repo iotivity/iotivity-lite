@@ -1634,8 +1634,13 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
 #endif /* OC_DEBUG */
 
   mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
-  mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
-                               MBEDTLS_SSL_MINOR_VERSION_3);
+  if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
+    mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
+                                 MBEDTLS_SSL_MINOR_VERSION_3);
+  } else {
+    mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
+                                 MBEDTLS_SSL_MINOR_VERSION_4);
+  }
   oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   if ((ps->s > OC_DOS_RFOTM) || (role != MBEDTLS_SSL_IS_SERVER)) {
     mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_REQUIRED);
