@@ -65,6 +65,8 @@ typedef void (*oc_on_push_arrived_t)(oc_pushd_rsc_rep_t *);
 
 /**
  * @brief print payload of Resource in user friendly format
+ *
+ * @param[in] payload pointer to the payload to be printed
  */
 OC_API
 void oc_print_pushd_rsc(const oc_rep_t *payload);
@@ -72,7 +74,7 @@ void oc_print_pushd_rsc(const oc_rep_t *payload);
 /**
  * @brief set callback function called whenever new push arrives
  *
- * @param[in] function name
+ * @param[in] func function name
  */
 OC_API
 void oc_set_on_push_arrived(oc_on_push_arrived_t func);
