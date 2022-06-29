@@ -21,6 +21,7 @@
 
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
+#include "oc_export.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -268,8 +269,8 @@ void _oc_free_array(
  * @param str not terminated string which will replace current str
  * @param str_len size of the string
  */
-void
-oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len);
+OC_API
+void oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len);
 
 /**
  * @brief new array
