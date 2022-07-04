@@ -71,9 +71,7 @@ static void jni_signal_event_loop(void)
 #if defined(_WIN32)
   WakeConditionVariable(&jni_cv);
 #elif defined(__linux__)
-  jni_mutex_lock(jni_cs);
   pthread_cond_signal(&jni_cv);
-  jni_mutex_unlock(jni_cs);
 #endif
 }
 
@@ -773,7 +771,7 @@ void jni_remove_ownership_status_cb(jobject cb)
    * a link, remove the link first.
    *
    * @param collection Collection to add the link to. Must not be NULL.
-   * @param link Link to add to the collection 
+   * @param link Link to add to the collection
    *
    * @see newLink
    * @see collectionRemoveLink
@@ -1888,7 +1886,7 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 %include "oc_api.h"
 
 /*******************Begin oc_client_state.h*****************/
-/* 
+/*
  * NOTE: currently We only expose callbacks and enum types from oc_client_state.h
  * This is why we are not currently using an independent swig interface file. It
  * would just create an empty Java class. If any functions are exposed this should

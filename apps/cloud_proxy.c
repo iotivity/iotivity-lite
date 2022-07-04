@@ -1531,9 +1531,7 @@ signal_event_loop(void)
 STATIC void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
 }
 #endif /* __linux__ */
 

@@ -144,9 +144,7 @@ void
 RIHelper::signalEventLoopCb(void)
 {
   PRINT("signalEventLoopCb\n");
-  pthread_mutex_lock(&s_mutex);
   pthread_cond_signal(&s_cv);
-  pthread_mutex_unlock(&s_mutex);
 }
 
 void
