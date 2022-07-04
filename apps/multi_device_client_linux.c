@@ -52,9 +52,7 @@ static bool stop_get_post = false;
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
 }
 
 static void

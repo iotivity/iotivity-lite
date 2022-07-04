@@ -39,9 +39,7 @@ static pid_t client_pid, server_pid;
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
 }
 
 static void
@@ -301,9 +299,7 @@ child_handler(int sig)
   }
 
   if (child_count >= 2) {
-    pthread_mutex_lock(&mutex);
     pthread_cond_signal(&cv);
-    pthread_mutex_unlock(&mutex);
   }
 }
 

@@ -76,12 +76,6 @@ private:
   static bool s_isServerStarted;
   static bool s_isCallbackReceived;
   static oc_resource_t *s_pResource;
-#ifdef _WIN32
-  static CONDITION_VARIABLE s_cv;
-#else
-  static pthread_mutex_t s_mutex;
-  static pthread_cond_t s_cv;
-#endif
 
 public:
   static int appInit(void)
@@ -106,16 +100,7 @@ public:
     oc_add_resource(s_pResource);
   }
 
-  static void signalEventLoop(void)
-  {
-#ifdef _WIN32
-    WakeConditionVariable(&s_cv);
-#else
-    pthread_mutex_lock(&s_mutex);
-    pthread_cond_signal(&s_cv);
-    pthread_mutex_unlock(&s_mutex);
-#endif
-  }
+  static void signalEventLoop(void) {}
 
   static void requestsEntry(void) {}
 
@@ -225,12 +210,6 @@ bool ApiHelper::s_isServerStarted = false;
 bool ApiHelper::s_isCallbackReceived = false;
 oc_resource_t *ApiHelper::s_pResource = nullptr;
 oc_handler_t ApiHelper::s_handler;
-#ifdef _WIN32
-CONDITION_VARIABLE ApiHelper::s_cv;
-#else
-pthread_mutex_t ApiHelper::s_mutex;
-pthread_cond_t ApiHelper::s_cv;
-#endif
 
 class TestUnicastRequest : public testing::Test {
 protected:

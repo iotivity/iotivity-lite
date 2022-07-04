@@ -103,9 +103,7 @@ signal_event_loop(void)
 #if defined(_WIN32)
   WakeConditionVariable(&cv);
 #elif defined(__linux__)
-  otb_mutex_lock(mutex);
   pthread_cond_signal(&cv);
-  otb_mutex_unlock(mutex);
 #endif
 }
 

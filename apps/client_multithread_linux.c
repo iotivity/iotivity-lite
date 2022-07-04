@@ -308,9 +308,7 @@ find_same_endpoint(oc_endpoint_t *endpoint)
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
 }
 
 void

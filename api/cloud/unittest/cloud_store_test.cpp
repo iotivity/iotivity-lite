@@ -40,12 +40,7 @@ public:
     return result;
   }
 
-  static void signalEventLoop(void)
-  {
-    pthread_mutex_lock(&mutex);
-    pthread_cond_signal(&cv);
-    pthread_mutex_unlock(&mutex);
-  }
+  static void signalEventLoop(void) { pthread_cond_signal(&cv); }
 
   static oc_event_callback_retval_t quitEvent(void *data)
   {
