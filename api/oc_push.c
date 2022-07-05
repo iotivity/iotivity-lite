@@ -1923,8 +1923,10 @@ _validate_recv_obj_list(oc_rep_t *obj_list)
   bool result = false;
   char mandatory_property_check;
 
-  if (!obj_list)
-    goto exit;
+  if (!obj_list) {
+    OC_PUSH_ERR("empty object array!");
+    return result;
+  }
 
   for (recv_obj = obj_list; recv_obj != NULL; recv_obj = recv_obj->next) {
 
@@ -2072,6 +2074,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
                         "(\"%.*s\")...",
                         uri_param_len, uri_param);
             result = OC_STATUS_BAD_REQUEST;
+            goto exit;
           }
         }
       } else {
