@@ -1599,6 +1599,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 }
 #endif // OC_CLOUD
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
 /**
  * read certificate in PEM format
  *
@@ -1645,6 +1646,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
   *buffer_len = (size_t)pem_len;
   return 0;
 }
+#endif /* OC_SECURITY && OC_PKI */
 
 /**
  * factory reset callback: resetting device with cloud_ca trust anchors.

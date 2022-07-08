@@ -51,12 +51,12 @@ static int cloud_store_load_internal(const char *store_name,
                                      oc_cloud_store_t *store);
 static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
 
-void
+int
 cloud_store_load(oc_cloud_store_t *store)
 {
   char cloud_tag[CLOUD_TAG_MAX];
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
-  cloud_store_load_internal(cloud_tag, store);
+  return cloud_store_load_internal(cloud_tag, store);
 }
 
 static void
@@ -147,20 +147,22 @@ cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
   return size;
 }
 
-void
+long
 cloud_store_dump(const oc_cloud_store_t *store)
 {
   char cloud_tag[CLOUD_TAG_MAX];
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   // Calling dump for cloud and access point info
-  cloud_store_dump_internal(cloud_tag, store);
+  return cloud_store_dump_internal(cloud_tag, store);
 }
 
 static oc_event_callback_retval_t
 cloud_store_dump_handler(void *data)
 {
   oc_cloud_store_t *store = (oc_cloud_store_t *)data;
-  cloud_store_dump(store);
+  if (cloud_store_dump(store) != 0) {
+    OC_ERR("failed to dump store");
+  }
   return OC_EVENT_DONE;
 }
 

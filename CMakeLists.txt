@@ -1,9 +1,9 @@
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required(VERSION 3.10)
 project(iotivity-lite VERSION 2.2.5)
 
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
-######## Build configuration options ########
+# ####### Build configuration options ########
 set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
@@ -30,7 +30,7 @@ set(OC_TSAN_ENABLED OFF CACHE BOOL "Enable thread sanitizer build.")
 set(OC_MSAN_ENABLED OFF CACHE BOOL "Enable memory sanitizer build. (clang on Linux only)")
 set(OC_UBSAN_ENABLED OFF CACHE BOOL "Enable undefined behaviour sanitizer build.")
 
-if (OC_CLOUD_ENABLED AND NOT OC_PKI_ENABLED)
+if(OC_CLOUD_ENABLED AND NOT OC_PKI_ENABLED)
     message(FATAL_ERROR "Cannot enable cloud communications without PKI security")
 endif()
 
@@ -59,14 +59,14 @@ if(UNIX)
         add_link_options(-fsanitize=undefined)
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # using clang
         if(OC_MSAN_ENABLED)
             message(STATUS "Memory sanitizer enabled")
             add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=memory -fno-omit-frame-pointer)
             add_link_options(-fsanitize=memory)
         endif()
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # using GCC
     endif()
 
@@ -83,9 +83,10 @@ set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during comp
 
 include(tools/clang-tidy.cmake)
 
-######## Define compiler flags ########
+# ####### Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
+
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
 endif()
@@ -163,7 +164,7 @@ if(MINGW)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "_WIN32_WINNT=0x0600")
 endif()
 
-######## Gather source files ########
+# ####### Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
@@ -194,6 +195,7 @@ elseif(WIN32)
 else()
     message(ERROR "Can build only on Linux and Windows!")
 endif()
+
 list(APPEND SERVER_SRC ${PORT_SRC})
 list(APPEND CLIENT_SRC ${PORT_SRC})
 
@@ -209,6 +211,7 @@ if(OC_SECURITY_ENABLED)
     )
     list(APPEND SERVER_SRC ${SECURITY_SRC})
     list(APPEND CLIENT_SRC ${SECURITY_SRC})
+
     if(OC_DYNAMIC_ALLOCATION_ENABLED)
         list(APPEND CLIENT_SRC ${SECURITY_OBT_SRC})
     endif()
@@ -221,11 +224,12 @@ endif()
 
 file(GLOB PYTHON_SRC python/*.c)
 
-######## Define link dependencies ########
+# ####### Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
 
 include(CheckLibraryExists)
 check_library_exists(m ceil "" HAVE_LIB_M)
+
 if(HAVE_LIB_M)
     list(APPEND PRIVATE_LINK_LIBS m)
 endif(HAVE_LIB_M)
@@ -239,7 +243,7 @@ else()
     list(APPEND PRIVATE_LINK_LIBS Threads::Threads)
 endif()
 
-######## Object libraries ########
+# ####### Object libraries ########
 include(deps/tinycbor.cmake)
 
 if(OC_SECURITY_ENABLED)
@@ -257,6 +261,7 @@ target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SO
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
@@ -264,6 +269,7 @@ endif()
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
@@ -271,6 +277,7 @@ endif()
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-server-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
@@ -279,6 +286,7 @@ if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+
     if(OC_SECURITY_ENABLED)
         target_include_directories(cloud-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
     endif()
@@ -289,20 +297,23 @@ target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_
 set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
 set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(python-obj PRIVATE ${MBEDTLS_INCLUDE_DIRS})
 endif()
 
-######## Compose static and shared libraries ########
+# ####### Compose static and shared libraries ########
 # Client
 set(client-lib-obj
     $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
+
 if(OC_SECURITY_ENABLED)
     list(APPEND client-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
+
 add_library(client-static STATIC ${client-lib-obj})
 target_link_libraries(client-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-static PUBLIC
@@ -316,9 +327,11 @@ target_include_directories(client-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
 endif()
+
 set_target_properties(client-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-static"
     VERSION ${PROJECT_VERSION}
@@ -339,9 +352,11 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
+
     if(OC_SECURITY_ENABLED)
         target_include_directories(client-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
     endif()
+
     set_target_properties(client-shared PROPERTIES
         OUTPUT_NAME "iotivity-lite-client"
         VERSION ${PROJECT_VERSION}
@@ -355,6 +370,7 @@ set(server-lib-obj
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:server-obj>
 )
+
 if(OC_SECURITY_ENABLED)
     list(APPEND server-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
@@ -372,9 +388,11 @@ target_include_directories(server-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(server-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
 endif()
+
 set_target_properties(server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-server-static"
     VERSION ${PROJECT_VERSION}
@@ -395,9 +413,11 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
+
     if(OC_SECURITY_ENABLED)
         target_include_directories(server-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
     endif()
+
     set_target_properties(server-shared PROPERTIES
         OUTPUT_NAME "iotivity-lite-server"
         VERSION ${PROJECT_VERSION}
@@ -411,12 +431,15 @@ set(client-server-lib-obj
     $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-server-obj>
 )
+
 if(OC_CLOUD_ENABLED)
     list(APPEND client-server-lib-obj $<TARGET_OBJECTS:cloud-obj>)
 endif()
+
 if(OC_SECURITY_ENABLED)
     list(APPEND client-server-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
+
 add_library(client-server-static STATIC ${client-server-lib-obj})
 target_link_libraries(client-server-static PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-server-static PUBLIC
@@ -430,12 +453,15 @@ target_include_directories(client-server-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-server-static PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
 endif()
+
 if(OC_CLOUD_ENABLED)
     target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
 endif()
+
 set_target_properties(client-server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server-static"
     VERSION ${PROJECT_VERSION}
@@ -456,12 +482,15 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
+
     if(OC_SECURITY_ENABLED)
         target_include_directories(client-server-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
     endif()
+
     if(OC_CLOUD_ENABLED)
         target_include_directories(client-server-shared PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
     endif()
+
     set_target_properties(client-server-shared PROPERTIES
         OUTPUT_NAME "iotivity-lite-client-server"
         VERSION ${PROJECT_VERSION}
@@ -476,9 +505,11 @@ set(client-python-lib-obj
     $<TARGET_OBJECTS:client-obj>
     $<TARGET_OBJECTS:python-obj>
 )
+
 if(OC_SECURITY_ENABLED)
     list(APPEND client-python-lib-obj $<TARGET_OBJECTS:mbedtls>)
 endif()
+
 add_library(client-python-shared SHARED ${client-python-lib-obj})
 target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
 target_compile_definitions(client-python-shared PUBLIC
@@ -489,27 +520,32 @@ target_include_directories(client-python-shared PUBLIC
     $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
+
 if(OC_SECURITY_ENABLED)
     target_include_directories(client-python-shared PUBLIC "$<BUILD_INTERFACE:${MBEDTLS_INCLUDE_DIRS}>")
 endif()
+
 set_target_properties(client-python-shared PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-python"
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
-######## Units tests (UNIX only) ########
+# ####### Units tests (UNIX only) ########
 include(CTest)
-if(BUILD_TESTING AND (UNIX OR MINGW))
+
+if(BUILD_TESTING AND(UNIX OR MINGW))
     enable_language(CXX)
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
     list(APPEND TEST_COMPILE_OPTIONS "-Wall" "-Wextra" "-fpermissive")
     list(APPEND TEST_LINK_LIBS client-server-static gtest_main)
+
     if(UNIX)
         list(APPEND TEST_LINK_LIBS Threads::Threads)
-        if(CMAKE_COMPILER_IS_GNUCXX AND NOT (OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
+
+        if(CMAKE_COMPILER_IS_GNUCXX AND NOT(OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
             list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
             list(APPEND TEST_LINK_LIBS gcov)
         endif()
@@ -534,15 +570,18 @@ if(BUILD_TESTING AND (UNIX OR MINGW))
             ${PORT_INCLUDE_DIR}
             ${PROJECT_SOURCE_DIR}/messaging/coap
         )
+
         if(OC_SECURITY_ENABLED)
             target_include_directories(${TESTNAME} PRIVATE
                 ${PROJECT_SOURCE_DIR}/security
                 ${PROJECT_SOURCE_DIR}/deps/mbedtls/include
             )
         endif()
+
         if(OC_CLOUD_ENABLED)
             target_include_directories(${TESTNAME} PRIVATE ${PROJECT_SOURCE_DIR}/api/cloud)
         endif()
+
         target_link_libraries(${TESTNAME} PRIVATE ${TEST_LINK_LIBS})
         add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
         set_target_properties(${TESTNAME} PROPERTIES FOLDER unittests)
@@ -568,17 +607,18 @@ if(BUILD_TESTING AND (UNIX OR MINGW))
         )
     endif()
 
-# Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f
-#    if(OC_CLOUD_ENABLED)
-#        file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
-#        package_add_test(cloudtest ${CLOUDTEST_SRC})
-#    endif()
+    # Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f
+    if(OC_CLOUD_ENABLED)
+        file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_cloud)
+        package_add_test(cloudtest ${CLOUDTEST_SRC})
+    endif()
 
     # reenable clang-tidy for any remaining targets
     oc_enable_clang_tidy()
 endif()
 
-######## Generate pkg-config and cmake package files ########
+# ####### Generate pkg-config and cmake package files ########
 foreach(cflag IN LISTS PUBLIC_COMPILE_DEFINITIONS)
     string(APPEND extra_cflags "-D${cflag} ")
 endforeach()
@@ -594,6 +634,7 @@ set(PKG_CONFIG_FILES
     iotivity-lite-client.pc
     iotivity-lite-server.pc
     iotivity-lite-client-server.pc)
+
 foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
     configure_file(
         "${PROJECT_SOURCE_DIR}/port/linux/${pkg-config-file}.in"
@@ -603,21 +644,22 @@ endforeach()
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(iotivity-liteConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfig.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite
+    ${CMAKE_CURRENT_BINARY_DIR}/iotivity-liteConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite
 )
 write_basic_package_version_file(iotivity-liteConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
-######## Installation ########
+# ####### Installation ########
 # Libraries
 set(INSTALL_TARGETS
     client-static client-shared
     server-static server-shared
     client-server-static client-server-shared
 )
+
 if(MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     set(INSTALL_TARGETS
@@ -626,6 +668,7 @@ if(MSVC)
         client-server-static
     )
 endif()
+
 install(TARGETS ${INSTALL_TARGETS}
     EXPORT iotivity-liteTARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
@@ -650,13 +693,14 @@ if(WIN32 AND NOT CYGWIN)
 else()
     set(TARGETS_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/iotivity-lite)
 endif()
+
 install(EXPORT iotivity-liteTARGETS
     FILE
-        iotivity-liteTargets.cmake
+    iotivity-liteTargets.cmake
     NAMESPACE
-        iotivity-lite::
+    iotivity-lite::
     DESTINATION
-        ${TARGETS_INSTALL_DIR}
+    ${TARGETS_INSTALL_DIR}
     COMPONENT dev
 )
 install(FILES
@@ -687,7 +731,7 @@ install(DIRECTORY messaging/coap/
     PATTERN "unittest" EXCLUDE
 )
 
-######## Code formatting ########
+# ####### Code formatting ########
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     # Add clang-format target
     add_custom_target(format
@@ -696,10 +740,11 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     )
 endif()
 
-######## Sub-projects ########
+# ####### Sub-projects ########
 if(UNIX)
     add_subdirectory(tests)
 endif()
+
 if(BUILD_EXAMPLE_APPLICATIONS)
     add_subdirectory(onboarding_tool)
     add_subdirectory(apps)

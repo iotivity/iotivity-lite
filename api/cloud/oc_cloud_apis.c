@@ -601,7 +601,7 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
   }
 #endif /* OC_SECURITY */
 
-  if (!endpoint || (!uid) || !access_token || !handler) {
+  if (!endpoint || !uid || !access_token || !handler) {
     OC_ERR("Error of input parameters");
     return false;
   }
