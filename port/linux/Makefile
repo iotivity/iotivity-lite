@@ -64,6 +64,8 @@ MESSAGING_TEST_OBJ_FILES := $(patsubst $(MESSAGING_TEST_DIR)/%.cpp,$(MESSAGING_T
 
 CLOUD_TEST_DIR = $(ROOT_DIR)/api/cloud/unittest
 CLOUD_TEST_OBJ_DIR = $(CLOUD_TEST_DIR)/obj
+CLOUD_TEST_STORAGE_DIR = storage_cloud
+$(shell mkdir -p $(CLOUD_TEST_STORAGE_DIR))
 CLOUD_TEST_SRC_FILES := $(wildcard $(CLOUD_TEST_DIR)/*.cpp)
 CLOUD_TEST_OBJ_FILES := $(patsubst $(CLOUD_TEST_DIR)/%.cpp,$(CLOUD_TEST_OBJ_DIR)/%.o,$(CLOUD_TEST_SRC_FILES))
 
@@ -157,13 +159,11 @@ ifeq ($(WKCORE),1)
 endif
 
 ifeq ($(CLOUD),1)
-#	UNIT_TESTS += cloudtest
-endif
-ifeq ($(CLOUD),1)
 	CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
 	SAMPLES += cloud_client cloud_server cloud_tests cloud_proxy
+	UNIT_TESTS += cloudtest
 endif
 
 OBT = onboarding_tool
@@ -272,6 +272,9 @@ test: all
 	LD_LIBRARY_PATH=./ ./messagingtest
 	LD_LIBRARY_PATH=./ ./platformtest
 	LD_LIBRARY_PATH=./ ./securitytest
+ifeq ($(CLOUD),1)
+	LD_LIBRARY_PATH=./ ./cloudtest
+endif
 
 .PHONY: test clean
 
@@ -564,7 +567,7 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(RD_CLIENT_TEST_OBJ_FILES)
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(CLOUD_TEST_STORAGE_DIR) $(RD_CLIENT_TEST_OBJ_FILES)
 	rm -rf $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
 	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor server_rules_IDD.cbor
 

@@ -163,6 +163,9 @@ publish_resources(oc_cloud_context_t *ctx)
 int
 oc_cloud_add_resource(oc_resource_t *res)
 {
+  if (res == NULL) {
+    return -1;
+  }
   oc_cloud_context_t *ctx = oc_cloud_get_context(res->device);
   if (ctx == NULL) {
     return -1;

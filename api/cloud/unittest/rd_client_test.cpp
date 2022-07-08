@@ -28,13 +28,13 @@ public:
   static oc_handler_t s_handler;
   static oc_endpoint_t s_endpoint;
 
-  static void onPostResponse(oc_client_response_t *data) { (void)data; }
+  static void onPostResponse(oc_client_response_t *) {}
 
   static int appInit(void)
   {
-    int result = oc_init_platform("OCFCloud", NULL, NULL);
+    int result = oc_init_platform("OCFCloud", nullptr, nullptr);
     result |= oc_add_device("/oic/d", "oic.d.light", "Jaehong's Light",
-                            "ocf.1.0.0", "ocf.res.1.0.0", NULL, NULL);
+                            "ocf.1.0.0", "ocf.res.1.0.0", nullptr, nullptr);
     return result;
   }
 
@@ -50,7 +50,7 @@ protected:
 
     oc_string_t ep_str;
     oc_new_string(&ep_str, "coap://224.0.1.187:5683", 23);
-    oc_string_to_endpoint(&ep_str, &s_endpoint, NULL);
+    oc_string_to_endpoint(&ep_str, &s_endpoint, nullptr);
     oc_free_string(&ep_str);
   }
 
@@ -62,7 +62,8 @@ oc_endpoint_t TestRDClient::s_endpoint;
 TEST_F(TestRDClient, rd_publish_p)
 {
   // When
-  bool ret = rd_publish(&s_endpoint, NULL, 0, 0, onPostResponse, LOW_QOS, NULL);
+  bool ret =
+    rd_publish(&s_endpoint, nullptr, 0, 0, onPostResponse, LOW_QOS, nullptr);
 
   // Then
   EXPECT_TRUE(ret);
@@ -71,10 +72,10 @@ TEST_F(TestRDClient, rd_publish_p)
 TEST_F(TestRDClient, rd_publish_f)
 {
   // Given
-  oc_endpoint_t *ep = NULL;
+  oc_endpoint_t *ep = nullptr;
 
   // When
-  bool ret = rd_publish(ep, NULL, 0, 0, NULL, LOW_QOS, NULL);
+  bool ret = rd_publish(ep, nullptr, 0, 0, nullptr, LOW_QOS, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
@@ -83,7 +84,8 @@ TEST_F(TestRDClient, rd_publish_f)
 TEST_F(TestRDClient, rd_delete_p)
 {
   // When
-  bool ret = rd_delete(&s_endpoint, NULL, 0, onPostResponse, LOW_QOS, NULL);
+  bool ret =
+    rd_delete(&s_endpoint, nullptr, 0, onPostResponse, LOW_QOS, nullptr);
 
   // Then
   EXPECT_TRUE(ret);
@@ -92,10 +94,10 @@ TEST_F(TestRDClient, rd_delete_p)
 TEST_F(TestRDClient, rd_delete_f)
 {
   // Given
-  oc_endpoint_t *ep = NULL;
+  oc_endpoint_t *ep = nullptr;
 
   // When
-  bool ret = rd_delete(ep, NULL, 0, NULL, LOW_QOS, NULL);
+  bool ret = rd_delete(ep, nullptr, 0, nullptr, LOW_QOS, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
