@@ -211,6 +211,11 @@ static void (*oc_push_arrived)(oc_pushd_rsc_rep_t *) = NULL;
     (str).next = NULL;                                                         \
   }
 
+/*
+ * @brief initialize oc_string_array_t object
+ */
+#define oc_init_string_array(str_array) oc_init_string((str_array))
+
 void
 oc_set_on_push_arrived(oc_on_push_arrived_t func)
 {
@@ -250,8 +255,12 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        */
       if (oc_string_len(rep->name) == 5 &&
           memcmp(oc_string(rep->name), "phref", 5) == 0) {
-        oc_set_string(&ns_instance->phref, oc_string(rep->value.string),
-                      oc_string_len(rep->value.string));
+        if (!strcmp(oc_string(rep->value.string), "")) {
+          oc_free_string(&ns_instance->phref);
+        } else {
+          oc_set_string(&ns_instance->phref, oc_string(rep->value.string),
+              oc_string_len(rep->value.string));
+        }
         OC_PUSH_DBG("oic.r.pushproxy:phref (%s)", oc_string(rep->value.string));
       }
       /*
@@ -490,7 +499,8 @@ get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
 
   case OC_IF_RW:
     /* phref (optional) */
-    if (oc_string_len(ns_instance->phref)) {
+//    if (oc_string_len(ns_instance->phref)) {
+    if (oc_string(ns_instance->phref)) {
       oc_rep_set_text_string(root, phref, oc_string(ns_instance->phref));
     }
 
@@ -690,8 +700,16 @@ get_ns_instance(const char *href, oc_string_array_t *types,
                   "collection is created",
                   oc_string(ns_instance->resource->uri), PUSHCONF_RSC_PATH);
 
+      /* initialize properties */
+      oc_init_string(ns_instance->phref);
+      oc_init_string_array(ns_instance->prt);
+      oc_init_string_array(ns_instance->pif);
+      oc_init_string(ns_instance->pushtarget_di);
+      oc_init_string(ns_instance->targetpath);
+      oc_init_string_array(ns_instance->sourcert);
       oc_new_string(&ns_instance->state, pp_statestr(OC_PP_WFP),
                     strlen(pp_statestr(OC_PP_WFP)));
+      ns_instance->user_data = NULL;
 
       OC_PUSH_DBG("state of Push Proxy (\"%s\") is initialized (%s)",
                   oc_string(ns_instance->resource->uri),
@@ -2084,6 +2102,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
         if (!_replace_recv_obj_array(recvs_instance, rep)) {
           OC_PUSH_ERR("failed to replace existing whole receiver objs...");
           result = OC_STATUS_BAD_REQUEST;
+          goto exit;
         }
       }
 
@@ -2210,7 +2229,6 @@ oc_create_pushreceiver_resource(size_t device_index)
     oc_resource_set_request_handler(push_recv, OC_DELETE, delete_pushrecv,
                                     NULL);
 
-    oc_add_resource(push_recv);
 
     /*
      * add struct for `receivers` object list for this Resource to the list
@@ -2218,6 +2236,7 @@ oc_create_pushreceiver_resource(size_t device_index)
     oc_recvs_t *recvs_instance =
       (oc_recvs_t *)oc_memb_alloc(&recvs_instance_memb);
     if (recvs_instance) {
+      oc_add_resource(push_recv);
       recvs_instance->resource = push_recv;
       OC_LIST_STRUCT_INIT(recvs_instance, receivers);
       oc_list_add(recvs_list, recvs_instance);
@@ -2304,10 +2323,12 @@ response_to_push_rsc(oc_client_response_t *data)
  * @brief send PUSH update request
  *
  * @param ns_instance composition of `oic.r.notificationselector` + `oic.r.pushproxy`
+ * @return true:success, false:fail
  */
-static void
+static bool
 push_update(oc_ns_t *ns_instance)
 {
+  bool result = false;
   oc_resource_t *src_rsc;
   char di[OC_UUID_LEN + 10];
 
@@ -2316,12 +2337,12 @@ push_update(oc_ns_t *ns_instance)
   if (!ns_instance || !src_rsc) {
     OC_PUSH_ERR("something wrong! corresponding notification selector source "
                 "resource is NULL, or updated resource is NULL!");
-    return;
+    goto exit;
   }
 
   if (!src_rsc->payload_builder) {
     OC_PUSH_ERR("payload_builder() of source resource is NULL!");
-    return;
+    goto exit;
   }
 
   /*
@@ -2369,7 +2390,6 @@ push_update(oc_ns_t *ns_instance)
     oc_rep_end_root_object();
 
     if (oc_do_post()) {
-
 #if OC_PUSHDEBUG
       oc_string_t ep, full_uri;
 
@@ -2391,10 +2411,17 @@ push_update(oc_ns_t *ns_instance)
       pp_update_state(ns_instance->state, pp_statestr(OC_PP_WFR));
     } else {
       OC_PUSH_ERR("Could not send POST");
+      goto exit;
     }
   } else {
     OC_PUSH_ERR("Could not init POST");
+    goto exit;
   }
+
+  result = true;
+
+exit:
+  return result;
 }
 
 OC_PROCESS_THREAD(oc_push_process, ev, data)
@@ -2496,8 +2523,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
  * @param target
  * @param source
  * @return
- * 			0: any of source is not part of target
- * 			1: any of source is part of target
+ * 			false: any of source is not part of target
+ * 			true: any of source is part of target
  */
 static bool
 _check_string_array_inclusion(oc_string_array_t *target,
@@ -2505,29 +2532,25 @@ _check_string_array_inclusion(oc_string_array_t *target,
 {
   int i, j;
   int src_len, tgt_len;
-  bool result = 0;
 
   tgt_len = oc_string_array_get_allocated_size(*target);
   src_len = oc_string_array_get_allocated_size(*source);
 
   if (!tgt_len || !src_len) {
     OC_PUSH_DBG("source or target string array is empty!");
-    return result;
+    return false;
   }
 
   for (i = 0; i < src_len; i++) {
     for (j = 0; j < tgt_len; j++) {
       if (!strcmp(oc_string_array_get_item(*source, i),
                   oc_string_array_get_item(*target, j))) {
-        result = 1;
-        break;
+        return true;
       }
     }
-    if (result)
-      break;
   }
 
-  return result;
+  return false;
 }
 
 /*
@@ -2566,17 +2589,53 @@ oc_resource_state_changed(const char *uri, size_t device_index)
       continue;
 
     if (oc_string(ns_instance->phref)) {
-      if (strcmp(oc_string(ns_instance->phref), "") &&
-          strcmp(oc_string(ns_instance->phref), uri))
+      if (/*strcmp(oc_string(ns_instance->phref), "") &&*/
+          strcmp(oc_string(ns_instance->phref), uri)) {
+        OC_PUSH_DBG("%s:phref exists, but mismatches (phref:%s - uri:%s)",
+            oc_string(ns_instance->resource->uri),
+            oc_string(ns_instance->phref), uri);
         all_matched = 0;
+      } else /*if (!strcmp(oc_string(ns_instance->phref), uri))*/ {
+        OC_PUSH_DBG("%s:phref matches (phref:%s - uri:%s)",
+            oc_string(ns_instance->resource->uri),
+            oc_string(ns_instance->phref), uri);
+      }
     } else {
+      OC_PUSH_DBG("%s:phref does not exist",
+          oc_string(ns_instance->resource->uri));
       all_matched &= 0x6;
     }
 
     if (oc_string_array_get_allocated_size(ns_instance->prt) > 0) {
-      if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types))
+      if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types)) {
+#ifdef OC_PUSHDEBUG
+        PRINT("%s:prt exists, but mismatches (prt: [", oc_string(ns_instance->resource->uri));
+        for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
+          PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
+        }
+        PRINT("] - rt of updated rsc: [");
+        for (int i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
+          PRINT("%s ", oc_string_array_get_item(resource->types, i));
+        }
+        PRINT("])\n");
+#endif
         all_matched = 0;
+      } else {
+#ifdef OC_PUSHDEBUG
+        PRINT("%s:prt matches (prt: [", oc_string(ns_instance->resource->uri));
+        for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
+          PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
+        }
+        PRINT("] - rt of updated rsc: [");
+        for (int i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
+          PRINT("%s ", oc_string_array_get_item(resource->types, i));
+        }
+        PRINT("])\n");
+#endif
+      }
     } else {
+      OC_PUSH_DBG("%s:prt does not exist",
+          oc_string(ns_instance->resource->uri));
       all_matched &= 0x5;
     }
 
@@ -2584,19 +2643,26 @@ oc_resource_state_changed(const char *uri, size_t device_index)
       oc_interface_mask_t pif = 0;
       for (int i = 0;
            i < (int)oc_string_array_get_allocated_size(ns_instance->pif); i++) {
-        //				pif |=
-        //_get_ifmask_from_ifstr(oc_string_array_get_item(ns_instance->pif, i));
         pif |= oc_ri_get_interface_mask(
           oc_string_array_get_item(ns_instance->pif, i),
           oc_byte_string_array_get_item_size(ns_instance->pif, i));
       }
 
-      if (!(pif & resource->interfaces))
+      if (!(pif & resource->interfaces)) {
+        OC_PUSH_DBG("%s:pif exists, but mismatches (pif:%#x - if of updated rsc:%#x)",
+            oc_string(ns_instance->resource->uri), pif, resource->interfaces);
         all_matched = 0;
+      } else {
+        OC_PUSH_DBG("%s:pif matches (pif:%#x - if of updated rsc:%#x)",
+            oc_string(ns_instance->resource->uri), pif, resource->interfaces);
+      }
     } else {
+      OC_PUSH_DBG("%s:pif does not exist",
+          oc_string(ns_instance->resource->uri));
       all_matched &= 0x3;
     }
 
+    /* todo4me <2022/7/8> resume here.. */
     if (all_matched) {
       if (!oc_process_is_running(&oc_push_process)) {
         OC_PUSH_DBG("oc_push_process is not running!");
@@ -2612,13 +2678,15 @@ oc_resource_state_changed(const char *uri, size_t device_index)
       ns_instance->user_data = resource;
 
       /* post "event" for Resource which has just been updated */
-      push_update(ns_instance);
-      //			oc_process_post(&oc_push_process,
-      // oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
+      if (!push_update(ns_instance)) {
+        OC_PUSH_ERR("sensing PUSH Update of \"%s\" failed!",
+            oc_string(resource->uri));
+      }
+      /*oc_process_post(&oc_push_process,
+          oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);*/
 
-    } else {
-      all_matched = 1;
     }
+    all_matched = 0x7;
   }
 
   return;
