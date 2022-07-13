@@ -1790,6 +1790,7 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     OC_ERR("Error of input parameters");
     return -1;
   }
+  OC_DBG("trying to resolve address %s", domain);
   int ret = -1;
   union dev_addr a;
 
@@ -1824,6 +1825,9 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 #ifdef OC_DNS_CACHE
       oc_dns_cache_domain(domain, &a);
 #endif /* OC_DNS_CACHE */
+    } else {
+      OC_ERR("failed to resolve address with error(%d): %s", ret,
+             gai_strerror(ret));
     }
     freeaddrinfo(result);
 #ifdef OC_DNS_CACHE
@@ -1854,6 +1858,7 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
       OC_DBG("%s address is %s", domain, address);
       oc_new_string(addr, address, strlen(address));
     } else {
+      OC_ERR("failed to parse address to string: %d", (int)errno);
       ret = -1;
     }
   }
