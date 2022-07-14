@@ -483,11 +483,6 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
     return -1;
   }
 
-  /* Extract a uri path if requested and available */
-  if (uri != NULL && ep_uri.uri != NULL) {
-    oc_new_string(uri, ep_uri.uri, ep_uri.uri_len);
-  }
-
   const char *address = ep_uri.address;
   size_t host_len = ep_uri.host_len;
 #ifdef OC_DNS_LOOKUP
@@ -496,7 +491,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #endif /* OC_DNS_LOOKUP */
   if (('A' <= address[host_len - 1] && 'Z' >= address[host_len - 1]) ||
       ('a' <= address[host_len - 1] && 'z' >= address[host_len - 1])) {
-#ifdef OC_DNS_LOOKUP
+#if defined(OC_DNS_LOOKUP) && (defined(OC_DNS_LOOKUP_IPV6) || defined(OC_IPV4))
     if (host_len > 254) {
       // https://www.rfc-editor.org/rfc/rfc1035.html#section-2.3.4
       OC_ERR("invalid domain length(%zu)", host_len);
@@ -508,17 +503,21 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #ifdef OC_DNS_LOOKUP_IPV6
     if (oc_dns_lookup(domain, &ipaddress, ep_uri.scheme_flags | IPV6) != 0) {
 #endif /* OC_DNS_LOOKUP_IPV6 */
+#ifdef OC_IPV4
       if (oc_dns_lookup(domain, &ipaddress, ep_uri.scheme_flags | IPV4) != 0) {
-        OC_ERR("DNS resolution of domain(%s) failed", domain);
+#endif /* OC_IPV4 */
+        OC_ERR("failed to resolve domain(%s)", domain);
         return -1;
+#ifdef OC_IPV4
       }
+#endif /* OC_IPV4 */
 #ifdef OC_DNS_LOOKUP_IPV6
     }
 #endif /* OC_DNS_LOOKUP_IPV6 */
     address = oc_string(ipaddress);
     host_len = oc_string_len(ipaddress);
-#else  /* OC_DNS_LOOKUP */
-    OC_ERR("invalid domain(%s)", domain);
+#else  /* OC_DNS_LOOKUP && (OC_DNS_LOOKUP_IPV6 || OC_IPV4) */
+    OC_ERR("cannot resolve address(%s): dns resolution disabled", address);
     return -1;
 #endif /* !OC_DNS_LOOKUP */
   }
@@ -545,6 +544,12 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 #ifdef OC_DNS_LOOKUP
   oc_free_string(&ipaddress);
 #endif /* OC_DNS_LOOKUP */
+
+  /* Extract a uri path if requested and available */
+  if (uri != NULL && ep_uri.uri != NULL) {
+    oc_new_string(uri, ep_uri.uri, ep_uri.uri_len);
+  }
+
   return 0;
 }
 

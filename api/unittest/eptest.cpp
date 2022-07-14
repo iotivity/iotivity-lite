@@ -73,7 +73,19 @@ TEST(OCEndpoints, StringToEndpoint)
     memset(&uri, 0, sizeof(oc_string_t));
 
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     EXPECT_EQ(ret, 0) << "spu1[" << i << "] " << spu1[i];
+#else
+    EXPECT_EQ(ret, -1) << "spu1[" << i << "] " << spu1[i];
+    oc_endpoint_t empty;
+    memset(&empty, 0, sizeof(oc_endpoint_t));
+    EXPECT_TRUE(memcmp(&empty, &ep, sizeof(oc_endpoint_t)) == 0);
+    EXPECT_EQ(nullptr, oc_string(uri));
+#ifdef _WIN32
+    WSACleanup();
+#endif /* _WIN32 */
+    return;
+#endif /* OC_IPV4 */
 
     switch (i) {
     case 0:
