@@ -30,6 +30,35 @@ TEST(OCEndpoints, StringToEndpoint)
   WSADATA wsaData;
   WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif /* _WIN32 */
+
+  /* bad format */
+  const char *espu[] = {
+    nullptr,
+    "",
+    "http://1.1.1.1:56789",
+    "coap://1.1.1.1:abc",
+    "coap://1.1.1.1:56789abc",
+  };
+  for (size_t i = 0; i < sizeof(espu) / sizeof(espu[0]); i++) {
+    oc_string_t s;
+    oc_new_string(&s, espu[i], espu[i] != nullptr ? strlen(espu[i]) : 0);
+    oc_endpoint_t ep;
+    memset(&ep, 0, sizeof(oc_endpoint_t));
+    oc_string_t uri;
+    memset(&uri, 0, sizeof(oc_string_t));
+
+    int ret = oc_string_to_endpoint(&s, &ep, &uri);
+    EXPECT_EQ(ret, -1) << "espu[" << i << "] "
+                       << (espu[i] != nullptr ? espu[i] : "NULL");
+    oc_endpoint_t empty;
+    memset(&empty, 0, sizeof(oc_endpoint_t));
+    EXPECT_TRUE(memcmp(&empty, &ep, sizeof(oc_endpoint_t)) == 0);
+    EXPECT_EQ(nullptr, oc_string(uri));
+
+    oc_free_string(&s);
+    oc_free_string(&uri);
+  }
+
 #ifdef OC_IPV4
   const char *spu0[1] = { "coaps://10.211.55.3:56789/a/light" };
   for (int i = 0; i < 1; i++) {

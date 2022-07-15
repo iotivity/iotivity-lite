@@ -352,7 +352,7 @@ typedef struct endpoint_uri_t
   const char *address;
   size_t address_len;
   size_t host_len; // length of only the host part of the address
-  const char *uri; // path of the address (ie. part after the first "/")
+  const char *uri; // path part of the address (ie. part from the first "/")
   size_t uri_len;
   uint16_t port;
 } endpoint_uri_t;
@@ -418,6 +418,14 @@ parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
   }
   size_t address_len = ep_len - (address - ep);
 
+  const char *u = memchr(address, '/', address_len);
+  const char *uri = NULL;
+  size_t uri_len = 0;
+  if (parse_uri && u != NULL) {
+    uri = u;
+    uri_len = address_len - (u - address);
+  }
+
   /* Extract the port # if available */
   const char *p = NULL;
   /* If IPv6 address, look for port after ] */
@@ -433,19 +441,22 @@ parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
     p = memchr(address, ':', address_len);
   }
 
-  const char *u = memchr(address, '/', address_len);
-  const char *uri = NULL;
-  size_t uri_len = 0;
-  if (parse_uri && u != NULL) {
-    uri = u;
-    uri_len = address_len - (u - address);
-  }
-
   size_t host_len = address_len;
   uint16_t port = 0;
   if (p != NULL) {
+    /* Move from ':' to digits */
+    const char *d = p + 1;
+    /* Validate port */
+    size_t port_len = u != NULL ? (size_t)(u - d) : address_len - (d - address);
+    for (size_t i = 0; i < port_len; ++i) {
+      if (d[i] < '0' || d[i] > '9') {
+        OC_ERR("invalid port subcomponent in address(%s)", address);
+        return false;
+      }
+    }
+
     /* Extract port # from string */
-    port = (uint16_t)strtoul(p + 1, NULL, 10);
+    port = (uint16_t)strtoul(d, NULL, 10);
     host_len = p - address;
   } else {
     /* Port not specified; assume 5683 for an unsecured ep and 5684 for
@@ -567,21 +578,17 @@ oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 int
 oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path)
 {
-  if (!endpoint_str) {
-    return -1;
-  }
-  if (!path) {
+  if (endpoint_str == NULL || path == NULL) {
     return -1;
   }
 
-  const char *address = NULL;
-
-  address = strstr(oc_string(*endpoint_str), "://");
-  if (!address) {
+#define SCHEME_SEPARATOR "://"
+  const char *address = strstr(oc_string(*endpoint_str), SCHEME_SEPARATOR);
+  if (address == NULL) {
     return -1;
   }
-  // 3 is string length of "://"
-  address += 3;
+  // move past scheme
+  address += (sizeof(SCHEME_SEPARATOR) - 1);
 
   size_t len =
     oc_string_len(*endpoint_str) - (address - oc_string(*endpoint_str));
