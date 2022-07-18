@@ -15,10 +15,11 @@
 */
 
 #include "gtest/gtest.h"
-#include <cstdlib>
-
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
+
+#include <cstdlib>
+#include <vector>
 
 #ifdef _WIN32
 #include <WinSock2.h>
@@ -32,14 +33,14 @@ TEST(OCEndpoints, StringToEndpoint)
 #endif /* _WIN32 */
 
   /* bad format */
-  const char *espu[] = {
+  std::vector<const char *> espu = {
     nullptr,
     "",
     "http://1.1.1.1:56789",
     "coap://1.1.1.1:abc",
     "coap://1.1.1.1:56789abc",
   };
-  for (size_t i = 0; i < sizeof(espu) / sizeof(espu[0]); i++) {
+  for (size_t i = 0; i < espu.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, espu[i], espu[i] != nullptr ? strlen(espu[i]) : 0);
     oc_endpoint_t ep;
@@ -60,8 +61,8 @@ TEST(OCEndpoints, StringToEndpoint)
   }
 
 #ifdef OC_IPV4
-  const char *spu0[1] = { "coaps://10.211.55.3:56789/a/light" };
-  for (int i = 0; i < 1; i++) {
+  std::vector<const char *> spu0 = { "coaps://10.211.55.3:56789/a/light" };
+  for (size_t i = 0; i < spu0.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu0[i], strlen(spu0[i]));
     oc_endpoint_t ep;
@@ -90,10 +91,12 @@ TEST(OCEndpoints, StringToEndpoint)
   }
 #endif /* OC_IPV4 */
 
-  const char *spu1[3] = { "coap://openconnectivity.org",
-                          "coap://openconnectivity.org/alpha",
-                          "coaps://openconnectivity.org:3456/alpha" };
-  for (int i = 0; i < 3; i++) {
+  std::vector<const char *> spu1 = {
+    "coap://openconnectivity.org",
+    "coap://openconnectivity.org/alpha",
+    "coaps://openconnectivity.org:3456/alpha",
+  };
+  for (size_t i = 0; i < spu1.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu1[i], strlen(spu1[i]));
     oc_endpoint_t ep;
@@ -159,9 +162,11 @@ TEST(OCEndpoints, StringToEndpoint)
 
 #ifdef OC_TCP
 #ifdef OC_IPV4
-  const char *spu2[2] = { "coaps+tcp://10.211.55.3/a/light",
-                          "coap+tcp://1.2.3.4:2568" };
-  for (int i = 0; i < 2; i++) {
+  std::vector<const char *> spu2 = {
+    "coaps+tcp://10.211.55.3/a/light",
+    "coap+tcp://1.2.3.4:2568",
+  };
+  for (size_t i = 0; i < spu2.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu2[i], strlen(spu2[i]));
     oc_endpoint_t ep;
@@ -198,11 +203,13 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&uri);
   }
 #endif /* OC_IPV4 */
-  const char *spu3[4] = { "coaps+tcp://openconnectivity.org:3456",
-                          "coap+tcp://[ff02::158]",
-                          "coaps+tcp://[ff02::158]/a/light",
-                          "coaps+tcp://[fe80::12]:2439/a/light" };
-  for (int i = 0; i < 4; i++) {
+  std::vector<const char *> spu3 = {
+    "coaps+tcp://openconnectivity.org:3456",
+    "coap+tcp://[ff02::158]",
+    "coaps+tcp://[ff02::158]/a/light",
+    "coaps+tcp://[fe80::12]:2439/a/light",
+  };
+  for (size_t i = 0; i < spu3.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu3[i], strlen(spu3[i]));
     oc_endpoint_t ep;
@@ -259,11 +266,13 @@ TEST(OCEndpoints, StringToEndpoint)
   }
 
   // test dns lookup when uri is NULL
-  const char *spu4[4] = { "coap://10.211.55.3:56789/a/light",
-                          "coaps+tcp://10.211.55.3/a/light",
-                          "coap://openconnectivity.org/alpha",
-                          "coaps://openconnectivity.org:3456/alpha" };
-  for (int i = 0; i < 4; i++) {
+  std::vector<const char *> spu4 = {
+    "coap://10.211.55.3:56789/a/light",
+    "coaps+tcp://10.211.55.3/a/light",
+    "coap://openconnectivity.org/alpha",
+    "coaps://openconnectivity.org:3456/alpha",
+  };
+  for (size_t i = 0; i < spu4.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu4[i], strlen(spu4[i]));
     oc_endpoint_t ep;
