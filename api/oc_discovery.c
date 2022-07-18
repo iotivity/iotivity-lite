@@ -60,7 +60,7 @@ clf_add_line_size_to_buffer(const char *line, int len)
 #endif /* OC_WKCORE */
 
 static bool
-filter_resource(oc_resource_t *resource, oc_request_t *request,
+filter_resource(const oc_resource_t *resource, const oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
 {
   if (!oc_filter_resource_by_rt(resource, request)) {
@@ -195,7 +195,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
   }
 
   // tag-pos-rel
-  double *pos = resource->tag_pos_rel;
+  const double *pos = resource->tag_pos_rel;
   if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
     oc_rep_set_key(oc_rep_object(link), "tag-pos-rel");
     oc_rep_start_array(oc_rep_object(link), tag_pos_rel);
@@ -211,7 +211,7 @@ filter_resource(oc_resource_t *resource, oc_request_t *request,
 }
 
 static int
-process_device_resources(CborEncoder *links, oc_request_t *request,
+process_device_resources(CborEncoder *links, const oc_request_t *request,
                          size_t device_index)
 {
   int matches = 0;
@@ -728,7 +728,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   // for dev without SVRs, ignore queries for backward compatibility
 #ifdef OC_SECURITY
-  char *q;
+  const char *q;
   int ql = oc_get_query_value(request, "sduuid", &q);
   if (ql > 0) {
     oc_sec_sdi_t *s = oc_sec_get_sdi(device);
@@ -831,10 +831,10 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     return;
   }
 
-  char *value = NULL;
+  const char *value = NULL;
   size_t value_len;
-  char *key;
-  char *rt_request = 0;
+  const char *key;
+  const char *rt_request = 0;
   int rt_len = 0;
   const char *rt_device = 0;
   int rt_devlen = 0;

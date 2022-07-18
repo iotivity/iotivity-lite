@@ -46,9 +46,6 @@
  */
 
 #include "engine.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "api/oc_events.h"
 #include "api/oc_main.h"
@@ -72,7 +69,11 @@
 #include "coap_signal.h"
 #endif
 
-OC_PROCESS(coap_engine, "CoAP Engine");
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+OC_PROCESS(g_coap_engine, "CoAP Engine");
 
 #ifdef OC_BLOCK_WISE
 extern bool oc_ri_invoke_coap_entity_handler(
@@ -92,16 +93,16 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 // match is found, the message is dropped as it must be
 // a duplicate.
 #define OC_REQUEST_HISTORY_SIZE (25)
-static uint16_t history[OC_REQUEST_HISTORY_SIZE];
-static uint8_t history_dev[OC_REQUEST_HISTORY_SIZE];
-static uint8_t idx;
+static uint16_t g_history[OC_REQUEST_HISTORY_SIZE];
+static uint32_t g_history_dev[OC_REQUEST_HISTORY_SIZE];
+static uint8_t g_idx = 0;
 
 bool
-oc_coap_check_if_duplicate(uint16_t mid, uint8_t device)
+oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
 {
   size_t i;
   for (i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
-    if (history[i] == mid && history_dev[i] == device) {
+    if (g_history[i] == mid && g_history_dev[i] == device) {
       OC_DBG("dropping duplicate request");
       return true;
     }
@@ -311,12 +312,12 @@ coap_receive(oc_message_t *msg)
         } else {
 #ifdef OC_REQUEST_HISTORY
           if (oc_coap_check_if_duplicate(message->mid,
-                                         (uint8_t)msg->endpoint.device)) {
+                                         (uint32_t)msg->endpoint.device)) {
             return 0;
           }
-          history[idx] = message->mid;
-          history_dev[idx] = (uint8_t)msg->endpoint.device;
-          idx = (idx + 1) % OC_REQUEST_HISTORY_SIZE;
+          g_history[g_idx] = message->mid;
+          g_history_dev[g_idx] = (uint32_t)msg->endpoint.device;
+          g_idx = (g_idx + 1) % OC_REQUEST_HISTORY_SIZE;
 #endif /* OC_REQUEST_HISTORY */
           if (href_len == 7 && memcmp(href, "oic/res", 7) == 0) {
             coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
@@ -663,12 +664,13 @@ coap_receive(oc_message_t *msg)
         coap_send_empty_response(COAP_TYPE_ACK, message->mid, NULL, 0, 0,
                                  &msg->endpoint);
       } else if (message->type == COAP_TYPE_ACK) {
-      } else if (message->type == COAP_TYPE_RST) {
+      }
 #ifdef OC_SERVER
+      else if (message->type == COAP_TYPE_RST) {
         /* cancel possible subscriptions */
         coap_remove_observer_by_mid(&msg->endpoint, message->mid);
-#endif
       }
+#endif
 
 #ifdef OC_CLIENT
 #ifdef OC_BLOCK_WISE
@@ -947,7 +949,7 @@ coap_init_engine(void)
   coap_register_as_transaction_handler();
 }
 /*---------------------------------------------------------------------------*/
-OC_PROCESS_THREAD(coap_engine, ev, data)
+OC_PROCESS_THREAD(g_coap_engine, ev, data)
 {
   OC_PROCESS_BEGIN();
 

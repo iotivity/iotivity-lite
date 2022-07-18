@@ -1068,7 +1068,7 @@ typedef struct oc_rep_s
 
 void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
 
-int oc_parse_rep(const uint8_t *payload, int payload_size,
+int oc_parse_rep(const uint8_t *payload, size_t payload_size,
                  oc_rep_t **value_list);
 
 void oc_free_rep(oc_rep_t *rep);

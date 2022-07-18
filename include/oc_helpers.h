@@ -153,6 +153,13 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 
 #endif /* !OC_MEMORY_TRACE */
 
+/**
+ * @brief Allocate a new oc_string and concat two non-empty C-strings into it.
+ *
+ * @param[out] concat pointer to output variable
+ * @param str1 first string (cannot be NULL)
+ * @param str2 second string (cannot be NULL)
+ */
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #define oc_string_len(ocstring) ((ocstring).size ? (ocstring).size - 1 : 0)
 
@@ -289,6 +296,7 @@ void _oc_alloc_string_array(
  * @param hex_str data as hex
  * @param hex_str_len lenght of the hex string
  * @return int 0 success
+ * @return int -1 on failure
  */
 int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
                                      char *hex_str, size_t *hex_str_len);
@@ -301,6 +309,7 @@ int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
  * @param array array of bytes
  * @param array_len byte array
  * @return int 0 success
+ * @return int -1 on failure
  */
 int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
                                      uint8_t *array, size_t *array_len);

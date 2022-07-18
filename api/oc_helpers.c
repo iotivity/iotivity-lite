@@ -107,11 +107,12 @@ _oc_free_string(
 void
 oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 {
-  size_t len1 = strlen(str1), len2 = strlen(str2);
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
   oc_alloc_string(concat, len1 + len2 + 1);
   memcpy(oc_string(*concat), str1, len1);
   memcpy(oc_string(*concat) + len1, str2, len2);
-  memcpy(oc_string(*concat) + len1 + len2, (const char *)"", 1);
+  oc_string(*concat)[len1 + len2] = '\0';
 }
 
 void
@@ -232,30 +233,33 @@ void
 oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
 {
   size_t len = 0;
-  size_t i;
-  for (i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(*ocstringarray);
+       i++) {
     const char *item =
       (const char *)oc_string_array_get_item(*ocstringarray, i);
-    if (strlen(item)) {
-      len += strlen(item);
+    size_t item_len = strlen(item);
+    if (item_len != 0) {
+      len += item_len;
       len++;
     }
   }
   oc_alloc_string(ocstring, len);
   len = 0;
-  for (i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(*ocstringarray);
+       i++) {
     const char *item =
       (const char *)oc_string_array_get_item(*ocstringarray, i);
-    if (strlen(item)) {
+    size_t item_len = strlen(item);
+    if (item_len != 0) {
       if (len > 0) {
         oc_string(*ocstring)[len] = ' ';
         len++;
       }
-      memcpy((char *)oc_string(*ocstring) + len, item, strlen(item));
-      len += strlen(item);
+      memcpy(oc_string(*ocstring) + len, item, item_len);
+      len += item_len;
     }
   }
-  strcpy((char *)oc_string(*ocstring) + len, "");
+  oc_string(*ocstring)[len] = '\0';
 }
 
 int
@@ -267,14 +271,10 @@ oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
   }
 
   *hex_str_len = 0;
-
-  size_t i;
-
-  for (i = 0; i < array_len; i++) {
+  for (size_t i = 0; i < array_len; i++) {
     snprintf(hex_str + *hex_str_len, 3, "%02x", array[i]);
     *hex_str_len += 2;
   }
-
   hex_str[*hex_str_len++] = '\0';
 
   return 0;
@@ -288,27 +288,26 @@ oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
     return -1;
   }
 
-  size_t a = hex_str_len / 2.0 + 0.5;
-
-  if (*array_len < a) {
+  size_t len = hex_str_len / 2;
+  if ((hex_str_len % 2) != 0) {
+    ++len;
+  }
+  if (*array_len < len) {
     return -1;
   }
+  *array_len = len;
 
-  *array_len = a;
-  a = 0;
-
-  uint32_t tmp;
-  size_t i, start;
-
-  if (hex_str_len % 2 == 0) {
-    start = 0;
-  } else {
+  size_t a = 0;
+  size_t start = 0;
+  if (hex_str_len % 2 != 0) {
     start = 1;
+    uint32_t tmp;
     sscanf(&hex_str[0], "%1x", &tmp);
     array[a++] = (uint8_t)tmp;
   }
 
-  for (i = start; i <= hex_str_len - 2; i += 2) {
+  for (size_t i = start; i + 2 <= hex_str_len; i += 2) {
+    uint32_t tmp;
     sscanf(&hex_str[i], "%2x", &tmp);
     array[a++] = (uint8_t)tmp;
   }

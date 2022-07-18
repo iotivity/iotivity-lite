@@ -601,7 +601,7 @@ oc_core_get_resource_by_index(int type, size_t device)
 
 #ifdef OC_SECURITY
 bool
-oc_core_is_SVR(oc_resource_t *resource, size_t device)
+oc_core_is_SVR(const oc_resource_t *resource, size_t device)
 {
   size_t device_svrs = OCF_D * device + OCF_SEC_DOXM;
 
@@ -617,7 +617,7 @@ oc_core_is_SVR(oc_resource_t *resource, size_t device)
 #endif /* OC_SECURITY */
 
 bool
-oc_core_is_vertical_resource(oc_resource_t *resource, size_t device)
+oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device)
 {
   if (resource == &core_resources[0]) {
     return true;
@@ -636,7 +636,7 @@ oc_core_is_vertical_resource(oc_resource_t *resource, size_t device)
 }
 
 bool
-oc_core_is_DCR(oc_resource_t *resource, size_t device)
+oc_core_is_DCR(const oc_resource_t *resource, size_t device)
 {
   if (resource == &core_resources[0]) {
     return true;
@@ -740,10 +740,11 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
 }
 
 bool
-oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request)
+oc_filter_resource_by_rt(const oc_resource_t *resource,
+                         const oc_request_t *request)
 {
   bool match = true, more_query_params = false;
-  char *rt = NULL;
+  const char *rt = NULL;
   int rt_len = -1;
   oc_init_query_iterator();
   do {

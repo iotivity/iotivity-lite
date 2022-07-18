@@ -185,8 +185,6 @@ static void
 call_process(struct oc_process *p, oc_process_event_t ev,
              oc_process_data_t data)
 {
-  int ret;
-
   if (p->thread == NULL) {
     return;
   }
@@ -200,7 +198,7 @@ call_process(struct oc_process *p, oc_process_event_t ev,
       continue;
     }
     oc_process_current = p;
-    ret = p->thread(&p->pt, ev, data);
+    char ret = p->thread(&p->pt, ev, data);
     if (ret == PT_EXITED || ret == PT_ENDED || ev == OC_PROCESS_EVENT_EXIT) {
       exit_process(p, p);
       break;
@@ -339,13 +337,13 @@ oc_process_run(void)
   /* Process one event from the queue */
   do_event();
 
-  return nevents + OC_ATOMIC_LOAD8(g_poll_requested);
+  return (int)nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 /*---------------------------------------------------------------------------*/
 int
 oc_process_nevents(void)
 {
-  return nevents + OC_ATOMIC_LOAD8(g_poll_requested);
+  return (int)nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 /*---------------------------------------------------------------------------*/
 #ifdef OC_SECURITY

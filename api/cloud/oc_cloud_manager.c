@@ -306,7 +306,7 @@ _register_handler(oc_cloud_context_t *ctx, oc_client_response_t *data,
   if (oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) && size > 0) {
     char *ci_server = oc_string(ctx->store.ci_server);
     if (!ci_server || oc_string_len(ctx->store.ci_server) != size ||
-        strcmp(ci_server, value)) {
+        strcmp(ci_server, value) != 0) {
       cloud_close_endpoint(ctx->cloud_ep);
       memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
       ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;

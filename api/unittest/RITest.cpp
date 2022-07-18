@@ -127,7 +127,7 @@ TEST_F(TestOcRi, RIGetQueryValue_P)
                           "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
                           "y&x&key=2&y" };
   int ret;
-  char *value;
+  const char *value;
 
   for (int i = 0; i < 7; i++) {
     ret = oc_ri_get_query_value(input[i], strlen(input[i]), "key", &value);

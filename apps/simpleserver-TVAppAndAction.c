@@ -95,24 +95,22 @@ app_init(void)
   return ret;
 }
 
-bool
-verify_action_in_supported_set(char *action, int action_len)
+static bool
+verify_action_in_supported_set(oc_string_t action)
 {
-  bool rc = false;
-  size_t i;
-
-  for (i = 0; i < oc_string_array_get_allocated_size(my_supportedactions);
-       i++) {
+  const char *act = oc_string(action);
+  size_t act_len = oc_string_len(action);
+  for (size_t i = 0;
+       i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
     PRINT("Action compare. Supported action %s against received action %s \n",
-          sv, action);
-    if (strlen(sv) == action_len && memcmp(sv, action, action_len) == 0) {
-      rc = true;
-      break;
+          sv, act);
+    if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
+      return true;
     }
   }
 
-  return rc;
+  return false;
 }
 
 static void
@@ -209,7 +207,7 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* Check if query string includes action selectio, it is does, reject the
    * request. */
-  char *action = NULL;
+  const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
   bool rc =
@@ -256,7 +254,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   int query_len = request->query_len;
 
   /* Check if query string includes action selection. */
-  char *action = NULL;
+  const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
   bool rc =
@@ -269,8 +267,9 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 
     // Validate that the action requests is in the set
     //
-    action[action_len] = "\0";
-    bool valid_action = verify_action_in_supported_set(action, action_len);
+    oc_string_t act;
+    oc_new_string(&act, action, action_len);
+    bool valid_action = verify_action_in_supported_set(act);
 
     // Build response with selected action
     //
@@ -278,13 +277,14 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_start_root_object();
       oc_rep_set_key(oc_rep_object(root), "selectedactions");
       oc_rep_begin_array(oc_rep_object(root), selectedactions);
-      oc_rep_add_text_string(selectedactions, action);
+      oc_rep_add_text_string(selectedactions, oc_string(act));
       oc_rep_end_array(oc_rep_object(root), selectedactions);
       oc_rep_end_root_object();
       oc_send_response(request, OC_STATUS_CHANGED);
     } else {
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
     }
+    oc_free_string(&act);
   } else {
     PRINT("POST no action received \n");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);

@@ -578,7 +578,7 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
  * @return true : found, false: not found
  */
 STATIC bool
-if_di_exist(char *di, int di_len)
+if_di_exist(const char *di, int di_len)
 {
   for (int i = 0; i < MAX_ARRAY; i++) {
     if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, di_len) == 0) {
@@ -597,7 +597,7 @@ if_di_exist(char *di, int di_len)
  * @return true : removed, false: not removed
  */
 STATIC bool
-remove_di(char *di, int len)
+remove_di(const char *di, int len)
 {
   for (int i = 0; i < MAX_ARRAY; i++) {
     PRINT("   %s %.*s ", g_d2dserverlist_d2dserverlist[i].di, len, di);
@@ -634,7 +634,7 @@ find_resource(const char *di)
  * @param len length of di
  */
 STATIC bool
-unregister_resources(char *di, int len)
+unregister_resources(const char *di, int len)
 {
   (void)len;
   oc_resource_t *res = NULL;
@@ -679,8 +679,8 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 
   // di is a query param, copy from DELETE.
   bool stored = false;
-  char *_di = NULL;   /* not null terminated  */
-  char *_scan = NULL; /* not null terminated  */
+  const char *_di = NULL;   /* not null terminated  */
+  const char *_scan = NULL; /* not null terminated  */
 
   /* do a scan to all devices */
   int _scan_len = oc_get_query_value(request, "scan", &_scan);
@@ -780,7 +780,7 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   list_udn();
 
   /* query name 'di' type: 'string'*/
-  char *_di = NULL; /* not null terminated  */
+  const char *_di = NULL; /* not null terminated  */
   int _di_len = oc_get_query_value(request, "di", &_di);
   if (_di_len != -1) {
     /* input check

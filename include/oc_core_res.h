@@ -209,7 +209,8 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
  * @return true resource is in the request
  * @return false resource is not in the request
  */
-bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
+bool oc_filter_resource_by_rt(const oc_resource_t *resource,
+                              const oc_request_t *request);
 
 /**
  * @brief determine if a resource is a Device Configuration Resource
@@ -219,7 +220,7 @@ bool oc_filter_resource_by_rt(oc_resource_t *resource, oc_request_t *request);
  * @return true is DCR resource
  * @return false is not DCR resource
  */
-bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
+bool oc_core_is_DCR(const oc_resource_t *resource, size_t device);
 
 /**
  * @brief determine if a resource is Security Vertical Resource
@@ -229,7 +230,7 @@ bool oc_core_is_DCR(oc_resource_t *resource, size_t device);
  * @return true is SRV resource
  * @return false is not SVR resource
  */
-bool oc_core_is_SVR(oc_resource_t *resource, size_t device);
+bool oc_core_is_SVR(const oc_resource_t *resource, size_t device);
 
 /**
  * @brief determine if a resource is a vertical resource
@@ -239,7 +240,7 @@ bool oc_core_is_SVR(oc_resource_t *resource, size_t device);
  * @return true : is vertical resource
  * @return false : is not a vertical resource
  */
-bool oc_core_is_vertical_resource(oc_resource_t *resource, size_t device);
+bool oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device);
 
 /**
  * set the latency (lat) property in eps of oic.wk.res resource.

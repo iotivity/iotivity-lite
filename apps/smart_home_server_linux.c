@@ -117,7 +117,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   (void)user_data;
   PRINT("GET_temp:\n");
   bool invalid_query = false;
-  char *units;
+  const char *units;
   units_t u = temp_units;
   int units_len = oc_get_query_value(request, "units", &units);
   if (units_len != -1) {
