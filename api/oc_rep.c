@@ -531,7 +531,7 @@ get_tagged_value:
 }
 
 int
-oc_parse_rep(const uint8_t *in_payload, int payload_size, oc_rep_t **out_rep)
+oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
 {
   CborParser parser;
   CborValue root_value, cur_value, map;

@@ -346,7 +346,6 @@ coap_serialize_oscore_option(unsigned int *current_number, void *packet,
       /* Remaining bytes, if any, represent the kid */
       if (coap_pkt->kid_len > 0) {
         memcpy(buffer, coap_pkt->kid, coap_pkt->kid_len);
-        buffer += coap_pkt->kid_len;
 
         OC_DBG("\tkid:");
         OC_LOGbytes(coap_pkt->kid, coap_pkt->kid_len);

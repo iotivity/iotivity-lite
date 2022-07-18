@@ -217,8 +217,7 @@ extern "C" {
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
     PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
-    uint16_t i;                                                                \
-    for (i = 0; i < (length); i++)                                             \
+    for (size_t i = 0; i < (size_t)(length); i++)                              \
       PRINT(" %02X", (bytes)[i]);                                              \
     PRINT("\n");                                                               \
   } while (0)

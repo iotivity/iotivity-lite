@@ -1677,7 +1677,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     }
   }
 
-  char *query_param = 0;
+  const char *query_param = 0;
   int ret = oc_get_query_value(request, "credid", &query_param);
   int credid = 0;
   if (ret != -1) {

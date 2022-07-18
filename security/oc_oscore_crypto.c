@@ -90,7 +90,8 @@ HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
   }
 
   /* Number of iterations: N = ceil(L/HashLen) */
-  int N = (okm_len + HMAC_SHA256_HASHLEN - 1) / HMAC_SHA256_HASHLEN;
+  uint8_t N =
+    (uint8_t)((okm_len + HMAC_SHA256_HASHLEN - 1) / HMAC_SHA256_HASHLEN);
 
   /* Iteration buffer:
    *  T(i) = HMAC-Hash(PRK, T(i - 1) | info | hex(i)), where
@@ -113,8 +114,7 @@ HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
               &(okm_buffer[0]));
 
   /* Iterations T(2)...T(N) */
-  uint8_t i;
-  for (i = 1; i < N; i++) {
+  for (uint8_t i = 1; i < N; i++) {
     memcpy(iter_buffer, &okm_buffer[(i - 1) * HMAC_SHA256_HASHLEN],
            HMAC_SHA256_HASHLEN);
     memcpy(&iter_buffer[HMAC_SHA256_HASHLEN], info, info_len);

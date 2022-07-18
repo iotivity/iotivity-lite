@@ -64,6 +64,7 @@
 #include "security/oc_roles.h"
 #include "security/oc_tls.h"
 #ifdef OC_OSCORE
+#include "messaging/coap/oscore.h"
 #include "security/oc_oscore.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
@@ -175,24 +176,24 @@ oc_ri_is_app_resource_valid(oc_resource_t *resource)
 int
 oc_status_code(oc_status_t key)
 {
-  return oc_coap_status_codes[key];
+  // safe: no status code is larger than INT_MAX
+  return (int)oc_coap_status_codes[key];
 }
 
 int
-oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
-                              size_t *key_len, char **value, size_t *value_len,
-                              size_t n)
+oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
+                              const char **key, size_t *key_len,
+                              const char **value, size_t *value_len, size_t n)
 {
-  int next_pos = -1;
-  size_t i = 0;
-  char *start = (char *)query, *current, *current2,
-       *end = (char *)query + query_len;
+  const char *start = query;
+  const char *end = query + query_len;
 
   if (start == NULL) {
-    return next_pos;
+    return -1;
   }
 
-  current = start;
+  const char *current = start;
+  size_t i = 0;
   while (i < (n - 1) && current != NULL) {
     current = memchr(start, '&', end - start);
     if (current == NULL) {
@@ -203,13 +204,15 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
   }
 
   current = memchr(start, '=', end - start);
-  current2 = memchr(start, '&', end - start);
+  const char *current2 = memchr(start, '&', end - start);
   if (current2 != NULL) {
     if (current2 < current) {
       /* the key is does not have = */
       current = NULL;
     }
   }
+
+  int next_pos;
   if (current != NULL) {
     *key_len = (current - start);
     *key = start;
@@ -237,11 +240,11 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len, char **key,
 
 int
 oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
-                      char **value)
+                      const char **value)
 {
   int next_pos = 0, found = -1;
   size_t kl, vl, pos = 0;
-  char *k;
+  const char *k;
 
   while (pos < query_len) {
     next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
@@ -361,7 +364,7 @@ start_processes(void)
   allocate_events();
   oc_process_start(&oc_etimer_process, NULL);
   oc_process_start(&g_timed_callback_events, NULL);
-  oc_process_start(&coap_engine, NULL);
+  oc_process_start(&g_coap_engine, NULL);
   oc_process_start(&message_buffer_handler, NULL);
 
 #ifdef OC_SECURITY
@@ -386,7 +389,7 @@ stop_processes(void)
   oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
   oc_process_exit(&g_timed_callback_events);
-  oc_process_exit(&coap_engine);
+  oc_process_exit(&g_coap_engine);
 
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
@@ -790,32 +793,42 @@ free_all_event_timers(void)
 }
 
 oc_interface_mask_t
-oc_ri_get_interface_mask(char *iface, size_t if_len)
+oc_ri_get_interface_mask(const char *iface, size_t if_len)
 {
-  oc_interface_mask_t iface_mask = 0;
-  if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0)
-    iface_mask |= OC_IF_BASELINE;
-  if (9 == if_len && strncmp(iface, "oic.if.ll", if_len) == 0)
-    iface_mask |= OC_IF_LL;
-  if (8 == if_len && strncmp(iface, "oic.if.b", if_len) == 0)
-    iface_mask |= OC_IF_B;
-  if (8 == if_len && strncmp(iface, "oic.if.r", if_len) == 0)
-    iface_mask |= OC_IF_R;
-  if (9 == if_len && strncmp(iface, "oic.if.rw", if_len) == 0)
-    iface_mask |= OC_IF_RW;
-  if (8 == if_len && strncmp(iface, "oic.if.a", if_len) == 0)
-    iface_mask |= OC_IF_A;
-  if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0)
-    iface_mask |= OC_IF_S;
-  if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0)
-    iface_mask |= OC_IF_CREATE;
-  if (14 == if_len && strncmp(iface, "oic.if.startup", if_len) == 0)
-    iface_mask |= OC_IF_STARTUP;
-  if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0)
-    iface_mask |= OC_IF_STARTUP_REVERT;
-  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0)
-    iface_mask |= OC_IF_W;
-  return iface_mask;
+  if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0) {
+    return OC_IF_BASELINE;
+  }
+  if (9 == if_len && strncmp(iface, "oic.if.ll", if_len) == 0) {
+    return OC_IF_LL;
+  }
+  if (8 == if_len && strncmp(iface, "oic.if.b", if_len) == 0) {
+    return OC_IF_B;
+  }
+  if (8 == if_len && strncmp(iface, "oic.if.r", if_len) == 0) {
+    return OC_IF_R;
+  }
+  if (9 == if_len && strncmp(iface, "oic.if.rw", if_len) == 0) {
+    return OC_IF_RW;
+  }
+  if (8 == if_len && strncmp(iface, "oic.if.a", if_len) == 0) {
+    return OC_IF_A;
+  }
+  if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0) {
+    return OC_IF_S;
+  }
+  if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0) {
+    return OC_IF_CREATE;
+  }
+  if (14 == if_len && strncmp(iface, "oic.if.startup", if_len) == 0) {
+    return OC_IF_STARTUP;
+  }
+  if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0) {
+    return OC_IF_STARTUP_REVERT;
+  }
+  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0) {
+    return OC_IF_W;
+  }
+  return 0;
 }
 
 static bool
@@ -992,7 +1005,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     request_obj.query_len = (int)uri_query_len;
 
     /* Check if query string includes interface selection. */
-    char *iface;
+    const char *iface;
     int if_len =
       oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
     if (if_len != -1) {

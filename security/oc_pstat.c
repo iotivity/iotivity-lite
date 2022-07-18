@@ -117,9 +117,6 @@ valid_transition(size_t device, oc_dostype_t state)
       return false;
     break;
   case OC_DOS_RFPRO:
-    if (state == OC_DOS_RFOTM)
-      return false;
-    break;
   case OC_DOS_RFNOP:
     if (state == OC_DOS_RFOTM)
       return false;

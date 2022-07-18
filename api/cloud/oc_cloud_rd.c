@@ -79,7 +79,7 @@ rd_link_find_by_href(oc_link_t *head, const char *href, size_t href_size)
   oc_link_t *iter = head;
   while (iter != NULL &&
          (oc_string_len(iter->resource->uri) != href_size ||
-          strncmp(oc_string(iter->resource->uri), href, href_size))) {
+          strncmp(oc_string(iter->resource->uri), href, href_size) != 0)) {
     iter = iter->next;
   }
   return iter;

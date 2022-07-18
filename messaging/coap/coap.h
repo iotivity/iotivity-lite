@@ -53,7 +53,7 @@
 #include <stddef.h> /* for size_t */
 #include <stdint.h>
 #ifdef OC_OSCORE
-#include "oscore.h"
+#include "oscore_constants.h"
 #endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"

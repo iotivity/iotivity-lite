@@ -64,7 +64,8 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
 }
 
 int
-oc_get_query_value(oc_request_t *request, const char *key, char **value)
+oc_get_query_value(const oc_request_t *request, const char *key,
+                   const char **value)
 {
   if (!request)
     return -1;
@@ -72,7 +73,7 @@ oc_get_query_value(oc_request_t *request, const char *key, char **value)
 }
 
 int
-oc_query_value_exists(oc_request_t *request, const char *key)
+oc_query_value_exists(const oc_request_t *request, const char *key)
 {
   if (!request)
     return -1;
@@ -230,8 +231,8 @@ oc_init_query_iterator(void)
 }
 
 int
-oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
-                 char **value, size_t *value_len)
+oc_iterate_query(const oc_request_t *request, const char **key, size_t *key_len,
+                 const char **value, size_t *value_len)
 {
   query_iterator++;
   return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
@@ -240,10 +241,10 @@ oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
 }
 
 bool
-oc_iterate_query_get_values(oc_request_t *request, const char *key,
-                            char **value, int *value_len)
+oc_iterate_query_get_values(const oc_request_t *request, const char *key,
+                            const char **value, int *value_len)
 {
-  char *current_key = 0;
+  const char *current_key = 0;
   size_t key_len = 0, v_len;
   int pos = 0;
 

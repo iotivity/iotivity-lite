@@ -188,16 +188,16 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
                           data);
         } else {
           OC_DBG("Inbound network event: decrypted request");
-          oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+          oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], data);
         }
 #else  /* OC_OSCORE */
         OC_DBG("Inbound network event: decrypted request");
-        oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+        oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], data);
 #endif /* OC_OSCORE */
       }
 #else  /* OC_SECURITY */
       OC_DBG("Inbound network event: decrypted request");
-      oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], data);
+      oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], data);
 #endif /* !OC_SECURITY */
     } else if (ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
       oc_message_t *message = (oc_message_t *)data;

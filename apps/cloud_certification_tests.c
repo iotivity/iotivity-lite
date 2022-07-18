@@ -693,17 +693,17 @@ main(int argc, char *argv[])
     PRINT("deviceID: %s\n", argv[6]);
   }
 
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
+  if (pthread_mutex_init(&mutex, NULL) != 0) {
     printf("pthread_mutex_init(mutex) failed!\n");
     return -1;
   }
 
-  if (pthread_mutex_init(&app_sync_lock, NULL) < 0) {
+  if (pthread_mutex_init(&app_sync_lock, NULL) != 0) {
     printf("pthread_mutex_init(app_sync_lock) failed!\n");
     return -1;
   }
 
-  if (pthread_cond_init(&cv, NULL) < 0) {
+  if (pthread_cond_init(&cv, NULL) != 0) {
     printf("pthread_cond_init failed!\n");
     return -1;
   }

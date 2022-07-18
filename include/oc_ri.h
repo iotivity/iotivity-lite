@@ -478,17 +478,19 @@ void oc_ri_free_resource_properties(oc_resource_t *resource);
  * @brief retrieve the query value at the nth position
  *
  * @param query the input query
- * @param query_len the query lenght
- * @param key the key
- * @param key_len the lenght of the key
- * @param value the value belonging to the key
- * @param value_len the lenght of the value
- * @param n the posiition to query
- * @return int the position of the next key value pair in the query or NULL
+ * @param query_len the query length
+ * @param[out] key the key
+ * @param[out] key_len the length of the key
+ * @param[out] value the value belonging to the key
+ * @param[out] value_len the length of the value
+ * @param n the position to query
+ * @return int the position of the next key value pair in the query
+ * @return int -1 on failure
  */
 int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
-                                  char **key, size_t *key_len, char **value,
-                                  size_t *value_len, size_t n);
+                                  const char **key, size_t *key_len,
+                                  const char **value, size_t *value_len,
+                                  size_t n);
 
 /**
  * @brief retrieve the value of the query parameter "key"
@@ -500,7 +502,7 @@ int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
  * @return int the lenght of the value
  */
 int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
-                          char **value);
+                          const char **value);
 
 /**
  * @brief checks if key exist in query
@@ -532,7 +534,7 @@ int oc_ri_query_nth_key_exists(const char *query, size_t query_len, char **key,
  * @param if_len the interface lenght
  * @return oc_interface_mask_t the mask value of the interface
  */
-oc_interface_mask_t oc_ri_get_interface_mask(char *iface, size_t if_len);
+oc_interface_mask_t oc_ri_get_interface_mask(const char *iface, size_t if_len);
 
 /**
  * @brief checks if the resource is valid

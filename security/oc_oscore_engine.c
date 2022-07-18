@@ -19,6 +19,7 @@
 #include "mbedtls/ccm.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/engine.h"
+#include "messaging/coap/oscore.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
 #include "oc_client_state.h"
@@ -57,6 +58,226 @@ fresh_request:
   oscore_ctx->rwin_idx = (oscore_ctx->rwin_idx + 1) % OSCORE_REPLAY_WINDOW_SIZE;
   oscore_ctx->rwin[oscore_ctx->rwin_idx] = piv;
   return false;
+}
+
+static bool
+oscore_parse_and_process_inner_message(const oc_message_t *message,
+                                       const coap_packet_t *oscore_pkt,
+                                       bool is_mcast_server,
+                                       coap_packet_t *coap_pkt)
+{
+  OC_DBG("### parse inner message ###");
+
+  /* Parse inner (CoAP) message from the decrypted OSCORE payload */
+  coap_status_t st = oscore_parse_inner_message(
+    oscore_pkt->payload, oscore_pkt->payload_len, coap_pkt);
+
+  if (st != COAP_NO_ERROR) {
+    OC_ERR("***error parsing inner message***");
+    oscore_send_error(oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
+    return false;
+  }
+
+  OC_DBG("### successfully parsed inner message ###");
+
+  if (is_mcast_server && coap_pkt->code != OC_POST) {
+    OC_ERR("***non-UPDATE multicast request protected using group OSCORE "
+           "context; silently ignore***");
+    return false;
+  }
+
+  /* Copy type, version, mid, token, observe fields from OSCORE packet to
+   * CoAP Packet */
+  coap_pkt->transport_type = oscore_pkt->transport_type;
+  coap_pkt->version = oscore_pkt->version;
+  coap_pkt->type = oscore_pkt->type;
+  coap_pkt->mid = oscore_pkt->mid;
+  memcpy(coap_pkt->token, oscore_pkt->token, oscore_pkt->token_len);
+  coap_pkt->token_len = oscore_pkt->token_len;
+  coap_pkt->observe = oscore_pkt->observe;
+
+  return true;
+}
+
+static bool
+oscore_parse_message(oc_message_t *message)
+{
+  OC_DBG("#################################");
+  message->endpoint.flags |= SECURED;
+
+  coap_packet_t oscore_pkt;
+  /* Parse OSCORE message */
+  OC_DBG("### parse OSCORE message ###");
+  coap_status_t st = oscore_parse_outer_message(message, &oscore_pkt);
+
+  if (st != COAP_NO_ERROR) {
+    OC_ERR("***error parsing OSCORE message***");
+    oscore_send_error(&oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
+    return false;
+  }
+
+  OC_DBG("### parsed OSCORE message ###");
+
+  if (oscore_pkt.transport_type == COAP_TRANSPORT_UDP &&
+      oscore_pkt.code <= OC_FETCH &&
+      oc_coap_check_if_duplicate(oscore_pkt.mid,
+                                 (uint32_t)message->endpoint.device)) {
+    OC_DBG("dropping duplicate request");
+    return false;
+  }
+
+  oc_oscore_context_t *oscore_ctx = NULL;
+  uint8_t *request_piv = NULL;
+  uint8_t request_piv_len = 0;
+  /* If OSCORE packet contains kid... */
+  if (oscore_pkt.kid_len > 0) {
+    /* Search for OSCORE context by kid */
+    OC_DBG("--- got kid from incoming message");
+    OC_LOGbytes(oscore_pkt.kid, oscore_pkt.kid_len);
+    OC_DBG("### searching for OSCORE context by kid ###");
+    oscore_ctx = oc_oscore_find_context_by_kid(
+      oscore_ctx, message->endpoint.device, oscore_pkt.kid, oscore_pkt.kid_len);
+  } else {
+    if (oscore_pkt.code <= OC_FETCH) {
+      /* OSCORE message is request and lacks kid, return error */
+      OC_ERR("***OSCORE protected request lacks kid param***");
+      oscore_send_error(&oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
+      return false;
+    }
+
+    /* If message is response */
+    /* Search for OSCORE context by token */
+    OC_DBG("### searching for OSCORE context by token ###");
+    oscore_ctx = oc_oscore_find_context_by_token_mid(
+      message->endpoint.device, oscore_pkt.token, oscore_pkt.token_len,
+      oscore_pkt.mid, &request_piv, &request_piv_len,
+      message->endpoint.flags & TCP);
+  }
+
+  if (!oscore_ctx) {
+    OC_ERR("***could not find matching OSCORE context***");
+    oscore_send_error(&oscore_pkt, UNAUTHORIZED_4_01, &message->endpoint);
+    return false;
+  }
+
+  const oc_sec_cred_t *c = (oc_sec_cred_t *)oscore_ctx->cred;
+  if (!(message->endpoint.flags & MULTICAST) &&
+      c->credtype != OC_CREDTYPE_OSCORE) {
+    OC_ERR("***unicast message protected using group OSCORE context; "
+           "silently ignore***");
+    return false;
+  }
+
+  /* Copy "subjectuuid" of cred with OSCORE context to oc_endpoint_t */
+  oc_sec_cred_t *oscore_cred = (oc_sec_cred_t *)oscore_ctx->cred;
+  memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id, 16);
+
+  /* Use recipient key for decryption */
+  uint8_t *key = oscore_ctx->recvkey;
+  uint8_t AAD[OSCORE_AAD_MAX_LEN];
+  uint8_t AAD_len = 0;
+  uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
+  /* If received Partial IV in message */
+  if (oscore_pkt.piv_len > 0) {
+    /* If message is request */
+    if (oscore_pkt.code >= OC_GET && oscore_pkt.code <= OC_FETCH) {
+      /* Check if this is a repeat request and discard */
+      uint64_t piv = 0;
+      oscore_read_piv(oscore_pkt.piv, oscore_pkt.piv_len, &piv);
+      if (check_if_replayed_request(oscore_ctx, piv)) {
+        oscore_send_error(&oscore_pkt, UNAUTHORIZED_4_01, &message->endpoint);
+        return false;
+      }
+
+      /* Compose AAD using received piv and context->recvid */
+      oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
+                            oscore_pkt.piv, oscore_pkt.piv_len, AAD, &AAD_len);
+      OC_DBG("---composed AAD using received Partial IV and Recipient ID");
+      OC_LOGbytes(AAD, AAD_len);
+    }
+
+    /* Copy received piv into oc_message_t->endpoint */
+    memcpy(message->endpoint.piv, oscore_pkt.piv, oscore_pkt.piv_len);
+    message->endpoint.piv_len = oscore_pkt.piv_len;
+
+    OC_DBG("---got Partial IV from incoming message");
+    OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
+
+    /* Compute nonce using received piv and context->recvid */
+    oc_oscore_AEAD_nonce(oscore_ctx->recvid, oscore_ctx->recvid_len,
+                         message->endpoint.piv, message->endpoint.piv_len,
+                         oscore_ctx->commoniv, nonce, OSCORE_AEAD_NONCE_LEN);
+
+    OC_DBG("---computed AEAD nonce using received Partial IV and Recipient ID");
+    OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+  }
+
+  /* If message is response */
+  if (oscore_pkt.code > OC_FETCH) {
+    OC_DBG("---got request_piv from client callback");
+    OC_LOGbytes(request_piv, request_piv_len);
+
+    /* If oc_message_t->endpoint.piv_len == 0 */
+    if (message->endpoint.piv_len == 0) {
+      /* Copy request_piv from client cb/transaction into
+       * oc_message_t->endpoint */
+      if (request_piv != NULL) {
+        memcpy(message->endpoint.piv, request_piv, request_piv_len);
+      }
+      message->endpoint.piv_len = request_piv_len;
+
+      /* Compute nonce using request_piv and context->sendid */
+      oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len,
+                           request_piv, request_piv_len, oscore_ctx->commoniv,
+                           nonce, OSCORE_AEAD_NONCE_LEN);
+
+      OC_DBG("---use AEAD nonce from request");
+      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+    }
+
+    /* Compose AAD using request_piv and context->sendid */
+    oc_oscore_compose_AAD(oscore_ctx->sendid, oscore_ctx->sendid_len,
+                          request_piv, request_piv_len, AAD, &AAD_len);
+
+    OC_DBG("---composed AAD using request_piv and Sender ID");
+    OC_LOGbytes(AAD, AAD_len);
+  }
+
+  OC_DBG("### decrypting OSCORE payload ###");
+
+  /* Verify and decrypt OSCORE payload */
+
+  int ret =
+    oc_oscore_decrypt(oscore_pkt.payload, oscore_pkt.payload_len,
+                      OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
+                      OSCORE_AEAD_NONCE_LEN, AAD, AAD_len, oscore_pkt.payload);
+
+  if (ret != 0) {
+    OC_ERR("***error decrypting/verifying response : (%d)***", ret);
+    oscore_send_error(&oscore_pkt, BAD_REQUEST_4_00, &message->endpoint);
+    return false;
+  }
+
+  OC_DBG("### successfully decrypted OSCORE payload ###");
+
+  /* Adjust payload length to size after decryption (i.e. exclude the tag)
+   */
+  oscore_pkt.payload_len -= OSCORE_AEAD_TAG_LEN;
+
+  coap_packet_t coap_pkt;
+  if (!oscore_parse_and_process_inner_message(
+        message, &oscore_pkt, c->credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER,
+        &coap_pkt)) {
+    return false;
+  }
+
+  OC_DBG("### serializing CoAP message ###");
+  /* Serialize fully decrypted CoAP packet to message->data buffer */
+  message->length = coap_serialize_message(&coap_pkt, message->data);
+
+  OC_DBG("### serialized decrypted CoAP message to dispatch to the CoAP "
+         "layer ###");
+  return true;
 }
 
 static int
@@ -104,215 +325,14 @@ oc_oscore_recv_message(oc_message_t *message)
    * Dispatch oc_message_t to the CoAP layer
    */
 
-  if (oscore_is_oscore_message(message) >= 0) {
-    OC_DBG("#################################");
-    oc_oscore_context_t *oscore_ctx = NULL;
-    message->endpoint.flags |= SECURED;
-
-    coap_packet_t oscore_pkt[1];
-
-    uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = 0, nonce[OSCORE_AEAD_NONCE_LEN];
-    /* Parse OSCORE message */
-    OC_DBG("### parse OSCORE message ###");
-    coap_status_t st = oscore_parse_outer_message(message, oscore_pkt);
-
-    if (st != COAP_NO_ERROR) {
-      OC_ERR("***error parsing OSCORE message***");
-      oscore_send_error(oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
-      goto oscore_recv_error;
-    }
-
-    OC_DBG("### parsed OSCORE message ###");
-
-    if (oscore_pkt->transport_type == COAP_TRANSPORT_UDP &&
-        oscore_pkt->code <= OC_FETCH) {
-      if (oc_coap_check_if_duplicate(oscore_pkt->mid,
-                                     message->endpoint.device)) {
-        OC_DBG("dropping duplicate request");
-        goto oscore_recv_error;
-      }
-    }
-
-    uint8_t *request_piv = NULL, request_piv_len = 0;
-
-    /* If OSCORE packet contains kid... */
-    if (oscore_pkt->kid_len > 0) {
-      /* Search for OSCORE context by kid */
-      OC_DBG("--- got kid from incoming message");
-      OC_LOGbytes(oscore_pkt->kid, oscore_pkt->kid_len);
-      OC_DBG("### searching for OSCORE context by kid ###");
-      oscore_ctx =
-        oc_oscore_find_context_by_kid(oscore_ctx, message->endpoint.device,
-                                      oscore_pkt->kid, oscore_pkt->kid_len);
-    } else {
-      /* If message is response */
-      if (oscore_pkt->code > OC_FETCH) {
-        /* Search for OSCORE context by token */
-        OC_DBG("### searching for OSCORE context by token ###");
-        oscore_ctx = oc_oscore_find_context_by_token_mid(
-          message->endpoint.device, oscore_pkt->token, oscore_pkt->token_len,
-          oscore_pkt->mid, &request_piv, &request_piv_len,
-          message->endpoint.flags & TCP);
-      } else {
-        /* OSCORE message is request and lacks kid, return error */
-        OC_ERR("***OSCORE protected request lacks kid param***");
-        oscore_send_error(oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
-        goto oscore_recv_error;
-      }
-    }
-
-    if (!oscore_ctx) {
-      OC_ERR("***could not find matching OSCORE context***");
-      oscore_send_error(oscore_pkt, UNAUTHORIZED_4_01, &message->endpoint);
-      goto oscore_recv_error;
-    }
-
-    oc_sec_cred_t *c = (oc_sec_cred_t *)oscore_ctx->cred;
-    if (!(message->endpoint.flags & MULTICAST) &&
-        c->credtype != OC_CREDTYPE_OSCORE) {
-      OC_ERR("***unicast message protected using group OSCORE context; "
-             "silently ignore***");
-      goto oscore_recv_error;
-    }
-
-    /* Copy "subjectuuid" of cred with OSCORE context to oc_endpoint_t */
-    oc_sec_cred_t *oscore_cred = (oc_sec_cred_t *)oscore_ctx->cred;
-    memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id, 16);
-
-    /* Use recipient key for decryption */
-    uint8_t *key = oscore_ctx->recvkey;
-
-    /* If received Partial IV in message */
-    if (oscore_pkt->piv_len > 0) {
-      /* If message is request */
-      if (oscore_pkt->code >= OC_GET && oscore_pkt->code <= OC_FETCH) {
-        /* Check if this is a repeat request and discard */
-        uint64_t piv = 0;
-        oscore_read_piv(oscore_pkt->piv, oscore_pkt->piv_len, &piv);
-        if (check_if_replayed_request(oscore_ctx, piv)) {
-          oscore_send_error(oscore_pkt, UNAUTHORIZED_4_01, &message->endpoint);
-          goto oscore_recv_error;
-        }
-
-        /* Compose AAD using received piv and context->recvid */
-        oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
-                              oscore_pkt->piv, oscore_pkt->piv_len, AAD,
-                              &AAD_len);
-        OC_DBG("---composed AAD using received Partial IV and Recipient ID");
-        OC_LOGbytes(AAD, AAD_len);
-      }
-
-      /* Copy received piv into oc_message_t->endpoint */
-      memcpy(message->endpoint.piv, oscore_pkt->piv, oscore_pkt->piv_len);
-      message->endpoint.piv_len = oscore_pkt->piv_len;
-
-      OC_DBG("---got Partial IV from incoming message");
-      OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
-
-      /* Compute nonce using received piv and context->recvid */
-      oc_oscore_AEAD_nonce(oscore_ctx->recvid, oscore_ctx->recvid_len,
-                           message->endpoint.piv, message->endpoint.piv_len,
-                           oscore_ctx->commoniv, nonce, OSCORE_AEAD_NONCE_LEN);
-
-      OC_DBG(
-        "---computed AEAD nonce using received Partial IV and Recipient ID");
-      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
-    }
-
-    /* If message is response */
-    if (oscore_pkt->code > OC_FETCH) {
-      OC_DBG("---got request_piv from client callback");
-      OC_LOGbytes(request_piv, request_piv_len);
-
-      /* If oc_message_t->endpoint.piv_len == 0 */
-      if (message->endpoint.piv_len == 0) {
-        /* Copy request_piv from client cb/transaction into
-         * oc_message_t->endpoint */
-        memcpy(message->endpoint.piv, request_piv, request_piv_len);
-        message->endpoint.piv_len = request_piv_len;
-
-        /* Compute nonce using request_piv and context->sendid */
-        oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len,
-                             request_piv, request_piv_len, oscore_ctx->commoniv,
-                             nonce, OSCORE_AEAD_NONCE_LEN);
-
-        OC_DBG("---use AEAD nonce from request");
-        OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
-      }
-
-      /* Compose AAD using request_piv and context->sendid */
-      oc_oscore_compose_AAD(oscore_ctx->sendid, oscore_ctx->sendid_len,
-                            request_piv, request_piv_len, AAD, &AAD_len);
-
-      OC_DBG("---composed AAD using request_piv and Sender ID");
-      OC_LOGbytes(AAD, AAD_len);
-    }
-
-    OC_DBG("### decrypting OSCORE payload ###");
-
-    /* Verify and decrypt OSCORE payload */
-
-    int ret = oc_oscore_decrypt(oscore_pkt->payload, oscore_pkt->payload_len,
-                                OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
-                                OSCORE_AEAD_NONCE_LEN, AAD, AAD_len,
-                                oscore_pkt->payload);
-
-    if (ret != 0) {
-      OC_ERR("***error decrypting/verifying response : (%d)***", ret);
-      oscore_send_error(oscore_pkt, BAD_REQUEST_4_00, &message->endpoint);
-      goto oscore_recv_error;
-    }
-
-    OC_DBG("### successfully decrypted OSCORE payload ###");
-
-    /* Adjust payload length to size after decryption (i.e. exclude the tag)
-     */
-    oscore_pkt->payload_len -= OSCORE_AEAD_TAG_LEN;
-
-    coap_packet_t coap_pkt[1];
-
-    OC_DBG("### parse inner message ###");
-
-    /* Parse inner (CoAP) message from the decrypted COSE payload */
-    st = oscore_parse_inner_message(oscore_pkt->payload,
-                                    oscore_pkt->payload_len, &coap_pkt);
-
-    if (st != COAP_NO_ERROR) {
-      OC_ERR("***error parsing inner message***");
-      oscore_send_error(oscore_pkt, BAD_OPTION_4_02, &message->endpoint);
-      goto oscore_recv_error;
-    }
-
-    OC_DBG("### successfully parsed inner message ###");
-
-    if (c->credtype == OC_CREDTYPE_OSCORE_MCAST_SERVER &&
-        coap_pkt->code != OC_POST) {
-      OC_ERR("***non-UPDATE multicast request protected using group OSCORE "
-             "context; silently ignore***");
-      goto oscore_recv_error;
-    }
-
-    /* Copy type, version, mid, token, observe fields from OSCORE packet to
-     * CoAP Packet */
-    coap_pkt->transport_type = oscore_pkt->transport_type;
-    coap_pkt->version = oscore_pkt->version;
-    coap_pkt->type = oscore_pkt->type;
-    coap_pkt->mid = oscore_pkt->mid;
-    memcpy(coap_pkt->token, oscore_pkt->token, oscore_pkt->token_len);
-    coap_pkt->token_len = oscore_pkt->token_len;
-    coap_pkt->observe = oscore_pkt->observe;
-
-    OC_DBG("### serializing CoAP message ###");
-    /* Serialize fully decrypted CoAP packet to message->data buffer */
-    message->length = coap_serialize_message((void *)coap_pkt, message->data);
-
-    OC_DBG("### serialized decrypted CoAP message to dispatch to the CoAP "
-           "layer ###");
+  if (oscore_is_oscore_message(message) >= 0 &&
+      !oscore_parse_message(message)) {
+    goto oscore_recv_error;
   }
   OC_DBG("#################################");
 
   /* Dispatch oc_message_t to the CoAP layer */
-  if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
+  if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
       OC_PROCESS_ERR_FULL) {
     goto oscore_recv_error;
   }

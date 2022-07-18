@@ -1338,7 +1338,7 @@ void oc_init_query_iterator(void);
  *
  * @param[in] request the oc_request_t that contains the query parameters
  * @param[out] key pointer to the location of the the key of the key=value pair
- * @param[out] key_len the lenght of the key string
+ * @param[out] key_len the length of the key string
  * @param[out] value pointer the location of the value string assigned to the
  *             key=value pair
  * @param[out] value_len the length of the value string
@@ -1347,8 +1347,8 @@ void oc_init_query_iterator(void);
  *   - The position in the query string of the next key=value string pair
  *   - `-1` if there are no additional query parameters
  */
-int oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
-                     char **value, size_t *value_len);
+int oc_iterate_query(const oc_request_t *request, const char **key,
+                     size_t *key_len, const char **value, size_t *value_len);
 
 /**
  * Iterate though the URI query parameters for a specific key.
@@ -1384,8 +1384,8 @@ int oc_iterate_query(oc_request_t *request, char **key, size_t *key_len,
  *
  * @return True if there are more query parameters to iterate through
  */
-bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
-                                 char **value, int *value_len);
+bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
+                                 const char **value, int *value_len);
 
 /**
  * Get a pointer to the start of the value in a URL query parameter key=value
@@ -1403,7 +1403,8 @@ bool oc_iterate_query_get_values(oc_request_t *request, const char *key,
  *   - The position in the query string of the next key=value string pair
  *   - `-1` if there are no additional query parameters
  */
-int oc_get_query_value(oc_request_t *request, const char *key, char **value);
+int oc_get_query_value(const oc_request_t *request, const char *key,
+                       const char **value);
 
 /**
  * Checks if a query parameter 'key' exist in the URL query parameter
@@ -1415,7 +1416,7 @@ int oc_get_query_value(oc_request_t *request, const char *key, char **value);
  *   - 1 exist
  *   - -1 does not exist
  */
-int oc_query_value_exists(oc_request_t *request, const char *key);
+int oc_query_value_exists(const oc_request_t *request, const char *key);
 
 /**
  * Called after the response to a GET, PUT, POST or DELETE call has been

@@ -218,7 +218,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   switch (iface_mask) {
   case OC_IF_RW:
   case OC_IF_BASELINE: {
-    char *q;
+    const char *q;
     int ql = oc_get_query_value(request, "owned", &q);
     size_t device = request->resource->device;
 
@@ -226,7 +226,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     // query parameter does not match the device's UUID
     // FOR DEVELOPMENT USE ONLY
 #ifdef OC_DOXM_UUID_FILTER
-    char *q2;
+    const char *q2;
     int ql2 = oc_get_query_value(request, "deviceuuid", &q2);
 
     oc_device_info_t *di = oc_core_get_device_info(device);

@@ -269,12 +269,12 @@ main(void)
   oc_storage_config("./server_multithread_linux_creds");
 #endif /* OC_STORAGE */
 
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
+  if (pthread_mutex_init(&mutex, NULL) != 0) {
     printf("pthread_mutex_init failed!\n");
     return -1;
   }
 
-  if (pthread_mutex_init(&app_mutex, NULL) < 0) {
+  if (pthread_mutex_init(&app_mutex, NULL) != 0) {
     printf("pthread_mutex_init failed!\n");
     pthread_mutex_destroy(&mutex);
     return -1;

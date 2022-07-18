@@ -145,8 +145,12 @@ start_client()
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  pthread_mutex_init(&mutex, NULL);
-  pthread_cond_init(&cv, NULL);
+  if (pthread_mutex_init(&mutex, NULL) != 0) {
+    return -1;
+  }
+  if (pthread_cond_init(&cv, NULL) != 0) {
+    return -1;
+  }
 
   while (quit != true) {
     struct timespec ts;
@@ -252,8 +256,12 @@ start_server(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  pthread_mutex_init(&mutex, NULL);
-  pthread_cond_init(&cv, NULL);
+  if (pthread_mutex_init(&mutex, NULL) != 0) {
+    return -1;
+  }
+  if (pthread_cond_init(&cv, NULL) != 0) {
+    return -1;
+  }
 
   while (quit != true) {
     struct timespec ts;
@@ -317,8 +325,12 @@ main(int argc, const char *argv[])
   sa.sa_handler = child_handler;
   sigaction(SIGCHLD, &sa, NULL);
 
-  pthread_mutex_init(&mutex, NULL);
-  pthread_cond_init(&cv, NULL);
+  if (pthread_mutex_init(&mutex, NULL) != 0) {
+    return -1;
+  }
+  if (pthread_cond_init(&cv, NULL) != 0) {
+    return -1;
+  }
 
   server_pid = fork();
   if (server_pid < 0)

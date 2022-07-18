@@ -2279,7 +2279,7 @@ read_application_data_tcp(oc_tls_peer_t *peer)
                (int)(total_length));
         peer->processed_recv_message->encrypted = 0;
         memcpy(peer->processed_recv_message->endpoint.di.id, peer->uuid.id, 16);
-        if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT],
+        if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT],
                             peer->processed_recv_message) ==
             OC_PROCESS_ERR_FULL) {
           oc_message_unref(peer->processed_recv_message);
@@ -2437,12 +2437,12 @@ read_application_data(oc_tls_peer_t *peer)
 #endif /* !OC_INOUT_BUFFER_SIZE */
     }
 #else /* OC_OSCORE */
-      if (oc_process_post(&coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
-          OC_PROCESS_ERR_FULL) {
+    if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
+        OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
-        oc_message_unref(msg);
+      oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
-      }
+    }
 #endif /* !OC_OSCORE */
   }
   OC_DBG("oc_tls: Decrypted incoming message");

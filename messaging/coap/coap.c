@@ -50,6 +50,9 @@
 
 #include "coap.h"
 #include "transactions.h"
+#ifdef OC_OSCORE
+#include "oscore.h"
+#endif /* OC_OSCORE */
 #ifdef OC_TCP
 #include "coap_signal.h"
 #endif /* OC_TCP */
@@ -57,7 +60,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
 #include "security/oc_tls.h"
-#endif
+#endif /* OC_SECURITY */
 
 /*---------------------------------------------------------------------------*/
 /*- Variables ---------------------------------------------------------------*/
@@ -391,11 +394,13 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
   unsigned int current_number = 0;
   size_t option_length = 0;
 
+#ifdef OC_DEBUG
   if (option) {
     OC_DBG("Serializing options at %p", option);
   } else {
     OC_DBG("Calculating size of options");
   }
+#endif /* OC_DEBUG */
 
 #ifdef OC_TCP
   if (coap_check_signal_message(packet)) {
@@ -668,7 +673,10 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
       if (!outer || !oscore) {
         return BAD_OPTION_4_02;
       }
-      coap_parse_oscore_option(coap_pkt, current_option, option_length);
+      if (coap_parse_oscore_option(coap_pkt, current_option, option_length) !=
+          0) {
+        return BAD_OPTION_4_02;
+      }
       break;
 #endif /* OC_OSCORE && OC_SECURITY */
     case COAP_OPTION_CONTENT_FORMAT:
