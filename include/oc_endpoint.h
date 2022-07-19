@@ -71,7 +71,7 @@ enum transport_flags {
   SECURED = 1 << 1,   ///< secure communication
   IPV4 = 1 << 2,      ///< ipv4 communication
   IPV6 = 1 << 3,      ///< ipv6 communication
-  TCP = 1 << 4,       ///< tpc communication
+  TCP = 1 << 4,       ///< tcp communication
   GATT = 1 << 5,      ///< BLE GATT communication
   MULTICAST = 1 << 6, ///< multicast enabled
   ACCEPTED = 1 << 7   ///< accepted
@@ -154,13 +154,15 @@ int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                           oc_string_t *uri);
 
 /**
- * @brief parse endopoint
+ * @brief parse path component (ie. the part after the first '/') of a uri
  *
- * @param endpoint_str
- * @param path
- * @return int
+ * @param[in] endpoint_str uri to parse
+ * @param[out] path output variable
+ * @return 0 on success
+ * @return -1 on failure
  */
-int oc_endpoint_string_parse_path(oc_string_t *endpoint_str, oc_string_t *path);
+int oc_endpoint_string_parse_path(const oc_string_t *endpoint_str,
+                                  oc_string_t *path);
 
 /**
  * @brief is endpoint (ipv6) link local

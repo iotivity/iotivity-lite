@@ -1790,6 +1790,7 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     OC_ERR("Error of input parameters");
     return -1;
   }
+  OC_DBG("trying to resolve address(%s) for flags(%d)", domain, (int)flags);
   int ret = -1;
   union dev_addr a;
 
@@ -1807,7 +1808,7 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     ret = getaddrinfo(domain, NULL, &hints, &result);
 
     if (ret == 0) {
-      if (flags & IPV6) {
+      if ((flags & IPV6) != 0) {
         struct sockaddr_in6 *r = (struct sockaddr_in6 *)result->ai_addr;
         memcpy(a.ipv6.address, r->sin6_addr.s6_addr,
                sizeof(r->sin6_addr.s6_addr));
@@ -1824,6 +1825,9 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
 #ifdef OC_DNS_CACHE
       oc_dns_cache_domain(domain, &a);
 #endif /* OC_DNS_CACHE */
+    } else {
+      OC_ERR("failed to resolve address(%s) with error(%d): %s", domain, ret,
+             gai_strerror(ret));
     }
     freeaddrinfo(result);
 #ifdef OC_DNS_CACHE
@@ -1836,7 +1840,8 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
   if (ret == 0) {
     char address[INET6_ADDRSTRLEN + 2] = { 0 };
     const char *dest = NULL;
-    if (flags & IPV6) {
+    errno = 0;
+    if ((flags & IPV6) != 0) {
       address[0] = '[';
       dest = inet_ntop(AF_INET6, (void *)a.ipv6.address, address + 1,
                        INET6_ADDRSTRLEN);
@@ -1854,6 +1859,7 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
       OC_DBG("%s address is %s", domain, address);
       oc_new_string(addr, address, strlen(address));
     } else {
+      OC_ERR("failed to parse domain(%s) to string: %d", domain, (int)errno);
       ret = -1;
     }
   }
