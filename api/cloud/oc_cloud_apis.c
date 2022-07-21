@@ -381,11 +381,9 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   p->data = data;
 
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     bool hasRefreshToken =
-      oc_string(ctx->store.refresh_token) &&
-      oc_string_len(ctx->store.refresh_token) > 0 &&
-      (!cloud_is_permanent_access_token(ctx->store.expires_in));
+      cloud_has_refresh_token(ctx) && !cloud_has_permanent_access_token(ctx);
     if (hasRefreshToken) {
       if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) !=
           0) {

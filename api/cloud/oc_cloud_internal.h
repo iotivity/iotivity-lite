@@ -230,12 +230,23 @@ void cloud_manager_stop(oc_cloud_context_t *ctx);
 void oc_create_cloudconf_resource(size_t device);
 
 /**
- * @brief Provides information whether expires in of the access token means
- * permanent.
+ * @brief Check whether refresh token is set.
  *
- * @return true if it is permanent
+ * @return true refresh token is set
  */
-bool cloud_is_permanent_access_token(int64_t expires_in);
+bool cloud_has_refresh_token(const oc_cloud_context_t *ctx);
+
+/**
+ * @brief Checks whether the access token is set and whether it is permanent
+ * (ie. the expires in time of the access token has special value which means
+ * that the token is permanent).
+ *
+ * @return true access token is permanent
+ */
+bool cloud_has_permanent_access_token(const oc_cloud_context_t *ctx);
+
+/** @brief Clear access token from context */
+void cloud_clear_access_token(oc_cloud_context_t *ctx);
 
 /// Maximal size of retry timeouts array
 #define MAX_RETRY_COUNT (6)
