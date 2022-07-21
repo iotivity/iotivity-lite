@@ -158,9 +158,25 @@ is_retry_over(oc_cloud_context_t *ctx)
 }
 
 bool
-cloud_is_permanent_access_token(int64_t expires_in)
+cloud_has_refresh_token(const oc_cloud_context_t *ctx)
 {
-  return expires_in < 0;
+  return oc_string(ctx->store.refresh_token) != NULL &&
+         oc_string_len(ctx->store.refresh_token) > 0;
+}
+
+bool
+cloud_has_permanent_access_token(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.access_token) != NULL &&
+         oc_string_len(ctx->store.access_token) > 0 &&
+         ctx->store.expires_in < 0;
+}
+
+void
+cloud_clear_access_token(oc_cloud_context_t *ctx)
+{
+  cloud_set_string(&ctx->store.access_token, NULL, 0);
+  ctx->store.expires_in = 0;
 }
 
 static void
@@ -179,14 +195,20 @@ cloud_start_process(oc_cloud_context_t *ctx)
   if (ctx->store.status == OC_CLOUD_INITIALIZED &&
       ctx->store.cps == OC_CPS_READYTOREGISTER) {
     reset_delayed_callback(ctx, cloud_register, g_retry_timeout[0]);
-  } else if (ctx->store.status & OC_CLOUD_REGISTERED) {
-    if (cloud_is_permanent_access_token(ctx->store.expires_in)) {
+    goto finish;
+  }
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+    if (cloud_has_permanent_access_token(ctx)) {
       reset_delayed_callback(ctx, cloud_login, g_retry_timeout[0]);
-    } else if (oc_string(ctx->store.refresh_token) &&
-               oc_string_len(ctx->store.refresh_token) > 0) {
+      goto finish;
+    }
+    if (cloud_has_refresh_token(ctx)) {
       reset_delayed_callback(ctx, refresh_token, g_retry_timeout[0]);
+      goto finish;
     }
   }
+
+finish:
   _oc_signal_event_loop();
 }
 
@@ -336,12 +358,15 @@ cloud_register_handler(oc_client_response_t *data)
   oc_remove_delayed_callback(ctx, cloud_register);
   if (ret == 0) {
     reset_delayed_callback(ctx, cloud_login, g_retry_timeout[ctx->retry_count]);
-  } else {
-    if (ctx->store.status == OC_CLOUD_INITIALIZED) {
-      oc_set_delayed_callback(ctx, cloud_register,
-                              g_retry_timeout[ctx->retry_count]);
-    }
+    goto finish;
   }
+
+  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+    oc_set_delayed_callback(ctx, cloud_register,
+                            g_retry_timeout[ctx->retry_count]);
+  }
+
+finish:
   reset_delayed_callback(ctx, callback_handler, 0);
 }
 
@@ -387,21 +412,25 @@ _login_handler_check_data_error(oc_client_response_t *data)
       data->code == OC_STATUS_GATEWAY_TIMEOUT) {
     return CLOUD_ERROR_CONNECT;
   }
+  if (data->code == OC_STATUS_UNAUTHORIZED) {
+    return CLOUD_ERROR_UNAUTHORIZED;
+  }
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return CLOUD_ERROR_RESPONSE;
   }
   return CLOUD_OK;
 }
 
-static int
-_login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
+static oc_cloud_error_t
+_login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data,
+               bool clearCtxOnUnauthorized)
 {
   oc_cloud_error_t err = _login_handler_check_data_error(data);
   if (err != CLOUD_OK) {
     goto error;
   }
 
-  if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     err = CLOUD_ERROR_RESPONSE;
     goto error;
   }
@@ -420,12 +449,19 @@ _login_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
   cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
-  return 0;
+  return CLOUD_OK;
 
 error:
+  if (err == CLOUD_ERROR_UNAUTHORIZED) {
+    cloud_clear_access_token(ctx);
+    if (clearCtxOnUnauthorized) {
+      oc_cloud_clear_context(ctx);
+    }
+  }
+
   ctx->store.status |= OC_CLOUD_FAILURE;
   cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
-  return -1;
+  return err;
 }
 
 void
@@ -434,7 +470,7 @@ oc_cloud_login_handler(oc_client_response_t *data)
   OC_DBG("login handler");
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  _login_handler(ctx, data);
+  _login_handler(ctx, data, false);
 
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
@@ -450,25 +486,31 @@ cloud_login_handler(oc_client_response_t *data)
   OC_DBG("[CM] login handler(%d)\n", data->code);
 
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  int ret = _login_handler(ctx, data);
+  bool handleUnauthorizedByRefresh = cloud_has_refresh_token(ctx);
+  oc_cloud_error_t ret =
+    _login_handler(ctx, data, !handleUnauthorizedByRefresh);
   oc_remove_delayed_callback(ctx, cloud_login);
-  if (ret == 0) {
+  if (ret == CLOUD_OK) {
     reset_delayed_callback(ctx, send_ping, PING_DELAY);
     if (ctx->store.expires_in > 0) {
       reset_delayed_callback(ctx, refresh_token,
                              check_expires_in(ctx->store.expires_in));
     }
-  } else {
-    if (data->code != OC_STATUS_UNAUTHORIZED) {
-      oc_set_delayed_callback(ctx, cloud_login,
-                              g_retry_timeout[ctx->retry_count]);
-    } else {
-      if (oc_string(ctx->store.refresh_token) &&
-          oc_string_len(ctx->store.refresh_token) > 0) {
-        reset_delayed_callback(ctx, refresh_token, g_retry_timeout[0]);
-      }
-    }
+    goto finish;
   }
+  if (ret == CLOUD_ERROR_UNAUTHORIZED) {
+    if (handleUnauthorizedByRefresh) {
+      reset_delayed_callback(ctx, refresh_token, g_retry_timeout[0]);
+    }
+    goto finish;
+  }
+
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+    oc_set_delayed_callback(ctx, cloud_login,
+                            g_retry_timeout[ctx->retry_count]);
+  }
+
+finish:
   reset_delayed_callback(ctx, callback_handler, 0);
 }
 
@@ -508,13 +550,16 @@ _refresh_token_handler_check_data_error(oc_client_response_t *data)
       data->code == OC_STATUS_GATEWAY_TIMEOUT) {
     return CLOUD_ERROR_CONNECT;
   }
+  if (data->code == OC_STATUS_UNAUTHORIZED) {
+    return CLOUD_ERROR_UNAUTHORIZED;
+  }
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
   }
   return CLOUD_OK;
 }
 
-static int
+static oc_cloud_error_t
 _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
 {
   oc_cloud_error_t err = _refresh_token_handler_check_data_error(data);
@@ -522,7 +567,7 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
     goto error;
   }
 
-  if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
   }
@@ -561,19 +606,27 @@ _refresh_token_handler(oc_cloud_context_t *ctx, oc_client_response_t *data)
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_REFRESHED_TOKEN;
 
-  return 0;
+  return CLOUD_OK;
 
 error:
+  if (err == CLOUD_ERROR_UNAUTHORIZED) {
+    oc_cloud_clear_context(ctx);
+    ctx->store.status |= OC_CLOUD_FAILURE;
+    cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+    return err;
+  }
+
   ctx->store.status |= OC_CLOUD_FAILURE;
   // we cannot be considered as logged in when refresh token fails.
   ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
-  if (err != CLOUD_ERROR_CONNECT) {
-    ctx->store.status &= ~OC_CLOUD_REGISTERED;
-    cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
-  } else {
+  if (err == CLOUD_ERROR_CONNECT) {
     cloud_set_last_error(ctx, err);
+    return err;
   }
-  return -1;
+
+  ctx->store.status &= ~OC_CLOUD_REGISTERED;
+  cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  return err;
 }
 
 void
@@ -598,17 +651,20 @@ refresh_token_handler(oc_client_response_t *data)
 {
   OC_DBG("[CM] refresh token handler(%d)\n", data->code);
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  int ret = _refresh_token_handler(ctx, data);
+  oc_cloud_error_t ret = _refresh_token_handler(ctx, data);
   oc_remove_delayed_callback(ctx, refresh_token);
-  if (ret == 0) {
+  if (ret == CLOUD_OK) {
     ctx->retry_refresh_token_count = 0;
     reset_delayed_callback(ctx, cloud_login, g_retry_timeout[ctx->retry_count]);
-  } else {
-    if (ctx->store.status & OC_CLOUD_REGISTERED) {
-      oc_set_delayed_callback(ctx, refresh_token,
-                              g_retry_timeout[ctx->retry_refresh_token_count]);
-    }
+    goto finish;
   }
+
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+    oc_set_delayed_callback(ctx, refresh_token,
+                            g_retry_timeout[ctx->retry_refresh_token_count]);
+  }
+
+finish:
   reset_delayed_callback(ctx, callback_handler, 0);
 }
 
@@ -617,7 +673,7 @@ refresh_token(void *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
 
-  if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     return OC_EVENT_DONE;
   }
   oc_remove_delayed_callback(ctx, send_ping);

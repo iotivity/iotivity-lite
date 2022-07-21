@@ -238,13 +238,19 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
                                oc_session_state_t state)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(endpoint->device);
-  if (ctx && oc_endpoint_compare(endpoint, ctx->cloud_ep) == 0) {
-    OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
-    ctx->cloud_ep_state = state;
-    if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
-      if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
-        cloud_manager_restart(ctx);
-      }
+  if (ctx == NULL || oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
+    return;
+  }
+  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
+  bool state_changed = ctx->cloud_ep_state != state;
+  if (!state_changed) {
+    return;
+  }
+
+  ctx->cloud_ep_state = state;
+  if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
+    if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+      cloud_manager_restart(ctx);
     }
   }
 }
@@ -404,9 +410,9 @@ oc_cloud_init(void)
     }
 #endif
     ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
-    oc_list_add(cloud_context_list, ctx);
-
     ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);
+    ctx->cloud_manager = false;
+    oc_list_add(cloud_context_list, ctx);
 
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, device));
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_D, device));

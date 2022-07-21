@@ -37,13 +37,13 @@ extern "C" {
 */
 typedef enum {
   OC_CLOUD_INITIALIZED = 0,
-  OC_CLOUD_REGISTERED = 1,
-  OC_CLOUD_LOGGED_IN = 2,
-  OC_CLOUD_TOKEN_EXPIRY = 4,
-  OC_CLOUD_REFRESHED_TOKEN = 8,
-  OC_CLOUD_LOGGED_OUT = 16,
-  OC_CLOUD_FAILURE = 32,
-  OC_CLOUD_DEREGISTERED = 64
+  OC_CLOUD_REGISTERED = 1 << 0,
+  OC_CLOUD_LOGGED_IN = 1 << 1,
+  OC_CLOUD_TOKEN_EXPIRY = 1 << 2,
+  OC_CLOUD_REFRESHED_TOKEN = 1 << 3,
+  OC_CLOUD_LOGGED_OUT = 1 << 4,
+  OC_CLOUD_FAILURE = 1 << 5,
+  OC_CLOUD_DEREGISTERED = 1 << 6,
 } oc_cloud_status_t;
 
 typedef enum oc_cps_t {
@@ -74,6 +74,7 @@ typedef enum {
   CLOUD_ERROR_RESPONSE = 1,
   CLOUD_ERROR_CONNECT = 2,
   CLOUD_ERROR_REFRESH_ACCESS_TOKEN = 3,
+  CLOUD_ERROR_UNAUTHORIZED = 4,
 } oc_cloud_error_t;
 
 struct oc_cloud_context_t;
