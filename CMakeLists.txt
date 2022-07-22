@@ -743,11 +743,11 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 # ####### Sub-projects ########
-if(UNIX)
-    add_subdirectory(tests)
-endif()
-
 if(BUILD_EXAMPLE_APPLICATIONS)
     add_subdirectory(onboarding_tool)
     add_subdirectory(apps)
+endif()
+
+if(BUILD_TESTING AND UNIX)
+    add_subdirectory(tests)
 endif()

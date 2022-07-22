@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS service
+FROM ubuntu:latest AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \

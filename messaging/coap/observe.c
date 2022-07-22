@@ -1085,7 +1085,7 @@ process_batch_observers(void *data)
     }
     int size_after = oc_rep_get_encoded_payload_size();
     if (size_before == size_after) {
-      OC_DBG("process_batch_observers: acls(%d) drop observations\n\n");
+      OC_DBG("process_batch_observers: drop observations\n\n");
     } else {
       oc_rep_end_links_array();
       size_after = oc_rep_get_encoded_payload_size();

@@ -5,3 +5,4 @@ Dockerfile.*
 build/
 images/
 swig/
+tests/
