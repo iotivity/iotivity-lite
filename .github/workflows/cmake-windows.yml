@@ -30,11 +30,6 @@ jobs:
            build_testing: "ON",
            platform: mingw
          }
-        # - {
-        #    name: "Ubuntu Latest GCC", artifact: "Linux.tar.xz",
-        #    os: ubuntu-latest,
-        #    build_type: "Release", cc: "gcc", cxx: "g++"
-        #  }
         #- {
         #    name: "macOS Latest Clang", artifact: "macOS.tar.xz",
         #    os: macos-latest,

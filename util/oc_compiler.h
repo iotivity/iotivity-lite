@@ -29,4 +29,10 @@
 #define OC_NO_DISCARD_RETURN
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+#define OC_FALLTHROUGH __attribute__((fallthrough))
+#else
+#define OC_FALLTHROUGH
+#endif
+
 #endif // OC_COMPILER

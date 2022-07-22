@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "util/oc_compiler.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -196,6 +197,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+    OC_FALLTHROUGH;
   case OC_IF_RW:
     oc_rep_set_boolean(root, state, light);
     break;

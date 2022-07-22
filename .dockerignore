@@ -1,6 +1,7 @@
-Dockerfile.*
 .github/
+.clang-format
+sonar-project.properties
+Dockerfile.*
+build/
 images/
 swig/
-tests/
-.clang-format

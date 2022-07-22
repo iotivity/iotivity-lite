@@ -535,9 +535,8 @@ set_target_properties(client-python-shared PROPERTIES
 )
 
 # ####### Units tests (UNIX only) ########
-include(CTest)
-
 if(BUILD_TESTING AND(UNIX OR MINGW))
+    include(CTest)
     enable_language(CXX)
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
