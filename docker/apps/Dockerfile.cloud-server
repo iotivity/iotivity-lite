@@ -1,13 +1,17 @@
-FROM alpine:3.12 AS build
+FROM alpine:3.15 AS build
+ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
-RUN apk add --no-cache curl git build-base gcc linux-headers patch
+RUN apk add --no-cache cmake curl git build-base gcc linux-headers patch
 COPY ./  /iotivity-lite/
 RUN cd /iotivity-lite/ && git submodule update --recursive
-RUN make -C /iotivity-lite/port/linux $BUILD_ARGS cloud_server
+RUN mkdir /iotivity-lite/build && \
+	cd /iotivity-lite/build && \
+	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+	cmake --build . --target cloud_server
 
-FROM alpine:3.12 AS service
+FROM alpine:3.15 AS service
 RUN apk add --no-cache bash
-COPY --from=build /iotivity-lite/port/linux/cloud_server /iotivity-lite/port/linux/service
+COPY --from=build /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 COPY /docker/run.sh /usr/local/bin/run.sh
 ENV NUM_DEVICES=1
 ENTRYPOINT ["/usr/local/bin/run.sh"]

@@ -27,54 +27,66 @@ jobs:
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            type: Debug
           - name: cloud-server-debug-asan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=1 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_ASAN_ENABLED=ON"
+            type: Debug
           - name: cloud-server-debug-tsan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OSCORE=0 ASAN=0 TSAN=1"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_TSAN_ENABLED=ON"
+            type: Debug
 
           - name: cloud-server-discovery-resource-observable-debug
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            type: Debug
           - name: cloud-server-discovery-resource-observable-debug-asan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=1 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_ASAN_ENABLED=ON"
+            type: Debug
           - name: cloud-server-discovery-resource-observable-debug-tsan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 OSCORE=0 ASAN=0 TSAN=1"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_TSAN_ENABLED=ON"
+            type: Debug
 
           - name: cloud-server-rep-realloc-debug
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            type: Debug
           - name: cloud-server-rep-realloc-debug-asan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=1 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_ASAN_ENABLED=ON"
+            type: Debug
           - name: cloud-server-rep-realloc-debug-tsan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=1"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_TSAN_ENABLED=ON"
+            type: Debug
 
           - name: cloud-server-discovery-resource-observable-rep-realloc-debug
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            type: Debug
           - name: cloud-server-discovery-resource-observable-rep-realloc-debug-asan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=1 TSAN=0"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_ASAN_ENABLED=ON"
+            type: Debug
           - name: cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
             file: docker/apps/Dockerfile.cloud-server-debug
             tag: dbg
-            args: "CLOUD=1 SECURE=1 CREATE=1 MNT=1 DEBUG=1 OICRES_OBSERVABLE=1 REP_ENCODING_REALLOC=1 OSCORE=0 ASAN=0 TSAN=1"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_TSAN_ENABLED=ON"
+            type: Debug
 
     steps:
       - name: Checkout repository
@@ -87,6 +99,7 @@ jobs:
           push: false
           build-args: |
             BUILD_ARGS=${{ matrix.args }}
+            BUILD_TYPE=${{ matrix.type }}
           file: ${{ matrix.file }}
           tags: ${{ matrix.tag }}
 
