@@ -2,7 +2,7 @@
  *
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -27,10 +27,31 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize all TCP members of the device network context.
+ *
+ * @param dev the device network context (cannot be NULL).
+ * @return 0 on success
+ * @return -1 on error
+ */
 int oc_tcp_connectivity_init(ip_context_t *dev);
 
+/**
+ * @brief Deinitialize all TCP members of the device network context.
+ *
+ * @param dev the device network context (cannot be NULL).
+ */
 void oc_tcp_connectivity_shutdown(ip_context_t *dev);
 
+/**
+ * @brief Send a message through a tcp connection.
+ *
+ * @param dev the device network context (cannot be NULL).
+ * @param message message with data to send (cannot be NULL).
+ * @param receiver address of the receiver (cannot be NULL).
+ * @return >0 number of written bytes
+ * @return -1 on error
+ */
 int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                        const struct sockaddr_storage *receiver);
 

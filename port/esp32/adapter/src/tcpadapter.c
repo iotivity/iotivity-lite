@@ -201,7 +201,7 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_list_add(session_list, session);
 
   if (!(endpoint->flags & SECURED)) {
-    oc_session_start_event((oc_endpoint_t *)endpoint);
+    oc_session_start_event(endpoint);
   }
 
   OC_DBG("recorded new TCP session");
@@ -221,7 +221,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
     OC_ERR("failed to accept incoming TCP connection");
     return -1;
   }
-  OC_DBG("accepted incomming TCP connection");
+  OC_DBG("accepted incoming TCP connection");
 
   if (endpoint->flags & IPV6) {
     struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receive_from;

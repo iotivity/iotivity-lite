@@ -239,7 +239,7 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_list_add(session_list, session);
 
   if (!(endpoint->flags & SECURED)) {
-    oc_session_start_event((oc_endpoint_t *)endpoint);
+    oc_session_start_event(endpoint);
   }
 
   OC_DBG("recorded new TCP session");
