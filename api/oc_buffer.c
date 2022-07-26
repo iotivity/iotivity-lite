@@ -243,7 +243,9 @@ OC_PROCESS_THREAD(message_buffer_handler, ev, data)
 #endif /* OC_SECURITY */
       {
         OC_DBG("Outbound network event: unicast message");
-        oc_send_buffer(message);
+        if (oc_send_buffer(message) < 0) {
+          OC_ERR("failed to send unicast message");
+        }
         oc_message_unref(message);
       }
     }

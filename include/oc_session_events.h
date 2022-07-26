@@ -60,14 +60,14 @@ OC_PROCESS_NAME(oc_session_events);
  *
  * @param endpoint start event on endpoint
  */
-void oc_session_start_event(oc_endpoint_t *endpoint);
+void oc_session_start_event(const oc_endpoint_t *endpoint);
 
 /**
  * @brief session end event
  *
  * @param endpoint stop event on endpoint
  */
-void oc_session_end_event(oc_endpoint_t *endpoint);
+void oc_session_end_event(const oc_endpoint_t *endpoint);
 
 /**
  * @brief set delay for events

@@ -131,7 +131,8 @@ struct oc_message_s
  * @brief send buffer
  *
  * @param message message to send
- * @return int 0 = success
+ * @return int >=0 number of sent bytes
+ * @return int -1 on error
  */
 int oc_send_buffer(oc_message_t *message);
 
@@ -221,7 +222,7 @@ typedef enum {
 } tcp_csm_state_t;
 
 /**
- * @brief retrieve the cms state
+ * @brief retrieve the csm state
  *
  * @param endpoint the endpoint
  * @return tcp_csm_state_t the cms state

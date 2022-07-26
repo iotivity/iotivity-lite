@@ -120,7 +120,7 @@ OC_PROCESS_THREAD(oc_session_events, ev, data)
 }
 
 void
-oc_session_start_event(oc_endpoint_t *endpoint)
+oc_session_start_event(const oc_endpoint_t *endpoint)
 {
   if (!oc_process_is_running(&(oc_session_events))) {
     return;
@@ -139,7 +139,7 @@ oc_session_start_event(oc_endpoint_t *endpoint)
 }
 
 void
-oc_session_end_event(oc_endpoint_t *endpoint)
+oc_session_end_event(const oc_endpoint_t *endpoint)
 {
   if (!oc_process_is_running(&(oc_session_events))) {
     return;
