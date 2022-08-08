@@ -20,7 +20,6 @@
 #define OC_SESSION_EVENTS_H
 
 #include "oc_endpoint.h"
-#include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
 
 #ifdef __cplusplus

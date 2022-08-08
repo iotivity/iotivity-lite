@@ -27,18 +27,20 @@
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
-#ifdef OC_TCP
-#include "tcpadapter.h"
-#endif
+#include "api/oc_network_events_internal.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
 #include "mutex.h"
 #include "network_addresses.h"
-
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
+#ifdef OC_TCP
+#include "tcpadapter.h"
+#endif /* OC_TCP */
 
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
@@ -871,7 +873,7 @@ network_event_thread(void *data)
         PRINTipaddr(message->endpoint);
         PRINT("\n\n");
 #endif /* OC_DEBUG */
-        oc_network_event(message);
+        oc_network_receive_event(message);
       }
     }
   }
@@ -1150,6 +1152,13 @@ oc_send_buffer(oc_message_t *message)
 #endif /* !OC_IPV4 */
 
   return send_msg(send_sock, &receiver, message);
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 #ifdef OC_CLIENT

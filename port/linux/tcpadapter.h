@@ -20,8 +20,9 @@
 #define TCP_ADAPTER_H
 
 #include "ipcontext.h"
-#include "port/oc_connectivity.h"
-#include <sys/select.h>
+#include "tcpcontext.h"
+
+#ifdef OC_TCP
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,42 +31,39 @@ extern "C" {
 /**
  * @brief Initialize all TCP members of the device network context.
  *
- * @param dev the device network context (cannot be NULL).
+ * @param dev the device network context (cannot be NULL)
  * @return 0 on success
  * @return -1 on error
  */
-int oc_tcp_connectivity_init(ip_context_t *dev);
+int tcp_connectivity_init(ip_context_t *dev);
 
 /**
  * @brief Deinitialize all TCP members of the device network context.
  *
- * @param dev the device network context (cannot be NULL).
+ * @param dev the device network context (cannot be NULL)
  */
-void oc_tcp_connectivity_shutdown(ip_context_t *dev);
+void tcp_connectivity_shutdown(ip_context_t *dev);
 
 /**
- * @brief Send a message through a tcp connection.
+ * @brief Add all TCP sockets and signal pipe to read fd set.
  *
- * @param dev the device network context (cannot be NULL).
- * @param message message with data to send (cannot be NULL).
- * @param receiver address of the receiver (cannot be NULL).
- * @return >0 number of written bytes
- * @return -1 on error
+ * @param dev the device network context (cannot be NULL)
  */
-int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
-                       const struct sockaddr_storage *receiver);
+void tcp_add_socks_to_rfd_set(ip_context_t *dev);
 
-void oc_tcp_add_socks_to_fd_set(ip_context_t *dev);
-
-void oc_tcp_set_session_fds(fd_set *fds);
-
-adapter_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
-                                               oc_message_t *message);
-
-void oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint);
+/**
+ * @brief Handle data available on the signal pipe (dev->connect_pipe).
+ *
+ * @param dev the device network context (cannot be NULL)
+ * @return ADAPTER_STATUS_ERROR on read error
+ * @return ADAPTER_STATUS_RECEIVE on success
+ */
+adapter_receive_state_t tcp_receive_signal(const tcp_context_t *dev);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* OC_TCP */
 
 #endif /* TCP_ADAPTER_H */

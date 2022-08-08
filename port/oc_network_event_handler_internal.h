@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2016-2018 Intel Corporation, All Rights Reserved.
+ * Copyright (c) 2016 Intel Corporation, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,35 @@
  *
  ****************************************************************************/
 
-#ifndef OC_NETWORK_EVENTS_H
-#define OC_NETWORK_EVENTS_H
-
-#include "util/oc_process.h"
+#ifndef OC_NETWORK_EVENT_HANDLER_INTERNAL_H
+#define OC_NETWORK_EVENT_HANDLER_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @brief Network events
+ * @brief initialize the network event handler mutex
  */
-typedef enum {
-  NETWORK_INTERFACE_DOWN, ///< network interface down
-  NETWORK_INTERFACE_UP    ///< network interface up
-} oc_interface_event_t;
+void oc_network_event_handler_mutex_init(void);
 
 /**
-  @brief Callback function to pass the network interface up/down infomation
-    to App.
-  @param event  enum values in oc_interface_event_t.
-*/
-typedef void (*interface_event_handler_t)(oc_interface_event_t event);
+ * @brief lock the network event hander
+ */
+void oc_network_event_handler_mutex_lock(void);
+
+/**
+ * @brief unlock the network event handler
+ */
+void oc_network_event_handler_mutex_unlock(void);
+
+/**
+ * @brief destroy the network event handler mutex
+ */
+void oc_network_event_handler_mutex_destroy(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_NETWORK_EVENTS_H */
+#endif /* OC_NETWORK_EVENT_HANDLER_INTERNAL_H */

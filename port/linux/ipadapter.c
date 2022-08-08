@@ -17,20 +17,26 @@
  ****************************************************************************/
 
 #define _GNU_SOURCE
+#include "api/oc_network_events_internal.h"
+#include "port/oc_assert.h"
+#include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_atomic.h"
+#include "util/oc_features.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
 #include "oc_config.h"
-#ifdef OC_TCP
-#include "tcpadapter.h"
-#include "tcpcontext.h"
-#endif
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
-#include "util/oc_atomic.h"
+#ifdef OC_TCP
+#include "tcpadapter.h"
+#include "tcpcontext.h"
+#include "tcpsession.h"
+#endif /* OC_TCP */
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -247,15 +253,12 @@ oc_network_event_handler_mutex_destroy(void)
   pthread_mutex_destroy(&g_mutex);
 }
 
-static ip_context_t *
-get_ip_context_for_device(size_t device)
+ip_context_t *
+oc_get_ip_context_for_device(size_t device)
 {
   ip_context_t *dev = oc_list_head(g_ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
-  }
-  if (!dev) {
-    return NULL;
   }
   return dev;
 }
@@ -423,7 +426,43 @@ configure_mcast_socket(int mcast_sock, int sa_family)
   return ret;
 }
 
-static void
+static ssize_t
+get_data_size(int sock)
+{
+  size_t guess = 512;
+  ssize_t response_len;
+  do {
+    guess <<= 1;
+    uint8_t dummy[guess];
+    response_len = recv(sock, dummy, guess, MSG_PEEK);
+    if (response_len < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+      return -1;
+    }
+  } while ((size_t)response_len == guess);
+  return response_len;
+}
+
+static ssize_t
+get_data(int sock, uint8_t *buffer, size_t buffer_size)
+{
+  ssize_t response_len;
+  do {
+    response_len = recv(sock, buffer, buffer_size, 0);
+    if (response_len < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+      return -1;
+    }
+    break;
+  } while (true);
+  return response_len;
+}
+
+static bool
 get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
                         bool secure, bool tcp)
 {
@@ -442,13 +481,19 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
 
   int nl_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
   if (nl_sock < 0) {
-    return;
+    return false;
   }
 
-  if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
-    close(nl_sock);
-    return;
-  }
+  do {
+    if (send(nl_sock, &request, request.nlhdr.nlmsg_len, 0) < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+      close(nl_sock);
+      return false;
+    }
+    break;
+  } while (true);
 
   fd_set rfds;
   FD_ZERO(&rfds);
@@ -456,34 +501,28 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
 
   if (select(FD_SETSIZE, &rfds, NULL, NULL, NULL) < 0) {
     close(nl_sock);
-    return;
+    return false;
   }
 
   int prev_interface_index = -1;
   bool done = false;
   while (!done) {
-    int guess = 512, response_len;
-    do {
-      guess <<= 1;
-      uint8_t dummy[guess];
-      response_len = recv(nl_sock, dummy, guess, MSG_PEEK);
-      if (response_len < 0) {
-        close(nl_sock);
-        return;
-      }
-    } while (response_len == guess);
-
-    uint8_t buffer[response_len];
-    response_len = recv(nl_sock, buffer, response_len, 0);
+    ssize_t response_len = get_data_size(nl_sock);
     if (response_len < 0) {
       close(nl_sock);
-      return;
+      return false;
+    }
+    uint8_t buffer[response_len];
+    response_len = get_data(nl_sock, buffer, sizeof(buffer));
+    if (response_len < 0) {
+      close(nl_sock);
+      return false;
     }
 
     response = (struct nlmsghdr *)buffer;
     if (response->nlmsg_type == NLMSG_ERROR) {
       close(nl_sock);
-      return;
+      return false;
     }
 
     while (NLMSG_OK(response, response_len)) {
@@ -549,7 +588,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
         oc_endpoint_t *new_ep = oc_memb_alloc(&g_device_eps);
         if (!new_ep) {
           close(nl_sock);
-          return;
+          return false;
         }
         memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
         oc_list_add(dev->eps, new_ep);
@@ -560,6 +599,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     }
   }
   close(nl_sock);
+  return true;
 }
 
 static void
@@ -578,26 +618,52 @@ refresh_endpoints_list(ip_context_t *dev)
 {
   free_endpoints_list(dev);
 
-  get_interface_addresses(dev, AF_INET6, dev->port, false, false);
+  if (!get_interface_addresses(dev, AF_INET6, dev->port, false, false)) {
+    OC_ERR("failed to refresh endpoints for ipv6 interface with port:%u",
+           (unsigned)dev->port);
+  }
 #ifdef OC_SECURITY
-  get_interface_addresses(dev, AF_INET6, dev->dtls_port, true, false);
+  if (!get_interface_addresses(dev, AF_INET6, dev->dtls_port, true, false)) {
+    OC_ERR("failed to refresh endpoints for secure ipv6 interface with port:%u",
+           (unsigned)dev->dtls_port);
+  }
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  get_interface_addresses(dev, AF_INET, dev->port4, false, false);
+  if (!get_interface_addresses(dev, AF_INET, dev->port4, false, false)) {
+    OC_ERR("failed to refresh endpoints for ipv4 interface with port:%u",
+           (unsigned)dev->port4);
+  }
 #ifdef OC_SECURITY
-  get_interface_addresses(dev, AF_INET, dev->dtls4_port, true, false);
+  if (!get_interface_addresses(dev, AF_INET, dev->dtls4_port, true, false)) {
+    OC_ERR("failed to refresh endpoints for secure ipv4 interface with port:%u",
+           (unsigned)dev->dtls4_port);
+  }
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 
 #ifdef OC_TCP
-  get_interface_addresses(dev, AF_INET6, dev->tcp.port, false, true);
+  if (!get_interface_addresses(dev, AF_INET6, dev->tcp.port, false, true)) {
+    OC_ERR("failed to refresh endpoints for ipv6 interface (TCP) with port:%u",
+           (unsigned)dev->tcp.port);
+  }
 #ifdef OC_SECURITY
-  get_interface_addresses(dev, AF_INET6, dev->tcp.tls_port, true, true);
+  if (!get_interface_addresses(dev, AF_INET6, dev->tcp.tls_port, true, true)) {
+    OC_ERR("failed to refresh endpoints for secure ipv6 interface (TCP) with "
+           "port:%u",
+           (unsigned)dev->tcp.tls_port);
+  }
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  get_interface_addresses(dev, AF_INET, dev->tcp.port4, false, true);
+  if (!get_interface_addresses(dev, AF_INET, dev->tcp.port4, false, true)) {
+    OC_ERR("failed to refresh endpoints for ipv4 interface (TCP) with port:%u",
+           (unsigned)dev->tcp.port4);
+  }
 #ifdef OC_SECURITY
-  get_interface_addresses(dev, AF_INET, dev->tcp.tls4_port, true, true);
+  if (!get_interface_addresses(dev, AF_INET, dev->tcp.tls4_port, true, true)) {
+    OC_ERR("failed to refresh endpoints for secure ipv4 interface (TCP) with "
+           "port:%u",
+           (unsigned)dev->tcp.tls4_port);
+  }
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
@@ -606,7 +672,7 @@ refresh_endpoints_list(ip_context_t *dev)
 oc_endpoint_t *
 oc_connectivity_get_endpoints(size_t device)
 {
-  ip_context_t *dev = get_ip_context_for_device(device);
+  ip_context_t *dev = oc_get_ip_context_for_device(device);
 
   if (!dev) {
     return NULL;
@@ -638,36 +704,27 @@ oc_connectivity_get_endpoints(size_t device)
 static int
 process_interface_change_event(void)
 {
-  int ret = 0, i, num_devices = oc_core_get_num_devices();
-  struct nlmsghdr *response = NULL;
-
-  size_t guess = 512;
-  ssize_t response_len;
-  do {
-    guess <<= 1;
-    uint8_t dummy[guess];
-    response_len = recv(g_ifchange_sock, dummy, guess, MSG_PEEK);
-    if (response_len < 0) {
-      OC_ERR("reading payload size from netlink interface");
-      return -1;
-    }
-  } while ((size_t)response_len == guess);
-
+  ssize_t response_len = get_data_size(g_ifchange_sock);
+  if (response_len < 0) {
+    OC_ERR("reading payload size from netlink interface");
+    return -1;
+  }
   uint8_t buffer[response_len];
-  response_len = recv(g_ifchange_sock, buffer, response_len, 0);
+  response_len = get_data(g_ifchange_sock, buffer, sizeof(buffer));
   if (response_len < 0) {
     OC_ERR("reading payload from netlink interface");
     return -1;
   }
 
-  response = (struct nlmsghdr *)buffer;
+  struct nlmsghdr *response = (struct nlmsghdr *)buffer;
   if (response->nlmsg_type == NLMSG_ERROR) {
     OC_ERR("caught NLMSG_ERROR in payload from netlink interface");
     return -1;
   }
 
+  int ret = 0;
+  size_t num_devices = oc_core_get_num_devices();
   bool if_state_changed = false;
-
   while (NLMSG_OK(response, response_len)) {
     if (response->nlmsg_type == RTM_NEWADDR) {
       struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
@@ -683,8 +740,8 @@ process_interface_change_event(void)
           if (attr->rta_type == IFA_ADDRESS) {
 #ifdef OC_IPV4
             if (ifa->ifa_family == AF_INET) {
-              for (i = 0; i < num_devices; i++) {
-                ip_context_t *dev = get_ip_context_for_device(i);
+              for (size_t i = 0; i < num_devices; i++) {
+                const ip_context_t *dev = oc_get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv4_mcast_group(
                   dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
               }
@@ -692,8 +749,8 @@ process_interface_change_event(void)
 #endif /* OC_IPV4 */
               if (ifa->ifa_family == AF_INET6 &&
                   ifa->ifa_scope == RT_SCOPE_LINK) {
-              for (i = 0; i < num_devices; i++) {
-                ip_context_t *dev = get_ip_context_for_device(i);
+              for (size_t i = 0; i < num_devices; i++) {
+                const ip_context_t *dev = oc_get_ip_context_for_device(i);
                 ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
                                                           ifa->ifa_index);
               }
@@ -718,8 +775,8 @@ process_interface_change_event(void)
   }
 
   if (if_state_changed) {
-    for (i = 0; i < num_devices; i++) {
-      ip_context_t *dev = get_ip_context_for_device(i);
+    for (size_t i = 0; i < num_devices; i++) {
+      ip_context_t *dev = oc_get_ip_context_for_device(i);
       if (dev == NULL) {
         continue;
       }
@@ -761,7 +818,10 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 
   msg.msg_flags = 0;
 
-  int ret = recvmsg(sock, &msg, 0);
+  ssize_t ret;
+  do {
+    ret = recvmsg(sock, &msg, 0);
+  } while (ret < 0 && errno == EINTR);
 
   if (ret < 0 || (msg.msg_flags & MSG_TRUNC) || (msg.msg_flags & MSG_CTRUNC)) {
     OC_ERR("recvmsg returned with an error: %d", errno);
@@ -800,7 +860,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       break;
     }
 #ifdef OC_IPV4
-    else if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_PKTINFO) {
+    if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_PKTINFO) {
       if (msg.msg_namelen != sizeof(struct sockaddr_in)) {
         OC_ERR("anciliary data contains invalid source address");
         return -1;
@@ -821,11 +881,12 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 #endif /* OC_IPV4 */
   }
 
-  return ret;
+  assert(ret <= INT_MAX);
+  return (int)ret;
 }
 
 static void
-oc_udp_add_socks_to_fd_set(ip_context_t *dev)
+udp_add_socks_to_rfd_set(ip_context_t *dev)
 {
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
@@ -842,10 +903,23 @@ oc_udp_add_socks_to_fd_set(ip_context_t *dev)
 #endif /* OC_IPV4 */
 }
 
+static void
+process_shutdown(const ip_context_t *dev)
+{
+  ssize_t len;
+  do {
+    char buf;
+    // write to pipe shall not block - so read the byte we wrote
+    len = read(dev->shutdown_pipe[0], &buf, 1);
+  } while (len < 0 && errno == EINTR);
+}
+
 static adapter_receive_state_t
 oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
   if (FD_ISSET(dev->server_sock, fds)) {
+    OC_DBG("udp receive server_sock(fd=%d)", dev->server_sock);
+    FD_CLR(dev->server_sock, fds);
     int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, false);
     if (count < 0) {
@@ -853,11 +927,12 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV6;
-    FD_CLR(dev->server_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 
   if (FD_ISSET(dev->mcast_sock, fds)) {
+    OC_DBG("udp receive mcast_sock(fd=%d)", dev->mcast_sock);
+    FD_CLR(dev->mcast_sock, fds);
     int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, true);
     if (count < 0) {
@@ -865,12 +940,13 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV6 | MULTICAST;
-    FD_CLR(dev->mcast_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 
 #ifdef OC_IPV4
   if (FD_ISSET(dev->server4_sock, fds)) {
+    OC_DBG("udp receive server4_sock(fd=%d)", dev->server4_sock);
+    FD_CLR(dev->server4_sock, fds);
     int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, false);
     if (count < 0) {
@@ -878,11 +954,12 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV4;
-    FD_CLR(dev->server4_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 
   if (FD_ISSET(dev->mcast4_sock, fds)) {
+    OC_DBG("udp receive mcast4_sock(fd=%d)", dev->mcast4_sock);
+    FD_CLR(dev->mcast4_sock, fds);
     int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, true);
     if (count < 0) {
@@ -890,13 +967,14 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
     message->length = (size_t)count;
     message->endpoint.flags = IPV4 | MULTICAST;
-    FD_CLR(dev->mcast4_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 #endif /* OC_IPV4 */
 
 #ifdef OC_SECURITY
   if (FD_ISSET(dev->secure_sock, fds)) {
+    OC_DBG("udp receive secure_sock(fd=%d)", dev->secure_sock);
+    FD_CLR(dev->secure_sock, fds);
     int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, false);
     if (count < 0) {
@@ -905,11 +983,12 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     message->length = (size_t)count;
     message->endpoint.flags = IPV6 | SECURED;
     message->encrypted = 1;
-    FD_CLR(dev->secure_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 #ifdef OC_IPV4
   if (FD_ISSET(dev->secure4_sock, fds)) {
+    OC_DBG("udp receive secure4_sock(fd=%d)", dev->secure4_sock);
+    FD_CLR(dev->secure4_sock, fds);
     int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
                          &message->endpoint, false);
     if (count < 0) {
@@ -918,7 +997,6 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     message->length = (size_t)count;
     message->endpoint.flags = IPV4 | SECURED;
     message->encrypted = 1;
-    FD_CLR(dev->secure4_sock, fds);
     return ADAPTER_STATUS_RECEIVE;
   }
 #endif /* OC_IPV4 */
@@ -928,91 +1006,192 @@ oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 }
 
 static bool
-process_socket_message(ip_context_t *dev, fd_set *rdfds)
+process_socket_signal_event(const ip_context_t *dev, fd_set *rdfds)
+{
+#ifdef OC_TCP
+  if (!FD_ISSET(dev->tcp.connect_pipe[0], rdfds)) {
+    return false;
+  }
+  FD_CLR(dev->tcp.connect_pipe[0], rdfds);
+  adapter_receive_state_t status = tcp_receive_signal(&dev->tcp);
+#ifndef OC_DEBUG
+  (void)status;
+#endif /* OC_DEBUG */
+  OC_DBG("Signal event received(fd=%d, status=%d)", dev->tcp.connect_pipe[0],
+         status);
+  return true;
+#else  /* !OC_TCP */
+  (void)dev;
+  (void)rdfds;
+  return false;
+#endif /* OC_TCP */
+}
+
+static int
+process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
 {
   oc_message_t *message = oc_allocate_message();
   if (message == NULL) {
-    return false;
+    return -1;
   }
-
   message->endpoint.device = dev->device;
 
-  if (oc_udp_receive_message(dev, rdfds, message) == ADAPTER_STATUS_RECEIVE) {
-    goto common;
+  adapter_receive_state_t s = oc_udp_receive_message(dev, rdfds, message);
+  if (s == ADAPTER_STATUS_RECEIVE) {
+    goto receive;
   }
 #ifdef OC_TCP
-  if (oc_tcp_receive_message(dev, rdfds, message) == ADAPTER_STATUS_RECEIVE) {
-    goto common;
+  if (s == ADAPTER_STATUS_NONE) {
+    s = tcp_receive_message(dev, rdfds, message);
+    if (s == ADAPTER_STATUS_RECEIVE) {
+      goto receive;
+    }
   }
 #endif /* OC_TCP */
 
   oc_message_unref(message);
-  return true;
+  return s == ADAPTER_STATUS_NONE ? 0 : 1;
 
-common:
+receive:
 #ifdef OC_DEBUG
   PRINT("Incoming message of size %zd bytes from ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
 #endif /* OC_DEBUG */
 
-  oc_network_event(message);
-  return true;
+  // TODO: oc_message_shrink_buffer
+  oc_network_receive_event(message);
+  return s == ADAPTER_STATUS_NONE ? 0 : 1;
 }
 
-static void
-process_messages(ip_context_t *dev, fd_set *rdfds, int fd_count)
+static int
+process_socket_write_event(fd_set *wfds)
 {
-  for (int i = 0; i < fd_count; i++) {
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  return tcp_process_waiting_sessions(wfds) ? 1 : 0;
+#else  /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  (void)wfds;
+  return 0;
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+}
+
+static int
+process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
+{
+  if (rdfds != NULL) {
     if ((dev->device == 0) && (FD_ISSET(g_ifchange_sock, rdfds))) {
+      OC_DBG("interface change processed on (fd=%d)", g_ifchange_sock);
+      FD_CLR(g_ifchange_sock, rdfds);
       if (process_interface_change_event() < 0) {
         OC_WRN("caught errors while handling a network interface change");
       }
-      FD_CLR(g_ifchange_sock, rdfds);
-      continue;
+      return 1;
     }
 
-    if (!process_socket_message(dev, rdfds)) {
+    if (process_socket_signal_event(dev, rdfds)) {
+      return 1;
+    }
+
+    int ret = process_socket_read_event(dev, rdfds);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  if (wfds != NULL) {
+    int ret = process_socket_write_event(wfds);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  OC_DBG("no handler found for event");
+  return 0;
+}
+
+static void
+process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
+{
+  if (fd_count == 0) {
+    OC_DBG("process_events: timeout");
+    return;
+  }
+
+  OC_DBG("processing %d events", fd_count);
+  for (int i = 0; i < fd_count; i++) {
+    if (process_event(dev, rdfds, wfds) < 0) {
       break;
     }
   }
 }
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+static struct timeval
+to_timeval(oc_clock_time_t ticks)
+{
+  unsigned sec = (unsigned)(ticks / OC_CLOCK_SECOND);
+  unsigned usec =
+    (unsigned)((ticks % OC_CLOCK_SECOND) * (1.e06 / OC_CLOCK_SECOND));
+  if (sec == 0 && usec == 0) {
+    usec = 1;
+  }
+  struct timeval tval = {
+    .tv_sec = sec,
+    .tv_usec = usec,
+  };
+  return tval;
+}
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 static void *
 network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
   FD_ZERO(&dev->rfds);
-  /* Monitor network interface changes on the platform from only the 0th logical
-   * device
+  /* Monitor network interface changes on the platform from only the 0th
+   * logical device
    */
   if (dev->device == 0) {
     FD_SET(g_ifchange_sock, &dev->rfds);
   }
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
 
-  oc_udp_add_socks_to_fd_set(dev);
-#ifdef OC_TCP
-  oc_tcp_add_socks_to_fd_set(dev);
-#endif /* OC_TCP */
+  udp_add_socks_to_rfd_set(dev);
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  tcp_add_socks_to_rfd_set(dev);
+  oc_clock_time_t expires_in = 0;
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
   while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
+    struct timeval *timeout = NULL;
     fd_set rdfds = ip_context_rfds_fd_copy(dev);
-    int n = select(FD_SETSIZE, &rdfds, NULL, NULL, NULL);
+    fd_set *wfds = NULL;
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+    fd_set write_fds = tcp_context_cfds_fd_copy(&dev->tcp);
+    wfds = &write_fds;
+    struct timeval tv;
+    if (expires_in > 0) {
+      tv = to_timeval(expires_in);
+      timeout = &tv;
+      OC_DBG("network_event_thread timeout:%us %uusec", (unsigned)tv.tv_sec,
+             (unsigned)tv.tv_usec);
+    }
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+    int n = select(FD_SETSIZE, &rdfds, wfds, NULL, timeout);
 
     if (FD_ISSET(dev->shutdown_pipe[0], &rdfds)) {
-      char buf;
-      // write to pipe shall not block - so read the byte we wrote
-      if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
-        // intentionally left blank
-      }
+      process_shutdown(dev);
     }
 
     if (OC_ATOMIC_LOAD8(dev->terminate)) {
       break;
     }
 
-    process_messages(dev, &rdfds, n);
+    process_events(dev, &rdfds, wfds, n);
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+    expires_in = tcp_check_expiring_sessions(oc_clock_time());
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   }
   pthread_exit(NULL);
   return NULL;
@@ -1090,7 +1269,7 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     iovec[0].iov_len = message->length - (size_t)bytes_sent;
     x = sendmsg(sock, &msg, 0);
     if (x < 0) {
-      OC_WRN("sendto() returned errno %d", errno);
+      OC_WRN("sendto() returned errno %d", (int)errno);
       break;
     }
     bytes_sent += x;
@@ -1104,8 +1283,34 @@ send_msg(int sock, struct sockaddr_storage *receiver,
   return bytes_sent;
 }
 
-int
-oc_send_buffer(oc_message_t *message)
+bool
+oc_get_socket_address(const oc_endpoint_t *endpoint,
+                      struct sockaddr_storage *addr)
+{
+  if (endpoint == NULL || addr == NULL) {
+    return false;
+  }
+#ifdef OC_IPV4
+  if ((endpoint->flags & IPV4) != 0) {
+    struct sockaddr_in *r = (struct sockaddr_in *)addr;
+    memcpy(&r->sin_addr.s_addr, endpoint->addr.ipv4.address,
+           sizeof(r->sin_addr.s_addr));
+    r->sin_family = AF_INET;
+    r->sin_port = htons(endpoint->addr.ipv4.port);
+    return true;
+  }
+#endif /* OC_IPV4 */
+  struct sockaddr_in6 *r = (struct sockaddr_in6 *)addr;
+  memcpy(r->sin6_addr.s6_addr, endpoint->addr.ipv6.address,
+         sizeof(r->sin6_addr.s6_addr));
+  r->sin6_family = AF_INET6;
+  r->sin6_port = htons(endpoint->addr.ipv6.port);
+  r->sin6_scope_id = endpoint->addr.ipv6.scope;
+  return true;
+}
+
+static int
+oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
 #ifdef OC_DEBUG
   PRINT("Outgoing message of size %zd bytes to ", message->length);
@@ -1115,37 +1320,29 @@ oc_send_buffer(oc_message_t *message)
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));
-#ifdef OC_IPV4
-  if (message->endpoint.flags & IPV4) {
-    struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
-    memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
-           sizeof(r->sin_addr.s_addr));
-    r->sin_family = AF_INET;
-    r->sin_port = htons(message->endpoint.addr.ipv4.port);
-  } else {
-#else  /* !OC_IPV4 */
-  {
-#endif /* OC_IPV4 */
-    struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
-    memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
-           sizeof(r->sin6_addr.s6_addr));
-    r->sin6_family = AF_INET6;
-    r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-    r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
+  if (!oc_get_socket_address(&message->endpoint, &receiver)) {
+    OC_ERR("cannot retrieve socket address");
+    return -1;
   }
-  int send_sock = -1;
 
-  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+  ip_context_t *dev = oc_get_ip_context_for_device(message->endpoint.device);
   if (dev == NULL) {
     return -1;
   }
 
 #ifdef OC_TCP
-  if (message->endpoint.flags & TCP) {
-    return oc_tcp_send_buffer(dev, message, &receiver);
+  if ((message->endpoint.flags & TCP) != 0) {
+    if (create) {
+      return oc_tcp_send_buffer(dev, message, &receiver);
+    }
+    return oc_tcp_send_buffer2(message, queue);
   }
+#else  /* !OC_TCP */
+  (void)create;
+  (void)queue;
 #endif /* OC_TCP */
 
+  int send_sock = -1;
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
 #ifdef OC_IPV4
@@ -1172,6 +1369,18 @@ oc_send_buffer(oc_message_t *message)
 #endif /* OC_IPV4 */
 
   return send_msg(send_sock, &receiver, message);
+}
+
+int
+oc_send_buffer(oc_message_t *message)
+{
+  return oc_send_buffer_internal(message, true, true);
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  return oc_send_buffer_internal(message, false, queue);
 }
 
 #ifdef OC_CLIENT
@@ -1264,7 +1473,6 @@ oc_send_discovery_request(oc_message_t *message)
   struct ifaddrs *ifs = NULL;
   if (getifaddrs(&ifs) < 0) {
     OC_ERR("querying interfaces: %d", errno);
-    freeifaddrs(ifs);
     return;
   }
 
@@ -1272,7 +1480,8 @@ oc_send_discovery_request(oc_message_t *message)
          sizeof(message->endpoint.addr_local));
   message->endpoint.interface_index = 0;
 
-  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+  const ip_context_t *dev =
+    oc_get_ip_context_for_device(message->endpoint.device);
 
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {
@@ -1524,7 +1733,7 @@ oc_connectivity_init(size_t device)
     OC_ERR("shutdown pipe: %d", errno);
     return -1;
   }
-  if (set_nonblock_socket(dev->shutdown_pipe[0]) < 0) {
+  if (oc_set_fd_flags(dev->shutdown_pipe[0], O_NONBLOCK, 0) < 0) {
     OC_ERR("Could not set non-block shutdown_pipe[0]");
     return -1;
   }
@@ -1675,7 +1884,7 @@ oc_connectivity_init(size_t device)
 #endif /* OC_IPV4 */
 
 #ifdef OC_TCP
-  if (oc_tcp_connectivity_init(dev) != 0) {
+  if (tcp_connectivity_init(dev) != 0) {
     OC_ERR("Could not initialize TCP adapter");
   }
 #endif /* OC_TCP */
@@ -1723,11 +1932,17 @@ oc_connectivity_init(size_t device)
 void
 oc_connectivity_shutdown(size_t device)
 {
-  ip_context_t *dev = get_ip_context_for_device(device);
+  ip_context_t *dev = oc_get_ip_context_for_device(device);
   OC_ATOMIC_STORE8(dev->terminate, 1);
-  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-    OC_WRN("cannot wakeup network thread");
-  }
+  do {
+    if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+      OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
+    }
+    break;
+  } while (true);
 
   pthread_join(dev->event_thread, NULL);
 
@@ -1747,7 +1962,7 @@ oc_connectivity_shutdown(size_t device)
 #endif /* OC_SECURITY */
 
 #ifdef OC_TCP
-  oc_tcp_connectivity_shutdown(dev);
+  tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
   close(dev->shutdown_pipe[1]);
@@ -1767,22 +1982,32 @@ oc_connectivity_shutdown(size_t device)
 void
 oc_connectivity_end_session(oc_endpoint_t *endpoint)
 {
-  if (endpoint->flags & TCP) {
-    ip_context_t *dev = get_ip_context_for_device(endpoint->device);
-    if (dev) {
-      oc_tcp_end_session(dev, endpoint);
-    }
+  if ((endpoint->flags & TCP) != 0 &&
+      oc_get_ip_context_for_device(endpoint->device) != NULL) {
+    tcp_end_session(endpoint);
   }
 }
 #endif /* OC_TCP */
 
 int
-set_nonblock_socket(int sockfd)
+oc_set_fd_flags(int sockfd, int to_add, int to_remove)
 {
-  int flags = fcntl(sockfd, F_GETFL, 0);
-  if (flags < 0) {
+  int old_flags = fcntl(sockfd, F_GETFL, 0);
+  if (old_flags < 0) {
     return -1;
   }
 
-  return fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+  int flags = old_flags;
+  flags &= ~to_remove;
+  flags |= to_add;
+
+  if (flags == old_flags) {
+    return flags;
+  }
+
+  if (fcntl(sockfd, F_SETFL, flags) < 0) {
+    return -1;
+  }
+
+  return flags;
 }

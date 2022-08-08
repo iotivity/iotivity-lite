@@ -18,26 +18,24 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "util/oc_etimer.h"
-#include "util/oc_list.h"
-#include "util/oc_memb.h"
-#include "util/oc_process.h"
-
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
-
 #include "port/oc_assert.h"
 #include "port/oc_random.h"
+#include "util/oc_etimer.h"
+#include "util/oc_list.h"
+#include "util/oc_memb.h"
+#include "util/oc_process.h"
 
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_discovery.h"
 #include "oc_events.h"
-#include "oc_network_events.h"
+#include "oc_network_events_internal.h"
 #ifdef OC_TCP
 #include "oc_session_events.h"
 #endif /* OC_TCP */

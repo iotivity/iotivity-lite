@@ -582,7 +582,7 @@
     <ClInclude Include="..\..\oc_log.h">
       <Filter>Port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\oc_network_events_mutex.h">
+    <ClInclude Include="..\..\oc_network_event_handler_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_random.h">

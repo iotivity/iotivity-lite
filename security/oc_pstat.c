@@ -17,6 +17,7 @@
 #ifdef OC_SECURITY
 #include "oc_pstat.h"
 #include "api/cloud/oc_cloud_internal.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_main.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"

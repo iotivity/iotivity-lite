@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2016-2018 Intel Corporation, All Rights Reserved.
+ * Copyright 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,14 @@
  *
  ****************************************************************************/
 
-#ifndef OC_NETWORK_EVENTS_H
-#define OC_NETWORK_EVENTS_H
+#ifndef OC_FEATURES_H
+#define OC_FEATURES_H
 
-#include "util/oc_process.h"
+#include "oc_config.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if defined(__linux__) && defined(OC_CLIENT) && defined(OC_TCP)
+/* Support asynchronous TCP connect */
+#define OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+#endif /* __linux__ && OC_CLIENT && OC_TCP */
 
-/**
- * @brief Network events
- */
-typedef enum {
-  NETWORK_INTERFACE_DOWN, ///< network interface down
-  NETWORK_INTERFACE_UP    ///< network interface up
-} oc_interface_event_t;
-
-/**
-  @brief Callback function to pass the network interface up/down infomation
-    to App.
-  @param event  enum values in oc_interface_event_t.
-*/
-typedef void (*interface_event_handler_t)(oc_interface_event_t event);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* OC_NETWORK_EVENTS_H */
+#endif /* OC_FEATURES_H */

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2018 Intel Corporation
+ * Copyright (c) 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,38 @@
  *
  ****************************************************************************/
 
-#include "ipcontext.h"
+#include <tcpcontext.h>
+#include <pthread.h>
+#include <sys/select.h>
+#include <string.h>
+
+#ifdef OC_TCP
 
 void
-ip_context_rfds_fd_set(ip_context_t *dev, int sockfd)
+tcp_context_cfds_fd_set(tcp_context_t *dev, int sockfd)
 {
-  pthread_mutex_lock(&dev->rfds_mutex);
-  FD_SET(sockfd, &dev->rfds);
-  pthread_mutex_unlock(&dev->rfds_mutex);
+  pthread_mutex_lock(&dev->cfds_mutex);
+  FD_SET(sockfd, &dev->cfds);
+  pthread_mutex_unlock(&dev->cfds_mutex);
 }
 
 void
-ip_context_rfds_fd_clr(ip_context_t *dev, int sockfd)
+tcp_context_cfds_fd_clr(tcp_context_t *dev, int sockfd)
 {
-  pthread_mutex_lock(&dev->rfds_mutex);
-  FD_CLR(sockfd, &dev->rfds);
-  pthread_mutex_unlock(&dev->rfds_mutex);
+  pthread_mutex_lock(&dev->cfds_mutex);
+  FD_CLR(sockfd, &dev->cfds);
+  pthread_mutex_unlock(&dev->cfds_mutex);
 }
 
 fd_set
-ip_context_rfds_fd_copy(ip_context_t *dev)
+tcp_context_cfds_fd_copy(tcp_context_t *dev)
 {
   fd_set setfds;
   FD_ZERO(&setfds);
-  pthread_mutex_lock(&dev->rfds_mutex);
-  memcpy(&setfds, &dev->rfds, sizeof(dev->rfds));
-  pthread_mutex_unlock(&dev->rfds_mutex);
+  pthread_mutex_lock(&dev->cfds_mutex);
+  memcpy(&setfds, &dev->cfds, sizeof(dev->cfds));
+  pthread_mutex_unlock(&dev->cfds_mutex);
   return setfds;
 }
+
+#endif /* OC_TCP */

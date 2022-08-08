@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-void oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state);
+void oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state);
 bool oc_session_events_is_ongoing(void);
 
 #ifdef __cplusplus

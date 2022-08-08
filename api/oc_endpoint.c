@@ -17,7 +17,7 @@
 #include "oc_endpoint.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_network_events_mutex.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,21 +176,21 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 int
 oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
-  if (!endpoint || !endpoint_str)
+  if (!endpoint || !endpoint_str) {
     return -1;
+  }
 
-  if (endpoint->flags & IPV6) {
+  if ((endpoint->flags & IPV6) != 0) {
     oc_ipv6_endpoint_to_string(endpoint, endpoint_str);
+    return 0;
   }
 #ifdef OC_IPV4
-  else if (endpoint->flags & IPV4) {
+  if ((endpoint->flags & IPV4) != 0) {
     oc_ipv4_endpoint_to_string(endpoint, endpoint_str);
+    return 0;
   }
 #endif /* OC_IPV4 */
-  else {
-    return -1;
-  }
-  return 0;
+  return -1;
 }
 
 #ifdef OC_IPV4

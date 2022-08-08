@@ -17,6 +17,7 @@
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
 #include "port/oc_log.h"
+#include "port/oc_network_event_handler_internal.h"
 
 #include <openthread/ip6.h>
 #include <openthread/thread.h>
@@ -62,7 +63,7 @@ udp_receive_cbk(void *context, otMessage *ot_message,
     PRINT("\n\n");
 #endif /* OC_DEBUG */
 
-    oc_network_event(oc_message);
+    oc_network_receive_event(oc_message);
   }
 }
 
@@ -155,6 +156,13 @@ oc_send_buffer(oc_message_t *message)
     return -1;
   }
   return 0;
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 int

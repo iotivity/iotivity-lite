@@ -163,8 +163,9 @@ OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static int
-coap_remove_observer_handle_by_uri(oc_endpoint_t *endpoint, const char *uri,
-                                   int uri_len, oc_interface_mask_t iface_mask)
+coap_remove_observer_handle_by_uri(const oc_endpoint_t *endpoint,
+                                   const char *uri, int uri_len,
+                                   oc_interface_mask_t iface_mask)
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
@@ -302,7 +303,7 @@ coap_free_all_observers(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_remove_observer_by_client(oc_endpoint_t *endpoint)
+coap_remove_observer_by_client(const oc_endpoint_t *endpoint)
 {
   int removed = 0;
   coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list), *next;
@@ -323,8 +324,8 @@ coap_remove_observer_by_client(oc_endpoint_t *endpoint)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
-                              size_t token_len)
+coap_remove_observer_by_token(const oc_endpoint_t *endpoint,
+                              const uint8_t *token, size_t token_len)
 {
   int removed = 0;
   OC_DBG("Unregistering observers for request token 0x%02X%02X", token[0],
@@ -344,7 +345,7 @@ coap_remove_observer_by_token(oc_endpoint_t *endpoint, uint8_t *token,
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
+coap_remove_observer_by_mid(const oc_endpoint_t *endpoint, uint16_t mid)
 {
   int removed = 0;
   OC_DBG("Unregistering observers for request MID %u", mid);

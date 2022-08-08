@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "oc_network_events.h"
+#include "port/oc_connectivity.h"
 
 #define APP_PRINT(...) printf(__VA_ARGS__)
 

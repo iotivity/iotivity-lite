@@ -704,7 +704,9 @@ install(DIRECTORY include/
 )
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/port
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*_internal.h" EXCLUDE
 )
 install(FILES ${PORT_INCLUDE_DIR}/oc_config.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev

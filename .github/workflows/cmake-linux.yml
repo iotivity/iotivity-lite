@@ -5,23 +5,26 @@ name: CI-cmake building linux
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-   cmake_linux:
+  cmake_linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           # default (secure on, pki on, dynamic allocation on, tcp off, oscore on, cloud off, maintenance resource off, software update off, well-known core resource off)
           - args: ""
           # ipv4 on
           - args: "-DOC_IPV4_ENABLED=ON"
+          # tcp on
+          - args: "-DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on, dynamic allocation off
@@ -36,6 +39,8 @@ jobs:
           - args: "-DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON"
           # secure off, ipv4 on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
+          # secure off, tcp on
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON"
           # secure off, ipv4 on, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
 
