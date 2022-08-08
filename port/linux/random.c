@@ -36,7 +36,10 @@ unsigned int
 oc_random_value(void)
 {
   unsigned int rand = 0;
-  int ret = read(urandom_fd, &rand, sizeof(rand));
+  int ret;
+  do {
+    ret = read(urandom_fd, &rand, sizeof(rand));
+  } while (ret < 0 && errno == EINTR);
   assert(ret != -1);
 #ifndef DEBUG
   (void)ret;

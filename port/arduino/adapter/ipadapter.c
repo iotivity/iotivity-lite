@@ -19,8 +19,10 @@
 #include "ipcontext.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
+#include "api/oc_network_events_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "util/oc_etimer.h"
 #include "util/oc_process.h"
 
@@ -158,6 +160,13 @@ oc_send_buffer(oc_message_t *message)
   ard_send_data(send_sock, message->endpoint.addr.ipv4.address, &send_port,
                 message->data, message->length);
   return message->length;
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 #ifdef OC_CLIENT
@@ -325,7 +334,7 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
           PRINT("Incoming message of size %u bytes from ", message->length);
           PRINTipaddr(message->endpoint);
           PRINT("\r\n");
-          oc_network_event(message);
+          oc_network_receive_event(message);
         }
       }
     }

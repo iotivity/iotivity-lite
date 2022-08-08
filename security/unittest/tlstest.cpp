@@ -30,6 +30,7 @@
 #define delete pseudo_delete
 #include "oc_core_res.h"
 #undef delete
+#include "port/oc_network_event_handler_internal.h"
 
 #define MAX_WAIT_TIME 10
 #define RESOURCE_URI "/LightResourceURI"

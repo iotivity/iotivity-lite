@@ -1,31 +1,33 @@
-/*
-// Copyright (c) 2016, 2018, 2020 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
-/**
-  @file
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016, 2018, 2020 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
+
 #ifndef OC_CONNECTIVITY_H
 #define OC_CONNECTIVITY_H
 
 #include "messaging/coap/conf.h"
+#include "port/oc_log.h"
+#include "util/oc_atomic.h"
+#include "util/oc_features.h"
+#include "util/oc_process.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
-#include "port/oc_log.h"
-#include "util/oc_process.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -103,13 +105,13 @@ extern "C" {
 #define OC_MIN_APP_DATA_SIZE (oc_get_min_app_data_size())
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-struct oc_message_s
+typedef struct oc_message_s
 {
   struct oc_message_s *next;
   struct oc_memb *pool;
   oc_endpoint_t endpoint;
   size_t length;
-  uint8_t ref_count;
+  OC_ATOMIC_UINT8_T ref_count;
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_INOUT_BUFFER_SIZE
   uint8_t data[OC_INOUT_BUFFER_SIZE];
@@ -125,7 +127,7 @@ struct oc_message_s
 #ifdef OC_SECURITY
   uint8_t encrypted;
 #endif /* OC_SECURITY */
-};
+} oc_message_t;
 
 /**
  * @brief send buffer
@@ -193,26 +195,73 @@ void oc_dns_clear_cache(void);
  */
 oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
 
-/**
- * @brief the callback function for an network change
- *
- * @param event the network event
- */
-void handle_network_interface_event_callback(oc_interface_event_t event);
-
-/**
- * @brief the session callback
- *
- * @param endpoint endpoint for the session
- * @param state the state of the session
- */
-void handle_session_event_callback(const oc_endpoint_t *endpoint,
-                                   oc_session_state_t state);
-
 #ifdef OC_TCP
+typedef enum {
+  OC_TCP_SOCKET_STATE_CONNECTING = 1, // connection is waiting to be established
+  OC_TCP_SOCKET_STATE_CONNECTED,      // connection was established
+} oc_tcp_socket_state_t;
+
+typedef enum {
+  OC_TCP_SOCKET_ERROR = -1,               // general error
+  OC_TCP_SOCKET_ERROR_NOT_CONNECTED = -2, // tcp socket is not connected
+  OC_TCP_SOCKET_ERROR_TIMEOUT = -3,       // connection timed out
+  OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING =
+    -4, // waiting connection for given address already exists
+  OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED =
+    -5, // ongoing connection for given address already exists
+} oc_tcp_socket_error_t;
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+typedef void (*on_tcp_connect_t)(const oc_endpoint_t *endpoint, int state,
+                                 void *user_data);
+
+/**
+ * @brief Try to establish a TCP connection to given endpoint.
+ *
+ * @param endpoint endpoint to which to connect (cannot be NULL)
+ * @param on_tcp_connect user function invoked after the connection is
+ * asynchronously created by this call (ie. call returned value
+ * OC_TCP_SOCKET_STATE_CONNECTING). Possible values of the state parameter of
+ * the on_tcp_connect call:
+ *   - OC_TCP_SOCKET_STATE_CONNECTED - connection to endpoint was succesfully
+ * established
+ *   - OC_TCP_SOCKET_ERROR_TIMEOUT - attempts to connect to endpoint timed out
+ *   - OC_TCP_SOCKET_ERROR - attempts to connect to endpoint failed
+ * @param on_tcp_connect_data data provided to the on_tcp_connect callback (you
+ * must ensure a correct lifetime, for given address the callback will be
+ * invoked just once)
+ * @return OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING connection waiting to be
+ * established already exists
+ * @return OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED ongoing connection already
+ * exists
+ * @return OC_TCP_SOCKET_ERROR on other error
+ * @return OC_TCP_SOCKET_STATE_CONNECTING connection was not established
+ * immediately. Representation was created and sent to the network thread, which
+ * will wait for the connection to be established or to timeout. In both cases
+ * on_tcp_connect will be invoke (if it is defined) with the appropriate
+ * arguments.
+ * @return OC_TCP_SOCKET_STATE_CONNECTED connection for the endpoint was
+ * established without delay (the on_tcp_connect and on_tcp_connect_data
+ * arguments used in this invocation will be ignored)
+ */
+int oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
+                   void *on_tcp_connect_data);
+
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+/**
+ * @brief Get state of TCP connection for given endpoint
+ *
+ * @param endpoint the endpoint (cannot be NULL)
+ * @return OC_TCP_SOCKET_STATE_CONNECTED TCP connection exists and it is ongoing
+ * @return OC_TCP_SOCKET_STATE_CONNECTING TCP connection is waiting to be
+ * established
+ * @return -1 otherwise
+ */
+int oc_tcp_connection_state(const oc_endpoint_t *endpoint);
+
 /**
  * @brief The CSM states
- *
  */
 typedef enum {
   CSM_NONE,       ///< None

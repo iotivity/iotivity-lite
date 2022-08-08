@@ -1,7 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2022 Daniel Adam
- * Copyright (c) 2018 Samsung Electronics All Rights Reserved.
+ * Copyright (c) 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -20,12 +19,16 @@
 #ifndef TCPCONTEXT_H
 #define TCPCONTEXT_H
 
-#ifdef OC_TCP
-
 #include <pthread.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <stdint.h>
+
+#ifdef OC_TCP
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct tcp_context_t
 {
@@ -48,7 +51,41 @@ typedef struct tcp_context_t
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   int connect_pipe[2];
+  pthread_mutex_t cfds_mutex;
+  fd_set cfds; //< set of tcp sockets waiting for connection
 } tcp_context_t;
 
+/**
+ * Set a given file descriptor to a set of descriptors waiting for connect
+ * (dev->cfds) under the mutex(cfds_mutex).
+ *
+ * @param[in] dev the device tcp context.
+ * @param[in] sockfd the file descriptor.
+ */
+void tcp_context_cfds_fd_set(tcp_context_t *dev, int sockfd);
+
+/**
+ * Remove a given file descriptor from a set (dev->cfds) under the
+ * mutex(cfds_mutex).
+ *
+ * @param[in] dev the device tcp context.
+ * @param[in] sockfd the file descriptor.
+ */
+void tcp_context_cfds_fd_clr(tcp_context_t *dev, int sockfd);
+
+/**
+ * Make a copy of file descriptor set (dev->cfds) under the mutex(cfds_mutex).
+ *
+ * @param[in] dev the device tcp context.
+ *
+ * @return a copy of file descriptor set.
+ */
+fd_set tcp_context_cfds_fd_copy(tcp_context_t *dev);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* OC_TCP */
+
 #endif /* TCPCONTEXT_H */

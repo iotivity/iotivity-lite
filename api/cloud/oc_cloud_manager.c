@@ -506,8 +506,12 @@ cloud_login_handler(oc_client_response_t *data)
   }
 
   if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
-    oc_set_delayed_callback(ctx, cloud_login,
-                            g_retry_timeout[ctx->retry_count]);
+    if (!is_retry_over(ctx)) {
+      oc_set_delayed_callback(ctx, cloud_login,
+                              g_retry_timeout[ctx->retry_count]);
+    } else {
+      reset_delayed_callback(ctx, reconnect, 0);
+    }
   }
 
 finish:

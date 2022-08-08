@@ -21,6 +21,8 @@
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_list.h"
 #ifdef OC_SECURITY
@@ -158,21 +160,26 @@ oc_session_end_event(const oc_endpoint_t *endpoint)
 }
 #endif /* OC_TCP */
 
-void
-oc_handle_session(oc_endpoint_t *endpoint, oc_session_state_t state)
+static void
+handle_session_disconnected(const oc_endpoint_t *endpoint)
 {
   (void)endpoint;
-  (void)state;
-  if (state == OC_SESSION_DISCONNECTED) {
 #ifdef OC_SECURITY
-    if (endpoint->flags & SECURED && endpoint->flags & TCP) {
-      oc_tls_remove_peer(endpoint);
-    }
+  if ((endpoint->flags & SECURED) != 0 && (endpoint->flags & TCP) != 0) {
+    oc_tls_remove_peer(endpoint);
+  }
 #endif /* OC_SECURITY */
 #ifdef OC_SERVER
-    /* remove all observations for the endpoint */
-    coap_remove_observer_by_client(endpoint);
+  /* remove all observations for the endpoint */
+  coap_remove_observer_by_client(endpoint);
 #endif /* OC_SERVER */
+}
+
+void
+oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state)
+{
+  if (state == OC_SESSION_DISCONNECTED) {
+    handle_session_disconnected(endpoint);
   }
 #ifdef OC_SESSION_EVENTS
   handle_session_event_callback(endpoint, state);

@@ -68,9 +68,9 @@ extern mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 int oc_tls_init_context(void);
 void oc_tls_shutdown(void);
 
-void oc_tls_close_connection(oc_endpoint_t *endpoint);
+void oc_tls_close_connection(const oc_endpoint_t *endpoint);
 
-bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
+bool oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
                              const size_t oxm_len, const uint8_t *server_uuid,
                              const size_t server_uuid_len,
                              const uint8_t *obt_uuid, const size_t obt_uuid_len,
@@ -87,14 +87,14 @@ bool oc_sec_derive_owner_psk(oc_endpoint_t *endpoint, const uint8_t *oxm,
  * @return peer for given endpoint on success
  * @return NULL on error
  */
-oc_tls_peer_t *oc_tls_add_peer(oc_endpoint_t *endpoint, int role);
+oc_tls_peer_t *oc_tls_add_peer(const oc_endpoint_t *endpoint, int role);
 
 /**
  * @brief Remove and deallocate the peer for the endpoint.
  *
  * @param endpoint the endpoint
  */
-void oc_tls_remove_peer(oc_endpoint_t *endpoint);
+void oc_tls_remove_peer(const oc_endpoint_t *endpoint);
 
 /**
  * @brief Get the peer for the endpoint.
@@ -103,7 +103,7 @@ void oc_tls_remove_peer(oc_endpoint_t *endpoint);
  * @return peer for the endpoint if it exists
  * @return NULL if no peer exists for the endpoint
  */
-oc_tls_peer_t *oc_tls_get_peer(oc_endpoint_t *endpoint);
+oc_tls_peer_t *oc_tls_get_peer(const oc_endpoint_t *endpoint);
 
 /**
  * @brief Get uuid of the peer for the endpoint.
@@ -112,7 +112,7 @@ oc_tls_peer_t *oc_tls_get_peer(oc_endpoint_t *endpoint);
  * @return uuid of the peer for the endpoint
  * @return NULL if no peer exists for the endpoint
  */
-oc_uuid_t *oc_tls_get_peer_uuid(oc_endpoint_t *endpoint);
+oc_uuid_t *oc_tls_get_peer_uuid(const oc_endpoint_t *endpoint);
 
 /**
  * @brief Count the number of peers in the device.
@@ -129,7 +129,7 @@ int oc_tls_num_peers(size_t device);
  * @return true if connected peer exists
  * @return false if no connected peer exists
  */
-bool oc_tls_connected(oc_endpoint_t *endpoint);
+bool oc_tls_connected(const oc_endpoint_t *endpoint);
 
 size_t oc_tls_send_message(oc_message_t *message);
 bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);

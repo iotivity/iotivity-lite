@@ -73,7 +73,7 @@ typedef struct ip_context_t
 #endif /* OC_IPV4 */
 #ifdef OC_TCP
   tcp_context_t tcp;
-#endif
+#endif /* OC_TCP */
   pthread_t event_thread;
   OC_ATOMIC_INT8_T terminate;
   size_t device;

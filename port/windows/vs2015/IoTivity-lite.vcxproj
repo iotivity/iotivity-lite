@@ -292,7 +292,7 @@
     <ClInclude Include="..\..\oc_clock.h" />
     <ClInclude Include="..\..\oc_connectivity.h" />
     <ClInclude Include="..\..\oc_log.h" />
-    <ClInclude Include="..\..\oc_network_events_mutex.h" />
+    <ClInclude Include="..\..\oc_network_event_handler_internal.h" />
     <ClInclude Include="..\..\oc_random.h" />
     <ClInclude Include="..\..\oc_storage.h" />
     <ClInclude Include="..\ipcontext.h" />
