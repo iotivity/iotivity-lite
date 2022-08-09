@@ -24,6 +24,7 @@
 #include "oc_cloud.h"
 #include "oc_cloud_internal.h"
 #include "oc_core_res.h"
+#include "rd_client.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #ifdef OC_SECURITY
@@ -698,6 +699,26 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 
   return oc_do_post();
 }
+
+bool
+cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+                oc_response_handler_t handler, void *user_data)
+{
+  if (!oc_tls_connected(endpoint)) {
+    return false;
+  }
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) {
+    return oc_send_ping(false, endpoint, timeout_seconds, handler, user_data);
+  } else
+#endif /* OC_TCP */
+  {
+    return oc_do_get_with_timeout(OC_RSRVD_RD_URI, endpoint, NULL,
+                                  timeout_seconds, handler, LOW_QOS, user_data);
+  }
+  return true;
+}
+
 #else  /* OC_CLOUD*/
 typedef int dummy_declaration;
 #endif /* !OC_CLOUD */

@@ -327,8 +327,11 @@ oc_cloud_manager_restart(oc_cloud_context_t *ctx)
   OC_DBG("[CM] oc_cloud_manager_restart\n");
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
+    bool is_tcp = (ctx->cloud_ep->flags & TCP) != 0;
     cloud_close_endpoint(ctx->cloud_ep);
-    return;
+    if (is_tcp) {
+      return;
+    }
   }
 #endif /* OC_SESSION_EVENTS */
   oc_remove_delayed_callback(ctx, restart_manager);

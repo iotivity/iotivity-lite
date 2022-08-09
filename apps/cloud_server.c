@@ -204,7 +204,8 @@ struct light_t
   int64_t power;
 };
 
-static struct light_t light1 = { 0 };
+static int num_resources = 1;
+static struct light_t *lights;
 
 static void
 get_handler(oc_request_t *request, oc_interface_mask_t iface, void *user_data)
@@ -270,16 +271,27 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_lights(void)
 {
-  oc_resource_t *res1 = oc_new_resource(NULL, "/light/1", 1, 0);
-  oc_resource_bind_resource_type(res1, resource_rt);
-  oc_resource_bind_resource_interface(res1, OC_IF_RW);
-  oc_resource_set_default_interface(res1, OC_IF_RW);
-  oc_resource_set_discoverable(res1, true);
-  oc_resource_set_observable(res1, true);
-  oc_resource_set_request_handler(res1, OC_GET, get_handler, &light1);
-  oc_resource_set_request_handler(res1, OC_POST, post_handler, &light1);
-  oc_cloud_add_resource(res1);
-  oc_add_resource(res1);
+  if (num_resources > 0) {
+    lights = (struct light_t *)calloc(num_resources, sizeof(struct light_t));
+  }
+  for (int i = 0; i < num_resources; i++) {
+    char buf[32];
+    int n = snprintf(buf, sizeof(buf) - 1, "/light/%d", i + 1);
+    if (n < 0) {
+      continue;
+    }
+    buf[n] = 0;
+    oc_resource_t *res = oc_new_resource(NULL, buf, 1, 0);
+    oc_resource_bind_resource_type(res, resource_rt);
+    oc_resource_bind_resource_interface(res, OC_IF_RW);
+    oc_resource_set_default_interface(res, OC_IF_RW);
+    oc_resource_set_discoverable(res, true);
+    oc_resource_set_observable(res, true);
+    oc_resource_set_request_handler(res, OC_GET, get_handler, &lights[i]);
+    oc_resource_set_request_handler(res, OC_POST, post_handler, &lights[i]);
+    oc_cloud_add_resource(res);
+    oc_add_resource(res);
+  }
 }
 
 #ifdef OC_COLLECTIONS
@@ -650,11 +662,13 @@ main(int argc, char *argv[])
 {
   if (argc == 1) {
     PRINT("./cloud_server <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn>\n");
+          "<apn> <num_resources>\n");
 #ifndef OC_SECURITY
     PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
           "sid: %s, "
-          "apn: %s\n",
+          "apn: %s, "
+          "num_resources: %d, "
+          "\n",
           device_name, auth_code, cis, sid, apn);
 #endif /* !OC_SECURITY */
   }
@@ -678,6 +692,13 @@ main(int argc, char *argv[])
     apn = argv[5];
     PRINT("apn: %s\n", argv[5]);
   }
+  if (argc > 6) {
+    num_resources = atoi(argv[6]);
+    if (num_resources < 0) {
+      num_resources = 0;
+    }
+    PRINT("num_resources: %d\n", num_resources);
+  }
 
   int ret = init();
   if (ret < 0) {
@@ -692,7 +713,7 @@ main(int argc, char *argv[])
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
-  oc_set_max_app_data_size(8 * 1024);
+  oc_set_max_app_data_size(8 * 1024 + num_resources * 200);
   oc_set_min_app_data_size(512);
   ret = oc_main_init(&handler);
   if (ret < 0)

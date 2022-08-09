@@ -44,6 +44,7 @@
 #include "oc_api.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
+#include "oc_ri_internal.h"
 
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
@@ -1470,6 +1471,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 static void
 free_client_cb(oc_client_cb_t *cb)
 {
+  if (!cb) {
+    return;
+  }
   oc_list_remove(g_client_cbs, cb);
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
@@ -1489,7 +1493,12 @@ oc_ri_remove_client_cb(void *data)
 static void
 notify_client_cb_503(oc_client_cb_t *cb)
 {
+  OC_DBG(
+    "notify_client_cb_503 - calling handler with service unavailable for %d %s",
+    cb->method, oc_string(cb->uri));
   oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+  oc_ri_remove_timed_event_callback(cb,
+                                    &oc_ri_remove_client_cb_with_notify_503);
 
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
@@ -1510,6 +1519,14 @@ notify_client_cb_503(oc_client_cb_t *cb)
 #endif /* OC_TCP */
 
   free_client_cb(cb);
+}
+
+oc_event_callback_retval_t
+oc_ri_remove_client_cb_with_notify_503(void *data)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)data;
+  notify_client_cb_503(cb);
+  return OC_EVENT_DONE;
 }
 
 void
@@ -1736,6 +1753,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       }
     } else {
       oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+      oc_ri_remove_timed_event_callback(
+        cb, &oc_ri_remove_client_cb_with_notify_503);
       free_client_cb(cb);
     }
 #ifdef OC_BLOCK_WISE

@@ -278,6 +278,19 @@ bool cloud_set_retry(const uint8_t retry_timeout[], size_t retry_timeout_size);
  */
 size_t cloud_get_retry(uint8_t *buffer, size_t buffer_size);
 
+/**
+ * @brief Send a ping over the cloud connected connection
+ *
+ * @param endpoint endpoint to be used
+ * @param timeout_seconds timeout for the ping
+ * @param handler the response handler
+ * @param user_data the user data to be conveyed to the response handler
+ * @return true
+ * @return false
+ */
+bool cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+                     oc_response_handler_t handler, void *user_data);
+
 #ifdef __cplusplus
 }
 #endif

@@ -707,7 +707,8 @@ send_ping_handler(oc_client_response_t *data)
   }
   OC_DBG("[CM] send ping handler(%d)\n", data->code);
 
-  if (data->code == OC_PING_TIMEOUT)
+  if (data->code == OC_PING_TIMEOUT ||
+      data->code == OC_STATUS_SERVICE_UNAVAILABLE)
     goto error;
 
   ctx->retry_count = 0;
@@ -716,7 +717,8 @@ send_ping_handler(oc_client_response_t *data)
 
 error:
   reset_delayed_callback(ctx, send_ping, PING_DELAY_ON_TIMEOUT);
-  if (data->code == OC_PING_TIMEOUT) {
+  if (data->code == OC_PING_TIMEOUT ||
+      data->code == OC_STATUS_SERVICE_UNAVAILABLE) {
     cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
   }
 }
@@ -732,7 +734,7 @@ send_ping(void *data)
 
   OC_DBG("[CM] try send ping(%d)\n", ctx->retry_count);
   if (!is_retry_over(ctx)) {
-    if (!oc_send_ping(false, ctx->cloud_ep, 1, send_ping_handler, ctx)) {
+    if (!cloud_send_ping(ctx->cloud_ep, 1, send_ping_handler, ctx)) {
       // While retrying, keep last error (clec) to CLOUD_OK
       cloud_set_last_error(ctx, CLOUD_OK);
     }
