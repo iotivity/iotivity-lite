@@ -199,6 +199,7 @@ endif
 # for PUSH NOTIFICATION
 ifeq ($(PUSH), 1)
 	EXTRA_CFLAGS += -DOC_PUSH
+	SAMPLES += push_originserver_multithread_linux push_targetserver_multithread_linux push_configurator_multithread_linux
 ifeq ($(PUSH_DEBUG), 1)
 	EXTRA_CFLAGS += -DOC_PUSHDEBUG
 endif
@@ -512,6 +513,19 @@ server_multithread_linux: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_mult
 client_multithread_linux: libiotivity-lite-client.a $(ROOT_DIR)/apps/client_multithread_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
+
+# push notification samples
+push_originserver_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_originserver_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS} ${LIBS}
+
+push_targetserver_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_targetserver_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+push_configurator_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_configurator_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 $(SO_DPP_OBJ): $(ROOT_DIR)/apps/streamlined_onboarding/ocf_dpp.c
 	${CC} -o $@ -c $^ ${CFLAGS} ${SECURITY_HEADERS} ${LIBS}

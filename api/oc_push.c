@@ -1993,7 +1993,6 @@ exit:
 static bool
 _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
-  int obj_arr_len;
   oc_rep_t *rep_obj;
   bool result = false;
 
@@ -2610,11 +2609,11 @@ oc_resource_state_changed(const char *uri, size_t device_index)
       if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types)) {
 #ifdef OC_PUSHDEBUG
         PRINT("%s:prt exists, but mismatches (prt: [", oc_string(ns_instance->resource->uri));
-        for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
+        for (size_t i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
           PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
         }
         PRINT("] - rt of updated rsc: [");
-        for (int i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
+        for (size_t i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
           PRINT("%s ", oc_string_array_get_item(resource->types, i));
         }
         PRINT("])\n");
@@ -2623,11 +2622,11 @@ oc_resource_state_changed(const char *uri, size_t device_index)
       } else {
 #ifdef OC_PUSHDEBUG
         PRINT("%s:prt matches (prt: [", oc_string(ns_instance->resource->uri));
-        for (int i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
+        for (size_t i=0; i<oc_string_array_get_allocated_size(ns_instance->prt); i++) {
           PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
         }
         PRINT("] - rt of updated rsc: [");
-        for (int i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
+        for (size_t i=0; i<oc_string_array_get_allocated_size(resource->types); i++) {
           PRINT("%s ", oc_string_array_get_item(resource->types, i));
         }
         PRINT("])\n");
