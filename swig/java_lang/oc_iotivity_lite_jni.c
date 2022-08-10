@@ -25,6 +25,59 @@
 
 static JavaVM *jvm;
 
+#if defined(_WIN32)
+HANDLE jni_poll_event_thread;
+CRITICAL_SECTION jni_sync_lock;
+CONDITION_VARIABLE jni_cv;
+CRITICAL_SECTION jni_cs;
+
+int jni_quit;
+#elif defined(__linux__)
+pthread_t jni_poll_event_thread;
+pthread_mutex_t jni_sync_lock;
+pthread_mutexattr_t jni_sync_lock_attr;
+pthread_cond_t jni_cv;
+pthread_mutex_t jni_cs;
+
+int jni_quit;
+#endif
+
+jclass cls_ArrayList;
+jclass cls_OCMainInitHandler;
+jclass cls_OCAddDeviceHandler;
+jclass cls_OCClientResponse;
+jclass cls_OCCloudContext;
+jclass cls_OCConWriteHandler;
+jclass cls_OCDiscoveryHandler;
+jclass cls_OCDiscoveryAllHandler;
+jclass cls_OCFactoryPresetsHandler;
+jclass cls_OCGetPropertiesHandler;
+jclass cls_OCInitPlatformHandler;
+jclass cls_OCOwnershipStatusHandler;
+jclass cls_OCQueryValue;
+jclass cls_OCRandomPinHandler;
+jclass cls_OCRepresentation;
+jclass cls_OCRequest;
+jclass cls_OCRequestHandler;
+jclass cls_OCResponseHandler;
+jclass cls_OCResource;
+jclass cls_OCSetPropertiesHandler;
+jclass cls_OCSoftwareUpdateHandler;
+jclass cls_OCTriggerHandler;
+
+jclass cls_OCCoreAddDeviceHandler;
+jclass cls_OCCoreInitPlatformHandler;
+jclass cls_OCCreds;
+jclass cls_OCEndpoint;
+jclass cls_OCUuid;
+jclass cls_OCObtAclHandler;
+jclass cls_OCObtCredsHandler;
+jclass cls_OCObtDiscoveryHandler;
+jclass cls_OCObtDeviceStatusHandler;
+jclass cls_OCObtStatusHandler;
+jclass cls_OCCloudHandler;
+jclass cls_OCSecurityAcl;
+
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {

@@ -131,6 +131,7 @@ oc_cloud_context_t *jni_cloud_get_context(size_t device)
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_manager_start;
 %rename (managerStart) jni_cloud_manager_start;
 %inline %{
@@ -151,6 +152,7 @@ int jni_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_manager_stop;
 %rename (managerStop) jni_cloud_manager_stop;
 %inline %{
@@ -167,6 +169,20 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 #endif /* !OC_CLOUD */
 }
 %}
+
+%ignore oc_cloud_manager_restart;
+%rename (managerRestart) jni_cloud_manager_restart;
+%inline %{
+int jni_cloud_manager_restart(oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  oc_cloud_manager_restart(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+#endif /* !OC_CLOUD */
+}
+%}
+
 %ignore oc_cloud_register;
 %rename (registerCloud) jni_cloud_register;
 %inline %{
@@ -187,6 +203,7 @@ int jni_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_call
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_login;
 %rename (login) jni_cloud_login;
 %inline %{
@@ -207,6 +224,7 @@ int jni_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callbac
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_logout;
 %rename (logout) jni_cloud_logout;
 %inline %{
@@ -227,6 +245,7 @@ int jni_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callba
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_deregister;
 %rename (deregisterCloud) jni_cloud_deregister;
 %inline %{
@@ -247,6 +266,7 @@ int jni_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_ca
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_refresh_token;
 %rename (refreshToken) jni_cloud_refresh_token;
 %inline %{
@@ -267,6 +287,21 @@ int jni_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
 #endif /* !OC_CLOUD */
 }
 %}
+
+%ignore oc_cloud_set_published_resources_ttl;
+%rename (setPublishedResourcesTtl) jni_cloud_set_published_resources_ttl;
+%inline %{
+void jni_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
+                                           uint32_t ttl)
+{
+#ifdef OC_CLOUD
+  oc_cloud_set_published_resources_ttl(ctx, ttl);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+#endif /* !OC_CLOUD */
+}
+%}
+
 %ignore oc_cloud_get_token_expiry;
 %rename (getTokenExpiry) jni_cloud_get_token_expiry;
 %inline %{
@@ -280,6 +315,7 @@ int jni_cloud_get_token_expiry(oc_cloud_context_t *ctx)
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_add_resource;
 %rename (addResource) jni_cloud_add_resource;
 %inline %{
@@ -293,6 +329,7 @@ int jni_cloud_add_resource(oc_resource_t *resource)
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_delete_resource;
 %rename (deleteResource) jni_cloud_delete_resource;
 %inline %{
@@ -305,6 +342,7 @@ void jni_cloud_delete_resource(oc_resource_t *resource)
 #endif /* !OC_CLOUD */
 }
 %}
+
 %ignore oc_cloud_publish_resources;
 %rename (publishResources) jni_cloud_publish_resources;
 %inline %{
@@ -353,6 +391,34 @@ int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
 {
 #ifdef OC_CLOUD
   return oc_cloud_provision_conf_resource(ctx, server, accessToken, serverId, authProvider);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  return -1;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_set_identity_cert_chain;
+%rename(setIdentityCertChain) jni_cloud_set_identity_cert_chain;
+%inline %{
+void jni_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
+                                       int selected_identity_cred_id)
+{
+#ifdef OC_CLOUD
+  oc_cloud_set_identity_cert_chain(ctx, selected_identity_cred_id);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_identity_cert_chain;
+%rename(getIdentityCertChain) jni_cloud_get_identity_cert_chain;
+%inline %{
+int jni_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_identity_cert_chain(ctx);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   return -1;

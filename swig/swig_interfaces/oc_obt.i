@@ -662,7 +662,7 @@ int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt
 %apply (const unsigned char * BYTE, size_t LENGTH)   { (const unsigned char *cert, size_t cert_size) };
 
 %inline %{
-int jni_oc_obt_provision_trust_anchor(const unsigned char *cert, size_t cert_size, char* subject, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+int jni_oc_obt_provision_trust_anchor(const char *cert, size_t cert_size, char* subject, oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)

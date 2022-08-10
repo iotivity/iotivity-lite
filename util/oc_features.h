@@ -20,8 +20,8 @@
 #define OC_FEATURES_H
 
 #include "oc_config.h"
-
-#if defined(__linux__) && defined(OC_CLIENT) && defined(OC_TCP)
+#if defined(__linux__) && !defined(__ANDROID_API__) && defined(OC_CLIENT) &&   \
+  defined(OC_TCP)
 /* Support asynchronous TCP connect */
 #define OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 #endif /* __linux__ && OC_CLIENT && OC_TCP */
