@@ -2,7 +2,6 @@
 %module OCCollectionUtil
 
 %include "stdint.i";
-%include "arrays_java.i";
 %include "iotivity.swg";
 
 %import "oc_ri.i";

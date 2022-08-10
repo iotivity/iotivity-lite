@@ -81,36 +81,28 @@ endif
 
 export ANDROID_HOST ?= arm-linux-androideabi-
 
-BIN_BASE := ${ANDROID_BASE}/bin/${ANDROID_HOST}
 ifeq ($(origin CC),default)
-export CC := ${BIN_BASE}gcc
+export CC := ${ANDROID_BASE}/bin/${ANDROID_HOST}gcc
 endif
 ifeq ($(origin AR),default)
-AR := ${BIN_BASE}ar
+AR := ${ANDROID_BASE}/bin/llvm-ar
 endif
 RM ?= rm
 MKDIR ?= mkdir
 
-
 ifeq (${MYGITHUB_ACTIONS}, true)
 export HOST_TAG := linux-x86_64
-#GITHUBBASE := /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/${HOST_TAG}/bin
-GITHUBBASE := /usr/local/lib/android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/${HOST_TAG}/bin
-#21.4.7075529
-#             /usr/local/lib/android/sdk/ndk/22.1.7171670/toolchains/llvm/prebuilt/linux-x86_64/bin
-export CC :=  ${GITHUBBASE}/aarch64-linux-android23-clang
-AR := ${GITHUBBASE}/aarch64-linux-android-ar
+GITHUBBASE := ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${HOST_TAG}/bin
+export CC := ${GITHUBBASE}/aarch64-linux-android23-clang
+AR := ${GITHUBBASE}/llvm-ar
 endif
-
 
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
 IPV4 ?= 1
 export TCP ?= 1
-
 export CLOUD ?= 1
-
 
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
 # default. It also assumes the use of OC_IDD_API is used by default.
@@ -168,7 +160,7 @@ HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS_CLOUD=-I../../api/cloud
-CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_API__=${ANDROID_API}
+CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))

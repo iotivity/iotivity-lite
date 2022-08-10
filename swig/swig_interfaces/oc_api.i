@@ -1,7 +1,6 @@
 /* File oc_api.i */
 %module OCMain
 %include "carrays.i"
-%include "arrays_java.i"
 %include "stdint.i"
 %include "typemaps.i"
 %include "various.i"
@@ -1205,9 +1204,9 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 
   result = JCALL2(NewObject, jenv, cls_ArrayList, mid_arrayListConstructor);
 
-  char *current_key = 0;
+  const char *current_key = NULL;
   size_t key_len = 0;
-  char *current_value;
+  const char *current_value;
   size_t value_len = 0;
   char temp_buffer[512];
   int pos = 0;

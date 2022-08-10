@@ -29,25 +29,25 @@
 #include <jni.h>
 
 #if defined(_WIN32)
-HANDLE jni_poll_event_thread;
-CRITICAL_SECTION jni_sync_lock;
-CONDITION_VARIABLE jni_cv;
-CRITICAL_SECTION jni_cs;
+extern HANDLE jni_poll_event_thread;
+extern CRITICAL_SECTION jni_sync_lock;
+extern CONDITION_VARIABLE jni_cv;
+extern CRITICAL_SECTION jni_cs;
 
-int jni_quit;
+extern int jni_quit;
 
 /* OS specific definition for lock/unlock */
 #define jni_mutex_lock(m) EnterCriticalSection(&m)
 #define jni_mutex_unlock(m) LeaveCriticalSection(&m)
 
 #elif defined(__linux__)
-pthread_t jni_poll_event_thread __attribute__((unused));
-pthread_mutex_t jni_sync_lock __attribute__((unused));
-pthread_mutexattr_t jni_sync_lock_attr __attribute__((unused));
-pthread_cond_t jni_cv __attribute__((unused));
-pthread_mutex_t jni_cs __attribute__((unused));
+extern pthread_t jni_poll_event_thread;
+extern pthread_mutex_t jni_sync_lock;
+extern pthread_mutexattr_t jni_sync_lock_attr;
+extern pthread_cond_t jni_cv;
+extern pthread_mutex_t jni_cs;
 
-int jni_quit __attribute__((unused));
+extern int jni_quit;
 
 /* OS specific definition for lock/unlock */
 #define jni_mutex_lock(m) pthread_mutex_lock(&m)
@@ -119,41 +119,41 @@ typedef enum {
  * For this reason we pre-load most Java classes that are called from the jni
  * code.
  */
-jclass cls_ArrayList;
-jclass cls_OCMainInitHandler;
-jclass cls_OCAddDeviceHandler;
-jclass cls_OCClientResponse;
-jclass cls_OCCloudContext;
-jclass cls_OCConWriteHandler;
-jclass cls_OCDiscoveryHandler;
-jclass cls_OCDiscoveryAllHandler;
-jclass cls_OCFactoryPresetsHandler;
-jclass cls_OCGetPropertiesHandler;
-jclass cls_OCInitPlatformHandler;
-jclass cls_OCOwnershipStatusHandler;
-jclass cls_OCQueryValue;
-jclass cls_OCRandomPinHandler;
-jclass cls_OCRepresentation;
-jclass cls_OCRequest;
-jclass cls_OCRequestHandler;
-jclass cls_OCResponseHandler;
-jclass cls_OCResource;
-jclass cls_OCSetPropertiesHandler;
-jclass cls_OCSoftwareUpdateHandler;
-jclass cls_OCTriggerHandler;
+extern jclass cls_ArrayList;
+extern jclass cls_OCMainInitHandler;
+extern jclass cls_OCAddDeviceHandler;
+extern jclass cls_OCClientResponse;
+extern jclass cls_OCCloudContext;
+extern jclass cls_OCConWriteHandler;
+extern jclass cls_OCDiscoveryHandler;
+extern jclass cls_OCDiscoveryAllHandler;
+extern jclass cls_OCFactoryPresetsHandler;
+extern jclass cls_OCGetPropertiesHandler;
+extern jclass cls_OCInitPlatformHandler;
+extern jclass cls_OCOwnershipStatusHandler;
+extern jclass cls_OCQueryValue;
+extern jclass cls_OCRandomPinHandler;
+extern jclass cls_OCRepresentation;
+extern jclass cls_OCRequest;
+extern jclass cls_OCRequestHandler;
+extern jclass cls_OCResponseHandler;
+extern jclass cls_OCResource;
+extern jclass cls_OCSetPropertiesHandler;
+extern jclass cls_OCSoftwareUpdateHandler;
+extern jclass cls_OCTriggerHandler;
 
-jclass cls_OCCoreAddDeviceHandler;
-jclass cls_OCCoreInitPlatformHandler;
-jclass cls_OCCreds;
-jclass cls_OCEndpoint;
-jclass cls_OCUuid;
-jclass cls_OCObtAclHandler;
-jclass cls_OCObtCredsHandler;
-jclass cls_OCObtDiscoveryHandler;
-jclass cls_OCObtDeviceStatusHandler;
-jclass cls_OCObtStatusHandler;
-jclass cls_OCCloudHandler;
-jclass cls_OCSecurityAcl;
+extern jclass cls_OCCoreAddDeviceHandler;
+extern jclass cls_OCCoreInitPlatformHandler;
+extern jclass cls_OCCreds;
+extern jclass cls_OCEndpoint;
+extern jclass cls_OCUuid;
+extern jclass cls_OCObtAclHandler;
+extern jclass cls_OCObtCredsHandler;
+extern jclass cls_OCObtDiscoveryHandler;
+extern jclass cls_OCObtDeviceStatusHandler;
+extern jclass cls_OCObtStatusHandler;
+extern jclass cls_OCCloudHandler;
+extern jclass cls_OCSecurityAcl;
 
 /*
  * This struct used to hold information needed for java callbacks.

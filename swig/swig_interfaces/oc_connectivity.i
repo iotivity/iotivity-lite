@@ -59,6 +59,10 @@ void jni_connectivity_shutdown(size_t device)
 %ignore oc_connectivity_get_endpoints;
 %ignore handle_network_interface_event_callback;
 %ignore handle_session_event_callback;
+%ignore oc_tcp_socket_state_t;
+%ignore oc_tcp_socket_error_t;
+%ignore oc_tcp_connect;
+%ignore oc_tcp_connection_state;
 %ignore tcp_csm_state_t;
 %ignore oc_tcp_get_csm_state;
 %ignore oc_tcp_update_csm_state;

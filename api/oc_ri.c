@@ -210,7 +210,7 @@ oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
     }
   }
 
-  int next_pos;
+  int next_pos = 0;
   if (current != NULL) {
     *key_len = (current - start);
     *key = start;
