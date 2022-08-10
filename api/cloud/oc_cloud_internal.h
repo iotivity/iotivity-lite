@@ -285,8 +285,7 @@ size_t cloud_get_retry(uint8_t *buffer, size_t buffer_size);
  * @param timeout_seconds timeout for the ping
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
- * @return true
- * @return false
+ * @return true on success
  */
 bool cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                      oc_response_handler_t handler, void *user_data);

@@ -25,9 +25,6 @@
 #include "port/oc_log.h"
 #include <inttypes.h>
 #include <stdlib.h>
-#ifdef OC_SECURITY
-#include "security/oc_tls.h"
-#endif
 
 static void
 _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
@@ -61,13 +58,6 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     OC_ERR("Error of input parameters");
     return false;
   }
-
-#ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    OC_ERR("tls connection is not established");
-    return false;
-  }
-#endif /* OC_SECURITY */
 
   if (oc_init_post(OC_RSRVD_RD_URI, endpoint, "rt=oic.wk.rdpub", handler, qos,
                    user_data)) {
@@ -135,13 +125,6 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     OC_ERR("Error of input parameters");
     return false;
   }
-
-#ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    OC_ERR("tls connection is not established");
-    return false;
-  }
-#endif /* OC_SECURITY */
 
   char uri_query[256];
   snprintf(uri_query, 255, "di=%s", id);
