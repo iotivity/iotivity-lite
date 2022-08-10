@@ -71,3 +71,11 @@ Option and default setting in the Linux Makefile
 - WKCORE
 
   enable discovery through IETF /.well-known/core on IETFs multicast ALL COAP NODES
+
+- PUSH 0
+
+  enable push notification
+
+- PUSH_DEBUG 0
+
+  enable push notification debug message only (if DEBUG=1, push notification debug messages are activated too)

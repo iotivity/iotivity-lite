@@ -150,6 +150,26 @@ if(UNIX)
         target_link_libraries(device_builder_server client-server-static)
         file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/device_builder_server_creds)
     endif()
+
+    if(OC_PUSH_ENABLED AND OC_COLLECTIONS_IF_CREATE_ENABLED AND OC_DYNAMIC_ALLOCATION_ENABLED)
+        add_executable(push_originserver_multithread_linux
+            ${PROJECT_SOURCE_DIR}/push_originserver_multithread_linux.c
+        )
+        target_link_libraries(push_originserver_multithread_linux client-server-static)
+        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/push_originserver_multithread_linux_creds)
+        
+        add_executable(push_targetserver_multithread_linux
+            ${PROJECT_SOURCE_DIR}/push_targetserver_multithread_linux.c
+        )
+        target_link_libraries(push_targetserver_multithread_linux client-server-static)
+        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/push_targetserver_multithread_linux_creds)
+        
+        add_executable(push_configurator_multithread_linux
+            ${PROJECT_SOURCE_DIR}/push_configurator_multithread_linux.c
+        )
+        target_link_libraries(push_configurator_multithread_linux client-server-static)
+        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/push_configurator_multithread_linux_creds)
+    endif()
 elseif(WIN32)
     add_executable(simpleserver
         ${PROJECT_SOURCE_DIR}/simpleserver_windows.c
