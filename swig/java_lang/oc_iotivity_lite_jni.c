@@ -25,6 +25,23 @@
 
 static JavaVM *jvm;
 
+#if defined(_WIN32)
+HANDLE jni_poll_event_thread;
+CRITICAL_SECTION jni_sync_lock;
+CONDITION_VARIABLE jni_cv;
+CRITICAL_SECTION jni_cs;
+
+int jni_quit;
+#elif defined(__linux__)
+pthread_t jni_poll_event_thread __attribute__((unused));
+pthread_mutex_t jni_sync_lock __attribute__((unused));
+pthread_mutexattr_t jni_sync_lock_attr __attribute__((unused));
+pthread_cond_t jni_cv __attribute__((unused));
+pthread_mutex_t jni_cs __attribute__((unused));
+
+int jni_quit __attribute__((unused));
+#endif
+
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {

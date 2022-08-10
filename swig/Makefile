@@ -126,9 +126,9 @@ ifeq ($(OS),android)
 	LDFLAG += -llog
 	INSTALL_ANDROID_LIBS = install_android_libs
 ifeq ($(ANDROID_API),)
-	EXTRA_FLAG += -D__ANDROID_API__=23
+	EXTRA_FLAG += -D__ANDROID_MIN_SDK_VERSION__=23
 else
-	EXTRA_FLAG += -D__ANDROID_API__=$(ANDROID_API)
+	EXTRA_FLAG += -D__ANDROID_MIN_SDK_VERSION__=$(ANDROID_API)
 endif
 endif
 
