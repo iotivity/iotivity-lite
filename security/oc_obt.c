@@ -2151,7 +2151,7 @@ trustanchor_device_RFPRO(int status, void *response_data)
       oc_rep_set_text_string(creds, subjectuuid, p->trustanchor_subject);
 
       oc_rep_set_object(creds, publicdata);
-      oc_rep_set_text_string(publicdata, data, (char *)p->trustanchor);
+      oc_rep_set_text_string(publicdata, data, p->trustanchor);
       oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
       oc_rep_close_object(creds, publicdata);
 
@@ -2211,7 +2211,7 @@ err_trustanchor_supports_cert_creds:
   3) switch dos to RFNOP
 */
 int
-oc_obt_provision_trust_anchor(char *certificate, size_t certificate_size,
+oc_obt_provision_trust_anchor(const char *certificate, size_t certificate_size,
                               char *subject, oc_uuid_t *uuid,
                               oc_obt_status_cb_t cb, void *data)
 {

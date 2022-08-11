@@ -1,7 +1,6 @@
 /* File oc_api.i */
 %module OCMain
 %include "carrays.i"
-%include "arrays_java.i"
 %include "stdint.i"
 %include "typemaps.i"
 %include "various.i"

@@ -33,13 +33,13 @@ CRITICAL_SECTION jni_cs;
 
 int jni_quit;
 #elif defined(__linux__)
-pthread_t jni_poll_event_thread __attribute__((unused));
-pthread_mutex_t jni_sync_lock __attribute__((unused));
-pthread_mutexattr_t jni_sync_lock_attr __attribute__((unused));
-pthread_cond_t jni_cv __attribute__((unused));
-pthread_mutex_t jni_cs __attribute__((unused));
+pthread_t jni_poll_event_thread;
+pthread_mutex_t jni_sync_lock;
+pthread_mutexattr_t jni_sync_lock_attr;
+pthread_cond_t jni_cv;
+pthread_mutex_t jni_cs;
 
-int jni_quit __attribute__((unused));
+int jni_quit;
 #endif
 
 JNIEXPORT jint JNICALL

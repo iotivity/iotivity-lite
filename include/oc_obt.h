@@ -846,9 +846,10 @@ void oc_obt_free_roleid(oc_role_t *roles);
  * @see oc_obt_add_roleid
  * @see oc_obt_free_roleid
  */
-int oc_obt_provision_trust_anchor(char *certificate, size_t certificate_size,
-                                  char *subject, oc_uuid_t *uuid,
-                                  oc_obt_status_cb_t cb, void *data);
+int oc_obt_provision_trust_anchor(const char *certificate,
+                                  size_t certificate_size, char *subject,
+                                  oc_uuid_t *uuid, oc_obt_status_cb_t cb,
+                                  void *data);
 
 /* Provision access-control entries (ace2) */
 /**

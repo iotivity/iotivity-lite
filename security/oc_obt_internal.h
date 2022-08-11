@@ -113,7 +113,7 @@ typedef struct oc_trustanchor_ctx_t
   oc_status_cb_t cb;
   oc_device_t *device1;
   oc_switch_dos_ctx_t *switch_dos;
-  char *trustanchor;
+  const char *trustanchor;
   size_t trustanchor_size;
   char trustanchor_subject[64];
 } oc_trustanchor_ctx_t;

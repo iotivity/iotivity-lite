@@ -41,13 +41,13 @@ extern int jni_quit;
 #define jni_mutex_unlock(m) LeaveCriticalSection(&m)
 
 #elif defined(__linux__)
-extern pthread_t jni_poll_event_thread __attribute__((unused));
-extern pthread_mutex_t jni_sync_lock __attribute__((unused));
-extern pthread_mutexattr_t jni_sync_lock_attr __attribute__((unused));
-extern pthread_cond_t jni_cv __attribute__((unused));
-extern pthread_mutex_t jni_cs __attribute__((unused));
+extern pthread_t jni_poll_event_thread;
+extern pthread_mutex_t jni_sync_lock;
+extern pthread_mutexattr_t jni_sync_lock_attr;
+extern pthread_cond_t jni_cv;
+extern pthread_mutex_t jni_cs;
 
-extern int jni_quit __attribute__((unused));
+extern int jni_quit;
 
 /* OS specific definition for lock/unlock */
 #define jni_mutex_lock(m) pthread_mutex_lock(&m)
