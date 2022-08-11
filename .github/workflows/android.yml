@@ -39,9 +39,17 @@ jobs:
           # show which compilers there are
           # note that this is hard coded in the makefile
           ls -l  /usr/local/lib/android/sdk/ndk/
-          make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=1 DEBUG=0
+          make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 CLOUD=1 JAVA=0 DEBUG=1
           #make DYNAMIC=1 TCP=1 IPV4=1 SECURE=1 PKI=1 JAVA=1 DEBUG=0
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           NDK_HOME: /usr/local/lib/android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/linux-x86_64/
           MYGITHUB_ACTIONS: true
+
+      - name: run tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 23
+          arch: arm64-v8a
+          ndk: 25.0.8775105
+          script: file port/android/simpleclient; port/android/simpleclient
