@@ -2437,12 +2437,12 @@ read_application_data(oc_tls_peer_t *peer)
 #endif /* !OC_INOUT_BUFFER_SIZE */
     }
 #else /* OC_OSCORE */
-    if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
-        OC_PROCESS_ERR_FULL) {
+      if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
+          OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
-      oc_message_unref(msg);
+        oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
-    }
+      }
 #endif /* !OC_OSCORE */
   }
   OC_DBG("oc_tls: Decrypted incoming message");
