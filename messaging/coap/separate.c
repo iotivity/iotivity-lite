@@ -75,12 +75,15 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
  */
 #ifdef OC_BLOCK_WISE
 int
-coap_separate_accept(void *request, oc_separate_response_t *separate_response,
-                     oc_endpoint_t *endpoint, int observe, uint16_t block2_size)
+coap_separate_accept(const coap_packet_t *request,
+                     oc_separate_response_t *separate_response,
+                     const oc_endpoint_t *endpoint, int observe,
+                     uint16_t block2_size)
 #else  /* OC_BLOCK_WISE */
 int
-coap_separate_accept(void *request, oc_separate_response_t *separate_response,
-                     oc_endpoint_t *endpoint, int observe)
+coap_separate_accept(const coap_packet_t *request,
+                     oc_separate_response_t *separate_response,
+                     const oc_endpoint_t *endpoint, int observe)
 #endif /* !OC_BLOCK_WISE */
 {
   coap_status_code = CLEAR_TRANSACTION;
@@ -92,12 +95,11 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
   coap_separate_t *separate_store = NULL;
   for (separate_store = oc_list_head(separate_response->requests);
        separate_store != NULL; separate_store = separate_store->next) {
-    if (separate_store->token_len == coap_req->token_len &&
-        memcmp(separate_store->token, coap_req->token,
+    if (separate_store->token_len == request->token_len &&
+        memcmp(separate_store->token, request->token,
                separate_store->token_len) == 0 &&
         separate_store->observe == observe) {
       break;
@@ -117,13 +119,13 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
     /* store correct response type */
     separate_store->type = COAP_TYPE_NON;
 
-    memcpy(separate_store->token, coap_req->token, coap_req->token_len);
-    separate_store->token_len = coap_req->token_len;
+    memcpy(separate_store->token, request->token, request->token_len);
+    separate_store->token_len = request->token_len;
 
-    oc_new_string(&separate_store->uri, coap_req->uri_path,
-                  coap_req->uri_path_len);
+    oc_new_string(&separate_store->uri, request->uri_path,
+                  request->uri_path_len);
 
-    separate_store->method = coap_req->code;
+    separate_store->method = request->code;
 
 #ifdef OC_BLOCK_WISE
     separate_store->block2_size = block2_size;
@@ -135,11 +137,11 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
   separate_store->observe = observe;
 
   /* send separate ACK for CON */
-  if (coap_req->type == COAP_TYPE_CON) {
+  if (request->type == COAP_TYPE_CON) {
     OC_DBG("Sending ACK for separate response");
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
-    coap_udp_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
+    coap_udp_init_message(ack, COAP_TYPE_ACK, 0, request->mid);
     oc_message_t *message = oc_internal_allocate_outgoing_message();
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -166,11 +168,11 @@ coap_separate_accept(void *request, oc_separate_response_t *separate_response,
 }
 /*----------------------------------------------------------------------------*/
 void
-coap_separate_resume(void *response, coap_separate_t *separate_store,
+coap_separate_resume(coap_packet_t *response, coap_separate_t *separate_store,
                      uint8_t code, uint16_t mid)
 {
 #ifdef OC_TCP
-  if (separate_store->endpoint.flags & TCP) {
+  if ((separate_store->endpoint.flags & TCP) != 0) {
     coap_tcp_init_message(response, code);
   } else
 #endif /* OC_TCP */
