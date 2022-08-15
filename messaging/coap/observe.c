@@ -362,6 +362,34 @@ coap_remove_observer_by_mid(oc_endpoint_t *endpoint, uint16_t mid)
   return removed;
 }
 /*---------------------------------------------------------------------------*/
+
+static void
+send_cancellation_notification(coap_observer_t *obs, uint8_t code)
+{
+  coap_packet_t notification[1];
+#ifdef OC_TCP
+  if (obs->endpoint.flags & TCP) {
+    coap_tcp_init_message(notification, code);
+  } else
+#endif
+  {
+    coap_udp_init_message(notification, COAP_TYPE_NON, code, 0);
+  }
+  coap_set_token(notification, obs->token, obs->token_len);
+  coap_transaction_t *transaction = coap_new_transaction(
+    coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
+  if (transaction) {
+    notification->mid = transaction->mid;
+    transaction->message->length =
+      coap_serialize_message(notification, transaction->message->data);
+    if (transaction->message->length > 0) {
+      coap_send_transaction(transaction);
+    } else {
+      coap_clear_transaction(transaction);
+    }
+  } // transaction
+}
+
 int
 coap_remove_observer_by_resource(const oc_resource_t *rsc)
 {
@@ -375,6 +403,8 @@ coap_remove_observer_by_resource(const oc_resource_t *rsc)
          oc_string_len(obs->url) == (oc_string_len(rsc->uri) - 1) &&
          memcmp(oc_string(obs->url), oc_string(rsc->uri) + 1,
                 oc_string_len(rsc->uri) - 1) == 0)) {
+      // https://www.rfc-editor.org/rfc/rfc7641.html#section-4.2
+      send_cancellation_notification(obs, NOT_FOUND_4_04);
       coap_remove_observer(obs);
       removed++;
     }
@@ -724,29 +754,7 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
     coap_observer_t *next = obs->next;
     if (obs->endpoint.device == device &&
         (reset || !oc_sec_check_acl(OC_GET, obs->resource, &obs->endpoint))) {
-      coap_packet_t notification[1];
-#ifdef OC_TCP
-      if (obs->endpoint.flags & TCP) {
-        coap_tcp_init_message(notification, SERVICE_UNAVAILABLE_5_03);
-      } else
-#endif
-      {
-        coap_udp_init_message(notification, COAP_TYPE_NON,
-                              SERVICE_UNAVAILABLE_5_03, 0);
-      }
-      coap_set_token(notification, obs->token, obs->token_len);
-      coap_transaction_t *transaction = coap_new_transaction(
-        coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
-      if (transaction) {
-        notification->mid = transaction->mid;
-        transaction->message->length =
-          coap_serialize_message(notification, transaction->message->data);
-        if (transaction->message->length > 0) {
-          coap_send_transaction(transaction);
-        } else {
-          coap_clear_transaction(transaction);
-        }
-      } // transaction
+      send_cancellation_notification(obs, SERVICE_UNAVAILABLE_5_03);
       coap_remove_observer(obs);
     }
     obs = next;
