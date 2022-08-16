@@ -74,8 +74,10 @@ Option and default setting in the Linux Makefile
 
 - PUSH 0
 
-  enable push notification
+  disable push notification
 
 - PUSH_DEBUG 0
 
-  enable push notification debug message only (if DEBUG=1, push notification debug messages are activated too)
+  disable push notification debug message 
+  (if `DEBUG`=0 and `PUSH_DEBUG`=1, only push notification debug messages are activated.
+   if `DEBUG`=1, push notification debug messages are activated too regardless of `PUSH_DEBUG`)

@@ -207,9 +207,7 @@ static void register_resources(void)
 
 static void signal_event_loop(void)
 {
-	pthread_mutex_lock(&mutex);
 	pthread_cond_signal(&cv);
-	pthread_mutex_unlock(&mutex);
 }
 
 void handle_signal(int signal)
@@ -277,13 +275,13 @@ int main(void)
 	oc_storage_config("./push_originserver_multithread_linux_creds");
 #endif /* OC_STORAGE */
 
-	if (pthread_mutex_init(&mutex, NULL) < 0)
+	if (pthread_mutex_init(&mutex, NULL))
 	{
 		printf("pthread_mutex_init failed!\n");
 		return -1;
 	}
 
-	if (pthread_mutex_init(&app_mutex, NULL) < 0)
+	if (pthread_mutex_init(&app_mutex, NULL))
 	{
 		printf("pthread_mutex_init failed!\n");
 		pthread_mutex_destroy(&mutex);

@@ -4,7 +4,7 @@
 OCF Push Notification lets devices send notifications to other devices without any initial request such as what observation does.
 OCF Push Notification is composed of 3 players: **Origin Server**, **Target Server**, **Configuration Client**. 
 
-![b3ca1628ad5ae3952724488e8de3593d.png](./resources/b3ca1628ad5ae3952724488e8de3593d.png)
+![push_arch.png](./resources/push_arch.png)
 - **Origin Server**: 
 	- An origin Server hosts pushable Resources (3rd LSB of "bm:p" of pushable Resource is 1) and sends push update requests to target Servers.
 	- An origin Server maintains "Push Configuration Resource" (`"oic.r.pushconfiguration"`) which keeps following information:
@@ -31,9 +31,9 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	```
 - cmake
 	```text
-	OC_COLLECTIONS_IF_CREATE_ENABLED = 1
-	OC_DYNAMIC_ALLOCATION_ENABLED = 1
-	OC_PUSH_ENABLED = 1
+	OC_COLLECTIONS_IF_CREATE_ENABLED = ON
+	OC_DYNAMIC_ALLOCATION_ENABLED = ON
+	OC_PUSH_ENABLED = ON
 	```
 <br>
 
@@ -41,18 +41,18 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 ### 3 Examples
 - `push_configurator_multithread_linux`: **Configuration Client**
 
-	![c7fa0bd3eb081c9a27bd7a6f6293c37c.png](./resources/c7fa0bd3eb081c9a27bd7a6f6293c37c.png)
+	![push_configurator.png](./resources/push_configurator.png)
 
 - `push_originserver_multithread_linux`: **Origin Server**
 
-	![77fdcc907530fe864dfe719daafb5d82.png](./resources/77fdcc907530fe864dfe719daafb5d82.png)
+	![push_originserver.png](./resources/push_originserver.png)
 
 - `push_targetserver_multithread_linux`: **Target Server**
 
-	![886880151a22d9bf4ede36cc9d06e44f.png](./resources/886880151a22d9bf4ede36cc9d06e44f.png)
+	![push_targetserver.png](./resources/push_targetserver.png)
 
 ### Onboarding
-- If you want quick test, build iotivity-lite without security (`OC_SECURITY_ENABLED=1` or `SECURE=0`).
+- If you want quick test, build iotivity-lite without security (`OC_SECURITY_ENABLED=OFF` or `SECURE=0`).
 - If iotivity-lite is built with security, refer to following steps: 
 	1. add ACE to eath of them (use wildcard provisioning)
 		- allow all ACE permissions (CRUDN)
@@ -66,24 +66,24 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 - **Configuration Client**
 	1. Discovery: 
 		find pushable Resource of "oic.r.custom.light" type.
-		![c2d2868eb249b3c5883fe5a230a0a8a8.png](./resources/c2d2868eb249b3c5883fe5a230a0a8a8.png)
+		![push_config_d_resources.png](./resources/push_config_d_resources.png)
 	2. Create new PUSH notification selector on origin server, and add new Receiver configuration object to target server: 
 		create / update related configuration Resources.
-		![34b12ca0e09eb72ddd9f66fd20c86e4d.png](./resources/34b12ca0e09eb72ddd9f66fd20c86e4d.png)
+		![push_config_c_ns.png](./resources/push_config_c_ns.png)
 	3. Retrieve PUSH configuration Resource of origin server
-		![7a22ac2da6c3e89b1cb142f9e071e9ce.png](./resources/7a22ac2da6c3e89b1cb142f9e071e9ce.png)
+		![push_config_r_pushconf.png](./resources/push_config_r_pushconf.png)
 	4. Retrieve PUSH receivers Resource of target server
-		![aa02152897eec300e7d1a446d06df390.png](./resources/aa02152897eec300e7d1a446d06df390.png)
+		![push_config_r_pushrecv.png](./resources/push_config_r_pushrecv.png)
 	6. Retrieve PUSH origin Resource of origin-server
-		![b3f68c02d9aa64658de9d50ef5f7ec74.png](./resources/b3f68c02d9aa64658de9d50ef5f7ec74.png)
+		![push_config_r_origin_resource.png](./resources/push_config_r_origin_resource.png)
 	
 - **Origin Server**
 	Change Contents of pushable Resource: press `1` or `2`.
 	
 - **Target Server**
 	- Whenever press `1` or `2` at Origin Server, you can see following screen.
-		![9806e8d764855eae7c5eba48e46d902a.png](./resources/9806e8d764855eae7c5eba48e46d902a.png)
-		![065a040a608f9d7b702eba15d235e1dd.png](./resources/065a040a608f9d7b702eba15d235e1dd.png)
+		![newpush1.png](./resources/newpush1.png)
+		![newpush2.png](./resources/newpush2.png)
 	- press `3` or `4` at Origin Server, you can see nothing changed.
 <br>
 
@@ -106,25 +106,8 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	```c
 	struct oc_resource_s
 	{
-	  struct oc_resource_s *next;            ///< next resource
-	  size_t device;                         ///< device index
-	  oc_string_t name;                      ///< name of the resource (e.g. "n")
-	  oc_string_t uri;                       ///< uri of the resource
-	  oc_string_array_t types;               ///< "rt" types of the resource
-	  oc_interface_mask_t interfaces;        ///< supported interfaces
-	  oc_interface_mask_t default_interface; ///< default interface
-	  oc_resource_properties_t properties;   ///< properties (as bit mask)
-	  oc_request_handler_t get_handler;      ///< callback for GET
-	  oc_request_handler_t put_handler;      ///< callback for PUT
-	  oc_request_handler_t post_handler;     ///< callback for POST
-	  oc_request_handler_t delete_handler;   ///< callback for DELETE
-	  oc_properties_cb_t get_properties;     ///< callback for get properties
-	  oc_properties_cb_t set_properties;     ///< callback for set properties
-	  double tag_pos_rel[3];                 ///< tag relative position [x,y,z]
-	  oc_pos_description_t tag_pos_desc; ///< tag (value) for position description
-	  oc_enum_t tag_func_desc;           ///< tag (value) for function description
-	  oc_locn_t tag_locn;                ///< tag (value) for location description
-	  uint8_t num_observers;             ///< amount of observers
+		...
+
 	#ifdef OC_COLLECTIONS
 	  uint8_t num_links; ///< number of links in the collection
 	#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
@@ -133,7 +116,8 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 		payload_builder; ///< callback to build contents of PUSH Notification
 	#endif
 	#endif                             /* OC_COLLECTIONS */
-	  uint16_t observe_period_seconds; ///< observe period in seconds
+		
+		...
 	};
 	```
 	- Callback function pointer. This function is necessary to build contents of push update request.
