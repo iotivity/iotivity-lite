@@ -90,7 +90,7 @@ int
 coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
                        uint8_t *token, uint8_t token_len)
 {
-  if (!endpoint || !token || token_len == 0)
+  if (!endpoint || !token || token_len == 0 || !(endpoint->flags & TCP))
     return 0;
 
   coap_packet_t ping_pkt[1];

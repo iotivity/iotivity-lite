@@ -20,6 +20,7 @@
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
 #include "oc_api.h"
+#include "oc_ri_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #ifdef OC_PKI
@@ -39,7 +40,6 @@ static oc_blockwise_state_t *request_buffer = NULL;
 #ifdef OC_OSCORE
 oc_message_t *multicast_update = NULL;
 #endif /* OC_OSCORE */
-oc_event_callback_retval_t oc_ri_remove_client_cb(void *data);
 
 static bool
 dispatch_coap_request(void)
@@ -360,9 +360,9 @@ oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
   return status;
 }
 
-bool
-oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
-          oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+static oc_client_cb_t *
+oc_do_get_int(const char *uri, oc_endpoint_t *endpoint, const char *query,
+              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler = {
     .response = handler,
@@ -373,7 +373,7 @@ oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET, query,
                                              client_handler, qos, user_data);
   if (!cb)
-    return false;
+    return NULL;
 
   bool status = false;
 
@@ -381,8 +381,34 @@ oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
 
   if (status)
     status = dispatch_coap_request();
+  if (!status) {
+    oc_ri_remove_client_cb(cb);
+    cb = NULL;
+  }
+  return cb;
+}
 
-  return status;
+bool
+oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
+          oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+{
+  return oc_do_get_int(uri, endpoint, query, handler, qos, user_data) != NULL;
+}
+
+bool
+oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+                       const char *query, uint16_t timeout_seconds,
+                       oc_response_handler_t handler, oc_qos_t qos,
+                       void *user_data)
+{
+  oc_client_cb_t *cb =
+    oc_do_get_int(uri, endpoint, query, handler, qos, user_data);
+  if (cb == NULL) {
+    return false;
+  }
+  oc_set_delayed_callback(cb, oc_ri_remove_client_cb_with_notify_503,
+                          timeout_seconds);
+  return true;
 }
 
 bool

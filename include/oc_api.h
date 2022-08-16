@@ -1847,6 +1847,27 @@ bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
                oc_response_handler_t handler, oc_qos_t qos, void *user_data);
 
 /**
+ * Issue a GET request to obtain the current value of all properties a resource.
+ *
+ * @param[in] uri the uri of the resource
+ * @param[in] endpoint the endpoint of the server
+ * @param[in] query a query parameter that will be sent to the server's
+ *                  oc_request_callback_t.
+ * @param[in] timeout_seconds timeout for the get
+ * @param[in] handler function invoked once the client has received the servers
+ *                    response to the GET request
+ * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
+ * @param[in] user_data context pointer that will be sent to the
+ *                      oc_response_handler_t
+ *
+ * @return True if the client successfully dispatched the CoAP GET request
+ */
+bool oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+                            const char *query, uint16_t timeout_seconds,
+                            oc_response_handler_t handler, oc_qos_t qos,
+                            void *user_data);
+
+/**
  * Issue a DELETE request to delete a resource
  *
  * @param[in] uri the uri of the resource

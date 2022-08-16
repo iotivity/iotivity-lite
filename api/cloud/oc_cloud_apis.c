@@ -24,6 +24,7 @@
 #include "oc_cloud.h"
 #include "oc_cloud_internal.h"
 #include "oc_core_res.h"
+#include "rd_client.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #ifdef OC_SECURITY
@@ -82,6 +83,38 @@ conv_cloud_endpoint(oc_cloud_context_t *ctx)
   }
   return ret;
 }
+
+#ifdef OC_SECURITY
+static bool
+cloud_tls_peer_connected(const oc_tls_peer_t *peer)
+{
+  return (peer && peer->role == MBEDTLS_SSL_IS_CLIENT &&
+          peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER);
+}
+
+static bool
+cloud_tls_connected(oc_endpoint_t *endpoint)
+{
+  return cloud_tls_peer_connected(oc_tls_get_peer(endpoint));
+}
+
+static bool
+cloud_tls_add_peer(oc_endpoint_t *endpoint, int selected_identity_cred_id)
+{
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (peer) {
+    if (cloud_tls_peer_connected(peer)) {
+      return true;
+    }
+    OC_DBG("cloud need to initialized from the device");
+    oc_tls_close_connection(endpoint);
+  }
+  oc_tls_select_cloud_ciphersuite();
+  oc_tls_select_identity_cert_chain(selected_identity_cred_id);
+  peer = oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_CLIENT);
+  return peer != NULL;
+}
+#endif
 
 int
 oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
@@ -488,9 +521,9 @@ cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
   }
 
 #ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    oc_tls_select_cloud_ciphersuite();
-    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
+  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
+    OC_ERR("cannot connect to cloud");
+    return false;
   }
 #else
   (void)selected_identity_cred_id;
@@ -571,9 +604,9 @@ cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    oc_tls_select_cloud_ciphersuite();
-    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
+  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
+    OC_ERR("cannot connect to cloud");
+    return false;
   }
 #else
   (void)selected_identity_cred_id;
@@ -605,9 +638,9 @@ cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    oc_tls_select_cloud_ciphersuite();
-    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
+  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
+    OC_ERR("cannot connect to cloud");
+    return false;
   }
 #else
   (void)selected_identity_cred_id;
@@ -672,9 +705,9 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  if (!oc_tls_connected(endpoint)) {
-    oc_tls_select_cloud_ciphersuite();
-    oc_tls_select_identity_cert_chain(selected_identity_cred_id);
+  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
+    OC_ERR("cannot connect to cloud");
+    return false;
   }
 #else
   (void)selected_identity_cred_id;
@@ -698,6 +731,25 @@ cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
 
   return oc_do_post();
 }
+
+bool
+cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+                oc_response_handler_t handler, void *user_data)
+{
+#ifdef OC_SECURITY
+  if (!cloud_tls_connected(endpoint)) {
+    return false;
+  }
+#endif /* OC_SECURITY */
+#ifdef OC_TCP
+  if (endpoint->flags & TCP) {
+    return oc_send_ping(false, endpoint, timeout_seconds, handler, user_data);
+  }
+#endif /* OC_TCP */
+  return oc_do_get_with_timeout(OC_RSRVD_RD_URI, endpoint, NULL,
+                                timeout_seconds, handler, LOW_QOS, user_data);
+}
+
 #else  /* OC_CLOUD*/
 typedef int dummy_declaration;
 #endif /* !OC_CLOUD */
