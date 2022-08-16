@@ -101,8 +101,6 @@ is_resource_found(void)
 
 static void cb_create_notification_selector_response(oc_client_response_t *data)
 {
-  (void) data;
-
   oc_rep_t *rep = data->payload;
 
   if (!rep) {
@@ -256,7 +254,6 @@ cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
   (void)anchor;
   (void)iface_mask;
-  (void)bm;
   int i;
   int uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
@@ -338,9 +335,7 @@ find_same_endpoint(oc_endpoint_t *endpoint, char *uri, oc_resource_properties_t 
 static void
 signal_event_loop(void)
 {
-  pthread_mutex_lock(&mutex);
   pthread_cond_signal(&cv);
-  pthread_mutex_unlock(&mutex);
 }
 
 void
@@ -445,12 +440,12 @@ main(void)
   oc_storage_config("./push_targetserver_multithread_linux_creds");
 #endif /* OC_STORAGE */
 
-  if (pthread_mutex_init(&mutex, NULL) < 0) {
+  if (pthread_mutex_init(&mutex, NULL)) {
     printf("pthread_mutex_init failed!\n");
     return -1;
   }
 
-  if (pthread_mutex_init(&app_mutex, NULL) < 0) {
+  if (pthread_mutex_init(&app_mutex, NULL)) {
     printf("pthread_mutex_init failed!\n");
     pthread_mutex_destroy(&mutex);
     return -1;
