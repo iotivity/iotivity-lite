@@ -43,11 +43,14 @@ struct timespec ts;
 pthread_mutex_t app_mutex;
 int quit = 0;
 
-void push_arrived(oc_pushd_rsc_rep_t *push_payload)
+void
+push_arrived(oc_pushd_rsc_rep_t *push_payload)
 {
-  printf("new push arrives (path: %s, rt: ", oc_string(push_payload->resource->uri));
-  for (size_t i=0; i<oc_string_array_get_allocated_size(push_payload->resource->types); i++)
-  {
+  printf("new push arrives (path: %s, rt: ",
+         oc_string(push_payload->resource->uri));
+  for (size_t i = 0;
+       i < oc_string_array_get_allocated_size(push_payload->resource->types);
+       i++) {
     printf("%s ", oc_string_array_get_item(push_payload->resource->types, i));
   }
   printf(")\n");
@@ -153,15 +156,12 @@ main(void)
 
   size_t device_num = oc_core_get_num_devices();
   size_t i;
-  for (i = 0; i < device_num; i++)
-  {
+  for (i = 0; i < device_num; i++) {
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(i);
     printf("=== device(%zd) endpoint info. ===\n", i);
-    while (ep)
-    {
+    while (ep) {
       oc_string_t ep_str;
-      if (oc_endpoint_to_string(ep, &ep_str) == 0)
-      {
+      if (oc_endpoint_to_string(ep, &ep_str) == 0) {
         printf("%s\n", oc_string(ep_str));
         oc_free_string(&ep_str);
       }
