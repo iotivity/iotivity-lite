@@ -56,18 +56,22 @@ static oc_endpoint_t targetserver_ep;
 
 #define PING_RETRY_COUNT (4)
 
-typedef void (*custom_func_t)(oc_endpoint_t *, char *, oc_resource_properties_t);
+typedef void (*custom_func_t)(oc_endpoint_t *, char *,
+                              oc_resource_properties_t);
 
 typedef struct
 {
   custom_func_t func;
 } custom_func_s;
 
-void push_arrived(oc_pushd_rsc_rep_t *push_payload)
+void
+push_arrived(oc_pushd_rsc_rep_t *push_payload)
 {
-  PRINT("new push arrives (path: %s, rt: ", oc_string(push_payload->resource->uri));
-  for (size_t i=0; i<oc_string_array_get_allocated_size(push_payload->resource->types); i++)
-  {
+  PRINT("new push arrives (path: %s, rt: ",
+        oc_string(push_payload->resource->uri));
+  for (size_t i = 0;
+       i < oc_string_array_get_allocated_size(push_payload->resource->types);
+       i++) {
     PRINT("%s ", oc_string_array_get_item(push_payload->resource->types, i));
   }
   PRINT(")\n");
@@ -99,7 +103,8 @@ is_resource_found(void)
   return true;
 }
 
-static void cb_create_notification_selector_response(oc_client_response_t *data)
+static void
+cb_create_notification_selector_response(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
 
@@ -120,7 +125,8 @@ create_notification_selector(void)
   if (!is_resource_found())
     return;
 
-  if (oc_init_post(PUSHCONF_RSC_PATH, &originserver_ep, "if=oic.if.create", &cb_create_notification_selector_response, LOW_QOS, NULL)) {
+  if (oc_init_post(PUSHCONF_RSC_PATH, &originserver_ep, "if=oic.if.create",
+                   &cb_create_notification_selector_response, LOW_QOS, NULL)) {
     oc_string_t pushtarget_ep_str;
     oc_string_t pushtarget_str;
 
@@ -184,9 +190,10 @@ create_notification_selector(void)
   }
 }
 
-static void cb_update_push_receiver_response(oc_client_response_t *data)
+static void
+cb_update_push_receiver_response(oc_client_response_t *data)
 {
-  (void) data;
+  (void)data;
 
   oc_rep_t *rep = data->payload;
 
@@ -210,7 +217,8 @@ update_push_receiver(void)
   char query[2048];
   sprintf(query, "receiveruri=%s&if=oic.if.rw", recv_path);
 
-  if (oc_init_post(PUSHRECVS_RSC_PATH, &targetserver_ep, query, &cb_update_push_receiver_response, LOW_QOS, NULL)) {
+  if (oc_init_post(PUSHRECVS_RSC_PATH, &targetserver_ep, query,
+                   &cb_update_push_receiver_response, LOW_QOS, NULL)) {
     /* create a "receiver" object in pushreceiver Resource */
     oc_rep_begin_root_object();
     oc_rep_set_text_string(root, receiveruri, recv_path);
@@ -228,7 +236,6 @@ update_push_receiver(void)
   }
 }
 
-
 static void
 cb_retrieve_push_origin_rsc_response(oc_client_response_t *data)
 {
@@ -242,13 +249,14 @@ retrieve_push_origin_rsc(void)
   if (!is_resource_found())
     return;
 
-  oc_do_get(push_rsc_uri, &originserver_ep, NULL, cb_retrieve_push_origin_rsc_response, LOW_QOS, NULL);
+  oc_do_get(push_rsc_uri, &originserver_ep, NULL,
+            cb_retrieve_push_origin_rsc_response, LOW_QOS, NULL);
 }
 
 static oc_discovery_flags_t
 cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                  oc_resource_properties_t bm, void *user_data)
+             oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+             oc_resource_properties_t bm, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
 
@@ -260,7 +268,8 @@ cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    if (strlen(t) == strlen(resource_rt) && strncmp(t, resource_rt, strlen(t)) == 0) {
+    if (strlen(t) == strlen(resource_rt) &&
+        strncmp(t, resource_rt, strlen(t)) == 0) {
       strncpy(rsc_uri, uri, uri_len);
       rsc_uri[uri_len] = '\0';
 
@@ -291,9 +300,9 @@ static void
 retrieve_pushconf_rsc(void)
 {
   if (!is_resource_found())
-      return;
+    return;
   oc_do_get(PUSHCONF_RSC_PATH, &originserver_ep, "if=oic.if.b",
-      cb_retrieve_pushconf_rsc_response, LOW_QOS, NULL);
+            cb_retrieve_pushconf_rsc_response, LOW_QOS, NULL);
 }
 
 static void
@@ -307,11 +316,12 @@ static void
 retrieve_pushreceiver_rsc(void)
 {
   oc_do_get(PUSHRECVS_RSC_PATH, &targetserver_ep, "if=oic.if.rw",
-      cb_retrieve_pushreceiver_rsc_response, LOW_QOS, NULL);
+            cb_retrieve_pushreceiver_rsc_response, LOW_QOS, NULL);
 }
 
 static void
-find_same_endpoint(oc_endpoint_t *endpoint, char *uri, oc_resource_properties_t bm)
+find_same_endpoint(oc_endpoint_t *endpoint, char *uri,
+                   oc_resource_properties_t bm)
 {
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
@@ -376,7 +386,8 @@ print_menu(void)
   pthread_mutex_lock(&app_mutex);
   printf("=====================================\n");
   printf("1. Discovery\n");
-  printf("2. Create new PUSH notification selector on origin server, and add new Receiver configuration object to target server\n");
+  printf("2. Create new PUSH notification selector on origin server, and add "
+         "new Receiver configuration object to target server\n");
   printf("3. Retrieve PUSH origin Resource of origin-server\n");
   printf("4. Retrieve PUSH configuration Resource of origin server\n");
   printf("5. Retrieve PUSH receivers Resource of target server\n");
@@ -480,7 +491,8 @@ main(void)
     pthread_mutex_lock(&app_mutex);
     switch (key) {
     case 1:
-      /* discover all Resources whose rt is `resource_rt`, and save uri of pushable one */
+      /* discover all Resources whose rt is `resource_rt`, and save uri of
+       * pushable one */
       resource_found = false;
       oc_do_ip_discovery(resource_rt, cb_discovery, &same_func);
       break;
