@@ -21,32 +21,32 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8EC91D9D-FA2D-45BF-9AFC-F5EC12622FF2}</ProjectGuid>
     <RootNamespace>iotivityliteswig</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -128,7 +128,7 @@ xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_api.i">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">swig.exe -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
@@ -334,6 +334,7 @@ xcopy /s /y /d /q $(SolutionDir)..\..\..\swig\oc_java\oc\*.java $(SolutionDir)..
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building SWIG %(Identity) interface</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c;</Outputs>
+    </CustomBuild>
     <CustomBuild Include="..\..\..\..\swig\swig_interfaces\oc_random.i">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">swig -java -package org.iotivity -outdir $(SolutionDir)../../../swig/iotivity-lite-java/src/org/iotivity/ -D_WIN32 -I$(SolutionDir)../../.. -I$(SolutionDir)../../../port/windows -I$(SolutionDir)../../../include/ -o $(SolutionDir)../../../swig/iotivity-lite-java/jni/%(Filename)_wrap.c %(Identity)</Command>
