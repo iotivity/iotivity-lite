@@ -43,6 +43,7 @@
 #include "esp_netif.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
+#include "esp_eth.h"
 #include <lwip/sockets.h>
 
 #define ipi_spec_dst ipi_addr
@@ -875,7 +876,12 @@ network_event_thread(void *data)
       PRINT("index %d", message->endpoint.interface_index);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
-
+#ifdef OC_DYNAMIC_ALLOCATION
+      void *tmp = realloc(message->data, message->length);
+      if (tmp != NULL) {
+        message->data = tmp;
+      }
+#endif
       oc_network_event(message);
     }
   }
@@ -1359,10 +1365,7 @@ got_ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
   ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
   const esp_netif_ip_info_t *ip_info = &event->ip_info;
   OC_DBG("Got IPv4 Address " IPSTR, IP2STR(&ip_info->ip));
-  if (event->if_index != -1) {
-    process_interface_change_event(event->if_index, AF_INET, &ip_info->ip,
-                                   NETWORK_INTERFACE_UP);
-  } else if (event->esp_netif != NULL) {
+  if (event->esp_netif != NULL) {
     process_interface_change_event(
       esp_netif_get_netif_impl_index(event->esp_netif), AF_INET, &ip_info->ip,
       NETWORK_INTERFACE_UP);
@@ -1378,10 +1381,7 @@ got_ip6_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
   ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
   const esp_netif_ip6_info_t *ip_info = &event->ip6_info;
   OC_DBG("Got IPv6 address " IPV6STR, IPV62STR(ip_info->ip));
-  if (event->if_index != -1) {
-    process_interface_change_event(event->if_index, AF_INET6, &ip_info->ip,
-                                   NETWORK_INTERFACE_UP);
-  } else if (event->esp_netif != NULL) {
+  if (event->esp_netif != NULL) {
     process_interface_change_event(
       esp_netif_get_netif_impl_index(event->esp_netif), AF_INET6, &ip_info->ip,
       NETWORK_INTERFACE_UP);

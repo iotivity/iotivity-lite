@@ -1,8 +1,8 @@
 diff --git a/src/api/sockets.c b/src/api/sockets.c
-index e807825b..982c7d4d 100644
+index 2d4c9b4a..795f79b9 100644
 --- a/src/api/sockets.c
 +++ b/src/api/sockets.c
-@@ -1235,6 +1235,22 @@ lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16
+@@ -1181,6 +1181,22 @@ lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16
            msg->msg_flags |= MSG_CTRUNC;
          }
  #endif /* LWIP_IPV4 */
@@ -25,7 +25,7 @@ index e807825b..982c7d4d 100644
        }
      }
  #endif /* LWIP_NETBUF_RECVINFO */
-@@ -3789,6 +3805,16 @@ lwip_setsockopt_impl(int s, int level, int optname, const void *optval, socklen_
+@@ -3680,6 +3696,16 @@ lwip_setsockopt_impl(int s, int level, int optname, const void *optval, socklen_
          }
          break;
  #endif /* LWIP_IPV6_MLD */
@@ -43,7 +43,7 @@ index e807825b..982c7d4d 100644
            LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_IPV6, UNIMPL: optname=0x%x, ..)\n",
                                        s, optname));
 diff --git a/src/include/lwip/sockets.h b/src/include/lwip/sockets.h
-index f342d8a5..925ef4dd 100644
+index d70d36c4..ff76a506 100644
 --- a/src/include/lwip/sockets.h
 +++ b/src/include/lwip/sockets.h
 @@ -289,6 +289,8 @@ struct linger {

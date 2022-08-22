@@ -2233,7 +2233,7 @@ read_application_data_tcp(oc_tls_peer_t *peer)
         if (total_length > (size_t)OC_PDU_SIZE) {
           OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu "
                  "size(%ld)",
-                 total_length, OC_PDU_SIZE);
+                 (long)total_length, (long)OC_PDU_SIZE);
           oc_tls_free_peer(peer, false);
           return;
         }

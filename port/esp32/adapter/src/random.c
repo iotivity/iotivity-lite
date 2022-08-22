@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 #include "esp_system.h"
+#include "esp_random.h"
 #include "port/oc_random.h"
 
 void
