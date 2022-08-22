@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+/* jitter added to response to some multicast requests */
+#define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
+
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 //#define OC_SPEC_VER_OIC
@@ -41,7 +44,7 @@ typedef uint64_t oc_clock_time_t;
 //#define OC_DNS_LOOKUP_IPV6
 
 /* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+#define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Maximum size of uri for a collection resource */
 //#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
@@ -52,7 +55,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_BLOCK_WISE
 
 /* Enable reallocation during encoding the representation to cbor */
-//#define OC_REP_ENCODING_REALLOC
+#define OC_REP_ENCODING_REALLOC
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic

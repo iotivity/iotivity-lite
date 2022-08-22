@@ -98,4 +98,28 @@ jobs:
           # the actual build
           cd port/linux
           make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
+  
+  build_esp32:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
 
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Runs a set of commands using the runners shell
+      - name: build esp32
+        run: |
+          sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
+          git submodule update --init
+          cd ./port/esp32
+          git clone --recursive -b release/v5.0 https://github.com/espressif/esp-idf.git
+          ./esp-idf/install.sh
+          . ./esp-idf/export.sh
+          idf.py set-target esp32
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch)
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
+          ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
+          idf.py build

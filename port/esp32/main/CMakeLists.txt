@@ -73,7 +73,7 @@ if (CONFIG_TCP)
 endif()
 
 if (CONFIG_CLOUD)
-  add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_TCP -DOC_IPV4)
+  add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
   list(APPEND sources
   	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
@@ -124,9 +124,6 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_compare.c
 	)
 endif()
-
-#add_definitions(-DOC_CLIENT)
-#add_definitions(-DOC_SERVER)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 

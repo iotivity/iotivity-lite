@@ -23,6 +23,8 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
+#include "esp_netif_ip_addr.h"
+#include "lwip/ip6_addr.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
@@ -142,16 +144,6 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
 }
 
-/*
-static void
-handle_signal(int signal)
-{
-  (void)signal;
-  signal_event_loop();
-  quit = 1;
-}
-*/
-
 static void
 sta_start(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
           void *event_data)
@@ -189,6 +181,8 @@ got_ip6(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
   xEventGroupSetBits(wifi_event_group, IPV6_CONNECTED_BIT);
 }
 
+esp_netif_t *sta_netif = NULL;
+
 static void
 initialise_wifi(void)
 {
@@ -210,7 +204,7 @@ initialise_wifi(void)
   asprintf(&desc, "%s: %s", TAG, esp_netif_config.if_desc);
   esp_netif_config.if_desc = desc;
   esp_netif_config.route_prio = 128;
-  esp_netif_t *netif = esp_netif_create_wifi(WIFI_IF_STA, &esp_netif_config);
+  sta_netif = esp_netif_create_wifi(ESP_IF_WIFI_STA, &esp_netif_config);
   free(desc);
   ESP_ERROR_CHECK(esp_wifi_set_default_wifi_sta_handlers());
 
@@ -220,7 +214,7 @@ initialise_wifi(void)
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START,
                                              sta_start, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(
-    WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, sta_connected, netif));
+    WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, sta_connected, sta_netif));
   ESP_ERROR_CHECK(
     esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, got_ip, NULL));
   ESP_ERROR_CHECK(
@@ -275,6 +269,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 void
 factory_presets_cb_new(size_t device, void *data)
 {
+  gpio_set_level(BLINK_GPIO, false);
   gpio_reset_pin(BLINK_GPIO);
   gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
@@ -385,11 +380,11 @@ factory_presets_cb_new(size_t device, void *data)
 oc_event_callback_retval_t
 heap_dbg(void *v)
 {
-  printf("heap size:%d\n", esp_get_free_heap_size());
+  printf("heap size:%" PRIu32 "\n", esp_get_free_heap_size());
   return OC_EVENT_CONTINUE;
 }
 
-#define STACK_SIZE 20000
+#define STACK_SIZE (8 * 1024)
 
 // Structure that will hold the TCB of the task being created.
 static StaticTask_t xTaskBuffer;
@@ -403,8 +398,10 @@ static void
 server_main(void *pvParameter)
 {
   int init;
-  tcpip_adapter_ip_info_t ip4_info = { 0 };
-  struct ip6_addr if_ipaddr_ip6 = { 0 };
+  esp_netif_ip_info_t ip4_info;
+  memset(&ip4_info, 0, sizeof(ip4_info));
+  esp_ip6_addr_t ip6_addr;
+  memset(&ip6_addr, 0, sizeof(ip6_addr));
   ESP_LOGI(TAG, "iotivity server task started");
   // wait to fetch IPv4 && ipv6 address
 #ifdef OC_IPV4
@@ -416,18 +413,19 @@ server_main(void *pvParameter)
 #endif
 
 #ifdef OC_IPV4
-  if (tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip4_info) != ESP_OK) {
+  if (esp_netif_get_ip_info(sta_netif, &ip4_info) != ESP_OK) {
     print_error("get IPv4 address failed");
   } else {
-    ESP_LOGI(TAG, "got IPv4 addr:%s", ip4addr_ntoa(&(ip4_info.ip)));
+    char buf[32];
+    ESP_LOGI(TAG, "got IPv4 addr:%s",
+             esp_ip4addr_ntoa(&(ip4_info.ip), buf, sizeof(buf)));
   }
 #endif
 
-  if (tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_STA, &if_ipaddr_ip6) !=
-      ESP_OK) {
+  if (esp_netif_get_ip6_linklocal(sta_netif, &ip6_addr) != ESP_OK) {
     print_error("get IPv6 address failed");
   } else {
-    ESP_LOGI(TAG, "got IPv6 addr:%s", ip6addr_ntoa(&if_ipaddr_ip6));
+    ESP_LOGI(TAG, "got IPv6 addr: " IPV6STR, IPV62STR(ip6_addr));
   }
 
   static const oc_handler_t handler = { .init = app_init,
@@ -442,7 +440,7 @@ server_main(void *pvParameter)
   oc_set_factory_presets_cb(factory_presets_cb_new, NULL);
 #endif /* OC_SECURITY */
 
-  oc_set_max_app_data_size(6000);
+  oc_set_max_app_data_size(10000);
 
   init = oc_main_init(&handler);
   if (init < 0)

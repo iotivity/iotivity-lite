@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-#if defined(__linux__) || defined(__MINGW32__)
+#if defined(__linux__) || defined(__MINGW32__) || defined(ESP_PLATFORM)
 
 #if defined(__GNUC__) && defined(__GNUC_MINOR__) &&                            \
   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))

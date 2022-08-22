@@ -244,7 +244,7 @@ handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint)
     oc_connectivity_end_session(endpoint);
   } else if (coap_pkt->code == ABORT_7_05) {
     OC_WRN("Peer aborted! [code: %d(diagnostic: %*.s)]", coap_pkt->bad_csm_opt,
-           coap_pkt->payload_len, (char *)coap_pkt->payload);
+           (int)coap_pkt->payload_len, (char *)coap_pkt->payload);
   }
 
   return COAP_NO_ERROR;
