@@ -107,11 +107,9 @@ cb_retrieve_light1(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
-    printf("oic.if.baseline\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_RW:
-    printf("oic.if.rw\n");
     oc_rep_set_int(root, brightness, brightness);
     oc_rep_set_int(root, power, power);
     break;
