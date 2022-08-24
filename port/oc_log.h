@@ -190,7 +190,7 @@ extern "C" {
     }                                                                          \
   } while (0)
 
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
 #ifdef __ANDROID__
 #define OC_LOG(level, ...)                                                     \
   android_log(level, __FILE__, __func__, __LINE__, __VA_ARGS__)
@@ -206,6 +206,7 @@ extern "C" {
     PRINT("\n");                                                               \
   } while (0)
 
+#if defined(OC_DEBUG)
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
     PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
@@ -223,11 +224,22 @@ extern "C" {
   } while (0)
 #else
 #endif /* NO_LOG_BYTES */
+#else
+#define OC_LOGipaddr(endpoint)
+#define OC_LOGbytes(bytes, length)
+#endif /* OC_DEBUG */
 #endif /* __ANDROID__ */
 
+#if defined(OC_DEBUG)
 #define OC_DBG(...) OC_LOG("D", __VA_ARGS__)
 #define OC_WRN(...) OC_LOG("W", __VA_ARGS__)
 #define OC_ERR(...) OC_LOG("E", __VA_ARGS__)
+#else
+#define OC_DBG(...)
+#define OC_WRN(...)
+#define OC_ERR(...)
+#endif
+
 #else
 #define OC_LOG(...)
 #define OC_DBG(...)

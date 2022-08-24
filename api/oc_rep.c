@@ -242,6 +242,15 @@ _alloc_rep(void)
   return rep;
 }
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+oc_rep_t *
+oc_alloc_rep()
+{
+  return _alloc_rep();
+}
+#endif
+
 static void
 _free_rep(oc_rep_t *rep_value)
 {

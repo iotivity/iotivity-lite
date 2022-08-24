@@ -1073,6 +1073,11 @@ int oc_parse_rep(const uint8_t *payload, size_t payload_size,
 
 void oc_free_rep(oc_rep_t *rep);
 
+#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+oc_rep_t *oc_alloc_rep();
+#endif
+
 /**
  * Check for a null value from an `oc_rep_t`
  *

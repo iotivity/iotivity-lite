@@ -105,6 +105,13 @@ _oc_free_string(
 }
 
 void
+oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len)
+{
+  oc_free_string(ocstring);
+  oc_new_string(ocstring, str, str_len);
+}
+
+void
 oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 {
   size_t len1 = strlen(str1);
