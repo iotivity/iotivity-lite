@@ -1,6 +1,7 @@
 set(includes
-    ${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/include
+	${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit
 	${CMAKE_CURRENT_SOURCE_DIR}/../../..
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../include
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap
@@ -56,43 +57,52 @@ set(sources
 	main.c
 )
 
-if (CONFIG_OC_DEBUG)
-  add_definitions(-DOC_DEBUG)
+if(CONFIG_OC_DEBUG)
+	add_definitions(-DOC_DEBUG)
 endif()
 
-if (CONFIG_IPV4)
-  add_definitions(-DOC_IPV4)
+if(CONFIG_IPV4)
+	add_definitions(-DOC_IPV4)
 endif()
 
-if (CONFIG_TCP)
-  add_definitions(-DOC_TCP)
-  list(APPEND sources
-  	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/coap_signal.c
-  )
-endif()
-
-if (CONFIG_CLOUD)
-  add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
-  list(APPEND sources
-  	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_resource.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_store.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/rd_client.c
-  )
-endif()
-
-if (CONFIG_DYNAMIC)
-	add_definitions(-DOC_DYNAMIC_ALLOCATION)
+if(CONFIG_TCP)
+	add_definitions(-DOC_TCP)
 	list(APPEND sources
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_collection.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/coap_signal.c
 	)
 endif()
 
-if (CONFIG_SECURE)
+if(CONFIG_CLOUD)
+	add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
+	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_resource.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_store.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/rd_client.c
+	)
+endif()
+
+if(CONFIG_SOFTWARE_UPDATE)
+	add_definitions(-DOC_SOFTWARE_UPDATE)
+	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_swupdate.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/main.cpp
+	)
+endif()
+
+if(CONFIG_DYNAMIC)
+	add_definitions(-DOC_DYNAMIC_ALLOCATION)
+	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_collection.c
+	)
+endif()
+
+if(CONFIG_SECURE)
 	add_definitions(-DOC_SECURITY -DOC_PKI -DAPP_DEBUG)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl.c
@@ -129,12 +139,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 
 idf_component_register(
 	SRCS
-		${sources}
+	${sources}
 	INCLUDE_DIRS
-		${includes}
+	${includes}
 )
 
 set_source_files_properties(${sources}
-   PROPERTIES COMPILE_FLAGS
-    "-DOC_SERVER -DOC_CLIENT"
+	PROPERTIES COMPILE_FLAGS
+	"-DOC_SERVER -DOC_CLIENT"
 )

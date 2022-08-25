@@ -14,6 +14,10 @@
 #include "freertos/task.h"
 #include "oc_network_events.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define APP_PRINT(...) printf(__VA_ARGS__)
 
 /**
@@ -92,5 +96,9 @@ void print_debug(const char *data, const unsigned int len, const char *note,
 #define APP_ERR(...)
 
 #endif // endif APP_DEBUG
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // endif _DEBUG_PRINT_H_
