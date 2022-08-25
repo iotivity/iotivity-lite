@@ -25,17 +25,21 @@
 #ifdef OC_HAS_FEATURE_PUSH
 
 #include "oc_push.h"
+
+#include "api/oc_helpers_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
 #include "oc_events_internal.h"
 #include "oc_push_internal.h"
-#include "oc_rep.h"
+#include "oc_rep_internal.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
+#include "util/oc_macros.h"
 #include "util/oc_mmem.h"
 #include "util/oc_process.h"
 
@@ -230,6 +234,14 @@ static void (*oc_push_arrived)(oc_pushd_resource_rep_t *) = NULL;
  */
 #define oc_init_string_array(str_array) oc_init_string((str_array))
 
+#define OC_PUSH_PROP_PHREF "phref"
+#define OC_PUSH_PROP_PUSHTARGET "pushtarget"
+#define OC_PUSH_PROP_PUSHQIF "pushqif"
+#define OC_PUSH_PROP_STATE "state"
+#define OC_PUSH_PROP_PRT "prt"
+#define OC_PUSH_PROP_PIF "pif"
+#define OC_PUSH_PROP_SOURCERT "sourcert"
+
 void
 oc_set_on_push_arrived(oc_on_push_arrived_t func)
 {
@@ -255,10 +267,6 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   (void)resource;
   bool pushtarget_is_updated = false;
 
-#define IS_PROPERTY(rep, prop)                                                 \
-  oc_string_len((rep)->name) == (sizeof(prop) - 1) &&                          \
-    memcmp(oc_string((rep)->name), prop, sizeof(prop) - 1) == 0
-
   /*
    * `data` is set when new Notification Selector Resource is created
    * by calling `oc_resource_set_properties_cbs()` in `get_ns_instance()`
@@ -271,8 +279,9 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:phref
        *  - optional
        */
-      if (IS_PROPERTY(rep, "phref")) {
-        if (!strcmp(oc_string(rep->value.string), "")) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_PHREF,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_PHREF))) {
+        if (oc_string_is_cstr_equal(&rep->value.string, "", 0)) {
           oc_free_string(&ns_instance->phref);
         } else {
           oc_set_string(&ns_instance->phref, oc_string(rep->value.string),
@@ -285,8 +294,9 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:pushtarget
        *  - mandatory
        */
-      if (IS_PROPERTY(rep, "pushtarget")) {
-        if (strcmp(oc_string(rep->value.string), "") == 0) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_PUSHTARGET,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_PUSHTARGET))) {
+        if (oc_string_is_cstr_equal(&rep->value.string, "", 0)) {
           /* NULL pushtarget ("") is still acceptable... */
           OC_PUSH_DBG("NULL \"pushtarget\" is received, still stay in "
                       "\"waitforprovisioning\" state...");
@@ -351,7 +361,8 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:pushqif
        *  - optional
        */
-      if (IS_PROPERTY(rep, "pushqif")) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_PUSHQIF,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_PUSHQIF))) {
         oc_set_string(&ns_instance->pushqif, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         break;
@@ -361,7 +372,8 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        *  - RETRIEVE: mandatory
        *  - UPDATE: optional
        */
-      if (IS_PROPERTY(rep, "state")) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_STATE,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_STATE))) {
         /* state can be modified only if Push Proxy is in "tout" or "err" state
          */
         if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) &&
@@ -392,16 +404,16 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:prt
        *  - optional
        */
-      if (IS_PROPERTY(rep, "prt")) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_PRT,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_PRT))) {
         oc_free_string_array(&ns_instance->prt);
 
         oc_new_string_array(
           &ns_instance->prt,
           oc_string_array_get_allocated_size(rep->value.array));
 
-        for (int i = 0;
-             i < (int)oc_string_array_get_allocated_size(rep->value.array);
-             i++) {
+        for (size_t i = 0;
+             i < oc_string_array_get_allocated_size(rep->value.array); i++) {
           OC_PUSH_DBG("oic.r.pushproxy:prt (%s)",
                       oc_string_array_get_item(rep->value.array, i));
           oc_string_array_add_item(
@@ -413,16 +425,16 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:pif
        *  - optional
        */
-      if (IS_PROPERTY(rep, "pif")) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_PIF,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_PIF))) {
         oc_free_string_array(&ns_instance->pif);
 
         oc_new_string_array(
           &ns_instance->pif,
           oc_string_array_get_allocated_size(rep->value.array));
 
-        for (int i = 0;
-             i < (int)oc_string_array_get_allocated_size(rep->value.array);
-             i++) {
+        for (size_t i = 0;
+             i < oc_string_array_get_allocated_size(rep->value.array); i++) {
           OC_PUSH_DBG("oic.r.pushproxy:pif (%s)",
                       oc_string_array_get_item(rep->value.array, i));
           oc_string_array_add_item(
@@ -434,12 +446,12 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:sourcert
        *  - mandatory
        */
-      if (IS_PROPERTY(rep, "sourcert")) {
-        for (int i = 0;
-             i < (int)oc_string_array_get_allocated_size(rep->value.array);
-             i++) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_SOURCERT,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_SOURCERT))) {
+        for (size_t i = 0;
+             i < oc_string_array_get_allocated_size(rep->value.array); i++) {
           if (strcmp(oc_string_array_get_item(rep->value.array, i),
-                     "oic.r.pushpayload")) {
+                     "oic.r.pushpayload") != 0) {
             OC_PUSH_ERR("illegal oic.r.pushproxy:sourcert value (%s)!",
                         oc_string_array_get_item(rep->value.array, i));
             return false;
@@ -450,9 +462,8 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
         oc_new_string_array(
           &ns_instance->sourcert,
           oc_string_array_get_allocated_size(rep->value.array));
-        for (int i = 0;
-             i < (int)oc_string_array_get_allocated_size(rep->value.array);
-             i++) {
+        for (size_t i = 0;
+             i < oc_string_array_get_allocated_size(rep->value.array); i++) {
           OC_PUSH_DBG("oic.r.pushproxy:sourcert (%s)",
                       oc_string_array_get_item(rep->value.array, i));
           oc_string_array_add_item(

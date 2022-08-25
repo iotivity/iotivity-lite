@@ -63,9 +63,7 @@ oc_sec_sdi_free(void)
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
-    if (oc_string(g_sdi[device].name) != NULL) {
-      oc_free_string(&(g_sdi[device].name));
-    }
+    oc_free_string(&(g_sdi[device].name));
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -77,15 +75,11 @@ void
 oc_sec_sdi_default(size_t device)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_sdi == NULL) {
-    return;
-  }
+  assert(g_sdi != NULL);
 #endif /* OC_DYNAMIC_ALLOCATION */
   g_sdi[device].priv = false;
   memset(&(g_sdi[device].uuid), 0, sizeof(oc_uuid_t));
-  if (oc_string(g_sdi[device].name) != NULL) {
-    oc_free_string(&g_sdi[device].name);
-  }
+  oc_free_string(&g_sdi[device].name);
   oc_sec_dump_sdi(device);
 }
 
@@ -214,9 +208,7 @@ oc_sec_sdi_decode_with_state(const oc_rep_t *rep, oc_dostype_t state,
     oc_str_to_uuid(oc_string(*sdi_data.uuid), &sdi->uuid);
   }
   if (sdi_data.name != NULL) {
-    if (oc_string(sdi->name) != NULL) {
-      oc_free_string(&sdi->name);
-    }
+    oc_free_string(&sdi->name);
     if (oc_string_len(*sdi_data.name) > 0) {
       oc_new_string(&sdi->name, oc_string(*sdi_data.name),
                     oc_string_len(*sdi_data.name));

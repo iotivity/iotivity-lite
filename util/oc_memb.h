@@ -92,15 +92,15 @@ extern "C" {
 extern "C" {
 #endif
 #define OC_MEMB(name, structure, num)                                          \
-  static struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
+  static struct oc_memb name = { sizeof(structure), 0, NULL, NULL, NULL }
 #define OC_MEMB_LOCAL(name, structure, num)                                    \
-  struct oc_memb name = { sizeof(structure), 0, 0, 0, 0 }
+  struct oc_memb name = { sizeof(structure), 0, NULL, NULL, NULL }
 #define OC_MEMB_STATIC(name, structure, num)                                   \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
   static struct oc_memb name = { sizeof(structure), num,                       \
                                  CC_CONCAT(name, _memb_count),                 \
-                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
+                                 (void *)CC_CONCAT(name, _memb_mem), NULL }
 #else /* OC_DYNAMIC_ALLOCATION */
 #ifdef __cplusplus
 }
@@ -114,7 +114,7 @@ extern "C" {
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
   static struct oc_memb name = { sizeof(structure), num,                       \
                                  CC_CONCAT(name, _memb_count),                 \
-                                 (void *)CC_CONCAT(name, _memb_mem), 0 }
+                                 (void *)CC_CONCAT(name, _memb_mem), NULL }
 #define OC_MEMB_LOCAL(name, structure, num)                                    \
   char CC_CONCAT(name, _memb_count)[num];                                      \
   memset(CC_CONCAT(name, _memb_count), 0, num * sizeof(char));                 \
@@ -122,7 +122,7 @@ extern "C" {
   memset(CC_CONCAT(name, _memb_mem), 0, num * sizeof(structure));              \
   struct oc_memb name = { sizeof(structure), num,                              \
                           CC_CONCAT(name, _memb_count),                        \
-                          (void *)CC_CONCAT(name, _memb_mem), 0 }
+                          (void *)CC_CONCAT(name, _memb_mem), NULL }
 
 // TODO: update struct oc_memb rep_objects
 #endif /* !OC_DYNAMIC_ALLOCATION */

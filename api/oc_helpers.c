@@ -61,8 +61,8 @@ oc_free(
 #endif
     block, pool_type);
 
-  block->next = 0;
-  block->ptr = 0;
+  block->next = NULL;
+  block->ptr = NULL;
   block->size = 0;
 }
 
@@ -236,6 +236,7 @@ bool
 _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
                               const char str[], size_t str_len, size_t index)
 {
+  assert(index < oc_string_array_get_allocated_size(*ocstringarray));
   if (str_len >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }

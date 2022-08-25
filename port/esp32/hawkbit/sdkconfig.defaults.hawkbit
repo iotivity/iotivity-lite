@@ -1,0 +1,6 @@
+#
+# IoTivity Example Configuration
+#
+CONFIG_PLGD_DEV_HAWKBIT=y
+CONFIG_APP_DEBUG=y
+# end of IoTivity Example Configuration

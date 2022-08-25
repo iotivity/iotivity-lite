@@ -58,7 +58,8 @@
 #endif /* OC_CLOUD */
 
 #ifdef OC_SOFTWARE_UPDATE
-#include "oc_swupdate_internal.h"
+#include "api/oc_swupdate_internal.h"
+#include "oc_swupdate.h"
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_MEMORY_TRACE
@@ -260,6 +261,61 @@ oc_shutdown_all_devices(void)
   oc_core_shutdown();
 }
 
+static void
+main_init_resources(void)
+{
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  plgd_time_create_resource();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+#ifdef OC_SECURITY
+  oc_sec_svr_create();
+#endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_create();
+#endif /* OC_SOFTWARE_UPDATE */
+}
+
+static void
+main_load_resources(void)
+{
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  OC_DBG("oc_main_init(): loading plgd time");
+  plgd_time_load();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+#if defined(OC_SECURITY) || defined(OC_SOFTWARE_UPDATE)
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+#ifdef OC_SECURITY
+    oc_sec_load_unique_ids(device);
+    OC_DBG("oc_main_init(): loading pstat(%zu)", device);
+    oc_sec_load_pstat(device);
+    OC_DBG("oc_main_init(): loading doxm(%zu)", device);
+    oc_sec_load_doxm(device);
+    OC_DBG("oc_main_init(): loading cred(%zu)", device);
+    oc_sec_load_cred(device);
+    OC_DBG("oc_main_init(): loading acl(%zu)", device);
+    oc_sec_load_acl(device);
+    OC_DBG("oc_main_init(): loading sp(%zu)", device);
+    oc_sec_load_sp(device);
+    OC_DBG("oc_main_init(): loading ael(%zu)", device);
+    oc_sec_load_ael(device);
+#ifdef OC_PKI
+    OC_DBG("oc_main_init(): loading ECDSA keypair(%zu)", device);
+    oc_sec_load_ecdsa_keypair(device);
+#endif /* OC_PKI */
+    OC_DBG("oc_main_init(): loading sdi(%zu)", device);
+    oc_sec_load_sdi(device);
+#endif /* OC_SECURITY */
+#ifdef OC_SOFTWARE_UPDATE
+    OC_DBG("oc_main_init(): loading swupdate(%zu)", device);
+    oc_swupdate_load(device);
+#endif /* OC_SOFTWARE_UPDATE */
+  }
+#endif /* OC_SECURITY || OC_SOFTWARE_UPDATE */
+}
+
 int
 oc_main_init(const oc_handler_t *handler)
 {
@@ -299,46 +355,8 @@ oc_main_init(const oc_handler_t *handler)
   }
 #endif /* OC_SECURITY */
 
-#ifdef OC_HAS_FEATURE_PLGD_TIME
-  plgd_time_create_resource();
-#endif /* OC_HAS_FEATURE_PLGD_TIME */
-
-#ifdef OC_SECURITY
-  oc_sec_svr_create();
-#endif /* OC_SECURITY */
-
-#ifdef OC_SOFTWARE_UPDATE
-  oc_swupdate_init();
-#endif /* OC_SOFTWARE_UPDATE */
-
-#ifdef OC_HAS_FEATURE_PLGD_TIME
-  OC_DBG("oc_main_init(): loading plgd time");
-  plgd_time_load();
-#endif /* OC_HAS_FEATURE_PLGD_TIME */
-
-#ifdef OC_SECURITY
-  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_load_unique_ids(device);
-    OC_DBG("oc_main_init(): loading pstat");
-    oc_sec_load_pstat(device);
-    OC_DBG("oc_main_init(): loading doxm");
-    oc_sec_load_doxm(device);
-    OC_DBG("oc_main_init(): loading cred");
-    oc_sec_load_cred(device);
-    OC_DBG("oc_main_init(): loading acl");
-    oc_sec_load_acl(device);
-    OC_DBG("oc_main_init(): loading sp");
-    oc_sec_load_sp(device);
-    OC_DBG("oc_main_init(): loading ael");
-    oc_sec_load_ael(device);
-#ifdef OC_PKI
-    OC_DBG("oc_main_init(): loading ECDSA keypair");
-    oc_sec_load_ecdsa_keypair(device);
-#endif /* OC_PKI */
-    OC_DBG("oc_main_init(): loading sdi");
-    oc_sec_load_sdi(device);
-  }
-#endif /* OC_SECURITY */
+  main_init_resources();
+  main_load_resources();
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   // initialize cloud after load pstat

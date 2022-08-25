@@ -148,9 +148,6 @@ POST method.
 * If the input values are correct, they will be assigned to the global  property
 values.
 * Resource Description:
-
-*
-* @param requestRep the request representation.
 */
 static void
 post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,

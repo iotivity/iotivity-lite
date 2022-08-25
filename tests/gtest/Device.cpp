@@ -199,19 +199,11 @@ Device::PoolEventsMs(uint64_t mseconds)
   oc_remove_delayed_callback(this, Device::QuitEvent);
 }
 
-const DeviceToAdd defaultDevice = {
-  /*rt=*/"oic.d.test",
-  /*name=*/"Test Device",
-  /*spec_version=*/"ocf.1.0.0",
-  /*data_model_version=*/"ocf.res.1.0.0",
-  /*uri=*/"/oic/d",
-};
-
 Device TestDevice::device{};
 size_t TestDevice::index{ 0 };
 bool TestDevice::is_started{ false };
 std::vector<DeviceToAdd> TestDevice::server_devices{
-  defaultDevice,
+  oc::DefaultDevice,
 };
 #ifdef OC_SERVER
 std::unordered_map<size_t, std::vector<oc_resource_t *>>
@@ -250,7 +242,7 @@ TestDevice::SetServerDevices(std::vector<DeviceToAdd> devices)
 void
 TestDevice::ResetServerDevices()
 {
-  server_devices = { defaultDevice };
+  server_devices = { oc::DefaultDevice };
 }
 
 bool

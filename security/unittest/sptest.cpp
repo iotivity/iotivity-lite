@@ -34,6 +34,7 @@
 #include "security/oc_svr_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Storage.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -44,14 +45,6 @@
 #include <gtest/gtest.h>
 #include <string>
 
-static const std::string kDeviceURI{ "/oic/d" };
-static const std::string kDeviceType{ "oic.d.light" };
-static const std::string kDeviceName{ "Table Lamp" };
-static const std::string kManufacturerName{ "Samsung" };
-static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
-static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
-static const std::string testStorage{ "storage_test" };
-
 class TestSecurityProfile : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -59,11 +52,14 @@ public:
     oc_network_event_handler_mutex_init();
     oc_ri_init();
     oc_core_init();
-    ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
-                               kDeviceName.c_str(), kOCFSpecVersion.c_str(),
-                               kOCFDataModelVersion.c_str(), nullptr, nullptr));
+    ASSERT_EQ(0, oc_add_device(oc::DefaultDevice.uri.c_str(),
+                               oc::DefaultDevice.rt.c_str(),
+                               oc::DefaultDevice.name.c_str(),
+                               oc::DefaultDevice.spec_version.c_str(),
+                               oc::DefaultDevice.data_model_version.c_str(),
+                               nullptr, nullptr));
     oc_sec_svr_create();
-    ASSERT_EQ(0, oc_storage_config(testStorage.c_str()));
+    ASSERT_EQ(0, oc::TestStorage.Config());
   }
 
   static void TearDownTestCase()
@@ -77,10 +73,7 @@ public:
     oc_ri_shutdown();
     oc_network_event_handler_mutex_destroy();
 
-    for (const auto &entry : std::filesystem::directory_iterator(testStorage)) {
-      std::filesystem::remove_all(entry.path());
-    }
-    ASSERT_EQ(0, oc_storage_reset());
+    ASSERT_EQ(0, oc::TestStorage.Clear());
   }
 
   static bool isEqual(const oc_sec_sp_t &lhs, const oc_sec_sp_t &rhs)
@@ -367,9 +360,6 @@ TEST_F(TestSecurityProfileWithServer, PostRequest)
   ASSERT_NE(nullptr, profile);
   profile->supported_profiles = OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE;
   profile->current_profile = OC_SP_PURPLE;
-
-  oc_sec_sp_t profile_copy{};
-  oc_sec_sp_copy(&profile_copy, profile);
 
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_CHANGED, data->code);

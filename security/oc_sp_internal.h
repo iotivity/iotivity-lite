@@ -75,14 +75,14 @@ void oc_sec_sp_copy(oc_sec_sp_t *dst, const oc_sec_sp_t *src) OC_NONNULL();
  */
 void oc_sec_sp_clear(oc_sec_sp_t *sp) OC_NONNULL();
 
-typedef enum oc_sec_sp_encode_flag_t {
+typedef enum {
   OC_SEC_SP_ENCODE_INCLUDE_BASELINE = 1 << 0, // include baseline properties
 } oc_sec_sp_encode_flag_t;
 
 /**
  * @brief Encode security profile to global encoder
  *
- * @param sp security profile to encode
+ * @param sp security profile to encode (cannot be NULL)
  * @param sp_res resource with baseline properties (only used when flags contain
  * OC_SEC_SP_ENCODE_INCLUDE_BASELINE)
  * @param flags encoding flags
@@ -99,27 +99,28 @@ int oc_sec_sp_encode_with_resource(const oc_sec_sp_t *sp,
  */
 bool oc_sec_sp_encode_for_device(size_t device, int flags);
 
-typedef enum oc_sec_sp_decode_flag_t {
+typedef enum {
   OC_SEC_SP_DECODE_FLAG_IGNORE_UNKNOWN_PROPERTIES = 1 << 0,
 } oc_sec_sp_decode_flag_t;
 
 /**
  * @brief Decode security profile payload.
  *
- * @param rep representation to decode (cannot be NULL)
+ * @param rep representation to decode
  * @param flags mask of decoding flags
  * @param dst output variable to store decoded data (cannot be NULL)
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst);
+bool oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
+  OC_NONNULL(3);
 
 /**
  * @brief Decode payload and update security profile for given device
  *
  * @note device cannot be in OC_DOS_RFNOP state
  *
- * @param rep representation to decode (cannot be NULL)
+ * @param rep representation to decode
  * @param device device index
  * @return true on success, payload was decoded and data for device were updated
  * @return false on failure
@@ -135,7 +136,8 @@ bool oc_sec_sp_decode_for_device(const oc_rep_t *rep, size_t device);
  * @return oc_sp_types_t on success
  * @return 0 on failure
  */
-oc_sp_types_t oc_sec_sp_type_from_string(const char *str, size_t str_len);
+oc_sp_types_t oc_sec_sp_type_from_string(const char *str, size_t str_len)
+  OC_NONNULL();
 
 /**
  * @brief Encode security profile type to string

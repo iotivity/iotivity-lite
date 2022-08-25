@@ -71,6 +71,14 @@ jobs:
   build_esp32:
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # default build
+          - args: ""
+          # hawkbit build
+          - args: -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;hawkbit/sdkconfig.defaults.hawkbit"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -91,7 +99,7 @@ jobs:
           ( cd esp-idf && git submodule update --init --recursive )
           ./esp-idf/install.sh
           . ./esp-idf/export.sh
-          idf.py set-target esp32
+          idf.py ${{ matrix.args }} set-target esp32
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch)
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )

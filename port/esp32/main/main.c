@@ -18,7 +18,17 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_esp.h"
 #include "oc_pki.h"
+#include "util/oc_features.h"
+
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate.h"
+#endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
+#include "hawkbit.h"
+#endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
 
 #include "debug_print.h"
 #include "driver/gpio.h"
@@ -26,6 +36,7 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "esp_netif_ip_addr.h"
+#include "esp_sntp.h"
 #include "lwip/ip6_addr.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -39,7 +50,7 @@
 
 #define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
 #define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
-#define BLINK_GPIO CONFIG_BLINK_GPIO
+#define BLINK_GPIO ((gpio_num_t)CONFIG_BLINK_GPIO)
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -60,15 +71,22 @@ set_device_custom_property(void *data)
 {
   (void)data;
   oc_set_custom_device_property(purpose, "desk lamp");
+  oc_set_custom_device_property(sv, oc_esp_get_application_version());
 }
 
 static int
 app_init(void)
 {
   int ret = oc_init_platform("Intel", NULL, NULL);
-  ret |= oc_add_device("/oic/d", "oic.d.light", device_name, "ocf.1.0.0",
-                       "ocf.res.1.0.0", set_device_custom_property, NULL);
-  return ret;
+  if (ret != 0) {
+    return ret;
+  }
+  ret = oc_add_device("/oic/d", "oic.d.light", device_name, "ocf.1.0.0",
+                      "ocf.res.1.0.0", set_device_custom_property, NULL);
+  if (ret != 0) {
+    return ret;
+  }
+  return 0;
 }
 
 static void
@@ -124,9 +142,9 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
 }
 
 static void
-register_resources(void)
+register_light(size_t device)
 {
-  oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, 0);
+  oc_resource_t *res = oc_new_resource("lightbulb", "/light/1", 1, device);
   oc_resource_bind_resource_type(res, "oic.r.light");
   oc_resource_bind_resource_interface(res, OC_IF_RW);
   oc_resource_set_default_interface(res, OC_IF_RW);
@@ -138,6 +156,15 @@ register_resources(void)
 #ifdef OC_CLOUD
   oc_cloud_add_resource(res);
 #endif /* OC_CLOUD */
+}
+
+static void
+register_resources(void)
+{
+  register_light(0);
+#ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
+  hawkbit_resource_register(0);
+#endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
 }
 
 static void
@@ -166,7 +193,7 @@ static void
 sta_connected(void *esp_netif, esp_event_base_t event_base, int32_t event_id,
               void *event_data)
 {
-  esp_netif_create_ip6_linklocal(esp_netif);
+  esp_netif_create_ip6_linklocal((esp_netif_t *)esp_netif);
 }
 
 static void
@@ -206,7 +233,7 @@ initialise_wifi(void)
   asprintf(&desc, "%s: %s", TAG, esp_netif_config.if_desc);
   esp_netif_config.if_desc = desc;
   esp_netif_config.route_prio = 128;
-  sta_netif = esp_netif_create_wifi(ESP_IF_WIFI_STA, &esp_netif_config);
+  sta_netif = esp_netif_create_wifi(WIFI_IF_STA, &esp_netif_config);
   free(desc);
   ESP_ERROR_CHECK(esp_wifi_set_default_wifi_sta_handlers());
 
@@ -230,10 +257,11 @@ initialise_wifi(void)
       },
   };
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
 }
 
+#ifdef OC_CLOUD
 static void
 cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                      void *data)
@@ -267,6 +295,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
     PRINT("\t\t-Refreshed Token\n");
   }
 }
+#endif /* OC_CLOUD */
 
 void
 factory_presets_cb_new(size_t device, void *data)
@@ -382,8 +411,75 @@ factory_presets_cb_new(size_t device, void *data)
 oc_event_callback_retval_t
 heap_dbg(void *v)
 {
-  printf("heap size:%" PRIu32 "\n", esp_get_free_heap_size());
+  PRINT("heap size:%" PRIu32 "\n", esp_get_free_heap_size());
   return OC_EVENT_CONTINUE;
+}
+
+static void
+initialize_sntp(void)
+{
+  ESP_LOGI(TAG, "Initializing SNTP");
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+
+/*
+ * If 'NTP over DHCP' is enabled, we set dynamic pool address
+ * as a 'secondary' server. It will act as a fallback server in case that
+ * address provided via NTP over DHCP is not accessible
+ */
+#if LWIP_DHCP_GET_NTP_SRV && SNTP_MAX_SERVERS > 1
+  sntp_setservername(1, "pool.ntp.org");
+
+#if LWIP_IPV6 &&                                                               \
+  SNTP_MAX_SERVERS > 2 // statically assigned IPv6 address is also possible
+  ip_addr_t ip6;
+  if (ipaddr_aton("2a01:3f7::1", &ip6)) { // ipv6 ntp source "ntp.netnod.se"
+    sntp_setserver(2, &ip6);
+  }
+#endif /* LWIP_IPV6 */
+
+#else /* LWIP_DHCP_GET_NTP_SRV && (SNTP_MAX_SERVERS > 1) */
+  // otherwise, use DNS address from a pool
+  sntp_setservername(0, CONFIG_SNTP_TIME_SERVER);
+
+  sntp_setservername(1,
+                     "pool.ntp.org"); // set the secondary NTP server (will be
+                                      // used only if SNTP_MAX_SERVERS > 1)
+#endif
+
+  sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
+  sntp_init();
+
+  ESP_LOGI(TAG, "List of configured NTP servers:");
+
+  for (uint8_t i = 0; i < SNTP_MAX_SERVERS; ++i) {
+    if (sntp_getservername(i)) {
+      ESP_LOGI(TAG, "server %d: %s", i, sntp_getservername(i));
+    } else {
+      // we have either IPv4 or IPv6 address, let's print it
+      char buff[IPADDR_STRLEN_MAX];
+      ip_addr_t const *ip = sntp_getserver(i);
+      if (ipaddr_ntoa_r(ip, buff, IPADDR_STRLEN_MAX) != NULL)
+        ESP_LOGI(TAG, "server %d: %s", i, buff);
+    }
+  }
+}
+
+static void
+obtain_time(void)
+{
+#ifdef LWIP_DHCP_GET_NTP_SRV
+  sntp_servermode_dhcp(1); // accept NTP offers from DHCP server, if any
+#endif
+  initialize_sntp();
+  // wait for time to be set
+  int retry = 0;
+  const int retry_count = 15;
+  while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET &&
+         ++retry < retry_count) {
+    ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry,
+             retry_count);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+  }
 }
 
 #define STACK_SIZE (8 * 1024)
@@ -396,25 +492,30 @@ static StaticTask_t xTaskBuffer;
 // the RTOS port.
 static StackType_t xStack[STACK_SIZE];
 
+#ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
+static oc_swupdate_cb_t hawkbit_swupdate_impl = {
+  .validate_purl = hawkbit_validate_purl,
+  .check_new_version = hawkbit_check_new_version,
+  .download_update = hawkbit_download_update,
+  .perform_upgrade = hawkbit_perform_upgrade,
+};
+#endif /* OC_HAS_FEATURE_PLGD_HAWKBIT  */
+
 static void
 server_main(void *pvParameter)
 {
-  int init;
-  esp_netif_ip_info_t ip4_info;
-  memset(&ip4_info, 0, sizeof(ip4_info));
-  esp_ip6_addr_t ip6_addr;
-  memset(&ip6_addr, 0, sizeof(ip6_addr));
-  ESP_LOGI(TAG, "iotivity server task started");
+  ESP_LOGI(TAG, "iotivity server task started(version=%s)",
+           oc_esp_get_application_version());
   // wait to fetch IPv4 && ipv6 address
+  EventBits_t waitBits = IPV6_CONNECTED_BIT;
 #ifdef OC_IPV4
-  xEventGroupWaitBits(wifi_event_group, IPV4_CONNECTED_BIT | IPV6_CONNECTED_BIT,
-                      false, true, portMAX_DELAY);
-#else
-  xEventGroupWaitBits(wifi_event_group, IPV6_CONNECTED_BIT, false, true,
-                      portMAX_DELAY);
-#endif
+  waitBits |= IPV4_CONNECTED_BIT;
+#endif /* OC_IPV4 */
+  xEventGroupWaitBits(wifi_event_group, waitBits, false, true, portMAX_DELAY);
 
 #ifdef OC_IPV4
+  esp_netif_ip_info_t ip4_info;
+  memset(&ip4_info, 0, sizeof(ip4_info));
   if (esp_netif_get_ip_info(sta_netif, &ip4_info) != ESP_OK) {
     print_error("get IPv4 address failed");
   } else {
@@ -422,42 +523,52 @@ server_main(void *pvParameter)
     ESP_LOGI(TAG, "got IPv4 addr:%s",
              esp_ip4addr_ntoa(&(ip4_info.ip), buf, sizeof(buf)));
   }
-#endif
-
+#endif /* OC_IPV4 */
+  esp_ip6_addr_t ip6_addr;
+  memset(&ip6_addr, 0, sizeof(ip6_addr));
   if (esp_netif_get_ip6_linklocal(sta_netif, &ip6_addr) != ESP_OK) {
     print_error("get IPv6 address failed");
   } else {
     ESP_LOGI(TAG, "got IPv6 addr: " IPV6STR, IPV62STR(ip6_addr));
   }
 
+  obtain_time();
+
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
                                           register_resources };
 
-  oc_clock_time_t next_event;
-
 #ifdef OC_SECURITY
-  oc_storage_config("storage");
+  if (oc_storage_config("storage") != 0) {
+    ESP_LOGE(TAG, "cannot create storage");
+  }
   oc_set_factory_presets_cb(factory_presets_cb_new, NULL);
 #endif /* OC_SECURITY */
 
   oc_set_max_app_data_size(10000);
 
-  init = oc_main_init(&handler);
-  if (init < 0)
+  if (oc_main_init(&handler) < 0) {
     return;
+  }
+
 #ifdef OC_CLOUD
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  if (ctx) {
+  if (ctx != NULL) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
   }
 #endif /* OC_CLOUD */
+#ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
+  oc_swupdate_set_impl(&hawkbit_swupdate_impl);
+  if (hawkbit_init() != 0) {
+    goto finish;
+  }
+#endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
 
   oc_set_delayed_callback(NULL, heap_dbg, 1);
 
   while (quit != 1) {
-    next_event = oc_main_poll();
+    oc_clock_time_t next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
@@ -469,11 +580,18 @@ server_main(void *pvParameter)
     pthread_mutex_unlock(&mutex);
   }
 
+#ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
+finish:
+  hawkbit_free();
+#endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
   oc_main_shutdown();
-  return;
 }
 
 static TaskHandle_t xHandle = NULL;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void
 app_main(void)
@@ -500,3 +618,7 @@ app_main(void)
     xStack,        // Array to use as the task's stack.
     &xTaskBuffer); // Variable to hold the task's data structure.
 }
+
+#ifdef __cplusplus
+}
+#endif

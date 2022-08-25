@@ -23,6 +23,7 @@
 
 #include "oc_ri.h"
 #include "port/oc_clock.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +31,6 @@ extern "C" {
 
 /**
  * OCF defined software update results
- *
  */
 typedef enum {
   OC_SWUPDATE_RESULT_IDLE = 0,         ///< Idle
@@ -45,37 +45,61 @@ typedef enum {
 } oc_swupdate_result_t;
 
 /**
+ * @brief Load device swupdate from storage.
+ *
+ * @param device index of the device
+ * @return <0 on error
+ * @return >=0 on success, number of bytes read from storage
+ */
+OC_API
+long oc_swupdate_load(size_t device);
+
+/**
+ * @brief Save device swupdate to storage.
+ *
+ * @param device index of the device
+ * @return <0 on error
+ * @return >=0 on success, number of bytes written to storage
+ */
+OC_API
+long oc_swupdate_dump(size_t device);
+
+/**
  * @brief callback to notify if a new software version is available
  *
  * @param device the device identifier
- * @param version version of the software
+ * @param version version of the software (cannot be NULL)
  * @param result status
  */
+OC_API
 void oc_swupdate_notify_new_version_available(size_t device,
                                               const char *version,
-                                              oc_swupdate_result_t result);
+                                              oc_swupdate_result_t result)
+  OC_NONNULL();
 
 /**
  * @brief callback to notify if a new software version is downloaded
  *
  * @param device the device identifier
- * @param version version of the software
+ * @param version version of the software (cannot be NULL)
  * @param result status
  */
+OC_API
 void oc_swupdate_notify_downloaded(size_t device, const char *version,
-                                   oc_swupdate_result_t result);
+                                   oc_swupdate_result_t result) OC_NONNULL();
 
 /**
  * @brief callback to notify if a new software version is upgrading
  *
  * @param device the device identifier
- * @param version version of the software
+ * @param version version of the software (cannot be NULL)
  * @param timestamp timestamp when the upgrade starts
  * @param result status
  */
+OC_API
 void oc_swupdate_notify_upgrading(size_t device, const char *version,
                                   oc_clock_time_t timestamp,
-                                  oc_swupdate_result_t result);
+                                  oc_swupdate_result_t result) OC_NONNULL();
 
 /**
  * @brief callback to notify if a new software version is complete
@@ -83,6 +107,7 @@ void oc_swupdate_notify_upgrading(size_t device, const char *version,
  * @param device the device identifier
  * @param result status
  */
+OC_API
 void oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result);
 
 typedef struct
@@ -98,6 +123,7 @@ typedef struct
  *
  * @param swupdate_impl the structure with the software update callbacks
  */
+OC_API
 void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl);
 
 #ifdef __cplusplus
