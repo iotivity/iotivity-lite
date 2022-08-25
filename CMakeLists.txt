@@ -57,7 +57,6 @@ else()
 endif()
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(OC_ASAN_ENABLED OFF CACHE BOOL "Enable address sanitizer build.")

@@ -5,4 +5,8 @@ sonar-project.properties
 Dockerfile.*
 build/
 images/
+port/esp32/build/
+port/esp32/esp-idf/
+port/esp32/sdconfig
+port/esp32/sdconfig.old
 swig/

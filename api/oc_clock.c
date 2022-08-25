@@ -16,11 +16,12 @@
  *
  ****************************************************************************/
 
+#include "oc_config.h"
 #include "port/oc_clock.h"
 #include "c-timestamp/timestamp.h"
 #include "port/oc_log_internal.h"
 
-#define OC_NSEC_PER_SEC 1000000000
+#define OC_NSEC_PER_SEC (1000000000)
 
 size_t
 oc_clock_time_rfc3339(char *out_buf, size_t out_buf_len)

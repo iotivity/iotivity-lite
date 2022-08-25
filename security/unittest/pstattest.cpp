@@ -30,6 +30,10 @@
 #include "security/oc_pstat.h"
 #include "security/oc_svr_internal.h"
 
+#ifdef OC_SOFTWARE_UPDATE
+#include "api/oc_swupdate_internal.h"
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
@@ -57,12 +61,18 @@ public:
                                kDeviceName.c_str(), kOCFSpecVersion.c_str(),
                                kOCFDataModelVersion.c_str(), nullptr, nullptr));
     oc_sec_svr_create();
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_create();
+#endif /* OC_SOFTWARE_UPDATE */
 
     ASSERT_EQ(0, oc_storage_config(testStorage.c_str()));
   }
 
   static void TearDownTestCase()
   {
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
     oc_sec_svr_free();
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();

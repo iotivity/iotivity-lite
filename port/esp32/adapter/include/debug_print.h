@@ -6,13 +6,17 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#ifndef _DEBUG_PRINT_H_
-#define _DEBUG_PRINT_H_
+#ifndef DEBUG_PRINT_H
+#define DEBUG_PRINT_H
 
 #include <inttypes.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "port/oc_connectivity.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define APP_PRINT(...) printf(__VA_ARGS__)
 
@@ -22,8 +26,6 @@
  * for easily debug, print all macro configuration
  *
  * @param[in]  no param input
- *
- * @return noreturn
  *
  */
 void print_macro_info();
@@ -35,8 +37,7 @@ void print_macro_info();
  *
  * @param[in]  message: the struct oc_message_t to print
  *
- * @return  noreturn
- * */
+ */
 void print_message_info(oc_message_t *message);
 
 /**
@@ -51,8 +52,6 @@ void print_message_info(oc_message_t *message);
  * @param[in]  mode: 0x00, 0x01, 0x10, 0x11 to decide the BINARY_SHOW &&
  * BYTES_SHOW
  *
- * @return noreturn
- *
  */
 void print_debug(const char *data, const unsigned int len, const char *note,
                  int mode);
@@ -60,9 +59,7 @@ void print_debug(const char *data, const unsigned int len, const char *note,
 /**
  * @brief  print the fatal error information and cycle it
  *
- *  usage: same to printf
- *
- * @return noreturn
+ * usage: same as printf
  * */
 #define print_error(fmt, args...)                                              \
   do {                                                                         \
@@ -72,7 +69,7 @@ void print_debug(const char *data, const unsigned int len, const char *note,
     vTaskDelay(2000 / portTICK_PERIOD_MS);                                     \
   } while (1)
 
-#if APP_DEBUG
+#ifdef APP_DEBUG
 
 #define APP_LOG(level, ...)                                                    \
   do {                                                                         \
@@ -91,6 +88,10 @@ void print_debug(const char *data, const unsigned int len, const char *note,
 #define APP_WRN(...)
 #define APP_ERR(...)
 
-#endif // endif APP_DEBUG
+#endif // APP_DEBUG
 
-#endif // endif _DEBUG_PRINT_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif // DEBUG_PRINT_H

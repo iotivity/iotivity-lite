@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2023 Daniel Adam
+ * Copyright (c) 2023 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include "oc_rep.h"
 #include "util/oc_compiler.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

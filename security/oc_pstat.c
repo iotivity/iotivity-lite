@@ -265,12 +265,15 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     // the reset call must be invoked asynchronously in a callback after
     // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
 #endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
-    memset(ps->rowneruuid.id, 0, 16);
+    memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
     oc_sec_ael_default(device);
     oc_sec_sdi_default(device);
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_default(device);
+#endif /* OC_SOFTWARE_UPDATE */
     if (!from_storage && oc_get_con_res_announced()) {
 #if OC_WIPE_NAME
       oc_device_info_t *di = oc_core_get_device_info(device);
@@ -483,12 +486,17 @@ oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
   if (*tm == OC_DPM_NSA) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISAC, device);
     *tm = 0;
-  } else if (*tm == OC_DPM_SVV) {
+    return;
+  }
+  if (*tm == OC_DPM_SVV) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
     *tm = 0;
-  } else if (*tm == OC_DPM_SSV) {
+    return;
+  }
+  if (*tm == OC_DPM_SSV) {
     oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
     *tm = 0;
+    return;
   }
 }
 
@@ -500,6 +508,12 @@ oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
 #endif /* OC_SERVER */
+}
+
+oc_dpmtype_t
+oc_sec_pstat_current_mode(size_t device)
+{
+  return g_pstat[device].cm;
 }
 #endif /* OC_SOFTWARE_UPDATE */
 

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 
+# project version obtainable in runtime by esp_app_get_description
+set(PROJECT_VER "1.0")
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../..

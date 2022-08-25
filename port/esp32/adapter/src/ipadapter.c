@@ -865,7 +865,11 @@ network_event_thread(void *data)
       OC_DBG("%s", "");
 
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-      void *tmp = realloc(message->data, message->length);
+      void *tmp = realloc(
+        message->data,
+        message->length +
+          1); // +1 because coap_oscore_parse_options writes in some cases
+              // '\0' after the payload so we need a single additional space
       if (tmp != NULL) {
         message->data = tmp;
       }

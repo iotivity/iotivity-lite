@@ -1245,7 +1245,7 @@ notify_discovery_observers(oc_resource_t *resource)
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (!buffer) {
     OC_WRN("notify_discovery_observers: out of memory allocating buffer");
-    goto leave_notify_observers;
+    return resource->num_observers;
   } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -1276,7 +1276,6 @@ notify_discovery_observers(oc_resource_t *resource)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-leave_notify_observers:
   buffer = response_buffer.buffer;
   if (buffer) {
     free(buffer);

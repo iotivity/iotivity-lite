@@ -37,6 +37,7 @@ extern "C" {
  */
 OC_API
 void oc_sec_load_acl(size_t device);
+
 /**
  * @brief Save device acls to storage.
  *
@@ -52,6 +53,7 @@ void oc_sec_dump_acl(size_t device);
  */
 OC_API
 void oc_sec_load_cred(size_t device);
+
 /**
  * @brief Save credential resource of device to storage.
  *
@@ -67,6 +69,7 @@ void oc_sec_dump_cred(size_t device);
  */
 OC_API
 void oc_sec_load_pstat(size_t device);
+
 /**
  * @brief Save provisioning status resource of device to storage.
  *
@@ -82,6 +85,7 @@ void oc_sec_dump_pstat(size_t device);
  */
 OC_API
 void oc_sec_load_doxm(size_t device);
+
 /**
  * @brief Save device owner transfer resource of device to storage.
  *
@@ -97,6 +101,7 @@ void oc_sec_dump_doxm(size_t device);
  */
 OC_API
 void oc_sec_load_unique_ids(size_t device);
+
 /**
  * @brief Save device and platform id to storage.
  *
@@ -127,6 +132,7 @@ void oc_sec_dump_sp(size_t device);
  */
 OC_API
 void oc_sec_load_ecdsa_keypair(size_t device);
+
 /**
  * @brief Save ECDSA keypair of device to storage.
  *
@@ -142,6 +148,7 @@ void oc_sec_dump_ecdsa_keypair(size_t device);
  */
 OC_API
 void oc_sec_load_ael(size_t device);
+
 /**
  * @brief Save auditable events resource of device to storage.
  *
@@ -157,6 +164,7 @@ void oc_sec_dump_ael(size_t device);
  */
 OC_API
 void oc_sec_load_sdi(size_t device);
+
 /**
  * @brief Save security domain information resource to storage.
  *

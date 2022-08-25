@@ -52,6 +52,14 @@ struct DeviceToAdd
   std::string uri;
 };
 
+inline const DeviceToAdd DefaultDevice = {
+  /*rt=*/"oic.d.test",
+  /*name=*/"Test Device",
+  /*spec_version=*/"ocf.1.0.0",
+  /*data_model_version=*/"ocf.res.1.0.0",
+  /*uri=*/"/oic/d",
+};
+
 class Device {
 public:
   Device();
