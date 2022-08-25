@@ -13,6 +13,18 @@ config WIFI_PASSWORD
 		WiFi password (WPA or WPA2) for the ESP32 to match.
 		can be blank if the network has no security set.
 
+config SNTP_TIME_SERVER
+    string "SNTP server name"
+    default "pool.ntp.org"
+    help
+        Hostname of the main SNTP server.
+
+config SOFTWARE_UPDATE
+    bool "SOFTWARE_UPDATE"
+    default y
+    help
+        enable or disable OTA updates via Hawkbit.
+
 config OC_DEBUG
     bool "OC_DEBUG"
     help

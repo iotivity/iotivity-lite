@@ -19,45 +19,85 @@
 #ifndef OC_SWUPDATE_INTERNAL_H
 #define OC_SWUPDATE_INTERNAL_H
 
-#include "oc_ri.h"
-#include "port/oc_clock.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef enum {
-  OC_SWUPDATE_STATE_IDLE,
-  OC_SWUPDATE_STATE_NSA,
-  OC_SWUPDATE_STATE_SVV,
-  OC_SWUPDATE_STATE_SVA,
-  OC_SWUPDATE_STATE_UPGRADING
+  OC_SWUPDATE_STATE_IDLE,     ///< idle, waiting for updates
+  OC_SWUPDATE_STATE_NSA,      ///< new software available
+  OC_SWUPDATE_STATE_SVV,      ///< software version validation
+  OC_SWUPDATE_STATE_SVA,      ///< software version available
+  OC_SWUPDATE_STATE_UPGRADING ///< upgrading
 } oc_swupdate_state_t;
 
 typedef enum {
-  OC_SWUPDATE_IDLE,
-  OC_SWUPDATE_ISAC,
-  OC_SWUPDATE_ISVV,
-  OC_SWUPDATE_UPGRADE
+  OC_SWUPDATE_IDLE,   ///< nothing scheduled
+  OC_SWUPDATE_ISAC,   ///< initiate software availability check
+  OC_SWUPDATE_ISVV,   ///< initiate software version validation
+  OC_SWUPDATE_UPGRADE ///< initiate secure software update
 } oc_swupdate_action_t;
 
-typedef struct
-{
-  oc_string_t purl;
-  oc_string_t nv;
-  oc_string_t signage;
-  oc_swupdate_action_t swupdateaction;
-  oc_swupdate_state_t swupdatestate;
-  int swupdateresult;
-  oc_clock_time_t lastupdate;
-  oc_clock_time_t updatetime;
-} oc_swupdate_t;
-
-void oc_swupdate_free(void);
+/**
+ * @brief Initialize software update resources.
+ *
+ * Allocate swupdate helper structures, set them to default values and try to
+ * load from storage.
+ */
 void oc_swupdate_init(void);
 
-/* Internal interface to swupdate resource used for handling sw update requests
- * via pstat */
+/**
+ * @brief Save software update data to storage and deallocate helper structures.
+ */
+void oc_swupdate_free(void);
+
+typedef struct oc_swupdate_t oc_swupdate_t;
+
+/** Get software update context for given device */
+oc_swupdate_t *oc_swupdate_get_context(size_t device);
+
+/**
+ * @brief Get package url from context
+ *
+ * @param ctx software update context (cannot be NULL)
+ * @return package url
+ */
+const char *oc_swupdate_get_package_url(const oc_swupdate_t *ctx);
+
+/**
+ * @brief Get available version from context
+ *
+ * @param ctx software update context (cannot be NULL)
+ * @return device index
+ */
+const char *oc_swupdate_get_new_version(const oc_swupdate_t *ctx);
+
+/**
+ * @brief Get current update action
+ *
+ * @param ctx software update context (cannot be NULL)
+ * @return current update state
+ */
+oc_swupdate_action_t oc_swupdate_get_action(const oc_swupdate_t *ctx);
+
+/** Convert action to string representation */
+const char *oc_swupdate_action_to_str(oc_swupdate_action_t action);
+
+/**
+ * @brief Get current update state
+ *
+ * @param ctx software update context (cannot be NULL)
+ * @return current update state
+ */
+oc_swupdate_state_t oc_swupdate_get_state(const oc_swupdate_t *ctx);
+
+/** Convert state to string representation */
+const char *oc_swupdate_state_to_str(oc_swupdate_state_t state);
+
+/* Internal interface to swupdate resource used for handling sw update
+ * requests via pstat */
 void oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device);
 
 #ifdef __cplusplus

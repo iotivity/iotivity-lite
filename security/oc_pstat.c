@@ -483,12 +483,17 @@ oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
   if (*tm == OC_DPM_NSA) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISAC, device);
     *tm = 0;
-  } else if (*tm == OC_DPM_SVV) {
+    return;
+  }
+  if (*tm == OC_DPM_SVV) {
     oc_swupdate_perform_action(OC_SWUPDATE_ISVV, device);
     *tm = 0;
-  } else if (*tm == OC_DPM_SSV) {
+    return;
+  }
+  if (*tm == OC_DPM_SSV) {
     oc_swupdate_perform_action(OC_SWUPDATE_UPGRADE, device);
     *tm = 0;
+    return;
   }
 }
 

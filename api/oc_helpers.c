@@ -61,8 +61,8 @@ oc_free(
 #endif
     block, pool_type);
 
-  block->next = 0;
-  block->ptr = 0;
+  block->next = NULL;
+  block->ptr = NULL;
   block->size = 0;
 }
 

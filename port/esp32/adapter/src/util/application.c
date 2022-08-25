@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2015-2017 Espressif Systems (Shanghai) PTE LTD
+ * Copyright (c) 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,17 @@
  *
  ****************************************************************************/
 
-#ifndef VFS_PIPE_H
-#define VFS_PIPE_H
+#include "oc_esp.h"
+#include "port/oc_log.h"
 
-void esp_vfs_dev_pipe_register(void);
-int vfs_pipe(int pipefd[2]);
+#include "esp_app_desc.h"
 
-#endif
+const char *
+oc_esp_get_application_version(void)
+{
+  const esp_app_desc_t *desc = esp_app_get_description();
+  if (desc != NULL) {
+    return desc->version;
+  }
+  return "";
+}

@@ -212,5 +212,5 @@ void jni_swupdate_set_impl(const oc_swupdate_cb_t *swupdateImpl)
 }
 %}
 
-
+#define OC_API
 %include oc_swupdate.h

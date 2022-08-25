@@ -254,10 +254,6 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   (void)resource;
   bool pushtarget_is_updated = false;
 
-#define IS_PROPERTY(rep, prop)                                                 \
-  oc_string_len((rep)->name) == (sizeof(prop) - 1) &&                          \
-    memcmp(oc_string((rep)->name), prop, sizeof(prop) - 1) == 0
-
   /*
    * `data` is set when new Notification Selector Resource is created
    * by calling `oc_resource_set_properties_cbs()` in `get_ns_instance()`
@@ -270,7 +266,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:phref
        *  - optional
        */
-      if (IS_PROPERTY(rep, "phref")) {
+      if (oc_rep_is_property(rep, "phref", sizeof("phref") - 1)) {
         if (!strcmp(oc_string(rep->value.string), "")) {
           oc_free_string(&ns_instance->phref);
         } else {
@@ -284,7 +280,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:pushtarget
        *  - mandatory
        */
-      if (IS_PROPERTY(rep, "pushtarget")) {
+      if (oc_rep_is_property(rep, "pushtarget", sizeof("pushtarget") - 1)) {
         if (strcmp(oc_string(rep->value.string), "") == 0) {
           /* NULL pushtarget ("") is still acceptable... */
           OC_PUSH_DBG("NULL \"pushtarget\" is received, still stay in "
@@ -350,7 +346,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:pushqif
        *  - optional
        */
-      if (IS_PROPERTY(rep, "pushqif")) {
+      if (oc_rep_is_property(rep, "pushqif", sizeof("pushqif") - 1)) {
         oc_set_string(&ns_instance->pushqif, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         break;
@@ -360,7 +356,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        *  - RETRIEVE: mandatory
        *  - UPDATE: optional
        */
-      if (IS_PROPERTY(rep, "state")) {
+      if (oc_rep_is_property(rep, "state", sizeof("state") - 1)) {
         /* state can be modified only if Push Proxy is in "tout" or "err" state
          */
         if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) &&
@@ -391,7 +387,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:prt
        *  - optional
        */
-      if (IS_PROPERTY(rep, "prt")) {
+      if (oc_rep_is_property(rep, "prt", sizeof("prt") - 1)) {
         oc_free_string_array(&ns_instance->prt);
 
         oc_new_string_array(
@@ -412,7 +408,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.notificationselector:pif
        *  - optional
        */
-      if (IS_PROPERTY(rep, "pif")) {
+      if (oc_rep_is_property(rep, "pif", sizeof("pif") - 1)) {
         oc_free_string_array(&ns_instance->pif);
 
         oc_new_string_array(
@@ -433,7 +429,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
        * oic.r.pushproxy:sourcert
        *  - mandatory
        */
-      if (IS_PROPERTY(rep, "sourcert")) {
+      if (oc_rep_is_property(rep, "sourcert", sizeof("sourcert") - 1)) {
         for (int i = 0;
              i < (int)oc_string_array_get_allocated_size(rep->value.array);
              i++) {

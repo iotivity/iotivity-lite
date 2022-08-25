@@ -1,6 +1,7 @@
 /****************************************************************************
  *
- * Copyright (c) 2015-2017 Espressif Systems (Shanghai) PTE LTD
+ * Copyright (c) 2022 Jozef Kralik, All Rights Reserved.
+ * Copyright (c) 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,10 +17,24 @@
  *
  ****************************************************************************/
 
-#ifndef VFS_PIPE_H
-#define VFS_PIPE_H
+#include "unity.h"
 
-void esp_vfs_dev_pipe_register(void);
-int vfs_pipe(int pipefd[2]);
+void
+app_main(void)
+{
+  /* These are the different ways of running registered tests.
+   * In practice, only one of them is usually needed.
+   *
+   * UNITY_BEGIN() and UNITY_END() calls tell Unity to print a summary
+   * (number of tests executed/failed/ignored) of tests executed between these
+   * calls.
+   */
+  UNITY_BEGIN();
+  unity_run_all_tests();
+  UNITY_END();
 
-#endif
+  /* This function will not return, and will be busy waiting for UART input.
+   * Make sure that task watchdog is disabled if you use this function.
+   */
+  unity_run_menu();
+}

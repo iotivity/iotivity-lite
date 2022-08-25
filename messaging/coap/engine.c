@@ -914,9 +914,10 @@ OC_PROCESS_THREAD(g_coap_engine, ev, data)
     OC_PROCESS_YIELD();
 
     if (ev == oc_events[INBOUND_RI_EVENT]) {
-      coap_receive(data);
+      oc_message_t *msg = (oc_message_t *)data;
+      coap_receive(msg);
 
-      oc_message_unref(data);
+      oc_message_unref(msg);
     } else if (ev == OC_PROCESS_EVENT_TIMER) {
       coap_check_transactions();
     }

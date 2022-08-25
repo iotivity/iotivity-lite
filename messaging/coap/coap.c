@@ -952,7 +952,10 @@ coap_oscore_parse_options(void *packet, const uint8_t *data, size_t data_len,
         /* null-terminate payload */
       }
       if (!validate) {
-        coap_pkt->payload[coap_pkt->payload_len] = '\0';
+        coap_pkt->payload[coap_pkt->payload_len] =
+          '\0'; // TODO: this writes after the payload, if the message was
+                // shrank so the allocation matches the message length this
+                // causes a memory corruption
         OC_DBG("Got payload:");
         OC_LOGbytes(coap_pkt->payload, coap_pkt->payload_len);
       }
