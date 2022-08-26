@@ -10,10 +10,12 @@ on:
     branches:
       - master
   pull_request:
-      types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonar-cloud-scan:
+    # don't run for forks
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     name: Sonar Cloud scan
     runs-on: ubuntu-latest
     env:
@@ -25,7 +27,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: "true"
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of SonarCloud analysis
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of SonarCloud analysis
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
