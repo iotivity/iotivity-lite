@@ -84,9 +84,15 @@ allocate_message(struct oc_memb *pool)
 oc_message_t *
 oc_allocate_message_from_pool(struct oc_memb *pool)
 {
+
   if (pool) {
-    return allocate_message(pool);
+    return              allocate_message(               pool);
   }
+
+
+
+
+  
   return NULL;
 }
 
