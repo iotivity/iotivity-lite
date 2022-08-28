@@ -432,7 +432,6 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
  */
 int oc_status_code(oc_status_t key);
 
-
 /**
  * @brief convert the status code to string
  *
@@ -441,7 +440,6 @@ int oc_status_code(oc_status_t key);
  */
 /*OC_API*/
 const char *oc_status_to_str(oc_status_t key);
-
 
 /**
  * @brief retrieve the resource by uri and device indes
