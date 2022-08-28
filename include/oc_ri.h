@@ -439,7 +439,7 @@ int oc_status_code(oc_status_t key);
  * @param[in] key key the application level key of the code
  * @return char* CoAP status code string
  */
-OC_API
+/*OC_API*/
 const char *oc_status_to_str(oc_status_t key);
 
 
