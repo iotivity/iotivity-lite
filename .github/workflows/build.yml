@@ -6,9 +6,9 @@ name: CI-building linux
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -16,6 +16,8 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   make_linux_secured_java:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -46,6 +48,8 @@ jobs:
           cd ../..
 
   make_linux_secured_java_cloud:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -76,6 +80,8 @@ jobs:
           cd ../..
 
   make_otgc_linux:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -98,6 +104,7 @@ jobs:
           # the actual build
           cd port/linux
           make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
+<<<<<<< HEAD
   
   build_esp32:
     # The type of runner that the job will run on
@@ -123,3 +130,5 @@ jobs:
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
           idf.py build
+=======
+>>>>>>> fixup! Enable SC analysis for Push Notifications

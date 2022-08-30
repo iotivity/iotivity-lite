@@ -17,6 +17,8 @@ env:
 
 jobs:
   build-and-push-image:
+    if: ${{ false }}
+
     runs-on: ubuntu-latest
     strategy:
       matrix:
