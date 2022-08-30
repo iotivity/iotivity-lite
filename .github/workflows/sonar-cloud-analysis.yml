@@ -10,7 +10,7 @@ on:
     branches:
       - master
   pull_request:
-      types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonar-cloud-scan:
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: "true"
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of SonarCloud analysis
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of SonarCloud analysis
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -53,9 +53,13 @@ jobs:
       - name: Run build-wrapper
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DBUILD_TESTING=ON ..
+          # sonar-scanner currently cannot handle multi configuration configuration (ie. compilation of the same file with different defines),
+          # so we enable as many features as possible so we get max. amount of code analysis
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DBUILD_TESTING=ON ..
           cd ..
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build
+          # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
+          # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build --verbose --target client-server-static --target all
 
       - name: Run sonar-scanner
         env:
