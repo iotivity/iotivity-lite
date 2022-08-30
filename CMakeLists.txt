@@ -174,6 +174,7 @@ endif()
 
 # ####### Gather source files ########
 file(GLOB COMMON_SRC
+    ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_compare.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
@@ -581,6 +582,9 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     # Unit tests
     file(GLOB APITEST_SRC api/unittest/*.cpp)
     package_add_test(apitest ${APITEST_SRC})
+
+    file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)
+    package_add_test(timestamptest ${TIMESTAMPTEST_SRC})
 
     file(GLOB PLATFORMTEST_SRC port/unittest/*.cpp)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_test)

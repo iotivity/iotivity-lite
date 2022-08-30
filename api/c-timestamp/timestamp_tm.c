@@ -40,26 +40,27 @@ static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
 static void
 rdn_to_struct_tm(uint32_t rdn, struct tm *tmp)
 {
-  uint32_t Z, H, A, B;
-  uint32_t C, y, m, d;
-
-  Z = rdn + 306;
-  H = 100 * Z - 25;
-  A = H / 3652425;
-  B = A - (A >> 2);
-  y = (100 * B + H) / 36525;
-  C = B + Z - (1461 * y >> 2);
-  m = (535 * C + 48950) >> 14;
-  if (m > 12)
-    d = C - 306, y++, m -= 12;
-  else
+  uint32_t Z = rdn + 306;
+  uint32_t H = 100 * Z - 25;
+  uint32_t A = H / 3652425;
+  uint32_t B = A - (A >> 2);
+  uint32_t y = (100 * B + H) / 36525;
+  uint32_t C = B + Z - (1461 * y >> 2);
+  uint32_t m = (535 * C + 48950) >> 14;
+  uint32_t d;
+  if (m > 12) {
+    d = C - 306;
+    y++;
+    m -= 12;
+  } else {
     d = C + 59 + ((y & 3) == 0 && (y % 100 != 0 || y % 400 == 0));
+  }
 
-  tmp->tm_mday = C - DayOffset[m]; /* Day of month [1,31]           */
-  tmp->tm_mon = m - 1;             /* Month of year [0,11]          */
-  tmp->tm_year = y - 1900;         /* Years since 1900              */
-  tmp->tm_wday = rdn % 7;          /* Day of week [0,6] (Sunday =0) */
-  tmp->tm_yday = d - 1;            /* Day of year [0,365]           */
+  tmp->tm_mday = (int)(C - DayOffset[m]); /* Day of month [1,31]           */
+  tmp->tm_mon = (int)(m - 1);             /* Month of year [0,11]          */
+  tmp->tm_year = (int)(y - 1900);         /* Years since 1900              */
+  tmp->tm_wday = (int)(rdn % 7);          /* Day of week [0,6] (Sunday =0) */
+  tmp->tm_yday = (int)(d - 1);            /* Day of year [0,365]           */
 }
 
 #define RDN_OFFSET INT64_C(62135683200) /* 1970-01-01T00:00:00 */
@@ -67,25 +68,24 @@ rdn_to_struct_tm(uint32_t rdn, struct tm *tmp)
 static struct tm *
 timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp, const bool local)
 {
-  uint64_t sec;
-  uint32_t rdn, sod;
-
-  if (!timestamp_valid(tsp))
+  if (!timestamp_valid(tsp)) {
     return NULL;
+  }
 
-  sec = tsp->sec + RDN_OFFSET;
-  if (local)
+  uint64_t sec = tsp->sec + RDN_OFFSET;
+  if (local) {
     sec += tsp->offset * 60;
+  }
   assert((sec / 86400) <= UINT32_MAX);
-  rdn = (uint32_t)(sec / 86400);
-  sod = sec % 86400;
+  uint32_t rdn = (uint32_t)(sec / 86400);
+  uint32_t sod = sec % 86400;
 
   rdn_to_struct_tm(rdn, tmp);
-  tmp->tm_sec = sod % 60;
+  tmp->tm_sec = (int)(sod % 60);
   sod /= 60;
-  tmp->tm_min = sod % 60;
+  tmp->tm_min = (int)(sod % 60);
   sod /= 60;
-  tmp->tm_hour = sod;
+  tmp->tm_hour = (int)sod;
   return tmp;
 }
 

@@ -39,18 +39,17 @@ static const uint16_t DayOffset[13] = { 0,   306, 337, 0,   31,  61, 92,
 static void
 rdn_to_ymd(uint32_t rdn, uint16_t *yp, uint16_t *mp, uint16_t *dp)
 {
-  uint32_t Z, H, A, B;
-  uint32_t y, m, d;
-
-  Z = rdn + 306;
-  H = 100 * Z - 25;
-  A = H / 3652425;
-  B = A - (A >> 2);
-  y = (100 * B + H) / 36525;
-  d = B + Z - (1461 * y >> 2);
-  m = (535 * d + 48950) >> 14;
-  if (m > 12)
-    y++, m -= 12;
+  uint32_t Z = rdn + 306;
+  uint32_t H = 100 * Z - 25;
+  uint32_t A = H / 3652425;
+  uint32_t B = A - (A >> 2);
+  uint32_t y = (100 * B + H) / 36525;
+  uint32_t d = B + Z - (1461 * y >> 2);
+  uint32_t m = (535 * d + 48950) >> 14;
+  if (m > 12) {
+    ++y;
+    m -= 12;
+  }
   assert(y < UINT16_MAX);
   assert(m < UINT16_MAX);
   assert(d < UINT16_MAX);
@@ -65,29 +64,35 @@ static const uint32_t Pow10[10] = { 1,         10,        100,     1000,
                                     10000,     100000,    1000000, 10000000,
                                     100000000, 1000000000 };
 
+#if defined(__clang__) || defined(__GNUC__)
+#define FALLTHROUGH __attribute__((fallthrough))
+#else
+#define FALLTHROUGH
+#endif
+
 static size_t
 timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
                           const int precision)
 {
-  unsigned char *p;
-  uint64_t sec, rdn;
-  uint32_t v;
-  uint16_t y, m, d;
-  size_t dlen;
-
-  dlen = sizeof("YYYY-MM-DDThh:mm:ssZ") - 1;
-  if (tsp->offset)
+  size_t dlen = sizeof("YYYY-MM-DDThh:mm:ssZ") - 1;
+  if (tsp->offset) {
     dlen += 5; /* hh:mm */
+  }
 
-  if (precision)
+  if (precision) {
     dlen += 1 + precision;
+  }
 
-  if (dlen >= len)
+  if (dlen >= len) {
     return 0;
+  }
 
-  sec = tsp->sec + tsp->offset * 60 + EPOCH;
-  rdn = sec / 86400;
+  uint64_t sec = tsp->sec + tsp->offset * 60 + EPOCH;
+  uint64_t rdn = sec / 86400;
   assert(rdn < UINT32_MAX);
+  uint16_t y;
+  uint16_t m;
+  uint16_t d;
   rdn_to_ymd((uint32_t)rdn, &y, &m, &d);
 
   /*
@@ -95,8 +100,8 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
    * 0123456789012345678
    * YYYY-MM-DDThh:mm:ss
    */
-  p = (unsigned char *)dst;
-  v = sec % 86400;
+  unsigned char *p = (unsigned char *)dst;
+  uint32_t v = sec % 86400;
   p[18] = '0' + (v % 10);
   v /= 10;
   p[17] = '0' + (v % 6);
@@ -134,49 +139,55 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
     case 9:
       p[9] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 8:
       p[8] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 7:
       p[7] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 6:
       p[6] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 5:
       p[5] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 4:
       p[4] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 3:
       p[3] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 2:
       p[2] = '0' + (v % 10);
       v /= 10;
-    /* fall through */
+      FALLTHROUGH;
     case 1:
       p[1] = '0' + (v % 10);
+      FALLTHROUGH;
+    default:
+      break;
     }
     p[0] = '.';
     p += 1 + precision;
   }
 
-  if (!tsp->offset)
+  if (!tsp->offset) {
     *p++ = 'Z';
-  else {
-    if (tsp->offset < 0)
-      p[0] = '-', v = -tsp->offset;
-    else
-      p[0] = '+', v = tsp->offset;
+  } else {
+    if (tsp->offset < 0) {
+      p[0] = '-';
+      v = -tsp->offset;
+    } else {
+      p[0] = '+';
+      v = tsp->offset;
+    }
 
     p[5] = '0' + (v % 10);
     v /= 10;
@@ -208,22 +219,22 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
 size_t
 timestamp_format(char *dst, size_t len, const timestamp_t *tsp)
 {
-  uint32_t f;
-  int precision;
-
-  if (!timestamp_valid(tsp))
+  if (!timestamp_valid(tsp)) {
     return 0;
+  }
 
-  f = tsp->nsec;
-  if (!f)
+  uint32_t f = tsp->nsec;
+  int precision;
+  if (!f) {
     precision = 0;
-  else {
-    if ((f % 1000000) == 0)
+  } else {
+    if ((f % 1000000) == 0) {
       precision = 3;
-    else if ((f % 1000) == 0)
+    } else if ((f % 1000) == 0) {
       precision = 6;
-    else
+    } else {
       precision = 9;
+    }
   }
   return timestamp_format_internal(dst, len, tsp, precision);
 }
@@ -232,7 +243,8 @@ size_t
 timestamp_format_precision(char *dst, size_t len, const timestamp_t *tsp,
                            int precision)
 {
-  if (!timestamp_valid(tsp) || precision < 0 || precision > 9)
+  if (!timestamp_valid(tsp) || precision < 0 || precision > 9) {
     return 0;
+  }
   return timestamp_format_internal(dst, len, tsp, precision);
 }
