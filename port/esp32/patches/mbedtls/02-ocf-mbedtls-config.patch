@@ -1,0 +1,16 @@
+diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
+index 0558ee001..fd14b602d 100644
+--- a/include/mbedtls/mbedtls_config.h
++++ b/include/mbedtls/mbedtls_config.h
+@@ -24,6 +24,11 @@
+  *  limitations under the License.
+  */
+ 
++#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
++#define MBEDTLS_X509_EXPANDED_SUBJECT_ALT_NAME_SUPPORT
++#define MBEDTLS_ALLOW_PRIVATE_ACCESS
++#define MBEDTLS_ENTROPY_MAX_SOURCES                2 /**< Maximum number of sources supported */
++
+ /**
+  * This is an optional version symbol that enables comatibility handling of
+  * config files.

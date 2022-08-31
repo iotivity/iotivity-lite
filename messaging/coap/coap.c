@@ -47,6 +47,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "coap.h"
 #include "transactions.h"
@@ -546,7 +547,7 @@ coap_parse_signal_options(void *packet, unsigned int option_number,
     if (option_number == COAP_SIGNAL_OPTION_MAX_MSG_SIZE) {
       coap_pkt->max_msg_size =
         coap_parse_int_option(current_option, option_length);
-      OC_DBG("  Max-Message-Size [%u]", coap_pkt->max_msg_size);
+      OC_DBG("  Max-Message-Size [%" PRIu32 "]", coap_pkt->max_msg_size);
     } else if (option_number == COAP_SIGNAL_OPTION_BLOCKWISE_TRANSFER) {
       coap_pkt->blockwise_transfer = 1;
       OC_DBG("  Bert [%u]", coap_pkt->blockwise_transfer);
@@ -567,7 +568,7 @@ coap_parse_signal_options(void *packet, unsigned int option_number,
              coap_pkt->alt_addr);
     } else if (option_number == COAP_SIGNAL_OPTION_HOLD_OFF) {
       coap_pkt->hold_off = coap_parse_int_option(current_option, option_length);
-      OC_DBG("  Hold-Off [%u]", coap_pkt->hold_off);
+      OC_DBG("  Hold-Off [%" PRIu32 "]", coap_pkt->hold_off);
     }
     break;
   case ABORT_7_05:

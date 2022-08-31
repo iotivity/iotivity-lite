@@ -40,6 +40,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifndef __FILENAME__
 #ifdef WIN32
 #define __FILENAME__                                                           \
   (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
@@ -47,6 +48,7 @@
 #define __FILENAME__                                                           \
   (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
+#endif /* !__FILENAME__ */
 
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"

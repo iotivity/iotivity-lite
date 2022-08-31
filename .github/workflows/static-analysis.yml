@@ -3,9 +3,9 @@ name: Static analysis
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -29,5 +29,5 @@ jobs:
       - name: Build with clang-tidy
         run: |
           mkdir linuxbuild && cd linuxbuild
-          cmake -DOC_IPV4_ENABLED=ON -DOC_CLANG_TIDY_ENABLED=ON -DBUILD_TESTING=OFF ..
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLANG_TIDY_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DBUILD_TESTING=OFF ..
           make all

@@ -18,6 +18,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include <stdbool.h>
+#include <inttypes.h>
 
 static bool mmem_initialized = false;
 
@@ -309,13 +310,13 @@ oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
   if (hex_str_len % 2 != 0) {
     start = 1;
     uint32_t tmp;
-    sscanf(&hex_str[0], "%1x", &tmp);
+    sscanf(&hex_str[0], "%1" SCNx32, &tmp);
     array[a++] = (uint8_t)tmp;
   }
 
   for (size_t i = start; i + 2 <= hex_str_len; i += 2) {
     uint32_t tmp;
-    sscanf(&hex_str[i], "%2x", &tmp);
+    sscanf(&hex_str[i], "%2" SCNx32, &tmp);
     array[a++] = (uint8_t)tmp;
   }
 
