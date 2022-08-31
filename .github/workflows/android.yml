@@ -6,16 +6,18 @@ name: CI building android
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-   make_android:
+  make_android:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 

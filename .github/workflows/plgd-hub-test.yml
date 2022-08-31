@@ -8,9 +8,9 @@ name: Run plgd/hub tests with cloud_server
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -20,6 +20,8 @@ env:
 
 jobs:
   plgd-hub-test:
+    if: ${{ false }}
+
     runs-on: ubuntu-latest
     strategy:
       matrix:

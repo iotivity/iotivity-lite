@@ -5,15 +5,16 @@ name: CI-cmake building linux
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
-   cmake_linux:
+  cmake_linux:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -36,8 +37,10 @@ jobs:
           - args: "-DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON"
           # secure off, ipv4 on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
+          # secure off, ipv4 on, tcp on
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
           # collection create if on, push notification on, tcp off
-          - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_TCP_ENABLED=OFF"
+          - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
 
     steps:
       - name: Checkout repository
