@@ -24,10 +24,11 @@
 #include <string>
 
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_helpers.h"
 #include "oc_ri.h"
 #include "oc_collection.h"
-#include "port/linux/oc_config.h"
+#include "port/oc_network_event_handler_internal.h"
 
 #define RESOURCE_URI "/LightResourceURI"
 #define RESOURCE_NAME "roomlights"
@@ -35,12 +36,16 @@
 
 class TestOcRi : public testing::Test {
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
-    oc_ri_init();
     oc_network_event_handler_mutex_init();
+    oc_ri_init();
   }
-  virtual void TearDown() { oc_ri_shutdown(); }
+  void TearDown() override
+  {
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
+  }
 };
 
 static void

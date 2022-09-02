@@ -14,15 +14,17 @@ on:
 
 jobs:
   cmake_linux:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           # default (secure on, pki on, dynamic allocation on, tcp off, oscore on, cloud off, maintenance resource off, software update off, well-known core resource off)
           - args: ""
           # ipv4 on
           - args: "-DOC_IPV4_ENABLED=ON"
+          # tcp on
+          - args: "-DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on, dynamic allocation off
@@ -37,6 +39,8 @@ jobs:
           - args: "-DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON"
           # secure off, ipv4 on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
+          # secure off, tcp on
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON"
           # secure off, ipv4 on, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
           # collection create if on, push notification on, tcp off

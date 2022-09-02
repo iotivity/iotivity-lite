@@ -20,7 +20,6 @@
 #define OC_SESSION_EVENTS_H
 
 #include "oc_endpoint.h"
-#include "port/oc_network_events_mutex.h"
 #include "util/oc_process.h"
 
 #ifdef __cplusplus
@@ -60,14 +59,14 @@ OC_PROCESS_NAME(oc_session_events);
  *
  * @param endpoint start event on endpoint
  */
-void oc_session_start_event(oc_endpoint_t *endpoint);
+void oc_session_start_event(const oc_endpoint_t *endpoint);
 
 /**
  * @brief session end event
  *
  * @param endpoint stop event on endpoint
  */
-void oc_session_end_event(oc_endpoint_t *endpoint);
+void oc_session_end_event(const oc_endpoint_t *endpoint);
 
 /**
  * @brief set delay for events

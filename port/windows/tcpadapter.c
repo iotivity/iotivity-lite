@@ -15,16 +15,17 @@
 */
 
 #define WIN32_LEAN_AND_MEAN
-#include "tcpadapter.h"
+#include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
+#include "port/oc_assert.h"
+#include "util/oc_memb.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "mutex.h"
 #include "network_addresses.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
-#include "port/oc_assert.h"
-#include "util/oc_memb.h"
+#include "tcpadapter.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -239,7 +240,7 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_list_add(session_list, session);
 
   if (!(endpoint->flags & SECURED)) {
-    oc_session_start_event((oc_endpoint_t *)endpoint);
+    oc_session_start_event(endpoint);
   }
 
   OC_DBG("recorded new TCP session");
@@ -604,7 +605,7 @@ recv_message(SOCKET s, void *ctx)
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
 #endif /* OC_DEBUG */
-  oc_network_event(message);
+  oc_network_receive_event(message);
 }
 
 static void

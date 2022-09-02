@@ -88,19 +88,6 @@ void oc_recv_message(oc_message_t *message);
  */
 void oc_send_message(oc_message_t *message);
 
-/**
- * @brief close all tls session for the specific device
- *
- * @param device the device index
- */
-void oc_close_all_tls_sessions_for_device(size_t device);
-
-/**
- * @brief close all tls sessions
- *
- */
-void oc_close_all_tls_sessions(void);
-
 #ifdef __cplusplus
 }
 #endif

@@ -20,16 +20,19 @@
 #if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
 #error __ANDROID_API__ not defined
 #endif
+#include "api/oc_network_events_internal.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
-#ifdef OC_TCP
-#include "tcpadapter.h"
-#endif
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
+#ifdef OC_TCP
+#include "tcpadapter.h"
+#endif /* OC_TCP */
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -925,7 +928,7 @@ network_event_thread(void *data)
       PRINT("\n\n");
 #endif /* OC_DEBUG */
 
-      oc_network_event(message);
+      oc_network_receive_event(message);
     }
   }
   pthread_exit(NULL);
@@ -1086,6 +1089,13 @@ oc_send_buffer(oc_message_t *message)
 #endif /* !OC_IPV4 */
 
   return send_msg(send_sock, &receiver, message);
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 #ifdef OC_CLIENT

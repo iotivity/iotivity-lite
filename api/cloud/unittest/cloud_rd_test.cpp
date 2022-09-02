@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include <gtest/gtest.h>
+#include <pthread.h>
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"

@@ -17,16 +17,19 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include "api/oc_network_events_internal.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
-#ifdef OC_TCP
-#include "tcpadapter.h"
-#endif
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
+#ifdef OC_TCP
+#include "tcpadapter.h"
+#endif /* OC_TCP */
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -570,7 +573,7 @@ static int
 process_interface_change_event(int ifa_index, int ifa_family,
                                const void *ifa_ip, oc_interface_event_t event)
 {
-  int num_devices = oc_core_get_num_devices();
+  size_t num_devices = oc_core_get_num_devices();
   int ret = 0;
   if (event == NETWORK_INTERFACE_UP) {
 #ifdef OC_NETWORK_MONITOR
@@ -591,7 +594,7 @@ process_interface_change_event(int ifa_index, int ifa_family,
       if (ifa_family == AF_INET6) {
       const esp_ip6_addr_t *ip = (const esp_ip6_addr_t *)ifa_ip;
       if (ip6_addr_islinklocal(ip)) {
-        for (int i = 0; i < num_devices; i++) {
+        for (size_t i = 0; i < num_devices; i++) {
           ip_context_t *dev = get_ip_context_for_device(i);
           ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock, ifa_index);
         }
@@ -605,7 +608,7 @@ process_interface_change_event(int ifa_index, int ifa_family,
 #endif /* OC_NETWORK_MONITOR */
   }
 
-  for (int i = 0; i < num_devices; i++) {
+  for (size_t i = 0; i < num_devices; i++) {
     ip_context_t *dev = get_ip_context_for_device(i);
     oc_network_event_handler_mutex_lock();
     refresh_endpoints_list(dev);
@@ -876,13 +879,14 @@ network_event_thread(void *data)
       PRINT("index %d", message->endpoint.interface_index);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
-#ifdef OC_DYNAMIC_ALLOCATION
+
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
       void *tmp = realloc(message->data, message->length);
       if (tmp != NULL) {
         message->data = tmp;
       }
-#endif
-      oc_network_event(message);
+#endif /* OC_DYNAMIC_ALLOCATION && OC_INOUT_BUFFER_SIZE */
+      oc_network_receive_event(message);
     }
   }
   return NULL;
@@ -1040,6 +1044,13 @@ oc_send_buffer(oc_message_t *message)
 #endif /* !OC_IPV4 */
 
   return send_msg(send_sock, &receiver, message);
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 #ifdef OC_CLIENT

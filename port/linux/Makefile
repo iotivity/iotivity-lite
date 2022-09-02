@@ -111,7 +111,7 @@ HEADERS += ../../port/linux/oc_config.h
 HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)
 HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
-HEADERS_PORT = $(wildcard ../../port/*.h)
+HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS_CLOUD=-I../../api/cloud

@@ -10,8 +10,6 @@ on:
 
 jobs:
   build:
-    if: ${{ false }}
-
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
@@ -140,7 +138,8 @@ jobs:
               -D CMAKE_VERBOSE_MAKEFILE=ON
               -D CMAKE_BUILD_TYPE=${{ matrix.config.build_type }}
               -D BUILD_TESTING=${{ matrix.config.build_testing }}
-              -D OC_IPV4_ENABLED=ON
+              -D OC_CLOUD_ENABLED=ON
+              -D OC_COLLECTIONS_IF_CREATE_ENABLED=ON
               -G Ninja
               -D CMAKE_MAKE_PROGRAM=${ninja_program}
             RESULT_VARIABLE result
@@ -148,7 +147,6 @@ jobs:
           if (NOT result EQUAL 0)
             message(FATAL_ERROR "Bad exit status")
           endif()
-
       - name: Build
         shell: cmake -P {0}
         run: |

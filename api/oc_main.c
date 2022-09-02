@@ -21,10 +21,9 @@
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
-
+#include "port/oc_network_event_handler_internal.h"
 #include "util/oc_etimer.h"
 #include "util/oc_process.h"
-
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_introspection_internal.h"

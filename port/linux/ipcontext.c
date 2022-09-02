@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2016-2018 Intel Corporation, All Rights Reserved.
+ * Copyright (c) 2018 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,31 @@
  *
  ****************************************************************************/
 
-#ifndef OC_NETWORK_EVENTS_H
-#define OC_NETWORK_EVENTS_H
+#include "ipcontext.h"
 
-#include "util/oc_process.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @brief Network events
- */
-typedef enum {
-  NETWORK_INTERFACE_DOWN, ///< network interface down
-  NETWORK_INTERFACE_UP    ///< network interface up
-} oc_interface_event_t;
-
-/**
-  @brief Callback function to pass the network interface up/down infomation
-    to App.
-  @param event  enum values in oc_interface_event_t.
-*/
-typedef void (*interface_event_handler_t)(oc_interface_event_t event);
-
-#ifdef __cplusplus
+void
+ip_context_rfds_fd_set(ip_context_t *dev, int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_SET(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
 }
-#endif
 
-#endif /* OC_NETWORK_EVENTS_H */
+void
+ip_context_rfds_fd_clr(ip_context_t *dev, int sockfd)
+{
+  pthread_mutex_lock(&dev->rfds_mutex);
+  FD_CLR(sockfd, &dev->rfds);
+  pthread_mutex_unlock(&dev->rfds_mutex);
+}
+
+fd_set
+ip_context_rfds_fd_copy(ip_context_t *dev)
+{
+  fd_set setfds;
+  FD_ZERO(&setfds);
+  pthread_mutex_lock(&dev->rfds_mutex);
+  memcpy(&setfds, &dev->rfds, sizeof(dev->rfds));
+  pthread_mutex_unlock(&dev->rfds_mutex);
+  return setfds;
+}

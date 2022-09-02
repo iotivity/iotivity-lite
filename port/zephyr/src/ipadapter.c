@@ -14,9 +14,11 @@
 // limitations under the License.
 */
 
+#include "api/oc_network_events_internal.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
-#include "port/oc_connectivity.h"
 #include <errno.h>
 #include <stdio.h>
 #include <zephyr.h>
@@ -130,7 +132,7 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
     PRINT("\n\n");
 #endif /* OC_DEBUG */
 
-    oc_network_event(message);
+    oc_network_receive_event(message);
   }
 
   net_pkt_unref(pkt);
@@ -193,6 +195,13 @@ oc_send_buffer(oc_message_t *message)
     return ret;
   }
   return message->length;
+}
+
+int
+oc_send_buffer2(oc_message_t *message, bool queue)
+{
+  (void)queue;
+  return oc_send_buffer(message);
 }
 
 static void

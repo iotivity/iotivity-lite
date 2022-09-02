@@ -47,6 +47,7 @@
 
 #include "engine.h"
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "oc_api.h"

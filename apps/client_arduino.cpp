@@ -3,7 +3,7 @@
 #include "oc_assert.h"
 #include "oc_clock.h"
 #include "oc_connectivity.h"
-#include "oc_network_events_mutex.h"
+#include "oc_network_event_handler_internal.h"
 #include "oc_storage.h"
 #include "serial.h"
 #include "util/oc_process.h"

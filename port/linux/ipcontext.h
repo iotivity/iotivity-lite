@@ -2,7 +2,7 @@
  *
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -21,6 +21,9 @@
 
 #include "oc_endpoint.h"
 #include "util/oc_atomic.h"
+#ifdef OC_TCP
+#include "tcpcontext.h"
+#endif /* OC_TCP */
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/select.h>
@@ -36,31 +39,6 @@ typedef enum {
   ADAPTER_STATUS_RECEIVE,  /* Receiving meaningful data */
   ADAPTER_STATUS_ERROR     /* Error */
 } adapter_receive_state_t;
-
-#ifdef OC_TCP
-typedef struct tcp_context_t
-{
-  struct sockaddr_storage server;
-  int server_sock;
-  uint16_t port;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure;
-  int secure_sock;
-  uint16_t tls_port;
-#endif /* OC_SECURITY */
-#ifdef OC_IPV4
-  struct sockaddr_storage server4;
-  int server4_sock;
-  uint16_t port4;
-#ifdef OC_SECURITY
-  struct sockaddr_storage secure4;
-  int secure4_sock;
-  uint16_t tls4_port;
-#endif /* OC_SECURITY */
-#endif /* OC_IPV4 */
-  int connect_pipe[2];
-} tcp_context_t;
-#endif
 
 typedef enum {
   IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST =
@@ -95,7 +73,7 @@ typedef struct ip_context_t
 #endif /* OC_IPV4 */
 #ifdef OC_TCP
   tcp_context_t tcp;
-#endif
+#endif /* OC_TCP */
   pthread_t event_thread;
   OC_ATOMIC_INT8_T terminate;
   size_t device;
@@ -106,7 +84,8 @@ typedef struct ip_context_t
 } ip_context_t;
 
 /**
- * Set a given file descriptor to a set (dev->rfds) under the mutex(rfds_mutex).
+ * Set a given file descriptor to a set of read descriptors (dev->rfds) under
+ * the mutex(rfds_mutex).
  *
  * @param[in] dev the device network context.
  * @param[in] sockfd the file descriptor.

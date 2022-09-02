@@ -26,6 +26,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
+#include "port/oc_network_event_handler_internal.h"
 
 #define DEVICE_URI "/oic/d"
 #define DEVICE_TYPE "oic.d.light"
