@@ -104,7 +104,6 @@ jobs:
           # the actual build
           cd port/linux
           make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
-<<<<<<< HEAD
   
   build_esp32:
     # The type of runner that the job will run on
@@ -130,5 +129,3 @@ jobs:
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
           idf.py build
-=======
->>>>>>> fixup! Enable SC analysis for Push Notifications

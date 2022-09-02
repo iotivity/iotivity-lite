@@ -2043,10 +2043,11 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (request->query) {
     uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
                                           "receiveruri", &uri_param);
-    if (uri_param_len != -1)
+    if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
         (int)request->query_len, request->query, uri_param_len, uri_param);
+    }
   } else {
     OC_PUSH_DBG("request->query is NULL");
   }
@@ -2140,10 +2141,11 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (request->query) {
     uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
                                           "receiveruri", &uri_param);
-    if (uri_param_len != -1)
+    if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
         (int)request->query_len, request->query, uri_param_len, uri_param);
+    }
   } else {
     OC_PUSH_DBG("request->query is NULL");
   }
@@ -2508,10 +2510,11 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
         oc_rep_end_root_object();
 
-        if (oc_do_post())
+        if (oc_do_post()) {
           OC_PUSH_DBG("Sent POST request");
-        else
+        } else {
           OC_PUSH_ERR("Could not send POST");
+        }
       } else {
         OC_PUSH_ERR("Could not init POST");
       }
