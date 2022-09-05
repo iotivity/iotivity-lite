@@ -81,7 +81,7 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 }
 
 void
-oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen)
+oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
 {
   int i, j = 0;
   if (buflen < OC_UUID_LEN || !uuid)

@@ -2,8 +2,6 @@
  *
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- *
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,124 +16,191 @@
  *
  ******************************************************************/
 
+#include "port/oc_clock.h"
+#include "util/oc_atomic.h"
+#include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_obt.h"
+#include "oc_uuid.h"
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <set>
 #include <string>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
+#include <pthread.h>
 #include <unistd.h>
-#endif
-
-#include "oc_api.h"
-#include "port/oc_clock.h"
+#include <vector>
 
 #define MAX_WAIT_TIME 10
-#define RESOURCE_URI "/LightResourceURI"
 #define DEVICE_URI "/oic/d"
-#define RESOURCE_TYPE "oic.r.light"
-#define DEVICE_TYPE "oic.d.light"
-#define RESOURCE_INTERFACE "oic.if.baseline"
 #define MANUFACTURER_NAME "Samsung"
-#define DEVICE_NAME "Table Lamp"
 #define OCF_SPEC_VERSION "ocf.1.0.0"
 #define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
 
-static int
-appInit(void)
+struct ApiDevice
 {
-  return -1;
-}
-
-static void
-registerResources(void)
-{
-}
-
-static void
-signalEventLoop(void)
-{
-}
-
-static void
-requestsEntry(void)
-{
-}
-
-class TestServerClient : public testing::Test {
-protected:
-  virtual void SetUp() {}
-
-  virtual void TearDown() {}
+  bool enabled;
+  size_t device_id;
+  std::string device_type;
+  std::string device_name;
+  std::string resource_uri;
+  std::string resource_type;
+  oc_resource_t *resource;
+  std::string uuid;
 };
 
 class ApiHelper {
 private:
+  static pthread_mutex_t s_mutex;
+  static pthread_cond_t s_cv;
   static oc_handler_t s_handler;
+  static OC_ATOMIC_UINT8_T s_terminate;
   static bool s_isServerStarted;
-  static bool s_isCallbackReceived;
-  static oc_resource_t *s_pResource;
 
 public:
+  static ApiDevice s_ObtResource;
+  static ApiDevice s_LightResource;
+  static ApiDevice s_SwitchResource;
+
   static int appInit(void)
   {
-    int result = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
-    result |=
-      oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME, OCF_SPEC_VERSION,
-                    OCF_DATA_MODEL_VERSION, NULL, NULL);
+    int result = oc_init_platform(MANUFACTURER_NAME, nullptr, nullptr);
+    size_t deviceId = 0;
+    if (s_ObtResource.enabled) {
+      result |=
+        oc_add_device(DEVICE_URI, s_ObtResource.device_type.c_str(),
+                      s_ObtResource.device_name.c_str(), OCF_SPEC_VERSION,
+                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      s_ObtResource.device_id = deviceId++;
+    }
+    if (s_LightResource.enabled) {
+      result |=
+        oc_add_device(DEVICE_URI, s_LightResource.device_type.c_str(),
+                      s_LightResource.device_name.c_str(), OCF_SPEC_VERSION,
+                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      s_LightResource.device_id = deviceId++;
+    }
+    if (s_SwitchResource.enabled) {
+      result |=
+        oc_add_device(DEVICE_URI, s_SwitchResource.device_type.c_str(),
+                      s_SwitchResource.device_name.c_str(), OCF_SPEC_VERSION,
+                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      s_SwitchResource.device_id = deviceId++;
+    }
     return result;
   }
 
   static void registerResources(void)
   {
-    s_pResource = oc_new_resource(NULL, RESOURCE_URI, 1, 0);
-    oc_resource_bind_resource_type(s_pResource, RESOURCE_TYPE);
-    oc_resource_bind_resource_interface(s_pResource, OC_IF_BASELINE);
-    oc_resource_set_default_interface(s_pResource, OC_IF_BASELINE);
-    oc_resource_set_discoverable(s_pResource, true);
-    oc_resource_set_periodic_observable(s_pResource, 1);
-    oc_resource_set_request_handler(s_pResource, OC_GET, onGet, NULL);
-    oc_process_baseline_interface(s_pResource);
-    oc_add_resource(s_pResource);
-  }
+    std::string buffer(OC_UUID_LEN, '\0');
 
-  static void signalEventLoop(void) {}
+    if (s_ObtResource.enabled) {
+      oc_resource_t *o =
+        oc_new_resource(nullptr, s_ObtResource.resource_uri.c_str(), 1,
+                        s_ObtResource.device_id);
+      oc_resource_bind_resource_type(o, s_ObtResource.device_type.c_str());
+      oc_resource_bind_resource_interface(o, OC_IF_BASELINE);
+      oc_resource_set_default_interface(o, OC_IF_BASELINE);
+      oc_resource_set_discoverable(o, true);
+      oc_resource_set_periodic_observable(o, 1);
+      oc_resource_set_request_handler(o, OC_GET, onGet, nullptr);
+      oc_add_resource(o);
+      s_ObtResource.resource = o;
 
-  static void requestsEntry(void) {}
-
-  static oc_discovery_flags_t onResourceDiscovered(
-    const char *di, const char *uri, oc_string_array_t types,
-    oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-    oc_resource_properties_t bm, void *user_data)
-  {
-    (void)di;
-    (void)types;
-    (void)iface_mask;
-    (void)endpoint;
-    (void)bm;
-    (void)user_data;
-    std::string discoveredResourceUri = std::string(uri);
-    if (discoveredResourceUri.compare(RESOURCE_URI) == 0) {
-      PRINT("Light Resource Discovered....\n");
-      s_isCallbackReceived = true;
-      return OC_STOP_DISCOVERY;
+      const oc_uuid_t *uuid =
+        oc_core_get_device_id(ApiHelper::s_ObtResource.device_id);
+      oc_uuid_to_str(uuid, &buffer[0], buffer.size());
+      s_ObtResource.uuid = buffer;
     }
-    return OC_CONTINUE_DISCOVERY;
+
+    if (s_LightResource.enabled) {
+      oc_resource_t *l =
+        oc_new_resource(nullptr, s_LightResource.resource_uri.c_str(), 1,
+                        s_LightResource.device_id);
+      oc_resource_bind_resource_type(l, s_LightResource.device_type.c_str());
+      oc_resource_bind_resource_interface(l, OC_IF_BASELINE);
+      oc_resource_set_default_interface(l, OC_IF_BASELINE);
+      oc_resource_set_discoverable(l, true);
+      oc_resource_set_periodic_observable(l, 1);
+      oc_resource_set_request_handler(l, OC_GET, onGet, nullptr);
+      oc_add_resource(l);
+      s_LightResource.resource = l;
+
+      const oc_uuid_t *uuid =
+        oc_core_get_device_id(ApiHelper::s_LightResource.device_id);
+      oc_uuid_to_str(uuid, &buffer[0], buffer.size());
+      s_LightResource.uuid = buffer;
+    }
+
+    if (s_SwitchResource.enabled) {
+      oc_resource_t *s =
+        oc_new_resource(nullptr, s_SwitchResource.resource_uri.c_str(), 1,
+                        s_SwitchResource.device_id);
+      oc_resource_bind_resource_type(s, s_SwitchResource.device_type.c_str());
+      oc_resource_bind_resource_interface(s, OC_IF_BASELINE);
+      oc_resource_set_default_interface(s, OC_IF_BASELINE);
+      oc_resource_set_discoverable(s, true);
+      oc_resource_set_periodic_observable(s, 1);
+      oc_resource_set_request_handler(s, OC_GET, onGet, nullptr);
+      oc_add_resource(s);
+      s_SwitchResource.resource = s;
+
+      const oc_uuid_t *uuid =
+        oc_core_get_device_id(ApiHelper::s_SwitchResource.device_id);
+      oc_uuid_to_str(uuid, &buffer[0], buffer.size());
+      s_SwitchResource.uuid = buffer;
+    }
   }
 
-  static void onGet(oc_request_t *request, oc_interface_mask_t iface_mask,
-                    void *user_data)
+  static void signalEventLoop(void) { pthread_cond_signal(&s_cv); }
+
+  static oc_event_callback_retval_t quitEvent(void *)
   {
-    (void)request;
-    (void)iface_mask;
-    (void)user_data;
-    s_isCallbackReceived = true;
+    terminate();
+    return OC_EVENT_DONE;
+  }
+
+  static void terminate() { OC_ATOMIC_STORE8(s_terminate, 1); }
+
+  static void poolEvents(uint16_t seconds)
+  {
+    OC_ATOMIC_STORE8(s_terminate, 0);
+    oc_set_delayed_callback(nullptr, quitEvent, seconds);
+
+    while (OC_ATOMIC_LOAD8(s_terminate) == 0) {
+      pthread_mutex_lock(&s_mutex);
+      oc_clock_time_t next_event = oc_main_poll();
+      if (OC_ATOMIC_LOAD8(s_terminate) != 0) {
+        pthread_mutex_unlock(&s_mutex);
+        break;
+      }
+      if (next_event == 0) {
+        pthread_cond_wait(&s_cv, &s_mutex);
+      } else {
+        struct timespec ts;
+        ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+        ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
+                                       OC_CLOCK_SECOND);
+        pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
+      }
+      pthread_mutex_unlock(&s_mutex);
+    }
+
+    oc_remove_delayed_callback(nullptr, quitEvent);
+  }
+
+  static void requestsEntry()
+  {
+    // no-op
+  }
+
+  static void onGet(oc_request_t *, oc_interface_mask_t, void *)
+  {
+    // no-op
   }
 
   static bool startServer(std::string &errorMessage)
   {
-    bool isPassed = true;
+    OC_ATOMIC_STORE8(s_terminate, 0);
     s_handler.init = appInit;
     s_handler.signal_event_loop = signalEventLoop;
     s_handler.register_resources = registerResources;
@@ -145,130 +210,178 @@ public:
 
     int initResult = oc_main_init(&s_handler);
     if (initResult < 0) {
-      isPassed = false;
       errorMessage += "Initialization of main server failed";
       s_isServerStarted = false;
-    } else {
-      s_isServerStarted = true;
+      return false;
     }
-
-    return isPassed;
+    s_isServerStarted = true;
+    return true;
   }
 
   static void stopServer()
   {
+    terminate();
     if (s_isServerStarted) {
       oc_main_shutdown();
     }
   }
-  static bool discoverResource(std::string &errorMessage)
+
+  static void unregisterResources()
   {
-    s_isCallbackReceived = false;
-    oc_do_ip_discovery(NULL, &onResourceDiscovered, NULL);
-    waitForEvent(MAX_WAIT_TIME);
-    if (!s_isCallbackReceived) {
-      errorMessage += "Unable to discover Light Resource";
+    if (s_ObtResource.enabled) {
+      oc_delete_resource(s_ObtResource.resource);
     }
-    return s_isCallbackReceived;
-  }
-
-  static void waitForEvent(int waitTime)
-  {
-    oc_clock_time_t next_event;
-    (void)next_event;
-    while (waitTime && !s_isCallbackReceived) {
-      PRINT("Waiting for callback....\n");
-      next_event = oc_main_poll();
-#ifdef _WIN32
-      Sleep(1000);
-#else
-      sleep(1);
-#endif
-      waitTime--;
+    if (s_LightResource.enabled) {
+      oc_delete_resource(s_LightResource.resource);
     }
-  }
-
-  static bool sendGetRequest(std::string &errorMessage)
-  {
-    (void)errorMessage;
-    bool isPassed = true;
-
-    // waitForEvent(MAX_WAIT_TIME);
-    return isPassed;
-  }
-
-  static bool unregisterReresource(std::string &errorMessage)
-  {
-    (void)errorMessage;
-    bool isPassed = true;
-    oc_delete_resource(s_pResource);
-    return isPassed;
+    if (s_SwitchResource.enabled) {
+      oc_delete_resource(s_SwitchResource.resource);
+    }
   }
 };
 
-bool ApiHelper::s_isServerStarted = false;
-bool ApiHelper::s_isCallbackReceived = false;
-oc_resource_t *ApiHelper::s_pResource = nullptr;
-oc_handler_t ApiHelper::s_handler;
+pthread_mutex_t ApiHelper::s_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t ApiHelper::s_cv = PTHREAD_COND_INITIALIZER;
+oc_handler_t ApiHelper::s_handler{};
+OC_ATOMIC_UINT8_T ApiHelper::s_terminate{ 0 };
+bool ApiHelper::s_isServerStarted{ false };
+ApiDevice ApiHelper::s_ObtResource{
+  .enabled = false,
+  .device_id = static_cast<size_t>(-1),
+  .device_type = "oic.d.obt",
+  .device_name = "Obt",
+  .resource_uri = "/ObtURI",
+  .resource_type = "oic.r.obt",
+  .resource = nullptr,
+  .uuid = "",
+};
+ApiDevice ApiHelper::s_LightResource{
+  .enabled = false,
+  .device_id = static_cast<size_t>(-1),
+  .device_type = "oic.d.light",
+  .device_name = "Table Lamp",
+  .resource_uri = "/LightResourceURI",
+  .resource_type = "oic.r.light",
+  .resource = nullptr,
+  .uuid = "",
+};
+ApiDevice ApiHelper::s_SwitchResource{
+  .enabled = false,
+  .device_id = static_cast<size_t>(-1),
+  .device_type = "oic.d.switch",
+  .device_name = "Switch",
+  .resource_uri = "/SwitchURI",
+  .resource_type = "oic.r.switch",
+  .resource = nullptr,
+  .uuid = "",
+};
 
-class TestUnicastRequest : public testing::Test {
-protected:
-  virtual void SetUp()
+class ResourceDiscovered {
+public:
+  std::set<std::string> deviceURI;
+
+  bool isDone() const
   {
+    return deviceURI.count(ApiHelper::s_LightResource.resource_uri) == 1 &&
+           deviceURI.count(ApiHelper::s_SwitchResource.resource_uri) == 1;
+  }
+};
+
+class TestServerClient : public testing::Test {
+protected:
+  void SetUp() override
+  {
+    ApiHelper::s_ObtResource.enabled = false;
+    ApiHelper::s_LightResource.enabled = true;
+    ApiHelper::s_SwitchResource.enabled = true;
     std::string msg = "";
-    ASSERT_TRUE(ApiHelper::startServer(msg)) << msg;
-    ASSERT_TRUE(ApiHelper::discoverResource(msg)) << msg;
+    EXPECT_TRUE(ApiHelper::startServer(msg)) << msg;
   }
 
-  virtual void TearDown()
+  void TearDown() override
   {
-    std::string msg = "";
-    ApiHelper::unregisterReresource(msg);
+    ApiHelper::unregisterResources();
     ApiHelper::stopServer();
   }
+
+public:
+  static oc_discovery_flags_t onResourceDiscovered(
+    const char *, const char *uri, oc_string_array_t, oc_interface_mask_t,
+    oc_endpoint_t *, oc_resource_properties_t, void *user_data)
+  {
+    auto *rd = static_cast<ResourceDiscovered *>(user_data);
+    std::string discoveredResourceUri = std::string(uri);
+    if (discoveredResourceUri.compare(
+          ApiHelper::s_LightResource.resource_uri.c_str()) == 0) {
+      rd->deviceURI.insert(discoveredResourceUri);
+      PRINT("Light Resource Discovered....\n");
+    }
+    if (discoveredResourceUri.compare(
+          ApiHelper::s_SwitchResource.resource_uri.c_str()) == 0) {
+      rd->deviceURI.insert(discoveredResourceUri);
+      PRINT("Switch Resource Discovered....\n");
+    }
+    if (rd->isDone()) {
+      ApiHelper::terminate();
+      return OC_STOP_DISCOVERY;
+    }
+    return OC_CONTINUE_DISCOVERY;
+  }
 };
 
-TEST(TestServerClient, ServerStartTest_P)
+#ifdef OC_DYNAMIC_ALLOCATION
+TEST_F(TestServerClient, DiscoverResources)
 {
-  static const oc_handler_t handler = { .init = appInit,
-                                        .signal_event_loop = signalEventLoop,
-                                        .register_resources = registerResources,
-                                        .requests_entry = requestsEntry };
-
-  int result = oc_main_init(&handler);
-  EXPECT_LT(result, 0);
-
-  oc_main_shutdown();
+  ResourceDiscovered rd{};
+  EXPECT_TRUE(oc_do_ip_discovery(nullptr, &onResourceDiscovered, &rd))
+    << "Cannot send discovery request";
+  ApiHelper::poolEvents(MAX_WAIT_TIME);
+  EXPECT_TRUE(rd.isDone());
 }
 
-TEST(TestServerClient, ServerStopTest_P)
+#ifdef OC_SECURITY
+class TestObt : public testing::Test {
+protected:
+  void SetUp() override
+  {
+    ApiHelper::s_ObtResource.enabled = true;
+    ApiHelper::s_LightResource.enabled = true;
+    ApiHelper::s_SwitchResource.enabled = true;
+    std::string msg = "";
+    EXPECT_TRUE(ApiHelper::startServer(msg)) << msg;
+    oc_obt_init();
+  }
+
+  void TearDown() override
+  {
+    oc_obt_shutdown();
+    ApiHelper::unregisterResources();
+    ApiHelper::stopServer();
+  }
+
+public:
+  static void onDeviceDiscovered(oc_uuid_t *uuid, oc_endpoint_t *, void *data)
+  {
+    auto *devices = static_cast<std::vector<std::string> *>(data);
+    std::string buffer(OC_UUID_LEN, '\0');
+    oc_uuid_to_str(uuid, &buffer[0], buffer.size());
+    devices->push_back(buffer);
+  }
+};
+
+TEST_F(TestObt, DiscoverUnownedResources)
 {
-
-  static const oc_handler_t handler = { .init = appInit,
-                                        .signal_event_loop = signalEventLoop,
-                                        .register_resources = registerResources,
-                                        .requests_entry = requestsEntry };
-
-  int result = oc_main_init(&handler);
-  ASSERT_LT(result, 0);
-
-  oc_main_shutdown();
+  std::vector<std::string> devices;
+  EXPECT_EQ(0, oc_obt_discover_unowned_devices(onDeviceDiscovered, &devices));
+  ApiHelper::poolEvents(5);
+  for (const auto &device : devices) {
+    PRINT("Discovered unowned device: %s\n", device.c_str());
+  }
+  EXPECT_EQ(2, devices.size());
+  std::set<std::string> deviceUUIDs(devices.begin(), devices.end());
+  EXPECT_EQ(1, deviceUUIDs.count(ApiHelper::s_LightResource.uuid));
+  EXPECT_EQ(1, deviceUUIDs.count(ApiHelper::s_SwitchResource.uuid));
 }
 
-TEST(TestUnicastRequest, SendGetRequest_P)
-{
-
-  std::string result = "";
-
-  EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
-}
-
-TEST(TestUnicastRequest, SendGetRequestTwice_P)
-{
-
-  std::string result = "";
-  EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
-
-  result = "";
-  EXPECT_TRUE(ApiHelper::sendGetRequest(result)) << result;
-}
+#endif /* OC_SECURITY */
+#endif /* OC_DYNAMIC_ALLOCATION */

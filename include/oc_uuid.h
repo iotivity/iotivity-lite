@@ -26,6 +26,7 @@
 
 #include "oc_export.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -70,7 +71,7 @@ OC_API
 void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
 
 /**
- * Convert the 128 bit oc_uuid_t to a sting representation.
+ * Convert the 128 bit oc_uuid_t to a string representation.
  *
  * The string representation of the UUID will be as specified in RFC 4122.
  *
@@ -93,7 +94,7 @@ void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
  *                    Recommend always using OC_UUID_LEN for buflen.
  */
 OC_API
-void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, int buflen);
+void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen);
 /**
  * Generate a random Universally Unique IDentifier (UUID)
  *
