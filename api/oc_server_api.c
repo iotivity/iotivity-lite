@@ -558,101 +558,113 @@ oc_set_separate_response_buffer(oc_separate_response_t *handle)
 #endif /* !OC_BLOCK_WISE */
 }
 
+static void
+handle_separate_response_transaction(coap_transaction_t *t,
+                                     coap_packet_t *response,
+                                     uint8_t response_code)
+{
+  coap_set_status_code(response, response_code);
+  t->message->length = coap_serialize_message(response, t->message->data);
+  if (t->message->length <= 0) {
+    coap_clear_transaction(t);
+    return;
+  }
+  coap_send_transaction(t);
+}
+
+static void
+handle_separate_response_request(coap_separate_t *request,
+                                 oc_response_buffer_t *response_buffer)
+{
+  coap_packet_t response;
+  coap_transaction_t *t = coap_new_transaction(
+    coap_get_mid(), request->token, request->token_len, &request->endpoint);
+  if (t == NULL) {
+    return;
+  }
+  coap_separate_resume(&response, request, response_buffer->code, t->mid);
+  coap_set_header_content_format(&response, response_buffer->content_format);
+
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_state_t *response_state = NULL;
+#ifdef OC_TCP
+  bool blockwise = (request->endpoint.flags & TCP) == 0 &&
+                   response_buffer->response_length > request->block2_size;
+#else  /* !OC_TCP */
+  bool blockwise = response_buffer->response_length > request->block2_size;
+#endif /* OC_TCP */
+  if (blockwise) {
+    response_state = oc_blockwise_find_response_buffer(
+      oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
+      request->method, NULL, 0, OC_BLOCKWISE_SERVER);
+    if (response_state != NULL) {
+      if (response_state->payload_size != response_state->next_block_offset) {
+        return;
+      }
+      oc_blockwise_free_response_buffer(response_state);
+      response_state = NULL;
+    }
+    response_state = oc_blockwise_alloc_response_buffer(
+      oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
+      request->method, OC_BLOCKWISE_SERVER,
+      (uint32_t)response_buffer->response_length);
+    if (response_state == NULL) {
+      return;
+    }
+
+    memcpy(response_state->buffer, response_buffer->buffer,
+           response_buffer->response_length);
+    response_state->payload_size = response_buffer->response_length;
+
+    uint32_t payload_size = 0;
+    const void *payload = oc_blockwise_dispatch_block(
+      response_state, 0, request->block2_size, &payload_size);
+    if (payload != NULL) {
+      coap_set_payload(&response, payload, payload_size);
+      coap_set_header_block2(&response, 0, 1, request->block2_size);
+      coap_set_header_size2(&response, response_state->payload_size);
+      oc_blockwise_response_state_t *bwt_res_state =
+        (oc_blockwise_response_state_t *)response_state;
+      coap_set_header_etag(&response, bwt_res_state->etag, COAP_ETAG_LEN);
+    }
+    handle_separate_response_transaction(t, &response, response_buffer->code);
+    return;
+  }
+#endif /* OC_BLOCK_WISE */
+  if (response_buffer->response_length > 0) {
+    coap_set_payload(&response, response_buffer->buffer,
+                     response_buffer->response_length);
+  }
+  handle_separate_response_transaction(t, &response, response_buffer->code);
+}
+
 void
 oc_send_separate_response(oc_separate_response_t *handle,
                           oc_status_t response_code)
 {
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
-  if (handle->len != 0)
+  if (handle->len != 0) {
     response_buffer.response_length = handle->len;
-  else
+  } else {
     response_buffer.response_length = response_length();
+  }
 
-  response_buffer.code = oc_status_code(response_code);
+  response_buffer.code = (uint8_t)oc_status_code(response_code);
   response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
-  coap_separate_t *cur = oc_list_head(handle->requests), *next = NULL;
-  coap_packet_t response[1];
-
+  coap_separate_t *cur = oc_list_head(handle->requests);
   while (cur != NULL) {
-    next = cur->next;
+    coap_separate_t *next = cur->next;
     if (cur->observe < 3) {
-      coap_transaction_t *t = coap_new_transaction(
-        coap_get_mid(), cur->token, cur->token_len, &cur->endpoint);
-      if (t) {
-        coap_separate_resume(response, cur,
-                             (uint8_t)oc_status_code(response_code), t->mid);
-        coap_set_header_content_format(response,
-                                       response_buffer.content_format);
-
-#ifdef OC_BLOCK_WISE
-        oc_blockwise_state_t *response_state = NULL;
-#ifdef OC_TCP
-        if (!(cur->endpoint.flags & TCP) &&
-            response_buffer.response_length > cur->block2_size) {
-#else  /* OC_TCP */
-        if (response_buffer.response_length > cur->block2_size) {
-#endif /* !OC_TCP */
-          response_state = oc_blockwise_find_response_buffer(
-            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, NULL, 0, OC_BLOCKWISE_SERVER);
-          if (response_state) {
-            if (response_state->payload_size ==
-                response_state->next_block_offset) {
-              oc_blockwise_free_response_buffer(response_state);
-              response_state = NULL;
-            } else {
-              goto next_separate_request;
-            }
-          }
-          response_state = oc_blockwise_alloc_response_buffer(
-            oc_string(cur->uri), oc_string_len(cur->uri), &cur->endpoint,
-            cur->method, OC_BLOCKWISE_SERVER,
-            (uint32_t)response_buffer.response_length);
-          if (!response_state) {
-            goto next_separate_request;
-          }
-
-          memcpy(response_state->buffer, response_buffer.buffer,
-                 response_buffer.response_length);
-          response_state->payload_size = response_buffer.response_length;
-
-          uint32_t payload_size = 0;
-          const void *payload = oc_blockwise_dispatch_block(
-            response_state, 0, cur->block2_size, &payload_size);
-          if (payload) {
-            coap_set_payload(response, payload, payload_size);
-            coap_set_header_block2(response, 0, 1, cur->block2_size);
-            coap_set_header_size2(response, response_state->payload_size);
-            oc_blockwise_response_state_t *bwt_res_state =
-              (oc_blockwise_response_state_t *)response_state;
-            coap_set_header_etag(response, bwt_res_state->etag, COAP_ETAG_LEN);
-          }
-        } else
-#endif /* OC_BLOCK_WISE */
-          if (response_buffer.response_length > 0) {
-          coap_set_payload(response, handle->buffer,
-                           response_buffer.response_length);
-        }
-        coap_set_status_code(response, response_buffer.code);
-        t->message->length = coap_serialize_message(response, t->message->data);
-        if (t->message->length > 0) {
-          coap_send_transaction(t);
-        } else {
-          coap_clear_transaction(t);
-        }
-      }
+      handle_separate_response_request(cur, &response_buffer);
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(
         oc_string(cur->uri), oc_string_len(cur->uri), cur->endpoint.device);
-      if (resource) {
+      if (resource != NULL) {
         coap_notify_observers(resource, &response_buffer, &cur->endpoint);
       }
     }
-#ifdef OC_BLOCK_WISE
-  next_separate_request:
-#endif /* OC_BLOCK_WISE */
     coap_separate_clear(handle, cur);
     cur = next;
   }
