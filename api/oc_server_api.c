@@ -1,43 +1,42 @@
-/*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
-
+#include "oc_core_res.h"
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "oc_collection.h"
+#endif /* OC_COLLECTIONS && OC_SERVER */
 #if defined(OC_CLOUD) && defined(OC_SERVER)
 #include "oc_server_api_internal.h"
 #endif /* OC_CLOUD && OC_SERVER */
-
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #endif /* OC_SECURITY */
 
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
-#include "oc_collection.h"
-#endif /* OC_COLLECTIONS && OC_SERVER */
-
+#include <assert.h>
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-#include "oc_core_res.h"
-
-static size_t query_iterator;
+static size_t g_query_iterator;
 
 #if defined(OC_CLOUD) && defined(OC_SERVER)
 static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
@@ -49,8 +48,9 @@ oc_add_device(const char *uri, const char *rt, const char *name,
               oc_add_device_cb_t add_device_cb, void *data)
 {
   if (!oc_core_add_new_device(uri, rt, name, spec_version, data_model_version,
-                              add_device_cb, data))
+                              add_device_cb, data)) {
     return -1;
+  }
   return 0;
 }
 
@@ -58,8 +58,9 @@ int
 oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
                  void *data)
 {
-  if (!oc_core_init_platform(mfg_name, init_platform_cb, data))
+  if (!oc_core_init_platform(mfg_name, init_platform_cb, data)) {
     return -1;
+  }
   return 0;
 }
 
@@ -67,16 +68,18 @@ int
 oc_get_query_value(const oc_request_t *request, const char *key,
                    const char **value)
 {
-  if (!request)
+  if (!request) {
     return -1;
+  }
   return oc_ri_get_query_value(request->query, request->query_len, key, value);
 }
 
 int
 oc_query_value_exists(const oc_request_t *request, const char *key)
 {
-  if (!request)
+  if (!request) {
     return -1;
+  }
   return oc_ri_query_exists(request->query, request->query_len, key);
 }
 
@@ -227,17 +230,17 @@ oc_process_baseline_interface(oc_resource_t *resource)
 void
 oc_init_query_iterator(void)
 {
-  query_iterator = 0;
+  g_query_iterator = 0;
 }
 
 int
 oc_iterate_query(const oc_request_t *request, const char **key, size_t *key_len,
                  const char **value, size_t *value_len)
 {
-  query_iterator++;
+  ++g_query_iterator;
   return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
                                        key_len, value, value_len,
-                                       query_iterator);
+                                       g_query_iterator);
 }
 
 bool
@@ -574,7 +577,7 @@ handle_separate_response_transaction(coap_transaction_t *t,
 
 static void
 handle_separate_response_request(coap_separate_t *request,
-                                 oc_response_buffer_t *response_buffer)
+                                 const oc_response_buffer_t *response_buffer)
 {
   coap_packet_t response;
   coap_transaction_t *t = coap_new_transaction(
@@ -582,7 +585,9 @@ handle_separate_response_request(coap_separate_t *request,
   if (t == NULL) {
     return;
   }
-  coap_separate_resume(&response, request, response_buffer->code, t->mid);
+  assert(response_buffer->code <= UINT8_MAX);
+  coap_separate_resume(&response, request, (uint8_t)response_buffer->code,
+                       t->mid);
   coap_set_header_content_format(&response, response_buffer->content_format);
 
 #ifdef OC_BLOCK_WISE
@@ -614,7 +619,7 @@ handle_separate_response_request(coap_separate_t *request,
 
     memcpy(response_state->buffer, response_buffer->buffer,
            response_buffer->response_length);
-    response_state->payload_size = response_buffer->response_length;
+    response_state->payload_size = (uint32_t)response_buffer->response_length;
 
     uint32_t payload_size = 0;
     const void *payload = oc_blockwise_dispatch_block(
@@ -627,7 +632,8 @@ handle_separate_response_request(coap_separate_t *request,
         (oc_blockwise_response_state_t *)response_state;
       coap_set_header_etag(&response, bwt_res_state->etag, COAP_ETAG_LEN);
     }
-    handle_separate_response_transaction(t, &response, response_buffer->code);
+    handle_separate_response_transaction(t, &response,
+                                         (uint8_t)response_buffer->code);
     return;
   }
 #endif /* OC_BLOCK_WISE */
@@ -635,7 +641,8 @@ handle_separate_response_request(coap_separate_t *request,
     coap_set_payload(&response, response_buffer->buffer,
                      response_buffer->response_length);
   }
-  handle_separate_response_transaction(t, &response, response_buffer->code);
+  handle_separate_response_transaction(t, &response,
+                                       (uint8_t)response_buffer->code);
 }
 
 void
@@ -650,7 +657,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
     response_buffer.response_length = response_length();
   }
 
-  response_buffer.code = (uint8_t)oc_status_code(response_code);
+  response_buffer.code = oc_status_code(response_code);
   response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
   coap_separate_t *cur = oc_list_head(handle->requests);
