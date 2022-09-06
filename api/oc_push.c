@@ -829,7 +829,6 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 {
   CborEncoder child;
   oc_rep_t *obj;
-  char *str = NULL;
 
   if (!rep)
     return;
@@ -872,11 +871,9 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     /* oc_rep_add_byte_string(xxxx, str); */
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
-      str = oc_string_array_get_item(rep->value.array, i);
-      str[STRING_ARRAY_ITEM_MAX_LEN-1] = '\0';
       g_err |= oc_rep_encode_byte_string(
         &child, (const uint8_t *)oc_string_array_get_item(rep->value.array, i),
-        strlen(/*oc_string_array_get_item(rep->value.array, i)*/str));
+        oc_string_array_get_item_size(rep->value.array, i));
     }
 
     /* oc_rep_close_array(root, xxxx); */
@@ -894,11 +891,9 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
       if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
-        str = oc_string_array_get_item(rep->value.array, i);
-        str[STRING_ARRAY_ITEM_MAX_LEN-1] = '\0';
         g_err |= oc_rep_encode_text_string(
           &child, oc_string_array_get_item(rep->value.array, i),
-          strlen(/*oc_string_array_get_item(rep->value.array, i)*/str));
+          oc_string_array_get_item_size(rep->value.array, i));
       } else {
         g_err |= oc_rep_encode_text_string(&child, "", 0);
       }
@@ -1288,12 +1283,14 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
     return;
   }
 
+  depth_prefix[sizeof(depth_prefix) - 1] = '\0';
   depth++;
   for (i = 0; i < depth; i++) {
-    //		depth_prefix[i] = '\t';
-    strncpy(depth_prefix + (i * prefix_width), prefix_str, prefix_width);
+    strncpy(depth_prefix + (i * prefix_width), prefix_str, sizeof(depth_prefix));
   }
-  //	depth_prefix[i] = '\0';
+  if (depth_prefix[sizeof(depth_prefix) - 1] != '\0') {
+    return;
+  }
   depth_prefix[i * prefix_width] = '\0';
 
   if (!rep) {
@@ -1464,7 +1461,6 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  char *str = NULL;
 
   int result = OC_STATUS_CHANGED;
   oc_rep_t *rep = request->request_payload;
@@ -1531,11 +1527,9 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
           for (int i = 0;
                i < (int)oc_string_array_get_allocated_size(rep->value.array);
                i++) {
-            str = oc_string_array_get_item(rep->value.array, i);
-            str[STRING_ARRAY_ITEM_MAX_LEN-1] = '\0';
             request->resource->interfaces |= oc_ri_get_interface_mask(
               oc_string_array_get_item(rep->value.array, i),
-              strlen(/*oc_string_array_get_item(rep->value.array, i)*/str));
+              oc_string_array_get_item_size(rep->value.array, i));
           }
 
           common_property = _rep_list_remove(&request->request_payload, &rep);
