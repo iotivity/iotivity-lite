@@ -110,8 +110,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 
 	#ifdef OC_COLLECTIONS
 	  uint8_t num_links; ///< number of links in the collection
-	#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-	  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+	#ifdef OC_HAS_FEATURE_PUSH
 	  oc_payload_callback_t
 		payload_builder; ///< callback to build contents of PUSH Notification
 	#endif
@@ -145,7 +144,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	 * belongs to
 	 */
 	OC_API
-	void oc_resource_state_changed(const char *uri, size_t device_index);
+	void oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index);
 	```
 	- User apps should call this function whenever contents of pushable Resource is changed.
 	- Example:
@@ -155,7 +154,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 		{
 			brightness = (brightness+1)%100;
 			/* notify PUSH origin Resource is changed */
-			oc_resource_state_changed(resource_uri, res->device);
+			oc_resource_state_changed(resource_uri, resource_uri_len, res->device);
 		}
 		```
 

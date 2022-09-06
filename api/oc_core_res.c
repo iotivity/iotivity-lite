@@ -14,6 +14,7 @@
  // limitations under the License.
  */
 
+#include "util/oc_features.h"
 #include "oc_core_res.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
@@ -51,8 +52,8 @@ static bool announce_con_res = false;
 static int res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+/*todo4me <2022/9/5> remove later*/
+#ifdef OC_HAS_FEATURE_PUSH
 void oc_create_pushconf_resource(size_t device_index);
 void oc_create_pushreceiver_resource(size_t device_index);
 #endif
@@ -428,8 +429,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   oc_create_pushconf_resource(device_count);
   oc_create_pushreceiver_resource(device_count);
 #endif

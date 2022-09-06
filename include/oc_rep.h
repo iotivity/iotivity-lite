@@ -23,6 +23,7 @@
 #include "deps/tinycbor/src/cbor.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"
+#include "util/oc_features.h"
 #include <oc_config.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -1073,8 +1074,7 @@ int oc_parse_rep(const uint8_t *payload, size_t payload_size,
 
 void oc_free_rep(oc_rep_t *rep);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 oc_rep_t *oc_alloc_rep();
 #endif
 

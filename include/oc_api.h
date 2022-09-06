@@ -29,6 +29,7 @@
 #ifndef OC_API_H
 #define OC_API_H
 
+#include "util/oc_features.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
 #include "oc_cloud.h"
@@ -1137,8 +1138,7 @@ void oc_resource_make_public(oc_resource_t *resource);
  */
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 /**
  * Specify if a resource can be pushable.
  *

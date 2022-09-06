@@ -30,6 +30,7 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
+#include "util/oc_features.h"
 
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -67,8 +68,7 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 OC_PROCESS_NAME(oc_push_process);
 void oc_push_list_init();
 #endif
@@ -413,8 +413,7 @@ start_processes(void)
   oc_process_start(&oc_session_events, NULL);
 #endif /* OC_TCP */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   oc_process_start(&oc_push_process, NULL);
 #endif
 }
@@ -439,8 +438,7 @@ stop_processes(void)
 
   oc_process_exit(&message_buffer_handler);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   oc_process_exit(&oc_push_process);
 #endif
 }
@@ -501,8 +499,7 @@ oc_ri_init(void)
 
   oc_list_init(g_timed_callbacks);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   oc_push_list_init();
 #endif
 

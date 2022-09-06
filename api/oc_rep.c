@@ -21,6 +21,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_memb.h"
+#include "util/oc_features.h"
 
 #include <inttypes.h>
 
@@ -242,8 +243,7 @@ _alloc_rep(void)
   return rep;
 }
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 oc_rep_t *
 oc_alloc_rep()
 {

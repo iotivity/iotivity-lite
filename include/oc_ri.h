@@ -25,6 +25,7 @@
 #include "oc_rep.h"
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
+#include "util/oc_features.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -50,8 +51,7 @@ typedef enum {
 typedef enum {
   OC_DISCOVERABLE = (1 << 0), ///< discoverable
   OC_OBSERVABLE = (1 << 1),   ///< observable
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   OC_PUSHABLE = (1 << 2), ///< pushable
 #endif
   OC_SECURE = (1 << 4),      ///< secure
@@ -274,8 +274,7 @@ typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
 typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
                                        void *);
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 /**
  * @brief application should define this callback which builds updated contents
  * of pushable Resource
@@ -329,8 +328,7 @@ struct oc_resource_s
   uint8_t num_observers;             ///< amount of observers
 #ifdef OC_COLLECTIONS
   uint8_t num_links; ///< number of links in the collection
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
   oc_payload_callback_t
     payload_builder; ///< callback to build contents of PUSH Notification
 #endif

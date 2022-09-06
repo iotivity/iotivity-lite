@@ -149,14 +149,14 @@ change_brightness(void)
 {
   brightness = (brightness + 1) % 100;
   /* notify PUSH origin Resource is changed */
-  oc_resource_state_changed(resource_uri, res->device);
+  oc_resource_state_changed(resource_uri, strlen(resource_uri), res->device);
 }
 
 static void
 change_power(void)
 {
   power += 5;
-  oc_resource_state_changed(resource_uri, res->device);
+  oc_resource_state_changed(resource_uri, strlen(resource_uri), res->device);
 }
 
 /* ======== for light #2 ======== */
@@ -164,14 +164,14 @@ static void
 change_brightness2(void)
 {
   brightness2 = (brightness2 + 1) % 100;
-  oc_resource_state_changed(resource_uri2, res2->device);
+  oc_resource_state_changed(resource_uri2, strlen(resource_uri2), res2->device);
 }
 
 static void
 change_power2(void)
 {
   power2 += 5;
-  oc_resource_state_changed(resource_uri2, res2->device);
+  oc_resource_state_changed(resource_uri2, strlen(resource_uri2), res2->device);
 }
 
 /* PUSH payload builder */

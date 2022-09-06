@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "util/oc_features.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
@@ -418,8 +419,7 @@ oc_resource_set_discoverable(oc_resource_t *resource, bool state)
     resource->properties &= ~OC_DISCOVERABLE;
 }
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 void
 oc_resource_set_pushable(oc_resource_t *resource, bool state)
 {

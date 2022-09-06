@@ -20,10 +20,10 @@
  *
  ****************************************************************************/
 
+#include "util/oc_features.h"
 #include "oc_push.h"
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_HAS_FEATURE_PUSH
 
 #include "oc_api.h"
 #include "oc_events.h"
@@ -278,7 +278,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
                  sizeof(ns_instance->pushtarget_ep));
 
           /* clear target path */
-          oc_set_string(&ns_instance->targetpath, "", strlen(""));
+          oc_set_string(&ns_instance->targetpath, "", 0);
 
         } else {
           /* if non-NULL pushtarget.. */
@@ -871,6 +871,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     /* oc_rep_add_byte_string(xxxx, str); */
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
+      oc_string_array_get_item(rep->value.array, i)[STRING_ARRAY_ITEM_MAX_LEN-1] = '\0';
       g_err |= oc_rep_encode_byte_string(
         &child, (const uint8_t *)oc_string_array_get_item(rep->value.array, i),
         strlen(oc_string_array_get_item(rep->value.array, i)));
@@ -891,6 +892,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
       if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
+        oc_string_array_get_item(rep->value.array, i)[STRING_ARRAY_ITEM_MAX_LEN-1] = '\0';
         g_err |= oc_rep_encode_text_string(
           &child, oc_string_array_get_item(rep->value.array, i),
           strlen(oc_string_array_get_item(rep->value.array, i)));
@@ -1001,7 +1003,8 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     /* recurse remaining objects... */
     obj = rep->value.object_array;
     while (obj) {
-      do {
+      /*todo4me <2022/9/6> remove later*/
+//      do {
         /* oc_rep_object_array_begin_item(key) */
         CborEncoder obj_map;
         memset(&obj_map, 0, sizeof(obj_map));
@@ -1012,7 +1015,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 
         /* oc_rep_object_array_end_item(key) */
         g_err |= oc_rep_encoder_close_container(&child, &obj_map);
-      } while (0);
+//      } while (0);
       obj = obj->next;
     }
 
@@ -1280,7 +1283,7 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   depth++;
   for (i = 0; i < depth; i++) {
     //		depth_prefix[i] = '\t';
-    strcpy(depth_prefix + (i * prefix_width), prefix_str);
+    strncpy(depth_prefix + (i * prefix_width), prefix_str, strlen(prefix_str));
   }
   //	depth_prefix[i] = '\0';
   depth_prefix[i * prefix_width] = '\0';
@@ -1519,6 +1522,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
           for (int i = 0;
                i < (int)oc_string_array_get_allocated_size(rep->value.array);
                i++) {
+            oc_string_array_get_item(rep->value.array, i)[STRING_ARRAY_ITEM_MAX_LEN] = '\0';
             request->resource->interfaces |= oc_ri_get_interface_mask(
               oc_string_array_get_item(rep->value.array, i),
               strlen(oc_string_array_get_item(rep->value.array, i)));
@@ -2367,7 +2371,7 @@ push_update(oc_ns_t *ns_instance)
     oc_rep_begin_root_object();
 
     /* anchor */
-    sprintf(di, "ocf://");
+    snprintf(di, sizeof(di), "ocf://");
     oc_uuid_to_str(oc_core_get_device_id(ns_instance->resource->device), di + 6,
                    OC_UUID_LEN);
     oc_rep_set_text_string(root, anchor, di);
@@ -2566,10 +2570,10 @@ _check_string_array_inclusion(oc_string_array_t *target,
  * @param device_index device index which the updated Resource belongs to
  */
 void
-oc_resource_state_changed(const char *uri, size_t device_index)
+oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
 {
   oc_resource_t *resource =
-    oc_ri_get_app_resource_by_uri(uri, strlen(uri), device_index);
+    oc_ri_get_app_resource_by_uri(uri, uri_len, device_index);
   oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(ns_list);
   char all_matched = 0x7;
 
@@ -2704,5 +2708,4 @@ oc_resource_state_changed(const char *uri, size_t device_index)
   return;
 }
 
-#endif /* OC_PUSH && OC_SERVER && OC_CLIENT && OC_DYNAMIC_ALLOCATION &&        \
-          OC_COLLECTIONS_IF_CREATE */
+#endif /* OC_HAS_FEATURE_PUSH */

@@ -85,11 +85,12 @@ void oc_set_on_push_arrived(oc_on_push_arrived_t func);
  *
  * @param[in] uri          path of pushable Resource whose contents is just
  * updated
+ * @param[in] uri_len      length of uri
  * @param[in] device_index index of Device that updated pushable Resource
  * belongs to
  */
 OC_API
-void oc_resource_state_changed(const char *uri, size_t device_index);
+void oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index);
 
 #ifdef __cplusplus
 }
