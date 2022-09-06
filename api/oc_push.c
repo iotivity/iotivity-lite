@@ -1279,7 +1279,7 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   int i;
 
   /* check buffer overflow */
-  if ((prefix_width*depth+1) > 1024) {
+  if ((prefix_width*depth+1) > sizeof(depth_prefix)) {
     return;
   }
 
