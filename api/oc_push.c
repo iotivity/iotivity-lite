@@ -1272,7 +1272,8 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
 {
   static int depth = 0;
   char prefix_width = 3;
-  char *prefix_str = "   ";
+//  char *prefix_str = "   ";
+  char prefix_str[4];
   char depth_prefix[1024];
   const oc_rep_t *rep = payload;
   const oc_rep_t *obj;
@@ -1283,6 +1284,7 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
     return;
   }
 
+#if 0
   depth_prefix[sizeof(depth_prefix) - 1] = '\0';
   depth++;
   for (i = 0; i < depth; i++) {
@@ -1291,6 +1293,13 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   if (depth_prefix[sizeof(depth_prefix) - 1] != '\0') {
     return;
   }
+#endif
+  depth++;
+  strcpy(prefix_str, "   ");
+  for (i = 0; i < depth; i++) {
+    strcpy(depth_prefix + (i * prefix_width), prefix_str);
+  }
+
   depth_prefix[i * prefix_width] = '\0';
 
   if (!rep) {
