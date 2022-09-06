@@ -1286,7 +1286,7 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   depth_prefix[sizeof(depth_prefix) - 1] = '\0';
   depth++;
   for (i = 0; i < depth; i++) {
-    strncpy(depth_prefix + (i * prefix_width), prefix_str, sizeof(depth_prefix));
+    strncpy(depth_prefix + (i * prefix_width), prefix_str, sizeof(depth_prefix)-(i * prefix_width));
   }
   if (depth_prefix[sizeof(depth_prefix) - 1] != '\0') {
     return;
