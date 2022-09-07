@@ -676,7 +676,7 @@ get_ns_instance(const char *href, oc_string_array_t *types,
 
   if (ns_instance) {
     ns_instance->resource = oc_new_resource(
-      NULL, href, (size_t)oc_string_array_get_allocated_size(*types), device);
+      NULL, href, (uint8_t)oc_string_array_get_allocated_size(*types), device);
     if (ns_instance->resource) {
       for (int i = 0; i < (int)oc_string_array_get_allocated_size(*types);
            i++) {
@@ -2535,7 +2535,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
     }
   }
 
-  OC_PROCESS_END();
+  OC_PROCESS_END()
 }
 
 /*
