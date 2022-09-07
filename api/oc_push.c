@@ -35,6 +35,7 @@
 #include "util/oc_process.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
+#include "util/oc_compiler.h"
 #include <arpa/inet.h>
 
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
@@ -205,11 +206,11 @@ static void (*oc_push_arrived)(oc_pushd_rsc_rep_t *) = NULL;
  * @brief initialize oc_string_t object
  */
 #define oc_init_string(str)                                                    \
-  {                                                                            \
+  do {                                                                         \
     (str).size = 0;                                                            \
     (str).ptr = NULL;                                                          \
     (str).next = NULL;                                                         \
-  }
+  } while (0)
 
 /*
  * @brief initialize oc_string_array_t object
@@ -495,8 +496,7 @@ get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(resource);
-    /* fall through */
-
+    OC_FALLTHROUGH;
   case OC_IF_RW:
     /* phref (optional) */
     //    if (oc_string_len(ns_instance->phref)) {
@@ -534,7 +534,8 @@ get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
      * pushtarget
      */
 
-    oc_string_t ep, full_uri;
+    oc_string_t ep;
+    oc_string_t full_uri;
 
     if (oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep) < 0) {
       /* handle NULL pushtarget... */
@@ -675,7 +676,7 @@ get_ns_instance(const char *href, oc_string_array_t *types,
 
   if (ns_instance) {
     ns_instance->resource = oc_new_resource(
-      NULL, href, oc_string_array_get_allocated_size(*types), device);
+      NULL, href, (size_t)oc_string_array_get_allocated_size(*types), device);
     if (ns_instance->resource) {
       for (int i = 0; i < (int)oc_string_array_get_allocated_size(*types);
            i++) {
@@ -868,7 +869,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     memset(&child, 0, sizeof(child));
     g_err |= oc_rep_encoder_create_array(parent, &child, CborIndefiniteLength);
 
-    /* oc_rep_add_byte_string(xxxx, str); */
+    /* oc_rep_add_byte_string(xxxx, str) */
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
       g_err |= oc_rep_encode_byte_string(
@@ -876,7 +877,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
         oc_string_array_get_item_size(rep->value.array, i));
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -887,7 +888,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     memset(&child, 0, sizeof(child));
     g_err |= oc_rep_encoder_create_array(parent, &child, CborIndefiniteLength);
 
-    /* oc_rep_add_text_string(xxxx, str); */
+    /* oc_rep_add_text_string(xxxx, str) */
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
       if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
@@ -899,7 +900,7 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
       }
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -910,13 +911,13 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     memset(&child, 0, sizeof(child));
     g_err |= oc_rep_encoder_create_array(parent, &child, CborIndefiniteLength);
 
-    /* oc_rep_add_boolean(xxxx, value); */
+    /* oc_rep_add_boolean(xxxx, value) */
     for (int i = 0; i < (int)rep->value.array.size; i++) {
       g_err |=
         oc_rep_encode_boolean(&child, ((char *)(rep->value.array.ptr))[i]);
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -927,13 +928,13 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     memset(&child, 0, sizeof(child));
     g_err |= oc_rep_encoder_create_array(parent, &child, CborIndefiniteLength);
 
-    /* oc_rep_add_double(xxxx, value); */
+    /* oc_rep_add_double(xxxx, value) */
     for (int i = 0; i < (int)rep->value.array.size; i++) {
       g_err |=
         oc_rep_encode_double(&child, ((double *)(rep->value.array.ptr))[i]);
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -944,13 +945,13 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     memset(&child, 0, sizeof(child));
     g_err |= oc_rep_encoder_create_array(parent, &child, CborIndefiniteLength);
 
-    /* oc_rep_add_int(xxxx, value); */
+    /* oc_rep_add_int(xxxx, value) */
     for (int i = 0; i < (int)rep->value.array.size; i++) {
       g_err |=
         oc_rep_encode_int(&child, ((int64_t *)(rep->value.array.ptr))[i]);
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -1001,8 +1002,6 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     /* recurse remaining objects... */
     obj = rep->value.object_array;
     while (obj) {
-      /*todo4me <2022/9/6> remove later*/
-//      do {
         /* oc_rep_object_array_begin_item(key) */
         CborEncoder obj_map;
         memset(&obj_map, 0, sizeof(obj_map));
@@ -1013,11 +1012,10 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
 
         /* oc_rep_object_array_end_item(key) */
         g_err |= oc_rep_encoder_close_container(&child, &obj_map);
-//      } while (0);
       obj = obj->next;
     }
 
-    /* oc_rep_close_array(root, xxxx); */
+    /* oc_rep_close_array(root, xxxx) */
     g_err |= oc_rep_encoder_close_container(parent, &child);
     break;
 
@@ -1084,7 +1082,7 @@ get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
     switch (iface_mask) {
     case OC_IF_BASELINE:
       oc_process_baseline_interface(request->resource);
-      /* fall through */
+      OC_FALLTHROUGH;
     case OC_IF_R:
     case OC_IF_RW:
       _build_rep_payload(&root_map, pushd_rsc_rep->rep);
@@ -1118,8 +1116,10 @@ static bool
 _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
 {
   bool result = 0;
-  int rt_len, rts_len;
-  int i, j;
+  size_t rt_len;
+  size_t rts_len;
+  size_t i;
+  size_t j;
 
   if (!recv_obj || !rep)
     return result;
@@ -1196,9 +1196,9 @@ _create_pushd_rsc_rep(oc_rep_t *org_rep)
 
   new_rep = oc_alloc_rep();
 
-  (new_rep)->next = _create_pushd_rsc_rep(org_rep->next);
+  new_rep->next = _create_pushd_rsc_rep(org_rep->next);
 
-  (new_rep)->type = org_rep->type;
+  new_rep->type = org_rep->type;
   oc_new_string(&((new_rep)->name), oc_string(org_rep->name),
                 oc_string_len(org_rep->name));
 
@@ -1206,62 +1206,62 @@ _create_pushd_rsc_rep(oc_rep_t *org_rep)
   case OC_REP_NIL:
     break;
   case OC_REP_INT:
-    (new_rep)->value.integer = org_rep->value.integer;
+    new_rep->value.integer = org_rep->value.integer;
     break;
   case OC_REP_DOUBLE:
-    (new_rep)->value.double_p = org_rep->value.double_p;
+    new_rep->value.double_p = org_rep->value.double_p;
     break;
   case OC_REP_BOOL:
-    (new_rep)->value.boolean = org_rep->value.boolean;
+    new_rep->value.boolean = org_rep->value.boolean;
     break;
   case OC_REP_BYTE_STRING_ARRAY:
   case OC_REP_STRING_ARRAY:
     oc_new_string_array(
-      &(new_rep)->value.array,
+      &(new_rep->value.array),
       oc_string_array_get_allocated_size(org_rep->value.array));
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(org_rep->value.array);
          i++) {
       oc_string_array_add_item(
-        (new_rep)->value.array,
+        new_rep->value.array,
         oc_string_array_get_item(org_rep->value.array, i));
     }
     break;
   case OC_REP_BOOL_ARRAY:
-    oc_new_bool_array(&(new_rep)->value.array,
+    oc_new_bool_array(&(new_rep->value.array),
                       oc_bool_array_size(org_rep->value.array));
-    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy(new_rep->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(uint8_t));
     break;
   case OC_REP_DOUBLE_ARRAY:
-    oc_new_double_array(&(new_rep)->value.array,
+    oc_new_double_array(&(new_rep->value.array),
                         oc_double_array_size(org_rep->value.array));
-    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy(new_rep->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(double));
     break;
   case OC_REP_INT_ARRAY:
-    oc_new_int_array(&(new_rep)->value.array,
+    oc_new_int_array(&(new_rep->value.array),
                      oc_int_array_size(org_rep->value.array));
-    memcpy((new_rep)->value.array.ptr, org_rep->value.array.ptr,
+    memcpy(new_rep->value.array.ptr, org_rep->value.array.ptr,
            org_rep->value.array.size * sizeof(int64_t));
     break;
   case OC_REP_BYTE_STRING:
   case OC_REP_STRING:
-    oc_new_string(&((new_rep)->value.string), oc_string(org_rep->value.string),
+    oc_new_string(&(new_rep->value.string), oc_string(org_rep->value.string),
                   oc_string_len(org_rep->value.string));
     break;
   case OC_REP_OBJECT:
-    (new_rep)->value.object = _create_pushd_rsc_rep(org_rep->value.object);
+    new_rep->value.object = _create_pushd_rsc_rep(org_rep->value.object);
     break;
   case OC_REP_OBJECT_ARRAY:
-    (new_rep)->value.object_array =
+    new_rep->value.object_array =
       _create_pushd_rsc_rep(org_rep->value.object_array);
     break;
   default:
     break;
   }
 
-  return (new_rep);
+  return new_rep;
 }
 
 /*
@@ -1279,7 +1279,7 @@ oc_print_pushd_rsc(const oc_rep_t *payload)
   int i;
 
   /* check buffer overflow */
-  if ((prefix_width*depth+1) > sizeof(depth_prefix)) {
+  if ((size_t)(prefix_width*(depth+1)+1) > sizeof(depth_prefix)) {
     return;
   }
 
@@ -1439,9 +1439,9 @@ _find_recv_obj_by_uri(oc_recvs_t *recvs_instance, const char *uri, int uri_len)
 static oc_rep_t *
 _rep_list_remove(oc_rep_t **rep_list, oc_rep_t **item)
 {
-  oc_rep_t **l, *removed_item;
+  oc_rep_t *removed_item;
 
-  for (l = rep_list; *l != NULL; l = &(*l)->next) {
+  for (oc_rep_t **l = rep_list; *l != NULL; l = &(*l)->next) {
     if (*l == *item) {
       *l = (*l)->next;
 
@@ -1596,16 +1596,15 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
   }
 
-  if (result == OC_STATUS_CHANGED) {
+  if (result == OC_STATUS_CHANGED
+      && !(pushd_rsc_rep->resource->properties & OC_DISCOVERABLE)) {
     /*
      * if this is the first push to this target Resource... make it discoverable
      */
-    if (!(pushd_rsc_rep->resource->properties & OC_DISCOVERABLE)) {
-      OC_PUSH_DBG("this is the first push to (%s), from now on it will be "
-                  "discoverable...",
-                  oc_string(pushd_rsc_rep->resource->uri));
-      oc_resource_set_discoverable(pushd_rsc_rep->resource, true);
-    }
+    OC_PUSH_DBG("this is the first push to (%s), from now on it will be "
+        "discoverable...",
+        oc_string(pushd_rsc_rep->resource->uri));
+    oc_resource_set_discoverable(pushd_rsc_rep->resource, true);
   }
 
   oc_send_response(request, result);
@@ -1628,6 +1627,7 @@ get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
     /* fall through */
+    OC_FALLTHROUGH;
   case OC_IF_RW:
     /*
      * `receivers` object array
@@ -1731,7 +1731,7 @@ _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
  * @return true:success, false:fail
  */
 static bool
-_create_pushd_rsc(oc_recv_t *recv_obj, oc_resource_t *resource)
+_create_pushd_rsc(oc_recv_t *recv_obj, const oc_resource_t *resource)
 {
   bool result = true;
 
@@ -1822,7 +1822,7 @@ _purge_recv_obj_list(oc_recvs_t *recvs_instance)
  * @param rep payload representation of new receiver object
  */
 static void
-_update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t *rep)
+_update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
   oc_pushd_rsc_rep_t *pushd_rsc_rep;
 
@@ -1858,10 +1858,10 @@ _update_recv_obj(oc_recv_t *recv_obj, oc_recvs_t *recvs_instance, oc_rep_t *rep)
     case OC_REP_STRING_ARRAY:
       if (!strcmp(oc_string(rep->name), "rts")) {
         oc_free_string_array(&recv_obj->rts);
-        int len = oc_string_array_get_allocated_size(rep->value.array);
+        size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
 
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
           oc_string_array_add_item(
             recv_obj->rts, oc_string_array_get_item(rep->value.array, i));
         }
@@ -1909,10 +1909,10 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 
     case OC_REP_STRING_ARRAY:
       if (!strcmp(oc_string(rep->name), "rts")) {
-        int len = oc_string_array_get_allocated_size(rep->value.array);
+        size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
 
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
           oc_string_array_add_item(
             recv_obj->rts, oc_string_array_get_item(rep->value.array, i));
         }
@@ -1953,7 +1953,7 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 static bool
 _validate_recv_obj_list(oc_rep_t *obj_list)
 {
-  oc_rep_t *recv_obj, *rep;
+  oc_rep_t *rep;
   bool result = false;
   char mandatory_property_check;
 
@@ -1962,7 +1962,7 @@ _validate_recv_obj_list(oc_rep_t *obj_list)
     return result;
   }
 
-  for (recv_obj = obj_list; recv_obj != NULL; recv_obj = recv_obj->next) {
+  for (oc_rep_t *recv_obj = obj_list; recv_obj != NULL; recv_obj = recv_obj->next) {
 
     mandatory_property_check = 0;
     rep = recv_obj->value.object;
@@ -2010,7 +2010,6 @@ exit:
 static bool
 _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
-  oc_rep_t *rep_obj;
   bool result = false;
 
   if (rep && (rep->type == OC_REP_OBJECT_ARRAY)) {
@@ -2023,7 +2022,7 @@ _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
     _purge_recv_obj_list(recvs_instance);
 
     /* replace `receivers` obj array with new one */
-    for (rep_obj = rep->value.object_array; rep_obj != NULL;
+    for (oc_rep_t *rep_obj = rep->value.object_array; rep_obj != NULL;
          rep_obj = rep_obj->next) {
       _create_recv_obj(recvs_instance, rep_obj->value.object);
     }
@@ -2551,8 +2550,8 @@ static bool
 _check_string_array_inclusion(oc_string_array_t *target,
                               oc_string_array_t *source)
 {
-  int i, j;
-  int src_len, tgt_len;
+  size_t src_len;
+  size_t tgt_len;
 
   tgt_len = oc_string_array_get_allocated_size(*target);
   src_len = oc_string_array_get_allocated_size(*source);
@@ -2562,8 +2561,8 @@ _check_string_array_inclusion(oc_string_array_t *target,
     return false;
   }
 
-  for (i = 0; i < src_len; i++) {
-    for (j = 0; j < tgt_len; j++) {
+  for (size_t i = 0; i < src_len; i++) {
+    for (size_t j = 0; j < tgt_len; j++) {
       if (!strcmp(oc_string_array_get_item(*source, i),
                   oc_string_array_get_item(*target, j))) {
         return true;
@@ -2610,13 +2609,12 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
       continue;
 
     if (oc_string(ns_instance->phref)) {
-      if (/*strcmp(oc_string(ns_instance->phref), "") &&*/
-          strcmp(oc_string(ns_instance->phref), uri)) {
+      if (strcmp(oc_string(ns_instance->phref), uri)) {
         OC_PUSH_DBG("%s:phref exists, but mismatches (phref:%s - uri:%s)",
                     oc_string(ns_instance->resource->uri),
                     oc_string(ns_instance->phref), uri);
         all_matched = 0;
-      } else /*if (!strcmp(oc_string(ns_instance->phref), uri))*/ {
+      } else {
         OC_PUSH_DBG("%s:phref matches (phref:%s - uri:%s)",
                     oc_string(ns_instance->resource->uri),
                     oc_string(ns_instance->phref), uri);
@@ -2690,7 +2688,6 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
       all_matched &= 0x3;
     }
 
-    /* todo4me <2022/7/8> resume here.. */
     if (all_matched) {
       if (!oc_process_is_running(&oc_push_process)) {
         OC_PUSH_DBG("oc_push_process is not running!");
@@ -2710,8 +2707,10 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
         OC_PUSH_ERR("sensing PUSH Update of \"%s\" failed!",
                     oc_string(resource->uri));
       }
-      /*oc_process_post(&oc_push_process,
-          oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);*/
+#if 0
+      oc_process_post(&oc_push_process,
+          oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
+#endif
     }
     all_matched = 0x7;
   }
