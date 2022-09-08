@@ -1748,9 +1748,12 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
     } else {
       ret = -1;
     }
+    freeaddrinfo(result);
+  } else {
+    OC_ERR("failed to resolve address(%s) with error(%d): %s", domain, ret,
+           gai_strerror(ret));
   }
 
-  freeaddrinfo(result);
   return ret;
 }
 #endif /* OC_DNS_LOOKUP */
