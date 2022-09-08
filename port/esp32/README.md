@@ -60,15 +60,25 @@ The last is to jump to the [common steps](#common-steps) below in the ubuntu bas
 
 ### Common steps
 
+<!--
+git clone --recursive -b release/v5.0 https://github.com/espressif/esp-idf.git
+release/v5.0 uses mbedTLS submodule with newer version than 3.2.1, our patches are applicable to
+version 3.1.0 so we must checkout a version with mbedTLS v3.1.0
+-->
+
 ```bash
 cd ./iotivity-lite/port/esp32
-git clone --recursive -b release/v5.0 https://github.com/espressif/esp-idf.git
+git clone -b release/v5.0 https://github.com/espressif/esp-idf.git
+# checkout latest commit with mbedTLS v3.1.0
+( cd esp-idf && git checkout 335ca8a687d4f507b8ffe8a4ec3132ba4a4a4be3 )
+( cd esp-idf && git submodule update --init --recursive )
 ./esp-idf/install.sh
 . ./esp-idf/export.sh
 idf.py set-target esp32
 idf.py menuconfig # this will bring up a GUI where you need to set up wifi
-( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch)
-( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
+# apply iotivity-lite patches for mbedTLS v3.1.0
+( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch )
+( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch )
 ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
 idf.py build
 ESPBAUD=115200 idf.py flash monitor
