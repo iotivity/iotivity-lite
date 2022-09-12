@@ -7,8 +7,6 @@ on:
 
 jobs:
   CLAssistant:
-    if: ${{ false }}
-
     runs-on: ubuntu-latest
     steps:
       - name: "CLA Assistant"
