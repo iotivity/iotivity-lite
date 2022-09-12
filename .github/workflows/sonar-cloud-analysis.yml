@@ -13,6 +13,9 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  cmake-linux-coverage:
+    uses: ./.github/workflows/cmake-linux-coverage.yml
+
   sonar-cloud-scan:
     name: Sonar Cloud scan
     runs-on: ubuntu-latest
@@ -20,6 +23,7 @@ jobs:
       SONAR_SCANNER_VERSION: 4.7.0.2747
       SONAR_SERVER_URL: "https://sonarcloud.io"
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+    needs: cmake-linux-coverage
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -60,6 +64,12 @@ jobs:
           # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
           # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build --verbose --target client-server-static --target all
+
+      - name: Get coverage from the dps-test job
+        uses: actions/download-artifact@v3
+        with:
+          name: unit-test-coverage
+          path: tools/
 
       - name: Run sonar-scanner
         env:
