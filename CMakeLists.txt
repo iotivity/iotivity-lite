@@ -3,7 +3,22 @@ project(iotivity-lite VERSION 2.2.5)
 
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
-# ####### Build configuration options ########
+######## Helper variables ########
+set(OC_COMPILER_IS_GCC ${CMAKE_COMPILER_IS_GNUCXX} CACHE BOOL "Compiler is gcc" FORCE)
+
+set(OC_COMPILER_IS_CLANG OFF CACHE BOOL "Compiler is clang." FORCE)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	set(OC_COMPILER_IS_CLANG ON CACHE BOOL "Compiler is clang." FORCE)
+endif()
+
+set(OC_COVERAGE_ENABLED OFF CACHE BOOL "Gather code coverage" FORCE)
+if(BUILD_TESTING AND UNIX AND (OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG))
+    if(NOT(OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
+        set(OC_COVERAGE_ENABLED ON CACHE BOOL "Gather code coverage" FORCE)
+    endif()
+endif()
+
+######## Build configuration options ########
 set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
@@ -81,12 +96,31 @@ if(UNIX)
     endif()
 endif()
 
+# Compiler and linker flags
+if(OC_COMPILER_IS_GCC)
+	set(OC_COMPILE_OPTIONS_RELEASE -fdata-sections -ffunction-sections)
+	# -Wl,--as-needed       = Only link libraries that export symbols used by the binary
+	# -Wl,--gc-sections     = Remove unused code resulting from -fdata-sections and -function-sections
+	# -s                    = Strip
+	set(OC_LINK_OPTIONS_RELEASE -Wl,--as-needed -Wl,--gc-sections -s)
+endif()
+
+if(OC_COMPILER_IS_CLANG)
+	# -Wl,-dead_strip       = Remove unused code
+    # -s                    = Strip
+	set(OC_LINK_OPTIONS_RELEASE -Wl,-dead_strip -s)
+endif()
+
+add_compile_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_COMPILE_OPTIONS_RELEASE}>")
+add_link_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_LINK_OPTIONS_RELEASE}>")
+
 set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 
 include(tools/clang-tidy.cmake)
 
-# ####### Define compiler flags ########
+######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
+set(PRIVATE_COMPILE_OPTIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
 set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM" "__OC_RANDOM")
 
@@ -182,6 +216,10 @@ if(MINGW)
     list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
 endif()
 
+if (OC_COVERAGE_ENABLED)
+    list(APPEND PRIVATE_COMPILE_OPTIONS "--coverage")
+endif()
+
 # ####### Gather source files ########
 file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_compare.c
@@ -262,6 +300,10 @@ else()
     list(APPEND PRIVATE_LINK_LIBS Threads::Threads)
 endif()
 
+if (OC_COVERAGE_ENABLED)
+    list(APPEND PRIVATE_LINK_LIBS "--coverage")
+endif()
+
 # ####### Object libraries ########
 include(deps/tinycbor.cmake)
 
@@ -274,10 +316,12 @@ oc_enable_clang_tidy()
 
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
+target_compile_options(client-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
@@ -286,6 +330,7 @@ endif()
 
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
+target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
@@ -294,6 +339,7 @@ endif()
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
+target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
@@ -303,6 +349,7 @@ endif()
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+    target_compile_options(cloud-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
     if(OC_SECURITY_ENABLED)
@@ -312,6 +359,7 @@ endif()
 
 add_library(python-obj OBJECT ${PYTHON_SRC})
 target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
+target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
 set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
@@ -468,6 +516,11 @@ if(OC_CLOUD_ENABLED)
     target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
 endif()
 
+if (OC_COVERAGE_ENABLED)
+    target_compile_options(client-server-static PRIVATE "--coverage")
+    target_link_libraries(client-server-static PRIVATE "--coverage")
+endif()
+
 set_target_properties(client-server-static PROPERTIES
     OUTPUT_NAME "iotivity-lite-client-server-static"
     VERSION ${PROJECT_VERSION}
@@ -545,11 +598,6 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
     if(UNIX)
         list(APPEND TEST_LINK_LIBS Threads::Threads)
-
-        if(CMAKE_COMPILER_IS_GNUCXX AND NOT(OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
-            list(APPEND TEST_COMPILE_OPTIONS "-fprofile-arcs" "-ftest-coverage")
-            list(APPEND TEST_LINK_LIBS gcov)
-        endif()
     endif()
 
     # Disable clang-tidy for gtest
@@ -558,6 +606,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     # Build googletest
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/gtest gtest)
 
+    set(OC_UNITTESTS)
     # Helper macro to build unit test
     macro(package_add_test TESTNAME)
         add_executable(${TESTNAME} ${ARGN})
@@ -587,6 +636,8 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
         set_target_properties(${TESTNAME} PROPERTIES FOLDER unittests)
         set_tests_properties(${TESTNAME} PROPERTIES LABELS oc-unittest)
+
+        list(APPEND OC_UNITTESTS ${TESTNAME})
     endmacro()
 
     # Unit tests
@@ -618,6 +669,11 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_cloud)
         package_add_test(cloudtest ${CLOUDTEST_SRC})
     endif()
+
+    add_custom_target(
+        oc-unittests
+        DEPENDS ${OC_UNITTESTS}
+    )
 
     # reenable clang-tidy for any remaining targets
     oc_enable_clang_tidy()
