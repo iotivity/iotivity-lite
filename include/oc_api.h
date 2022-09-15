@@ -1876,7 +1876,7 @@ bool oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
  * @param[in] query a query parameter that will be sent to the server's
  *                  oc_request_callback_t.
  * @param[in] handler function invoked once the client has received the servers
- *                    response to the DELETE request
+ *                    response to the DELETE request (cannot be NULL)
  * @param[in] qos the quality of service current options are HIGH_QOS or LOW_QOS
  * @param[in] user_data context pointer that will be sent to the
  *                      oc_response_handler_t

@@ -211,17 +211,8 @@ publish_published_resources(void *data)
 static void
 delete_resources_handler(oc_client_response_t *data)
 {
-  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   OC_DBG("[CRD] delete resources handler(%d)\n", data->code);
-
-  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
-    return;
-  }
-  if (data->code != OC_STATUS_DELETED) {
-    OC_ERR("cannot delete resource");
-    return;
-  }
-  rd_link_free(&ctx->rd_delete_resources);
+  (void)data;
 }
 
 static void
@@ -241,11 +232,13 @@ delete_resources(oc_cloud_context_t *ctx)
   if (ctx->rd_delete_resources == NULL) {
     return;
   }
+
   if (!rd_delete(ctx->cloud_ep, ctx->rd_delete_resources, ctx->device,
                  delete_resources_handler, LOW_QOS, ctx)) {
     OC_ERR("cannot send unpublish resource links request");
     return;
   }
+  rd_link_free(&ctx->rd_delete_resources);
 }
 
 void
