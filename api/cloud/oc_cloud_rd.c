@@ -214,17 +214,18 @@ delete_resources_handler(oc_client_response_t *data)
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   OC_DBG("[CRD] delete resources handler(%d)\n", data->code);
 
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN))
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
-  if (data->code != OC_STATUS_DELETED)
-    goto error;
+  }
+  if (data->code != OC_STATUS_DELETED) {
+    OC_ERR("cannot delete resource");
+    return;
+  }
   rd_link_free(&ctx->rd_delete_resources);
-error : {
-}
 }
 
 static void
-delete_resources(oc_cloud_context_t *ctx, bool all)
+delete_resources(oc_cloud_context_t *ctx)
 {
 #ifdef OC_SECURITY
   oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
@@ -232,36 +233,36 @@ delete_resources(oc_cloud_context_t *ctx, bool all)
     return;
   }
 #endif /* OC_SECURITY */
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
+    OC_DBG("cannot unpublish resource links when not logged in");
     return;
   }
 
-  if (all) {
-    rd_delete(ctx->cloud_ep, NULL, ctx->device, delete_resources_handler,
-              LOW_QOS, ctx);
+  if (ctx->rd_delete_resources == NULL) {
     return;
   }
-  if (ctx->rd_delete_resources) {
-    rd_delete(ctx->cloud_ep, ctx->rd_delete_resources, ctx->device,
-              delete_resources_handler, LOW_QOS, ctx);
+  if (!rd_delete(ctx->cloud_ep, ctx->rd_delete_resources, ctx->device,
+                 delete_resources_handler, LOW_QOS, ctx)) {
+    OC_ERR("cannot send unpublish resource links request");
+    return;
   }
 }
 
 void
 cloud_rd_manager_status_changed(oc_cloud_context_t *ctx)
 {
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     oc_remove_delayed_callback(ctx, publish_published_resources);
     return;
   }
-  if (ctx->store.status & OC_CLOUD_REFRESHED_TOKEN) {
+  if ((ctx->store.status & OC_CLOUD_REFRESHED_TOKEN) != 0) {
     // when refresh occurs we don't want to publish resources.
     return;
   }
-  if (ctx->rd_publish_resources) {
+  if (ctx->rd_publish_resources != NULL) {
     publish_resources(ctx);
   }
-  delete_resources(ctx, false);
+  delete_resources(ctx);
   oc_remove_delayed_callback(ctx, publish_published_resources);
   if (ctx->time_to_live != RD_PUBLISH_TTL_UNLIMITED) {
     oc_set_delayed_callback(ctx, publish_published_resources, ONE_HOUR);
@@ -318,7 +319,7 @@ oc_cloud_delete_resource(oc_resource_t *res)
       published->resource = NULL;
     }
     rd_link_add(&ctx->rd_delete_resources, published);
-    delete_resources(ctx, false);
+    delete_resources(ctx);
   }
 }
 
@@ -328,7 +329,7 @@ oc_cloud_publish_resources(size_t device)
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
   if (ctx) {
     publish_published_resources(ctx);
-    delete_resources(ctx, false);
+    delete_resources(ctx);
     return 0;
   }
   return -1;

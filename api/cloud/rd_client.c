@@ -134,20 +134,20 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     links = links->next;
   }
 
-  bool ret =
-    oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos, user_data);
-  return ret;
+  return oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos,
+                      user_data);
 }
 
 bool
 rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
-  if (!device_info)
+  if (device_info == NULL) {
     return false;
-  oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
+  }
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(&device_info->di, uuid, sizeof(uuid));
 
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
