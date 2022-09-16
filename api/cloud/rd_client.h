@@ -54,10 +54,11 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
 
 /**
   @brief Delete RD resource from Resource Directory.
-  @param endpoint The endpoint of the RD.
+  @param endpoint The endpoint of the RD (cannot be NULL).
   @param links This is the resource which we need to delete to RD.
   @param device Index of the device for an unique identifier.
-  @param handler To refer to the request sent out on behalf of calling this API.
+  @param handler To refer to the request sent out on behalf of calling this API
+  (cannot be NULL).
   @param qos Quality of service.
   @param user_data The user data passed from the registration function.
   @return Returns true if success.

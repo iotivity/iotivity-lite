@@ -121,33 +121,56 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
                          const char *id, oc_response_handler_t handler,
                          oc_qos_t qos, void *user_data)
 {
-  if (!endpoint || !id || !handler) {
+  assert(id != NULL);
+  if (endpoint == NULL || handler == NULL) {
     OC_ERR("Error of input parameters");
     return false;
   }
 
-  char uri_query[256];
-  snprintf(uri_query, 255, "di=%s", id);
-  while (links) {
-    snprintf(uri_query + strlen(uri_query), (255 - strlen(uri_query)),
-             "&ins=%" PRId64 "", links->ins);
+#define URI_QUERY_LEN 255
+  char uri_query[URI_QUERY_LEN + 1] = { 0 }; // +1 for \0
+  int written = snprintf(uri_query, URI_QUERY_LEN, "di=%s", id);
+  if (written < 0) {
+    OC_ERR("Cannot unpublish device: cannot write device id(%d)", written);
+    return false;
+  }
+  if (written > URI_QUERY_LEN) {
+    OC_ERR("Cannot unpublish device: buffer too small");
+    return false;
+  }
+
+  char *buffer = uri_query + written;
+  size_t buffer_size = URI_QUERY_LEN - written;
+  while (links != NULL) {
+    written = snprintf(buffer, buffer_size, "&ins=%" PRId64 "", links->ins);
+    if (written < 0) {
+      OC_ERR("Cannot unpublish device link: cannot write instance id(%d)",
+             written);
+      return false;
+    }
+    if ((size_t)written > buffer_size) {
+      OC_ERR("Cannot unpublish device link: buffer too small");
+      return false;
+    }
+    buffer = buffer + written;
+    buffer_size = buffer_size - written;
     links = links->next;
   }
 
-  bool ret =
-    oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos, user_data);
-  return ret;
+  return oc_do_delete(OC_RSRVD_RD_URI, endpoint, uri_query, handler, qos,
+                      user_data);
 }
 
 bool
 rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
-  if (!device_info)
+  if (device_info == NULL) {
     return false;
-  oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
+  }
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(&device_info->di, uuid, sizeof(uuid));
 
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);

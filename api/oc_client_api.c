@@ -27,6 +27,8 @@
 #include "security/oc_roles.h"
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
+#include <assert.h>
+
 #ifdef OC_CLIENT
 
 static coap_transaction_t *transaction;
@@ -338,6 +340,7 @@ bool
 oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
+  assert(handler != NULL);
   oc_client_handler_t client_handler = {
     .response = handler,
     .discovery = NULL,
