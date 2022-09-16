@@ -256,10 +256,12 @@ oc_network_event_handler_mutex_destroy(void)
 ip_context_t *
 oc_get_ip_context_for_device(size_t device)
 {
+  pthread_mutex_lock(&g_mutex);
   ip_context_t *dev = oc_list_head(g_ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
   }
+  pthread_mutex_unlock(&g_mutex);
   return dev;
 }
 
@@ -742,6 +744,9 @@ process_interface_change_event(void)
             if (ifa->ifa_family == AF_INET) {
               for (size_t i = 0; i < num_devices; i++) {
                 const ip_context_t *dev = oc_get_ip_context_for_device(i);
+                if (dev == NULL) {
+                  continue;
+                }
                 ret += add_mcast_sock_to_ipv4_mcast_group(
                   dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
               }
@@ -751,6 +756,9 @@ process_interface_change_event(void)
                   ifa->ifa_scope == RT_SCOPE_LINK) {
               for (size_t i = 0; i < num_devices; i++) {
                 const ip_context_t *dev = oc_get_ip_context_for_device(i);
+                if (dev == NULL) {
+                  continue;
+                }
                 ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
                                                           ifa->ifa_index);
               }
@@ -1712,16 +1720,9 @@ connectivity_ipv4_init(ip_context_t *dev)
 }
 #endif /* OC_IPV4 */
 
-int
-oc_connectivity_init(size_t device)
+static bool
+initialize_ip_context(ip_context_t *dev, size_t device)
 {
-  OC_DBG("Initializing connectivity for device %zd", device);
-
-  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&g_ip_context_s);
-  if (!dev) {
-    oc_abort("Insufficient memory");
-  }
-  oc_list_add(g_ip_contexts, dev);
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
 
@@ -1731,11 +1732,11 @@ oc_connectivity_init(size_t device)
 
   if (pipe(dev->shutdown_pipe) < 0) {
     OC_ERR("shutdown pipe: %d", errno);
-    return -1;
+    return false;
   }
   if (oc_set_fd_flags(dev->shutdown_pipe[0], O_NONBLOCK, 0) < 0) {
     OC_ERR("Could not set non-block shutdown_pipe[0]");
-    return -1;
+    return false;
   }
 
   memset(&dev->mcast, 0, sizeof(struct sockaddr_storage));
@@ -1764,14 +1765,14 @@ oc_connectivity_init(size_t device)
 
   if (dev->server_sock < 0 || dev->mcast_sock < 0) {
     OC_ERR("creating server sockets");
-    return -1;
+    return false;
   }
 
 #ifdef OC_SECURITY
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (dev->secure_sock < 0) {
     OC_ERR("creating secure socket");
-    return -1;
+    return false;
   }
 #endif /* OC_SECURITY */
 
@@ -1779,87 +1780,87 @@ oc_connectivity_init(size_t device)
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
+    return false;
   }
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting sock option %d", errno);
-    return -1;
+    return false;
   }
 #ifdef IPV6_ADDR_PREFERENCES
   int prefer = 2;
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
                  sizeof(prefer)) == -1) {
     OC_ERR("setting src addr preference %d", errno);
-    return -1;
+    return false;
   }
 #endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
            sizeof(dev->server)) == -1) {
     OC_ERR("binding server socket %d", errno);
-    return -1;
+    return false;
   }
 
   socklen_t socklen = sizeof(dev->server);
   if (getsockname(dev->server_sock, (struct sockaddr *)&dev->server,
                   &socklen) == -1) {
     OC_ERR("obtaining server socket information %d", errno);
-    return -1;
+    return false;
   }
 
   dev->port = ntohs(l->sin6_port);
 
   if (configure_mcast_socket(dev->mcast_sock, AF_INET6) < 0) {
-    return -1;
+    return false;
   }
 
   if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
+    return false;
   }
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
       -1) {
     OC_ERR("setting reuseaddr option %d", errno);
-    return -1;
+    return false;
   }
 #ifdef IPV6_ADDR_PREFERENCES
   if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
                  sizeof(prefer)) == -1) {
     OC_ERR("setting src addr preference %d", errno);
-    return -1;
+    return false;
   }
 #endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
            sizeof(dev->mcast)) == -1) {
     OC_ERR("binding mcast socket %d", errno);
-    return -1;
+    return false;
   }
 
 #ifdef OC_SECURITY
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", errno);
-    return -1;
+    return false;
   }
 #ifdef IPV6_ADDR_PREFERENCES
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
                  sizeof(prefer)) == -1) {
     OC_ERR("setting src addr preference %d", errno);
-    return -1;
+    return false;
   }
 #endif /* IPV6_ADDR_PREFERENCES */
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
            sizeof(dev->secure)) == -1) {
     OC_ERR("binding IPv6 secure socket %d", errno);
-    return -1;
+    return false;
   }
 
   socklen = sizeof(dev->secure);
   if (getsockname(dev->secure_sock, (struct sockaddr *)&dev->secure,
                   &socklen) == -1) {
     OC_ERR("obtaining secure socket information %d", errno);
-    return -1;
+    return false;
   }
 
   dev->dtls_port = ntohs(sm->sin6_port);
@@ -1902,17 +1903,17 @@ oc_connectivity_init(size_t device)
     if (g_ifchange_sock < 0) {
       OC_ERR("creating netlink socket to monitor network interface changes %d",
              errno);
-      return -1;
+      return false;
     }
     if (bind(g_ifchange_sock, (struct sockaddr *)&g_ifchange_nl,
              sizeof(g_ifchange_nl)) == -1) {
       OC_ERR("binding netlink socket %d", errno);
-      return -1;
+      return false;
     }
 #ifdef OC_NETWORK_MONITOR
     if (!check_new_ip_interfaces()) {
       OC_ERR("checking new IP interfaces failed.");
-      return -1;
+      return false;
     }
 #endif /* OC_NETWORK_MONITOR */
     g_ifchange_initialized = true;
@@ -1921,10 +1922,31 @@ oc_connectivity_init(size_t device)
   if (pthread_create(&dev->event_thread, NULL, &network_event_thread, dev) !=
       0) {
     OC_ERR("creating network polling thread");
+    return false;
+  }
+
+  return true;
+}
+
+int
+oc_connectivity_init(size_t device)
+{
+  OC_DBG("Initializing connectivity for device %zd", device);
+
+  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&g_ip_context_s);
+  if (dev == NULL) {
+    oc_abort("Insufficient memory");
+  }
+
+  if (!initialize_ip_context(dev, device)) {
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
   OC_DBG("Successfully initialized connectivity for device %zd", device);
+  pthread_mutex_lock(&g_mutex);
+  oc_list_add(g_ip_contexts, dev);
+  pthread_mutex_unlock(&g_mutex);
 
   return 0;
 }
@@ -1972,7 +1994,9 @@ oc_connectivity_shutdown(size_t device)
 
   free_endpoints_list(dev);
 
+  pthread_mutex_lock(&g_mutex);
   oc_list_remove(g_ip_contexts, dev);
+  pthread_mutex_unlock(&g_mutex);
   oc_memb_free(&g_ip_context_s, dev);
 
   OC_DBG("oc_connectivity_shutdown for device %zd", device);
