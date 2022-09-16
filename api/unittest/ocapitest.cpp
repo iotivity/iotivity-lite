@@ -110,6 +110,9 @@ public:
         oc_core_get_device_id(ApiHelper::s_ObtResource.device_id);
       oc_uuid_to_str(uuid, &buffer[0], buffer.size());
       s_ObtResource.uuid = buffer;
+
+      PRINT("Obt Resource id=%zu uuid=%s\n", s_ObtResource.device_id,
+            s_ObtResource.uuid.c_str());
     }
 
     if (s_LightResource.enabled) {
@@ -129,6 +132,9 @@ public:
         oc_core_get_device_id(ApiHelper::s_LightResource.device_id);
       oc_uuid_to_str(uuid, &buffer[0], buffer.size());
       s_LightResource.uuid = buffer;
+
+      PRINT("Light Resource id=%zu uuid=%s\n", s_LightResource.device_id,
+            s_LightResource.uuid.c_str());
     }
 
     if (s_SwitchResource.enabled) {
@@ -148,6 +154,9 @@ public:
         oc_core_get_device_id(ApiHelper::s_SwitchResource.device_id);
       oc_uuid_to_str(uuid, &buffer[0], buffer.size());
       s_SwitchResource.uuid = buffer;
+
+      PRINT("Switch Resource id=%zu uuid=%s\n", s_SwitchResource.device_id,
+            s_SwitchResource.uuid.c_str());
     }
   }
 
