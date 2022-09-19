@@ -48,20 +48,20 @@ extern "C" {
 
 /**
  * @brief object used to store Resource pushed to
- * "oic.r.pshreceiver:receivers[i].receiveruri"
+ * "oic.r.pushreceiver:receivers[i].receiveruri"
  */
-typedef struct oc_pushd_rsc_rep
+typedef struct oc_pushd_resource_rep
 {
-  struct oc_pushd_rsc_rep *next;
+  struct oc_pushd_resource_rep *next;
   oc_resource_t
     *resource;   ///< used to point any pushed Resource managed by iotivity-lite
   oc_rep_t *rep; ///< payload of pushed Resource
-} oc_pushd_rsc_rep_t;
+} oc_pushd_resource_rep_t;
 
 /**
  * @brief callback function called whenever new push arrives
  */
-typedef void (*oc_on_push_arrived_t)(oc_pushd_rsc_rep_t *);
+typedef void (*oc_on_push_arrived_t)(oc_pushd_resource_rep_t *);
 
 /**
  * @brief print payload of Resource in user friendly format

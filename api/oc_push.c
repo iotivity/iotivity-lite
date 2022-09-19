@@ -152,7 +152,7 @@ OC_MEMB(rep_instance_memb, oc_rep_t, 1);
  * @brief	memory block definition for storing pushed resource representation
  * list
  */
-OC_MEMB(pushd_rsc_rep_instance_memb, oc_pushd_rsc_rep_t, 1);
+OC_MEMB(pushd_rsc_rep_instance_memb, oc_pushd_resource_rep_t, 1);
 
 /*
  * @brief	`pushed_rsc_list` keeps Resource representation of Pushed Resources
@@ -189,7 +189,7 @@ enum {
  * if this callback function is provided by user, it will called whenever new
  * push is arrived...
  */
-static void (*oc_push_arrived)(oc_pushd_rsc_rep_t *) = NULL;
+static void (*oc_push_arrived)(oc_pushd_resource_rep_t *) = NULL;
 
 #define pp_statestr(i) (pp_state_strs[(i)])
 
@@ -1033,13 +1033,13 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
  *
  * @param uri uri for pushed Resource
  * @param device_index device index which pushed Resource belongs to
- * @return `oc_pushd_rsc_rep_t` instance
+ * @return `oc_pushd_resource_rep_t` instance
  */
-static oc_pushd_rsc_rep_t *
+static oc_pushd_resource_rep_t *
 _find_pushd_rsc_rep_by_uri(oc_string_t *uri, size_t device_index)
 {
-  oc_pushd_rsc_rep_t *pushd_rsc_rep =
-    (oc_pushd_rsc_rep_t *)(oc_list_head(pushd_rsc_rep_list));
+  oc_pushd_resource_rep_t *pushd_rsc_rep =
+    (oc_pushd_resource_rep_t *)(oc_list_head(pushd_rsc_rep_list));
 
   while (pushd_rsc_rep) {
     if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri)) &&
@@ -1067,7 +1067,7 @@ get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)user_data;
 
   int result = OC_STATUS_OK;
-  oc_pushd_rsc_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(
+  oc_pushd_resource_rep_t *pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(
     &request->resource->uri, request->resource->device);
 
   if (!pushd_rsc_rep) {
@@ -1472,7 +1472,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
   int result = OC_STATUS_CHANGED;
   oc_rep_t *rep = request->request_payload;
   oc_rep_t *common_property;
-  oc_pushd_rsc_rep_t *pushd_rsc_rep;
+  oc_pushd_resource_rep_t *pushd_rsc_rep;
   oc_recvs_t *recvs_instance;
   oc_recv_t *recv_obj;
 
@@ -1680,7 +1680,7 @@ get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 /*
  * @brief purge app resource (`oc_resource_t`) and resource representation
- * instance (`oc_pushd_rsc_rep_t`) accessed through `uri` in device whose
+ * instance (`oc_pushd_resource_rep_t`) accessed through `uri` in device whose
  * index is `device_index`
  *
  * @param uri URI of app resource to be purged
@@ -1691,7 +1691,7 @@ _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 {
   oc_resource_t *pushd_rsc = oc_ri_get_app_resource_by_uri(
     oc_string(*uri), oc_string_len(*uri), device_index);
-  oc_pushd_rsc_rep_t *pushd_rsc_rep =
+  oc_pushd_resource_rep_t *pushd_rsc_rep =
     _find_pushd_rsc_rep_by_uri(uri, device_index);
 
   if (pushd_rsc_rep) {
@@ -1724,7 +1724,7 @@ _purge_pushd_rsc(oc_string_t *uri, size_t device_index)
 
 /*
  * @brief create app Resource (`oc_resource_t`) and Resource representation
- * (`oc_pushd_rsc_rep_t`) instance for the pushed Resource
+ * (`oc_pushd_resource_rep_t`) instance for the pushed Resource
  *
  * @param recv_obj receiver object that points pushed resource
  * @param resource Push Receiver resource
@@ -1766,8 +1766,8 @@ _create_pushd_rsc(oc_recv_t *recv_obj, const oc_resource_t *resource)
       result = false;
 
     /* create resource representation container for this resource */
-    oc_pushd_rsc_rep_t *pushd_rsc_rep_instance =
-      (oc_pushd_rsc_rep_t *)oc_memb_alloc(&pushd_rsc_rep_instance_memb);
+    oc_pushd_resource_rep_t *pushd_rsc_rep_instance =
+      (oc_pushd_resource_rep_t *)oc_memb_alloc(&pushd_rsc_rep_instance_memb);
     if (pushd_rsc_rep_instance) {
       pushd_rsc_rep_instance->resource = pushd_rsc;
       pushd_rsc_rep_instance->rep = NULL;
@@ -1824,7 +1824,7 @@ _purge_recv_obj_list(oc_recvs_t *recvs_instance)
 static void
 _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
-  oc_pushd_rsc_rep_t *pushd_rsc_rep;
+  oc_pushd_resource_rep_t *pushd_rsc_rep;
 
   while (rep) {
     switch (rep->type) {
