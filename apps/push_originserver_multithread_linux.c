@@ -67,7 +67,7 @@ static int brightness2;
  * callback function to be called whenever new PUSH arrives
  */
 void
-push_arrived(oc_pushd_rsc_rep_t *push_payload)
+push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
   printf("new push arrives (path: %s, rt: ",
          oc_string(push_payload->resource->uri));
@@ -78,7 +78,7 @@ push_arrived(oc_pushd_rsc_rep_t *push_payload)
   }
   printf(")\n");
 
-  oc_print_pushd_rsc(push_payload->rep);
+  oc_print_pushd_resource(push_payload->rep);
 }
 
 static int

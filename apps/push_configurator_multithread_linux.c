@@ -65,7 +65,7 @@ typedef struct
 } custom_func_s;
 
 void
-push_arrived(oc_pushd_rsc_rep_t *push_payload)
+push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
   PRINT("new push arrives (path: %s, rt: ",
         oc_string(push_payload->resource->uri));
@@ -76,7 +76,7 @@ push_arrived(oc_pushd_rsc_rep_t *push_payload)
   }
   PRINT(")\n");
 
-  oc_print_pushd_rsc(push_payload->rep);
+  oc_print_pushd_resource(push_payload->rep);
 }
 
 static int
@@ -114,7 +114,7 @@ cb_create_notification_selector_response(oc_client_response_t *data)
   }
 
   printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
-  oc_print_pushd_rsc(data->payload);
+  oc_print_pushd_resource(data->payload);
 
   return;
 }
@@ -125,7 +125,8 @@ create_notification_selector(void)
   if (!is_resource_found())
     return;
 
-  if (oc_init_post(PUSHCONF_RSC_PATH, &originserver_ep, "if=oic.if.create",
+  if (oc_init_post(PUSHCONFIG_RESOURCE_PATH, &originserver_ep,
+                   "if=oic.if.create",
                    &cb_create_notification_selector_response, LOW_QOS, NULL)) {
     oc_string_t pushtarget_ep_str;
     oc_string_t pushtarget_str;
@@ -203,7 +204,7 @@ cb_update_push_receiver_response(oc_client_response_t *data)
   }
 
   printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
-  oc_print_pushd_rsc(data->payload);
+  oc_print_pushd_resource(data->payload);
 
   return;
 }
@@ -217,7 +218,7 @@ update_push_receiver(void)
   char query[2048];
   sprintf(query, "receiveruri=%s&if=oic.if.rw", recv_path);
 
-  if (oc_init_post(PUSHRECVS_RSC_PATH, &targetserver_ep, query,
+  if (oc_init_post(PUSHRECEIVERS_RESOURCE_PATH, &targetserver_ep, query,
                    &cb_update_push_receiver_response, LOW_QOS, NULL)) {
     /* create a "receiver" object in pushreceiver Resource */
     oc_rep_begin_root_object();
@@ -240,7 +241,7 @@ static void
 cb_retrieve_push_origin_rsc_response(oc_client_response_t *data)
 {
   printf("RETRIEVE \"%s\":\n", resource_rt);
-  oc_print_pushd_rsc(data->payload);
+  oc_print_pushd_resource(data->payload);
 }
 
 static void
@@ -292,8 +293,8 @@ exit:
 static void
 cb_retrieve_pushconf_rsc_response(oc_client_response_t *data)
 {
-  printf("RETRIEVE \"%s\":\n", PUSHCONF_RSC_TYPE);
-  oc_print_pushd_rsc(data->payload);
+  printf("RETRIEVE \"%s\":\n", PUSHCONFIG_RESOURCE_TYPE);
+  oc_print_pushd_resource(data->payload);
 }
 
 static void
@@ -301,21 +302,21 @@ retrieve_pushconf_rsc(void)
 {
   if (!is_resource_found())
     return;
-  oc_do_get(PUSHCONF_RSC_PATH, &originserver_ep, "if=oic.if.b",
+  oc_do_get(PUSHCONFIG_RESOURCE_PATH, &originserver_ep, "if=oic.if.b",
             cb_retrieve_pushconf_rsc_response, LOW_QOS, NULL);
 }
 
 static void
 cb_retrieve_pushreceiver_rsc_response(oc_client_response_t *data)
 {
-  printf("RETRIEVE \"%s\":\n", PUSHRECVS_RSC_TYPE);
-  oc_print_pushd_rsc(data->payload);
+  printf("RETRIEVE \"%s\":\n", PUSHRECEIVERS_RESOURCE_TYPE);
+  oc_print_pushd_resource(data->payload);
 }
 
 static void
 retrieve_pushreceiver_rsc(void)
 {
-  oc_do_get(PUSHRECVS_RSC_PATH, &targetserver_ep, "if=oic.if.rw",
+  oc_do_get(PUSHRECEIVERS_RESOURCE_PATH, &targetserver_ep, "if=oic.if.rw",
             cb_retrieve_pushreceiver_rsc_response, LOW_QOS, NULL);
 }
 

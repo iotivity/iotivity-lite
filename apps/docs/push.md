@@ -165,18 +165,18 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	 * @brief object used to store Resource pushed to
 	 * "oic.r.pshreceiver:receivers[i].receiveruri"
 	 */
-	typedef struct oc_pushd_rsc_rep
+	typedef struct oc_pushd_resource_rep
 	{
-	  struct oc_pushd_rsc_rep *next;
+	  struct oc_pushd_resource_rep *next;
 	  oc_resource_t
 		*resource;   ///< used to point any pushed Resource managed by iotivity-lite
 	  oc_rep_t *rep; ///< payload of pushed Resource
-	} oc_pushd_rsc_rep_t;
+	} oc_pushd_resource_rep_t;
 
 	/**
 	 * @brief callback function called whenever new push arrives
 	 */
-	typedef void (*oc_on_push_arrived_t)(oc_pushd_rsc_rep_t *);
+	typedef void (*oc_on_push_arrived_t)(oc_pushd_resource_rep_t *);
 
 	/**
 	 * @brief set callback function called whenever new push arrives
@@ -190,7 +190,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	- Example:
 		```c
 		/* callback function example */
-		void push_arrived(oc_pushd_rsc_rep_t *push_payload)
+		void push_arrived(oc_pushd_resource_rep_t *push_payload)
 		{
 		  printf("new push arrives (path: %s, rt: ", oc_string(push_payload->resource->uri));
 		  for (size_t i=0; i<oc_string_array_get_allocated_size(push_payload->resource->types); i++)
@@ -199,7 +199,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 		  }
 		  printf(")\n");
 
-		  oc_print_pushd_rsc(push_payload->rep);
+		  oc_print_pushd_resource(push_payload->rep);
 		}
 		```
 
@@ -208,7 +208,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	```c
 	#include "oc_push.h"
 	```
-- `oc_print_pushd_rsc()`
+- `oc_print_pushd_resource()`
 	```c
 	/**
 	 * @brief print payload of Resource in user friendly format
@@ -216,7 +216,7 @@ OCF Push Notification is composed of 3 players: **Origin Server**, **Target Serv
 	 * @param[in] payload pointer to the payload to be printed
 	 */
 	OC_API
-	void oc_print_pushd_rsc(const oc_rep_t *payload);
+	void oc_print_pushd_resource(const oc_rep_t *payload);
 	```
 	- print out payload contents.
 <br>
