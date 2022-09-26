@@ -30,6 +30,7 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
+#include "util/oc_features.h"
 
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -67,6 +68,11 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
+#ifdef OC_HAS_FEATURE_PUSH
+OC_PROCESS_NAME(oc_push_process);
+void oc_push_list_init();
+#endif
+
 #ifdef OC_SERVER
 OC_LIST(g_app_resources);
 OC_LIST(g_observe_callbacks);
@@ -99,6 +105,29 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
 
 oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
+
+const char *cli_status_strs[] = {
+  "OC_STATUS_OK",                       /* 0 */
+  "OC_STATUS_CREATED",                  /* 1 */
+  "OC_STATUS_CHANGED",                  /* 2 */
+  "OC_STATUS_DELETED",                  /* 3 */
+  "OC_STATUS_NOT_MODIFIED",             /* 4 */
+  "OC_STATUS_BAD_REQUEST",              /* 5 */
+  "OC_STATUS_UNAUTHORIZED",             /* 6 */
+  "OC_STATUS_BAD_OPTION",               /* 7 */
+  "OC_STATUS_FORBIDDEN",                /* 8 */
+  "OC_STATUS_NOT_FOUND",                /* 9 */
+  "OC_STATUS_METHOD_NOT_ALLOWED",       /* 10 */
+  "OC_STATUS_NOT_ACCEPTABLE",           /* 11 */
+  "OC_STATUS_REQUEST_ENTITY_TOO_LARGE", /* 12 */
+  "OC_STATUS_UNSUPPORTED_MEDIA_TYPE",   /* 13 */
+  "OC_STATUS_INTERNAL_SERVER_ERROR",    /* 14 */
+  "OC_STATUS_NOT_IMPLEMENTED",          /* 15 */
+  "OC_STATUS_BAD_GATEWAY",              /* 16 */
+  "OC_STATUS_SERVICE_UNAVAILABLE",      /* 17 */
+  "OC_STATUS_GATEWAY_TIMEOUT",          /* 18 */
+  "OC_STATUS_PROXYING_NOT_SUPPORTED"    /* 19 */
+};
 
 static void
 set_mpro_status_codes(void)
@@ -176,6 +205,13 @@ oc_status_code(oc_status_t key)
 {
   // safe: no status code is larger than INT_MAX
   return (int)oc_coap_status_codes[key];
+}
+
+OC_API
+const char *
+oc_status_to_str(oc_status_t key)
+{
+  return cli_status_strs[key];
 }
 
 int
@@ -376,6 +412,10 @@ start_processes(void)
 #ifdef OC_TCP
   oc_process_start(&oc_session_events, NULL);
 #endif /* OC_TCP */
+
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_process_start(&oc_push_process, NULL);
+#endif
 }
 
 static void
@@ -397,6 +437,10 @@ stop_processes(void)
 #endif /* OC_SECURITY */
 
   oc_process_exit(&message_buffer_handler);
+
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_process_exit(&oc_push_process);
+#endif
 }
 
 #ifdef OC_SERVER
@@ -454,6 +498,10 @@ oc_ri_init(void)
 #endif /* OC_CLIENT */
 
   oc_list_init(g_timed_callbacks);
+
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_push_list_init();
+#endif
 
   oc_process_init();
   start_processes();

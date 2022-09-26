@@ -24,7 +24,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             :tada: Thank you for your code contribution! To guarantee the change/addition is conformant to the [OCF Specification](https://openconnectivity.org), we would like to ask you to execute OCF Conformance Testing of your change :point_up: **when your work is ready to be reviewed**.
-            
+
             ---
 
             :information_source: To verify your latest change (${{ github.event.pull_request.head.sha }}), label this PR with `OCF Conformance Testing`.

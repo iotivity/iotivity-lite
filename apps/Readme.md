@@ -17,183 +17,143 @@ naming convention:
 
 ## Example applications
 
-### Arduino.cpp
+- ### Arduino.cpp:
+  Server example application explaining how to use IoTivity on an Arduino.
+  e.g. how to use IoTivity code in conjunction with the Arduino main loop.
 
-Server example application explaining how to use IoTivity on an Arduino.
-e.g. how to use IoTivity code in conjunction with the Arduino main loop.
+- ### client_block_linux.c:
+  Client and Server example with linux main loop.
 
-### client_block_linux.c
+- ### client_certification_tests.c:
+  Client Certification test example
+  - runs on Linux only.
+  - uses client_certification_tests_IDD.cbor as introspection data.
 
-Client and Server example with linux main loop.
+- ### client_collections_linux.c:
+  Client example with collections.
 
-### client_certification_tests.c
+- ### client_linux.c:
+  Client example with Linux main loop.
 
-Client Certification test example
+- ### client_multithread_linux.c:
+  Client example on linux implementing multiple threads.
 
-- runs on Linux only.
-- uses client_certification_tests_IDD.cbor as introspection data.
+- ### client_openthread.c:
+  Client example on openthread.
 
-### client_collections_linux.c
+- ### client_zephyr.c:
+  Client example on zypher.
 
-Client example with collections.
+- ### cloud_certification_tests.c:
+  Cloud certification example.
 
-### client_linux.c
+- ### cloud_client.c:
+  Client example with cloud API.
 
-Client example with Linux main loop.
+- ### cloud_proxy.c:
+  Cloud proxy example.
+  - uses cloud_proxy_IDD.cbor as introspection data.
+    works on Windows & Linux.
 
-### client_multithread_linux.c
+- ### cloud_server.c:
+  Server example with Cloud API.
 
-Client example on linux implementing multiple threads.
+- ### introspectionclient.c:
+  Client example of retrieving introspection device data.
 
-### client_openthread.c
+- ### multi_device_client_linux.c:
+  Client example on linux talking to multiple devices.
 
-Client example on openthread.
+- ### multi_device_server_linux.c:
+  Server example on linux, implementing more than 1 device.
 
-### client_zephyr.c
+- ### secure_mcast_client.c:
+  Client example with simple secure multicast.
+  Works on Linux only.
 
-Client example on zypher.
+- ### secure_mcast_server1.c:
+  Server example implementing simple secure multicast.
+  Works on Linux only. use in combination with secure_mcast_client.c.
 
-### cloud_certification_tests.c
+- ### secure_mcast_server2.c:
+  Server example implementing simple secure multicast.
+  Works on Linux only. use in combination with secure_mcast_client.c.
 
-Cloud certification example.
+- ### sensor_interrupt_server_zephyr.c:
+  Server example implementing a sensor on zypher, showing how to use interupts.
 
-### cloud_client.c
+- ### server_arduino.cpp:
+  Server example on Arduino.
 
-Client example with cloud API.
+- ### server_block_linux.c:
+  Client and server example on linux.
 
-### cloud_proxy.c
+- ### server_certification_tests.c:
+  Server example for certification tests.
+  - runs on Linux only.
+  - uses server_certification_tests_IDD.cbor as introspection data.
 
-Cloud proxy example.
+- ### server_collections_linux.c:
+  Server example implementing collections.
 
-- uses cloud_proxy_IDD.cbor as introspection data.
+- ### server_linux.c:
+  Server example on Linux.
 
-works on Windows & Linux.
+- ### server_multithread_linux.c:
+  Server example on Linux, multi threaded.
 
-### cloud_server.c
+- ### server_openthread.c:
+  Server example on openthread.
 
-Server example with Cloud API.
+- ### server_rules.c:
+  Server example implementing rules.
+  - runs on Linux only.
+  - uses server_certification_tests_IDD.cbor as introspection data.
 
-### introspectionclient.c
+- ### server_zephyr.c:
+  Client example on zypher.
 
-Client example of retrieving introspection device data.
+- ### simpleclient.c:
+  Client example on Linux.
 
-### multi_device_client_linux.c
+- ### simpleclient_windows.c:
+  Client example on windows.
 
-Client example on linux talking to multiple devices.
+- ### simpleserver.c:
+  Server example on Linux.
 
-### multi_device_server_linux.c
+- ### simpleserver_pki.c:
+  Server example implementing PKI using test certificates.
+  - runs on Linux only.
 
-Server example on linux, implementing more than 1 device.
+- ### simpleserver_windows.c:
+  Server example on Windows.
 
-### secure_mcast_client.c
+- ### smart_home_server_linux.c:
+  Server example on Linux.
+  - uses smart_home_server_linux_IDD.cbor as introspection data.
 
-Client example with simple secure multicast.
+- ### smart_home_server_with_mock_swupdate.cpp:
+  Server example implementing a mockup of software update.
 
-Works on Linux only.
+- ### smart_lock_linux.c:
+  Server example of a smart lock on Linux.
+  - includes commandline controller.
 
-### secure_mcast_server1.c
+- ### temp_sensor_client_linux.c:
+  Client example of temperature sensor.
 
-Server example implementing simple secure multicast.
+- ### push_configurator_multithread_linux.c:
+  PUSH configuration client which configures origin server and target server.
 
-Works on Linux only.
-use in combination with secure_mcast_client.c.
+- ### push_originserver_multithread_linux.c:
+  PUSH origin server which has pushable Resource.
 
-### secure_mcast_server2.c
+- ### push_targetserver_multithread_linux.c:
+  PUSH target server which receives PUSH update request from PUSH origin server.
+  It plays the role of PUSH configurator at the same time.
+  - for more detail see [OCF Push Notification](./docs/push.md)
 
-Server example implementing simple secure multicast.
-
-Works on Linux only.
-use in combination with secure_mcast_client.c.
-
-### sensor_interrupt_server_zephyr.c
-
-Server example implementing a sensor on zypher, showing how to use interupts.
-
-### server_arduino.cpp
-
-Server example on Arduino.
-
-### server_block_linux.c
-
-Client and server example on linux.
-
-### server_certification_tests.c
-
-Server example for certification tests.
-
-- runs on Linux only.
-- uses server_certification_tests_IDD.cbor as introspection data.
-
-### server_collections_linux.c
-
-Server example implementing collections.
-
-### server_linux.c
-
-Server example on Linux.
-
-### server_multithread_linux.c
-
-Server example on Linux, multi threaded.
-
-### server_openthread.c
-
-Server example on openthread.
-
-### server_rules.c
-
-Server example implementing rules.
-
-- runs on Linux only.
-- uses server_certification_tests_IDD.cbor as introspection data.
-
-### server_zephyr.c
-
-Client example on zypher.
-
-### simpleclient.c
-
-Client example on Linux.
-
-### simpleclient_windows.c
-
-Client example on windows.
-
-### simpleserver.c
-
-Server example on Linux.
-
-### simpleserver_pki.c
-
-Server example implementing PKI using test certificates.
-
-- runs on Linux only.
-
-### simpleserver_windows.c
-
-Server example on Windows.
-
-### smart_home_server_linux.c
-
-Server example on Linux.
-
-- uses smart_home_server_linux_IDD.cbor as introspection data.
-
-### smart_home_server_with_mock_swupdate.cpp
-
-Server example implementing a mockup of software update.
-
-### smart_lock_linux.c
-
-Server example of a smart lock on Linux.
-
-- includes commandline controller.
-
-### temp_sensor_client_linux.c
-
-Client example of temperature sensor.
-
-### Other files
-
-The JSON files are the introspection files in JSON.
-The CBOR files are the introspection files in CBOR.
+- ### Other files:
+  The JSON files are the introspection files in JSON.
+  The CBOR files are the introspection files in CBOR.

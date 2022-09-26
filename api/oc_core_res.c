@@ -14,6 +14,7 @@
  // limitations under the License.
  */
 
+#include "util/oc_features.h"
 #include "oc_core_res.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
@@ -50,6 +51,12 @@ static oc_platform_info_t oc_platform_info;
 static bool announce_con_res = false;
 static int res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
+
+/*todo4me <2022/9/5> remove later*/
+#ifdef OC_HAS_FEATURE_PUSH
+void oc_create_pushconf_resource(size_t device_index);
+void oc_create_pushreceiver_resource(size_t device_index);
+#endif
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.
@@ -421,6 +428,11 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_create_cloudconf_resource(device_count);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_create_pushconf_resource(device_count);
+  oc_create_pushreceiver_resource(device_count);
+#endif
 
   oc_device_info[device_count].data = data;
 
