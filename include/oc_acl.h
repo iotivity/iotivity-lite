@@ -129,6 +129,16 @@ typedef struct oc_sec_ace_t
 } oc_sec_ace_t;
 
 /**
+ * @brief Access control entry (ACE) filtering function.
+ *
+ * @param ace ACE to check
+ * @param user_data user data passed from the caller
+ * @return true if ACE matches the filter
+ * @return false otherwise
+ */
+typedef bool (*oc_sec_ace_filter_t)(const oc_sec_ace_t *ace, void *user_data);
+
+/**
  * @brief Get access control list of a device
  *
  * @param device Index of the device
@@ -136,6 +146,17 @@ typedef struct oc_sec_ace_t
  */
 OC_API
 oc_sec_acl_t *oc_sec_get_acl(size_t device);
+
+/**
+ * @brief Remove access control entries matching filter from given device
+ *
+ * @param device Index of the device
+ * @param filter Filtering function (if NULL all existing ACEs match)
+ * @param user_data User data passed from the caller
+ */
+OC_API
+void oc_sec_acl_clear(size_t device, oc_sec_ace_filter_t filter,
+                      void *user_data);
 
 /**
  * @brief Remove access control entry from given device

@@ -28,22 +28,22 @@
 #include "oc_helpers.h"
 #include "port/oc_network_event_handler_internal.h"
 
-#define DEVICE_URI "/oic/d"
-#define DEVICE_TYPE "oic.d.light"
-#define MANUFACTURER_NAME "Samsung"
-#define DEVICE_NAME "Table Lamp"
-#define OCF_SPEC_VERSION "ocf.1.0.0"
-#define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
+static const std::string kDeviceURI{ "/oic/d" };
+static const std::string kDeviceType{ "oic.d.light" };
+static const std::string kDeviceName{ "Table Lamp" };
+static const std::string kManufacturerName{ "Samsung" };
+static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
+static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 class TestCoreResource : public testing::Test {
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
     oc_core_init();
     oc_network_event_handler_mutex_init();
     oc_random_init();
   }
-  virtual void TearDown()
+  void TearDown() override
   {
     oc_random_destroy();
     oc_network_event_handler_mutex_destroy();
@@ -53,42 +53,37 @@ protected:
 
 TEST_F(TestCoreResource, InitPlatform_P)
 {
-  int oc_platform_info;
-
-  oc_platform_info = oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
+  int oc_platform_info =
+    oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
   EXPECT_EQ(0, oc_platform_info);
 }
 
 TEST_F(TestCoreResource, CoreInitPlatform_P)
 {
-  oc_platform_info_t *oc_platform_info;
-
-  oc_platform_info = oc_core_init_platform(MANUFACTURER_NAME, NULL, NULL);
-  EXPECT_EQ(strlen(MANUFACTURER_NAME),
+  const oc_platform_info_t *oc_platform_info =
+    oc_core_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
+  EXPECT_EQ(kManufacturerName.length(),
             oc_string_len(oc_platform_info->mfg_name));
 }
 
 TEST_F(TestCoreResource, CoreDevice_P)
 {
-  int numcoredevice;
-  oc_device_info_t *addcoredevice;
-
-  addcoredevice = oc_core_add_new_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME,
-                                         OCF_SPEC_VERSION,
-                                         OCF_DATA_MODEL_VERSION, NULL, NULL);
+  oc_device_info_t *addcoredevice = oc_core_add_new_device(
+    kDeviceURI.c_str(), kDeviceType.c_str(), kDeviceName.c_str(),
+    kOCFSpecVersion.c_str(), kOCFDataModelVersion.c_str(), nullptr, nullptr);
   ASSERT_NE(addcoredevice, nullptr);
-  numcoredevice = oc_core_get_num_devices();
+  size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
   oc_connectivity_shutdown(0);
 }
 
 TEST_F(TestCoreResource, CoreGetResource_P)
 {
-  oc_core_init_platform(MANUFACTURER_NAME, NULL, NULL);
+  oc_core_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
 
-  char uri[] = "/oic/p";
-  oc_resource_t *res = oc_core_get_resource_by_uri(uri, 0);
+  std::string uri = "/oic/p";
+  oc_resource_t *res = oc_core_get_resource_by_uri(uri.c_str(), 0);
 
   ASSERT_NE(nullptr, res);
-  EXPECT_EQ(strlen(uri), oc_string_len(res->uri));
+  EXPECT_EQ(uri.length(), oc_string_len(res->uri));
 }

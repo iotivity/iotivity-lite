@@ -282,7 +282,7 @@ protected:
     oc_tls_init_context();
     oc_device_info_t *info =
       oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                             "ocf.res.1.0.0", NULL, NULL);
+                             "ocf.res.1.0.0", nullptr, nullptr);
     EXPECT_NE(nullptr, info);
     oc_sec_cred_init();
 
@@ -323,6 +323,54 @@ public:
 };
 
 time_t TestTlsCertificates::now_{ time(nullptr) };
+
+static size_t
+oc_sec_cred_count(size_t device)
+{
+  size_t count = 0;
+  const oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  const oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
+  while (c != nullptr) {
+    ++count;
+    c = c->next;
+  }
+  return count;
+}
+
+TEST_F(TestTlsCertificates, ClearCertificates)
+{
+  // 4 = 2 root certificates + 2 mfg certs
+  EXPECT_EQ(4, oc_sec_cred_count(device_));
+
+  oc_sec_cred_clear(
+    device_, [](const oc_sec_cred_t *, void *) { return false; }, nullptr);
+  EXPECT_EQ(4, oc_sec_cred_count(device_));
+
+  EXPECT_NE(nullptr, oc_sec_get_cred_by_credid(idcert1_.credid_, device_));
+  oc_sec_cred_clear(
+    device_,
+    [](const oc_sec_cred_t *cred, void *data) {
+      const auto *cert = static_cast<IdentityCertificate *>(data);
+      return cred->credid == cert->credid_;
+    },
+    &idcert1_);
+  EXPECT_EQ(3, oc_sec_cred_count(device_));
+  EXPECT_EQ(nullptr, oc_sec_get_cred_by_credid(idcert1_.credid_, device_));
+
+#ifdef OC_PKI
+  EXPECT_NE(nullptr, oc_sec_get_cred_by_credid(idcert2_.credid_, device_));
+  auto removeMfgCert = [](const oc_sec_cred_t *cred, void *) {
+    return cred->credtype == OC_CREDTYPE_CERT &&
+           cred->credusage == OC_CREDUSAGE_MFG_CERT;
+  };
+  oc_sec_cred_clear(device_, removeMfgCert, nullptr);
+  EXPECT_EQ(2, oc_sec_cred_count(device_));
+  EXPECT_EQ(nullptr, oc_sec_get_cred_by_credid(idcert2_.credid_, device_));
+#endif /* OC_PKI */
+
+  oc_sec_cred_clear(device_, nullptr, nullptr);
+  EXPECT_EQ(0, oc_sec_cred_count(device_));
+}
 
 #ifdef OC_TEST
 

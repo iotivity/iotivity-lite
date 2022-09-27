@@ -29,7 +29,7 @@ extern "C" {
 
 struct oc_tls_peer_t;
 
-typedef struct oc_sec_add_new_cred_data_t
+typedef struct
 {
   bool created; ///< true if a new credential was created, false otherwise
   oc_sec_cred_t

@@ -33,10 +33,6 @@ static uint8_t buf[100];
 #endif /* OC_SECURITY */
 
 class TestStorage : public testing::Test {
-protected:
-  virtual void SetUp() {}
-
-  virtual void TearDown() {}
 };
 
 #ifdef OC_SECURITY

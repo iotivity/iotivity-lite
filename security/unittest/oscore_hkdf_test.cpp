@@ -25,13 +25,13 @@
 
 class TestOSCOREHKDF : public testing::Test {
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
     oc_random_init();
     oc_tls_init_context();
   }
 
-  virtual void TearDown()
+  void TearDown() override
   {
     oc_tls_shutdown();
     oc_random_destroy();

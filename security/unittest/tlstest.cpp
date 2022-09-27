@@ -32,30 +32,27 @@
 #undef delete
 #include "port/oc_network_event_handler_internal.h"
 
-#define MAX_WAIT_TIME 10
-#define RESOURCE_URI "/LightResourceURI"
-#define DEVICE_URI "/oic/d"
-#define RESOURCE_TYPE "oic.r.light"
-#define DEVICE_TYPE "oic.d.light"
-#define RESOURCE_INTERFACE "oic.if.baseline"
-#define MANUFACTURER_NAME "Samsung"
-#define DEVICE_NAME "Table Lamp"
-#define OCF_SPEC_VERSION "ocf.1.0.0"
-#define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
+static const std::string kDeviceURI{ "/oic/d" };
+static const std::string kDeviceType{ "oic.d.light" };
+static const std::string kDeviceName{ "Table Lamp" };
+static const std::string kManufacturerName{ "Samsung" };
+static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
+static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 class TestTlsConnection : public testing::Test {
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
     oc_ri_init();
     oc_network_event_handler_mutex_init();
     oc_core_init();
-    oc_init_platform(MANUFACTURER_NAME, NULL, NULL);
-    oc_add_device(DEVICE_URI, DEVICE_TYPE, DEVICE_NAME, OCF_SPEC_VERSION,
-                  OCF_DATA_MODEL_VERSION, NULL, NULL);
+    oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
+    oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(), kDeviceName.c_str(),
+                  kOCFSpecVersion.c_str(), kOCFDataModelVersion.c_str(),
+                  nullptr, nullptr);
   }
 
-  virtual void TearDown()
+  void TearDown() override
   {
     oc_ri_shutdown();
     oc_tls_shutdown();
