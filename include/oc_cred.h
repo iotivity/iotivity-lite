@@ -122,6 +122,17 @@ typedef struct oc_sec_creds_t
   oc_uuid_t rowneruuid;  ///< row owner uuid
 } oc_sec_creds_t;
 
+/**
+ * @brief Security credential filtering function.
+ *
+ * @param cred security credential to check
+ * @param user_data user data passed from the caller
+ * @return true if security credential matches the filter
+ * @return false otherwise
+ */
+typedef bool (*oc_sec_cred_filter_t)(const oc_sec_cred_t *cred,
+                                     void *user_data);
+
 #ifdef OC_PKI
 
 /**
@@ -253,6 +264,17 @@ int oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
  */
 OC_API
 oc_sec_creds_t *oc_sec_get_creds(size_t device);
+
+/**
+ * @brief remove credentials matching filter from given device
+ *
+ * @param device index of the device
+ * @param filter filtering function (if NULL all existing credentials match)
+ * @param user_data user data passed from the caller
+ */
+OC_API
+void oc_sec_cred_clear(size_t device, oc_sec_cred_filter_t filter,
+                       void *user_data);
 
 /**
  * @brief remove credential from given device

@@ -30,11 +30,11 @@
 #include <unistd.h>
 #include <vector>
 
-#define MAX_WAIT_TIME 10
-#define DEVICE_URI "/oic/d"
-#define MANUFACTURER_NAME "Samsung"
-#define OCF_SPEC_VERSION "ocf.1.0.0"
-#define OCF_DATA_MODEL_VERSION "ocf.res.1.0.0"
+static constexpr uint16_t kMaxWaitTime{ 10 };
+static const std::string kDeviceURI{ "/oic/d" };
+static const std::string kManufacturerName{ "Samsung" };
+static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
+static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 struct ApiDevice
 {
@@ -63,27 +63,27 @@ public:
 
   static int appInit(void)
   {
-    int result = oc_init_platform(MANUFACTURER_NAME, nullptr, nullptr);
+    int result = oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
     size_t deviceId = 0;
     if (s_ObtResource.enabled) {
-      result |=
-        oc_add_device(DEVICE_URI, s_ObtResource.device_type.c_str(),
-                      s_ObtResource.device_name.c_str(), OCF_SPEC_VERSION,
-                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      result |= oc_add_device(
+        kDeviceURI.c_str(), s_ObtResource.device_type.c_str(),
+        s_ObtResource.device_name.c_str(), kOCFSpecVersion.c_str(),
+        kOCFDataModelVersion.c_str(), nullptr, nullptr);
       s_ObtResource.device_id = deviceId++;
     }
     if (s_LightResource.enabled) {
-      result |=
-        oc_add_device(DEVICE_URI, s_LightResource.device_type.c_str(),
-                      s_LightResource.device_name.c_str(), OCF_SPEC_VERSION,
-                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      result |= oc_add_device(
+        kDeviceURI.c_str(), s_LightResource.device_type.c_str(),
+        s_LightResource.device_name.c_str(), kOCFSpecVersion.c_str(),
+        kOCFDataModelVersion.c_str(), nullptr, nullptr);
       s_LightResource.device_id = deviceId++;
     }
     if (s_SwitchResource.enabled) {
-      result |=
-        oc_add_device(DEVICE_URI, s_SwitchResource.device_type.c_str(),
-                      s_SwitchResource.device_name.c_str(), OCF_SPEC_VERSION,
-                      OCF_DATA_MODEL_VERSION, nullptr, nullptr);
+      result |= oc_add_device(
+        kDeviceURI.c_str(), s_SwitchResource.device_type.c_str(),
+        s_SwitchResource.device_name.c_str(), kOCFSpecVersion.c_str(),
+        kOCFDataModelVersion.c_str(), nullptr, nullptr);
       s_SwitchResource.device_id = deviceId++;
     }
     return result;
@@ -344,7 +344,7 @@ TEST_F(TestServerClient, DiscoverResources)
   ResourceDiscovered rd{};
   EXPECT_TRUE(oc_do_ip_discovery(nullptr, &onResourceDiscovered, &rd))
     << "Cannot send discovery request";
-  ApiHelper::poolEvents(MAX_WAIT_TIME);
+  ApiHelper::poolEvents(kMaxWaitTime);
   EXPECT_TRUE(rd.isDone());
 }
 

@@ -23,10 +23,6 @@
 #include <gtest/gtest.h>
 
 class RIGeneralIntegrationTest : public ::testing::Test {
-public:
-  virtual void SetUp() {}
-
-  virtual void TearDown() {}
 };
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P)

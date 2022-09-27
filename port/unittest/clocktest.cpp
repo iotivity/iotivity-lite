@@ -27,10 +27,6 @@ extern "C" {
 }
 
 class TestClock : public testing::Test {
-protected:
-  virtual void SetUp() {}
-
-  virtual void TearDown() {}
 };
 
 TEST_F(TestClock, oc_clock_time)

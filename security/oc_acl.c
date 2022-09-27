@@ -139,7 +139,7 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   return res;
 }
 
-static oc_sec_ace_t *
+oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
                         oc_ace_subject_t *subject, int aceid,
                         uint16_t permission, const char *tag, bool match_tag,
@@ -818,14 +818,7 @@ oc_sec_ace_get_res(oc_sec_ace_t *ace, const char *href,
   return data;
 }
 
-typedef struct oc_sec_ace_update_data_t
-{
-  oc_sec_ace_t *ace;
-  bool created;
-  bool created_resource;
-} oc_sec_ace_update_data_t;
-
-static bool
+bool
 oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
                       int aceid, uint16_t permission, const char *tag,
                       const char *href, oc_ace_wildcard_t wildcard,
@@ -848,7 +841,7 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
     return false;
   }
 
-  if (data) {
+  if (data != NULL) {
     data->ace = ace;
     data->created = created;
     data->created_resource = res_data.created;
@@ -940,14 +933,18 @@ oc_sec_remove_ace_by_aceid(int aceid, size_t device)
   return removed;
 }
 
-static void
-oc_sec_clear_acl(size_t device)
+void
+oc_sec_acl_clear(size_t device, oc_sec_ace_filter_t filter, void *user_data)
 {
   oc_sec_acl_t *acl_d = &aclist[device];
-  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(acl_d->subjects);
   while (ace != NULL) {
-    oc_acl_free_ace(ace, device);
-    ace = (oc_sec_ace_t *)oc_list_pop(acl_d->subjects);
+    oc_sec_ace_t *ace_next = ace->next;
+    if (filter == NULL || filter(ace, user_data)) {
+      oc_list_remove(acl_d->subjects, ace);
+      oc_acl_free_ace(ace, device);
+    }
+    ace = ace_next;
   }
 }
 
@@ -956,7 +953,7 @@ oc_sec_acl_free(void)
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_clear_acl(device);
+    oc_sec_acl_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (aclist) {
@@ -991,7 +988,7 @@ oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
 void
 oc_sec_acl_default(size_t device)
 {
-  oc_sec_clear_acl(device);
+  oc_sec_acl_clear(device, NULL, NULL);
   memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
@@ -1325,7 +1322,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       }
     }
   } else if (ret == -1) {
-    oc_sec_clear_acl(request->resource->device);
+    oc_sec_acl_clear(request->resource->device, NULL, NULL);
     success = true;
   }
 

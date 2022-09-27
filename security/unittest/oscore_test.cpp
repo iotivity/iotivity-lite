@@ -18,18 +18,28 @@
 
 #include "messaging/coap/coap.h"
 #include "messaging/coap/oscore.h"
-#include "oc_helpers.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "security/oc_oscore.h"
 #include "security/oc_oscore_context.h"
 #include "security/oc_oscore_crypto.h"
+#include "oc_helpers.h"
+
 #include "gtest/gtest.h"
 #include <cstdlib>
 
 class TestOSCORE : public testing::Test {
 protected:
-  virtual void SetUp() { oc_ri_init(); }
+  void SetUp() override
+  {
+    oc_network_event_handler_mutex_init();
+    oc_ri_init();
+  }
 
-  virtual void TearDown() { oc_ri_shutdown(); }
+  void TearDown() override
+  {
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
+  }
 };
 
 /* Test cases from RFC 8613 */

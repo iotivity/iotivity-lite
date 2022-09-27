@@ -289,13 +289,15 @@ oc_sec_remove_cred_by_credid(int credid, size_t device)
   return false;
 }
 
-static void
-oc_sec_clear_creds(size_t device)
+void
+oc_sec_cred_clear(size_t device, oc_sec_cred_filter_t filter, void *user_data)
 {
-  oc_sec_cred_t *cred = oc_list_head(devices[device].creds), *next;
+  oc_sec_cred_t *cred = oc_list_head(devices[device].creds);
   while (cred != NULL) {
-    next = cred->next;
-    oc_sec_remove_cred(cred, device);
+    oc_sec_cred_t *next = cred->next;
+    if (filter == NULL || filter(cred, user_data)) {
+      oc_sec_remove_cred(cred, device);
+    }
     cred = next;
   }
 }
@@ -303,7 +305,7 @@ oc_sec_clear_creds(size_t device)
 void
 oc_sec_cred_default(size_t device)
 {
-  oc_sec_clear_creds(device);
+  oc_sec_cred_clear(device, NULL, NULL);
   memset(devices[device].rowneruuid.id, 0, OC_UUID_ID_SIZE);
   oc_sec_dump_cred(device);
 }
@@ -313,7 +315,7 @@ oc_sec_cred_free(void)
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_sec_clear_creds(device);
+    oc_sec_cred_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (devices) {
@@ -1698,7 +1700,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     }
   } else {
     if (!roles_resource) {
-      oc_sec_clear_creds(request->resource->device);
+      oc_sec_cred_clear(request->resource->device, NULL, NULL);
     }
 #ifdef OC_PKI
     else {
