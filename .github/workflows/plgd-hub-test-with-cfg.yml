@@ -1,0 +1,97 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Run plgd/hub tests with cloud_server and a single configuration
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        type: string
+        required: true
+      file:
+        type: string
+        required: true
+      tag:
+        type: string
+        required: true
+      build_args:
+        type: string
+        required: true
+      build_type:
+        type: string
+        required: true
+      coverage:
+        type: boolean
+        required: false
+        default: false
+
+env:
+  TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
+
+jobs:
+  plgd-hub-test-with-cfg:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: Build cloud server docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: false
+          build-args: |
+            BUILD_ARGS=${{ inputs.build_args }}
+            BUILD_TYPE=${{ inputs.build_type }}
+          file: ${{ inputs.file }}
+          tags: ${{ inputs.tag }}
+
+      - name: Pull plgd hub tests image
+        run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
+
+      - name: Run cloud server container
+        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
+
+      - name: Run plgd hub tests image
+        run: docker run --rm --network=host ${{ env.TEST_CLOUD_SERVER_IMAGE }}
+
+      - name: Gather coverage data
+        if: ${{ inputs.coverage }}
+        run: |
+          # stop to generate .gcda files
+          docker stop --time 60 ${{ inputs.name }}
+          # restart to generate report from the .gcda files
+          docker start ${{ inputs.name }}
+          # see Dockerfile.cloud-server-debug for the absolute path with the iotivity-lite checkout
+          docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }} /bin/bash -c "./collect-coverage.sh --output /data/coverage/coverage-plgd-hub.json"
+
+      - name: Upload coverage data
+        if: ${{ inputs.coverage }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: plgd-hub-coverage
+          path: data/coverage/coverage-plgd-hub.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Collect cloud server logs when the test fails
+        if: ${{ failure() }}
+        run: cat `pwd`/data/0.log
+
+      - name: Collect sanitizers cloud server logs when the test fails
+        if: ${{ failure() }}
+        run: |
+          if ls `pwd`/data/0.asan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/0.asan.log*; \
+          fi
+          if ls `pwd`/data/0.tsan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/0.tsan.log*; \
+          fi
+
+      - name: Remove cloud server container
+        run: docker rm -f ${{ inputs.name }}

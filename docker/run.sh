@@ -7,7 +7,6 @@ if which logbt > /dev/null ; then
     PREFIX_EXEC="logbt -- "
 fi
 
-
 echo Spawning $NUM_DEVICES devices
 
 umask 0000
@@ -20,6 +19,16 @@ for ((i=0;i<$NUM_DEVICES;i++)); do
     ${PREFIX_EXEC} /iotivity-lite/port/linux/service $@ > /tmp/$i.log 2>&1 &
     pids+=($!)
 done
+
+terminate()
+{
+    echo "Terminate"
+    for (( i=0; i<${#pids[@]}; i++ )); do
+        kill -SIGTERM ${pids[$i]}
+    done
+}
+
+trap terminate SIGTERM
 
 # Naive check runs checks once a minute to see if either of the processes exited.
 # This illustrates part of the heavy lifting you need to do if you want to run
