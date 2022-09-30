@@ -102,6 +102,7 @@ init(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGPIPE, &sa, NULL);
+  sigaction(SIGTERM, &sa, NULL);
 
   if (pthread_mutex_init(&mutex, NULL) != 0) {
     OC_ERR("pthread_mutex_init failed!");

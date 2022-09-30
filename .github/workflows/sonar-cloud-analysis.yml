@@ -13,17 +13,37 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  cmake-linux-coverage:
+  unit-tests:
     uses: ./.github/workflows/cmake-linux-coverage.yml
+
+  plgd-device-tests:
+    uses: ./.github/workflows/plgd-device-test-with-cfg.yml
+    with:
+      name: cloud-server-debug
+      file: docker/apps/Dockerfile.cloud-server-debug
+      tag: dbg
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DBUILD_TESTING=ON"
+      build_type: Debug
+      coverage: true
+
+  plgd-hub-tests:
+    uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
+    with:
+      name: cloud-server-debug
+      file: docker/apps/Dockerfile.cloud-server-debug
+      tag: dbg
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DBUILD_TESTING=ON"
+      build_type: Debug
+      coverage: true
 
   sonar-cloud-scan:
     name: Sonar Cloud scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       SONAR_SCANNER_VERSION: 4.7.0.2747
       SONAR_SERVER_URL: "https://sonarcloud.io"
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-    needs: cmake-linux-coverage
+    needs: [unit-tests, plgd-device-tests, plgd-hub-tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -59,17 +79,27 @@ jobs:
           mkdir build && cd build
           # sonar-scanner currently cannot handle multi configuration configuration (ie. compilation of the same file with different defines),
           # so we enable as many features as possible so we get max. amount of code analysis
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=ON ..
           cd ..
           # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
           # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build --verbose --target client-server-static --target all
 
-      - name: Get coverage from the dps-test job
+      - name: Get coverage from all tests job
         uses: actions/download-artifact@v3
         with:
-          name: unit-test-coverage
           path: tools/
+
+      - name: Install gcovr
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gcovr
+
+      - name: Create single coverage file in sonarqube format
+        run: |
+          cd tools
+          # ls -lR .
+          gcovr --add-tracefile "unit-test-coverage/*coverage*.json" --add-tracefile "plgd-device-coverage/*coverage*.json" --add-tracefile "plgd-hub-coverage/*coverage*.json"  --sonarqube --output "coverage.xml" --verbose
 
       - name: Run sonar-scanner
         env:

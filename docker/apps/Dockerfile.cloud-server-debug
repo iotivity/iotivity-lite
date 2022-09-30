@@ -1,8 +1,8 @@
-FROM ubuntu:latest AS service
+FROM ubuntu:22.04 AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
-	DEBIAN_FRONTEND="noninteractive" apt-get install -y bash ca-certificates cmake curl gdb git-core g++ make patch python3 --no-install-recommends
+	DEBIAN_FRONTEND="noninteractive" apt-get install -y bash ca-certificates cmake curl gdb git-core gcovr g++ make patch python3 --no-install-recommends
 COPY ./  /iotivity-lite/
 RUN cd /iotivity-lite/ && git submodule update --recursive
 RUN mkdir /iotivity-lite/build && \

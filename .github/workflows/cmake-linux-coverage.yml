@@ -8,7 +8,7 @@ on:
 
 jobs:
   cmake_linux_coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -31,12 +31,12 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gcovr
-          ./tools/collect-coverage.sh --build-dir linuxbuild --output-file coverage-unit.xml
+          ./tools/collect-coverage.sh --build-dir linuxbuild --output ${GITHUB_WORKSPACE}/tools/coverage-unit.json
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-coverage
-          path: tools/coverage-unit.xml
+          path: tools/coverage-unit.json
           if-no-files-found: error
           retention-days: 1

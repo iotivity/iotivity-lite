@@ -1,0 +1,61 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Run plgd/hub tests with cloud_server
+
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
+
+jobs:
+  plgd-hub-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cloud-server-debug
+            args: ""
+          - name: cloud-server-debug-asan
+            args: "-DOC_ASAN_ENABLED=ON"
+          - name: cloud-server-debug-tsan
+            args: "-DOC_TSAN_ENABLED=ON"
+
+          - name: cloud-server-discovery-resource-observable-debug
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-debug-asan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-debug-tsan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+
+          - name: cloud-server-rep-realloc-debug
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+          - name: cloud-server-rep-realloc-debug-asan
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+          - name: cloud-server-rep-realloc-debug-tsan
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+
+          - name: cloud-server-discovery-resource-observable-rep-realloc-debug
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-asan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+
+    uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
+    with:
+      name: ${{ matrix.name }}
+      file: docker/apps/Dockerfile.cloud-server-debug
+      tag: dbg
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.args }}
+      build_type: Debug

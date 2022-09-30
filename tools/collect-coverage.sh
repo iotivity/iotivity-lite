@@ -24,7 +24,7 @@ usage() {
 	local readonly EXIT_STATUS=$1
 
 cat << HELP_USAGE
-Usage: $(basename $0) [-b|--build-dir DIR] [-h|--help] [-o|--output-file]
+Usage: $(basename $0) [-b|--build-dir DIR] [-h|--help] [-o|--output FILE]
 
 Description:
     Helper script to collect coverage data
@@ -32,7 +32,7 @@ Description:
 Options:
     -b|--build-dir DIR      directory where CMake build system is generated in (default: build)
     -h|--help               show help
-    -o|--output-file FILE   output file (default: coverage.xml)
+    -o|--output FILE        path output file (default: coverage.json in the script directory)
 HELP_USAGE
 
 	exit ${EXIT_STATUS}
@@ -42,7 +42,7 @@ readonly SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && 
 readonly REPOSITORY_DIR=$(cd "${SCRIPT_DIR}/.." &> /dev/null && pwd)
 
 BUILD_DIR=build
-OUTPUT_FILE=coverage.xml
+OUTPUT=${SCRIPT_DIR}/coverage.json
 while getopts "b:ho:-:" optchar; do
 	case "${optchar}" in
 		-)
@@ -54,8 +54,8 @@ while getopts "b:ho:-:" optchar; do
 				help)
 					usage 0
 					;;
-				output-file)
-					OUTPUT_FILE="${!OPTIND}";
+				output)
+					OUTPUT="${!OPTIND}";
 					OPTIND=$(($OPTIND+1))
 					;;
 				*)
@@ -72,7 +72,7 @@ while getopts "b:ho:-:" optchar; do
 			usage 0
 			;;
 		o)
-			OUTPUT_FILE=${OPTARG}
+			OUTPUT=${OPTARG}
 			;;
 		*)
 			echo "ERROR: Unknown option -${OPTARG}" >&2
@@ -128,5 +128,5 @@ gcovr --verbose --root .. \
 	--gcov-executable "${GCOV}" \
 	--exclude-unreachable-branches \
 	${GCOVR_OPTS[@]} \
-	--sonarqube --output "${SCRIPT_DIR}/${OUTPUT_FILE}" \
+	--json --output "${OUTPUT}" \
 	--verbose
