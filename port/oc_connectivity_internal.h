@@ -53,6 +53,9 @@ typedef struct
   uint16_t timeout;  //< timeout of a single retry in seconds (default: 5)
 } oc_tcp_connect_retry_t;
 
+#define OC_TCP_CONNECT_RETRY_MAX_COUNT 5
+#define OC_TCP_CONNECT_RETRY_TIMEOUT 5
+
 void oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout);
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
