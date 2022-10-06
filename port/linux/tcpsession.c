@@ -1077,14 +1077,11 @@ oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout)
 }
 
 static void
-tcp_send_waiting_messages_locked(tcp_waiting_session_t *session)
+tcp_send_waiting_messages_locked(tcp_waiting_session_t *ws,
+                                 const tcp_session_t *s)
 {
-  const tcp_session_t *s = find_session_by_endpoint_locked(&session->endpoint);
-  if (s == NULL) {
-    OC_ERR("cannot find ongoing session");
-  }
-
-  queued_message_t *qm = (queued_message_t *)oc_list_pop(session->messages);
+  assert(s != NULL);
+  queued_message_t *qm = (queued_message_t *)oc_list_pop(ws->messages);
   while (qm != NULL) {
     if (s != NULL) {
       qm->message->endpoint.interface_index = s->endpoint.interface_index;
@@ -1094,12 +1091,13 @@ tcp_send_waiting_messages_locked(tcp_waiting_session_t *session)
     }
     oc_message_unref(qm->message);
     oc_memb_free(&g_queued_message_s, qm);
-    qm = oc_list_pop(session->messages);
+    qm = oc_list_pop(ws->messages);
   }
 }
 
 static bool
-tcp_cleanup_connected_waiting_session_locked(tcp_waiting_session_t *ws)
+tcp_cleanup_connected_waiting_session_locked(tcp_waiting_session_t *ws,
+                                             const tcp_session_t *s)
 {
   if (ws->on_tcp_connect != NULL) {
     oc_tcp_on_connect_event_t *event = oc_tcp_on_connect_event_create(
@@ -1112,7 +1110,7 @@ tcp_cleanup_connected_waiting_session_locked(tcp_waiting_session_t *ws)
   }
 
   oc_list_remove(g_waiting_session_list, ws);
-  tcp_send_waiting_messages_locked(ws);
+  tcp_send_waiting_messages_locked(ws, s);
   signal_network_thread(&ws->dev->tcp);
   oc_memb_free(&g_tcp_waiting_session_s, ws);
   return true;
@@ -1146,7 +1144,7 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws)
   tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
   ws->sock = -1; // socket was taken by the ongoing session
 
-  if (!tcp_cleanup_connected_waiting_session_locked(ws)) {
+  if (!tcp_cleanup_connected_waiting_session_locked(ws, s)) {
     free_session_locked(s, false);
     return false;
   }
@@ -1197,7 +1195,7 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws, oc_clock_time_t now)
       OC_ERR("cannot allocate ongoing TCP connection");
       return -1;
     }
-    if (!tcp_cleanup_connected_waiting_session_locked(ws)) {
+    if (!tcp_cleanup_connected_waiting_session_locked(ws, s)) {
       free_session_locked(s, false);
       return -1;
     }
