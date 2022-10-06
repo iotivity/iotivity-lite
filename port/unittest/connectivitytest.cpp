@@ -27,6 +27,7 @@
 #include "oc_buffer.h"
 #include "oc_network_monitor.h"
 #include <array>
+#include <atomic>
 #include <cstdlib>
 #include <ctime>
 #include <gtest/gtest.h>
@@ -40,8 +41,8 @@ public:
   static pthread_mutex_t s_mutex;
   static pthread_cond_t s_cv;
   static oc_handler_t s_handler;
-  static OC_ATOMIC_UINT8_T s_terminate;
-  static bool s_is_callback_received;
+  static std::atomic<bool> s_terminate;
+  static std::atomic<bool> s_is_callback_received;
 
   static int appInit(void) { return 0; }
 
@@ -49,18 +50,19 @@ public:
 
   static oc_event_callback_retval_t quitEvent(void *)
   {
-    OC_ATOMIC_STORE8(s_terminate, 1);
+    s_terminate.store(true);
     return OC_EVENT_DONE;
   }
 
   static void poolEvents(uint16_t seconds)
   {
+    s_terminate.store(false);
     oc_set_delayed_callback(nullptr, quitEvent, seconds);
 
-    while (OC_ATOMIC_LOAD8(s_terminate) == 0) {
+    while (!s_terminate) {
       pthread_mutex_lock(&s_mutex);
       oc_clock_time_t next_event = oc_main_poll();
-      if (OC_ATOMIC_LOAD8(s_terminate) != 0) {
+      if (s_terminate) {
         pthread_mutex_unlock(&s_mutex);
         break;
       }
@@ -79,13 +81,13 @@ public:
 protected:
   void SetUp() override
   {
-    s_is_callback_received = false;
-    OC_ATOMIC_STORE8(s_terminate, 0);
+    s_is_callback_received.store(false);
+    s_terminate.store(false);
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
-    oc_connectivity_init(g_device);
+    ASSERT_EQ(0, oc_connectivity_init(g_device));
   }
 
   void TearDown() override
@@ -102,8 +104,8 @@ public:
 pthread_mutex_t TestConnectivity::s_mutex;
 pthread_cond_t TestConnectivity::s_cv;
 oc_handler_t TestConnectivity::s_handler;
-OC_ATOMIC_UINT8_T TestConnectivity::s_terminate;
-bool TestConnectivity::s_is_callback_received = false;
+std::atomic<bool> TestConnectivity::s_terminate{ false };
+std::atomic<bool> TestConnectivity::s_is_callback_received{ false };
 
 oc_endpoint_t *
 TestConnectivity::findEndpoint(size_t device)
@@ -138,7 +140,7 @@ TestConnectivity::createEndpoint(const std::string &ep_str)
   oc_endpoint_t ep;
   int ret = oc_string_to_endpoint(&ep_ocstr, &ep, nullptr);
   oc_free_string(&ep_ocstr);
-  EXPECT_EQ(0, ret);
+  EXPECT_EQ(0, ret) << "cannot convert endpoint " << ep_str;
   return ep;
 }
 
@@ -159,7 +161,7 @@ static void
 interface_event_handler(oc_interface_event_t event)
 {
   EXPECT_EQ(NETWORK_INTERFACE_UP, event);
-  TestConnectivity::s_is_callback_received = true;
+  TestConnectivity::s_is_callback_received.store(true);
 }
 
 TEST_F(TestConnectivity, oc_add_network_interface_event_callback)
@@ -195,7 +197,7 @@ session_event_handler(const oc_endpoint_t *ep, oc_session_state_t state)
 {
   EXPECT_NE(nullptr, ep);
   EXPECT_EQ(OC_SESSION_CONNECTED, state);
-  TestConnectivity::s_is_callback_received = true;
+  TestConnectivity::s_is_callback_received.store(true);
 }
 
 TEST_F(TestConnectivity, oc_add_session_event_callback)
@@ -249,7 +251,7 @@ on_tcp_connect(const oc_endpoint_t *, int state, void *)
 {
   OC_DBG("on_tcp_connect");
   EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, state);
-  OC_ATOMIC_STORE8(TestConnectivity::s_terminate, 1);
+  TestConnectivity::s_terminate.store(true);
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
@@ -302,12 +304,13 @@ TEST_F(TestConnectivity, oc_tcp_connect_fail)
   EXPECT_EQ(-1, oc_tcp_connect(&ep, nullptr, this));
 }
 
-void
+static void
 on_tcp_connect_timeout(const oc_endpoint_t *, int state, void *)
 {
   OC_DBG("on_tcp_connect_timeout");
   EXPECT_EQ(OC_TCP_SOCKET_ERROR_TIMEOUT, state);
-  OC_ATOMIC_STORE8(TestConnectivity::s_terminate, 1);
+  TestConnectivity::s_is_callback_received.store(true);
+  TestConnectivity::s_terminate.store(true);
 }
 
 TEST_F(TestConnectivity, oc_tcp_connect_timeout)
@@ -332,6 +335,9 @@ TEST_F(TestConnectivity, oc_tcp_connect_timeout)
 
   EXPECT_EQ(-1, oc_tcp_connection_state(&ep));
   oc_message_unref(msg);
+
+  oc_tcp_set_connect_retry(OC_TCP_CONNECT_RETRY_MAX_COUNT,
+                           OC_TCP_CONNECT_RETRY_TIMEOUT);
 }
 
 TEST_F(TestConnectivity, oc_tcp_connect_repeat_fail)
@@ -357,6 +363,7 @@ TEST_F(TestConnectivity, oc_tcp_connecting_repeat_fail)
             oc_tcp_connect(&ep, nullptr, this));
 }
 
+/** create a TCP session, wait for it to connect and send data */
 TEST_F(TestConnectivity, oc_tcp_send_buffer2)
 {
   oc_endpoint_t *ep = findEndpoint(g_device);
@@ -382,6 +389,8 @@ TEST_F(TestConnectivity, oc_tcp_send_buffer2)
   oc_message_unref(msg);
 }
 
+/** fail sending a message to an address without an ongoing or waiting TCP
+ * session */
 TEST_F(TestConnectivity, oc_tcp_send_buffer2_not_connected)
 {
   oc_endpoint_t ep = createEndpoint("coaps+tcp://[ff02::158]:12345");
@@ -397,5 +406,22 @@ TEST_F(TestConnectivity, oc_tcp_send_buffer2_not_connected)
 
   oc_message_unref(msg);
 }
+
+#if defined(OC_DNS_LOOKUP) && (defined(OC_DNS_LOOKUP_IPV6) || defined(OC_IPV4))
+/** connecting to existing but not listening endpoint should timeout after 5
+ * retries  */
+TEST_F(TestConnectivity, oc_tcp_send_buffer2_drop)
+{
+  oc_endpoint_t ep = createEndpoint("coap+tcp://openconnectivity.org:3456");
+  ASSERT_EQ(OC_TCP_SOCKET_STATE_CONNECTING,
+            oc_tcp_connect(&ep, on_tcp_connect_timeout, this));
+
+  while (!s_is_callback_received) {
+    OC_DBG("oc_tcp_send_buffer2_drop wait");
+    poolEvents(5);
+  }
+}
+#endif /* OC_DNS_LOOKUP && (OC_DNS_LOOKUP_IPV6 || OC_IPV4) */
+
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 #endif /* OC_TCP */

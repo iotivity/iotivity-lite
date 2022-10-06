@@ -85,6 +85,7 @@ typedef struct tcp_waiting_session_t
   {
     oc_clock_time_t start;
     uint8_t count;
+    uint8_t force;
   } retry;
   OC_LIST_STRUCT(messages);
   on_tcp_connect_t on_tcp_connect;
@@ -99,8 +100,8 @@ OC_MEMB(g_tcp_waiting_session_s, tcp_waiting_session_t,
         OC_MAX_TCP_PEERS); //< guarded by g_mutex
 
 static oc_tcp_connect_retry_t g_connect_retry = {
-  .max_count = 5,
-  .timeout = 5,
+  .max_count = OC_TCP_CONNECT_RETRY_MAX_COUNT,
+  .timeout = OC_TCP_CONNECT_RETRY_TIMEOUT,
 };
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
@@ -583,7 +584,8 @@ tcp_create_connected_socket(const oc_endpoint_t *endpoint,
 }
 
 static tcp_session_t *
-tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
+tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
+                          bool signal)
 {
   tcp_session_t *session =
     add_new_session_locked(sock, dev, endpoint, CSM_SENT);
@@ -593,7 +595,9 @@ tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint)
   }
 
   ip_context_rfds_fd_set(dev, sock);
-  signal_network_thread(&dev->tcp);
+  if (signal) {
+    signal_network_thread(&dev->tcp);
+  }
   OC_DBG("signaled network event thread to monitor the newly added session");
   return session;
 }
@@ -700,7 +704,7 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   tcp_connected_socket_t cs = tcp_create_connected_socket(endpoint, receiver);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    s = tcp_create_session_locked(cs.socket, dev, endpoint);
+    s = tcp_create_session_locked(cs.socket, dev, endpoint, true);
     if (s != NULL) {
       res.created = true;
       return res;
@@ -801,9 +805,10 @@ free_waiting_session_locked(tcp_waiting_session_t *session, bool has_expired,
       &session->endpoint,
       has_expired ? OC_TCP_SOCKET_ERROR_TIMEOUT : OC_TCP_SOCKET_ERROR,
       session->on_tcp_connect, session->on_tcp_connect_data);
-    if (event != NULL) {
-      oc_network_tcp_connect_event(event);
+    if (event == NULL) {
+      oc_abort("cannot send on TCP connect event: insufficient memory");
     }
+    oc_network_tcp_connect_event(event);
   }
 
   OC_DBG("freed waiting TCP session(%p)", session);
@@ -1071,41 +1076,12 @@ oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout)
          (unsigned)max_count, (unsigned)timeout);
 }
 
-static bool
-tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws)
+static void
+tcp_send_waiting_messages_locked(tcp_waiting_session_t *ws,
+                                 const tcp_session_t *s)
 {
-  assert(ws != NULL && ws->sock != -1);
-  int error = 0;
-  socklen_t len = sizeof(error);
-  if (getsockopt(ws->sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0 ||
-      error != 0) {
-    OC_ERR("socket error: %d", error);
-    return false; /* Solaris pending error */
-  }
-
-  if (oc_set_fd_flags(ws->sock, 0, O_NONBLOCK) < 0) {
-    OC_ERR("cannot set blocking socket(%d)", ws->sock);
-    return false;
-  }
-
-  if (tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint) == NULL) {
-    return false;
-  }
-
-  oc_list_remove(g_waiting_session_list, ws);
-  tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
-  return true;
-}
-
-void
-tcp_send_waiting_messages_locked(tcp_waiting_session_t *session)
-{
-  const tcp_session_t *s = find_session_by_endpoint_locked(&session->endpoint);
-  if (s == NULL) {
-    OC_ERR("cannot find ongoing session");
-  }
-
-  queued_message_t *qm = (queued_message_t *)oc_list_pop(session->messages);
+  assert(s != NULL);
+  queued_message_t *qm = (queued_message_t *)oc_list_pop(ws->messages);
   while (qm != NULL) {
     if (s != NULL) {
       qm->message->endpoint.interface_index = s->endpoint.interface_index;
@@ -1115,8 +1091,65 @@ tcp_send_waiting_messages_locked(tcp_waiting_session_t *session)
     }
     oc_message_unref(qm->message);
     oc_memb_free(&g_queued_message_s, qm);
-    qm = oc_list_pop(session->messages);
+    qm = oc_list_pop(ws->messages);
   }
+}
+
+static bool
+tcp_cleanup_connected_waiting_session_locked(tcp_waiting_session_t *ws,
+                                             const tcp_session_t *s)
+{
+  if (ws->on_tcp_connect != NULL) {
+    oc_tcp_on_connect_event_t *event = oc_tcp_on_connect_event_create(
+      &ws->endpoint, OC_TCP_SOCKET_STATE_CONNECTED, ws->on_tcp_connect,
+      ws->on_tcp_connect_data);
+    if (event == NULL) {
+      return false;
+    }
+    oc_network_tcp_connect_event(event);
+  }
+
+  oc_list_remove(g_waiting_session_list, ws);
+  tcp_send_waiting_messages_locked(ws, s);
+  signal_network_thread(&ws->dev->tcp);
+  oc_memb_free(&g_tcp_waiting_session_s, ws);
+  return true;
+}
+
+static bool
+tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws)
+{
+  assert(ws != NULL && ws->sock != -1);
+  int error = 0;
+  socklen_t len = sizeof(error);
+  if (getsockopt(ws->sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+    OC_ERR("get socket options error: %d", (int)errno);
+    return false; /* Solaris pending error */
+  }
+  if (error != 0) {
+    OC_ERR("socket error: %d", error);
+    return false;
+  }
+
+  if (oc_set_fd_flags(ws->sock, 0, O_NONBLOCK) < 0) {
+    OC_ERR("cannot set blocking socket(%d)", ws->sock);
+    return false;
+  }
+
+  tcp_session_t *s =
+    tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint, false);
+  if (s == NULL) {
+    return false;
+  }
+  tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
+  ws->sock = -1; // socket was taken by the ongoing session
+
+  if (!tcp_cleanup_connected_waiting_session_locked(ws, s)) {
+    free_session_locked(s, false);
+    return false;
+  }
+
+  return true;
 }
 
 enum {
@@ -1129,8 +1162,12 @@ static int
 tcp_waiting_session_check(const tcp_waiting_session_t *session,
                           oc_clock_time_t now)
 {
-  oc_clock_time_t elapsed = now - session->retry.start;
-  if (elapsed >= g_connect_retry.timeout * OC_CLOCK_SECOND) {
+  bool retry = session->retry.force != 0;
+  if (!retry) {
+    oc_clock_time_t elapsed = now - session->retry.start;
+    retry = elapsed >= g_connect_retry.timeout * OC_CLOCK_SECOND;
+  }
+  if (retry) {
     if (session->retry.count >= g_connect_retry.max_count) {
       return TCP_WAITING_SESSION_EXPIRED;
     }
@@ -1152,30 +1189,27 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws, oc_clock_time_t now)
   tcp_connected_socket_t cs = tcp_create_connected_socket(&ws->endpoint, NULL);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    if (tcp_create_session_locked(cs.socket, ws->dev, &ws->endpoint) != NULL) {
-      oc_list_remove(g_waiting_session_list, ws);
-      tcp_send_waiting_messages_locked(ws);
-      oc_tcp_on_connect_event_t *event = oc_tcp_on_connect_event_create(
-        &ws->endpoint, OC_TCP_SOCKET_STATE_CONNECTED, ws->on_tcp_connect,
-        ws->on_tcp_connect_data);
-      if (event != NULL) {
-        oc_network_tcp_connect_event(event);
-      }
-      oc_memb_free(&g_tcp_waiting_session_s, ws);
-      return OC_TCP_SOCKET_STATE_CONNECTED;
+    tcp_session_t *s =
+      tcp_create_session_locked(cs.socket, ws->dev, &ws->endpoint, false);
+    if (s == NULL) {
+      OC_ERR("cannot allocate ongoing TCP connection");
+      return -1;
     }
-    OC_ERR("cannot allocate ongoing TCP connection");
-    return -1;
+    if (!tcp_cleanup_connected_waiting_session_locked(ws, s)) {
+      free_session_locked(s, false);
+      return -1;
+    }
+    return OC_TCP_SOCKET_STATE_CONNECTED;
   }
 
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTING) {
-    ws->retry.count++;
+    ++ws->retry.count;
     ws->retry.start = now;
+    ws->retry.force = 0;
     ws->sock = cs.socket;
     tcp_waiting_session_set_socked_locked(&ws->dev->tcp, ws->sock);
     return OC_TCP_SOCKET_STATE_CONNECTING;
   }
-
   return -1;
 }
 
@@ -1227,24 +1261,13 @@ tcp_process_waiting_session_locked(tcp_waiting_session_t *ws)
 {
   if (!tcp_try_connect_waiting_session_locked(ws)) {
     OC_DBG("failed to connect session(%p)", ws);
-    tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
-    close(ws->sock);
-    ws->sock = -1;
-    return;
-  }
-
-  // session connected
-  tcp_send_waiting_messages_locked(ws);
-  if (ws->on_tcp_connect != NULL) {
-    oc_tcp_on_connect_event_t *event = oc_tcp_on_connect_event_create(
-      &ws->endpoint, OC_TCP_SOCKET_STATE_CONNECTED, ws->on_tcp_connect,
-      ws->on_tcp_connect_data);
-    if (event == NULL) {
-      return;
+    if (ws->sock >= 0) {
+      tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
+      close(ws->sock);
+      ws->sock = -1;
     }
-    oc_network_tcp_connect_event(event);
+    ws->retry.force = 1;
   }
-  oc_memb_free(&g_tcp_waiting_session_s, ws);
 }
 
 bool
