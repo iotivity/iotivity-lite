@@ -145,8 +145,8 @@ void newBuffer(int size) {
 /* Alt implementation of oc_rep_set_double macro*/
 void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_double(object, value);
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_double(object, value);
 }
 %}
 
@@ -182,8 +182,8 @@ void jni_rep_set_double(CborEncoder * object, const char* key, double value) {
 /* Alt implementation of oc_rep_set_int macro */
 void jni_rep_set_long(CborEncoder * object, const char* key, int64_t value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_int(object, value);
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_int(object, value);
 }
 %}
 
@@ -224,8 +224,8 @@ void jni_rep_set_long(CborEncoder * object, const char* key, int64_t value) {
 /* Alt implementation of oc_rep_set_uint macro */
 void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_uint(object, value);
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_uint(object, value);
 }
 %}
 
@@ -261,8 +261,8 @@ void jni_rep_set_uint(CborEncoder * object, const char* key, unsigned int value)
 /* Alt implementation of oc_rep_set_boolean macro */
 void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_boolean(object, value);
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_boolean(object, value);
 }
 %}
 
@@ -298,8 +298,12 @@ void jni_rep_set_boolean(CborEncoder * object, const char* key, bool value) {
 /* Alt implementation of oc_rep_set_text_string macro */
 void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_text_string(object, value, strlen(value));
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  if (value != NULL) {
+    g_err |= oc_rep_encode_text_string(object, value, strlen(value));
+  } else {
+    g_err |= oc_rep_encode_text_string(object, "", 0);
+  }
 }
 %}
 
@@ -310,8 +314,8 @@ void jni_rep_set_text_string(CborEncoder * object, const char* key, const char* 
 /* Alt implementation of oc_rep_set_byte_string macro */
 void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsigned char *value, size_t length) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
-  g_err |= cbor_encode_byte_string(object, value, length);
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_byte_string(object, value, length);
 }
 %}
 
@@ -321,7 +325,7 @@ void jni_rep_set_byte_string(CborEncoder * object, const char* key, const unsign
 CborEncoder * jni_rep_start_array(CborEncoder *parent) {
   OC_DBG("JNI: %s\n", __func__);
   CborEncoder *cbor_encoder_array = (CborEncoder *)malloc(sizeof(struct CborEncoder));
-  g_err |= cbor_encoder_create_array(parent, cbor_encoder_array, CborIndefiniteLength);
+  g_err |= oc_rep_encoder_create_array(parent, cbor_encoder_array, CborIndefiniteLength);
   return cbor_encoder_array;
 }
 %}
@@ -331,7 +335,7 @@ CborEncoder * jni_rep_start_array(CborEncoder *parent) {
 /* Alt implementation of oc_rep_end_array macro */
 void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encoder_close_container(parent, arrayObject);
+  g_err |= oc_rep_encoder_close_container(parent, arrayObject);
   free(arrayObject);
   arrayObject = NULL;
 }
@@ -342,7 +346,7 @@ void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
 /* Alt implementation of oc_rep_start_links_array macro */
 CborEncoder * jni_rep_start_links_array() {
   OC_DBG("JNI: %s\n", __func__);
-  cbor_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength);
+  oc_rep_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength);
   return &links_array;
 }
 %}
@@ -370,7 +374,7 @@ void jni_rep_end_links_array() {
 /* Alt implementation of oc_rep_start_root_object macro */
 CborEncoder * jni_begin_root_object() {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
+  g_err |= oc_rep_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
   return &root_map;
 }
 %}
@@ -436,7 +440,7 @@ void jni_rep_end_root_object() {
 void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* value, const size_t length) {
   OC_DBG("JNI: %s\n", __func__);
   if (value != NULL) {
-    g_err |= cbor_encode_byte_string(arrayObject, value, length);
+    g_err |= oc_rep_encode_byte_string(arrayObject, value, length);
   }
 }
 %}
@@ -493,7 +497,9 @@ void jni_rep_add_byte_string(CborEncoder *arrayObject, const unsigned char* valu
 void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value) {
   OC_DBG("JNI: %s\n", __func__);
   if (value != NULL) {
-    g_err |= cbor_encode_text_string(arrayObject, value, strlen(value));
+    g_err |= oc_rep_encode_text_string(arrayObject, value, strlen(value));
+  } else {
+    g_err |= oc_rep_encode_text_string(arrayObject, "", 0);
   }
 }
 %}
@@ -521,7 +527,7 @@ void jni_rep_add_text_string(CborEncoder *arrayObject, const char* value) {
 /* Alt implementation of oc_rep_add_double macro */
 void jni_rep_add_double(CborEncoder *arrayObject, const double value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_double(arrayObject, value);
+  g_err |= oc_rep_encode_double(arrayObject, value);
 }
 %}
 
@@ -548,7 +554,7 @@ void jni_rep_add_double(CborEncoder *arrayObject, const double value) {
 /* Alt implementation of oc_rep_add_int macro */
 void jni_rep_add_int(CborEncoder *arrayObject, const int64_t value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_int(arrayObject, value);
+  g_err |= oc_rep_encode_int(arrayObject, value);
 }
 %}
 
@@ -575,7 +581,7 @@ void jni_rep_add_int(CborEncoder *arrayObject, const int64_t value) {
 /* Alt implementation of oc_rep_add_boolean macro */
 void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_boolean(arrayObject, value);
+  g_err |= oc_rep_encode_boolean(arrayObject, value);
 }
 %}
 
@@ -584,7 +590,9 @@ void jni_rep_add_boolean(CborEncoder *arrayObject, const bool value) {
 /* Alt implementation of oc_rep_set_key macro */
 void jni_rep_set_key(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  if (key != NULL) {
+    g_err |= oc_rep_encode_text_string(parent, key, strlen(key));
+  }
 }
 %}
 
@@ -619,7 +627,7 @@ void jni_rep_set_key(CborEncoder *parent, const char* key) {
 /* Alt implementation of oc_rep_set_array macro */
 CborEncoder * jni_rep_set_array(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(parent, key, strlen(key));
   return jni_rep_start_array(parent);
 }
 %}
@@ -651,7 +659,7 @@ void jni_rep_close_array(CborEncoder *object, CborEncoder *arrayObject) {
 CborEncoder * jni_rep_start_object(CborEncoder *parent) {
   OC_DBG("JNI: %s\n", __func__);
   CborEncoder *cbor_encoder_map = (CborEncoder *)malloc(sizeof(struct CborEncoder));
-  g_err |= cbor_encoder_create_map(parent, cbor_encoder_map, CborIndefiniteLength);
+  g_err |= oc_rep_encoder_create_map(parent, cbor_encoder_map, CborIndefiniteLength);
   return cbor_encoder_map;
 }
 %}
@@ -661,7 +669,7 @@ CborEncoder * jni_rep_start_object(CborEncoder *parent) {
 /* Alt implementation of oc_rep_end_object macro */
 void jni_rep_end_object(CborEncoder *parent, CborEncoder *object) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encoder_close_container(parent, object);
+  g_err |= oc_rep_encoder_close_container(parent, object);
   free(object);
   object = NULL;
 }
@@ -798,7 +806,7 @@ void jni_rep_object_array_end_item(CborEncoder *parentArrayObject, CborEncoder *
 /* Alt implementation of oc_rep_set_object macro */
 CborEncoder * jni_rep_open_object(CborEncoder *parent, const char* key) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(parent, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(parent, key, strlen(key));
   return jni_rep_start_object(parent);
 }
 %}
@@ -872,14 +880,14 @@ void jni_rep_close_object(CborEncoder *parent, CborEncoder *object) {
 /* Alt implementation of oc_rep_set_int_array macro */
 void jni_rep_set_long_array(CborEncoder *object, const char* key, int64_t *values, int length) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
-  g_err |= cbor_encoder_create_array(object, &value_array, length);
+  g_err |= oc_rep_encoder_create_array(object, &value_array, length);
   int i;
   for (i = 0; i < length; i++) {
-    g_err |= cbor_encode_int(&value_array, values[i]);
+    g_err |= oc_rep_encode_int(&value_array, values[i]);
   }
-  g_err |= cbor_encoder_close_container(object, &value_array);
+  g_err |= oc_rep_encoder_close_container(object, &value_array);
 }
 %}
 
@@ -932,14 +940,14 @@ void jni_rep_set_long_array(CborEncoder *object, const char* key, int64_t *value
 /* Alt implementation of oc_rep_set_bool_array macro */
 void jni_rep_set_bool_array(CborEncoder *object, const char* key, bool *values, int length) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
-  g_err |= cbor_encoder_create_array(object, &value_array, length);
+  g_err |= oc_rep_encoder_create_array(object, &value_array, length);
   int i;
   for (i = 0; i < length; i++) {
-    g_err |= cbor_encode_boolean(&value_array, values[i]);
+    g_err |= oc_rep_encode_boolean(&value_array, values[i]);
   }
-  g_err |= cbor_encoder_close_container(object, &value_array);
+  g_err |= oc_rep_encoder_close_container(object, &value_array);
 }
 %}
 
@@ -992,14 +1000,14 @@ void jni_rep_set_bool_array(CborEncoder *object, const char* key, bool *values, 
 /* Alt implementation of oc_rep_set_double_array macro */
 void jni_rep_set_double_array(CborEncoder *object, const char* key, double *values, int length) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
-  g_err |= cbor_encoder_create_array(object, &value_array, length);
+  g_err |= oc_rep_encoder_create_array(object, &value_array, length);
   int i;
   for (i = 0; i < length; i++) {
-    g_err |= cbor_encode_floating_point(&value_array, CborDoubleType, &values[i]);
+    g_err |= oc_rep_encode_floating_point(&value_array, CborDoubleType, &values[i]);
   }
-  g_err |= cbor_encoder_close_container(object, &value_array);
+  g_err |= oc_rep_encoder_close_container(object, &value_array);
 }
 %}
 
@@ -1037,17 +1045,17 @@ void jni_rep_set_double_array(CborEncoder *object, const char* key, double *valu
 /* Alt implementation of oc_rep_set_string_array macro */
 void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_string_array_t values) {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= cbor_encode_text_string(object, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object, key, strlen(key));
   CborEncoder value_array;
-  g_err |= cbor_encoder_create_array(object, &value_array, CborIndefiniteLength);
+  g_err |= oc_rep_encoder_create_array(object, &value_array, CborIndefiniteLength);
   int i;
     for (i = 0; i < (int)oc_string_array_get_allocated_size(values); i++) {
       if (oc_string_array_get_item_size(values, i) > 0) {
-        g_err |= cbor_encode_text_string(&value_array, oc_string_array_get_item(values, i),
-                                         oc_string_array_get_item_size(values, i));
+        g_err |= oc_rep_encode_text_string(&value_array, oc_string_array_get_item(values, i),
+                                           oc_string_array_get_item_size(values, i));
       }
     }
-  g_err |= cbor_encoder_close_container(object, &value_array);
+  g_err |= oc_rep_encoder_close_container(object, &value_array);
 }
 %}
 
