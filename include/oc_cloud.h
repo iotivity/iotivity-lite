@@ -125,7 +125,7 @@ oc_cloud_context_t *oc_cloud_get_context(size_t device);
  * @brief Start cloud registration process.
  *
  * @param ctx cloud context (cannot be NULL)
- * @param cb callback function invoked on status change (cannot be NULL)
+ * @param cb callback function invoked on status change
  * @param data user data provided to the status change function
  * @return int 0 on success
  * @return int -1 on error

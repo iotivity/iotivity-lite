@@ -41,7 +41,7 @@ cloud_manager_cb(oc_cloud_context_t *ctx)
   OC_DBG("cloud manager status changed %d", (int)ctx->store.status);
   cloud_rd_manager_status_changed(ctx);
 
-  if (ctx->callback) {
+  if (ctx->callback != NULL) {
     ctx->callback(ctx, ctx->store.status, ctx->user_data);
   }
 }
@@ -229,6 +229,11 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   ctx->store.cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
     oc_cloud_manager_restart(ctx);
+    return;
+  }
+
+  if (oc_cloud_manager_start(ctx, ctx->callback, ctx->user_data) != 0) {
+    OC_ERR("cannot start cloud manager");
   }
 }
 
@@ -341,7 +346,7 @@ oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 int
 oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
-  if (!ctx || !cb) {
+  if (ctx == NULL) {
     return -1;
   }
 
