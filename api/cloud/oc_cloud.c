@@ -197,7 +197,6 @@ void
 cloud_update_by_resource(oc_cloud_context_t *ctx,
                          const cloud_conf_update_t *data)
 {
-
   if (data->ci_server_len == 0) {
     OC_DBG("[Cloud] got forced deregister via provisioning of empty cis\n");
     oc_cloud_reset_context(ctx->device);
