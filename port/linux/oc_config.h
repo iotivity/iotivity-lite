@@ -115,6 +115,7 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of callbacks for connection of session */
 #define OC_MAX_SESSION_EVENT_CBS (2)
 
+/* Maximal number of callbacks for ownership status changes */
 #define OC_MAX_DOXM_OWNED_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */

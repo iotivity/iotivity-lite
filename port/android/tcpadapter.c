@@ -478,20 +478,20 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 
   int flags = fcntl(sockfd, F_GETFL, 0);
   if (flags < 0) {
-    OC_ERR("failed to get file descriptor flags (error=%d)", (int)ernno);
+    OC_ERR("failed to get file descriptor flags (error=%d)", (int)errno);
     return -1;
   }
 
   if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
     OC_ERR("failed to add O_NONBLOCK to file descriptor flags (error=%d)",
-           (int)ernno);
+           (int)errno);
     return -1;
   }
 
   int n;
   if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
     if (errno != EINPROGRESS) {
-      OC_ERR("failed to connect to address (error=%d)", (int)ernno);
+      OC_ERR("failed to connect to address (error=%d)", (int)errno);
       return -1;
     }
   }
@@ -529,7 +529,7 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 done:
   if (fcntl(sockfd, F_SETFL, flags) < 0) {
     OC_ERR("failed restore original file descriptor flags (error=%d)",
-           (int)ernno);
+           (int)errno);
     return -1;
   }
   return 0;
@@ -564,7 +564,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
 
     close(sock);
     retry_cnt++;
-    OC_DBG("connect failed, retry(%d)", ret, retry_cnt);
+    OC_DBG("connect failed, retry(%d)", retry_cnt);
   }
 
   if (retry_cnt >= LIMIT_RETRY_CONNECT) {

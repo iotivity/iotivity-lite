@@ -173,7 +173,7 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 %ignore oc_cloud_manager_restart;
 %rename (managerRestart) jni_cloud_manager_restart;
 %inline %{
-int jni_cloud_manager_restart(oc_cloud_context_t *ctx)
+void jni_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
 #ifdef OC_CLOUD
   oc_cloud_manager_restart(ctx);
