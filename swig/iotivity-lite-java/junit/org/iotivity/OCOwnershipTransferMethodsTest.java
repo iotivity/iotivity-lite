@@ -11,7 +11,6 @@ public class OCOwnershipTransferMethodsTest {
     // wait times chosen arbitrarily they can be adjusted if needed.
     private final int WAIT_TIME_SHORT = 3;
     private final int WAIT_TIME_MED = 10;
-    // private final int WAIT_TIME_LONG = 30;
     
     private static CountDownLatch requestEntryExecuted;
     private static OCMainInitHandler init = new OCMainInitHandler() {

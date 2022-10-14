@@ -119,6 +119,7 @@
 %ignore transport_flags;
 //%rename (OCTransportFlags) transport_flags;
 %rename(DevAddr) dev_addr;
+%include "arrays_java.i"
 //if uncommented the following apply lines will cause the output to be byte[] vs short[]
 //%apply signed char[ANY] { uint8_t address[4] };
 //%apply signed char[ANY] { uint8_t address[16] };

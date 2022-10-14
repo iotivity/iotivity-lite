@@ -15,9 +15,19 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  make_linux_secured_java:
+  make_linux_java:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # tcp on, ipv4 on
+          - args: "TCP=1 IPV4=1"
+          # cloud on (tcp on, ipv4 on)
+          - args: "CLOUD=1"
+          # cloud on (tcp on, ipv4 on), debug on
+          - args: "CLOUD=1 DEBUG=1"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -26,7 +36,7 @@ jobs:
         uses: actions/checkout@v3
 
       # Runs a set of commands using the runners shell
-      - name: make secured with Java
+      - name: build
         run: |
           # the setup
           sudo apt-get update -y
@@ -34,70 +44,14 @@ jobs:
           swig -version
           java -version
           javac -version
+          # the actual build
+          cd port/linux
+          make JAVA=1 ${{ matrix.args }}
+          cd ../../swig/apps/unit_test
           wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
           wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
-          # the actual build
-          cd port/linux
-          make TCP=1 IPV4=1 PKI=1 JAVA=1
-          cd ../..
-          cd swig/apps/unit_test
-          JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
-          JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
-          cd ../..
-
-  make_linux_secured_java_cloud:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make secured with Java
-        run: |
-          # the setup
-          sudo apt-get update -y
-          sudo apt-get -y install make autoconf swig default-jdk
-          swig -version
-          java -version
-          javac -version
-          wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
-          wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
-          # the actual build
-          cd port/linux
-          make TCP=1 IPV4=1 CLOUD=1 PKI=1 JAVA=1
-          cd ../..
-          cd swig/apps/unit_test
-          JUNIT4=../../../junit-4.13.jar ./build-unit-tests.sh
-          JUNIT4=../../../junit-4.13.jar HAMCREST_CORE=../../../hamcrest-core-1.3.jar ./run-unit-tests.sh
-          cd ../..
-
-  make_otgc_linux:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Runs a set of commands using the runners shell
-      - name: make secured with Java
-        run: |
-          # the setup
-          #sudo apt-get -y install make autoconf swig default-jdk
-          #swig -version
-          #java -version
-          #javac -version
-          #wget --quiet --output-document=junit-4.13.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13/junit-4.13.jar
-          #wget --quiet --output-document=hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
-          # the actual build
-          cd port/linux
-          make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
+          JUNIT4=./junit-4.13.jar ./build-unit-tests.sh
+          JUNIT4=./junit-4.13.jar HAMCREST_CORE=./hamcrest-core-1.3.jar ./run-unit-tests.sh
 
   build_esp32:
     # The type of runner that the job will run on
