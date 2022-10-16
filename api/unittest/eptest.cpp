@@ -119,7 +119,7 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
     oc_free_string(&uri);
     continue;
-#endif /* OC_IPV4 */
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
 
     switch (i) {
     case 0:
@@ -220,15 +220,28 @@ TEST(OCEndpoints, StringToEndpoint)
     memset(&uri, 0, sizeof(oc_string_t));
 
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
-    EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+    switch (i) {
+    case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+#else
+      EXPECT_EQ(ret, -1) << "spu3[" << i << "] " << spu3[i];
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
+      break;
+    default:
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+      break;
+    }
 
     switch (i) {
     case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
       ASSERT_TRUE((ep.flags & IPV4) || (ep.flags & IPV6));
       ASSERT_TRUE(ep.flags & SECURED);
       ASSERT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv4.port, 3456);
       EXPECT_EQ(oc_string_len(uri), 0);
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
       break;
     case 1: {
       ASSERT_TRUE(ep.flags & IPV6);
@@ -269,10 +282,14 @@ TEST(OCEndpoints, StringToEndpoint)
 
   // test dns lookup when uri is NULL
   std::vector<const char *> spu4 = {
+#ifdef OC_IPV4
     "coap://10.211.55.3:56789/a/light",
     "coaps+tcp://10.211.55.3/a/light",
+#endif /* OC_IPV4 */
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     "coap://openconnectivity.org/alpha",
     "coaps://openconnectivity.org:3456/alpha",
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
   };
   for (size_t i = 0; i < spu4.size(); i++) {
     oc_string_t s;
@@ -283,7 +300,7 @@ TEST(OCEndpoints, StringToEndpoint)
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
     oc_free_string(&s);
   }
-#endif
+#endif /* OC_TCP */
 #ifdef _WIN32
   WSACleanup();
 #endif /* _WIN32 */
