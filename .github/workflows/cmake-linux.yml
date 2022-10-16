@@ -45,6 +45,8 @@ jobs:
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
           # collection create if on, push notification on, tcp off
           - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
+          # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off)
+          - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF"
 
     steps:
       - name: Checkout repository

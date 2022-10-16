@@ -1273,7 +1273,7 @@ send_msg(int sock, struct sockaddr_storage *receiver,
 
   int bytes_sent = 0, x;
   while (bytes_sent < (int)message->length) {
-    iovec[0].iov_base = message->data + bytes_sent;
+    iovec[0].iov_base = (void *)(message->data + bytes_sent);
     iovec[0].iov_len = message->length - (size_t)bytes_sent;
     x = sendmsg(sock, &msg, 0);
     if (x < 0) {
