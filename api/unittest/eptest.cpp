@@ -25,13 +25,26 @@
 #include <WinSock2.h>
 #endif /* _WIN32 */
 
-TEST(OCEndpoints, StringToEndpoint)
-{
+class TestOCEndpoint : public testing::Test {
+protected:
+  void SetUp() override
+  {
 #ifdef _WIN32
-  WSADATA wsaData;
-  WSAStartup(MAKEWORD(2, 2), &wsaData);
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif /* _WIN32 */
+  }
 
+  void TearDown() override
+  {
+#ifdef _WIN32
+    WSACleanup();
+#endif /* _WIN32 */
+  }
+};
+
+TEST_F(TestOCEndpoint, StringToEndpointBadFormat)
+{
   /* bad format */
   std::vector<const char *> espu = {
     nullptr,
@@ -59,7 +72,10 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
     oc_free_string(&uri);
   }
+}
 
+TEST_F(TestOCEndpoint, StringToEndpointCoap)
+{
 #ifdef OC_IPV4
   std::vector<const char *> spu0 = { "coaps://10.211.55.3:56789/a/light" };
   for (size_t i = 0; i < spu0.size(); i++) {
@@ -113,9 +129,6 @@ TEST(OCEndpoints, StringToEndpoint)
     memset(&empty, 0, sizeof(oc_endpoint_t));
     EXPECT_TRUE(memcmp(&empty, &ep, sizeof(oc_endpoint_t)) == 0);
     EXPECT_EQ(nullptr, oc_string(uri));
-#ifdef _WIN32
-    WSACleanup();
-#endif /* _WIN32 */
     oc_free_string(&s);
     oc_free_string(&uri);
     continue;
@@ -161,8 +174,11 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
     oc_free_string(&uri);
   }
+}
 
 #ifdef OC_TCP
+TEST_F(TestOCEndpoint, StringToEndpointCoapTcp)
+{
 #ifdef OC_IPV4
   std::vector<const char *> spu2 = {
     "coaps+tcp://10.211.55.3/a/light",
@@ -279,12 +295,18 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
     oc_free_string(&uri);
   }
+}
+#endif /* OC_TCP */
 
+TEST_F(TestOCEndpoint, StringToEndpointNoURI)
+{
   // test dns lookup when uri is NULL
   std::vector<const char *> spu4 = {
 #ifdef OC_IPV4
     "coap://10.211.55.3:56789/a/light",
+#ifdef OC_TCP
     "coaps+tcp://10.211.55.3/a/light",
+#endif /* OC_TCP */
 #endif /* OC_IPV4 */
 #if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     "coap://openconnectivity.org/alpha",
@@ -300,10 +322,22 @@ TEST(OCEndpoints, StringToEndpoint)
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
     oc_free_string(&s);
   }
-#endif /* OC_TCP */
-#ifdef _WIN32
-  WSACleanup();
-#endif /* _WIN32 */
+}
+
+TEST_F(TestOCEndpoint, StringToEndpointWithScope)
+{
+  std::vector<std::string> spu5 = {
+    "coap://[ff02::158%1]",
+  };
+  for (size_t i = 0; i < spu5.size(); i++) {
+    oc_string_t s;
+    oc_new_string(&s, spu5[i].c_str(), spu5[i].length());
+    oc_endpoint_t ep;
+    memset(&ep, 0, sizeof(oc_endpoint_t));
+    int ret = oc_string_to_endpoint(&s, &ep, NULL);
+    EXPECT_EQ(ret, 0) << "spu5[" << i << "] " << spu5[i];
+    oc_free_string(&s);
+  }
 }
 
 TEST(OCEndpoints, EndpointStringParsePath)
