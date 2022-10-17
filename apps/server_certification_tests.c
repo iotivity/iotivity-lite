@@ -107,8 +107,11 @@ static double temp = 5.0, temp_K = (5.0 + 273.15), temp_F = (5.0 * 9 / 5 + 32),
 typedef enum { C = 100, F, K } units_t;
 units_t temp_units = C;
 
-int g_switch_storage_status = 0; /* 0=no storage, 1=startup, 2=startup.revert */
-bool g_switch_value =
+#ifdef OC_STORAGE
+static int g_switch_storage_status =
+  0;   // 0=no storage, 1=startup, 2=startup.revert
+#endif /* OC_STORAGE */
+static bool g_switch_value =
   false; /* current value of property "value" The status of the switch. */
 
 const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
@@ -748,7 +751,6 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)user_data;
   PRINT("GET_switch:\n");
-  bool error_state = false;
   int oc_status_code = OC_STATUS_OK;
 
   oc_rep_start_root_object();
@@ -759,9 +761,10 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   case OC_IF_A:
     oc_rep_set_boolean(root, value, g_switch_value);
     break;
+#ifdef OC_STORAGE
   case OC_IF_STARTUP:
     if (g_switch_storage_status != 1) {
-      error_state = true;
+      oc_status_code = OC_STATUS_BAD_OPTION;
       break;
     }
 
@@ -775,22 +778,20 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
     break;
   case OC_IF_STARTUP_REVERT:
     if (g_switch_storage_status != 2) {
-      error_state = true;
+      oc_status_code = OC_STATUS_BAD_OPTION;
       break;
     }
 
     oc_status_code = OC_STATUS_NOT_MODIFIED;
     break;
+#endif /* OC_STORAGE */
+
   default:
     break;
   }
   oc_rep_end_root_object();
 
-  if (error_state == false) {
-    oc_send_response(request, oc_status_code);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_OPTION);
-  }
+  oc_send_response(request, oc_status_code);
 }
 
 static void
@@ -800,11 +801,12 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)iface_mask;
   (void)user_data;
 
-  bool error_state = false;
   int oc_status_code = OC_STATUS_CHANGED;
 
   PRINT("POST_switch:\n");
-  bool state = false, bad_request = false, var_in_request = false;
+  bool state = false;
+  bool bad_request = false;
+  bool var_in_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
@@ -828,11 +830,9 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (!var_in_request) {
     bad_request = true;
   }
-  if (bad_request) {
-    error_state = true;
-  }
   long tmp_size;
-  if (error_state == false) {
+  if (!bad_request) {
+#ifdef OC_STORAGE
     switch (iface_mask) {
     case OC_IF_STARTUP: {
       g_switch_storage_status = 1;
@@ -850,7 +850,6 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     case OC_IF_STARTUP_REVERT: {
       g_switch_storage_status = 2;
-      g_switch_value = state;
       oc_storage_write("g_switch_storage_status",
                        (uint8_t *)&g_switch_storage_status,
                        sizeof(g_switch_storage_status));
@@ -858,6 +857,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
       PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n",
             btoa(state), tmp_size);
+      g_switch_value = state;
       oc_rep_start_root_object();
       oc_rep_set_boolean(root, value, g_switch_value);
       oc_rep_end_root_object();
@@ -877,6 +877,12 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       break;
     }
     }
+#else  /* !OC_STORAGE */
+    g_switch_value = state;
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, value, g_switch_value);
+    oc_rep_end_root_object();
+#endif /* OC_STORAGE */
   }
 
   if (!bad_request) {
@@ -1690,9 +1696,11 @@ register_resources(void)
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
+#ifdef OC_STORAGE
   oc_resource_bind_resource_interface(bswitch, OC_IF_STARTUP);
   oc_resource_bind_resource_interface(
-    bswitch, OC_IF_STARTUP_REVERT); /* oic.if.startup.revert */
+    bswitch, OC_IF_STARTUP_REVERT); // oic.if.startup.revert
+#endif                              /* OC_STORAGE */
   oc_resource_set_default_interface(bswitch, OC_IF_A);
   oc_resource_set_observable(bswitch, true);
   oc_resource_set_discoverable(bswitch, true);
@@ -1957,17 +1965,20 @@ display_device_uuid(void)
 void
 initialize_variables(void)
 {
-  int ret_size = 0;
+  g_switch_value =
+    false; /* current value of property "value" The status of the switch. */
+
+#ifdef OC_STORAGE
   /* initialize global variables for resource "/switch" */
   oc_storage_read("g_switch_storage_status",
                   (uint8_t *)&g_switch_storage_status,
                   sizeof(g_switch_storage_status));
-  g_switch_value =
-    false; /* current value of property "value" The status of the switch. */
-  ret_size = oc_storage_read("g_switch_value", (uint8_t *)&g_switch_value,
-                             sizeof(g_switch_value));
-  if (ret_size != sizeof(g_switch_value))
+  int ret_size = oc_storage_read("g_switch_value", (uint8_t *)&g_switch_value,
+                                 sizeof(g_switch_value));
+  if (ret_size != sizeof(g_switch_value)) {
     PRINT(" could not read store g_switch_value : %d\n", ret_size);
+  }
+#endif /* OC_STORAGE */
 }
 int
 main(void)

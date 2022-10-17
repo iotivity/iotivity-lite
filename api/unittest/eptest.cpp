@@ -116,8 +116,10 @@ TEST(OCEndpoints, StringToEndpoint)
 #ifdef _WIN32
     WSACleanup();
 #endif /* _WIN32 */
-    return;
-#endif /* OC_IPV4 */
+    oc_free_string(&s);
+    oc_free_string(&uri);
+    continue;
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
 
     switch (i) {
     case 0:
@@ -218,15 +220,28 @@ TEST(OCEndpoints, StringToEndpoint)
     memset(&uri, 0, sizeof(oc_string_t));
 
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
-    EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+    switch (i) {
+    case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+#else
+      EXPECT_EQ(ret, -1) << "spu3[" << i << "] " << spu3[i];
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
+      break;
+    default:
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+      break;
+    }
 
     switch (i) {
     case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
       ASSERT_TRUE((ep.flags & IPV4) || (ep.flags & IPV6));
       ASSERT_TRUE(ep.flags & SECURED);
       ASSERT_TRUE(ep.flags & TCP);
       EXPECT_EQ(ep.addr.ipv4.port, 3456);
       EXPECT_EQ(oc_string_len(uri), 0);
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
       break;
     case 1: {
       ASSERT_TRUE(ep.flags & IPV6);
@@ -267,10 +282,14 @@ TEST(OCEndpoints, StringToEndpoint)
 
   // test dns lookup when uri is NULL
   std::vector<const char *> spu4 = {
+#ifdef OC_IPV4
     "coap://10.211.55.3:56789/a/light",
     "coaps+tcp://10.211.55.3/a/light",
+#endif /* OC_IPV4 */
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     "coap://openconnectivity.org/alpha",
     "coaps://openconnectivity.org:3456/alpha",
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
   };
   for (size_t i = 0; i < spu4.size(); i++) {
     oc_string_t s;
@@ -281,7 +300,7 @@ TEST(OCEndpoints, StringToEndpoint)
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
     oc_free_string(&s);
   }
-#endif
+#endif /* OC_TCP */
 #ifdef _WIN32
   WSACleanup();
 #endif /* _WIN32 */
@@ -289,23 +308,23 @@ TEST(OCEndpoints, StringToEndpoint)
 
 TEST(OCEndpoints, EndpointStringParsePath)
 {
-  const char *spu[12] = { "coaps://10.211.55.3:56789/a/light",
-                          "coap://openconnectivity.org",
-                          "coap://openconnectivity.org/alpha",
-                          "coaps://openconnectivity.org:3456/alpha",
-                          "coaps+tcp://10.211.55.3/a/light",
-                          "coap+tcp://1.2.3.4:2568",
-                          "coaps+tcp://openconnectivity.org:3456",
-                          "coap+tcp://[ff02::158]",
-                          "coaps+tcp://[ff02::158]/a/light",
-                          "coaps+tcp://[fe80::12]:2439/a/light",
-                          "coaps+tcp://[fe80::12]:2439/a/light?s=100",
-                          "coap://0/foo" };
-  for (int i = 0; i < 12; i++) {
-    oc_string_t s;
-    oc_string_t path;
+  std::vector<const char *> spu = { "coaps://10.211.55.3:56789/a/light",
+                                    "coap://openconnectivity.org",
+                                    "coap://openconnectivity.org/alpha",
+                                    "coaps://openconnectivity.org:3456/alpha",
+                                    "coaps+tcp://10.211.55.3/a/light",
+                                    "coap+tcp://1.2.3.4:2568",
+                                    "coaps+tcp://openconnectivity.org:3456",
+                                    "coap+tcp://[ff02::158]",
+                                    "coaps+tcp://[ff02::158]/a/light",
+                                    "coaps+tcp://[fe80::12]:2439/a/light",
+                                    "coaps+tcp://[fe80::12]:2439/a/light?s=100",
+                                    "coap://0/foo" };
+  for (size_t i = 0; i < spu.size(); i++) {
     int ret = -1;
+    oc_string_t s;
     oc_new_string(&s, spu[i], strlen(spu[i]));
+    oc_string_t path;
     memset(&path, 0, sizeof(oc_string_t));
     switch (i) {
     case 0:
@@ -376,11 +395,11 @@ TEST(OCEndpoints, EndpointStringParsePath)
   }
 
   // paths with expected errors
-  const char *spu2[2] = {
+  std::vector<const char *> spu2 = {
     "coaps://",                        // no address
     "coaps:/10.211.55.3:56789/a/light" // missing ://
   };
-  for (int i = 0; i < 2; i++) {
+  for (size_t i = 0; i < spu2.size(); i++) {
     oc_string_t s;
     oc_new_string(&s, spu2[i], strlen(spu2[i]));
     oc_string_t path;
