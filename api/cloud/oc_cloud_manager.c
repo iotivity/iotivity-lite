@@ -231,11 +231,17 @@ check_expires_in(int64_t expires_in)
   return expires_in > UINT16_MAX ? UINT16_MAX : (uint16_t)expires_in;
 }
 
+static bool
+is_connection_error_code(oc_status_t code)
+{
+  return code == OC_STATUS_SERVICE_UNAVAILABLE ||
+         code == OC_STATUS_GATEWAY_TIMEOUT;
+}
+
 static oc_cloud_error_t
 _register_handler_check_data_error(oc_client_response_t *data)
 {
-  if (data->code == OC_STATUS_SERVICE_UNAVAILABLE ||
-      data->code == OC_STATUS_GATEWAY_TIMEOUT) {
+  if (is_connection_error_code(data->code)) {
     return CLOUD_ERROR_CONNECT;
   }
   if (data->code >= OC_STATUS_BAD_REQUEST) {
@@ -361,7 +367,8 @@ cloud_register_handler(oc_client_response_t *data)
     goto finish;
   }
 
-  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+  if (((ctx->store.status & ~OC_CLOUD_FAILURE) == OC_CLOUD_INITIALIZED) &&
+      is_connection_error_code(data->code) && !is_retry_over(ctx)) {
     oc_set_delayed_callback(ctx, cloud_register,
                             g_retry_timeout[ctx->retry_count]);
   }
