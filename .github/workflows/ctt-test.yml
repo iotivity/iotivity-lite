@@ -18,12 +18,14 @@ jobs:
         id: commit
         run: |
           if ("${{github.event_name}}" -eq "pull_request") {
-            echo "::set-output name=sha::${{github.event.pull_request.head.sha}}"
+            echo "sha=${{github.event.pull_request.head.sha}}" >> $env:GITHUB_OUTPUT
           } else {
-            echo "::set-output name=sha::${{github.sha}}"
+            echo "sha=${{github.sha}}" >> $env:GITHUB_OUTPUT
           }
+
       - name: Test
         run: python ../../github_run_ci.py --commit ${{steps.commit.outputs.sha}}
+
       - name: Archive results
         if: success() || failure()
         uses: actions/upload-artifact@v3
