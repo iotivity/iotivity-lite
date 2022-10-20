@@ -20,7 +20,7 @@ jobs:
         with:
           path: iotivity-lite
 
-      - uses: webfactory/ssh-agent@v0.5.3
+      - uses: webfactory/ssh-agent@v0.7
         with:
           ssh-private-key: ${{ secrets.IOTIVITY_LITE_SSH_KEY }}
 
