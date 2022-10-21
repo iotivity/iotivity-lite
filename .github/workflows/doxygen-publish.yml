@@ -5,7 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-    types: [closed]
+    types: [opened, closed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
 jobs:
   doxygen-publish:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.merged }}
+    # if: ${{ github.event.pull_request.merged }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

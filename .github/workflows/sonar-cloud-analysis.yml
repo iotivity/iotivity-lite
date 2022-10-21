@@ -17,6 +17,8 @@ jobs:
     uses: ./.github/workflows/cmake-linux-coverage.yml
 
   sonar-cloud-scan:
+    if: ${{ false }}
+
     name: Sonar Cloud scan
     runs-on: ubuntu-latest
     env:

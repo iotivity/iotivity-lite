@@ -11,6 +11,7 @@ on:
       - "*"
 jobs:
   test:
+    if: ${{ false }}
     name: Test
     runs-on: [self-hosted, windows, ctt]
     steps:

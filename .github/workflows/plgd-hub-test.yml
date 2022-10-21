@@ -20,6 +20,8 @@ env:
 
 jobs:
   plgd-hub-test:
+    if: ${{ false }}
+
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

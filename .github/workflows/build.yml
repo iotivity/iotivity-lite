@@ -16,6 +16,8 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   make_linux_secured_java:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -46,6 +48,8 @@ jobs:
           cd ../..
 
   make_linux_secured_java_cloud:
+    if: ${{ false }}
+
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -76,6 +80,7 @@ jobs:
           cd ../..
 
   make_otgc_linux:
+    if: ${{ false }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -100,6 +105,7 @@ jobs:
           make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
 
   build_esp32:
+    if: ${{ false }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 

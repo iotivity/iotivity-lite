@@ -22,6 +22,8 @@ env:
 
 jobs:
   plgd-device-test:
+    if: ${{ false }}
+
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

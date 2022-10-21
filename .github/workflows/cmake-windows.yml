@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    if: ${{ false }}
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
