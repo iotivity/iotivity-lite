@@ -471,25 +471,29 @@ get_session_socket(oc_endpoint_t *endpoint)
 static int
 connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 {
-  int flags, n, error;
+  int error;
   socklen_t len;
   fd_set rset, wset;
   struct timeval tval;
 
-  flags = fcntl(sockfd, F_GETFL, 0);
+  int flags = fcntl(sockfd, F_GETFL, 0);
   if (flags < 0) {
+    OC_ERR("failed to get file descriptor flags (error=%d)", (int)errno);
     return -1;
   }
 
-  error = fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
-  if (error < 0) {
+  if (fcntl(sockfd, F_SETFL, flags | O_NONBLOCK) < 0) {
+    OC_ERR("failed to add O_NONBLOCK to file descriptor flags (error=%d)",
+           (int)errno);
     return -1;
   }
 
-  error = 0;
+  int n;
   if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
-    if (errno != EINPROGRESS)
+    if (errno != EINPROGRESS) {
+      OC_ERR("failed to connect to address (error=%d)", (int)errno);
       return -1;
+    }
   }
 
   /* Do whatever we want while the connect is taking place. */
@@ -505,29 +509,28 @@ connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
 
   if ((n = select(sockfd + 1, &rset, &wset, NULL, nsec ? &tval : NULL)) == 0) {
     /* timeout */
-    errno = ETIMEDOUT;
     return -1;
   }
 
-  if (FD_ISSET(sockfd, &rset) || FD_ISSET(sockfd, &wset)) {
-    len = sizeof(error);
-    if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
-      return -1; /* Solaris pending error */
-  } else {
-    OC_DBG("select error: sockfd not set");
+  if (!FD_ISSET(sockfd, &rset) && !FD_ISSET(sockfd, &wset)) {
+    OC_ERR("select error: sockfd not set");
+    return -1;
+  }
+  len = sizeof(error);
+  if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+    OC_ERR("get socket options error: %d", (int)errno);
+    return -1; /* Solaris pending error */
+  }
+  if (error != 0) {
+    OC_ERR("socket error: %d", error);
     return -1;
   }
 
 done:
-  if (error < 0) {
-    close(sockfd); /* just in case */
-    errno = error;
+  if (fcntl(sockfd, F_SETFL, flags) < 0) {
+    OC_ERR("failed restore original file descriptor flags (error=%d)",
+           (int)errno);
     return -1;
-  } else {
-    error = fcntl(sockfd, F_SETFL, flags); /* restore file status flags */
-    if (error < 0) {
-      return -1;
-    }
   }
   return 0;
 }
@@ -554,15 +557,14 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
     }
 
     socklen_t receiver_size = sizeof(*receiver);
-    int ret = 0;
-    if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
-                            TCP_CONNECT_TIMEOUT)) == 0) {
+    if (connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
+                     TCP_CONNECT_TIMEOUT) == 0) {
       break;
     }
 
     close(sock);
     retry_cnt++;
-    OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+    OC_DBG("connect failed, retry(%d)", retry_cnt);
   }
 
   if (retry_cnt >= LIMIT_RETRY_CONNECT) {

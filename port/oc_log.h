@@ -68,41 +68,7 @@ extern "C" {
 #define SPRINTF(...) sprintf(__VA_ARGS__)
 #define SNPRINTF(...) snprintf(__VA_ARGS__)
 
-#define PRINTipaddr(endpoint)                                                  \
-  do {                                                                         \
-    const char *scheme = "coap";                                               \
-    if ((endpoint).flags & SECURED)                                            \
-      scheme = "coaps";                                                        \
-    if ((endpoint).flags & TCP)                                                \
-      scheme = "coap+tcp";                                                     \
-    if ((endpoint).flags & TCP && (endpoint).flags & SECURED)                  \
-      scheme = "coaps+tcp";                                                    \
-    if ((endpoint).flags & IPV4) {                                             \
-      PRINT("%s://%d.%d.%d.%d:%d", scheme, ((endpoint).addr.ipv4.address)[0],  \
-            ((endpoint).addr.ipv4.address)[1],                                 \
-            ((endpoint).addr.ipv4.address)[2],                                 \
-            ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);     \
-    } else {                                                                   \
-      PRINT(                                                                   \
-        "%s://[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%"    \
-        "02x:%"                                                                \
-        "02x%"                                                                 \
-        "02x]:%d",                                                             \
-        scheme, ((endpoint).addr.ipv6.address)[0],                             \
-        ((endpoint).addr.ipv6.address)[1], ((endpoint).addr.ipv6.address)[2],  \
-        ((endpoint).addr.ipv6.address)[3], ((endpoint).addr.ipv6.address)[4],  \
-        ((endpoint).addr.ipv6.address)[5], ((endpoint).addr.ipv6.address)[6],  \
-        ((endpoint).addr.ipv6.address)[7], ((endpoint).addr.ipv6.address)[8],  \
-        ((endpoint).addr.ipv6.address)[9], ((endpoint).addr.ipv6.address)[10], \
-        ((endpoint).addr.ipv6.address)[11],                                    \
-        ((endpoint).addr.ipv6.address)[12],                                    \
-        ((endpoint).addr.ipv6.address)[13],                                    \
-        ((endpoint).addr.ipv6.address)[14],                                    \
-        ((endpoint).addr.ipv6.address)[15], (endpoint).addr.ipv6.port);        \
-    }                                                                          \
-  } while (0)
-
-#define PRINTipaddr_local(endpoint)                                            \
+#define PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                               \
   do {                                                                         \
     const char *scheme = "coap";                                               \
     if ((endpoint).flags & SECURED)                                            \
@@ -113,38 +79,42 @@ extern "C" {
       scheme = "coaps+tcp";                                                    \
     if ((endpoint).flags & IPV4) {                                             \
       PRINT("%s://%d.%d.%d.%d:%d", scheme,                                     \
-            ((endpoint).addr_local.ipv4.address)[0],                           \
-            ((endpoint).addr_local.ipv4.address)[1],                           \
-            ((endpoint).addr_local.ipv4.address)[2],                           \
-            ((endpoint).addr_local.ipv4.address)[3],                           \
-            (endpoint).addr_local.ipv4.port);                                  \
+            ((endpoint).addr_memb.ipv4.address)[0],                            \
+            ((endpoint).addr_memb.ipv4.address)[1],                            \
+            ((endpoint).addr_memb.ipv4.address)[2],                            \
+            ((endpoint).addr_memb.ipv4.address)[3],                            \
+            (endpoint).addr_memb.ipv4.port);                                   \
     } else {                                                                   \
-      PRINT(                                                                   \
-        "%s://[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%"    \
-        "02x:%"                                                                \
-        "02x%"                                                                 \
-        "02x]:%d",                                                             \
-        scheme, ((endpoint).addr_local.ipv6.address)[0],                       \
-        ((endpoint).addr_local.ipv6.address)[1],                               \
-        ((endpoint).addr_local.ipv6.address)[2],                               \
-        ((endpoint).addr_local.ipv6.address)[3],                               \
-        ((endpoint).addr_local.ipv6.address)[4],                               \
-        ((endpoint).addr_local.ipv6.address)[5],                               \
-        ((endpoint).addr_local.ipv6.address)[6],                               \
-        ((endpoint).addr_local.ipv6.address)[7],                               \
-        ((endpoint).addr_local.ipv6.address)[8],                               \
-        ((endpoint).addr_local.ipv6.address)[9],                               \
-        ((endpoint).addr_local.ipv6.address)[10],                              \
-        ((endpoint).addr_local.ipv6.address)[11],                              \
-        ((endpoint).addr_local.ipv6.address)[12],                              \
-        ((endpoint).addr_local.ipv6.address)[13],                              \
-        ((endpoint).addr_local.ipv6.address)[14],                              \
-        ((endpoint).addr_local.ipv6.address)[15],                              \
-        (endpoint).addr_local.ipv6.port);                                      \
+      PRINT("%s://[", scheme);                                                 \
+      PRINT("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"            \
+            ":%02x%02x:%02x%02x",                                              \
+            ((endpoint).addr_memb.ipv6.address)[0],                            \
+            ((endpoint).addr_memb.ipv6.address)[1],                            \
+            ((endpoint).addr_memb.ipv6.address)[2],                            \
+            ((endpoint).addr_memb.ipv6.address)[3],                            \
+            ((endpoint).addr_memb.ipv6.address)[4],                            \
+            ((endpoint).addr_memb.ipv6.address)[5],                            \
+            ((endpoint).addr_memb.ipv6.address)[6],                            \
+            ((endpoint).addr_memb.ipv6.address)[7],                            \
+            ((endpoint).addr_memb.ipv6.address)[8],                            \
+            ((endpoint).addr_memb.ipv6.address)[9],                            \
+            ((endpoint).addr_memb.ipv6.address)[10],                           \
+            ((endpoint).addr_memb.ipv6.address)[11],                           \
+            ((endpoint).addr_memb.ipv6.address)[12],                           \
+            ((endpoint).addr_memb.ipv6.address)[13],                           \
+            ((endpoint).addr_memb.ipv6.address)[14],                           \
+            ((endpoint).addr_memb.ipv6.address)[15]);                          \
+      if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
+        PRINT("%%%d", (int)(endpoint).addr_memb.ipv6.scope);                   \
+      }                                                                        \
+      PRINT("]:%d", (int)(endpoint).addr_memb.ipv6.port);                      \
     }                                                                          \
   } while (0)
 
-#define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6]:port = 59 bytes
+#define PRINTipaddr(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr)
+#define PRINTipaddr_local(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr_local)
+
+#define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6%scope]:port = 63 bytes
 
 #define SNPRINTFipaddr(str, size, endpoint)                                    \
   do {                                                                         \
@@ -163,11 +133,16 @@ extern "C" {
                ((endpoint).addr.ipv4.address)[2],                              \
                ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);  \
     } else {                                                                   \
+      char scope[5] = { 0 };                                                   \
+      if ((endpoint).addr.ipv6.scope > 0) {                                    \
+        SNPRINTF(scope, sizeof(scope), "%%%d",                                 \
+                 (int)(endpoint).addr.ipv6.scope);                             \
+      }                                                                        \
       SNPRINTF(                                                                \
         str, size,                                                             \
         "%s://"                                                                \
         "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
-        "%02x%02x]:%d",                                                        \
+        "%02x%02x%s]:%d",                                                      \
         scheme, ((endpoint).addr.ipv6.address)[0],                             \
         ((endpoint).addr.ipv6.address)[1], ((endpoint).addr.ipv6.address)[2],  \
         ((endpoint).addr.ipv6.address)[3], ((endpoint).addr.ipv6.address)[4],  \
@@ -178,7 +153,7 @@ extern "C" {
         ((endpoint).addr.ipv6.address)[12],                                    \
         ((endpoint).addr.ipv6.address)[13],                                    \
         ((endpoint).addr.ipv6.address)[14],                                    \
-        ((endpoint).addr.ipv6.address)[15], (endpoint).addr.ipv6.port);        \
+        ((endpoint).addr.ipv6.address)[15], scope, (endpoint).addr.ipv6.port); \
     }                                                                          \
   } while (0)
 

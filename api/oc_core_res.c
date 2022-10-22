@@ -602,9 +602,11 @@ oc_core_get_platform_info(void)
 oc_resource_t *
 oc_core_get_resource_by_index(int type, size_t device)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
   if (core_resources == NULL) {
     return NULL;
   }
+#endif /* OC_DYNAMIC_ALLOCATION */
   if (type == OCF_P) {
     return &core_resources[0];
   }

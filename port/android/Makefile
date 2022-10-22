@@ -185,16 +185,10 @@ ifeq ($(CLOUD),1)
 	TCP=1
 	IPV4=1
 	SAMPLES += cloud_server cloud_tests
+	#NATIVE_SAMPLES += cloud_linux cloud_tests
 endif
 
 OBT = onboarding_tool
-
-ifeq ($(CLOUD),1)
-	CFLAGS += -DOC_CLOUD
-	TCP=1
-	IPV4=1
-	#NATIVE_SAMPLES += cloud_linux cloud_tests
-endif
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
