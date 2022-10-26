@@ -14,7 +14,18 @@ on:
 
 jobs:
   unit-tests:
-    uses: ./.github/workflows/cmake-linux-coverage.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - build_args: ""
+          - build_args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
+
+    uses: ./.github/workflows/unit-test-with-cfg.yml
+    with:
+      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON ${{ matrix.build_args }}"
+      build_type: Debug
+      coverage: true
 
   plgd-device-tests:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
@@ -98,7 +109,7 @@ jobs:
       - name: Create single coverage file in sonarqube format
         run: |
           cd tools
-          # ls -lR .
+          ls -lR .
           gcovr --add-tracefile "unit-test-coverage/*coverage*.json" --add-tracefile "plgd-device-coverage/*coverage*.json" --add-tracefile "plgd-hub-coverage/*coverage*.json"  --sonarqube --output "coverage.xml" --verbose
 
       - name: Run sonar-scanner

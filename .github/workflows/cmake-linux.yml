@@ -14,7 +14,6 @@ on:
 
 jobs:
   cmake_linux:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -47,21 +46,29 @@ jobs:
           - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
           # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off)
           - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF"
+    uses: ./.github/workflows/unit-test-with-cfg.yml
+    with:
+      build_args: ${{ matrix.build_args }}
+      build_type: Debug
+      coverage: false
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          submodules: "true"
-
-      - name: build
-        run: |
-          mkdir linuxbuild
-          cd linuxbuild
-          cmake ../. ${{ matrix.args }} -DBUILD_TESTING=ON
-          make all
-
-      - name: test
-        run: |
-          cd linuxbuild
-          ctest --verbose --label-regex "oc-unittest"
+  cmake_linux_sanitized:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # address sanitizer
+          - args: -DOC_ASAN_ENABLED=ON
+          # leak sanitizer
+          - args: -DOC_LSAN_ENABLED=ON
+          # thread sanitizer
+          - args: -DOC_TSAN_ENABLED=ON
+          # undefined behaviour sanitizer
+          - args: -DOC_UBSAN_ENABLED=ON
+          # TODO: update gtest
+          # - args: -DOC_MSAN_ENABLED=ON
+    uses: ./.github/workflows/unit-test-with-cfg.yml
+    with:
+      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON ${{ matrix.build_args }}"
+      build_type: Debug
+      coverage: false
