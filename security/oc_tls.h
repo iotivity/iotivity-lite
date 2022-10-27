@@ -63,6 +63,17 @@ typedef struct oc_tls_peer_t
 #endif
 } oc_tls_peer_t;
 
+/**
+ * @brief TLS peer filtering function.
+ *
+ * @param peer peer to check
+ * @param user_data user data passed from the caller
+ * @return true if the peer matches the filter
+ * @return false otherwise
+ */
+typedef bool (*oc_tls_peer_filter_t)(const oc_tls_peer_t *peer,
+                                     void *user_data);
+
 extern mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 
 int oc_tls_init_context(void);
@@ -95,6 +106,15 @@ oc_tls_peer_t *oc_tls_add_peer(const oc_endpoint_t *endpoint, int role);
  * @param endpoint the endpoint
  */
 void oc_tls_remove_peer(const oc_endpoint_t *endpoint);
+
+/**
+ * @brief Remove TLS peers matching filter.
+ *
+ * @param filter Filtering function (if NULL all existing peers match)
+ * @param user_data User data passed from the caller
+ */
+OC_API
+void oc_tls_peer_clear(oc_tls_peer_filter_t filter, void *user_data);
 
 /**
  * @brief Get the peer for the endpoint.
