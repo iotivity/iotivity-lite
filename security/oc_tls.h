@@ -48,7 +48,8 @@ typedef struct oc_tls_peer_t
   mbedtls_ssl_context ssl_ctx;
   mbedtls_ssl_config ssl_conf;
   oc_endpoint_t endpoint;
-  int role;
+  int role; // MBEDTLS_SSL_IS_SERVER = device acts as a server
+            // MBEDTLS_SSL_IS_CLIENT = device acts as a client
   oc_tls_retr_timer_t timer;
   uint8_t master_secret[48];
   uint8_t client_server_random[64];
@@ -114,7 +115,7 @@ void oc_tls_remove_peer(const oc_endpoint_t *endpoint);
  * @param user_data User data passed from the caller
  */
 OC_API
-void oc_tls_peer_clear(oc_tls_peer_filter_t filter, void *user_data);
+void oc_tls_close_peers(oc_tls_peer_filter_t filter, void *user_data);
 
 /**
  * @brief Get the peer for the endpoint.
@@ -122,6 +123,9 @@ void oc_tls_peer_clear(oc_tls_peer_filter_t filter, void *user_data);
  * @param endpoint the endpoint
  * @return peer for the endpoint if it exists
  * @return NULL if no peer exists for the endpoint
+ *
+ * @note if endpoint is NULL then the first peer will be returned regardless of
+ * the endpoint on the peer
  */
 oc_tls_peer_t *oc_tls_get_peer(const oc_endpoint_t *endpoint);
 

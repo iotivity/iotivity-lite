@@ -388,7 +388,8 @@ oc_tls_get_peer(const oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_list_head(g_tls_peers);
   while (peer != NULL) {
-    if (oc_endpoint_compare(&peer->endpoint, endpoint) == 0) {
+    if (endpoint == NULL ||
+        oc_endpoint_compare(&peer->endpoint, endpoint) == 0) {
       return peer;
     }
     peer = peer->next;
@@ -400,19 +401,30 @@ void
 oc_tls_remove_peer(const oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer) {
+  if (peer != NULL) {
     oc_tls_free_peer(peer, false);
   }
 }
 
+static void
+oc_tls_close_peer(oc_tls_peer_t *peer)
+{
+  assert(peer != NULL);
+  mbedtls_ssl_close_notify(&peer->ssl_ctx);
+  if ((peer->endpoint.flags & TCP) == 0) {
+    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+  }
+  oc_tls_free_peer(peer, false);
+}
+
 void
-oc_tls_peer_clear(oc_tls_peer_filter_t filter, void *user_data)
+oc_tls_close_peers(oc_tls_peer_filter_t filter, void *user_data)
 {
   oc_tls_peer_t *peer = oc_list_head(g_tls_peers);
   while (peer != NULL) {
     oc_tls_peer_t *peer_next = peer->next;
     if (filter == NULL || filter(peer, user_data)) {
-      oc_tls_free_peer(peer, false);
+      oc_tls_close_peer(peer);
     }
     peer = peer_next;
   }
@@ -1853,12 +1865,8 @@ void
 oc_tls_close_connection(const oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer) {
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    if ((peer->endpoint.flags & TCP) == 0) {
-      mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    }
-    oc_tls_free_peer(peer, false);
+  if (peer != NULL) {
+    oc_tls_close_peer(peer);
   }
 }
 

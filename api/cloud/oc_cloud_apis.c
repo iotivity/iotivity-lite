@@ -439,6 +439,7 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
       free_api_param(p);
       return -1;
     }
+    return 0;
   }
 
   return cloud_deregister(p, canUseAccessToken);
