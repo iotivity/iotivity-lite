@@ -1,7 +1,7 @@
 /*
 // Copyright (c) 2016-2019 Intel Corporation
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the "License"),
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -61,7 +61,7 @@ typedef struct oc_tls_peer_t
 #endif /* OC_PKI */
 #ifdef OC_TCP
   oc_message_t *processed_recv_message;
-#endif
+#endif /* OC_TCP */
 } oc_tls_peer_t;
 
 /**

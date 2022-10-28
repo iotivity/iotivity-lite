@@ -79,7 +79,7 @@ jobs:
           mkdir build && cd build
           # sonar-scanner currently cannot handle multi configuration configuration (ie. compilation of the same file with different defines),
           # so we enable as many features as possible so we get max. amount of code analysis
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=ON ..
           cd ..
           # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
           # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled

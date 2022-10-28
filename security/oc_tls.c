@@ -546,9 +546,9 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 static void
 check_retr_timers(void)
 {
-  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(g_tls_peers), *next;
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(g_tls_peers);
   while (peer != NULL) {
-    next = peer->next;
+    oc_tls_peer_t *next = peer->next;
     if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
       if (oc_etimer_expired(&peer->timer.fin_timer)) {
         int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
@@ -661,7 +661,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     oc_sec_cred_t *cred =
       oc_sec_find_cred(NULL, (oc_uuid_t *)identity, OC_CREDTYPE_PSK,
                        OC_CREDUSAGE_NULL, peer->endpoint.device);
-    if (cred) {
+    if (cred != NULL) {
       OC_DBG("oc_tls: Found peer credential");
       memcpy(peer->uuid.id, identity, 16);
       OC_DBG("oc_tls: Setting the key:");
@@ -674,31 +674,29 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       }
       OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
-    } else {
-      oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
-      if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
-        if (identity_len != 16 ||
-            memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
-          OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
-          return -1;
-        }
-        OC_DBG("oc_tls: deriving PPSK for PIN OTM");
-        memcpy(peer->uuid.id, identity, 16);
-
-        uint8_t key[16];
-
-        if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
-            0) {
-          OC_ERR("oc_tls: error deriving PPSK");
-          return -1;
-        }
-
-        if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
-          OC_ERR("oc_tls: error applying PPSK to current handshake");
-          return -1;
-        }
-        return 0;
+    }
+    oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
+    if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+      if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
+        OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
+        return -1;
       }
+      OC_DBG("oc_tls: deriving PPSK for PIN OTM");
+      memcpy(peer->uuid.id, identity, 16);
+
+      uint8_t key[16];
+
+      if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
+          0) {
+        OC_ERR("oc_tls: error deriving PPSK");
+        return -1;
+      }
+
+      if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
+        OC_ERR("oc_tls: error applying PPSK to current handshake");
+        return -1;
+      }
+      return 0;
     }
   }
   OC_ERR("oc_tls: could not find peer credential");
@@ -1690,104 +1688,122 @@ oc_tls_num_peers(size_t device)
   return num_peers;
 }
 
+static oc_tls_peer_t *
+oc_tls_peer_allocate(const oc_endpoint_t *endpoint, int role, bool doc)
+{
+  oc_tls_peer_t *peer = oc_memb_alloc(&g_tls_peers_s);
+  if (peer == NULL) {
+    OC_WRN("TLS peers exhausted");
+    return NULL;
+  }
+  OC_DBG("oc_tls: Allocating new peer");
+  memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
+  OC_LIST_STRUCT_INIT(peer, recv_q);
+  OC_LIST_STRUCT_INIT(peer, send_q);
+  peer->next = NULL;
+  peer->doc = doc;
+  assert(role == MBEDTLS_SSL_IS_CLIENT || role == MBEDTLS_SSL_IS_SERVER);
+  peer->role = role;
+  memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
+#ifdef OC_TCP
+  peer->processed_recv_message = NULL;
+#endif /* OC_TCP */
+  return peer;
+}
+
+int
+oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
+{
+  mbedtls_ssl_init(&peer->ssl_ctx);
+
+  int transport_type = (peer->endpoint.flags & TCP) != 0
+                         ? MBEDTLS_SSL_TRANSPORT_STREAM
+                         : MBEDTLS_SSL_TRANSPORT_DATAGRAM;
+
+  if (oc_tls_populate_ssl_config(&peer->ssl_conf, peer->endpoint.device,
+                                 peer->role, transport_type) < 0) {
+    OC_ERR("oc_tls: error in tls_populate_ssl_config");
+    return -1;
+  }
+
+#ifdef OC_PKI
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+  if (ciphers != cloud_priority) {
+#endif /* OC_CLOUD && OC_CLIENT */
+    mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+  }
+#endif /* OC_CLOUD && OC_CLIENT */
+#endif /* OC_PKI */
+
+  oc_tls_set_ciphersuites(&peer->ssl_conf, &peer->endpoint);
+
+  int err = mbedtls_ssl_setup(&peer->ssl_ctx, &peer->ssl_conf);
+  if (err != 0) {
+    OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
+    return -1;
+  }
+  /* Fix maximum size of outgoing encrypted application payloads when sent
+   * over UDP */
+  if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
+    mbedtls_ssl_set_mtu(&peer->ssl_ctx,
+                        (OC_PDU_SIZE > UINT16_MAX ? UINT16_MAX : OC_PDU_SIZE));
+  }
+
+  mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
+
+  if (peer->role == MBEDTLS_SSL_IS_SERVER &&
+      mbedtls_ssl_set_client_transport_id(
+        &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+        sizeof(peer->endpoint.addr)) != 0) {
+    return -1;
+  }
+  return 0;
+}
+
 oc_tls_peer_t *
 oc_tls_add_peer(const oc_endpoint_t *endpoint, int role)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (!peer) {
-    /* Check if this a Device Ownership Connection (DOC) */
-    bool doc = false;
-    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
-    oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
-    if (pstat->s == OC_DOS_RFOTM) {
-      if (doxm->oxmsel == 4) {
-        /* Prior to a successful anonymous Update of "oxmsel" in
-         *  "/oic/sec/doxm", all attempts to establish new DTLS connections
-         * shall be rejected.
-         */
-        return NULL;
-      }
-      if (oc_list_length(g_tls_peers) == 0) {
-        doc = true;
-      } else {
-        /* Allow only a single DOC */
-        return NULL;
-      }
+  if (peer != NULL) {
+    return peer;
+  }
+
+  /* Check if this a Device Ownership Connection (DOC) */
+  bool doc = false;
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  if (pstat->s == OC_DOS_RFOTM) {
+    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
+    if (doxm->oxmsel == 4) {
+      /* Prior to a successful anonymous Update of "oxmsel" in
+       *  "/oic/sec/doxm", all attempts to establish new DTLS connections
+       * shall be rejected.
+       */
+      return NULL;
     }
-    peer = oc_memb_alloc(&g_tls_peers_s);
-    if (peer) {
-      OC_DBG("oc_tls: Allocating new peer");
-      memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
-      OC_LIST_STRUCT_INIT(peer, recv_q);
-      OC_LIST_STRUCT_INIT(peer, send_q);
-      peer->next = 0;
-      peer->doc = doc;
-      peer->role = role;
-      memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
-      mbedtls_ssl_init(&peer->ssl_ctx);
-
-      int transport_type = (endpoint->flags & TCP)
-                             ? MBEDTLS_SSL_TRANSPORT_STREAM
-                             : MBEDTLS_SSL_TRANSPORT_DATAGRAM;
-
-      if (oc_tls_populate_ssl_config(&peer->ssl_conf, endpoint->device, role,
-                                     transport_type) < 0) {
-        OC_ERR("oc_tls: error in tls_populate_ssl_config");
-        oc_tls_free_peer(peer, false);
-        return NULL;
-      }
-
-#ifdef OC_PKI
-#if defined(OC_CLOUD) && defined(OC_CLIENT)
-      if (ciphers != cloud_priority) {
-#endif /* OC_CLOUD && OC_CLIENT */
-        mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
-#if defined(OC_CLOUD) && defined(OC_CLIENT)
-      }
-#endif /* OC_CLOUD && OC_CLIENT */
-#endif /* OC_PKI */
-
-#ifdef OC_TCP
-      peer->processed_recv_message = NULL;
-#endif
-
-      oc_tls_set_ciphersuites(&peer->ssl_conf, endpoint);
-
-      int err = mbedtls_ssl_setup(&peer->ssl_ctx, &peer->ssl_conf);
-
-      if (err != 0) {
-        OC_ERR("oc_tls: error in mbedtls_ssl_setup: %d", err);
-        oc_tls_free_peer(peer, false);
-        return NULL;
-      }
-      /* Fix maximum size of outgoing encrypted application payloads when sent
-       * over UDP */
-      if (transport_type == MBEDTLS_SSL_TRANSPORT_DATAGRAM) {
-        mbedtls_ssl_set_mtu(
-          &peer->ssl_ctx,
-          (OC_PDU_SIZE > UINT16_MAX ? UINT16_MAX : OC_PDU_SIZE));
-      }
-
-      mbedtls_ssl_set_bio(&peer->ssl_ctx, peer, ssl_send, ssl_recv, NULL);
-
-      if (role == MBEDTLS_SSL_IS_SERVER &&
-          mbedtls_ssl_set_client_transport_id(
-            &peer->ssl_ctx, (const unsigned char *)&endpoint->addr,
-            sizeof(endpoint->addr)) != 0) {
-        oc_tls_free_peer(peer, false);
-        return NULL;
-      }
-      oc_list_add(g_tls_peers, peer);
-
-      if (!(endpoint->flags & TCP)) {
-        mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
-                                 ssl_get_timer);
-        oc_ri_add_timed_event_callback_seconds(
-          peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
-      }
-    } else {
-      OC_WRN("TLS peers exhausted");
+    if (oc_list_length(g_tls_peers) != 0) {
+      /* Allow only a single DOC */
+      return NULL;
     }
+    doc = true;
+  }
+  peer = oc_tls_peer_allocate(endpoint, role, doc);
+  if (peer == NULL) {
+    return NULL;
+  }
+
+  if (oc_tls_peer_ssl_init(peer) != 0) {
+    oc_tls_free_peer(peer, false);
+    return NULL;
+  }
+
+  oc_list_add(g_tls_peers, peer);
+
+  if ((endpoint->flags & TCP) == 0) {
+    mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
+                             ssl_get_timer);
+    oc_ri_add_timed_event_callback_seconds(
+      peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
   }
   return peer;
 }
@@ -2556,9 +2572,9 @@ static void
 close_all_tls_sessions_for_device(size_t device)
 {
   OC_DBG("oc_tls: closing all open (D)TLS sessions on device %zd", device);
-  oc_tls_peer_t *p = oc_list_head(g_tls_peers), *next;
+  oc_tls_peer_t *p = oc_list_head(g_tls_peers);
   while (p != NULL) {
-    next = p->next;
+    oc_tls_peer_t *next = p->next;
     if (p->endpoint.device == device) {
       oc_tls_close_connection(&p->endpoint);
     }
@@ -2570,9 +2586,9 @@ static void
 close_all_tls_sessions(void)
 {
   OC_DBG("oc_tls: closing all open (D)TLS sessions on all devices");
-  oc_tls_peer_t *p = oc_list_head(g_tls_peers), *next;
+  oc_tls_peer_t *p = oc_list_head(g_tls_peers);
   while (p != NULL) {
-    next = p->next;
+    oc_tls_peer_t *next = p->next;
     oc_tls_close_connection(&p->endpoint);
     p = next;
   }
