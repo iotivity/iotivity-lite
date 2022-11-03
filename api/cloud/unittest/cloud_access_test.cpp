@@ -40,7 +40,10 @@ public:
     return result;
   }
 
-  static void signalEventLoop(void) {}
+  static void signalEventLoop(void)
+  {
+    // no-op for tests
+  }
 
 protected:
   static void SetUpTestCase()
