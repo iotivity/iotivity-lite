@@ -1,0 +1,71 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Run unit tests with a single compile configuration
+
+on:
+  workflow_call:
+    inputs:
+      build_args:
+        type: string
+        required: true
+      build_type:
+        type: string
+        required: false
+        default: Debug
+      coverage:
+        type: boolean
+        required: false
+        default: false
+jobs:
+  unit-test-with-cfg:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: Build unit tests
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DCMAKE_BUILD_TYPE=${{ inputs.build_args }} -DBUILD_TESTING=ON ..
+          make oc-unittests
+
+      - name: Run unit tests
+        run: |
+          cd build
+          ctest --verbose --label-regex "oc-unittest"
+
+      - name: Get output file name
+        if: ${{ inputs.coverage }}
+        id: coverage
+        run: |
+          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DCMAKE_BUILD_TYPE=${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
+          echo "filename=coverage-unix-${SUFFIX}.json" >> $GITHUB_OUTPUT
+
+      - name: Collect coverage data
+        if: ${{ inputs.coverage }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gcovr
+          ./tools/collect-coverage.sh --build-dir build --output "${GITHUB_WORKSPACE}/tools/${{ steps.coverage.outputs.filename }}"
+
+      - name: Upload coverage data
+        if: ${{ inputs.coverage }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-coverage
+          path: tools/${{ steps.coverage.outputs.filename }}
+          if-no-files-found: error
+          retention-days: 1
+
+      # Build all the remaining targets after the code coverage information has been gathered
+      - name: Build all
+        run: |
+          cd build
+          make all

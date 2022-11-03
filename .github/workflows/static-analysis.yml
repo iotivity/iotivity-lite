@@ -13,18 +13,13 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   clang-tidy-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           submodules: "true"
-
-      - name: Install clang-tidy
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y clang-tidy
 
       - name: Build with clang-tidy
         run: |
