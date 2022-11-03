@@ -48,6 +48,7 @@
 #include "engine.h"
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "oc_api.h"
@@ -893,14 +894,8 @@ send_message:
         oc_blockwise_response_state_t *b =
           (oc_blockwise_response_state_t *)response_buffer;
         if (b && b->observe_seq != -1) {
-          int i = 0;
-          uint32_t r;
-          while (i < COAP_TOKEN_LEN) {
-            r = oc_random_value();
-            memcpy(response->token + i, &r, sizeof(r));
-            i += sizeof(r);
-          }
-          response->token_len = (uint8_t)i;
+          response->token_len = sizeof(response->token);
+          oc_random_buffer(response->token, response->token_len);
           if (request_buffer) {
             memcpy(request_buffer->token, response->token, response->token_len);
             request_buffer->token_len = response->token_len;

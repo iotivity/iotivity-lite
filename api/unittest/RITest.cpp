@@ -18,11 +18,6 @@
  *
  ******************************************************************/
 
-#include <cstdlib>
-#include <gtest/gtest.h>
-#include <stdio.h>
-#include <string>
-
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_helpers.h"
@@ -30,9 +25,15 @@
 #include "oc_collection.h"
 #include "port/oc_network_event_handler_internal.h"
 
-#define RESOURCE_URI "/LightResourceURI"
-#define RESOURCE_NAME "roomlights"
-#define OBSERVERPERIODSECONDS_P 1
+#include <cstdlib>
+#include <gtest/gtest.h>
+#include <stdio.h>
+#include <string>
+#include <vector>
+
+static const std::string kResourceURI = "/LightResourceURI";
+static const std::string kResourceName = "roomlights";
+static constexpr uint16_t kObservePeriodSeconds = 1;
 
 class TestOcRi : public testing::Test {
 protected:
@@ -58,14 +59,16 @@ onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 
 TEST_F(TestOcRi, GetAppResourceByUri_P)
 {
-  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
+  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_TRUE(add_check);
 
-  res = oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
+  res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
+                                      kResourceURI.length(), 0);
   EXPECT_NE(nullptr, res);
   bool del_check = oc_ri_delete_resource(res);
   EXPECT_TRUE(del_check);
@@ -73,16 +76,17 @@ TEST_F(TestOcRi, GetAppResourceByUri_P)
 
 TEST_F(TestOcRi, GetAppResourceByUri_N)
 {
-  oc_resource_t *res =
-    oc_ri_get_app_resource_by_uri(RESOURCE_URI, strlen(RESOURCE_URI), 0);
+  oc_resource_t *res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
+                                                     kResourceURI.length(), 0);
   EXPECT_EQ(nullptr, res);
 }
 
 TEST_F(TestOcRi, RiGetAppResource_P)
 {
-  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
+  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_TRUE(add_check);
@@ -107,7 +111,8 @@ TEST_F(TestOcRi, RiAllocResource_P)
 
 TEST_F(TestOcRi, RiFreeResourceProperties_P)
 {
-  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_ri_free_resource_properties(res);
   EXPECT_EQ(0, oc_string_len(res->name));
   bool del_check = oc_ri_delete_resource(res);
@@ -116,9 +121,10 @@ TEST_F(TestOcRi, RiFreeResourceProperties_P)
 
 TEST_F(TestOcRi, RiAddResource_P)
 {
-  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
+  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_EQ(true, add_check);
@@ -128,45 +134,48 @@ TEST_F(TestOcRi, RiAddResource_P)
 
 TEST_F(TestOcRi, RIGetQueryValue_P)
 {
-  const char *input[] = { "key=1",          "data=1&key=2",     "key=2&data=3",
-                          "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
-                          "y&x&key=2&y" };
-  int ret;
-  const char *value;
+  std::vector<std::string> inputs = {
+    "key=1",          "data=1&key=2",     "key=2&data=3",
+    "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
+    "y&x&key=2&y"
+  };
 
-  for (int i = 0; i < 7; i++) {
-    ret = oc_ri_get_query_value(input[i], strlen(input[i]), "key", &value);
-    EXPECT_EQ(1, ret) << "P input[" << i << "] " << input[i] << " "
+  const char *value;
+  for (const auto &input : inputs) {
+    int ret =
+      oc_ri_get_query_value(input.c_str(), input.length(), "key", &value);
+    EXPECT_EQ(1, ret) << "P input " << input << " "
                       << "key";
   }
-  for (int i = 0; i < 7; i++) {
-    ret = oc_ri_get_query_value(input[i], strlen(input[i]), "key2", &value);
-    EXPECT_EQ(-1, ret) << "N input[" << i << "] " << input[i] << " "
+  for (const auto &input : inputs) {
+    int ret =
+      oc_ri_get_query_value(input.c_str(), input.length(), "key2", &value);
+    EXPECT_EQ(-1, ret) << "N input " << input << " "
                        << "key2";
   }
 }
 
 TEST_F(TestOcRi, RIQueryExists_P)
 {
-  const char *input[] = { "key=1",
-                          "key",
-                          "data=1&key=2",
-                          "data=2&key",
-                          "key&data=3",
-                          "key=2&data=3",
-                          "x=1&key=2&data=3",
-                          "y=&key=2&data=3",
-                          "y=1&x&key=2&data=3",
-                          "y=1&x&key" };
+  std::vector<std::string> inputs = { "key=1",
+                                      "key",
+                                      "data=1&key=2",
+                                      "data=2&key",
+                                      "key&data=3",
+                                      "key=2&data=3",
+                                      "x=1&key=2&data=3",
+                                      "y=&key=2&data=3",
+                                      "y=1&x&key=2&data=3",
+                                      "y=1&x&key" };
   int ret;
-  for (int i = 0; i < 10; i++) {
-    ret = oc_ri_query_exists(input[i], strlen(input[i]), "key");
-    EXPECT_EQ(1, ret) << "P input[" << i << "] " << input[i] << " "
+  for (const auto &input : inputs) {
+    ret = oc_ri_query_exists(input.c_str(), input.length(), "key");
+    EXPECT_EQ(1, ret) << "P input " << input << " "
                       << "key";
   }
-  for (int i = 0; i < 10; i++) {
-    ret = oc_ri_query_exists(input[i], strlen(input[i]), "key2");
-    EXPECT_EQ(-1, ret) << "N input[" << i << "] " << input[i] << " "
+  for (const auto &input : inputs) {
+    ret = oc_ri_query_exists(input.c_str(), input.length(), "key2");
+    EXPECT_EQ(-1, ret) << "N input " << input << " "
                        << "key2";
   }
 }
@@ -200,9 +209,10 @@ TEST_F(TestOcRi, RiCleanupCollection_P)
   oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
   oc_add_collection(col);
 
-  oc_resource_t *res = oc_new_resource(RESOURCE_NAME, RESOURCE_URI, 1, 0);
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, OBSERVERPERIODSECONDS_P);
+  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
 
   oc_link_t *l = oc_new_link(res);

@@ -535,7 +535,7 @@ int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
  * @param[in] query the query to inspect
  * @param[in] query_len the lenght of the query
  * @param[in] key the key to be checked if exist, key is null terminated
- * @return int -1 = not exist
+ * @return int -1 = not exists
  */
 int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
 
@@ -549,8 +549,8 @@ int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
  * @param n
  * @return int
  */
-int oc_ri_query_nth_key_exists(const char *query, size_t query_len, char **key,
-                               size_t *key_len, size_t n);
+int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
+                               const char **key, size_t *key_len, size_t n);
 
 /**
  * @brief retrieve the interface mask from the interface name

@@ -25,6 +25,7 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
+#include "api/oc_helpers_internal.h"
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "oc_store.h"
@@ -361,36 +362,10 @@ oc_obt_load_state(void)
 
 #ifdef OC_OSCORE
 static void
-gen_oscore_secret(uint8_t *secret)
-{
-  int i = 0;
-  while (i < OSCORE_MASTER_SECRET_LEN) {
-    unsigned int r = oc_random_value();
-    size_t copy_len = (sizeof(r) < (unsigned)(OSCORE_MASTER_SECRET_LEN - i))
-                        ? sizeof(r)
-                        : (unsigned)OSCORE_MASTER_SECRET_LEN - i;
-    memcpy(&secret[i], &r, copy_len);
-    i += copy_len;
-  }
-}
-
-static void
 gen_oscore_ctxid(uint8_t *id, bool group)
 {
-  int i = 0;
-  while (i < OSCORE_CTXID_LEN) {
-    unsigned int r1 = oc_random_value(), r2 = oc_random_value();
-    size_t copy_len = (sizeof(r1) < (unsigned)(OSCORE_CTXID_LEN - i))
-                        ? sizeof(r1)
-                        : (unsigned)OSCORE_CTXID_LEN - i;
-    memcpy(&id[i], &r2, copy_len);
-    i += copy_len;
-  }
-  if (group) {
-    id[0] = 0x02;
-  } else {
-    id[0] = 0x01;
-  }
+  oc_random_buffer(id, OSCORE_CTXID_LEN);
+  id[0] = group ? 0x02 : 0x01;
 }
 #endif /* OC_OSCORE */
 
@@ -1101,7 +1076,7 @@ device2oscore_RFPRO(int status, void *data)
   if (status >= 0) {
     gen_oscore_ctxid(p->sendid, false);
     gen_oscore_ctxid(p->recvid, false);
-    gen_oscore_secret(p->secret);
+    oc_random_buffer(p->secret, sizeof(p->secret));
 
     char d2uuid[OC_UUID_LEN];
     oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
@@ -1542,12 +1517,7 @@ device2_RFPRO(int status, void *data)
   p->switch_dos = NULL;
 
   if (status >= 0) {
-    int i;
-    for (i = 0; i < 4; i++) {
-      unsigned int r = oc_random_value();
-      memcpy(&p->key[i * 4], &r, sizeof(r));
-      i += 4;
-    }
+    oc_random_buffer(p->key, sizeof(p->key));
 
     char d2uuid[OC_UUID_LEN];
     oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
@@ -3675,7 +3645,7 @@ oc_obt_init(void)
     OC_DBG("oc_obt: generating OSCORE group context id");
     gen_oscore_ctxid(groupid, true);
     OC_DBG("oc_obt: generating OSCORE group secret");
-    gen_oscore_secret(group_secret);
+    oc_random_buffer(group_secret, sizeof(group_secret));
 #endif /* OC_OSCORE */
 #ifdef OC_PKI
     uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];

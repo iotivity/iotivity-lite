@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "api/oc_helpers_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
 #ifdef OC_TCP
@@ -275,14 +276,8 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
 
-  request->token_len = 8;
-  int i = 0;
-  uint32_t r;
-  while (i < request->token_len) {
-    r = oc_random_value();
-    memcpy(request->token + i, &r, sizeof(r));
-    i += sizeof(r);
-  }
+  request->token_len = sizeof(request->token);
+  oc_random_buffer(request->token, request->token_len);
 
   coap_set_header_uri_path(request, uri, strlen(uri));
 

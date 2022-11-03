@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "api/oc_helpers_internal.h"
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -214,77 +215,102 @@ oc_status_to_str(oc_status_t key)
   return cli_status_strs[key];
 }
 
+// representation of query key-value pairs (&key=value)
+typedef struct
+{
+  const char *key;
+  size_t key_len;
+  const char *value;
+  size_t value_len;
+} key_value_pair_t;
+
+static key_value_pair_t
+oc_ri_find_query_nth_key_value_pair(const char *query, size_t query_len,
+                                    size_t n)
+{
+  key_value_pair_t res = { NULL, 0, NULL, 0 };
+  if (query == NULL) {
+    return res;
+  }
+  const char *start = query;
+  const char *end = query + query_len;
+  // find nth key-value pair
+  size_t i = 0;
+  while (i < (n - 1) && start != NULL) {
+    start = memchr(start, '&', end - start);
+    if (start == NULL) {
+      return res;
+    }
+    ++i;
+    ++start;
+  }
+  res.key = start;
+
+  const char *value = memchr(start, '=', end - start);
+  const char *next_pair = memchr(start, '&', end - start);
+  // verify that the found value belongs to the current key
+  if (next_pair != NULL && (next_pair < value)) {
+    // the current key does not have a '='
+    value = NULL;
+  }
+  if (value == NULL) {
+    res.key_len = next_pair != NULL ? next_pair - res.key : end - res.key;
+    return res;
+  }
+  res.key_len = value - res.key;
+
+  ++value; // move past '='
+  res.value = value;
+  res.value_len = next_pair != NULL ? next_pair - res.value : end - res.value;
+  return res;
+}
+
 int
 oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
                               const char **key, size_t *key_len,
                               const char **value, size_t *value_len, size_t n)
 {
-  const char *start = query;
-  const char *end = query + query_len;
-
-  if (start == NULL) {
+  assert(key != NULL);
+  assert(key_len != NULL);
+  key_value_pair_t kv =
+    oc_ri_find_query_nth_key_value_pair(query, query_len, n);
+  if (kv.key == NULL) {
     return -1;
   }
 
-  const char *current = start;
-  size_t i = 0;
-  while (i < (n - 1) && current != NULL) {
-    current = memchr(start, '&', end - start);
-    if (current == NULL) {
-      return -1;
-    }
-    i++;
-    start = current + 1;
+  *key = kv.key;
+  *key_len = kv.key_len;
+  if (value != NULL) {
+    *value = kv.value;
+  }
+  if (value_len != NULL) {
+    *value_len = kv.value_len;
   }
 
-  current = memchr(start, '=', end - start);
-  const char *current2 = memchr(start, '&', end - start);
-  if (current2 != NULL) {
-    if (current2 < current) {
-      /* the key is does not have = */
-      current = NULL;
-    }
-  }
+  size_t next_pos =
+    kv.value != NULL ? (size_t)((kv.value + kv.value_len) - query) : kv.key_len;
+  ++next_pos; // +1 for '&'
 
-  int next_pos = 0;
-  if (current != NULL) {
-    *key_len = (current - start);
-    *key = start;
-    *value = current + 1;
-    current = memchr(*value, '&', end - *value);
-    if (current == NULL) {
-      *value_len = (end - *value);
-    } else {
-      *value_len = (current - *value);
-    }
-    next_pos = (int)(*value + *value_len - query + 1);
-  } else {
-    current = memchr(start, '&', end - start);
-    if (current == NULL) {
-      current = end;
-    }
-    /* there is no value */
-    *key = start;
-    *key_len = (current - start);
-    next_pos = *key_len + 1;
-  }
-
-  return next_pos;
+  assert(next_pos <= INT_MAX);
+  return (int)next_pos;
 }
 
 int
 oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                       const char **value)
 {
-  int next_pos = 0, found = -1;
-  size_t kl, vl, pos = 0;
-  const char *k;
-
+  assert(key != NULL);
+  int found = -1;
+  size_t pos = 0;
   while (pos < query_len) {
-    next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos, &k,
-                                             &kl, value, &vl, 1u);
-    if (next_pos == -1)
+    const char *k;
+    size_t kl;
+    size_t vl;
+    int next_pos = oc_ri_get_query_nth_key_value(query + pos, query_len - pos,
+                                                 &k, &kl, value, &vl, 1u);
+    if (next_pos == -1) {
       return -1;
+    }
 
     if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
       found = (int)vl;
@@ -297,80 +323,51 @@ oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
 }
 
 int
-oc_ri_query_nth_key_exists(const char *query, size_t query_len, char **key,
-                           size_t *key_len, size_t n)
+oc_ri_query_nth_key_exists(const char *query, size_t query_len,
+                           const char **key, size_t *key_len, size_t n)
 {
-  int next_pos = -1;
-  size_t i = 0;
-  size_t value_len;
-  char *start = (char *)query, *current, *current2,
-       *end = (char *)query + query_len;
-  char *value = NULL;
-  current = start;
-
-  while (i < (n - 1) && current != NULL) {
-    current = memchr(start, '&', end - start);
-    if (current == NULL) {
-      return -1;
-    }
-    i++;
-    start = current + 1;
+  assert(key != NULL);
+  assert(key_len != NULL);
+  key_value_pair_t kv =
+    oc_ri_find_query_nth_key_value_pair(query, query_len, n);
+  if (kv.key == NULL) {
+    return -1;
   }
 
-  current = memchr(start, '=', end - start);
-  current2 = memchr(start, '&', end - start);
-  if (current2 != NULL) {
-    if (current2 < current) {
-      /* the key is does not have = */
-      current = NULL;
-    }
-  }
-  if (current != NULL) {
-    /* there is a value */
-    *key_len = (current - start);
-    *key = start;
-    value = current + 1;
-    current = memchr(value, '&', end - value);
-    if (current == NULL) {
-      value_len = (end - value);
-    } else {
-      value_len = (current - value);
-    }
-    next_pos = (int)(value + value_len - query + 1);
-  } else {
-    current = memchr(start, '&', end - start);
-    if (current == NULL) {
-      current = end;
-    }
-    /* there is no value */
-    *key = start;
-    *key_len = (current - start);
-    next_pos = *key_len + 1;
-  }
+  *key = kv.key;
+  *key_len = kv.key_len;
 
-  return next_pos;
+  size_t next_pos =
+    kv.value != NULL ? (size_t)((kv.value + kv.value_len) - query) : kv.key_len;
+  ++next_pos; // +1 for '&'
+
+  assert(next_pos <= INT_MAX);
+  return (int)next_pos;
 }
 
 int
 oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 {
-  int next_pos = 0, found = -1;
-  size_t kl, pos = 0;
-  char *k;
-
+  assert(key != NULL);
+  int found = -1;
+  size_t pos = 0;
   while (pos < query_len) {
-    next_pos =
+    const char *k;
+    size_t kl;
+    int next_pos =
       oc_ri_query_nth_key_exists(query + pos, query_len - pos, &k, &kl, 1u);
 
-    if (next_pos == -1)
+    if (next_pos == -1) {
       return -1;
+    }
 
     if (kl == strlen(key) && strncasecmp(key, k, kl) == 0) {
       found = 1;
       break;
     }
-    if (next_pos == 0)
+    if (next_pos == 0) {
       return -1;
+    }
 
     pos += next_pos;
   }
@@ -1277,7 +1274,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   // for realloc we need reassign memory again.
   if (enable_realloc_rep) {
     response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-    if (response_state && (*response_state)) {
+    if (response_state != NULL && (*response_state) != NULL) {
       (*response_state)->buffer = response_buffer.buffer;
     }
   }
@@ -1659,32 +1656,25 @@ oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
   return false;
 }
 
-#ifdef OC_BLOCK_WISE
-bool
-oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t **response_state,
-                       oc_client_cb_t *cb, oc_endpoint_t *endpoint)
-#else  /* OC_BLOCK_WISE */
-bool
-oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
-                       oc_endpoint_t *endpoint)
-#endif /* OC_BLOCK_WISE */
+static ocf_version_t
+oc_ri_get_ocf_version(oc_content_format_t cf)
 {
-  endpoint->version = OCF_VER_1_0_0;
-  oc_content_format_t cf = 0;
-  coap_get_header_content_format(response, &cf);
 #ifdef OC_SPEC_VER_OIC
   if (cf == APPLICATION_CBOR) {
-    endpoint->version = OIC_VER_1_1_0;
+    return OIC_VER_1_1_0;
   }
+#else
+  (void)cf;
 #endif /* OC_SPEC_VER_OIC */
+  return OCF_VER_1_0_0;
+}
 
-  cb->ref_count = 1;
-
-  uint8_t *payload = NULL;
-  int payload_len = 0;
-  coap_packet_t *const pkt = (coap_packet_t *)response;
-  int i;
-
+static oc_client_response_t
+oc_ri_prepare_client_response(const coap_packet_t *packet,
+                              oc_blockwise_state_t **response_state,
+                              oc_client_cb_t *cb, oc_endpoint_t *endpoint,
+                              oc_content_format_t cf)
+{
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.client_cb = cb;
@@ -1695,22 +1685,57 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   client_response._payload_len = 0;
   client_response.content_format = cf;
   client_response.user_data = cb->user_data;
-  for (i = 0; i < __NUM_OC_STATUS_CODES__; i++) {
-    if (oc_coap_status_codes[i] == pkt->code) {
+
+  for (int i = 0; i < __NUM_OC_STATUS_CODES__; i++) {
+    if (oc_coap_status_codes[i] == packet->code) {
       client_response.code = i;
       break;
     }
   }
 
 #ifdef OC_BLOCK_WISE
-  if (response_state) {
-    oc_blockwise_response_state_t *bwt_response_state =
+  if (response_state != NULL) {
+    const oc_blockwise_response_state_t *bwt_response_state =
       (oc_blockwise_response_state_t *)*response_state;
-    client_response.observe_option = bwt_response_state->observe_seq;
+    if (bwt_response_state != NULL) {
+      client_response.observe_option = bwt_response_state->observe_seq;
+    }
   }
+#else  /* !OC_BLOCK_WISE */
+  (void)response_state;
+  coap_get_header_observe(packet, (uint32_t *)&client_response.observe_option);
+#endif /* OC_BLOCK_WISE */
+
+  return client_response;
+}
+
+#ifdef OC_BLOCK_WISE
+bool
+oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t **response_state,
+                       oc_client_cb_t *cb, oc_endpoint_t *endpoint)
 #else  /* OC_BLOCK_WISE */
-  coap_get_header_observe(pkt, (uint32_t *)&client_response.observe_option);
-#endif /* !OC_BLOCK_WISE */
+bool
+oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
+                       oc_endpoint_t *endpoint)
+#endif /* OC_BLOCK_WISE */
+{
+  oc_content_format_t cf = 0;
+  coap_get_header_content_format(response, &cf);
+  endpoint->version = oc_ri_get_ocf_version(cf);
+
+  cb->ref_count = 1;
+
+  uint8_t *payload = NULL;
+  int payload_len = 0;
+  coap_packet_t *const pkt = (coap_packet_t *)response;
+
+#ifdef OC_BLOCK_WISE
+  oc_client_response_t client_response =
+    oc_ri_prepare_client_response(pkt, response_state, cb, endpoint, cf);
+#else  /* !OC_BLOCK_WISE */
+  oc_client_response_t client_response =
+    oc_ri_prepare_client_response(pkt, NULL, cb, endpoint, cf);
+#endif /* OC_BLOCK_WISE */
 
 #if defined(OC_OSCORE) && defined(OC_SECURITY)
   if (client_response.observe_option > 1) {
@@ -1726,7 +1751,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   bool separate = false;
 
 #ifdef OC_BLOCK_WISE
-  if (response_state) {
+  if (response_state != NULL && *response_state != NULL) {
     payload = (*response_state)->buffer;
     payload_len = (*response_state)->payload_size;
   }
@@ -1735,17 +1760,8 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 #endif /* !OC_BLOCK_WISE */
   client_response._payload = payload;
   client_response._payload_len = (size_t)payload_len;
-#ifndef OC_DYNAMIC_ALLOCATION
-  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                 rep_objects_alloc, (void *)rep_objects_pool,
-                                 0 };
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-#endif /* OC_DYNAMIC_ALLOCATION */
+
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   oc_rep_set_pool(&rep_objects);
   if (payload_len) {
     if (cb->discovery) {
@@ -1756,7 +1772,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         cb->ref_count = 0;
         oc_ri_free_client_cbs_by_mid(mid);
 #ifdef OC_BLOCK_WISE
-        *response_state = NULL;
+        if (response_state) {
+          *response_state = NULL;
+        }
 #endif /* OC_BLOCK_WISE */
         return true;
       }
@@ -1817,7 +1835,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       free_client_cb(cb);
     }
 #ifdef OC_BLOCK_WISE
-    *response_state = NULL;
+    if (response_state) {
+      *response_state = NULL;
+    }
 #endif /* OC_BLOCK_WISE */
   } else {
     cb->observe_seq = client_response.observe_option;
@@ -1894,14 +1914,8 @@ oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
   cb->qos = qos;
   cb->handler = handler;
   cb->user_data = user_data;
-  cb->token_len = 8;
-  int i = 0;
-  uint32_t r;
-  while (i < cb->token_len) {
-    r = oc_random_value();
-    memcpy(cb->token + i, &r, sizeof(r));
-    i += sizeof(r);
-  }
+  cb->token_len = sizeof(cb->token);
+  oc_random_buffer(cb->token, cb->token_len);
   cb->discovery = false;
   cb->timestamp = oc_clock_time();
   cb->observe_seq = -1;

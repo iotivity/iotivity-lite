@@ -51,7 +51,7 @@ OC_API
 void oc_random_init(void);
 
 /**
- *@brief  Calculate a pseudo random number.
+ * @brief  Calculate a pseudo random number.
  *
  * @return A pseudo-random number.
  */
@@ -60,7 +60,6 @@ unsigned int oc_random_value(void);
 
 /**
  * @brief destroy the pseudo-random generator
- *
  */
 OC_API
 void oc_random_destroy(void);
