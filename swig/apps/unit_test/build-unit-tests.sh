@@ -11,4 +11,3 @@ javac  -cp ../../iotivity-lite-java/libs/iotivity-lite.jar:$JUNIT4 -sourcepath .
 
 # create jar file
 jar -cfv iotivity-junit.jar -C ./bin .
-#$HOME/junit/junit-4.13.jar

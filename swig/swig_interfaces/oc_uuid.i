@@ -1,5 +1,6 @@
 /* File oc_obt.i */
 %module OCUuidUtil
+%include "stdint.i"
 %include "typemaps.i"
 %include "iotivity.swg"
 
@@ -16,29 +17,31 @@
 
 %{
 #include "oc_uuid.h"
-
 %}
 
-%typemap(jstype) uint8_t id[16] "byte[]"
-%typemap(jtype) uint8_t id[16] "byte[]"
-%typemap(jni) uint8_t id[16] "jbyteArray"
-%typemap(javaout) uint8_t id[16] {
+#define OC_UUID_LEN (37)
+#define OC_UUID_ID_SIZE (16)
+
+%typemap(jstype) uint8_t id[OC_UUID_ID_SIZE] "byte[]"
+%typemap(jtype) uint8_t id[OC_UUID_ID_SIZE] "byte[]"
+%typemap(jni) uint8_t id[OC_UUID_ID_SIZE] "jbyteArray"
+%typemap(javaout) uint8_t id[OC_UUID_ID_SIZE] {
   return $jnicall;
 }
-%typemap(out) uint8_t id[16] {
+%typemap(out) uint8_t id[OC_UUID_ID_SIZE] {
   if($1 != NULL) {
-    $result = JCALL1(NewByteArray, jenv, (jsize)16);
-    JCALL4(SetByteArrayRegion, jenv, $result, 0, (jsize)16, (const jbyte *)$1);
+    $result = JCALL1(NewByteArray, jenv, (jsize)OC_UUID_ID_SIZE);
+    JCALL4(SetByteArrayRegion, jenv, $result, 0, (jsize)OC_UUID_ID_SIZE, (const jbyte *)$1);
   } else {
     $result = NULL;
   }
 }
-%typemap(javain) uint8_t id[16] "$javainput"
-%typemap(in) uint8_t id[16] (uint8_t temp[16]) {
+%typemap(javain) uint8_t id[OC_UUID_ID_SIZE] "$javainput"
+%typemap(in) uint8_t id[OC_UUID_ID_SIZE] (uint8_t temp[OC_UUID_ID_SIZE]) {
   jbyte *jid = JCALL2(GetByteArrayElements, jenv, $input, 0);
   //jsize jid_size = JCALL1(GetArrayLength, jenv, $input);
-  // TODO if jid_size != 16 throw exception
-  memcpy(temp, jid, 16);
+  // TODO if jid_size != OC_UUID_ID_SIZE throw exception
+  memcpy(temp, jid, OC_UUID_ID_SIZE);
   $1 = temp;
   JCALL3(ReleaseByteArrayElements, jenv, $input, jid, 0);
 }

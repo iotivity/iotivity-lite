@@ -2,7 +2,6 @@ package org.iotivity;
 
 import static org.junit.Assert.*;
 
-import org.iotivity.OCRepresentation.*;
 import org.junit.Test;
 
 public class OCRepresentationTest {
@@ -41,11 +40,11 @@ public class OCRepresentationTest {
         assertNull(r);
         assertEquals("{\"one\":null,\"two\":null,\"three\":null}", OCRep.toJSON(rep1, false));
         assertEquals("{\n" +
-                     "  \"one\" : null,\n" +
-                     "  \"two\" : null,\n" +
-                     "  \"three\" : null\n" +
-                     "}\n", OCRep.toJSON(rep1, true));
-}
+                "  \"one\" : null,\n" +
+                "  \"two\" : null,\n" +
+                "  \"three\" : null\n" +
+                "}\n", OCRep.toJSON(rep1, true));
+    }
 
     @Test
     public void testName() {
@@ -124,18 +123,18 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        long fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
         OCRep.setLongArray(root, "fibonacci", fib);
         assertEquals(0, OCRep.getCborErrno());
-        boolean barray[] = {false, false, true, false, false};
+        boolean barray[] = { false, false, true, false, false };
         OCRep.setBooleanArray(root, "flips", barray);
         assertEquals(0, OCRep.getCborErrno());
-        double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
+        double mathConstants[] = { 3.1415926535, 2.71828, 1.4142135, 1.618033 };
         OCRep.setDoubleArray(root, "math_constants", mathConstants);
         assertEquals(0, OCRep.getCborErrno());
-        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
+        String lorem_ipsum[] = { "Lorem", "ipsum", "dolor", "sit", "amet",
                 "consectetur", "adipiscing", "elit.", "Sed",
-                "nec", "feugiat", "odio.", "Donec."};
+                "nec", "feugiat", "odio.", "Donec." };
         OCRep.setStringArray(root, "lorem_ipsum", lorem_ipsum);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -144,7 +143,7 @@ public class OCRepresentationTest {
         OCRepresentation rep = OCRep.getOCRepresentaionFromRootObject();
         assertNotNull(rep);
 
-        //OCArray to int array
+        // OCArray to int array
         assertEquals(OCType.OC_REP_INT_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("fibonacci"));
         assertNotNull(rep.getValue().getArray());
@@ -178,7 +177,7 @@ public class OCRepresentationTest {
                 + "  ]\n"
                 + "}\n", OCRep.toJSON(rep, true));
 
-        //OCArray to boolean array
+        // OCArray to boolean array
         assertEquals(OCType.OC_REP_BOOL_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("flips"));
         assertNotNull(rep.getValue().getArray());
@@ -188,7 +187,7 @@ public class OCRepresentationTest {
         rep = rep.getNext();
         assertNotNull(rep);
 
-        //OCArray to double array
+        // OCArray to double array
         assertEquals(OCType.OC_REP_DOUBLE_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("math_constants"));
         assertNotNull(rep.getValue().getArray());
@@ -199,7 +198,7 @@ public class OCRepresentationTest {
         rep = rep.getNext();
         assertNotNull(rep);
 
-        //OCArray to string array
+        // OCArray to string array
         assertEquals(OCType.OC_REP_STRING_ARRAY, rep.getType());
         assertTrue(rep.getName().equals("lorem_ipsum"));
         assertNotNull(rep.getValue().getArray());
@@ -217,11 +216,11 @@ public class OCRepresentationTest {
 
         /*
          * Create an OCRepresentation with the following
-         *  {
-         *     "a": 1,
-         *     "b": false,
-         *     "c": "three"
-         *   }
+         * {
+         * "a": 1,
+         * "b": false,
+         * "c": "three"
+         * }
          */
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
@@ -289,7 +288,7 @@ public class OCRepresentationTest {
          * linked list of OCRepresentation objects. When used in code
          * it has the same limitations as a singly-linked-list
          */
-        /* 
+        /*
          * The first part of this test is copy/paste from later test
          * testRepObjectArray (see below) this is the easiest way to
          * to build an object array to place into the OCValue
@@ -297,11 +296,11 @@ public class OCRepresentationTest {
 
         /*
          * {
-         *   "space_2001": [
-         *     {"name": "Dave Bowman", "job": "astronaut"},
-         *     {"name": "Frank Poole", "job": "astronaut"},
-         *     {"name": "Hal 9000", "job": "AI computer"}
-         *   ]
+         * "space_2001": [
+         * {"name": "Dave Bowman", "job": "astronaut"},
+         * {"name": "Frank Poole", "job": "astronaut"},
+         * {"name": "Hal 9000", "job": "AI computer"}
+         * ]
          */
         /* add values to root object */
         CborEncoder root = OCRep.beginRootObject();
@@ -550,7 +549,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        boolean barray[] = {false, false, true, false, false};
+        boolean barray[] = { false, false, true, false, false };
         OCRep.setBooleanArray(root, "flips", barray);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -578,7 +577,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        double mathConstants[] = {3.1415926535, 2.71828,  1.4142135, 1.618033};
+        double mathConstants[] = { 3.1415926535, 2.71828, 1.4142135, 1.618033 };
         OCRep.setDoubleArray(root, "math_constants", mathConstants);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -591,7 +590,7 @@ public class OCRepresentationTest {
         assertEquals("{\n"
                 + "  \"math_constants\" : [3.141593, 2.718280, 1.414214, 1.618033]\n"
                 + "}\n", OCRep.toJSON(rep, true));
-        
+
         double outValue[] = OCRep.getDoubleArray(rep, "math_constants");
         assertNotNull(outValue);
         assertEquals(mathConstants.length, outValue.length);
@@ -606,7 +605,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        long fib[] = {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89};
+        long fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
         OCRep.setLongArray(root, "fibonacci", fib);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -626,7 +625,7 @@ public class OCRepresentationTest {
         assertArrayEquals(fib, outValue);
         OCRep.deleteBuffer();
     }
-    
+
     @Test
     public void testRepByteStringArray() {
         OCRep.newBuffer(1024);
@@ -635,11 +634,11 @@ public class OCRepresentationTest {
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
         /* jagged arrays for testing */
-        byte ba0[] = {0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-        byte ba1[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
-        byte ba2[] = {0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
-                         0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42};
-        byte ba3[] = {0x00, 0x00, (byte)0xff, 0x00, 0x00};
+        byte ba0[] = { 0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+        byte ba1[] = { 0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte) 0x89 };
+        byte ba2[] = { 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+                0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42 };
+        byte ba3[] = { 0x00, 0x00, (byte) 0xff, 0x00, 0x00 };
         CborEncoder barray = OCRep.openArray(root, "barray");
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(barray);
@@ -692,9 +691,9 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        String lorem_ipsum[] = {"Lorem", "ipsum", "dolor", "sit", "amet",
-                                "consectetur", "adipiscing", "elit.", "Sed",
-                                "nec", "feugiat", "odio.", "Donec."};
+        String lorem_ipsum[] = { "Lorem", "ipsum", "dolor", "sit", "amet",
+                "consectetur", "adipiscing", "elit.", "Sed",
+                "nec", "feugiat", "odio.", "Donec." };
         OCRep.setStringArray(root, "lorem_ipsum", lorem_ipsum);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -737,7 +736,7 @@ public class OCRepresentationTest {
         CborEncoder root = OCRep.beginRootObject();
         assertEquals(0, OCRep.getCborErrno());
         assertNotNull(root);
-        byte fibBytes[] = {0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte)0x89};
+        byte fibBytes[] = { 0x01, 0x01, 0x02, 0x03, 0x05, 0x08, 0x13, 0x21, 0x34, 0x55, (byte) 0x89 };
         OCRep.setByteString(root, "fib_bytes", fibBytes);
         assertEquals(0, OCRep.getCborErrno());
         OCRep.endRootObject();
@@ -765,11 +764,11 @@ public class OCRepresentationTest {
 
         /*
          * {
-         *   "my_object": {
-         *     "a": 1,
-         *     "b": false,
-         *     "c": "three"
-         *   }
+         * "my_object": {
+         * "a": 1,
+         * "b": false,
+         * "c": "three"
+         * }
          * }
          */
         CborEncoder root = OCRep.beginRootObject();
@@ -826,11 +825,11 @@ public class OCRepresentationTest {
          */
         /*
          * {
-         *   "space_2001": [
-         *     {"name": "Dave Bowman", "job": "astronaut"},
-         *     {"name": "Frank Poole", "job": "astronaut"},
-         *     {"name": "Hal 9000", "job": "AI computer"}
-         *   ]
+         * "space_2001": [
+         * {"name": "Dave Bowman", "job": "astronaut"},
+         * {"name": "Frank Poole", "job": "astronaut"},
+         * {"name": "Hal 9000", "job": "AI computer"}
+         * ]
          */
         /* add values to root object */
         CborEncoder root = OCRep.beginRootObject();
