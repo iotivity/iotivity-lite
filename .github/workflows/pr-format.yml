@@ -6,7 +6,7 @@ jobs:
   format:
     name: Format the pull request if the '~format' comment is made
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '~format') }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: octokit/graphql-action@v2.x
         id: get_branch

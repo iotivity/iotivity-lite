@@ -46,9 +46,15 @@ jobs:
       - name: Update MinGW to 10.2
         if: ${{ matrix.config.platform == 'mingw' }}
         run: |
-          choco upgrade mingw --version=10.2.0 --force
-          if (!$?) {
-            throw "choco upgrade mingw failed"
+          for($i=0; ; $i++) {
+            choco upgrade mingw --version=10.2.0 --force
+            if (!$?) {              
+              if ($i -le 3) {
+                continue
+              }
+              throw "choco upgrade mingw failed"
+            }
+            break
           }
           $gcc_version = &gcc -v 2>&1 | Out-String
           $gcc_version
