@@ -1,18 +1,20 @@
-/*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ***************************************************************************/
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,9 +24,6 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
-#ifdef OC_TCP
-#include "messaging/coap/coap_signal.h"
-#endif /* OC_TCP */
 #include "port/oc_assert.h"
 #include "port/oc_random.h"
 #include "util/oc_etimer.h"
@@ -33,22 +32,23 @@
 #include "util/oc_process.h"
 #include "util/oc_features.h"
 
+#include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_discovery.h"
 #include "oc_events.h"
 #include "oc_network_events_internal.h"
-#ifdef OC_TCP
-#include "oc_session_events.h"
-#endif /* OC_TCP */
-#include "oc_api.h"
 #include "oc_ri.h"
-#include "oc_uuid.h"
 #include "oc_ri_internal.h"
+#include "oc_uuid.h"
 
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
+
+#ifdef OC_CLIENT
+#include "oc_client_state.h"
+#endif /* OC_CLIENT */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
@@ -56,6 +56,10 @@
 #include "oc_resource_factory.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS && OC_SERVER */
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "oc_push_internal.h"
+#endif /*OC_HAS_FEATURE_PUSH  */
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
@@ -69,10 +73,14 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
+#ifdef OC_TCP
+#include "messaging/coap/coap_signal.h"
+#include "oc_session_events.h"
+#endif /* OC_TCP */
+
 #ifdef OC_HAS_FEATURE_PUSH
 OC_PROCESS_NAME(oc_push_process);
-void oc_push_list_init();
-#endif
+#endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef OC_SERVER
 OC_LIST(g_app_resources);
@@ -83,7 +91,6 @@ OC_MEMB(g_resource_default_s, oc_resource_defaults_data_t,
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
-#include "oc_client_state.h"
 OC_LIST(g_client_cbs);
 OC_MEMB(g_client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
 #endif /* OC_CLIENT */
@@ -188,7 +195,7 @@ oc_ri_get_app_resources(void)
 }
 
 bool
-oc_ri_is_app_resource_valid(oc_resource_t *resource)
+oc_ri_is_app_resource_valid(const oc_resource_t *resource)
 {
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res) {
@@ -377,7 +384,7 @@ oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 static void
 allocate_events(void)
 {
-  for (int i = 0; i < __NUM_OC_EVENT_TYPES__; i++) {
+  for (int i = 0; i < __NUM_OC_EVENT_TYPES__; ++i) {
     oc_events[i] = oc_process_alloc_event();
   }
 }
@@ -623,7 +630,7 @@ oc_ri_free_resource_properties(oc_resource_t *resource)
 }
 
 bool
-oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
+oc_ri_has_timed_event_callback(const void *cb_data, oc_trigger_t event_callback,
                                bool ignore_cb_data)
 {
   const oc_event_callback_t *event_cb =
@@ -639,7 +646,8 @@ oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
 }
 
 void
-oc_ri_remove_timed_event_callback(void *cb_data, oc_trigger_t event_callback)
+oc_ri_remove_timed_event_callback(const void *cb_data,
+                                  oc_trigger_t event_callback)
 {
   oc_event_callback_t *event_cb =
     (oc_event_callback_t *)oc_list_head(g_timed_callbacks);
@@ -691,11 +699,9 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
 static void
 poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
 {
-  oc_event_callback_t *event_cb = (oc_event_callback_t *)oc_list_head(list),
-                      *next;
-
+  oc_event_callback_t *event_cb = (oc_event_callback_t *)oc_list_head(list);
   while (event_cb != NULL) {
-    next = event_cb->next;
+    oc_event_callback_t *next = event_cb->next;
     if (oc_etimer_expired(&event_cb->timer)) {
       g_currently_processed_event_cb = event_cb;
       g_currently_processed_event_cb_delete = false;
@@ -754,7 +760,7 @@ periodic_observe_handler(void *data)
 }
 
 static oc_event_callback_t *
-get_periodic_observe_callback(oc_resource_t *resource)
+get_periodic_observe_callback(const oc_resource_t *resource)
 {
   oc_event_callback_t *event_cb;
   bool found = false;
@@ -775,7 +781,7 @@ get_periodic_observe_callback(oc_resource_t *resource)
 }
 
 static void
-remove_periodic_observe_callback(oc_resource_t *resource)
+remove_periodic_observe_callback(const oc_resource_t *resource)
 {
   oc_event_callback_t *event_cb = get_periodic_observe_callback(resource);
 
@@ -912,8 +918,8 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
 
 #ifdef OC_SECURITY
 static void
-oc_ri_audit_log(oc_method_t method, oc_resource_t *resource,
-                oc_endpoint_t *endpoint)
+oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
+                const oc_endpoint_t *endpoint)
 {
 #define LINE_WIDTH 80
   char aux_arr[6][LINE_WIDTH];
@@ -1024,9 +1030,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj._payload = NULL;
   request_obj._payload_len = 0;
 
-  /* Initialize OCF interface selector. */
-  oc_interface_mask_t iface_query = 0, iface_mask = 0;
-
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path = NULL;
   size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
@@ -1043,6 +1046,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   unsigned int accept = 0;
   coap_get_header_accept(request, &accept);
 
+  /* Initialize OCF interface selector. */
+  oc_interface_mask_t iface_query = 0;
   if (uri_query_len) {
     request_obj.query = uri_query;
     request_obj.query_len = (int)uri_query_len;
@@ -1103,7 +1108,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
-  oc_resource_t *resource, *cur_resource = NULL;
+  oc_resource_t *cur_resource = NULL;
 
   /* If there were no errors thus far, attempt to locate the specific
    * resource object that will handle the request using the request uri.
@@ -1111,9 +1116,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Check against list of declared core resources.
    */
   if (!bad_request) {
-    int i;
-    for (i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; i++) {
-      resource = oc_core_get_resource_by_index(i, endpoint->device);
+    for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
+      oc_resource_t *resource =
+        oc_core_get_resource_by_index(i, endpoint->device);
       if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
           strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
                   uri_path_len) == 0) {
@@ -1138,6 +1143,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif /* OC_SERVER */
 
+  oc_interface_mask_t iface_mask = 0;
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
     iface_mask = iface_query;
@@ -1568,8 +1574,8 @@ notify_client_cb_503(oc_client_cb_t *cb)
   handler(&client_response);
 
 #ifdef OC_TCP
-  if ((oc_string_len(cb->uri) == 5 &&
-       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
+  if ((oc_string_len(cb->uri) == 5) &&
+      (memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
   }
 #endif /* OC_TCP */
@@ -1588,9 +1594,9 @@ oc_ri_remove_client_cb_with_notify_503(void *data)
 void
 oc_ri_free_client_cbs_by_mid(uint16_t mid)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs), *next;
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
   while (cb != NULL) {
-    next = cb->next;
+    oc_client_cb_t *next = cb->next;
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         cb->mid == mid) {
       cb->ref_count = 1;
@@ -1603,11 +1609,11 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
 }
 
 void
-oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint)
+oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs), *next;
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
   while (cb != NULL) {
-    next = cb->next;
+    oc_client_cb_t *next = cb->next;
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
       cb->ref_count = 1;
@@ -1632,7 +1638,7 @@ oc_ri_find_client_cb_by_mid(uint16_t mid)
 }
 
 oc_client_cb_t *
-oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
+oc_ri_find_client_cb_by_token(const uint8_t *token, uint8_t token_len)
 {
   oc_client_cb_t *cb = oc_list_head(g_client_cbs);
   while (cb != NULL) {
@@ -1644,7 +1650,7 @@ oc_ri_find_client_cb_by_token(uint8_t *token, uint8_t token_len)
 }
 
 bool
-oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb)
+oc_ri_is_client_cb_valid(const oc_client_cb_t *client_cb)
 {
   oc_client_cb_t *cb = oc_list_head(g_client_cbs);
   while (cb != NULL) {
@@ -1681,12 +1687,12 @@ oc_ri_prepare_client_response(const coap_packet_t *packet,
   client_response.endpoint = endpoint;
   client_response.observe_option = -1;
   client_response.payload = 0;
-  client_response._payload = 0;
+  client_response._payload = NULL;
   client_response._payload_len = 0;
   client_response.content_format = cf;
   client_response.user_data = cb->user_data;
 
-  for (int i = 0; i < __NUM_OC_STATUS_CODES__; i++) {
+  for (int i = 0; i < __NUM_OC_STATUS_CODES__; ++i) {
     if (oc_coap_status_codes[i] == packet->code) {
       client_response.code = i;
       break;
@@ -1707,6 +1713,36 @@ oc_ri_prepare_client_response(const coap_packet_t *packet,
 #endif /* OC_BLOCK_WISE */
 
   return client_response;
+}
+
+static void
+oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
+                                const oc_endpoint_t *endpoint)
+{
+  cb->observe_seq = observe_seq;
+
+  // Drop old observe callback and keep the last one.
+  if (cb->observe_seq == 0) {
+    oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
+    const char *uri = oc_string(cb->uri);
+    size_t uri_len = oc_string_len(cb->uri);
+
+    while (dup_cb != NULL) {
+      if (dup_cb != cb && dup_cb->observe_seq != -1 &&
+          dup_cb->token_len == cb->token_len &&
+          memcmp(dup_cb->token, cb->token, cb->token_len) == 0 &&
+          oc_string_len(dup_cb->uri) == uri_len &&
+          strncmp(oc_string(dup_cb->uri), uri, uri_len) == 0 &&
+          oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
+        OC_DBG("Freeing cb %s, token 0x%02X%02X", uri, dup_cb->token[0],
+               dup_cb->token[1]);
+        oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
+        free_client_cb(dup_cb);
+        break;
+      }
+      dup_cb = dup_cb->next;
+    }
+  }
 }
 
 #ifdef OC_BLOCK_WISE
@@ -1840,35 +1876,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     }
 #endif /* OC_BLOCK_WISE */
   } else {
-    cb->observe_seq = client_response.observe_option;
-
-    // Drop old observe callback and keep the last one.
-    if (cb->observe_seq == 0) {
-      oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
-      size_t uri_len = oc_string_len(cb->uri);
-
-      while (dup_cb != NULL) {
-        if (dup_cb != cb && dup_cb->observe_seq != -1 &&
-            dup_cb->token_len == cb->token_len &&
-            memcmp(dup_cb->token, cb->token, cb->token_len) == 0 &&
-            oc_string_len(dup_cb->uri) == uri_len &&
-            strncmp(oc_string(dup_cb->uri), oc_string(cb->uri), uri_len) == 0 &&
-            oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
-          OC_DBG("Freeing cb %s, token 0x%02X%02X", oc_string(dup_cb->uri),
-                 dup_cb->token[0], dup_cb->token[1]);
-          oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
-          free_client_cb(dup_cb);
-          break;
-        }
-        dup_cb = dup_cb->next;
-      }
-    }
+    oc_ri_client_cb_set_observe_seq(cb, client_response.observe_option,
+                                    endpoint);
   }
   return true;
 }
 
 oc_client_cb_t *
-oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
+oc_ri_get_client_cb(const char *uri, const oc_endpoint_t *endpoint,
                     oc_method_t method)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
@@ -1952,9 +1967,9 @@ oc_ri_shutdown(void)
 
 #ifdef OC_SERVER
 #ifdef OC_COLLECTIONS
-  oc_collection_t *collection = oc_collection_get_all(), *next;
+  oc_collection_t *collection = oc_collection_get_all();
   while (collection != NULL) {
-    next = (oc_collection_t *)collection->res.next;
+    oc_collection_t *next = (oc_collection_t *)collection->res.next;
     oc_collection_free(collection);
     collection = next;
   }

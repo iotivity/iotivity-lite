@@ -486,7 +486,7 @@ oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
 }
 
 bool
-oc_stop_observe(const char *uri, oc_endpoint_t *endpoint)
+oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
 {
   oc_client_cb_t *cb = oc_ri_get_client_cb(uri, endpoint, OC_GET);
 

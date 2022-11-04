@@ -33,12 +33,13 @@ OC_LIST(created_res);
 static void
 gen_random_uri(char *uri, size_t uri_length)
 {
-  const char *alpha =
+  static const char alpha[] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const size_t alpha_len = sizeof(alpha) - 1;
   uri[0] = '/';
   size_t i = 1;
   while (i < uri_length - 1) {
-    unsigned int r = oc_random_value() % strlen(alpha);
+    unsigned int r = oc_random_value() % alpha_len;
     uri[i++] = alpha[r];
   }
   uri[uri_length - 1] = '\0';

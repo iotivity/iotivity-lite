@@ -320,9 +320,10 @@ static oc_rt_t *
 is_known_rt(oc_list_t list, const char *rt)
 {
   oc_rt_t *rtt = (oc_rt_t *)oc_list_head(list);
+  size_t rt_len = strlen(rt);
   while (rtt) {
-    if (strlen(rt) == oc_string_len(rtt->rt) &&
-        memcmp(rt, oc_string(rtt->rt), strlen(rt)) == 0) {
+    if (rt_len == oc_string_len(rtt->rt) &&
+        memcmp(rt, oc_string(rtt->rt), rt_len) == 0) {
       return rtt;
     }
     rtt = rtt->next;
@@ -336,9 +337,10 @@ static oc_rt_factory_t *
 is_known_rtfactory(const char *rt)
 {
   oc_rt_factory_t *rf = (oc_rt_factory_t *)oc_list_head(rt_factories);
+  size_t rt_len = strlen(rt);
   while (rf) {
-    if (strlen(rt) == oc_string_len(rf->rt) &&
-        memcmp(rt, oc_string(rf->rt), strlen(rt)) == 0) {
+    if (rt_len == oc_string_len(rf->rt) &&
+        memcmp(rt, oc_string(rf->rt), rt_len) == 0) {
       return rf;
     }
     rf = rf->next;

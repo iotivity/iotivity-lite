@@ -332,15 +332,17 @@ oc_obt_load_state(void)
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
 #define GROUP_ID "groupid"
-          if (oc_string_len(rep->name) == strlen(GROUP_ID) &&
-              memcmp(oc_string(rep->name), GROUP_ID, strlen(GROUP_ID)) == 0) {
+#define GROUP_ID_LEN (sizeof(GROUP_ID) - 1)
+          if (oc_string_len(rep->name) == GROUP_ID_LEN &&
+              memcmp(oc_string(rep->name), GROUP_ID, GROUP_ID_LEN) == 0) {
             memcpy(groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
             break;
           }
 #define GROUP_SECRET "group_secret"
-          if (oc_string_len(rep->name) == strlen(GROUP_SECRET) &&
-              memcmp(oc_string(rep->name), GROUP_SECRET,
-                     strlen(GROUP_SECRET)) == 0) {
+#define GROUP_SECRET_LEN (sizeof(GROUP_SECRET) - 1)
+          if (oc_string_len(rep->name) == GROUP_SECRET_LEN &&
+              memcmp(oc_string(rep->name), GROUP_SECRET, GROUP_SECRET_LEN) ==
+                0) {
             memcpy(group_secret, oc_string(rep->value.string),
                    OSCORE_MASTER_SECRET_LEN);
             break;

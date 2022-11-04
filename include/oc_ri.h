@@ -410,7 +410,8 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
  * @return true matching timed event callback was found
  * @return false otherwise
  */
-bool oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
+bool oc_ri_has_timed_event_callback(const void *cb_data,
+                                    oc_trigger_t event_callback,
                                     bool ignore_cb_data);
 
 /**
@@ -419,7 +420,7 @@ bool oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
  * @param cb_data the timed event callback info
  * @param event_callback the callback
  */
-void oc_ri_remove_timed_event_callback(void *cb_data,
+void oc_ri_remove_timed_event_callback(const void *cb_data,
                                        oc_trigger_t event_callback);
 
 /**
@@ -568,7 +569,7 @@ oc_interface_mask_t oc_ri_get_interface_mask(const char *iface, size_t if_len);
  * @return true valid
  * @return false not valid
  */
-bool oc_ri_is_app_resource_valid(oc_resource_t *resource);
+bool oc_ri_is_app_resource_valid(const oc_resource_t *resource);
 
 #ifdef __cplusplus
 }
