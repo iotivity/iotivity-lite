@@ -410,7 +410,8 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
  * @return true matching timed event callback was found
  * @return false otherwise
  */
-bool oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
+bool oc_ri_has_timed_event_callback(const void *cb_data,
+                                    oc_trigger_t event_callback,
                                     bool ignore_cb_data);
 
 /**
@@ -419,7 +420,7 @@ bool oc_ri_has_timed_event_callback(void *cb_data, oc_trigger_t event_callback,
  * @param cb_data the timed event callback info
  * @param event_callback the callback
  */
-void oc_ri_remove_timed_event_callback(void *cb_data,
+void oc_ri_remove_timed_event_callback(const void *cb_data,
                                        oc_trigger_t event_callback);
 
 /**
@@ -535,7 +536,7 @@ int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
  * @param[in] query the query to inspect
  * @param[in] query_len the lenght of the query
  * @param[in] key the key to be checked if exist, key is null terminated
- * @return int -1 = not exist
+ * @return int -1 = not exists
  */
 int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
 
@@ -549,8 +550,8 @@ int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
  * @param n
  * @return int
  */
-int oc_ri_query_nth_key_exists(const char *query, size_t query_len, char **key,
-                               size_t *key_len, size_t n);
+int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
+                               const char **key, size_t *key_len, size_t n);
 
 /**
  * @brief retrieve the interface mask from the interface name
@@ -568,7 +569,7 @@ oc_interface_mask_t oc_ri_get_interface_mask(const char *iface, size_t if_len);
  * @return true valid
  * @return false not valid
  */
-bool oc_ri_is_app_resource_valid(oc_resource_t *resource);
+bool oc_ri_is_app_resource_valid(const oc_resource_t *resource);
 
 #ifdef __cplusplus
 }

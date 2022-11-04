@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "api/oc_helpers_internal.h"
 #include "port/oc_connectivity.h"
 #include <oc_config.h>
 #ifdef OC_BLOCK_WISE
@@ -179,13 +180,7 @@ oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
       &oc_blockwise_response_states_s, href, href_len, endpoint, method, role,
       buffer_size);
   if (buffer) {
-    int i = COAP_ETAG_LEN;
-    uint32_t r = oc_random_value();
-    while (i > 0) {
-      memcpy(buffer->etag, &r, MIN((int)sizeof(r), i));
-      i -= sizeof(r);
-      r = oc_random_value();
-    }
+    oc_random_buffer(buffer->etag, sizeof(buffer->etag));
 #ifdef OC_CLIENT
     buffer->observe_seq = -1;
 #endif /* OC_CLIENT */

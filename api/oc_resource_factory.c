@@ -33,12 +33,13 @@ OC_LIST(created_res);
 static void
 gen_random_uri(char *uri, size_t uri_length)
 {
-  const char *alpha =
+  static const char alpha[] =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const size_t alpha_len = sizeof(alpha) - 1;
   uri[0] = '/';
   size_t i = 1;
   while (i < uri_length - 1) {
-    unsigned int r = oc_random_value() % strlen(alpha);
+    unsigned int r = oc_random_value() % alpha_len;
     uri[i++] = alpha[r];
   }
   uri[uri_length - 1] = '\0';
@@ -139,10 +140,14 @@ get_collection_instance_uri(oc_collection_t *collection, char *uri,
   if (index == 0) {
     return false;
   }
+  unsigned len = oc_string_len(collection->res.uri) + 1;
+  if (len > uri_size) {
+    // uri too long for output buffer
+    return false;
+  }
   strncpy(uri, oc_string(collection->res.uri),
           oc_string_len(collection->res.uri));
   uri[oc_string_len(collection->res.uri)] = '/';
-  unsigned len = oc_string_len(collection->res.uri) + 1;
 
   int written = snprintf(NULL, 0, "%d", index);
   if ((written <= 0) || (len + (unsigned)written + 1 > uri_size)) {

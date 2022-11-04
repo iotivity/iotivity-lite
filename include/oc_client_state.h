@@ -186,7 +186,8 @@ oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
  * @param method the used method
  * @return oc_client_cb_t* the client callback info
  */
-oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
+oc_client_cb_t *oc_ri_get_client_cb(const char *uri,
+                                    const oc_endpoint_t *endpoint,
                                     oc_method_t method);
 
 /**
@@ -196,7 +197,7 @@ oc_client_cb_t *oc_ri_get_client_cb(const char *uri, oc_endpoint_t *endpoint,
  * @return true is correct
  * @return false is incomplete
  */
-bool oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb);
+bool oc_ri_is_client_cb_valid(const oc_client_cb_t *client_cb);
 
 /**
  * @brief find the client callback info by token
@@ -205,7 +206,7 @@ bool oc_ri_is_client_cb_valid(oc_client_cb_t *client_cb);
  * @param token_len the token lenght
  * @return oc_client_cb_t* the client callback info
  */
-oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
+oc_client_cb_t *oc_ri_find_client_cb_by_token(const uint8_t *token,
                                               uint8_t token_len);
 
 /**
@@ -217,11 +218,11 @@ oc_client_cb_t *oc_ri_find_client_cb_by_token(uint8_t *token,
 oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
 /**
- * @brief free the client callback informatin by endpoint
+ * @brief free the client callback information by endpoint
  *
  * @param endpoint the endpoint
  */
-void oc_ri_free_client_cbs_by_endpoint(oc_endpoint_t *endpoint);
+void oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint);
 
 /**
  * @brief free the client callback infomation by message id (mid)

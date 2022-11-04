@@ -2051,7 +2051,7 @@ bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * @return True if the client successfully dispatched the CaAP stop observer
  *         request
  */
-bool oc_stop_observe(const char *uri, oc_endpoint_t *endpoint);
+bool oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint);
 
 /**
  * invoke multicast discovery of devices

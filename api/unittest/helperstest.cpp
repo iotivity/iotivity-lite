@@ -16,9 +16,11 @@
  *
  ******************************************************************/
 
-#include "gtest/gtest.h"
+#include "api/oc_helpers_internal.h"
 #include "oc_helpers.h"
+#include "port/oc_random.h"
 #include <cstdlib>
+#include <gtest/gtest.h>
 
 TEST(Helpers, ConcatStrings)
 {
@@ -41,4 +43,39 @@ TEST(Helpers, ConcatStrings)
   oc_concat_strings(&str, "abc", "def");
   EXPECT_STREQ("abcdef", oc_string(str));
   oc_free_string(&str);
+}
+
+TEST(Helpers, RandomBuffer)
+{
+  oc_random_init();
+
+  uint8_t c{ 0 };
+  oc_random_buffer(&c, 1);
+  std::cout << "token: " << std::hex << (int)c << std::endl;
+
+  std::array<uint8_t, 2> small_array{ 0 };
+  oc_random_buffer(small_array.data(), small_array.size());
+  std::cout << "token: ";
+  for (const auto &a : small_array) {
+    std::cout << std::hex << (int)a << " ";
+  }
+  std::cout << std::endl;
+
+  std::array<uint8_t, 8> medium_array{ 0 };
+  oc_random_buffer(medium_array.data(), medium_array.size());
+  std::cout << "token: ";
+  for (const auto &a : medium_array) {
+    std::cout << std::hex << (int)a << " ";
+  }
+  std::cout << std::endl;
+
+  std::array<uint8_t, 42> best_array{ 0 };
+  oc_random_buffer(best_array.data(), best_array.size());
+  std::cout << "token: ";
+  for (const auto &a : best_array) {
+    std::cout << std::hex << (int)a << " ";
+  }
+  std::cout << std::endl;
+
+  oc_random_destroy();
 }

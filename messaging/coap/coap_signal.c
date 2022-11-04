@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_helpers_internal.h"
 #include "coap_signal.h"
 #include "coap.h"
 #include "transactions.h"
@@ -25,14 +26,8 @@
 static void
 coap_make_token(coap_packet_t *packet)
 {
-  packet->token_len = COAP_TOKEN_LEN;
-  int i = 0;
-  uint32_t r;
-  while (i < packet->token_len) {
-    r = oc_random_value();
-    memcpy(packet->token + i, &r, sizeof(r));
-    i += sizeof(r);
-  }
+  packet->token_len = sizeof(packet->token);
+  oc_random_buffer(packet->token, packet->token_len);
 }
 
 static int

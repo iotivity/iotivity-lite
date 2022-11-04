@@ -1,7 +1,7 @@
 /*
 // Copyright (c) 2016 Intel Corporation
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the "License"),
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -14,9 +14,13 @@
 // limitations under the License.
 */
 
+#include "messaging/coap/oc_coap.h"
 #include "oc_helpers.h"
+#include "oc_helpers_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
+#include "port/oc_random.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <inttypes.h>
 
@@ -321,4 +325,16 @@ oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
   }
 
   return 0;
+}
+
+void
+oc_random_buffer(uint8_t *buffer, size_t buffer_size)
+{
+  assert(buffer != NULL);
+  size_t i = 0;
+  while (i < buffer_size) {
+    uint32_t r = oc_random_value();
+    memcpy(buffer + i, &r, MIN(sizeof(r), buffer_size - i));
+    i += sizeof(r);
+  }
 }
