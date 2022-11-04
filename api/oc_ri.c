@@ -236,7 +236,7 @@ oc_ri_find_query_nth_key_value_pair(const char *query, size_t query_len,
   const char *end = query + query_len;
   // find nth key-value pair
   size_t i = 0;
-  while (i < (n - 1) && start != NULL) {
+  while (i < (n - 1)) {
     start = memchr(start, '&', end - start);
     if (start == NULL) {
       return res;

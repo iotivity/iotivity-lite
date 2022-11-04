@@ -27,6 +27,7 @@
 
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <map>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -132,25 +133,49 @@ TEST_F(TestOcRi, RiAddResource_P)
   EXPECT_EQ(true, del_check);
 }
 
+TEST_F(TestOcRi, RIGetQueryValueEmpty_N)
+{
+  const char *value;
+  int ret = oc_ri_get_query_value(nullptr, 0, "key", &value);
+  EXPECT_EQ(-1, ret) << "N input NULL "
+                     << "key";
+
+  ret = oc_ri_get_query_value("", 0, "key", &value);
+  EXPECT_EQ(-1, ret) << "N input \"\" "
+                     << "key";
+}
+
 TEST_F(TestOcRi, RIGetQueryValue_P)
 {
-  std::vector<std::string> inputs = {
-    "key=1",          "data=1&key=2",     "key=2&data=3",
-    "x&key=2&data=3", "y&x&key=2&data=3", "y&x&key=2",
-    "y&x&key=2&y"
+  std::map<std::string, std::string> inputs = {
+    { "key", "" },
+    { "key=1337", "1337" },
+    { "data=1&key=22", "22" },
+    { "key=333&data=3", "333" },
+    { "x&key=42&data=3", "42" },
+    { "y&x&key=5225&data=3", "5225" },
+    { "y&x&key=6", "6" },
+    { "y&x&key=777&y", "777" },
   };
 
-  const char *value;
+  const char *v;
   for (const auto &input : inputs) {
-    int ret =
-      oc_ri_get_query_value(input.c_str(), input.length(), "key", &value);
-    EXPECT_EQ(1, ret) << "P input " << input << " "
-                      << "key";
+    int ret = oc_ri_get_query_value(input.first.c_str(), input.first.length(),
+                                    "key", &v);
+    EXPECT_EQ(input.second.length(), ret) << "P input " << input.first << " "
+                                          << "key";
+    if (ret > 0) {
+      std::string value(v, ret);
+      EXPECT_STREQ(input.second.c_str(), value.c_str())
+        << "P input " << input.first << " "
+        << "value " << input.second << " vs " << value;
+    }
   }
+
   for (const auto &input : inputs) {
-    int ret =
-      oc_ri_get_query_value(input.c_str(), input.length(), "key2", &value);
-    EXPECT_EQ(-1, ret) << "N input " << input << " "
+    int ret = oc_ri_get_query_value(input.first.c_str(), input.first.length(),
+                                    "key2", nullptr);
+    EXPECT_EQ(-1, ret) << "N input " << input.first << " "
                        << "key2";
   }
 }
@@ -173,6 +198,8 @@ TEST_F(TestOcRi, RIQueryExists_P)
     EXPECT_EQ(1, ret) << "P input " << input << " "
                       << "key";
   }
+
+  inputs.emplace_back("");
   for (const auto &input : inputs) {
     ret = oc_ri_query_exists(input.c_str(), input.length(), "key2");
     EXPECT_EQ(-1, ret) << "N input " << input << " "

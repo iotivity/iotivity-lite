@@ -139,10 +139,14 @@ get_collection_instance_uri(oc_collection_t *collection, char *uri,
   if (index == 0) {
     return false;
   }
+  unsigned len = oc_string_len(collection->res.uri) + 1;
+  if (len > uri_size) {
+    // uri too long for output buffer
+    return false;
+  }
   strncpy(uri, oc_string(collection->res.uri),
           oc_string_len(collection->res.uri));
   uri[oc_string_len(collection->res.uri)] = '/';
-  unsigned len = oc_string_len(collection->res.uri) + 1;
 
   int written = snprintf(NULL, 0, "%d", index);
   if ((written <= 0) || (len + (unsigned)written + 1 > uri_size)) {
