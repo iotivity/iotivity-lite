@@ -27,7 +27,10 @@ on:
         type: boolean
         required: false
         default: false
-
+      hub_args:
+        type: string
+        required: false
+        default: ""
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
 
@@ -58,7 +61,7 @@ jobs:
         run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
 
       - name: Run plgd hub tests image
-        run: docker run --rm --network=host ${{ env.TEST_CLOUD_SERVER_IMAGE }}
+        run: docker run --rm --network=host ${{ inputs.hub_args }} ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
       - name: Gather coverage data
         if: ${{ inputs.coverage }}

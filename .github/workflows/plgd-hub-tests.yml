@@ -52,6 +52,46 @@ jobs:
           - name: cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
+          - name: dtls-cloud-server-debug
+            args: ""
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-debug-asan
+            args: "-DOC_ASAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-debug-tsan
+            args: "-DOC_TSAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+
+          - name: dtls-cloud-server-discovery-resource-observable-debug
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-discovery-resource-observable-debug-asan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-discovery-resource-observable-debug-tsan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+
+          - name: dtls-cloud-server-rep-realloc-debug
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-rep-realloc-debug-asan
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-rep-realloc-debug-tsan
+            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+
+          - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-debug
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-debug-asan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+          - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
@@ -59,3 +99,4 @@ jobs:
       tag: dbg
       build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.args }}
       build_type: Debug
+      hub_args: ${{ matrix.hub_args }}
