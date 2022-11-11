@@ -1,18 +1,20 @@
-/*
-// Copyright (c) 2016-2019 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016-2019 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 
 /**
   @file
@@ -21,6 +23,7 @@
 #define OC_REP_H
 
 #include "deps/tinycbor/src/cbor.h"
+#include "oc_export.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
@@ -32,7 +35,8 @@
 extern "C" {
 #endif
 
-extern CborEncoder g_encoder, root_map, links_array;
+extern CborEncoder root_map;
+extern CborEncoder links_array;
 extern int g_err;
 
 /**
@@ -56,6 +60,13 @@ void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
  * @param[in] size size of the payload buffer
  */
 void oc_rep_new(uint8_t *payload, int size);
+
+/**
+ * @brief Get the global cbor encoder
+ *
+ * @return global cbor encoder
+ */
+CborEncoder *oc_rep_get_encoder(void);
 
 /**
  * Get the size of the encoder buffer.
@@ -415,11 +426,11 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
 #define oc_rep_start_links_array() oc_rep_begin_links_array()
 
 #define oc_rep_begin_links_array()                                             \
-  g_err |= oc_rep_encoder_create_array(&g_encoder, &links_array,               \
+  g_err |= oc_rep_encoder_create_array(oc_rep_get_encoder(), &links_array,     \
                                        CborIndefiniteLength)
 
 #define oc_rep_end_links_array()                                               \
-  g_err |= oc_rep_encoder_close_container(&g_encoder, &links_array)
+  g_err |= oc_rep_encoder_close_container(oc_rep_get_encoder(), &links_array)
 
 /**
  * This macro has been replaced with oc_rep_begin_root_object
@@ -436,8 +447,8 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  * @see oc_rep_end_root_object
  */
 #define oc_rep_begin_root_object()                                             \
-  g_err |=                                                                     \
-    oc_rep_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength)
+  g_err |= oc_rep_encoder_create_map(oc_rep_get_encoder(), &root_map,          \
+                                     CborIndefiniteLength)
 
 /**
  * End the root object. Items can no longer be added to the root object.
@@ -445,7 +456,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  * @see oc_rep_begin_root_object
  */
 #define oc_rep_end_root_object()                                               \
-  g_err |= oc_rep_encoder_close_container(&g_encoder, &root_map)
+  g_err |= oc_rep_encoder_close_container(oc_rep_get_encoder(), &root_map)
 
 /**
  * Add a byte string `value` to a `parent` array. Currently the only way to make
@@ -1097,7 +1108,8 @@ oc_rep_t *oc_alloc_rep();
  *
  * @see oc_rep_set_null
  */
-bool oc_rep_is_null(oc_rep_t *rep, const char *key, bool *is_null);
+OC_API
+bool oc_rep_is_null(const oc_rep_t *rep, const char *key, bool *is_null);
 
 /**
  * Read an integer from an `oc_rep_t`
@@ -1119,7 +1131,8 @@ bool oc_rep_is_null(oc_rep_t *rep, const char *key, bool *is_null);
  *
  * @see oc_rep_set_int
  */
-bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value);
+OC_API
+bool oc_rep_get_int(const oc_rep_t *rep, const char *key, int64_t *value);
 
 /**
  * Read a boolean value from an `oc_rep_t`
@@ -1141,7 +1154,8 @@ bool oc_rep_get_int(oc_rep_t *rep, const char *key, int64_t *value);
  *
  * @see oc_rep_set_boolean
  */
-bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
+OC_API
+bool oc_rep_get_bool(const oc_rep_t *rep, const char *key, bool *value);
 
 /**
  * Read a double value from an `oc_rep_t`
@@ -1162,7 +1176,8 @@ bool oc_rep_get_bool(oc_rep_t *rep, const char *key, bool *value);
  *
  * @see oc_rep_set_double
  */
-bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
+OC_API
+bool oc_rep_get_double(const oc_rep_t *rep, const char *key, double *value);
 
 /**
  * Read a byte string value from an `oc_rep_t`
@@ -1186,7 +1201,8 @@ bool oc_rep_get_double(oc_rep_t *rep, const char *key, double *value);
  *
  * @see oc_rep_set_byte_string
  */
-bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
+OC_API
+bool oc_rep_get_byte_string(const oc_rep_t *rep, const char *key, char **value,
                             size_t *size);
 
 /**
@@ -1211,7 +1227,8 @@ bool oc_rep_get_byte_string(oc_rep_t *rep, const char *key, char **value,
  *
  * @see oc_rep_set_text_string
  */
-bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
+OC_API
+bool oc_rep_get_string(const oc_rep_t *rep, const char *key, char **value,
                        size_t *size);
 
 /**
@@ -1235,7 +1252,8 @@ bool oc_rep_get_string(oc_rep_t *rep, const char *key, char **value,
  *
  * @see oc_rep_set_int_array
  */
-bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
+OC_API
+bool oc_rep_get_int_array(const oc_rep_t *rep, const char *key, int64_t **value,
                           size_t *size);
 
 /**
@@ -1259,7 +1277,8 @@ bool oc_rep_get_int_array(oc_rep_t *rep, const char *key, int64_t **value,
  *
  * @see oc_rep_set_bool_array
  */
-bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
+OC_API
+bool oc_rep_get_bool_array(const oc_rep_t *rep, const char *key, bool **value,
                            size_t *size);
 
 /**
@@ -1286,8 +1305,9 @@ bool oc_rep_get_bool_array(oc_rep_t *rep, const char *key, bool **value,
  *
  * @see oc_rep_set_double_array
  */
-bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
-                             size_t *size);
+OC_API
+bool oc_rep_get_double_array(const oc_rep_t *rep, const char *key,
+                             double **value, size_t *size);
 
 /**
  * Read an byte string array value from an `oc_rep_t`
@@ -1320,7 +1340,8 @@ bool oc_rep_get_double_array(oc_rep_t *rep, const char *key, double **value,
  * @see oc_byte_string_array_get_item
  * @see oc_byte_string_array_get_item_size
  */
-bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
+OC_API
+bool oc_rep_get_byte_string_array(const oc_rep_t *rep, const char *key,
                                   oc_string_array_t *value, size_t *size);
 
 /**
@@ -1355,7 +1376,8 @@ bool oc_rep_get_byte_string_array(oc_rep_t *rep, const char *key,
  * @see oc_string_array_get_item
  * @see oc_string_array_get_item_size
  */
-bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
+OC_API
+bool oc_rep_get_string_array(const oc_rep_t *rep, const char *key,
                              oc_string_array_t *value, size_t *size);
 
 /**
@@ -1386,7 +1408,8 @@ bool oc_rep_get_string_array(oc_rep_t *rep, const char *key,
  *
  * @see oc_rep_set_object
  */
-bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
+OC_API
+bool oc_rep_get_object(const oc_rep_t *rep, const char *key, oc_rep_t **value);
 
 /**
  * Read a object array value from an `oc_rep_t`
@@ -1425,7 +1448,9 @@ bool oc_rep_get_object(oc_rep_t *rep, const char *key, oc_rep_t **value);
  *
  * @see oc_rep_set_object
  */
-bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
+OC_API
+bool oc_rep_get_object_array(const oc_rep_t *rep, const char *key,
+                             oc_rep_t **value);
 
 /**
  * Tab character(s) used for oc_rep_to_json function when doing pretty_print
@@ -1472,7 +1497,8 @@ bool oc_rep_get_object_array(oc_rep_t *rep, const char *key, oc_rep_t **value);
  * output to strings).
  *
  */
-size_t oc_rep_to_json(oc_rep_t *rep, char *buf, size_t buf_size,
+OC_API
+size_t oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
                       bool pretty_print);
 
 #ifdef __cplusplus

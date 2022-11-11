@@ -50,7 +50,6 @@ struct CborEncoder
 %rename(Double) double_p;
 %rename(Bool) boolean;
 %rename(objectArray) object_array;
-%ignore g_encoder;
 %ignore root_map;
 %ignore links_array;
 %ignore g_err;
@@ -346,7 +345,7 @@ void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
 /* Alt implementation of oc_rep_start_links_array macro */
 CborEncoder * jni_rep_start_links_array() {
   OC_DBG("JNI: %s\n", __func__);
-  oc_rep_encoder_create_array(&g_encoder, &links_array, CborIndefiniteLength);
+  oc_rep_encoder_create_array(oc_rep_get_encoder(), &links_array, CborIndefiniteLength);
   return &links_array;
 }
 %}
@@ -374,7 +373,7 @@ void jni_rep_end_links_array() {
 /* Alt implementation of oc_rep_start_root_object macro */
 CborEncoder * jni_begin_root_object() {
   OC_DBG("JNI: %s\n", __func__);
-  g_err |= oc_rep_encoder_create_map(&g_encoder, &root_map, CborIndefiniteLength);
+  g_err |= oc_rep_encoder_create_map(oc_rep_get_encoder(), &root_map, CborIndefiniteLength);
   return &root_map;
 }
 %}
@@ -1865,6 +1864,6 @@ char *jni_rep_to_json(oc_rep_t *rep, bool prettyPrint)
 }
 %}
 
-
+#define OC_API
 %include "oc_rep.h"
 /*******************End oc_rep.h****************************/

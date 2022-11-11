@@ -46,8 +46,8 @@ public:
 
   bool Load(const std::string &path);
 
-  static bool ReadPemFile(std::string &file_path, char *buffer,
-                          size_t *buffer_len);
+  static long ReadPemFile(std::string &file_path, char *buffer,
+                          size_t buffer_size);
 
   std::string path_{};
   char data_[8192]{};
@@ -58,49 +58,54 @@ bool
 Certificate::Load(const std::string &path)
 {
   path_ = path;
-  dataLen_ = sizeof(data_);
-  return Certificate::ReadPemFile(path_, data_, &dataLen_);
+  dataLen_ = 0;
+  long ret = Certificate::ReadPemFile(path_, data_, sizeof(data_));
+  if (ret < 0) {
+    return false;
+  }
+  dataLen_ = static_cast<size_t>(ret);
+  return true;
 }
 
-bool
+long
 Certificate::ReadPemFile(std::string &file_path, char *buffer,
-                         size_t *buffer_len)
+                         size_t buffer_size)
 {
   FILE *fp = fopen(file_path.c_str(), "r");
   if (fp == nullptr) {
     printf("%s:%d\n", __func__, __LINE__);
-    return false;
+    return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
     printf("%s:%d\n", __func__, __LINE__);
     fclose(fp);
-    return false;
+    return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
     printf("%s:%d\n", __func__, __LINE__);
     fclose(fp);
-    return false;
+    return -1;
   }
-  if (pem_len >= (long)*buffer_len) {
+  if (pem_len >= (long)buffer_size) {
     printf("%s:%d\n", __func__, __LINE__);
     fclose(fp);
-    return false;
+    return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
     printf("%s:%d\n", __func__, __LINE__);
     fclose(fp);
-    return false;
+    return -1;
   }
-  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+  auto to_read = static_cast<size_t>(pem_len);
+  if (fread(buffer, 1, to_read, fp) < to_read) {
     printf("%s:%d\n", __func__, __LINE__);
     fclose(fp);
-    return false;
+    return -1;
   }
   fclose(fp);
   buffer[pem_len] = '\0';
-  *buffer_len = (size_t)pem_len;
-  return true;
+  return pem_len;
 }
 
 class CertificateKey {
@@ -118,8 +123,13 @@ bool
 CertificateKey::Load(const std::string &path)
 {
   path_ = path;
-  dataLen_ = sizeof(data_);
-  return Certificate::ReadPemFile(path_, data_, &dataLen_);
+  dataLen_ = 0;
+  long ret = Certificate::ReadPemFile(path_, data_, sizeof(data_));
+  if (ret < 0) {
+    return false;
+  }
+  dataLen_ = static_cast<size_t>(ret);
+  return true;
 }
 
 class IdentityCertificate {

@@ -361,7 +361,9 @@ oc_sec_load_acl(size_t device)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(oc_store_buf, (int)ret, &rep);
+    if (oc_parse_rep(oc_store_buf, (int)ret, &rep) != 0) {
+      OC_ERR("failed to parse acl buffer");
+    }
     oc_sec_decode_acl(rep, true, device, NULL, NULL);
     oc_free_rep(rep);
   }

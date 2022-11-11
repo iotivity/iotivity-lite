@@ -650,7 +650,7 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 
     oc_rep_set_text_string(links, href, href);
     oc_rep_set_key(oc_rep_object(links), "rep");
-    memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+    memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
 
     int size_before = oc_rep_get_encoded_payload_size();
     rest_request.resource = resource;
@@ -676,7 +676,7 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
       oc_rep_start_root_object();
       oc_rep_end_root_object();
     }
-    memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
+    memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
     oc_rep_end_object((links_array), links);
 #ifdef OC_SECURITY
   }
@@ -808,9 +808,9 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     ) {
       CborEncoder encoder;
       oc_rep_start_links_array();
-      memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+      memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
       process_batch_request(&links_array, request->origin, device);
-      memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
+      memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
       oc_rep_end_links_array();
       matches++;
     }

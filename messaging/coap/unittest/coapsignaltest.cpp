@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 
 #if defined(OC_TCP) && defined(OC_IPV4)
 
@@ -44,15 +45,15 @@ app_init(void)
   return ret;
 }
 
-static oc_handler_t handler = { .init = app_init,
-                                .signal_event_loop = signal_event_loop,
-                                .register_resources = nullptr,
-                                .requests_entry = nullptr };
-
 class TestCoapSignal : public testing::Test {
 protected:
   void SetUp() override
   {
+    static oc_handler_t handler = { /*.init =*/app_init,
+                                    /*.signal_event_loop =*/signal_event_loop,
+                                    /*.register_resources =*/nullptr,
+                                    /*.requests_entry =*/nullptr };
+
     oc_main_init(&handler);
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
     while (ep) {
@@ -620,11 +621,13 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
   coap_signal_set_max_msg_size(&packet, size);
   coap_signal_set_blockwise_transfer(&packet, 1);
 
-  uint8_t buffer[OC_PDU_SIZE];
-  size_t buffer_len = coap_serialize_message(&packet, buffer);
+  std::vector<uint8_t> buffer;
+  buffer.reserve(OC_PDU_SIZE);
+  size_t buffer_len = coap_serialize_message(&packet, buffer.data());
 
   coap_packet_t parse_packet{};
-  coap_status_t ret = coap_tcp_parse_message(&parse_packet, buffer, buffer_len);
+  coap_status_t ret =
+    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -638,11 +641,13 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PING)
   coap_tcp_init_message(&packet, PING_7_02);
   coap_signal_set_custody(&packet, 1);
 
-  uint8_t buffer[OC_PDU_SIZE];
-  size_t buffer_len = coap_serialize_message(&packet, buffer);
+  std::vector<uint8_t> buffer;
+  buffer.reserve(OC_PDU_SIZE);
+  size_t buffer_len = coap_serialize_message(&packet, buffer.data());
 
   coap_packet_t parse_packet{};
-  coap_status_t ret = coap_tcp_parse_message(&parse_packet, buffer, buffer_len);
+  coap_status_t ret =
+    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -655,11 +660,13 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PONG)
   coap_tcp_init_message(&packet, PONG_7_03);
   coap_signal_set_custody(&packet, 1);
 
-  uint8_t buffer[OC_PDU_SIZE];
-  size_t buffer_len = coap_serialize_message(&packet, buffer);
+  std::vector<uint8_t> buffer;
+  buffer.reserve(OC_PDU_SIZE);
+  size_t buffer_len = coap_serialize_message(&packet, buffer.data());
 
   coap_packet_t parse_packet{};
-  coap_status_t ret = coap_tcp_parse_message(&parse_packet, buffer, buffer_len);
+  coap_status_t ret =
+    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -677,11 +684,13 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
   uint32_t hold_off = 10;
   coap_signal_set_hold_off(&packet, hold_off);
 
-  uint8_t buffer[OC_PDU_SIZE];
-  size_t buffer_len = coap_serialize_message(&packet, buffer);
+  std::vector<uint8_t> buffer;
+  buffer.reserve(OC_PDU_SIZE);
+  size_t buffer_len = coap_serialize_message(&packet, buffer.data());
 
   coap_packet_t parse_packet{};
-  coap_status_t ret = coap_tcp_parse_message(&parse_packet, buffer, buffer_len);
+  coap_status_t ret =
+    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -702,11 +711,13 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
   size_t diagnostic_len = strlen(diagnostic) + 1;
   coap_set_payload(&packet, diagnostic, diagnostic_len);
 
-  uint8_t buffer[OC_PDU_SIZE];
-  size_t buffer_len = coap_serialize_message(&packet, buffer);
+  std::vector<uint8_t> buffer;
+  buffer.reserve(OC_PDU_SIZE);
+  size_t buffer_len = coap_serialize_message(&packet, buffer.data());
 
   coap_packet_t parse_packet{};
-  coap_status_t ret = coap_tcp_parse_message(&parse_packet, buffer, buffer_len);
+  coap_status_t ret =
+    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
