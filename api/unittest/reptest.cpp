@@ -18,41 +18,13 @@
  *
  ******************************************************************/
 
-#include "gtest/gtest.h"
-#include <stdlib.h>
-
+#include "api/oc_rep_encode_internal.h"
 #include "oc_rep.h"
-
-class TestRepWithPool : public testing::Test {
-protected:
-  void SetUp() override
-  {
-#ifndef OC_DYNAMIC_ALLOCATION
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-#endif
-  }
-  void TearDown() override {}
-
-public:
-  oc_memb *GetRepObjectsPool();
-
-private:
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_memb rep_objects{ sizeof(oc_rep_t), 0, 0, 0, 0 };
-#else
-  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-  oc_memb rep_objects{ sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                       rep_objects_alloc, (void *)rep_objects_pool, 0 };
-#endif
-};
-
-oc_memb *
-TestRepWithPool::GetRepObjectsPool()
-{
-  return &rep_objects;
-}
+#include "gtest/gtest.h"
+#include <array>
+#include <memory>
+#include <stdlib.h>
+#include <vector>
 
 TEST(TestRep, OCRepEncodedPayloadSize_P)
 {
@@ -63,8 +35,8 @@ TEST(TestRep, OCRepEncodedPayloadSize_P)
 TEST(TestRep, OCRepEncodedPayloadSizeTooSmall)
 {
   /* buffer for oc_rep_t */
-  uint8_t buf[10]; // Purposely small buffer
-  oc_rep_new(&buf[0], 10);
+  std::array<uint8_t, 10> buf{}; // Purposely small buffer
+  oc_rep_new(buf.data(), buf.size());
 
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -78,9 +50,9 @@ TEST(TestRep, OCRepEncodedPayloadSizeTooSmall)
 
 TEST(TestRep, RepToJson_null)
 {
-  oc_rep_t *rep = NULL;
-  EXPECT_EQ(2, oc_rep_to_json(rep, NULL, 0, false));
-  EXPECT_EQ(4, oc_rep_to_json(rep, NULL, 0, true));
+  const oc_rep_t *rep = nullptr;
+  EXPECT_EQ(2, oc_rep_to_json(rep, nullptr, 0, false));
+  EXPECT_EQ(4, oc_rep_to_json(rep, nullptr, 0, true));
   char buf[5];
   EXPECT_EQ(2, oc_rep_to_json(rep, buf, 5, false));
   EXPECT_STREQ("{}", buf);
@@ -88,113 +60,236 @@ TEST(TestRep, RepToJson_null)
   EXPECT_STREQ("{\n}\n", buf);
 }
 
+TEST(TestRep, OCRepEncodedPayloadRealloc)
+{
+  /* buffer for oc_rep_t */
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *b = (uint8_t *)malloc(0);
+  oc_rep_new_realloc(&b, 0, 1024);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  std::array<uint8_t, 1024> buffer;
+  uint8_t *b = buffer.data();
+  oc_rep_new(buffer.data(), buffer.size());
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_text_string(root, "hello", "world");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_double(root, "double", 3.14);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_boolean(root, "bool", true);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_int(root, "int", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_uint(root, "uint", -1);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  uint8_t byte_string[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
+  oc_rep_set_byte_string(root, byte_string_key, byte_string,
+                         sizeof(byte_string));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  int fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+  oc_rep_set_key(oc_rep_object(root), "fibonacci");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_begin_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
+    oc_rep_add_int(fibonacci, fib[i]);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  oc_rep_end_array(oc_rep_object(root), fibonacci);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+  oc_rep_set_double_array(
+    root, math_constants, math_constants,
+    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  b = oc_rep_shrink_encoder_buf(b);
+  EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(b);
+#endif
+}
+
+using oc_rep_unique_ptr = std::unique_ptr<oc_rep_t, void (*)(oc_rep_t *)>;
+
+class TestRepWithPool : public testing::Test {
+protected:
+  void SetUp() override
+  {
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_rep_new_realloc(&buffer_, 0, 1024);
+#else
+    oc_rep_new(buffer_.data(), buffer_.size());
+    memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+    memset(rep_objects_pool_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+
+  void TearDown() override
+  {
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buffer_);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+
+public:
+  oc_memb *GetRepObjectsPool()
+  {
+    return &rep_objects_;
+  }
+
+  void CheckJson(const oc_rep_t *rep, const char *expected,
+                 bool pretty_print) const
+  {
+    size_t json_size = oc_rep_to_json(rep, nullptr, 0, pretty_print);
+    std::vector<char> json{};
+    json.reserve(json_size + 1);
+    size_t rep_len =
+      oc_rep_to_json(rep, &json[0], json.capacity(), pretty_print);
+    EXPECT_EQ(strlen(expected), rep_len);
+    EXPECT_STREQ(expected, json.data());
+  }
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr ParsePayload()
+  {
+    const uint8_t *payload = oc_rep_get_encoder_buf();
+    int payload_len = oc_rep_get_encoded_payload_size();
+    EXPECT_NE(payload_len, -1);
+    oc_rep_set_pool(&rep_objects_);
+    oc_rep_t *rep = nullptr;
+    EXPECT_EQ(CborNoError, oc_parse_rep(payload, payload_len, &rep));
+    return oc_rep_unique_ptr(rep, &oc_free_rep);
+  }
+
+private:
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer_{ nullptr };
+  oc_memb rep_objects_{ sizeof(oc_rep_t), 0, nullptr, nullptr, nullptr };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  char rep_objects_alloc_[OC_MAX_NUM_REP_OBJECTS];
+  oc_rep_t rep_objects_pool_[OC_MAX_NUM_REP_OBJECTS];
+  oc_memb rep_objects_{ sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
+                        rep_objects_alloc_, (void *)rep_objects_pool_,
+                        nullptr };
+  std::array<uint8_t, 1024> buffer_{ '\0' };
+#endif /* OC_DYNAMIC_ALLOCATION */
+};
+
 /*
  * Most code done here is to enable testing without passing the code through the
  * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
  * and oc_parse_rep
  */
-TEST_F(TestRepWithPool, OCRepSetGetNull)
+TEST_F(TestRepWithPool, OCRepInvalidFormat)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
-  /* add null value to root object */
   oc_rep_start_root_object();
-  oc_rep_set_null(root, nothing);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_encode_int(&root_map, 42);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
   EXPECT_NE(payload_len, -1);
   oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
-
-  bool is_null = false;
-  EXPECT_TRUE(oc_rep_is_null(rep, "nothing", &is_null));
-  EXPECT_TRUE(is_null);
-  /* error handling */
-  EXPECT_FALSE(oc_rep_is_null(NULL, "nothing", &is_null));
-  EXPECT_FALSE(oc_rep_is_null(rep, NULL, &is_null));
-  EXPECT_FALSE(oc_rep_is_null(rep, "nothing", NULL));
-  EXPECT_FALSE(oc_rep_is_null(rep, "not_the_key", &is_null));
-
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  EXPECT_STREQ("{\"nothing\":null}", json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
-  EXPECT_STREQ("{\n  \"nothing\" : null\n}\n", json);
-  free(json);
-  json = NULL;
+  oc_rep_t *rep = nullptr;
+  ASSERT_NE(CborNoError, oc_parse_rep(payload, payload_len, &rep));
+  ASSERT_EQ(nullptr, rep);
 
   oc_free_rep(rep);
+}
+
+TEST_F(TestRepWithPool, OCRepInvalidArray)
+{
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_key(oc_rep_object(root), "mixed");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_begin_array(oc_rep_object(root), mixed);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_add_int(mixed, 42);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_add_text_string(mixed, "1337");
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_array(oc_rep_object(root), mixed);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  const uint8_t *payload = oc_rep_get_encoder_buf();
+  int payload_len = oc_rep_get_encoded_payload_size();
+  EXPECT_NE(payload_len, -1);
+  oc_rep_set_pool(GetRepObjectsPool());
+  oc_rep_t *rep = nullptr;
+  ASSERT_NE(CborNoError, oc_parse_rep(payload, payload_len, &rep));
+  ASSERT_EQ(nullptr, rep);
+
+  oc_free_rep(rep);
+}
+
+TEST_F(TestRepWithPool, OCRepSetGetNull)
+{
+  /* add null value to root object */
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_null(root, nothing);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  bool is_null = false;
+  EXPECT_TRUE(oc_rep_is_null(rep.get(), "nothing", &is_null));
+  EXPECT_TRUE(is_null);
+  /* error handling */
+  EXPECT_FALSE(oc_rep_is_null(nullptr, "nothing", &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep.get(), nullptr, &is_null));
+  EXPECT_FALSE(oc_rep_is_null(rep.get(), "nothing", nullptr));
+  EXPECT_FALSE(oc_rep_is_null(rep.get(), "not_the_key", &is_null));
+
+  CheckJson(rep.get(), "{\"nothing\":null}", false);
+  CheckJson(rep.get(), "{\n  \"nothing\" : null\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetDouble)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add int values to root object */
   oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_double(root, pi, 3.14159);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read values from  the oc_rep_t */
   double pi_out = 0;
-  EXPECT_TRUE(oc_rep_get_double(rep, "pi", &pi_out));
+  EXPECT_TRUE(oc_rep_get_double(rep.get(), "pi", &pi_out));
   EXPECT_EQ(3.14159, pi_out);
   /* error handling */
-  EXPECT_FALSE(oc_rep_get_double(NULL, "pi", &pi_out));
-  EXPECT_FALSE(oc_rep_get_double(rep, NULL, &pi_out));
-  EXPECT_FALSE(oc_rep_get_double(rep, "pi", NULL));
-  EXPECT_FALSE(oc_rep_get_double(rep, "no_a_key", &pi_out));
+  EXPECT_FALSE(oc_rep_get_double(nullptr, "pi", &pi_out));
+  EXPECT_FALSE(oc_rep_get_double(rep.get(), nullptr, &pi_out));
+  EXPECT_FALSE(oc_rep_get_double(rep.get(), "pi", nullptr));
+  EXPECT_FALSE(oc_rep_get_double(rep.get(), "no_a_key", &pi_out));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  EXPECT_STREQ("{\"pi\":3.141590}", json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
-  EXPECT_STREQ("{\n  \"pi\" : 3.141590\n}\n", json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), "{\"pi\":3.141590}", false);
+  CheckJson(rep.get(), "{\n  \"pi\" : 3.141590\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetInt)
 {
-
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -208,44 +303,35 @@ TEST_F(TestRepWithPool, OCRepSetGetInt)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from  the oc_rep_t */
   int64_t ultimate_answer_out = 0;
-  EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
+  EXPECT_TRUE(
+    oc_rep_get_int(rep.get(), "ultimate_answer", &ultimate_answer_out));
   EXPECT_EQ(10000000000, ultimate_answer_out);
   int64_t negative_out = 0;
-  EXPECT_TRUE(oc_rep_get_int(rep, "negative", &negative_out));
+  EXPECT_TRUE(oc_rep_get_int(rep.get(), "negative", &negative_out));
   EXPECT_EQ(-1024, negative_out);
   int64_t zero_out = -1;
-  EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
+  EXPECT_TRUE(oc_rep_get_int(rep.get(), "zero", &zero_out));
   EXPECT_EQ(0, zero_out);
   /* check error handling */
-  EXPECT_FALSE(oc_rep_get_int(NULL, "zero", &zero_out));
-  EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
-  EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
-  EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(nullptr, "zero", &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), nullptr, &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), "zero", nullptr));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), "not_a_key", &zero_out));
 
-  char json_buf[75];
-  EXPECT_EQ(57, oc_rep_to_json(rep, json_buf, 75, false));
-  EXPECT_STREQ(
-    "{\"ultimate_answer\":10000000000,\"negative\":-1024,\"zero\":0}",
-    json_buf);
-  const char json[] = "{\n"
-                      "  \"ultimate_answer\" : 10000000000,\n"
-                      "  \"negative\" : -1024,\n"
-                      "  \"zero\" : 0\n"
-                      "}\n";
-  EXPECT_EQ(74, oc_rep_to_json(rep, json_buf, 75, true));
-  EXPECT_STREQ(json, json_buf);
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(),
+            "{\"ultimate_answer\":10000000000,\"negative\":-1024,\"zero\":0}",
+            false);
+  const char pretty_json[] = "{\n"
+                             "  \"ultimate_answer\" : 10000000000,\n"
+                             "  \"negative\" : -1024,\n"
+                             "  \"zero\" : 0\n"
+                             "}\n";
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -262,10 +348,6 @@ TEST_F(TestRepWithPool, OCRepSetGetInt)
  */
 TEST_F(TestRepWithPool, OCRepSetGetUint)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -284,62 +366,43 @@ TEST_F(TestRepWithPool, OCRepSetGetUint)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from  the oc_rep_t */
   EXPECT_EQ(OC_REP_INT, rep->type);
   int64_t ultimate_answer_out = 0;
-  EXPECT_TRUE(oc_rep_get_int(rep, "ultimate_answer", &ultimate_answer_out));
+  EXPECT_TRUE(
+    oc_rep_get_int(rep.get(), "ultimate_answer", &ultimate_answer_out));
   EXPECT_EQ(42u, (unsigned)ultimate_answer_out);
   int64_t larger_than_int_out = 0;
-  EXPECT_TRUE(oc_rep_get_int(rep, "larger_than_int", &larger_than_int_out));
+  EXPECT_TRUE(
+    oc_rep_get_int(rep.get(), "larger_than_int", &larger_than_int_out));
   EXPECT_EQ(3000000000u, (unsigned)larger_than_int_out);
   int64_t zero_out = -1;
-  EXPECT_TRUE(oc_rep_get_int(rep, "zero", &zero_out));
+  EXPECT_TRUE(oc_rep_get_int(rep.get(), "zero", &zero_out));
   EXPECT_EQ(0u, (unsigned)zero_out);
   /* check error handling */
-  EXPECT_FALSE(oc_rep_get_int(NULL, "zero", &zero_out));
-  EXPECT_FALSE(oc_rep_get_int(rep, NULL, &zero_out));
-  EXPECT_FALSE(oc_rep_get_int(rep, "zero", NULL));
-  EXPECT_FALSE(oc_rep_get_int(rep, "not_a_key", &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(nullptr, "zero", &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), nullptr, &zero_out));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), "zero", nullptr));
+  EXPECT_FALSE(oc_rep_get_int(rep.get(), "not_a_key", &zero_out));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  EXPECT_STREQ(
-    "{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}", json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(
+    rep.get(),
+    "{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}",
+    false);
   const char pretty_json[] = "{\n"
                              "  \"ultimate_answer\" : 42,\n"
                              "  \"larger_than_int\" : 3000000000,\n"
                              "  \"zero\" : 0\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /* why do we have set_boolean but get_bool shouldn't the function names match */
 TEST_F(TestRepWithPool, OCRepSetGetBool)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -351,48 +414,29 @@ TEST_F(TestRepWithPool, OCRepSetGetBool)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the ultimate_answer from  the oc_rep_t */
   bool true_flag_out = false;
-  EXPECT_TRUE(oc_rep_get_bool(rep, "true_flag", &true_flag_out));
+  EXPECT_TRUE(oc_rep_get_bool(rep.get(), "true_flag", &true_flag_out));
   EXPECT_TRUE(true_flag_out);
   bool false_flag_out = true;
-  EXPECT_TRUE(oc_rep_get_bool(rep, "false_flag", &false_flag_out));
+  EXPECT_TRUE(oc_rep_get_bool(rep.get(), "false_flag", &false_flag_out));
   EXPECT_FALSE(false_flag_out);
   /* check error handling */
-  EXPECT_FALSE(oc_rep_get_bool(NULL, "true_flag", &true_flag_out));
-  EXPECT_FALSE(oc_rep_get_bool(rep, NULL, &true_flag_out));
-  EXPECT_FALSE(oc_rep_get_bool(rep, "true_flag", NULL));
-  EXPECT_FALSE(oc_rep_get_bool(rep, "not_a_key", &true_flag_out));
+  EXPECT_FALSE(oc_rep_get_bool(nullptr, "true_flag", &true_flag_out));
+  EXPECT_FALSE(oc_rep_get_bool(rep.get(), nullptr, &true_flag_out));
+  EXPECT_FALSE(oc_rep_get_bool(rep.get(), "true_flag", nullptr));
+  EXPECT_FALSE(oc_rep_get_bool(rep.get(), "not_a_key", &true_flag_out));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"true_flag\":true,\"false_flag\":false}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"true_flag\":true,\"false_flag\":false}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"true_flag\" : true,\n"
                              "  \"false_flag\" : false\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -409,12 +453,10 @@ TEST_F(TestRepWithPool, OCRepSetGetBool)
  */
 TEST_F(TestRepWithPool, OCRepSetGetTextString)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add text string value "hal9000":"Dave" to root object */
   oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_text_string(root, empty, "");
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_text_string(root, hal9000, "Dave");
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -425,23 +467,21 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the hal9000 from  the oc_rep_t */
-  char *hal9000_out = NULL;
+  char *empty_out = nullptr;
   size_t str_len;
-  EXPECT_TRUE(oc_rep_get_string(rep, "hal9000", &hal9000_out, &str_len));
+  EXPECT_TRUE(oc_rep_get_string(rep.get(), "empty", &empty_out, &str_len));
+  EXPECT_STREQ("", empty_out);
+  char *hal9000_out = nullptr;
+  EXPECT_TRUE(oc_rep_get_string(rep.get(), "hal9000", &hal9000_out, &str_len));
   EXPECT_STREQ("Dave", hal9000_out);
   EXPECT_EQ(4, str_len);
-  char *ru_character_set_out = NULL;
-  EXPECT_TRUE(oc_rep_get_string(rep, "ru_character_set", &ru_character_set_out,
-                                &str_len));
+  char *ru_character_set_out = nullptr;
+  EXPECT_TRUE(oc_rep_get_string(rep.get(), "ru_character_set",
+                                &ru_character_set_out, &str_len));
   EXPECT_STREQ("Привет, мир", ru_character_set_out);
   /*
    * to encode Привет, мир takes more bytes than the number of characters so
@@ -449,34 +489,23 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
    */
   EXPECT_EQ(strlen("Привет, мир"), str_len);
   /* check error handling */
-  EXPECT_FALSE(oc_rep_get_string(NULL, "hal9000", &hal9000_out, &str_len));
-  EXPECT_FALSE(oc_rep_get_string(rep, NULL, &hal9000_out, &str_len));
-  EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", NULL, &str_len));
-  EXPECT_FALSE(oc_rep_get_string(rep, "hal9000", &hal9000_out, NULL));
-  EXPECT_FALSE(oc_rep_get_string(rep, "not_a_key", &hal9000_out, &str_len));
+  EXPECT_FALSE(oc_rep_get_string(nullptr, "hal9000", &hal9000_out, &str_len));
+  EXPECT_FALSE(oc_rep_get_string(rep.get(), nullptr, &hal9000_out, &str_len));
+  EXPECT_FALSE(oc_rep_get_string(rep.get(), "hal9000", nullptr, &str_len));
+  EXPECT_FALSE(oc_rep_get_string(rep.get(), "hal9000", &hal9000_out, nullptr));
+  EXPECT_FALSE(
+    oc_rep_get_string(rep.get(), "not_a_key", &hal9000_out, &str_len));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"hal9000\":\"Dave\","
-                                 "\"ru_character_set\":\"Привет, мир\"}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"empty\":\"\","
+                      "\"hal9000\":\"Dave\","
+                      "\"ru_character_set\":\"Привет, мир\"}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
+                             "  \"empty\" : \"\",\n"
                              "  \"hal9000\" : \"Dave\",\n"
                              "  \"ru_character_set\" : \"Привет, мир\"\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -485,86 +514,93 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
  */
 TEST_F(TestRepWithPool, OCRepSetGetByteString)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add text string value "hal9000":"Dave" to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_byte_string(root, empty_byte_string, nullptr, 0);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   const uint8_t test_byte_string[] = { 0x01, 0x02, 0x03, 0x04, 0x02, 0x00 };
-  oc_rep_set_byte_string(root, test_byte_string, test_byte_string, 6u);
+  oc_rep_set_byte_string(root, test_byte_string, test_byte_string,
+                         sizeof(test_byte_string));
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
-  char *test_byte_string_out = NULL;
   size_t str_len;
-  EXPECT_TRUE(oc_rep_get_byte_string(rep, "test_byte_string",
+  char *empty_byte_string_out = nullptr;
+  EXPECT_TRUE(oc_rep_get_byte_string(rep.get(), "empty_byte_string",
+                                     &empty_byte_string_out, &str_len));
+  EXPECT_EQ(0, str_len);
+  char *test_byte_string_out = nullptr;
+  EXPECT_TRUE(oc_rep_get_byte_string(rep.get(), "test_byte_string",
                                      &test_byte_string_out, &str_len));
   EXPECT_EQ(6, str_len);
   /*
    * cast the array and use STREQ to compare this only works because the
-   * test_byte_string was nul terminated other wise we would have to loop
+   * test_byte_string was null terminated other wise we would have to loop
    * through the array.
    */
   EXPECT_STREQ((const char *)test_byte_string, test_byte_string_out);
   /* error handling */
-  EXPECT_FALSE(oc_rep_get_byte_string(NULL, "test_byte_string",
+  EXPECT_FALSE(oc_rep_get_byte_string(nullptr, "test_byte_string",
                                       &test_byte_string_out, &str_len));
+  EXPECT_FALSE(oc_rep_get_byte_string(rep.get(), nullptr, &test_byte_string_out,
+                                      &str_len));
   EXPECT_FALSE(
-    oc_rep_get_byte_string(rep, NULL, &test_byte_string_out, &str_len));
-  EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string", NULL, &str_len));
-  EXPECT_FALSE(oc_rep_get_byte_string(rep, "test_byte_string",
-                                      &test_byte_string_out, NULL));
-  EXPECT_FALSE(
-    oc_rep_get_byte_string(rep, "not_a_key", &test_byte_string_out, &str_len));
+    oc_rep_get_byte_string(rep.get(), "test_byte_string", nullptr, &str_len));
+  EXPECT_FALSE(oc_rep_get_byte_string(rep.get(), "test_byte_string",
+                                      &test_byte_string_out, nullptr));
+  EXPECT_FALSE(oc_rep_get_byte_string(rep.get(), "not_a_key",
+                                      &test_byte_string_out, &str_len));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"test_byte_string\":\"AQIDBAIA\"}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"empty_byte_string\":\"\","
+                      "\"test_byte_string\":\"AQIDBAIA\"}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
+                             "  \"empty_byte_string\" : \"\",\n"
                              "  \"test_byte_string\" : \"AQIDBAIA\"\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+  CheckJson(rep.get(), pretty_json, true);
 
-  EXPECT_LT(28, oc_rep_to_json(rep, NULL, 0, false));
-  char too_small[28];
-  EXPECT_LT(28, oc_rep_to_json(rep, too_small, sizeof(too_small), false));
+  EXPECT_LT(25, oc_rep_to_json(rep.get(), nullptr, 0, false));
+  std::array<char, 25> too_small;
+  EXPECT_LT(too_small.size(), oc_rep_to_json(rep.get(), too_small.data(),
+                                             too_small.size(), false));
   // Decoding of byte string is an all or nothing action. Since there
   // is not enough room in the too_small output buffer nothing is placed in the
   // buffer and remaining space is left empty.
-  const char too_small_json[] = "{\"test_byte_string\":\"";
-  EXPECT_STREQ(too_small_json, too_small);
-  oc_free_rep(rep);
+  const char too_small_json[] = "{\"empty_byte_string\":\"\",";
+  EXPECT_STREQ(too_small_json, too_small.data());
+}
+
+TEST_F(TestRepWithPool, OCRepSetGetEmptyIntArray)
+{
+  /*
+    {
+      "emptyInt": null,
+    }
+  */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  oc_rep_set_int_array(root, emptyInt, (int64_t *)nullptr, 0);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"emptyInt\":null}", false);
+  CheckJson(rep.get(), "{\n  \"emptyInt\" : null\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetIntArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -576,52 +612,34 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   int64_t *fib_out = 0;
   size_t fib_len;
-  EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
+  EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
   ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
 
   /* Error handling */
-  EXPECT_FALSE(oc_rep_get_int_array(NULL, "fibonacci", &fib_out, &fib_len));
-  EXPECT_FALSE(oc_rep_get_int_array(rep, NULL, &fib_out, &fib_len));
-  EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", NULL, &fib_len));
-  EXPECT_FALSE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, NULL));
-  EXPECT_FALSE(oc_rep_get_int_array(rep, "not_a_key", &fib_out, &fib_len));
+  EXPECT_FALSE(oc_rep_get_int_array(nullptr, "fibonacci", &fib_out, &fib_len));
+  EXPECT_FALSE(oc_rep_get_int_array(rep.get(), nullptr, &fib_out, &fib_len));
+  EXPECT_FALSE(oc_rep_get_int_array(rep.get(), "fibonacci", nullptr, &fib_len));
+  EXPECT_FALSE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, nullptr));
+  EXPECT_FALSE(
+    oc_rep_get_int_array(rep.get(), "not_a_key", &fib_out, &fib_len));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
+  const char json[] =
     "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89,10000000000]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000]\n"
     "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -630,10 +648,6 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
  */
 TEST_F(TestRepWithPool, OCRepAddGetIntArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -651,44 +665,25 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   int64_t *fib_out = 0;
   size_t fib_len;
-  EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
+  EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
   ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
     "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -697,15 +692,10 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArray)
  */
 TEST_F(TestRepWithPool, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   int64_t fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
-
   oc_rep_set_key(oc_rep_object(root), "fibonacci");
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_begin_array(oc_rep_object(root), fibonacci);
@@ -720,52 +710,51 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   int64_t *fib_out = 0;
   size_t fib_len;
-  EXPECT_TRUE(oc_rep_get_int_array(rep, "fibonacci", &fib_out, &fib_len));
+  EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
   ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
     "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+  CheckJson(rep.get(), pretty_json, true);
+}
 
-  oc_free_rep(rep);
+TEST_F(TestRepWithPool, OCRepSetGetEmptyBoolArray)
+{
+  /*
+    {
+      "emptyBool": null,
+    }
+  */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  oc_rep_set_bool_array(root, emptyBool, (bool *)nullptr, 0);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"emptyBool\":null}", false);
+  CheckJson(rep.get(), "{\n  \"emptyBool\" : null\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -777,50 +766,32 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   bool *flip_out = 0;
   size_t flip_len;
-  EXPECT_TRUE(oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len));
+  EXPECT_TRUE(oc_rep_get_bool_array(rep.get(), "flip", &flip_out, &flip_len));
   ASSERT_EQ(sizeof(flip) / sizeof(flip[0]), flip_len);
   for (size_t i = 0; i < flip_len; ++i) {
     EXPECT_EQ(flip[i], flip_out[i]);
   }
 
   /* Error handling */
-  EXPECT_FALSE(oc_rep_get_bool_array(NULL, "flip", &flip_out, &flip_len));
-  EXPECT_FALSE(oc_rep_get_bool_array(rep, NULL, &flip_out, &flip_len));
-  EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", NULL, &flip_len));
-  EXPECT_FALSE(oc_rep_get_bool_array(rep, "flip", &flip_out, NULL));
-  EXPECT_FALSE(oc_rep_get_bool_array(rep, "not_a_key", &flip_out, &flip_len));
+  EXPECT_FALSE(oc_rep_get_bool_array(nullptr, "flip", &flip_out, &flip_len));
+  EXPECT_FALSE(oc_rep_get_bool_array(rep.get(), nullptr, &flip_out, &flip_len));
+  EXPECT_FALSE(oc_rep_get_bool_array(rep.get(), "flip", nullptr, &flip_len));
+  EXPECT_FALSE(oc_rep_get_bool_array(rep.get(), "flip", &flip_out, nullptr));
+  EXPECT_FALSE(
+    oc_rep_get_bool_array(rep.get(), "not_a_key", &flip_out, &flip_len));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"flip\":[false,false,true,false,false]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"flip\" : [false, false, true, false, false]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -829,15 +800,10 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
  */
 TEST_F(TestRepWithPool, OCRepAddGetBoolArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   bool flip[] = { false, false, true, false, false };
-
   oc_rep_open_array(root, flip);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   for (size_t i = 0; i < (sizeof(flip) / sizeof(flip[0])); i++) {
@@ -846,56 +812,54 @@ TEST_F(TestRepWithPool, OCRepAddGetBoolArray)
   }
   oc_rep_close_array(root, flip);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   bool *flip_out = 0;
   size_t flip_len;
-  EXPECT_TRUE(oc_rep_get_bool_array(rep, "flip", &flip_out, &flip_len));
+  EXPECT_TRUE(oc_rep_get_bool_array(rep.get(), "flip", &flip_out, &flip_len));
   ASSERT_EQ(sizeof(flip) / sizeof(flip[0]), flip_len);
   for (size_t i = 0; i < flip_len; ++i) {
     EXPECT_EQ(flip[i], flip_out[i]);
   }
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"flip\":[false,false,true,false,false]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"flip\":[false,false,true,false,false]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"flip\" : [false, false, true, false, false]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+  CheckJson(rep.get(), pretty_json, true);
+}
 
-  oc_free_rep(rep);
+TEST_F(TestRepWithPool, OCRepSetGetEmptyDoubleArray)
+{
+  /*
+    {
+      "emptyDouble": null,
+    }
+  */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  oc_rep_set_double_array(root, emptyDouble, (double *)nullptr, 0);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"emptyDouble\":null}", false);
+  CheckJson(rep.get(), "{\n  \"emptyDouble\" : null\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -908,19 +872,14 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   double *math_constants_out = 0;
   size_t math_constants_len;
   EXPECT_TRUE(oc_rep_get_double_array(
-    rep, "math_constants", &math_constants_out, &math_constants_len));
+    rep.get(), "math_constants", &math_constants_out, &math_constants_len));
   ASSERT_EQ(sizeof(math_constants) / sizeof(math_constants[0]),
             math_constants_len);
   for (size_t i = 0; i < math_constants_len; ++i) {
@@ -929,39 +888,24 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
 
   /* Error handling */
   EXPECT_FALSE(oc_rep_get_double_array(
-    NULL, "math_constants", &math_constants_out, &math_constants_len));
-  EXPECT_FALSE(oc_rep_get_double_array(rep, NULL, &math_constants_out,
+    nullptr, "math_constants", &math_constants_out, &math_constants_len));
+  EXPECT_FALSE(oc_rep_get_double_array(rep.get(), nullptr, &math_constants_out,
                                        &math_constants_len));
-  EXPECT_FALSE(
-    oc_rep_get_double_array(rep, "math_constants", NULL, &math_constants_len));
-  EXPECT_FALSE(
-    oc_rep_get_double_array(rep, "math_constants", &math_constants_out, NULL));
-  EXPECT_FALSE(oc_rep_get_double_array(rep, "not_a_key", &math_constants_out,
+  EXPECT_FALSE(oc_rep_get_double_array(rep.get(), "math_constants", nullptr,
                                        &math_constants_len));
+  EXPECT_FALSE(oc_rep_get_double_array(rep.get(), "math_constants",
+                                       &math_constants_out, nullptr));
+  EXPECT_FALSE(oc_rep_get_double_array(
+    rep.get(), "not_a_key", &math_constants_out, &math_constants_len));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
+  const char json[] =
     "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] =
     "{\n"
     "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
     "}\n";
-
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /*
@@ -969,10 +913,6 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
  */
 TEST_F(TestRepWithPool, OCRepAddGetDoubleArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -986,61 +926,61 @@ TEST_F(TestRepWithPool, OCRepAddGetDoubleArray)
   }
   oc_rep_close_array(root, math_constants);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   double *math_constants_out = 0;
   size_t math_constants_len;
   EXPECT_TRUE(oc_rep_get_double_array(
-    rep, "math_constants", &math_constants_out, &math_constants_len));
+    rep.get(), "math_constants", &math_constants_out, &math_constants_len));
   ASSERT_EQ(sizeof(math_constants) / sizeof(math_constants[0]),
             math_constants_len);
   for (size_t i = 0; i < math_constants_len; ++i) {
     EXPECT_EQ(math_constants[i], math_constants_out[i]);
   }
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
+  const char json[] =
     "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] =
     "{\n"
     "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
     "}\n";
+  CheckJson(rep.get(), pretty_json, true);
+}
 
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+TEST_F(TestRepWithPool, OCRepSetGetEmptyObject)
+{
+  /*
+    {
+      "empty": {},
+    }
+  */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_open_object(root, empty);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_close_object(root, empty);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_free_rep(rep);
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"empty\":{}}", false);
+  CheckJson(rep.get(), "{\n  \"empty\" : {\n  }\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetObject)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /*
    * {
    *   "my_object": {
@@ -1067,43 +1007,27 @@ TEST_F(TestRepWithPool, OCRepSetGetObject)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  oc_rep_t *my_object_out = NULL;
-  EXPECT_TRUE(oc_rep_get_object(rep, "my_object", &my_object_out));
-  ASSERT_TRUE(my_object_out != NULL);
+  oc_rep_t *my_object_out = nullptr;
+  EXPECT_TRUE(oc_rep_get_object(rep.get(), "my_object", &my_object_out));
+  ASSERT_TRUE(my_object_out != nullptr);
   int64_t a_out;
   EXPECT_TRUE(oc_rep_get_int(my_object_out, "a", &a_out));
   EXPECT_EQ(1, a_out);
   bool b_out = true;
   EXPECT_TRUE(oc_rep_get_bool(my_object_out, "b", &b_out));
   EXPECT_FALSE(b_out);
-  char *c_out = NULL;
+  char *c_out = nullptr;
   size_t c_out_size = 0;
   EXPECT_TRUE(oc_rep_get_string(my_object_out, "c", &c_out, &c_out_size));
   EXPECT_EQ(5, c_out_size);
   EXPECT_STREQ("three", c_out);
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
-    "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"my_object\" : {\n"
                              "    \"a\" : 1,\n"
@@ -1111,19 +1035,88 @@ TEST_F(TestRepWithPool, OCRepSetGetObject)
                              "    \"c\" : \"three\"\n"
                              "  }\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+  CheckJson(rep.get(), pretty_json, true);
+}
 
-  oc_free_rep(rep);
+#ifndef OC_DYNAMIC_ALLOCATION
+
+static int
+oc_rep_encode_tagged_string(CborEncoder *encoder, CborTag tag,
+                            const std::string &key, const std::string &value)
+{
+  oc_rep_encoder_convert_offset_to_ptr(encoder);
+  int err = cbor_encode_text_string(encoder, key.c_str(), key.length());
+  err |= cbor_encode_tag(encoder, tag);
+  err |= cbor_encode_text_string(encoder, value.c_str(), value.length());
+  oc_rep_encoder_convert_ptr_to_offset(encoder);
+  return err;
+}
+
+TEST_F(TestRepWithPool, OCRepSetGetObjectWithTag)
+{
+  /*
+   * {
+   *   "tagged_url": {
+   *     "url": "iotivity.org"
+   *   }
+   * }
+   */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_set_object(root, tagged_url);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_EQ(CborNoError,
+            oc_rep_encode_tagged_string(oc_rep_object(tagged_url), CborUrlTag,
+                                        "url", "iotivity.org"));
+  oc_rep_close_object(root, tagged_url);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  const char json[] = "{\"tagged_url\":{\"url\":\"iotivity.org\"}}";
+  CheckJson(rep.get(), json, false);
+  const char pretty_json[] = "{\n"
+                             "  \"tagged_url\" : {\n"
+                             "    \"url\" : \"iotivity.org\"\n"
+                             "  }\n"
+                             "}\n";
+  CheckJson(rep.get(), pretty_json, true);
+}
+
+#endif /* !OC_DYNAMIC_ALLOCATION  */
+
+TEST_F(TestRepWithPool, OCRepSetGetEmptyObjectArray)
+{
+  /*
+    {
+      "emptyObj": null,
+    }
+  */
+  /* add values to root object */
+  oc_rep_start_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_open_array(root, emptyObj);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_close_array(root, emptyObj);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"emptyObj\":null}", false);
+  CheckJson(rep.get(), "{\n  \"emptyObj\" : null\n}\n", true);
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /*
    * {
    *   "space_2001": [
@@ -1171,27 +1164,21 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   /* calling this an object_array is a bit of a misnomer internally it is a
    * linked list */
-  oc_rep_t *space_2001_out = NULL;
-  EXPECT_TRUE(oc_rep_get_object_array(rep, "space_2001", &space_2001_out));
-  ASSERT_TRUE(space_2001_out != NULL);
+  oc_rep_t *space_2001_out = nullptr;
+  EXPECT_TRUE(
+    oc_rep_get_object_array(rep.get(), "space_2001", &space_2001_out));
+  ASSERT_TRUE(space_2001_out != nullptr);
 
-  char *name_out = NULL;
+  char *name_out = nullptr;
   size_t name_out_size = 0;
-
-  char *job_out = NULL;
+  char *job_out = nullptr;
   size_t job_out_size = 0;
-
   EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
   EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out,
                                 &name_out_size));
@@ -1203,7 +1190,7 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_STREQ("astronaut", job_out);
 
   space_2001_out = space_2001_out->next;
-  ASSERT_TRUE(space_2001_out != NULL);
+  ASSERT_TRUE(space_2001_out != nullptr);
   EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
   EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out,
                                 &name_out_size));
@@ -1215,7 +1202,7 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_STREQ("astronaut", job_out);
 
   space_2001_out = space_2001_out->next;
-  ASSERT_TRUE(space_2001_out != NULL);
+  ASSERT_TRUE(space_2001_out != nullptr);
   EXPECT_EQ(OC_REP_OBJECT, space_2001_out->type);
   EXPECT_TRUE(oc_rep_get_string(space_2001_out->value.object, "name", &name_out,
                                 &name_out_size));
@@ -1226,21 +1213,11 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_EQ(strlen("AI computer"), job_out_size);
   EXPECT_STREQ("AI computer", job_out);
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
+  const char json[] =
     "{\"space_2001\":[{\"name\":\"Dave Bowman\","
     "\"job\":\"astronaut\"},{\"name\":\"Frank Poole\",\"job\":\"astronaut\"}"
     ",{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"space_2001\" : [\n"
                              "    {\n"
@@ -1255,19 +1232,11 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
                              "      \"job\" : \"AI computer\"\n"
                              "    }]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* jagged arrays for testing */
   uint8_t ba1[] = { 0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
   uint8_t ba2[] = { 0x01, 0x01, 0x02, 0x03, 0x05, 0x08,
@@ -1298,20 +1267,24 @@ TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   oc_string_array_t barray_out;
   size_t barray_len;
-  EXPECT_TRUE(
-    oc_rep_get_byte_string_array(rep, "barray", &barray_out, &barray_len));
+  EXPECT_TRUE(oc_rep_get_byte_string_array(rep.get(), "barray", &barray_out,
+                                           &barray_len));
   ASSERT_EQ(4, barray_len);
+
+  EXPECT_FALSE(
+    oc_rep_get_byte_string_array(nullptr, "barray", &barray_out, &barray_len));
+  EXPECT_FALSE(
+    oc_rep_get_byte_string_array(rep.get(), nullptr, &barray_out, &barray_len));
+  EXPECT_FALSE(
+    oc_rep_get_byte_string_array(rep.get(), "barray", nullptr, &barray_len));
+  EXPECT_FALSE(
+    oc_rep_get_byte_string_array(rep.get(), "barray", &barray_out, nullptr));
 
   EXPECT_EQ(sizeof(ba1), oc_byte_string_array_get_item_size(barray_out, 0));
   EXPECT_EQ(memcmp(ba1, oc_byte_string_array_get_item(barray_out, 0),
@@ -1330,20 +1303,10 @@ TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
                    oc_byte_string_array_get_item_size(barray_out, 3)),
             0);
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
+  const char json[] =
     "{\"barray\":[\"AQECAwQFBg==\","
     "\"AQECAwUIEyE0VYk=\",\"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\"AAD/AAA=\"]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"barray\" : [\n"
                              "    \"AQECAwQFBg==\",\n"
@@ -1352,20 +1315,36 @@ TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
                              "    \"AAD/AAA=\"\n"
                              "  ]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
+  CheckJson(rep.get(), pretty_json, true);
+}
 
-  oc_free_rep(rep);
+TEST_F(TestRepWithPool, OCRepSetGetEmptyStringArray)
+{
+  /*
+    {
+      "emptyStr": null,
+    }
+  */
+  /* add values to root object */
+  oc_rep_begin_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_string_array_t emptyStr{};
+  oc_rep_set_string_array(root, emptyStr, emptyStr);
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  /* convert CborEncoder to oc_rep_t */
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+
+  CheckJson(rep.get(), "{\"emptyStr\":null}", false);
+  CheckJson(rep.get(), "{\n  \"emptyStr\" : null\n}\n", true);
 }
 
 /* use oc_rep_set_string_array to build the string array. */
 TEST_F(TestRepWithPool, OCRepSetGetStringArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* Strings for testing
     Note: check STRING_ARRAY_ITEM_MAX_LEN for maximal allowed string item length
     in a string array.
@@ -1384,7 +1363,7 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_string_array_t quotes;
-  oc_new_string_array(&quotes, (size_t)4);
+  oc_new_string_array(&quotes, static_cast<size_t>(4));
   EXPECT_TRUE(oc_string_array_add_item(quotes, STR0));
   EXPECT_TRUE(oc_string_array_add_item(quotes, STR1));
   EXPECT_TRUE(oc_string_array_add_item(quotes, STR2));
@@ -1397,20 +1376,27 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_free_string_array(&quotes);
+
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  EXPECT_EQ(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   oc_string_array_t quotes_out;
   size_t quotes_len;
-  EXPECT_TRUE(oc_rep_get_string_array(rep, "quotes", &quotes_out, &quotes_len));
+  EXPECT_TRUE(
+    oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, &quotes_len));
   ASSERT_EQ(4, quotes_len);
+
+  /* Error handling */
+  EXPECT_FALSE(
+    oc_rep_get_string_array(nullptr, "quotes", &quotes_out, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), nullptr, &quotes_out, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), "quotes", nullptr, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, nullptr));
 
   EXPECT_EQ(strlen(STR0), oc_string_array_get_item_size(quotes_out, 0));
   EXPECT_STREQ(STR0, oc_string_array_get_item(quotes_out, 0));
@@ -1421,22 +1407,12 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
   EXPECT_EQ(strlen(STR3), oc_string_array_get_item_size(quotes_out, 3));
   EXPECT_STREQ(STR3, oc_string_array_get_item(quotes_out, 3));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"quotes\":"
-                                 "[\"" STR0 "\","
-                                 "\"" STR1 "\","
-                                 "\"" STR2 "\","
-                                 "\"" STR3 "\"]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"quotes\":"
+                      "[\"" STR0 "\","
+                      "\"" STR1 "\","
+                      "\"" STR2 "\","
+                      "\"" STR3 "\"]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"quotes\" : [\n"
                              "    \"" STR0 "\",\n"
@@ -1445,20 +1421,12 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
                              "    \"" STR3 "\"\n"
                              "  ]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 /* use oc_rep_add_text_string to build string array */
 TEST_F(TestRepWithPool, OCRepAddGetStringArray)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /* Strings for testing
     Note: check STRING_ARRAY_ITEM_MAX_LEN for maximal allowed string item length
     in a string array.
@@ -1495,19 +1463,25 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   oc_string_array_t quotes_out;
   size_t quotes_len;
-  EXPECT_TRUE(oc_rep_get_string_array(rep, "quotes", &quotes_out, &quotes_len));
+  EXPECT_TRUE(
+    oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, &quotes_len));
   ASSERT_EQ(4, quotes_len);
+
+  /* Error handling */
+  EXPECT_FALSE(
+    oc_rep_get_string_array(nullptr, "quotes", &quotes_out, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), nullptr, &quotes_out, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), "quotes", nullptr, &quotes_len));
+  EXPECT_FALSE(
+    oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, nullptr));
 
   EXPECT_EQ(strlen(STR0), oc_string_array_get_item_size(quotes_out, 0));
   EXPECT_STREQ(STR0, oc_string_array_get_item(quotes_out, 0));
@@ -1518,22 +1492,12 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
   EXPECT_EQ(strlen(STR3), oc_string_array_get_item_size(quotes_out, 3));
   EXPECT_STREQ(STR3, oc_string_array_get_item(quotes_out, 3));
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] = "{\"quotes\":"
-                                 "[\"" STR0 "\","
-                                 "\"" STR1 "\","
-                                 "\"" STR2 "\","
-                                 "\"" STR3 "\"]}";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "{\"quotes\":"
+                      "[\"" STR0 "\","
+                      "\"" STR1 "\","
+                      "\"" STR2 "\","
+                      "\"" STR3 "\"]}";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "{\n"
                              "  \"quotes\" : [\n"
                              "    \"" STR0 "\",\n"
@@ -1542,19 +1506,11 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
                              "    \"" STR3 "\"\n"
                              "  ]\n"
                              "}\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
+  CheckJson(rep.get(), pretty_json, true);
 }
 
 TEST_F(TestRepWithPool, OCRepRootArrayObject)
 {
-  /*buffer for oc_rep_t */
-  uint8_t buf[1024];
-  oc_rep_new(&buf[0], sizeof(buf));
-
   /*
    * create root object array
    * "[{"href":"/light/1","rep":{"state":true}},{"href":"/count/1","rep":{"count":100}}]"
@@ -1589,34 +1545,26 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
   oc_rep_end_links_array();
 
   /* convert CborEncoder to oc_rep_t */
-  const uint8_t *payload = oc_rep_get_encoder_buf();
-  int payload_len = oc_rep_get_encoded_payload_size();
-  EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = NULL;
-  oc_parse_rep(payload, payload_len, &rep);
-  ASSERT_TRUE(rep != NULL);
+  oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
   /* calling this an object_array is a bit of a misnomer internally it is a
    * linked list */
   EXPECT_EQ(0, oc_string_len(rep->name));
   EXPECT_EQ(OC_REP_OBJECT, rep->type);
-  oc_rep_t *links = rep;
-  ASSERT_TRUE(links != NULL);
-
-  char *href_out = NULL;
+  oc_rep_t *links = rep.get();
+  ASSERT_TRUE(links != nullptr);
+  char *href_out = nullptr;
   size_t href_out_size = 0;
-
-  oc_rep_t *rep_out = NULL;
-
+  oc_rep_t *rep_out = nullptr;
   EXPECT_TRUE(
     oc_rep_get_string(links->value.object, "href", &href_out, &href_out_size));
   EXPECT_EQ(strlen("/light/1"), href_out_size);
   EXPECT_STREQ("/light/1", href_out);
 
   EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
-  ASSERT_TRUE(rep_out != NULL);
+  ASSERT_TRUE(rep_out != nullptr);
 
   EXPECT_EQ(OC_REP_BOOL, rep_out->type);
   bool state_out = false;
@@ -1631,27 +1579,16 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
   EXPECT_STREQ("/count/1", href_out);
 
   EXPECT_TRUE(oc_rep_get_object(links->value.object, "rep", &rep_out));
-  ASSERT_TRUE(rep_out != NULL);
+  ASSERT_TRUE(rep_out != nullptr);
 
   EXPECT_EQ(OC_REP_INT, rep_out->type);
   int64_t count_out = 0;
   EXPECT_TRUE(oc_rep_get_int(rep_out, "count", &count_out));
   EXPECT_EQ(100, count_out);
 
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, false);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, false);
-  const char non_pretty_json[] =
-    "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
-    "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
-  EXPECT_STREQ(non_pretty_json, json);
-  free(json);
-  json = NULL;
-  json_size = oc_rep_to_json(rep, NULL, 0, true);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  const char json[] = "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
+                      "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
+  CheckJson(rep.get(), json, false);
   const char pretty_json[] = "[\n"
                              "  {\n"
                              "    \"href\" : \"/light/1\",\n"
@@ -1665,61 +1602,5 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
                              "      \"count\" : 100\n    }\n"
                              "  }\n"
                              "]\n";
-  EXPECT_STREQ(pretty_json, json);
-  free(json);
-  json = NULL;
-
-  oc_free_rep(rep);
-}
-
-TEST(TestRep, OCRepEncodedPayloadRealloc)
-{
-  /* buffer for oc_rep_t */
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *b = (uint8_t *)malloc(0);
-  oc_rep_new_realloc(&b, 0, 1024);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[1024];
-  uint8_t *b = buffer;
-  oc_rep_new(buffer, sizeof(buffer));
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_rep_start_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, "hello", "world");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_double(root, "double", 3.14);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_boolean(root, "bool", true);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_int(root, "int", -1);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_uint(root, "uint", -1);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  uint8_t byte_string[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
-  oc_rep_set_byte_string(root, byte_string_key, byte_string,
-                         sizeof(byte_string));
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  int fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
-  oc_rep_set_key(oc_rep_object(root), "fibonacci");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_begin_array(oc_rep_object(root), fibonacci);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
-    oc_rep_add_int(fibonacci, fib[i]);
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  }
-  oc_rep_end_array(oc_rep_object(root), fibonacci);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
-  oc_rep_set_double_array(
-    root, math_constants, math_constants,
-    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_end_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  b = oc_rep_shrink_encoder_buf(b);
-  EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(b);
-#endif
+  CheckJson(rep.get(), pretty_json, true);
 }

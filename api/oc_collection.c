@@ -483,7 +483,7 @@ oc_handle_collection_create_request(oc_method_t method, oc_request_t *request)
     oc_collection_add_link((oc_resource_t *)collection, link);
 
     oc_rep_start_root_object();
-    memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+    memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
     oc_rep_set_text_string(root, href, oc_string(new_res->resource->uri));
     oc_rep_set_string_array(root, rt, new_res->resource->types);
     oc_core_encode_interfaces_mask(oc_rep_object(root),
@@ -493,14 +493,14 @@ oc_handle_collection_create_request(oc_method_t method, oc_request_t *request)
     oc_rep_close_object(root, p);
     oc_rep_set_int(root, ins, link->ins);
     oc_rep_set_key(oc_rep_object(root), "rep");
-    memcpy(&g_encoder, &root_map, sizeof(CborEncoder));
+    memcpy(oc_rep_get_encoder(), &root_map, sizeof(CborEncoder));
     oc_rep_start_root_object();
     new_res->resource->get_properties.cb.get_props(
       new_res->resource, OC_IF_BASELINE,
       new_res->resource->get_properties.user_data);
     oc_rep_end_root_object();
-    memcpy(&root_map, &g_encoder, sizeof(CborEncoder));
-    memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
+    memcpy(&root_map, oc_rep_get_encoder(), sizeof(CborEncoder));
+    memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
 
     oc_link_params_t *p = (oc_link_params_t *)oc_list_pop(params_list);
     while (p) {
@@ -842,7 +842,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   rest_request.origin = request->origin;
 
   oc_rep_start_links_array();
-  memcpy(&encoder, &g_encoder, sizeof(CborEncoder));
+  memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
   if (method == OC_GET || method == OC_DELETE) {
     get_delete = true;
   }
@@ -893,7 +893,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
 
             oc_rep_set_text_string(links, href, oc_string(link->resource->uri));
             oc_rep_set_key(oc_rep_object(links), "rep");
-            memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+            memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
 
             int size_before = oc_rep_get_encoded_payload_size();
             rest_request.resource = link->resource;
@@ -987,7 +987,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
               }
             }
 
-            memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
+            memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
             oc_rep_object_array_end_item(links);
           }
         }
@@ -1005,7 +1005,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
     rep = rep->next;
   }
 processed_request:
-  memcpy(&g_encoder, &encoder, sizeof(CborEncoder));
+  memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
   oc_rep_end_links_array();
 
   oc_handle_collection_request_result_t result = {

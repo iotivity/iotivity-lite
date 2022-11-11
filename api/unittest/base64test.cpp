@@ -76,9 +76,9 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
   for (size_t i = 0; i < inputArraySize; ++i) {
     outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
                                     (uint8_t *)buf, bufSize - 1);
-    EXPECT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
+    ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
-    EXPECT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
+    ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                        "operations should be a multiple of 4.";
     // base64 encoder does not null terminate its output
     buf[outputLength] = '\0';
@@ -299,9 +299,9 @@ TEST(B64Test, encoder_does_not_null_terminate)
   for (size_t i = 0; i < inputArraySize; ++i) {
     outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
                                     (uint8_t *)buf, bufSize - 1);
-    EXPECT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
+    ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
-    EXPECT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
+    ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                        "operations should be a multiple of 4.";
     if (i == 0) {
       /* expect to pass on first encode due to zero initialized buf */
@@ -318,11 +318,11 @@ TEST(B64Test, encoder_does_not_null_terminate)
   for (size_t i = 0; i < inputArraySize; ++i) {
     outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
                                     (uint8_t *)buf, bufSize - 1);
-    EXPECT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
+    ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
     // base64 encoder does not null terminate its output
     buf[outputLength] = '\0';
-    EXPECT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
+    ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                        "operations should be a multiple of 4.";
     EXPECT_STREQ(output[i], buf) << "Failed to Base64 encode \"" << input[i]
                                  << "\" to \"" << output[i] << "\"";
@@ -351,15 +351,15 @@ TEST(B64Test, EncodeThenDecode)
   ASSERT_NE(nullptr, b64Buf) << "memory allocation error.";
   outputLength = oc_base64_encode((const uint8_t *)input, sizeof(input),
                                   (uint8_t *)b64Buf, b64BufSize - 1);
-  EXPECT_NE(-1, outputLength)
+  ASSERT_NE(-1, outputLength)
     << "Failed to Base64 encode \"" << input << "\" to \"" << b64Buf << "\"";
-  EXPECT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
+  ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                      "operations should be a multiple of 4.";
   // base64 encoder does not null terminate its output
   b64Buf[outputLength] = '\0';
 
   outputLength = oc_base64_decode((uint8_t *)b64Buf, strlen(b64Buf));
-  EXPECT_NE(-1, outputLength)
+  ASSERT_NE(-1, outputLength)
     << "Failed to Base64 decode \"" << input << "\" to \"" << b64Buf << "\"";
   EXPECT_EQ(sizeof(input), outputLength);
   EXPECT_STREQ(input, b64Buf);

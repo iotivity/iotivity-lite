@@ -1006,10 +1006,10 @@ create_batch_for_removed_resource(CborEncoder *links_array,
     '\0';
   oc_rep_set_text_string(links, href, href);
   oc_rep_set_key(oc_rep_object(links), "rep");
-  memcpy(&g_encoder, &links_map, sizeof(CborEncoder));
+  memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
   oc_rep_start_root_object();
   oc_rep_end_root_object();
-  memcpy(&links_map, &g_encoder, sizeof(CborEncoder));
+  memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
   oc_rep_end_object((links_array), links);
 }
 

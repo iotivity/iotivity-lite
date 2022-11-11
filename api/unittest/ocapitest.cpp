@@ -254,35 +254,36 @@ pthread_cond_t ApiHelper::s_cv = PTHREAD_COND_INITIALIZER;
 oc_handler_t ApiHelper::s_handler{};
 OC_ATOMIC_UINT8_T ApiHelper::s_terminate{ 0 };
 bool ApiHelper::s_isServerStarted{ false };
+
 ApiDevice ApiHelper::s_ObtResource{
-  .enabled = false,
-  .device_id = static_cast<size_t>(-1),
-  .device_type = "oic.d.obt",
-  .device_name = "Obt",
-  .resource_uri = "/ObtURI",
-  .resource_type = "oic.r.obt",
-  .resource = nullptr,
-  .uuid = "",
+  /*.enabled =*/false,
+  /*.device_id =*/static_cast<size_t>(-1),
+  /*.device_type =*/"oic.d.obt",
+  /*.device_name =*/"Obt",
+  /*.resource_uri =*/"/ObtURI",
+  /*.resource_type =*/"oic.r.obt",
+  /*.resource =*/nullptr,
+  /*.uuid =*/"",
 };
 ApiDevice ApiHelper::s_LightResource{
-  .enabled = false,
-  .device_id = static_cast<size_t>(-1),
-  .device_type = "oic.d.light",
-  .device_name = "Table Lamp",
-  .resource_uri = "/LightResourceURI",
-  .resource_type = "oic.r.light",
-  .resource = nullptr,
-  .uuid = "",
+  /*.enabled =*/false,
+  /*.device_id =*/static_cast<size_t>(-1),
+  /*.device_type =*/"oic.d.light",
+  /*.device_name =*/"Table Lamp",
+  /*.resource_uri =*/"/LightResourceURI",
+  /*.resource_type =*/"oic.r.light",
+  /*.resource =*/nullptr,
+  /*.uuid =*/"",
 };
 ApiDevice ApiHelper::s_SwitchResource{
-  .enabled = false,
-  .device_id = static_cast<size_t>(-1),
-  .device_type = "oic.d.switch",
-  .device_name = "Switch",
-  .resource_uri = "/SwitchURI",
-  .resource_type = "oic.r.switch",
-  .resource = nullptr,
-  .uuid = "",
+  /*.enabled =*/false,
+  /*.device_id =*/static_cast<size_t>(-1),
+  /*.device_type =*/"oic.d.switch",
+  /*.device_name =*/"Switch",
+  /*.resource_uri =*/"/SwitchURI",
+  /*.resource_type =*/"oic.r.switch",
+  /*.resource =*/nullptr,
+  /*.uuid =*/"",
 };
 
 class ResourceDiscovered {
