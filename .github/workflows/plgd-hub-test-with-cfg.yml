@@ -54,11 +54,26 @@ jobs:
           file: ${{ inputs.file }}
           tags: ${{ inputs.tag }}
 
+      - name: Build cloud server with discovery resource observable docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: false
+          build-args: |
+            BUILD_ARGS=${{ inputs.build_args }} -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON
+            BUILD_TYPE=${{ inputs.build_type }}
+          file: ${{ inputs.file }}
+          tags: ${{ inputs.tag }}-resobs
+
       - name: Pull plgd hub tests image
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
-      - name: Run cloud server container
-        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
+      - name: Run cloud server containers
+        run: |
+          mkdir -p `pwd`/data/cloud_server
+          docker run --privileged -d --network=host -v `pwd`/data/cloud_server:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
+          mkdir -p `pwd`/data/cloud_server_resobs
+          docker run --privileged -d --network=host -v `pwd`/data/cloud_server_resobs:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }}-resobs ${{ inputs.tag }}-resobs devsim-resobs-`hostname`
 
       - name: Run plgd hub tests image
         run: docker run --rm --network=host ${{ inputs.hub_args }} ${{ env.TEST_CLOUD_SERVER_IMAGE }}
@@ -72,29 +87,48 @@ jobs:
           docker start ${{ inputs.name }}
           # see Dockerfile.cloud-server-debug for the absolute path with the iotivity-lite checkout
           docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }} /bin/bash -c "./collect-coverage.sh --output /data/coverage/coverage-plgd-hub.json"
+          # stop to generate .gcda files
+          docker stop --time 60 ${{ inputs.name }}-resobs
+          # restart to generate report from the .gcda files
+          docker start ${{ inputs.name }}-resobs
+          # see Dockerfile.cloud-server-debug for the absolute path with the iotivity-lite checkout
+          docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }}-resobs /bin/bash -c "./collect-coverage.sh --output /data/coverage/coverage-plgd-hub-resobs.json"
 
       - name: Upload coverage data
         if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
           name: plgd-hub-coverage
-          path: data/coverage/coverage-plgd-hub.json
+          path: |
+            data/coverage/coverage-plgd-hub.json
+            data/coverage/coverage-plgd-hub-resobs.json
           if-no-files-found: error
           retention-days: 1
 
       - name: Collect cloud server logs when the test fails
         if: ${{ failure() }}
-        run: cat `pwd`/data/0.log
+        run: |
+          cat `pwd`/data/cloud_server/0.log
+          cat `pwd`/data/cloud_server_resobs/0.log
 
       - name: Collect sanitizers cloud server logs when the test fails
         if: ${{ failure() }}
         run: |
-          if ls `pwd`/data/0.asan.log* 1> /dev/null 2>&1; then \
-            sudo cat `pwd`/data/0.asan.log*; \
+          if ls `pwd`/data/cloud_server/0.asan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/cloud_server/0.asan.log*; \
           fi
-          if ls `pwd`/data/0.tsan.log* 1> /dev/null 2>&1; then \
-            sudo cat `pwd`/data/0.tsan.log*; \
+          if ls `pwd`/data/cloud_server_resobs/0.asan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/cloud_server_resobs/0.asan.log*; \
+          fi
+          if ls `pwd`/data/cloud_server/0.tsan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/cloud_server/0.tsan.log*; \
+          fi
+          if ls `pwd`/data/cloud_server_resobs/0.tsan.log* 1> /dev/null 2>&1; then \
+            sudo cat `pwd`/data/cloud_server_resobs/0.tsan.log*; \
           fi
 
       - name: Remove cloud server container
-        run: docker rm -f ${{ inputs.name }}
+        if: ${{ always() }}
+        run: |
+          docker rm -f ${{ inputs.name }}
+          docker rm -f ${{ inputs.name }}-resobs
