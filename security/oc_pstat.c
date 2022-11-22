@@ -135,6 +135,7 @@ close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
+  oc_set_drop_commands(device, false);
   if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
     coap_status_code = COAP_NO_ERROR;
   }
@@ -143,7 +144,7 @@ close_all_tls_sessions(void *data)
 
 static bool
 oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
-                      bool self_reset)
+                      bool close_all_tls_connections_immediately)
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   oc_sec_acl_t *acl = oc_sec_get_acl(device);
@@ -209,13 +210,21 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     coap_status_t status_code = CLOSE_ALL_TLS_SESSIONS;
+    if (close_all_tls_connections_immediately) {
+      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
+      oc_close_all_tls_sessions_for_device(device);
+      status_code = COAP_NO_ERROR;
+      oc_set_drop_commands(device, false);
+    } else if (!from_storage) {
+      // The request comes from oc_reset_v1 or API, so we must close all TLS
+      // after a delay so the response can be sent.
+      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
+      oc_set_delayed_callback((void *)device, close_all_tls_sessions, 2);
+      // Don't accept any commands GET, POST, PUT, DELETE until all TLS sessions
+      // are closed
+      oc_set_drop_commands(device, true);
+    }
     if (fp->cb != NULL) {
-      if (self_reset) {
-        oc_close_all_tls_sessions_for_device(device);
-        status_code = COAP_NO_ERROR;
-      } else {
-        oc_set_delayed_callback((void *)device, close_all_tls_sessions, 0);
-      }
       memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
       OC_DBG("oc_pstat: invoking the factory presets callback");
       fp->cb(device, fp->data);
@@ -625,10 +634,11 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 bool
-oc_pstat_reset_device(size_t device, bool self_reset)
+oc_pstat_reset_device(size_t device, bool close_all_tls_connections_immediately)
 {
   oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
-  bool ret = oc_pstat_handle_state(&ps, device, false, self_reset);
+  bool ret = oc_pstat_handle_state(&ps, device, false,
+                                   close_all_tls_connections_immediately);
   oc_sec_dump_pstat(device);
   return ret;
 }
@@ -639,12 +649,24 @@ oc_reset_device(size_t device)
   oc_pstat_reset_device(device, true);
 }
 
+bool
+oc_reset_device_v1(size_t device, bool close_all_tls_connections_immediately)
+{
+  return oc_pstat_reset_device(device, close_all_tls_connections_immediately);
+}
+
 void
-oc_reset()
+oc_reset_v1(bool close_all_tls_connections_immediately)
 {
   size_t device;
   for (device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_pstat_reset_device(device, true);
+    oc_reset_device_v1(device, close_all_tls_connections_immediately);
   }
+}
+
+void
+oc_reset()
+{
+  oc_reset_v1(true);
 }
 #endif /* OC_SECURITY */

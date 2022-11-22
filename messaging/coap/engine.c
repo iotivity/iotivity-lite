@@ -165,20 +165,6 @@ coap_audit_log(oc_message_t *msg)
 }
 #endif /* OC_SECURITY */
 
-#ifdef OC_SECURITY
-static oc_event_callback_retval_t
-close_all_tls_sessions(void *data)
-{
-  size_t device = (size_t)data;
-  oc_close_all_tls_sessions_for_device(device);
-  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
-    coap_status_code = COAP_NO_ERROR;
-  }
-  oc_set_drop_commands(device, false);
-  return OC_EVENT_DONE;
-}
-#endif /* OC_SECURITY */
-
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -923,14 +909,6 @@ send_message:
       coap_clear_transaction(transaction);
     }
   }
-
-#ifdef OC_SECURITY
-  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
-    oc_set_drop_commands(msg->endpoint.device, true);
-    oc_set_delayed_callback((void *)msg->endpoint.device,
-                            &close_all_tls_sessions, 2);
-  }
-#endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers(false);

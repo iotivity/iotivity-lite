@@ -549,7 +549,8 @@ bool oc_get_con_res_announced(void);
 void oc_set_con_res_announced(bool announce);
 
 /**
- * Reset all logical devices to the RFOTM state
+ * Reset all logical devices to the RFOTM state and close all opened TLS
+ * connections immediately.
  *
  * All devices will be placed in the 'Ready For Ownership Transfer Mode'
  * (RFOTM). This is the initial startup state for for all devices that have not
@@ -560,11 +561,34 @@ void oc_set_con_res_announced(bool announce);
  *       does not reset any other device settings.
  *
  * @note Use of this function requires building with OC_SECURITY defined.
+ * @note A device connected to a cloud is not unregistered from the cloud since
+ * the connection has been closed immediately.
  */
 void oc_reset();
 
 /**
- * Reset logical device to the RFOTM state
+ * Reset all logical devices to the RFOTM state.
+ *
+ * All devices will be placed in the 'Ready For Ownership Transfer Mode'
+ * (RFOTM). This is the initial startup state for for all devices that have not
+ * yet been onboarded.  After this call all devices will need to be onboarded
+ * and provisioned again.
+ *
+ * @note The function oc_reset_v1() deals only with security and provisioning it
+ *       does not reset any other device settings.
+ *
+ * @note Use of this function requires building with OC_SECURITY defined.
+ *
+ * @param[in] close_all_tls_connections_immediately true to close all TLS
+ *            connections immediately, false to close them after the 2 second
+ * delay. Set to false if the device is connected to a cloud and you want to
+ * unregister it.
+ */
+void oc_reset_v1(bool close_all_tls_connections_immediately);
+
+/**
+ * Reset logical device to the RFOTM state and close all opened TLS connections
+ * immediately.
  *
  * The device will be placed in the 'Ready For Ownership Transfer Mode' (RFOTM).
  * This is the initial state startup state for for all devices that have not yet
@@ -580,6 +604,29 @@ void oc_reset();
  * @param[in] device index of the logical device to reset
  */
 void oc_reset_device(size_t device);
+
+/**
+ * Reset logical device to the RFOTM state.
+ *
+ * The device will be placed in the 'Ready For Ownership Transfer Mode' (RFOTM).
+ * This is the initial state startup state for for all devices that have not yet
+ * been onboarded.  After this call the device will need to be onboarded and
+ * provisioned again.
+ *
+ * @note The function oc_reset_device() deals only with security and
+ *       provisioning it does not reset any other device settings.
+ *
+ * @note Use of this function requires building the stack with OC_SECURITY
+ *       defined.
+ *
+ * @param[in] device index of the logical device to reset
+ * @param[in] close_all_tls_connections_immediately true to close all TLS
+ *            connections immediately, false to close them after the 2 second
+ * delay. Set to false if the device is connected to a cloud and you want to
+ * unregister it.
+ */
+bool oc_reset_device_v1(size_t device,
+                        bool close_all_tls_connections_immediately);
 
 /**
  * Callback invoked when the "owned" property of the doxm is changed

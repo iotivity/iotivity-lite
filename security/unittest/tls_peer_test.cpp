@@ -59,12 +59,24 @@ createPeer(const std::string &addr, int role)
 }
 
 class TestTLSPeer : public testing::Test {
+#if defined(_WIN32)
+#include <windows.h>
+  static CRITICAL_SECTION s_mutex;
+  static CONDITION_VARIABLE s_cv;
+#else
+#include <pthread.h>
+  static pthread_mutex_t s_mutex;
+  static pthread_cond_t s_cv;
+#endif
+
 protected:
   static void SetUpTestCase()
   {
 #ifdef _WIN32
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
+    InitializeCriticalSection(&s_mutex);
+    InitializeConditionVariable(&s_cv);
 #endif /* _WIN32 */
   }
 
@@ -109,7 +121,79 @@ public:
 
   static void signalEventLoop(void)
   {
-    // no-op for tests
+#ifdef _WIN32
+    WakeConditionVariable(&s_cv);
+#else
+    pthread_cond_signal(&s_cv);
+#endif
+  }
+
+  static oc_event_callback_retval_t quitEvent(void *data)
+  {
+    auto quit = (bool *)data;
+    *quit = true;
+    return OC_EVENT_DONE;
+  }
+
+  static void mutex_lock(void)
+  {
+#ifdef _WIN32
+    EnterCriticalSection(&s_mutex);
+#else
+    pthread_mutex_lock(&s_mutex);
+#endif
+  }
+
+  static void mutex_unlock(void)
+  {
+#ifdef _WIN32
+    LeaveCriticalSection(&s_mutex);
+#else
+    pthread_mutex_unlock(&s_mutex);
+#endif
+  }
+
+  static void cond_wait(oc_clock_time_t next_event)
+  {
+#ifdef _WIN32
+    if (next_event == 0) {
+      SleepConditionVariableCS(&s_cv, &s_mutex, INFINITE);
+    } else {
+      oc_clock_time_t now = oc_clock_time();
+      if (now < next_event) {
+        SleepConditionVariableCS(
+          &s_cv, &s_mutex,
+          (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+#else
+    if (next_event == 0) {
+      pthread_cond_wait(&s_cv, &s_mutex);
+    } else {
+      struct timespec ts;
+      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec =
+        long((next_event % OC_CLOCK_SECOND) * 1.e09) / OC_CLOCK_SECOND;
+      pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
+    }
+#endif
+  }
+
+  static void poolEvents(uint16_t seconds)
+  {
+    bool quit = false;
+    oc_set_delayed_callback(&quit, quitEvent, seconds);
+
+    while (true) {
+      mutex_lock();
+      oc_clock_time_t next_event = oc_main_poll();
+      if (quit) {
+        mutex_unlock();
+        break;
+      }
+      cond_wait(next_event);
+      mutex_unlock();
+    }
   }
 
   static oc_endpoint_t getEndpoint(const std::string &ep)
@@ -177,6 +261,13 @@ public:
 };
 
 oc_handler_t TestTLSPeer::s_handler{};
+#ifdef _WIN32
+CRITICAL_SECTION TestTLSPeer::s_mutex;
+CONDITION_VARIABLE TestTLSPeer::s_cv;
+#else
+pthread_mutex_t TestTLSPeer::s_mutex;
+pthread_cond_t TestTLSPeer::s_cv;
+#endif
 
 TEST_F(TestTLSPeer, CountPeers)
 {
@@ -252,6 +343,56 @@ TEST_F(TestTLSPeer, ClearPeers)
   ASSERT_EQ(servers.size(), oc_tls_num_peers(deviceId_));
 
   oc_tls_close_peers(nullptr, nullptr);
+  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
+}
+
+TEST_F(TestTLSPeer, ResetDeviceImmediately)
+{
+  auto clients = getClients();
+  auto servers = getServers();
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  size_t max_peers = OC_MAX_TLS_PEERS;
+  if (clients.size() > max_peers) {
+    clients.resize(max_peers);
+  }
+  max_peers -= clients.size();
+  if (servers.size() > max_peers) {
+    servers.resize(max_peers);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  addPeers(clients);
+  addPeers(servers);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
+  oc_reset();
+  poolEvents(1);
+  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
+}
+
+TEST_F(TestTLSPeer, ResetDevice)
+{
+  auto clients = getClients();
+  auto servers = getServers();
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  size_t max_peers = OC_MAX_TLS_PEERS;
+  if (clients.size() > max_peers) {
+    clients.resize(max_peers);
+  }
+  max_peers -= clients.size();
+  if (servers.size() > max_peers) {
+    servers.resize(max_peers);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  addPeers(clients);
+  addPeers(servers);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
+  oc_reset_v1(false);
+  poolEvents(1);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
+  poolEvents(2);
   ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
 }
 
