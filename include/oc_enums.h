@@ -223,6 +223,20 @@ const char *oc_enum_locn_to_str(oc_locn_t locn);
  */
 oc_locn_t oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined);
 
+/**
+ * @brief ACE permissions, as bitmap
+ *
+ */
+typedef enum {
+  OC_PERM_NONE = 0,          ///< no permissions
+  OC_PERM_CREATE = (1 << 0), ///< Create permission is granted
+  OC_PERM_RETRIEVE =
+    (1 << 1),                ///< Read, observe, discover permission is granted
+  OC_PERM_UPDATE = (1 << 2), ///< Write, update permission is granted
+  OC_PERM_DELETE = (1 << 3), ///< Delete permission is granted
+  OC_PERM_NOTIFY = (1 << 4)  ///< Notify permission is granted
+} oc_ace_permissions_t;
+
 #ifdef __cplusplus
 }
 #endif

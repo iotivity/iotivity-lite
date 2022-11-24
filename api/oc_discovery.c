@@ -59,6 +59,45 @@ clf_add_line_size_to_buffer(const char *line, int len)
 }
 #endif /* OC_WKCORE */
 
+bool
+oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
+                              const oc_resource_t *resource,
+                              const oc_endpoint_t *request_origin,
+                              size_t device_index, bool owned_for_SVRs)
+{
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  if (((oc_sec_get_pstat(device_index))->s == OC_DOS_RFOTM) &&
+      (resource->properties & OC_ACCESS_IN_RFOTM)) {
+    return false;
+  }
+#else  /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  (void)device_index;
+#endif /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  /*  If this resource has been explicitly tagged as SECURE on the
+   *  application layer, skip all coap:// endpoints, and only include
+   *  coaps:// endpoints.
+   *  Also, exclude all endpoints that are not associated with the interface
+   *  through which this request arrived. This is achieved by checking if the
+   *  interface index matches.
+   */
+  if (((resource->properties & OC_SECURE
+#ifdef OC_SECURITY
+        || owned_for_SVRs
+#endif /* OC_SECURITY */
+        ) &&
+       !(ep->flags & SECURED)) ||
+      (request_origin && request_origin->interface_index != -1 &&
+       request_origin->interface_index != ep->interface_index)) {
+    return true;
+  }
+  if (request_origin &&
+      (((request_origin->flags & IPV4) && (ep->flags & IPV6)) ||
+       ((request_origin->flags & IPV6) && (ep->flags & IPV4)))) {
+    return true;
+  }
+  return false;
+}
+
 static bool
 filter_resource(const oc_resource_t *resource, const oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
@@ -70,13 +109,6 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
   if (!(resource->properties & OC_DISCOVERABLE)) {
     return false;
   }
-
-#ifdef OC_SECURITY
-  bool owned_for_SVRs =
-    (oc_core_is_SVR(resource, device_index) &&
-     (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
-      oc_tls_num_peers(device_index) != 0));
-#endif /* OC_SECURITY */
 
   oc_rep_start_object(links, link);
 
@@ -117,28 +149,20 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
   // eps
   oc_rep_set_array(link, eps);
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(device_index);
-  while (eps != NULL) {
-    /*  If this resource has been explicitly tagged as SECURE on the
-     *  application layer, skip all coap:// endpoints, and only include
-     *  coaps:// endpoints.
-     *  Also, exclude all endpoints that are not associated with the interface
-     *  through which this request arrived. This is achieved by checking if the
-     *  interface index matches.
-     */
-    if (((resource->properties & OC_SECURE
+
 #ifdef OC_SECURITY
-          || owned_for_SVRs
+  bool owned_for_SVRs =
+    (oc_core_is_SVR(resource, device_index) &&
+     (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
+      oc_tls_num_peers(device_index) != 0));
+#else  /* OC_SECURITY */
+  bool owned_for_SVRs = false;
 #endif /* OC_SECURITY */
-          ) &&
-         !(eps->flags & SECURED)) ||
-        (request->origin && request->origin->interface_index != -1 &&
-         request->origin->interface_index != eps->interface_index)) {
-      goto next_eps;
-    }
-    if (request->origin &&
-        (((request->origin->flags & IPV4) && (eps->flags & IPV6)) ||
-         ((request->origin->flags & IPV6) && (eps->flags & IPV4)))) {
-      goto next_eps;
+
+  for (; eps != NULL; eps = eps->next) {
+    if (oc_filter_out_ep_for_resource(eps, resource, request->origin,
+                                      device_index, owned_for_SVRs)) {
+      continue;
     }
     oc_rep_object_array_start_item(eps);
     oc_string_t ep;
@@ -149,8 +173,6 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
     if (oc_core_get_latency() > 0)
       oc_rep_set_uint(eps, lat, oc_core_get_latency());
     oc_rep_object_array_end_item(eps);
-  next_eps:
-    eps = eps->next;
   }
 #ifdef OC_OSCORE
   if (resource->properties & OC_SECURE_MCAST) {
@@ -379,9 +401,20 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
   // port, x.org.iotivity.tcp and x.org.iotivity.tls
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(resource->device);
-  while (eps != NULL) {
-    if (resource->properties & OC_SECURE && !(eps->flags & SECURED)) {
-      goto next_eps;
+  size_t device_index = resource->device;
+#ifdef OC_SECURITY
+  bool owned_for_SVRs =
+    (oc_core_is_SVR(resource, device_index) &&
+     (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
+      oc_tls_num_peers(device_index) != 0));
+#else  /* OC_SECURITY */
+  bool owned_for_SVRs = false;
+#endif /* OC_SECURITY */
+
+  for (; eps != NULL; eps = eps->next) {
+    if (oc_filter_out_ep_for_resource(eps, resource, request->origin,
+                                      device_index, owned_for_SVRs)) {
+      continue;
     }
 
 #ifdef OC_TCP
@@ -417,8 +450,6 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
       }
 #endif /* OC_IPV4 */
     }
-  next_eps:
-    eps = eps->next;
   }
 
   oc_rep_close_object(res, p);

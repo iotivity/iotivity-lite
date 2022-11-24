@@ -23,19 +23,19 @@ jobs:
         include:
           - name: cloud-server
             file: docker/apps/Dockerfile.cloud-server
-            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
             type: Release
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
             type: Debug
           - name: cloud-server-discovery-resource-observable
             file: docker/apps/Dockerfile.cloud-server
-            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
             type: Release
           - name: cloud-server-discovery-resource-observable-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+            args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
             type: Debug
     permissions:
       contents: read
