@@ -62,20 +62,6 @@ typedef enum {
 } oc_ace_wildcard_t;
 
 /**
- * @brief ACE permissions, as bitmap
- *
- */
-typedef enum {
-  OC_PERM_NONE = 0,          ///< no permissions
-  OC_PERM_CREATE = (1 << 0), ///< Create permission is granted
-  OC_PERM_RETRIEVE =
-    (1 << 1),                ///< Read, observe, discover permission is granted
-  OC_PERM_UPDATE = (1 << 2), ///< Write, update permission is granted
-  OC_PERM_DELETE = (1 << 3), ///< Delete permission is granted
-  OC_PERM_NOTIFY = (1 << 4)  ///< Notify permission is granted
-} oc_ace_permissions_t;
-
-/**
  * @brief ACE subject
  *
  */
@@ -237,6 +223,17 @@ OC_API
 int oc_sec_apply_acl(oc_rep_t *rep, size_t device,
                      oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                      void *on_apply_ace_data);
+
+/**
+ * Specify if a resource is accessible in RFOTM state.
+ *
+ * @param[in] resource to specify as accessible or non-accessible in RFOTM state
+ * @param[in] state if true the resource will be accessible in RFOTM state
+ * @param[in] permission the permission of the resource in RFOTM state
+ */
+OC_API
+void oc_resource_set_access_in_RFOTM(oc_resource_t *resource, bool state,
+                                     oc_ace_permissions_t permission);
 
 #ifdef __cplusplus
 }

@@ -54,9 +54,11 @@ typedef enum {
 #ifdef OC_HAS_FEATURE_PUSH
   OC_PUSHABLE = (1 << 2), ///< pushable
 #endif
-  OC_SECURE = (1 << 4),      ///< secure
-  OC_PERIODIC = (1 << 6),    ///< periodiacal update
-  OC_SECURE_MCAST = (1 << 8) ///< secure multicast (oscore)
+  OC_SECURE = (1 << 4),         ///< secure
+  OC_PERIODIC = (1 << 6),       ///< periodiacal update
+  OC_SECURE_MCAST = (1 << 8),   ///< secure multicast (oscore)
+  OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
+                                ///< ownership transfer method(RFOTM) state
 } oc_resource_properties_t;
 
 /**
@@ -334,6 +336,8 @@ struct oc_resource_s
 #endif
 #endif                             /* OC_COLLECTIONS */
   uint16_t observe_period_seconds; ///< observe period in seconds
+  oc_ace_permissions_t
+    anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 };
 
 typedef struct oc_link_s oc_link_t;

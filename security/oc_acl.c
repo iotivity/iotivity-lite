@@ -328,6 +328,34 @@ get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
   return permission;
 }
 
+static bool
+eval_access(oc_method_t method, uint16_t permission)
+{
+  if (permission != 0) {
+    switch (method) {
+    case OC_GET:
+      if ((permission & OC_PERM_RETRIEVE) || (permission & OC_PERM_NOTIFY)) {
+        return true;
+      }
+      break;
+    case OC_PUT:
+    case OC_POST:
+      if ((permission & OC_PERM_CREATE) || (permission & OC_PERM_UPDATE)) {
+        return true;
+      }
+      break;
+    case OC_DELETE:
+      if (permission & OC_PERM_DELETE) {
+        return true;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return false;
+}
+
 bool
 oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
                  oc_endpoint_t *endpoint)
@@ -357,6 +385,20 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
            "acess forbidden");
     return false;
   }
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  /* Allow access to resources in RFOTM mode if the feature is enabled and
+   * permission match the method. */
+  if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
+      (resource->properties & OC_ACCESS_IN_RFOTM) == OC_ACCESS_IN_RFOTM &&
+      eval_access(method, resource->anon_permission_in_rfotm)) {
+    OC_DBG("oc_sec_check_acl: access granted to %s via anon permission in "
+           "RFOTM state",
+           oc_string(resource->uri));
+    return true;
+  }
+#endif
+
   /* NCRs are accessible only in RFNOP */
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
     OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
@@ -586,29 +628,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       }
     } while (match);
   }
-  if (permission != 0) {
-    switch (method) {
-    case OC_GET:
-      if ((permission & OC_PERM_RETRIEVE) || (permission & OC_PERM_NOTIFY)) {
-        return true;
-      }
-      break;
-    case OC_PUT:
-    case OC_POST:
-      if ((permission & OC_PERM_CREATE) || (permission & OC_PERM_UPDATE)) {
-        return true;
-      }
-      break;
-    case OC_DELETE:
-      if (permission & OC_PERM_DELETE) {
-        return true;
-      }
-      break;
-    default:
-      break;
-    }
-  }
-  return false;
+  return eval_access(method, permission);
 }
 
 bool
@@ -1344,5 +1364,20 @@ get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 }
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+void
+oc_resource_set_access_in_RFOTM(oc_resource_t *resource, bool state,
+                                oc_ace_permissions_t permission)
+{
+  if (state) {
+    resource->properties |= OC_ACCESS_IN_RFOTM;
+    resource->anon_permission_in_rfotm = permission;
+    return;
+  }
+  resource->properties &= ~OC_ACCESS_IN_RFOTM;
+  resource->anon_permission_in_rfotm = OC_PERM_NONE;
+}
+#endif
 
 #endif /* OC_SECURITY */

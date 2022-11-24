@@ -18,6 +18,7 @@
 
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_acl_internal.h"
+#include "security/oc_pstat.h"
 #include "util/oc_list.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -161,5 +162,53 @@ TEST_F(TestAcl, oc_sec_acl_clear)
   oc_free_string(&subject.role.authority);
   oc_free_string(&subject.role.role);
 }
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+static const std::string kResourceURI = "/LightResourceURI";
+static const std::string kResourceName = "roomlights";
+
+static void
+onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+{
+  (void)request;
+  (void)iface_mask;
+  (void)user_data;
+}
+
+TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)
+{
+  oc_sec_pstat_init();
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device_id_);
+  EXPECT_NE(nullptr, pstat);
+  pstat->s = OC_DOS_RFOTM;
+  oc_resource_t *res =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+  oc_resource_set_discoverable(res, true);
+  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_access_in_RFOTM(res, true, OC_PERM_RETRIEVE);
+  bool add_check = oc_ri_add_resource(res);
+  EXPECT_EQ(true, add_check);
+
+  oc_endpoint_t endpoint;
+  memset(&endpoint, 0, sizeof(oc_endpoint_t));
+  EXPECT_EQ(true, oc_sec_check_acl(OC_GET, res, &endpoint));
+
+  EXPECT_EQ(false, oc_sec_check_acl(OC_POST, res, &endpoint));
+
+  oc_resource_set_access_in_RFOTM(res, false, OC_PERM_NONE);
+  EXPECT_EQ(false, oc_sec_check_acl(OC_GET, res, &endpoint));
+
+  oc_resource_set_access_in_RFOTM(res, true, OC_PERM_NONE);
+  EXPECT_EQ(false, oc_sec_check_acl(OC_GET, res, &endpoint));
+  EXPECT_EQ(false, oc_sec_check_acl(OC_POST, res, &endpoint));
+  EXPECT_EQ(false, oc_sec_check_acl(OC_PUT, res, &endpoint));
+  EXPECT_EQ(false, oc_sec_check_acl(OC_DELETE, res, &endpoint));
+  EXPECT_EQ(false, oc_sec_check_acl(OC_FETCH, res, &endpoint));
+
+  bool del_check = oc_ri_delete_resource(res);
+  EXPECT_EQ(true, del_check);
+  oc_sec_pstat_free();
+}
+#endif
 
 #endif /* OC_SECURITY */

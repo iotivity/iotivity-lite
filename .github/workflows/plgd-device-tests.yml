@@ -21,32 +21,46 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: cloud-server-debug
+          - name: cloud-server
             args: ""
-          - name: cloud-server-debug-asan
+          - name: cloud-server-asan
             args: "-DOC_ASAN_ENABLED=ON"
-          - name: cloud-server-debug-tsan
+          - name: cloud-server-tsan
             args: "-DOC_TSAN_ENABLED=ON"
 
-          - name: cloud-server-discovery-resource-observable-debug
+          - name: cloud-server-access-in-RFOTM
+            args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-asan-access-in-RFOTM
+            args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-tsan-access-in-RFOTM
+            args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+
+          - name: cloud-server-discovery-resource-observable
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-debug-asan
+          - name: cloud-server-discovery-resource-observable-asan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-debug-tsan
+          - name: cloud-server-discovery-resource-observable-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
-          - name: cloud-server-rep-realloc-debug
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-asan-access-in-RFOTM
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+
+          - name: cloud-server-rep-realloc
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          - name: cloud-server-rep-realloc-debug-asan
+          - name: cloud-server-rep-realloc-asan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-          - name: cloud-server-rep-realloc-debug-tsan
+          - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug
+          - name: cloud-server-discovery-resource-observable-rep-realloc
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-asan
+          - name: cloud-server-discovery-resource-observable-rep-realloc-asan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-debug-tsan
+          - name: cloud-server-discovery-resource-observable-rep-realloc-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml

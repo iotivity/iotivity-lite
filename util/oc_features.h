@@ -31,4 +31,8 @@
 #define OC_HAS_FEATURE_PUSH
 #endif
 
+#if defined(OC_SECURITY) && defined(OC_RESOURCE_ACCESS_IN_RFOTM)
+#define OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+#endif
+
 #endif /* OC_FEATURES_H */

@@ -20,6 +20,7 @@
 #include "messaging/coap/observe.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_discovery_internal.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "api/oc_resource_factory.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
@@ -690,19 +691,11 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
         oc_rep_set_array(links, eps);
         oc_endpoint_t *eps =
           oc_connectivity_get_endpoints(link->resource->device);
-        while (eps != NULL) {
-          /*  If this resource has been explicitly tagged as SECURE on the
-           *  application layer, skip all coap:// endpoints, and only include
-           *  coaps:// endpoints.
-           *  Also, exclude all endpoints that are not associated with the
-           * interface through which this request arrived. This is achieved
-           * by checking if the interface index matches.
-           */
-          if (((link->resource->properties & OC_SECURE) &&
-               !(eps->flags & SECURED)) ||
-              (request->origin && request->origin->interface_index != -1 &&
-               request->origin->interface_index != eps->interface_index)) {
-            goto next_eps;
+        for (; eps != NULL; eps = eps->next) {
+          if (oc_filter_out_ep_for_resource(eps, link->resource,
+                                            request->origin,
+                                            link->resource->device, false)) {
+            continue;
           }
           oc_rep_object_array_start_item(eps);
           oc_string_t ep;
@@ -711,8 +704,6 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
             oc_free_string(&ep);
           }
           oc_rep_object_array_end_item(eps);
-        next_eps:
-          eps = eps->next;
         }
         oc_rep_close_array(links, eps);
 
@@ -806,19 +797,10 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
       oc_rep_set_array(links, eps);
       oc_endpoint_t *eps =
         oc_connectivity_get_endpoints(link->resource->device);
-      while (eps != NULL) {
-        /* If this resource has been explicitly tagged as SECURE on the
-         * application layer, skip all coap:// endpoints, and only include
-         * coaps:// endpoints.
-         * Also, exclude all endpoints that are not associated with the
-         * interface through which this request arrived. This is achieved by
-         * checking if the interface index matches.
-         */
-        if (((link->resource->properties & OC_SECURE) &&
-             !(eps->flags & SECURED)) ||
-            (request->origin && request->origin->interface_index != -1 &&
-             request->origin->interface_index != eps->interface_index)) {
-          goto next_eps;
+      for (; eps != NULL; eps = eps->next) {
+        if (oc_filter_out_ep_for_resource(eps, link->resource, request->origin,
+                                          link->resource->device, false)) {
+          continue;
         }
         oc_rep_object_array_start_item(eps);
         oc_string_t ep;
@@ -827,8 +809,6 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
           oc_free_string(&ep);
         }
         oc_rep_object_array_end_item(eps);
-      next_eps:
-        eps = eps->next;
       }
       oc_rep_close_array(links, eps);
 

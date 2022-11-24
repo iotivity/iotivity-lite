@@ -20,6 +20,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
+#include "oc_acl.h"
 #include <inttypes.h>
 #include <signal.h>
 
@@ -290,6 +291,10 @@ register_lights(void)
     oc_resource_set_default_interface(res, OC_IF_RW);
     oc_resource_set_discoverable(res, true);
     oc_resource_set_observable(res, true);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    oc_resource_set_access_in_RFOTM(res, true,
+                                    OC_PERM_UPDATE | OC_PERM_RETRIEVE);
+#endif
     oc_resource_set_request_handler(res, OC_GET, get_handler, &lights[i]);
     oc_resource_set_request_handler(res, OC_POST, post_handler, &lights[i]);
     oc_cloud_add_resource(res);
