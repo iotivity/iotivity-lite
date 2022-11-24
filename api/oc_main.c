@@ -435,6 +435,9 @@ _oc_signal_event_loop(void)
 void
 oc_set_drop_commands(size_t device, bool drop)
 {
+  if (drop_commands == NULL) {
+    return;
+  }
   drop_commands[device] = drop;
 }
 

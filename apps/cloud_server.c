@@ -58,6 +58,7 @@ static void
 run(void)
 {
   while (quit != 1) {
+    EnterCriticalSection(&cs);
     oc_clock_time_t next_event = oc_main_poll();
     if (next_event == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
@@ -68,6 +69,7 @@ run(void)
           &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
       }
     }
+    LeaveCriticalSection(&cs);
   }
 }
 

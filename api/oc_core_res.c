@@ -25,6 +25,7 @@
 #include "oc_discovery.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
+#include "oc_main.h"
 #include "util/oc_atomic.h"
 
 #ifdef OC_SECURITY
@@ -439,6 +440,8 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   if (oc_connectivity_init(device_count) < 0) {
     oc_abort("error initializing connectivity for device");
   }
+
+  oc_set_drop_commands(device_count, false);
 
   return &oc_device_info[device_count];
 }
