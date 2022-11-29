@@ -14,6 +14,10 @@
 // limitations under the License.
 */
 
+/**
+ * @file
+ */
+
 #ifndef OC_EXPORT_H
 #define OC_EXPORT_H
 

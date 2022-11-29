@@ -397,7 +397,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
            oc_string(resource->uri));
     return true;
   }
-#endif
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
   /* NCRs are accessible only in RFNOP */
   if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
@@ -1378,6 +1378,6 @@ oc_resource_set_access_in_RFOTM(oc_resource_t *resource, bool state,
   resource->properties &= ~OC_ACCESS_IN_RFOTM;
   resource->anon_permission_in_rfotm = OC_PERM_NONE;
 }
-#endif
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #endif /* OC_SECURITY */

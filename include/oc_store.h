@@ -14,6 +14,10 @@
 // limitations under the License.
 */
 
+/**
+ * @file
+ */
+
 #ifndef OC_STORE_H
 #define OC_STORE_H
 

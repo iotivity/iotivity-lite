@@ -501,6 +501,8 @@ int oc_init_platform(const char *mfg_name,
  * }
  * ```
  *
+ * @param[in] pin random pin
+ * @param[in] pin_len length of the random pin
  * @param[in] data context pointer that comes from the oc_init_platform()
  *                 function
  *

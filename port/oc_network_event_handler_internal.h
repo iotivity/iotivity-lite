@@ -16,6 +16,10 @@
  *
  ****************************************************************************/
 
+/**
+ * @file
+ */
+
 #ifndef OC_NETWORK_EVENT_HANDLER_INTERNAL_H
 #define OC_NETWORK_EVENT_HANDLER_INTERNAL_H
 
