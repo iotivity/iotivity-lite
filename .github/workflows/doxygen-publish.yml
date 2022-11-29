@@ -13,7 +13,7 @@ on:
 jobs:
   doxygen-publish:
     runs-on: ubuntu-22.04
-    if: ${{ github.event.pull_request.merged }}
+    if: (github.event_name == 'pull_request' && github.event.pull_request.merged) || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
