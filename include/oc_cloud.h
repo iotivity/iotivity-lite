@@ -81,7 +81,9 @@ struct oc_cloud_context_t;
 
 /**
   @brief A function pointer for handling the cloud status.
+  @param ctx Cloud context (cannot be NULL)
   @param status Current status of the cloud.
+  @param user_data User data
 */
 typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
                               oc_cloud_status_t status, void *user_data);

@@ -209,6 +209,6 @@ TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)
   EXPECT_EQ(true, del_check);
   oc_sec_pstat_free();
 }
-#endif
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #endif /* OC_SECURITY */
