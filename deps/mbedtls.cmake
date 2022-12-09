@@ -13,12 +13,7 @@ endif()
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
-if(USE_SHARED_MBEDTLS_LIBRARY)
-    # when using mbedtls dynamic library make install needs to install .so files to /usr/lib and headers to /usr/include
-    add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
-else()
-    add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls EXCLUDE_FROM_ALL)
-endif()
+add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 
 set(COMPILABLE_TYPES STATIC_LIBRARY MODULE_LIBRARY SHARED_LIBRARY OBJECT_LIBRARY EXECUTABLE)
 
