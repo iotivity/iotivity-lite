@@ -20,7 +20,8 @@ endif()
 
 ######## Build configuration options ########
 set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
-set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and MBedtls.")
+set(BUILD_MBEDTLS ON CACHE BOOL "Build Mbed TLS library. When set to OFF, the Mbed TLS library with the OCF patches has to be provided.")
+set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and Mbed TLS.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
 set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
@@ -161,7 +162,9 @@ include(tools/clang-tidy.cmake)
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
-set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM" "__OC_RANDOM")
+if(BUILD_MBEDTLS)
+    set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM" "__OC_RANDOM")
+endif()
 
 if(OC_PUSH_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PUSH")
@@ -179,7 +182,9 @@ if (OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED)
 endif()
 if(OC_DYNAMIC_ALLOCATION_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DYNAMIC_ALLOCATION")
+    endif()
 endif()
 
 if(OC_SECURITY_ENABLED)
@@ -188,12 +193,16 @@ endif()
 
 if(OC_PKI_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PKI")
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_PKI")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_PKI")
+    endif()
 endif()
 
 if(OC_DEBUG_ENABLED)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DEBUG")
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DEBUG")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DEBUG")
+    endif()
     list(APPEND TEST_COMPILE_DEFINITIONS "OC_DEBUG")
 endif()
 
@@ -239,7 +248,9 @@ endif()
 
 if(OC_OSCORE_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_OSCORE")
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_OSCORE")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_OSCORE")
+    endif()
 endif()
 
 if(OC_IPV4_ENABLED)
@@ -258,7 +269,9 @@ endif()
 if(MINGW)
     # Windows Vista or later
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
+    endif()
 endif()
 
 if(MSVC)
@@ -356,7 +369,23 @@ endif()
 include(deps/tinycbor.cmake)
 
 if(OC_SECURITY_ENABLED)
-    include(deps/mbedtls.cmake)
+    if(BUILD_MBEDTLS)
+        include(deps/mbedtls.cmake)
+        set(MBEDTLS_DEP mbedtls)
+    else()
+        find_package(MbedTLS REQUIRED)
+        # Check that the Mbed TLS library is patched
+        include(CheckSymbolExists)
+        get_target_property(mbedtls_INTERFACE_INCLUDE_DIRECTORIES MbedTLS::mbedtls INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(mbedtls_INTERFACE_LINK_LIBRARIES MbedTLS::mbedtls INTERFACE_LINK_LIBRARIES)
+        set(CMAKE_REQUIRED_INCLUDES ${mbedtls_INTERFACE_INCLUDE_DIRECTORIES})
+        set(CMAKE_REQUIRED_LIBRARIES ${mbedtls_INTERFACE_LINK_LIBRARIES})
+        check_symbol_exists(mbedtls_x509write_crt_set_subject_alt_names "mbedtls/x509_crt.h" MBEDTLS_PATCHED)
+        if(NOT MBEDTLS_PATCHED)
+            message(FATAL_ERROR "Detected Mbed TLS library is not patched!")
+        endif()
+        set(MBEDTLS_DEP MbedTLS::mbedtls)
+    endif()
 endif()
 
 # enable clang-tidy for iotivity targets
@@ -373,7 +402,7 @@ target_compile_options(client-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-obj PRIVATE mbedtls)
+    target_link_libraries(client-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
 add_library(server-obj OBJECT ${SERVER_SRC})
@@ -382,7 +411,7 @@ target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(server-obj PRIVATE mbedtls)
+    target_link_libraries(server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
@@ -391,7 +420,7 @@ target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-server-obj PRIVATE mbedtls)
+    target_link_libraries(client-server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
 if(OC_CLOUD_ENABLED)
@@ -401,7 +430,7 @@ if(OC_CLOUD_ENABLED)
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
     if(OC_SECURITY_ENABLED)
-        target_link_libraries(cloud-obj PRIVATE mbedtls)
+        target_link_libraries(cloud-obj PRIVATE ${MBEDTLS_DEP})
     endif()
 endif()
 
@@ -413,7 +442,7 @@ set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(python-obj PRIVATE mbedtls)
+    target_link_libraries(python-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
 # ####### Compose static and shared libraries ########
@@ -439,7 +468,7 @@ target_include_directories(client-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-static PUBLIC mbedtls)
+    target_link_libraries(client-static PUBLIC ${MBEDTLS_DEP})
 endif()
 
 set_target_properties(client-static PROPERTIES
@@ -464,7 +493,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_link_libraries(client-shared PUBLIC mbedtls)
+        target_link_libraries(client-shared PUBLIC ${MBEDTLS_DEP})
     endif()
 
     set_target_properties(client-shared PROPERTIES
@@ -496,7 +525,7 @@ target_include_directories(server-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(server-static PUBLIC mbedtls)
+    target_link_libraries(server-static PUBLIC ${MBEDTLS_DEP})
 endif()
 
 set_target_properties(server-static PROPERTIES
@@ -521,7 +550,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_link_libraries(server-shared PUBLIC mbedtls)
+        target_link_libraries(server-shared PUBLIC ${MBEDTLS_DEP})
     endif()
 
     set_target_properties(server-shared PROPERTIES
@@ -557,7 +586,7 @@ target_include_directories(client-server-static PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-server-static PUBLIC mbedtls)
+    target_link_libraries(client-server-static PUBLIC ${MBEDTLS_DEP})
 endif()
 
 if(OC_CLOUD_ENABLED)
@@ -591,7 +620,7 @@ if(NOT MSVC)
     )
 
     if(OC_SECURITY_ENABLED)
-        target_link_libraries(client-server-shared PUBLIC mbedtls)
+        target_link_libraries(client-server-shared PUBLIC ${MBEDTLS_DEP})
     endif()
 
     if(OC_CLOUD_ENABLED)
@@ -625,7 +654,7 @@ target_include_directories(client-python-shared PUBLIC
 )
 
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-python-shared PUBLIC mbedtls)
+    target_link_libraries(client-python-shared PUBLIC ${MBEDTLS_DEP})
 endif()
 
 set_target_properties(client-python-shared PROPERTIES
@@ -673,7 +702,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
             target_include_directories(${TESTNAME} PRIVATE
                 ${PROJECT_SOURCE_DIR}/security
             )
-            list(APPEND TEST_LINK_LIBS mbedtls)
+            list(APPEND TEST_LINK_LIBS ${MBEDTLS_DEP})
         endif()
 
         if(OC_CLOUD_ENABLED)
