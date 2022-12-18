@@ -82,8 +82,23 @@ const char *oc_swupdate_get_new_version(const oc_swupdate_t *ctx);
  */
 oc_swupdate_action_t oc_swupdate_get_action(const oc_swupdate_t *ctx);
 
-/** Convert action to string representation */
+/**
+ * @brief Convert action to string representation
+ *
+ * @param action action to convert
+ * @return NULL on failure
+ * @return string representation on success
+ */
 const char *oc_swupdate_action_to_str(oc_swupdate_action_t action);
+
+/**
+ * @brief Convert string to oc_swupdate_action_t
+ *
+ * @param action string to convert (cannot be NULL)
+ * @return -1 on failure
+ * @return oc_swupdate_action_t on success
+ */
+int oc_swupdate_action_from_str(const char *action);
 
 /**
  * @brief Get current update state
@@ -93,8 +108,23 @@ const char *oc_swupdate_action_to_str(oc_swupdate_action_t action);
  */
 oc_swupdate_state_t oc_swupdate_get_state(const oc_swupdate_t *ctx);
 
-/** Convert state to string representation */
+/**
+ * @brief Convert state to string representation
+ *
+ * @param state state to convert
+ * @return NULL on failure
+ * @return string representation on success
+ */
 const char *oc_swupdate_state_to_str(oc_swupdate_state_t state);
+
+/**
+ * @brief Convert string to oc_swupdate_state_t
+ *
+ * @param state a string (cannot be NULL)
+ * @return -1 on failure
+ * @return oc_swupdate_state_t on success
+ */
+int oc_swupdate_state_from_str(const char *state);
 
 /* Internal interface to swupdate resource used for handling sw update
  * requests via pstat */

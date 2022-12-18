@@ -59,6 +59,17 @@ static oc_swupdate_t *g_sw;
 static oc_swupdate_t g_sw[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#define OC_SWUPDATE_IDLE_STR "idle"
+#define OC_SWUPDATE_ISAC_STR "isac"
+#define OC_SWUPDATE_ISVV_STR "isvv"
+#define OC_SWUPDATE_UPGRADE_STR "upgrade"
+
+#define OC_SWUPDATE_STATE_IDLE_STR "idle"
+#define OC_SWUPDATE_STATE_NSA_STR "nsa"
+#define OC_SWUPDATE_STATE_SVV_STR "svv"
+#define OC_SWUPDATE_STATE_SVA_STR "sva"
+#define OC_SWUPDATE_STATE_UPGRADING_STR "upgrading"
+
 #define OC_SWU_PROP_LASTUPDATE "lastupdate"
 #define OC_SWU_PROP_NEWVERSION "nv"
 #define OC_SWU_PROP_PACKAGEURL "purl"
@@ -121,15 +132,38 @@ oc_swupdate_action_to_str(oc_swupdate_action_t action)
 {
   switch (action) {
   case OC_SWUPDATE_IDLE:
-    return "idle";
+    return OC_SWUPDATE_IDLE_STR;
   case OC_SWUPDATE_ISAC:
-    return "isac";
+    return OC_SWUPDATE_ISAC_STR;
   case OC_SWUPDATE_ISVV:
-    return "isvv";
+    return OC_SWUPDATE_ISVV_STR;
   case OC_SWUPDATE_UPGRADE:
-    return "upgrade";
+    return OC_SWUPDATE_UPGRADE_STR;
   }
   return NULL;
+}
+
+int
+oc_swupdate_action_from_str(const char *action)
+{
+  size_t len = strlen(action);
+  if ((len == sizeof(OC_SWUPDATE_IDLE_STR) - 1) &&
+      memcmp(action, OC_SWUPDATE_IDLE_STR, len) == 0) {
+    return OC_SWUPDATE_IDLE;
+  }
+  if ((len == sizeof(OC_SWUPDATE_ISAC_STR) - 1) &&
+      memcmp(action, OC_SWUPDATE_ISAC_STR, len) == 0) {
+    return OC_SWUPDATE_ISAC;
+  }
+  if ((len == sizeof(OC_SWUPDATE_ISVV_STR) - 1) &&
+      memcmp(action, OC_SWUPDATE_ISVV_STR, len) == 0) {
+    return OC_SWUPDATE_ISVV;
+  }
+  if ((len == sizeof(OC_SWUPDATE_UPGRADE_STR) - 1) &&
+      memcmp(action, OC_SWUPDATE_UPGRADE_STR, len) == 0) {
+    return OC_SWUPDATE_UPGRADE;
+  }
+  return -1;
 }
 
 const char *
@@ -137,58 +171,44 @@ oc_swupdate_state_to_str(oc_swupdate_state_t state)
 {
   switch (state) {
   case OC_SWUPDATE_STATE_IDLE:
-    return "idle";
+    return OC_SWUPDATE_STATE_IDLE_STR;
   case OC_SWUPDATE_STATE_NSA:
-    return "nsa";
+    return OC_SWUPDATE_STATE_NSA_STR;
   case OC_SWUPDATE_STATE_SVV:
-    return "svv";
+    return OC_SWUPDATE_STATE_SVV_STR;
   case OC_SWUPDATE_STATE_SVA:
-    return "sva";
+    return OC_SWUPDATE_STATE_SVA_STR;
   case OC_SWUPDATE_STATE_UPGRADING:
-    return "upgrading";
+    return OC_SWUPDATE_STATE_UPGRADING_STR;
   }
   return NULL;
 }
 
-static oc_swupdate_state_t
-str_to_state(const char *state)
+int
+oc_swupdate_state_from_str(const char *state)
 {
   size_t len = strlen(state);
-  if (len == 4 && memcmp(state, "idle", 4) == 0) {
+  if ((len == sizeof(OC_SWUPDATE_STATE_IDLE_STR) - 1) &&
+      memcmp(state, OC_SWUPDATE_STATE_IDLE_STR, len) == 0) {
     return OC_SWUPDATE_STATE_IDLE;
   }
-  if (len == 3 && memcmp(state, "nsa", 3) == 0) {
+  if ((len == sizeof(OC_SWUPDATE_STATE_NSA_STR) - 1) &&
+      memcmp(state, OC_SWUPDATE_STATE_NSA_STR, len) == 0) {
     return OC_SWUPDATE_STATE_NSA;
   }
-  if (len == 3 && memcmp(state, "svv", 3) == 0) {
+  if ((len == sizeof(OC_SWUPDATE_STATE_SVV_STR) - 1) &&
+      memcmp(state, OC_SWUPDATE_STATE_SVV_STR, len) == 0) {
     return OC_SWUPDATE_STATE_SVV;
   }
-  if (len == 3 && memcmp(state, "sva", 3) == 0) {
+  if ((len == sizeof(OC_SWUPDATE_STATE_SVA_STR) - 1) &&
+      memcmp(state, OC_SWUPDATE_STATE_SVA_STR, len) == 0) {
     return OC_SWUPDATE_STATE_SVA;
   }
-  if (len == 9 && memcmp(state, "upgrading", 9) == 0) {
+  if ((len == sizeof(OC_SWUPDATE_STATE_UPGRADING_STR) - 1) &&
+      memcmp(state, OC_SWUPDATE_STATE_UPGRADING_STR, len) == 0) {
     return OC_SWUPDATE_STATE_UPGRADING;
   }
-  return OC_SWUPDATE_STATE_UPGRADING + 1;
-}
-
-static oc_swupdate_action_t
-str_to_action(const char *action)
-{
-  size_t len = strlen(action);
-  if (len == 4 && memcmp(action, "idle", 4) == 0) {
-    return OC_SWUPDATE_IDLE;
-  }
-  if (len == 4 && memcmp(action, "isac", 4) == 0) {
-    return OC_SWUPDATE_ISAC;
-  }
-  if (len == 4 && memcmp(action, "isvv", 4) == 0) {
-    return OC_SWUPDATE_ISVV;
-  }
-  if (len == 7 && memcmp(action, "upgrade", 7) == 0) {
-    return OC_SWUPDATE_UPGRADE;
-  }
-  return OC_SWUPDATE_UPGRADE + 1;
+  return -1;
 }
 
 typedef struct
@@ -320,11 +340,11 @@ oc_swupdate_decode_string_property(const oc_rep_t *rep, bool from_storage,
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATEACTION,
                          sizeof(OC_SWU_PROP_UPDATEACTION) - 1)) {
-    oc_swupdate_action_t action = str_to_action(oc_string(rep->value.string));
-    if (action > OC_SWUPDATE_UPGRADE) {
+    int action = oc_swupdate_action_from_str(oc_string(rep->value.string));
+    if (action < 0) {
       return false;
     }
-    swud->data.swupdateaction = action;
+    swud->data.swupdateaction = (oc_swupdate_action_t)action;
     swud->swupdateaction_set = true;
     return true;
   }
@@ -332,7 +352,11 @@ oc_swupdate_decode_string_property(const oc_rep_t *rep, bool from_storage,
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATESTATE,
                          sizeof(OC_SWU_PROP_UPDATESTATE) - 1)) {
     if (from_storage) {
-      swud->data.swupdatestate = str_to_state(oc_string(rep->value.string));
+      int state = oc_swupdate_state_from_str(oc_string(rep->value.string));
+      if (state < 0) {
+        return false;
+      }
+      swud->data.swupdatestate = (oc_swupdate_state_t)state;
       swud->swupdatestate_set = true;
       return true;
     }
