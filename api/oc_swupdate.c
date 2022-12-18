@@ -30,6 +30,9 @@
 #include "security/oc_pstat.h"
 #include "util/oc_compiler.h"
 
+#include <assert.h>
+#include <limits.h>
+
 #ifndef OC_STORAGE
 #error Preprocessor macro OC_SOFTWARE_UPDATE is defined but OC_STORAGE is not defined \
 check oc_config.h and make sure OC_STORAGE is defined if OC_SOFTWARE_UPDATE is defined.
@@ -257,7 +260,8 @@ oc_swupdate_decode_int_property(const oc_rep_t *rep, bool from_storage,
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATERESULT,
                          sizeof(OC_SWU_PROP_UPDATERESULT) - 1)) {
     if (from_storage) {
-      swud->data.swupdateresult = rep->value.integer;
+      assert(rep->value.integer <= INT_MAX);
+      swud->data.swupdateresult = (int)rep->value.integer;
       swud->swupdateresult_set = true;
       return true;
     }
@@ -352,6 +356,28 @@ oc_swupdate_decode_string_property(const oc_rep_t *rep, bool from_storage,
 }
 
 static bool
+oc_swupdate_decode_property(const oc_rep_t *rep, bool from_storage,
+                            oc_swupdate_decode_t *swud)
+{
+  if (rep->type == OC_REP_STRING) {
+    if (!oc_swupdate_decode_string_property(rep, from_storage, swud)) {
+      OC_DBG("software update error: cannot decode property(%s)", rep->name);
+      return false;
+    }
+    return true;
+  }
+  if (rep->type == OC_REP_INT) {
+    if (!oc_swupdate_decode_int_property(rep, from_storage, swud)) {
+      OC_DBG("software update error: cannot decode property(%s)", rep->name);
+      return false;
+    }
+    return true;
+  }
+  OC_DBG("software update error: unrecognized property(%s)", rep->name);
+  return false;
+}
+
+static bool
 oc_swupdate_validate_post(size_t device, const oc_swupdate_decode_t *swud)
 {
   if (swud->updatetime_set &&
@@ -378,23 +404,10 @@ oc_swupdate_decode_and_validate(size_t device, const oc_rep_t *rep,
 {
   /* loop over all the properties in the input document */
   for (; rep != NULL; rep = rep->next) {
-    if (rep->type == OC_REP_STRING) {
-      if (!oc_swupdate_decode_string_property(rep, from_storage, swud)) {
-        OC_DBG("software update error: cannot decode property(%s)", rep->name);
-        goto prop_error;
-      }
-      continue;
-    }
-    if (rep->type == OC_REP_INT) {
-      if (!oc_swupdate_decode_int_property(rep, from_storage, swud)) {
-        OC_DBG("software update error: cannot decode property(%s)", rep->name);
-        goto prop_error;
-      }
+    if (oc_swupdate_decode_property(rep, from_storage, swud)) {
       continue;
     }
 
-    OC_DBG("software update error: unrecognized property(%s)", rep->name);
-  prop_error:
     if (from_storage) { // ignore invalid properties when decoding from
                         // storage
       continue;
