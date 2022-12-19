@@ -17,7 +17,7 @@
  ****************************************************************************/
 
 #include "oc_esp.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #include "esp_app_desc.h"
 

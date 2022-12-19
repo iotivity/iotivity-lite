@@ -20,14 +20,18 @@
 
 #ifdef OC_SOFTWARE_UPDATE
 
-#include "api/oc_rep_internal.h"
-#include "oc_api.h"
-#include "oc_core_res.h"
-#include "oc_ri.h"
 #include "oc_swupdate.h"
 #include "oc_swupdate_internal.h"
+
+#include "api/oc_core_res_internal.h"
+#include "api/oc_rep_internal.h"
+#include "api/oc_storage_internal.h"
+#include "oc_api.h"
+#include "oc_ri.h"
 #include "port/oc_clock.h"
+#ifdef OC_SECURITY
 #include "security/oc_pstat.h"
+#endif /* OC_SECURITY  */
 #include "util/oc_compiler.h"
 
 #include <assert.h>
@@ -43,11 +47,10 @@ typedef struct oc_swupdate_t
   oc_string_t purl;    ///< package URL, source of the software package
   oc_string_t nv;      ///< new version, new available software version
   oc_string_t signage; ///< signage method of the software package
-  oc_swupdate_action_t
-    swupdateaction; ///< scheduled action to execute at updatetime
-  oc_swupdate_state_t swupdatestate; ///< state of the software update
-  int swupdateresult;                ///< result of the software update
-  oc_clock_time_t lastupdate;        ///< time of the last software update
+  oc_swupdate_action_t swupdateaction; ///< action to execute
+  oc_swupdate_state_t swupdatestate;   ///< state of the software update
+  int swupdateresult;                  ///< result of the software update
+  oc_clock_time_t lastupdate;          ///< time of the last software update
   oc_clock_time_t updatetime; ///< scheduled time to execute swupdateaction
 } oc_swupdate_t;
 
@@ -117,14 +120,6 @@ void
 oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
 {
   g_cb = swupdate_impl;
-}
-
-static int
-oc_swupdate_on_load(const oc_rep_t *rep, size_t device, void *data)
-{
-  (void)data;
-  oc_swupdate_decode(rep, device);
-  return 0;
 }
 
 const char *
@@ -486,8 +481,8 @@ oc_swupdate_load(size_t device)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-  char svr_tag[SVR_TAG_MAX];
-  gen_svr_tag("sw", device, svr_tag);
+  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
+  oc_storage_gen_svr_tag("sw", device, svr_tag, sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
   if (ret < 0) {
     goto finish;

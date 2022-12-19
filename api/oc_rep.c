@@ -865,12 +865,3 @@ oc_rep_is_baseline_interface_property(const oc_rep_t *rep)
   }
   return false;
 }
-
-bool
-oc_rep_is_property(const oc_rep_t *rep, const char *name, size_t name_len)
-{
-  assert(rep != NULL);
-  assert(name != NULL);
-  return ((oc_string_len(rep->name) == name_len) &&
-          (memcmp(oc_string(rep->name), name, name_len) == 0));
-}

@@ -183,14 +183,17 @@ bool _oc_copy_string_to_array(oc_string_array_t *ocstringarray,
                               const char str[], size_t index);
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[]);
-void oc_join_string_array(oc_string_array_t *ocstringarray,
-                          oc_string_t *ocstring);
 
-bool _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
-                                   const char str[], size_t str_len,
-                                   size_t index);
-bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
-                                    const char str[], size_t str_len);
+/**
+ * @brief Join a string array into a single string using a delimiter.
+ *
+ * @param[in] ocstringarray string array (cannot be NULL)
+ * @param[in] delimiter delimiter between joined strings
+ * @param[out] ocstring output string (cannot be NULL), function allocates the
+ * oc_string_t, the caller must then deallocate it
+ */
+void oc_join_string_array(oc_string_array_t *ocstringarray, char delimiter,
+                          oc_string_t *ocstring);
 
 /* Arrays of text strings */
 #define oc_string_array_add_item(ocstringarray, str)                           \
@@ -203,6 +206,12 @@ bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
   (strlen((const char *)oc_string_array_get_item(ocstringarray, index)))
 #define oc_string_array_get_allocated_size(ocstringarray)                      \
   ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)
+
+bool _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
+                                   const char str[], size_t str_len,
+                                   size_t index);
+bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
+                                    const char str[], size_t str_len);
 
 /* Arrays of byte strings */
 #define oc_byte_string_array_add_item(ocstringarray, str, str_len)             \

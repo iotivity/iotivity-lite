@@ -1274,7 +1274,6 @@ notify_discovery_observers(oc_resource_t *resource)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-leave_notify_observers:
   buffer = response_buffer.buffer;
   if (buffer) {
     free(buffer);

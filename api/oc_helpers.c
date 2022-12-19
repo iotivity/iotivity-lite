@@ -222,6 +222,7 @@ bool
 _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
                               const char str[], size_t str_len, size_t index)
 {
+  assert(index < oc_string_array_get_allocated_size(*ocstringarray));
   if (str_len >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }
@@ -272,7 +273,8 @@ _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
 }
 
 void
-oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
+oc_join_string_array(oc_string_array_t *ocstringarray, char delimiter,
+                     oc_string_t *ocstring)
 {
   size_t len = 0;
   for (size_t i = 0; i < oc_string_array_get_allocated_size(*ocstringarray);
@@ -292,7 +294,7 @@ oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
     size_t item_len = strlen(item);
     if (item_len != 0) {
       if (len > 0) {
-        oc_string(*ocstring)[len] = ' ';
+        oc_string(*ocstring)[len] = delimiter;
         len++;
       }
       memcpy(oc_string(*ocstring) + len, item, item_len);

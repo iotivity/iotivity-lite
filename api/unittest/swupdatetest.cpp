@@ -25,8 +25,8 @@
 
 class TestSWUpdate : public testing::Test {
 protected:
-  void SetUp() override { oc_swupdate_init(); }
-  void TearDown() override { oc_swupdate_free(); }
+  void SetUp() override {}
+  void TearDown() override {}
 
   static void SetUpTestCase()
   {
@@ -40,9 +40,6 @@ protected:
 
 private:
   static oc_handler_t s_handler;
-  static oc_endpoint_t s_endpoint;
-
-  static void onPostResponse(oc_client_response_t *) {}
 
   static int appInit(void)
   {

@@ -34,7 +34,7 @@
 #include "oc_swupdate.h"
 #ifdef OC_SECURITY
 #include "oc_store.h"
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #endif /* OC_SECURITY */
 
 #include <cJSON.h>
@@ -65,9 +65,11 @@ hawkbit_fetch_by_http_get(const char *url)
   APP_DBG("Fetch by HTTP GET payload: %s", buffer);
   cJSON *root = cJSON_Parse(buffer);
   if (root == NULL) {
+#ifdef APP_DEBUG
     const char *json_error = cJSON_GetErrorPtr();
     APP_ERR("fetch by HTTP GET failed: %s",
             json_error != NULL ? json_error : "failed to parse output");
+#endif /* APP_DEBUG */
     return NULL;
   }
   return root;
@@ -160,6 +162,8 @@ hawkbit_get_url(const hawkbit_context_t *ctx, char *server_url,
     return HAWKBIT_ERROR_GENERAL;
   }
 
+  // TODO: devowneruuid doesn't seem to work for hawkbit, check if the tenant_id
+  // must have some format
   if (!hawkbit_get_url_tenant(hawkbit_get_device(ctx), hurl, tenant,
                               tenant_size)) {
     APP_ERR("get URL failed: cannot get tenant");
@@ -703,6 +707,7 @@ hawkbit_restart_device(hawkbit_context_t *ctx)
   esp_restart();
 }
 
+#ifdef APP_DEBUG
 static void
 print_sha256(const char *label, const uint8_t *sha256)
 {
@@ -713,6 +718,7 @@ print_sha256(const char *label, const uint8_t *sha256)
   hash_print[ESP_IMAGE_HASH_LEN * 2] = '\0';
   APP_DBG("%s: %s", label, hash_print);
 }
+#endif /* APP_DEBUG  */
 
 static void
 print_partitions_info(void)
@@ -784,7 +790,7 @@ print_partitions_info(void)
 #endif // APP_DEBUG
 }
 
-int
+hawkbit_error_t
 hawkbit_poll(hawkbit_context_t *ctx, hawkbit_configuration_t *cfg)
 {
   APP_DBG("Hawkbit poll");
@@ -793,7 +799,6 @@ hawkbit_poll(hawkbit_context_t *ctx, hawkbit_configuration_t *cfg)
   hawkbit_action_t action;
   hawkbit_error_t err = hawkbit_poll_base_resource(ctx, &action, cfg);
   if (err != HAWKBIT_OK) {
-    APP_ERR("cannot poll hawkbit resource");
     return err;
   }
 

@@ -44,6 +44,7 @@ hex_to_uint(char c)
 hawkbit_sha1_digest_t
 hawkbit_sha1_hash_to_digest(hawkbit_sha1_hash_t hash)
 {
+  // TODO: oc_conv_hex_string_to_byte_array
   hawkbit_sha1_digest_t digest;
   for (int i = 0; i < HAWKBIT_SHA1_DIGEST_SIZE; ++i) {
     digest.data[i] = (uint8_t)(hex_to_uint(hash.data[i * 2]) << 4) |
@@ -55,6 +56,7 @@ hawkbit_sha1_hash_to_digest(hawkbit_sha1_hash_t hash)
 hawkbit_sha1_hash_t
 hawkbit_sha1_digest_to_hash(hawkbit_sha1_digest_t digest)
 {
+  // TODO: oc_conv_byte_array_to_hex_string
   hawkbit_sha1_hash_t hash;
   for (int i = 0; i < HAWKBIT_SHA1_DIGEST_SIZE; ++i) {
     sprintf(&hash.data[i * 2], "%02x", digest.data[i]);
