@@ -65,6 +65,9 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
                               const oc_endpoint_t *request_origin,
                               size_t device_index, bool owned_for_SVRs)
 {
+#ifndef OC_SECURITY
+  (void)owned_for_SVRs;
+#endif
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   if (((oc_sec_get_pstat(device_index))->s == OC_DOS_RFOTM) &&
       (resource->properties & OC_ACCESS_IN_RFOTM)) {
