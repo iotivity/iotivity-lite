@@ -1164,8 +1164,9 @@ tcp_waiting_session_check(const tcp_waiting_session_t *session,
 {
   bool retry = session->retry.force != 0;
   if (!retry) {
+    oc_clock_time_t expires_in = g_connect_retry.timeout * OC_CLOCK_SECOND;
     oc_clock_time_t elapsed = now - session->retry.start;
-    retry = elapsed >= g_connect_retry.timeout * OC_CLOCK_SECOND;
+    retry = elapsed >= expires_in;
   }
   if (retry) {
     if (session->retry.count >= g_connect_retry.max_count) {
