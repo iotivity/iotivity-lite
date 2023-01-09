@@ -20,7 +20,7 @@
 #ifndef OC_REP_H
 #define OC_REP_H
 
-#include "deps/tinycbor/src/cbor.h"
+#include "cbor.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"

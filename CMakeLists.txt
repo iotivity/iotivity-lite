@@ -365,12 +365,12 @@ oc_enable_clang_tidy()
 add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
 target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
 target_compile_options(client-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-obj PRIVATE mbedtls)
@@ -379,7 +379,7 @@ endif()
 add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
 target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
     target_link_libraries(server-obj PRIVATE mbedtls)
@@ -388,7 +388,7 @@ endif()
 add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
 target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-server-obj PRIVATE mbedtls)
@@ -398,7 +398,7 @@ if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
     target_compile_options(cloud-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+    target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
     if(OC_SECURITY_ENABLED)
         target_link_libraries(cloud-obj PRIVATE mbedtls)
@@ -410,7 +410,7 @@ target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_
 target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
 set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/deps/tinycbor/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
 
 if(OC_SECURITY_ENABLED)
     target_link_libraries(python-obj PRIVATE mbedtls)
@@ -432,10 +432,12 @@ target_compile_definitions(client-static PUBLIC
 )
 target_include_directories(client-static PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
+    $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
 )
 
 if(OC_SECURITY_ENABLED)
@@ -457,10 +459,12 @@ if(NOT MSVC)
     )
     target_include_directories(client-shared PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
+        $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
     )
 
     if(OC_SECURITY_ENABLED)
@@ -489,10 +493,12 @@ target_compile_definitions(server-static PUBLIC
 )
 target_include_directories(server-static PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
+    $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
 )
 
 if(OC_SECURITY_ENABLED)
@@ -514,10 +520,12 @@ if(NOT MSVC)
     )
     target_include_directories(server-shared PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
+        $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
     )
 
     if(OC_SECURITY_ENABLED)
@@ -550,10 +558,12 @@ target_compile_definitions(client-server-static PUBLIC
 )
 target_include_directories(client-server-static PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
+    $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
 )
 
 if(OC_SECURITY_ENABLED)
@@ -584,10 +594,12 @@ if(NOT MSVC)
     )
     target_include_directories(client-server-shared PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/deps/tinycbor/src>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/port>
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
+        $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
     )
 
     if(OC_SECURITY_ENABLED)
@@ -620,8 +632,9 @@ target_compile_definitions(client-python-shared PUBLIC
     $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
 )
 target_include_directories(client-python-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:.;deps/tinycbor/src;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
+    $<INSTALL_INTERFACE:include/iotivity-lite/deps/tinycbor/src>
 )
 
 if(OC_SECURITY_ENABLED)
