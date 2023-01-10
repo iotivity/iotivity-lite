@@ -43,6 +43,12 @@
 #include "security/oc_tls.h"
 #endif
 
+#ifdef WIN32
+#include <windows.h>
+#else /* !WIN32 */
+#include <strings.h>
+#endif /* WIN32 */
+
 #ifdef OC_WKCORE
 static int
 clf_add_line_to_buffer(const char *line)

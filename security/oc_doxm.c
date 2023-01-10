@@ -30,9 +30,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#ifndef _WIN32
+#ifdef WIN32
+#include <windows.h>
+#else /* !WIN32 */
 #include <strings.h>
-#endif
+#endif /* WIN32 */
 
 #define OC_DOXM_OWNED "owned"
 #define OC_DOXM_OWNED_LEN (sizeof(OC_DOXM_OWNED) - 1)

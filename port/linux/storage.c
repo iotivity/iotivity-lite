@@ -38,8 +38,9 @@ int
 oc_storage_config(const char *store)
 {
   g_store_path_len = strlen(store);
-  if (g_store_path_len >= STORE_PATH_SIZE)
+  if (g_store_path_len >= STORE_PATH_SIZE) {
     return -ENOENT;
+  }
 
   strncpy(g_store_path, store, g_store_path_len);
   g_store_path[g_store_path_len] = '\0';
@@ -51,22 +52,25 @@ oc_storage_config(const char *store)
 long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
-  FILE *fp = 0;
-  size_t store_len = strlen(store);
-
-  if (!g_path_set || (1 + store_len + g_store_path_len >= STORE_PATH_SIZE))
+  if (!g_path_set) {
     return -ENOENT;
+  }
+  size_t store_len = strlen(store);
+  if (1 + store_len + g_store_path_len >= STORE_PATH_SIZE) {
+    return -ENOENT;
+  }
 
   g_store_path[g_store_path_len] = '/';
-  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  memcpy(g_store_path + g_store_path_len + 1, store, store_len);
   g_store_path[1 + g_store_path_len + store_len] = '\0';
-  fp = fopen(g_store_path, "rb");
-  if (!fp)
+  FILE *fp = fopen(g_store_path, "rb");
+  if (fp == NULL) {
     return -EINVAL;
+  }
 
   size = fread(buf, 1, size, fp);
   fclose(fp);
-  return size;
+  return (long)size;
 }
 
 static long

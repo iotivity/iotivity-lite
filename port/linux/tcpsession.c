@@ -212,7 +212,7 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     OC_ERR("could not allocate new TCP session object");
     return NULL;
   }
-  OC_DBG("new TCP session(%p) created sock:%d", session, sock);
+  OC_DBG("new TCP session(%p) created sock:%d", (void *)session, sock);
 
   session->dev = dev;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -287,7 +287,7 @@ free_session_locked(tcp_session_t *session, bool signal)
   }
   close(session->sock);
 
-  OC_DBG("freed TCP session(%p)", session);
+  OC_DBG("freed TCP session(%p)", (void *)session);
   oc_memb_free(&g_tcp_session_s, session);
 }
 
@@ -671,7 +671,7 @@ tcp_create_waiting_session_locked(int sock, ip_context_t *dev,
     OC_ERR("could not record new waiting TCP session");
     return NULL;
   }
-  OC_DBG("new waiting TCP session(%p) created sock:%d", ws, sock);
+  OC_DBG("new waiting TCP session(%p) created sock:%d", (void *)ws, sock);
   tcp_waiting_session_set_socked_locked(&dev->tcp, sock);
   return ws;
 }
@@ -786,7 +786,7 @@ free_waiting_session_locked(tcp_waiting_session_t *session, bool has_expired,
 
   queued_message_t *qm = (queued_message_t *)oc_list_pop(session->messages);
   while (qm != NULL) {
-    OC_DBG("queued tcp session message(%p) discarded", qm->message);
+    OC_DBG("queued tcp session message(%p) discarded", (void *)qm->message);
     oc_message_unref(qm->message);
     oc_memb_free(&g_queued_message_s, qm);
     qm = oc_list_pop(session->messages);
@@ -811,7 +811,7 @@ free_waiting_session_locked(tcp_waiting_session_t *session, bool has_expired,
     oc_network_tcp_connect_event(event);
   }
 
-  OC_DBG("freed waiting TCP session(%p)", session);
+  OC_DBG("freed waiting TCP session(%p)", (void *)session);
   oc_memb_free(&g_tcp_waiting_session_s, session);
 }
 
@@ -924,7 +924,7 @@ add_message_to_waiting_session_locked(tcp_waiting_session_t *session,
     return false;
   }
 
-  OC_DBG("message added to waiting session queue(%p)", message);
+  OC_DBG("message added to waiting session queue(%p)", (void *)message);
   oc_message_add_ref(message);
   qm->message = message;
   qm->timestamp = oc_clock_time();
@@ -1180,7 +1180,8 @@ tcp_waiting_session_check(const tcp_waiting_session_t *session,
 static int
 tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws, oc_clock_time_t now)
 {
-  OC_DBG("try connect waiting session(%p): %u", ws, (unsigned)ws->retry.count);
+  OC_DBG("try connect waiting session(%p): %u", (void *)ws,
+         (unsigned)ws->retry.count);
   if (ws->sock >= 0) {
     tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
     close(ws->sock);
@@ -1261,7 +1262,7 @@ static void
 tcp_process_waiting_session_locked(tcp_waiting_session_t *ws)
 {
   if (!tcp_try_connect_waiting_session_locked(ws)) {
-    OC_DBG("failed to connect session(%p)", ws);
+    OC_DBG("failed to connect session(%p)", (void *)ws);
     if (ws->sock >= 0) {
       tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
       close(ws->sock);
@@ -1283,7 +1284,7 @@ tcp_process_waiting_sessions(fd_set *fds)
       continue;
     }
 
-    OC_DBG("tcp session(%p) connect (fd=%d): %u", ws, ws->sock,
+    OC_DBG("tcp session(%p) connect (fd=%d): %u", (void *)ws, ws->sock,
            (unsigned)ws->retry.count);
     FD_CLR(ws->sock, fds);
     ret = true;

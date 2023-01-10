@@ -351,8 +351,8 @@ TEST(B64Test, EncodeThenDecode)
   ASSERT_NE(nullptr, b64Buf) << "memory allocation error.";
   outputLength = oc_base64_encode((const uint8_t *)input, sizeof(input),
                                   (uint8_t *)b64Buf, b64BufSize - 1);
-  EXPECT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input
-                              << "\" to \"" << (char *)b64Buf << "\"";
+  EXPECT_NE(-1, outputLength)
+    << "Failed to Base64 encode \"" << input << "\" to \"" << b64Buf << "\"";
   EXPECT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                      "operations should be a multiple of 4.";
   // base64 encoder does not null terminate its output
@@ -362,6 +362,6 @@ TEST(B64Test, EncodeThenDecode)
   EXPECT_NE(-1, outputLength)
     << "Failed to Base64 decode \"" << input << "\" to \"" << b64Buf << "\"";
   EXPECT_EQ(sizeof(input), outputLength);
-  EXPECT_STREQ(input, (char *)b64Buf);
+  EXPECT_STREQ(input, b64Buf);
   free(b64Buf);
 }

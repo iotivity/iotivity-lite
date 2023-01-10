@@ -237,6 +237,7 @@ signal_event_loop(void)
 void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }

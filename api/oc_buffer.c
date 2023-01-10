@@ -55,7 +55,7 @@ allocate_message(struct oc_memb *pool)
   oc_network_event_handler_mutex_unlock();
   if (message) {
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-    message->data = malloc(OC_PDU_SIZE);
+    message->data = (uint8_t *)malloc(OC_PDU_SIZE);
     if (!message->data) {
       OC_ERR("Out of memory, cannot allocate message");
       oc_network_event_handler_mutex_lock();

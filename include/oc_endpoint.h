@@ -66,7 +66,7 @@ typedef struct
  * @brief transport flags (bit map)
  *
  */
-enum transport_flags {
+typedef enum transport_flags {
   DISCOVERY = 1 << 0, ///< used for discovery
   SECURED = 1 << 1,   ///< secure communication
   IPV4 = 1 << 2,      ///< ipv4 communication
@@ -75,7 +75,7 @@ enum transport_flags {
   GATT = 1 << 5,      ///< BLE GATT communication
   MULTICAST = 1 << 6, ///< multicast enabled
   ACCEPTED = 1 << 7   ///< accepted
-};
+} transport_flags;
 
 /**
  * @brief the endpoint information
@@ -85,7 +85,7 @@ typedef struct oc_endpoint_t
 {
   struct oc_endpoint_t *next; ///< pointer to the next structure
   size_t device;              ///< device index
-  enum transport_flags flags; ///< the transport flags
+  transport_flags flags;      ///< the transport flags
   oc_uuid_t di;               ///< device di
   union dev_addr {
     oc_ipv6_addr_t ipv6; ///< ipv6 address

@@ -47,13 +47,14 @@ oc_process_network_event(void)
     (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
   while (event != NULL) {
     oc_tcp_connect_session(event);
-    event = oc_list_pop(g_network_tcp_connect_events);
+    event =
+      (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   oc_message_t *message = (oc_message_t *)oc_list_pop(g_network_events);
   while (message != NULL) {
     oc_recv_message(message);
-    message = oc_list_pop(g_network_events);
+    message = (oc_message_t *)oc_list_pop(g_network_events);
   }
 #ifdef OC_NETWORK_MONITOR
   if (g_interface_up) {

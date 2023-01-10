@@ -84,7 +84,7 @@ oc_dns_clear_cache(void)
 #endif /* OC_DNS_CACHE */
 
 int
-oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 {
   if (!domain || !addr) {
     OC_ERR("Error of input parameters");

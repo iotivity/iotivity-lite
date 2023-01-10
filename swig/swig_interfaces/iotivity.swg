@@ -37,11 +37,11 @@
 
 %typemap(in)      transport_flags "$1 = (transport_flags)$input;"
 %typemap(out)     transport_flags "$result = (jint)$1;"
-%typemap(jni)     enum transport_flags "jint";
-%typemap(jtype)   enum transport_flags "int";
-%typemap(jstype)  enum transport_flags "int";
-%typemap(javain)  enum transport_flags "$javainput"
-%typemap(javaout) enum transport_flags { return $jnicall; }
+%typemap(jni)     transport_flags "jint";
+%typemap(jtype)   transport_flags "int";
+%typemap(jstype)  transport_flags "int";
+%typemap(javain)  transport_flags "$javainput"
+%typemap(javaout) transport_flags { return $jnicall; }
 
 %typemap(in)      oc_ace_permissions_t "$1 = (oc_ace_permissions_t)$input;"
 %typemap(out)     oc_ace_permissions_t "$result = (jint)$1;"

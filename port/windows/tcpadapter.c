@@ -319,21 +319,6 @@ find_session_by_endpoint_locked(oc_endpoint_t *endpoint)
   return session;
 }
 
-static tcp_session_t *
-get_ready_to_read_session(fd_set *setfds)
-{
-  tcp_session_t *session = oc_list_head(session_list);
-  while (session != NULL && !FD_ISSET(session->sock, setfds)) {
-    session = session->next;
-  }
-
-  if (!session) {
-    OC_ERR("could not find any open ready-to-read session");
-    return NULL;
-  }
-  return session;
-}
-
 static size_t
 get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
 {
@@ -764,26 +749,28 @@ fill_sockets_handlers(ip_context_t *dev, sockets_handler_t *s)
   return n;
 }
 
-static void *
+static DWORD
 network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
   sockets_handler_t socks;
   while (!dev->terminate) {
     DWORD size = fill_sockets_handlers(dev, &socks);
-    DWORD idx = WaitForMultipleObjects(size, socks.handlers, FALSE, INFINITE);
-    if (idx == WAIT_FAILED) {
+    DWORD ret = WaitForMultipleObjects(size, socks.handlers, FALSE, INFINITE);
+    if (ret == WAIT_FAILED) {
       OC_ERR("cannot wait for multiple objects: error_code(%d)",
              GetLastError());
-    } else if (idx - WAIT_OBJECT_0 >= 0 && idx - WAIT_OBJECT_0 < size) {
-      idx = idx - WAIT_OBJECT_0;
-      socks.cbks[idx](socks.sockets[idx], socks.ctxs[idx]);
-    } else {
-      oc_abort("err in network event thread");
+      continue;
     }
+    DWORD idx = ret - WAIT_OBJECT_0;
+    if (idx < size) {
+      socks.cbks[idx](socks.sockets[idx], socks.ctxs[idx]);
+      continue;
+    }
+    oc_abort("err in network event thread");
   }
 
-  return NULL;
+  return 0;
 }
 
 #ifdef OC_IPV4
@@ -897,7 +884,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   l->sin6_port = 0;
 
   dev->tcp.server_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-  if (dev->tcp.server_sock == SOCKET_ERROR) {
+  if (dev->tcp.server_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating TCP server socket %d", WSAGetLastError());
     return -1;
   }
@@ -929,7 +916,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   sm->sin6_port = 0;
 
   dev->tcp.secure_sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-  if (dev->tcp.secure_sock == SOCKET_ERROR) {
+  if (dev->tcp.secure_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating TCP secure socket %d", WSAGetLastError());
     WSACloseEvent(dev->tcp.server_event);
     closesocket(dev->tcp.server_sock);
@@ -990,8 +977,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
 #endif /* OC_IPV4 */
 
   dev->tcp.event_thread_handle =
-    CreateThread(0, 0, (LPTHREAD_START_ROUTINE)network_event_thread, dev, 0,
-                 &dev->tcp.event_thread);
+    CreateThread(0, 0, network_event_thread, dev, 0, &dev->tcp.event_thread);
   if (dev->tcp.event_thread_handle == NULL) {
     OC_ERR("creating tcp network polling thread %d", GetLastError());
     WSACloseEvent(dev->tcp.server_event);

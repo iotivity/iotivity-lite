@@ -77,7 +77,7 @@ OC_PROCESS_THREAD(oc_etimer_process, ev, data)
     OC_PROCESS_YIELD();
 
     if (ev == OC_PROCESS_EVENT_EXITED) {
-      struct oc_process *p = data;
+      struct oc_process *p = (struct oc_process *)data;
 
       while (timerlist != NULL && timerlist->p == p) {
         timerlist = timerlist->next;

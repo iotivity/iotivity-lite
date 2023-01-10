@@ -112,6 +112,45 @@ if(OC_COMPILER_IS_CLANG)
 	set(OC_LINK_OPTIONS_RELEASE -Wl,-dead_strip -s)
 endif()
 
+include(CheckCCompilerFlag)
+function(oc_add_compile_options)
+    foreach(arg IN LISTS ARGN)
+        string(REPLACE "-" "_" arg_name ${arg})
+        string(TOUPPER ${arg_name} arg_name)
+        set(arg_name "C_COMPILER_SUPPORTS${arg_name}")
+        unset(${arg_name})
+        check_c_compiler_flag(${arg} ${arg_name})
+        if(${${arg_name}})
+            add_compile_options(${arg})
+        endif()
+    endforeach()
+endfunction()
+
+include(CheckCXXCompilerFlag)
+function(oc_add_cxx_compile_options)
+    foreach(arg IN LISTS ARGN)
+        string(REPLACE "-" "_" arg_name ${arg})
+        string(TOUPPER ${arg_name} arg_name)
+        set(arg_name "CXX_COMPILER_SUPPORTS${arg_name}")
+        check_cxx_compiler_flag(${arg} ${arg_name})
+        if(${${arg_name}})
+            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${arg}>)
+        endif()
+    endforeach()
+endfunction()
+
+# Global compile options
+set(PRIVATE_COMPILE_OPTIONS "")
+if (MSVC)
+    # TODO: Enable and fix issues
+    # list(APPEND PRIVATE_COMPILE_OPTIONS /WX)
+elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
+    oc_add_compile_options(-Wall -Wextra -pedantic)
+    oc_add_cxx_compile_options(-Wuseless-cast)
+    list(APPEND PRIVATE_COMPILE_OPTIONS -Werror)
+endif()
+
+# Release compile and linker options
 add_compile_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_COMPILE_OPTIONS_RELEASE}>")
 add_link_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_LINK_OPTIONS_RELEASE}>")
 
@@ -121,7 +160,6 @@ include(tools/clang-tidy.cmake)
 
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
-set(PRIVATE_COMPILE_OPTIONS "")
 set(PUBLIC_COMPILE_DEFINITIONS "")
 set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM" "__OC_RANDOM")
 
@@ -223,6 +261,10 @@ if(MINGW)
     list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
 endif()
 
+if(MSVC)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "_CRT_SECURE_NO_WARNINGS=1")
+endif()
+
 if (OC_COVERAGE_ENABLED)
     list(APPEND PRIVATE_COMPILE_OPTIONS "--coverage")
 endif()
@@ -246,7 +288,6 @@ file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/messaging/coap/*.c
     ${PROJECT_SOURCE_DIR}/api/*.c
 )
-
 set(CLIENT_SRC ${SERVER_SRC})
 
 # Detect the platform and pick the right port
@@ -600,7 +641,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
-    list(APPEND TEST_COMPILE_OPTIONS "-Wall" "-Wextra" "-fpermissive")
+    list(APPEND TEST_COMPILE_OPTIONS "-fpermissive" "-Wno-error")
     list(APPEND TEST_LINK_LIBS client-server-static gtest_main)
 
     if(UNIX)

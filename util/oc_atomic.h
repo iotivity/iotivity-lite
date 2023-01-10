@@ -70,7 +70,7 @@ extern "C" {
 
 #if defined(_WIN32) || defined(_WIN64)
 
-#if _MSC_VER
+#ifdef _MSC_VER
 
 #include <intrin.h>
 

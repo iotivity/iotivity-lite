@@ -45,7 +45,7 @@ oc_new_endpoint(void)
 #ifndef OC_DYNAMIC_ALLOCATION
   oc_network_event_handler_mutex_lock();
 #endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_endpoint_t *endpoint = oc_memb_alloc(&oc_endpoints_s);
+  oc_endpoint_t *endpoint = (oc_endpoint_t *)oc_memb_alloc(&oc_endpoints_s);
 #ifndef OC_DYNAMIC_ALLOCATION
   oc_network_event_handler_mutex_unlock();
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -300,7 +300,8 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
       str_idx += 2;
     }
     seg_len = len - str_idx;
-    const char *next_seg = memchr(&address[str_idx], ':', seg_len);
+    const char *next_seg =
+      (const char *)memchr(&address[str_idx], ':', seg_len);
     if (next_seg) {
       seg_len = next_seg - &address[str_idx];
     }
@@ -348,7 +349,7 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 
 typedef struct endpoint_uri_t
 {
-  enum transport_flags scheme_flags;
+  transport_flags scheme_flags;
   const char *address;
   size_t address_len;
   size_t host_len; // length of only the host part of the address
@@ -418,7 +419,7 @@ parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
   size_t ep_len = oc_string_len(*endpoint_str);
   size_t address_len = ep_len - (address - ep);
 
-  const char *u = memchr(address, '/', address_len);
+  const char *u = (const char *)memchr(address, '/', address_len);
   const char *uri = NULL;
   size_t uri_len = 0;
   if (parse_uri && u != NULL) {
@@ -430,15 +431,15 @@ parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
   const char *p = NULL;
   /* If IPv6 address, look for port after ] */
   if (address[0] == '[') {
-    p = memchr(address, ']', address_len);
+    p = (const char *)memchr(address, ']', address_len);
     if (p == NULL) {
       return false;
     }
     /* A : that ever follows ] must precede a port */
-    p = memchr(p, ':', address_len - (p - address + 1));
+    p = (const char *)memchr(p, ':', address_len - (p - address + 1));
   } else {
     /* IPv4 address or hostname; the first : must precede a port */
-    p = memchr(address, ':', address_len);
+    p = (const char *)memchr(address, ':', address_len);
   }
 
   size_t host_len = address_len;
@@ -484,7 +485,7 @@ parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
 
 #if defined(OC_DNS_LOOKUP) && (defined(OC_DNS_LOOKUP_IPV6) || defined(OC_IPV4))
 static bool
-dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 {
 #ifdef OC_IPV4
   if (oc_dns_lookup(domain, addr, flags | IPV4) == 0) {
@@ -610,14 +611,14 @@ oc_endpoint_string_parse_path(const oc_string_t *endpoint_str,
     return -1;
   }
   /* Extract a uri path if available */
-  const char *path_start = memchr(address, '/', len);
+  const char *path_start = (const char *)memchr(address, '/', len);
   if (path_start == NULL) {
     // no path found return error
     return -1;
   }
 
-  const char *query_start = memchr((address + (path_start - address)), '?',
-                                   (len - (path_start - address)));
+  const char *query_start = (const char *)memchr(
+    (address + (path_start - address)), '?', (len - (path_start - address)));
   if (query_start != NULL) {
     oc_new_string(path, path_start, (query_start - path_start));
   } else {
@@ -728,10 +729,10 @@ oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
     return;
   }
   oc_endpoint_t *e = oc_connectivity_get_endpoints(ep->device);
-  enum transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;
+  transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;
   while (e) {
     if ((e->flags & conn) && e->interface_index == interface_index) {
-      memcpy(&ep->addr_local, &e->addr, sizeof(union dev_addr));
+      memcpy(&ep->addr_local, &e->addr, sizeof(e->addr));
       return;
     }
     e = e->next;

@@ -1066,14 +1066,14 @@ oc_tls_validate_identity_certs_consistency_for_device(size_t device)
         OC_DBG("\tidentity not found");
         return false;
       }
-      OC_DBG("\tidentity cert(%p) found", cert);
+      OC_DBG("\tidentity cert(%p) found", (void *)cert);
     }
   }
 
   // - all identity certificates have a credential
   oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
-    OC_DBG("search for cred for identity cert(%p)", cert);
+    OC_DBG("search for cred for identity cert(%p)", (void *)cert);
     oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
     if (cred == NULL) {
       OC_DBG("\tcred not found");
@@ -1161,7 +1161,7 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
         OC_DBG("\ttrust anchor not found");
         return false;
       }
-      OC_DBG("\ttrust anchor(%p) found", cert);
+      OC_DBG("\ttrust anchor(%p) found", (void *)cert);
     }
   }
 
@@ -1169,7 +1169,7 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
   // list
   oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
   while (cert != NULL) {
-    OC_DBG("search for cred for trust anchor(%p)", cert);
+    OC_DBG("search for cred for trust anchor(%p)", (void *)cert);
     oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
     if (cred == NULL) {
       OC_DBG("\tcred not found");
@@ -1184,13 +1184,13 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
   if (!oc_tls_trust_anchors_is_empty()) {
     mbedtls_x509_crt *c = &g_trust_anchors;
     while (c != NULL) {
-      OC_DBG("search for trust anchor for mbedtls trust anchor(%p)", c);
+      OC_DBG("search for trust anchor for mbedtls trust anchor(%p)", (void *)c);
       cert = oc_tls_find_ca_cert(c);
       if (cert == NULL) {
         OC_DBG("\ttrust anchor not found");
         return false;
       }
-      OC_DBG("\ttrust anchor(%p) found", cert);
+      OC_DBG("\ttrust anchor(%p) found", (void *)cert);
       c = c->next;
     }
   }
@@ -1199,13 +1199,14 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
   // the g_ca_certs list
   cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
   while (cert != NULL) {
-    OC_DBG("search for mbedtls trust anchor for trust anchor(%p)", cert);
+    OC_DBG("search for mbedtls trust anchor for trust anchor(%p)",
+           (void *)cert);
     mbedtls_x509_crt *c = oc_tls_find_trust_anchor(cert);
     if (c == NULL) {
       OC_DBG("\tmbedtls trust anchor not found");
       return false;
     }
-    OC_DBG("\tmbedtls trust anchor(%p) found", c);
+    OC_DBG("\tmbedtls trust anchor(%p) found", (void *)c);
     cert = cert->next;
   }
 
@@ -2559,7 +2560,8 @@ oc_tls_recv_message(oc_message_t *message)
   oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
   OC_DBG("oc_tls: Received message from device %s", u);
   if (peer->endpoint.flags & TCP) {
-    OC_DBG("oc_tls_recv_message_tcp: %zu %p", message->length, peer);
+    OC_DBG("oc_tls_recv_message_tcp: length=%zu  peer=%p", message->length,
+           (void *)peer);
   }
 #endif /* OC_DEBUG */
 
