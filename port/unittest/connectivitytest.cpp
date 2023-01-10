@@ -28,6 +28,7 @@
 #include "oc_network_monitor.h"
 #include <array>
 #include <atomic>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <gtest/gtest.h>

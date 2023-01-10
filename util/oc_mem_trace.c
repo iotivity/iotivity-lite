@@ -112,7 +112,8 @@ void
 oc_mem_trace_print_paces(void)
 {
   int cnt = 0;
-  mem_logger_s *mem_log_item_link = oc_list_head((&mInfo)->mem_log_list);
+  mem_logger_s *mem_log_item_link =
+    (mem_logger_s *)oc_list_head((&mInfo)->mem_log_list);
 
   PRINT("==================================================================");
   PRINT("=================\n");

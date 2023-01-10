@@ -17,7 +17,7 @@
 // limitations under the License.
 */
 
-//#define OC_SERVER
+// #define OC_SERVER
 
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -219,7 +219,8 @@ inform_diplomat_python(const char *anchor, const char *uri, const char *state,
                        const char *event, const char *target,
                        const char *target_cred)
 {
-  PRINT("[C]inform_python %p\n", my_CBFunctions.diplomatFCB);
+  // PRINT("[C]inform_python %p\n", (void
+  // *)(uintptr_t)my_CBFunctions.diplomatFCB);
   if (my_CBFunctions.diplomatFCB != NULL) {
     my_CBFunctions.diplomatFCB((char *)anchor, (char *)uri, (char *)state,
                                (char *)event, (char *)target,
@@ -230,7 +231,8 @@ inform_diplomat_python(const char *anchor, const char *uri, const char *state,
 void
 inform_client_python(const char *uuid, const char *state, const char *event)
 {
-  PRINT("[C]inform_python %p\n", my_CBFunctions.clientFCB);
+  // PRINT("[C]inform_python %p\n", (void
+  // *)(uintptr_t)my_CBFunctions.clientFCB);
   if (my_CBFunctions.clientFCB != NULL) {
     my_CBFunctions.clientFCB((char *)uuid, (char *)state, (char *)event);
   }
@@ -317,6 +319,7 @@ python_exit(int signal)
 DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
 {
+  (void)lpParam;
   oc_clock_time_t next_event;
   while (quit != 1) {
     otb_mutex_lock(app_sync_lock);
@@ -388,15 +391,14 @@ get_obt_device(oc_uuid_t *uuid, const char *device_name)
     return false;
   }
   memcpy(device->uuid.id, uuid->id, 16);
-  if (device_name) {
-    size_t len = strlen(device_name);
-    len = (len > 63) ? 63 : len;
-    strncpy(device->device_name, device_name, len);
-    device->device_name[len] = '\0';
-  } else {
-    device->device_name[0] = '\0';
-  }
 
+  size_t len = 0;
+  if (device_name) {
+    len = strlen(device_name);
+    len = (len > 63) ? 63 : len;
+    memcpy(device->device_name, device_name, len);
+  }
+  device->device_name[len] = '\0';
   return device;
 }
 
@@ -414,14 +416,13 @@ add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
     oc_list_add(list, device);
   }
 
+  size_t len = 0;
   if (device_name) {
-    size_t len = strlen(device_name);
+    len = strlen(device_name);
     len = (len > 63) ? 63 : len;
-    strncpy(device->device_name, device_name, len);
-    device->device_name[len] = '\0';
-  } else {
-    device->device_name[0] = '\0';
+    memcpy(device->device_name, device_name, len);
   }
+  device->device_name[len] = '\0';
   return true;
 }
 

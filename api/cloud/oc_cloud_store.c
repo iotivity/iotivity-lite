@@ -63,7 +63,7 @@ static void
 rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
 {
   g_err |= oc_rep_encode_text_string(object_map, key, strlen(key));
-  if ((const char *)value != NULL) {
+  if (value != NULL) {
     g_err |= oc_rep_encode_text_string(object_map, value, strlen(value));
   } else {
     g_err |= oc_rep_encode_text_string(object_map, "", 0);

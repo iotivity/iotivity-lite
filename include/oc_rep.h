@@ -279,7 +279,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
 #define oc_rep_set_text_string(object, key, value)                             \
   do {                                                                         \
     g_err |= oc_rep_encode_text_string(&object##_map, #key, strlen(#key));     \
-    if ((const char *)(value) != NULL) {                                       \
+    if ((value) != NULL) {                                                     \
       g_err |= oc_rep_encode_text_string(&object##_map, value, strlen(value)); \
     } else {                                                                   \
       g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
@@ -529,7 +529,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  */
 #define oc_rep_add_text_string(parent, value)                                  \
   do {                                                                         \
-    if ((const char *)(value) != NULL) {                                       \
+    if ((value) != NULL) {                                                     \
       g_err |=                                                                 \
         oc_rep_encode_text_string(&parent##_array, value, strlen(value));      \
     } else {                                                                   \
@@ -539,7 +539,7 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
 
 #define oc_rep_set_value_text_string(parent, value)                            \
   do {                                                                         \
-    if ((const char *)(value) != NULL) {                                       \
+    if ((value) != NULL) {                                                     \
       g_err |= oc_rep_encode_text_string(&parent##_map, value, strlen(value)); \
     } else {                                                                   \
       g_err |= oc_rep_encode_text_string(&parent##_map, "", 0);                \

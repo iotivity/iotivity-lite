@@ -47,7 +47,8 @@ OC_LIST(params_list);
 oc_collection_t *
 oc_collection_alloc(void)
 {
-  oc_collection_t *collection = oc_memb_alloc(&oc_collections_s);
+  oc_collection_t *collection =
+    (oc_collection_t *)oc_memb_alloc(&oc_collections_s);
   if (collection) {
     OC_LIST_STRUCT_INIT(collection, supported_rts);
     OC_LIST_STRUCT_INIT(collection, mandatory_rts);
@@ -66,7 +67,7 @@ oc_collection_free(oc_collection_t *collection)
     oc_ri_free_resource_properties((oc_resource_t *)collection);
 
     oc_link_t *link;
-    while ((link = oc_list_pop(collection->links)) != NULL) {
+    while ((link = (oc_link_t *)oc_list_pop(collection->links)) != NULL) {
       oc_delete_link(link);
     }
 
@@ -96,7 +97,7 @@ oc_link_t *
 oc_new_link(oc_resource_t *resource)
 {
   if (resource) {
-    oc_link_t *link = oc_memb_alloc(&oc_links_s);
+    oc_link_t *link = (oc_link_t *)oc_memb_alloc(&oc_links_s);
     if (link) {
       oc_new_string_array(&link->rel, 3);
       oc_string_array_add_item(link->rel, "hosts");
@@ -136,7 +137,7 @@ oc_delete_link(oc_link_t *link)
 static oc_event_callback_retval_t
 batch_notify_collection(void *data)
 {
-  if (coap_notify_collection_batch(data) != 0) {
+  if (coap_notify_collection_batch((oc_collection_t *)data) != 0) {
     OC_WRN("failed to send batch notification to collection observers");
   }
   return OC_EVENT_DONE;
@@ -145,7 +146,7 @@ batch_notify_collection(void *data)
 static oc_event_callback_retval_t
 baseline_notify_collection(void *data)
 {
-  if (coap_notify_collection_baseline(data) != 0) {
+  if (coap_notify_collection_baseline((oc_collection_t *)data) != 0) {
     OC_WRN("failed to send baseline notification to collection observers");
   }
   return OC_EVENT_DONE;
@@ -284,7 +285,7 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
       uri_path_len--;
     }
 
-    link = oc_list_head(collection->links);
+    link = (oc_link_t *)oc_list_head(collection->links);
     while (link != NULL) {
       if (link->resource &&
           (int)oc_string_len(link->resource->uri) == (uri_path_len + 1) &&
@@ -609,7 +610,7 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
   int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
   oc_collection_t *collection = (oc_collection_t *)request->resource;
   if (method == OC_GET) {
-    oc_link_t *link = oc_list_head(collection->links);
+    oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
     oc_rep_start_root_object();
     oc_process_baseline_interface(request->resource);
     /* rts */
@@ -739,7 +740,7 @@ static void
 oc_handle_collection_linked_list_request(oc_request_t *request)
 {
   const oc_collection_t *collection = (oc_collection_t *)request->resource;
-  oc_link_t *link = oc_list_head(collection->links);
+  oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
   oc_rep_start_links_array();
   while (link != NULL) {
     if (oc_filter_resource_by_rt(link->resource, request)) {
@@ -873,7 +874,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
         goto processed_request;
       }
     process_request:
-      link = oc_list_head(collection->links);
+      link = (oc_link_t *)oc_list_head(collection->links);
       while (link != NULL) {
         if (link->resource &&
             (!notify_resource == !(link->resource == notify_resource))) {

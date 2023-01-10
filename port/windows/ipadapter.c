@@ -599,9 +599,13 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
   Msg.dwBufferCount = 1;
 
   union {
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     char in[WSA_CMSG_SPACE(sizeof(struct in_pktinfo))];
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     char in6[WSA_CMSG_SPACE(sizeof(struct in6_pktinfo))];
   } control_buf;
   Msg.Control.buf = (char *)&control_buf;
@@ -632,7 +636,9 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
 
     LPWSACMSGHDR MsgHdr = NULL;
     do {
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
       MsgHdr = WSA_CMSG_NXTHDR(&Msg, MsgHdr);
       if (!MsgHdr) {
         break;
@@ -679,7 +685,7 @@ recv_msg(SOCKET sock, uint8_t *recv_buf, int recv_buf_size,
   return -1;
 }
 
-static void *
+static DWORD
 network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
@@ -882,11 +888,11 @@ network_event_thread(void *data)
     WSACloseEvent(events_list[i]);
   }
 
-  return NULL;
+  return 0;
 
 network_event_thread_error:
   oc_abort("err in network event thread");
-  return NULL;
+  return -1;
 }
 
 oc_endpoint_t *
@@ -998,9 +1004,13 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
   LPWSACMSGHDR MsgHdr = NULL;
 
   union {
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     char in[WSA_CMSG_SPACE(sizeof(struct in_pktinfo))];
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     char in6[WSA_CMSG_SPACE(sizeof(struct in6_pktinfo))];
   } control_buf;
 
@@ -1009,12 +1019,18 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
   if (message->endpoint.flags & IPV6) {
     Msg.namelen = sizeof(struct sockaddr_in6);
 
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     Msg.Control.len = WSA_CMSG_SPACE(sizeof(struct in6_pktinfo));
 
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     MsgHdr = WSA_CMSG_FIRSTHDR(&Msg);
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     memset(MsgHdr, 0, WSA_CMSG_SPACE(sizeof(struct in6_pktinfo)));
 
     MsgHdr->cmsg_level = IPPROTO_IPV6;
@@ -1038,12 +1054,18 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 #ifdef OC_IPV4
   else if (message->endpoint.flags & IPV4) {
     Msg.namelen = sizeof(struct sockaddr_in);
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     Msg.Control.len = WSA_CMSG_SPACE(sizeof(struct in_pktinfo));
 
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     MsgHdr = WSA_CMSG_FIRSTHDR(&Msg);
+#ifdef _MSC_VER
 #pragma warning(suppress : 4116)
+#endif /* _MSC_VER */
     memset(MsgHdr, 0, WSA_CMSG_SPACE(sizeof(struct in_pktinfo)));
 
     MsgHdr->cmsg_level = IPPROTO_IP;
@@ -1238,7 +1260,7 @@ connectivity_ipv4_init(ip_context_t *dev)
   sm->sin_addr.s_addr = INADDR_ANY;
 
   dev->secure4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->secure4_sock == SOCKET_ERROR) {
+  if (dev->secure4_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating secure IPv4 socket");
     return -1;
   }
@@ -1247,7 +1269,8 @@ connectivity_ipv4_init(ip_context_t *dev)
   dev->server4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   dev->mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (dev->server4_sock == SOCKET_ERROR || dev->mcast4_sock == SOCKET_ERROR) {
+  if (dev->server4_sock == (SOCKET)SOCKET_ERROR ||
+      dev->mcast4_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating IPv4 server sockets");
     return -1;
   }
@@ -1502,14 +1525,15 @@ oc_connectivity_init(size_t device)
   dev->server_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   dev->mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-  if (dev->server_sock == SOCKET_ERROR || dev->mcast_sock == SOCKET_ERROR) {
+  if (dev->server_sock == (SOCKET)SOCKET_ERROR ||
+      dev->mcast_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating server sockets");
     return -1;
   }
 
 #ifdef OC_SECURITY
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->secure_sock == SOCKET_ERROR) {
+  if (dev->secure_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating secure socket");
     return -1;
   }
@@ -1643,8 +1667,7 @@ oc_connectivity_init(size_t device)
   }
 
   dev->event_thread_handle =
-    CreateThread(0, 0, (LPTHREAD_START_ROUTINE)network_event_thread, dev, 0,
-                 &dev->event_thread);
+    CreateThread(0, 0, network_event_thread, dev, 0, &dev->event_thread);
   if (dev->event_thread_handle == NULL) {
     OC_ERR("creating network polling thread");
     return -1;
@@ -1710,7 +1733,7 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 
 #ifdef OC_DNS_LOOKUP
 int
-oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 {
   if (!domain || !addr) {
     OC_ERR("Error of input parameters");

@@ -41,7 +41,7 @@ static oc_blockwise_state_t *request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_OSCORE
-oc_message_t *multicast_update = NULL;
+oc_message_t *g_multicast_update = NULL;
 #endif /* OC_OSCORE */
 
 static bool
@@ -205,13 +205,34 @@ prepare_coap_request(oc_client_cb_t *cb)
 }
 
 #ifdef OC_OSCORE
+
+#ifdef OC_IPV4
+static void
+oc_do_multicast_update_ipv4()
+{
+  oc_message_t *multicast_update4 = oc_internal_allocate_outgoing_message();
+  if (multicast_update4) {
+    oc_make_ipv4_endpoint(mcast4, IPV4 | MULTICAST | SECURED, 5683, 0xe0, 0x00,
+                          0x01, 0xbb);
+
+    memcpy(&multicast_update4->endpoint, &mcast4, sizeof(oc_endpoint_t));
+
+    multicast_update4->length = g_multicast_update->length;
+    memcpy(multicast_update4->data, g_multicast_update->data,
+           g_multicast_update->length);
+
+    oc_send_message(multicast_update4);
+  }
+}
+#endif /* OC_IPV4 */
+
 bool
 oc_do_multicast_update(void)
 {
   int payload_size = oc_rep_get_encoded_payload_size();
 
   if (payload_size > 0) {
-    coap_set_payload(request, multicast_update->data + COAP_MAX_HEADER_SIZE,
+    coap_set_payload(request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
                      payload_size);
   } else {
     goto do_multicast_update_error;
@@ -221,35 +242,23 @@ oc_do_multicast_update(void)
     coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
   }
 
-  multicast_update->length =
-    coap_serialize_message(request, multicast_update->data);
-  if (multicast_update->length > 0) {
-    oc_send_message(multicast_update);
+  g_multicast_update->length =
+    coap_serialize_message(request, g_multicast_update->data);
+  if (g_multicast_update->length > 0) {
+    oc_send_message(g_multicast_update);
   } else {
     goto do_multicast_update_error;
   }
 
 #ifdef OC_IPV4
-  oc_message_t *multicast_update4 = oc_internal_allocate_outgoing_message();
-  if (multicast_update4) {
-    oc_make_ipv4_endpoint(mcast4, IPV4 | MULTICAST | SECURED, 5683, 0xe0, 0x00,
-                          0x01, 0xbb);
-
-    memcpy(&multicast_update4->endpoint, &mcast4, sizeof(oc_endpoint_t));
-
-    multicast_update4->length = multicast_update->length;
-    memcpy(multicast_update4->data, multicast_update->data,
-           multicast_update->length);
-
-    oc_send_message(multicast_update4);
-  }
+  oc_do_multicast_update_ipv4();
 #endif /* OC_IPV4 */
 
-  multicast_update = NULL;
+  g_multicast_update = NULL;
   return true;
 do_multicast_update_error:
-  oc_message_unref(multicast_update);
-  multicast_update = NULL;
+  oc_message_unref(g_multicast_update);
+  g_multicast_update = NULL;
   return false;
 }
 
@@ -262,15 +271,15 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   coap_message_type_t type = COAP_TYPE_NON;
 
-  multicast_update = oc_internal_allocate_outgoing_message();
+  g_multicast_update = oc_internal_allocate_outgoing_message();
 
-  if (!multicast_update) {
+  if (!g_multicast_update) {
     return false;
   }
 
-  memcpy(&multicast_update->endpoint, &mcast, sizeof(oc_endpoint_t));
+  memcpy(&g_multicast_update->endpoint, &mcast, sizeof(oc_endpoint_t));
 
-  oc_rep_new(multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
+  oc_rep_new(g_multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
 
   coap_udp_init_message(request, type, OC_POST, coap_get_mid());
 

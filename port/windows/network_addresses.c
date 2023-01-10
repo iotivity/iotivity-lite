@@ -90,7 +90,7 @@ get_network_addresses()
       OC_DBG("processing iface %ws:", iface->FriendlyName);
     }
 #endif /* OC_DEBUG */
-/* Process all IPv4 addresses on this interface. */
+       //  Process all IPv4 addresses on this interface.
 #ifdef OC_IPV4
     for (address = iface->FirstUnicastAddress; address;
          address = address->Next) {
@@ -110,44 +110,42 @@ get_network_addresses()
       }
     }
 #endif /* OC_IPV4 */
-    /* Process all IPv6 addresses on this interface. */
+    //  Process all IPv6 addresses on this interface.
     struct sockaddr_in6 *v6addr = NULL;
     for (address = iface->FirstUnicastAddress; address;
          address = address->Next) {
       if (address->Address.lpSockaddr->sa_family == AF_INET6) {
         struct sockaddr_in6 *addr =
           (struct sockaddr_in6 *)address->Address.lpSockaddr;
-        /* If the first address we see is link-local save it. */
+        // If the first address we see is link-local save it.
         if (!v6addr && IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
           v6addr = addr;
         }
-        /* If we see a non link-local and DNS_ELIGIBLE address, */
+        // If we see a non link-local and DNS_ELIGIBLE address,
         if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
             (address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
-          /* If this is the first address we're seeing, save it. */
+          // If this is the first address we're seeing, save it.
           if (!v6addr) {
             v6addr = addr;
           }
           uint8_t b = addr->sin6_addr.u.Byte[0];
           if (!((b & 0xfc) == b) && !((b & 0xfd) == b)) {
-            /* We've gotten a non-private global address
-             * which we could use. So, break.
-             */
+            // We've gotten a non-private global address which we could use.
+            // So, break.
             v6addr = addr;
             break;
           } else {
-            /* We've gotten a private IPv6 address in global scope. */
-            /* If the saved address is link-local, substitute that with this. */
+            // We've gotten a private IPv6 address in global scope. If the saved
+            // address is link-local, substitute that with this.
             if (IN6_IS_ADDR_LINKLOCAL(&v6addr->sin6_addr)) {
               v6addr = addr;
             }
-            /* Process the remaining addresses on this interface to see if we
-            /* can find the global address assigned by our ISP. */
+            // Process the remaining addresses on this interface to see if we
+            // can find the global address assigned by our ISP.
             continue;
           }
         }
-        /* If we see a non link-local and non DNS_ELIGIBLE address, ignore it.
-         */
+        // If we see a non link-local and non DNS_ELIGIBLE address, ignore it.
         if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
             !(address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
 #ifdef OC_DEBUG

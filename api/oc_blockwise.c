@@ -23,6 +23,7 @@
 #include "port/oc_log.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#include <inttypes.h>
 
 OC_MEMB(oc_blockwise_request_states_s, oc_blockwise_request_state_t,
         OC_MAX_NUM_CONCURRENT_REQUESTS);
@@ -63,7 +64,7 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href,
     if (!buffer->buffer) {
       buffer->buffer = (uint8_t *)malloc(buffer_size);
       buffer->buffer_size = buffer_size;
-      OC_DBG("block-wise buffer allocated with size %u", (unsigned)buffer_size);
+      OC_DBG("block-wise buffer allocated with size %" PRIu32, buffer_size);
     }
     if (!buffer->buffer) {
       oc_memb_free(pool, buffer);
@@ -139,7 +140,8 @@ static oc_event_callback_retval_t
 oc_blockwise_request_timeout(void *data)
 {
   oc_blockwise_free_buffer(oc_blockwise_requests,
-                           &oc_blockwise_request_states_s, data);
+                           &oc_blockwise_request_states_s,
+                           (oc_blockwise_state_t *)data);
   return OC_EVENT_DONE;
 }
 
@@ -147,7 +149,8 @@ static oc_event_callback_retval_t
 oc_blockwise_response_timeout(void *data)
 {
   oc_blockwise_free_buffer(oc_blockwise_responses,
-                           &oc_blockwise_response_states_s, data);
+                           &oc_blockwise_response_states_s,
+                           (oc_blockwise_state_t *)data);
   return OC_EVENT_DONE;
 }
 
@@ -209,18 +212,19 @@ oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer)
 void
 oc_blockwise_scrub_buffers_for_client_cb(void *cb)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(oc_blockwise_requests), *next;
+  oc_blockwise_state_t *buffer =
+    (oc_blockwise_state_t *)oc_list_head(oc_blockwise_requests);
   while (buffer != NULL) {
-    next = buffer->next;
+    oc_blockwise_state_t *next = buffer->next;
     if (buffer->client_cb == cb) {
       oc_blockwise_free_request_buffer(buffer);
     }
     buffer = next;
   }
 
-  buffer = oc_list_head(oc_blockwise_responses);
+  buffer = (oc_blockwise_state_t *)oc_list_head(oc_blockwise_responses);
   while (buffer != NULL) {
-    next = buffer->next;
+    oc_blockwise_state_t *next = buffer->next;
     if (buffer->client_cb == cb) {
       oc_blockwise_free_response_buffer(buffer);
     }
@@ -232,18 +236,19 @@ oc_blockwise_scrub_buffers_for_client_cb(void *cb)
 void
 oc_blockwise_scrub_buffers(bool all)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(oc_blockwise_requests), *next;
+  oc_blockwise_state_t *buffer =
+    (oc_blockwise_state_t *)oc_list_head(oc_blockwise_requests);
   while (buffer != NULL) {
-    next = buffer->next;
+    oc_blockwise_state_t *next = buffer->next;
     if (buffer->ref_count == 0 || all) {
       oc_blockwise_free_request_buffer(buffer);
     }
     buffer = next;
   }
 
-  buffer = oc_list_head(oc_blockwise_responses);
+  buffer = (oc_blockwise_state_t *)oc_list_head(oc_blockwise_responses);
   while (buffer != NULL) {
-    next = buffer->next;
+    oc_blockwise_state_t *next = buffer->next;
     if (buffer->ref_count == 0 || all) {
       oc_blockwise_free_response_buffer(buffer);
     }
@@ -256,7 +261,7 @@ static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_token(oc_list_t list, uint8_t *token,
                                   uint8_t token_len)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(list);
+  oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_list_head(list);
   while (buffer) {
     if (token_len > 0 && buffer->role == OC_BLOCKWISE_CLIENT &&
         buffer->token_len == token_len &&
@@ -284,7 +289,7 @@ oc_blockwise_find_response_buffer_by_token(uint8_t *token, uint8_t token_len)
 static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_mid(oc_list_t list, uint16_t mid)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(list);
+  oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_list_head(list);
   while (buffer) {
     if (buffer->mid == mid && buffer->role == OC_BLOCKWISE_CLIENT)
       break;
@@ -309,7 +314,7 @@ static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_client_cb(oc_list_t list, oc_endpoint_t *endpoint,
                                       void *client_cb)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(list);
+  oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_list_head(list);
   while (buffer) {
     if (buffer->role == OC_BLOCKWISE_CLIENT && buffer->client_cb == client_cb &&
         oc_endpoint_compare(endpoint, &buffer->endpoint) == 0) {
@@ -343,7 +348,7 @@ oc_blockwise_find_buffer(oc_list_t list, const char *href, size_t href_len,
                          const char *query, size_t query_len,
                          oc_blockwise_role_t role)
 {
-  oc_blockwise_state_t *buffer = oc_list_head(list);
+  oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_list_head(list);
   while (buffer) {
     if (strncmp(href, oc_string(buffer->href), href_len) == 0 &&
         oc_endpoint_compare(&buffer->endpoint, endpoint) == 0 &&

@@ -27,7 +27,7 @@
 
 static struct oc_memb *rep_objects;
 CborEncoder g_encoder, root_map, links_array;
-CborError g_err;
+int g_err;
 static uint8_t *g_buf;
 #ifdef OC_DYNAMIC_ALLOCATION
 static bool g_enable_realloc;
@@ -233,7 +233,7 @@ oc_rep_get_encoded_payload_size(void)
 static oc_rep_t *
 _alloc_rep(void)
 {
-  oc_rep_t *rep = oc_memb_alloc(rep_objects);
+  oc_rep_t *rep = (oc_rep_t *)oc_memb_alloc(rep_objects);
   if (rep != NULL) {
     rep->name.size = 0;
   }
@@ -512,7 +512,8 @@ get_tagged_value:
         (*prev)->type = OC_REP_OBJECT;
         (*prev)->next = NULL;
         oc_rep_t **obj = &(*prev)->value.object;
-        /* Process a series of properties that make up an object of the array */
+        /* Process a series of properties that make up an object of the
+        array */
         *err |= cbor_value_enter_container(&array, &map);
         while (!cbor_value_at_end(&map)) {
           oc_parse_rep_value(&map, obj, err);

@@ -180,8 +180,7 @@ void oc_connectivity_end_session(oc_endpoint_t *endpoint);
  * @param flags the transport flags
  * @return int 0 = success
  */
-int oc_dns_lookup(const char *domain, oc_string_t *addr,
-                  enum transport_flags flags);
+int oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags);
 #ifdef OC_DNS_CACHE
 /**
  * @brief clear the DNS cache

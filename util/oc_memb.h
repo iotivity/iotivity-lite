@@ -175,11 +175,11 @@ char _oc_memb_free(
   struct oc_memb *m, void *ptr);
 
 #ifdef OC_MEMORY_TRACE
-#define oc_memb_alloc(m) (void *)_oc_memb_alloc(__func__, m)
-#define oc_memb_free(m, ptr) (char)_oc_memb_free(__func__, m, ptr)
+#define oc_memb_alloc(m) _oc_memb_alloc(__func__, m)
+#define oc_memb_free(m, ptr) _oc_memb_free(__func__, m, ptr)
 #else
-#define oc_memb_alloc(m) (void *)_oc_memb_alloc(m)
-#define oc_memb_free(m, ptr) (char)_oc_memb_free(m, ptr)
+#define oc_memb_alloc(m) _oc_memb_alloc(m)
+#define oc_memb_free(m, ptr) _oc_memb_free(m, ptr)
 #endif
 
 void oc_memb_set_buffers_avail_cb(struct oc_memb *m,

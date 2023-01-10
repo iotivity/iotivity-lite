@@ -101,7 +101,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   int interface_index =
     (request->origin) ? request->origin->interface_index : -1;
-  enum transport_flags conn =
+  transport_flags conn =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   /* We are interested in only a single coap:// endpoint on this logical device.
    */

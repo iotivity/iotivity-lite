@@ -19,6 +19,8 @@
 #include "api/oc_helpers_internal.h"
 #include "oc_helpers.h"
 #include "port/oc_random.h"
+#include <array>
+#include <cstdint>
 #include <cstdlib>
 #include <gtest/gtest.h>
 

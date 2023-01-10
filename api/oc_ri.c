@@ -16,10 +16,6 @@
  *
  ***************************************************************************/
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <string.h>
-
 #include "api/oc_helpers_internal.h"
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
@@ -78,6 +74,15 @@
 #include "oc_session_events.h"
 #endif /* OC_TCP */
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
+#ifdef WIN32
+#include <windows.h>
+#else /* !WIN32 */
+#include <strings.h>
+#endif /* WIN32 */
+
 #ifdef OC_HAS_FEATURE_PUSH
 OC_PROCESS_NAME(oc_push_process);
 #endif /* OC_HAS_FEATURE_PUSH */
@@ -107,8 +112,6 @@ OC_PROCESS(g_timed_callback_events, "OC timed callbacks");
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler(void *data);
 #endif /* OC_TCP */
-
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
 
@@ -244,7 +247,7 @@ oc_ri_find_query_nth_key_value_pair(const char *query, size_t query_len,
   // find nth key-value pair
   size_t i = 0;
   while (i < (n - 1)) {
-    start = memchr(start, '&', end - start);
+    start = (const char *)memchr(start, '&', end - start);
     if (start == NULL) {
       return res;
     }
@@ -253,8 +256,8 @@ oc_ri_find_query_nth_key_value_pair(const char *query, size_t query_len,
   }
   res.key = start;
 
-  const char *value = memchr(start, '=', end - start);
-  const char *next_pair = memchr(start, '&', end - start);
+  const char *value = (const char *)memchr(start, '=', end - start);
+  const char *next_pair = (const char *)memchr(start, '&', end - start);
   // verify that the found value belongs to the current key
   if (next_pair != NULL && (next_pair < value)) {
     // the current key does not have a '='
@@ -709,13 +712,13 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
           g_currently_processed_event_cb_delete) {
         oc_list_remove(list, event_cb);
         oc_memb_free(cb_pool, event_cb);
-        event_cb = oc_list_head(list);
+        event_cb = (oc_event_callback_t *)oc_list_head(list);
         continue;
       } else {
         OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
         oc_etimer_restart(&event_cb->timer);
         OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
-        event_cb = oc_list_head(list);
+        event_cb = (oc_event_callback_t *)oc_list_head(list);
         continue;
       }
     }
@@ -828,7 +831,7 @@ free_all_event_timers(void)
     oc_etimer_stop(&obs_cb->timer);
     oc_list_remove(g_observe_callbacks, obs_cb);
     oc_memb_free(&g_event_callbacks_s, obs_cb);
-    obs_cb = oc_list_pop(g_observe_callbacks);
+    obs_cb = (oc_event_callback_t *)oc_list_pop(g_observe_callbacks);
   }
 #endif /* OC_SERVER */
   oc_event_callback_t *event_cb =
@@ -837,7 +840,7 @@ free_all_event_timers(void)
     oc_etimer_stop(&event_cb->timer);
     oc_list_remove(g_timed_callbacks, event_cb);
     oc_memb_free(&g_event_callbacks_s, event_cb);
-    event_cb = oc_list_pop(g_timed_callbacks);
+    event_cb = (oc_event_callback_t *)oc_list_pop(g_timed_callbacks);
   }
 }
 

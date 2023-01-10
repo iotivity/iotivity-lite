@@ -3,6 +3,9 @@
 
 /* Time resolution */
 #include <stdint.h>
+#ifdef __GNUC__
+#include <string.h> // redefine strncasecmp for MinGW and Cygwin
+#endif
 
 #ifdef __cplusplus
 extern "C" {

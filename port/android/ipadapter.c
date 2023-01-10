@@ -1678,7 +1678,7 @@ oc_connectivity_end_session(oc_endpoint_t *endpoint)
 
 #ifdef OC_DNS_LOOKUP
 int
-oc_dns_lookup(const char *domain, oc_string_t *addr, enum transport_flags flags)
+oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 {
   if (!domain || !addr) {
     OC_ERR("Error of input parameters");

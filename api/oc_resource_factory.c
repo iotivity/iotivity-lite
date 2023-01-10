@@ -74,8 +74,8 @@ find_collection_unique_instance_index(oc_collection_t *collection)
   const char *collection_uri = oc_string(collection->res.uri);
 
   unsigned index = 1;
-  for (oc_link_t *link = oc_list_head(collection->links); link != NULL;
-       link = link->next) {
+  for (oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
+       link != NULL; link = link->next) {
     if ((link->resource == NULL) || (oc_string_len(link->resource->uri) == 0)) {
       continue;
     }
@@ -145,8 +145,10 @@ get_collection_instance_uri(oc_collection_t *collection, char *uri,
     // uri too long for output buffer
     return false;
   }
-  strncpy(uri, oc_string(collection->res.uri),
-          oc_string_len(collection->res.uri));
+  if (oc_string_len(collection->res.uri) > 0) {
+    strncpy(uri, oc_string(collection->res.uri),
+            oc_string_len(collection->res.uri));
+  }
   uri[oc_string_len(collection->res.uri)] = '/';
 
   int written = snprintf(NULL, 0, "%d", index);
