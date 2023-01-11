@@ -65,7 +65,7 @@ get_network_addresses()
                              GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER,
                            NULL, iface_list, &out_buf_len);
     if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
-      OC_ERR("retry GetAdaptersAddresses with out_buf_len=%d", out_buf_len);
+      OC_ERR("retry GetAdaptersAddresses with out_buf_len=%ld", out_buf_len);
       free(iface_list);
       iface_list = NULL;
       continue;
@@ -87,7 +87,9 @@ get_network_addresses()
 
 #ifdef OC_DEBUG
     if (iface->FriendlyName) {
+#ifdef _MSC_VER
       OC_DBG("processing iface %ws:", iface->FriendlyName);
+#endif /* _MSC_VER */
     }
 #endif /* OC_DEBUG */
        //  Process all IPv4 addresses on this interface.

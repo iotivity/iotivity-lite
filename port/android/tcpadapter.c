@@ -417,12 +417,12 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       total_length = get_total_length_from_header(message, &session->endpoint);
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)",
+        OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
                total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         OC_ERR("It may occur buffer overflow.");
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
-      OC_DBG("tcp packet total length : %ld bytes.", total_length);
+      OC_DBG("tcp packet total length : %zu bytes.", total_length);
 
       want_read = total_length - (size_t)count;
     }

@@ -42,7 +42,7 @@ oc_storage_config(const char *store)
     return -ENOENT;
   }
 
-  strncpy(g_store_path, store, g_store_path_len);
+  memcpy(g_store_path, store, g_store_path_len);
   g_store_path[g_store_path_len] = '\0';
   g_path_set = true;
 
@@ -103,7 +103,7 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
   }
 
   g_store_path[g_store_path_len] = '/';
-  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  memcpy(g_store_path + g_store_path_len + 1, store, store_len);
   g_store_path[1 + g_store_path_len + store_len] = '\0';
 
   while (true) {

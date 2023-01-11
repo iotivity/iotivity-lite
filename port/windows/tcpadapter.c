@@ -197,7 +197,7 @@ free_tcp_session_async_locked(tcp_session_t *session)
   oc_list_add(free_session_list_async, session);
 
   if (!SetEvent(session->dev->tcp.signal_event)) {
-    OC_ERR("could not trigger signal event (%d)\n", GetLastError());
+    OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
   }
   OC_DBG("free TCP session async");
 }
@@ -207,7 +207,7 @@ set_socket_block_mode(SOCKET sockfd, u_long nonblock)
 {
   int error = ioctlsocket(sockfd, FIONBIO, &nonblock);
   if (error == SOCKET_ERROR) {
-    OC_ERR("set socket as blocking(%ul) %d", nonblock, WSAGetLastError());
+    OC_ERR("set socket as blocking(%lu) %d", nonblock, WSAGetLastError());
     return SOCKET_ERROR;
   }
   return 0;
@@ -287,7 +287,7 @@ accept_new_session(ip_context_t *dev, SOCKET fd, oc_endpoint_t *endpoint)
   oc_tcp_adapter_mutex_unlock();
 
   if (!SetEvent(dev->tcp.signal_event)) {
-    OC_ERR("could not trigger signal event (%d)\n", GetLastError());
+    OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
     return SOCKET_ERROR;
   }
 
@@ -454,7 +454,7 @@ initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   }
 
   if (!SetEvent(dev->tcp.signal_event)) {
-    OC_ERR("could not trigger signal event (%d)\n", GetLastError());
+    OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
   }
 
   OC_DBG("signaled network event thread to monitor the newly added session\n");
@@ -758,7 +758,7 @@ network_event_thread(void *data)
     DWORD size = fill_sockets_handlers(dev, &socks);
     DWORD ret = WaitForMultipleObjects(size, socks.handlers, FALSE, INFINITE);
     if (ret == WAIT_FAILED) {
-      OC_ERR("cannot wait for multiple objects: error_code(%d)",
+      OC_ERR("cannot wait for multiple objects: error_code(%ld)",
              GetLastError());
       continue;
     }
@@ -979,7 +979,7 @@ oc_tcp_connectivity_init(ip_context_t *dev)
   dev->tcp.event_thread_handle =
     CreateThread(0, 0, network_event_thread, dev, 0, &dev->tcp.event_thread);
   if (dev->tcp.event_thread_handle == NULL) {
-    OC_ERR("creating tcp network polling thread %d", GetLastError());
+    OC_ERR("creating tcp network polling thread %ld", GetLastError());
     WSACloseEvent(dev->tcp.server_event);
     closesocket(dev->tcp.server_sock);
 #ifdef OC_SECURITY
@@ -1005,7 +1005,7 @@ void
 oc_tcp_connectivity_shutdown(ip_context_t *dev)
 {
   if (!SetEvent(dev->tcp.signal_event)) {
-    OC_ERR("could not trigger signal event (%d)\n", GetLastError());
+    OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
   }
   WaitForSingleObject(dev->tcp.event_thread_handle, INFINITE);
   TerminateThread(dev->tcp.event_thread_handle, 0);

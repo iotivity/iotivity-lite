@@ -106,9 +106,13 @@ oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
   memset(&now_tm, 0, sizeof(struct tm));
   timestamp_to_tm_utc(&now_t, &now_tm);
   char now_str[15];
-  snprintf(now_str, 15, "%d%02d%02d%02d%02d%02d", now_tm.tm_year + 1900,
-           now_tm.tm_mon + 1, now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min,
-           now_tm.tm_sec);
+  ret = snprintf(now_str, sizeof(now_str), "%d%02d%02d%02d%02d%02d",
+                 now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday,
+                 now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
+  if (ret < 0 || ret >= (int)sizeof(now_str)) {
+    OC_ERR("error writing role cert validity: invalid date");
+    goto exit;
+  }
   ret = mbedtls_x509write_crt_set_validity(&cert, now_str, "20291231235959");
   if (ret < 0) {
     OC_ERR("error writing role cert validity %d", ret);
@@ -348,9 +352,13 @@ oc_obt_generate_identity_cert(const char *subject_name,
   memset(&now_tm, 0, sizeof(struct tm));
   timestamp_to_tm_utc(&now_t, &now_tm);
   char now_str[15];
-  snprintf(now_str, 15, "%d%02d%02d%02d%02d%02d", now_tm.tm_year + 1900,
-           now_tm.tm_mon + 1, now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min,
-           now_tm.tm_sec);
+  ret = snprintf(now_str, sizeof(now_str), "%d%02d%02d%02d%02d%02d",
+                 now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday,
+                 now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
+  if (ret < 0 || ret >= (int)sizeof(now_str)) {
+    OC_ERR("error writing identity cert validity: invalid date");
+    goto exit;
+  }
   ret = mbedtls_x509write_crt_set_validity(&cert, now_str, "20291231235959");
   if (ret < 0) {
     OC_ERR("error writing identity cert validity %d", ret);
@@ -536,9 +544,13 @@ oc_obt_generate_self_signed_root_cert(const char *subject_name,
   memset(&now_tm, 0, sizeof(struct tm));
   timestamp_to_tm_utc(&now_t, &now_tm);
   char now_str[15];
-  snprintf(now_str, 15, "%d%02d%02d%02d%02d%02d", now_tm.tm_year + 1900,
-           now_tm.tm_mon + 1, now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min,
-           now_tm.tm_sec);
+  ret = snprintf(now_str, sizeof(now_str), "%d%02d%02d%02d%02d%02d",
+                 now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday,
+                 now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
+  if (ret < 0 || ret >= (int)sizeof(now_str)) {
+    OC_ERR("error writing root cert validity: invalid date");
+    goto exit;
+  }
   ret = mbedtls_x509write_crt_set_validity(&cert, now_str, "20291231235959");
   if (ret < 0) {
     OC_ERR("error writing root cert validity %d", ret);
