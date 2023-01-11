@@ -339,8 +339,17 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
     int i = addr_idx - 1;
     addr_idx = OC_IPV6_ADDRLEN - 1;
     while (i >= split) {
+#ifdef __GNUC__
+// GCC thinks that addr has size=4 instead of size=16 and complains about
+// overflow
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif // __GNUC__
       addr[addr_idx] = addr[i];
       addr[i] = 0;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif // __GNUC__
       i--;
       addr_idx--;
     }
