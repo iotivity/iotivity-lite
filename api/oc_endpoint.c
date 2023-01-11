@@ -68,6 +68,23 @@ oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di)
   }
 }
 
+static const char *
+oc_endpoint_flags_to_scheme(transport_flags flags)
+{
+#ifdef OC_TCP
+  if ((flags & TCP) != 0) {
+    if ((flags & SECURED) != 0) {
+      return OC_SCHEME_COAPS_TCP;
+    }
+    return OC_SCHEME_COAP_TCP;
+  }
+#endif
+  if ((flags & SECURED) != 0) {
+    return OC_SCHEME_COAPS;
+  }
+  return OC_SCHEME_COAP;
+}
+
 #ifdef OC_IPV4
 static void
 oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
@@ -79,28 +96,16 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   uint8_t *addr = endpoint->addr.ipv4.address;
   sprintf(ip, "%u.%u.%u.%u:%u", addr[0], addr[1], addr[2], addr[3],
           endpoint->addr.ipv4.port);
-#ifdef OC_TCP
-  if (endpoint->flags & TCP) {
-    if (endpoint->flags & SECURED) {
-      oc_concat_strings(endpoint_str, OC_SCHEME_COAPS_TCP, ip);
-    } else {
-      oc_concat_strings(endpoint_str, OC_SCHEME_COAP_TCP, ip);
-    }
-  } else
-#endif
-    if (endpoint->flags & SECURED) {
-    oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
-  } else {
-    oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
-  }
+  oc_concat_strings(endpoint_str, oc_endpoint_flags_to_scheme(endpoint->flags),
+                    ip);
 }
 #endif /* OC_IPV4 */
 
-static void
+static int
 oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
   if (!endpoint || !endpoint_str) {
-    return;
+    return -1;
   }
   uint8_t *addr = endpoint->addr.ipv6.address;
   char ip[OC_IPV6_ADDRSTRLEN + 8];
@@ -116,29 +121,37 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
       last_zeros = addr_idx;
       num_zeros += 2;
       addr_idx += 2;
+      continue;
+    }
+    if (num_zeros > max_zeros_num) {
+      max_zeros_num = num_zeros;
+      max_zeros_start = start_zeros;
+    }
+    if (addr_idx > 0 && addr_idx <= 14) {
+      ip[str_idx++] = ':';
+    }
+  next_octet:
+    if (addr_idx % 2 == 0 && addr[addr_idx] == 0) {
+      /* Skip zero octet */
     } else {
-      if (num_zeros > max_zeros_num) {
-        max_zeros_num = num_zeros;
-        max_zeros_start = start_zeros;
-      }
-      if (addr_idx > 0 && addr_idx <= 14) {
-        ip[str_idx++] = ':';
-      }
-    next_octet:
-      if (addr_idx % 2 == 0 && addr[addr_idx] == 0) {
-        /* Skip zero octet */
-      } else if ((addr_idx % 2 == 0 ||
-                  (addr_idx > 0 && addr[addr_idx - 1]) == 0) &&
-                 addr[addr_idx] <= 0x0f) {
-        snprintf(&ip[str_idx++], 2, "%x", addr[addr_idx]);
+      size_t wsize;
+      int ret;
+      if ((addr_idx % 2 == 0 || (addr_idx > 0 && addr[addr_idx - 1]) == 0) &&
+          addr[addr_idx] <= 0x0f) {
+        wsize = 2;
+        ret = snprintf(&ip[str_idx], wsize, "%x", addr[addr_idx]);
       } else {
-        snprintf(&ip[str_idx], 3, "%02x", addr[addr_idx]);
-        str_idx += 2;
+        wsize = 3;
+        ret = snprintf(&ip[str_idx], wsize, "%02x", addr[addr_idx]);
       }
-      addr_idx++;
-      if (addr_idx % 2 != 0) {
-        goto next_octet;
+      if (ret < 0 || ret != (int)(wsize - 1)) {
+        return -1;
       }
+      str_idx += ret;
+    }
+    addr_idx++;
+    if (addr_idx % 2 != 0) {
+      goto next_octet;
     }
   }
   if (num_zeros > max_zeros_num) {
@@ -157,20 +170,9 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   } else {
     sprintf(&ip[str_idx], "]:%u", endpoint->addr.ipv6.port);
   }
-#ifdef OC_TCP
-  if (endpoint->flags & TCP) {
-    if (endpoint->flags & SECURED) {
-      oc_concat_strings(endpoint_str, OC_SCHEME_COAPS_TCP, ip);
-    } else {
-      oc_concat_strings(endpoint_str, OC_SCHEME_COAP_TCP, ip);
-    }
-  } else
-#endif
-    if (endpoint->flags & SECURED) {
-    oc_concat_strings(endpoint_str, OC_SCHEME_COAPS, ip);
-  } else {
-    oc_concat_strings(endpoint_str, OC_SCHEME_COAP, ip);
-  }
+  oc_concat_strings(endpoint_str, oc_endpoint_flags_to_scheme(endpoint->flags),
+                    ip);
+  return 0;
 }
 
 int
@@ -181,7 +183,9 @@ oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   }
 
   if ((endpoint->flags & IPV6) != 0) {
-    oc_ipv6_endpoint_to_string(endpoint, endpoint_str);
+    if (oc_ipv6_endpoint_to_string(endpoint, endpoint_str) != 0) {
+      return -1;
+    }
     return 0;
   }
 #ifdef OC_IPV4

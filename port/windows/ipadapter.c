@@ -111,7 +111,7 @@ add_ip_interface(DWORD target_index)
   }
   new_if->if_index = target_index;
   oc_list_add(ip_interface_list, new_if);
-  OC_DBG("New interface added: %d", new_if->if_index);
+  OC_DBG("New interface added: %ld", new_if->if_index);
   return true;
 }
 
@@ -126,7 +126,7 @@ remove_ip_interface(DWORD target_index)
 
   oc_list_remove(ip_interface_list, if_item);
   oc_memb_free(&ip_interface_s, if_item);
-  OC_DBG("Removed from ip interface list: %d", target_index);
+  OC_DBG("Removed from ip interface list: %ld", target_index);
   return true;
 }
 
@@ -419,7 +419,7 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
 #ifdef OC_DEBUG
-      PRINT("Adding address for interface %d\n", ifaddr->if_index);
+      PRINT("Adding address for interface %ld\n", ifaddr->if_index);
       PRINTipaddr(ep);
       PRINT("\n\n");
 #endif /* OC_DEBUG */
@@ -439,7 +439,7 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
 #ifdef OC_DEBUG
-      PRINT("Adding address for interface %d\n", ifaddr->if_index);
+      PRINT("Adding address for interface %ld\n", ifaddr->if_index);
       PRINTipaddr(ep);
       PRINT("\n\n");
 #endif /* OC_DEBUG */

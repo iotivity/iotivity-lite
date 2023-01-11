@@ -420,12 +420,13 @@ tcp_session_receive_message(tcp_session_t *session, oc_message_t *message)
       // check to avoid buffer overflow
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%ld) is bigger than max pdu size(%ld)",
-               total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
+        OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
+               total_length,
+               (long)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         free_session_locked(session, true);
         return ADAPTER_STATUS_ERROR;
       }
-      OC_DBG("tcp packet total length : %ld bytes.", total_length);
+      OC_DBG("tcp packet total length : %zu bytes.", total_length);
 
       want_read = total_length - (size_t)count;
     }
