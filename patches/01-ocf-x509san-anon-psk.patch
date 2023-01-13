@@ -59,7 +59,7 @@ index 0c754b122..a7bc61354 100644
  mbedtls_net_context;
  
 diff --git a/include/mbedtls/ssl.h b/include/mbedtls/ssl.h
-index 072ebbe46..c829de214 100644
+index 072ebbe46..2bed05198 100644
 --- a/include/mbedtls/ssl.h
 +++ b/include/mbedtls/ssl.h
 @@ -581,7 +581,8 @@ union mbedtls_ssl_premaster_secret
@@ -83,10 +83,40 @@ index 072ebbe46..c829de214 100644
  #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
      mbedtls_x509_crt_ca_cb_t MBEDTLS_PRIVATE(f_ca_cb);
      void *MBEDTLS_PRIVATE(p_ca_cb);
-@@ -2964,6 +2969,45 @@ void mbedtls_ssl_conf_ca_cb( mbedtls_ssl_config *conf,
+@@ -2964,6 +2969,75 @@ void mbedtls_ssl_conf_ca_cb( mbedtls_ssl_config *conf,
  int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
                                mbedtls_x509_crt *own_cert,
                                mbedtls_pk_context *pk_key );
++
++/**
++ * \brief          The type of certificate chain and private key callback.
++ *
++ * \note           The callback will be invoked by \c mbedtls_ssl_conf_iterate_own_certs for
++ *                 each certificate chain and private key pair added to configuration
++ *                 by \c mbedtls_ssl_conf_own_cert.
++ *
++ * \param ctx      An opaque context passed to the callback.
++ * \param own_cert own public certificate chain
++ * \param pk_key   own private key
++ *
++ * \return         \c 0 to continue iteration.
++ * \return         A non-zero value to stop iteration.
++ */
++typedef int (*mbedtls_ssl_conf_iterate_own_certs_cb_t)( void *ctx,
++                                                        const mbedtls_x509_crt *own_cert,
++                                                        const mbedtls_pk_context *pk_key );
++
++/**
++ * \brief          Iterate over configured certificate and key pairs and invoke provided
++ *                 callback with each pair.
++ *
++ * \param conf     SSL configuration
++ * \param cert_cb  The callback to use with each certificate key pair
++ * \param ctx      The context to be passed to \p cert_cb
++*/
++void mbedtls_ssl_conf_iterate_own_certs( const mbedtls_ssl_config *conf,
++                                        mbedtls_ssl_conf_iterate_own_certs_cb_t cert_cb,
++                                        void *ctx );
 +
 +/**
 + * \brief                  Set custom EKU OIDs to be checked on certificates during TLS negotiation,
@@ -808,7 +838,7 @@ index f34f2de30..fb89dd181 100644
          if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
                                        p, end - p) ) != 0 )
 diff --git a/library/ssl_tls.c b/library/ssl_tls.c
-index d868e4965..382f14ae3 100644
+index d868e4965..d7e650292 100644
 --- a/library/ssl_tls.c
 +++ b/library/ssl_tls.c
 @@ -2148,6 +2148,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl,
@@ -820,10 +850,23 @@ index d868e4965..382f14ae3 100644
                                        &ssl->session_negotiate->verify_result ) != 0 )
      {
          MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad certificate (usage extensions)" ) );
-@@ -3653,6 +3655,26 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
+@@ -3653,6 +3655,39 @@ int mbedtls_ssl_conf_own_cert( mbedtls_ssl_config *conf,
      return( ssl_append_key_cert( &conf->key_cert, own_cert, pk_key ) );
  }
  
++void mbedtls_ssl_conf_iterate_own_certs( const mbedtls_ssl_config *conf,
++                                        mbedtls_ssl_conf_iterate_own_certs_cb_t cert_cb,
++                                        void *ctx )
++{
++    mbedtls_ssl_key_cert *key_cert = conf->key_cert;
++    while(key_cert != NULL)
++    {
++        if (cert_cb(ctx, key_cert->cert, key_cert->key) != 0)
++            break;
++        key_cert = key_cert->next;
++    }
++}
++
 +int mbedtls_ssl_conf_ekus( mbedtls_ssl_config *conf,
 +                           const char *client_oid, size_t client_oid_len,
 +                           const char *server_oid, size_t server_oid_len )
@@ -847,7 +890,7 @@ index d868e4965..382f14ae3 100644
  void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
                                 mbedtls_x509_crt *ca_chain,
                                 mbedtls_x509_crl *ca_crl )
-@@ -4208,14 +4230,14 @@ void mbedtls_ssl_get_dtls_srtp_negotiation_result( const mbedtls_ssl_context *ss
+@@ -4208,14 +4243,14 @@ void mbedtls_ssl_get_dtls_srtp_negotiation_result( const mbedtls_ssl_context *ss
  
  void mbedtls_ssl_conf_max_version( mbedtls_ssl_config *conf, int major, int minor )
  {
@@ -866,7 +909,7 @@ index d868e4965..382f14ae3 100644
  }
  
  #if defined(MBEDTLS_SSL_SRV_C)
-@@ -6458,6 +6480,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
+@@ -6458,6 +6493,13 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
      mbedtls_ssl_conf_endpoint( conf, endpoint );
      mbedtls_ssl_conf_transport( conf, transport );
  
@@ -880,7 +923,7 @@ index d868e4965..382f14ae3 100644
      /*
       * Things that are common to all presets
       */
-@@ -6861,6 +6890,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
+@@ -6861,6 +6903,8 @@ int mbedtls_ssl_check_sig_hash( const mbedtls_ssl_context *ssl,
  int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
                            const mbedtls_ssl_ciphersuite_t *ciphersuite,
                            int cert_endpoint,
@@ -889,7 +932,7 @@ index d868e4965..382f14ae3 100644
                            uint32_t *flags )
  {
      int ret = 0;
-@@ -6895,6 +6926,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -6895,6 +6939,7 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
              case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
              case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
              case MBEDTLS_KEY_EXCHANGE_ECJPAKE:
@@ -897,7 +940,7 @@ index d868e4965..382f14ae3 100644
                  usage = 0;
          }
      }
-@@ -6912,13 +6944,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
+@@ -6912,13 +6957,13 @@ int mbedtls_ssl_check_cert_usage( const mbedtls_x509_crt *cert,
  
      if( cert_endpoint == MBEDTLS_SSL_IS_SERVER )
      {
