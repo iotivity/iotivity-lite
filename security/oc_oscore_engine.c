@@ -31,6 +31,8 @@
 #include "oc_tls.h"
 #include "util/oc_process.h"
 
+#include <inttypes.h>
+
 OC_PROCESS(oc_oscore_handler, "OSCORE Process");
 
 static oc_event_callback_retval_t
@@ -398,7 +400,7 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     OC_DBG("### protecting multicast request ###");
     /* Use context->SSN as Partial IV */
     oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-    OC_DBG("---using SSN as Partial IV: %llu", oscore_ctx->ssn);
+    OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
     OC_LOGbytes(piv, piv_len);
     /* Increment SSN */
     oscore_ctx->ssn++;
@@ -610,7 +612,7 @@ oc_oscore_send_message(oc_message_t *msg)
       /* Request */
       /* Use context->SSN as Partial IV */
       oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-      OC_DBG("---using SSN as Partial IV: %llu", oscore_ctx->ssn);
+      OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
       OC_LOGbytes(piv, piv_len);
       /* Increment SSN */
       oscore_ctx->ssn++;
@@ -666,7 +668,7 @@ oc_oscore_send_message(oc_message_t *msg)
       /* Per OCF specification, all responses must include a new Partial IV */
       /* Use context->SSN as partial IV */
       oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-      OC_DBG("---using SSN as Partial IV: %llu", oscore_ctx->ssn);
+      OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
       OC_LOGbytes(piv, piv_len);
 
       /* Increment SSN */
