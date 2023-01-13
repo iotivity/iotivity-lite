@@ -29,7 +29,6 @@
 #include "mbedtls/pkcs5.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/ssl_cookie.h"
-#include "deps/mbedtls/library/ssl_misc.h"
 #include "mbedtls/timing.h"
 #ifdef OC_DEBUG
 #include "mbedtls/debug.h"
@@ -1365,12 +1364,30 @@ oc_tls_select_identity_cert_chain(int credid)
   selected_id_cred = credid;
 }
 
+static int
+get_cert_from_ssl_config(void *ctx, const mbedtls_x509_crt *own_cert,
+                         const mbedtls_pk_context *pk_key)
+{
+  (void)pk_key;
+  const mbedtls_x509_crt **out = (const mbedtls_x509_crt **)ctx;
+  *out = own_cert;
+  return 1;
+}
+
 static oc_x509_crt_t *
 get_identity_cert_for_session(const mbedtls_ssl_config *conf)
 {
+  const mbedtls_x509_crt *conf_cert = NULL;
+  mbedtls_ssl_conf_iterate_own_certs(conf, get_cert_from_ssl_config,
+                                     &conf_cert);
+  if (conf_cert == NULL) {
+    OC_ERR("no identify certificate found in SSL configuration");
+    return NULL;
+  }
+
   oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
-    if (&cert->cert == conf->key_cert->cert) {
+    if (&cert->cert == conf_cert) {
       return cert;
     }
     cert = cert->next;
@@ -1478,7 +1495,6 @@ oc_tls_select_anon_ciphersuite(void)
 static int
 verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 {
-  (void)opq;
   (void)flags;
   oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   OC_DBG("verifying certificate at depth %d", depth);
