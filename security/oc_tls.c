@@ -1712,6 +1712,29 @@ oc_tls_peer_allocate(const oc_endpoint_t *endpoint, int role, bool doc)
   return peer;
 }
 
+static void
+oc_tls_export_keys(void *p_expkey, mbedtls_ssl_key_export_type type,
+                   const unsigned char *secret, size_t secret_len,
+                   const unsigned char client_random[32],
+                   const unsigned char server_random[32],
+                   mbedtls_tls_prf_types tls_prf_type)
+{
+  (void)type;
+  (void)tls_prf_type;
+  OC_DBG("oc_tls_export_keys: Type=%d", type);
+
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)p_expkey;
+  OC_DBG("oc_tls: Got master secret (len=%zu)", secret_len);
+  assert(secret_len == sizeof(peer->master_secret));
+  memcpy(peer->master_secret, secret, secret_len);
+  OC_LOGbytes(peer->master_secret, secret_len);
+
+  memcpy(peer->client_server_random, client_random, 32);
+  memcpy(peer->client_server_random + 32, server_random, 32);
+  OC_DBG("oc_tls: Got nonce\n");
+  OC_LOGbytes(peer->client_server_random, sizeof(peer->client_server_random));
+}
+
 int
 oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
 {
@@ -1759,6 +1782,8 @@ oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
         sizeof(peer->endpoint.addr)) != 0) {
     return -1;
   }
+
+  mbedtls_ssl_set_export_keys_cb(&peer->ssl_ctx, oc_tls_export_keys, peer);
   return 0;
 }
 
@@ -2401,20 +2426,6 @@ read_application_data(oc_tls_peer_t *peer)
     int ret = 0;
     do {
       ret = mbedtls_ssl_handshake_step(&peer->ssl_ctx);
-      if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC ||
-          peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC) {
-        memcpy(peer->master_secret, peer->ssl_ctx.session_negotiate->master,
-               sizeof(peer->master_secret));
-        OC_DBG("oc_tls: Got master secret");
-        OC_LOGbytes(peer->master_secret, 48);
-      }
-      if (peer->ssl_ctx.state == MBEDTLS_SSL_CLIENT_KEY_EXCHANGE ||
-          peer->ssl_ctx.state == MBEDTLS_SSL_SERVER_KEY_EXCHANGE) {
-        memcpy(peer->client_server_random, peer->ssl_ctx.handshake->randbytes,
-               sizeof(peer->client_server_random));
-        OC_DBG("oc_tls: Got nonce");
-        OC_LOGbytes(peer->client_server_random, 64);
-      }
       if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
         mbedtls_ssl_session_reset(&peer->ssl_ctx);
         /* For HelloVerifyRequest cookies */
