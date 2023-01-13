@@ -30,7 +30,7 @@ oc_audit_log(size_t device, const char *aeid, const char *message,
 {
   bool ret =
     oc_sec_ael_add(device, category, priority, aeid, message, aux, aux_len);
-#ifndef DEBUG
+#ifndef OC_DEBUG
   (void)ret;
 #else
   OC_DBG("audit_log: %s %s %u %u; status = %d", aeid, message, category,
