@@ -1536,7 +1536,7 @@ void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
  * @return true - retrieved payload
  * @return false
  */
-bool oc_get_response_payload_raw(oc_client_response_t *response,
+bool oc_get_response_payload_raw(const oc_client_response_t *response,
                                  const uint8_t **payload, size_t *size,
                                  oc_content_format_t *content_format);
 
@@ -2224,8 +2224,8 @@ oc_role_t *oc_get_all_roles(void);
  * @param endpoint endpoint identifying the connection
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
- * @return true
- * @return false
+ * @return true request was initialized and sent
+ * @return false otherwise
  */
 bool oc_assert_role(const char *role, const char *authority,
                     oc_endpoint_t *endpoint, oc_response_handler_t handler,

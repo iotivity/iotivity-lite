@@ -1,18 +1,20 @@
-/*
-// Copyright (c) 2016 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 
 #include "api/oc_helpers_internal.h"
 #include "messaging/coap/coap.h"
@@ -24,24 +26,20 @@
 #include "oc_ri_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
-#ifdef OC_PKI
-#include "security/oc_roles.h"
-#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 #include <assert.h>
 
 #ifdef OC_CLIENT
 
-static coap_transaction_t *transaction;
-coap_packet_t request[1];
-oc_client_cb_t *client_cb;
-
+static coap_transaction_t *g_transaction;
+static coap_packet_t g_request[1];
 #ifdef OC_BLOCK_WISE
-static oc_blockwise_state_t *request_buffer = NULL;
+static oc_blockwise_state_t *g_request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
+static oc_client_cb_t *g_client_cb;
 
 #ifdef OC_OSCORE
-oc_message_t *g_multicast_update = NULL;
+static oc_message_t *g_multicast_update = NULL;
 #endif /* OC_OSCORE */
 
 static bool
@@ -49,78 +47,79 @@ dispatch_coap_request(void)
 {
   int payload_size = oc_rep_get_encoded_payload_size();
 
-  if ((client_cb->method == OC_PUT || client_cb->method == OC_POST) &&
+  if ((g_client_cb->method == OC_PUT || g_client_cb->method == OC_POST) &&
       payload_size > 0) {
 
 #ifdef OC_BLOCK_WISE
-    request_buffer->payload_size = (uint32_t)payload_size;
+    g_request_buffer->payload_size = (uint32_t)payload_size;
     uint32_t block_size;
 #ifdef OC_TCP
-    if (!(transaction->message->endpoint.flags & TCP) &&
+    if (!(g_transaction->message->endpoint.flags & TCP) &&
         payload_size > OC_BLOCK_SIZE) {
 #else  /* OC_TCP */
     if ((long)payload_size > OC_BLOCK_SIZE) {
 #endif /* !OC_TCP */
       const void *payload = oc_blockwise_dispatch_block(
-        request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
+        g_request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
-        coap_set_payload(request, payload, block_size);
-        coap_set_header_block1(request, 0, 1, (uint16_t)block_size);
-        coap_set_header_size1(request, (uint32_t)payload_size);
-        request->type = COAP_TYPE_CON;
-        client_cb->qos = HIGH_QOS;
+        coap_set_payload(g_request, payload, block_size);
+        coap_set_header_block1(g_request, 0, 1, (uint16_t)block_size);
+        coap_set_header_size1(g_request, (uint32_t)payload_size);
+        g_request->type = COAP_TYPE_CON;
+        g_client_cb->qos = HIGH_QOS;
       }
     } else {
-      coap_set_payload(request, request_buffer->buffer, payload_size);
-      request_buffer->ref_count = 0;
+      coap_set_payload(g_request, g_request_buffer->buffer, payload_size);
+      g_request_buffer->ref_count = 0;
     }
 #else  /* OC_BLOCK_WISE */
-    coap_set_payload(request, transaction->message->data + COAP_MAX_HEADER_SIZE,
+    coap_set_payload(g_request,
+                     g_transaction->message->data + COAP_MAX_HEADER_SIZE,
                      payload_size);
 #endif /* !OC_BLOCK_WISE */
   }
 
   if (payload_size > 0) {
 #ifdef OC_SPEC_VER_OIC
-    if (client_cb->endpoint.version == OIC_VER_1_1_0) {
-      coap_set_header_content_format(request, APPLICATION_CBOR);
+    if (g_client_cb->endpoint.version == OIC_VER_1_1_0) {
+      coap_set_header_content_format(g_request, APPLICATION_CBOR);
     } else
 #endif /* OC_SPEC_VER_OIC */
     {
-      coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+      coap_set_header_content_format(g_request, APPLICATION_VND_OCF_CBOR);
     }
   }
 
   bool success = false;
-  transaction->message->length =
-    coap_serialize_message(request, transaction->message->data);
-  if (transaction->message->length > 0) {
-    coap_send_transaction(transaction);
+  g_transaction->message->length =
+    coap_serialize_message(g_request, g_transaction->message->data);
+  if (g_transaction->message->length > 0) {
+    coap_send_transaction(g_transaction);
 
-    if (client_cb->observe_seq == -1) {
-      if (client_cb->qos == LOW_QOS)
-        oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
+    if (g_client_cb->observe_seq == -1) {
+      if (g_client_cb->qos == LOW_QOS)
+        oc_set_delayed_callback(g_client_cb, &oc_ri_remove_client_cb,
                                 OC_NON_LIFETIME);
       else
-        oc_set_delayed_callback(client_cb, &oc_ri_remove_client_cb,
+        oc_set_delayed_callback(g_client_cb, &oc_ri_remove_client_cb,
                                 OC_EXCHANGE_LIFETIME);
     }
 
     success = true;
   } else {
-    coap_clear_transaction(transaction);
-    oc_ri_remove_client_cb(client_cb);
+    coap_clear_transaction(g_transaction);
+    oc_ri_remove_client_cb(g_client_cb);
   }
 
 #ifdef OC_BLOCK_WISE
-  if (request_buffer && request_buffer->ref_count == 0) {
-    oc_blockwise_free_request_buffer(request_buffer);
+  if (g_request_buffer && g_request_buffer->ref_count == 0) {
+    oc_blockwise_free_request_buffer(g_request_buffer);
   }
-  request_buffer = NULL;
+  g_request_buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
-  transaction = NULL;
-  client_cb = NULL;
+  g_transaction = NULL;
+  g_client_cb = NULL;
 
   return success;
 }
@@ -134,72 +133,74 @@ prepare_coap_request(oc_client_cb_t *cb)
     type = COAP_TYPE_CON;
   }
 
-  transaction =
+  g_transaction =
     coap_new_transaction(cb->mid, cb->token, cb->token_len, &cb->endpoint);
 
-  if (!transaction) {
+  if (!g_transaction) {
     return false;
   }
 
-  oc_rep_new(transaction->message->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
+  oc_rep_new(g_transaction->message->data + COAP_MAX_HEADER_SIZE,
+             OC_BLOCK_SIZE);
 
 #ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
-    request_buffer = oc_blockwise_alloc_request_buffer(
+    g_request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT, OC_MIN_APP_DATA_SIZE);
-    if (!request_buffer) {
-      OC_ERR("request_buffer is NULL");
+    if (!g_request_buffer) {
+      OC_ERR("g_request_buffer is NULL");
       return false;
     }
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-    if (request_buffer->block) {
-      oc_rep_new(request_buffer->buffer, request_buffer->buffer_size);
+    if (g_request_buffer->block) {
+      oc_rep_new(g_request_buffer->buffer, g_request_buffer->buffer_size);
     } else
 #endif
     {
-      oc_rep_new_realloc(&request_buffer->buffer, request_buffer->buffer_size,
-                         OC_MAX_APP_DATA_SIZE);
+      oc_rep_new_realloc(&g_request_buffer->buffer,
+                         g_request_buffer->buffer_size, OC_MAX_APP_DATA_SIZE);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
+    oc_rep_new(g_request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    request_buffer->mid = cb->mid;
-    request_buffer->client_cb = cb;
+    g_request_buffer->mid = cb->mid;
+    g_request_buffer->client_cb = cb;
   }
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_TCP
   if (cb->endpoint.flags & TCP) {
-    coap_tcp_init_message(request, cb->method);
+    coap_tcp_init_message(g_request, cb->method);
   } else
 #endif /* OC_TCP */
   {
-    coap_udp_init_message(request, type, cb->method, cb->mid);
+    coap_udp_init_message(g_request, type, cb->method, cb->mid);
   }
 
 #ifdef OC_SPEC_VER_OIC
   if (cb->endpoint.version == OIC_VER_1_1_0) {
-    coap_set_header_accept(request, APPLICATION_CBOR);
+    coap_set_header_accept(g_request, APPLICATION_CBOR);
   } else
 #endif /* OC_SPEC_VER_OIC */
   {
-    coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+    coap_set_header_accept(g_request, APPLICATION_VND_OCF_CBOR);
   }
 
-  coap_set_token(request, cb->token, cb->token_len);
+  coap_set_token(g_request, cb->token, cb->token_len);
 
-  coap_set_header_uri_path(request, oc_string(cb->uri), oc_string_len(cb->uri));
+  coap_set_header_uri_path(g_request, oc_string(cb->uri),
+                           oc_string_len(cb->uri));
 
   if (cb->observe_seq != -1)
-    coap_set_header_observe(request, cb->observe_seq);
+    coap_set_header_observe(g_request, cb->observe_seq);
 
   if (oc_string_len(cb->query) > 0) {
-    coap_set_header_uri_query(request, oc_string(cb->query));
+    coap_set_header_uri_query(g_request, oc_string(cb->query));
   }
 
-  client_cb = cb;
+  g_client_cb = cb;
 
   return true;
 }
@@ -232,18 +233,18 @@ oc_do_multicast_update(void)
   int payload_size = oc_rep_get_encoded_payload_size();
 
   if (payload_size > 0) {
-    coap_set_payload(request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
+    coap_set_payload(g_request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
                      payload_size);
   } else {
     goto do_multicast_update_error;
   }
 
   if (payload_size > 0) {
-    coap_set_header_content_format(request, APPLICATION_VND_OCF_CBOR);
+    coap_set_header_content_format(g_request, APPLICATION_VND_OCF_CBOR);
   }
 
   g_multicast_update->length =
-    coap_serialize_message(request, g_multicast_update->data);
+    coap_serialize_message(g_request, g_multicast_update->data);
   if (g_multicast_update->length > 0) {
     oc_send_message(g_multicast_update);
   } else {
@@ -281,17 +282,17 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   oc_rep_new(g_multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
 
-  coap_udp_init_message(request, type, OC_POST, coap_get_mid());
+  coap_udp_init_message(g_request, type, OC_POST, coap_get_mid());
 
-  coap_set_header_accept(request, APPLICATION_VND_OCF_CBOR);
+  coap_set_header_accept(g_request, APPLICATION_VND_OCF_CBOR);
 
-  request->token_len = sizeof(request->token);
-  oc_random_buffer(request->token, request->token_len);
+  g_request->token_len = sizeof(g_request->token);
+  oc_random_buffer(g_request->token, g_request->token_len);
 
-  coap_set_header_uri_path(request, uri, strlen(uri));
+  coap_set_header_uri_path(g_request, uri, strlen(uri));
 
   if (query) {
-    coap_set_header_uri_query(request, query);
+    coap_set_header_uri_query(g_request, query);
   }
 
   return true;
@@ -310,7 +311,7 @@ oc_free_server_endpoints(oc_endpoint_t *endpoint)
 }
 
 bool
-oc_get_response_payload_raw(oc_client_response_t *response,
+oc_get_response_payload_raw(const oc_client_response_t *response,
                             const uint8_t **payload, size_t *size,
                             oc_content_format_t *content_format)
 {
@@ -619,9 +620,9 @@ oc_stop_multicast(oc_client_response_t *response)
 }
 
 static bool
-multi_scope_ipv6_multicast(oc_client_cb_t *cb4, uint8_t scope, const char *uri,
-                           const char *query, oc_response_handler_t handler,
-                           void *user_data)
+multi_scope_ipv6_multicast(const oc_client_cb_t *cb4, uint8_t scope,
+                           const char *uri, const char *query,
+                           oc_response_handler_t handler, void *user_data)
 {
   if (!uri || !handler) {
     return false;
@@ -650,12 +651,12 @@ multi_scope_ipv6_multicast(oc_client_cb_t *cb4, uint8_t scope, const char *uri,
       return true;
     }
 
-    if (transaction) {
-      coap_clear_transaction(transaction);
-      transaction = NULL;
+    if (g_transaction) {
+      coap_clear_transaction(g_transaction);
+      g_transaction = NULL;
     }
     oc_ri_remove_client_cb(cb);
-    client_cb = NULL;
+    g_client_cb = NULL;
   }
   return false;
 }
@@ -693,7 +694,7 @@ oc_do_ip_multicast(const char *uri, const char *query,
 }
 
 static bool
-dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
+dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
                       oc_client_handler_t handler, oc_endpoint_t *endpoint,
                       oc_qos_t qos, void *user_data)
 {
@@ -716,11 +717,11 @@ dispatch_ip_discovery(oc_client_cb_t *cb4, const char *query,
       goto exit;
     }
 
-    if (transaction) {
-      coap_clear_transaction(transaction);
-      transaction = NULL;
+    if (g_transaction) {
+      coap_clear_transaction(g_transaction);
+      g_transaction = NULL;
       oc_ri_remove_client_cb(cb);
-      client_cb = cb = NULL;
+      g_client_cb = cb = NULL;
     }
 
     return false;
@@ -895,106 +896,5 @@ oc_close_session(oc_endpoint_t *endpoint)
 #endif /* OC_TCP */
   }
 }
-
-#if defined(OC_SECURITY) && defined(OC_PKI)
-oc_role_t *
-oc_get_all_roles(void)
-{
-  return oc_sec_get_role_creds();
-}
-
-static void
-serialize_role_credential(CborEncoder *roles_array, oc_sec_cred_t *cr)
-{
-  oc_rep_begin_object(roles_array, roles);
-  /* credtype */
-  oc_rep_set_int(roles, credtype, cr->credtype);
-  /* roleid */
-  if (oc_string_len(cr->role.role) > 0) {
-    oc_rep_set_object(roles, roleid);
-    oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
-    if (oc_string_len(cr->role.authority) > 0) {
-      oc_rep_set_text_string(roleid, authority, oc_string(cr->role.authority));
-    }
-    oc_rep_close_object(roles, roleid);
-  }
-  /* credusage */
-  oc_rep_set_text_string(roles, credusage, "oic.sec.cred.rolecert");
-  /* publicdata */
-  if (oc_string_len(cr->publicdata.data) > 0) {
-    oc_rep_set_object(roles, publicdata);
-    oc_rep_set_text_string(publicdata, data, oc_string(cr->publicdata.data));
-    oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
-    oc_rep_close_object(roles, publicdata);
-  }
-  oc_rep_end_object(roles_array, roles);
-}
-
-bool
-oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
-               oc_response_handler_t handler, void *user_data)
-{
-  if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
-    return false;
-  }
-  oc_sec_cred_t *cr = oc_sec_find_role_cred(
-    /*start*/ NULL, role, authority,
-    /*tag*/ NULL); // ignore tag, we want to serialize only the
-                   // [role,authority] pairs
-  if (cr) {
-    oc_tls_select_cert_ciphersuite();
-    if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
-                     user_data)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, roles);
-      serialize_role_credential(&roles_array, cr);
-      oc_rep_close_array(root, roles);
-      oc_rep_end_root_object();
-      if (!oc_do_post()) {
-        return false;
-      }
-    }
-  }
-  return false;
-}
-
-void
-oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                    void *user_data)
-{
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (oc_tls_uses_psk_cred(peer)) {
-    return;
-  }
-  oc_tls_select_cert_ciphersuite();
-  oc_role_t *roles = oc_get_all_roles();
-  if (roles) {
-    if (oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
-                     user_data)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, roles);
-
-      while (roles) {
-        oc_sec_cred_t *cr = oc_sec_find_role_cred(
-          /*start*/ NULL, oc_string(roles->role), oc_string(roles->authority),
-          /*tag*/ NULL); // ignore tag, we want to serialize only the
-                         // [role,authority] pairs
-        if (cr) {
-          serialize_role_credential(&roles_array, cr);
-        }
-
-        roles = roles->next;
-      }
-
-      oc_rep_close_array(root, roles);
-      oc_rep_end_root_object();
-      if (!oc_do_post()) {
-        return;
-      }
-    }
-  }
-}
-
-#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */
