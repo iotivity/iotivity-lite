@@ -18,12 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - build_args: ""
-          - build_args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
+          - args: ""
+          - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
 
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON ${{ matrix.build_args }}"
+      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}"
       build_type: Debug
       coverage: true
 

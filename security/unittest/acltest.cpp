@@ -25,6 +25,11 @@
 #include "oc_core_res.h"
 #include "oc_tls.h"
 #include "oc_uuid.h"
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
 #include "gtest/gtest.h"
 #include <string>
 
@@ -54,6 +59,9 @@ protected:
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
     oc_sec_acl_free();
     oc_ri_shutdown();
     oc_tls_shutdown();

@@ -30,30 +30,30 @@ oc_get_all_roles(void)
 }
 
 static void
-serialize_role_credential(CborEncoder *roles_array, oc_sec_cred_t *cr)
+serialize_role_credential(CborEncoder *roles_array, const oc_sec_cred_t *cr)
 {
-  oc_rep_begin_object(roles_array, roles);
+  oc_rep_begin_object(roles_array, role);
   /* credtype */
-  oc_rep_set_int(roles, credtype, cr->credtype);
+  oc_rep_set_int(role, credtype, cr->credtype);
   /* roleid */
   if (oc_string_len(cr->role.role) > 0) {
-    oc_rep_set_object(roles, roleid);
+    oc_rep_set_object(role, roleid);
     oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
     if (oc_string_len(cr->role.authority) > 0) {
       oc_rep_set_text_string(roleid, authority, oc_string(cr->role.authority));
     }
-    oc_rep_close_object(roles, roleid);
+    oc_rep_close_object(role, roleid);
   }
   /* credusage */
-  oc_rep_set_text_string(roles, credusage, "oic.sec.cred.rolecert");
+  oc_rep_set_text_string(role, credusage, "oic.sec.cred.rolecert");
   /* publicdata */
   if (oc_string_len(cr->publicdata.data) > 0) {
-    oc_rep_set_object(roles, publicdata);
+    oc_rep_set_object(role, publicdata);
     oc_rep_set_text_string(publicdata, data, oc_string(cr->publicdata.data));
     oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
-    oc_rep_close_object(roles, publicdata);
+    oc_rep_close_object(role, publicdata);
   }
-  oc_rep_end_object(roles_array, roles);
+  oc_rep_end_object(roles_array, role);
 }
 
 bool
@@ -63,10 +63,10 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
   if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
     return false;
   }
-  oc_sec_cred_t *cr = oc_sec_find_role_cred(
-    /*start*/ NULL, role, authority,
-    /*tag*/ NULL); // ignore tag, we want to serialize only the
-                   // [role,authority] pairs
+  const oc_sec_cred_t *cr =
+    oc_sec_find_role_cred(/*start*/ NULL, role, authority,
+                          /*tag*/ NULL); // ignore tag, we want to serialize
+                                         // only the [role,authority] pairs
   if (cr == NULL) {
     OC_ERR("no role was found");
     return false;
@@ -109,7 +109,7 @@ oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
   oc_rep_set_array(root, roles);
 
   while (roles) {
-    oc_sec_cred_t *cr = oc_sec_find_role_cred(
+    const oc_sec_cred_t *cr = oc_sec_find_role_cred(
       /*start*/ NULL, oc_string(roles->role), oc_string(roles->authority),
       /*tag*/ NULL); // ignore tag, we want to serialize only the
                      // [role,authority] pairs

@@ -61,6 +61,10 @@
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
 
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif
+
 #include "oc_main.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -69,10 +73,6 @@ static bool *drop_commands;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static bool drop_commands[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
-#ifdef OC_HAS_FEATURE_PUSH
-void oc_push_free();
-#endif
 
 static bool initialized = false;
 static const oc_handler_t *app_callbacks;
@@ -183,7 +183,7 @@ oc_get_block_size(void)
 {
   return (long)_OC_BLOCK_SIZE;
 }
-#else
+#else  /* !OC_DYNAMIC_ALLOCATION  */
 int
 oc_set_mtu_size(size_t mtu_size)
 {

@@ -29,6 +29,8 @@ extern "C" {
 
 void oc_push_list_init(void);
 
+void oc_push_free(void);
+
 #ifdef __cplusplus
 }
 #endif
