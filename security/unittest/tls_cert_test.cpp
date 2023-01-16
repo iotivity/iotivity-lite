@@ -23,8 +23,6 @@
 #ifdef OC_DYNAMIC_ALLOCATION // need bigger OC_BYTES_POOL_SIZE for this test to
                              // pass
 
-#include "gtest/gtest.h"
-
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
@@ -32,7 +30,11 @@
 #include "oc_pki.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_tls.h"
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
 #include <array>
 #include <cstdio>
 #include <ctime>
@@ -313,6 +315,9 @@ protected:
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
     oc_connectivity_shutdown(device_);
     oc_network_event_handler_mutex_destroy();
     oc_sec_cred_free();

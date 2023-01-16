@@ -2270,21 +2270,18 @@ oc_push_list_init()
  * - for push receivers Resource: free in this function
  */
 void
-oc_push_free()
+oc_push_free(void)
 {
-  oc_recvs_t *recvs_instance;
-
   OC_PUSH_DBG("begin to free push receiver list!!!");
 
-  oc_recvs_t *next;
-  recvs_instance = (oc_recvs_t *)oc_list_head(g_recvs_list);
+  oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_pop(g_recvs_list);
   while (recvs_instance) {
-    next = recvs_instance->next;
     _purge_recv_obj_list(recvs_instance);
     OC_PUSH_DBG("free push receiver Resource (device: %ld)... ",
                 recvs_instance->resource->device);
+    oc_delete_resource(recvs_instance->resource);
     oc_memb_free(&g_recvs_instance_memb, recvs_instance);
-    recvs_instance = next;
+    recvs_instance = (oc_recvs_t *)oc_list_pop(g_recvs_list);
   }
 }
 

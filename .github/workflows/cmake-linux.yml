@@ -50,7 +50,7 @@ jobs:
           - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF"
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: ${{ matrix.build_args }}
+      build_args: ${{ matrix.args }}
       build_type: Debug
       coverage: false
 
@@ -71,6 +71,6 @@ jobs:
           # - args: -DOC_MSAN_ENABLED=ON
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.build_args }}"
+      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}"
       build_type: Debug
       coverage: false

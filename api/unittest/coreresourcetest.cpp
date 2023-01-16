@@ -18,15 +18,18 @@
  *
  ******************************************************************/
 
-#include <cstdlib>
-#include <gtest/gtest.h>
-#include <stdio.h>
-#include <string>
-
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "port/oc_network_event_handler_internal.h"
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
+#include <cstdlib>
+#include <gtest/gtest.h>
+#include <stdio.h>
+#include <string>
 
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
@@ -45,6 +48,9 @@ protected:
   }
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
     oc_random_destroy();
     oc_network_event_handler_mutex_destroy();
     oc_core_shutdown();
