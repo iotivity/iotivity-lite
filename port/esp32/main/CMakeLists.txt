@@ -34,6 +34,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_blockwise.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_buffer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_client_api.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_client_role.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_core_res.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_discovery.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_endpoint.c
