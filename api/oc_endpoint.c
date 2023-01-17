@@ -198,11 +198,11 @@ oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 }
 
 #ifdef OC_IPV4
-static void
+static int
 oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
   if (!address || !endpoint) {
-    return;
+    return -1;
   }
   uint8_t *addr = endpoint->addr.ipv4.address;
   size_t str_idx = 0, addr_idx = 0;
@@ -213,6 +213,7 @@ oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
       str_idx += next_seg - &address[str_idx] + 1;
     }
   }
+  return 0;
 }
 #endif /* OC_IPV4 */
 
@@ -288,11 +289,11 @@ low_nibble:
   return b;
 }
 
-static void
+static int
 oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
   if (!address || !endpoint) {
-    return;
+    return -1;
   }
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
@@ -336,7 +337,8 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
       str_idx++;
     } break;
     default:
-      break;
+      OC_ERR("invalid ipv6 address segment(%s)", next_seg);
+      return -1;
     }
   }
   if (split != -1) {
@@ -358,6 +360,7 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
       addr_idx--;
     }
   }
+  return 0;
 }
 
 typedef struct endpoint_uri_t
@@ -560,13 +563,19 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
   if (host_len > 1 && address[0] == '[' && address[host_len - 1] == ']') {
     endpoint->flags = ep_uri.scheme_flags | IPV6;
     endpoint->addr.ipv6.port = ep_uri.port;
-    oc_parse_ipv6_address(&address[1], host_len - 2, endpoint);
+    if (oc_parse_ipv6_address(&address[1], host_len - 2, endpoint) != 0) {
+      OC_ERR("invalid ipv6 address(%s)", address);
+      return -1;
+    }
   }
 #ifdef OC_IPV4
   else {
     endpoint->flags = ep_uri.scheme_flags | IPV4;
     endpoint->addr.ipv4.port = ep_uri.port;
-    oc_parse_ipv4_address(address, host_len, endpoint);
+    if (oc_parse_ipv4_address(address, host_len, endpoint) != 0) {
+      OC_ERR("invalid ipv4 address(%s)", address);
+      return -1;
+    }
   }
 #else /* OC_IPV4 */
   else {
