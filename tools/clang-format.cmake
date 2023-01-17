@@ -8,7 +8,7 @@ list(FILTER iotivity_allsource EXCLUDE REGEX "deps/")
 # Find clang-format
 find_program(
 	CLANG_FORMAT_EXE
-	NAMES "clang-format-10"
+	NAMES "clang-format-14"
 		"clang-format"
 	DOC "Path to clang-format executable"
 )
@@ -25,8 +25,8 @@ execute_process(
 
 # Version check
 message(STATUS ${CLANG_VERSION})
-if(NOT ${CLANG_VERSION} MATCHES "version 10\.0")
-	message(FATAL_ERROR "clang-format must be version 10.0")
+if(NOT ${CLANG_VERSION} MATCHES "version 14\.0")
+	message(FATAL_ERROR "clang-format must be version 14.0")
 endif()
 
 # Run clang format

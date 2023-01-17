@@ -464,9 +464,9 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
             } else
 #endif /* OC_IPV4 */
               if (family == AF_INET6) {
-              memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
-              ep.flags = IPV6;
-            }
+                memcpy(ep.addr.ipv6.address, RTA_DATA(attr), 16);
+                ep.flags = IPV6;
+              }
           } else if (attr->rta_type == IFA_FLAGS) {
             if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
               include = false;
@@ -489,8 +489,8 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
         } else
 #endif /* OC_IPV4 */
           if (family == AF_INET6) {
-          ep.addr.ipv6.port = port;
-        }
+            ep.addr.ipv6.port = port;
+          }
 #ifdef OC_TCP
         if (tcp) {
           ep.flags |= TCP;
@@ -633,12 +633,12 @@ process_interface_change_event(void)
 #endif /* OC_IPV4 */
               if (ifa->ifa_family == AF_INET6 &&
                   ifa->ifa_scope == RT_SCOPE_LINK) {
-              for (i = 0; i < num_devices; i++) {
-                ip_context_t *dev = get_ip_context_for_device(i);
-                ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
-                                                          ifa->ifa_index);
+                for (i = 0; i < num_devices; i++) {
+                  ip_context_t *dev = get_ip_context_for_device(i);
+                  ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
+                                                            ifa->ifa_index);
+                }
               }
-            }
           }
           attr = RTA_NEXT(attr, att_len);
         }

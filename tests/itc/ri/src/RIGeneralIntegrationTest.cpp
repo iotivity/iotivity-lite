@@ -22,8 +22,7 @@
 
 #include <gtest/gtest.h>
 
-class RIGeneralIntegrationTest : public ::testing::Test {
-};
+class RIGeneralIntegrationTest : public ::testing::Test {};
 
 TEST(RIGeneralIntegrationTest, ri_nonsecure_initserver_P)
 {
