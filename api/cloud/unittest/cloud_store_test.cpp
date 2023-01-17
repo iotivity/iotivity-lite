@@ -143,7 +143,10 @@ protected:
     memset(&s_context, 0, sizeof(s_context));
   }
 
-  static void TearDownTestCase() { oc_main_shutdown(); }
+  static void TearDownTestCase()
+  {
+    oc_main_shutdown();
+  }
 
   void SetUp() override
   {
@@ -159,7 +162,10 @@ protected:
     m_store.status = STATUS;
   }
 
-  void TearDown() override { freeStore(&m_store); }
+  void TearDown() override
+  {
+    freeStore(&m_store);
+  }
 
   oc_cloud_store_t m_store;
 };

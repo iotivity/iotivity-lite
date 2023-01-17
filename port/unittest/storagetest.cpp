@@ -32,8 +32,7 @@ static const char *file_name = "storage_store";
 static uint8_t buf[100];
 #endif /* OC_SECURITY */
 
-class TestStorage : public testing::Test {
-};
+class TestStorage : public testing::Test {};
 
 #ifdef OC_SECURITY
 TEST_F(TestStorage, oc_storage_config_fail_with_length_over)

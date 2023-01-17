@@ -26,8 +26,7 @@ extern "C" {
 #include "port/oc_clock.h"
 }
 
-class TestClock : public testing::Test {
-};
+class TestClock : public testing::Test {};
 
 TEST_F(TestClock, oc_clock_time)
 {

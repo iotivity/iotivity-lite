@@ -437,8 +437,8 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     } else
 #endif /* OC_IPV4 */
       if (family == AF_INET6) {
-      ep.addr.ipv6.port = port;
-    }
+        ep.addr.ipv6.port = port;
+      }
 #ifdef OC_TCP
     if (tcp) {
       ep.flags |= TCP;
@@ -476,30 +476,30 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     } else
 #endif /* OC_IPV4 */
       if (family == AF_INET6) {
-      ep.flags |= IPV6;
-      esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
-      int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
-      for (int i = 0; i < num; ++i) {
-        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i])) {
-          continue;
-        }
-        memcpy(ep.addr.ipv6.address, &if_ip6[i].addr, 16);
-        ep.addr.ipv6.scope = if_ip6[i].zone;
-        oc_endpoint_t *new_ep = oc_memb_alloc(&device_eps);
-        if (!new_ep) {
-          return;
-        }
-        memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
+        ep.flags |= IPV6;
+        esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
+        int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
+        for (int i = 0; i < num; ++i) {
+          if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i])) {
+            continue;
+          }
+          memcpy(ep.addr.ipv6.address, &if_ip6[i].addr, 16);
+          ep.addr.ipv6.scope = if_ip6[i].zone;
+          oc_endpoint_t *new_ep = oc_memb_alloc(&device_eps);
+          if (!new_ep) {
+            return;
+          }
+          memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
 #ifdef OC_DEBUG
-        PRINT("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure,
-              (int)tcp);
-        PRINTipaddr(ep);
-        PRINT(" index %d", ep.interface_index);
-        PRINT("\n\n");
+          PRINT("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure,
+                (int)tcp);
+          PRINTipaddr(ep);
+          PRINT(" index %d", ep.interface_index);
+          PRINT("\n\n");
 #endif /* OC_DEBUG */
-        oc_list_add(dev->eps, new_ep);
+          oc_list_add(dev->eps, new_ep);
+        }
       }
-    }
   }
 }
 
@@ -592,14 +592,15 @@ process_interface_change_event(int ifa_index, int ifa_family,
     } else
 #endif /* OC_IPV4 */
       if (ifa_family == AF_INET6) {
-      const esp_ip6_addr_t *ip = (const esp_ip6_addr_t *)ifa_ip;
-      if (ip6_addr_islinklocal(ip)) {
-        for (size_t i = 0; i < num_devices; i++) {
-          ip_context_t *dev = get_ip_context_for_device(i);
-          ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock, ifa_index);
+        const esp_ip6_addr_t *ip = (const esp_ip6_addr_t *)ifa_ip;
+        if (ip6_addr_islinklocal(ip)) {
+          for (size_t i = 0; i < num_devices; i++) {
+            ip_context_t *dev = get_ip_context_for_device(i);
+            ret +=
+              add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock, ifa_index);
+          }
         }
       }
-    }
   } else if (event == NETWORK_INTERFACE_DOWN) {
 #ifdef OC_NETWORK_MONITOR
     if (remove_ip_interface(ifa_index)) {

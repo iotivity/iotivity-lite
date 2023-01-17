@@ -450,15 +450,15 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     } else
 #endif /* OC_TCP */
       if (eps->flags & SECURED) {
-      if (request->origin->flags & IPV6 && eps->flags & IPV6) {
-        oc_rep_set_uint(p, port, eps->addr.ipv6.port);
-      }
+        if (request->origin->flags & IPV6 && eps->flags & IPV6) {
+          oc_rep_set_uint(p, port, eps->addr.ipv6.port);
+        }
 #ifdef OC_IPV4
-      else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
-        oc_rep_set_uint(p, port, eps->addr.ipv4.port);
-      }
+        else if (request->origin->flags & IPV4 && eps->flags & IPV4) {
+          oc_rep_set_uint(p, port, eps->addr.ipv4.port);
+        }
 #endif /* OC_IPV4 */
-    }
+      }
   }
 
   oc_rep_close_object(res, p);

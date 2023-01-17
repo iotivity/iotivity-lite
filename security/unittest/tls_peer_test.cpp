@@ -100,7 +100,10 @@ protected:
     pstat->s = OC_DOS_RFNOP;
   }
 
-  void TearDown() override { oc_main_shutdown(); }
+  void TearDown() override
+  {
+    oc_main_shutdown();
+  }
 
 public:
   size_t deviceId_{ static_cast<size_t>(-1) };
