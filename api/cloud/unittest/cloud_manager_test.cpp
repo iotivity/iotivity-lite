@@ -76,15 +76,15 @@ public:
   static void statusHandler(oc_cloud_context_t *, oc_cloud_status_t, void *) {}
 
 protected:
-  static void SetUpTestCase()
-  {
-    s_handler.init = &appInit;
-    s_handler.signal_event_loop = &signalEventLoop;
-    int ret = oc_main_init(&s_handler);
-    ASSERT_EQ(0, ret);
-  }
+  // static void SetUpTestCase()
+  // {
+  // s_handler.init = &appInit;
+  // s_handler.signal_event_loop = &signalEventLoop;
+  // int ret = oc_main_init(&s_handler);
+  // ASSERT_EQ(0, ret);
+  // }
 
-  static void TearDownTestCase() { oc_main_shutdown(); }
+  // static void TearDownTestCase() { oc_main_shutdown(); }
 
   void SetUp() override
   {
@@ -99,10 +99,17 @@ protected:
     oc_new_string(&m_context.store.access_token, TOKEN, strlen(TOKEN));
 #define RTOKEN "refresh_token"
     oc_new_string(&m_context.store.refresh_token, RTOKEN, strlen(RTOKEN));
+
+    s_handler.init = &appInit;
+    s_handler.signal_event_loop = &signalEventLoop;
+    int ret = oc_main_init(&s_handler);
+    ASSERT_EQ(0, ret);
   }
 
   void TearDown() override
   {
+    oc_main_shutdown();
+
     oc_free_string(&m_context.store.refresh_token);
     oc_free_string(&m_context.store.access_token);
     oc_free_string(&m_context.store.ci_server);
@@ -129,7 +136,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
-  poolEvents(7);
+  poolEvents(5);
   cloud_manager_stop(&m_context);
 
   // Then

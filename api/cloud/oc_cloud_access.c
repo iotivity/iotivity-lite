@@ -134,6 +134,9 @@ cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
   oc_rep_set_text_string(root, devicetype, "device");
   oc_rep_end_root_object();
 
+  if (conf.timeout > 0) {
+    return oc_do_post_with_timeout(conf.timeout);
+  }
   return oc_do_post();
 }
 

@@ -118,6 +118,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = oc_cloud_register_handler,
     .user_data = p,
+    .timeout = 0,
   };
   if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                             oc_string(ctx->store.uid),

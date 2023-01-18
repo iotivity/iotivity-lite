@@ -362,6 +362,7 @@ oc_cloud_register_handler(oc_client_response_t *data)
 static void
 cloud_register_handler(oc_client_response_t *data)
 {
+  bool retry = false;
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   int ret = _register_handler(ctx, data, true);
   oc_remove_delayed_callback(ctx, cloud_register);
@@ -372,12 +373,16 @@ cloud_register_handler(oc_client_response_t *data)
 
   if (((ctx->store.status & ~OC_CLOUD_FAILURE) == OC_CLOUD_INITIALIZED) &&
       is_connection_error_code(data->code) && !is_retry_over(ctx)) {
-    oc_set_delayed_callback(ctx, cloud_register,
-                            g_retry_timeout[ctx->retry_count]);
+    retry = true;
   }
 
 finish:
   reset_delayed_callback(ctx, callback_handler, 0);
+  if (retry) {
+    // must be invoked after callback_handler
+    oc_set_delayed_callback(ctx, cloud_register, 0);
+    ctx->retry_count++;
+  }
 }
 
 static oc_event_callback_retval_t
@@ -385,7 +390,7 @@ cloud_register(void *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
 
-  if ((ctx->store.status == OC_CLOUD_INITIALIZED) == 0) {
+  if (!(ctx->store.status == OC_CLOUD_INITIALIZED)) {
     return OC_EVENT_DONE;
   }
   OC_DBG("[CM] try register(%d)\n", ctx->retry_count);
@@ -403,25 +408,27 @@ cloud_register(void *data)
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = cloud_register_handler,
     .user_data = data,
+    .timeout = g_retry_timeout[ctx->retry_count],
   };
   if (oc_string(ctx->store.ci_server) == NULL ||
       conv_cloud_endpoint(ctx) != 0) {
     OC_ERR("invalid cloud server");
-    // While retrying, keep last error (clec) to CLOUD_OK
-    cloud_set_last_error(ctx, CLOUD_OK);
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
-                            oc_string(ctx->store.uid),
-                            oc_string(ctx->store.access_token))) {
-    cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
-  } else {
-    // While retrying, keep last error (clec) to CLOUD_OK
-    cloud_set_last_error(ctx, CLOUD_OK);
+  if (!cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
+                             oc_string(ctx->store.uid),
+                             oc_string(ctx->store.access_token))) {
+    OC_ERR("failed to sent register request to cloud");
+    goto retry;
   }
 
+  cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
+  return OC_EVENT_DONE;
+
 retry:
+  // While retrying, keep last error (clec) to CLOUD_OK
+  cloud_set_last_error(ctx, CLOUD_OK);
   oc_set_delayed_callback(data, cloud_register,
                           g_retry_timeout[ctx->retry_count]);
   ctx->retry_count++;
@@ -572,6 +579,8 @@ cloud_login(void *data)
     // While retrying, keep last error (clec) to CLOUD_OK
     cloud_set_last_error(ctx, CLOUD_OK);
   }
+
+  // TODO call retry from handler
 
 retry:
   oc_set_delayed_callback(ctx, cloud_login, g_retry_timeout[ctx->retry_count]);
@@ -738,6 +747,8 @@ refresh_token(void *data)
     cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     goto retry;
   }
+
+  // TODO call retry from handler
 
 retry:
   oc_set_delayed_callback(ctx, refresh_token,

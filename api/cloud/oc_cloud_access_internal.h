@@ -25,6 +25,7 @@
 #include "oc_endpoint.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,7 @@ typedef struct oc_cloud_access_conf_t
   int selected_identity_cred_id; ///< selected identity certficate id
   oc_response_handler_t handler; ///< response callback
   void *user_data;               ///< data passed to response callback
+  uint16_t timeout;              ///< timeout for response
 } oc_cloud_access_conf_t;
 
 /**

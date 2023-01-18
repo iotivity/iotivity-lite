@@ -393,8 +393,10 @@ oc_do_request_with_timeout(oc_method_t method, const char *uri,
   if (cb == NULL) {
     return false;
   }
-  oc_set_delayed_callback(cb, oc_ri_remove_client_cb_with_notify_503,
-                          timeout_seconds);
+  if (timeout_seconds > 0) {
+    oc_set_delayed_callback(cb, oc_ri_remove_client_cb_with_notify_503,
+                            timeout_seconds);
+  }
   return true;
 }
 
@@ -465,11 +467,7 @@ static bool
 oc_do_async_request_with_timeout(uint16_t timeout_seconds, oc_method_t method)
 {
   oc_client_cb_t *cb = g_dispatch.client_cb;
-  if (cb == NULL) {
-    return false;
-  }
-
-  if (cb->method != method) {
+  if (cb == NULL || cb->method != method) {
     return false;
   }
 
@@ -478,8 +476,10 @@ oc_do_async_request_with_timeout(uint16_t timeout_seconds, oc_method_t method)
     return false;
   }
 
-  oc_set_delayed_callback(cb, oc_ri_remove_client_cb_with_notify_503,
-                          timeout_seconds);
+  if (timeout_seconds > 0) {
+    oc_set_delayed_callback(cb, oc_ri_remove_client_cb_with_notify_503,
+                            timeout_seconds);
+  }
   return true;
 }
 
