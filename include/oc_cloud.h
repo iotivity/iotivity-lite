@@ -145,6 +145,7 @@ int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
  */
 OC_API
 int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
+
 /**
  * @brief Restart cloud registration process with the current configuration.
  *
@@ -153,14 +154,67 @@ int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
 OC_API
 void oc_cloud_manager_restart(oc_cloud_context_t *ctx);
 
+/**
+ * @brief Send request to register device to cloud.
+ *
+ * @param ctx cloud context
+ * @param cb callback function invoked on status change
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 OC_API
 int oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+
+/**
+ * @brief Send request to sign in the device to the cloud.
+ *
+ * @param ctx cloud context
+ * @param cb callback function invoked on status change
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 OC_API
 int oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+
+/**
+ * @brief Send request to sign out the device to the cloud.
+ *
+ * @param ctx cloud context
+ * @param cb callback function invoked on status change
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 OC_API
 int oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+
+/**
+ * @brief Send request to deregister device from cloud.
+ *
+ * @note If the device is not signed in then the request requires additional
+ * data. If the request becomes larger than is allowed because of this then
+ * this call will attempt to sign in to avoid sending this additional data.
+ *
+ * @param ctx cloud context
+ * @param cb callback function invoked on status change
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 OC_API
 int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
+
+/**
+ * @brief Send request to refresh the device access token to the cloud.
+ *
+ * @param ctx cloud context
+ * @param cb callback function invoked on status change
+ * @param data user data provided to the status change function
+ * @return int 0 on success
+ * @return int -1 on error
+ */
 OC_API
 int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);

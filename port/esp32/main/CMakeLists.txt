@@ -78,6 +78,7 @@ endif()
 if (CONFIG_CLOUD)
   add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
   list(APPEND sources
+  	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_access.c
   	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c

@@ -18,9 +18,12 @@
  *
  ****************************************************************************/
 
+#include "oc_config.h"
+
 #ifdef OC_CLOUD
 
 #include "oc_api.h"
+#include "oc_cloud_access_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_endpoint.h"
 #include "port/oc_log.h"
@@ -386,29 +389,42 @@ cloud_register(void *data)
     return OC_EVENT_DONE;
   }
   OC_DBG("[CM] try register(%d)\n", ctx->retry_count);
-  if (!is_retry_over(ctx)) {
-    if (oc_string(ctx->store.ci_server) && (conv_cloud_endpoint(ctx) == 0) &&
-        cloud_access_register(
-          ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
-          oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-          ctx->device, ctx->selected_identity_cred_id, cloud_register_handler,
-          data)) {
-      cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
-    } else {
-      // While retrying, keep last error (clec) to CLOUD_OK
-      cloud_set_last_error(ctx, CLOUD_OK);
-    }
-    oc_set_delayed_callback(data, cloud_register,
-                            g_retry_timeout[ctx->retry_count]);
-    ctx->retry_count++;
-  } else {
+  if (is_retry_over(ctx)) {
     // for register, we don't try to reconnect because the access token has
     // short validity
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_CONNECT);
     ctx->store.status |= OC_CLOUD_FAILURE;
     reset_delayed_callback(ctx, callback_handler, 0);
+    return OC_EVENT_DONE;
   }
 
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = cloud_register_handler,
+    .user_data = data,
+  };
+  if (oc_string(ctx->store.ci_server) == NULL ||
+      conv_cloud_endpoint(ctx) != 0) {
+    OC_ERR("invalid cloud server");
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_last_error(ctx, CLOUD_OK);
+    goto retry;
+  }
+  conf.endpoint = ctx->cloud_ep;
+  if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
+                            oc_string(ctx->store.uid),
+                            oc_string(ctx->store.access_token))) {
+    cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
+  } else {
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_last_error(ctx, CLOUD_OK);
+  }
+
+retry:
+  oc_set_delayed_callback(data, cloud_register,
+                          g_retry_timeout[ctx->retry_count]);
+  ctx->retry_count++;
   return OC_EVENT_DONE;
 }
 
@@ -529,28 +545,37 @@ static oc_event_callback_retval_t
 cloud_login(void *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
-
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     return OC_EVENT_DONE;
   }
   OC_DBG("[CM] try login (%d)\n", ctx->retry_count);
-  if (!is_retry_over(ctx)) {
-    if ((conv_cloud_endpoint(ctx) != 0) ||
-        !cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
-                            oc_string(ctx->store.access_token), ctx->device,
-                            ctx->selected_identity_cred_id, cloud_login_handler,
-                            ctx)) {
-      // While retrying, keep last error (clec) to CLOUD_OK
-      cloud_set_last_error(ctx, CLOUD_OK);
-    }
-
-    oc_set_delayed_callback(ctx, cloud_login,
-                            g_retry_timeout[ctx->retry_count]);
-    ctx->retry_count++;
-  } else {
+  if (is_retry_over(ctx)) {
     reset_delayed_callback(ctx, reconnect, 0);
+    return OC_EVENT_DONE;
   }
 
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = cloud_login_handler,
+    .user_data = ctx,
+  };
+  if (conv_cloud_endpoint(ctx) != 0) {
+    OC_ERR("invalid cloud server");
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_last_error(ctx, CLOUD_OK);
+    goto retry;
+  }
+  conf.endpoint = ctx->cloud_ep;
+  if (!cloud_access_login(conf, oc_string(ctx->store.uid),
+                          oc_string(ctx->store.access_token))) {
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_last_error(ctx, CLOUD_OK);
+  }
+
+retry:
+  oc_set_delayed_callback(ctx, cloud_login, g_retry_timeout[ctx->retry_count]);
+  ctx->retry_count++;
   return OC_EVENT_DONE;
 }
 
@@ -690,22 +715,35 @@ refresh_token(void *data)
   oc_remove_delayed_callback(ctx, send_ping);
   OC_DBG("[CM] try refresh token(%d)\n", ctx->retry_refresh_token_count);
 
-  if (!is_refresh_token_retry_over(ctx)) {
-    if ((conv_cloud_endpoint(ctx) != 0) ||
-        !cloud_access_refresh_access_token(
-          ctx->cloud_ep, oc_string(ctx->store.uid),
-          oc_string(ctx->store.refresh_token), ctx->device,
-          ctx->selected_identity_cred_id, refresh_token_handler, ctx)) {
-      cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
-    }
-    oc_set_delayed_callback(ctx, refresh_token,
-                            g_retry_timeout[ctx->retry_refresh_token_count]);
-
-    ctx->retry_refresh_token_count++;
-  } else {
+  if (is_refresh_token_retry_over(ctx)) {
     reset_delayed_callback(ctx, reconnect, 0);
+    return OC_EVENT_DONE;
   }
 
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = refresh_token_handler,
+    .user_data = ctx,
+  };
+  if (conv_cloud_endpoint(ctx) != 0) {
+    OC_ERR("invalid cloud server");
+    cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
+    goto retry;
+  }
+  conf.endpoint = ctx->cloud_ep;
+
+  if (!cloud_access_refresh_access_token(conf, oc_string(ctx->store.uid),
+                                         oc_string(ctx->store.refresh_token))) {
+    cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
+    goto retry;
+  }
+
+retry:
+  oc_set_delayed_callback(ctx, refresh_token,
+                          g_retry_timeout[ctx->retry_refresh_token_count]);
+
+  ctx->retry_refresh_token_count++;
   return OC_EVENT_DONE;
 }
 
@@ -756,6 +794,5 @@ send_ping(void *data)
 
   return OC_EVENT_DONE;
 }
-#else  /* OC_CLOUD*/
-typedef int dummy_declaration;
-#endif /* !OC_CLOUD */
+
+#endif /* OC_CLOUD */
