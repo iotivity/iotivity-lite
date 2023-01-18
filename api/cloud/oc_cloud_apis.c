@@ -4,11 +4,11 @@
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -17,43 +17,24 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+
+#include "oc_config.h"
+
 #ifdef OC_CLOUD
 
 #include "oc_api.h"
 #include "oc_client_state.h"
 #include "oc_cloud.h"
+#include "oc_cloud_access_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_core_res.h"
 #include "rd_client.h"
-#include "port/oc_assert.h"
 #include "port/oc_log.h"
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
-/** Account URI.*/
-#ifdef OC_SPEC_VER_OIC
-#define OC_RSRVD_ACCOUNT_URI "/oic/account"
-#else
-#define OC_RSRVD_ACCOUNT_URI "/oic/sec/account"
-#endif
 
-/** Account session URI.*/
-#ifdef OC_SPEC_VER_OIC
-#define OC_RSRVD_ACCOUNT_SESSION_URI "/oic/account/session"
-#else
-#define OC_RSRVD_ACCOUNT_SESSION_URI "/oic/sec/session"
-#endif
-
-/** Account token refresh URI.*/
-#ifdef OC_SPEC_VER_OIC
-#define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/account/tokenrefresh"
-#else
-#define OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI "/oic/sec/tokenrefresh"
-#endif
-
-/** To represent grant type with refresh token. */
-#define OC_RSRVD_GRANT_TYPE_REFRESH_TOKEN "refresh_token"
+#include <assert.h>
 
 OC_MEMB(api_params, cloud_api_param_t, 1);
 
@@ -85,116 +66,118 @@ conv_cloud_endpoint(oc_cloud_context_t *ctx)
 }
 
 #ifdef OC_SECURITY
+
 static bool
-cloud_tls_peer_connected(const oc_tls_peer_t *peer)
+cloud_tls_connected(const oc_endpoint_t *endpoint)
 {
-  return (peer && peer->role == MBEDTLS_SSL_IS_CLIENT &&
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  return (peer != NULL && peer->role == MBEDTLS_SSL_IS_CLIENT &&
           peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER);
 }
 
-static bool
-cloud_tls_connected(oc_endpoint_t *endpoint)
-{
-  return cloud_tls_peer_connected(oc_tls_get_peer(endpoint));
-}
-
-static bool
-cloud_tls_add_peer(oc_endpoint_t *endpoint, int selected_identity_cred_id)
-{
-  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer) {
-    if (cloud_tls_peer_connected(peer)) {
-      return true;
-    }
-    OC_DBG("cloud need to initialized from the device");
-    oc_tls_close_connection(endpoint);
-  }
-  oc_tls_select_cloud_ciphersuite();
-  oc_tls_select_identity_cert_chain(selected_identity_cred_id);
-  peer = oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_CLIENT);
-  return peer != NULL;
-}
-#endif
+#endif /* OC_SECURITY */
 
 int
 oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
-  if (!ctx || !cb) {
+  if (ctx == NULL || cb == NULL) {
     return -1;
   }
 
-  if (ctx->store.status & OC_CLOUD_REGISTERED) {
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
   }
 
   cloud_api_param_t *p = alloc_api_param();
-  if (p) {
-    p->ctx = ctx;
-    p->cb = cb;
-    p->data = data;
-
-    if (ctx->store.status == OC_CLOUD_INITIALIZED) {
-      OC_DBG("try register device %zu\n", ctx->device);
-      bool cannotConnect = true;
-      if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0 &&
-          cloud_access_register(
-            ctx->cloud_ep, oc_string(ctx->store.auth_provider), NULL,
-            oc_string(ctx->store.uid), oc_string(ctx->store.access_token),
-            ctx->device, ctx->selected_identity_cred_id,
-            oc_cloud_register_handler, p)) {
-        cannotConnect = false;
-        ctx->store.cps = OC_CPS_REGISTERING;
-      }
-      if (cannotConnect) {
-        cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-        free_api_param(p);
-        return -1;
-      }
-      return 0;
-    }
-    free_api_param(p);
+  if (p == NULL) {
+    OC_ERR("cannot allocate cloud parameters");
+    return -1;
   }
+  p->ctx = ctx;
+  p->cb = cb;
+  p->data = data;
+
+  if (ctx->store.status != OC_CLOUD_INITIALIZED) {
+    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    free_api_param(p);
+    return -1;
+  }
+
+  OC_DBG("try register device %zu\n", ctx->device);
+  if (oc_string(ctx->store.ci_server) == NULL ||
+      conv_cloud_endpoint(ctx) != 0) {
+    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+    free_api_param(p);
+    return -1;
+  }
+
+  oc_cloud_access_conf_t conf = {
+    .endpoint = ctx->cloud_ep,
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = oc_cloud_register_handler,
+    .user_data = p,
+  };
+  if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
+                            oc_string(ctx->store.uid),
+                            oc_string(ctx->store.access_token))) {
+    ctx->store.cps = OC_CPS_REGISTERING;
+    return 0;
+  }
+
+  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  free_api_param(p);
   return -1;
 }
 
 int
 oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
-  if (!ctx || !cb) {
+  if (ctx == NULL || cb == NULL) {
     return -1;
   }
 
-  if (ctx->store.status & OC_CLOUD_LOGGED_IN) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
   }
 
   cloud_api_param_t *p = alloc_api_param();
-  if (p) {
-    p->ctx = ctx;
-    p->cb = cb;
-    p->data = data;
-
-    if (ctx->store.status & OC_CLOUD_REGISTERED) {
-      OC_DBG("try login device %zu\n", ctx->device);
-      bool cannotConnect = true;
-      if (conv_cloud_endpoint(ctx) == 0 &&
-          cloud_access_login(ctx->cloud_ep, oc_string(ctx->store.uid),
-                             oc_string(ctx->store.access_token), ctx->device,
-                             ctx->selected_identity_cred_id,
-                             oc_cloud_login_handler, p)) {
-        cannotConnect = false;
-      }
-      if (cannotConnect) {
-        cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-        free_api_param(p);
-        return -1;
-      }
-      return 0;
-    }
-    free_api_param(p);
+  if (p == NULL) {
+    OC_ERR("cannot allocate cloud parameters");
+    return -1;
   }
+  p->ctx = ctx;
+  p->cb = cb;
+  p->data = data;
+
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
+    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    free_api_param(p);
+    return -1;
+  }
+
+  OC_DBG("try login device %zu\n", ctx->device);
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = oc_cloud_login_handler,
+    .user_data = p,
+  };
+  if (conv_cloud_endpoint(ctx) != 0) {
+    goto error;
+  }
+  conf.endpoint = ctx->cloud_ep;
+
+  if (cloud_access_login(conf, oc_string(ctx->store.uid),
+                         oc_string(ctx->store.access_token))) {
+    return 0;
+  }
+
+error:
+  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  free_api_param(p);
   return -1;
 }
 
@@ -237,35 +220,42 @@ cloud_logout_internal(oc_client_response_t *data)
 int
 oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
-  if (!ctx || !cb) {
+  if (ctx == NULL || cb == NULL) {
     return -1;
   }
 
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
+    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     return -1;
   }
   cloud_api_param_t *p = alloc_api_param();
-  if (p) {
-    p->ctx = ctx;
-    p->cb = cb;
-    p->data = data;
+  if (p == NULL) {
+    OC_ERR("cannot allocate cloud parameters");
+    return -1;
+  }
+  p->ctx = ctx;
+  p->cb = cb;
+  p->data = data;
 
-    OC_DBG("try logout device %zu", ctx->device);
-    bool cannotConnect = true;
-    if (conv_cloud_endpoint(ctx) == 0 &&
-        cloud_access_logout(ctx->cloud_ep, oc_string(ctx->store.uid),
-                            oc_string(ctx->store.access_token), 0,
-                            ctx->selected_identity_cred_id,
-                            cloud_logout_internal, p)) {
-      cannotConnect = false;
-    }
-    if (cannotConnect) {
-      cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-      free_api_param(p);
-      return -1;
-    }
+  OC_DBG("try logout device %zu", ctx->device);
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = cloud_logout_internal,
+    .user_data = p,
+  };
+  if (conv_cloud_endpoint(ctx) != 0) {
+    goto error;
+  }
+  conf.endpoint = ctx->cloud_ep;
+  if (cloud_access_logout(conf, oc_string(ctx->store.uid),
+                          oc_string(ctx->store.access_token))) {
     return 0;
   }
+
+error:
+  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  free_api_param(p);
   return -1;
 }
 
@@ -320,28 +310,34 @@ check_accesstoken_for_deregister(oc_cloud_context_t *ctx)
 static int
 cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
 {
-  oc_assert(p != NULL);
+  assert(p != NULL);
 
   oc_cloud_context_t *ctx = p->ctx;
   OC_DBG("try deregister device %zu\n", ctx->device);
-  bool cannotConnect = true;
   cloud_set_cps(ctx, OC_CPS_DEREGISTERING);
 
-  if (oc_string(ctx->store.ci_server) && conv_cloud_endpoint(ctx) == 0) {
-    if (cloud_access_deregister(
-          ctx->cloud_ep, oc_string(ctx->store.uid),
-          useAccessToken ? oc_string(ctx->store.access_token) : NULL,
-          ctx->device, ctx->selected_identity_cred_id,
-          cloud_deregistered_internal, p)) {
-      cannotConnect = false;
-    }
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = cloud_deregistered_internal,
+    .user_data = p,
+  };
+  if (oc_string(ctx->store.ci_server) == NULL ||
+      conv_cloud_endpoint(ctx) != 0) {
+    goto error;
   }
-  if (cannotConnect) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-    free_api_param(p);
-    return -1;
+  conf.endpoint = ctx->cloud_ep;
+
+  if (cloud_access_deregister(
+        conf, oc_string(ctx->store.uid),
+        useAccessToken ? oc_string(ctx->store.access_token) : NULL)) {
+    return 0;
   }
-  return 0;
+
+error:
+  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  free_api_param(p);
+  return -1;
 }
 
 static void
@@ -376,7 +372,8 @@ cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
     return;
   }
 
-  // short access token -> we can use it in query and deregister without login
+  // short access token -> we can use it in query and deregister without
+  // login
   if (check_accesstoken_for_deregister(ctx)) {
     if (cloud_deregister(p, true) != 0) {
       OC_ERR("Failed to deregister from cloud");
@@ -406,7 +403,8 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   }
 
   cloud_api_param_t *p = alloc_api_param();
-  if (!p) {
+  if (p == NULL) {
+    OC_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -457,27 +455,33 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   }
 
   cloud_api_param_t *p = alloc_api_param();
-  if (p) {
-    p->ctx = ctx;
-    p->cb = cb;
-    p->data = data;
+  if (p == NULL) {
+    OC_ERR("cannot allocate cloud parameters");
+    return -1;
+  }
+  p->ctx = ctx;
+  p->cb = cb;
+  p->data = data;
 
-    OC_DBG("try refresh token for device %zu\n", ctx->device);
-    bool cannotConnect = true;
-    if (conv_cloud_endpoint(ctx) == 0 &&
-        cloud_access_refresh_access_token(
-          ctx->cloud_ep, oc_string(ctx->store.uid),
-          oc_string(ctx->store.refresh_token), ctx->device,
-          ctx->selected_identity_cred_id, oc_cloud_refresh_token_handler, p)) {
-      cannotConnect = false;
-    }
-    if (cannotConnect) {
-      cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
-      free_api_param(p);
-      return -1;
-    }
+  OC_DBG("try refresh token for device %zu\n", ctx->device);
+  oc_cloud_access_conf_t conf = {
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = oc_cloud_refresh_token_handler,
+    .user_data = p,
+  };
+  if (conv_cloud_endpoint(ctx) != 0) {
+    goto error;
+  }
+  conf.endpoint = ctx->cloud_ep;
+  if (cloud_access_refresh_access_token(conf, oc_string(ctx->store.uid),
+                                        oc_string(ctx->store.refresh_token))) {
     return 0;
   }
+
+error:
+  cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
+  free_api_param(p);
   return -1;
 }
 
@@ -500,239 +504,6 @@ oc_cloud_discover_resources(oc_cloud_context_t *ctx,
   return -1;
 }
 
-/* Internal APIs for accessing the OCF Cloud */
-bool
-cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
-                      const char *auth_code, const char *uid,
-                      const char *access_token, size_t device,
-                      int selected_identity_cred_id,
-                      oc_response_handler_t handler, void *user_data)
-{
-#ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s != OC_DOS_RFNOP) {
-    return false;
-  }
-#endif /* OC_SECURITY */
-
-  if (!endpoint || ((!auth_provider || !auth_code) && !access_token) ||
-      !handler) {
-    OC_ERR("Error of input parameters");
-    return false;
-  }
-
-#ifdef OC_SECURITY
-  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
-    return false;
-  }
-#else
-  (void)selected_identity_cred_id;
-#endif /* OC_SECURITY */
-
-  if (oc_init_post(OC_RSRVD_ACCOUNT_URI, endpoint, NULL, handler, LOW_QOS,
-                   user_data)) {
-    char uuid[OC_UUID_LEN] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
-
-    oc_rep_start_root_object();
-    oc_rep_set_text_string(root, di, uuid);
-    if (auth_provider)
-      oc_rep_set_text_string(root, authprovider, auth_provider);
-    if (auth_code) {
-      oc_rep_set_text_string(root, accesstoken, auth_code);
-    } else {
-      if (uid)
-        oc_rep_set_text_string(root, uid, uid);
-      oc_rep_set_text_string(root, accesstoken, access_token);
-    }
-    oc_rep_set_text_string(root, devicetype, "device");
-    oc_rep_end_root_object();
-  } else {
-    OC_ERR("Could not init POST request for sign up");
-    return false;
-  }
-
-  return oc_do_post();
-}
-
-oc_string_t
-cloud_access_deregister_query(const char *uid, const char *access_token,
-                              size_t device)
-{
-  oc_string_t q_uid;
-  oc_concat_strings(&q_uid, "uid=", uid);
-
-  char uuid[OC_UUID_LEN] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
-  oc_string_t q_di;
-  oc_concat_strings(&q_di, "&di=", uuid);
-  oc_string_t q_uid_di;
-  oc_concat_strings(&q_uid_di, oc_string(q_uid), oc_string(q_di));
-  oc_free_string(&q_uid);
-  oc_free_string(&q_di);
-
-  oc_string_t q_uid_di_at;
-  if (access_token != NULL) {
-    oc_string_t q_at;
-    oc_concat_strings(&q_at, "&accesstoken=", access_token);
-    oc_concat_strings(&q_uid_di_at, oc_string(q_uid_di), oc_string(q_at));
-    oc_free_string(&q_at);
-  } else {
-    oc_new_string(&q_uid_di_at, oc_string(q_uid_di), oc_string_len(q_uid_di));
-  }
-
-  oc_free_string(&q_uid_di);
-  return q_uid_di_at;
-}
-
-bool
-cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
-                        const char *access_token, size_t device,
-                        int selected_identity_cred_id,
-                        oc_response_handler_t handler, void *user_data)
-{
-#ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s != OC_DOS_RFNOP) {
-    return false;
-  }
-#endif /* OC_SECURITY */
-
-  if (!endpoint || !handler) {
-    OC_ERR("Error of input parameters");
-    return false;
-  }
-
-#ifdef OC_SECURITY
-  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
-    return false;
-  }
-#else
-  (void)selected_identity_cred_id;
-#endif /* OC_SECURITY */
-
-  oc_string_t query = cloud_access_deregister_query(uid, access_token, device);
-  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, endpoint, oc_string(query),
-                        handler, HIGH_QOS, user_data);
-  oc_free_string(&query);
-  return s;
-}
-
-static bool
-cloud_access_login_out(oc_endpoint_t *endpoint, const char *uid,
-                       const char *access_token, size_t device, bool is_sign_in,
-                       int selected_identity_cred_id,
-                       oc_response_handler_t handler, void *user_data)
-{
-#ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s != OC_DOS_RFNOP) {
-    return false;
-  }
-#endif /* OC_SECURITY */
-
-  if (!endpoint || !uid || !access_token || !handler) {
-    OC_ERR("Error of input parameters");
-    return false;
-  }
-
-#ifdef OC_SECURITY
-  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
-    return false;
-  }
-#else
-  (void)selected_identity_cred_id;
-#endif /* OC_SECURITY */
-
-  if (oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, endpoint, NULL, handler,
-                   LOW_QOS, user_data)) {
-    char uuid[OC_UUID_LEN] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
-
-    oc_rep_start_root_object();
-    oc_rep_set_text_string(root, uid, uid);
-    oc_rep_set_text_string(root, di, uuid);
-    oc_rep_set_text_string(root, accesstoken, access_token);
-    oc_rep_set_boolean(root, login, is_sign_in);
-    oc_rep_end_root_object();
-  } else {
-    OC_ERR("Could not init POST request for sign in/out");
-    return false;
-  }
-
-  return oc_do_post();
-}
-
-bool
-cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
-                   const char *access_token, size_t device,
-                   int selected_identity_cred_id, oc_response_handler_t handler,
-                   void *user_data)
-{
-  return cloud_access_login_out(endpoint, uid, access_token, device, true,
-                                selected_identity_cred_id, handler, user_data);
-}
-
-bool
-cloud_access_logout(oc_endpoint_t *endpoint, const char *uid,
-                    const char *access_token, size_t device,
-                    int selected_identity_cred_id,
-                    oc_response_handler_t handler, void *user_data)
-{
-  return cloud_access_login_out(endpoint, uid, access_token, device, false,
-                                selected_identity_cred_id, handler, user_data);
-}
-
-bool
-cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
-                                  const char *refresh_token, size_t device,
-                                  int selected_identity_cred_id,
-                                  oc_response_handler_t handler,
-                                  void *user_data)
-{
-#ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s != OC_DOS_RFNOP) {
-    return false;
-  }
-#endif /* OC_SECURITY */
-
-  if (!endpoint || !uid || !refresh_token || !handler) {
-    OC_ERR("Error of input parameters");
-    return false;
-  }
-
-#ifdef OC_SECURITY
-  if (!cloud_tls_add_peer(endpoint, selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
-    return false;
-  }
-#else
-  (void)selected_identity_cred_id;
-#endif /* OC_SECURITY */
-
-  if (oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, endpoint, NULL, handler,
-                   LOW_QOS, user_data)) {
-    char uuid[OC_UUID_LEN] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
-
-    oc_rep_start_root_object();
-    oc_rep_set_text_string(root, uid, uid);
-    oc_rep_set_text_string(root, di, uuid);
-    oc_rep_set_text_string(root, granttype, OC_RSRVD_GRANT_TYPE_REFRESH_TOKEN);
-    oc_rep_set_text_string(root, refreshtoken, refresh_token);
-    oc_rep_end_root_object();
-  } else {
-    OC_ERR("Could not init POST request for refresh access token");
-    return false;
-  }
-
-  return oc_do_post();
-}
-
 bool
 cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                 oc_response_handler_t handler, void *user_data)
@@ -751,6 +522,4 @@ cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                                 timeout_seconds, handler, LOW_QOS, user_data);
 }
 
-#else  /* OC_CLOUD*/
-typedef int dummy_declaration;
-#endif /* !OC_CLOUD */
+#endif /* OC_CLOUD */

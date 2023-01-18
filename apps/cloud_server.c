@@ -677,7 +677,7 @@ main(int argc, char *argv[])
           "apn: %s, "
           "num_resources: %d, "
           "\n",
-          device_name, auth_code, cis, sid, apn);
+          device_name, auth_code, cis, sid, apn, num_resources);
 #endif /* !OC_SECURITY */
   }
   if (argc > 1) {

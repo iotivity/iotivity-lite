@@ -4,11 +4,11 @@
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -86,107 +86,6 @@ void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
                                   oc_cloud_error_t error);
 void cloud_update_by_resource(oc_cloud_context_t *ctx,
                               const cloud_conf_update_t *data);
-/**
- * @brief Send request to register device to cloud.
- *
- * @param endpoint cloud endpoint
- * @param auth_provider authorization provider
- * @param auth_code authorization code
- * @param uid user id
- * @param access_token access token
- * @param device index of the device to deregister
- * @param selected_identity_cred_id selected identity certficate id
- * @param handler response callback
- * @param user_data data passed to response callback
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_register(oc_endpoint_t *endpoint, const char *auth_provider,
-                           const char *auth_code, const char *uid,
-                           const char *access_token, size_t device,
-                           int selected_identity_cred_id,
-                           oc_response_handler_t handler, void *user_data);
-
-/**
- * @brief Generate URI query for deregister request.
- *
- * @return URI query, must be freed by caller
- */
-oc_string_t cloud_access_deregister_query(const char *uid,
-                                          const char *access_token,
-                                          size_t device);
-/**
- * @brief Send request to deregister device from cloud.
- *
- * The device must be registered and logged in for this call to succeed.
- *
- * @param endpoint cloud endpoint
- * @param uid user id
- * @param access_token access token
- * @param device index of the device to deregister
- * @param selected_identity_cred_id selected identity certficate id
- * @param handler response callback
- * @param user_data data passed to response callback
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_deregister(oc_endpoint_t *endpoint, const char *uid,
-                             const char *access_token, size_t device,
-                             int selected_identity_cred_id,
-                             oc_response_handler_t handler, void *user_data);
-/**
- * @brief Send request to sign in the device to the cloud.
- *
- * @param endpoint cloud endpoint
- * @param uid user id
- * @param access_token access token
- * @param device index of the device to deregister
- * @param selected_identity_cred_id selected identity certficate id
- * @param handler response callback
- * @param user_data data passed to response callback
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_login(oc_endpoint_t *endpoint, const char *uid,
-                        const char *access_token, size_t device,
-                        int selected_identity_cred_id,
-                        oc_response_handler_t handler, void *user_data);
-/**
- * @brief Send request to sign out the device to the cloud.
- *
- * @param endpoint cloud endpoint
- * @param uid user id
- * @param access_token access token
- * @param device index of the device to deregister
- * @param selected_identity_cred_id selected identity certficate id
- * @param handler response callback
- * @param user_data data passed to response callback
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_logout(oc_endpoint_t *endpoint, const char *uid,
-                         const char *access_token, size_t device,
-                         int selected_identity_cred_id,
-                         oc_response_handler_t handler, void *user_data);
-/**
- * @brief Send request to refresh the device access token to the cloud.
- *
- * @param endpoint cloud endpoint
- * @param uid user id
- * @param refresh_token refresh token
- * @param device index of the device to deregister
- * @param selected_identity_cred_id selected identity certficate id
- * @param handler response callback
- * @param user_data data passed to response callback
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_refresh_access_token(oc_endpoint_t *endpoint, const char *uid,
-                                       const char *refresh_token, size_t device,
-                                       int selected_identity_cred_id,
-                                       oc_response_handler_t handler,
-                                       void *user_data);
-
 /**
  * @brief Update resource links after manager status change.
  *

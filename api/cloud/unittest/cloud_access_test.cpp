@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "oc_api.h"
+#include "oc_cloud_access_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_endpoint.h"
 
@@ -67,9 +68,15 @@ oc_endpoint_t TestCloudAccess::s_endpoint;
 TEST_F(TestCloudAccess, cloud_access_register_p)
 {
   // When
-  bool ret =
-    cloud_access_register(&s_endpoint, "auth_provider", "auth_code", "uid",
-                          "access_token", 0, -1, onPostResponse, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ &s_endpoint,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ onPostResponse,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_register(conf, "auth_provider", "auth_code", "uid",
+                                   "access_token");
 
   // Then
   EXPECT_TRUE(ret);
@@ -77,12 +84,15 @@ TEST_F(TestCloudAccess, cloud_access_register_p)
 
 TEST_F(TestCloudAccess, cloud_access_register_f)
 {
-  // Given
-  oc_endpoint_t *ep = nullptr;
-
   // When
-  bool ret = cloud_access_register(ep, nullptr, nullptr, nullptr, nullptr, 0,
-                                   -1, nullptr, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ nullptr,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ nullptr,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_register(conf, nullptr, nullptr, nullptr, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
@@ -91,8 +101,14 @@ TEST_F(TestCloudAccess, cloud_access_register_f)
 TEST_F(TestCloudAccess, cloud_access_login_p)
 {
   // When
-  bool ret = cloud_access_login(&s_endpoint, "uid", "access_token", 0, -1,
-                                onPostResponse, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ &s_endpoint,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ onPostResponse,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_login(conf, "uid", "access_token");
 
   // Then
   EXPECT_TRUE(ret);
@@ -100,11 +116,15 @@ TEST_F(TestCloudAccess, cloud_access_login_p)
 
 TEST_F(TestCloudAccess, cloud_access_login_f)
 {
-  // Given
-  oc_endpoint_t *ep = nullptr;
-
   // When
-  bool ret = cloud_access_login(ep, nullptr, nullptr, 0, -1, nullptr, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ nullptr,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ nullptr,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_login(conf, nullptr, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
@@ -113,8 +133,14 @@ TEST_F(TestCloudAccess, cloud_access_login_f)
 TEST_F(TestCloudAccess, cloud_access_logout_p)
 {
   // When
-  bool ret = cloud_access_logout(&s_endpoint, "uid", "access_token", 0, -1,
-                                 onPostResponse, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ &s_endpoint,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ onPostResponse,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_logout(conf, "uid", "access_token");
 
   // Then
   EXPECT_TRUE(ret);
@@ -122,11 +148,15 @@ TEST_F(TestCloudAccess, cloud_access_logout_p)
 
 TEST_F(TestCloudAccess, cloud_access_logout_f)
 {
-  // Given
-  oc_endpoint_t *ep = nullptr;
-
   // When
-  bool ret = cloud_access_logout(ep, nullptr, nullptr, 0, -1, nullptr, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ nullptr,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ nullptr,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_logout(conf, nullptr, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
@@ -135,8 +165,14 @@ TEST_F(TestCloudAccess, cloud_access_logout_f)
 TEST_F(TestCloudAccess, cloud_access_refresh_access_token_p)
 {
   // When
-  bool ret = cloud_access_refresh_access_token(
-    &s_endpoint, "uid", "refresh_token", 0, -1, onPostResponse, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ &s_endpoint,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ onPostResponse,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_refresh_access_token(conf, "uid", "refresh_token");
 
   // Then
   EXPECT_TRUE(ret);
@@ -144,12 +180,15 @@ TEST_F(TestCloudAccess, cloud_access_refresh_access_token_p)
 
 TEST_F(TestCloudAccess, cloud_access_refresh_access_token_f)
 {
-  // Given
-  oc_endpoint_t *ep = nullptr;
-
   // When
-  bool ret = cloud_access_refresh_access_token(ep, nullptr, nullptr, 0, -1,
-                                               nullptr, nullptr);
+  oc_cloud_access_conf_t conf = {
+    /*.endpoint = */ nullptr,
+    /*.device = */ 0,
+    /*.selected_identity_cred_id = */ -1,
+    /*.handler = */ nullptr,
+    /*.user_data = */ nullptr,
+  };
+  bool ret = cloud_access_refresh_access_token(conf, nullptr, nullptr);
 
   // Then
   EXPECT_FALSE(ret);
