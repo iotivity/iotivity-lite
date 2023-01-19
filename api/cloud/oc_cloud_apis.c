@@ -54,9 +54,7 @@ int
 conv_cloud_endpoint(oc_cloud_context_t *ctx)
 {
   int ret = 0;
-  oc_endpoint_t ep;
-  memset(&ep, 0, sizeof(oc_endpoint_t));
-  if (ctx->cloud_ep && memcmp(&ep, ctx->cloud_ep, sizeof(oc_endpoint_t)) == 0) {
+  if (ctx->cloud_ep != NULL && oc_endpoint_is_empty(ctx->cloud_ep)) {
     ret = oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
 #ifdef OC_DNS_CACHE
     oc_dns_clear_cache();

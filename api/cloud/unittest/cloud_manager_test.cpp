@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <pthread.h>
+#include <string>
 #include <vector>
 
 #ifndef OC_SECURITY
@@ -194,27 +195,41 @@ class TestCloudManagerData : public testing::Test {
 public:
   void SetUp() override { memset(&m_context, 0, sizeof(m_context)); }
 
-  void TearDown() override {}
+  void TearDown() override { cloud_store_deinitialize(&m_context.store); }
+
+  void Clear() { pool_.Clear(); }
 
   oc::oc_rep_unique_ptr ParsePayload() { return pool_.ParsePayload(); }
-  oc_cloud_context_t *GetContext() { return &m_context; }
-  void Clear() { pool_.Clear(); }
 
   static void PrintJson(const oc_rep_t *rep)
   {
     (void)rep;
-    // #ifdef OC_DEBUG
+#ifdef OC_DEBUG
     size_t json_size = oc_rep_to_json(rep, nullptr, 0, true);
     std::vector<char> json{};
     json.reserve(json_size + 1);
     oc_rep_to_json(rep, &json[0], json.capacity(), true);
     PRINT("%s", json.data());
-    // #endif /* OC_DEBUG */
+#endif /* OC_DEBUG */
   }
 
-  oc::oc_rep_unique_ptr GetPayloadWithAccessToken();
-  oc::oc_rep_unique_ptr GetPayloadWithRefreshToken();
-  oc::oc_rep_unique_ptr GetPayloadWithTokens();
+  oc::oc_rep_unique_ptr GetPayload(const std::string &access_token,
+                                   const std::string &refresh_token,
+                                   const std::string &uid, int64_t expires_in);
+
+  oc_cloud_context_t *GetContext()
+  {
+    return &m_context;
+  }
+
+  bool IsEmptyContext() const
+  {
+    return oc_string(m_context.store.ci_server) == nullptr &&
+           oc_string(m_context.store.access_token) == nullptr &&
+           oc_string(m_context.store.refresh_token) == nullptr &&
+           oc_string(m_context.store.uid) == nullptr &&
+           m_context.store.expires_in == 0 && m_context.store.status == 0;
+  }
 
 private:
   oc_cloud_context_t m_context{};
@@ -222,17 +237,29 @@ private:
 };
 
 oc::oc_rep_unique_ptr
-TestCloudManagerData::GetPayloadWithAccessToken()
+TestCloudManagerData::GetPayload(const std::string &access_token,
+                                 const std::string &refresh_token = {},
+                                 const std::string &uid = {},
+                                 int64_t expires_in = -1)
 {
-  /*
-  {
-    accesstoken: "accesstoken",
-  }
-  */
   oc_rep_begin_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, accesstoken, "accesstoken");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  if (!access_token.empty()) {
+    oc_rep_set_text_string(root, accesstoken, access_token.c_str());
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  if (!refresh_token.empty()) {
+    oc_rep_set_text_string(root, refreshtoken, refresh_token.c_str());
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  if (!uid.empty()) {
+    oc_rep_set_text_string(root, uid, uid.c_str());
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
+  if (expires_in >= 0) {
+    oc_rep_set_int(root, expiresin, expires_in);
+    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  }
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc::oc_rep_unique_ptr rep = ParsePayload();
@@ -240,58 +267,127 @@ TestCloudManagerData::GetPayloadWithAccessToken()
   return rep;
 }
 
-oc::oc_rep_unique_ptr
-TestCloudManagerData::GetPayloadWithRefreshToken()
+TEST_F(TestCloudManagerData, cloud_manager_parse_register_data_invalid)
 {
-  /*
-  {
-    refreshtoken: "refreshtoken",
-  }
-  */
+  // {
+  //   accesstoken: "accesstoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_register_response(
+    GetContext(), GetPayload("accesstoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   refreshtoken: "refreshtoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_register_response(
+    GetContext(), GetPayload("", "refreshtoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_register_response(
+    GetContext(), GetPayload("accesstoken", "refreshtoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  //   uid: "uid",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_register_response(
+    GetContext(), GetPayload("accesstoken", "refreshtoken", "uid").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+}
+
+TEST_F(TestCloudManagerData, cloud_manager_parse_register_data)
+{
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  //   uid: "uid",
+  //   expiresin: 42,
+  // }
+  std::string at{ "accesstoken" };
+  std::string rt{ "refreshtoken" };
+  std::string uid{ "uid" };
+  int64_t expiresin = 42;
+  oc::oc_rep_unique_ptr rep = GetPayload(at, rt, uid, expiresin);
+  EXPECT_TRUE(cloud_manager_handle_register_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
+
+  EXPECT_STREQ(at.c_str(), oc_string(GetContext()->store.access_token));
+  EXPECT_STREQ(rt.c_str(), oc_string(GetContext()->store.refresh_token));
+  EXPECT_STREQ(uid.c_str(), oc_string(GetContext()->store.uid));
+  EXPECT_EQ(expiresin, GetContext()->store.expires_in);
+}
+
+TEST_F(TestCloudManagerData, cloud_manager_parse_redirect)
+{
+  std::string redirect{ "coap://mock.plgd.dev" };
   oc_rep_begin_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, refreshtoken, "refreshtoken");
+  oc_rep_set_text_string(root, redirecturi, redirect.c_str());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc::oc_rep_unique_ptr rep = ParsePayload();
   PrintJson(rep.get());
-  return rep;
+
+  EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
+  EXPECT_STREQ(redirect.c_str(), oc_string(GetContext()->store.ci_server));
 }
 
-oc::oc_rep_unique_ptr
-TestCloudManagerData::GetPayloadWithTokens()
+TEST_F(TestCloudManagerData, cloud_manager_parse_refresh_token_data_invalid)
 {
-  /*
-  {
-    accesstoken: "accesstoken",
-    refreshtoken: "refreshtoken",
-  }
-  */
-  oc_rep_begin_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, accesstoken, "accesstoken");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, refreshtoken, "refreshtoken");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_end_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc::oc_rep_unique_ptr rep = ParsePayload();
-  PrintJson(rep.get());
-  return rep;
+  // {
+  //   accesstoken: "accesstoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_refresh_token_response(
+    GetContext(), GetPayload("accesstoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   refreshtoken: "refreshtoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_refresh_token_response(
+    GetContext(), GetPayload("", "refreshtoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_refresh_token_response(
+    GetContext(), GetPayload("accesstoken", "refreshtoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
 }
 
-TEST_F(TestCloudManagerData, cloud_manager_parse_register_invalid_data)
+TEST_F(TestCloudManagerData, cloud_manager_parse_refresh_token_data)
 {
-  ASSERT_FALSE(cloud_manager_handle_register_response(
-    GetContext(), GetPayloadWithAccessToken().get()));
-  Clear();
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  //   expiresin: 42,
+  // }
+  std::string at{ "accesstoken" };
+  std::string rt{ "refreshtoken" };
+  int64_t expiresin = 42;
+  oc::oc_rep_unique_ptr rep = GetPayload(at, rt, "", expiresin);
+  EXPECT_TRUE(
+    cloud_manager_handle_refresh_token_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
 
-  ASSERT_FALSE(cloud_manager_handle_register_response(
-    GetContext(), GetPayloadWithRefreshToken().get()));
-  Clear();
-
-  ASSERT_FALSE(cloud_manager_handle_register_response(
-    GetContext(), GetPayloadWithTokens().get()));
-  Clear();
+  EXPECT_STREQ(at.c_str(), oc_string(GetContext()->store.access_token));
+  EXPECT_STREQ(rt.c_str(), oc_string(GetContext()->store.refresh_token));
+  EXPECT_EQ(expiresin, GetContext()->store.expires_in);
 }

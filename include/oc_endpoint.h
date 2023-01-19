@@ -19,11 +19,14 @@
 #ifndef OC_ENDPOINT_H
 #define OC_ENDPOINT_H
 
+#include "oc_export.h"
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore_constants.h"
 #endif /* OC_OSCORE */
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -190,6 +193,16 @@ int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
  */
 int oc_endpoint_compare_address(const oc_endpoint_t *ep1,
                                 const oc_endpoint_t *ep2);
+
+/**
+ * @brief check if all fields of the endpoint struct are empty
+ *
+ * @param endpoint endpoint to check (cannot be NULL)
+ * @return true all fields of the endpoint are empty
+ * @return false otherwise
+ */
+OC_API
+bool oc_endpoint_is_empty(const oc_endpoint_t *endpoint);
 
 /**
  * @brief set interface index on the endpoint

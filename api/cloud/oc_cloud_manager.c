@@ -301,6 +301,31 @@ cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
   return true;
 }
 
+bool
+cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
+                                       const oc_rep_t *payload)
+{
+  assert(ctx != NULL);
+  assert(payload != NULL);
+
+  char *value = NULL;
+  size_t size = 0;
+  if (oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) && size > 0) {
+    const char *ci_server = oc_string(ctx->store.ci_server);
+    if ((ctx->cloud_ep != NULL) &&
+        (ci_server == NULL || oc_string_len(ctx->store.ci_server) != size ||
+         strcmp(ci_server, value) != 0)) {
+      cloud_close_endpoint(ctx->cloud_ep);
+      memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+      ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
+    }
+    cloud_set_string(&ctx->store.ci_server, value, size);
+    return true;
+  }
+
+  return false;
+}
+
 static int
 _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
                   bool retryIsActive)
@@ -321,17 +346,8 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
     goto error;
   }
 
-  char *value = NULL;
-  size_t size = 0;
-  if (oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) && size > 0) {
-    const char *ci_server = oc_string(ctx->store.ci_server);
-    if (ci_server == NULL || oc_string_len(ctx->store.ci_server) != size ||
-        strcmp(ci_server, value) != 0) {
-      cloud_close_endpoint(ctx->cloud_ep);
-      memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
-      ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-    }
-    cloud_set_string(&ctx->store.ci_server, value, size);
+  if (cloud_manager_handle_redirect_response(ctx, payload)) {
+    OC_DBG("redirect detected");
   }
 
   cloud_store_dump_async(&ctx->store);
@@ -630,6 +646,43 @@ _refresh_token_handler_check_data_error(const oc_client_response_t *data)
   return CLOUD_OK;
 }
 
+bool
+cloud_manager_handle_refresh_token_response(oc_cloud_context_t *ctx,
+                                            const oc_rep_t *payload)
+{
+  assert(ctx != NULL);
+  assert(payload != NULL);
+
+  char *access_value = NULL;
+  size_t access_size = 0;
+  if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
+                         &access_size) ||
+      access_size == 0) {
+    return false;
+  }
+
+  char *refresh_value = NULL;
+  size_t refresh_size = 0;
+  if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
+                         &refresh_size) ||
+      refresh_size == 0) {
+    return false;
+  }
+
+  int64_t expires_in = 0;
+  if (!oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in)) {
+    return false;
+  }
+
+  cloud_set_string(&ctx->store.access_token, access_value, access_size);
+  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
+  ctx->store.expires_in = expires_in;
+  if (ctx->store.expires_in > 0) {
+    ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
+  }
+  return true;
+}
+
 static oc_cloud_error_t
 _refresh_token_handler(oc_cloud_context_t *ctx,
                        const oc_client_response_t *data, bool retryIsActive)
@@ -645,32 +698,9 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
   }
 
   const oc_rep_t *payload = data->payload;
-  char *access_value = NULL;
-  size_t access_size = 0;
-  char *refresh_value = NULL;
-  size_t refresh_size = 0;
-  int64_t expires_in = 0;
-  if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, &access_value,
-                         &access_size) ||
-      access_size == 0) {
+  if (!cloud_manager_handle_refresh_token_response(ctx, payload)) {
     err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
     goto error;
-  }
-  if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, &refresh_value,
-                         &refresh_size) ||
-      refresh_size == 0) {
-    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
-    goto error;
-  }
-  if (!oc_rep_get_int(payload, EXPIRESIN_KEY, &expires_in)) {
-    err = CLOUD_ERROR_REFRESH_ACCESS_TOKEN;
-    goto error;
-  }
-  cloud_set_string(&ctx->store.access_token, access_value, access_size);
-  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
-  ctx->store.expires_in = expires_in;
-  if (ctx->store.expires_in > 0) {
-    ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
   }
 
   cloud_store_dump_async(&ctx->store);

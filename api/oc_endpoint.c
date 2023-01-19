@@ -708,6 +708,14 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   return -1;
 }
 
+bool
+oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
+{
+  oc_endpoint_t empty;
+  memset(&empty, 0, sizeof(oc_endpoint_t));
+  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0;
+}
+
 void
 oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src)
 {

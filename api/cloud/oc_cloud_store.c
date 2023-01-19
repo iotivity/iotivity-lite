@@ -160,7 +160,7 @@ static oc_event_callback_retval_t
 cloud_store_dump_handler(void *data)
 {
   const oc_cloud_store_t *store = (oc_cloud_store_t *)data;
-  if (cloud_store_dump(store) != 0) {
+  if (cloud_store_dump(store) < 0) {
     OC_ERR("failed to dump store");
   }
   return OC_EVENT_DONE;
