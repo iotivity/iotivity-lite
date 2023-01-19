@@ -296,7 +296,7 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_new_string(&s, spu4[i], strlen(spu4[i]));
     oc_endpoint_t ep;
     memset(&ep, 0, sizeof(oc_endpoint_t));
-    int ret = oc_string_to_endpoint(&s, &ep, NULL);
+    int ret = oc_string_to_endpoint(&s, &ep, nullptr);
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
     oc_free_string(&s);
   }
@@ -413,7 +413,7 @@ TEST(OCEndpoints, EndpointStringParsePath)
   }
   {
     oc_string_t path;
-    int ret = oc_endpoint_string_parse_path(NULL, &path);
+    int ret = oc_endpoint_string_parse_path(nullptr, &path);
     EXPECT_EQ(-1, ret);
     if (-1 != ret) {
       // If code is working as expected this should never run.
@@ -423,7 +423,7 @@ TEST(OCEndpoints, EndpointStringParsePath)
   {
     oc_string_t s;
     oc_new_string(&s, "coap://0/p", strlen("coap://0/p"));
-    EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, NULL));
+    EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, nullptr));
     oc_free_string(&s);
   }
 }

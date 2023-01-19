@@ -26,23 +26,23 @@
 class TestCloudResource : public testing::Test {
 public:
   static oc_handler_t s_handler;
-  static pthread_mutex_t mutex;
-  static pthread_cond_t cv;
+  static pthread_mutex_t s_mutex;
+  static pthread_cond_t s_cv;
   static oc_cloud_context_t s_context;
 
   static int appInit(void)
   {
-    int result = oc_init_platform("OCFCloud", NULL, NULL);
+    int result = oc_init_platform("OCFCloud", nullptr, nullptr);
     result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                            "ocf.res.1.0.0", NULL, NULL);
+                            "ocf.res.1.0.0", nullptr, nullptr);
     return result;
   }
 
-  static void signalEventLoop(void) { pthread_cond_signal(&cv); }
+  static void signalEventLoop(void) { pthread_cond_signal(&s_cv); }
 
   static oc_event_callback_retval_t quitEvent(void *data)
   {
-    bool *quit = (bool *)data;
+    auto *quit = static_cast<bool *>(data);
     *quit = true;
     return OC_EVENT_DONE;
   }
@@ -53,21 +53,21 @@ public:
     oc_set_delayed_callback(&quit, quitEvent, seconds);
 
     while (true) {
-      pthread_mutex_lock(&mutex);
+      pthread_mutex_lock(&s_mutex);
       oc_clock_time_t next_event = oc_main_poll();
       if (quit) {
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&s_mutex);
         break;
       }
       if (next_event == 0) {
-        pthread_cond_wait(&cv, &mutex);
+        pthread_cond_wait(&s_cv, &s_mutex);
       } else {
         struct timespec ts;
         ts.tv_sec = (next_event / OC_CLOCK_SECOND);
         ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-        pthread_cond_timedwait(&cv, &mutex, &ts);
+        pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
       }
-      pthread_mutex_unlock(&mutex);
+      pthread_mutex_unlock(&s_mutex);
     }
   }
 
@@ -86,6 +86,6 @@ protected:
 };
 
 oc_handler_t TestCloudResource::s_handler;
-pthread_mutex_t TestCloudResource::mutex;
-pthread_cond_t TestCloudResource::cv;
+pthread_mutex_t TestCloudResource::s_mutex;
+pthread_cond_t TestCloudResource::s_cv;
 oc_cloud_context_t TestCloudResource::s_context;

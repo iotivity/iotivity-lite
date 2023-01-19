@@ -240,6 +240,9 @@ cloud_access_login_out(oc_cloud_access_conf_t conf, const char *uid,
   oc_rep_set_boolean(root, login, is_sign_in);
   oc_rep_end_root_object();
 
+  if (conf.timeout > 0) {
+    return oc_do_post_with_timeout(conf.timeout);
+  }
   return oc_do_post();
 }
 
@@ -296,6 +299,9 @@ cloud_access_refresh_access_token(oc_cloud_access_conf_t conf, const char *uid,
   oc_rep_set_text_string(root, refreshtoken, refresh_token);
   oc_rep_end_root_object();
 
+  if (conf.timeout > 0) {
+    return oc_do_post_with_timeout(conf.timeout);
+  }
   return oc_do_post();
 }
 

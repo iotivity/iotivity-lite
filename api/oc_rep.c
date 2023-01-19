@@ -638,7 +638,7 @@ oc_rep_get_value(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
         break;
       case OC_REP_BYTE_STRING:
       case OC_REP_STRING:
-        *value = oc_string(rep_value->value.string);
+        *(const char **)value = oc_string(rep_value->value.string);
         *size = oc_string_len(rep_value->value.string);
         break;
       case OC_REP_INT_ARRAY:
@@ -735,6 +735,10 @@ bool
 oc_rep_get_string(const oc_rep_t *rep, const char *key, char **value,
                   size_t *size)
 {
+  // TODO: for oc_rep_get_byte_string, oc_rep_get_string and for all the arrays
+  // the value parameter should be changed to const since it points to a
+  // value of const oc_rep_t*
+
   if (!size) {
     OC_ERR("Error of input parameters");
     return false;

@@ -688,9 +688,11 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         list(APPEND OC_UNITTESTS ${TESTNAME})
     endmacro()
 
+    file(GLOB COMMONTEST_SRC tests/gtest/*.cpp)
+
     # Unit tests
     file(GLOB APITEST_SRC api/unittest/*.cpp)
-    package_add_test(apitest ${APITEST_SRC})
+    package_add_test(apitest ${COMMONTEST_SRC} ${APITEST_SRC})
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)
     package_add_test(timestamptest ${TIMESTAMPTEST_SRC})
@@ -715,7 +717,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     if(OC_CLOUD_ENABLED)
         file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_cloud)
-        package_add_test(cloudtest ${CLOUDTEST_SRC})
+        package_add_test(cloudtest ${COMMONTEST_SRC} ${CLOUDTEST_SRC})
     endif()
 
     add_custom_target(
