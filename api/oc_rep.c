@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "oc_rep.h"
+#include "oc_rep_internal.h"
 #include "oc_rep_encode_internal.h"
 #include "oc_config.h"
 #include "port/oc_assert.h"
@@ -812,4 +813,14 @@ bool
 oc_rep_get_object_array(const oc_rep_t *rep, const char *key, oc_rep_t **value)
 {
   return oc_rep_get_value(rep, OC_REP_OBJECT_ARRAY, key, (void **)value, NULL);
+}
+
+bool
+oc_rep_is_property(const oc_rep_t *rep, const char *propname,
+                   size_t propname_len)
+{
+  assert(rep != NULL);
+  assert(propname != NULL);
+  return oc_string_len(rep->name) == propname_len &&
+         memcmp(oc_string((rep)->name), propname, propname_len) == 0;
 }

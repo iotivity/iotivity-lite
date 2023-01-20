@@ -24,8 +24,10 @@
 
 #include "oc_api.h"
 #include "oc_cloud_access_internal.h"
+#include "oc_cloud_context_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_manager_internal.h"
+#include "oc_cloud_store_internal.h"
 #include "oc_endpoint.h"
 #include "port/oc_log.h"
 #include "rd_client.h"
@@ -156,28 +158,6 @@ is_retry_over(const oc_cloud_context_t *ctx)
          g_retry_timeout[ctx->retry_count] == 0;
 }
 
-bool
-cloud_has_refresh_token(const oc_cloud_context_t *ctx)
-{
-  return oc_string(ctx->store.refresh_token) != NULL &&
-         oc_string_len(ctx->store.refresh_token) > 0;
-}
-
-bool
-cloud_has_permanent_access_token(const oc_cloud_context_t *ctx)
-{
-  return oc_string(ctx->store.access_token) != NULL &&
-         oc_string_len(ctx->store.access_token) > 0 &&
-         ctx->store.expires_in < 0;
-}
-
-void
-cloud_clear_access_token(oc_cloud_context_t *ctx)
-{
-  cloud_set_string(&ctx->store.access_token, NULL, 0);
-  ctx->store.expires_in = 0;
-}
-
 static void
 cloud_start_process(oc_cloud_context_t *ctx)
 {
@@ -197,11 +177,11 @@ cloud_start_process(oc_cloud_context_t *ctx)
     goto finish;
   }
   if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
-    if (cloud_has_permanent_access_token(ctx)) {
+    if (cloud_context_has_permanent_access_token(ctx)) {
       reset_delayed_callback(ctx, cloud_login, g_retry_timeout[0]);
       goto finish;
     }
-    if (cloud_has_refresh_token(ctx)) {
+    if (cloud_context_has_refresh_token(ctx)) {
       reset_delayed_callback(ctx, refresh_token, g_retry_timeout[0]);
       goto finish;
     }
@@ -231,22 +211,16 @@ check_expires_in(int64_t expires_in)
 }
 
 static bool
-is_connection_error_code(oc_status_t code)
+cloud_is_connection_error_or_timeout(oc_status_t code)
 {
-  return code == OC_STATUS_SERVICE_UNAVAILABLE ||
-         code == OC_STATUS_GATEWAY_TIMEOUT;
-}
-
-static bool
-is_timeout_error_code(oc_status_t code)
-{
-  return code == OC_STATUS_SERVICE_UNAVAILABLE;
+  return cloud_is_timeout_error_code(code) ||
+         cloud_is_connection_error_code(code);
 }
 
 static oc_cloud_error_t
 _register_handler_check_data_error(const oc_client_response_t *data)
 {
-  if (is_connection_error_code(data->code)) {
+  if (cloud_is_connection_error_or_timeout(data->code)) {
     return CLOUD_ERROR_CONNECT;
   }
   if (data->code >= OC_STATUS_BAD_REQUEST) {
@@ -385,6 +359,21 @@ oc_cloud_register_handler(oc_client_response_t *data)
 }
 
 static void
+cloud_schedule_retry(oc_cloud_context_t *ctx, oc_trigger_t callback,
+                     bool is_timeout, bool is_refresh_token)
+{
+  uint16_t interval;
+  if (is_refresh_token) {
+    interval = g_retry_timeout[ctx->retry_refresh_token_count];
+    ++ctx->retry_refresh_token_count;
+  } else {
+    interval = g_retry_timeout[ctx->retry_count];
+    ++ctx->retry_count;
+  }
+  oc_set_delayed_callback(ctx, callback, is_timeout ? 0 : interval);
+}
+
+static void
 cloud_register_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
@@ -396,7 +385,7 @@ cloud_register_handler(oc_client_response_t *data)
   }
 
   if (((ctx->store.status & ~OC_CLOUD_FAILURE) == OC_CLOUD_INITIALIZED) &&
-      is_connection_error_code(data->code) && !is_retry_over(ctx)) {
+      cloud_is_connection_error_or_timeout(data->code) && !is_retry_over(ctx)) {
     retry = true;
   }
 
@@ -404,11 +393,8 @@ finish:
   reset_delayed_callback(ctx, callback_handler, 0);
   if (retry) {
     // must be invoked after callback_handler
-    oc_set_delayed_callback(ctx, cloud_register,
-                            is_timeout_error_code(data->code)
-                              ? 0
-                              : g_retry_timeout[ctx->retry_count]);
-    ++ctx->retry_count;
+    cloud_schedule_retry(ctx, cloud_register,
+                         cloud_is_timeout_error_code(data->code), false);
   }
 }
 
@@ -465,7 +451,7 @@ retry:
 static oc_cloud_error_t
 _login_handler_check_data_error(const oc_client_response_t *data)
 {
-  if (is_connection_error_code(data->code)) {
+  if (cloud_is_connection_error_or_timeout(data->code)) {
     return CLOUD_ERROR_CONNECT;
   }
   if (data->code == OC_STATUS_UNAUTHORIZED) {
@@ -515,9 +501,9 @@ error:
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
   }
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
-    cloud_clear_access_token(ctx);
+    cloud_context_clear_access_token(ctx);
     if (clearCtxOnUnauthorized) {
-      oc_cloud_clear_context(ctx);
+      cloud_context_clear(ctx);
     }
   }
 
@@ -549,7 +535,7 @@ cloud_login_handler(oc_client_response_t *data)
 
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   oc_remove_delayed_callback(ctx, cloud_login);
-  bool handleUnauthorizedByRefresh = cloud_has_refresh_token(ctx);
+  bool handleUnauthorizedByRefresh = cloud_context_has_refresh_token(ctx);
   bool retry = false;
   oc_cloud_error_t ret = _login_handler(ctx, data, /*retryIsActive*/ true,
                                         !handleUnauthorizedByRefresh);
@@ -581,11 +567,8 @@ finish:
   reset_delayed_callback(ctx, callback_handler, 0);
   if (retry) {
     // must be invoked after callback_handler
-    oc_set_delayed_callback(ctx, cloud_login,
-                            is_timeout_error_code(data->code)
-                              ? 0
-                              : g_retry_timeout[ctx->retry_count]);
-    ++ctx->retry_count;
+    cloud_schedule_retry(ctx, cloud_login,
+                         cloud_is_timeout_error_code(data->code), false);
   }
 }
 
@@ -634,7 +617,7 @@ retry:
 static oc_cloud_error_t
 _refresh_token_handler_check_data_error(const oc_client_response_t *data)
 {
-  if (is_connection_error_code(data->code)) {
+  if (cloud_is_connection_error_or_timeout(data->code)) {
     return CLOUD_ERROR_CONNECT;
   }
   if (data->code == OC_STATUS_UNAUTHORIZED) {
@@ -714,7 +697,7 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
 
 error:
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
-    oc_cloud_clear_context(ctx);
+    cloud_context_clear(ctx);
     ctx->store.status |= OC_CLOUD_FAILURE;
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
     return err;
@@ -776,12 +759,8 @@ finish:
   reset_delayed_callback(ctx, callback_handler, 0);
   if (retry) {
     // must be invoked after callback_handler
-    oc_set_delayed_callback(
-      ctx, refresh_token,
-      is_timeout_error_code(data->code)
-        ? 0
-        : g_retry_timeout[ctx->retry_refresh_token_count]);
-    ++ctx->retry_refresh_token_count;
+    cloud_schedule_retry(ctx, refresh_token,
+                         cloud_is_timeout_error_code(data->code), true);
   }
 }
 
@@ -838,8 +817,10 @@ send_ping_handler(oc_client_response_t *data)
   OC_DBG("[CM] send ping handler(%d)\n", data->code);
 
   if (data->code == OC_PING_TIMEOUT ||
-      data->code == OC_STATUS_SERVICE_UNAVAILABLE)
+      data->code == OC_STATUS_SERVICE_UNAVAILABLE ||
+      cloud_is_timeout_error_code(data->code)) {
     goto error;
+  }
 
   ctx->retry_count = 0;
   reset_delayed_callback(ctx, send_ping, PING_DELAY);
@@ -848,7 +829,8 @@ send_ping_handler(oc_client_response_t *data)
 error:
   reset_delayed_callback(ctx, send_ping, PING_DELAY_ON_TIMEOUT);
   if (data->code == OC_PING_TIMEOUT ||
-      data->code == OC_STATUS_SERVICE_UNAVAILABLE) {
+      data->code == OC_STATUS_SERVICE_UNAVAILABLE ||
+      cloud_is_timeout_error_code(data->code)) {
     cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
   }
 }

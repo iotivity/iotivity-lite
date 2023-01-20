@@ -100,6 +100,20 @@ bool cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
 bool cloud_manager_handle_refresh_token_response(oc_cloud_context_t *ctx,
                                                  const oc_rep_t *payload);
 
+/**
+ * @brief Start executing cloud provisioning steps
+ *
+ * @param ctx cloud context (cannot be NULL)
+ */
+void cloud_manager_start(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Stop executing cloud provisioning steps
+ *
+ * @param ctx cloud context (cannot be NULL)
+ */
+void cloud_manager_stop(oc_cloud_context_t *ctx);
+
 #ifdef __cplusplus
 }
 #endif

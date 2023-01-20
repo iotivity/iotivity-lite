@@ -26,7 +26,9 @@
 #include "oc_client_state.h"
 #include "oc_cloud.h"
 #include "oc_cloud_access_internal.h"
+#include "oc_cloud_context_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 #include "rd_client.h"
 #include "port/oc_log.h"
@@ -197,7 +199,7 @@ cloud_logout_internal(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  if (data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
+  if (cloud_is_connection_error_code(data->code)) {
     cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
     ctx->store.status |= OC_CLOUD_FAILURE;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
@@ -264,7 +266,7 @@ cloud_deregistered_internal(oc_client_response_t *data)
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   if (data->code < OC_STATUS_BAD_REQUEST ||
-      data->code >= OC_STATUS_SERVICE_UNAVAILABLE) {
+      cloud_is_connection_error_code(data->code)) {
     ctx->store.status = OC_CLOUD_DEREGISTERED;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
@@ -348,13 +350,13 @@ cloud_login_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   if ((status & OC_CLOUD_LOGGED_IN) == 0) {
     OC_ERR("Failed to login to cloud for deregister");
     free_api_param(p);
-    oc_cloud_clear_context(ctx);
+    cloud_context_clear(ctx);
     return;
   }
 
   if (cloud_deregister(p, false) != 0) {
     OC_ERR("Failed to deregister from cloud");
-    oc_cloud_clear_context(ctx);
+    cloud_context_clear(ctx);
   }
 }
 
@@ -367,7 +369,7 @@ cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
   if ((status & OC_CLOUD_REFRESHED_TOKEN) == 0) {
     OC_ERR("Failed to refresh access token for deregister");
     free_api_param(p);
-    oc_cloud_clear_context(ctx);
+    cloud_context_clear(ctx);
     return;
   }
 
@@ -376,7 +378,7 @@ cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
   if (check_accesstoken_for_deregister(ctx)) {
     if (cloud_deregister(p, true) != 0) {
       OC_ERR("Failed to deregister from cloud");
-      oc_cloud_clear_context(ctx);
+      cloud_context_clear(ctx);
     }
     return;
   }
@@ -385,7 +387,7 @@ cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
   if (oc_cloud_login(ctx, cloud_login_for_deregister, p) != 0) {
     OC_ERR("Failed to login to cloud for deregister");
     free_api_param(p);
-    oc_cloud_clear_context(ctx);
+    cloud_context_clear(ctx);
     return;
   }
 }
@@ -412,8 +414,14 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
-    bool hasRefreshToken =
-      cloud_has_refresh_token(ctx) && !cloud_has_permanent_access_token(ctx);
+    if (canUseAccessToken) {
+      // short access token -> we can use it in query and deregister without
+      // login
+      return cloud_deregister(p, true);
+    }
+
+    bool hasRefreshToken = cloud_context_has_refresh_token(ctx) &&
+                           !cloud_context_has_permanent_access_token(ctx);
     if (hasRefreshToken) {
       if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) !=
           0) {
@@ -422,12 +430,6 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
         return -1;
       }
       return 0;
-    }
-
-    if (canUseAccessToken) {
-      // short access token -> we can use it in query and deregister without
-      // login
-      return cloud_deregister(p, true);
     }
 
     // long access token -> we must login and then deregister without token

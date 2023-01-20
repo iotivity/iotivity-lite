@@ -141,13 +141,13 @@ TEST_F(TestCloud, cloud_update_by_resource)
   ctx->store.status = OC_CLOUD_FAILURE;
 
   cloud_conf_update_t data;
-  data.access_token = (char *)"access_token";
+  data.access_token = "access_token";
   data.access_token_len = strlen(data.access_token);
-  data.auth_provider = (char *)"auth_provider";
+  data.auth_provider = "auth_provider";
   data.auth_provider_len = strlen(data.auth_provider);
-  data.ci_server = (char *)"ci_server";
+  data.ci_server = "ci_server";
   data.ci_server_len = strlen("ci_server");
-  data.sid = (char *)"sid";
+  data.sid = "sid";
   data.sid_len = strlen(data.sid);
 
   cloud_update_by_resource(ctx, &data);
@@ -156,5 +156,24 @@ TEST_F(TestCloud, cloud_update_by_resource)
   EXPECT_STREQ(data.auth_provider, oc_string(ctx->store.auth_provider));
   EXPECT_STREQ(data.ci_server, oc_string(ctx->store.ci_server));
   EXPECT_STREQ(data.sid, oc_string(ctx->store.sid));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
+}
+
+TEST_F(TestCloud, oc_cloud_provision_conf_resource)
+{
+  oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+  ASSERT_NE(nullptr, ctx);
+
+  const char *access_token = "access_token";
+  const char *auth_provider = "auth_provider";
+  const char *ci_server = "ci_server";
+  const char *sid = "sid";
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                sid, auth_provider));
+
+  EXPECT_STREQ(access_token, oc_string(ctx->store.access_token));
+  EXPECT_STREQ(auth_provider, oc_string(ctx->store.auth_provider));
+  EXPECT_STREQ(ci_server, oc_string(ctx->store.ci_server));
+  EXPECT_STREQ(sid, oc_string(ctx->store.sid));
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
 }
