@@ -19,6 +19,10 @@ on:
         type: boolean
         required: false
         default: false
+      install_mbedtls:
+        type: boolean
+        required: false
+        default: false
 jobs:
   unit-test-with-cfg:
     runs-on: ubuntu-22.04
@@ -29,11 +33,22 @@ jobs:
         with:
           submodules: "true"
 
+      - name: Install mbedTLS
+        if: ${{ inputs.install_mbedtls }}
+        run: |
+          mkdir build_mbedtls && cd build_mbedtls
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} -DBUILD_TESTING=OFF ..
+          OC_SECURITY_ENABLED=$(cmake -LA -N . | grep OC_SECURITY_ENABLED | cut -d "=" -f2)
+          if [ "${OC_SECURITY_ENABLED}" = "ON" ]; then
+            make mbedtls mbedx509 mbedcrypto
+            cd deps/mbedtls
+            sudo make install
+          fi
+
       - name: Build unit tests
         run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DCMAKE_BUILD_TYPE=${{ inputs.build_args }} -DBUILD_TESTING=ON ..
+          mkdir build && cd build
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} ${{ inputs.install_mbedtls && '-DBUILD_MBEDTLS=OFF' || '' }} -DBUILD_TESTING=ON ..
           make oc-unittests
 
       - name: Run unit tests
@@ -45,7 +60,7 @@ jobs:
         if: ${{ inputs.coverage }}
         id: coverage
         run: |
-          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} -DCMAKE_BUILD_TYPE=${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
+          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
           echo "filename=coverage-unix-${SUFFIX}.json" >> $GITHUB_OUTPUT
 
       - name: Collect coverage data

@@ -30,6 +30,10 @@
 #undef delete
 #include "port/oc_network_event_handler_internal.h"
 
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
 static const std::string kDeviceName{ "Table Lamp" };
@@ -52,6 +56,9 @@ protected:
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
     oc_ri_shutdown();
     oc_tls_shutdown();
     oc_connectivity_shutdown(0);

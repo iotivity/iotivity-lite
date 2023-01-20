@@ -11,6 +11,11 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      install_mbedtls:
+        description: "Install mbedTLS and use it for the build"
+        required: false
+        default: "false"
 
 jobs:
   cmake_linux:
@@ -53,6 +58,7 @@ jobs:
       build_args: ${{ matrix.args }}
       build_type: Debug
       coverage: false
+      install_mbedtls: ${{ github.even.inputs.install_mbedtls && github.even.inputs.install_mbedtls == 'true' }}
 
   cmake_linux_sanitized:
     strategy:
@@ -74,3 +80,4 @@ jobs:
       build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}"
       build_type: Debug
       coverage: false
+      install_mbedtls: ${{ github.even.inputs.install_mbedtls && github.even.inputs.install_mbedtls == 'true' }}
