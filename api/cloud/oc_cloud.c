@@ -17,23 +17,37 @@
  *
  ******************************************************************/
 
+#include "oc_config.h"
+
 #ifdef OC_CLOUD
 
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
+#include "oc_cloud_context_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_manager_internal.h"
+#include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
-OC_LIST(cloud_context_list);
-OC_MEMB(cloud_context_pool, oc_cloud_context_t, OC_MAX_NUM_DEVICES);
+bool
+cloud_is_connection_error_code(oc_status_t code)
+{
+  return code == OC_STATUS_SERVICE_UNAVAILABLE ||
+         code == OC_STATUS_GATEWAY_TIMEOUT;
+}
+
+bool
+cloud_is_timeout_error_code(oc_status_t code)
+{
+  return code == OC_REQUEST_TIMEOUT;
+}
 
 void
 cloud_manager_cb(oc_cloud_context_t *ctx)
@@ -111,39 +125,24 @@ cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
 {
   (void)status;
   (void)data;
-  oc_cloud_clear_context(ctx);
-  OC_DBG("[Cloud] cloud_deregister_on_reset_internal\n");
+  cloud_context_clear(ctx);
+  OC_DBG("[Cloud] cloud_deregister_on_reset_internal device=%zu", ctx->device);
 }
 #endif /* OC_SECURITY */
 
-void
-oc_cloud_clear_context(oc_cloud_context_t *ctx)
-{
-  oc_assert(ctx != NULL);
-
-  cloud_rd_reset_context(ctx);
-  cloud_close_endpoint(ctx->cloud_ep);
-  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
-  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-  cloud_manager_stop(ctx);
-  cloud_store_initialize(&ctx->store);
-  ctx->last_error = 0;
-  ctx->store.cps = 0;
-  ctx->selected_identity_cred_id = -1;
-  cloud_store_dump_async(&ctx->store);
-}
-
 int
-oc_cloud_reset_context(size_t device)
+cloud_reset(size_t device)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
-  if (!ctx) {
+  if (ctx == NULL) {
     return -1;
   }
-  OC_DBG("[Cloud] oc_cloud_reset_context\n");
+  OC_DBG("[Cloud] cloud_reset\n");
 
 #ifdef OC_SECURITY
   if (oc_tls_connected(ctx->cloud_ep)) {
+    cloud_manager_stop(ctx);
+    // TODO: store data needed for deregister, use it as context
     if (oc_cloud_deregister(ctx, cloud_deregister_on_reset_internal, ctx) ==
         0) {
       return 0;
@@ -151,8 +150,30 @@ oc_cloud_reset_context(size_t device)
   }
 #endif /* OC_SECURITY */
 
-  oc_cloud_clear_context(ctx);
+  cloud_context_clear(ctx);
   return 0;
+}
+
+void
+cloud_set_cloudconf(oc_cloud_context_t *ctx, const cloud_conf_update_t *data)
+{
+  assert(ctx != NULL);
+  assert(data != NULL);
+  if (data->auth_provider && data->auth_provider_len) {
+    cloud_set_string(&ctx->store.auth_provider, data->auth_provider,
+                     data->auth_provider_len);
+  }
+  if (data->access_token && data->access_token_len) {
+    cloud_set_string(&ctx->store.access_token, data->access_token,
+                     data->access_token_len);
+  }
+  if (data->ci_server && data->ci_server_len) {
+    cloud_set_string(&ctx->store.ci_server, data->ci_server,
+                     data->ci_server_len);
+  }
+  if (data->sid && data->sid_len) {
+    cloud_set_string(&ctx->store.sid, data->sid, data->sid_len);
+  }
 }
 
 int
@@ -161,6 +182,7 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
                                  const char *server_id,
                                  const char *auth_provider)
 {
+  assert(ctx != NULL);
   if (!server || !access_token || !server_id) {
     return -1;
   }
@@ -171,15 +193,17 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
 
-  cloud_set_string(&ctx->store.ci_server, server, strlen(server));
-  cloud_set_string(&ctx->store.access_token, access_token,
-                   strlen(access_token));
-  cloud_set_string(&ctx->store.sid, server_id, strlen(server_id));
-
-  if (auth_provider) {
-    cloud_set_string(&ctx->store.auth_provider, auth_provider,
-                     strlen(auth_provider));
-  }
+  cloud_conf_update_t data = {
+    .access_token = access_token,
+    .access_token_len = strlen(access_token),
+    .ci_server = server,
+    .ci_server_len = strlen(server),
+    .sid = server_id,
+    .sid_len = strlen(server_id),
+    .auth_provider = auth_provider,
+    .auth_provider_len = auth_provider != NULL ? strlen(auth_provider) : 0,
+  };
+  cloud_set_cloudconf(ctx, &data);
 
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
@@ -199,7 +223,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
 {
   if (data->ci_server_len == 0) {
     OC_DBG("[Cloud] got forced deregister via provisioning of empty cis\n");
-    oc_cloud_reset_context(ctx->device);
+    cloud_reset(ctx->device);
     return;
   }
 
@@ -209,21 +233,8 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
 
-  if (data->auth_provider && data->auth_provider_len) {
-    cloud_set_string(&ctx->store.auth_provider, data->auth_provider,
-                     data->auth_provider_len);
-  }
-  if (data->access_token && data->access_token_len) {
-    cloud_set_string(&ctx->store.access_token, data->access_token,
-                     data->access_token_len);
-  }
-  if (data->ci_server && data->ci_server_len) {
-    cloud_set_string(&ctx->store.ci_server, data->ci_server,
-                     data->ci_server_len);
-  }
-  if (data->sid && data->sid_len) {
-    cloud_set_string(&ctx->store.sid, data->sid, data->sid_len);
-  }
+  cloud_set_cloudconf(ctx, data);
+
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
@@ -260,26 +271,20 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
 #endif /* OC_SESSION_EVENTS */
 
 static void
-cloud_interface_event_handler(oc_interface_event_t event)
+cloud_interface_up_event_handler(oc_cloud_context_t *ctx, void *user_data)
 {
-  if (event == NETWORK_INTERFACE_UP) {
-    for (oc_cloud_context_t *ctx = oc_list_head(cloud_context_list);
-         ctx != NULL; ctx = ctx->next) {
-      if (ctx->store.status == OC_CLOUD_INITIALIZED) {
-        cloud_manager_restart(ctx);
-      }
-    }
+  (void)user_data;
+  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+    cloud_manager_restart(ctx);
   }
 }
 
-oc_cloud_context_t *
-oc_cloud_get_context(size_t device)
+static void
+cloud_interface_event_handler(oc_interface_event_t event)
 {
-  oc_cloud_context_t *ctx = oc_list_head(cloud_context_list);
-  while (ctx != NULL && ctx->device != device) {
-    ctx = ctx->next;
+  if (event == NETWORK_INTERFACE_UP) {
+    cloud_context_iterate(cloud_interface_up_event_handler, NULL);
   }
-  return ctx;
 }
 
 void
@@ -309,18 +314,6 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
     ctx->last_error = error;
     oc_notify_observers(ctx->cloud_conf);
   }
-}
-
-void
-oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx, int cred_id)
-{
-  ctx->selected_identity_cred_id = cred_id;
-}
-
-int
-oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
-{
-  return ctx->selected_identity_cred_id;
 }
 
 void
@@ -369,7 +362,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
     return -1;
   }
 #ifdef OC_SESSION_EVENTS
-  if (oc_list_length(cloud_context_list) == 0) {
+  if (cloud_context_size() == 0) {
     oc_remove_session_event_callback(cloud_ep_session_event_handler);
     oc_remove_network_interface_event_callback(cloud_interface_event_handler);
   }
@@ -391,33 +384,9 @@ oc_cloud_init(void)
 {
   oc_set_on_delayed_delete_resource_cb(oc_cloud_delete_resource);
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
-    oc_cloud_context_t *ctx =
-      (oc_cloud_context_t *)oc_memb_alloc(&cloud_context_pool);
-    if (ctx == NULL) {
-      OC_ERR("insufficient memory to create cloud context");
+    if (cloud_context_init(device) == NULL) {
       return -1;
     }
-    ctx->next = NULL;
-    ctx->device = device;
-    ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-    ctx->cloud_ep = oc_new_endpoint();
-    ctx->selected_identity_cred_id = -1;
-    cloud_store_load(&ctx->store);
-    ctx->store.status &=
-      ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
-        OC_CLOUD_LOGGED_OUT | OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
-#ifdef OC_SECURITY
-    const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
-    if (ps->s == OC_DOS_RFOTM || ps->s == OC_DOS_RESET) {
-      // loaded configuration can have stored old cloud data
-      cloud_store_initialize(&ctx->store);
-    }
-#endif
-    ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
-    ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);
-    ctx->cloud_manager = false;
-    oc_list_add(cloud_context_list, ctx);
-
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, device));
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_D, device));
   }
@@ -433,16 +402,9 @@ oc_cloud_shutdown(void)
       OC_ERR("invalid cloud context for device=%zu", device);
       continue;
     }
-    cloud_rd_deinit(ctx);
     cloud_manager_stop(ctx);
-    cloud_store_deinitialize(&ctx->store);
-    cloud_close_endpoint(ctx->cloud_ep);
-    oc_free_endpoint(ctx->cloud_ep);
-    oc_list_remove(cloud_context_list, ctx);
-    oc_memb_free(&cloud_context_pool, ctx);
+    cloud_context_deinit(ctx);
     OC_DBG("cloud_shutdown for %d", (int)device);
   }
 }
-#else  /* OC_CLOUD*/
-typedef int dummy_declaration;
-#endif /* !OC_CLOUD */
+#endif /* OC_CLOUD */

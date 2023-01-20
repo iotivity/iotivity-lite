@@ -89,8 +89,11 @@ typedef enum {
   OC_STATUS_GATEWAY_TIMEOUT,          ///< Gateway Timeout
   OC_STATUS_PROXYING_NOT_SUPPORTED,   ///< Proxying not supported
   __NUM_OC_STATUS_CODES__,
-  OC_IGNORE,      ///< Ignore: do not respond to request
-  OC_PING_TIMEOUT ///< Ping Time out
+  OC_IGNORE,          ///< Ignore: do not respond to request
+  OC_PING_TIMEOUT,    ///< Ping Time out
+  OC_REQUEST_TIMEOUT, ///< Timeout for requests created by
+                      ///< oc_do_get_with_timeout, oc_do_delete_with_timeout,
+                      ///< oc_do_put_with_timeout or oc_do_post_with_timeout
 } oc_status_t;
 
 /**

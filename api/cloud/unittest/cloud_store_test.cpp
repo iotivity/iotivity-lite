@@ -17,12 +17,13 @@
  *
  ******************************************************************/
 
-#include <gtest/gtest.h>
-#include <pthread.h>
-
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
+
+#include <gtest/gtest.h>
+#include <pthread.h>
 
 #define ACCESS_TOKEN ("access_token")
 #define AUTH_PROVIDER ("auth_provider")

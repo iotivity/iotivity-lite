@@ -15,8 +15,8 @@
 */
 
 #ifdef OC_SECURITY
+
 #include "oc_pstat.h"
-#include "api/cloud/oc_cloud_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main.h"
 #include "messaging/coap/observe.h"
@@ -31,6 +31,11 @@
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+
+#ifdef OC_CLOUD
+#include "api/cloud/oc_cloud_internal.h"
+#endif /* OC_CLOUD */
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "api/oc_resource_factory.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
@@ -161,7 +166,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #ifdef OC_SERVER
 #ifdef OC_CLIENT
 #ifdef OC_CLOUD
-    oc_cloud_reset_context(device);
+    cloud_reset(device);
 #endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
 #endif /* OC_SERVER */

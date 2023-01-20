@@ -266,6 +266,20 @@ int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
                                 oc_discovery_all_handler_t handler,
                                 void *user_data);
 
+/**
+ * @brief Configure cloud properties.
+ *
+ * @param ctx Cloud context to update (cannot be be NULL)
+ * @param server Cloud server URL
+ * @param access_token Access token from an Authorisation Provider
+ * @param server_id Cloud server ID
+ * @param auth_provider Name of the Authorization Provider which provided the
+ * access token
+ * @return 0 on success
+ * @return -1 on failure
+ *
+ * @note Cloud manager will be restarted if is was started previously
+ */
 OC_API
 int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,

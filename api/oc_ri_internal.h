@@ -19,7 +19,7 @@
 #ifndef OC_RI_INTERNAL_H
 #define OC_RI_INTERNAL_H
 
-#include "oc_api.h"
+#include "oc_ri.h"
 
 /**
  * @brief removes the client callback. This is silent remove client without
@@ -32,7 +32,7 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
 
 /**
  * @brief removes the client callback with triggering
- * OC_STATUS_SERVICE_UNAVAILABLE to handler.
+ * OC_REQUEST_TIMEOUT to handler.
  *
  * @param cb is oc_client_cb_t* type
  * @return returns OC_EVENT_DONE

@@ -537,7 +537,7 @@ TEST_F(TestServerClient, GetWithTimeout)
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onGet.response = -1; // disable sending of response
-  expected = OC_STATUS_SERVICE_UNAVAILABLE;
+  expected = OC_REQUEST_TIMEOUT;
   EXPECT_TRUE(
     oc_do_get_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
                            &ApiHelper::s_TestResource.endpoint, nullptr,
@@ -566,7 +566,7 @@ TEST_F(TestServerClient, DeleteWithTimeout)
 
   ApiHelper::s_TestResource.onDelete.response =
     -1; // disable sending of response
-  expected = OC_STATUS_SERVICE_UNAVAILABLE;
+  expected = OC_REQUEST_TIMEOUT;
   EXPECT_TRUE(
     oc_do_delete_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
                               &ApiHelper::s_TestResource.endpoint, nullptr,
@@ -594,7 +594,7 @@ TEST_F(TestServerClient, PostWithTimeout)
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPost.response = -1; // disable sending of
-  expected = OC_STATUS_SERVICE_UNAVAILABLE;
+  expected = OC_REQUEST_TIMEOUT;
   EXPECT_TRUE(oc_init_post(ApiHelper::s_TestResource.resource_uri.c_str(),
                            &ApiHelper::s_TestResource.endpoint, nullptr,
                            PostDevice, HIGH_QOS, &code));
@@ -622,7 +622,7 @@ TEST_F(TestServerClient, PutWithTimeout)
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPut.response = -1; // disable sending of
-  expected = OC_STATUS_SERVICE_UNAVAILABLE;
+  expected = OC_REQUEST_TIMEOUT;
   EXPECT_TRUE(oc_init_put(ApiHelper::s_TestResource.resource_uri.c_str(),
                           &ApiHelper::s_TestResource.endpoint, nullptr,
                           PutDevice, HIGH_QOS, &code));

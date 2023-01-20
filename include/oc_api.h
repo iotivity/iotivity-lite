@@ -1928,7 +1928,7 @@ bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * @return True if the client successfully dispatched the CoAP GET request
  *
  * @note If a response is not received before @p timeout_seconds expires then
- * the response handler is invoked with OC_STATUS_SERVICE_UNAVAILABLE code
+ * the response handler is invoked with OC_REQUEST_TIMEOUT code
  */
 OC_API
 bool oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
@@ -1972,7 +1972,7 @@ bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * @return True if the client successfully dispatched the CoAP DELETE
  *
  * @note If a response is not received before @p timeout_seconds expires then
- * the response handler is invoked with OC_STATUS_SERVICE_UNAVAILABLE code
+ * the response handler is invoked with OC_REQUEST_TIMEOUT code
  */
 OC_API
 bool oc_do_delete_with_timeout(const char *uri, oc_endpoint_t *endpoint,
@@ -2052,7 +2052,7 @@ bool oc_do_put(void);
  * @return True if the client successfully dispatched the CoAP PUT request
  *
  * @note If a response is not received before @p timeout_seconds expires then
- * the response handler is invoked with OC_STATUS_SERVICE_UNAVAILABLE code
+ * the response handler is invoked with OC_REQUEST_TIMEOUT code
  *
  * @see oc_init_put
  */
@@ -2131,7 +2131,7 @@ bool oc_do_post(void);
  * @return True if the client successfully dispatched the CoAP POST request
  *
  * @note If a response is not received before @p timeout_seconds expires then
- * the response handler is invoked with OC_STATUS_SERVICE_UNAVAILABLE code
+ * the response handler is invoked with OC_REQUEST_TIMEOUT code
  *
  * @see oc_init_post
  */

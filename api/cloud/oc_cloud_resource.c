@@ -15,11 +15,14 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+
+#include "oc_config.h"
+
 #ifdef OC_CLOUD
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
-#include "oc_config.h"
+#include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 
 #define OC_RSRVD_RES_TYPE_COAPCLOUDCONF "oic.r.coapcloudconf"
@@ -109,18 +112,28 @@ cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
   cloud_conf_update_t data;
   memset(&data, 0, sizeof(data));
 
+  char *access_token;
   bool has_at =
     oc_rep_get_string(request->request_payload, OC_RSRVD_ACCESSTOKEN,
-                      &data.access_token, &data.access_token_len);
+                      &access_token, &data.access_token_len);
+  data.access_token = access_token;
 
+  char *auth_provider;
   oc_rep_get_string(request->request_payload, OC_RSRVD_AUTHPROVIDER,
-                    &data.auth_provider, &data.auth_provider_len);
+                    &auth_provider, &data.auth_provider_len);
+  data.auth_provider = auth_provider;
 
+  char *ci_server;
   bool has_cis = oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER,
-                                   &data.ci_server, &data.ci_server_len);
+                                   &ci_server, &data.ci_server_len);
+  data.ci_server = ci_server;
+
   // OCF 2.0 spec version added sid property.
+  char *sid;
   bool has_sid = oc_rep_get_string(request->request_payload, OC_RSRVD_SERVERID,
-                                   &data.sid, &data.sid_len);
+                                   &sid, &data.sid_len);
+  data.sid = sid;
+
   if (has_cis && (data.ci_server_len == 0 || (has_at && has_sid))) {
     cloud_update_by_resource(ctx, &data);
     return true;
@@ -133,13 +146,13 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
            void *user_data)
 {
   (void)user_data;
+  (void)interface;
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
   if (!ctx) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   OC_DBG("POST request received");
-  (void)interface;
   bool request_invalid_in_state = true;
   switch (ctx->store.cps) {
   case OC_CPS_UNINITIALIZED:
@@ -193,6 +206,5 @@ oc_create_cloudconf_resource(size_t device)
     OC_SECURE | OC_DISCOVERABLE | OC_OBSERVABLE, get_cloud, 0, post_cloud, 0, 1,
     OC_RSRVD_RES_TYPE_COAPCLOUDCONF);
 }
-#else  /* OC_CLOUD*/
-typedef int dummy_declaration;
-#endif /* !OC_CLOUD */
+
+#endif /* OC_CLOUD */

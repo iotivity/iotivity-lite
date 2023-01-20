@@ -40,14 +40,14 @@ extern "C" {
 
 typedef struct cloud_conf_update_t
 {
-  char *access_token; /**< Access Token resolved with an auth code. */
+  const char *access_token; /**< Access Token resolved with an auth code. */
   size_t access_token_len;
-  char *auth_provider; /**< Auth Provider ID*/
+  const char *auth_provider; /**< Auth Provider ID*/
   size_t auth_provider_len;
-  char *ci_server; /**< Cloud Interface Server URL which an Enrollee is going to
-                      registered. */
+  const char *ci_server; /**< Cloud Interface Server URL which an Enrollee is
+                      going to registered. */
   size_t ci_server_len;
-  char *sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
+  const char *sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
   size_t sid_len;
 } cloud_conf_update_t;
 
@@ -65,25 +65,33 @@ int conv_cloud_endpoint(oc_cloud_context_t *ctx);
 int oc_cloud_init(void);
 void oc_cloud_shutdown(void);
 
+bool cloud_is_connection_error_code(oc_status_t code);
+bool cloud_is_timeout_error_code(oc_status_t code);
+
 void oc_cloud_register_handler(oc_client_response_t *data);
 void oc_cloud_login_handler(oc_client_response_t *data);
 void oc_cloud_refresh_token_handler(oc_client_response_t *data);
-void oc_cloud_clear_context(oc_cloud_context_t *ctx);
-int oc_cloud_reset_context(size_t device);
 
 void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
 
-void cloud_store_dump_async(const oc_cloud_store_t *store);
-int cloud_store_load(oc_cloud_store_t *store);
-long cloud_store_dump(const oc_cloud_store_t *store);
-void cloud_store_initialize(oc_cloud_store_t *store);
-void cloud_store_deinitialize(oc_cloud_store_t *store);
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
 void cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps);
 void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
                                   oc_cloud_error_t error);
+
+int cloud_reset(size_t device);
+
+/**
+ * @brief Set cloud configuration.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param data configuration update (cannot be NULL)
+ */
+void cloud_set_cloudconf(oc_cloud_context_t *ctx,
+                         const cloud_conf_update_t *data);
+
 void cloud_update_by_resource(oc_cloud_context_t *ctx,
                               const cloud_conf_update_t *data);
 /**
@@ -123,29 +131,7 @@ void cloud_rd_deinit(oc_cloud_context_t *ctx);
  */
 void cloud_rd_reset_context(oc_cloud_context_t *ctx);
 
-void cloud_manager_start(oc_cloud_context_t *ctx);
-void cloud_manager_stop(oc_cloud_context_t *ctx);
-
 void oc_create_cloudconf_resource(size_t device);
-
-/**
- * @brief Check whether refresh token is set.
- *
- * @return true refresh token is set
- */
-bool cloud_has_refresh_token(const oc_cloud_context_t *ctx);
-
-/**
- * @brief Checks whether the access token is set and whether it is permanent
- * (ie. the expires in time of the access token has special value which means
- * that the token is permanent).
- *
- * @return true access token is permanent
- */
-bool cloud_has_permanent_access_token(const oc_cloud_context_t *ctx);
-
-/** @brief Clear access token from context */
-void cloud_clear_access_token(oc_cloud_context_t *ctx);
 
 /**
  * @brief Send a ping over the cloud connected connection

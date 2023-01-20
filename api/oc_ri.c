@@ -1571,7 +1571,7 @@ notify_client_cb_503(oc_client_cb_t *cb)
   client_response.endpoint = &cb->endpoint;
   client_response.observe_option = -1;
   client_response.user_data = cb->user_data;
-  client_response.code = OC_STATUS_SERVICE_UNAVAILABLE;
+  client_response.code = OC_REQUEST_TIMEOUT;
 
   oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
   handler(&client_response);
