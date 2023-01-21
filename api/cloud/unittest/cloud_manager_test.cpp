@@ -32,8 +32,6 @@ public:
   static oc_handler_t s_handler;
   oc_cloud_context_t m_context;
 
-  static void onPostResponse(oc_client_response_t *) {}
-
   static int appInit(void)
   {
     int result = oc_init_platform("OCFCloud", nullptr, nullptr);

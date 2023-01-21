@@ -220,7 +220,7 @@ int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 
 OC_API
-int oc_cloud_get_token_expiry(oc_cloud_context_t *ctx);
+int oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx);
 
 /**
  * @brief Set Time to Live value in the provided cloud context.
@@ -289,7 +289,7 @@ void oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
  * @return Selected identity certificate chain id. -1 means any.
  */
 OC_API
-int oc_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx);
+int oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx);
 
 #ifdef __cplusplus
 }
