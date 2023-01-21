@@ -159,7 +159,7 @@ cloud_store_dump(const oc_cloud_store_t *store)
 static oc_event_callback_retval_t
 cloud_store_dump_handler(void *data)
 {
-  oc_cloud_store_t *store = (oc_cloud_store_t *)data;
+  const oc_cloud_store_t *store = (oc_cloud_store_t *)data;
   if (cloud_store_dump(store) != 0) {
     OC_ERR("failed to dump store");
   }
@@ -169,6 +169,8 @@ cloud_store_dump_handler(void *data)
 void
 cloud_store_dump_async(const oc_cloud_store_t *store)
 {
+  // ensure that cloud_store_dump_handler uses a const oc_cloud_store_t*
+  // so this void* cast which drops const is safe
   oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
   _oc_signal_event_loop();

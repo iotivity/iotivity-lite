@@ -104,7 +104,7 @@ get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 }
 
 static bool
-cloud_update_from_request(oc_cloud_context_t *ctx, oc_request_t *request)
+cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
 {
   cloud_conf_update_t data;
   memset(&data, 0, sizeof(data));

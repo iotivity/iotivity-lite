@@ -28,7 +28,10 @@ public:
   static oc_handler_t s_handler;
   static oc_endpoint_t s_endpoint;
 
-  static void onPostResponse(oc_client_response_t *) {}
+  static void onPostResponse(oc_client_response_t *)
+  {
+    // no-op for tests
+  }
 
   static int appInit(void)
   {

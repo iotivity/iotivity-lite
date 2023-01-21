@@ -30,8 +30,6 @@ public:
   static pthread_cond_t cv;
   static oc_cloud_context_t s_context;
 
-  static void onPostResponse(oc_client_response_t *data) { (void)data; }
-
   static int appInit(void)
   {
     int result = oc_init_platform("OCFCloud", NULL, NULL);

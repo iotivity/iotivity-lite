@@ -18,9 +18,6 @@
 
 #if defined(OC_TCP) && defined(OC_SECURITY)
 
-#include "gtest/gtest.h"
-#include <cstdlib>
-
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"
@@ -29,6 +26,13 @@
 #include "oc_core_res.h"
 #undef delete
 #include "port/oc_network_event_handler_internal.h"
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
+#include <cstdlib>
+#include <gtest/gtest.h>
 
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
@@ -52,6 +56,9 @@ protected:
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
     oc_ri_shutdown();
     oc_tls_shutdown();
     oc_connectivity_shutdown(0);

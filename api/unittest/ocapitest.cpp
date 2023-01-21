@@ -464,6 +464,10 @@ public:
     oc_endpoint_t *ep, oc_resource_properties_t, void *user_data)
   {
     auto *rd = static_cast<ResourceDiscovered *>(user_data);
+    if (uri == nullptr) {
+      OC_ERR("invalid uri parameter");
+      return OC_CONTINUE_DISCOVERY;
+    }
     auto discoveredUri = std::string(uri);
 
     bool discovered =

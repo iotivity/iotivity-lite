@@ -182,7 +182,7 @@ error:
 }
 
 int
-oc_cloud_get_token_expiry(oc_cloud_context_t *ctx)
+oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx)
 {
   return (int)ctx->store.expires_in;
 }

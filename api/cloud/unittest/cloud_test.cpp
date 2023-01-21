@@ -29,8 +29,6 @@ public:
   static pthread_mutex_t s_mutex;
   static pthread_cond_t s_cv;
 
-  static void onPostResponse(oc_client_response_t *) {}
-
   static int appInit(void)
   {
     int result = oc_init_platform("OCFCloud", nullptr, nullptr);

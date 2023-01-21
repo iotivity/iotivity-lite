@@ -30,7 +30,7 @@
 #define OC_RSRVD_INSTANCEID "ins"
 
 static oc_link_t *
-rd_link_find(oc_link_t *head, oc_resource_t *res)
+rd_link_find(oc_link_t *head, const oc_resource_t *res)
 {
   oc_link_t *iter = head;
   while (iter != NULL && iter->resource != res) {
@@ -99,7 +99,7 @@ rd_link_remove(oc_link_t **head, oc_link_t *l)
 }
 
 static oc_link_t *
-rd_link_remove_by_resource(oc_link_t **head, oc_resource_t *res)
+rd_link_remove_by_resource(oc_link_t **head, const oc_resource_t *res)
 {
   return rd_link_remove(head, rd_link_find(*head, res));
 }
@@ -110,14 +110,16 @@ publish_resources_handler(oc_client_response_t *data)
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   OC_DBG("[CRD] publish resources handler(%d)\n", data->code);
 
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN))
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
-  if (data->code != OC_STATUS_CHANGED)
-    goto error;
+  }
+  if (data->code != OC_STATUS_CHANGED) {
+    return;
+  }
 
   oc_rep_t *link = NULL;
   if (oc_rep_get_object_array(data->payload, OC_RSRVD_LINKS, &link)) {
-    while (link) {
+    while (link != NULL) {
       char *href = NULL;
       size_t href_size = 0;
       int64_t instance_id = -1;
@@ -136,23 +138,18 @@ publish_resources_handler(oc_client_response_t *data)
       link = link->next;
     }
   }
-
-  return;
-
-error : {
-}
 }
 
 static void
 publish_resources(oc_cloud_context_t *ctx)
 {
 #ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
   if (pstat->s != OC_DOS_RFNOP) {
     return;
   }
 #endif /* OC_SECURITY */
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
+  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
   }
 
@@ -170,12 +167,12 @@ oc_cloud_add_resource(oc_resource_t *res)
   if (ctx == NULL) {
     return -1;
   }
-  oc_link_t *publish = rd_link_find(ctx->rd_publish_resources, res);
-  if (publish) {
+  const oc_link_t *publish = rd_link_find(ctx->rd_publish_resources, res);
+  if (publish != NULL) {
     return 0;
   }
-  oc_link_t *published = rd_link_find(ctx->rd_published_resources, res);
-  if (published) {
+  const oc_link_t *published = rd_link_find(ctx->rd_published_resources, res);
+  if (published != NULL) {
     return 0;
   }
   oc_link_t *delete =
@@ -219,7 +216,7 @@ static void
 delete_resources(oc_cloud_context_t *ctx)
 {
 #ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
   if (pstat->s != OC_DOS_RFNOP) {
     return;
   }
@@ -296,7 +293,7 @@ oc_cloud_delete_resource(oc_resource_t *res)
     rd_link_remove_by_resource(&ctx->rd_published_resources, res);
 
 #ifdef OC_SECURITY
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(res->device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(res->device);
   if (pstat->s == OC_DOS_RESET || pstat->s == OC_DOS_RFOTM) {
     oc_delete_link(published);
 
