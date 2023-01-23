@@ -380,11 +380,6 @@ get_ready_to_read_session_locked(const fd_set *setfds)
   while (session != NULL && !FD_ISSET(session->sock, setfds)) {
     session = session->next;
   }
-
-  if (session == NULL) {
-    OC_ERR("could not find any open ready-to-read session");
-    return NULL;
-  }
   return session;
 }
 

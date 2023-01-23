@@ -263,8 +263,8 @@ static void
 cloud_interface_event_handler(oc_interface_event_t event)
 {
   if (event == NETWORK_INTERFACE_UP) {
-    for (oc_cloud_context_t *ctx = oc_list_head(cloud_context_list); ctx;
-         ctx = ctx->next) {
+    for (oc_cloud_context_t *ctx = oc_list_head(cloud_context_list);
+         ctx != NULL; ctx = ctx->next) {
       if (ctx->store.status == OC_CLOUD_INITIALIZED) {
         cloud_manager_restart(ctx);
       }
@@ -390,7 +390,7 @@ int
 oc_cloud_init(void)
 {
   oc_set_on_delayed_delete_resource_cb(oc_cloud_delete_resource);
-  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     oc_cloud_context_t *ctx =
       (oc_cloud_context_t *)oc_memb_alloc(&cloud_context_pool);
     if (ctx == NULL) {
@@ -427,7 +427,7 @@ oc_cloud_init(void)
 void
 oc_cloud_shutdown(void)
 {
-  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     oc_cloud_context_t *ctx = oc_cloud_get_context(device);
     if (ctx == NULL) {
       OC_ERR("invalid cloud context for device=%zu", device);

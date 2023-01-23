@@ -43,6 +43,10 @@ HEADER_DIR = -I$(ROOT_DIR)/include \
 SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
 MESSAGING_HEADERS = -I$(ROOT_DIR)/messaging/coap
+COMMON_TEST_DIR = $(ROOT_DIR)/tests/gtest
+COMMON_TEST_OBJ_DIR = $(COMMON_TEST_DIR)/obj
+COMMON_TEST_SRC_FILES = $(wildcard $(COMMON_TEST_DIR)/*.cpp)
+COMMON_TEST_OBJ_FILES = $(patsubst $(COMMON_TEST_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_SRC_FILES))
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
@@ -292,11 +296,15 @@ endif
 $(GTEST):
 	$(MAKE) --directory=$(GTEST_DIR)/make
 
+$(COMMON_TEST_OBJ_DIR)/%.o: $(COMMON_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
 $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
-apitest: $(API_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+apitest: $(API_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $^ -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -L$(OUT_DIR) -L$(GTEST_DIR)/make -l:gtest_main.a -liotivity-lite-client-server -lpthread
 
 $(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
@@ -317,7 +325,7 @@ $(CLOUD_TEST_OBJ_DIR)/%.o: $(CLOUD_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -I$(ROOT_DIR)/service/cloud/src -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
-cloudtest: $(CLOUD_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+cloudtest: $(CLOUD_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(MESSAGING_TEST_OBJ_DIR)/%.o: $(MESSAGING_TEST_DIR)/%.cpp
@@ -594,8 +602,8 @@ $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 endif
 
 clean:
-	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(CLOUD_TEST_STORAGE_DIR) $(RD_CLIENT_TEST_OBJ_FILES)
-	rm -rf $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
+	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(COMMON_TEST_OBJ_FILES) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(CLOUD_TEST_STORAGE_DIR) $(RD_CLIENT_TEST_OBJ_FILES)
+	rm -rf $(COMMON_TEST_OBJ_DIR)/*.gcda  $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
 	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor server_rules_IDD.cbor
 
 cleanall: clean

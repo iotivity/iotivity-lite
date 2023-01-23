@@ -41,7 +41,7 @@ public:
 
   static oc_event_callback_retval_t quitEvent(void *data)
   {
-    bool *quit = static_cast<bool *>(data);
+    auto *quit = static_cast<bool *>(data);
     *quit = true;
     return OC_EVENT_DONE;
   }
@@ -79,7 +79,7 @@ protected:
     ASSERT_EQ(0, ret);
   }
 
-  static oc_resource_t *findResource(oc_link_t *head, oc_resource_t *res)
+  static oc_resource_t *findResource(oc_link_t *head, const oc_resource_t *res)
   {
     for (oc_link_t *l = head; l; l = l->next) {
       if (l->resource == res) {

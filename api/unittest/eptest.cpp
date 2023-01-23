@@ -51,9 +51,7 @@ TEST(OCEndpoints, StringToEndpoint)
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
     EXPECT_EQ(ret, -1) << "espu[" << i << "] "
                        << (espu[i] != nullptr ? espu[i] : "NULL");
-    oc_endpoint_t empty;
-    memset(&empty, 0, sizeof(oc_endpoint_t));
-    EXPECT_TRUE(memcmp(&empty, &ep, sizeof(oc_endpoint_t)) == 0);
+    EXPECT_TRUE(oc_endpoint_is_empty(&ep));
     EXPECT_EQ(nullptr, oc_string(uri));
 
     oc_free_string(&s);
@@ -109,13 +107,8 @@ TEST(OCEndpoints, StringToEndpoint)
     EXPECT_EQ(ret, 0) << "spu1[" << i << "] " << spu1[i];
 #else
     EXPECT_EQ(ret, -1) << "spu1[" << i << "] " << spu1[i];
-    oc_endpoint_t empty;
-    memset(&empty, 0, sizeof(oc_endpoint_t));
-    EXPECT_TRUE(memcmp(&empty, &ep, sizeof(oc_endpoint_t)) == 0);
+    EXPECT_TRUE(oc_endpoint_is_empty(&ep));
     EXPECT_EQ(nullptr, oc_string(uri));
-#ifdef _WIN32
-    WSACleanup();
-#endif /* _WIN32 */
     oc_free_string(&s);
     oc_free_string(&uri);
     continue;
@@ -296,7 +289,7 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_new_string(&s, spu4[i], strlen(spu4[i]));
     oc_endpoint_t ep;
     memset(&ep, 0, sizeof(oc_endpoint_t));
-    int ret = oc_string_to_endpoint(&s, &ep, NULL);
+    int ret = oc_string_to_endpoint(&s, &ep, nullptr);
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
     oc_free_string(&s);
   }
@@ -413,7 +406,7 @@ TEST(OCEndpoints, EndpointStringParsePath)
   }
   {
     oc_string_t path;
-    int ret = oc_endpoint_string_parse_path(NULL, &path);
+    int ret = oc_endpoint_string_parse_path(nullptr, &path);
     EXPECT_EQ(-1, ret);
     if (-1 != ret) {
       // If code is working as expected this should never run.
@@ -423,7 +416,23 @@ TEST(OCEndpoints, EndpointStringParsePath)
   {
     oc_string_t s;
     oc_new_string(&s, "coap://0/p", strlen("coap://0/p"));
-    EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, NULL));
+    EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, nullptr));
     oc_free_string(&s);
   }
+}
+
+TEST(OCEndpoints, EndpointIsEmpty)
+{
+  oc_endpoint_t endpoint{};
+  EXPECT_TRUE(oc_endpoint_is_empty(&endpoint));
+
+  std::string ep_str = "coap://[ff02::158]";
+  oc_string_t s;
+  oc_new_string(&s, ep_str.c_str(), ep_str.length());
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+
+  EXPECT_EQ(0, oc_string_to_endpoint(&s, &endpoint, nullptr));
+  oc_free_string(&s);
+  EXPECT_FALSE(oc_endpoint_is_empty(&endpoint));
 }

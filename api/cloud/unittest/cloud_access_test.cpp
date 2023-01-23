@@ -31,7 +31,10 @@ public:
   static oc_handler_t s_handler;
   static oc_endpoint_t s_endpoint;
 
-  static void onPostResponse(oc_client_response_t *) {}
+  static void onPostResponse(oc_client_response_t *)
+  {
+    // no-op for tests
+  }
 
   static int appInit(void)
   {
@@ -74,6 +77,7 @@ TEST_F(TestCloudAccess, cloud_access_register_p)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ onPostResponse,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_register(conf, "auth_provider", "auth_code", "uid",
                                    "access_token");
@@ -91,6 +95,7 @@ TEST_F(TestCloudAccess, cloud_access_register_f)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ nullptr,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_register(conf, nullptr, nullptr, nullptr, nullptr);
 
@@ -107,6 +112,7 @@ TEST_F(TestCloudAccess, cloud_access_login_p)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ onPostResponse,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_login(conf, "uid", "access_token");
 
@@ -123,6 +129,7 @@ TEST_F(TestCloudAccess, cloud_access_login_f)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ nullptr,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_login(conf, nullptr, nullptr);
 
@@ -139,6 +146,7 @@ TEST_F(TestCloudAccess, cloud_access_logout_p)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ onPostResponse,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_logout(conf, "uid", "access_token");
 
@@ -155,6 +163,7 @@ TEST_F(TestCloudAccess, cloud_access_logout_f)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ nullptr,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_logout(conf, nullptr, nullptr);
 
@@ -171,6 +180,7 @@ TEST_F(TestCloudAccess, cloud_access_refresh_access_token_p)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ onPostResponse,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_refresh_access_token(conf, "uid", "refresh_token");
 
@@ -187,6 +197,7 @@ TEST_F(TestCloudAccess, cloud_access_refresh_access_token_f)
     /*.selected_identity_cred_id = */ -1,
     /*.handler = */ nullptr,
     /*.user_data = */ nullptr,
+    /*.timeout=*/0,
   };
   bool ret = cloud_access_refresh_access_token(conf, nullptr, nullptr);
 
