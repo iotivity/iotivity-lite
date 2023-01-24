@@ -5,7 +5,7 @@
 First, clone recursively IoTivity-Lite which includes a port for the ESP32.
 
 ```bash
-git clone --recursive https://gitlab.iotivity.org/iotivity/iotivity-lite.git
+git clone --recursive https://github.com/iotivity/iotivity-lite.git
 ```
 
 ## Build
@@ -23,8 +23,6 @@ Jump to the [common steps](#common-steps) below.
 ### MacOS
 
 Jump to the [common steps](#common-steps) below.
-
-> Note: `./esp-idf/export.sh` script exports invalid `IDF_PATH` value. Please modify it after export manually.
 
 ### Windows
 
