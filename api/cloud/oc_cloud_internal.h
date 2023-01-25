@@ -23,6 +23,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "oc_api.h"
 #include "oc_cloud.h"
@@ -56,6 +57,7 @@ typedef struct cloud_api_param_t
   oc_cloud_context_t *ctx;
   oc_cloud_cb_t cb;
   void *data;
+  uint16_t timeout;
 } cloud_api_param_t;
 
 cloud_api_param_t *alloc_api_param(void);
@@ -74,14 +76,33 @@ void oc_cloud_refresh_token_handler(oc_client_response_t *data);
 
 void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
 
+/// Remove callback (if it exists) and schedule it again
+void cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
+                                  uint16_t seconds);
+
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
 void cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps);
 void cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
                                   oc_cloud_error_t error);
+/// Check if cloud is in deregistering state
+bool cloud_is_deregistering(const oc_cloud_context_t *ctx);
 
-int cloud_reset(size_t device);
+/**
+ * @brief Reset context for device.
+ *
+ * @note For secure device it will trigger deregistration if a cloud
+ * endpoint peer exists.
+ *
+ * @param device device index
+ * @param sync for synchronous (no attempted login) execution of deregistration
+ * for security device
+ * @param timeout timeout for asynchronous deregistration requests
+ * @return 0 on success
+ * @return -1 on failure
+ */
+int cloud_reset(size_t device, bool sync, uint16_t timeout);
 
 /**
  * @brief Set cloud configuration.
@@ -131,7 +152,14 @@ void cloud_rd_deinit(oc_cloud_context_t *ctx);
  */
 void cloud_rd_reset_context(oc_cloud_context_t *ctx);
 
-void oc_create_cloudconf_resource(size_t device);
+int cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                   uint16_t timeout);
+int cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                uint16_t timeout);
+int cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                 uint16_t timeout);
+int cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                        uint16_t timeout);
 
 /**
  * @brief Send a ping over the cloud connected connection

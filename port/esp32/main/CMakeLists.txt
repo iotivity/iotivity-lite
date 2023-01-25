@@ -81,6 +81,7 @@ if (CONFIG_CLOUD)
   	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_access.c
   	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_context.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_deregister.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_resource.c

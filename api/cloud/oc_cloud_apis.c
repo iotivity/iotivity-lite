@@ -27,6 +27,7 @@
 #include "oc_cloud.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_context_internal.h"
+#include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
@@ -38,18 +39,20 @@
 
 #include <assert.h>
 
-OC_MEMB(api_params, cloud_api_param_t, 1);
+// cloud_deregister might invoke cloud_refresh_token or cloud_login so we might
+// have 2 concurrent allocations per device
+OC_MEMB(g_api_params, cloud_api_param_t, OC_MAX_NUM_DEVICES * 2);
 
 cloud_api_param_t *
 alloc_api_param(void)
 {
-  return (cloud_api_param_t *)oc_memb_alloc(&api_params);
+  return (cloud_api_param_t *)oc_memb_alloc(&g_api_params);
 }
 
 void
 free_api_param(cloud_api_param_t *p)
 {
-  oc_memb_free(&api_params, p);
+  oc_memb_free(&g_api_params, p);
 }
 
 int
@@ -78,12 +81,9 @@ cloud_tls_connected(const oc_endpoint_t *endpoint)
 #endif /* OC_SECURITY */
 
 int
-oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+               uint16_t timeout)
 {
-  if (ctx == NULL || cb == NULL) {
-    return -1;
-  }
-
   if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
@@ -97,6 +97,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   p->ctx = ctx;
   p->cb = cb;
   p->data = data;
+  p->timeout = timeout;
 
   if (ctx->store.status != OC_CLOUD_INITIALIZED) {
     OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
@@ -104,7 +105,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     return -1;
   }
 
-  OC_DBG("try register device %zu\n", ctx->device);
+  OC_DBG("try register device %zu", ctx->device);
   if (oc_string(ctx->store.ci_server) == NULL ||
       conv_cloud_endpoint(ctx) != 0) {
     cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -118,7 +119,7 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = oc_cloud_register_handler,
     .user_data = p,
-    .timeout = 0,
+    .timeout = timeout,
   };
   if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                             oc_string(ctx->store.uid),
@@ -133,12 +134,18 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 }
 
 int
-oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
   if (ctx == NULL || cb == NULL) {
     return -1;
   }
+  return cloud_register(ctx, cb, data, /*timeout*/ 0);
+}
 
+int
+cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+            uint16_t timeout)
+{
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
@@ -152,6 +159,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   p->ctx = ctx;
   p->cb = cb;
   p->data = data;
+  p->timeout = timeout;
 
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
@@ -159,12 +167,13 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     return -1;
   }
 
-  OC_DBG("try login device %zu\n", ctx->device);
+  OC_DBG("try login device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = oc_cloud_login_handler,
     .user_data = p,
+    .timeout = timeout,
   };
   if (conv_cloud_endpoint(ctx) != 0) {
     goto error;
@@ -180,6 +189,15 @@ error:
   cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
   free_api_param(p);
   return -1;
+}
+
+int
+oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
+  if (ctx == NULL || cb == NULL) {
+    return -1;
+  }
+  return cloud_login(ctx, cb, data, /*timeout*/ 0);
 }
 
 int
@@ -219,12 +237,9 @@ cloud_logout_internal(oc_client_response_t *data)
 }
 
 int
-oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+             uint16_t timeout)
 {
-  if (ctx == NULL || cb == NULL) {
-    return -1;
-  }
-
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     return -1;
@@ -237,6 +252,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   p->ctx = ctx;
   p->cb = cb;
   p->data = data;
+  p->timeout = timeout;
 
   OC_DBG("try logout device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
@@ -244,6 +260,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = cloud_logout_internal,
     .user_data = p,
+    .timeout = timeout,
   };
   if (conv_cloud_endpoint(ctx) != 0) {
     goto error;
@@ -260,136 +277,13 @@ error:
   return -1;
 }
 
-static void
-cloud_deregistered_internal(oc_client_response_t *data)
+int
+oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {
-  cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
-  oc_cloud_context_t *ctx = p->ctx;
-  if (data->code < OC_STATUS_BAD_REQUEST ||
-      cloud_is_connection_error_code(data->code)) {
-    ctx->store.status = OC_CLOUD_DEREGISTERED;
-  } else if (data->code >= OC_STATUS_BAD_REQUEST) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
-    ctx->store.status |= OC_CLOUD_FAILURE;
+  if (ctx == NULL || cb == NULL) {
+    return -1;
   }
-
-  ctx->store.cps = OC_CPS_UNINITIALIZED;
-
-  if (p->cb) {
-    p->cb(ctx, ctx->store.status, p->data);
-  }
-  free_api_param(p);
-
-  ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
-
-  cloud_store_dump_async(&ctx->store);
-}
-
-static bool
-check_accesstoken_for_deregister(oc_cloud_context_t *ctx)
-{
-// This value is calculated by coap_oscore_serialize_message for deregister
-// message with empty query parameters. The value should remain the same
-// unless some global options are added to coap requests.
-// The deregister request won't be sent if the total size of its header is
-// greater than COAP_MAX_HEADER_SIZE, so we must ensure that the query
-// is not too large.
-// Some older cloud implementations require tokens in deregister requests.
-// To facilitate support for such implementations we append access token
-// to the request query if the resulting query size is within the limit.
-#define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
-
-  oc_string_t query = cloud_access_deregister_query(
-    oc_string(ctx->store.uid), oc_string(ctx->store.access_token), ctx->device);
-  size_t query_size = oc_string_len(query);
-  oc_free_string(&query);
-
-  return DEREGISTER_EMPTY_QUERY_HEADER_SIZE + query_size <=
-         COAP_MAX_HEADER_SIZE;
-}
-
-static int
-cloud_deregister(cloud_api_param_t *p, bool useAccessToken)
-{
-  assert(p != NULL);
-
-  oc_cloud_context_t *ctx = p->ctx;
-  OC_DBG("try deregister device %zu\n", ctx->device);
-  cloud_set_cps(ctx, OC_CPS_DEREGISTERING);
-
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = cloud_deregistered_internal,
-    .user_data = p,
-  };
-  if (oc_string(ctx->store.ci_server) == NULL ||
-      conv_cloud_endpoint(ctx) != 0) {
-    goto error;
-  }
-  conf.endpoint = ctx->cloud_ep;
-
-  if (cloud_access_deregister(
-        conf, oc_string(ctx->store.uid),
-        useAccessToken ? oc_string(ctx->store.access_token) : NULL)) {
-    return 0;
-  }
-
-error:
-  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-  free_api_param(p);
-  return -1;
-}
-
-static void
-cloud_login_for_deregister(oc_cloud_context_t *ctx, oc_cloud_status_t status,
-                           void *data)
-{
-  cloud_api_param_t *p = (cloud_api_param_t *)data;
-
-  if ((status & OC_CLOUD_LOGGED_IN) == 0) {
-    OC_ERR("Failed to login to cloud for deregister");
-    free_api_param(p);
-    cloud_context_clear(ctx);
-    return;
-  }
-
-  if (cloud_deregister(p, false) != 0) {
-    OC_ERR("Failed to deregister from cloud");
-    cloud_context_clear(ctx);
-  }
-}
-
-static void
-cloud_refresh_token_for_deregister(oc_cloud_context_t *ctx,
-                                   oc_cloud_status_t status, void *data)
-{
-  cloud_api_param_t *p = (cloud_api_param_t *)data;
-
-  if ((status & OC_CLOUD_REFRESHED_TOKEN) == 0) {
-    OC_ERR("Failed to refresh access token for deregister");
-    free_api_param(p);
-    cloud_context_clear(ctx);
-    return;
-  }
-
-  // short access token -> we can use it in query and deregister without
-  // login
-  if (check_accesstoken_for_deregister(ctx)) {
-    if (cloud_deregister(p, true) != 0) {
-      OC_ERR("Failed to deregister from cloud");
-      cloud_context_clear(ctx);
-    }
-    return;
-  }
-
-  // long access token -> we must login and then deregister without token
-  if (oc_cloud_login(ctx, cloud_login_for_deregister, p) != 0) {
-    OC_ERR("Failed to login to cloud for deregister");
-    free_api_param(p);
-    cloud_context_clear(ctx);
-    return;
-  }
+  return cloud_logout(ctx, cb, data, /*timeout*/ 0);
 }
 
 int
@@ -398,60 +292,14 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (!ctx || !cb) {
     return -1;
   }
-
-  if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
-    return -1;
-  }
-
-  cloud_api_param_t *p = alloc_api_param();
-  if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
-    return -1;
-  }
-  p->ctx = ctx;
-  p->cb = cb;
-  p->data = data;
-
-  bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
-  if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
-    if (canUseAccessToken) {
-      // short access token -> we can use it in query and deregister without
-      // login
-      return cloud_deregister(p, true);
-    }
-
-    bool hasRefreshToken = cloud_context_has_refresh_token(ctx) &&
-                           !cloud_context_has_permanent_access_token(ctx);
-    if (hasRefreshToken) {
-      if (oc_cloud_refresh_token(ctx, cloud_refresh_token_for_deregister, p) !=
-          0) {
-        OC_ERR("Failed to refresh token for deregister");
-        free_api_param(p);
-        return -1;
-      }
-      return 0;
-    }
-
-    // long access token -> we must login and then deregister without token
-    if (oc_cloud_login(ctx, cloud_login_for_deregister, p) != 0) {
-      OC_ERR("Failed to login to cloud for deregister");
-      free_api_param(p);
-      return -1;
-    }
-    return 0;
-  }
-
-  return cloud_deregister(p, canUseAccessToken);
+  return cloud_deregister(ctx, /*sync*/ true, /*timeout*/ 0, cb, data);
 }
 
 int
-oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                    uint16_t timeout)
 {
-  if (!ctx || !cb) {
-    return -1;
-  }
-
-  if (!(ctx->store.status & OC_CLOUD_REGISTERED)) {
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     return -1;
   }
 
@@ -463,13 +311,15 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   p->ctx = ctx;
   p->cb = cb;
   p->data = data;
+  p->timeout = timeout;
 
-  OC_DBG("try refresh token for device %zu\n", ctx->device);
+  OC_DBG("try refresh token for device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = oc_cloud_refresh_token_handler,
     .user_data = p,
+    .timeout = timeout,
   };
   if (conv_cloud_endpoint(ctx) != 0) {
     goto error;
@@ -484,6 +334,15 @@ error:
   cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
   free_api_param(p);
   return -1;
+}
+
+int
+oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
+{
+  if (!ctx || !cb) {
+    return -1;
+  }
+  return cloud_refresh_token(ctx, cb, data, 0);
 }
 
 int

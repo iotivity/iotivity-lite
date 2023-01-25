@@ -21,6 +21,7 @@
 #ifdef OC_CLOUD
 
 #include "oc_cloud_context_internal.h"
+#include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
@@ -110,6 +111,7 @@ cloud_context_clear(oc_cloud_context_t *ctx)
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_manager_stop(ctx);
+  cloud_deregister_stop(ctx);
   cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
@@ -124,18 +126,16 @@ cloud_context_size()
 }
 
 bool
-cloud_context_has_refresh_token(const oc_cloud_context_t *ctx)
+cloud_context_has_access_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.refresh_token) != NULL &&
-         oc_string_len(ctx->store.refresh_token) > 0;
+  return oc_string(ctx->store.access_token) != NULL &&
+         oc_string_len(ctx->store.access_token) > 0;
 }
 
 bool
 cloud_context_has_permanent_access_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.access_token) != NULL &&
-         oc_string_len(ctx->store.access_token) > 0 &&
-         ctx->store.expires_in < 0;
+  return cloud_context_has_access_token(ctx) && ctx->store.expires_in < 0;
 }
 
 void
@@ -143,6 +143,13 @@ cloud_context_clear_access_token(oc_cloud_context_t *ctx)
 {
   cloud_set_string(&ctx->store.access_token, NULL, 0);
   ctx->store.expires_in = 0;
+}
+
+bool
+cloud_context_has_refresh_token(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.refresh_token) != NULL &&
+         oc_string_len(ctx->store.refresh_token) > 0;
 }
 
 void

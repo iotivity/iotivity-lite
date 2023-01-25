@@ -202,6 +202,12 @@ int oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);
  * @param data user data provided to the status change function
  * @return int 0 on success
  * @return int -1 on error
+ *
+ * @note oc_cloud_deregister shouldn't be called when oc_cloud_login or
+ * oc_cloud_refresh_token have been invoked and haven't yet received a response.
+ *
+ * @see oc_cloud_login
+ * @see oc_cloud_refresh_token
  */
 OC_API
 int oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data);

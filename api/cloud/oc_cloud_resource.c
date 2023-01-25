@@ -2,7 +2,7 @@
  *
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -22,6 +22,7 @@
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_resource_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 

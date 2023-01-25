@@ -3,7 +3,7 @@
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -291,7 +291,7 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
-    OC_ERR("[CLOUD_STORE] alloc failed!\n");
+    OC_ERR("[CLOUD_STORE] alloc failed!");
     return -1;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */

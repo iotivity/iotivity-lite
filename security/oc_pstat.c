@@ -163,13 +163,12 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->tm = 2;
     ps->om = 3;
     ps->sm = 4;
-#ifdef OC_SERVER
-#ifdef OC_CLIENT
-#ifdef OC_CLOUD
-    cloud_reset(device);
-#endif /* OC_CLOUD */
-#endif /* OC_CLIENT */
-#endif /* OC_SERVER */
+#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+    cloud_reset(device, true, 0);
+    // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
+    // the reset call must be invoked asynchronously in a callback after
+    // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
+#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
     memset(ps->rowneruuid.id, 0, 16);
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);

@@ -2,7 +2,7 @@
  *
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -108,7 +108,7 @@ static void
 publish_resources_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  OC_DBG("[CRD] publish resources handler(%d)\n", data->code);
+  OC_DBG("[CRD] publish resources handler(%d)", data->code);
 
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
@@ -208,7 +208,7 @@ publish_published_resources(void *data)
 static void
 delete_resources_handler(oc_client_response_t *data)
 {
-  OC_DBG("[CRD] delete resources handler(%d)\n", data->code);
+  OC_DBG("[CRD] delete resources handler(%d)", data->code);
   (void)data;
 }
 
