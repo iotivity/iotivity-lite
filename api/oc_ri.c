@@ -104,8 +104,10 @@ OC_LIST(g_timed_callbacks);
 OC_MEMB(g_event_callbacks_s, oc_event_callback_t,
         1 + OCF_D * OC_MAX_NUM_DEVICES + OC_MAX_APP_RESOURCES +
           OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
-static oc_event_callback_t *g_currently_processed_event_cb;
-static bool g_currently_processed_event_cb_delete;
+static oc_event_callback_t *g_currently_processed_event_cb = NULL;
+static bool g_currently_processed_event_cb_delete = false;
+static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
+  NULL;
 
 OC_PROCESS(g_timed_callback_events, "OC timed callbacks");
 
@@ -649,35 +651,44 @@ oc_ri_has_timed_event_callback(const void *cb_data, oc_trigger_t event_callback,
 }
 
 void
-oc_ri_remove_timed_event_callback_by_filter(oc_trigger_t cb,
-                                            oc_ri_timed_event_filter_t filter,
-                                            const void *filter_data)
+oc_ri_remove_timed_event_callback_by_filter(
+  oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data,
+  bool match_all, oc_ri_timed_event_on_delete_t on_delete)
 {
   bool want_to_delete_currently_processed_event_cb = false;
   oc_event_callback_t *event_cb =
     (oc_event_callback_t *)oc_list_head(g_timed_callbacks);
-  for (; event_cb != NULL; event_cb = event_cb->next) {
+  while (event_cb != NULL) {
     if (event_cb->callback != cb || !filter(event_cb->data, filter_data)) {
+      event_cb = event_cb->next;
       continue;
     }
 
+    oc_event_callback_t *next = event_cb->next;
     if (g_currently_processed_event_cb == event_cb) {
       want_to_delete_currently_processed_event_cb = true;
+    } else {
+      OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+      oc_etimer_stop(&event_cb->timer);
+      OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+      oc_list_remove(g_timed_callbacks, event_cb);
+      if (on_delete != NULL) {
+        on_delete(event_cb->data);
+      }
+      oc_memb_free(&g_event_callbacks_s, event_cb);
+      want_to_delete_currently_processed_event_cb = false;
+    }
+    if (!match_all) {
       break;
     }
-    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
-    oc_etimer_stop(&event_cb->timer);
-    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
-    oc_list_remove(g_timed_callbacks, event_cb);
-    oc_memb_free(&g_event_callbacks_s, event_cb);
-    want_to_delete_currently_processed_event_cb = false;
-    break;
+    event_cb = next;
   }
   if (want_to_delete_currently_processed_event_cb) {
     // We can't remove the currently processed delayed callback because when
     // the callback returns OC_EVENT_DONE, a double release occurs. So we
     // set up the flag to remove it, and when it's over, we've removed it.
     g_currently_processed_event_cb_delete = true;
+    g_currently_processed_event_on_delete = on_delete;
   }
 }
 
@@ -692,7 +703,7 @@ oc_ri_remove_timed_event_callback(const void *cb_data,
                                   oc_trigger_t event_callback)
 {
   oc_ri_remove_timed_event_callback_by_filter(
-    event_callback, ri_is_identical_timed_event_filter, cb_data);
+    event_callback, ri_is_identical_timed_event_filter, cb_data, false, NULL);
 }
 
 void
@@ -720,28 +731,32 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
   oc_event_callback_t *event_cb = (oc_event_callback_t *)oc_list_head(list);
   while (event_cb != NULL) {
     oc_event_callback_t *next = event_cb->next;
-    if (oc_etimer_expired(&event_cb->timer)) {
-      g_currently_processed_event_cb = event_cb;
-      g_currently_processed_event_cb_delete = false;
-      if ((event_cb->callback(event_cb->data) == OC_EVENT_DONE) ||
-          g_currently_processed_event_cb_delete) {
-        oc_list_remove(list, event_cb);
-        oc_memb_free(cb_pool, event_cb);
-        event_cb = (oc_event_callback_t *)oc_list_head(list);
-        continue;
-      } else {
-        OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
-        oc_etimer_restart(&event_cb->timer);
-        OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
-        event_cb = (oc_event_callback_t *)oc_list_head(list);
-        continue;
-      }
+    if (!oc_etimer_expired(&event_cb->timer)) {
+      event_cb = next;
+      continue;
     }
-
-    event_cb = next;
+    g_currently_processed_event_cb = event_cb;
+    g_currently_processed_event_cb_delete = false;
+    if ((event_cb->callback(event_cb->data) == OC_EVENT_DONE) ||
+        g_currently_processed_event_cb_delete) {
+      oc_list_remove(list, event_cb);
+      if (g_currently_processed_event_on_delete != NULL) {
+        g_currently_processed_event_on_delete(event_cb->data);
+      }
+      oc_memb_free(cb_pool, event_cb);
+      event_cb = (oc_event_callback_t *)oc_list_head(list);
+      continue;
+    }
+    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+    oc_etimer_restart(&event_cb->timer);
+    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    event_cb = (oc_event_callback_t *)oc_list_head(list);
+    continue;
   }
+
   g_currently_processed_event_cb = NULL;
   g_currently_processed_event_cb_delete = false;
+  g_currently_processed_event_on_delete = NULL;
 }
 
 static void

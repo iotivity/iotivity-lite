@@ -2409,13 +2409,23 @@ bool oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
  * @param[in] cb the delayed callback that is being removed
  * @param[in] filter filtering function (cannot be NULL)
  * @param[in] filter_data user data provided to the filtering function
+ * @param[in] match_all iterate over all delayed callbacks (otherwise the
+ * iteration will stop after the first match)
+ * @param[in] on_delete function invoked with the context data of the delayed
+ * callback, before the callback is deallocated
+ *
+ * @note if the matched timed event is currently being processed then the \p
+ * on_delete callback will be invoked when the processing is finished. So it
+ * might occurr some time after the call to
+ * oc_ri_remove_timed_event_callback_by_filter has finished.
  *
  * @see oc_ri_timed_event_filter_t
+ * @see oc_ri_timed_event_on_delete_t
  */
 OC_API
-void oc_remove_delayed_callback_by_filter(oc_trigger_t cb,
-                                          oc_ri_timed_event_filter_t filter,
-                                          const void *filter_data);
+void oc_remove_delayed_callback_by_filter(
+  oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data,
+  bool match_all, oc_ri_timed_event_on_delete_t on_delete);
 
 /**
  * Cancel a scheduled delayed callback.

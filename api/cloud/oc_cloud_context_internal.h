@@ -61,11 +61,13 @@ void cloud_context_iterate(cloud_context_iterator_cb_t cb, void *user_data);
 void cloud_context_clear(oc_cloud_context_t *ctx);
 
 /**
- * @brief Check whether refresh token is set.
+ * @brief Check whether access token is set.
  *
  * @return true refresh token is set
+ * @return false otherwise
  */
-bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx);
+
+bool cloud_context_has_access_token(const oc_cloud_context_t *ctx);
 
 /**
  * @brief Checks whether the access token is set and whether it is permanent
@@ -73,11 +75,20 @@ bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx);
  * that the token is permanent).
  *
  * @return true access token is permanent
+ * @return false otherwise
  */
 bool cloud_context_has_permanent_access_token(const oc_cloud_context_t *ctx);
 
 /** @brief Clear access token from context */
 void cloud_context_clear_access_token(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Check whether refresh token is set.
+ *
+ * @return true refresh token is set
+ * @return false otherwise
+ */
+bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx);
 
 #ifdef __cplusplus
 }

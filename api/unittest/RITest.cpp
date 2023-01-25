@@ -305,12 +305,72 @@ TEST_F(TestOcRi, RiTimedCallbacksFilter_P)
 
   auto match_by_value_filter = [](const void *cb_data,
                                   const void *filter_data) {
-    const auto *first = (thing_t *)cb_data;
-    const auto *second = (thing_t *)filter_data;
+    const auto *first = static_cast<const thing_t *>(cb_data);
+    const auto *second = static_cast<const thing_t *>(filter_data);
     return first->value == second->value;
   };
-  oc_ri_remove_timed_event_callback_by_filter(test_timed_callback,
-                                              match_by_value_filter, &b);
+  oc_ri_remove_timed_event_callback_by_filter(
+    test_timed_callback, match_by_value_filter, &b, false, nullptr);
   // matching by value removes the callback
   EXPECT_FALSE(oc_ri_has_timed_event_callback(&a, test_timed_callback, false));
+}
+
+TEST_F(TestOcRi, RiTimedCallbacksFilterMatchAll_P)
+{
+  struct thing_t
+  {
+    int value;
+  };
+  thing_t a{ 1 };
+  thing_t b = a;
+  thing_t c = a;
+  oc_ri_add_timed_event_callback_seconds(&a, test_timed_callback, 0);
+  oc_ri_add_timed_event_callback_seconds(&b, test_timed_callback, 0);
+  oc_ri_add_timed_event_callback_seconds(&c, test_timed_callback, 0);
+
+  auto match_by_value_filter = [](const void *cb_data,
+                                  const void *filter_data) {
+    const auto *first = static_cast<const thing_t *>(cb_data);
+    const auto *second = static_cast<const thing_t *>(filter_data);
+    return first->value == second->value;
+  };
+  oc_ri_remove_timed_event_callback_by_filter(
+    test_timed_callback, match_by_value_filter, &a, true, nullptr);
+
+  EXPECT_FALSE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
+}
+
+TEST_F(TestOcRi, RiTimedCallbacksFilterDealloc_P)
+{
+  struct thing_t
+  {
+    int value;
+  };
+  thing_t m{ 1 };
+  auto *a = new thing_t{ m };
+  auto *b = new thing_t{ m };
+  auto *c = new thing_t{ m };
+
+  oc_ri_add_timed_event_callback_seconds(a, test_timed_callback, 0);
+  oc_ri_add_timed_event_callback_seconds(b, test_timed_callback, 0);
+  oc_ri_add_timed_event_callback_seconds(c, test_timed_callback, 0);
+
+  auto match_by_value_filter = [](const void *cb_data,
+                                  const void *filter_data) {
+    const auto *first = static_cast<const thing_t *>(cb_data);
+    const auto *second = static_cast<const thing_t *>(filter_data);
+    return first->value == second->value;
+  };
+
+  auto free_thing = [](void *data) {
+    auto *t = static_cast<thing_t *>(data);
+    delete t;
+  };
+
+  oc_ri_remove_timed_event_callback_by_filter(
+    test_timed_callback, match_by_value_filter, &m, true, free_thing);
+
+  EXPECT_FALSE(
+    oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
 }

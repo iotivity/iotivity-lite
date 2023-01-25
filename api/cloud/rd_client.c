@@ -3,7 +3,7 @@
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -16,6 +16,9 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+
+#include "oc_config.h"
+
 #ifdef OC_CLOUD
 
 #include "rd_client.h"
@@ -175,6 +178,5 @@ rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
   return rd_delete_with_device_id(endpoint, links, uuid, handler, qos,
                                   user_data);
 }
-#else  /* OC_CLOUD*/
-typedef int dummy_declaration;
-#endif /* !OC_CLOUD */
+
+#endif /* OC_CLOUD */

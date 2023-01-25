@@ -180,13 +180,6 @@ cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
   }
 
 #ifdef OC_SECURITY
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(conf.device);
-  if (pstat->s != OC_DOS_RFNOP) {
-    return false;
-  }
-#endif /* OC_SECURITY */
-
-#ifdef OC_SECURITY
   if (!cloud_tls_add_peer(conf.endpoint, conf.selected_identity_cred_id)) {
     OC_ERR("cannot connect to cloud");
     return false;
@@ -195,8 +188,16 @@ cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
 
   oc_string_t query =
     cloud_access_deregister_query(uid, access_token, conf.device);
-  bool s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, conf.endpoint, oc_string(query),
-                        conf.handler, HIGH_QOS, conf.user_data);
+
+  bool s;
+  if (conf.timeout > 0) {
+    s = oc_do_delete_with_timeout(OC_RSRVD_ACCOUNT_URI, conf.endpoint,
+                                  oc_string(query), conf.timeout, conf.handler,
+                                  HIGH_QOS, conf.user_data);
+  } else {
+    s = oc_do_delete(OC_RSRVD_ACCOUNT_URI, conf.endpoint, oc_string(query),
+                     conf.handler, HIGH_QOS, conf.user_data);
+  }
   oc_free_string(&query);
   return s;
 }

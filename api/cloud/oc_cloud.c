@@ -3,7 +3,7 @@
  * Copyright (c) 2019 Intel Corporation
  * Copyright 2019 Jozef Kralik All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -24,6 +24,7 @@
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_context_internal.h"
+#include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
@@ -35,6 +36,14 @@
 #ifdef OC_SECURITY
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
+
+void
+cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
+                             uint16_t seconds)
+{
+  oc_remove_delayed_callback(cb_data, callback);
+  oc_set_delayed_callback(cb_data, callback, seconds);
+}
 
 bool
 cloud_is_connection_error_code(oc_status_t code)
@@ -87,6 +96,7 @@ static void
 cloud_manager_restart(oc_cloud_context_t *ctx)
 {
   cloud_manager_stop(ctx);
+  cloud_deregister_stop(ctx);
   oc_remove_delayed_callback(ctx, start_manager);
   oc_set_delayed_callback(ctx, start_manager, 0);
 }
@@ -106,48 +116,35 @@ cloud_close_endpoint(oc_endpoint_t *cloud_ep)
 #ifdef OC_SECURITY
   const oc_tls_peer_t *peer = oc_tls_get_peer(cloud_ep);
   if (peer != NULL) {
-    OC_DBG("cloud_close_endpoint: oc_tls_close_connection\n");
+    OC_DBG("cloud_close_endpoint: oc_tls_close_connection");
     oc_tls_close_connection(cloud_ep);
   } else
 #endif /* OC_SECURITY */
   {
 #ifdef OC_TCP
-    OC_DBG("cloud_close_endpoint: oc_connectivity_end_session\n");
+    OC_DBG("cloud_close_endpoint: oc_connectivity_end_session");
     oc_connectivity_end_session(cloud_ep);
 #endif /* OC_TCP */
   }
 }
 
-#ifdef OC_SECURITY
-static void
-cloud_deregister_on_reset_internal(oc_cloud_context_t *ctx,
-                                   oc_cloud_status_t status, void *data)
-{
-  (void)status;
-  (void)data;
-  cloud_context_clear(ctx);
-  OC_DBG("[Cloud] cloud_deregister_on_reset_internal device=%zu", ctx->device);
-}
-#endif /* OC_SECURITY */
-
 int
-cloud_reset(size_t device)
+cloud_reset(size_t device, bool sync, uint16_t timeout)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
   if (ctx == NULL) {
     return -1;
   }
-  OC_DBG("[Cloud] cloud_reset\n");
+  OC_DBG("[Cloud] cloud_reset");
 
 #ifdef OC_SECURITY
-  if (oc_tls_connected(ctx->cloud_ep)) {
-    cloud_manager_stop(ctx);
-    // TODO: store data needed for deregister, use it as context
-    if (oc_cloud_deregister(ctx, cloud_deregister_on_reset_internal, ctx) ==
-        0) {
-      return 0;
-    }
+  if (oc_tls_connected(ctx->cloud_ep) &&
+      cloud_deregister_on_reset(ctx, sync, timeout)) {
+    return 0;
   }
+#else  /* !OC_SECURITY */
+  (void)timeout;
+  (void)sync;
 #endif /* OC_SECURITY */
 
   cloud_context_clear(ctx);
@@ -192,6 +189,7 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
+  cloud_deregister_stop(ctx);
 
   cloud_conf_update_t data = {
     .access_token = access_token,
@@ -222,16 +220,22 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
                          const cloud_conf_update_t *data)
 {
   if (data->ci_server_len == 0) {
-    OC_DBG("[Cloud] got forced deregister via provisioning of empty cis\n");
-    cloud_reset(ctx->device);
+    OC_DBG("[Cloud] got forced deregister via provisioning of empty cis");
+    if (cloud_reset(ctx->device, false, CLOUD_DEREGISTER_TIMEOUT) != 0) {
+      OC_DBG("[Cloud] reset failed");
+    }
     return;
   }
 
+  // if deregistering or other cloud API was active then closing of the endpoint
+  // triggers the handler with timeout error, which ensures that/ the operation
+  // is interrupted
   cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
+  cloud_deregister_stop(ctx);
 
   cloud_set_cloudconf(ctx, data);
 
@@ -256,7 +260,7 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
   if (ctx == NULL || oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
     return;
   }
-  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d\n", (int)state);
+  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d", (int)state);
   bool state_changed = ctx->cloud_ep_state != state;
   if (!state_changed) {
     return;
@@ -316,10 +320,16 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
   }
 }
 
+bool
+cloud_is_deregistering(const oc_cloud_context_t *ctx)
+{
+  return ctx->store.cps == OC_CPS_DEREGISTERING;
+}
+
 void
 oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
-  OC_DBG("[CM] oc_cloud_manager_restart\n");
+  OC_DBG("[CM] oc_cloud_manager_restart");
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
     bool is_tcp = (ctx->cloud_ep->flags & TCP) != 0;

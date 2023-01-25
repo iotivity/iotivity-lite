@@ -1,32 +1,39 @@
-/*
- // Copyright (c) 2016 Intel Corporation
- //
- // Licensed under the Apache License, Version 2.0 (the "License");
- // you may not use this file except in compliance with the License.
- // You may obtain a copy of the License at
- //
- //      http://www.apache.org/licenses/LICENSE-2.0
- //
- // Unless required by applicable law or agreed to in writing, software
- // distributed under the License is distributed on an "AS IS" BASIS,
- // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- // See the License for the specific language governing permissions and
- // limitations under the License.
- */
+/****************************************************************************
+ *
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 
+#include "messaging/coap/oc_coap.h"
+#include "port/oc_assert.h"
+#include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "oc_core_res.h"
-#include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
-#ifdef OC_MNT
-#include "api/oc_mnt.h"
-#endif /* OC_MNT */
-#include "messaging/coap/oc_coap.h"
 #include "oc_discovery.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
 #include "oc_main.h"
-#include "util/oc_atomic.h"
+
+#ifdef OC_CLOUD
+#include "api/cloud/oc_cloud_resource_internal.h"
+#endif /* OC_CLOUD */
+
+#ifdef OC_MNT
+#include "api/oc_mnt.h"
+#endif /* OC_MNT */
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm.h"
@@ -34,7 +41,6 @@
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
-#include "port/oc_assert.h"
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -265,7 +271,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 #if defined(OC_SERVER)
       oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_D, device),
                                   0);
-#endif /* OC_SERVER && OC_CLOUD */
+#endif /* OC_SERVER */
 
       changed = true;
       break;

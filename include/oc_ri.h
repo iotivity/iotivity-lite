@@ -397,6 +397,17 @@ typedef bool (*oc_ri_timed_event_filter_t)(const void *cb_data,
                                            const void *filter_data);
 
 /**
+ * @brief Function invoked with timed event context data before the timed event
+ * is deallocated.
+ *
+ * @note Expected use case is for a dynamically allocated context to be
+ * deallocated by this callback.
+ *
+ * @see oc_ri_remove_timed_event_callback_by_filter
+ */
+typedef void (*oc_ri_timed_event_on_delete_t)(void *cb_data);
+
+/**
  * @brief add timed event callback
  *
  * @param cb_data the timed event callback info
@@ -448,12 +459,22 @@ bool oc_ri_has_timed_event_callback(const void *cb_data,
  * @param cb timed event callback
  * @param filter filtering function (cannot be NULL)
  * @param filter_data user data provided to the filtering function
+ * @param match_all iterate over all timed events (otherwise the iteration will
+ * stop after the first match)
+ * @param on_delete function invoked with the context data of the timed event,
+ * before the event is deallocated
+ *
+ * @note if the matched timed event is currently being processed then the \p
+ * on_delete callback will be invoked when the processing is finished. So it
+ * might occurr some time after the call to
+ * oc_ri_remove_timed_event_callback_by_filter has finished.
  *
  * @see oc_ri_timed_event_filter_t
  */
 OC_API
 void oc_ri_remove_timed_event_callback_by_filter(
-  oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data);
+  oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data,
+  bool match_all, oc_ri_timed_event_on_delete_t on_delete);
 
 /**
  * @brief remove the timed event callback
