@@ -649,28 +649,29 @@ oc_ri_has_timed_event_callback(const void *cb_data, oc_trigger_t event_callback,
 }
 
 void
-oc_ri_remove_timed_event_callback(const void *cb_data,
-                                  oc_trigger_t event_callback)
+oc_ri_remove_timed_event_callback_by_filter(oc_trigger_t cb,
+                                            oc_ri_timed_event_filter_t filter,
+                                            const void *filter_data)
 {
+  bool want_to_delete_currently_processed_event_cb = false;
   oc_event_callback_t *event_cb =
     (oc_event_callback_t *)oc_list_head(g_timed_callbacks);
-
-  bool want_to_delete_currently_processed_event_cb = false;
-  while (event_cb != NULL) {
-    if (event_cb->data == cb_data && event_cb->callback == event_callback) {
-      if (g_currently_processed_event_cb == event_cb) {
-        want_to_delete_currently_processed_event_cb = true;
-      } else {
-        OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
-        oc_etimer_stop(&event_cb->timer);
-        OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
-        oc_list_remove(g_timed_callbacks, event_cb);
-        oc_memb_free(&g_event_callbacks_s, event_cb);
-        want_to_delete_currently_processed_event_cb = false;
-        break;
-      }
+  for (; event_cb != NULL; event_cb = event_cb->next) {
+    if (event_cb->callback != cb || !filter(event_cb->data, filter_data)) {
+      continue;
     }
-    event_cb = event_cb->next;
+
+    if (g_currently_processed_event_cb == event_cb) {
+      want_to_delete_currently_processed_event_cb = true;
+      break;
+    }
+    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+    oc_etimer_stop(&event_cb->timer);
+    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    oc_list_remove(g_timed_callbacks, event_cb);
+    oc_memb_free(&g_event_callbacks_s, event_cb);
+    want_to_delete_currently_processed_event_cb = false;
+    break;
   }
   if (want_to_delete_currently_processed_event_cb) {
     // We can't remove the currently processed delayed callback because when
@@ -678,6 +679,20 @@ oc_ri_remove_timed_event_callback(const void *cb_data,
     // set up the flag to remove it, and when it's over, we've removed it.
     g_currently_processed_event_cb_delete = true;
   }
+}
+
+static bool
+ri_is_identical_timed_event_filter(const void *cb_data, const void *filter_data)
+{
+  return cb_data == filter_data;
+}
+
+void
+oc_ri_remove_timed_event_callback(const void *cb_data,
+                                  oc_trigger_t event_callback)
+{
+  oc_ri_remove_timed_event_callback_by_filter(
+    event_callback, ri_is_identical_timed_event_filter, cb_data);
 }
 
 void

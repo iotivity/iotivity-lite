@@ -1,18 +1,20 @@
-/*
-// Copyright (c) 2016-2019 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016-2019 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 
 /**
   @brief Main API of IoTivity-Lite for client and server.
@@ -29,9 +31,7 @@
 #ifndef OC_API_H
 #define OC_API_H
 
-#include "util/oc_features.h"
 #include "messaging/coap/oc_coap.h"
-#include "port/oc_storage.h"
 #include "oc_buffer_settings.h"
 #include "oc_cloud.h"
 #include "oc_config.h"
@@ -39,6 +39,8 @@
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_storage.h"
+#include "util/oc_features.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -2365,6 +2367,7 @@ void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
  * @param[in] callback the callback invoked after the set number of seconds
  * @param[in] seconds the number of seconds to wait till the callback is invoked
  */
+OC_API
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
 
@@ -2377,6 +2380,7 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
  * @param[in] miliseconds the number of miliseconds to wait till the callback is
  * invoked
  */
+OC_API
 void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
                                 uint16_t miliseconds);
 
@@ -2394,16 +2398,33 @@ void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
  * @return true matching delayed callback was found
  * @return false otherwise
  */
+OC_API
 bool oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
                              bool ignore_cb_data);
+
+/**
+ * @brief Cancel a scheduled delayed callback by matching it by the provided
+ * filtering function.
+ *
+ * @param[in] cb the delayed callback that is being removed
+ * @param[in] filter filtering function (cannot be NULL)
+ * @param[in] filter_data user data provided to the filtering function
+ *
+ * @see oc_ri_timed_event_filter_t
+ */
+OC_API
+void oc_remove_delayed_callback_by_filter(oc_trigger_t cb,
+                                          oc_ri_timed_event_filter_t filter,
+                                          const void *filter_data);
 
 /**
  * Cancel a scheduled delayed callback.
  *
  * @param[in] cb_data the user defined context pointer that was passed to the
- *                   oc_sed_delayed_callback() function
+ *                   oc_set_delayed_callback() function
  * @param[in] callback the delayed callback that is being removed
  */
+OC_API
 void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
 
 /** API for setting handlers for interrupts */

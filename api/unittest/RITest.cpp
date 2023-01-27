@@ -270,7 +270,7 @@ test_timed_callback(void *data)
   return OC_EVENT_DONE;
 }
 
-TEST_F(TestOcRi, RiTimedCallbacks)
+TEST_F(TestOcRi, RiTimedCallbacks_P)
 {
   EXPECT_FALSE(
     oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
@@ -287,4 +287,30 @@ TEST_F(TestOcRi, RiTimedCallbacks)
   oc_ri_remove_timed_event_callback(&data, test_timed_callback);
   EXPECT_FALSE(
     oc_ri_has_timed_event_callback(nullptr, test_timed_callback, true));
+}
+
+TEST_F(TestOcRi, RiTimedCallbacksFilter_P)
+{
+  struct thing_t
+  {
+    int value;
+  };
+  thing_t a{ 1 };
+  thing_t b = a;
+  oc_ri_add_timed_event_callback_seconds(&a, test_timed_callback, 0);
+  oc_ri_remove_timed_event_callback(&b, test_timed_callback);
+  // comparison by pointer address will fail to match the data, so the callback
+  // won't be removed
+  EXPECT_TRUE(oc_ri_has_timed_event_callback(&a, test_timed_callback, false));
+
+  auto match_by_value_filter = [](const void *cb_data,
+                                  const void *filter_data) {
+    const auto *first = (thing_t *)cb_data;
+    const auto *second = (thing_t *)filter_data;
+    return first->value == second->value;
+  };
+  oc_ri_remove_timed_event_callback_by_filter(test_timed_callback,
+                                              match_by_value_filter, &b);
+  // matching by value removes the callback
+  EXPECT_FALSE(oc_ri_has_timed_event_callback(&a, test_timed_callback, false));
 }

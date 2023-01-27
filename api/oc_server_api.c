@@ -152,6 +152,14 @@ oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
 }
 
 void
+oc_remove_delayed_callback_by_filter(oc_trigger_t cb,
+                                     oc_ri_timed_event_filter_t filter,
+                                     const void *filter_data)
+{
+  oc_ri_remove_timed_event_callback_by_filter(cb, filter, filter_data);
+}
+
+void
 oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
 {
   oc_ri_remove_timed_event_callback(cb_data, callback);

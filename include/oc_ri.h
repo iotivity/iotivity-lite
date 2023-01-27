@@ -1,18 +1,20 @@
-/*
-// Copyright (c) 2016-2019 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+/****************************************************************************
+ *
+ * Copyright (c) 2016-2019 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
 /**
   @file
 */
@@ -22,6 +24,7 @@
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_enums.h"
+#include "oc_export.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
@@ -382,12 +385,25 @@ void oc_ri_init(void);
 void oc_ri_shutdown(void);
 
 /**
+ * @brief Filtering function used to match scheduled timed events by context
+ * data.
+ *
+ * @param cb_data Data for the timed event callback
+ * @param filter_data User data passed from the caller to the filtering function
+ *
+ * @see oc_ri_remove_timed_event_callback_by_filter
+ */
+typedef bool (*oc_ri_timed_event_filter_t)(const void *cb_data,
+                                           const void *filter_data);
+
+/**
  * @brief add timed event callback
  *
  * @param cb_data the timed event callback info
  * @param event_callback the callback
  * @param ticks time in ticks
  */
+OC_API
 void oc_ri_add_timed_event_callback_ticks(void *cb_data,
                                           oc_trigger_t event_callback,
                                           oc_clock_time_t ticks);
@@ -421,16 +437,31 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
  * @return true matching timed event callback was found
  * @return false otherwise
  */
+OC_API
 bool oc_ri_has_timed_event_callback(const void *cb_data,
                                     oc_trigger_t event_callback,
                                     bool ignore_cb_data);
 
 /**
+ * @brief remove the timed event callback by filter
+ *
+ * @param cb timed event callback
+ * @param filter filtering function (cannot be NULL)
+ * @param filter_data user data provided to the filtering function
+ *
+ * @see oc_ri_timed_event_filter_t
+ */
+OC_API
+void oc_ri_remove_timed_event_callback_by_filter(
+  oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data);
+
+/**
  * @brief remove the timed event callback
  *
- * @param cb_data the timed event callback info
- * @param event_callback the callback
+ * @param cb_data timed event callback info
+ * @param event_callback timed event callback
  */
+OC_API
 void oc_ri_remove_timed_event_callback(const void *cb_data,
                                        oc_trigger_t event_callback);
 
