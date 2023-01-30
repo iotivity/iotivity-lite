@@ -271,7 +271,7 @@ coap_remove_observer(coap_observer_t *o)
   const char *query = get_iface_query(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
-    &o->endpoint, OC_GET, query, (query) ? strlen(query) : 0,
+    &o->endpoint, OC_GET, query, query != NULL ? strlen(query) : 0,
     OC_BLOCKWISE_SERVER);
   // If response_state->payload_size == 0 it means, that this blockwise state
   // doesn't belong to the observer. Because the observer always sets
@@ -493,7 +493,7 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
             oc_blockwise_find_response_buffer(
               oc_string(obs->resource->uri) + 1,
               oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
-              query, (query) ? strlen(query) : 0, OC_BLOCKWISE_SERVER);
+              query, query != NULL ? strlen(query) : 0, OC_BLOCKWISE_SERVER);
           if (response_state) {
             if (response_state->payload_size ==
                 response_state->next_block_offset) {
@@ -1068,7 +1068,7 @@ process_batch_observers(void *data)
     const char *query = get_iface_query(obs->iface_mask);
     oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
       oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
-      &obs->endpoint, OC_GET, query, (query) ? strlen(query) : 0,
+      &obs->endpoint, OC_GET, query, query != NULL ? strlen(query) : 0,
       OC_BLOCKWISE_SERVER);
     if (response_state) {
       batch_obs = batch_obs->next;

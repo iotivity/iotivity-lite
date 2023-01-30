@@ -116,7 +116,7 @@ OC_PROCESS_THREAD(oc_session_events, ev, data)
   (void)data;
   OC_PROCESS_POLLHANDLER(oc_process_session_event());
   OC_PROCESS_BEGIN();
-  while (oc_process_is_running(&(oc_session_events))) {
+  while (oc_process_is_running(&oc_session_events)) {
     OC_PROCESS_YIELD();
   }
   free_session_state_delayed(NULL);
@@ -126,7 +126,7 @@ OC_PROCESS_THREAD(oc_session_events, ev, data)
 void
 oc_session_start_event(const oc_endpoint_t *endpoint)
 {
-  if (!oc_process_is_running(&(oc_session_events))) {
+  if (!oc_process_is_running(&oc_session_events)) {
     return;
   }
 
@@ -138,14 +138,14 @@ oc_session_start_event(const oc_endpoint_t *endpoint)
   oc_list_add(g_session_start_events, ep);
   oc_network_event_handler_mutex_unlock();
 
-  oc_process_poll(&(oc_session_events));
+  oc_process_poll(&oc_session_events);
   _oc_signal_event_loop();
 }
 
 void
 oc_session_end_event(const oc_endpoint_t *endpoint)
 {
-  if (!oc_process_is_running(&(oc_session_events))) {
+  if (!oc_process_is_running(&oc_session_events)) {
     return;
   }
 
@@ -157,7 +157,7 @@ oc_session_end_event(const oc_endpoint_t *endpoint)
   oc_list_add(g_session_end_events, ep);
   oc_network_event_handler_mutex_unlock();
 
-  oc_process_poll(&(oc_session_events));
+  oc_process_poll(&oc_session_events);
   _oc_signal_event_loop();
 }
 #endif /* OC_TCP */
