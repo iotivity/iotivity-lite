@@ -1586,14 +1586,14 @@ oc_ri_remove_client_cb(void *data)
 }
 
 static void
-notify_client_cb_503(oc_client_cb_t *cb)
+notify_client_cb_timeout(oc_client_cb_t *cb)
 {
   OC_DBG(
-    "notify_client_cb_503 - calling handler with service unavailable for %d %s",
+    "notify_client_cb_timeout - calling handler with request timeout for %d %s",
     cb->method, oc_string(cb->uri));
   oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-  oc_ri_remove_timed_event_callback(cb,
-                                    &oc_ri_remove_client_cb_with_notify_503);
+  oc_ri_remove_timed_event_callback(
+    cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
 
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
@@ -1617,10 +1617,10 @@ notify_client_cb_503(oc_client_cb_t *cb)
 }
 
 oc_event_callback_retval_t
-oc_ri_remove_client_cb_with_notify_503(void *data)
+oc_ri_remove_client_cb_with_notify_timeout_async(void *data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)data;
-  notify_client_cb_503(cb);
+  notify_client_cb_timeout(cb);
   return OC_EVENT_DONE;
 }
 
@@ -1633,7 +1633,7 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         cb->mid == mid) {
       cb->ref_count = 1;
-      notify_client_cb_503(cb);
+      notify_client_cb_timeout(cb);
       cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       continue;
     }
@@ -1650,7 +1650,7 @@ oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint)
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
       cb->ref_count = 1;
-      notify_client_cb_503(cb);
+      notify_client_cb_timeout(cb);
       cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       continue;
     }
@@ -1900,7 +1900,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     } else {
       oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
       oc_ri_remove_timed_event_callback(
-        cb, &oc_ri_remove_client_cb_with_notify_503);
+        cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
       free_client_cb(cb);
     }
 #ifdef OC_BLOCK_WISE

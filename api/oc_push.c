@@ -2298,7 +2298,7 @@ response_to_push_rsc(oc_client_response_t *data)
   OC_PUSH_DBG("\n   => return status code: [ %s ]",
               oc_status_to_str(data->code));
 
-  if (data->code == OC_STATUS_SERVICE_UNAVAILABLE) {
+  if (data->code == OC_REQUEST_TIMEOUT) {
     /*
      * TODO4ME <2022/4/17> if update request fails... retry to resolve endpoint
      * of target device ID...

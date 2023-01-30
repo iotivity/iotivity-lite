@@ -57,11 +57,12 @@ cloud_deregister_on_reset_async_handler(oc_cloud_context_t *ctx,
   OC_DBG("[Cloud] cloud_deregister_on_reset_async_handler device=%zu",
          ctx->device);
   // this call might be invoked because of timeout (delayed call of
-  // oc_ri_remove_client_cb_with_notify_503 when the request is fired), however
-  // cloud_context_clear among other things closes the connected endpoint. This
-  // also invokes oc_ri_remove_client_cb_with_notify_503 for this call,
-  // causing memory issues. We schedule the context clear in a delayed callback,
-  // so this call removes itself from the queue of calls for the endpoint.
+  // oc_ri_remove_client_cb_with_notify_timeout_async when the request is
+  // fired), however cloud_context_clear among other things closes the connected
+  // endpoint. This closing for the endpoint connection also invokes
+  // oc_ri_remove_client_cb_with_notify_timeout_async for this call, causing
+  // memory issues. We schedule the context clear in a delayed callback, so this
+  // call removes itself from the queue of calls for the endpoint.
   cloud_reset_delayed_callback(ctx, cloud_deregister_context_clear_async, 0);
 }
 

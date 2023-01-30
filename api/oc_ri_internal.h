@@ -31,12 +31,13 @@
 oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
 
 /**
- * @brief removes the client callback with triggering
- * OC_REQUEST_TIMEOUT to handler.
+ * @brief removes the client callback with triggering OC_REQUEST_TIMEOUT to
+ * handler.
  *
  * @param cb is oc_client_cb_t* type
  * @return returns OC_EVENT_DONE
  */
-oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_503(void *cb);
+oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
+  void *cb);
 
 #endif /* OC_RI_INTERNAL_H */
