@@ -796,8 +796,7 @@ pstat_POST_dos1_to_dos2(oc_client_response_t *data)
 
   oc_switch_dos_ctx_t *d = (oc_switch_dos_ctx_t *)data->user_data;
 
-  if (data->code >= OC_STATUS_BAD_REQUEST &&
-      data->code != OC_STATUS_SERVICE_UNAVAILABLE) {
+  if (data->code >= OC_STATUS_BAD_REQUEST && data->code != OC_REQUEST_TIMEOUT) {
     free_switch_dos_ctx(d, -1);
     return;
   }
