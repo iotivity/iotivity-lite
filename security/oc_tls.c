@@ -628,8 +628,8 @@ oc_tls_audit_log(const char *aeid, const char *message, uint8_t category,
     buff[0] = '\0';
   }
   char *aux[] = { buff };
-  oc_audit_log((peer) ? peer->endpoint.device : 0, aeid, message, category,
-               priority, (const char **)aux, 1);
+  oc_audit_log(peer != NULL ? peer->endpoint.device : 0, aeid, message,
+               category, priority, (const char **)aux, 1);
 }
 
 static int

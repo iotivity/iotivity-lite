@@ -463,7 +463,7 @@ get_endpoints(oc_client_response_t *data)
   oc_rep_t *links = data->payload;
 
   oc_uuid_t di;
-  oc_rep_t *link = (links) ? links->value.object : NULL;
+  oc_rep_t *link = links != NULL ? links->value.object : NULL;
   while (link != NULL) {
     switch (link->type) {
     case OC_REP_STRING: {

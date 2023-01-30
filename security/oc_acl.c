@@ -181,11 +181,11 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
         }
         break;
       case OC_SUBJECT_ROLE:
-        if ((oc_string_len(subject->role.role) ==
-               oc_string_len(ace->subject.role.role) &&
-             memcmp(oc_string(subject->role.role),
-                    oc_string(ace->subject.role.role),
-                    oc_string_len(subject->role.role)) == 0)) {
+        if (oc_string_len(subject->role.role) ==
+              oc_string_len(ace->subject.role.role) &&
+            memcmp(oc_string(subject->role.role),
+                   oc_string(ace->subject.role.role),
+                   oc_string_len(subject->role.role)) == 0) {
           if (oc_string_len(ace->subject.role.authority) == 0) {
             return ace;
           } else if (oc_string_len(ace->subject.role.authority) ==

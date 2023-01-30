@@ -376,7 +376,7 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
   if (nevents == OC_PROCESS_NUMEVENTS) {
 #ifdef OC_DYNAMIC_ALLOCATION
     OC_PROCESS_NUMEVENTS <<= 1;
-    events = (struct event_data *)realloc(events, (OC_PROCESS_NUMEVENTS) *
+    events = (struct event_data *)realloc(events, OC_PROCESS_NUMEVENTS *
                                                     sizeof(struct event_data));
     if (!events) {
       oc_abort("Insufficient memory");

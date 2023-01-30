@@ -647,7 +647,8 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
   oc_tls_peer_t *p = oc_tls_get_peer(request->origin);
-  if (oc_sec_decode_doxm(request->request_payload, false, (p) ? p->doc : false,
+  if (oc_sec_decode_doxm(request->request_payload, false,
+                         p != NULL ? p->doc : false,
                          request->resource->device)) {
     oc_send_response(request, OC_STATUS_CHANGED);
     oc_sec_dump_doxm(request->resource->device);

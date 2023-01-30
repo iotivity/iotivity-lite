@@ -201,7 +201,7 @@ oc_close_all_tls_sessions_for_device(size_t device)
 void
 oc_close_all_tls_sessions(void)
 {
-  oc_process_poll(&(oc_tls_handler));
+  oc_process_poll(&oc_tls_handler);
   _oc_signal_event_loop();
 }
 #endif /* OC_SECURITY */
