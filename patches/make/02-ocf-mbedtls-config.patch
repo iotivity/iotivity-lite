@@ -1,5 +1,5 @@
 diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
-index 0558ee001..2ef38f751 100644
+index 0558ee001..de8136570 100644
 --- a/include/mbedtls/mbedtls_config.h
 +++ b/include/mbedtls/mbedtls_config.h
 @@ -33,6 +33,17 @@
@@ -297,6 +297,15 @@ index 0558ee001..2ef38f751 100644
  
  /**
   * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+@@ -1027,7 +1048,7 @@
+  *
+  * Uncomment this macro to disable the built-in platform entropy functions.
+  */
+-//#define MBEDTLS_NO_PLATFORM_ENTROPY
++#define MBEDTLS_NO_PLATFORM_ENTROPY
+ 
+ /**
+  * \def MBEDTLS_ENTROPY_FORCE_SHA256
 @@ -1117,7 +1138,7 @@
   *
   * Comment this macro to disable support for external private RSA keys.

@@ -1,5 +1,5 @@
 diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
-index 0558ee001..9619d2467 100644
+index 0558ee001..8b39020d6 100644
 --- a/include/mbedtls/mbedtls_config.h
 +++ b/include/mbedtls/mbedtls_config.h
 @@ -33,6 +33,15 @@
@@ -61,7 +61,7 @@ index 0558ee001..9619d2467 100644
 -//#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
 +#ifdef __OC_PLATFORM
 +#define MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-+#endif
++#endif /* __OC_PLATFORM */
  
  /**
   * \def MBEDTLS_PLATFORM_EXIT_ALT
@@ -302,7 +302,18 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-@@ -1117,7 +1140,7 @@
+@@ -1027,7 +1050,9 @@
+  *
+  * Uncomment this macro to disable the built-in platform entropy functions.
+  */
+-//#define MBEDTLS_NO_PLATFORM_ENTROPY
++#ifdef __OC_PLATFORM
++#define MBEDTLS_NO_PLATFORM_ENTROPY
++#endif /* __OC_PLATFORM */
+ 
+ /**
+  * \def MBEDTLS_ENTROPY_FORCE_SHA256
+@@ -1117,7 +1142,7 @@
   *
   * Comment this macro to disable support for external private RSA keys.
   */
@@ -311,7 +322,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_PKCS1_V15
-@@ -1139,7 +1162,7 @@
+@@ -1139,7 +1164,7 @@
   *
   * This enables support for RSAES-OAEP and RSASSA-PSS operations.
   */
@@ -320,7 +331,7 @@ index 0558ee001..9619d2467 100644
  
  /** \def MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
   *
-@@ -1265,7 +1288,7 @@
+@@ -1265,7 +1290,7 @@
   *
   * Enable the checkup functions (*_self_test).
   */
@@ -329,7 +340,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SHA256_SMALLER
-@@ -1371,7 +1394,7 @@
+@@ -1371,7 +1396,7 @@
   *
   * Comment to disable the context serialization APIs.
   */
@@ -338,7 +349,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_DEBUG_ALL
-@@ -1403,7 +1426,7 @@
+@@ -1403,7 +1428,7 @@
   *
   * Comment this macro to disable support for Encrypt-then-MAC
   */
@@ -347,7 +358,7 @@ index 0558ee001..9619d2467 100644
  
  /** \def MBEDTLS_SSL_EXTENDED_MASTER_SECRET
   *
-@@ -1463,7 +1486,7 @@
+@@ -1463,7 +1488,7 @@
   *          configuration of this extension).
   *
   */
@@ -356,7 +367,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-@@ -1543,7 +1566,7 @@
+@@ -1543,7 +1568,7 @@
   *
   * Comment this macro to disable support for ALPN.
   */
@@ -365,7 +376,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_DTLS_ANTI_REPLAY
-@@ -1623,7 +1646,7 @@
+@@ -1623,7 +1648,7 @@
   *
   * Comment this to disable support for clients reusing the source port.
   */
@@ -374,7 +385,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_SESSION_TICKETS
-@@ -1637,7 +1660,7 @@
+@@ -1637,7 +1662,7 @@
   *
   * Comment this macro to disable support for SSL session tickets
   */
@@ -383,7 +394,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_SERVER_NAME_INDICATION
-@@ -1648,7 +1671,7 @@
+@@ -1648,7 +1673,7 @@
   *
   * Comment this macro to disable support for server name indication in SSL
   */
@@ -392,7 +403,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH
-@@ -1788,7 +1811,7 @@
+@@ -1788,7 +1813,7 @@
   *
   * Comment this to disable run-time checking and save ROM space
   */
@@ -401,7 +412,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
-@@ -1828,7 +1851,7 @@
+@@ -1828,7 +1853,7 @@
   *
   * Comment this macro to disallow using RSASSA-PSS in certificates.
   */
@@ -410,7 +421,7 @@ index 0558ee001..9619d2467 100644
  /* \} name SECTION: mbed TLS feature support */
  
  /**
-@@ -1850,7 +1873,7 @@
+@@ -1850,7 +1875,7 @@
   *
   * This modules adds support for the AES-NI instructions on x86-64
   */
@@ -419,7 +430,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_AES_C
-@@ -1939,7 +1962,9 @@
+@@ -1939,7 +1964,9 @@
   *          library/pkcs5.c
   *          library/pkparse.c
   */
@@ -429,7 +440,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_ASN1_WRITE_C
-@@ -1953,7 +1978,9 @@
+@@ -1953,7 +1980,9 @@
   *          library/x509write_crt.c
   *          library/x509write_csr.c
   */
@@ -439,7 +450,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_BASE64_C
-@@ -1965,7 +1992,9 @@
+@@ -1965,7 +1994,9 @@
   *
   * This module is required for PEM support (required by X.509).
   */
@@ -449,7 +460,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_BIGNUM_C
-@@ -2037,7 +2066,7 @@
+@@ -2037,7 +2068,7 @@
   *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256
   */
@@ -458,7 +469,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_ARIA_C
-@@ -2103,7 +2132,9 @@
+@@ -2103,7 +2134,9 @@
   * This module enables the AES-CCM ciphersuites, if other requisites are
   * enabled as well.
   */
@@ -468,7 +479,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_CHACHA20_C
-@@ -2112,7 +2143,7 @@
+@@ -2112,7 +2145,7 @@
   *
   * Module:  library/chacha20.c
   */
@@ -477,7 +488,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_CHACHAPOLY_C
-@@ -2123,7 +2154,7 @@
+@@ -2123,7 +2156,7 @@
   *
   * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
   */
@@ -486,7 +497,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_CIPHER_C
-@@ -2187,7 +2218,9 @@
+@@ -2187,7 +2220,9 @@
   *
   * This module provides debugging functions.
   */
@@ -496,7 +507,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_DES_C
-@@ -2203,7 +2236,7 @@
+@@ -2203,7 +2238,7 @@
   * \warning   DES is considered a weak cipher and its use constitutes a
   *            security risk. We recommend considering stronger ciphers instead.
   */
@@ -505,7 +516,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_DHM_C
-@@ -2224,7 +2257,7 @@
+@@ -2224,7 +2259,7 @@
   *             See dhm.h for more details.
   *
   */
@@ -514,7 +525,7 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_ECDH_C
-@@ -2257,7 +2290,9 @@
+@@ -2257,7 +2292,9 @@
   *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
   *           short Weierstrass curve.
   */
@@ -524,16 +535,6 @@ index 0558ee001..9619d2467 100644
  
  /**
   * \def MBEDTLS_ECJPAKE_C
-@@ -2304,7 +2339,9 @@
-  *
-  * This module provides a generic entropy pool
-  */
-+#ifdef __OC_PLATFORM
- #define MBEDTLS_ENTROPY_C
-+#endif
- 
- /**
-  * \def MBEDTLS_ERROR_C
 @@ -2316,7 +2353,9 @@
   *
   * This module enables mbedtls_strerror().
@@ -910,16 +911,17 @@ index 0558ee001..9619d2467 100644
  //#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
  
  /** \def MBEDTLS_TLS_EXT_CID
-diff --git a/include/mbedtls/mbedtls_oc_platform.h.in b/include/mbedtls/mbedtls_oc_platform.h.in
+diff --git a/include/mbedtls/mbedtls_oc_platform-standalone.h.in b/include/mbedtls/mbedtls_oc_platform-standalone.h.in
 new file mode 100644
-index 000000000..a918862a3
+index 000000000..53d733bdc
 --- /dev/null
-+++ b/include/mbedtls/mbedtls_oc_platform.h.in
-@@ -0,0 +1,32 @@
++++ b/include/mbedtls/mbedtls_oc_platform-standalone.h.in
+@@ -0,0 +1,33 @@
 +#ifdef __OC_PLATFORM
++
 +#include <oc_config.h>
-+#include "port/oc_connectivity.h"
-+#include "port/oc_assert.h"
++#include <port/oc_assert.h>
++#include <port/oc_connectivity.h>
 +
 +#ifndef OC_DYNAMIC_ALLOCATION
 +#define __OC_SSL_CONTENT_LEN             (OC_PDU_SIZE)
@@ -945,6 +947,23 @@ index 000000000..a918862a3
 +
 +#ifndef OC_DYNAMIC_ALLOCATION
 +#define __OC_SSL_CONTENT_LEN             (16384)
++#endif /* !OC_DYNAMIC_ALLOCATION */
++
++#endif /* __OC_PLATFORM */
+diff --git a/include/mbedtls/mbedtls_oc_platform.h.in b/include/mbedtls/mbedtls_oc_platform.h.in
+new file mode 100644
+index 000000000..33499ffb5
+--- /dev/null
++++ b/include/mbedtls/mbedtls_oc_platform.h.in
+@@ -0,0 +1,11 @@
++#ifdef __OC_PLATFORM
++
++#include <oc_config.h>
++#include <port/oc_assert.h>
++#include <port/oc_connectivity.h>
++
++#ifndef OC_DYNAMIC_ALLOCATION
++#define __OC_SSL_CONTENT_LEN             (OC_PDU_SIZE)
 +#endif /* !OC_DYNAMIC_ALLOCATION */
 +
 +#endif /* __OC_PLATFORM */

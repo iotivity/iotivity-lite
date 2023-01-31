@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -98,7 +99,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;OC_DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -118,7 +119,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;OC_DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;OC_DEBUG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -140,7 +141,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -165,7 +166,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\;..\..\..\include;..\..\..\;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;__OC_RANDOM;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;OC_CLIENT;OC_SERVER;OC_IPV4;OC_TCP;OC_CLOUD;OC_SECURITY;OC_PKI;OC_DYNAMIC_ALLOCATION;OC_IDD_API;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>

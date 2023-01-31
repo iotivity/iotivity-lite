@@ -2,7 +2,7 @@ ccflags-y += -I${ZEPHYR_BASE}/net/ip
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os/lib
 ccflags-y +=-I${ZEPHYR_BASE}/net/ip/contiki/os
-ccflags-y +=-I. -I../../include -I../../ -D__OC_RANDOM -I../../deps/mbedtls/include
+ccflags-y +=-I. -I../../include -I../../ -I../../deps/mbedtls/include
 
 ifeq ($(SECURE),1)
 ccflags-y += -DOC_SECURITY
@@ -131,6 +131,7 @@ obj-y += ../../../deps/mbedtls/library/aes.o \
          ../../../security/oc_cred.o \
          ../../../security/oc_doxm.o \
          ../../../security/oc_dtls.o \
+         ../../../security/oc_entropy.o \
          ../../../security/oc_pstat.o \
          ../../../security/oc_store.o \
          ../../../security/oc_svr.o \

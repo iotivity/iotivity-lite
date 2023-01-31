@@ -51,8 +51,7 @@ set(mbedtls_targets ${mbedtls_library})
 
 if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     # * abort.c -  MBEDTLS_PLATFORM_STD_EXIT is defined as oc_exit and mbedtls utilities need to include implementation of oc_exit
-    # * random.c - needed by mbedtls_platform_entropy_poll in mbedtls testing programs
-    set(MBEDTLS_SUPPORT_SRC ${PORT_INCLUDE_DIR}/abort.c ${PORT_INCLUDE_DIR}/random.c)
+    set(MBEDTLS_SUPPORT_SRC ${PORT_INCLUDE_DIR}/abort.c)
 
     add_library(mbedtls-support
         OBJECT ${MBEDTLS_SUPPORT_SRC}

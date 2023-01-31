@@ -22,15 +22,17 @@
 #endif /* !OC_DYNAMIC_ALLOCATION */
 #ifdef OC_PKI
 #include "api/c-timestamp/timestamp.h"
+#include "oc_obt.h"
+#include "oc_store.h"
+#include "security/oc_certs.h"
+#include "security/oc_entropy_internal.h"
+#include "security/oc_keypair.h"
+#include "security/oc_obt_internal.h"
+
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
-#include "oc_obt.h"
-#include "oc_store.h"
-#include "security/oc_certs.h"
-#include "security/oc_keypair.h"
-#include "security/oc_obt_internal.h"
 
 int
 oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
@@ -59,6 +61,7 @@ oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
 
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -307,6 +310,7 @@ oc_obt_generate_identity_cert(const char *subject_name,
 
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -501,6 +505,7 @@ oc_obt_generate_self_signed_root_cert(const char *subject_name,
 
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
