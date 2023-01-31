@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef COAP_SIGANAL_H
-#define COAP_SIGANAL_H
+#ifndef COAP_SIGNAL_H
+#define COAP_SIGNAL_H
 
 #include "oc_endpoint.h"
 
@@ -79,4 +79,4 @@ int coap_signal_set_bad_csm(void *packet, uint16_t opt);
 }
 #endif
 
-#endif /* COAP_SIGANAL_H */
+#endif /* COAP_SIGNAL_H */

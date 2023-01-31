@@ -8,6 +8,9 @@ on:
   pull_request:
     branches: [master]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   build:
     name: ${{ matrix.config.name }}
@@ -185,23 +188,19 @@ jobs:
         run: |
           set(ENV{NINJA_STATUS} "[%f/%t %o/sec] ")
 
-           if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
-             file(STRINGS environment_script_output.txt output_lines)
-             foreach(line IN LISTS output_lines)
-               if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
-                 set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
-               endif()
-             endforeach()
-           endif()
+          if ("${{ runner.os }}" STREQUAL "Windows" AND NOT "x${{ matrix.config.environment_script }}" STREQUAL "x")
+            file(STRINGS environment_script_output.txt output_lines)
+            foreach(line IN LISTS output_lines)
+              if (line MATCHES "^([a-zA-Z0-9_-]+)=(.*)$")
+                set(ENV{${CMAKE_MATCH_1}} "${CMAKE_MATCH_2}")
+              endif()
+            endforeach()
+          endif()
 
-           if (NOT result EQUAL 0)
-             message(STATUS "${output}")
-           endif()
-
-           execute_process(
-             COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/ctest --verbose --label-regex "oc-unittest"
-             RESULT_VARIABLE result
-           )
-           if (NOT result EQUAL 0)
-             message(FATAL_ERROR "Bad exit status")
-           endif()
+          execute_process(
+            COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/ctest --verbose --label-regex "oc-unittest"
+            RESULT_VARIABLE result
+          )
+          if (NOT result EQUAL 0)
+            message(FATAL_ERROR "Bad exit status")
+          endif()
