@@ -41,7 +41,7 @@ public:
 
   static oc_event_callback_retval_t quitEvent(void *data)
   {
-    bool *quit = (bool *)data;
+    auto *quit = static_cast<bool *>(data);
     *quit = true;
     return OC_EVENT_DONE;
   }
@@ -63,7 +63,8 @@ public:
       } else {
         struct timespec ts;
         ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-        ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+        ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
+                                       OC_CLOCK_SECOND);
         pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
       }
       pthread_mutex_unlock(&s_mutex);
@@ -77,12 +78,6 @@ protected:
     s_handler.signal_event_loop = &signalEventLoop;
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
-  }
-
-  static void update_status(oc_cloud_status_t status, void *data)
-  {
-    oc_cloud_status_t *u_status = (oc_cloud_status_t *)data;
-    *u_status = status;
   }
 
   static void TearDownTestCase() { oc_main_shutdown(); }

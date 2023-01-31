@@ -16,13 +16,16 @@
  *
  ******************************************************************/
 
-#include "gtest/gtest.h"
-#include <cstdlib>
-
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 
-#define UUID "12345678123412341234123456789012"
+#include <array>
+#include <cstdlib>
+#include "gtest/gtest.h"
+
+constexpr const char UUID[] = "12345678123412341234123456789012";
+
+using uuid_buffer_t = std::array<char, OC_UUID_LEN>;
 
 TEST(UUIDGeneration, StrToUUIDTest_P)
 {
@@ -46,18 +49,18 @@ TEST(UUIDGeneration, WildcardStrToUUID)
 TEST(UUIDGeneration, WildcardUUIDToStr)
 {
   const char *u = "*";
-  char wc[OC_UUID_LEN];
+  uuid_buffer_t wc;
   oc_uuid_t uuid = { { 0 } };
   uuid.id[0] = '*';
-  oc_uuid_to_str(&uuid, wc, OC_UUID_LEN);
-  EXPECT_EQ(strlen(u), strlen(wc));
-  EXPECT_EQ(memcmp(u, wc, strlen(u)), 0);
+  oc_uuid_to_str(&uuid, wc.data(), wc.size());
+  EXPECT_EQ(strlen(u), strlen(wc.data()));
+  EXPECT_STREQ(u, wc.data());
 }
 
 TEST(UUIDGeneration, NonWildcardUUID)
 {
   const char *u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
-  char nonwc[OC_UUID_LEN];
+  uuid_buffer_t nonwc;
   oc_uuid_t uuid;
   oc_str_to_uuid(u, &uuid);
 
@@ -78,10 +81,9 @@ TEST(UUIDGeneration, NonWildcardUUID)
   EXPECT_EQ(0x41, uuid.id[14]);
   EXPECT_EQ(0xd7, uuid.id[15]);
 
-  oc_uuid_to_str(&uuid, nonwc, sizeof(nonwc));
-  EXPECT_EQ(strlen(u), strlen(nonwc));
-  EXPECT_EQ(memcmp(u, nonwc, strlen(u)), 0);
-  EXPECT_STREQ(u, nonwc);
+  oc_uuid_to_str(&uuid, nonwc.data(), nonwc.size());
+  EXPECT_EQ(strlen(u), strlen(nonwc.data()));
+  EXPECT_STREQ(u, nonwc.data());
 }
 
 /*
@@ -117,8 +119,8 @@ TEST(UUIDGeneration, GenerateType4UUID)
   // be set to 0 1 0 0 (0x40) per spec
   EXPECT_EQ(0x40, (uuid.id[6] & 0x40));
 
-  char uuid_str[OC_UUID_LEN];
-  oc_uuid_to_str(&uuid, uuid_str, OC_UUID_LEN);
+  uuid_buffer_t uuid_str;
+  oc_uuid_to_str(&uuid, uuid_str.data(), uuid_str.size());
   EXPECT_EQ('-', uuid_str[8]);
   EXPECT_EQ('-', uuid_str[13]);
   EXPECT_EQ('4', uuid_str[14]); // For Version 4 UUIDs this will always be a 4
@@ -158,17 +160,18 @@ TEST(UUIDComparison, CopyUUID)
 
 TEST(UUIDComparison, NonEmptyUUID)
 {
-  const char uuid_str[OC_UUID_LEN] = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
+  std::string uuid_str = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
   oc_uuid_t uuid;
-  oc_str_to_uuid(uuid_str, &uuid);
+  oc_str_to_uuid(uuid_str.c_str(), &uuid);
 
   oc_random_init();
   oc_uuid_t gen_uuid;
-  char gen_uuid_str[OC_UUID_LEN];
+  uuid_buffer_t gen_uuid_str;
   do {
     oc_gen_uuid(&gen_uuid);
-    oc_uuid_to_str(&gen_uuid, gen_uuid_str, sizeof(gen_uuid_str));
-  } while (memcmp(gen_uuid_str, uuid_str, sizeof(gen_uuid_str)) == 0);
+    oc_uuid_to_str(&gen_uuid, gen_uuid_str.data(), gen_uuid_str.size());
+  } while (memcmp(gen_uuid_str.data(), uuid_str.c_str(), gen_uuid_str.size()) ==
+           0);
 
   EXPECT_FALSE(oc_uuid_is_equal(uuid, gen_uuid));
   EXPECT_FALSE(oc_uuid_is_equal(gen_uuid, uuid));

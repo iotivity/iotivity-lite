@@ -85,16 +85,16 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
   char testvec[512];
   size_t testvec_len = 512;
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "Key", secret,
-                                           secret_len, salt, salt_len, key,
-                                           OSCORE_KEY_LEN),
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "Key",
+                                           secret, secret_len, salt, salt_len,
+                                           key, OSCORE_KEY_LEN),
             0);
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(key, OSCORE_KEY_LEN, testvec,
                                              &testvec_len),
             0);
   EXPECT_STREQ(testvec, "f0910ed7295e6ad4b54fc793154302ff");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, NULL, 0, "Key", secret,
+  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, nullptr, 0, "Key", secret,
                                            secret_len, salt, salt_len, key,
                                            OSCORE_KEY_LEN),
             0);
@@ -104,7 +104,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "ffb14e093c94c9cac9471648b4f98710");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "IV", secret,
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV", secret,
                                            secret_len, salt, salt_len, iv,
                                            OSCORE_COMMON_IV_LEN),
             0);
@@ -117,7 +117,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
   uint8_t piv[1] = { 0 };
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
-  oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
                                              testvec, &testvec_len),
@@ -170,7 +170,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
   char testvec[512];
   size_t testvec_len = 512;
 
-  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, NULL, 0, "Key", secret,
+  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, nullptr, 0, "Key", secret,
                                            secret_len, salt, salt_len, key,
                                            OSCORE_KEY_LEN),
             0);
@@ -179,9 +179,9 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "ffb14e093c94c9cac9471648b4f98710");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "Key", secret,
-                                           secret_len, salt, salt_len, key,
-                                           OSCORE_KEY_LEN),
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "Key",
+                                           secret, secret_len, salt, salt_len,
+                                           key, OSCORE_KEY_LEN),
             0);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(key, OSCORE_KEY_LEN, testvec,
@@ -189,7 +189,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "f0910ed7295e6ad4b54fc793154302ff");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "IV", secret,
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV", secret,
                                            secret_len, salt, salt_len, iv,
                                            OSCORE_COMMON_IV_LEN),
             0);
@@ -209,7 +209,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec, "4722d4dd6d944169eefb54987c");
 
-  oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
                                              testvec, &testvec_len),
@@ -250,8 +250,8 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
   char testvec[512];
   size_t testvec_len = 512;
 
-  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, NULL, 0, "Key", secret,
-                                           secret_len, NULL, 0, key,
+  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, nullptr, 0, "Key", secret,
+                                           secret_len, nullptr, 0, key,
                                            OSCORE_KEY_LEN),
             0);
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(key, OSCORE_KEY_LEN, testvec,
@@ -259,8 +259,8 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "321b26943253c7ffb6003b0b64d74041");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, NULL, 0, "Key", secret,
-                                           secret_len, NULL, 0, key,
+  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, nullptr, 0, "Key", secret,
+                                           secret_len, nullptr, 0, key,
                                            OSCORE_KEY_LEN),
             0);
   testvec_len = 512;
@@ -269,8 +269,8 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "e57b5635815177cd679ab4bcec9d7dda");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "IV", secret,
-                                           secret_len, NULL, 0, iv,
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV", secret,
+                                           secret_len, nullptr, 0, iv,
                                            OSCORE_COMMON_IV_LEN),
             0);
   testvec_len = 512;
@@ -329,8 +329,8 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
   char testvec[512];
   size_t testvec_len = 512;
 
-  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, NULL, 0, "Key", secret,
-                                           secret_len, NULL, 0, key,
+  EXPECT_EQ(oc_oscore_context_derive_param(sid, 1, nullptr, 0, "Key", secret,
+                                           secret_len, nullptr, 0, key,
                                            OSCORE_KEY_LEN),
             0);
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(key, OSCORE_KEY_LEN, testvec,
@@ -338,8 +338,8 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "e57b5635815177cd679ab4bcec9d7dda");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, NULL, 0, "Key", secret,
-                                           secret_len, NULL, 0, key,
+  EXPECT_EQ(oc_oscore_context_derive_param(rid, 1, nullptr, 0, "Key", secret,
+                                           secret_len, nullptr, 0, key,
                                            OSCORE_KEY_LEN),
             0);
   testvec_len = 512;
@@ -348,8 +348,8 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec, "321b26943253c7ffb6003b0b64d74041");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, NULL, 0, "IV", secret,
-                                           secret_len, NULL, 0, iv,
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV", secret,
+                                           secret_len, nullptr, 0, iv,
                                            OSCORE_COMMON_IV_LEN),
             0);
   testvec_len = 512;
@@ -423,7 +423,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
   char testvec[512];
   size_t testvec_len = 512;
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, idctx, idctx_len, "Key",
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, idctx, idctx_len, "Key",
                                            secret, secret_len, salt, salt_len,
                                            key, OSCORE_KEY_LEN),
             0);
@@ -442,7 +442,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "e39a0c7c77b43f03b4b39ab9a268699f");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, idctx, idctx_len, "IV",
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, idctx, idctx_len, "IV",
                                            secret, secret_len, salt, salt_len,
                                            iv, OSCORE_COMMON_IV_LEN),
             0);
@@ -455,7 +455,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
   uint8_t piv[1] = { 0 };
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
 
-  oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
                                              testvec, &testvec_len),
@@ -525,7 +525,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "e39a0c7c77b43f03b4b39ab9a268699f");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, idctx, idctx_len, "Key",
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, idctx, idctx_len, "Key",
                                            secret, secret_len, salt, salt_len,
                                            key, OSCORE_KEY_LEN),
             0);
@@ -535,7 +535,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "af2a1300a5e95788b356336eeecd2b92");
 
-  EXPECT_EQ(oc_oscore_context_derive_param(NULL, 0, idctx, idctx_len, "IV",
+  EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, idctx, idctx_len, "IV",
                                            secret, secret_len, salt, salt_len,
                                            iv, OSCORE_COMMON_IV_LEN),
             0);
@@ -555,7 +555,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec, "2da58fb85ff1b81d0b7181b85e");
 
-  oc_oscore_AEAD_nonce(NULL, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, 1, iv, nonce, OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
                                              testvec, &testvec_len),
@@ -613,7 +613,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
 
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
 
-  EXPECT_EQ(oc_oscore_compose_AAD(NULL, 0, piv, piv_len, AAD, &AAD_len), 0);
+  EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, piv, piv_len, AAD, &AAD_len), 0);
 
   char testvec[512];
   size_t testvec_len = 512;
@@ -633,7 +633,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
 
   /* Verify nonce: 0x4622d4dd6d944168eefb549868 (13 bytes) */
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
-  oc_oscore_AEAD_nonce(NULL, 0, piv, piv_len, civ, nonce,
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, piv_len, civ, nonce,
                        OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
@@ -660,7 +660,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
   /* Set the OSCORE option */
-  coap_set_header_oscore(coap_pkt, piv, piv_len, NULL, 0, NULL, 0);
+  coap_set_header_oscore(coap_pkt, piv, piv_len, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
   buffer_len = oscore_serialize_message(coap_pkt, buffer);
@@ -774,7 +774,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
   /* Set the OSCORE option */
-  coap_set_header_oscore(coap_pkt, piv, piv_len, sid, 1, NULL, 0);
+  coap_set_header_oscore(coap_pkt, piv, piv_len, sid, 1, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
   buffer_len = oscore_serialize_message(coap_pkt, buffer);
@@ -848,7 +848,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
 
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
 
-  EXPECT_EQ(oc_oscore_compose_AAD(NULL, 0, piv, piv_len, AAD, &AAD_len), 0);
+  EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, piv, piv_len, AAD, &AAD_len), 0);
 
   char testvec[512];
   size_t testvec_len = 512;
@@ -868,7 +868,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
 
   /* Verify nonce: 0x2ca58fb85ff1b81c0b7181b84a (13 bytes) */
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
-  oc_oscore_AEAD_nonce(NULL, 0, piv, piv_len, civ, nonce,
+  oc_oscore_AEAD_nonce(nullptr, 0, piv, piv_len, civ, nonce,
                        OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
@@ -895,7 +895,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
   /* Set the OSCORE option */
-  coap_set_header_oscore(coap_pkt, piv, piv_len, NULL, 0, idctx, idctx_len);
+  coap_set_header_oscore(coap_pkt, piv, piv_len, nullptr, 0, idctx, idctx_len);
 
   /* Serialize OSCORE message to oc_message_t */
   buffer_len = oscore_serialize_message(coap_pkt, buffer);
@@ -960,7 +960,8 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
 
-  EXPECT_EQ(oc_oscore_compose_AAD(NULL, 0, request_piv, 1, AAD, &AAD_len), 0);
+  EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, request_piv, 1, AAD, &AAD_len),
+            0);
 
   char testvec[512];
   size_t testvec_len = 512;
@@ -981,7 +982,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   /* Verify nonce: 0x4622d4dd6d944168eefb549868 (13 bytes) */
   /* Using nonce from request in test vector C.4 */
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
-  oc_oscore_AEAD_nonce(NULL, 0, request_piv, 1, civ, nonce,
+  oc_oscore_AEAD_nonce(nullptr, 0, request_piv, 1, civ, nonce,
                        OSCORE_AEAD_NONCE_LEN);
   testvec_len = 512;
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(nonce, OSCORE_AEAD_NONCE_LEN,
@@ -1009,7 +1010,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
   /* Set the OSCORE option */
-  coap_set_header_oscore(coap_pkt, NULL, 0, NULL, 0, NULL, 0);
+  coap_set_header_oscore(coap_pkt, nullptr, 0, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
   buffer_len = oscore_serialize_message(coap_pkt, buffer);
@@ -1072,7 +1073,8 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   uint8_t request_piv[1] = { 0x14 };
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
   uint8_t AAD[OSCORE_AAD_MAX_LEN], AAD_len = OSCORE_AAD_MAX_LEN;
-  EXPECT_EQ(oc_oscore_compose_AAD(NULL, 0, request_piv, 1, AAD, &AAD_len), 0);
+  EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, request_piv, 1, AAD, &AAD_len),
+            0);
 
   char testvec[512];
   size_t testvec_len = 512;
@@ -1125,7 +1127,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   coap_pkt->code = oscore_get_outer_code(coap_pkt);
 
   /* Set the OSCORE option */
-  coap_set_header_oscore(coap_pkt, piv, 1, NULL, 0, NULL, 0);
+  coap_set_header_oscore(coap_pkt, piv, 1, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
   buffer_len = oscore_serialize_message(coap_pkt, buffer);
