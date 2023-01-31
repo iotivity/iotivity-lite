@@ -20,11 +20,13 @@
 #ifdef OC_PKI
 
 #include "oc_keypair.h"
+#include "oc_api.h"
+#include "oc_store.h"
+#include "security/oc_entropy_internal.h"
+
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/pk.h"
-#include "oc_api.h"
-#include "oc_store.h"
 
 OC_MEMB(oc_keypairs_s, oc_ecdsa_keypair_t, OC_MAX_NUM_DEVICES);
 OC_LIST(oc_keypairs);
@@ -130,6 +132,7 @@ oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
   mbedtls_pk_init(&pk);
   mbedtls_ctr_drbg_init(&ctr_drbg);
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
 #define PERSONALIZATION_DATA "IoTivity-Lite-Key-Pair"
 

@@ -108,6 +108,7 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_cred.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_csr.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_doxm.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_entropy.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_keypair.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_obt.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_obt_certs.c

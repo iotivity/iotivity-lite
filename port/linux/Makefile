@@ -89,7 +89,7 @@ DTLS= 	aes.c		aesni.c   	asn1parse.c	asn1write.c	base64.c	\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c	x509write_csr.c\
 	x509write_crt.c	x509_create.c	x509_csr.c ssl_msg.c constant_time.c \
 	nist_kw.c aria.c rsa_alt_helpers.c
-DTLSFLAGS=-I../../deps/mbedtls/include -D__OC_RANDOM
+DTLSFLAGS=-I../../deps/mbedtls/include
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborencoder_float.c ../../deps/tinycbor/src/cborparser.c ../../deps/tinycbor/src/cborparser_float.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 
@@ -211,7 +211,9 @@ endif
 
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c oc_ael.c oc_audit.c oc_sdi.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c)
+	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
+			oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
+			oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)

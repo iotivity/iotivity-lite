@@ -20,16 +20,18 @@
 #ifdef OC_PKI
 
 #include "oc_certs.h"
+#include "oc_core_res.h"
+#include "oc_helpers.h"
+#include "security/oc_entropy_internal.h"
+#include "security/oc_keypair.h"
+#include "security/oc_tls.h"
+
 #include "mbedtls/bignum.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/x509_csr.h"
-#include "oc_core_res.h"
-#include "oc_helpers.h"
-#include "oc_keypair.h"
-#include "security/oc_tls.h"
 
 #define UUID_PREFIX "uuid:"
 #define UUID_PREFIX_LEN (5)
@@ -43,6 +45,7 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt)
 
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
 #define PERSONALIZATION_DATA "IoTivity-Lite-Certificate_Serial_Number"
 
@@ -811,6 +814,7 @@ oc_certs_generate_csr(size_t device, unsigned char *csr, size_t csr_len)
 
   mbedtls_entropy_context entropy;
   mbedtls_entropy_init(&entropy);
+  oc_entropy_add_source(&entropy);
 
   mbedtls_pk_context pk;
   mbedtls_pk_init(&pk);

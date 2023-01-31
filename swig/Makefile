@@ -60,7 +60,7 @@ HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I
 
 JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -Wno-unused-function
 EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DLONG_BIT=64
-DTLSFLAGS=-I../deps/mbedtls/include -D__OC_RANDOM
+DTLSFLAGS=-I../deps/mbedtls/include
 LDFLAG += -lm
 
 INSTALL_ANDROID_LIBS =

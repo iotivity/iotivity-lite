@@ -14,7 +14,7 @@ DTLS += aes.c  aesni.c 	asn1parse.c	asn1write.c	base64.c  bignum.c \
 	x509write_crt.c	x509_create.c	platform_util.c ssl_msg.c constant_time.c \
 	nist_kw.c aria.c rsa_alt_helpers.c
 
-DTLSFLAGS=$(addprefix -I$(ROOT_DIR)/, security deps/mbedtls/include) -D__OC_RANDOM
+DTLSFLAGS=$(addprefix -I$(ROOT_DIR)/, security deps/mbedtls/include)
 
 CBOR+=$(addprefix $(ROOT_DIR)/deps/tinycbor/src/, cborencoder.c cborencoder_close_container_checked.c cborparser.c)
 
@@ -24,7 +24,7 @@ SRC=$(wildcard $(ROOT_DIR)/messaging/coap/*.c $(ROOT_DIR)/api/*.c *.c )
 # Arduino ethernet and iotivity constrained includes
 
 LIB_HEADERS   =-I$(ARDUINO_DIR)/libraries/Ethernet2/src/utility -I$(ARDUINO_DIR)/libraries/SdFat/src/FatLib
-DEPS_HEADERS  =$(addprefix -I../deps/, pRNG  wiz5500 sdFat serial)
+DEPS_HEADERS  =$(addprefix -I../deps/, pRNG wiz5500 sdFat serial)
 CORE_HEADERS  =$(addprefix -I$(ROOT_DIR)/, messaging/coap util util/pt include  api port .)
 CFLAGS += -I. $(CORE_HEADERS) $(LIB_HEADERS) $(DEPS_HEADERS)
 
@@ -39,8 +39,8 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SEC_SRC += $(addprefix $(ROOT_DIR)/security/, oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c \
-	              oc_tls.c oc_svr.c oc_store.c oc_pki.c oc_certs.c oc_sp.c oc_keypair.c oc_csr.c oc_roles.c)
+	SEC_SRC += $(addprefix $(ROOT_DIR)/security/, oc_acl.c oc_cred.c oc_certs.c oc_csr.c oc_doxm.c oc_entropy.c \
+	              oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC += $(SEC_SRC)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt

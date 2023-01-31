@@ -17,9 +17,35 @@
  ****************************************************************************/
 
 #ifdef OC_SECURITY
-#include <stdarg.h>
-#include <stdint.h>
-#include <string.h>
+
+#include "oc_tls.h"
+#include "api/oc_events.h"
+#include "api/oc_main.h"
+#include "api/oc_network_events_internal.h"
+#include "api/oc_session_events_internal.h"
+#include "messaging/coap/engine.h"
+#include "messaging/coap/observe.h"
+#include "oc_api.h"
+#include "oc_buffer.h"
+#include "oc_client_state.h"
+#include "oc_config.h"
+#include "oc_core_res.h"
+#include "oc_endpoint.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "util/oc_features.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_audit.h"
+#include "security/oc_cred_internal.h"
+#include "security/oc_doxm.h"
+#include "security/oc_entropy_internal.h"
+#include "security/oc_pstat.h"
+#include "security/oc_roles.h"
+#include "security/oc_svr.h"
+
+#ifdef OC_OSCORE
+#include "security/oc_oscore.h"
+#endif /* OC_OSCORE */
 
 #include "mbedtls/mbedtls_config.h"
 #include "mbedtls/ctr_drbg.h"
@@ -36,32 +62,9 @@
 #include "mbedtls/platform.h"
 #endif /* OC_DEBUG */
 
-#include "api/oc_events.h"
-#include "api/oc_main.h"
-#include "api/oc_network_events_internal.h"
-#include "api/oc_session_events_internal.h"
-#include "messaging/coap/engine.h"
-#include "messaging/coap/observe.h"
-#include "port/oc_connectivity.h"
-#include "port/oc_connectivity_internal.h"
-#include "util/oc_features.h"
-#include "oc_acl_internal.h"
-#include "oc_api.h"
-#include "oc_audit.h"
-#include "oc_buffer.h"
-#include "oc_client_state.h"
-#include "oc_config.h"
-#include "oc_core_res.h"
-#include "oc_cred_internal.h"
-#include "oc_doxm.h"
-#include "oc_endpoint.h"
-#ifdef OC_OSCORE
-#include "oc_oscore.h"
-#endif /* OC_OSCORE */
-#include "oc_pstat.h"
-#include "oc_roles.h"
-#include "oc_svr.h"
-#include "oc_tls.h"
+#include <stdarg.h>
+#include <stdint.h>
+#include <string.h>
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(g_tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -1894,6 +1897,7 @@ oc_tls_init_context(void)
 #endif /* OC_DEBUG */
 
   mbedtls_entropy_init(&g_entropy_ctx);
+  oc_entropy_add_source(&g_entropy_ctx);
   mbedtls_ssl_cookie_init(&g_cookie_ctx);
   mbedtls_ctr_drbg_init(&g_oc_ctr_drbg_ctx);
   if (mbedtls_ctr_drbg_seed(&g_oc_ctr_drbg_ctx, mbedtls_entropy_func,

@@ -38,22 +38,28 @@ foreach(PATCH IN LISTS PATCHES_COMMON PATCHES_CMAKE)
 	)
 endforeach()
 
-# configure variables for mbedtls_oc_platform.in
-if(OC_DEBUG_ENABLED)
-	set(OC_DEBUG_MACRO "#define OC_DEBUG")
-endif()
-
-if(OC_DYNAMIC_ALLOCATION_ENABLED)
-	set(OC_DYNAMIC_ALLOCATION_MACRO "#define OC_DYNAMIC_ALLOCATION")
-endif()
-
-if(OC_PKI_ENABLED)
-	set(OC_PKI_MACRO "#define OC_PKI")
-endif()
-
-if(OC_OSCORE_ENABLED)
-	set(OC_OSCORE_MACRO "#define OC_OSCORE")
-endif()
-
 set(MBEDTLS_INCLUDE_DIR "${IOTIVITY_SRC_DIR}/deps/mbedtls/include/mbedtls")
-configure_file(${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform.h.in ${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform.h @ONLY)
+
+if(ENABLE_TESTING OR ENABLE_PROGRAMS)
+	# configure variables for mbedtls_oc_platform-standalone.in
+	if(OC_DEBUG_ENABLED)
+		set(OC_DEBUG_MACRO "#define OC_DEBUG")
+	endif()
+
+	if(OC_DYNAMIC_ALLOCATION_ENABLED)
+		set(OC_DYNAMIC_ALLOCATION_MACRO "#define OC_DYNAMIC_ALLOCATION")
+	endif()
+
+	if(OC_PKI_ENABLED)
+		set(OC_PKI_MACRO "#define OC_PKI")
+	endif()
+
+	if(OC_OSCORE_ENABLED)
+		set(OC_OSCORE_MACRO "#define OC_OSCORE")
+	endif()
+
+	# support for compilation of standalone binaries
+	configure_file(${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform-standalone.h.in ${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform.h @ONLY)
+else()
+	configure_file(${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform.h.in ${MBEDTLS_INCLUDE_DIR}/mbedtls_oc_platform.h @ONLY)
+endif()
