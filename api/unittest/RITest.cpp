@@ -63,7 +63,7 @@ TEST_F(TestOcRi, GetAppResourceByUri_P)
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_TRUE(add_check);
 
@@ -87,7 +87,7 @@ TEST_F(TestOcRi, RiGetAppResource_P)
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_TRUE(add_check);
   res = oc_ri_get_app_resources();
@@ -125,7 +125,7 @@ TEST_F(TestOcRi, RiAddResource_P)
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_EQ(true, add_check);
   bool del_check = oc_ri_delete_resource(res);
@@ -209,25 +209,26 @@ TEST_F(TestOcRi, RIQueryExists_P)
 #ifdef OC_COLLECTIONS
 
 bool
-find_resource_in_collections(oc_resource_t *resource)
+find_resource_in_collections(const oc_resource_t *resource)
 {
   oc_collection_t *collection = oc_collection_get_all();
   while (collection) {
-    oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
+    const auto *link =
+      static_cast<oc_link_t *>(oc_list_head(collection->links));
     while (link) {
       if (link->resource == resource) {
         return true;
       }
       link = link->next;
     }
-    collection = (oc_collection_t *)collection->res.next;
+    collection = reinterpret_cast<oc_collection_t *>(collection->res.next);
   }
   return false;
 }
 
 TEST_F(TestOcRi, RiCleanupCollection_P)
 {
-  oc_resource_t *col = oc_new_collection(NULL, "/switches", 1, 0);
+  oc_resource_t *col = oc_new_collection(nullptr, "/switches", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
@@ -239,7 +240,7 @@ TEST_F(TestOcRi, RiCleanupCollection_P)
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
 
   oc_link_t *l = oc_new_link(res);
   oc_collection_add_link(col, l);

@@ -20,14 +20,19 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 
+#include <array>
 #include <cstdlib>
+#include <string>
 #include <vector>
 
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */
 
-TEST(OCEndpoints, StringToEndpoint)
+using addr4_t = std::array<uint8_t, 4>;
+using addr6_t = std::array<uint8_t, 16>;
+
+TEST(OCEndpoints, StringToEndpointInvalid)
 {
 #ifdef _WIN32
   WSADATA wsaData;
@@ -59,29 +64,87 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&s);
     oc_free_string(&uri);
   }
+#ifdef _WIN32
+  WSACleanup();
+#endif /* _WIN32 */
+}
 
 #ifdef OC_IPV4
-  std::vector<const char *> spu0 = { "coaps://10.211.55.3:56789/a/light" };
-  for (size_t i = 0; i < spu0.size(); i++) {
+TEST(OCEndpoints, StringToEndpointIPv4)
+{
+#ifdef _WIN32
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif /* _WIN32 */
+  std::string spu0 = { "coaps://10.211.55.3:56789/a/light" };
+  oc_string_t s;
+  oc_new_string(&s, spu0.c_str(), spu0.length());
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
+  oc_string_t uri;
+  memset(&uri, 0, sizeof(oc_string_t));
+
+  int ret = oc_string_to_endpoint(&s, &ep, &uri);
+  EXPECT_EQ(ret, 0) << "spu0 " << spu0;
+
+  EXPECT_TRUE(ep.flags & IPV4);
+  EXPECT_TRUE(ep.flags & SECURED);
+  EXPECT_FALSE(ep.flags & TCP);
+  EXPECT_EQ(ep.addr.ipv4.port, 56789);
+  EXPECT_STREQ(oc_string(uri), "/a/light");
+  addr4_t addr = { 10, 211, 55, 3 };
+  EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr.data(), addr.size()));
+
+  oc_free_string(&s);
+  oc_free_string(&uri);
+#ifdef _WIN32
+  WSACleanup();
+#endif /* _WIN32 */
+}
+#endif /* OC_IPV4 */
+
+#ifdef OC_TCP
+TEST(OCEndpoints, StringToEndpointTCP)
+{
+#ifdef _WIN32
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif /* _WIN32 */
+
+#ifdef OC_IPV4
+  std::vector<std::string> spu2 = {
+    "coaps+tcp://10.211.55.3/a/light",
+    "coap+tcp://1.2.3.4:2568",
+  };
+  for (size_t i = 0; i < spu2.size(); i++) {
     oc_string_t s;
-    oc_new_string(&s, spu0[i], strlen(spu0[i]));
+    oc_new_string(&s, spu2[i].c_str(), spu2[i].length());
     oc_endpoint_t ep;
     memset(&ep, 0, sizeof(oc_endpoint_t));
     oc_string_t uri;
     memset(&uri, 0, sizeof(oc_string_t));
 
     int ret = oc_string_to_endpoint(&s, &ep, &uri);
-    EXPECT_EQ(ret, 0) << "spu0[" << i << "] " << spu0[i];
+    EXPECT_EQ(ret, 0) << "spu2[" << i << "] " << spu2[i];
 
     switch (i) {
     case 0: {
       EXPECT_TRUE(ep.flags & IPV4);
       EXPECT_TRUE(ep.flags & SECURED);
-      EXPECT_FALSE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv4.port, 56789);
+      EXPECT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv4.port, 5684);
       EXPECT_STREQ(oc_string(uri), "/a/light");
-      uint8_t addr[4] = { 10, 211, 55, 3 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
+      addr4_t addr = { 10, 211, 55, 3 };
+      EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr.data(), addr.size()));
+    } break;
+    case 1: {
+      EXPECT_TRUE(ep.flags & IPV4);
+      EXPECT_FALSE(ep.flags & SECURED);
+      EXPECT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv4.port, 2568);
+      EXPECT_EQ(oc_string_len(uri), 0);
+      addr4_t addr = { 1, 2, 3, 4 };
+      EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr.data(), addr.size()));
     } break;
     default:
       break;
@@ -90,15 +153,122 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&uri);
   }
 #endif /* OC_IPV4 */
+  std::vector<std::string> spu3 = {
+    "coaps+tcp://openconnectivity.org:3456",
+    "coap+tcp://[ff02::158]",
+    "coaps+tcp://[ff02::158]/a/light",
+    "coaps+tcp://[fe80::12]:2439/a/light",
+  };
+  for (size_t i = 0; i < spu3.size(); i++) {
+    oc_string_t s;
+    oc_new_string(&s, spu3[i].c_str(), spu3[i].length());
+    oc_endpoint_t ep;
+    memset(&ep, 0, sizeof(oc_endpoint_t));
+    oc_string_t uri;
+    memset(&uri, 0, sizeof(oc_string_t));
 
-  std::vector<const char *> spu1 = {
+    int ret = oc_string_to_endpoint(&s, &ep, &uri);
+    switch (i) {
+    case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+#else
+      EXPECT_EQ(ret, -1) << "spu3[" << i << "] " << spu3[i];
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
+      break;
+    default:
+      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
+      break;
+    }
+
+    switch (i) {
+    case 0:
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
+      ASSERT_TRUE((ep.flags & IPV4) || (ep.flags & IPV6));
+      ASSERT_TRUE(ep.flags & SECURED);
+      ASSERT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv4.port, 3456);
+      EXPECT_EQ(oc_string_len(uri), 0);
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
+      break;
+    case 1: {
+      ASSERT_TRUE(ep.flags & IPV6);
+      ASSERT_FALSE(ep.flags & SECURED);
+      ASSERT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv6.port, 5683);
+      EXPECT_EQ(oc_string_len(uri), 0);
+      addr6_t addr = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
+                       0,    0,    0, 0, 0, 0, 0x01, 0x58 };
+      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr.data(), addr.size()));
+    } break;
+    case 2: {
+      ASSERT_TRUE(ep.flags & IPV6);
+      ASSERT_TRUE(ep.flags & SECURED);
+      ASSERT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv6.port, 5684);
+      addr6_t addr = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
+                       0,    0,    0, 0, 0, 0, 0x01, 0x58 };
+      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr.data(), addr.size()));
+      EXPECT_STREQ(oc_string(uri), "/a/light");
+    } break;
+    case 3: {
+      ASSERT_TRUE(ep.flags & IPV6);
+      ASSERT_TRUE(ep.flags & SECURED);
+      ASSERT_TRUE(ep.flags & TCP);
+      EXPECT_EQ(ep.addr.ipv6.port, 2439);
+      addr6_t addr = {
+        0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x12
+      };
+      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr.data(), addr.size()));
+      EXPECT_STREQ(oc_string(uri), "/a/light");
+    } break;
+    default:
+      break;
+    }
+    oc_free_string(&s);
+    oc_free_string(&uri);
+  }
+
+  // test dns lookup when uri is NULL
+  std::vector<std::string> spu4 = {
+#ifdef OC_IPV4
+    "coap://10.211.55.3:56789/a/light",
+    "coaps+tcp://10.211.55.3/a/light",
+#endif /* OC_IPV4 */
+#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
+    "coap://openconnectivity.org/alpha",
+    "coaps://openconnectivity.org:3456/alpha",
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
+  };
+  for (size_t i = 0; i < spu4.size(); i++) {
+    oc_string_t s;
+    oc_new_string(&s, spu4[i].c_str(), spu4[i].length());
+    oc_endpoint_t ep;
+    memset(&ep, 0, sizeof(oc_endpoint_t));
+    int ret = oc_string_to_endpoint(&s, &ep, nullptr);
+    EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
+    oc_free_string(&s);
+  }
+#ifdef _WIN32
+  WSACleanup();
+#endif /* _WIN32 */
+}
+#endif /* OC_TCP */
+
+TEST(OCEndpoints, StringToEndpoint)
+{
+#ifdef _WIN32
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif /* _WIN32 */
+  std::vector<std::string> spu1 = {
     "coap://openconnectivity.org",
     "coap://openconnectivity.org/alpha",
     "coaps://openconnectivity.org:3456/alpha",
   };
   for (size_t i = 0; i < spu1.size(); i++) {
     oc_string_t s;
-    oc_new_string(&s, spu1[i], strlen(spu1[i]));
+    oc_new_string(&s, spu1[i].c_str(), spu1[i].length());
     oc_endpoint_t ep;
     memset(&ep, 0, sizeof(oc_endpoint_t));
     oc_string_t uri;
@@ -157,145 +327,6 @@ TEST(OCEndpoints, StringToEndpoint)
     oc_free_string(&uri);
   }
 
-#ifdef OC_TCP
-#ifdef OC_IPV4
-  std::vector<const char *> spu2 = {
-    "coaps+tcp://10.211.55.3/a/light",
-    "coap+tcp://1.2.3.4:2568",
-  };
-  for (size_t i = 0; i < spu2.size(); i++) {
-    oc_string_t s;
-    oc_new_string(&s, spu2[i], strlen(spu2[i]));
-    oc_endpoint_t ep;
-    memset(&ep, 0, sizeof(oc_endpoint_t));
-    oc_string_t uri;
-    memset(&uri, 0, sizeof(oc_string_t));
-
-    int ret = oc_string_to_endpoint(&s, &ep, &uri);
-    EXPECT_EQ(ret, 0) << "spu2[" << i << "] " << spu2[i];
-
-    switch (i) {
-    case 0: {
-      EXPECT_TRUE(ep.flags & IPV4);
-      EXPECT_TRUE(ep.flags & SECURED);
-      EXPECT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv4.port, 5684);
-      EXPECT_STREQ(oc_string(uri), "/a/light");
-      uint8_t addr[4] = { 10, 211, 55, 3 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
-    } break;
-    case 1: {
-      EXPECT_TRUE(ep.flags & IPV4);
-      EXPECT_FALSE(ep.flags & SECURED);
-      EXPECT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv4.port, 2568);
-      EXPECT_EQ(oc_string_len(uri), 0);
-      uint8_t addr[4] = { 1, 2, 3, 4 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv4.address, addr, 4));
-    } break;
-    default:
-      break;
-    }
-    oc_free_string(&s);
-    oc_free_string(&uri);
-  }
-#endif /* OC_IPV4 */
-  std::vector<const char *> spu3 = {
-    "coaps+tcp://openconnectivity.org:3456",
-    "coap+tcp://[ff02::158]",
-    "coaps+tcp://[ff02::158]/a/light",
-    "coaps+tcp://[fe80::12]:2439/a/light",
-  };
-  for (size_t i = 0; i < spu3.size(); i++) {
-    oc_string_t s;
-    oc_new_string(&s, spu3[i], strlen(spu3[i]));
-    oc_endpoint_t ep;
-    memset(&ep, 0, sizeof(oc_endpoint_t));
-    oc_string_t uri;
-    memset(&uri, 0, sizeof(oc_string_t));
-
-    int ret = oc_string_to_endpoint(&s, &ep, &uri);
-    switch (i) {
-    case 0:
-#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
-      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
-#else
-      EXPECT_EQ(ret, -1) << "spu3[" << i << "] " << spu3[i];
-#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
-      break;
-    default:
-      EXPECT_EQ(ret, 0) << "spu3[" << i << "] " << spu3[i];
-      break;
-    }
-
-    switch (i) {
-    case 0:
-#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
-      ASSERT_TRUE((ep.flags & IPV4) || (ep.flags & IPV6));
-      ASSERT_TRUE(ep.flags & SECURED);
-      ASSERT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv4.port, 3456);
-      EXPECT_EQ(oc_string_len(uri), 0);
-#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6  */
-      break;
-    case 1: {
-      ASSERT_TRUE(ep.flags & IPV6);
-      ASSERT_FALSE(ep.flags & SECURED);
-      ASSERT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv6.port, 5683);
-      EXPECT_EQ(oc_string_len(uri), 0);
-      uint8_t addr[16] = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
-                           0,    0,    0, 0, 0, 0, 0x01, 0x58 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
-    } break;
-    case 2: {
-      ASSERT_TRUE(ep.flags & IPV6);
-      ASSERT_TRUE(ep.flags & SECURED);
-      ASSERT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv6.port, 5684);
-      uint8_t addr[16] = { 0xff, 0x02, 0, 0, 0, 0, 0,    0,
-                           0,    0,    0, 0, 0, 0, 0x01, 0x58 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
-      EXPECT_STREQ(oc_string(uri), "/a/light");
-    } break;
-    case 3: {
-      ASSERT_TRUE(ep.flags & IPV6);
-      ASSERT_TRUE(ep.flags & SECURED);
-      ASSERT_TRUE(ep.flags & TCP);
-      EXPECT_EQ(ep.addr.ipv6.port, 2439);
-      uint8_t addr[16] = { 0xfe, 0x80, 0, 0, 0, 0, 0, 0,
-                           0,    0,    0, 0, 0, 0, 0, 0x12 };
-      EXPECT_EQ(0, memcmp(ep.addr.ipv6.address, addr, 16));
-      EXPECT_STREQ(oc_string(uri), "/a/light");
-    } break;
-    default:
-      break;
-    }
-    oc_free_string(&s);
-    oc_free_string(&uri);
-  }
-
-  // test dns lookup when uri is NULL
-  std::vector<const char *> spu4 = {
-#ifdef OC_IPV4
-    "coap://10.211.55.3:56789/a/light",
-    "coaps+tcp://10.211.55.3/a/light",
-#endif /* OC_IPV4 */
-#if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
-    "coap://openconnectivity.org/alpha",
-    "coaps://openconnectivity.org:3456/alpha",
-#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
-  };
-  for (size_t i = 0; i < spu4.size(); i++) {
-    oc_string_t s;
-    oc_new_string(&s, spu4[i], strlen(spu4[i]));
-    oc_endpoint_t ep;
-    memset(&ep, 0, sizeof(oc_endpoint_t));
-    int ret = oc_string_to_endpoint(&s, &ep, nullptr);
-    EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
-    oc_free_string(&s);
-  }
-#endif /* OC_TCP */
 #ifdef _WIN32
   WSACleanup();
 #endif /* _WIN32 */
@@ -303,22 +334,22 @@ TEST(OCEndpoints, StringToEndpoint)
 
 TEST(OCEndpoints, EndpointStringParsePath)
 {
-  std::vector<const char *> spu = { "coaps://10.211.55.3:56789/a/light",
-                                    "coap://openconnectivity.org",
-                                    "coap://openconnectivity.org/alpha",
-                                    "coaps://openconnectivity.org:3456/alpha",
-                                    "coaps+tcp://10.211.55.3/a/light",
-                                    "coap+tcp://1.2.3.4:2568",
-                                    "coaps+tcp://openconnectivity.org:3456",
-                                    "coap+tcp://[ff02::158]",
-                                    "coaps+tcp://[ff02::158]/a/light",
-                                    "coaps+tcp://[fe80::12]:2439/a/light",
-                                    "coaps+tcp://[fe80::12]:2439/a/light?s=100",
-                                    "coap://0/foo" };
+  std::vector<std::string> spu = { "coaps://10.211.55.3:56789/a/light",
+                                   "coap://openconnectivity.org",
+                                   "coap://openconnectivity.org/alpha",
+                                   "coaps://openconnectivity.org:3456/alpha",
+                                   "coaps+tcp://10.211.55.3/a/light",
+                                   "coap+tcp://1.2.3.4:2568",
+                                   "coaps+tcp://openconnectivity.org:3456",
+                                   "coap+tcp://[ff02::158]",
+                                   "coaps+tcp://[ff02::158]/a/light",
+                                   "coaps+tcp://[fe80::12]:2439/a/light",
+                                   "coaps+tcp://[fe80::12]:2439/a/light?s=100",
+                                   "coap://0/foo" };
   for (size_t i = 0; i < spu.size(); i++) {
     int ret = -1;
     oc_string_t s;
-    oc_new_string(&s, spu[i], strlen(spu[i]));
+    oc_new_string(&s, spu[i].c_str(), spu[i].length());
     oc_string_t path;
     memset(&path, 0, sizeof(oc_string_t));
     switch (i) {
@@ -390,13 +421,13 @@ TEST(OCEndpoints, EndpointStringParsePath)
   }
 
   // paths with expected errors
-  std::vector<const char *> spu2 = {
+  std::vector<std::string> spu2 = {
     "coaps://",                        // no address
     "coaps:/10.211.55.3:56789/a/light" // missing ://
   };
   for (size_t i = 0; i < spu2.size(); i++) {
     oc_string_t s;
-    oc_new_string(&s, spu2[i], strlen(spu2[i]));
+    oc_new_string(&s, spu2[i].c_str(), spu2[i].length());
     oc_string_t path;
     memset(&path, 0, sizeof(oc_string_t));
 
@@ -406,21 +437,20 @@ TEST(OCEndpoints, EndpointStringParsePath)
     oc_free_string(&s);
     oc_free_string(&path);
   }
-  {
-    oc_string_t path;
-    int ret = oc_endpoint_string_parse_path(nullptr, &path);
-    EXPECT_EQ(-1, ret);
-    if (-1 != ret) {
-      // If code is working as expected this should never run.
-      oc_free_string(&path);
-    }
+
+  oc_string_t path;
+  int ret = oc_endpoint_string_parse_path(nullptr, &path);
+  EXPECT_EQ(-1, ret);
+  if (-1 != ret) {
+    // If code is working as expected this should never run.
+    oc_free_string(&path);
   }
-  {
-    oc_string_t s;
-    oc_new_string(&s, "coap://0/p", strlen("coap://0/p"));
-    EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, nullptr));
-    oc_free_string(&s);
-  }
+
+  std::string spu3 = "coap://0/p";
+  oc_string_t s;
+  oc_new_string(&s, spu3.c_str(), spu3.length());
+  EXPECT_EQ(-1, oc_endpoint_string_parse_path(&s, nullptr)) << "spu3 " << spu3;
+  oc_free_string(&s);
 }
 
 TEST(OCEndpoints, EndpointIsEmpty)

@@ -192,7 +192,7 @@ TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)
   oc_resource_t *res =
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
   oc_resource_set_discoverable(res, true);
-  oc_resource_set_request_handler(res, OC_GET, onGet, NULL);
+  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
   oc_resource_set_access_in_RFOTM(res, true, OC_PERM_RETRIEVE);
   bool add_check = oc_ri_add_resource(res);
   EXPECT_EQ(true, add_check);

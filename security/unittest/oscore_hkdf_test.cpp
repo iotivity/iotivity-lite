@@ -177,7 +177,7 @@ TEST_F(TestOSCOREHKDF, HKFDTC3_P)
     oc_conv_hex_string_to_byte_array(ikm_str, strlen(ikm_str), ikm, &ikm_len),
     0);
   EXPECT_EQ(ikm_len, 22);
-  EXPECT_EQ(HKDF_SHA256(NULL, 0, ikm, ikm_len, NULL, 0, okm, L), 0);
+  EXPECT_EQ(HKDF_SHA256(nullptr, 0, ikm, ikm_len, nullptr, 0, okm, L), 0);
 
   char hkdf[512];
   size_t hkdf_len = 512;

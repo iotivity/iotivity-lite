@@ -16,20 +16,51 @@
  *
  ******************************************************************/
 
-#include <gtest/gtest.h>
-#include <string.h>
-extern "C" {
 #include "oc_base64.h"
+
+#include <algorithm>
+#include <array>
+#include <gtest/gtest.h>
+#include <stddef.h>
+#include <string>
+#include <vector>
+
+template<typename To>
+std::vector<To>
+fromString(const std::string &str, bool includeTerminator = false)
+{
+  std::vector<To> arr;
+  arr.resize(str.length());
+  for (size_t i = 0; i < str.length(); ++i) {
+    arr[i] = static_cast<To>(str[i]);
+  }
+  if (includeTerminator) {
+    arr.push_back(static_cast<To>('\0'));
+  }
+  return arr;
 }
+
+template<typename From>
+std::string
+toString(From *arr, size_t arrSize)
+{
+  std::string str{};
+  str.resize(arrSize);
+  for (size_t i = 0; i < arrSize; ++i) {
+    str[i] = static_cast<char>(arr[i]);
+  }
+  // base64 encoder does not null terminate its output
+  str.push_back('\0');
+  return str;
+}
+
 /*
  * Expected input and output comes from section 10 of RFC4648
  */
 TEST(B64Test, RFC4648_EncodeTestVectors)
 {
-  char buf[129];
-  int outputLength = 0;
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "",
     "f",
@@ -37,10 +68,10 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
     "foo",
     "foob",
     "fooba",
-    "foobar"
+    "foobar",
   };
 
-  const char *output[] =
+  std::vector<std::string> output =
   {
     "",
     "Zg==",
@@ -48,10 +79,10 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
     "Zm9v",
     "Zm9vYg==",
     "Zm9vYmE=",
-    "Zm9vYmFy"
+    "Zm9vYmFy",
   };
 
-  const size_t expectedOutputLenth[] =
+  std::vector<size_t> expectedOutputLenth =
   {
     0,
     4,
@@ -59,43 +90,36 @@ TEST(B64Test, RFC4648_EncodeTestVectors)
     4,
     8,
     8,
-    8
+    8,
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-  size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
-  size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
+  ASSERT_EQ(input.size(), output.size())
+    << "Input test data and output test data missmatch.";
+  ASSERT_EQ(input.size(), expectedOutputLenth.size())
+    << "Input test data and output test data missmatch.";
 
-  ASSERT_EQ(inputArraySize, outputArraySize)
-    << "Input test data and output test data missmatch.";
-  ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
-    << "Input test data and output test data missmatch.";
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
-                                    (uint8_t *)buf, bufSize - 1);
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    auto toEncode = fromString<uint8_t>(input[i]);
+    int outputLength = oc_base64_encode(toEncode.data(), toEncode.size(),
+                                        buf.data(), buf.size() - 1);
     ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
     ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
-                                       "operations should be a multiple of 4.";
-    // base64 encoder does not null terminate its output
-    buf[outputLength] = '\0';
-    EXPECT_STREQ(output[i], buf) << "Failed to Base64 encode \"" << input[i]
-                                 << "\" to \"" << output[i] << "\"";
+                                       "operations should be a multiple of 4. ";
+    auto str = toString(buf.data(), outputLength);
+    EXPECT_STREQ(output[i].c_str(), str.c_str())
+      << "Failed to Base64 encode \"" << input[i] << "\" to \"" << output[i]
+      << "\"";
     EXPECT_EQ(expectedOutputLenth[i], outputLength);
   }
 }
 
 TEST(B64Test, RFC4648_DecodeTestVectors)
 {
-  uint8_t buf[128] = {
-    0,
-  };
-  size_t outputLength = 0;
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "",
     "Zg==",
@@ -106,7 +130,7 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
     "Zm9vYmFy"
   };
 
-  const char *output[] =
+  std::vector<std::string> output =
   {
     "",
     "f",
@@ -117,7 +141,7 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
     "foobar"
   };
 
-  const size_t expectedOutputLenth[] =
+  std::vector<size_t> expectedOutputLenth =
   {
     0,
     1,
@@ -129,52 +153,43 @@ TEST(B64Test, RFC4648_DecodeTestVectors)
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-  size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
-  size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
-
-  ASSERT_EQ(inputArraySize, outputArraySize)
+  ASSERT_EQ(input.size(), output.size())
     << "Input test data and output test data missmatch.";
-  ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
+  ASSERT_EQ(input.size(), expectedOutputLenth.size())
     << "Input test data and output test data missmatch.";
 
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize - 1] = '\0';
-    outputLength = oc_base64_decode(buf, strlen((const char *)buf));
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    std::copy(input[i].begin(), input[i].end(), buf.data());
+    size_t bufLen = input[i].length();
+    buf[bufLen] = '\0';
+    int outputLength = oc_base64_decode(buf.data(), bufLen);
     EXPECT_NE(-1, outputLength) << "Failed to Base64 decode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
-    EXPECT_STREQ(output[i], (char *)buf)
+    EXPECT_EQ(expectedOutputLenth[i], outputLength);
+    auto str = toString(buf.data(), outputLength);
+    EXPECT_STREQ(output[i].c_str(), str.c_str())
       << "Failed to Base64 decode \"" << input[i] << "\" to \"" << output[i]
       << "\"";
-    EXPECT_EQ(expectedOutputLenth[i], outputLength);
   }
 }
 
 TEST(B64Test, DecodeInputMissingPadding)
 {
-  uint8_t buf[128] = {
-    0,
-  };
-  size_t outputLength = 0;
-
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "Zg",
     "Zg="
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize - 1] = '\0';
-    outputLength = oc_base64_decode(buf, strlen((const char *)buf));
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    std::copy(input[i].begin(), input[i].end(), buf.data());
+    size_t bufLen = input[i].length();
+    buf[bufLen] = '\0';
+    int outputLength = oc_base64_decode(buf.data(), bufLen);
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
@@ -182,16 +197,11 @@ TEST(B64Test, DecodeInputMissingPadding)
 
 TEST(B64Test, DecodeInputInvalidCharacters)
 {
-  uint8_t buf[128] = {
-    0,
-  };
-  size_t outputLength = 0;
-
   // Characters '-' and '_' chosen because the are part of other encoding
   // standards, other characters chosen at random just to increase test
   // coverage
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "-a==",
     "_a==",
@@ -200,13 +210,12 @@ TEST(B64Test, DecodeInputInvalidCharacters)
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize - 1] = '\0';
-    outputLength = oc_base64_decode(buf, strlen((const char *)buf));
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    std::copy(input[i].begin(), input[i].end(), buf.data());
+    size_t bufLen = input[i].length();
+    buf[bufLen] = '\0';
+    int outputLength = oc_base64_decode(buf.data(), bufLen);
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
@@ -214,12 +223,8 @@ TEST(B64Test, DecodeInputInvalidCharacters)
 
 TEST(B64Test, DecodeInputInvalidPadding)
 {
-  uint8_t buf[128] = {
-    0,
-  };
-  size_t outputLength = 0;
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "Zg==Zg==", // Invalid padding in middle of encoded string
     "Zm8=Zm8=", // Invalid padding in middle of encoded string
@@ -229,13 +234,12 @@ TEST(B64Test, DecodeInputInvalidPadding)
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    strncpy((char *)buf, input[i], bufSize);
-    buf[bufSize - 1] = '\0';
-    outputLength = oc_base64_decode(buf, strlen((const char *)buf));
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    std::copy(input[i].begin(), input[i].end(), buf.data());
+    size_t bufLen = input[i].length();
+    buf[bufLen] = '\0';
+    int outputLength = oc_base64_decode(buf.data(), bufLen);
     EXPECT_EQ(-1, outputLength)
       << "Base64 decode for \"" << input[i] << "\" did not fail as expected.";
   }
@@ -263,69 +267,69 @@ TEST(B64Test, DecodeInputInvalidPadding)
  */
 TEST(B64Test, encoder_does_not_null_terminate)
 {
-  char buf[129] = { 0 };
-  int outputLength = 0;
   // clang-format off
-  const char *input[] =
+  std::vector<std::string> input =
   {
     "foobar",
     "foo"
   };
 
-  const char *output[] =
+  std::vector<std::string> output =
   {
     "Zm9vYmFy",
     "Zm9v"
   };
 
-  const size_t expectedOutputLenth[] =
+  std::vector<size_t> expectedOutputLenth =
   {
     8,
     4
   };
   // clang-format on
 
-  size_t bufSize = (sizeof(buf) / sizeof(buf[0]));
-  size_t inputArraySize = (sizeof(input) / sizeof(input[0]));
-  size_t outputArraySize = (sizeof(output) / sizeof(output[0]));
-  size_t expectedOutputLenthArraySize =
-    (sizeof(expectedOutputLenth) / sizeof(expectedOutputLenth[0]));
-
-  ASSERT_EQ(inputArraySize, outputArraySize)
+  ASSERT_EQ(input.size(), output.size())
     << "Input test data and output test data missmatch.";
-  ASSERT_EQ(inputArraySize, expectedOutputLenthArraySize)
+  ASSERT_EQ(input.size(), expectedOutputLenth.size())
     << "Input test data and output test data missmatch.";
 
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
-                                    (uint8_t *)buf, bufSize - 1);
+  std::array<uint8_t, 64> buf{};
+  for (size_t i = 0; i < input.size(); ++i) {
+    auto toEncode = fromString<uint8_t>(input[i]);
+    int outputLength = oc_base64_encode(toEncode.data(), toEncode.size(),
+                                        buf.data(), buf.size() - 1);
     ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
     ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                        "operations should be a multiple of 4.";
+
+    std::array<char, buf.size()> strBuf;
+    std::copy(buf.begin(), buf.end(), strBuf.data());
     if (i == 0) {
       /* expect to pass on first encode due to zero initialized buf */
-      EXPECT_STREQ(output[i], buf) << "Failed to Base64 encode \"" << input[i]
-                                   << "\" to \"" << output[i] << "\"";
+      EXPECT_STREQ(output[i].c_str(), strBuf.data())
+        << "Failed to Base64 encode \"" << input[i] << "\" to \"" << output[i]
+        << "\"";
     } else {
       /* expect to fail on second encode due to lack of NUL character */
-      EXPECT_STRNE(output[i], buf) << "Failed to Base64 encode \"" << input[i]
-                                   << "\" to \"" << output[i] << "\"";
+      EXPECT_STRNE(output[i].c_str(), strBuf.data())
+        << "Failed to Base64 encode \"" << input[i] << "\" to \"" << output[i]
+        << "\"";
     }
     EXPECT_EQ(expectedOutputLenth[i], outputLength);
   }
 
-  for (size_t i = 0; i < inputArraySize; ++i) {
-    outputLength = oc_base64_encode((const uint8_t *)input[i], strlen(input[i]),
-                                    (uint8_t *)buf, bufSize - 1);
+  for (size_t i = 0; i < input.size(); ++i) {
+    auto toEncode = fromString<uint8_t>(input[i]);
+    int outputLength = oc_base64_encode(toEncode.data(), toEncode.size(),
+                                        buf.data(), buf.size() - 1);
     ASSERT_NE(-1, outputLength) << "Failed to Base64 encode \"" << input[i]
                                 << "\" to \"" << output[i] << "\"";
-    // base64 encoder does not null terminate its output
-    buf[outputLength] = '\0';
     ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
-                                       "operations should be a multiple of 4.";
-    EXPECT_STREQ(output[i], buf) << "Failed to Base64 encode \"" << input[i]
-                                 << "\" to \"" << output[i] << "\"";
+                                       "operations should be a multiple of 4. ";
+    auto str = toString(buf.data(), outputLength);
+    EXPECT_STREQ(output[i].c_str(), str.c_str())
+      << "Failed to Base64 encode \"" << input[i] << "\" to \"" << output[i]
+      << "\"";
     EXPECT_EQ(expectedOutputLenth[i], outputLength);
   }
 }
@@ -333,35 +337,30 @@ TEST(B64Test, encoder_does_not_null_terminate)
 // verify round trip encoding
 TEST(B64Test, EncodeThenDecode)
 {
-
-  const char input[] = "This is a string that will be passed into  the Base64 "
-                       "encoder.  After it is encoded the encoded result will "
-                       "be passed into the Base64 decoded and the result will "
-                       "be checked with the original input to make sure the "
-                       "round trip results are as expected.";
-  int outputLength = 0;
-  // Use sizeof instead of strlen to encode the null character at the end of the
-  // string.
-  size_t b64BufSize = (sizeof(input) / 3) * 4;
+  std::string input = "This is a string that will be passed into  the Base64 "
+                      "encoder.  After it is encoded the encoded result will "
+                      "be passed into the Base64 decoded and the result will "
+                      "be checked with the original input to make sure the "
+                      "round trip results are as expected.";
+  size_t input_size = input.size() + 1; // include null terminator
+  size_t b64BufSize = (input_size / 3) * 4;
   if (sizeof(input) % 3 != 0) {
     b64BufSize += 4;
   }
   b64BufSize++;
-  char *b64Buf = (char *)calloc(1, b64BufSize);
-  ASSERT_NE(nullptr, b64Buf) << "memory allocation error.";
-  outputLength = oc_base64_encode((const uint8_t *)input, sizeof(input),
-                                  (uint8_t *)b64Buf, b64BufSize - 1);
+  std::vector<uint8_t> b64Buf(b64BufSize, '\0');
+
+  auto toEncode = fromString<uint8_t>(input, true);
+  int outputLength = oc_base64_encode(toEncode.data(), toEncode.size(),
+                                      b64Buf.data(), b64BufSize - 1);
   ASSERT_NE(-1, outputLength)
-    << "Failed to Base64 encode \"" << input << "\" to \"" << b64Buf << "\"";
+    << "Failed to Base64 encode \"" << input << "\" to buffer";
   ASSERT_EQ(0u, outputLength % 4) << "The return size for all b64Encode "
                                      "operations should be a multiple of 4.";
-  // base64 encoder does not null terminate its output
-  b64Buf[outputLength] = '\0';
-
-  outputLength = oc_base64_decode((uint8_t *)b64Buf, strlen(b64Buf));
+  outputLength = oc_base64_decode(b64Buf.data(), outputLength);
   ASSERT_NE(-1, outputLength)
-    << "Failed to Base64 decode \"" << input << "\" to \"" << b64Buf << "\"";
-  EXPECT_EQ(sizeof(input), outputLength);
-  EXPECT_STREQ(input, b64Buf);
-  free(b64Buf);
+    << "Failed to Base64 decode \"" << input << "\" to buffer";
+  EXPECT_EQ(toEncode.size(), outputLength);
+  auto str = toString(b64Buf.data(), outputLength);
+  EXPECT_STREQ(input.c_str(), str.c_str());
 }

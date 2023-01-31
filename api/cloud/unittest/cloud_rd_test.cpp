@@ -63,7 +63,8 @@ public:
       } else {
         struct timespec ts;
         ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-        ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+        ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
+                                       OC_CLOCK_SECOND);
         pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
       }
       pthread_mutex_unlock(&s_mutex);
