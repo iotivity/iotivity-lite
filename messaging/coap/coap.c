@@ -379,7 +379,7 @@ coap_serialize_signal_options(void *packet, uint8_t *option_array)
   }
 
   if (option) {
-    OC_DBG("-Done serializing at %p----", option);
+    OC_DBG("-Done serializing at %p----", (void *)option);
   }
 
   return option_length;
@@ -399,7 +399,7 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
 
 #ifdef OC_DEBUG
   if (option) {
-    OC_DBG("Serializing options at %p", option);
+    OC_DBG("Serializing options at %p", (void *)option);
   } else {
     OC_DBG("Calculating size of options");
   }
@@ -528,7 +528,7 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
   }
 
   if (option) {
-    OC_DBG("-Done serializing at %p----", option);
+    OC_DBG("-Done serializing at %p----", (void *)option);
   }
 
   return option_length;
@@ -1099,7 +1099,7 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
                               bool outer, bool oscore)
 {
   if (!packet || !buffer) {
-    OC_ERR("packet: %p or buffer: %p is NULL", packet, buffer);
+    OC_ERR("packet: %p or buffer: %p is NULL", packet, (void *)buffer);
     return 0;
   }
 
@@ -1164,14 +1164,15 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
         goto exit;
       }
 
-      OC_DBG("-Serializing MID %u to %p", coap_pkt->mid, coap_pkt->buffer);
+      OC_DBG("-Serializing MID %u to %p", coap_pkt->mid,
+             (void *)coap_pkt->buffer);
       coap_udp_set_header_fields(coap_pkt);
     }
   }
 
   /* empty packet, dont need to do more stuff */
   if (outer && !coap_pkt->code) {
-    OC_DBG("Done serializing empty message at %p-", coap_pkt->buffer);
+    OC_DBG("Done serializing empty message at %p-", (void *)coap_pkt->buffer);
     return token_location;
   } else if (outer) {
     if (oscore) {

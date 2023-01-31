@@ -11,6 +11,17 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      clang:
+        description: "Compile using clang"
+        required: false
+        type: boolean
+        default: false
+      install_mbedtls:
+        description: "Install mbedTLS and use it for the build"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   cmake_linux:
@@ -52,7 +63,9 @@ jobs:
     with:
       build_args: ${{ matrix.args }}
       build_type: Debug
+      clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
+      install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}
 
   cmake_linux_sanitized:
     strategy:
@@ -71,6 +84,8 @@ jobs:
           # - args: -DOC_MSAN_ENABLED=ON
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}"
+      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}
       build_type: Debug
+      clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
+      install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}

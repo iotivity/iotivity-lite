@@ -278,7 +278,7 @@ oc_main_init(const oc_handler_t *handler)
   if (!drop_commands) {
     oc_abort("Insufficient memory");
   }
-#endif
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
@@ -291,7 +291,7 @@ oc_main_init(const oc_handler_t *handler)
 
 #ifdef OC_SECURITY
   oc_sec_create_svr();
-#endif
+#endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_init();
@@ -320,7 +320,7 @@ oc_main_init(const oc_handler_t *handler)
     OC_DBG("oc_main_init(): loading sdi");
     oc_sec_load_sdi(device);
   }
-#endif
+#endif /* OC_SECURITY */
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   // initialize cloud after load pstat
@@ -332,7 +332,7 @@ oc_main_init(const oc_handler_t *handler)
   // initialize after cloud because their can be registered to cloud.
   if (app_callbacks->register_resources)
     app_callbacks->register_resources();
-#endif
+#endif /* OC_SERVER */
 
   OC_DBG("oc_main: stack initialized");
 
@@ -341,7 +341,7 @@ oc_main_init(const oc_handler_t *handler)
 #ifdef OC_CLIENT
   if (app_callbacks->requests_entry)
     app_callbacks->requests_entry();
-#endif
+#endif /* OC_CLIENT */
 
   return 0;
 
@@ -350,7 +350,7 @@ err:
 #ifdef OC_DYNAMIC_ALLOCATION
   free(drop_commands);
   drop_commands = NULL;
-#endif
+#endif /* OC_DYNAMIC_ALLOCATION */
   return ret;
 }
 
@@ -382,7 +382,7 @@ oc_main_shutdown(void)
 
 #ifdef OC_HAS_FEATURE_PUSH
   oc_push_free();
-#endif
+#endif /* OC_HAS_FEATURE_PUSH */
 
   oc_ri_shutdown();
 
@@ -409,9 +409,9 @@ oc_main_shutdown(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   free(drop_commands);
   drop_commands = NULL;
-#else
+#else  /* !OC_DYNAMIC_ALLOCATION */
   memset(drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
-#endif
+#endif /* OC_DYNAMIC_ALLOCATION */
 
   app_callbacks = NULL;
 
@@ -437,9 +437,11 @@ _oc_signal_event_loop(void)
 void
 oc_set_drop_commands(size_t device, bool drop)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
   if (drop_commands == NULL) {
     return;
   }
+#endif /* OC_DYNAMIC_ALLOCATION */
   drop_commands[device] = drop;
 }
 

@@ -104,16 +104,17 @@ struct py_cb_struct
  */
 struct py_cb_struct my_CBFunctions;
 
+#if 0
+
 /**
  * Function to return response strings
- *
  */
 
 static inline char *
 stringFromResponse(int code)
 {
   static char *strings[] = { "STATUS_OK",
-                             "STATUS_CREATED"
+                             "STATUS_CREATED",
                              "STATUS_CHANGED",
                              "STATUS_DELETED",
                              "STATUS_NOT_MODIFIED",
@@ -134,9 +135,12 @@ stringFromResponse(int code)
                              "STATUS_PROXYING_NOT_SUPPORTED",
                              "__NUM_STATUS_CODES__",
                              "IGNORE",
-                             "PING_TIMEOUT" };
+                             "PING_TIMEOUT",
+                             "OC_REQUEST_TIMEOUT" };
   return strings[code];
 }
+
+#endif
 
 void
 install_changedCB(changedCB changedCB)
