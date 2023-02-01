@@ -157,10 +157,9 @@ HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)
 HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
-HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
 
 CFLAGS_CLOUD=-I../../api/cloud
-CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
+CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))

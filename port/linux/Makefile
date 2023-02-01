@@ -30,6 +30,7 @@ ifeq ($(TSAN),1)
 	EXTRA_CFLAGS += -fsanitize=thread
 endif
 
+TINYCBOR_DIR := $(ROOT_DIR)/deps/tinycbor
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 GTEST_DIR = $(ROOT_DIR)/deps/gtest
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -39,6 +40,7 @@ GTEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
 TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_SERVER -DOC_CLIENT -fprofile-arcs -ftest-coverage
 HEADER_DIR = -I$(ROOT_DIR)/include \
              -I$(ROOT_DIR) \
+             -I$(TINYCBOR_DIR)/src \
              -I$(OUT_DIR)
 SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
@@ -91,7 +93,10 @@ DTLS= 	aes.c		aesni.c   	asn1parse.c	asn1write.c	base64.c	\
 	nist_kw.c aria.c rsa_alt_helpers.c
 DTLSFLAGS=-I../../deps/mbedtls/include
 
-CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborencoder_float.c ../../deps/tinycbor/src/cborparser.c ../../deps/tinycbor/src/cborparser_float.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
+CBOR_DIR=../../deps/tinycbor/src
+CBOR=$(CBOR_DIR)/cborencoder.c $(CBOR_DIR)/cborencoder_close_container_checked.c \
+	$(CBOR_DIR)/cborencoder_float.c $(CBOR_DIR)/cborparser.c $(CBOR_DIR)/cborparser_float.c
+# $(CBOR_DIR)/cbortojson.c $(CBOR_DIR)/cborpretty.c $(CBOR_DIR)/cborparser_dup_string.c
 
 
 PYTHON_DIR=../../python
@@ -116,10 +121,10 @@ HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
 HEADERS_UTIL = $(wildcard ../../util/*.h)
 HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
 HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
-HEADERS_TINYCBOR = $(wildcard ../../deps/tinycbor/src/*.h)
+HEADERS_TINYCBOR = $(addprefix ../../deps/tinycbor/src/,cbor.h cborjson.h tinycbor-version.h)
 
 CFLAGS_CLOUD=-I../../api/cloud
-CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../api -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
+CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -I../../api -std=gnu99 -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -Wall -Wextra -Werror -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
@@ -128,8 +133,8 @@ OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
 OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 
-$(info    OBJ_PYTHON is $(OBJ_PYTHON))
-$(info    SRC_PYTHON is $(SRC_PYTHON))
+# $(info    OBJ_PYTHON is $(OBJ_PYTHON))
+# $(info    SRC_PYTHON is $(SRC_PYTHON))
 
 VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
 LIBS?= -lm -pthread -lrt
@@ -304,7 +309,7 @@ $(COMMON_TEST_OBJ_DIR)/%.o: $(COMMON_TEST_DIR)/%.cpp
 
 $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c $< -o $@
 
 apitest: $(API_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $^ -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -L$(OUT_DIR) -L$(GTEST_DIR)/make -l:gtest_main.a -liotivity-lite-client-server -lpthread
@@ -318,14 +323,14 @@ securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GT
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c
+	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c
 
 platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(CLOUD_TEST_OBJ_DIR)/%.o: $(CLOUD_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
-	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -I$(ROOT_DIR)/service/cloud/src -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -I$(ROOT_DIR)/service/cloud/src -c $< -o $@
 
 cloudtest: $(CLOUD_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(CFLAGS_CLOUD) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
@@ -559,7 +564,7 @@ iotivity-lite-server.pc: iotivity-lite-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 iotivity-lite-client.pc: iotivity-lite-client.pc.in
@@ -569,7 +574,7 @@ iotivity-lite-client.pc: iotivity-lite-client.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
@@ -579,7 +584,7 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
-		-e 's,@extra_cflags@,$(EXTRA_CFLAGS),' \
+		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
 swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
@@ -623,14 +628,14 @@ install: $(SAMPLES) $(PC) $(CONSTRAINED_LIBS)
 	$(INSTALL) -d $(includedir)/iotivity-lite/util
 	$(INSTALL) -d $(includedir)/iotivity-lite/util/pt
 	$(INSTALL) -d $(includedir)/iotivity-lite/messaging/coap
-	$(INSTALL) -d $(includedir)/iotivity-lite/deps/tinycbor/src/
+	$(INSTALL) -d $(includedir)/iotivity-lite/tinycbor
 	$(INSTALL) -d $(pkgconfigdir)
 	$(INSTALL) -m 644 $(HEADERS) $(includedir)/iotivity-lite/
 	$(INSTALL) -m 644 $(HEADERS_PORT) $(includedir)/iotivity-lite/port
 	$(INSTALL) -m 644 $(HEADERS_UTIL) $(includedir)/iotivity-lite/util
 	$(INSTALL) -m 644 $(HEADERS_UTIL_PT) $(includedir)/iotivity-lite/util/pt
 	$(INSTALL) -m 644 $(HEADERS_COAP) $(includedir)/iotivity-lite/messaging/coap
-	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-lite/deps/tinycbor/src
+	$(INSTALL) -m 644 $(HEADERS_TINYCBOR) $(includedir)/iotivity-lite/tinycbor
 	$(INSTALL) -m 644 $(PC) $(pkgconfigdir)
 	$(INSTALL) -m 644 $(CONSTRAINED_LIBS) $(libdir)
 # Installing the samples

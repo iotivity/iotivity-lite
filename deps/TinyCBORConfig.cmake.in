@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+# import our export targets to user of our library
+include("${CMAKE_CURRENT_LIST_DIR}/TinyCBORTargets.cmake")
+
+check_required_components(tinyCBOR)

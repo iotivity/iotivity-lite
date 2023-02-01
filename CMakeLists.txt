@@ -21,6 +21,10 @@ endif()
 ######## Build configuration options ########
 set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
 set(BUILD_MBEDTLS ON CACHE BOOL "Build Mbed TLS library. When set to OFF, the Mbed TLS library with the OCF patches has to be provided.")
+set(OC_INSTALL_MBEDTLS ON CACHE BOOL "Include Mbed TLS in installation")
+set(BUILD_TINYCBOR ON CACHE BOOL "Build TinyCBOR library. When set to OFF, the TinyCBOR library has to be provided.")
+set(OC_INSTALL_TINYCBOR ON CACHE BOOL "Include TinyCBOR in installation")
+
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and Mbed TLS.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
 set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
@@ -366,8 +370,6 @@ if (OC_COVERAGE_ENABLED)
 endif()
 
 # ####### Object libraries ########
-include(deps/tinycbor.cmake)
-
 if(OC_SECURITY_ENABLED)
     if(BUILD_MBEDTLS)
         include(deps/mbedtls.cmake)
@@ -388,6 +390,28 @@ if(OC_SECURITY_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "__OC_PLATFORM")
 endif()
 
+if (BUILD_TINYCBOR)
+    configure_file(${PROJECT_SOURCE_DIR}/deps/TinyCBORConfig.cmake.in ${PROJECT_SOURCE_DIR}/deps/tinycbor/TinyCBORConfig.cmake.in COPYONLY)
+    configure_file(${PROJECT_SOURCE_DIR}/deps/tinycbor.cmake ${PROJECT_SOURCE_DIR}/deps/tinycbor/CMakeLists.txt COPYONLY)
+
+    # freestanding sources are sufficient for our needs
+    set(TINYCBOR_FREESTANDING_BUILD_ENABLED ON CACHE BOOL "Make freestanding build.")
+    # use command-line parameters to enable TinyCBOR unit tests / helper executables
+    option(ENABLE_EXECUTABLES "Build TinyCBOR executables." OFF)
+    option(ENABLE_TESTING "Build TinyCBOR tests." OFF)
+
+    if(OC_INSTALL_TINYCBOR)
+        add_subdirectory(${PROJECT_SOURCE_DIR}/deps/tinycbor)
+    else()
+        add_subdirectory(${PROJECT_SOURCE_DIR}/deps/tinycbor EXCLUDE_FROM_ALL)
+    endif()
+
+    set(TINYCBOR_DEP tinycbor)
+else()
+    find_package(TinyCBOR REQUIRED)
+    set(TINYCBOR_DEP TinyCBOR::tinycbor)
+endif()
+
 # enable clang-tidy for iotivity targets
 oc_enable_clang_tidy()
 
@@ -395,12 +419,13 @@ add_library(common-obj OBJECT ${COMMON_SRC})
 target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
 target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_link_libraries(common-obj PRIVATE ${TINYCBOR_DEP})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
 target_compile_options(client-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-
+target_link_libraries(client-obj PRIVATE ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-obj PRIVATE ${MBEDTLS_DEP})
 endif()
@@ -409,7 +434,7 @@ add_library(server-obj OBJECT ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
 target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-
+target_link_libraries(server-obj PRIVATE ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
@@ -418,7 +443,7 @@ add_library(client-server-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
 target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-
+target_link_libraries(client-server-obj PRIVATE ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
@@ -428,7 +453,7 @@ if(OC_CLOUD_ENABLED)
     target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
     target_compile_options(cloud-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-
+    target_link_libraries(cloud-obj PRIVATE ${TINYCBOR_DEP})
     if(OC_SECURITY_ENABLED)
         target_link_libraries(cloud-obj PRIVATE ${MBEDTLS_DEP})
     endif()
@@ -440,7 +465,7 @@ target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
 set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
 target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-
+target_link_libraries(python-obj PRIVATE ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(python-obj PRIVATE ${MBEDTLS_DEP})
 endif()
@@ -449,7 +474,6 @@ endif()
 # Client
 set(client-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
 )
 
@@ -466,7 +490,7 @@ target_include_directories(client-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
-
+target_link_libraries(client-static PUBLIC ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-static PUBLIC ${MBEDTLS_DEP})
 endif()
@@ -491,7 +515,7 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
-
+    target_link_libraries(client-shared PUBLIC ${TINYCBOR_DEP})
     if(OC_SECURITY_ENABLED)
         target_link_libraries(client-shared PUBLIC ${MBEDTLS_DEP})
     endif()
@@ -506,7 +530,6 @@ endif()
 # Server
 set(server-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:server-obj>
 )
 
@@ -523,7 +546,7 @@ target_include_directories(server-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
-
+target_link_libraries(server-static PUBLIC ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(server-static PUBLIC ${MBEDTLS_DEP})
 endif()
@@ -548,7 +571,7 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
-
+    target_link_libraries(server-shared PUBLIC ${TINYCBOR_DEP})
     if(OC_SECURITY_ENABLED)
         target_link_libraries(server-shared PUBLIC ${MBEDTLS_DEP})
     endif()
@@ -563,7 +586,6 @@ endif()
 # Client-Server
 set(client-server-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-server-obj>
 )
 
@@ -584,13 +606,12 @@ target_include_directories(client-server-static PUBLIC
     $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
-
-if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-server-static PUBLIC ${MBEDTLS_DEP})
-endif()
-
 if(OC_CLOUD_ENABLED)
     target_include_directories(client-server-static PUBLIC $<BUILD_INTERFACE:${CLOUD_INCLUDE_DIR}>)
+endif()
+target_link_libraries(client-server-static PUBLIC ${TINYCBOR_DEP})
+if(OC_SECURITY_ENABLED)
+    target_link_libraries(client-server-static PUBLIC ${MBEDTLS_DEP})
 endif()
 
 if (OC_COVERAGE_ENABLED)
@@ -618,7 +639,7 @@ if(NOT MSVC)
         $<BUILD_INTERFACE:${PORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include/iotivity-lite>
     )
-
+    target_link_libraries(client-server-shared PUBLIC ${TINYCBOR_DEP})
     if(OC_SECURITY_ENABLED)
         target_link_libraries(client-server-shared PUBLIC ${MBEDTLS_DEP})
     endif()
@@ -637,7 +658,6 @@ endif()
 # Python client
 set(client-python-lib-obj
     $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:tinycbor-master>
     $<TARGET_OBJECTS:client-obj>
     $<TARGET_OBJECTS:python-obj>
 )
@@ -652,7 +672,7 @@ target_include_directories(client-python-shared PUBLIC
     $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include/iotivity-lite>
 )
-
+target_link_libraries(client-python-shared PUBLIC ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
     target_link_libraries(client-python-shared PUBLIC ${MBEDTLS_DEP})
 endif()
@@ -674,7 +694,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     list(APPEND TEST_COMPILE_OPTIONS "-fpermissive" "-Wno-error")
     list(APPEND TEST_LINK_LIBS client-server-static gtest_main)
     if(OC_SECURITY_ENABLED)
-        list(APPEND TEST_LINK_LIBS ${MBEDTLS_DEP})
+        list(APPEND TEST_LINK_LIBS ${TINYCBOR_DEP} ${MBEDTLS_DEP})
     endif()
     if(UNIX)
         list(APPEND TEST_LINK_LIBS Threads::Threads)

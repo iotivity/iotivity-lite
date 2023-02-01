@@ -7,9 +7,8 @@ include Makefile-${OPENTHREAD_BOARD}
 PATH_OBJ = output/${OPENTHREAD_BOARD}/obj
 PATH_BIN = output/${OPENTHREAD_BOARD}/bin
 
-CBOR = \
-	../../deps/tinycbor/src/cborencoder.c \
-	 ../../deps/tinycbor/src/cborencoder_float.c \
+CBOR = ../../deps/tinycbor/src/cborencoder.c \
+	../../deps/tinycbor/src/cborencoder_float.c \
 	../../deps/tinycbor/src/cborencoder_close_container_checked.c \
 	../../deps/tinycbor/src/cborparser.c \
 	../../deps/tinycbor/src/cborparser_float.c
@@ -27,7 +26,7 @@ OBJ_CLIENT = $(addprefix ${PATH_OBJ}/client/, $(addsuffix .o, $(basename $(notdi
 OBJ_SERVER = $(addprefix ${PATH_OBJ}/server/, $(addsuffix .o, $(basename $(notdir $(SRC_SERVER)))))
 
 CFLAGS += -Wall -Wextra
-CFLAGS += -I./ -I../../include/ -I../../ -I../
+CFLAGS += -I./ -I../../include/ -I../../deps/tinycbor/src/ -I../../ -I../
 CFLAGS += -I${OPENTHREAD_PATH} -I${OPENTHREAD_PATH}/output/include -I${OPENTHREAD_PATH}/src/core
 CFLAGS += -I${OPENTHREAD_PATH}/third_party/mbedtls/repo.patched/include
 CFLAGS += -DOPENTHREAD_FTD 
