@@ -13,7 +13,6 @@ endif()
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 
-set(OC_INSTALL_MBEDTLS ON CACHE BOOL "Include mbedtls in installation")
 if(OC_INSTALL_MBEDTLS)
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 else()
