@@ -22,6 +22,11 @@ on:
         required: false
         type: boolean
         default: false
+      install_tinycbor:
+        description: "Install tinyCBOR and use it for the build"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   cmake_linux:
@@ -55,7 +60,7 @@ jobs:
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON"
           # secure off, ipv4 on, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
-          # collection create if on, push notification on, tcp off
+          # collection create if on, push notification on
           - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
           # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off)
           - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF"
@@ -66,6 +71,18 @@ jobs:
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
       install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}
+      install_tinycbor: ${{ github.event_name == 'workflow_dispatch' && inputs.install_tinycbor }}
+
+  cmake_linux_preinstalled:
+    uses: ./.github/workflows/unit-test-with-cfg.yml
+    with:
+      # cloud on (ipv4+tcp on), collections create on, maintenance resource on, well-known core resource on, software update on, push notification on
+      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON
+      build_type: Debug
+      clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
+      coverage: false
+      install_mbedtls: ${{ github.event_name != 'workflow_dispatch' }}
+      install_tinycbor: ${{ github.event_name != 'workflow_dispatch' }}
 
   cmake_linux_sanitized:
     strategy:
@@ -89,3 +106,4 @@ jobs:
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
       install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}
+      install_tinycbor: ${{ github.event_name == 'workflow_dispatch' && inputs.install_tinycbor }}

@@ -27,6 +27,10 @@ on:
         type: boolean
         required: false
         default: false
+      install_tinycbor:
+        type: boolean
+        required: false
+        default: false
 jobs:
   unit-test-with-cfg:
     runs-on: ubuntu-22.04
@@ -55,10 +59,19 @@ jobs:
             sudo make install
           fi
 
+      - name: Install tinyCBOR
+        if: ${{ inputs.install_tinycbor }}
+        run: |
+          mkdir build_tinycbor && cd build_tinycbor
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=OFF ..
+          make tinycbor
+          cd deps/tinycbor
+          sudo make install
+
       - name: Build unit tests
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} ${{ inputs.install_mbedtls && '-DBUILD_MBEDTLS=OFF' || '' }} -DBUILD_TESTING=ON ..
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} ${{ inputs.install_mbedtls && '-DBUILD_MBEDTLS=OFF' || '' }} ${{ inputs.install_tinycbor && '-DBUILD_TINYCBOR=OFF' || '' }} -DBUILD_TESTING=ON ..
           make oc-unittests
 
       - name: Run unit tests
