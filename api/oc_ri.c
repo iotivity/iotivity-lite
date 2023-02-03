@@ -387,16 +387,18 @@ oc_ri_query_exists(const char *query, size_t query_len, const char *key)
 }
 
 /*
-  * Filter requests by device id in the query string
-  * @param device the device index
-  * @param query the query string
-  * @param query_len the length of the query string
-  * @return true if the query string contains a di=<deviceID> or doesn't contains di key, otherwise it returns false
-*/
+ * Filter requests by device id in the query string
+ * @param device the device index
+ * @param query the query string
+ * @param query_len the length of the query string
+ * @return true if the query string contains a di=<deviceID> or doesn't contains
+ * di key, otherwise it returns false
+ */
 static bool
-oc_ri_filter_request_by_device_id(size_t device, const char *query, size_t query_len)
+oc_ri_filter_request_by_device_id(size_t device, const char *query,
+                                  size_t query_len)
 {
-  oc_uuid_t *device_id = oc_core_get_device_id(device);
+  const oc_uuid_t *device_id = oc_core_get_device_id(device);
   assert(device_id != NULL);
   if (query == NULL || query_len == 0) {
     return true;
@@ -405,15 +407,15 @@ oc_ri_filter_request_by_device_id(size_t device, const char *query, size_t query
   oc_uuid_to_str(device_id, di, OC_UUID_LEN);
   for (size_t pos = 0; pos < query_len;) {
     const char *value = NULL;
-    size_t pos = 0;
-    int value_len = oc_ri_get_query_value(query+pos, query_len-pos, "di", &value);
+    int value_len =
+      oc_ri_get_query_value(query + pos, query_len - pos, "di", &value);
     if (value_len == -1) {
       return true;
     }
-    if (OC_UUID_LEN == value_len+1 && strncmp(di, value, value_len) == 0) {
+    if (OC_UUID_LEN == value_len + 1 && strncmp(di, value, value_len) == 0) {
       return true;
     }
-    pos = (value - query)+value_len;
+    pos = (value - query) + value_len;
   }
   return false;
 }
@@ -1114,9 +1116,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Initialize OCF interface selector. */
   oc_interface_mask_t iface_query = 0;
   if (uri_query_len) {
-    
-    // Check if the request is a multicast request and if the device id in query matches the device id
-    if (request_obj.origin && (request_obj.origin->flags & MULTICAST) && !oc_ri_filter_request_by_device_id(endpoint->device, uri_query, uri_query_len)) {
+
+    // Check if the request is a multicast request and if the device id in query
+    // matches the device id
+    if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
+        !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
+                                           uri_query_len)) {
       coap_set_status_code(response, CLEAR_TRANSACTION);
       return false;
     }
