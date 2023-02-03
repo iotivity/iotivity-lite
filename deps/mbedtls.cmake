@@ -85,12 +85,4 @@ foreach(target ${mbedtls_targets})
     if(TARGET mbedtls-support)
         target_sources(${target} PRIVATE $<TARGET_OBJECTS:mbedtls-support>)
     endif()
-
-    if(USE_SHARED_MBEDTLS_LIBRARY)
-        get_target_property(target_type ${target} TYPE)
-
-        if("${target_type}" STREQUAL "SHARED_LIBRARY")
-            string(APPEND extra_libs "-l${target} ")
-        endif()
-    endif()
 endforeach()

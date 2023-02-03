@@ -564,6 +564,7 @@ iotivity-lite-server.pc: iotivity-lite-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_requires@,,' \
 		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
@@ -574,6 +575,7 @@ iotivity-lite-client.pc: iotivity-lite-client.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_requires@,,' \
 		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
@@ -584,6 +586,7 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 		-e 's,@libdir@,$(libdir),' \
 		-e 's,@includedir@,$(includedir),' \
 		-e 's,@version@,$(VERSION),' \
+		-e 's,@extra_requires@,,' \
 		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
