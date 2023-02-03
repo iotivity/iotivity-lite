@@ -801,6 +801,11 @@ set(PKG_CONFIG_FILES
     iotivity-lite-client-server.pc)
 
 foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
+    set(extra_requires "tinycbor")
+    if (OC_SECURITY_ENABLED)
+        set(extra_libs "-lmbedtls -lmbedx509 -lmbedcrypto")
+    endif()
+
     configure_file(
         "${PROJECT_SOURCE_DIR}/port/linux/${pkg-config-file}.in"
         ${pkg-config-file}
