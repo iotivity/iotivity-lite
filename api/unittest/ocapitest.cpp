@@ -44,6 +44,7 @@ static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kManufacturerName{ "Samsung" };
 static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
+static const std::string kDeviceIdKey{ "di" };
 
 struct ApiCallback
 {
@@ -447,13 +448,18 @@ private:
 public:
   bool isDone() const
   {
-    return std::all_of(
-      requiredDevices_.cbegin(), requiredDevices_.cend(),
-      [this](const std::string &device_id) { return devices_.count(device_id) == 1; });
+    return std::all_of(requiredDevices_.cbegin(), requiredDevices_.cend(),
+                       [this](const std::string &device_id) {
+                         return devices_.find(device_id.c_str()) !=
+                                devices_.end();
+                       });
   }
   size_t size() const { return devices_.size(); }
 
-  void addRequired(const std::string &device_id) { requiredDevices_.insert(device_id); }
+  void addRequired(const std::string &device_id)
+  {
+    requiredDevices_.insert(device_id);
+  }
   void addDevice(const std::string &device_id) { devices_.insert(device_id); }
 };
 
@@ -502,17 +508,18 @@ public:
     return OC_CONTINUE_DISCOVERY;
   }
 
-  static void onResourceResponse(oc_client_response_t *data) {
+  static void onDeviceResourceResponse(oc_client_response_t *data)
+  {
     oc_rep_t *rep = data->payload;
     auto *rd = static_cast<DevicesDiscovered *>(data->user_data);
     while (rep != NULL) {
-      PRINT("key %s, value ", oc_string(rep->name));
       switch (rep->type) {
       case OC_REP_STRING:
-        if (oc_string_len(rep->name) == sizeof("di")-1 && memcmp(oc_string(rep->name), "di", sizeof("di")-1) == 0) {
-          PRINT("di=%s\n", oc_string(rep->value.string));
+        if (oc_string_len(rep->name) == kDeviceIdKey.size() &&
+            memcmp(oc_string(rep->name), kDeviceIdKey.c_str(),
+                   kDeviceIdKey.size()) == 0) {
           rd->addDevice(oc_string(rep->value.string));
-        } 
+        }
         break;
       default:
         break;
@@ -538,22 +545,32 @@ public:
   static void DiscoverDeviceIDTestResources()
   {
     DevicesDiscovered lightDevice{};
-    char lightDeviceID[37] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_LightResource.device_id),lightDeviceID, sizeof(lightDeviceID));
+    std::string lightDeviceID(OC_UUID_LEN, '\0');
+    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_LightResource.device_id),
+                   &lightDeviceID[0], lightDeviceID.size());
     lightDevice.addRequired(lightDeviceID);
-    auto query = std::string("di=") + lightDeviceID;
-    EXPECT_TRUE(oc_do_ip_multicast("/oic/d", query.c_str(), &onResourceResponse, &lightDevice))
+    std::string query = kDeviceIdKey + "=" + lightDeviceID.c_str();
+    EXPECT_TRUE(oc_do_ip_multicast("/oic/d", query.c_str(),
+                                   &onDeviceResourceResponse, &lightDevice))
       << "Cannot send multicast request";
     ApiHelper::poolEvents(kMaxWaitTime);
     EXPECT_TRUE(lightDevice.isDone());
     EXPECT_EQ(lightDevice.size(), 1);
-/*
-    char switchDevice[OC_MAX_URI_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_SwitchResource.device_id),switchDevice, sizeof(switchDevice));
 
-    char testDevice[OC_MAX_URI_LENGTH] = { 0 };
-    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_TestResource.device_id),testDevice, sizeof(testDevice));
-*/
+    DevicesDiscovered lightSwitchDevice{};
+    std::string switchDeviceID(OC_UUID_LEN, '\0');
+    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_SwitchResource.device_id),
+                   &switchDeviceID[0], switchDeviceID.size());
+    lightSwitchDevice.addRequired(switchDeviceID);
+    lightSwitchDevice.addRequired(lightDeviceID);
+    query += "&" + kDeviceIdKey + "=" + switchDeviceID.c_str();
+
+    EXPECT_TRUE(oc_do_ip_multicast(
+      "/oic/d", query.c_str(), &onDeviceResourceResponse, &lightSwitchDevice))
+      << "Cannot send multicast request";
+    ApiHelper::poolEvents(kMaxWaitTime);
+    EXPECT_TRUE(lightSwitchDevice.isDone());
+    EXPECT_EQ(lightSwitchDevice.size(), 2);
   }
 
   static void HandleClientResponse(oc_client_response_t *data)

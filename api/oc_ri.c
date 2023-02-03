@@ -410,7 +410,8 @@ oc_ri_filter_request_by_device_id(size_t device, const char *query,
     int value_len =
       oc_ri_get_query_value(query + pos, query_len - pos, "di", &value);
     if (value_len == -1) {
-      return true;
+      // pos == 0 key not found, otherwise device id not match the device.
+      return pos == 0;
     }
     if (OC_UUID_LEN == value_len + 1 && strncmp(di, value, value_len) == 0) {
       return true;
@@ -1122,7 +1123,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
         !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
                                            uri_query_len)) {
-      coap_set_status_code(response, CLEAR_TRANSACTION);
+      coap_status_code = CLEAR_TRANSACTION;
+      coap_set_status_code(response, OC_IGNORE);
       return false;
     }
 
