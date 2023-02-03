@@ -512,17 +512,12 @@ public:
   {
     oc_rep_t *rep = data->payload;
     auto *rd = static_cast<DevicesDiscovered *>(data->user_data);
-    while (rep != NULL) {
-      switch (rep->type) {
-      case OC_REP_STRING:
-        if (oc_string_len(rep->name) == kDeviceIdKey.size() &&
-            memcmp(oc_string(rep->name), kDeviceIdKey.c_str(),
-                   kDeviceIdKey.size()) == 0) {
-          rd->addDevice(oc_string(rep->value.string));
-        }
-        break;
-      default:
-        break;
+    while (rep != nullptr) {
+      if (rep->type == OC_REP_STRING &&
+          oc_string_len(rep->name) == kDeviceIdKey.size() &&
+          memcmp(oc_string(rep->name), kDeviceIdKey.c_str(),
+                 kDeviceIdKey.size()) == 0) {
+        rd->addDevice(oc_string(rep->value.string));
       }
       rep = rep->next;
     }
