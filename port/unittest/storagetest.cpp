@@ -16,24 +16,18 @@
  *
  ******************************************************************/
 
+#include "port/oc_storage.h"
+
+#ifdef OC_SECURITY
+
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 
-extern "C" {
-#include "port/oc_storage.h"
-}
-
-#ifdef OC_SECURITY
-static const char *path = "./storage_test";
-static const char *file_name = "storage_store";
-static uint8_t buf[100];
-#endif /* OC_SECURITY */
-
-class TestStorage : public testing::Test {};
-
-#ifdef OC_SECURITY
-TEST_F(TestStorage, oc_storage_config_fail_with_length_over)
+TEST(TestStorage, oc_storage_config_fail_with_length_over)
 {
   int ret = oc_storage_config("./"
                               "storage_test_long_size_fail_storage_test_long_"
@@ -41,31 +35,40 @@ TEST_F(TestStorage, oc_storage_config_fail_with_length_over)
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_read_fail)
+TEST(TestStorage, oc_storage_read_fail)
 {
-  int ret = oc_storage_read(file_name, buf, 100);
+  std::array<uint8_t, 100> buf;
+  auto ret = oc_storage_read("storage_store", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_write_fail)
+TEST(TestStorage, oc_storage_write_fail)
 {
-  int ret = oc_storage_write(file_name, buf, 100);
+  std::array<uint8_t, 100> buf;
+  auto ret = oc_storage_write("storage_store", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_config)
+TEST(TestStorage, oc_storage_config)
 {
-  int ret = oc_storage_config(path);
+  auto ret = oc_storage_config("./storage_test");
   EXPECT_EQ(0, ret);
 }
 
-TEST_F(TestStorage, oc_storage_write)
+TEST(TestStorage, oc_storage_write)
 {
-  uint8_t str[100] = "storage";
-  int ret = oc_storage_write(file_name, str, strlen((char *)str));
+  std::string file_name = "storage_store";
+  std::string str = "storage";
+  std::vector<uint8_t> in{};
+  std::copy(str.begin(), str.end(), std::back_inserter(in));
+  auto ret = oc_storage_write(file_name.c_str(), in.data(), in.size());
   EXPECT_LE(0, ret);
-  ret = oc_storage_read(file_name, buf, 100);
+
+  std::array<uint8_t, 100> buf{};
+  ret = oc_storage_read(file_name.c_str(), buf.data(), buf.size());
   EXPECT_LE(0, ret);
-  EXPECT_STREQ((const char *)str, (const char *)buf);
+  std::string out{};
+  std::copy_n(buf.begin(), static_cast<size_t>(ret), std::back_inserter(out));
+  EXPECT_STREQ(str.c_str(), out.c_str());
 }
 #endif /* OC_SECURITY */

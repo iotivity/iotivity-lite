@@ -119,10 +119,11 @@ oc_set_mtu_size(size_t mtu_size)
   (void)mtu_size;
 #ifdef OC_INOUT_BUFFER_SIZE
   return -1;
-#endif /* OC_INOUT_BUFFER_SIZE */
+#else /* !OC_INOUT_BUFFER_SIZE */
 #ifdef OC_BLOCK_WISE
-  if (mtu_size < (COAP_MAX_HEADER_SIZE + 16))
+  if (mtu_size < (COAP_MAX_HEADER_SIZE + 16)) {
     return -1;
+  }
 #ifdef OC_OSCORE
   _OC_MTU_SIZE = mtu_size + COAP_MAX_HEADER_SIZE;
 #else  /* OC_OSCORE */
@@ -135,6 +136,7 @@ oc_set_mtu_size(size_t mtu_size)
   _OC_BLOCK_SIZE = ((size_t)1) << i;
 #endif /* OC_BLOCK_WISE */
   return 0;
+#endif /* OC_INOUT_BUFFER_SIZE */
 }
 
 long
@@ -147,8 +149,8 @@ void
 oc_set_max_app_data_size(size_t size)
 {
 #ifdef OC_APP_DATA_BUFFER_SIZE
-  return;
-#endif /* OC_APP_DATA_BUFFER_SIZE */
+  (void)size;
+#else /* !OC_APP_DATA_BUFFER_SIZE */
   _OC_MAX_APP_DATA_SIZE = size;
 #ifndef OC_REP_ENCODING_REALLOC
   _OC_MIN_APP_DATA_SIZE = size;
@@ -157,6 +159,7 @@ oc_set_max_app_data_size(size_t size)
   _OC_BLOCK_SIZE = size;
   _OC_MTU_SIZE = size + COAP_MAX_HEADER_SIZE;
 #endif /* !OC_BLOCK_WISE */
+#endif /* OC_APP_DATA_BUFFER_SIZE */
 }
 
 long
@@ -169,9 +172,10 @@ void
 oc_set_min_app_data_size(size_t size)
 {
 #if defined(OC_APP_DATA_BUFFER_SIZE) || !defined(OC_REP_ENCODING_REALLOC)
-  return;
-#endif /* OC_APP_DATA_BUFFER_SIZE || !OC_REP_ENCODING_REALLOC */
+  (void)size;
+#else  /* !OC_APP_DATA_BUFFER_SIZE && !OC_REP_ENCODING_REALLOC */
   _OC_MIN_APP_DATA_SIZE = size;
+#endif /* OC_APP_DATA_BUFFER_SIZE || !OC_REP_ENCODING_REALLOC */
 }
 
 long

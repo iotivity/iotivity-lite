@@ -24,7 +24,19 @@
 #include <array>
 #include <memory>
 #include <stdlib.h>
+#include <string>
 #include <vector>
+
+template<class InputIt>
+static std::string
+BufferToString(InputIt first, InputIt last)
+{
+  std::string val;
+  for (; first != last; ++first) {
+    val += static_cast<char>(*first);
+  }
+  return val;
+}
 
 TEST(TestRep, OCRepEncodedPayloadSize_P)
 {
@@ -53,63 +65,13 @@ TEST(TestRep, RepToJson_null)
   const oc_rep_t *rep = nullptr;
   EXPECT_EQ(2, oc_rep_to_json(rep, nullptr, 0, false));
   EXPECT_EQ(4, oc_rep_to_json(rep, nullptr, 0, true));
-  char buf[5];
-  EXPECT_EQ(2, oc_rep_to_json(rep, buf, 5, false));
-  EXPECT_STREQ("{}", buf);
-  EXPECT_EQ(4, oc_rep_to_json(rep, buf, 5, true));
-  EXPECT_STREQ("{\n}\n", buf);
-}
 
-TEST(TestRep, OCRepEncodedPayloadRealloc)
-{
-  /* buffer for oc_rep_t */
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *b = (uint8_t *)malloc(0);
-  oc_rep_new_realloc(&b, 0, 1024);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  std::array<uint8_t, 1024> buffer;
-  uint8_t *b = buffer.data();
-  oc_rep_new(buffer.data(), buffer.size());
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_rep_start_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_text_string(root, "hello", "world");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_double(root, "double", 3.14);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_boolean(root, "bool", true);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_int(root, "int", -1);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_uint(root, "uint", -1);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  uint8_t byte_string[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
-  oc_rep_set_byte_string(root, byte_string_key, byte_string,
-                         sizeof(byte_string));
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  int fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
-  oc_rep_set_key(oc_rep_object(root), "fibonacci");
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_begin_array(oc_rep_object(root), fibonacci);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
-    oc_rep_add_int(fibonacci, fib[i]);
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  }
-  oc_rep_end_array(oc_rep_object(root), fibonacci);
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
-  oc_rep_set_double_array(
-    root, math_constants, math_constants,
-    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_end_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  b = oc_rep_shrink_encoder_buf(b);
-  EXPECT_EQ(166, oc_rep_get_encoded_payload_size());
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(b);
-#endif
+  std::array<char, 5> buffer;
+  EXPECT_EQ(2, oc_rep_to_json(rep, buffer.data(), buffer.size(), false));
+  EXPECT_STREQ("{}", buffer.data());
+
+  EXPECT_EQ(4, oc_rep_to_json(rep, buffer.data(), buffer.size(), true));
+  EXPECT_STREQ("{\n}\n", buffer.data());
 }
 
 class TestRepWithPool : public testing::Test {
@@ -118,7 +80,7 @@ public:
 
   oc::oc_rep_unique_ptr ParsePayload() { return pool_.ParsePayload(); }
 
-  void CheckJson(const oc_rep_t *rep, const char *expected,
+  void CheckJson(const oc_rep_t *rep, const std::string &expected,
                  bool pretty_print) const
   {
     size_t json_size = oc_rep_to_json(rep, nullptr, 0, pretty_print);
@@ -126,8 +88,8 @@ public:
     json.reserve(json_size + 1);
     size_t rep_len =
       oc_rep_to_json(rep, &json[0], json.capacity(), pretty_print);
-    EXPECT_EQ(strlen(expected), rep_len);
-    EXPECT_STREQ(expected, json.data());
+    EXPECT_EQ(expected.length(), rep_len);
+    EXPECT_STREQ(expected.c_str(), json.data());
   }
 
 private:
@@ -282,11 +244,11 @@ TEST_F(TestRepWithPool, OCRepSetGetInt)
   CheckJson(rep.get(),
             "{\"ultimate_answer\":10000000000,\"negative\":-1024,\"zero\":0}",
             false);
-  const char pretty_json[] = "{\n"
-                             "  \"ultimate_answer\" : 10000000000,\n"
-                             "  \"negative\" : -1024,\n"
-                             "  \"zero\" : 0\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"ultimate_answer\" : 10000000000,\n"
+                            "  \"negative\" : -1024,\n"
+                            "  \"zero\" : 0\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -344,15 +306,14 @@ TEST_F(TestRepWithPool, OCRepSetGetUint)
   EXPECT_FALSE(oc_rep_get_int(rep.get(), "zero", nullptr));
   EXPECT_FALSE(oc_rep_get_int(rep.get(), "not_a_key", &zero_out));
 
-  CheckJson(
-    rep.get(),
-    "{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}",
-    false);
-  const char pretty_json[] = "{\n"
-                             "  \"ultimate_answer\" : 42,\n"
-                             "  \"larger_than_int\" : 3000000000,\n"
-                             "  \"zero\" : 0\n"
-                             "}\n";
+  std::string json =
+    "{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}";
+  CheckJson(rep.get(), json, false);
+  std::string pretty_json = "{\n"
+                            "  \"ultimate_answer\" : 42,\n"
+                            "  \"larger_than_int\" : 3000000000,\n"
+                            "  \"zero\" : 0\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -386,12 +347,12 @@ TEST_F(TestRepWithPool, OCRepSetGetBool)
   EXPECT_FALSE(oc_rep_get_bool(rep.get(), "true_flag", nullptr));
   EXPECT_FALSE(oc_rep_get_bool(rep.get(), "not_a_key", &true_flag_out));
 
-  const char json[] = "{\"true_flag\":true,\"false_flag\":false}";
+  std::string json = "{\"true_flag\":true,\"false_flag\":false}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"true_flag\" : true,\n"
-                             "  \"false_flag\" : false\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"true_flag\" : true,\n"
+                            "  \"false_flag\" : false\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -452,15 +413,15 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
   EXPECT_FALSE(
     oc_rep_get_string(rep.get(), "not_a_key", &hal9000_out, &str_len));
 
-  const char json[] = "{\"empty\":\"\","
-                      "\"hal9000\":\"Dave\","
-                      "\"ru_character_set\":\"Привет, мир\"}";
+  std::string json = "{\"empty\":\"\","
+                     "\"hal9000\":\"Dave\","
+                     "\"ru_character_set\":\"Привет, мир\"}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"empty\" : \"\",\n"
-                             "  \"hal9000\" : \"Dave\",\n"
-                             "  \"ru_character_set\" : \"Привет, мир\"\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"empty\" : \"\",\n"
+                            "  \"hal9000\" : \"Dave\",\n"
+                            "  \"ru_character_set\" : \"Привет, мир\"\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -513,13 +474,13 @@ TEST_F(TestRepWithPool, OCRepSetGetByteString)
   EXPECT_FALSE(oc_rep_get_byte_string(rep.get(), "not_a_key",
                                       &test_byte_string_out, &str_len));
 
-  const char json[] = "{\"empty_byte_string\":\"\","
-                      "\"test_byte_string\":\"AQIDBAIA\"}";
+  std::string json = "{\"empty_byte_string\":\"\","
+                     "\"test_byte_string\":\"AQIDBAIA\"}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"empty_byte_string\" : \"\",\n"
-                             "  \"test_byte_string\" : \"AQIDBAIA\"\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"empty_byte_string\" : \"\",\n"
+                            "  \"test_byte_string\" : \"AQIDBAIA\"\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 
   EXPECT_LT(25, oc_rep_to_json(rep.get(), nullptr, 0, false));
@@ -529,8 +490,8 @@ TEST_F(TestRepWithPool, OCRepSetGetByteString)
   // Decoding of byte string is an all or nothing action. Since there
   // is not enough room in the too_small output buffer nothing is placed in the
   // buffer and remaining space is left empty.
-  const char too_small_json[] = "{\"empty_byte_string\":\"\",";
-  EXPECT_STREQ(too_small_json, too_small.data());
+  std::string too_small_json = "{\"empty_byte_string\":\"\",";
+  EXPECT_STREQ(too_small_json.c_str(), too_small.data());
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetEmptyIntArray)
@@ -560,9 +521,10 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  int64_t fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000 };
-  oc_rep_set_int_array(root, fibonacci, fib,
-                       (int)(sizeof(fib) / sizeof(fib[0])));
+  std::vector<int64_t> fib = {
+    1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000
+  };
+  oc_rep_set_int_array(root, fibonacci, fib.data(), fib.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -572,10 +534,10 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  int64_t *fib_out = 0;
+  int64_t *fib_out = nullptr;
   size_t fib_len;
   EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
-  ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
+  ASSERT_EQ(fib.size(), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
@@ -588,10 +550,9 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
   EXPECT_FALSE(
     oc_rep_get_int_array(rep.get(), "not_a_key", &fib_out, &fib_len));
 
-  const char json[] =
-    "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89,10000000000]}";
+  std::string json = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89,10000000000]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] =
+  std::string pretty_json =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 10000000000]\n"
     "}\n";
@@ -607,12 +568,12 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  int64_t fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+  std::vector<int64_t> fib = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
 
   oc_rep_open_array(root, fibonacci);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
-    oc_rep_add_int(fibonacci, fib[i]);
+  for (const auto &v : fib) {
+    oc_rep_add_int(fibonacci, v);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   }
   oc_rep_close_array(root, fibonacci);
@@ -625,17 +586,17 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  int64_t *fib_out = 0;
+  int64_t *fib_out = nullptr;
   size_t fib_len;
   EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
-  ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
+  ASSERT_EQ(fib.size(), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
 
-  const char json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+  std::string json = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] =
+  std::string pretty_json =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
     "}\n";
@@ -651,13 +612,13 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  int64_t fib[] = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
+  std::vector<int64_t> fib = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
   oc_rep_set_key(oc_rep_object(root), "fibonacci");
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_begin_array(oc_rep_object(root), fibonacci);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(fib) / sizeof(fib[0])); i++) {
-    oc_rep_add_int(fibonacci, fib[i]);
+  for (const auto &v : fib) {
+    oc_rep_add_int(fibonacci, v);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   }
   oc_rep_end_array(oc_rep_object(root), fibonacci);
@@ -670,17 +631,17 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  int64_t *fib_out = 0;
+  int64_t *fib_out = nullptr;
   size_t fib_len;
   EXPECT_TRUE(oc_rep_get_int_array(rep.get(), "fibonacci", &fib_out, &fib_len));
-  ASSERT_EQ(sizeof(fib) / sizeof(fib[0]), fib_len);
+  ASSERT_EQ(fib.size(), fib_len);
   for (size_t i = 0; i < fib_len; ++i) {
     EXPECT_EQ(fib[i], fib_out[i]);
   }
 
-  const char json[] = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
+  std::string json = "{\"fibonacci\":[1,1,2,3,5,8,13,21,34,55,89]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] =
+  std::string pretty_json =
     "{\n"
     "  \"fibonacci\" : [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]\n"
     "}\n";
@@ -714,9 +675,8 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  bool flip[] = { false, false, true, false, false };
-  oc_rep_set_bool_array(root, flip, flip,
-                        (int)(sizeof(flip) / sizeof(flip[0])));
+  std::array<bool, 5> flip = { false, false, true, false, false };
+  oc_rep_set_bool_array(root, flip, flip.data(), flip.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -726,10 +686,10 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  bool *flip_out = 0;
+  bool *flip_out = nullptr;
   size_t flip_len;
   EXPECT_TRUE(oc_rep_get_bool_array(rep.get(), "flip", &flip_out, &flip_len));
-  ASSERT_EQ(sizeof(flip) / sizeof(flip[0]), flip_len);
+  ASSERT_EQ(flip.size(), flip_len);
   for (size_t i = 0; i < flip_len; ++i) {
     EXPECT_EQ(flip[i], flip_out[i]);
   }
@@ -742,11 +702,11 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
   EXPECT_FALSE(
     oc_rep_get_bool_array(rep.get(), "not_a_key", &flip_out, &flip_len));
 
-  const char json[] = "{\"flip\":[false,false,true,false,false]}";
+  std::string json = "{\"flip\":[false,false,true,false,false]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"flip\" : [false, false, true, false, false]\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"flip\" : [false, false, true, false, false]\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -759,11 +719,11 @@ TEST_F(TestRepWithPool, OCRepAddGetBoolArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  bool flip[] = { false, false, true, false, false };
+  std::array<bool, 5> flip = { false, false, true, false, false };
   oc_rep_open_array(root, flip);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(flip) / sizeof(flip[0])); i++) {
-    oc_rep_add_boolean(flip, flip[i]);
+  for (const auto &v : flip) {
+    oc_rep_add_boolean(flip, v);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   }
   oc_rep_close_array(root, flip);
@@ -776,19 +736,19 @@ TEST_F(TestRepWithPool, OCRepAddGetBoolArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  bool *flip_out = 0;
+  bool *flip_out = nullptr;
   size_t flip_len;
   EXPECT_TRUE(oc_rep_get_bool_array(rep.get(), "flip", &flip_out, &flip_len));
-  ASSERT_EQ(sizeof(flip) / sizeof(flip[0]), flip_len);
+  ASSERT_EQ(flip.size(), flip_len);
   for (size_t i = 0; i < flip_len; ++i) {
     EXPECT_EQ(flip[i], flip_out[i]);
   }
 
-  const char json[] = "{\"flip\":[false,false,true,false,false]}";
+  std::string json = "{\"flip\":[false,false,true,false,false]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"flip\" : [false, false, true, false, false]\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"flip\" : [false, false, true, false, false]\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -819,10 +779,9 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
-  oc_rep_set_double_array(
-    root, math_constants, math_constants,
-    (int)(sizeof(math_constants) / sizeof(math_constants[0])));
+  std::vector<double> math_constants = { 3.14159, 2.71828, 1.414121, 1.61803 };
+  oc_rep_set_double_array(root, math_constants, math_constants.data(),
+                          math_constants.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -832,12 +791,11 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  double *math_constants_out = 0;
+  double *math_constants_out = nullptr;
   size_t math_constants_len;
   EXPECT_TRUE(oc_rep_get_double_array(
     rep.get(), "math_constants", &math_constants_out, &math_constants_len));
-  ASSERT_EQ(sizeof(math_constants) / sizeof(math_constants[0]),
-            math_constants_len);
+  ASSERT_EQ(math_constants.size(), math_constants_len);
   for (size_t i = 0; i < math_constants_len; ++i) {
     EXPECT_EQ(math_constants[i], math_constants_out[i]);
   }
@@ -854,10 +812,10 @@ TEST_F(TestRepWithPool, OCRepSetGetDoubleArray)
   EXPECT_FALSE(oc_rep_get_double_array(
     rep.get(), "not_a_key", &math_constants_out, &math_constants_len));
 
-  const char json[] =
+  std::string json =
     "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] =
+  std::string pretty_json =
     "{\n"
     "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
     "}\n";
@@ -872,12 +830,11 @@ TEST_F(TestRepWithPool, OCRepAddGetDoubleArray)
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  double math_constants[] = { 3.14159, 2.71828, 1.414121, 1.61803 };
+  std::vector<double> math_constants = { 3.14159, 2.71828, 1.414121, 1.61803 };
   oc_rep_open_array(root, math_constants);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  for (size_t i = 0; i < (sizeof(math_constants) / sizeof(math_constants[0]));
-       i++) {
-    oc_rep_add_double(math_constants, math_constants[i]);
+  for (const auto &v : math_constants) {
+    oc_rep_add_double(math_constants, v);
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   }
   oc_rep_close_array(root, math_constants);
@@ -890,20 +847,19 @@ TEST_F(TestRepWithPool, OCRepAddGetDoubleArray)
   ASSERT_NE(nullptr, rep.get());
 
   /* read the values from the oc_rep_t */
-  double *math_constants_out = 0;
+  double *math_constants_out = nullptr;
   size_t math_constants_len;
   EXPECT_TRUE(oc_rep_get_double_array(
     rep.get(), "math_constants", &math_constants_out, &math_constants_len));
-  ASSERT_EQ(sizeof(math_constants) / sizeof(math_constants[0]),
-            math_constants_len);
+  ASSERT_EQ(math_constants.size(), math_constants_len);
   for (size_t i = 0; i < math_constants_len; ++i) {
     EXPECT_EQ(math_constants[i], math_constants_out[i]);
   }
 
-  const char json[] =
+  std::string json =
     "{\"math_constants\":[3.141590,2.718280,1.414121,1.618030]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] =
+  std::string pretty_json =
     "{\n"
     "  \"math_constants\" : [3.141590, 2.718280, 1.414121, 1.618030]\n"
     "}\n";
@@ -982,15 +938,15 @@ TEST_F(TestRepWithPool, OCRepSetGetObject)
   EXPECT_EQ(5, c_out_size);
   EXPECT_STREQ("three", c_out);
 
-  const char json[] = "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
+  std::string json = "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"my_object\" : {\n"
-                             "    \"a\" : 1,\n"
-                             "    \"b\" : false,\n"
-                             "    \"c\" : \"three\"\n"
-                             "  }\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"my_object\" : {\n"
+                            "    \"a\" : 1,\n"
+                            "    \"b\" : false,\n"
+                            "    \"c\" : \"three\"\n"
+                            "  }\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -1034,13 +990,13 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectWithTag)
   oc::oc_rep_unique_ptr rep = ParsePayload();
   ASSERT_NE(nullptr, rep.get());
 
-  const char json[] = "{\"tagged_url\":{\"url\":\"iotivity.org\"}}";
+  std::string json = "{\"tagged_url\":{\"url\":\"iotivity.org\"}}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"tagged_url\" : {\n"
-                             "    \"url\" : \"iotivity.org\"\n"
-                             "  }\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"tagged_url\" : {\n"
+                            "    \"url\" : \"iotivity.org\"\n"
+                            "  }\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -1169,53 +1125,52 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_EQ(strlen("AI computer"), job_out_size);
   EXPECT_STREQ("AI computer", job_out);
 
-  const char json[] =
+  std::string json =
     "{\"space_2001\":[{\"name\":\"Dave Bowman\","
     "\"job\":\"astronaut\"},{\"name\":\"Frank Poole\",\"job\":\"astronaut\"}"
     ",{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"space_2001\" : [\n"
-                             "    {\n"
-                             "      \"name\" : \"Dave Bowman\",\n"
-                             "      \"job\" : \"astronaut\"\n    },\n"
-                             "    {\n"
-                             "      \"name\" : \"Frank Poole\",\n"
-                             "      \"job\" : \"astronaut\"\n"
-                             "    },\n"
-                             "    {\n"
-                             "      \"name\" : \"Hal 9000\",\n"
-                             "      \"job\" : \"AI computer\"\n"
-                             "    }]\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"space_2001\" : [\n"
+                            "    {\n"
+                            "      \"name\" : \"Dave Bowman\",\n"
+                            "      \"job\" : \"astronaut\"\n    },\n"
+                            "    {\n"
+                            "      \"name\" : \"Frank Poole\",\n"
+                            "      \"job\" : \"astronaut\"\n"
+                            "    },\n"
+                            "    {\n"
+                            "      \"name\" : \"Hal 9000\",\n"
+                            "      \"job\" : \"AI computer\"\n"
+                            "    }]\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
 TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
 {
   /* jagged arrays for testing */
-  uint8_t ba1[] = { 0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
-  uint8_t ba2[] = { 0x01, 0x01, 0x02, 0x03, 0x05, 0x08,
-                    0x13, 0x21, 0x34, 0x55, 0x89 };
-  uint8_t ba3[] = {
-    0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
-    0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42
-  };
+  std::vector<uint8_t> ba1 = { 0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+  std::vector<uint8_t> ba2 = { 0x01, 0x01, 0x02, 0x03, 0x05, 0x08,
+                               0x13, 0x21, 0x34, 0x55, 0x89 };
+  std::vector<uint8_t> ba3 = { 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+                               0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+                               0x42, 0x42, 0x42, 0x42, 0x42, 0x42 };
   // at lease on byte array not nul terminated.
-  uint8_t ba4[] = { 0x00, 0x00, 0xff, 0x00, 0x00 };
+  std::vector<uint8_t> ba4 = { 0x00, 0x00, 0xff, 0x00, 0x00 };
 
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_array(root, barray);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_byte_string(barray, ba1, sizeof(ba1));
+  oc_rep_add_byte_string(barray, ba1.data(), ba1.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_byte_string(barray, ba2, sizeof(ba2));
+  oc_rep_add_byte_string(barray, ba2.data(), ba2.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_byte_string(barray, ba3, sizeof(ba3));
+  oc_rep_add_byte_string(barray, ba3.data(), ba3.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_byte_string(barray, ba4, sizeof(ba4));
+  oc_rep_add_byte_string(barray, ba4.data(), ba4.size());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_close_array(root, barray);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -1242,35 +1197,35 @@ TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
   EXPECT_FALSE(
     oc_rep_get_byte_string_array(rep.get(), "barray", &barray_out, nullptr));
 
-  EXPECT_EQ(sizeof(ba1), oc_byte_string_array_get_item_size(barray_out, 0));
-  EXPECT_EQ(memcmp(ba1, oc_byte_string_array_get_item(barray_out, 0),
+  EXPECT_EQ(ba1.size(), oc_byte_string_array_get_item_size(barray_out, 0));
+  EXPECT_EQ(memcmp(ba1.data(), oc_byte_string_array_get_item(barray_out, 0),
                    oc_byte_string_array_get_item_size(barray_out, 0)),
             0);
-  EXPECT_EQ(sizeof(ba2), oc_byte_string_array_get_item_size(barray_out, 1));
-  EXPECT_EQ(memcmp(ba2, oc_byte_string_array_get_item(barray_out, 1),
+  EXPECT_EQ(ba2.size(), oc_byte_string_array_get_item_size(barray_out, 1));
+  EXPECT_EQ(memcmp(ba2.data(), oc_byte_string_array_get_item(barray_out, 1),
                    oc_byte_string_array_get_item_size(barray_out, 1)),
             0);
-  EXPECT_EQ(sizeof(ba3), oc_byte_string_array_get_item_size(barray_out, 2));
-  EXPECT_EQ(memcmp(ba3, oc_byte_string_array_get_item(barray_out, 2),
+  EXPECT_EQ(ba3.size(), oc_byte_string_array_get_item_size(barray_out, 2));
+  EXPECT_EQ(memcmp(ba3.data(), oc_byte_string_array_get_item(barray_out, 2),
                    oc_byte_string_array_get_item_size(barray_out, 2)),
             0);
-  EXPECT_EQ(sizeof(ba4), oc_byte_string_array_get_item_size(barray_out, 3));
-  EXPECT_EQ(memcmp(ba4, oc_byte_string_array_get_item(barray_out, 3),
+  EXPECT_EQ(ba4.size(), oc_byte_string_array_get_item_size(barray_out, 3));
+  EXPECT_EQ(memcmp(ba4.data(), oc_byte_string_array_get_item(barray_out, 3),
                    oc_byte_string_array_get_item_size(barray_out, 3)),
             0);
 
-  const char json[] =
+  std::string json =
     "{\"barray\":[\"AQECAwQFBg==\","
     "\"AQECAwUIEyE0VYk=\",\"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\"AAD/AAA=\"]}";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"barray\" : [\n"
-                             "    \"AQECAwQFBg==\",\n"
-                             "    \"AQECAwUIEyE0VYk=\",\n"
-                             "    \"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\n"
-                             "    \"AAD/AAA=\"\n"
-                             "  ]\n"
-                             "}\n";
+  std::string pretty_json = "{\n"
+                            "  \"barray\" : [\n"
+                            "    \"AQECAwQFBg==\",\n"
+                            "    \"AQECAwUIEyE0VYk=\",\n"
+                            "    \"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\n"
+                            "    \"AAD/AAA=\"\n"
+                            "  ]\n"
+                            "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -1306,24 +1261,25 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
     in a string array.
   */
 #ifdef OC_DYNAMIC_ALLOCATION
-#define STR0                                                                   \
-  "Do not take life too seriously. You will never get out of it alive."
-#define STR1 "All generalizations are false, including this one."
-#define STR2 "Those who believe in telekinetics, raise my hand."
-#define STR3 "I refuse to join any club that would have me as a member."
-#else /* !OC_DYNAMIC_ALLOCATION */
-#define STR0 "Do not take life too seriously."
-#define STR1 "All generalizations are false."
-#define STR2 "Raise my hand."
-#define STR3 "I refuse to join any club."
+  std::string STR0 =
+    "Do not take life too seriously. You will never get out of it alive.";
+  std::string STR1 = "All generalizations are false, including this one.";
+  std::string STR2 = "Those who believe in telekinetics, raise my hand.";
+  std::string STR3 =
+    "I refuse to join any club that would have me as a member.";
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  std::string STR0 = "Do not take life too seriously.";
+  std::string STR1 = "All generalizations are false.";
+  std::string STR2 = "Raise my hand.";
+  std::string STR3 = "I refuse to join any club.";
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_string_array_t quotes;
   oc_new_string_array(&quotes, static_cast<size_t>(4));
-  EXPECT_TRUE(oc_string_array_add_item(quotes, STR0));
-  EXPECT_TRUE(oc_string_array_add_item(quotes, STR1));
-  EXPECT_TRUE(oc_string_array_add_item(quotes, STR2));
-  EXPECT_TRUE(oc_string_array_add_item(quotes, STR3));
+  EXPECT_TRUE(oc_string_array_add_item(quotes, STR0.c_str()));
+  EXPECT_TRUE(oc_string_array_add_item(quotes, STR1.c_str()));
+  EXPECT_TRUE(oc_string_array_add_item(quotes, STR2.c_str()));
+  EXPECT_TRUE(oc_string_array_add_item(quotes, STR3.c_str()));
   /* add values to root object */
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -1354,29 +1310,33 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
   EXPECT_FALSE(
     oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, nullptr));
 
-  EXPECT_EQ(strlen(STR0), oc_string_array_get_item_size(quotes_out, 0));
-  EXPECT_STREQ(STR0, oc_string_array_get_item(quotes_out, 0));
-  EXPECT_EQ(strlen(STR1), oc_string_array_get_item_size(quotes_out, 1));
-  EXPECT_STREQ(STR1, oc_string_array_get_item(quotes_out, 1));
-  EXPECT_EQ(strlen(STR2), oc_string_array_get_item_size(quotes_out, 2));
-  EXPECT_STREQ(STR2, oc_string_array_get_item(quotes_out, 2));
-  EXPECT_EQ(strlen(STR3), oc_string_array_get_item_size(quotes_out, 3));
-  EXPECT_STREQ(STR3, oc_string_array_get_item(quotes_out, 3));
+  EXPECT_EQ(STR0.length(), oc_string_array_get_item_size(quotes_out, 0));
+  EXPECT_STREQ(STR0.c_str(), oc_string_array_get_item(quotes_out, 0));
+  EXPECT_EQ(STR1.length(), oc_string_array_get_item_size(quotes_out, 1));
+  EXPECT_STREQ(STR1.c_str(), oc_string_array_get_item(quotes_out, 1));
+  EXPECT_EQ(STR2.length(), oc_string_array_get_item_size(quotes_out, 2));
+  EXPECT_STREQ(STR2.c_str(), oc_string_array_get_item(quotes_out, 2));
+  EXPECT_EQ(STR3.length(), oc_string_array_get_item_size(quotes_out, 3));
+  EXPECT_STREQ(STR3.c_str(), oc_string_array_get_item(quotes_out, 3));
 
-  const char json[] = "{\"quotes\":"
-                      "[\"" STR0 "\","
-                      "\"" STR1 "\","
-                      "\"" STR2 "\","
-                      "\"" STR3 "\"]}";
+  // clang-format off
+  std::string json = "{\"quotes\":"
+                     "[\"" + STR0 + "\","
+                     "\"" + STR1 + "\","
+                     "\"" + STR2 + "\","
+                     "\"" + STR3 + "\"]}";
+  // clang-format on
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"quotes\" : [\n"
-                             "    \"" STR0 "\",\n"
-                             "    \"" STR1 "\",\n"
-                             "    \"" STR2 "\",\n"
-                             "    \"" STR3 "\"\n"
-                             "  ]\n"
-                             "}\n";
+  // clang-format off
+  std::string pretty_json = "{\n"
+                            "  \"quotes\" : [\n"
+                            "    \"" + STR0 + "\",\n"
+                            "    \"" + STR1 + "\",\n"
+                            "    \"" + STR2 + "\",\n"
+                            "    \"" + STR3 + "\"\n"
+                            "  ]\n"
+                            "}\n";
+  // clang-format on
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -1388,16 +1348,17 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
     in a string array.
   */
 #ifdef OC_DYNAMIC_ALLOCATION
-#define STR0                                                                   \
-  "Do not take life too seriously. You will never get out of it alive."
-#define STR1 "All generalizations are false, including this one."
-#define STR2 "Those who believe in telekinetics, raise my hand."
-#define STR3 "I refuse to join any club that would have me as a member."
-#else /* !OC_DYNAMIC_ALLOCATION */
-#define STR0 "Do not take life too seriously."
-#define STR1 "All generalizations are false."
-#define STR2 "Raise my hand."
-#define STR3 "I refuse to join any club."
+  std::string STR0 =
+    "Do not take life too seriously. You will never get out of it alive.";
+  std::string STR1 = "All generalizations are false, including this one.";
+  std::string STR2 = "Those who believe in telekinetics, raise my hand.";
+  std::string STR3 =
+    "I refuse to join any club that would have me as a member.";
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  std::string STR0 = "Do not take life too seriously.";
+  std::string STR1 = "All generalizations are false.";
+  std::string STR2 = "Raise my hand.";
+  std::string STR3 = "I refuse to join any club.";
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   /* add values to root object */
@@ -1405,13 +1366,13 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_open_array(root, quotes);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_text_string(quotes, STR0);
+  oc_rep_add_text_string(quotes, STR0.c_str());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_text_string(quotes, STR1);
+  oc_rep_add_text_string(quotes, STR1.c_str());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_text_string(quotes, STR2);
+  oc_rep_add_text_string(quotes, STR2.c_str());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_add_text_string(quotes, STR3);
+  oc_rep_add_text_string(quotes, STR3.c_str());
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_close_array(root, quotes);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -1439,29 +1400,33 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
   EXPECT_FALSE(
     oc_rep_get_string_array(rep.get(), "quotes", &quotes_out, nullptr));
 
-  EXPECT_EQ(strlen(STR0), oc_string_array_get_item_size(quotes_out, 0));
-  EXPECT_STREQ(STR0, oc_string_array_get_item(quotes_out, 0));
-  EXPECT_EQ(strlen(STR1), oc_string_array_get_item_size(quotes_out, 1));
-  EXPECT_STREQ(STR1, oc_string_array_get_item(quotes_out, 1));
-  EXPECT_EQ(strlen(STR2), oc_string_array_get_item_size(quotes_out, 2));
-  EXPECT_STREQ(STR2, oc_string_array_get_item(quotes_out, 2));
-  EXPECT_EQ(strlen(STR3), oc_string_array_get_item_size(quotes_out, 3));
-  EXPECT_STREQ(STR3, oc_string_array_get_item(quotes_out, 3));
+  EXPECT_EQ(STR0.length(), oc_string_array_get_item_size(quotes_out, 0));
+  EXPECT_STREQ(STR0.c_str(), oc_string_array_get_item(quotes_out, 0));
+  EXPECT_EQ(STR1.length(), oc_string_array_get_item_size(quotes_out, 1));
+  EXPECT_STREQ(STR1.c_str(), oc_string_array_get_item(quotes_out, 1));
+  EXPECT_EQ(STR2.length(), oc_string_array_get_item_size(quotes_out, 2));
+  EXPECT_STREQ(STR2.c_str(), oc_string_array_get_item(quotes_out, 2));
+  EXPECT_EQ(STR3.length(), oc_string_array_get_item_size(quotes_out, 3));
+  EXPECT_STREQ(STR3.c_str(), oc_string_array_get_item(quotes_out, 3));
 
-  const char json[] = "{\"quotes\":"
-                      "[\"" STR0 "\","
-                      "\"" STR1 "\","
-                      "\"" STR2 "\","
-                      "\"" STR3 "\"]}";
+  // clang-format off
+  std::string json = "{\"quotes\":"
+                     "[\"" + STR0 + "\","
+                     "\"" + STR1 + "\","
+                     "\"" + STR2 + "\","
+                     "\"" + STR3 + "\"]}";
+  // clang-format on                      
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "{\n"
-                             "  \"quotes\" : [\n"
-                             "    \"" STR0 "\",\n"
-                             "    \"" STR1 "\",\n"
-                             "    \"" STR2 "\",\n"
-                             "    \"" STR3 "\"\n"
-                             "  ]\n"
-                             "}\n";
+  // clang-format off  
+  std::string  pretty_json = "{\n"
+                            "  \"quotes\" : [\n"
+                            "    \"" + STR0 + "\",\n"
+                            "    \"" + STR1 + "\",\n"
+                            "    \"" + STR2 + "\",\n"
+                            "    \"" + STR3 + "\"\n"
+                            "  ]\n"
+                            "}\n";
+  // clang-format on
   CheckJson(rep.get(), pretty_json, true);
 }
 
@@ -1542,21 +1507,21 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
   EXPECT_TRUE(oc_rep_get_int(rep_out, "count", &count_out));
   EXPECT_EQ(100, count_out);
 
-  const char json[] = "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
-                      "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
+  std::string json = "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
+                     "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
   CheckJson(rep.get(), json, false);
-  const char pretty_json[] = "[\n"
-                             "  {\n"
-                             "    \"href\" : \"/light/1\",\n"
-                             "    \"rep\" : {\n"
-                             "      \"state\" : true\n"
-                             "    }\n"
-                             "  },\n"
-                             "  {\n"
-                             "    \"href\" : \"/count/1\",\n"
-                             "    \"rep\" : {\n"
-                             "      \"count\" : 100\n    }\n"
-                             "  }\n"
-                             "]\n";
+  std::string pretty_json = "[\n"
+                            "  {\n"
+                            "    \"href\" : \"/light/1\",\n"
+                            "    \"rep\" : {\n"
+                            "      \"state\" : true\n"
+                            "    }\n"
+                            "  },\n"
+                            "  {\n"
+                            "    \"href\" : \"/count/1\",\n"
+                            "    \"rep\" : {\n"
+                            "      \"count\" : 100\n    }\n"
+                            "  }\n"
+                            "]\n";
   CheckJson(rep.get(), pretty_json, true);
 }

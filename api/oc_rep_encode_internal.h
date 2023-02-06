@@ -52,7 +52,8 @@ void oc_rep_encoder_init(uint8_t *buffer, size_t size);
  * @param size size of the buffer
  * @param max_size maximal allowed size of the buffer
  */
-void oc_rep_encoder_realloc_init(uint8_t **buffer, size_t size, int max_size);
+void oc_rep_encoder_realloc_init(uint8_t **buffer, size_t size,
+                                 size_t max_size);
 
 /**
  * @brief Recalcute the pointer to the buffer and the pointer to the end of the
