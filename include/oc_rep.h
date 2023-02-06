@@ -48,6 +48,7 @@ extern int g_err;
  * @param[in] size size of the payload buffer
  * @param[in] max_size maximum size the encoder buffer
  */
+OC_API
 void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
 
 /**
@@ -59,6 +60,7 @@ void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
  * @param[in] payload pointer to payload buffer
  * @param[in] size size of the payload buffer
  */
+OC_API
 void oc_rep_new(uint8_t *payload, int size);
 
 /**
@@ -66,6 +68,7 @@ void oc_rep_new(uint8_t *payload, int size);
  *
  * @return global cbor encoder
  */
+OC_API
 CborEncoder *oc_rep_get_encoder(void);
 
 /**
@@ -76,6 +79,7 @@ CborEncoder *oc_rep_get_encoder(void);
  *
  * @see oc_rep_new_realloc
  */
+OC_API
 int oc_rep_get_encoder_buffer_size(void);
 
 /**
@@ -90,14 +94,14 @@ int oc_rep_get_encoder_buffer_size(void);
  *
  * @see oc_rep_new
  */
+OC_API
 int oc_rep_get_encoded_payload_size(void);
 
 /**
  * Get the buffer pointer at the start of the encoded cbor data.
  *
  * This is used when parsing the encoded cbor data to an oc_rep_t. It is
- * unlikely
- * to be used outside the IoTivity-lite library.
+ * unlikely to be used outside the IoTivity-lite library.
  *
  * @return pointer to the start of the cbor encoded buffer
  *
@@ -109,8 +113,7 @@ const uint8_t *oc_rep_get_encoder_buf(void);
  * Shrink the buffer pointer to length of encoded cbor data.
  *
  * This is used when parsing the encoded cbor data to an oc_rep_t. It is
- * unlikely
- * to be used outside the IoTivity-lite library.
+ * unlikely to be used outside the IoTivity-lite library.
  *
  * @param[in] buf pointer to cbor encoded buffer
  * @return pointer to the start of the shrinked cbor encoded buffer
@@ -120,41 +123,154 @@ const uint8_t *oc_rep_get_encoder_buf(void);
 uint8_t *oc_rep_shrink_encoder_buf(uint8_t *buf);
 
 /**
- * @brief Encode raw data, as if it was already encoded.
+ * @brief Encode raw data to the global encoder, as if it was already encoded.
  *
  * @param data Pointer to data to be encoded. Will be copied into the global
  * buffer.
  * @param len Length of data.
  */
+OC_API
 void oc_rep_encode_raw(const uint8_t *data, size_t len);
 
-CborError oc_rep_encoder_create_map(CborEncoder *encoder,
-                                    CborEncoder *mapEncoder, size_t length);
+/**
+ * @brief Encode a NULL value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_null(CborEncoder *encoder);
 
-CborError oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
-                                    size_t length);
-
-CborError oc_rep_encode_double(CborEncoder *encoder, double value);
-
-CborError oc_rep_encoder_close_container(CborEncoder *encoder,
-                                         CborEncoder *containerEncoder);
-
-CborError oc_rep_encode_int(CborEncoder *encoder, int64_t value);
-
-CborError oc_rep_encode_uint(CborEncoder *encoder, uint64_t value);
-
+/**
+ * @brief Encode a boolean value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param value value to encode
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
 CborError oc_rep_encode_boolean(CborEncoder *encoder, bool value);
 
-CborError oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
-                                    size_t length);
+/**
+ * @brief Encode a signed integer value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param value value to encode
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_int(CborEncoder *encoder, int64_t value);
 
-CborError oc_rep_encoder_create_array(CborEncoder *encoder,
-                                      CborEncoder *arrayEncoder, size_t length);
+/**
+ * @brief Encode an unsigned integer value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param value value to encode
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_uint(CborEncoder *encoder, uint64_t value);
 
+/**
+ * @brief Encode floating point value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param fpType floating point type (CborHalfFloatType, CborFloatType or
+ * CborDoubleType)
+ * @param value value to encode
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
 CborError oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
                                        const void *value);
 
-CborError oc_rep_encode_null(CborEncoder *encoder);
+/**
+ * @brief Encode a double value.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param value value to encode
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_double(CborEncoder *encoder, double value);
+
+/**
+ * @brief Encode a C-string.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param string C-string to encode
+ * @param length length of the C-string
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
+                                    size_t length);
+
+/**
+ * @brief Encode a byte string.
+ *
+ * @param encoder Internal Iotivity-lite encoder to store the value
+ * @param string byte string to encode
+ * @param length length of the byte string
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
+                                    size_t length);
+
+/**
+ * @brief Encode the beginning of an array.
+ *
+ * @param[in] encoder Parent encoder to store the array.
+ * @param[out] arrayEncoder Encoder for the created array.
+ * @param[in] length Number of items in the array (use CborIndefiniteLength if
+ * it is unknown)
+ * @return CborError encoding error
+ *
+ * @note Must be closed by oc_rep_encoder_close_container
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encoder_create_array(CborEncoder *encoder,
+                                      CborEncoder *arrayEncoder, size_t length);
+/**
+ * @brief Encode the beginning of a map.
+ *
+ * @param[in] encoder Parent encoder to store the map.
+ * @param[out] mapEncoder Encoder for the created map.
+ * @param[in] length Number of items in the map (use CborIndefiniteLength if it
+ * is unknown)
+ * @return CborError encoding error
+ *
+ * @note Must be closed by oc_rep_encoder_close_container
+ *
+ * @see oc_rep_encoder_init
+ */
+CborError oc_rep_encoder_create_map(CborEncoder *encoder,
+                                    CborEncoder *mapEncoder, size_t length);
+
+/**
+ * @brief Encode the ending of a container (an array or a map).
+ *
+ * @param encoder Parent encoder
+ * @param containerEncoder Container encoder to be closed (must have been
+ * created either by oc_rep_encoder_create_array or by
+ * oc_rep_encoder_create_map).
+ * @return CborError encoding error
+ *
+ * @see oc_rep_encoder_create_array
+ * @see oc_rep_encoder_create_map
+ */
+CborError oc_rep_encoder_close_container(CborEncoder *encoder,
+                                         CborEncoder *containerEncoder);
 
 /**
  * Get a pointer to the cbor object with the given `name`

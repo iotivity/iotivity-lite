@@ -22,9 +22,7 @@
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"
 #include "oc_tls.h"
-#define delete pseudo_delete
 #include "oc_core_res.h"
-#undef delete
 #include "port/oc_network_event_handler_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
