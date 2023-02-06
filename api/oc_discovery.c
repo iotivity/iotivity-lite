@@ -109,6 +109,23 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
   return false;
 }
 
+static void
+link_set_resource_type(CborEncoder *parent, const oc_resource_t *resource)
+{
+  // rt
+  oc_rep_set_key((parent), "rt");
+  oc_rep_start_array((parent), rt);
+  int i;
+  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+       i++) {
+    size_t size = oc_string_array_get_item_size(resource->types, i);
+    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
+    if (size > 0)
+      oc_rep_add_text_string(rt, t);
+  }
+  oc_rep_end_array((parent), rt);
+}
+
 static bool
 filter_resource(const oc_resource_t *resource, const oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
@@ -137,16 +154,7 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
   oc_rep_set_text_string(link, href, oc_string(resource->uri));
 
   // rt
-  oc_rep_set_array(link, rt);
-  int i;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-       i++) {
-    size_t size = oc_string_array_get_item_size(resource->types, i);
-    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (size > 0)
-      oc_rep_add_text_string(rt, t);
-  }
-  oc_rep_close_array(link, rt);
+  link_set_resource_type(oc_rep_object(link), resource);
 
   // if
   oc_core_encode_interfaces_mask(oc_rep_object(link), resource->interfaces);
@@ -651,6 +659,7 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
     href[6 + OC_UUID_LEN - 1 + oc_string_len(resource->uri)] = '\0';
 
     oc_rep_set_text_string(links, href, href);
+    link_set_resource_type(oc_rep_object(links), resource);
     oc_rep_set_key(oc_rep_object(links), "rep");
     memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
 
