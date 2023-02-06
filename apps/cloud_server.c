@@ -556,6 +556,15 @@ register_con()
   oc_cloud_add_resource(con_res);
 }
 
+#ifdef OC_MNT
+static void
+register_mnt()
+{
+  oc_resource_t *mnt_res = oc_core_get_resource_by_index(OCF_MNT, 0);
+  oc_cloud_add_resource(mnt_res);
+}
+#endif /* OC_MNT */
+
 static void
 register_resources(void)
 {
@@ -564,6 +573,9 @@ register_resources(void)
   register_collection();
 #endif /* OC_COLLECTIONS */
   register_con();
+#ifdef OC_MNT
+  register_mnt();
+#endif /* OC_MNT */
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)

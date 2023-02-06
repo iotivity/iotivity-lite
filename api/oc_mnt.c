@@ -44,6 +44,14 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_send_response(request, OC_STATUS_OK);
 }
 
+static oc_event_callback_retval_t
+factory_reset(void *data)
+{
+  size_t device = (size_t)(data);
+  oc_pstat_reset_device(device, false);
+  return OC_EVENT_DONE;
+}
+
 void
 post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
@@ -54,12 +62,11 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   if (oc_rep_get_bool(request->request_payload, "fr", &fr)) {
     if (fr) {
 #ifdef OC_SECURITY
-      if (oc_pstat_reset_device(request->resource->device, false)) {
-        success = true;
-      }
-#else  /* OC_SECURITY */
+      // 250ms delay to allow the response to be sent before the device resets
+      oc_set_delayed_callback_ms((void *)request->resource->device,
+                                 factory_reset, 250);
+#endif /* OC_SECURITY */
       success = true;
-#endif /* !OC_SECURITY */
     }
   }
 
