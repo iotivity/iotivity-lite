@@ -55,6 +55,19 @@ jobs:
           JUNIT4=./junit-4.13.jar ./build-unit-tests.sh
           JUNIT4=./junit-4.13.jar HAMCREST_CORE=./hamcrest-core-1.3.jar ./run-unit-tests.sh
 
+  ctt_build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: build
+        run: |
+          cd port/linux
+          make TCP=1 MNT=1 SWUPDATE=1 CLOUD=1 IPV4=0 CREATE=1 OSCORE=1
+
   build_esp32:
     # The type of runner that the job will run on
     runs-on: ubuntu-22.04
