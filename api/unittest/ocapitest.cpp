@@ -44,6 +44,7 @@ static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kManufacturerName{ "Samsung" };
 static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
+static const std::string kDeviceIdKey{ "di" };
 
 struct ApiCallback
 {
@@ -439,6 +440,29 @@ public:
   }
 };
 
+class DevicesDiscovered {
+private:
+  std::set<std::string> requiredDevices_;
+  std::set<std::string> devices_;
+
+public:
+  bool isDone() const
+  {
+    return std::all_of(requiredDevices_.cbegin(), requiredDevices_.cend(),
+                       [this](const std::string &device_id) {
+                         return devices_.find(device_id.c_str()) !=
+                                devices_.end();
+                       });
+  }
+  size_t size() const { return devices_.size(); }
+
+  void addRequired(const std::string &device_id)
+  {
+    requiredDevices_.insert(device_id);
+  }
+  void addDevice(const std::string &device_id) { devices_.insert(device_id); }
+};
+
 class TestServerClient : public testing::Test {
 protected:
   void SetUp() override
@@ -484,6 +508,25 @@ public:
     return OC_CONTINUE_DISCOVERY;
   }
 
+  static void onDeviceResourceResponse(oc_client_response_t *data)
+  {
+    oc_rep_t *rep = data->payload;
+    auto *rd = static_cast<DevicesDiscovered *>(data->user_data);
+    while (rep != nullptr) {
+      if (rep->type == OC_REP_STRING &&
+          oc_string_len(rep->name) == kDeviceIdKey.size() &&
+          memcmp(oc_string(rep->name), kDeviceIdKey.c_str(),
+                 kDeviceIdKey.size()) == 0) {
+        rd->addDevice(oc_string(rep->value.string));
+      }
+      rep = rep->next;
+    }
+    if (rd->isDone()) {
+      OC_DBG("Discovery done\n");
+      ApiHelper::terminate();
+    }
+  }
+
   static void DiscoverTestResources()
   {
     ResourceDiscovered rd{};
@@ -492,6 +535,37 @@ public:
       << "Cannot send discovery request";
     ApiHelper::poolEvents(kMaxWaitTime);
     EXPECT_TRUE(rd.isDone());
+  }
+
+  static void DiscoverDeviceIDTestResources()
+  {
+    DevicesDiscovered lightDevice{};
+    std::string lightDeviceID(OC_UUID_LEN, '\0');
+    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_LightResource.device_id),
+                   &lightDeviceID[0], lightDeviceID.size());
+    lightDevice.addRequired(lightDeviceID);
+    std::string query = kDeviceIdKey + "=" + lightDeviceID.c_str();
+    EXPECT_TRUE(oc_do_ip_multicast("/oic/d", query.c_str(),
+                                   &onDeviceResourceResponse, &lightDevice))
+      << "Cannot send multicast request";
+    ApiHelper::poolEvents(kMaxWaitTime);
+    EXPECT_TRUE(lightDevice.isDone());
+    EXPECT_EQ(lightDevice.size(), 1);
+
+    DevicesDiscovered lightSwitchDevice{};
+    std::string switchDeviceID(OC_UUID_LEN, '\0');
+    oc_uuid_to_str(oc_core_get_device_id(ApiHelper::s_SwitchResource.device_id),
+                   &switchDeviceID[0], switchDeviceID.size());
+    lightSwitchDevice.addRequired(switchDeviceID);
+    lightSwitchDevice.addRequired(lightDeviceID);
+    query += "&" + kDeviceIdKey + "=" + switchDeviceID.c_str();
+
+    EXPECT_TRUE(oc_do_ip_multicast(
+      "/oic/d", query.c_str(), &onDeviceResourceResponse, &lightSwitchDevice))
+      << "Cannot send multicast request";
+    ApiHelper::poolEvents(kMaxWaitTime);
+    EXPECT_TRUE(lightSwitchDevice.isDone());
+    EXPECT_EQ(lightSwitchDevice.size(), 2);
   }
 
   static void HandleClientResponse(oc_client_response_t *data)
@@ -515,6 +589,11 @@ public:
 TEST_F(TestServerClient, DiscoverResources)
 {
   DiscoverTestResources();
+}
+
+TEST_F(TestServerClient, DiscoverDeviceIDWithResources)
+{
+  DiscoverDeviceIDTestResources();
 }
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
