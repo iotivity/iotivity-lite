@@ -19,13 +19,24 @@
 #ifndef OC_OBT_INTERNAL_H
 #define OC_OBT_INTERNAL_H
 
+#ifdef OC_SECURITY
+
 #include "messaging/coap/oscore_constants.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_obt.h"
+#include "oc_role.h"
 #include "oc_uuid.h"
 #include "security/oc_pstat.h"
 #include "util/oc_list.h"
+
+#ifdef OC_PKI
+#include <mbedtls/build_info.h>
+#include <mbedtls/x509_crt.h>
+#endif /* OC_PKI */
+
+#include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -216,28 +227,114 @@ void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx);
 
-int oc_obt_generate_self_signed_root_cert(const char *subject_name,
-                                          const uint8_t *public_key,
-                                          const size_t public_key_size,
-                                          const uint8_t *private_key,
-                                          const size_t private_key_size);
-int oc_obt_generate_identity_cert(const char *subject_name,
-                                  const uint8_t *subject_public_key,
-                                  const size_t subject_public_key_size,
-                                  const char *issuer_name,
-                                  const uint8_t *issuer_private_key,
-                                  const size_t issuer_private_key_size,
-                                  oc_string_t *id_cert);
-int oc_obt_generate_role_cert(oc_role_t *roles, const char *subject_name,
-                              const uint8_t *subject_public_key,
-                              const size_t subject_public_key_size,
-                              const char *issuer_name,
-                              const uint8_t *issuer_private_key,
-                              const size_t issuer_private_key_size,
-                              oc_string_t *role_cert);
+#ifdef OC_PKI
+
+typedef struct oc_obt_generate_root_cert_data_t
+{
+  const char *subject_name;
+  const uint8_t *public_key;
+  size_t public_key_size;
+  const uint8_t *private_key;
+  size_t private_key_size;
+} oc_obt_generate_root_cert_data_t;
+
+/**
+ * @brief Generate self-signed root certificate in PEM string format.
+ *
+ * @param cert_data data for self-signed root certificate
+ * @param[out] buffer output buffer to store the PEM of the certificate (cannot
+ * be NULL)
+ * @param[in] buffer_size size of the output buffer
+ * @return 0 on success
+ * @return -1 on error
+ */
+int oc_obt_generate_self_signed_root_cert_pem(
+  oc_obt_generate_root_cert_data_t cert_data, unsigned char *buffer,
+  size_t buffer_size);
+
+/**
+ * @brief Generate a self-signed certificate and add it to credentials of given
+ * device.
+ *
+ * @param cert_data data for the self-signed root certificate
+ * @param device device index
+ * @return >=0 on success, credid of the self-signed certificate
+ * @return -1 on error
+ */
+int oc_obt_generate_self_signed_root_cert(
+  oc_obt_generate_root_cert_data_t cert_data, size_t device);
+
+typedef struct oc_obt_generate_identity_cert_data_t
+{
+  const char *subject_name;
+  const uint8_t *public_key;
+  size_t public_key_size;
+  const char *issuer_name;
+  const uint8_t *issuer_private_key;
+  size_t issuer_private_key_size;
+} oc_obt_generate_identity_cert_data_t;
+
+/**
+ * @brief Generate an identity certificate in PEM string format.
+ *
+ * @param cert_data data for identity certificate
+ * @param[out] buffer output buffer to store the PEM of the certificate
+ * (cannot be NULL)
+ * @param[in] buffer_size size of the output buffer
+ * @return 0 on success
+ * @return -1 on error
+ */
+int oc_obt_generate_identity_cert_pem(
+  oc_obt_generate_identity_cert_data_t cert_data, unsigned char *buffer,
+  size_t buffer_size);
+
+/**
+ * @brief Encode linked list of role and authority pairs into linked list of
+ * mbedtls_x509_general_names*
+ *
+ * @param[in] roles
+ * @param[out] general_names output pointer to store linked list of
+ * mbedtls_x509_general_names * (cannot be NULL, must be deallocated by
+ * oc_obt_free_encoded_roles)
+ * @return >=0 on success, number of encoded roles
+ * @return -1 on error
+ */
+int oc_obt_encode_roles(const oc_role_t *roles,
+                        mbedtls_x509_general_names **general_names);
+
+/// @brief Deallocate a linked list of mbedtls_x509_general_names*
+void oc_obt_free_encoded_roles(mbedtls_x509_general_names *general_names);
+
+typedef struct oc_obt_generate_role_cert_data_t
+{
+  const oc_role_t *roles;
+  const char *subject_name;
+  const uint8_t *public_key;
+  size_t public_key_size;
+  const char *issuer_name;
+  const uint8_t *issuer_private_key;
+  size_t issuer_private_key_size;
+} oc_obt_generate_role_cert_data_t;
+
+/**
+ * @brief Generate a role certificate in PEM string format.
+ *
+ * @param cert_data data for role certificate
+ * @param[out] buffer output buffer to store the PEM of the certificate
+ * (cannot be NULL)
+ * @param[in] buffer_size size of the output buffer
+ * @return 0 on success
+ * @return -1 on error
+ */
+int oc_obt_generate_role_cert_pem(oc_obt_generate_role_cert_data_t cert_data,
+                                  unsigned char *buffer, size_t buffer_size);
+
+#endif /* OC_PKI */
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* OC_SECURITY */
 
 #endif /* OC_OBT_INTERNAL_H */

@@ -225,9 +225,9 @@ endif
 
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
+	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
 			oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
-			oc_sp.c oc_store.c oc_svr.c oc_tls.c)
+			oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -329,7 +329,7 @@ $(SECURITY_TEST_OBJ_DIR)/%.o: $(SECURITY_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) $(SECURITY_HEADERS) -c
 
-securitytest: $(SECURITY_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+securitytest: $(SECURITY_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS)  $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp

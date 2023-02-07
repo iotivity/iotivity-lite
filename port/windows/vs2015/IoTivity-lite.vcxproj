@@ -266,14 +266,14 @@
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
     <ClInclude Include="..\..\..\security\oc_ael.h" />
     <ClInclude Include="..\..\..\security\oc_audit.h" />
-    <ClInclude Include="..\..\..\security\oc_certs.h" />
+    <ClInclude Include="..\..\..\security\oc_certs_internal.h" />
     <ClInclude Include="..\..\..\security\oc_cred_internal.h" />
-    <ClInclude Include="..\..\..\security\oc_csr.h" />
+    <ClInclude Include="..\..\..\security\oc_csr_internal.h" />
     <ClInclude Include="..\..\..\security\oc_doxm.h" />
     <ClInclude Include="..\..\..\security\oc_keypair.h" />
     <ClInclude Include="..\..\..\security\oc_obt_internal.h" />
     <ClInclude Include="..\..\..\security\oc_pstat.h" />
-    <ClInclude Include="..\..\..\security\oc_roles.h" />
+    <ClInclude Include="..\..\..\security\oc_roles_internal.h" />
     <ClInclude Include="..\..\..\security\oc_sdi.h" />
     <ClInclude Include="..\..\..\security\oc_sp_internal.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />

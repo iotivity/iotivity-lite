@@ -390,14 +390,15 @@ if(OC_SECURITY_ENABLED)
     if(OC_DYNAMIC_ALLOCATION_ENABLED)
         list(APPEND CLIENT_SRC ${SECURITY_OBT_SRC})
     endif()
+
+    # fix oc_python compilation when OC_SECURITY is disabled
+    file(GLOB PYTHON_SRC python/*.c)
 endif()
 
 if(OC_CLOUD_ENABLED)
     file(GLOB CLOUD_SRC api/cloud/*.c)
     set(CLOUD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/api/cloud)
 endif()
-
-file(GLOB PYTHON_SRC python/*.c)
 
 # ####### Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
@@ -512,14 +513,14 @@ if(OC_CLOUD_ENABLED)
     endif()
 endif()
 
-add_library(python-obj OBJECT ${PYTHON_SRC})
-target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
-target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
-set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
-target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-target_link_libraries(python-obj PRIVATE ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
+    add_library(python-obj OBJECT ${PYTHON_SRC})
+    target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
+    target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+    set_property(TARGET python-obj PROPERTY C_VISIBILITY_PRESET hidden)
+    set_property(TARGET python-obj PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+    target_include_directories(python-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+    target_link_libraries(python-obj PRIVATE ${TINYCBOR_DEP})
     target_link_libraries(python-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
@@ -708,33 +709,33 @@ if(NOT MSVC)
     )
 endif()
 
-# Python client
-set(client-python-lib-obj
-    $<TARGET_OBJECTS:common-obj>
-    $<TARGET_OBJECTS:client-obj>
-    $<TARGET_OBJECTS:python-obj>
-)
-
-add_library(client-python-shared SHARED ${client-python-lib-obj})
-target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
-target_compile_definitions(client-python-shared PUBLIC
-    $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-    $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
-)
-target_include_directories(client-python-shared PUBLIC
-    $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include/iotivity-lite>
-)
-target_link_libraries(client-python-shared PUBLIC ${TINYCBOR_DEP})
 if(OC_SECURITY_ENABLED)
-    target_link_libraries(client-python-shared PUBLIC ${MBEDTLS_DEP})
-endif()
+    # Python client
+    set(client-python-lib-obj
+        $<TARGET_OBJECTS:common-obj>
+        $<TARGET_OBJECTS:client-obj>
+        $<TARGET_OBJECTS:python-obj>
+    )
 
-set_target_properties(client-python-shared PROPERTIES
-    OUTPUT_NAME "iotivity-lite-client-python"
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-)
+    add_library(client-python-shared SHARED ${client-python-lib-obj})
+    target_link_libraries(client-python-shared PRIVATE ${PRIVATE_LINK_LIBS})
+    target_compile_definitions(client-python-shared PUBLIC
+        $<BUILD_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+        $<INSTALL_INTERFACE:${PUBLIC_COMPILE_DEFINITIONS};OC_CLIENT>
+    )
+    target_include_directories(client-python-shared PUBLIC
+        $<BUILD_INTERFACE:.;include;port;${PORT_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include/iotivity-lite>
+    )
+    target_link_libraries(client-python-shared PUBLIC ${TINYCBOR_DEP})
+    target_link_libraries(client-python-shared PUBLIC ${MBEDTLS_DEP})
+
+    set_target_properties(client-python-shared PROPERTIES
+        OUTPUT_NAME "iotivity-lite-client-python"
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
+endif()
 
 # ####### Units tests (UNIX only) ########
 if(BUILD_TESTING AND(UNIX OR MINGW))
@@ -813,7 +814,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
     if(OC_SECURITY_ENABLED)
         file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)
-        package_add_test(securitytest ${SECURITYTEST_SRC})
+        package_add_test(securitytest ${COMMONTEST_SRC} ${SECURITYTEST_SRC})
 
         file(COPY ${PROJECT_SOURCE_DIR}/apps/pki_certs
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR}

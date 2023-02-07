@@ -105,6 +105,7 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_audit.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs_validate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_cred.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_csr.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_doxm.c
@@ -119,6 +120,7 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_pstat.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_roles.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_sdi.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_security.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_sp.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_store.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_svr.c

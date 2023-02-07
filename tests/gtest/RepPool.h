@@ -31,10 +31,10 @@ namespace oc {
 
 using oc_rep_unique_ptr = std::unique_ptr<oc_rep_t, void (*)(oc_rep_t *)>;
 
-class TestRepPool {
+class RepPool {
 public:
-  TestRepPool();
-  ~TestRepPool();
+  RepPool();
+  ~RepPool();
 
   void Clear();
 
@@ -57,4 +57,4 @@ private:
 #endif /* OC_DYNAMIC_ALLOCATION */
 };
 
-}
+} // namespace oc

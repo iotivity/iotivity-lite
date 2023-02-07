@@ -10,7 +10,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   clang-tidy-linux:
     runs-on: ubuntu-22.04
@@ -21,8 +20,8 @@ jobs:
         with:
           submodules: "true"
 
-      - name: Build with clang-tidy
+      - name: Build with clang and analyze with clang-tidy
         run: |
           mkdir linuxbuild && cd linuxbuild
-          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLANG_TIDY_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=OFF ..
-          make all
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DOC_CLANG_TIDY_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DBUILD_TESTING=OFF ..
+          cmake --build .

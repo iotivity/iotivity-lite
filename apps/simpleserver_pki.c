@@ -19,7 +19,7 @@
 #include "oc_api.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "security/oc_certs.h"
+#include "security/oc_certs_internal.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>

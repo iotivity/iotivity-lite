@@ -93,7 +93,7 @@ public:
   }
 
 private:
-  oc::TestRepPool pool_{};
+  oc::RepPool pool_{};
 };
 
 /*

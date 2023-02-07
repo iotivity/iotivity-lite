@@ -16,11 +16,11 @@
  *
  ****************************************************************************/
 
-#ifndef OC_ROLES_H
-#define OC_ROLES_H
+#ifndef OC_ROLES_INTERNAL_H
+#define OC_ROLES_INTERNAL_H
 
-#include "oc_api.h"
-#include "oc_cred_internal.h"
+#include "oc_role.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_tls.h"
 
 #ifdef __cplusplus
@@ -46,4 +46,4 @@ oc_role_t *oc_sec_get_role_creds(void);
 }
 #endif
 
-#endif /* OC_ROLES_H */
+#endif /* OC_ROLES_INTERNAL_H */

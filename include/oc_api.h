@@ -38,6 +38,7 @@
 #include "oc_export.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
+#include "oc_role.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
 #include "util/oc_features.h"
@@ -2272,58 +2273,6 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
  */
 void oc_close_session(oc_endpoint_t *endpoint);
 
-/**
-  @defgroup doc_module_tag_asserting_roles Asserting roles
-  Asserting roles support functions
-  @{
-*/
-typedef struct oc_role_t
-{
-  struct oc_role_t *next;
-  oc_string_t role;
-  oc_string_t authority;
-} oc_role_t;
-
-/**
- * @brief retrieve all roles
- *
- * @return oc_role_t*
- */
-oc_role_t *oc_get_all_roles(void);
-
-/**
- * @brief assert the specific role
- *
- * @param role the role
- * @param authority the authority
- * @param endpoint endpoint identifying the connection
- * @param handler the response handler
- * @param user_data the user data to be conveyed to the response handler
- * @return true request was initialized and sent
- * @return false otherwise
- */
-bool oc_assert_role(const char *role, const char *authority,
-                    oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                    void *user_data);
-
-/**
- * @brief set automatic role assertion (e.g. for all endpoints with a
- * connection)
- *
- * @param auto_assert
- */
-void oc_auto_assert_roles(bool auto_assert);
-
-/**
- * @brief assert all the roles for a specific endpoint
- *
- * @param endpoint identifying the connection
- * @param handler the response handler
- * @param user_data the user data to be conveyed to the response handler
- */
-void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                         void *user_data);
-/** @} */ // end of doc_module_tag_asserting_roles
 #ifdef OC_TCP
 /**
  * @brief send CoAP ping over the TCP connection

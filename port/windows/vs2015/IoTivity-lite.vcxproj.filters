@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\..\..\deps\mbedtls\library\aes.c">
       <Filter>mbedTLS</Filter>
@@ -612,13 +613,13 @@
     <ClInclude Include="..\..\..\include\server_introspection.dat.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_certs.h">
+    <ClInclude Include="..\..\..\security\oc_certs_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_keypair.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_roles.h">
+    <ClInclude Include="..\..\..\security\oc_roles_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_sp_internal.h">
@@ -645,7 +646,7 @@
     <ClInclude Include="..\..\..\security\oc_tls.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_csr.h">
+    <ClInclude Include="..\..\..\security\oc_csr_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_main.h">

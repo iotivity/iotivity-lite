@@ -41,14 +41,20 @@
 #include "security/oc_doxm.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pstat.h"
-#include "security/oc_roles.h"
+#include "security/oc_roles_internal.h"
+#include "security/oc_security_internal.h"
 #include "security/oc_svr.h"
+
+#ifdef OC_PKI
+#include "oc_certs_internal.h"
+#include "oc_certs_validate_internal.h"
+#endif /* OC_PKI */
 
 #ifdef OC_OSCORE
 #include "security/oc_oscore.h"
 #endif /* OC_OSCORE */
 
-#include "mbedtls/mbedtls_config.h"
+#include "mbedtls/build_info.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/md.h"
@@ -137,17 +143,10 @@ typedef struct oc_x509_crt_t
   oc_x509_cacrt_t *ctx;
 } oc_x509_crt_t;
 
-#include "oc_certs.h"
 OC_MEMB(g_identity_certs_s, oc_x509_crt_t, 2 * OC_MAX_NUM_DEVICES);
 OC_LIST(g_identity_certs);
 
 #endif /* OC_PKI */
-
-#ifndef OC_DYNAMIC_ALLOCATION
-#define MBEDTLS_ALLOC_BUF_SIZE (20000)
-#include "mbedtls/memory_buffer_alloc.h"
-static unsigned char alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #define PERSONALIZATION_DATA "IoTivity-Lite-TLS"
 
@@ -1550,8 +1549,8 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
 
     /* Parse the peer's subjectuuid from its end-entity certificate */
-    oc_string_t uuid;
-    if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
+    char uuid[OC_UUID_LEN] = { 0 };
+    if (!oc_certs_extract_CN_for_UUID(crt, uuid, sizeof(uuid))) {
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         OC_ERR("unable to retrieve UUID from the cert's CN");
         return -1;
@@ -1560,12 +1559,11 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
         OC_DBG("attempting to connect with peer *");
       }
     } else {
-      oc_str_to_uuid(oc_string(uuid), &peer->uuid);
-      OC_DBG("attempting to connect with peer %s", oc_string(uuid));
-      oc_free_string(&uuid);
+      oc_str_to_uuid(uuid, &peer->uuid);
+      OC_DBG("attempting to connect with peer %s", uuid);
     }
 
-    if (oc_certs_extract_public_key(crt, &peer->public_key) < 0) {
+    if (oc_certs_extract_public_key_to_oc_string(crt, &peer->public_key) < 0) {
       OC_ERR("unable to extract public key from cert");
       return -1;
     }
@@ -1600,8 +1598,8 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
                "UUID matching with the peer's UUID, or *");
 #ifdef OC_DEBUG
         if (ca_cert->cred->subjectuuid.id[0] != '*') {
-          char ca_uuid[37];
-          oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid, 37);
+          char ca_uuid[OC_UUID_LEN] = { 0 };
+          oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid, sizeof(ca_uuid));
           OC_DBG("trustca cred UUID is %s", ca_uuid);
         } else {
           OC_DBG("trustca cred UUID is the wildcard *");
@@ -1657,12 +1655,11 @@ verify_cloud_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
   if (depth != 0) {
     return oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags);
   }
-  oc_string_t uuid;
-  if (oc_certs_parse_CN_for_UUID(crt, &uuid) < 0) {
+  char uuid[OC_UUID_LEN] = { 0 };
+  if (!oc_certs_extract_CN_for_UUID(crt, uuid, sizeof(uuid))) {
     peer->uuid.id[0] = '*';
   } else {
-    oc_str_to_uuid(oc_string(uuid), &peer->uuid);
-    oc_free_string(&uuid);
+    oc_str_to_uuid(uuid, &peer->uuid);
   }
   if (oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags) != 0) {
     OC_ERR("failed in global verify certificate callback");
@@ -1926,18 +1923,7 @@ oc_tls_shutdown(void)
 int
 oc_tls_init_context(void)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
-  mbedtls_memory_buffer_alloc_init(alloc_buf, sizeof(alloc_buf));
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-#ifdef OC_DEBUG
-#if defined(_WIN32) || defined(_WIN64)
-  // mbedtls debug logs fail if snprintf is not specified
-  mbedtls_platform_set_snprintf(snprintf);
-#endif /* _WIN32 or _WIN64 */
-  mbedtls_debug_set_threshold(4);
-#endif /* OC_DEBUG */
-
+  oc_mbedtls_init();
   mbedtls_entropy_init(&g_entropy_ctx);
   oc_entropy_add_source(&g_entropy_ctx);
   mbedtls_ssl_cookie_init(&g_cookie_ctx);

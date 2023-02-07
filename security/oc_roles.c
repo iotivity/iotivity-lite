@@ -19,10 +19,11 @@
 #ifdef OC_SECURITY
 #ifdef OC_PKI
 
-#include "oc_roles.h"
-#include "mbedtls/x509_crt.h"
+#include "oc_roles_internal.h"
 #include "port/oc_log.h"
 #include "security/oc_tls.h"
+
+#include <mbedtls/x509_crt.h>
 
 #define OC_ROLES_NUM_ROLE_CREDS (2)
 #define OC_ROLES_NUM_ROLES (2)

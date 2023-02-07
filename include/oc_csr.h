@@ -19,21 +19,43 @@
 #ifndef OC_CSR_H
 #define OC_CSR_H
 
-#include "oc_ri.h"
-#include "oc_uuid.h"
-#include <stdint.h>
+#ifdef OC_SECURITY
 
-#include "oc_cred_internal.h"
-#include "oc_ri.h"
+#include "oc_export.h"
+
+#include <mbedtls/build_info.h>
+#include <mbedtls/md.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+#define OCF_SEC_CSR_URI "/oic/sec/csr"
+#define OCF_SEC_CSR_RT "oic.r.csr"
+
+#ifdef OC_PKI
+
+/**
+ * @brief Generate certificate signing request for given device in a PEM string
+ * format.
+ *
+ * @param[in] device device index
+ * @param[in] md message digests to use
+ * @param[out] csr buffer to store the csr string
+ * @param[in] csr_size size of the buffer
+ * @return 0 on success
+ * @return -1 on error
+ */
+OC_API
+int oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
+                        size_t csr_size);
+
+#endif /* OC_PKI */
 
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* OC_SECURITY */
 #endif /* OC_CSR_H */

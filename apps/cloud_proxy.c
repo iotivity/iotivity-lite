@@ -143,6 +143,7 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_csr.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
 #include <signal.h>
@@ -988,8 +989,10 @@ is_vertical(char *resource_type)
     return false;
   if (size_rt == 9 && strncmp(resource_type, "oic.r.ael", 9) == 0)
     return false;
-  if (size_rt == 9 && strncmp(resource_type, "oic.r.csr", 9) == 0)
+#if defined(OC_SECURITY)
+  if (size_rt == 9 && strncmp(resource_type, OCF_SEC_CSR_RT, 9) == 0)
     return false;
+#endif /* OC_SECURITY */
   if (size_rt == 10 && strncmp(resource_type, "oic.r.acl2", 10) == 0)
     return false;
   if (size_rt == 8 && strncmp(resource_type, "oic.r.sp", 8) == 0)
