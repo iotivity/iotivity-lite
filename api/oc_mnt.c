@@ -45,6 +45,7 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_send_response(request, OC_STATUS_OK);
 }
 
+#ifdef OC_SECURITY
 static oc_event_callback_retval_t
 factory_reset(void *data)
 {
@@ -52,6 +53,7 @@ factory_reset(void *data)
   oc_pstat_reset_device(device, false);
   return OC_EVENT_DONE;
 }
+#endif /* OC_SECURITY */
 
 void
 post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
