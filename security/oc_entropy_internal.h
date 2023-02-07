@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_ENTROPY_H
-#define OC_ENTROPY_H
+#ifndef OC_ENTROPY_INTERNAL_H
+#define OC_ENTROPY_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,4 +37,4 @@ int oc_entropy_poll(void *data, unsigned char *output, size_t len,
 }
 #endif
 
-#endif /* OC_ENTROPY_H */
+#endif /* OC_ENTROPY_INTERNAL_H */

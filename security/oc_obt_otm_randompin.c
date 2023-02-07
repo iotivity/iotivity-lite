@@ -22,6 +22,7 @@
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #include "oc_core_res.h"
+#include "oc_csr.h"
 #include "oc_obt.h"
 #include "oc_store.h"
 #include "security/oc_acl_internal.h"
@@ -141,7 +142,7 @@ obt_rdp_12(oc_client_response_t *data)
     oc_rep_set_array(aclist2, resources);
 
     oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string(resources, href, "/oic/sec/csr");
+    oc_rep_set_text_string(resources, href, OCF_SEC_CSR_URI);
     oc_rep_object_array_end_item(resources);
 
     oc_rep_close_array(aclist2, resources);

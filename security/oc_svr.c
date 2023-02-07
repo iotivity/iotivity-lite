@@ -24,6 +24,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
+#include "oc_csr_internal.h"
 #include "oc_csr.h"
 #include "oc_doxm.h"
 #include "oc_pstat.h"
@@ -72,8 +73,8 @@ oc_sec_create_svr(void)
       OC_DISCOVERABLE | OC_SECURE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
 #ifdef OC_PKI
     oc_core_populate_resource(
-      OCF_SEC_CSR, i, "/oic/sec/csr", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_csr, 0, 0, 0, 1, "oic.r.csr");
+      OCF_SEC_CSR, i, OCF_SEC_CSR_URI, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+      OC_DISCOVERABLE | OC_SECURE, get_csr, 0, 0, 0, 1, OCF_SEC_CSR_RT);
     oc_core_populate_resource(OCF_SEC_ROLES, i, "/oic/sec/roles",
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_cred, 0,

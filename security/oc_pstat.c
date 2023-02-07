@@ -29,7 +29,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
-#include "oc_roles.h"
+#include "oc_roles_internal.h"
 #include "oc_sdi.h"
 #include "oc_sp_internal.h"
 #include "oc_store.h"

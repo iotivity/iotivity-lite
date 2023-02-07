@@ -24,21 +24,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-static int urandom_fd;
+static int g_urandom_fd = -1;
 
 void
 oc_random_init(void)
 {
-  urandom_fd = open("/dev/urandom", O_RDONLY);
+  g_urandom_fd = open("/dev/urandom", O_RDONLY);
 }
 
 unsigned int
 oc_random_value(void)
 {
+  assert(g_urandom_fd != -1);
   unsigned int rand = 0;
-  int ret;
+  ssize_t ret;
   do {
-    ret = read(urandom_fd, &rand, sizeof(rand));
+    ret = read(g_urandom_fd, &rand, sizeof(rand));
   } while (ret < 0 && errno == EINTR);
   assert(ret != -1);
 #ifndef DEBUG
@@ -50,5 +51,6 @@ oc_random_value(void)
 void
 oc_random_destroy(void)
 {
-  close(urandom_fd);
+  close(g_urandom_fd);
+  g_urandom_fd = -1;
 }

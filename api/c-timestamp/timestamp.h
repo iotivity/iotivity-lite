@@ -27,8 +27,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __TIMESTAMP_H__
-#define __TIMESTAMP_H__
+
+#ifndef _TIMESTAMP_H_
+#define _TIMESTAMP_H_
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -57,4 +59,5 @@ struct tm *timestamp_to_tm_local(const timestamp_t *tsp, struct tm *tmp);
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* _TIMESTAMP_H_ */

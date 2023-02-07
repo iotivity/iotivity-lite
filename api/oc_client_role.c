@@ -20,8 +20,9 @@
 
 #if defined(OC_CLIENT) && defined(OC_SECURITY) && defined(OC_PKI)
 
+#include "oc_role.h"
 #include "port/oc_log.h"
-#include "security/oc_roles.h"
+#include "security/oc_roles_internal.h"
 
 oc_role_t *
 oc_get_all_roles(void)

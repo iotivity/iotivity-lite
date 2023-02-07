@@ -29,6 +29,7 @@
 #include "oc_api.h"
 #include "oc_cred.h"
 #include "oc_pki.h"
+#include "oc_role.h"
 #include "oc_uuid.h"
 
 #ifdef __cplusplus

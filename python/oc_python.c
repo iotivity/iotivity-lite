@@ -25,7 +25,10 @@
 #include "oc_obt.h"
 #include "oc_python.h"
 #include "port/oc_clock.h"
+
+#ifdef OC_SECURITY
 #include "security/oc_obt_internal.h"
+#endif /* OC_SECURITY */
 
 #ifdef OC_SO
 #include "oc_streamlined_onboarding.h"

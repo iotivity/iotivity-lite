@@ -41,6 +41,7 @@
 #include "oc_rep.h"
 #include "oc_collection.h"
 #include "oc_helpers.h"
+#include "oc_role.h"
 #include <assert.h>
 %}
 
@@ -1716,68 +1717,7 @@ void jni_free_server_endpoints(oc_endpoint_t *endpoints) {
 %}
 
 %rename(closeSession) oc_close_session;
-%rename(OCRole) oc_role_t;
-%nodefaultctor oc_role_t;
-%nodefaultdtor oc_role_t;
-%immutable oc_role_t::role;
-%immutable oc_role_t::authority;
-%ignore oc_get_all_roles;
-%rename(getAllRoles) jni_get_all_roles;
-%inline %{
-oc_role_t *jni_get_all_roles(void) {
-#if defined(OC_SECURITY) && defined(OC_PKI)
-  return oc_get_all_roles();
-#else
-  return NULL;
-#endif /* OC_SECURITY && OC_PKI */
-}
-%}
 
-%ignore oc_assert_role;
-%rename(assertRole) jni_assert_role;
-%inline %{
-bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
-                     oc_response_handler_t handler, jni_callback_data *jcb)
-{
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY) && defined(OC_PKI)
-  OC_DBG("JNI: - lock %s\n", __func__);
-  jni_mutex_lock(jni_sync_lock);
-  bool return_value = oc_assert_role(role, authority, endpoint, handler, jcb);
-  jni_mutex_unlock(jni_sync_lock);
-  OC_DBG("JNI: - unlock %s\n", __func__);
-  return return_value;
-#else
-  return false;
-#endif /* OC_SECURITY && OC_PKI */
-}
-%}
-
-%ignore oc_auto_assert_roles;
-%rename(autoAssertRoles) jni_auto_assert_roles;
-%inline %{
-void jni_auto_assert_roles(bool auto_assert) {
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY) && defined(OC_PKI)
-  oc_auto_assert_roles(auto_assert);
-#endif /* OC_SECURITY && OC_PKI */
-}
-%}
-
-%ignore oc_assert_all_roles;
-%rename(assertAllRoles) jni_assert_all_roles;
-%inline %{
-void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler, jni_callback_data *jcb) {
-  OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_SECURITY) && defined(OC_PKI)
-  OC_DBG("JNI: - lock %s\n", __func__);
-  jni_mutex_lock(jni_sync_lock);
-  oc_assert_all_roles(endpoint, handler, jcb);
-  jni_mutex_unlock(jni_sync_lock);
-  OC_DBG("JNI: - unlock %s\n", __func__);
-#endif /* OC_SECURITY && OC_PKI */
-}
-%}
 %ignore oc_send_ping;
 %rename(sendPing) jni_send_ping;
 %inline %{
@@ -1884,6 +1824,73 @@ void jni_oc_remove_delayed_callback(jobject callback) {
 }
 %}
 %include "oc_api.h"
+
+/*******************Begin oc_role.h*****************/
+%rename(OCRole) oc_role_t;
+%nodefaultctor oc_role_t;
+%nodefaultdtor oc_role_t;
+%immutable oc_role_t::role;
+%immutable oc_role_t::authority;
+%ignore oc_get_all_roles;
+%rename(getAllRoles) jni_get_all_roles;
+%inline %{
+oc_role_t *jni_get_all_roles(void) {
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  return oc_get_all_roles();
+#else
+  return NULL;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+
+%ignore oc_assert_role;
+%rename(assertRole) jni_assert_role;
+%inline %{
+bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
+                     oc_response_handler_t handler, jni_callback_data *jcb)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  bool return_value = oc_assert_role(role, authority, endpoint, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+  return return_value;
+#else
+  return false;
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+
+%ignore oc_auto_assert_roles;
+%rename(autoAssertRoles) jni_auto_assert_roles;
+%inline %{
+void jni_auto_assert_roles(bool auto_assert) {
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_auto_assert_roles(auto_assert);
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+
+%ignore oc_assert_all_roles;
+%rename(assertAllRoles) jni_assert_all_roles;
+%inline %{
+void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler, jni_callback_data *jcb) {
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  OC_DBG("JNI: - lock %s\n", __func__);
+  jni_mutex_lock(jni_sync_lock);
+  oc_assert_all_roles(endpoint, handler, jcb);
+  jni_mutex_unlock(jni_sync_lock);
+  OC_DBG("JNI: - unlock %s\n", __func__);
+#endif /* OC_SECURITY && OC_PKI */
+}
+%}
+
+%include "oc_role.h"
+/*******************End oc_role.h*******************/
 
 /*******************Begin oc_client_state.h*****************/
 /*

@@ -22,7 +22,7 @@
 
 namespace oc {
 
-TestRepPool::TestRepPool()
+RepPool::RepPool()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_rep_new_realloc(&buffer_, 0, 1024);
@@ -33,7 +33,7 @@ TestRepPool::TestRepPool()
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-TestRepPool::~TestRepPool()
+RepPool::~RepPool()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   free(buffer_);
@@ -41,7 +41,7 @@ TestRepPool::~TestRepPool()
 }
 
 void
-TestRepPool::Clear()
+RepPool::Clear()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_rep_new_realloc(&buffer_, 0, 1024);
@@ -51,7 +51,7 @@ TestRepPool::Clear()
 }
 
 oc_rep_unique_ptr
-TestRepPool::ParsePayload()
+RepPool::ParsePayload()
 {
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
@@ -62,4 +62,4 @@ TestRepPool::ParsePayload()
   return oc_rep_unique_ptr(rep, &oc_free_rep);
 }
 
-}
+} // namespace oc

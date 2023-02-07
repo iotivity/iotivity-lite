@@ -62,7 +62,7 @@
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit.h"
 #include "security/oc_pstat.h"
-#include "security/oc_roles.h"
+#include "security/oc_roles_internal.h"
 #include "security/oc_tls.h"
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore.h"

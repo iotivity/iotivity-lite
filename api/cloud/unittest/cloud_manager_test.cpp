@@ -235,7 +235,7 @@ public:
 
 private:
   oc_cloud_context_t m_context{};
-  oc::TestRepPool pool_{};
+  oc::RepPool pool_{};
 };
 
 oc::oc_rep_unique_ptr

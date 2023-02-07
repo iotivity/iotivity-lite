@@ -20,14 +20,14 @@
 
 #include "oc_api.h"
 #include "oc_base64.h"
-#include "oc_certs.h"
+#include "oc_certs_internal.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
 #include "oc_keypair.h"
 #include "oc_pstat.h"
-#include "oc_roles.h"
+#include "oc_roles_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_assert.h"
@@ -35,12 +35,14 @@
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include <stdlib.h>
+
 #ifdef OC_OSCORE
 #include "oc_oscore_context.h"
 #include <ctype.h>
 #endif /* OC_OSCORE */
 #ifdef OC_PKI
-#include "mbedtls/platform_util.h"
+#include "security/oc_certs_internal.h"
+#include <mbedtls/platform_util.h>
 #endif /* OC_PKI */
 
 OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
@@ -410,22 +412,18 @@ static bool
 check_uuid_from_cert_raw(size_t publicdata_size, const uint8_t *publicdata,
                          const oc_uuid_t *uuid)
 {
-  bool res = false;
-
   if (!publicdata || !uuid) {
     return false;
   }
 
-  oc_string_t uuid_from_cert;
-  if (oc_certs_parse_CN_for_UUID_raw(publicdata, publicdata_size,
-                                     &uuid_from_cert) == 0) {
-    char uuid_str[OC_UUID_LEN];
-    oc_uuid_to_str(uuid, uuid_str, OC_UUID_LEN);
-    res = (memcmp(oc_string(uuid_from_cert), uuid_str, OC_UUID_LEN) == 0);
-    oc_free_string(&uuid_from_cert);
+  char uuid_from_cert[OC_UUID_LEN];
+  if (!oc_certs_parse_CN_for_UUID(publicdata, publicdata_size, uuid_from_cert,
+                                  sizeof(uuid_from_cert))) {
+    return false;
   }
-
-  return res;
+  char uuid_str[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, uuid_str, OC_UUID_LEN);
+  return memcmp(uuid_from_cert, uuid_str, OC_UUID_LEN) == 0;
 }
 
 static const oc_uuid_t *
@@ -569,7 +567,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   memset(&public_key, 0, sizeof(oc_string_t));
   int public_key_len = 0;
   if (credtype == OC_CREDTYPE_CERT &&
-      (public_key_len = oc_certs_parse_public_key(
+      (public_key_len = oc_certs_parse_public_key_to_oc_string(
          publicdata, publicdata_size + 1, &public_key)) < 0) {
     goto add_new_cred_error;
   }
@@ -1102,37 +1100,6 @@ oc_cred_parse_certificate(const oc_sec_cred_t *cred, mbedtls_x509_crt *crt)
   return true;
 }
 
-static uint64_t
-oc_cred_time_to_timestamp(mbedtls_x509_time time)
-{
-#define MONTHSPERYEAR 12 /* months per calendar year */
-  static const int days_offset[MONTHSPERYEAR] = {
-    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-  };
-
-  int month = time.mon - 1;
-  long year = time.year + month / MONTHSPERYEAR;
-
-  long days = (year - 1970) * 365 + days_offset[month % MONTHSPERYEAR];
-  // leap years
-  days += (year - 1968) / 4;
-  days -= (year - 1900) / 100;
-  days += (year - 1600) / 400;
-  if ((year % 4) == 0 && ((year % 100) != 0 || (year % 400) == 0) &&
-      (month % MONTHSPERYEAR) < 2) {
-    days--;
-  }
-
-  days += time.day - 1;
-  uint64_t result = days * 24;
-  result += time.hour;
-  result *= 60;
-  result += time.min;
-  result *= 60;
-  result += time.sec;
-  return result;
-}
-
 typedef struct oc_cred_get_certificate_chain_result_t
 {
   bool valid;
@@ -1201,8 +1168,8 @@ oc_cred_verify_certificate_chain(const oc_sec_cred_t *cred,
        crt_ptr = crt_ptr->next) {
 
     oc_sec_certs_data_t data = {
-      .valid_from = oc_cred_time_to_timestamp(crt_ptr->valid_from),
-      .valid_to = oc_cred_time_to_timestamp(crt_ptr->valid_to),
+      .valid_from = oc_certs_time_to_unix_timestamp(crt_ptr->valid_from),
+      .valid_to = oc_certs_time_to_unix_timestamp(crt_ptr->valid_to),
     };
 
     if (!verify_cert(&data, user_data)) {

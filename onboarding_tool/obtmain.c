@@ -1507,7 +1507,6 @@ provision_ace2(void)
 
   const char *conn_types[2] = { "anon-clear", "auth-crypt" };
   int num_resources = 0;
-  char di[OC_UUID_LEN];
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
@@ -1516,7 +1515,7 @@ provision_ace2(void)
   PRINT("\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
-    char di[OC_UUID_LEN];
+    char di[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s - %s\n", i, di, device->device_name);
     i++;
@@ -1543,7 +1542,7 @@ provision_ace2(void)
   PRINT("[3]: Cloud\n");
   i = 0;
   while (device != NULL) {
-    // char di[OC_UUID_LEN];
+    char di[OC_UUID_LEN] = { 0 };
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     PRINT("[%d]: %s - %s\n", i + 4, di, device->device_name);
     i++;
@@ -1586,7 +1585,8 @@ provision_ace2(void)
   } else {
     if (sub == 3) {
       PRINT("\nEnter Cloud sid: ");
-      SCANF("%63s", di);
+      char di[OC_UUID_LEN] = { 0 };
+      SCANF("%36s", di);
       oc_uuid_t uuid_di;
       oc_str_to_uuid(di, &uuid_di);
       ace = oc_obt_new_ace_for_subject(&uuid_di);
