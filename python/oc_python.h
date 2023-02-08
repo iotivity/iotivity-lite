@@ -194,21 +194,26 @@ int py_get_nr_owned_devices(void);
 
 /**
  * function to retrieve the uuid of the owned/unowned device
+ *
+ * @return " empty " if device with given index does not exist
+ * @return uuid of the device
+ *
+ * @warning not thread-safe, returns pointer to a static buffer
  */
 OC_API
-char *get_uuid(int owned, int index);
+const char *get_uuid(int owned, int index);
 
 /**
  * function to retrieve the device name of the owned/unowned device
  */
 OC_API
-char *get_device_name(int owned, int index);
+const char *get_device_name(int owned, int index);
 
 /**
  * function to retrieve the device name belonging to the uuid
  */
 OC_API
-char *get_device_name_from_uuid(char *uuid);
+const char *get_device_name_from_uuid(char *uuid);
 
 /**
  * function to retrieve the number of unowned device
