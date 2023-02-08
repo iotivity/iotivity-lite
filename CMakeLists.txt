@@ -118,29 +118,43 @@ if(OC_COMPILER_IS_CLANG)
 endif()
 
 include(CheckCCompilerFlag)
-function(oc_add_compile_options)
-    foreach(arg IN LISTS ARGN)
-        string(REPLACE "-" "_" arg_name ${arg})
-        string(TOUPPER ${arg_name} arg_name)
-        set(arg_name "C_COMPILER_SUPPORTS${arg_name}")
-        unset(${arg_name})
-        check_c_compiler_flag(${arg} ${arg_name})
-        if(${${arg_name}})
-            add_compile_options(${arg})
-        endif()
-    endforeach()
-endfunction()
-
 include(CheckCXXCompilerFlag)
-function(oc_add_cxx_compile_options)
-    foreach(arg IN LISTS ARGN)
-        string(REPLACE "-" "_" arg_name ${arg})
-        string(TOUPPER ${arg_name} arg_name)
-        set(arg_name "CXX_COMPILER_SUPPORTS${arg_name}")
-        check_cxx_compiler_flag(${arg} ${arg_name})
-        if(${${arg_name}})
-            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${arg}>)
+# function oc_add_compile_options([GLOBAL] [IX_CXX] FLAGS [flags...])
+#
+# Arguments:
+#   IS_CXX (option) flags are C++ (otherwise they are checked as C)
+#   GLOBAL (option) flags are added as global compilation options (C flags are added to both C and C++, C++ flags only to C++)
+#   FLAGS list of flags to check
+#
+# Side-effect: C_COMPILER_SUPPORTS_${flag_name} / CXX_COMPILER_SUPPORTS_${flag_name}
+# is created and set to ON/OFF based on the result of the check. This variable
+# can be used in the context of the caller.
+function(oc_add_compile_options)
+    set(options IS_CXX GLOBAL)
+    set(oneValueArgs)
+    set(multiValueArgs FLAGS)
+    cmake_parse_arguments(OC_ADD_COMPILE_OPTIONS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS)
+        string(REPLACE "-" "_" flag_name ${flag})
+        string(REPLACE "=" "_" flag_name ${flag_name})
+        string(TOUPPER ${flag_name} flag_name)
+        if (OC_ADD_COMPILE_OPTIONS_IS_CXX)
+            set(flag_name "CXX_COMPILER_SUPPORTS${flag_name}")
+            check_cxx_compiler_flag(${flag} ${flag_name})
+            check_c_compiler_flag(${flag} ${flag_name})
+            if ((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
+                add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${arg}>)
+            endif()
+        else()
+            set(flag_name "C_COMPILER_SUPPORTS${flag_name}")
+            unset(${flag_name})
+            check_c_compiler_flag(${flag} ${flag_name})
+            if ((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
+                add_compile_options(${flag})
+            endif()
         endif()
+        set(${flag_name} ${${flag_name}} PARENT_SCOPE)
     endforeach()
 endfunction()
 
@@ -150,9 +164,19 @@ if (MSVC)
     # TODO: Enable and fix issues
     # list(APPEND PRIVATE_COMPILE_OPTIONS /WX)
 elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
-    oc_add_compile_options(-Wall -Wextra -pedantic)
-    oc_add_cxx_compile_options(-Wuseless-cast)
+    oc_add_compile_options(GLOBAL
+        FLAGS -Wall -Wextra -pedantic
+    )
+    oc_add_compile_options(GLOBAL IS_CXX
+        FLAGS -Wuseless-cast
+    )
     list(APPEND PRIVATE_COMPILE_OPTIONS -Werror)
+    oc_add_compile_options(FLAGS -Wno-error=cast-align)
+    if (C_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN)
+        # TODO: alignment warnings appear on some 32-bit compilers, keep those just
+        # as warnings for now
+        list(APPEND PRIVATE_COMPILE_OPTIONS -Wno-error=cast-align)
+    endif()
 endif()
 
 # Release compile and linker options
