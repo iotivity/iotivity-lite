@@ -165,8 +165,11 @@ if (MSVC)
     # list(APPEND PRIVATE_COMPILE_OPTIONS /WX)
 elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     oc_add_compile_options(GLOBAL
-        FLAGS -Wall -Wextra -pedantic
+        FLAGS -Wall -Wextra -pedantic 
+            -Wwrite-strings -Wunused -Wunreachable-code -Wcast-align -Wpointer-arith
+            -fno-common
     )
+
     oc_add_compile_options(GLOBAL IS_CXX
         FLAGS -Wuseless-cast
     )

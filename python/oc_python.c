@@ -472,12 +472,7 @@ get_device(oc_client_response_t *data)
     add_device_to_list(&uuid, n, data->user_data);
 
     bool owned = oc_obt_is_owned_device(&uuid);
-    char *state = "";
-    if (owned) {
-      state = "owned";
-    } else {
-      state = "unowned";
-    }
+    const char *state = owned ? "owned" : "unowned";
     PRINT("[C] adding device to list...\n");
     inform_python(di, state, NULL);
   }
@@ -981,27 +976,26 @@ delete_cred_by_credid_cb(int status, void *data)
 static void
 reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  (void)data;
   char di[37];
-  char *state = "";
-  oc_uuid_to_str(uuid, di, 37);
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
-  if (status >= 0) {
-    PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
-    inform_python(NULL, NULL, NULL);
-
-    device_handle_t *device = py_getdevice_from_uuid(di, 1);
-    oc_list_remove(owned_devices, device);
-    oc_memb_free(&device_handles, data);
-
-    state = "reset";
-    inform_python(di, state, NULL);
-    cb_result = true;
-  } else {
+  if (status < 0) {
     PRINT("[C]\nERROR performing hard RESET to device %s\n", di);
     oc_memb_free(&device_handles, data);
     cb_result = false;
+    return;
   }
+
+  PRINT("[C]\nSuccessfully performed hard RESET to device %s\n", di);
+  inform_python(NULL, NULL, NULL);
+
+  device_handle_t *device = py_getdevice_from_uuid(di, 1);
+  oc_list_remove(owned_devices, device);
+  oc_memb_free(&device_handles, data);
+
+  const char *state = "reset";
+  inform_python(di, state, NULL);
+  cb_result = true;
 }
 
 int
@@ -1010,8 +1004,7 @@ py_get_nr_owned_devices(void)
   return (oc_list_length(owned_devices));
 }
 
-char xx_di[OC_UUID_LEN];
-char *
+const char *
 get_uuid(int owned, int index)
 {
   device_handle_t *device = NULL;
@@ -1022,10 +1015,11 @@ get_uuid(int owned, int index)
   }
 
   int i = 0;
+  static char di[OC_UUID_LEN];
   while (device != NULL) {
-    oc_uuid_to_str(&device->uuid, xx_di, OC_UUID_LEN);
+    oc_uuid_to_str(&device->uuid, di, sizeof(di));
     if (index == i) {
-      return xx_di;
+      return di;
     }
     i++;
     device = device->next;
@@ -1033,7 +1027,7 @@ get_uuid(int owned, int index)
   return " empty ";
 }
 
-char *
+const char *
 get_device_name(int owned, int index)
 {
   device_handle_t *device = NULL;
@@ -1056,7 +1050,7 @@ get_device_name(int owned, int index)
   return " empty ";
 }
 
-char *
+const char *
 get_device_name_from_uuid(char *uuid)
 {
   device_handle_t *device = NULL;
