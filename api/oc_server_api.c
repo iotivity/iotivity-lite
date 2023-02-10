@@ -138,9 +138,16 @@ oc_set_delayed_callback(void *cb_data, oc_trigger_t callback, uint16_t seconds)
 
 void
 oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                           uint16_t miliseconds)
+                           uint16_t milliseconds)
 {
-  oc_clock_time_t ticks = miliseconds * OC_CLOCK_SECOND / 1000;
+  oc_set_delayed_callback_ms_v1(cb_data, callback, (uint64_t)milliseconds);
+}
+
+void
+oc_set_delayed_callback_ms_v1(void *cb_data, oc_trigger_t callback,
+                              uint64_t milliseconds)
+{
+  oc_clock_time_t ticks = milliseconds * OC_CLOCK_SECOND / 1000;
   oc_ri_add_timed_event_callback_ticks(cb_data, callback, ticks);
 }
 
@@ -739,9 +746,9 @@ oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds)
 }
 
 void
-oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t miliseconds)
+oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t milliseconds)
 {
-  oc_clock_time_t ticks = miliseconds * OC_CLOCK_SECOND / 1000;
+  oc_clock_time_t ticks = milliseconds * OC_CLOCK_SECOND / 1000;
   oc_notify_observers_delayed_ticks(resource, ticks);
 }
 

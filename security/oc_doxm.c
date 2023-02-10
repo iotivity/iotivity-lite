@@ -346,8 +346,9 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       }
 
       oc_indicate_separate_response(request, &rd->separate_response);
-      uint16_t jitter = oc_random_value() % OC_MULTICAST_RESPONSE_JITTER_MS;
-      oc_set_delayed_callback_ms(rd, handle_doxm_separate_response, jitter);
+      uint64_t jitter =
+        (uint64_t)(oc_random_value() % OC_MULTICAST_RESPONSE_JITTER_MS);
+      oc_set_delayed_callback_ms_v1(rd, handle_doxm_separate_response, jitter);
       return;
     }
 #endif /* OC_SERVER */
