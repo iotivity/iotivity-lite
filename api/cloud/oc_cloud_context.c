@@ -66,6 +66,7 @@ cloud_context_init(size_t device)
   ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
   ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);
   ctx->cloud_manager = false;
+  ctx->keepalive.ping_timeout = 4;
   oc_list_add(g_cloud_context_list, ctx);
 
   return ctx;
@@ -116,6 +117,7 @@ cloud_context_clear(oc_cloud_context_t *ctx)
   ctx->last_error = 0;
   ctx->store.cps = 0;
   ctx->selected_identity_cred_id = -1;
+  ctx->keepalive.ping_timeout = 4;
   cloud_store_dump_async(&ctx->store);
 }
 
@@ -162,6 +164,15 @@ int
 oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
 {
   return ctx->selected_identity_cred_id;
+}
+
+void
+oc_cloud_set_keepalive(
+  oc_cloud_context_t *ctx,
+  oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data)
+{
+  ctx->keepalive.on_response = on_keepalive_response;
+  ctx->keepalive.user_data = user_data;
 }
 
 #endif /* OC_CLOUD */

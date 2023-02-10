@@ -45,6 +45,14 @@ cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
   oc_set_delayed_callback(cb_data, callback, seconds);
 }
 
+void
+cloud_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                                uint64_t milliseconds)
+{
+  oc_remove_delayed_callback(cb_data, callback);
+  oc_set_delayed_callback_ms(cb_data, callback, milliseconds);
+}
+
 bool
 cloud_is_connection_error_code(oc_status_t code)
 {
