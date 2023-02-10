@@ -53,6 +53,7 @@
 
 #include "oc_buffer.h"
 #include "separate.h"
+#include "messaging/coap/coap_internal.h"
 #include "transactions.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
@@ -88,7 +89,7 @@ coap_separate_accept(const coap_packet_t *request,
                      const oc_endpoint_t *endpoint, int observe)
 #endif /* !OC_BLOCK_WISE */
 {
-  coap_status_code = CLEAR_TRANSACTION;
+  coap_set_global_status_code(CLEAR_TRANSACTION);
 
   if (separate_response->active == 0) {
     OC_LIST_STRUCT_INIT(separate_response, requests);

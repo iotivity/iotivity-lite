@@ -17,6 +17,7 @@
  ***************************************************************************/
 
 #include "api/oc_helpers_internal.h"
+#include "messaging/coap/coap_internal.h"
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -1123,7 +1124,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
         !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
                                            uri_query_len)) {
-      coap_status_code = CLEAR_TRANSACTION;
+      coap_set_global_status_code(CLEAR_TRANSACTION);
       coap_set_status_code(response, OC_IGNORE);
       return false;
     }
@@ -1553,7 +1554,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
        * below a response code of IGNORE, which results in the messaging
        * layer freeing the CoAP transaction associated with the request.
        */
-      coap_status_code = CLEAR_TRANSACTION;
+      coap_set_global_status_code(CLEAR_TRANSACTION);
     } else {
 #ifdef OC_SERVER
       /* If the recently handled request was a PUT/POST, it conceivably

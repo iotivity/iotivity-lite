@@ -920,11 +920,13 @@ install(FILES ${PORT_INCLUDE_DIR}/oc_config.h
 install(DIRECTORY util
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
+    PATTERN "*_internal.h" EXCLUDE
 )
 install(DIRECTORY messaging/coap/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/messaging/coap COMPONENT dev
     FILES_MATCHING PATTERN "*.h"
     PATTERN "unittest" EXCLUDE
+    PATTERN "*_internal.h" EXCLUDE
 )
 
 # ####### Code formatting ########

@@ -90,6 +90,7 @@ protected:
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
     ASSERT_EQ(0, oc_connectivity_init(g_device));
+    poolEvents(1); // give some time for everything to start-up
   }
 
   void TearDown() override

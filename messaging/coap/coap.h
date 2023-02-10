@@ -171,65 +171,6 @@ typedef struct
   uint8_t *payload;
 } coap_packet_t;
 
-/* option format serialization */
-#define COAP_SERIALIZE_INT_OPTION(number, field, text)                         \
-  if (IS_OPTION(coap_pkt, number)) {                                           \
-    option_length += coap_serialize_int_option(number, current_number, option, \
-                                               coap_pkt->field);               \
-    if (option) {                                                              \
-      OC_DBG(text " [%u]", (unsigned int)coap_pkt->field);                     \
-      option = option_array + option_length;                                   \
-    }                                                                          \
-    current_number = number;                                                   \
-  }
-#define COAP_SERIALIZE_BYTE_OPTION(number, field, text)                        \
-  if (IS_OPTION(coap_pkt, number)) {                                           \
-    option_length += coap_serialize_array_option(number, current_number,       \
-                                                 option, coap_pkt->field,      \
-                                                 coap_pkt->field##_len, '\0'); \
-    if (option) {                                                              \
-      OC_DBG(text " %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]",                  \
-             (unsigned int)coap_pkt->field##_len, coap_pkt->field[0],          \
-             coap_pkt->field[1], coap_pkt->field[2], coap_pkt->field[3],       \
-             coap_pkt->field[4], coap_pkt->field[5], coap_pkt->field[6],       \
-             coap_pkt->field[7]); /* FIXME always prints 8 bytes */            \
-      option = option_array + option_length;                                   \
-    }                                                                          \
-    current_number = number;                                                   \
-  }
-#define COAP_SERIALIZE_STRING_OPTION(number, field, splitter, text)            \
-  if (IS_OPTION(coap_pkt, number)) {                                           \
-    option_length += coap_serialize_array_option(                              \
-      number, current_number, option, (uint8_t *)coap_pkt->field,              \
-      coap_pkt->field##_len, splitter);                                        \
-    if (option) {                                                              \
-      OC_DBG(text " [%.*s]", (int)coap_pkt->field##_len, coap_pkt->field);     \
-      option = option_array + option_length;                                   \
-    }                                                                          \
-    current_number = number;                                                   \
-  }
-#define COAP_SERIALIZE_BLOCK_OPTION(number, field, text)                       \
-  if (IS_OPTION(coap_pkt, number)) {                                           \
-    uint32_t block = coap_pkt->field##_num << 4;                               \
-    if (coap_pkt->field##_more) {                                              \
-      block |= 0x8;                                                            \
-    }                                                                          \
-    block |= 0xF & coap_log_2(coap_pkt->field##_size / 16);                    \
-    option_length +=                                                           \
-      coap_serialize_int_option(number, current_number, option, block);        \
-    if (option) {                                                              \
-      OC_DBG(text " [%lu%s (%u B/blk)]", (unsigned long)coap_pkt->field##_num, \
-             coap_pkt->field##_more ? "+" : "", coap_pkt->field##_size);       \
-      OC_DBG(text " encoded: 0x%lX", (unsigned long)block);                    \
-      option = option_array + option_length;                                   \
-    }                                                                          \
-    current_number = number;                                                   \
-  }
-
-/* to store error code and human-readable payload */
-extern coap_status_t coap_status_code;
-extern char *coap_error_message;
-
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 

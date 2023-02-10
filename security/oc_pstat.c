@@ -21,6 +21,7 @@
 #include "oc_pstat.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main.h"
+#include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"
@@ -143,8 +144,8 @@ close_all_tls_sessions(void *data)
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
   oc_set_drop_commands(device, false);
-  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
-    coap_status_code = COAP_NO_ERROR;
+  if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
+    coap_set_global_status_code(COAP_NO_ERROR);
   }
   return OC_EVENT_DONE;
 }
@@ -215,15 +216,15 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       goto pstat_state_error;
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
-    coap_status_t status_code = CLOSE_ALL_TLS_SESSIONS;
+    coap_status_t status_code = COAP_NO_ERROR;
     if (close_all_tls_connections_immediately) {
       oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
       oc_close_all_tls_sessions_for_device(device);
-      status_code = COAP_NO_ERROR;
       oc_set_drop_commands(device, false);
     } else if (!from_storage) {
       // The request comes from oc_reset_v1 or API, so we must close all TLS
       // after a delay so the response can be sent.
+      status_code = CLOSE_ALL_TLS_SESSIONS;
       oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
       oc_set_delayed_callback((void *)device, close_all_tls_sessions, 2);
       // Don't accept any commands GET, POST, PUT, DELETE until all TLS sessions
@@ -237,7 +238,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       OC_DBG("oc_pstat: returned from the factory presets callback");
       memcpy(ps, &pstat[device], sizeof(oc_sec_pstat_t));
     }
-    coap_status_code = status_code;
+    coap_set_global_status_code(status_code);
     ps->p = false;
   } break;
   case OC_DOS_RFPRO: {
