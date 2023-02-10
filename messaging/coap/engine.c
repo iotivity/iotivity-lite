@@ -53,6 +53,7 @@
 #include "api/oc_helpers_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 
@@ -173,7 +174,7 @@ coap_audit_log(oc_message_t *msg)
 int
 coap_receive(oc_message_t *msg)
 {
-  coap_status_code = COAP_NO_ERROR;
+  coap_set_global_status_code(COAP_NO_ERROR);
 
   OC_DBG("CoAP Engine: received datalen=%u from", (unsigned int)msg->length);
   OC_LOGipaddr(msg->endpoint);
@@ -201,19 +202,18 @@ coap_receive(oc_message_t *msg)
   oc_client_cb_t *client_cb = 0;
 #endif /* OC_CLIENT */
 
+  coap_status_t status;
 #ifdef OC_TCP
   if (msg->endpoint.flags & TCP) {
-    coap_status_code =
-      coap_tcp_parse_message(message, msg->data, (uint32_t)msg->length);
+    status = coap_tcp_parse_message(message, msg->data, (uint32_t)msg->length);
   } else
 #endif /* OC_TCP */
   {
-    coap_status_code =
-      coap_udp_parse_message(message, msg->data, (uint16_t)msg->length);
+    status = coap_udp_parse_message(message, msg->data, (uint16_t)msg->length);
   }
+  coap_set_global_status_code(status);
 
-  if (coap_status_code == COAP_NO_ERROR) {
-
+  if (status == COAP_NO_ERROR) {
 #ifdef OC_DEBUG
     OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u",
            message->version, message->token[0], message->token[1],
@@ -238,7 +238,8 @@ coap_receive(oc_message_t *msg)
 
 #ifdef OC_TCP
     if (coap_check_signal_message(message)) {
-      coap_status_code = handle_coap_signal_message(message, &msg->endpoint);
+      status = handle_coap_signal_message(message, &msg->endpoint);
+      coap_set_global_status_code(status);
     }
 #endif /* OC_TCP */
 
@@ -555,7 +556,7 @@ coap_receive(oc_message_t *msg)
                     response_buffer->payload_size) {
                 OC_DBG("Dropping duplicate block-wise transfer request due to "
                        "repeated multicast");
-                coap_status_code = CLEAR_TRANSACTION;
+                coap_set_global_status_code(CLEAR_TRANSACTION);
                 goto send_message;
               } else {
                 oc_blockwise_free_response_buffer(response_buffer);
@@ -838,17 +839,17 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_SECURITY
     coap_audit_log(msg);
 #endif /* OC_SECURITY */
+    coap_status_t cs = coap_global_status_code();
     if (msg->endpoint.flags & TCP) {
       coap_send_empty_response(COAP_TYPE_NON, 0, message->token,
-                               message->token_len, coap_status_code,
-                               &msg->endpoint);
+                               message->token_len, (uint8_t)cs, &msg->endpoint);
     } else {
       coap_send_empty_response(message->type == COAP_TYPE_CON ? COAP_TYPE_ACK
                                                               : COAP_TYPE_NON,
                                message->mid, message->token, message->token_len,
-                               coap_status_code, &msg->endpoint);
+                               (uint8_t)cs, &msg->endpoint);
     }
-    return coap_status_code;
+    return cs;
   }
 
 init_reset_message:
@@ -870,7 +871,7 @@ init_reset_message:
 #endif /* OC_BLOCK_WISE */
 
 send_message:
-  if (coap_status_code == CLEAR_TRANSACTION) {
+  if (coap_global_status_code() == CLEAR_TRANSACTION) {
     coap_clear_transaction(transaction);
   } else if (transaction) {
     if (response->type != COAP_TYPE_RST && message->token_len) {
@@ -916,7 +917,7 @@ send_message:
   oc_blockwise_scrub_buffers(false);
 #endif /* OC_BLOCK_WISE */
 
-  return coap_status_code;
+  return coap_global_status_code();
 }
 /*---------------------------------------------------------------------------*/
 void

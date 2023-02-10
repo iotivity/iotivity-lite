@@ -42,8 +42,8 @@
 #include <string.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 #ifdef OC_SECURITY
-#include "api/oc_events.h"       // oc_event_to_oc_process_event
-#include "messaging/coap/coap.h" // coap_status_code
+#include "api/oc_events.h" // oc_event_to_oc_process_event
+#include "messaging/coap/coap_internal.h"
 
 #endif /* OC_SECURITY */
 
@@ -350,7 +350,7 @@ oc_process_nevents(void)
 bool
 oc_process_is_closing_all_tls_sessions()
 {
-  if (coap_status_code == CLOSE_ALL_TLS_SESSIONS) {
+  if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
     return true;
   }
 
