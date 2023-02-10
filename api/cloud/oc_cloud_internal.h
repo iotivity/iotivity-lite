@@ -79,6 +79,8 @@ void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
 /// Remove callback (if it exists) and schedule it again
 void cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
                                   uint16_t seconds);
+void cloud_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                                     uint64_t milliseconds);
 
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_string(oc_string_t *dst, const char *data, size_t len);

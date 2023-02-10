@@ -40,9 +40,6 @@
 #include <assert.h>
 #include <stdint.h>
 
-#define PING_DELAY 20
-#define PING_DELAY_ON_TIMEOUT (PING_DELAY / 5)
-
 static void cloud_start_process(oc_cloud_context_t *ctx);
 static oc_event_callback_retval_t cloud_manager_reconnect_async(void *data);
 static oc_event_callback_retval_t cloud_manager_register_async(void *data);
@@ -526,6 +523,48 @@ oc_cloud_login_handler(oc_client_response_t *data)
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_TOKEN_EXPIRY);
 }
 
+static bool
+on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
+                              uint64_t *next_ping)
+{
+  if (response_received) {
+    *next_ping = 20 * 1000;
+    ctx->retry_count = 0;
+  } else {
+    *next_ping = 4 * 1000;
+    uint64_t keepalive_ping_timeout_ms =
+      ((uint64_t)(ctx->keepalive.ping_timeout)) * 1000;
+    // we don't want to ping more often than once per second
+    if (keepalive_ping_timeout_ms >= (*next_ping + 1000)) {
+      *next_ping = (keepalive_ping_timeout_ms - *next_ping);
+    }
+    ++ctx->retry_count;
+  }
+  return !is_retry_over(ctx);
+}
+
+static bool
+on_keepalive_response(oc_cloud_context_t *ctx, bool response_received,
+                      uint64_t *next_ping)
+{
+  bool ok = false;
+  if (ctx->keepalive.on_response != NULL) {
+    ok = ctx->keepalive.on_response(response_received, next_ping,
+                                    &ctx->keepalive.ping_timeout,
+                                    ctx->keepalive.user_data);
+  } else {
+    ok = on_keepalive_response_default(ctx, response_received, next_ping);
+  }
+  if (!ok) {
+    OC_ERR("[CM] keepalive failed");
+  } else {
+    OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
+           "seconds timeout",
+           (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+  }
+  return ok;
+}
+
 static void
 cloud_manager_login_handler(oc_client_response_t *data)
 {
@@ -538,8 +577,10 @@ cloud_manager_login_handler(oc_client_response_t *data)
   oc_cloud_error_t ret = _login_handler(ctx, data, /*retryIsActive*/ true,
                                         !handleUnauthorizedByRefresh);
   if (ret == CLOUD_OK) {
-    cloud_reset_delayed_callback(ctx, cloud_manager_send_ping_async,
-                                 PING_DELAY);
+    uint64_t next_ping = 0;
+    on_keepalive_response(ctx, true, &next_ping);
+    cloud_reset_delayed_callback_ms(ctx, cloud_manager_send_ping_async,
+                                    next_ping);
     if (ctx->store.expires_in > 0) {
       cloud_reset_delayed_callback(ctx, cloud_manager_refresh_token_async,
                                    check_expires_in(ctx->store.expires_in));
@@ -818,24 +859,23 @@ cloud_manager_send_ping_handler(oc_client_response_t *data)
   }
   OC_DBG("[CM] send ping handler(%d)", data->code);
 
+  bool response_received = true;
   if (data->code == OC_PING_TIMEOUT ||
       data->code == OC_STATUS_SERVICE_UNAVAILABLE ||
       cloud_is_timeout_error_code(data->code)) {
-    goto error;
+    response_received = false;
   }
-
-  ctx->retry_count = 0;
-  cloud_reset_delayed_callback(ctx, cloud_manager_send_ping_async, PING_DELAY);
-  return;
-
-error:
-  cloud_reset_delayed_callback(ctx, cloud_manager_send_ping_async,
-                               PING_DELAY_ON_TIMEOUT);
-  if (data->code == OC_PING_TIMEOUT ||
-      data->code == OC_STATUS_SERVICE_UNAVAILABLE ||
-      cloud_is_timeout_error_code(data->code)) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  uint64_t next_ping = 0;
+  bool want_continue =
+    on_keepalive_response(ctx, response_received, &next_ping);
+  if (want_continue) {
+    cloud_reset_delayed_callback_ms(ctx, cloud_manager_send_ping_async,
+                                    next_ping);
+    return;
   }
+  OC_DBG("[CM] ping fails with code(%d)", data->code);
+  cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
+  cloud_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
 }
 
 static oc_event_callback_retval_t
@@ -846,16 +886,11 @@ cloud_manager_send_ping_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_DBG("[CM] try send ping(%d)", ctx->retry_count);
-  if (!is_retry_over(ctx)) {
-    if (!cloud_send_ping(ctx->cloud_ep, 1, cloud_manager_send_ping_handler,
-                         ctx)) {
-      // While retrying, keep last error (clec) to CLOUD_OK
-      cloud_set_last_error(ctx, CLOUD_OK);
-    }
-    ++ctx->retry_count;
-  } else {
-    cloud_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
+  OC_DBG("[CM] try send ping");
+  if (!cloud_send_ping(ctx->cloud_ep, ctx->keepalive.ping_timeout,
+                       cloud_manager_send_ping_handler, ctx)) {
+    // While retrying, keep last error (clec) to CLOUD_OK
+    cloud_set_last_error(ctx, CLOUD_OK);
   }
 
   return OC_EVENT_DONE;

@@ -88,6 +88,35 @@ struct oc_cloud_context_t;
 typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
                               oc_cloud_status_t status, void *user_data);
 
+/**
+ * @brief Callback invoked by the cloud manager when cloud change state to
+ * logged in or a keepalive response is received.
+ *
+ * @param response_received Keepalive response received, true if received,
+ * otherwise false
+ * @param next_ping Delay in milliseconds before next keepalive ping
+ * @param next_ping_timeout Timeout in seconds for next keepalive ping
+ * @param user_data User data passed from the caller
+ *
+ * @return true if the cloud manager should continue sending keepalive pings,
+ * false if cloud manager should consider the connection lost
+ */
+typedef bool (*oc_cloud_on_keepalive_response_cb_t)(bool response_received,
+                                                    uint64_t *next_ping,
+                                                    uint16_t *next_ping_timeout,
+                                                    void *user_data);
+
+/**
+ * @brief Cloud keepalive configuration.
+ */
+typedef struct oc_cloud_keepalive_t
+{
+  oc_cloud_on_keepalive_response_cb_t
+    on_response;   /**< Callback invoked on keepalive response */
+  void *user_data; /**< User data provided to the keepalive response callback */
+  uint16_t ping_timeout; /**< Timeout for keepalive ping in seconds */
+} oc_cloud_keepalive_t;
+
 typedef struct oc_cloud_context_t
 {
   struct oc_cloud_context_t *next;
@@ -115,6 +144,8 @@ typedef struct oc_cloud_context_t
   int selected_identity_cred_id; /**< Selected identity cert chain. -1(default)
                                     means any*/
   bool cloud_manager;
+
+  oc_cloud_keepalive_t keepalive; /**< Keepalive configuration */
 } oc_cloud_context_t;
 
 /**
@@ -310,6 +341,19 @@ void oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
  */
 OC_API
 int oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx);
+
+/**
+ * @brief Set keepalive parameters for the cloud manager.
+ *
+ * @param ctx Cloud context to update, must not be NULL.
+ * @param on_keepalive_response Callback invoked by the cloud manager when cloud
+ * change state to logged in or a keepalive response is received.
+ * @param user_data User data passed from the caller
+ */
+OC_API
+void oc_cloud_set_keepalive(
+  oc_cloud_context_t *ctx,
+  oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data);
 
 #ifdef __cplusplus
 }
