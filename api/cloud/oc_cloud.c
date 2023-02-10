@@ -50,7 +50,7 @@ cloud_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
                                 uint64_t milliseconds)
 {
   oc_remove_delayed_callback(cb_data, callback);
-  oc_set_delayed_callback_ms(cb_data, callback, milliseconds);
+  oc_set_delayed_callback_ms_v1(cb_data, callback, milliseconds);
 }
 
 bool

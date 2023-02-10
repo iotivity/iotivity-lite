@@ -1694,11 +1694,11 @@ void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
  *       result from a PUT, or POST oc_request_callback_t.
  *
  * @param[in] resource the oc_resource_t that has a modified property
- * @param[in] miliseconds the number of miliseconds to wait till the callback is
- * invoked
+ * @param[in] milliseconds the number of milliseconds to wait till the callback
+ * is invoked
  */
 void oc_notify_observers_delayed_ms(oc_resource_t *resource,
-                                    uint16_t miliseconds);
+                                    uint16_t milliseconds);
 
 #ifdef __cplusplus
 }
@@ -2372,17 +2372,30 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
 
 /**
- * Schedule a callback to be invoked after a set number of miliseconds.
+ * Schedule a callback to be invoked after a set number of milliseconds.
  *
+ * @deprecated use oc_set_delayed_callback_ms_v1 instead
  * @param[in] cb_data user defined context pointer that is passed to the
  *                    oc_trigger_t callback
- * @param[in] callback the callback invoked after the set number of miliseconds
- * @param[in] miliseconds the number of miliseconds to wait till the callback is
- * invoked
+ * @param[in] callback the callback invoked after the set number of milliseconds
+ * @param[in] milliseconds the number of milliseconds to wait till the callback
+ * is invoked
  */
 OC_API
 void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                                uint16_t miliseconds);
+                                uint16_t milliseconds);
+/**
+ * Schedule a callback to be invoked after a set number of milliseconds.
+ *
+ * @param[in] cb_data user defined context pointer that is passed to the
+ *                    oc_trigger_t callback
+ * @param[in] callback the callback invoked after the set number of milliseconds
+ * @param[in] milliseconds the number of milliseconds to wait till the callback
+ * is invoked
+ */
+OC_API
+void oc_set_delayed_callback_ms_v1(void *cb_data, oc_trigger_t callback,
+                                   uint64_t milliseconds);
 
 /**
  * @brief Check if given delayed callback has already been scheduled.
