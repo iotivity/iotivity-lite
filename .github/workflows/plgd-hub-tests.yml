@@ -25,85 +25,111 @@ jobs:
       matrix:
         include:
           - name: cloud-server
-            args: ""
+            build_args: ""
           - name: cloud-server-asan
-            args: "-DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
-            args: "-DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_TSAN_ENABLED=ON"
+          
+          - name: cloud-server-time-2000-01-01
+            build_args: ""
+            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
+          - name: cloud-server-time-2000-01-01-asan
+            build_args: "-DOC_ASAN_ENABLED=ON"
+            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
+          - name: cloud-server-time-2000-01-01-tsan
+            build_args: "-DOC_TSAN_ENABLED=ON"
+            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
+
+          - name: cloud-server-time-2100-01-01
+            build_args: ""
+            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
+          - name: cloud-server-time-2100-01-01-asan
+            build_args: "-DOC_ASAN_ENABLED=ON"
+            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
+          - name: cloud-server-time-2100-01-01-tsan
+            build_args: "-DOC_TSAN_ENABLED=ON"
+            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            args: "--disable-tls-verify-time"
 
           - name: cloud-server-access-in-RFOTM
-            args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-asan-access-in-RFOTM
-            args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
-            args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
 
           - name: cloud-server-discovery-resource-observable
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-asan-access-in-RFOTM
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
 
           - name: cloud-server-rep-realloc
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
           - name: cloud-server-rep-realloc-asan
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-rep-realloc-tsan
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
           - name: cloud-server-discovery-resource-observable-rep-realloc
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-rep-realloc-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-rep-realloc-tsan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
           - name: dtls-cloud-server
-            args: ""
+            build_args: ""
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-asan
-            args: "-DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_ASAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-tsan
-            args: "-DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_TSAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-tsan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-rep-realloc
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-rep-realloc-asan
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-rep-realloc-tsan
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-tsan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
             hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
 
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
@@ -111,6 +137,8 @@ jobs:
       name: ${{ matrix.name }}
       file: docker/apps/Dockerfile.cloud-server-debug
       tag: dbg
-      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.args }}
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.build_args }}
       build_type: Debug
       hub_args: ${{ matrix.hub_args }}
+      args: ${{ matrix.args }}
+      docker_args: ${{ matrix.docker_args }}

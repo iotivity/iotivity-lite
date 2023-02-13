@@ -22,6 +22,7 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
+#include "port/oc_assert.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair.h"
 #include "security/oc_tls.h"
@@ -138,13 +139,13 @@ oc_certs_parse_role_certificate(const unsigned char *role_certificate,
     goto exit_parse_role_cert;
   }
 
-  if (oc_certs_validate_role_cert(cert) < 0) {
+  uint32_t flags = 0;
+  if (oc_certs_validate_role_cert(cert, &flags) < 0 || flags != 0) {
     OC_ERR("role certificate does not meet the necessary constraints");
     goto exit_parse_role_cert;
   }
 
   /* Verify that the role certificate was signed by a CA */
-  uint32_t flags = 0;
   mbedtls_x509_crt *trust_ca = oc_tls_get_trust_anchors();
   ret = mbedtls_x509_crt_verify_with_profile(cert, trust_ca, NULL,
                                              &mbedtls_x509_crt_profile_default,
@@ -408,8 +409,11 @@ oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
 }
 
 static int
-validate_x509v1_fields(const mbedtls_x509_crt *cert)
+validate_x509v1_fields(const mbedtls_x509_crt *cert, uint32_t *flags)
 {
+  oc_assert(cert != NULL);
+  oc_assert(flags != NULL);
+
   /* signatureAlgorithm */
   if ((MBEDTLS_X509_ID_FLAG(cert->sig_md) &
        MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)) == 0) {
@@ -426,13 +430,13 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert)
   /* notBefore */
   if (mbedtls_x509_time_is_future(&cert->valid_from)) {
     OC_WRN("certificate not yet active");
-    return -1;
+    *flags |= MBEDTLS_X509_BADCERT_FUTURE;
   }
 
   /* notAfter */
   if (mbedtls_x509_time_is_past(&cert->valid_to)) {
     OC_WRN("certificate has expired");
-    return -1;
+    *flags |= MBEDTLS_X509_BADCERT_EXPIRED;
   }
 
   /* Subject Public Key Info */
@@ -455,11 +459,12 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert)
 
 int
 oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
-                                      bool is_root, bool is_otm, int depth)
+                                      bool is_root, bool is_otm, int depth,
+                                      uint32_t *flags)
 {
   OC_DBG("attempting to validate %s cert", is_root ? "root" : "intermediate");
   /* Validate common X.509v1 fields */
-  if (validate_x509v1_fields(cert) < 0) {
+  if (validate_x509v1_fields(cert, flags) < 0) {
     return -1;
   }
 
@@ -518,11 +523,11 @@ oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
 }
 
 int
-oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
+oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert, uint32_t *flags)
 {
   OC_DBG("attempting to validate end entity cert");
   /* Validate common X.509v1 fields */
-  if (validate_x509v1_fields(cert) < 0) {
+  if (validate_x509v1_fields(cert, flags) < 0) {
     return -1;
   }
 
@@ -613,12 +618,12 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert)
 }
 
 int
-oc_certs_validate_role_cert(const mbedtls_x509_crt *cert)
+oc_certs_validate_role_cert(const mbedtls_x509_crt *cert, uint32_t *flags)
 {
   OC_DBG("attempting to validate role certificate");
 
   /* Validate common X.509v1 fields */
-  if (validate_x509v1_fields(cert) < 0) {
+  if (validate_x509v1_fields(cert, flags) < 0) {
     return -1;
   }
 

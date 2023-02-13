@@ -10,8 +10,20 @@ RUN mkdir /iotivity-lite/build && \
 	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
 	cmake --build . --target cloud_server
 RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
+
+# install libfaketime
+RUN git clone https://github.com/wolfcw/libfaketime.git && \
+	cd /libfaketime/src && \
+	make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS"
+
 COPY /docker/logbt /usr/local/bin/logbt
 RUN logbt --version
 COPY /docker/run.sh /usr/local/bin/run.sh
 ENV NUM_DEVICES=1
+ENV FAKETIME=
+ENV FAKETIME_TIMESTAMP_FILE=
+ENV FAKETIME_UPDATE_TIMESTAMP_FILE=
+ENV FAKETIME_DONT_RESET=
+ENV FAKETIME_NO_CACHE=
+ENV FAKETIME_CACHE_DURATION=
 ENTRYPOINT ["/usr/local/bin/run.sh"]

@@ -22,10 +22,13 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/x509_crt.h"
 #include "oc_certs.h"
+#include "oc_pki.h"
 #include "oc_cred_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_connectivity.h"
+
+static oc_pki_verify_certificate_cb_t g_verify_certificate_cb;
 
 static int
 pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
@@ -360,6 +363,61 @@ oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
                         size_t cert_size)
 {
   return pki_add_trust_anchor(device, cert, cert_size, OC_CREDUSAGE_TRUSTCA);
+}
+
+void
+oc_pki_set_verify_certificate_cb(oc_pki_verify_certificate_cb_t cb)
+{
+  g_verify_certificate_cb = cb;
+}
+
+static int
+default_verify_certificate_cb(struct oc_tls_peer_t *peer, mbedtls_x509_crt *crt,
+                              int depth, uint32_t *flags)
+{
+  (void)peer;
+  (void)depth;
+#ifndef OC_DEBUG
+  (void)crt;
+  (void)flags;
+#else  /* OC_DEBUG */
+  if (flags != NULL && (*flags & MBEDTLS_X509_BADCERT_EXPIRED) != 0) {
+    char buf[256];
+    int ret = mbedtls_x509_dn_gets(buf, sizeof(buf) - 1, &crt->subject);
+    if (ret >= 0) {
+      buf[ret] = 0;
+    } else {
+      ret = snprintf(buf, sizeof(buf) - 1, "unknown");
+      buf[ret] = 0;
+    }
+    OC_ERR("certificate %s is expired on %d-%02d-%02d %02d:%02d:%02d", buf,
+           crt->valid_to.year, crt->valid_to.mon, crt->valid_to.day,
+           crt->valid_to.hour, crt->valid_to.min, crt->valid_to.sec);
+  }
+  if (flags != NULL && (*flags & MBEDTLS_X509_BADCERT_FUTURE) != 0) {
+    char buf[256];
+    int ret = mbedtls_x509_dn_gets(buf, sizeof(buf) - 1, &crt->subject);
+    if (ret >= 0) {
+      buf[ret] = 0;
+    } else {
+      ret = snprintf(buf, sizeof(buf) - 1, "unknown");
+      buf[ret] = 0;
+    }
+    OC_ERR("certificate %s will be valid from %d-%02d-%02d %02d:%02d:%02d", buf,
+           crt->valid_from.year, crt->valid_from.mon, crt->valid_from.day,
+           crt->valid_from.hour, crt->valid_from.min, crt->valid_from.sec);
+  }
+#endif /* OC_DEBUG */
+  return 0;
+}
+
+oc_pki_verify_certificate_cb_t
+oc_pki_get_verify_certificate_cb()
+{
+  if (g_verify_certificate_cb == NULL) {
+    return &default_verify_certificate_cb;
+  }
+  return g_verify_certificate_cb;
 }
 
 #else  /* OC_PKI */

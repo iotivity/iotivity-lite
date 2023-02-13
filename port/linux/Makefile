@@ -229,6 +229,8 @@ else
 	SRC_COMMON += $(MBEDTLS_DIR)/library/memory_buffer_alloc.c
 endif
 	CFLAGS += ${DTLSFLAGS}
+	CXXFLAGS += ${DTLSFLAGS}
+	TEST_CXXFLAGS += ${DTLSFLAGS}
 	EXTRA_CFLAGS += -DOC_SECURITY
 	VPATH += ../../security/:../../deps/mbedtls/library:
 endif

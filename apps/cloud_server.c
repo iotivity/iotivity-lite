@@ -23,6 +23,8 @@
 #include "oc_acl.h"
 #include <inttypes.h>
 #include <signal.h>
+#include <getopt.h>
+#include <errno.h>
 
 static int quit;
 
@@ -677,48 +679,200 @@ display_device_uuid(void)
   PRINT("Started device with ID: %s\n", buffer);
 }
 
-int
-main(int argc, char *argv[])
+#if defined(OC_SECURITY) && defined(OC_PKI)
+static int
+disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
+                                   mbedtls_x509_crt *crt, int depth,
+                                   uint32_t *flags)
 {
-  if (argc == 1) {
-    PRINT("./cloud_server <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn> <num_resources>\n");
-#ifndef OC_SECURITY
-    PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
-          "sid: %s, "
-          "apn: %s, "
-          "num_resources: %d, "
-          "\n",
-          device_name, auth_code, cis, sid, apn, num_resources);
-#endif /* !OC_SECURITY */
+  (void)peer;
+  (void)crt;
+  (void)depth;
+  *flags &=
+    ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED | MBEDTLS_X509_BADCERT_FUTURE));
+  return 0;
+}
+#endif /* OC_SECURITY && OC_PKI */
+
+#define OPT_DISABLE_TLS_VERIFY_TIME "disable-tls-verify-time"
+#define OPT_HELP "help"
+#define OPT_NUM_RESOURCES "num-resources"
+#define OPT_DEVICE_NAME "device-name"
+#define OPT_CLOUD_AUTH_CODE "cloud-auth-code"
+#define OPT_CLOUD_CIS "cloud-endpoint"
+#define OPT_CLOUD_APN "cloud-auth-provider-name"
+#define OPT_CLOUD_SID "cloud-id"
+
+#define OPT_ARG_DEVICE_NAME OPT_DEVICE_NAME
+#define OPT_ARG_CLOUD_AUTH_CODE OPT_CLOUD_AUTH_CODE
+#define OPT_ARG_CLOUD_CIS OPT_CLOUD_CIS
+#define OPT_ARG_CLOUD_SID OPT_CLOUD_SID
+#define OPT_ARG_CLOUD_APN OPT_CLOUD_APN
+
+static void
+printhelp(const char *exec_path)
+{
+  const char *binary_name = strrchr(exec_path, '/');
+  binary_name = binary_name != NULL ? binary_name + 1 : exec_path;
+  PRINT("./%s <%s> <%s> <%s> <%s> <%s>\n\n", binary_name, OPT_ARG_DEVICE_NAME,
+        OPT_ARG_CLOUD_AUTH_CODE, OPT_ARG_CLOUD_CIS, OPT_ARG_CLOUD_SID,
+        OPT_ARG_CLOUD_APN);
+  PRINT("OPTIONS:\n");
+  PRINT("  -h | --%-26s print help\n", OPT_HELP);
+  PRINT("  -n | --%-26s device name\n", OPT_DEVICE_NAME);
+  PRINT("  -a | --%-26s cloud authorization code\n", OPT_CLOUD_AUTH_CODE);
+  PRINT("  -e | --%-26s cloud endpoint\n", OPT_CLOUD_CIS);
+  PRINT("  -i | --%-26s cloud id\n", OPT_CLOUD_SID);
+  PRINT("  -p | --%-26s cloud authorization provider name\n", OPT_CLOUD_APN);
+  PRINT("  -r | --%-26s number of resources\n", OPT_NUM_RESOURCES);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  PRINT("  -d | --%-26s disable time verification during TLS handshake\n",
+        OPT_DISABLE_TLS_VERIFY_TIME);
+#endif /* OC_SECURITY && OC_PKI */
+  PRINT("ARGUMENTS:\n");
+  PRINT("  %-33s device name (optional, default: cloud_server)\n",
+        OPT_ARG_DEVICE_NAME);
+  PRINT("  %-33s cloud authorization code (optional)\n",
+        OPT_ARG_CLOUD_AUTH_CODE);
+  PRINT("  %-33s cloud endpoint (optional)\n", OPT_ARG_CLOUD_CIS);
+  PRINT("  %-33s cloud id (optional)\n", OPT_ARG_CLOUD_SID);
+  PRINT("  %-33s cloud authorization provider name (optional)\n",
+        OPT_ARG_CLOUD_APN);
+}
+
+typedef struct
+{
+  bool help;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  bool disable_tls_verify_time;
+#endif /* OC_SECURITY && OC_PKI */
+} parse_options_result_t;
+
+static bool
+parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
+{
+  static struct option long_options[] = {
+    { OPT_HELP, no_argument, NULL, 'h' },
+    { OPT_DEVICE_NAME, required_argument, NULL, 'n' },
+    { OPT_CLOUD_AUTH_CODE, required_argument, NULL, 'a' },
+    { OPT_CLOUD_CIS, required_argument, NULL, 'e' },
+    { OPT_CLOUD_SID, required_argument, NULL, 'i' },
+    { OPT_CLOUD_APN, required_argument, NULL, 'p' },
+    { OPT_NUM_RESOURCES, required_argument, NULL, 'r' },
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    { OPT_DISABLE_TLS_VERIFY_TIME, no_argument, NULL, 'd' },
+#endif /* OC_SECURITY && OC_PKI */
+    { NULL, 0, NULL, 0 },
+  };
+  while (true) {
+    int option_index = 0;
+    int opt =
+      getopt_long(argc, argv, "hdn:a:e:i:p:r:", long_options, &option_index);
+    if (opt == -1) {
+      break;
+    }
+    switch (opt) {
+    case 0:
+      if (long_options[option_index].flag != 0) {
+        break;
+      }
+      PRINT("invalid option(%s)\n", argv[optind]);
+      return false;
+    case 'h':
+      printhelp(argv[0]);
+      parsed_options->help = true;
+      return true;
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    case 'd':
+      parsed_options->disable_tls_verify_time = true;
+      break;
+#endif /* OC_SECURITY && OC_PKI */
+    case 'n':
+      device_name = optarg;
+      break;
+    case 'a':
+      auth_code = optarg;
+      break;
+    case 'e':
+      cis = optarg;
+      break;
+    case 'i':
+      sid = optarg;
+      break;
+    case 'p':
+      apn = optarg;
+      break;
+    case 'r': {
+      char *eptr = NULL;
+      errno = 0;
+      long val = strtol(optarg, &eptr, 10); // NOLINT(readability-magic-numbers)
+      if (errno != 0 || eptr == optarg || (*eptr) != '\0' || val < 0 ||
+          val > INT32_MAX) {
+        PRINT("invalid number of resources argument value(%s)\n", optarg);
+        return false;
+      }
+      num_resources = (int)val;
+      break;
+    }
+    default:
+      PRINT("invalid option(%s)\n", argv[optind]);
+      return false;
+    }
+  }
+  argc -= (optind - 1);
+  for (int i = 1; i < argc; ++i, ++optind) {
+    argv[i] = argv[optind];
   }
   if (argc > 1) {
     device_name = argv[1];
-    PRINT("device_name: %s\n", argv[1]);
   }
   if (argc > 2) {
     auth_code = argv[2];
-    PRINT("auth_code: %s\n", argv[2]);
   }
   if (argc > 3) {
     cis = argv[3];
-    PRINT("cis : %s\n", argv[3]);
   }
   if (argc > 4) {
     sid = argv[4];
-    PRINT("sid: %s\n", argv[4]);
   }
   if (argc > 5) {
     apn = argv[5];
-    PRINT("apn: %s\n", argv[5]);
   }
-  if (argc > 6) {
-    num_resources = atoi(argv[6]);
-    if (num_resources < 0) {
-      num_resources = 0;
-    }
-    PRINT("num_resources: %d\n", num_resources);
+  return true;
+}
+
+int
+main(int argc, char *argv[])
+{
+  parse_options_result_t parsed_options = {
+    .help = false,
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    .disable_tls_verify_time = false,
+#endif /* OC_SECURITY && OC_PKI */
+  };
+  if (!parse_options(argc, argv, &parsed_options)) {
+    return -1;
   }
+  if (parsed_options.help) {
+    return 0;
+  }
+
+  PRINT("Using parameters: device_name: %s, auth_code: %s, cis: %s, "
+        "sid: %s, "
+        "apn: %s, "
+        "num_resources: %d, ",
+        device_name, auth_code, cis, sid, apn, num_resources);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  PRINT("disable_tls_time_verification: %s, ",
+        parsed_options.disable_tls_verify_time ? "true" : "false");
+#endif /* OC_SECURITY && OC_PKI */
+  PRINT("\n");
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  if (parsed_options.disable_tls_verify_time) {
+    oc_pki_set_verify_certificate_cb(&disable_time_verify_certificate_cb);
+  }
+#endif /* OC_SECURITY && OC_PKI */
 
   int ret = init();
   if (ret < 0) {
