@@ -26,12 +26,16 @@
  */
 #ifndef OC_PKI_H
 #define OC_PKI_H
+#ifdef OC_PKI
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stddef.h>
+
+#include "mbedtls/mbedtls_config.h"
+#include "mbedtls/x509_crt.h"
 
 /**
  * OCF defined security profiles
@@ -200,7 +204,45 @@ int oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
 void oc_pki_set_security_profile(size_t device,
                                  oc_sp_types_t supported_profiles,
                                  oc_sp_types_t current_profile, int mfg_credid);
+
+/**
+ * @brief TLS peer connection
+ *
+ */
+struct oc_tls_peer_t;
+
+/**
+ * @brief Callback invoked after ocf verifies the certificate chain. For each
+ * certificate in the chain, the callback is invoked with the depth of the
+ * certificate in the chain.
+ *
+ * @param peer TLS peer connection
+ * @param crt Certificate
+ * @param depth Depth of the certificate chain, 0 is the leaf certificate.
+ * @param flags Verification flags from mbedtls_x509_crt_verify(), see
+ * https://github.com/Mbed-TLS/mbedtls/blob/10ada3501975e7abab25a7fa28e9e8e0f6b4259f/include/mbedtls/x509.h#L99
+ *
+ * @return 0 if the certificate is valid, otherwise -1
+ */
+typedef int (*oc_pki_verify_certificate_cb_t)(struct oc_tls_peer_t *peer,
+                                              mbedtls_x509_crt *crt, int depth,
+                                              uint32_t *flags);
+
+/**
+ * Set the verification callback for the certificate chain. It is invoked after
+ * ocf verifies the certificate chain.
+ * @param[in] cb the callback function
+ */
+void oc_pki_set_verify_certificate_cb(oc_pki_verify_certificate_cb_t cb);
+
+/**
+ * Get the verification callback for the certificate chain.
+ * @return the callback function
+ */
+oc_pki_verify_certificate_cb_t oc_pki_get_verify_certificate_cb();
+
 #ifdef __cplusplus
 }
 #endif
+#endif /* OC_PKI */
 #endif /* OC_PKI_H */

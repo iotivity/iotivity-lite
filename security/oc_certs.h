@@ -42,11 +42,14 @@ int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
                                 oc_string_t *public_key);
 
 int oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
-                                          bool is_root, bool is_otm, int depth);
+                                          bool is_root, bool is_otm, int depth,
+                                          uint32_t *flags);
 
-int oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *ee_cert);
+int oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *ee_cert,
+                                      uint32_t *flags);
 
-int oc_certs_validate_role_cert(const mbedtls_x509_crt *role_cert);
+int oc_certs_validate_role_cert(const mbedtls_x509_crt *role_cert,
+                                uint32_t *flags);
 
 int oc_certs_is_subject_the_issuer(mbedtls_x509_crt *issuer,
                                    mbedtls_x509_crt *child);

@@ -27,7 +27,12 @@ set(OC_INSTALL_TINYCBOR ON CACHE BOOL "Include TinyCBOR in installation")
 
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and Mbed TLS.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
-set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
+if (OC_SECURITY_ENABLED)
+    set(OC_PKI_ENABLED ON CACHE BOOL "Enable PKI security.")
+else()
+    # Force PKI security to be disabled if security is disabled
+    set(OC_PKI_ENABLED OFF CACHE BOOL "Disable PKI security (force)" FORCE)
+endif()
 set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
 set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
 set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
@@ -53,7 +58,7 @@ set(OC_TSAN_ENABLED OFF CACHE BOOL "Enable thread sanitizer build.")
 set(OC_MSAN_ENABLED OFF CACHE BOOL "Enable memory sanitizer build. (clang on Linux only)")
 set(OC_UBSAN_ENABLED OFF CACHE BOOL "Enable undefined behaviour sanitizer build.")
 
-if(OC_CLOUD_ENABLED AND NOT OC_PKI_ENABLED)
+if(OC_CLOUD_ENABLED AND OC_SECURITY_ENABLED AND NOT OC_PKI_ENABLED)
     message(FATAL_ERROR "Cannot enable cloud communications without PKI security")
 endif()
 

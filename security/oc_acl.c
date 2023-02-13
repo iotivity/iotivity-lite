@@ -574,7 +574,9 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
       oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL, *next;
       while (role_cred) {
         next = role_cred->next;
-        if (oc_certs_validate_role_cert(role_cred->ctx) < 0) {
+        uint32_t flags = 0;
+        if (oc_certs_validate_role_cert(role_cred->ctx, &flags) < 0 ||
+            flags != 0) {
           oc_sec_free_role(role_cred, peer);
           role_cred = next;
           continue;

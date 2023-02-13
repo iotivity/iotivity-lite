@@ -31,6 +31,14 @@ on:
         type: string
         required: false
         default: ""
+      docker_args:
+        type: string
+        required: false
+        default: ""
+      args:
+        type: string
+        required: false
+        default: ""
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
 
@@ -58,7 +66,7 @@ jobs:
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
       - name: Run cloud server container
-        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
+        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.docker_args }} ${{ inputs.tag }} ${{ inputs.args }} devsim-`hostname`
 
       - name: Run plgd hub tests image
         run: docker run --rm --network=host ${{ inputs.hub_args }} ${{ env.TEST_CLOUD_SERVER_IMAGE }}
