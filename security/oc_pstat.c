@@ -31,7 +31,7 @@
 #include "oc_doxm.h"
 #include "oc_roles.h"
 #include "oc_sdi.h"
-#include "oc_sp.h"
+#include "oc_sp_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 

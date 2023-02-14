@@ -34,25 +34,9 @@ extern "C" {
 
 #include <stddef.h>
 
+#include "oc_sp.h"
 #include "mbedtls/mbedtls_config.h"
 #include "mbedtls/x509_crt.h"
-
-/**
- * OCF defined security profiles
- *
- * Security Profiles differentiate devices based on requirements from different
- * verticals such as industrial, health care, or smart home.
- *
- * See oc_pki_set_security_profile() for a description of the each of the
- * security profiles or reference the security profiles section of the OCF
- * Security Specification.
- */
-typedef enum {
-  OC_SP_BASELINE = 1 << 1, ///< The OCF Baseline Security Profile
-  OC_SP_BLACK = 1 << 2,    ///< The OCF Black Security Profile
-  OC_SP_BLUE = 1 << 3,     ///< The OCF Blue Security Profile
-  OC_SP_PURPLE = 1 << 4    ///< The OCF Purple Security Profile
-} oc_sp_types_t;
 
 /**
  * Add the manufactures PKI identity certificate.

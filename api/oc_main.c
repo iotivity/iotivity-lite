@@ -43,7 +43,7 @@
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm.h"
 #include "security/oc_pstat.h"
-#include "security/oc_sp.h"
+#include "security/oc_sp_internal.h"
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
 #ifdef OC_PKI

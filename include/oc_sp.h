@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2018-2019 Intel Corporation
+ * Copyright (c) 2018 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,37 @@
  *
  ****************************************************************************/
 
+/**
+ * @file
+ *
+ * OCF security profiles
+ *
+ */
 #ifndef OC_SP_H
 #define OC_SP_H
-
-#include "oc_pki.h"
-#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct
-{
-  oc_sp_types_t supported_profiles;
-  oc_sp_types_t current_profile;
-  int credid;
-} oc_sec_sp_t;
-
-void oc_sec_sp_init(void);
-void oc_sec_sp_free(void);
-bool oc_sec_decode_sp(oc_rep_t *rep, size_t device);
-void oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask,
-                      bool to_storage);
-oc_sec_sp_t *oc_sec_get_sp(size_t device);
-void oc_sec_sp_default(size_t device);
-void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
-void post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+/**
+ * OCF defined security profiles
+ *
+ * Security Profiles differentiate devices based on requirements from different
+ * verticals such as industrial, health care, or smart home.
+ *
+ * See oc_pki_set_security_profile() for a description of the each of the
+ * security profiles or reference the security profiles section of the OCF
+ * Security Specification.
+ */
+typedef enum {
+  OC_SP_BASELINE = 1 << 1, ///< The OCF Baseline Security Profile
+  OC_SP_BLACK = 1 << 2,    ///< The OCF Black Security Profile
+  OC_SP_BLUE = 1 << 3,     ///< The OCF Blue Security Profile
+  OC_SP_PURPLE = 1 << 4    ///< The OCF Purple Security Profile
+} oc_sp_types_t;
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* OC_SP_H */
