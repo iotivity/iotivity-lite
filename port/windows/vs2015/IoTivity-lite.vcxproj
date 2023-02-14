@@ -245,6 +245,7 @@
     <ClInclude Include="..\..\..\include\oc_network_monitor.h" />
     <ClInclude Include="..\..\..\include\oc_obt.h" />
     <ClInclude Include="..\..\..\include\oc_pki.h" />
+    <ClInclude Include="..\..\..\include\sp.h" />
     <ClInclude Include="..\..\..\include\oc_rep.h" />
     <ClInclude Include="..\..\..\include\oc_ri.h" />
     <ClInclude Include="..\..\..\include\oc_session_events.h" />
@@ -274,7 +275,7 @@
     <ClInclude Include="..\..\..\security\oc_pstat.h" />
     <ClInclude Include="..\..\..\security\oc_roles.h" />
     <ClInclude Include="..\..\..\security\oc_sdi.h" />
-    <ClInclude Include="..\..\..\security\oc_sp.h" />
+    <ClInclude Include="..\..\..\security\oc_sp_internal.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr.h" />
     <ClInclude Include="..\..\..\security\oc_tls.h" />

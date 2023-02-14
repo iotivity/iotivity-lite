@@ -25,7 +25,7 @@
 #include "oc_keypair.h"
 #include "oc_pstat.h"
 #include "oc_sdi.h"
-#include "oc_sp.h"
+#include "oc_sp_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_storage.h"

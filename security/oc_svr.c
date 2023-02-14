@@ -29,7 +29,7 @@
 #include "oc_pstat.h"
 #include "oc_ri.h"
 #include "oc_sdi.h"
-#include "oc_sp.h"
+#include "oc_sp_internal.h"
 #include "port/oc_log.h"
 
 void
