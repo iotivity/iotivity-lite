@@ -22,6 +22,7 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_certs_validate_internal.h"
+#include "oc_certs_internal.h"
 #include "port/oc_log.h"
 
 #include <assert.h>
@@ -38,8 +39,7 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert, uint32_t *flags)
   assert(flags != NULL);
 
   /* signatureAlgorithm */
-  if ((MBEDTLS_X509_ID_FLAG(cert->sig_md) &
-       MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)) == 0) {
+  if (!oc_certs_md_algorithm_is_allowed(cert->sig_md)) {
     OC_WRN("certificate uses non-compliant signature algorithm");
     return -1;
   }

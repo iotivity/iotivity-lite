@@ -42,6 +42,63 @@
 #define CN_UUID_PREFIX "CN=uuid:"
 #define CN_UUID_PREFIX_LEN (sizeof(CN_UUID_PREFIX) - 1)
 
+// allowed message digests signature algorithms
+static int g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+                                MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384);
+
+// message digest used for signature of generated certificates or certificate
+// signing requests
+static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA384;
+
+mbedtls_md_type_t
+oc_certs_signature_md_algorithm()
+{
+  return g_signature_md;
+}
+
+void
+oc_certs_set_signature_md_algorithm(mbedtls_md_type_t md)
+{
+  g_signature_md = md;
+  OC_DBG("signature message digest: %d", (int)g_signature_md);
+}
+
+void
+oc_certs_md_algorithm_allow(mbedtls_md_type_t md)
+{
+  g_allowed_mds_mask |= MBEDTLS_X509_ID_FLAG(md);
+  OC_DBG("allowed message digest:%d (mask: %x)", (int)md,
+         (int)g_allowed_mds_mask);
+}
+
+void
+oc_certs_md_algorithm_disallow(mbedtls_md_type_t md)
+{
+  g_allowed_mds_mask &= ~MBEDTLS_X509_ID_FLAG(md);
+  OC_DBG("disallowed message digest:%d (mask: %x)", (int)md,
+         (int)g_allowed_mds_mask);
+}
+
+void
+oc_certs_set_md_algorithm_allowed(int md_mask)
+{
+  g_allowed_mds_mask = md_mask;
+  OC_DBG("allowed message digests mask: %x", (int)g_allowed_mds_mask);
+}
+
+int
+oc_certs_md_algorithm_allowed(void)
+{
+  return g_allowed_mds_mask;
+}
+
+bool
+oc_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
+{
+  return md != MBEDTLS_MD_NONE &&
+         (MBEDTLS_X509_ID_FLAG(md) & g_allowed_mds_mask) != 0;
+}
+
 int
 oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
 {

@@ -140,18 +140,11 @@ bool
 oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
 {
   if (md_flags == 0) {
+    OC_DBG("signature verification disabled");
     return true;
   }
 
-  if (csr->sig_md != MBEDTLS_MD_SHA256 && csr->sig_md != MBEDTLS_MD_SHA384) {
-    OC_ERR("unsupported signature MD type(%d)", (int)csr->sig_md);
-    return false;
-  }
-
-  bool is_allowed_sha256 = (md_flags & OC_CSR_SIGNATURE_MD_SHA256_FLAG) != 0;
-  bool is_allowed_sha384 = (md_flags & OC_CSR_SIGNATURE_MD_SHA384_FLAG) != 0;
-  if ((csr->sig_md == MBEDTLS_MD_SHA256 && !is_allowed_sha256) ||
-      (csr->sig_md == MBEDTLS_MD_SHA384 && !is_allowed_sha384)) {
+  if ((MBEDTLS_X509_ID_FLAG(csr->sig_md) & md_flags) == 0) {
     OC_ERR("unallowed signature MD type(%d)", (int)csr->sig_md);
     return false;
   }
@@ -239,7 +232,8 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   size_t device = request->resource->device;
   unsigned char csr[512];
-  int ret = oc_sec_csr_generate(device, MBEDTLS_MD_SHA256, csr, sizeof(csr));
+  int ret = oc_sec_csr_generate(device, oc_certs_signature_md_algorithm(), csr,
+                                sizeof(csr));
   if (ret != 0) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
