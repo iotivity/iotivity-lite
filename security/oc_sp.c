@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #ifdef OC_SECURITY
+#include "oc_sp.h"
 #include "oc_sp_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"

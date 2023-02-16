@@ -16,6 +16,7 @@
  *
  ******************************************************************/
 
+#include "api/oc_tcp_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/coap_signal.h"
 #include "port/oc_connectivity.h"
@@ -249,7 +250,7 @@ TEST_F(TestConnectivity, oc_tcp_get_csm_state_N)
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-void
+static void
 on_tcp_connect(const oc_endpoint_t *, int state, void *)
 {
   OC_DBG("on_tcp_connect");

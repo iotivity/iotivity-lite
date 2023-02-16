@@ -642,12 +642,11 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 
   oc_send_response(request, OC_STATUS_CHANGED);
 }
-#endif /* OC_COLLECTIONS */
 
 /**
  * Callbacks for handling Collection level Properties on Scene Collection
  */
-bool
+static bool
 set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -683,7 +682,7 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                         void *data)
 {
@@ -698,6 +697,8 @@ get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
     break;
   }
 }
+
+#endif /* OC_COLLECTIONS */
 
 /**
  * register all the resources to the stack
@@ -889,7 +890,7 @@ signal_event_loop(void)
  * handle Ctrl-C
  * @param signal the captured signal
  */
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
@@ -900,7 +901,7 @@ handle_signal(int signal)
 /**
  * Display UUID of device
  */
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];

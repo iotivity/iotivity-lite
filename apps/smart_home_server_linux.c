@@ -345,6 +345,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
+#ifdef OC_COLLECTIONS
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.switch.binary instances */
 typedef struct oc_switch_t
@@ -356,7 +357,7 @@ typedef struct oc_switch_t
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches);
 
-bool
+static bool
 set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -374,7 +375,7 @@ set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                       void *data)
 {
@@ -391,7 +392,7 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   }
 }
 
-void
+static void
 post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
              void *user_data)
 {
@@ -434,7 +435,7 @@ post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-void
+static void
 get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
@@ -444,7 +445,7 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_resource_t *
+static oc_resource_t *
 get_switch_instance(const char *href, oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
@@ -479,7 +480,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-void
+static void
 free_switch_instance(oc_resource_t *resource)
 {
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
@@ -498,7 +499,7 @@ free_switch_instance(oc_resource_t *resource)
 
 /* Setting custom Collection-level properties */
 int64_t battery_level = 94;
-bool
+static bool
 set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -519,7 +520,7 @@ set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                         void *data)
 {
@@ -533,6 +534,7 @@ get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
     break;
   }
 }
+#endif /* OC_COLLECTIONS */
 
 static void
 register_resources(void)
@@ -605,7 +607,7 @@ handle_signal(int signal)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
@@ -655,7 +657,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -713,7 +715,7 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];

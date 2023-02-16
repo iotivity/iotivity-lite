@@ -40,4 +40,19 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
 oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
   void *cb);
 
+#ifdef OC_BLOCK_WISE
+extern bool oc_ri_invoke_coap_entity_handler(
+  void *request, void *response, oc_blockwise_state_t **request_state,
+  oc_blockwise_state_t **response_state, uint16_t block2_size,
+  oc_endpoint_t *endpoint);
+#else  /* OC_BLOCK_WISE */
+extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
+                                             uint8_t *buffer,
+                                             oc_endpoint_t *endpoint);
+#endif /* !OC_BLOCK_WISE */
+
+#ifdef OC_TCP
+oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);
+#endif /* OC_TCP */
+
 #endif /* OC_RI_INTERNAL_H */

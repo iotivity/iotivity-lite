@@ -223,7 +223,7 @@ signal_event_loop(void)
   WakeConditionVariable(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;

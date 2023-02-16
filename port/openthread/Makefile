@@ -16,7 +16,12 @@ CBOR = ../../deps/tinycbor/src/cborencoder.c \
 # ../../deps/tinycbor/src/cborpretty.c
 # ../../deps/tinycbor/src/cborparser_dup_string.c
 
-SRC_COMMON =  $(wildcard ../../util/*.c) ${CBOR} 
+ifneq ($(MEMORY_TRACE),1)
+SRC_UTIL=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
+else
+SRC_UTIL=$(wildcard ../../util/*.c)
+endif
+SRC_COMMON =  ${SRC_UTIL} ${CBOR}
 SRC_COMMON += $(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/openthread/*.c*)
 
 SRC_CLIENT = $(SRC_COMMON) ../../apps/client_openthread.c
@@ -44,6 +49,10 @@ ifeq ($(DEBUG),1)
 	CFLAGS += -DOC_DEBUG -g -O0
 else
 	CFLAGS += -g -O0
+endif
+
+ifeq ($(MEMORY_TRACE), 1)
+	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
 ifeq ($(SECURE),1)

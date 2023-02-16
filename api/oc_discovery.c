@@ -23,6 +23,7 @@
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_discovery.h"
+#include "oc_discovery_internal.h"
 #include "oc_enums.h"
 
 #ifdef OC_RES_BATCH_SUPPORT

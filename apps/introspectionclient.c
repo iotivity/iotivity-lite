@@ -47,7 +47,7 @@ static char introspection_data_uri[MAX_URI_LENGTH];
 static oc_endpoint_t wk_introspection_server;
 static oc_endpoint_t introspection_data_server;
 
-void
+static void
 print_rep(oc_rep_t *rep, bool pretty_print)
 {
   char *json;
@@ -175,7 +175,7 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;

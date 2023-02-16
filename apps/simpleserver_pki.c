@@ -136,7 +136,7 @@ signal_event_loop(void)
   pthread_mutex_unlock(&mutex);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
@@ -144,7 +144,7 @@ handle_signal(int signal)
   quit = 1;
 }
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;

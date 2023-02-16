@@ -52,6 +52,7 @@
 #include <inttypes.h>
 
 #include "coap.h"
+#include "coap_internal.h"
 #include "transactions.h"
 #ifdef OC_OSCORE
 #include "oscore.h"
@@ -393,7 +394,7 @@ coap_get_variable(const char *buffer, size_t length, const char *name,
 #endif
 /*---------------------------------------------------------------------------*/
 #ifdef OC_TCP
-size_t
+static size_t
 coap_serialize_signal_options(void *packet, uint8_t *option_array)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -590,7 +591,7 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
 }
 /*---------------------------------------------------------------------------*/
 #ifdef OC_TCP
-coap_status_t
+static coap_status_t
 coap_parse_signal_options(void *packet, unsigned int option_number,
                           uint8_t *current_option, size_t option_length,
                           bool inner)
@@ -1943,7 +1944,7 @@ coap_set_payload(void *packet, const void *payload, size_t length)
 }
 
 coap_status_t
-coap_global_status_code()
+coap_global_status_code(void)
 {
   return g_coap_status_code;
 }

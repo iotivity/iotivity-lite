@@ -81,7 +81,7 @@ alloc_rep_internal(void)
 
 #ifdef OC_HAS_FEATURE_PUSH
 oc_rep_t *
-oc_alloc_rep()
+oc_alloc_rep(void)
 {
   return alloc_rep_internal();
 }

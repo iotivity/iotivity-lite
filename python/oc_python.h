@@ -86,7 +86,7 @@ OC_API
 void print_rep(oc_rep_t *rep, bool pretty_print);
 
 OC_API
-char *get_response_payload();
+char *get_response_payload(void);
 
 /**
  * function to save the returned cbor as JSON
@@ -135,7 +135,7 @@ void empty_device_list(oc_list_t list);
  * generic callback for owned/unowned devices
  */
 OC_API
-bool get_cb_result();
+bool get_cb_result(void);
 
 OC_API
 void discover_owned_devices(int scope);
@@ -276,7 +276,7 @@ void install_trust_anchor(void);
 #endif /* OC_PKI */
 
 OC_API
-void set_sd_info();
+void set_sd_info(void);
 
 #ifdef OC_CLOUD
 OC_API
@@ -319,10 +319,10 @@ OC_API
 void py_post(char *uri, int value);
 
 OC_API
-void display_device_uuid();
+void display_device_uuid(void);
 
 OC_API
-char *py_get_obt_uuid();
+char *py_get_obt_uuid(void);
 
 OC_API
 void test_print(void);

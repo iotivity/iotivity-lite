@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /// @brief Get global COAP status code
-coap_status_t coap_global_status_code();
+coap_status_t coap_global_status_code(void);
 
 /// @brief Set global COAP status code
 void coap_set_global_status_code(coap_status_t code);

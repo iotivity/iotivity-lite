@@ -1,5 +1,6 @@
 .github/
 .clang-format
+.clang-tidy
 sonar-project.properties
 Dockerfile.*
 build/

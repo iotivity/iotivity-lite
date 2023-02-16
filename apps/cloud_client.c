@@ -332,7 +332,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;

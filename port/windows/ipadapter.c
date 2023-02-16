@@ -40,6 +40,7 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
+#include "oc_network_monitor.h"
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif /* OC_TCP */
@@ -985,7 +986,7 @@ set_source_address_for_interface(ADDRESS_FAMILY family, uint8_t *address,
   free_network_addresses(ifaddr_list);
 }
 
-int
+static int
 send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 {
   if (!PWSASendMsg && get_WSASendMsg() < 0) {

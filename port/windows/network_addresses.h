@@ -24,6 +24,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <ws2tcpip.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Structure to manage interface list.
+ */
 typedef struct ifaddr_t
 {
   struct ifaddr_t *next;
@@ -31,11 +38,7 @@ typedef struct ifaddr_t
   DWORD if_index;
 } ifaddr_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-ifaddr_t *get_network_addresses();
+ifaddr_t *get_network_addresses(void);
 
 void free_network_addresses(ifaddr_t *ifaddr);
 

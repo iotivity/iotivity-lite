@@ -66,7 +66,7 @@ static int brightness2;
 /*
  * callback function to be called whenever new PUSH arrives
  */
-void
+static void
 push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
   printf("new push arrives (path: %s, rt: ",
@@ -175,8 +175,8 @@ change_power2(void)
 }
 
 /* PUSH payload builder */
-void
-build_light_payload()
+static void
+build_light_payload(void)
 {
   oc_rep_open_object(root, rep);
   oc_rep_set_int(rep, power, power);
@@ -218,7 +218,7 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
@@ -250,7 +250,7 @@ process_func(void *data)
   pthread_exit(0);
 }
 
-void
+static void
 print_menu(void)
 {
   pthread_mutex_lock(&app_mutex);

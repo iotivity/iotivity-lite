@@ -49,6 +49,7 @@ set(OC_DNS_LOOKUP_IPV6_ENABLED OFF CACHE BOOL "Enable IPv6 DNS lookup.")
 set(OC_PUSH_ENABLED OFF CACHE BOOL "Enable Push Notification.")
 set(OC_PUSHDEBUG_ENABLED OFF CACHE BOOL "Enable debug messages for Push Notification.")
 set(OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED OFF CACHE BOOL "Enable resource access in RFOTM.")
+set(OC_MEMORY_TRACE_ENABLED OFF CACHE BOOL "Enable memory tracing.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -122,42 +123,51 @@ if(OC_COMPILER_IS_CLANG)
 	set(OC_LINK_OPTIONS_RELEASE -Wl,-dead_strip -s)
 endif()
 
+set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
+
+include(tools/clang-tidy.cmake)
+
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 # function oc_add_compile_options([GLOBAL] [IX_CXX] FLAGS [flags...])
 #
 # Arguments:
-#   IS_CXX (option) flags are C++ (otherwise they are checked as C)
-#   GLOBAL (option) flags are added as global compilation options (C flags are added to both C and C++, C++ flags only to C++)
-#   FLAGS list of flags to check
+#   GLOBAL   (option) flags are added as global compilation options
+#   FLAGS    list of flags to check and add for both C and C++
+#   CFLAGS   list of flags to check and add for C
+#   CXXFLAGS list of flags to check and add for C++
 #
 # Side-effect: C_COMPILER_SUPPORTS_${flag_name} / CXX_COMPILER_SUPPORTS_${flag_name}
 # is created and set to ON/OFF based on the result of the check. This variable
 # can be used in the context of the caller.
 function(oc_add_compile_options)
-    set(options IS_CXX GLOBAL)
+    set(options GLOBAL)
     set(oneValueArgs)
-    set(multiValueArgs FLAGS)
+    set(multiValueArgs CFLAGS CXXFLAGS FLAGS)
     cmake_parse_arguments(OC_ADD_COMPILE_OPTIONS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS)
+    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS OC_ADD_COMPILE_OPTIONS_CFLAGS)
         string(REPLACE "-" "_" flag_name ${flag})
         string(REPLACE "=" "_" flag_name ${flag_name})
         string(TOUPPER ${flag_name} flag_name)
-        if (OC_ADD_COMPILE_OPTIONS_IS_CXX)
-            set(flag_name "CXX_COMPILER_SUPPORTS${flag_name}")
-            check_cxx_compiler_flag(${flag} ${flag_name})
-            check_c_compiler_flag(${flag} ${flag_name})
-            if ((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
-                add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${arg}>)
-            endif()
-        else()
-            set(flag_name "C_COMPILER_SUPPORTS${flag_name}")
-            unset(${flag_name})
-            check_c_compiler_flag(${flag} ${flag_name})
-            if ((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
-                add_compile_options(${flag})
-            endif()
+        set(flag_name "C_COMPILER_SUPPORTS${flag_name}")
+        unset(${flag_name})
+        check_c_compiler_flag(${flag} ${flag_name})
+        if((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
+            add_compile_options($<$<COMPILE_LANGUAGE:C>:${flag}>)
+        endif()
+        set(${flag_name} ${${flag_name}} PARENT_SCOPE)
+    endforeach()
+
+    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS OC_ADD_COMPILE_OPTIONS_CXXFLAGS)
+        string(REPLACE "-" "_" flag_name ${flag})
+        string(REPLACE "=" "_" flag_name ${flag_name})
+        string(TOUPPER ${flag_name} flag_name)
+        set(flag_name "CXX_COMPILER_SUPPORTS${flag_name}")
+        unset(${flag_name})
+        check_cxx_compiler_flag(${flag} ${flag_name})
+        if((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
+            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${flag}>)
         endif()
         set(${flag_name} ${${flag_name}} PARENT_SCOPE)
     endforeach()
@@ -165,22 +175,26 @@ endfunction()
 
 # Global compile options
 set(PRIVATE_COMPILE_OPTIONS "")
-if (MSVC)
+if(MSVC)
     # TODO: Enable and fix issues
     # list(APPEND PRIVATE_COMPILE_OPTIONS /WX)
 elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     oc_add_compile_options(GLOBAL
         FLAGS -Wall -Wextra -pedantic 
             -Wwrite-strings -Wunused -Wunreachable-code -Wcast-align -Wpointer-arith
+            -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes
             -fno-common
     )
 
-    oc_add_compile_options(GLOBAL IS_CXX
-        FLAGS -Wuseless-cast
-    )
+    if(NOT OC_CLANG_TIDY_ENABLED)
+        oc_add_compile_options(GLOBAL
+            CXXFLAGS -Wuseless-cast -Wno-error=useless-cast
+        )
+    endif()
+
     list(APPEND PRIVATE_COMPILE_OPTIONS -Werror)
     oc_add_compile_options(FLAGS -Wno-error=cast-align)
-    if (C_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN)
+    if(C_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN)
         # TODO: alignment warnings appear on some 32-bit compilers, keep those just
         # as warnings for now
         list(APPEND PRIVATE_COMPILE_OPTIONS -Wno-error=cast-align)
@@ -190,10 +204,6 @@ endif()
 # Release compile and linker options
 add_compile_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_COMPILE_OPTIONS_RELEASE}>")
 add_link_options("$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:${OC_LINK_OPTIONS_RELEASE}>")
-
-set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
-
-include(tools/clang-tidy.cmake)
 
 ######## Define compiler flags ########
 set(PRIVATE_COMPILE_DEFINITIONS "")
@@ -210,7 +220,7 @@ if(OC_PUSH_ENABLED)
     set(OC_DYNAMIC_ALLOCATION_ENABLED ON)
     set(OC_COLLECTIONS_IF_CREATE_ENABLED ON)
 endif()
-if (OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED)
+if(OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED)
     if(NOT OC_SECURITY_ENABLED)
         message(FATAL_ERROR "Cannot enable resource access in RFOTM without security")
     endif()
@@ -298,6 +308,11 @@ if(OC_DNS_LOOKUP_IPV6_ENABLED)
     list(APPEND TEST_COMPILE_DEFINITIONS "OC_DNS_LOOKUP_IPV6")
 endif()
 
+if(OC_MEMORY_TRACE_ENABLED)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_MEMORY_TRACE")
+    list(APPEND TEST_COMPILE_DEFINITIONS "OC_MEMORY_TRACE")
+endif()
+
 if(BUILD_TESTING)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
 endif()
@@ -314,7 +329,7 @@ if(MSVC)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "_CRT_SECURE_NO_WARNINGS=1")
 endif()
 
-if (OC_COVERAGE_ENABLED)
+if(OC_COVERAGE_ENABLED)
     list(APPEND PRIVATE_COMPILE_OPTIONS "--coverage")
 endif()
 
@@ -326,6 +341,12 @@ file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
     ${PROJECT_SOURCE_DIR}/util/*.c
 )
+
+if(NOT OC_MEMORY_TRACE_ENABLED)
+    list(REMOVE_ITEM COMMON_SRC
+        ${PROJECT_SOURCE_DIR}/util/oc_mem_trace.c
+    )
+endif()
 
 if(OC_PKI_ENABLED)
     list(APPEND COMMON_SRC
@@ -397,7 +418,7 @@ else()
     list(APPEND PRIVATE_LINK_LIBS Threads::Threads)
 endif()
 
-if (OC_COVERAGE_ENABLED)
+if(OC_COVERAGE_ENABLED)
     list(APPEND PRIVATE_LINK_LIBS "--coverage")
 endif()
 
@@ -422,7 +443,7 @@ if(OC_SECURITY_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "__OC_PLATFORM")
 endif()
 
-if (BUILD_TINYCBOR)
+if(BUILD_TINYCBOR)
     configure_file(${PROJECT_SOURCE_DIR}/deps/TinyCBORConfig.cmake.in ${PROJECT_SOURCE_DIR}/deps/tinycbor/TinyCBORConfig.cmake.in COPYONLY)
     configure_file(${PROJECT_SOURCE_DIR}/deps/tinycbor.cmake ${PROJECT_SOURCE_DIR}/deps/tinycbor/CMakeLists.txt COPYONLY)
 
@@ -646,7 +667,7 @@ if(OC_SECURITY_ENABLED)
     target_link_libraries(client-server-static PUBLIC ${MBEDTLS_DEP})
 endif()
 
-if (OC_COVERAGE_ENABLED)
+if(OC_COVERAGE_ENABLED)
     target_compile_options(client-server-static PRIVATE "--coverage")
     target_link_libraries(client-server-static PRIVATE "--coverage")
 endif()
@@ -834,7 +855,7 @@ set(PKG_CONFIG_FILES
 
 foreach(pkg-config-file IN LISTS PKG_CONFIG_FILES)
     set(extra_requires "tinycbor")
-    if (OC_SECURITY_ENABLED)
+    if(OC_SECURITY_ENABLED)
         set(extra_libs "-lmbedtls -lmbedx509 -lmbedcrypto")
     endif()
 

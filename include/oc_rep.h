@@ -1202,7 +1202,7 @@ int oc_parse_rep(const uint8_t *payload, size_t payload_size,
 void oc_free_rep(oc_rep_t *rep);
 
 #ifdef OC_HAS_FEATURE_PUSH
-oc_rep_t *oc_alloc_rep();
+oc_rep_t *oc_alloc_rep(void);
 #endif
 
 /**

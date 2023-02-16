@@ -127,7 +127,7 @@ app_init_client(void)
 }
 
 static int
-start_client()
+start_client(void)
 {
   int ret;
   struct sigaction sa;

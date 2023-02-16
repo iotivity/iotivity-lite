@@ -205,7 +205,7 @@ print_rep(oc_rep_t *rep, bool pretty_print)
 
 char *response_payload;
 char *
-get_response_payload()
+get_response_payload(void)
 {
   return response_payload;
 }
@@ -321,7 +321,7 @@ python_exit(int signal)
  *
  */
 #if defined(_WIN32)
-DWORD WINAPI
+static DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
 {
   (void)lpParam;
@@ -446,7 +446,7 @@ empty_device_list(oc_list_t list)
 
 bool cb_result = false;
 bool
-get_cb_result()
+get_cb_result(void)
 {
   bool result_to_return = cb_result;
   cb_result = false;
@@ -1565,7 +1565,7 @@ install_trust_anchor(void)
 #endif /* OC_PKI */
 
 void
-set_sd_info()
+set_sd_info(void)
 {
   char name[64] = { 0 };
   int priv = 0;
@@ -2044,7 +2044,7 @@ py_post(char *uri, int value)
 }
 
 void
-display_device_uuid()
+display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
@@ -2053,7 +2053,7 @@ display_device_uuid()
 }
 
 char *
-py_get_obt_uuid()
+py_get_obt_uuid(void)
 {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));

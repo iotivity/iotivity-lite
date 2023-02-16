@@ -552,7 +552,7 @@ register_collection(void)
 #endif /* OC_COLLECTIONS */
 
 static void
-register_con()
+register_con(void)
 {
   oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, 0);
   oc_cloud_add_resource(con_res);
@@ -560,7 +560,7 @@ register_con()
 
 #ifdef OC_MNT
 static void
-register_mnt()
+register_mnt(void)
 {
   oc_resource_t *mnt_res = oc_core_get_resource_by_index(OCF_MNT, 0);
   oc_cloud_add_resource(mnt_res);
@@ -670,7 +670,7 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];

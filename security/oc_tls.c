@@ -978,7 +978,7 @@ oc_tls_get_trust_anchor_for_cred(const oc_sec_cred_t *cred)
 }
 
 static int
-oc_tls_reload_trust_anchors()
+oc_tls_reload_trust_anchors(void)
 {
   oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
   while (cert != NULL) {
@@ -1134,14 +1134,14 @@ oc_tls_find_trust_anchor(oc_x509_cacrt_t *cacert)
 }
 
 static bool
-oc_tls_trust_anchors_is_empty()
+oc_tls_trust_anchors_is_empty(void)
 {
   mbedtls_x509_crt crt;
   memset(&crt, 0, sizeof(mbedtls_x509_crt));
   return memcmp(&g_trust_anchors, &crt, sizeof(mbedtls_x509_crt)) == 0;
 }
 
-bool
+static bool
 oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
 {
   // We have 3 containers that should contain the same trust anchors:
@@ -1795,7 +1795,7 @@ oc_tls_export_keys(void *p_expkey, mbedtls_ssl_key_export_type type,
   OC_LOGbytes(peer->client_server_random, sizeof(peer->client_server_random));
 }
 
-int
+static int
 oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
 {
   mbedtls_ssl_init(&peer->ssl_ctx);

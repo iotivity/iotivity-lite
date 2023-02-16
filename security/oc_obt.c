@@ -378,7 +378,7 @@ struct list
   struct list *next;
 };
 
-bool
+static bool
 is_item_in_list(oc_list_t list, void *item)
 {
   struct list *h = oc_list_head(list);
@@ -2965,7 +2965,7 @@ oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid, oc_obt_status_cb_t cb,
 
 /* Retrieve ACL */
 
-bool
+static bool
 decode_acl(oc_rep_t *rep, oc_sec_acl_t *acl)
 {
   size_t len = 0;

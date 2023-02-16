@@ -43,7 +43,7 @@ oc_cloud_context_t *cloud_context_init(size_t device);
 void cloud_context_deinit(oc_cloud_context_t *ctx);
 
 /// @brief Count number of allocated contexts
-size_t cloud_context_size();
+size_t cloud_context_size(void);
 
 /**
  * @brief A function pointer for handling a single cloud context iteration;

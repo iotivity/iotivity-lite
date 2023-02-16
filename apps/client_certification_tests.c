@@ -163,14 +163,14 @@ display_menu(void)
 }
 
 #ifdef OC_SOFTWARE_UPDATE
-int
+static int
 validate_purl(const char *purl)
 {
   (void)purl;
   return 0;
 }
 
-int
+static int
 check_new_version(size_t device, const char *url, const char *version)
 {
   if (!url) {
@@ -186,7 +186,7 @@ check_new_version(size_t device, const char *url, const char *version)
   return 0;
 }
 
-int
+static int
 download_update(size_t device, const char *url)
 {
   (void)url;
@@ -194,7 +194,7 @@ download_update(size_t device, const char *url)
   return 0;
 }
 
-int
+static int
 perform_upgrade(size_t device, const char *url)
 {
   (void)url;
@@ -206,7 +206,7 @@ perform_upgrade(size_t device, const char *url)
 }
 #endif /* OC_SOFTWARE_UPDATE */
 static resource_t *
-get_discovered_resource_by_uri(char *uri)
+get_discovered_resource_by_uri(const char *uri)
 {
   resource_t *resource = (resource_t *)oc_list_head(resources);
   while (resource != NULL) {
@@ -556,7 +556,7 @@ discover_realm_local_resources(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
@@ -605,7 +605,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -851,7 +851,7 @@ post_cloud_configuration_resource(bool tcp)
   signal_event_loop();
 }
 
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];

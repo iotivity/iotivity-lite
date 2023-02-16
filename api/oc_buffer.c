@@ -278,7 +278,7 @@ handle_outbound_network_event(oc_process_data_t data)
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-void
+static void
 handle_tcp_connect_event(oc_process_data_t data)
 {
   oc_tcp_on_connect_event_t *event = (oc_tcp_on_connect_event_t *)data;

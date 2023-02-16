@@ -105,7 +105,7 @@ write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
  * is set to true. It helps produce output with reasonably human readable
  * white-space.
  */
-size_t
+static size_t
 oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
 {
   write_buffer_t b = {
@@ -128,7 +128,7 @@ oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
  * an OC_REP_BYTE_STRING_ARRAY. If uses the base64 encoded to encode the
  * byte_string to a base64 string.
  */
-size_t
+static size_t
 oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
                                           char *byte_str, size_t byte_str_size)
 {

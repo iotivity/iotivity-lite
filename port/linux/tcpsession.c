@@ -173,7 +173,7 @@ get_interface_index(int sock)
 }
 
 #ifdef OC_DEBUG
-void
+static void
 log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 {
   oc_string_t ep;
@@ -316,7 +316,7 @@ get_total_length_from_header(const oc_message_t *message,
   return coap_tcp_get_packet_size(message->data);
 }
 
-adapter_receive_state_t
+static adapter_receive_state_t
 tcp_receive_server_message_locked(ip_context_t *dev, fd_set *fds,
                                   oc_message_t *message)
 {
@@ -534,7 +534,7 @@ typedef struct
   int state;
 } tcp_connected_socket_t;
 
-tcp_connected_socket_t
+static tcp_connected_socket_t
 tcp_create_connected_socket(const oc_endpoint_t *endpoint,
                             const struct sockaddr_storage *receiver)
 {
@@ -1015,7 +1015,7 @@ oc_tcp_send_buffer2(oc_message_t *message, bool queue)
 }
 
 void
-tcp_session_handle_signal()
+tcp_session_handle_signal(void)
 {
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   pthread_mutex_lock(&g_mutex);

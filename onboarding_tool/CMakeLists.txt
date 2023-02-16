@@ -4,6 +4,7 @@ if(UNIX AND OC_DYNAMIC_ALLOCATION_ENABLED AND OC_SECURITY_ENABLED AND OC_PKI_ENA
     add_executable(onboarding_tool
         ${PROJECT_SOURCE_DIR}/obtmain.c
     )
+    target_compile_options(onboarding_tool PRIVATE ${PRIVATE_COMPILE_OPTIONS})
     target_link_libraries(onboarding_tool PRIVATE client-static)
 
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/onboarding_tool_creds)

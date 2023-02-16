@@ -37,14 +37,14 @@ TEST(TestStorage, oc_storage_config_fail_with_length_over)
 
 TEST(TestStorage, oc_storage_read_fail)
 {
-  std::array<uint8_t, 100> buf;
+  std::array<uint8_t, 100> buf{};
   auto ret = oc_storage_read("storage_store", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
 
 TEST(TestStorage, oc_storage_write_fail)
 {
-  std::array<uint8_t, 100> buf;
+  std::array<uint8_t, 100> buf{};
   auto ret = oc_storage_write("storage_store", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
