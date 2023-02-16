@@ -32,14 +32,8 @@
 extern "C" {
 #endif
 
-#define OC_CSR_SIGNATURE_MD_SHA256_FLAG (1 << MBEDTLS_MD_SHA256)
-#define OC_CSR_SIGNATURE_MD_SHA384_FLAG (1 << MBEDTLS_MD_SHA384)
-
-// supported message digests of a CSR signature
-#define OC_CSR_SIGNATURE_MD_SUPPORTED_MASK (OC_CSR_SIGNATURE_MD_SHA256_FLAG)
-
 /**
- * @brief
+ * @brief Verify CSR signature
  *
  * @param csr parsed CSR to check (cannot be NULL)
  * @param md_flags bitmask of allowed signatures (if 0 then signature is not

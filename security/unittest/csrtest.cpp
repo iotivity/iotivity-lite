@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <mbedtls/x509_crt.h>
 
 class TestCSR : public testing::Test {
 public:
@@ -132,8 +133,8 @@ TEST_F(TestCSR, ValidateError)
                                    csr.size()));
 
   EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA384_FLAG |
-                                     OC_CSR_SIGNATURE_MD_SHA256_FLAG,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
                                    nullptr, nullptr, 0))
     << "sha224 signature not supported";
 }
@@ -145,30 +146,30 @@ TEST_F(TestCSR, Validate256)
                                    csr.size()));
 
   EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_OPAQUE,
-                                   OC_CSR_SIGNATURE_MD_SHA256_FLAG, nullptr,
-                                   nullptr, 0))
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
+                                   nullptr, nullptr, 0))
     << "unexpected public key type";
 
   std::array<unsigned char, 1> too_small{};
   EXPECT_GT(0, oc_sec_csr_validate(
                  too_small.data(), too_small.size(), MBEDTLS_PK_ECKEY,
-                 OC_CSR_SIGNATURE_MD_SHA256_FLAG, nullptr, nullptr, 0))
+                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256), nullptr, nullptr, 0))
     << "buffer too small";
 
   EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA384_FLAG, nullptr,
-                                   nullptr, 0))
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
+                                   nullptr, nullptr, 0))
     << "wrong signature type";
 
   EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA256_FLAG, nullptr,
-                                   nullptr, 0));
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
+                                   nullptr, nullptr, 0));
 
   oc_string_t subject{};
   std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
   EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA256_FLAG |
-                                     OC_CSR_SIGNATURE_MD_SHA384_FLAG,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
                                    &subject, pk.data(), pk.size()));
   EXPECT_LT(0, oc_string_len(subject));
   OC_DBG("Subject: %s", oc_string(subject));
@@ -183,29 +184,29 @@ TEST_F(TestCSR, Validate384)
 
   EXPECT_GT(0, oc_sec_csr_validate(
                  csr.data(), csr.size(), MBEDTLS_PK_RSASSA_PSS,
-                 OC_CSR_SIGNATURE_MD_SHA384_FLAG, nullptr, nullptr, 0))
+                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384), nullptr, nullptr, 0))
     << "unexpected public key type";
 
   std::array<unsigned char, 1> too_small{};
   EXPECT_GT(0, oc_sec_csr_validate(
                  too_small.data(), too_small.size(), MBEDTLS_PK_ECKEY,
-                 OC_CSR_SIGNATURE_MD_SHA384_FLAG, nullptr, nullptr, 0))
+                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384), nullptr, nullptr, 0))
     << "buffer too small";
 
   EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA256_FLAG, nullptr,
-                                   nullptr, 0))
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
+                                   nullptr, nullptr, 0))
     << "wrong signature type";
 
   EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA384_FLAG, nullptr,
-                                   nullptr, 0));
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
+                                   nullptr, nullptr, 0));
 
   oc_string_t subject{};
   std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
   EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   OC_CSR_SIGNATURE_MD_SHA256_FLAG |
-                                     OC_CSR_SIGNATURE_MD_SHA384_FLAG,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
                                    &subject, pk.data(), pk.size()));
   EXPECT_LT(0, oc_string_len(subject));
   OC_DBG("Subject: %s", oc_string(subject));

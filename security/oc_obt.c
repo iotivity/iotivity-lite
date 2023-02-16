@@ -1804,7 +1804,7 @@ device_CSR(oc_client_response_t *data)
    */
   int ret = oc_sec_csr_validate(
     (const unsigned char *)csr, csr_len, MBEDTLS_PK_ECKEY,
-    OC_CSR_SIGNATURE_MD_SUPPORTED_MASK, &subject, pub_key, sizeof(pub_key));
+    oc_certs_md_algorithm_allowed(), &subject, pub_key, sizeof(pub_key));
 
   if (ret < 0) {
     goto err_device_CSR;

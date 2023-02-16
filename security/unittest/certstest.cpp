@@ -16,9 +16,10 @@
  *
  ******************************************************************/
 
-#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_DYNAMIC_ALLOCATION)
+#if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_cred.h"
+#include "oc_uuid.h"
 #include "port/oc_random.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
@@ -26,7 +27,6 @@
 #include "security/oc_obt_internal.h"
 #include "security/oc_keypair.h"
 #include "security/oc_security_internal.h"
-#include "oc_uuid.h"
 #include "tests/gtest/Device.h"
 
 #include <algorithm>
@@ -38,20 +38,25 @@
 #include <string>
 #include <vector>
 
-static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
-static const std::string g_root_subject{ "C=US, O=OCF, CN=" +
-                                         g_root_subject_name };
+class TestCerts : public testing::Test {
+public:
+  void TearDown() override
+  {
+    oc_certs_set_signature_md_algorithm(MBEDTLS_MD_SHA384);
+    oc_certs_set_md_algorithm_allowed(MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+                                      MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384));
+  }
 
-template<class T>
-static std::vector<T>
-toArray(const std::string &str)
-{
-  std::vector<T> res;
-  std::copy(str.begin(), str.end(), std::back_inserter(res));
-  return res;
-}
+  template<class T>
+  static std::vector<T> toArray(const std::string &str)
+  {
+    std::vector<T> res;
+    std::copy(str.begin(), str.end(), std::back_inserter(res));
+    return res;
+  }
+};
 
-TEST(TestCerts, IsPem)
+TEST_F(TestCerts, IsPem)
 {
   auto is_pem = [](const std::string &str) {
     std::vector<unsigned char> buf{ toArray<unsigned char>(str) };
@@ -64,7 +69,7 @@ TEST(TestCerts, IsPem)
   EXPECT_TRUE(is_pem("-----BEGIN CERTIFICATE-----"));
 }
 
-TEST(TestCerts, TimestampFormatFail)
+TEST_F(TestCerts, TimestampFormatFail)
 {
   timestamp_t ts = oc_certs_timestamp_now();
 
@@ -73,7 +78,7 @@ TEST(TestCerts, TimestampFormatFail)
     oc_certs_timestamp_format(ts, too_small.data(), too_small.size()));
 }
 
-TEST(TestCerts, TimestampFormat)
+TEST_F(TestCerts, TimestampFormat)
 {
   timestamp_t ts = oc_certs_timestamp_now();
 
@@ -86,6 +91,49 @@ TEST(TestCerts, TimestampFormat)
   EXPECT_TRUE(oc_certs_timestamp_format(ts, buffer.data(), buffer.size()));
   OC_DBG("notAfter: %s", buffer.data());
 }
+
+TEST_F(TestCerts, SetSignatureMDAlgorithm)
+{
+  std::vector<mbedtls_md_type_t> all_mds{
+    MBEDTLS_MD_MD5,      MBEDTLS_MD_SHA1,   MBEDTLS_MD_SHA224,
+    MBEDTLS_MD_SHA256,   MBEDTLS_MD_SHA384, MBEDTLS_MD_SHA512,
+    MBEDTLS_MD_RIPEMD160
+  };
+
+  for (auto md : all_mds) {
+    oc_certs_set_signature_md_algorithm(md);
+    EXPECT_EQ(md, oc_certs_signature_md_algorithm());
+  }
+}
+
+TEST_F(TestCerts, AllowedMDAlgorithms)
+{
+  std::vector<mbedtls_md_type_t> all_mds{
+    MBEDTLS_MD_MD5,      MBEDTLS_MD_SHA1,   MBEDTLS_MD_SHA224,
+    MBEDTLS_MD_SHA256,   MBEDTLS_MD_SHA384, MBEDTLS_MD_SHA512,
+    MBEDTLS_MD_RIPEMD160
+  };
+
+  // disable all
+  oc_certs_set_md_algorithm_allowed(MBEDTLS_MD_NONE);
+  EXPECT_EQ(0, oc_certs_md_algorithm_allowed());
+
+  // enable all one by one
+  for (auto md : all_mds) {
+    EXPECT_FALSE(oc_certs_md_algorithm_is_allowed(md));
+    oc_certs_md_algorithm_allow(md);
+    EXPECT_TRUE(oc_certs_md_algorithm_is_allowed(md));
+  }
+
+  // disable all one by one
+  for (auto md : all_mds) {
+    EXPECT_TRUE(oc_certs_md_algorithm_is_allowed(md));
+    oc_certs_md_algorithm_disallow(md);
+    EXPECT_FALSE(oc_certs_md_algorithm_is_allowed(md));
+  }
+}
+
+#ifdef OC_DYNAMIC_ALLOCATION
 
 struct keypair_t
 {
@@ -203,6 +251,10 @@ public:
   keypair_t kp_{};
   Roles roles_{};
 };
+
+static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
+static const std::string g_root_subject{ "C=US, O=OCF, CN=" +
+                                         g_root_subject_name };
 
 std::vector<unsigned char>
 TestObtCerts::GenerateSelfSignedRootCertificate()
@@ -763,5 +815,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
 
   oc_sec_remove_cred(cred, oc::TestDevice::Index());
 }
+
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #endif /* OC_SECURITY && OC_PKI && OC_DYNAMIC_ALLOCATION  */

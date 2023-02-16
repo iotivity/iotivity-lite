@@ -133,7 +133,7 @@ oc_obt_generate_self_signed_root_cert_pem(
   /* Version: v3 */
   mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
   /* signatureAlgorithm: ecdsa-with-SHA256 */
-  mbedtls_x509write_crt_set_md_alg(&cert, MBEDTLS_MD_SHA256);
+  mbedtls_x509write_crt_set_md_alg(&cert, oc_certs_signature_md_algorithm());
   /* Subject */
   ret = mbedtls_x509write_crt_set_subject_name(&cert, cert_data.subject_name);
   if (ret < 0) {
@@ -273,7 +273,7 @@ oc_obt_generate_identity_cert_pem(
   /* Version: v3 */
   mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
   /* signatureAlgorithm: ecdsa-with-SHA256 */
-  mbedtls_x509write_crt_set_md_alg(&cert, MBEDTLS_MD_SHA256);
+  mbedtls_x509write_crt_set_md_alg(&cert, oc_certs_signature_md_algorithm());
   /* Subject */
   ret = mbedtls_x509write_crt_set_subject_name(&cert, cert_data.subject_name);
   if (ret < 0) {
@@ -534,7 +534,7 @@ oc_obt_generate_role_cert_pem(oc_obt_generate_role_cert_data_t cert_data,
   /* Version: v3 */
   mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
   /* signatureAlgorithm: ecdsa-with-SHA256 */
-  mbedtls_x509write_crt_set_md_alg(&cert, MBEDTLS_MD_SHA256);
+  mbedtls_x509write_crt_set_md_alg(&cert, oc_certs_signature_md_algorithm());
   /* Subject */
   ret = mbedtls_x509write_crt_set_subject_name(&cert, cert_data.subject_name);
   if (ret < 0) {
