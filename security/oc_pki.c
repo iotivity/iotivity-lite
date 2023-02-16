@@ -16,17 +16,19 @@
  *
  ****************************************************************************/
 
-#ifdef OC_SECURITY
-#ifdef OC_PKI
+#include "oc_config.h"
 
-#include "mbedtls/pk.h"
-#include "mbedtls/x509_crt.h"
-#include "oc_certs.h"
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
 #include "oc_pki.h"
+#include "oc_certs.h"
 #include "oc_cred_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_connectivity.h"
+
+#include <mbedtls/pk.h>
+#include <mbedtls/x509_crt.h>
 
 static oc_pki_verify_certificate_cb_t g_verify_certificate_cb;
 
@@ -252,12 +254,12 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 }
 
 int
-oc_obt_add_identity_cert(size_t device, const unsigned char *cert,
+oc_pki_add_identity_cert(size_t device, const unsigned char *cert,
                          size_t cert_size, const unsigned char *key,
-                         size_t key_size, oc_sec_credusage_t credusage)
+                         size_t key_size)
 {
   return pki_add_identity_cert(device, cert, cert_size, key, key_size,
-                               credusage);
+                               OC_CREDUSAGE_IDENTITY_CERT);
 }
 
 int
@@ -412,7 +414,7 @@ default_verify_certificate_cb(struct oc_tls_peer_t *peer, mbedtls_x509_crt *crt,
 }
 
 oc_pki_verify_certificate_cb_t
-oc_pki_get_verify_certificate_cb()
+oc_pki_get_verify_certificate_cb(void)
 {
   if (g_verify_certificate_cb == NULL) {
     return &default_verify_certificate_cb;
@@ -420,7 +422,4 @@ oc_pki_get_verify_certificate_cb()
   return g_verify_certificate_cb;
 }
 
-#else  /* OC_PKI */
-typedef int dummy_declaration;
-#endif /* !OC_PKI */
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY && OC_PKI */

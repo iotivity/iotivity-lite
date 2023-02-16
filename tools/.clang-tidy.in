@@ -1,5 +1,5 @@
 ---
-Checks: "clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-clang-analyzer-optin.performance.Padding,bugprone-*"
+Checks: "clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-clang-analyzer-optin.performance.Padding,bugprone-*,-bugprone-easily-swappable-parameters,-bugprone-reserved-identifier"
 WarningsAsErrors: "" # set to "*" to treat all warnings as errors
 HeaderFilterRegex: "@IOTIVITY_DIR_NAMES_REGEX@" # all directories except deps
 AnalyzeTemporaryDtors: false

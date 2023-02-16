@@ -163,10 +163,5 @@ oc_mem_trace_free(void)
     mem_log_item = oc_list_pop((&mInfo)->mem_log_list);
   }
 }
-#else  /* OC_MEMORY_TRACE */
-// TODO : it would be removed if MEMTRACE=0 excludes compiling this file
-void
-dummy_null_func(void)
-{
-}
-#endif /* !OC_MEMORY_TRACE */
+
+#endif /* OC_MEMORY_TRACE */

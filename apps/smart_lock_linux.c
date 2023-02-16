@@ -389,7 +389,7 @@ discover_smart_locks(void)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;

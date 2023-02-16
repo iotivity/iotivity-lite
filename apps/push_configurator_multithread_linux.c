@@ -64,7 +64,7 @@ typedef struct
   custom_func_t func;
 } custom_func_s;
 
-void
+static void
 push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
   PRINT("new push arrives (path: %s, rt: ",
@@ -349,7 +349,7 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
@@ -381,7 +381,7 @@ process_func(void *data)
   pthread_exit(0);
 }
 
-void
+static void
 print_menu(void)
 {
   pthread_mutex_lock(&app_mutex);

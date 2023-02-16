@@ -29,7 +29,7 @@ using uuid_buffer_t = std::array<char, OC_UUID_LEN>;
 
 TEST(UUIDGeneration, StrToUUIDTest_P)
 {
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   memset(&uuid, 0, sizeof(oc_uuid_t));
   oc_uuid_t uuidTemp = uuid;
   oc_str_to_uuid(UUID, &uuid);
@@ -39,9 +39,9 @@ TEST(UUIDGeneration, StrToUUIDTest_P)
 TEST(UUIDGeneration, WildcardStrToUUID)
 {
   const char *u = "*";
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   oc_str_to_uuid(u, &uuid);
-  oc_uuid_t wc = { { 0 } };
+  oc_uuid_t wc{};
   wc.id[0] = '*';
   EXPECT_EQ(memcmp(wc.id, uuid.id, OC_UUID_ID_SIZE), 0);
 }
@@ -49,8 +49,8 @@ TEST(UUIDGeneration, WildcardStrToUUID)
 TEST(UUIDGeneration, WildcardUUIDToStr)
 {
   const char *u = "*";
-  uuid_buffer_t wc;
-  oc_uuid_t uuid = { { 0 } };
+  uuid_buffer_t wc{};
+  oc_uuid_t uuid{};
   uuid.id[0] = '*';
   oc_uuid_to_str(&uuid, wc.data(), wc.size());
   EXPECT_EQ(strlen(u), strlen(wc.data()));
@@ -60,8 +60,8 @@ TEST(UUIDGeneration, WildcardUUIDToStr)
 TEST(UUIDGeneration, NonWildcardUUID)
 {
   const char *u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
-  uuid_buffer_t nonwc;
-  oc_uuid_t uuid;
+  uuid_buffer_t nonwc{};
+  oc_uuid_t uuid{};
   oc_str_to_uuid(u, &uuid);
 
   EXPECT_EQ('*', uuid.id[0]);
@@ -109,7 +109,7 @@ TEST(UUIDGeneration, GenerateType4UUID)
 {
   // Type 4 uuid uses iotivities psudo random number generator.
   oc_random_init();
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
   // `clock_seq_hi_and_reserved` is the 8th byte bit 7 is zero per spec
   EXPECT_EQ(0, (uuid.id[8] & 0x80));
@@ -119,7 +119,7 @@ TEST(UUIDGeneration, GenerateType4UUID)
   // be set to 0 1 0 0 (0x40) per spec
   EXPECT_EQ(0x40, (uuid.id[6] & 0x40));
 
-  uuid_buffer_t uuid_str;
+  uuid_buffer_t uuid_str{};
   oc_uuid_to_str(&uuid, uuid_str.data(), uuid_str.size());
   EXPECT_EQ('-', uuid_str[8]);
   EXPECT_EQ('-', uuid_str[13]);
@@ -131,27 +131,24 @@ TEST(UUIDGeneration, GenerateType4UUID)
 
 TEST(UUIDComparison, EmptyUUID)
 {
-  oc_uuid_t first;
-  memset(&first, 0, sizeof(oc_uuid_t));
-  oc_uuid_t second;
-  memset(&second, 0, sizeof(oc_uuid_t));
+  oc_uuid_t first{};
+  oc_uuid_t second{};
   EXPECT_TRUE(oc_uuid_is_equal(first, second));
   EXPECT_TRUE(oc_uuid_is_equal(second, first));
 }
 
 TEST(UUIDComparison, EmptyAndNonEmptyUUID)
 {
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   oc_str_to_uuid(UUID, &uuid);
-  oc_uuid_t empty;
-  memset(&empty, 0, sizeof(oc_uuid_t));
+  oc_uuid_t empty{};
   EXPECT_FALSE(oc_uuid_is_equal(uuid, empty));
   EXPECT_FALSE(oc_uuid_is_equal(empty, uuid));
 }
 
 TEST(UUIDComparison, CopyUUID)
 {
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   oc_str_to_uuid(UUID, &uuid);
   oc_uuid_t uuid_copy = uuid;
   EXPECT_TRUE(oc_uuid_is_equal(uuid, uuid_copy));
@@ -161,12 +158,12 @@ TEST(UUIDComparison, CopyUUID)
 TEST(UUIDComparison, NonEmptyUUID)
 {
   std::string uuid_str = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
-  oc_uuid_t uuid;
+  oc_uuid_t uuid{};
   oc_str_to_uuid(uuid_str.c_str(), &uuid);
 
   oc_random_init();
-  oc_uuid_t gen_uuid;
-  uuid_buffer_t gen_uuid_str;
+  oc_uuid_t gen_uuid{};
+  uuid_buffer_t gen_uuid_str{};
   do {
     oc_gen_uuid(&gen_uuid);
     oc_uuid_to_str(&gen_uuid, gen_uuid_str.data(), gen_uuid_str.size());

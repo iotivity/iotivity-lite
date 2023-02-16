@@ -53,6 +53,7 @@
 #include "api/oc_helpers_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
@@ -79,17 +80,6 @@
 #include <string.h>
 
 OC_PROCESS(g_coap_engine, "CoAP Engine");
-
-#ifdef OC_BLOCK_WISE
-extern bool oc_ri_invoke_coap_entity_handler(
-  void *request, void *response, oc_blockwise_state_t **request_state,
-  oc_blockwise_state_t **response_state, uint16_t block2_size,
-  oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE */
-extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
-                                             uint8_t *buffer,
-                                             oc_endpoint_t *endpoint);
-#endif /* !OC_BLOCK_WISE */
 
 #ifdef OC_REQUEST_HISTORY
 // The size of the array used to deduplicate CoAP messages.

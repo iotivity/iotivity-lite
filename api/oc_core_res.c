@@ -41,6 +41,10 @@
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -58,12 +62,6 @@ static oc_platform_info_t oc_platform_info;
 static bool announce_con_res = false;
 static int res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
-
-/*todo4me <2022/9/5> remove later*/
-#ifdef OC_HAS_FEATURE_PUSH
-void oc_create_pushconf_resource(size_t device_index);
-void oc_create_pushreceiver_resource(size_t device_index);
-#endif
 
 /* Although used several times in the OCF spec, "/oic/con" is not
    accepted by the spec. Use a private prefix instead.

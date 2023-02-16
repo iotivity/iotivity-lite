@@ -73,13 +73,13 @@ oc_tcp_adapter_mutex_destroy(void)
   mutex_free(mutex);
 }
 
-void
+static void
 oc_tcp_adapter_mutex_lock(void)
 {
   mutex_lock(mutex);
 }
 
-void
+static void
 oc_tcp_adapter_mutex_unlock(void)
 {
   mutex_unlock(mutex);

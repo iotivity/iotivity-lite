@@ -534,7 +534,7 @@ int oc_process_nevents(void);
  * \return true closing of all tls is sessions is scheduled by the process
  * \return false otherwise
  */
-bool oc_process_is_closing_all_tls_sessions();
+bool oc_process_is_closing_all_tls_sessions(void);
 #endif /* OC_SECURITY */
 
 /** @} */

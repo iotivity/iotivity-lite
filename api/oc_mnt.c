@@ -25,7 +25,7 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
-void
+static void
 get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
@@ -44,7 +44,7 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_send_response(request, OC_STATUS_OK);
 }
 
-void
+static void
 post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;

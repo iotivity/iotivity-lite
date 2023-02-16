@@ -289,7 +289,7 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
  * @brief application should define this callback which builds updated contents
  * of pushable Resource
  */
-typedef void (*oc_payload_callback_t)();
+typedef void (*oc_payload_callback_t)(void);
 #endif
 
 /**

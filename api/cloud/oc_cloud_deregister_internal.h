@@ -29,10 +29,10 @@ extern "C" {
 #endif
 
 /// Timeout for deregistering requests
-#define CLOUD_DEREGISTER_TIMEOUT 10
+#define CLOUD_DEREGISTER_TIMEOUT (10)
 
 /// Error when attempting to multiple deregistrations concurrently
-#define CLOUD_DEREGISTER_ERROR_ALREADY_DEREGISTERING -2
+#define CLOUD_DEREGISTER_ERROR_ALREADY_DEREGISTERING (-2)
 
 /**
  * @brief Execute cloud deregister

@@ -30,11 +30,15 @@
 #ifdef OC_CLOUD
 #include "rd_client.h"
 #include "oc_cloud.h"
-#endif
+#endif /* OC_CLOUD */
 
-#if defined(OC_IDD_API)
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate.h"
+#endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_IDD_API
 #include "oc_introspection.h"
-#endif
+#endif /* OC_IDD_API */
 
 static const size_t DEVICE = 0;
 
@@ -52,29 +56,29 @@ static const char *manufacturer = "OCF";
 #define MAX_ARRAY 10 /* max size of the array */
 
 /* global property variables for path: "/dali" */
-static char *g_dali_RESOURCE_PROPERTY_NAME_pld =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_pld =
   "pld"; /* the name for the attribute */
 /* array pld  Each DALI byte is conveyed as an byte */
 uint8_t g_dali_pld[MAX_ARRAY];
 size_t g_dali_pld_array_size;
-static char *g_dali_RESOURCE_PROPERTY_NAME_pld_s =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_pld_s =
   "pld_s";            /* the name for the attribute */
 int g_dali_pld_s = 0; /* current value of property "pld_s" The amount of
                          integers in the Dali payload. */
-static char *g_dali_RESOURCE_PROPERTY_NAME_prio =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_prio =
   "prio"; /* the name for the attribute */
 int g_dali_prio =
   0; /* current value of property "prio" The priority of the command. */
-static char *g_dali_RESOURCE_PROPERTY_NAME_src =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_src =
   "src"; /* the name for the attribute */
 int g_dali_src =
   0; /* current value of property "src" assigned source address. -1 means not
         yet assigned by the Application controller. */
-static char *g_dali_RESOURCE_PROPERTY_NAME_st =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_st =
   "st"; /* the name for the attribute */
 bool g_dali_st =
   false; /* current value of property "st" The command has to be send twice. */
-static char *g_dali_RESOURCE_PROPERTY_NAME_tbus =
+static const char *g_dali_RESOURCE_PROPERTY_NAME_tbus =
   "tbus"; /* the name for the attribute */
 /* array tbus  The set of  bus identifiers to which the command should be
  * applied. */
@@ -82,16 +86,16 @@ int g_dali_tbus[MAX_ARRAY];
 size_t g_dali_tbus_array_size;
 
 /* global property variables for path: "/dali_conf" */
-static char *g_config_RESOURCE_PROPERTY_NAME_bus =
+static const char *g_config_RESOURCE_PROPERTY_NAME_bus =
   "bus"; /* the name for the attribute */
 int g_config_bus =
   2; /* current value of property "bus" assign the bus identifier. */
-static char *g_config_RESOURCE_PROPERTY_NAME_src =
+static const char *g_config_RESOURCE_PROPERTY_NAME_src =
   "src"; /* the name for the attribute */
 int g_config_src =
   5; /* current value of property "src" assigned source address. -1 means not
         yet assigned by the Application controller. */
-static char *g_config_RESOURCE_PROPERTY_NAME_ver =
+static const char *g_config_RESOURCE_PROPERTY_NAME_ver =
   "ver"; /* the name for the attribute */
 int g_config_ver =
   2; /* current value of property "ver" version of dali on the device. */
@@ -170,14 +174,14 @@ display_menu(void)
 }
 
 #ifdef OC_SOFTWARE_UPDATE
-int
+static int
 validate_purl(const char *purl)
 {
   (void)purl;
   return 0;
 }
 
-int
+static int
 check_new_version(size_t device, const char *url, const char *version)
 {
   if (!url) {
@@ -193,7 +197,7 @@ check_new_version(size_t device, const char *url, const char *version)
   return 0;
 }
 
-int
+static int
 download_update(size_t device, const char *url)
 {
   (void)url;
@@ -201,7 +205,7 @@ download_update(size_t device, const char *url)
   return 0;
 }
 
-int
+static int
 perform_upgrade(size_t device, const char *url)
 {
   (void)url;
@@ -504,7 +508,7 @@ oc_define_interrupt_handler(toggle_switch)
 }
 
 static void
-toggle_switch_resource()
+toggle_switch_resource(void)
 {
   PRINT("\nSwitch toggled\n");
   g_switch_value = !g_switch_value;
@@ -832,7 +836,6 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (!var_in_request) {
     bad_request = true;
   }
-  long tmp_size;
   if (!bad_request) {
 #ifdef OC_STORAGE
     switch (iface_mask) {
@@ -841,7 +844,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_storage_write("g_switch_storage_status",
                        (uint8_t *)&g_switch_storage_status,
                        sizeof(g_switch_storage_status));
-      tmp_size =
+      long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
       PRINT("storage (startup)  property 'value' : %s (%ld)\n", btoa(state),
             tmp_size);
@@ -855,7 +858,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_storage_write("g_switch_storage_status",
                        (uint8_t *)&g_switch_storage_status,
                        sizeof(g_switch_storage_status));
-      tmp_size =
+      long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
       PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n",
             btoa(state), tmp_size);
@@ -867,7 +870,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     default: {
       if (g_switch_storage_status == 2) {
-        tmp_size =
+        long tmp_size =
           oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
         PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n",
               btoa(state), tmp_size);
@@ -1380,6 +1383,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   PRINT("-- End post_config\n");
 }
 
+#ifdef OC_COLLECTIONS
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Resource creation and request handlers for oic.r.switch.binary instances */
 typedef struct oc_switch_t
@@ -1391,7 +1395,7 @@ typedef struct oc_switch_t
 OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches);
 
-bool
+static bool
 set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -1409,7 +1413,7 @@ set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                       void *data)
 {
@@ -1426,7 +1430,7 @@ get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   }
 }
 
-void
+static void
 post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
              void *user_data)
 {
@@ -1469,7 +1473,7 @@ post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-void
+static void
 get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
             void *user_data)
 {
@@ -1479,7 +1483,7 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_resource_t *
+static oc_resource_t *
 get_switch_instance(const char *href, oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
@@ -1514,7 +1518,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-void
+static void
 free_switch_instance(oc_resource_t *resource)
 {
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
@@ -1533,7 +1537,7 @@ free_switch_instance(oc_resource_t *resource)
 
 /* Setting custom Collection-level properties */
 int64_t battery_level = 94;
-bool
+static bool
 set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -1554,7 +1558,7 @@ set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                         void *data)
 {
@@ -1568,6 +1572,7 @@ get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
     break;
   }
 }
+#endif /* OC_COLLECTIONS */
 
 static bool
 verify_action_in_supported_set(oc_string_t action)
@@ -1821,7 +1826,7 @@ handle_signal(int signal)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
@@ -1871,7 +1876,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -1956,7 +1961,7 @@ ocf_event_thread(void *data)
   return NULL;
 }
 
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
@@ -1964,7 +1969,8 @@ display_device_uuid(void)
 
   PRINT("Started device with ID: %s\n", buffer);
 }
-void
+
+static void
 initialize_variables(void)
 {
   g_switch_value =

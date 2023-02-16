@@ -208,7 +208,7 @@ TEST_F(TestOcRi, RIQueryExists_P)
 
 #ifdef OC_COLLECTIONS
 
-bool
+static bool
 find_resource_in_collections(const oc_resource_t *resource)
 {
   oc_collection_t *collection = oc_collection_get_all();

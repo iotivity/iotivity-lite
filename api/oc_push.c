@@ -21,10 +21,11 @@
  ****************************************************************************/
 
 #include "util/oc_features.h"
-#include "oc_push.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 
+#include "oc_push.h"
+#include "oc_push_internal.h"
 #include "oc_api.h"
 #include "oc_events.h"
 #include "oc_rep.h"
@@ -2256,7 +2257,7 @@ oc_create_pushreceiver_resource(size_t device_index)
 }
 
 void
-oc_push_list_init()
+oc_push_init()
 {
   oc_list_init(g_ns_list);
   oc_list_init(g_recvs_list);

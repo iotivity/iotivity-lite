@@ -42,7 +42,7 @@ static int g_session_state_free_delay_secs;
 static OC_ATOMIC_UINT8_T g_session_end_ref = 0;
 
 static int
-get_session_start_events_count()
+get_session_start_events_count(void)
 {
   oc_network_event_handler_mutex_lock();
   int count = oc_list_length(g_session_start_events);
@@ -51,7 +51,7 @@ get_session_start_events_count()
 }
 
 static int
-get_session_end_events_count()
+get_session_end_events_count(void)
 {
   oc_network_event_handler_mutex_lock();
   int count = oc_list_length(g_session_end_events);

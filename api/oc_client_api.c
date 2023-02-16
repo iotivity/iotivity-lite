@@ -219,7 +219,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 
 #ifdef OC_IPV4
 static void
-oc_do_multicast_update_ipv4()
+oc_do_multicast_update_ipv4(void)
 {
   oc_message_t *multicast_update4 = oc_internal_allocate_outgoing_message();
   if (multicast_update4) {
@@ -573,7 +573,7 @@ oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
 
 #ifdef OC_TCP
 oc_event_callback_retval_t
-oc_remove_ping_handler(void *data)
+oc_remove_ping_handler_async(void *data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)data;
 
@@ -607,7 +607,7 @@ oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
     return false;
   }
 
-  oc_set_delayed_callback(cb, oc_remove_ping_handler, timeout_seconds);
+  oc_set_delayed_callback(cb, oc_remove_ping_handler_async, timeout_seconds);
   return true;
 }
 #endif /* OC_TCP */

@@ -3,16 +3,19 @@ project(iotivity-lite-tests)
 add_executable(client_init_linux_test
     ${PROJECT_SOURCE_DIR}/client_init_linux.c
 )
+target_compile_options(client_init_linux_test PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_link_libraries(client_init_linux_test PRIVATE client-static)
 
 add_executable(server_init_linux_test
     ${PROJECT_SOURCE_DIR}/server_init_linux.c
 )
+target_compile_options(server_init_linux_test PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_link_libraries(server_init_linux_test PRIVATE server-static)
 
 add_executable(client_get_linux_test
     ${PROJECT_SOURCE_DIR}/client_get_linux.c
 )
+target_compile_options(client_get_linux_test PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_link_libraries(client_get_linux_test PRIVATE client-server-static)
 
 find_package(PythonInterp)

@@ -102,7 +102,7 @@ void tcp_end_session(const oc_endpoint_t *endpoint);
 /**
  * @brief Handle data received on the signal pipe.
  */
-void tcp_session_handle_signal();
+void tcp_session_handle_signal(void);
 
 /**
  * @brief Stop and deallocate all sessions.

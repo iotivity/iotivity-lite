@@ -672,7 +672,7 @@ oc_reset_v1(bool close_all_tls_connections_immediately)
 }
 
 void
-oc_reset()
+oc_reset(void)
 {
   oc_reset_v1(true);
 }

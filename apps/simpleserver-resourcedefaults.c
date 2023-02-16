@@ -1121,7 +1121,7 @@ register_resources(void)
 }
 
 /**
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -1159,7 +1159,7 @@ strlen(root_ca)) < 0) { PRINT("ERROR installing root certificate\n"); } else {
 * registers and starts the handler
 
 */
-void
+static void
 initialize_variables(void)
 {
   int ret_size = 0;
@@ -1232,7 +1232,7 @@ signal_event_loop(void)
  * handle Ctrl-C
  * @param signal the captured signal
  */
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;

@@ -141,9 +141,14 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
-SRC_COMMON:=$(wildcard ../../util/*.c) ${CBOR} ${CTIMESTAMP}
+ifneq ($(MEMORY_TRACE),1)
+SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
+else
+SRC_UTIL:=$(wildcard ../../util/*.c)
+endif
+SRC_COMMON:=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
 SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
-SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
+SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
 # From API level 24 on Android supports getifaddrs itself.
 ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
@@ -202,6 +207,10 @@ ifeq (${MYGITHUB_ACTIONS}, false)
 	CFLAGS += -Wl,--gc-sections
 endif
 
+endif
+
+ifeq ($(MEMORY_TRACE), 1)
+	CFLAGS += -DOC_MEMORY_TRACE
 endif
 
 ifeq ($(PKI),1)

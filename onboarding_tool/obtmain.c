@@ -71,22 +71,6 @@ static struct timespec ts;
 #endif
 static int quit;
 
-/**
- * function to print the returned cbor as JSON
- *
- */
-void
-print_rep(oc_rep_t *rep, bool pretty_print)
-{
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
-  json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, pretty_print);
-  printf("%s\n", json);
-  free(json);
-}
-
 static void
 display_menu(void)
 {
@@ -281,7 +265,7 @@ add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
   return true;
 }
 
-void
+static void
 empty_device_list(oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_pop(list);
@@ -1790,7 +1774,7 @@ install_trust_anchor(void)
 #endif /* OC_PKI */
 
 static void
-set_sd_info()
+set_sd_info(void)
 {
   char name[64] = { 0 };
   int priv = 0;
@@ -1802,6 +1786,21 @@ set_sd_info()
 }
 
 #ifdef OC_CLOUD
+/**
+ * function to print the returned cbor as JSON
+ *
+ */
+static void
+print_rep(oc_rep_t *rep, bool pretty_print)
+{
+  char *json;
+  size_t json_size;
+  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
+  json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, pretty_print);
+  printf("%s\n", json);
+  free(json);
+}
 
 static void
 post_response_cloud_config(oc_client_response_t *data)
@@ -1937,7 +1936,7 @@ get_cloud_info(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-void
+static void
 trustanchorcb(int status, void *data)
 {
   (void)data;
@@ -2026,7 +2025,7 @@ set_cloud_trust_anchor(void)
 
 #endif /* OC_CLOUD */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -2136,8 +2135,8 @@ discover_resources(void)
   otb_mutex_unlock(app_sync_lock);
 }
 
-void
-display_device_uuid()
+static void
+display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));

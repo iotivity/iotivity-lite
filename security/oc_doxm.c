@@ -80,7 +80,7 @@ typedef struct doxm_response_data_s
 OC_LIST(g_doxm_response_data_list);
 OC_MEMB(g_doxm_response_data_s, doxm_response_data_t, OC_MAX_NUM_DEVICES);
 
-doxm_response_data_t *
+static doxm_response_data_t *
 add_doxm_response_for_device(size_t device, oc_interface_mask_t iface_mask)
 {
   doxm_response_data_t *d =
@@ -97,14 +97,14 @@ add_doxm_response_for_device(size_t device, oc_interface_mask_t iface_mask)
   return d;
 }
 
-void
+static void
 clear_doxm_response(doxm_response_data_t *rd)
 {
   oc_list_remove(g_doxm_response_data_list, rd);
   oc_memb_free(&g_doxm_response_data_s, rd);
 }
 
-bool
+static bool
 has_doxm_response_for_device(size_t device)
 {
   doxm_response_data_t *rd =

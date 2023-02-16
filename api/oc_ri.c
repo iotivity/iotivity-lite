@@ -112,10 +112,6 @@ static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
 
 OC_PROCESS(g_timed_callback_events, "OC timed callbacks");
 
-#ifdef OC_TCP
-oc_event_callback_retval_t oc_remove_ping_handler(void *data);
-#endif /* OC_TCP */
-
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
 
 oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
@@ -545,7 +541,7 @@ oc_ri_init(void)
   oc_list_init(g_timed_callbacks);
 
 #ifdef OC_HAS_FEATURE_PUSH
-  oc_push_list_init();
+  oc_push_init();
 #endif
 
   oc_process_init();
@@ -1655,7 +1651,7 @@ notify_client_cb_timeout(oc_client_cb_t *cb)
 #ifdef OC_TCP
   if ((oc_string_len(cb->uri) == 5) &&
       (memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
-    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
+    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
 
@@ -1927,7 +1923,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   if (pkt->code == PONG_7_03 ||
       (oc_string_len(cb->uri) == 5 &&
        memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
-    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler);
+    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
 

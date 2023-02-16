@@ -483,7 +483,8 @@ int oc_init_platform(const char *mfg_name,
  * Example:
  * ```
  * #ifdef OC_SECURITY
- * void random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
+ * static void random_pin_cb(const unsigned char *pin, size_t pin_len, void
+ * *data)
  * {
  *  (void)data;
  *  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
@@ -568,7 +569,7 @@ void oc_set_con_res_announced(bool announce);
  * @note A device connected to a cloud is not unregistered from the cloud since
  * the connection has been closed immediately.
  */
-void oc_reset();
+void oc_reset(void);
 
 /**
  * Reset all logical devices to the RFOTM state.

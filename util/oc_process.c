@@ -348,7 +348,7 @@ oc_process_nevents(void)
 /*---------------------------------------------------------------------------*/
 #ifdef OC_SECURITY
 bool
-oc_process_is_closing_all_tls_sessions()
+oc_process_is_closing_all_tls_sessions(void)
 {
   if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
     return true;

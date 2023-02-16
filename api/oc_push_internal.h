@@ -23,13 +23,19 @@
 #ifndef OC_PUSH_INTERNAL_H
 #define OC_PUSH_INTERNAL_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void oc_push_list_init(void);
+void oc_push_init(void);
 
 void oc_push_free(void);
+
+void oc_create_pushconf_resource(size_t device_index);
+
+void oc_create_pushreceiver_resource(size_t device_index);
 
 #ifdef __cplusplus
 }

@@ -57,7 +57,7 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
-int
+static int
 tcp_create_socket(int domain, struct sockaddr_storage *sock_info)
 {
   int sock = socket(domain, SOCK_STREAM, IPPROTO_TCP);

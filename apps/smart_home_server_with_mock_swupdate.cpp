@@ -18,11 +18,23 @@
 
 #include "oc_api.h"
 #include "oc_pki.h"
-#include "oc_swupdate.h"
 #include "port/oc_clock.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate.h"
+
+#include <iostream>
+
+#ifdef BOOST_FOR_URL_VALIDATION
+#include <boost/network/uri.hpp>
+using namespace boost::network;
+#else /* !BOOST_FOR_URL_VALIDATION */
+#include <regex>
+#endif /* BOOST_FOR_URL_VALIDATION */
+#endif /* OC_SOFTWARE_UPDATE */
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -32,16 +44,8 @@ static int quit = 0;
 static bool switch_state;
 
 #ifdef OC_SOFTWARE_UPDATE
-#include <iostream>
 
-#ifdef BOOST_FOR_URL_VALIDATION
-#include <boost/network/uri.hpp>
-using namespace boost::network;
-#else
-#include <regex>
-#endif
-
-int
+static int
 validate_purl(const char *purl)
 {
 #ifdef BOOST_FOR_URL_VALIDATION
@@ -80,7 +84,7 @@ validate_purl(const char *purl)
 #endif
 }
 
-int
+static int
 check_new_version(size_t device, const char *url, const char *version)
 {
   if (!url) {
@@ -96,7 +100,7 @@ check_new_version(size_t device, const char *url, const char *version)
   return 0;
 }
 
-int
+static int
 download_update(size_t device, const char *url)
 {
   (void)url;
@@ -104,7 +108,7 @@ download_update(size_t device, const char *url)
   return 0;
 }
 
-int
+static int
 perform_upgrade(size_t device, const char *url)
 {
   (void)url;
@@ -217,7 +221,7 @@ handle_signal(int signal)
 }
 
 #ifdef OC_SECURITY
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
@@ -267,7 +271,7 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 }
 #endif /* OC_SECURITY && OC_PKI */
 
-void
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;

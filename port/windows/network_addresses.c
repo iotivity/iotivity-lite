@@ -20,28 +20,21 @@
 
 #define WIN32_LEAN_AND_MEAN
 // clang-format off
+#include "network_addresses.h"
+#include "port/oc_log.h"
+
+#include <inttypes.h>
+#include <malloc.h>
+
 #include <windows.h>
 #include <WinSock2.h>
 #include <Mswsock.h>
-#include <inttypes.h>
 #include <iphlpapi.h>
-#include <malloc.h>
-#include <oc_log.h>
 #include <ws2tcpip.h>
 // clang-format on
 
-/**
- * Structure to manage interface list.
- */
-typedef struct ifaddr_t
-{
-  struct ifaddr_t *next;
-  struct sockaddr_storage addr;
-  DWORD if_index;
-} ifaddr_t;
-
 ifaddr_t *
-get_network_addresses()
+get_network_addresses(void)
 {
   ifaddr_t *ifaddr_list = NULL;
   ULONG family = AF_INET6;

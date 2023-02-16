@@ -236,7 +236,7 @@ signal_event_loop(void)
   pthread_cond_signal(&cv);
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;

@@ -218,7 +218,7 @@ STATIC const char *device_name = "CloudProxy";
 STATIC char proxy_di[38];
 
 /** global property variables for path: "d2dserverlist" */
-STATIC char *g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist =
+STATIC const char *g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist =
   "dis"; /**< the name for the attribute */
 
 /* array of objects
@@ -249,9 +249,9 @@ char g_d2dserverlist_di[MAX_PAYLOAD_STRING] =
 /* registration data variables for the resources */
 
 /* global resource variables for path: d2dserverlist */
-STATIC char *g_d2dserverlist_RESOURCE_ENDPOINT =
+STATIC const char *g_d2dserverlist_RESOURCE_ENDPOINT =
   "d2dserverlist"; /**< used path for this resource */
-STATIC char *g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = {
+STATIC const char *g_d2dserverlist_RESOURCE_TYPE[MAX_STRING] = {
   "oic.r.d2dserverlist"
 }; /**< rt value (as an array) */
 int g_d2dserverlist_nr_resource_types = 1;
@@ -266,7 +266,7 @@ void issue_requests_all(void);
  * @param rep the cbor representation
  * @param print_print nice printing, e.g. nicely indented json
  */
-void
+STATIC void
 print_rep(oc_rep_t *rep, bool pretty_print)
 {
   char *json;
@@ -412,7 +412,7 @@ is_udn_listed(char *udn)
  * function to set up the device.
  *
  */
-int
+STATIC int
 app_init(void)
 {
   int ret = oc_init_platform("ocf", NULL, NULL);
@@ -615,7 +615,7 @@ remove_di(const char *di, int len)
  * @param di di to be checked (not NULL terminated)
  * @return return the resource or NULL
  */
-oc_resource_t *
+STATIC oc_resource_t *
 find_resource(const char *di)
 {
   oc_resource_t *res = oc_ri_get_app_resources();
@@ -822,7 +822,7 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
  *     default interface is the first of the list of interfaces as specified in
  * the input file
  */
-void
+STATIC void
 register_resources(void)
 {
 
@@ -875,7 +875,7 @@ register_resources(void)
 
 #ifdef OC_SECURITY
 #ifdef OC_SECURITY_PIN
-void
+static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
@@ -886,7 +886,9 @@ random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 #endif /* OC_SECURITY_PIN */
 #endif /* OC_SECURITY */
 
-void
+#if 0
+
+static void
 factory_presets_cb(size_t device, void *data)
 {
   (void)device;
@@ -927,11 +929,14 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+#endif
+
+#ifdef OC_SECURITY
 /**
  * intializes the global variables
  * registers and starts the handler
  */
-void
+STATIC void
 initialize_variables(void)
 {
   /* initialize global variables for resource "d2dserverlist" */
@@ -947,6 +952,7 @@ initialize_variables(void)
   /* set the flag for NO oic/con resource. */
   oc_set_con_res_announced(false);
 }
+#endif /* OC_SECURITY */
 
 /**
  * check if the resource type is a vertical resource.
@@ -1539,7 +1545,7 @@ signal_event_loop(void)
  * handle Ctrl-C
  * @param signal the captured signal
  */
-void
+STATIC void
 handle_signal(int signal)
 {
   (void)signal;
@@ -1676,6 +1682,7 @@ minimal_factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+#ifdef OC_SECURITY
 /**
  * callback when the server changes ownership
  *
@@ -1683,7 +1690,7 @@ minimal_factory_presets_cb(size_t device, void *data)
  * @param device_index the index in the device list
  * @param owned owned/unowned
  */
-void
+STATIC void
 oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
                        bool owned, void *user_data)
 {
@@ -1695,8 +1702,9 @@ oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
   oc_uuid_to_str(device_uuid, uuid, OC_UUID_LEN);
   PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 }
+#endif /* OC_SECURITY */
 
-void
+static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
