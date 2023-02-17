@@ -17,7 +17,7 @@ RUN git clone https://github.com/wolfcw/libfaketime.git && \
 FROM alpine:latest AS service
 RUN apk add --no-cache bash
 COPY --from=build /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
-COPY --from=build /usr/local/lib/libfaketime.so.1 /usr/local/lib/libfaketime.so.1
+COPY --from=build /usr/local/lib/faketime/libfaketimeMT.so.1 /usr/local/lib/faketime/libfaketimeMT.so.1
 COPY /docker/run.sh /usr/local/bin/run.sh
 ENV NUM_DEVICES=1
 ENV FAKETIME=

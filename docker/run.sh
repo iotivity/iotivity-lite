@@ -12,12 +12,12 @@ echo Spawning $NUM_DEVICES devices
 umask 0000
 mkdir -p /tmp/logbt-coredumps
 pids=()
-echo "called_from_lib:libfaketime.so.1" > /tmp/tsan.suppressions
+echo "called_from_lib:libfaketimeMT.so.1" > /tmp/tsan.suppressions
 for ((i=0;i<$NUM_DEVICES;i++)); do
     export ASAN_OPTIONS="log_path=/tmp/${i}.asan.log verify_asan_link_order=0"
     # abort on first tsan problem found
     export TSAN_OPTIONS="halt_on_error=1 abort_on_error=1 log_path=/tmp/${i}.tsan.log suppressions=/tmp/tsan.suppressions"
-    export LD_PRELOAD=/usr/local/lib/faketime/libfaketime.so.1
+    export LD_PRELOAD=/usr/local/lib/faketime/libfaketimeMT.so.1
     ${PREFIX_EXEC} /iotivity-lite/port/linux/service $@ > /tmp/$i.log 2>&1 &
     pids+=($!)
 done
