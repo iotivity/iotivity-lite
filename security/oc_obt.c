@@ -38,7 +38,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_cred_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_doxm.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi.h"
@@ -1821,6 +1821,7 @@ device_CSR(oc_client_response_t *data)
       .issuer_name = g_root_subject,
       .issuer_private_key = g_private_key,
       .issuer_private_key_size = g_private_key_size,
+      .signature_md_alg = oc_certs_signature_md_algorithm(),
     };
     ret = oc_obt_generate_identity_cert_pem(gen, cert_pem, sizeof(cert_pem));
   } else {
@@ -1834,6 +1835,7 @@ device_CSR(oc_client_response_t *data)
       .issuer_name = g_root_subject,
       .issuer_private_key = g_private_key,
       .issuer_private_key_size = g_private_key_size,
+      .signature_md_alg = oc_certs_signature_md_algorithm(),
     };
     ret = oc_obt_generate_role_cert_pem(gen, cert_pem, sizeof(cert_pem));
   }
@@ -3680,9 +3682,10 @@ oc_obt_init(void)
 #ifdef OC_PKI
   uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
   size_t public_key_size = 0;
-  if (oc_generate_ecdsa_keypair(
-        public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size, g_private_key,
-        sizeof(g_private_key), &g_private_key_size) < 0) {
+  if (oc_generate_ecdsa_keypair(MBEDTLS_ECP_DP_SECP256R1, public_key,
+                                OC_ECDSA_PUBKEY_SIZE, &public_key_size,
+                                g_private_key, sizeof(g_private_key),
+                                &g_private_key_size) < 0) {
     OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
            "certificate");
   } else if (public_key_size != OC_ECDSA_PUBKEY_SIZE) {
@@ -3694,6 +3697,7 @@ oc_obt_init(void)
       .public_key_size = OC_ECDSA_PUBKEY_SIZE,
       .private_key = g_private_key,
       .private_key_size = g_private_key_size,
+      .signature_md_alg = oc_certs_signature_md_algorithm(),
     };
     g_root_cert_credid = oc_obt_generate_self_signed_root_cert(cert_data, 0);
   }

@@ -145,6 +145,39 @@ oc_certs_validate_non_end_entity_cert(const mbedtls_x509_crt *cert,
   return 0;
 }
 
+static bool
+oc_certs_has_identity_cert_oid(const mbedtls_x509_crt *cert)
+{
+  const unsigned char identity_cert_oid[] = { 0x2b,             /* 1.3 */
+                                              0x06,             /* .6 */
+                                              0x01,             /* .1 */
+                                              0x04,             /* .4 */
+                                              0x01,             /* .1 */
+                                              0x82,             /* .44924 */
+                                              0xDE, 0x7C, 0x01, /* .1 */
+                                              0x06 };           /* .6 */
+
+  return mbedtls_x509_crt_check_extended_key_usage(
+           cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) ==
+         0;
+}
+
+static bool
+oc_certs_has_role_cert_oid(const mbedtls_x509_crt *cert)
+{
+  const unsigned char role_cert_oid[] = { 0x2b,             /* 1.3 */
+                                          0x06,             /* .6 */
+                                          0x01,             /* .1 */
+                                          0x04,             /* .4 */
+                                          0x01,             /* .1 */
+                                          0x82,             /* .44924 */
+                                          0xDE, 0x7C, 0x01, /* .1 */
+                                          0x07 };           /* .7 */
+
+  return mbedtls_x509_crt_check_extended_key_usage(
+           cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) == 0;
+}
+
 int
 oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert, uint32_t *flags)
 {
@@ -198,31 +231,11 @@ oc_certs_validate_end_entity_cert(const mbedtls_x509_crt *cert, uint32_t *flags)
    * Identity certificate - 1.3.6.1.4.1.44924.1.6
    * Role certificate - 1.3.6.1.4.1.44924.1.7
    */
-  const unsigned char identity_cert_oid[] = { 0x2b,             /* 1.3 */
-                                              0x06,             /* .6 */
-                                              0x01,             /* .1 */
-                                              0x04,             /* .4 */
-                                              0x01,             /* .1 */
-                                              0x82,             /* .44924 */
-                                              0xDE, 0x7C, 0x01, /* .1 */
-                                              0x06 };           /* .6 */
-
-  const unsigned char role_cert_oid[] = { 0x2b,             /* 1.3 */
-                                          0x06,             /* .6 */
-                                          0x01,             /* .1 */
-                                          0x04,             /* .4 */
-                                          0x01,             /* .1 */
-                                          0x82,             /* .44924 */
-                                          0xDE, 0x7C, 0x01, /* .1 */
-                                          0x07 };           /* .7 */
-  if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) !=
-      0) {
+  if (!oc_certs_has_identity_cert_oid(cert)) {
     OC_WRN("identity certificate OID is absent");
     return -1;
   }
-  if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) == 0) {
+  if (oc_certs_has_role_cert_oid(cert)) {
     OC_WRN("role certificate OID present in identity certificate");
     return -1;
   }
@@ -294,31 +307,11 @@ oc_certs_validate_role_cert(const mbedtls_x509_crt *cert, uint32_t *flags)
    * Identity certificate - 1.3.6.1.4.1.44924.1.6
    * Role certificate - 1.3.6.1.4.1.44924.1.7
    */
-  const unsigned char identity_cert_oid[] = { 0x2b,             /* 1.3 */
-                                              0x06,             /* .6 */
-                                              0x01,             /* .1 */
-                                              0x04,             /* .4 */
-                                              0x01,             /* .1 */
-                                              0x82,             /* .44924 */
-                                              0xDE, 0x7C, 0x01, /* .1 */
-                                              0x06 };           /* .6 */
-
-  const unsigned char role_cert_oid[] = { 0x2b,             /* 1.3 */
-                                          0x06,             /* .6 */
-                                          0x01,             /* .1 */
-                                          0x04,             /* .4 */
-                                          0x01,             /* .1 */
-                                          0x82,             /* .44924 */
-                                          0xDE, 0x7C, 0x01, /* .1 */
-                                          0x07 };           /* .7 */
-  if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)identity_cert_oid, sizeof(identity_cert_oid)) ==
-      0) {
+  if (oc_certs_has_identity_cert_oid(cert)) {
     OC_WRN("identity certificate OID is present in role certificate");
     return -1;
   }
-  if (mbedtls_x509_crt_check_extended_key_usage(
-        cert, (const char *)role_cert_oid, sizeof(role_cert_oid)) != 0) {
+  if (!oc_certs_has_role_cert_oid(cert)) {
     OC_WRN("role certificate OID is absent");
     return -1;
   }

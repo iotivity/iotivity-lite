@@ -204,13 +204,15 @@ int oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
                                    const mbedtls_x509_crt *child);
 
 /**
- * @brief
+ * @brief Parse role certificate from a PEM string.
  *
  * @param rcert role certificate in PEM string format
  * @param rcert_size length of the role certificate
- * @param role_cred
- * @param roles_resource
- * @return int
+ * @param role_cred allocated credential to store the first role-authority pair
+ * in the certificate
+ * @param roles_resource is the roles resource
+ * @return 0 on success
+ * @return -1 on failure
  */
 int oc_certs_parse_role_certificate(const unsigned char *rcert,
                                     size_t rcert_size, oc_sec_cred_t *role_cred,

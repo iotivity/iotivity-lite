@@ -28,7 +28,7 @@
 #include "security/oc_certs_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_tls.h"
 
 #include <assert.h>
