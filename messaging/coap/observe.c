@@ -1124,7 +1124,7 @@ process_batch_observers(void *data)
     free_batch_observer(batch_obs);
     batch_obs = (batch_observer_t *)oc_list_head(batch_observers_list);
   }
-leave_notify_observers:;
+leave_notify_observers:
 #ifdef OC_DYNAMIC_ALLOCATION
   buffer = response_buffer.buffer;
   if (buffer) {
@@ -1269,8 +1269,8 @@ notify_discovery_observers(oc_resource_t *resource)
     }
   }
 
-leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
+leave_notify_observers:
   buffer = response_buffer.buffer;
   if (buffer) {
     free(buffer);

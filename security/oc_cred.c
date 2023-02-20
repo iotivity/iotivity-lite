@@ -25,7 +25,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
-#include "oc_keypair.h"
+#include "oc_keypair_internal.h"
 #include "oc_pstat.h"
 #include "oc_roles_internal.h"
 #include "oc_store.h"
@@ -530,8 +530,7 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
                                oc_string_t public_key, size_t publicdata_size,
                                const uint8_t *publicdata)
 {
-  oc_ecdsa_keypair_t *kp = NULL;
-  kp = oc_sec_get_ecdsa_keypair(device);
+  oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
   if (!kp) {
     return NULL;
   }

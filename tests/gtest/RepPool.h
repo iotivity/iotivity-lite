@@ -22,18 +22,17 @@
 #include "oc_rep.h"
 #include "util/oc_memb.h"
 
-#include <array>
 #include <memory>
 #include <stdint.h>
 #include <string.h>
-
+#include <vector>
 namespace oc {
 
 using oc_rep_unique_ptr = std::unique_ptr<oc_rep_t, void (*)(oc_rep_t *)>;
 
 class RepPool {
 public:
-  RepPool();
+  RepPool(size_t size = 1024);
   ~RepPool();
 
   void Clear();
@@ -44,6 +43,7 @@ public:
   oc_rep_unique_ptr ParsePayload();
 
 private:
+  size_t size_;
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buffer_{ nullptr };
   oc_memb rep_objects_{ sizeof(oc_rep_t), 0, nullptr, nullptr, nullptr };
@@ -53,7 +53,7 @@ private:
   oc_memb rep_objects_{ sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
                         rep_objects_alloc_, (void *)rep_objects_pool_,
                         nullptr };
-  std::array<uint8_t, 1024> buffer_{ '\0' };
+  std::vector<uint8_t> buffer_{};
 #endif /* OC_DYNAMIC_ALLOCATION */
 };
 

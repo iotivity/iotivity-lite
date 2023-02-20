@@ -24,10 +24,12 @@
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
 #include "security/oc_cred_internal.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
-#include "security/oc_keypair.h"
 #include "security/oc_security_internal.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/KeyPair.h"
+#include "tests/gtest/Role.h"
 
 #include <algorithm>
 #include <array>
@@ -135,80 +137,6 @@ TEST_F(TestCerts, AllowedMDAlgorithms)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 
-struct keypair_t
-{
-  std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> public_key{};
-  size_t public_key_size{ 0 };
-  std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
-  size_t private_key_size{ 0 };
-};
-
-class Role {
-public:
-  Role(const std::string &role, const std::string &authority);
-  ~Role();
-
-  Role(Role &other) = delete;
-  Role &operator=(const Role &Role) = delete;
-  Role(Role &&fp) noexcept = delete;
-  Role &operator=(Role &&fp) = delete;
-
-  oc_role_t *Data() { return &role_; }
-
-private:
-  oc_role_t role_{};
-};
-
-Role::Role(const std::string &role, const std::string &authority = "")
-{
-  if (!role.empty()) {
-    oc_new_string(&role_.role, role.c_str(), role.length());
-  }
-  if (!authority.empty()) {
-    oc_new_string(&role_.authority, authority.c_str(), authority.length());
-  }
-}
-
-Role::~Role()
-{
-  oc_free_string(&role_.role);
-  oc_free_string(&role_.authority);
-}
-
-class Roles {
-public:
-  void Add(const std::string &role, const std::string &authority = "");
-  oc_role_t *Head() const;
-  oc_role_t *Get(size_t index) const;
-  void Clear() { roles_.clear(); };
-
-private:
-  std::vector<std::unique_ptr<Role>> roles_{};
-};
-
-void
-Roles::Add(const std::string &role, const std::string &authority)
-{
-  roles_.push_back(std::unique_ptr<Role>(new Role(role, authority)));
-
-  for (size_t i = 1; i < roles_.size(); ++i) {
-    roles_[i - 1]->Data()->next = roles_[i]->Data();
-  }
-  roles_.back()->Data()->next = nullptr;
-}
-
-oc_role_t *
-Roles::Get(size_t index) const
-{
-  return roles_.at(index)->Data();
-}
-
-oc_role_t *
-Roles::Head() const
-{
-  return roles_.front()->Data();
-}
-
 class TestObtCerts : public testing::Test {
 public:
   void SetUp() override
@@ -222,10 +150,7 @@ public:
     EXPECT_TRUE(oc_certs_encode_CN_with_UUID(&uuid, buf.data(), buf.size()));
     uuid_ = buf.data();
 
-    int err = oc_generate_ecdsa_keypair(
-      kp_.public_key.data(), kp_.public_key.size(), &kp_.public_key_size,
-      kp_.private_key.data(), kp_.private_key.size(), &kp_.private_key_size);
-    EXPECT_EQ(0, err);
+    kp_ = oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1);
 
     roles_.Add("user", "admin");
   }
@@ -248,8 +173,8 @@ public:
   std::vector<unsigned char> GenerateRoleCertificate();
 
   std::string uuid_{};
-  keypair_t kp_{};
-  Roles roles_{};
+  oc::keypair_t kp_{};
+  oc::Roles roles_{};
 };
 
 static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
@@ -265,6 +190,7 @@ TestObtCerts::GenerateSelfSignedRootCertificate()
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -294,6 +220,7 @@ TestObtCerts::GenerateIdentityCertificate()
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -325,6 +252,7 @@ TestObtCerts::GenerateRoleCertificate()
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -353,6 +281,7 @@ TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   // bad buffer
@@ -458,6 +387,7 @@ TEST_F(TestObtCerts, GenerateIdentityCertificateFail)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   // bad buffer
@@ -574,6 +504,7 @@ TEST_F(TestObtCerts, GenerateRoleCertificateFail)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   // bad buffer
@@ -622,7 +553,7 @@ TEST_F(TestObtCerts, GenerateRoleCertificateFail)
 
   // bad role - bad value
   bad_data = cert_data;
-  Roles roles;
+  oc::Roles roles;
   roles.Add(std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'c'), "");
   bad_data.roles = roles.Head();
   err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
@@ -717,10 +648,7 @@ public:
     EXPECT_TRUE(oc_certs_encode_CN_with_UUID(&uuid, buf.data(), buf.size()));
     uuid_ = buf.data();
 
-    int err = oc_generate_ecdsa_keypair(
-      kp_.public_key.data(), kp_.public_key.size(), &kp_.public_key_size,
-      kp_.private_key.data(), kp_.private_key.size(), &kp_.private_key_size);
-    EXPECT_EQ(0, err);
+    kp_ = oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1);
 
     // if empty authority should be taken from the Common Name of the issuer
     roles_.Add("user", "");
@@ -729,8 +657,8 @@ public:
   void TearDown() override { oc::TestDevice::StopServer(); }
 
   std::string uuid_{};
-  keypair_t kp_{};
-  Roles roles_{};
+  oc::keypair_t kp_{};
+  oc::Roles roles_{};
 };
 
 TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
@@ -741,6 +669,7 @@ TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   int credid =
@@ -777,6 +706,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   int credid =
@@ -791,6 +721,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
+    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};

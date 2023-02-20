@@ -21,13 +21,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          # dynamic allocation off
           - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-          - args: "-DOC_SECURITY_ENABLED=OFF"
+          # security off
+          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
 
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON ${{ matrix.args }}"
+      build_args: "-DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON ${{ matrix.args }}"
       build_type: Debug
       coverage: true
 

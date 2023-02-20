@@ -20,7 +20,7 @@
 
 #include "oc_csr.h"
 #include "security/oc_csr_internal.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "tests/gtest/Device.h"
 
 #include <algorithm>

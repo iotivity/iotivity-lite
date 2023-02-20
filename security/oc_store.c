@@ -22,7 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
-#include "oc_keypair.h"
+#include "oc_keypair_internal.h"
 #include "oc_pstat.h"
 #include "oc_sdi.h"
 #include "oc_sp_internal.h"
@@ -247,7 +247,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(oc_store_buf, (int)ret, &rep);
-    if (oc_sec_decode_ecdsa_keypair(rep, device)) {
+    if (oc_sec_decode_ecdsa_keypair_for_device(rep, device)) {
       OC_DBG("successfully read ECDSA keypair for device %zd", device);
     }
     oc_free_rep(rep);
@@ -258,7 +258,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   if (ret <= 0) {
-    if (oc_generate_ecdsa_keypair_for_device(device) < 0) {
+    if (!oc_generate_ecdsa_keypair_for_device(device)) {
       OC_ERR("error generating ECDSA keypair for device %zd", device);
     }
     oc_sec_dump_ecdsa_keypair(device);
@@ -277,7 +277,7 @@ oc_sec_dump_ecdsa_keypair(size_t device)
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
-  oc_sec_encode_ecdsa_keypair(device);
+  oc_sec_encode_ecdsa_keypair_for_device(device);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   oc_store_buf = oc_rep_shrink_encoder_buf(oc_store_buf);
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */

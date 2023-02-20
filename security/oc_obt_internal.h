@@ -236,6 +236,7 @@ typedef struct oc_obt_generate_root_cert_data_t
   size_t public_key_size;
   const uint8_t *private_key;
   size_t private_key_size;
+  mbedtls_md_type_t signature_md_alg;
 } oc_obt_generate_root_cert_data_t;
 
 /**
@@ -272,6 +273,7 @@ typedef struct oc_obt_generate_identity_cert_data_t
   const char *issuer_name;
   const uint8_t *issuer_private_key;
   size_t issuer_private_key_size;
+  mbedtls_md_type_t signature_md_alg;
 } oc_obt_generate_identity_cert_data_t;
 
 /**
@@ -314,6 +316,7 @@ typedef struct oc_obt_generate_role_cert_data_t
   const char *issuer_name;
   const uint8_t *issuer_private_key;
   size_t issuer_private_key_size;
+  mbedtls_md_type_t signature_md_alg;
 } oc_obt_generate_role_cert_data_t;
 
 /**

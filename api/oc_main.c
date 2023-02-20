@@ -47,7 +47,7 @@
 #include "security/oc_svr.h"
 #include "security/oc_tls.h"
 #ifdef OC_PKI
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #endif /* OC_PKI */
 #include "security/oc_sdi.h"
 #endif /* OC_SECURITY */
@@ -399,7 +399,7 @@ oc_main_shutdown(void)
   oc_sec_ael_free();
   oc_sec_sp_free();
 #ifdef OC_PKI
-  oc_free_ecdsa_keypairs();
+  oc_sec_free_ecdsa_keypairs();
 #endif /* OC_PKI */
   oc_sec_sdi_free();
 #endif /* OC_SECURITY */
