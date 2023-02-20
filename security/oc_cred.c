@@ -25,7 +25,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
-#include "oc_keypair.h"
+#include "oc_keypair_internal.h"
 #include "oc_pstat.h"
 #include "oc_roles_internal.h"
 #include "oc_store.h"
@@ -42,6 +42,7 @@
 #endif /* OC_OSCORE */
 #ifdef OC_PKI
 #include "security/oc_certs_internal.h"
+#include "security/oc_certs_generate_internal.h"
 #include <mbedtls/platform_util.h>
 #endif /* OC_PKI */
 

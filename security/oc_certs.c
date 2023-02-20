@@ -42,42 +42,6 @@
 #define CN_UUID_PREFIX "CN=uuid:"
 #define CN_UUID_PREFIX_LEN (sizeof(CN_UUID_PREFIX) - 1)
 
-int
-oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
-{
-  mbedtls_ctr_drbg_context ctr_drbg;
-  mbedtls_ctr_drbg_init(&ctr_drbg);
-
-  mbedtls_entropy_context entropy;
-  mbedtls_entropy_init(&entropy);
-  oc_entropy_add_source(&entropy);
-
-#define PERSONALIZATION_DATA "IoTivity-Lite-Certificate_Serial_Number"
-
-  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                                  (const unsigned char *)PERSONALIZATION_DATA,
-                                  sizeof(PERSONALIZATION_DATA));
-
-#undef PERSONALIZATION_DATA
-
-  if (ret < 0) {
-    OC_ERR("error initializing RNG %d", ret);
-    return -1;
-  }
-
-  mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
-
-  ret = mbedtls_mpi_fill_random(&crt->serial, size, mbedtls_ctr_drbg_random,
-                                &ctr_drbg);
-
-  if (ret < 0) {
-    OC_ERR("error generating random serial number for certificate %d", ret);
-    return -1;
-  }
-
-  return 0;
-}
-
 bool
 oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
 {
@@ -483,69 +447,6 @@ oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
   bool ok = oc_certs_extract_first_role(&crt, role, authority);
   mbedtls_x509_crt_free(&crt);
   return ok;
-}
-
-timestamp_t
-oc_certs_timestamp_now(void)
-{
-  oc_clock_time_t now = oc_clock_time();
-  timestamp_t ts;
-  memset(&ts, 0, sizeof(ts));
-  ts.sec = (int64_t)(now / OC_CLOCK_SECOND);
-  return ts;
-}
-
-bool
-oc_certs_timestamp_format(timestamp_t ts, char *buffer, size_t buffer_size)
-{
-  assert(buffer != NULL);
-
-  struct tm now_tm;
-  memset(&now_tm, 0, sizeof(struct tm));
-  if (timestamp_to_tm_utc(&ts, &now_tm) == NULL) {
-    OC_ERR("cannot convert timestamp to string: invalid timestamp");
-    return false;
-  }
-
-  int ret = snprintf(buffer, buffer_size, "%d%02d%02d%02d%02d%02d",
-                     now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday,
-                     now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
-  if (ret < 0 || (size_t)ret >= buffer_size) {
-    OC_ERR("cannot convert timestamp to string: buffer too small");
-    return false;
-  }
-  return true;
-}
-
-uint64_t
-oc_certs_time_to_unix_timestamp(mbedtls_x509_time time)
-{
-#define MONTHSPERYEAR 12 /* months per calendar year */
-  static const int days_offset[MONTHSPERYEAR] = {
-    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-  };
-
-  int month = time.mon - 1;
-  long year = time.year + month / MONTHSPERYEAR;
-
-  long days = (year - 1970) * 365 + days_offset[month % MONTHSPERYEAR];
-  // leap years
-  days += (year - 1968) / 4;
-  days -= (year - 1900) / 100;
-  days += (year - 1600) / 400;
-  if ((year % 4) == 0 && ((year % 100) != 0 || (year % 400) == 0) &&
-      (month % MONTHSPERYEAR) < 2) {
-    days--;
-  }
-
-  days += time.day - 1;
-  uint64_t result = days * 24;
-  result += time.hour;
-  result *= 60;
-  result += time.min;
-  result *= 60;
-  result += time.sec;
-  return result;
 }
 
 static int

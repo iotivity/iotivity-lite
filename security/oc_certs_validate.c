@@ -22,6 +22,7 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_certs_validate_internal.h"
+#include "oc_certs_internal.h"
 #include "port/oc_log.h"
 
 #include <assert.h>
@@ -78,6 +79,68 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert, uint32_t *flags)
   }
 
   return 0;
+}
+
+bool
+oc_certs_validate_common_fields(const mbedtls_x509_crt *cert,
+                                oc_certs_validate_t cfg, uint32_t *flags)
+{
+  assert(cert != NULL);
+  assert(flags != NULL);
+
+  /* Version */
+  if (cert->version != 3) {
+    OC_ERR("non-compliant certificate version (require X.509 v3)");
+    return false;
+  }
+
+  /* notBefore */
+  if (mbedtls_x509_time_is_future(&cert->valid_from)) {
+    OC_DBG("certificate not yet active");
+    *flags |= MBEDTLS_X509_BADCERT_FUTURE;
+  }
+
+  /* notAfter */
+  if (mbedtls_x509_time_is_past(&cert->valid_to)) {
+    OC_DBG("certificate has expired");
+    *flags |= MBEDTLS_X509_BADCERT_EXPIRED;
+  }
+
+  /* signatureAlgorithm */
+  if ((cfg.sig_mds_mask != 0) &&
+      (MBEDTLS_X509_ID_FLAG(cert->sig_md) & cfg.sig_mds_mask) == 0) {
+    OC_ERR("certificate uses non-compliant signature algorithm");
+    return false;
+  }
+
+  /* public key type */
+  if ((cfg.pk_types_mask != 0) &&
+      (MBEDTLS_X509_ID_FLAG(cert->sig_pk) & cfg.pk_types_mask) == 0) {
+    OC_ERR("certificate uses unsupported public key type");
+    return false;
+  }
+
+  /* elliptic curve */
+  if (cfg.ecs_mask != 0) {
+    mbedtls_ecp_group_id gid = mbedtls_pk_ec(cert->pk)->grp.id;
+    if ((MBEDTLS_X509_ID_FLAG(gid) & cfg.ecs_mask) == 0) {
+      OC_ERR("certificate advertises unsupported EC curve");
+      return false;
+    }
+  }
+
+  if (cfg.key_usage != 0) {
+    if ((cert->key_usage & cfg.key_usage) != cfg.key_usage) {
+      OC_ERR("key_usage constraints not met");
+      return false;
+    }
+    if ((cert->key_usage & ~(cfg.optional_key_usage | cfg.key_usage)) != 0) {
+      OC_ERR("key_usage sets additional bits");
+      return false;
+    }
+  }
+
+  return false;
 }
 
 int

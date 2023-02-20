@@ -22,7 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm.h"
-#include "oc_keypair.h"
+#include "oc_keypair_internal.h"
 #include "oc_pstat.h"
 #include "oc_sdi.h"
 #include "oc_sp_internal.h"

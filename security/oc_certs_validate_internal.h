@@ -29,6 +29,37 @@
 extern "C" {
 #endif
 
+typedef struct oc_certs_validate_t
+{
+  unsigned sig_mds_mask; /// mask of allowed signature MDs, 0 if check should be
+                         /// skipped
+  unsigned pk_types_mask; /// mask of allowed public key types, 0 if check
+                          /// should be skipped
+  unsigned
+    ecs_mask; /// mask of allowed elliptic curves, 0 if check should be skipped
+  unsigned
+    key_usage; /// mask of required key usages , 0 if check should be skipped
+  unsigned optional_key_usage; /// mask of optional key usages, validation of
+                               /// certificate will fail for cert if:
+                               ///   cert->key_usage & ~(optional_key_usage |
+                               ///   key_usage)) != 0
+} oc_certs_validate_t;
+
+/**
+ * @brief Configurable validation of common fields for a certificate.
+ *
+ * For configuration options see oc_certs_validate_t.
+ *
+ * @param cert certificate to validate (cannot be NULL)
+ * @param cfg validation configuration
+ * @param[out] flags write flags for select errors instead of failing validation
+ * (cannot be NULL)
+ * @return true if certificate is valid
+ * @return false otherwise
+ */
+bool oc_certs_validate_common_fields(const mbedtls_x509_crt *cert,
+                                     oc_certs_validate_t cfg, uint32_t *flags);
+
 /**
  * @brief Validate a non-leaf certificate (root or intermediate)
  *

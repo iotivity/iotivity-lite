@@ -20,6 +20,8 @@
 #define OC_KEYPAIR_H
 
 #include "oc_rep.h"
+
+#include <mbedtls/ecp.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -41,10 +43,26 @@ typedef struct oc_ecdsa_keypair_t
 
 bool oc_sec_decode_ecdsa_keypair(oc_rep_t *rep, size_t device);
 bool oc_sec_encode_ecdsa_keypair(size_t device);
-int oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
+
+/**
+ * @brief Generate an ECP key-pair.
+ *
+ * @param grpid Mbed TLS elliptic curve identifier
+ * @param[out] public_key buffer to store generated public key
+ * @param public_key_buf_size size of the public key buffer
+ * @param[out] public_key_size size of the generated public key
+ * @param[out] private_key buffer to store generated private key
+ * @param private_key_buf_size size of the private key buffer
+ * @param[out] private_key_size size of the generated private key
+ * @return 0 on success
+ * @return -1 on failure
+ */
+int oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
+                              size_t public_key_buf_size,
                               size_t *public_key_size, uint8_t *private_key,
                               size_t private_key_buf_size,
                               size_t *private_key_size);
+
 int oc_generate_ecdsa_keypair_for_device(size_t device);
 oc_ecdsa_keypair_t *oc_sec_get_ecdsa_keypair(size_t device);
 void oc_free_ecdsa_keypairs(void);

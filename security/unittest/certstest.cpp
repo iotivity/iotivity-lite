@@ -16,42 +16,40 @@
  *
  ******************************************************************/
 
-#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_DYNAMIC_ALLOCATION)
+#if defined(OC_SECURITY) && defined(OC_PKI)
 
-#include "oc_cred.h"
 #include "port/oc_random.h"
+#include "security/oc_certs_generate_internal.h"
 #include "security/oc_certs_internal.h"
-#include "security/oc_certs_validate_internal.h"
-#include "security/oc_cred_internal.h"
-#include "security/oc_obt_internal.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_security_internal.h"
-#include "oc_uuid.h"
-#include "tests/gtest/Device.h"
+#include "tests/gtest/KeyPair.h"
 
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <mbedtls/oid.h>
 #include <mbedtls/x509.h>
 #include <memory>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
-static const std::string g_root_subject{ "C=US, O=OCF, CN=" +
-                                         g_root_subject_name };
+using mbedtls_x509_crt_uptr =
+  std::unique_ptr<mbedtls_x509_crt, void (*)(mbedtls_x509_crt *)>;
 
-template<class T>
-static std::vector<T>
-toArray(const std::string &str)
-{
-  std::vector<T> res;
-  std::copy(str.begin(), str.end(), std::back_inserter(res));
-  return res;
-}
+class TestCerts : public testing::Test {
+public:
+  template<class T>
+  static std::vector<T> toArray(const std::string &str)
+  {
+    std::vector<T> res;
+    std::copy(str.begin(), str.end(), std::back_inserter(res));
+    return res;
+  }
+};
 
-TEST(TestCerts, IsPem)
+TEST_F(TestCerts, IsPem)
 {
   auto is_pem = [](const std::string &str) {
     std::vector<unsigned char> buf{ toArray<unsigned char>(str) };
@@ -64,7 +62,7 @@ TEST(TestCerts, IsPem)
   EXPECT_TRUE(is_pem("-----BEGIN CERTIFICATE-----"));
 }
 
-TEST(TestCerts, TimestampFormatFail)
+TEST_F(TestCerts, TimestampFormatFail)
 {
   timestamp_t ts = oc_certs_timestamp_now();
 
@@ -73,7 +71,7 @@ TEST(TestCerts, TimestampFormatFail)
     oc_certs_timestamp_format(ts, too_small.data(), too_small.size()));
 }
 
-TEST(TestCerts, TimestampFormat)
+TEST_F(TestCerts, TimestampFormat)
 {
   timestamp_t ts = oc_certs_timestamp_now();
 
@@ -87,81 +85,7 @@ TEST(TestCerts, TimestampFormat)
   OC_DBG("notAfter: %s", buffer.data());
 }
 
-struct keypair_t
-{
-  std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> public_key{};
-  size_t public_key_size{ 0 };
-  std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
-  size_t private_key_size{ 0 };
-};
-
-class Role {
-public:
-  Role(const std::string &role, const std::string &authority);
-  ~Role();
-
-  Role(Role &other) = delete;
-  Role &operator=(const Role &Role) = delete;
-  Role(Role &&fp) noexcept = delete;
-  Role &operator=(Role &&fp) = delete;
-
-  oc_role_t *Data() { return &role_; }
-
-private:
-  oc_role_t role_{};
-};
-
-Role::Role(const std::string &role, const std::string &authority = "")
-{
-  if (!role.empty()) {
-    oc_new_string(&role_.role, role.c_str(), role.length());
-  }
-  if (!authority.empty()) {
-    oc_new_string(&role_.authority, authority.c_str(), authority.length());
-  }
-}
-
-Role::~Role()
-{
-  oc_free_string(&role_.role);
-  oc_free_string(&role_.authority);
-}
-
-class Roles {
-public:
-  void Add(const std::string &role, const std::string &authority = "");
-  oc_role_t *Head() const;
-  oc_role_t *Get(size_t index) const;
-  void Clear() { roles_.clear(); };
-
-private:
-  std::vector<std::unique_ptr<Role>> roles_{};
-};
-
-void
-Roles::Add(const std::string &role, const std::string &authority)
-{
-  roles_.push_back(std::unique_ptr<Role>(new Role(role, authority)));
-
-  for (size_t i = 1; i < roles_.size(); ++i) {
-    roles_[i - 1]->Data()->next = roles_[i]->Data();
-  }
-  roles_.back()->Data()->next = nullptr;
-}
-
-oc_role_t *
-Roles::Get(size_t index) const
-{
-  return roles_.at(index)->Data();
-}
-
-oc_role_t *
-Roles::Head() const
-{
-  return roles_.front()->Data();
-}
-
-class TestObtCerts : public testing::Test {
+class TestGenerateCerts : public testing::Test {
 public:
   void SetUp() override
   {
@@ -173,595 +97,106 @@ public:
     std::array<char, 50> buf;
     EXPECT_TRUE(oc_certs_encode_CN_with_UUID(&uuid, buf.data(), buf.size()));
     uuid_ = buf.data();
-
-    int err = oc_generate_ecdsa_keypair(
-      kp_.public_key.data(), kp_.public_key.size(), &kp_.public_key_size,
-      kp_.private_key.data(), kp_.private_key.size(), &kp_.private_key_size);
-    EXPECT_EQ(0, err);
-
-    roles_.Add("user", "admin");
   }
 
   void TearDown() override { oc_random_destroy(); }
 
-  template<class Container>
-  static std::string stripNewLines(Container &container)
-  {
-    container.erase(
-      std::remove_if(container.begin(), container.end(),
-                     [](char ch) { return (ch == '\n' || ch == '\r'); }),
-      container.end());
-
-    return std::string(container.begin(), container.end());
-  }
-
-  std::vector<unsigned char> GenerateSelfSignedRootCertificate();
-  std::vector<unsigned char> GenerateIdentityCertificate();
-  std::vector<unsigned char> GenerateRoleCertificate();
+  static std::vector<unsigned char> GeneratePEM(oc_certs_generate_t data);
+  static mbedtls_x509_crt_uptr Generate(oc_certs_generate_t data);
 
   std::string uuid_{};
-  keypair_t kp_{};
-  Roles roles_{};
+
+  static const std::vector<unsigned char> g_personalization_string;
+  static const std::string g_root_subject_name;
+  static const std::string g_root_subject_CN;
 };
 
-std::vector<unsigned char>
-TestObtCerts::GenerateSelfSignedRootCertificate()
-{
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.private_key =*/kp_.private_key.data(),
-    /*.private_key_size =*/kp_.private_key_size,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err = oc_obt_generate_self_signed_root_cert_pem(
-    cert_data, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
-}
-
-std::vector<unsigned char>
-TestObtCerts::GenerateIdentityCertificate()
-{
-  oc_obt_generate_identity_cert_data_t cert_data = {
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp_.private_key.data(),
-    /*.issuer_private_key_size =*/kp_.private_key_size,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err = oc_obt_generate_identity_cert_pem(cert_data, cert_buf.data(),
-                                              cert_buf.size());
-  EXPECT_EQ(0, err);
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-  std::string pem(cert_buf.begin(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
-}
-
-std::vector<unsigned char>
-TestObtCerts::GenerateRoleCertificate()
-{
-  oc_obt_generate_role_cert_data_t cert_data = {
-    /*.roles =*/roles_.Head(),
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp_.private_key.data(),
-    /*.issuer_private_key_size =*/kp_.private_key_size,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err =
-    oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-  std::string pem(cert_buf.begin(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
-}
-
-TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)
-{
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.private_key =*/kp_.private_key.data(),
-    /*.private_key_size =*/kp_.private_key_size,
-  };
-
-  // bad buffer
-  std::array<unsigned char, 1> too_small{};
-  int err = oc_obt_generate_self_signed_root_cert_pem(
-    cert_data, too_small.data(), too_small.size());
-  EXPECT_GT(0, err);
-
-  std::array<unsigned char, 4096> pem;
-  // bad subject
-  oc_obt_generate_root_cert_data_t bad_data{ cert_data };
-  std::string bad_subject =
-    "A=" + std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'a');
-  bad_data.subject_name = bad_subject.c_str();
-  err =
-    oc_obt_generate_self_signed_root_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad public key
-  std::array<uint8_t, 1> bad_key{ '\0' };
-  bad_data = cert_data;
-  bad_data.public_key = bad_key.data();
-  bad_data.public_key_size = 1;
-  err =
-    oc_obt_generate_self_signed_root_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad private key
-  bad_data = cert_data;
-  bad_data.private_key = bad_key.data();
-  bad_data.private_key_size = 1;
-  err =
-    oc_obt_generate_self_signed_root_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-}
-
-TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
-{
-  auto cert_buf = GenerateSelfSignedRootCertificate();
-
-  std::array<char, 128> serial{};
-  int ret = oc_certs_parse_serial_number(&cert_buf[0], cert_buf.size(),
-                                         serial.data(), serial.size());
-  EXPECT_LT(0, ret);
-  OC_DBG("serial: %s", &serial[0]);
-
-  std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&cert_buf[0], cert_buf.size(),
-                                   private_key.data(), private_key.size());
-  EXPECT_EQ(kp_.private_key_size, ret);
-
-  oc_string_t pk{};
-  ret =
-    oc_certs_parse_public_key_to_oc_string(&cert_buf[0], cert_buf.size(), &pk);
-  EXPECT_LT(0, ret);
-  EXPECT_EQ(0, memcmp(kp_.public_key.data(), oc_cast(pk, uint8_t), ret));
-  oc_free_string(&pk);
-}
-
-TEST_F(TestObtCerts, SerializeSelfSignedCertificate)
-{
-  auto root_cert = GenerateSelfSignedRootCertificate();
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &root_cert[0], root_cert.size()));
-
-  std::vector<char> pem{};
-  pem.resize(4096, '\0');
-  int ret = oc_certs_serialize_chain_to_pem(&crt, pem.data(), pem.size());
-  EXPECT_LT(0, ret);
-  pem.resize(ret + 1); // +1 for nul-terminator
-
-  EXPECT_STREQ(stripNewLines(root_cert).c_str(), stripNewLines(pem).c_str());
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-TEST_F(TestObtCerts, ValidateSelfSignedCertificate)
-{
-  auto root_cert = GenerateSelfSignedRootCertificate();
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &root_cert[0], root_cert.size()));
-  // root == non end entity should succeed, others should fail
-  uint32_t flags{};
-  EXPECT_EQ(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
-  EXPECT_EQ(0, flags);
-  EXPECT_NE(0, oc_certs_validate_end_entity_cert(&crt, &flags));
-  EXPECT_NE(0, oc_certs_validate_role_cert(&crt, &flags));
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-TEST_F(TestObtCerts, GenerateIdentityCertificateFail)
-{
-  oc_obt_generate_identity_cert_data_t cert_data = {
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp_.private_key.data(),
-    /*.issuer_private_key_size =*/kp_.private_key_size,
-  };
-
-  // bad buffer
-  std::array<unsigned char, 1> too_small{};
-  int err = oc_obt_generate_identity_cert_pem(cert_data, too_small.data(),
-                                              too_small.size());
-  EXPECT_GT(0, err);
-
-  std::array<unsigned char, 4096> pem;
-  // bad subject
-  oc_obt_generate_identity_cert_data_t bad_data{ cert_data };
-  std::string bad_subject =
-    "A=" + std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'a');
-  bad_data.subject_name = bad_subject.c_str();
-  err = oc_obt_generate_identity_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad public key
-  std::array<uint8_t, 1> bad_key{ '\0' };
-  bad_data = cert_data;
-  bad_data.public_key = bad_key.data();
-  bad_data.public_key_size = 1;
-  err = oc_obt_generate_identity_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad issuer
-  std::string bad_issuer =
-    "A=" + std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'b');
-  bad_data = cert_data;
-  bad_data.issuer_name = bad_issuer.c_str();
-  err = oc_obt_generate_identity_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad private key
-  bad_data = cert_data;
-  bad_data.issuer_private_key = bad_key.data();
-  bad_data.issuer_private_key_size = 1;
-  err = oc_obt_generate_identity_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-}
-
-TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
-{
-  auto id_cert = GenerateIdentityCertificate();
-
-  std::array<char, 128> serial{};
-  int ret = oc_certs_parse_serial_number(&id_cert[0], id_cert.size(),
-                                         serial.data(), serial.size());
-  EXPECT_LT(0, ret);
-  OC_DBG("serial: %s", &serial[0]);
-
-  std::array<char, OC_UUID_LEN> uuid_cstr{};
-  EXPECT_TRUE(oc_certs_parse_CN_for_UUID(&id_cert[0], id_cert.size(),
-                                         uuid_cstr.data(), uuid_cstr.size()));
-  EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
-
-  std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&id_cert[0], id_cert.size(),
-                                   private_key.data(), private_key.size());
-  EXPECT_EQ(kp_.private_key_size, ret);
-
-  std::array<uint8_t, 200> public_key{};
-  ret = oc_certs_parse_public_key(&id_cert[0], id_cert.size(),
-                                  public_key.data(), public_key.size());
-  EXPECT_LT(0, ret);
-  EXPECT_EQ(0, memcmp(kp_.public_key.data(), public_key.data(), ret));
-}
-
-TEST_F(TestObtCerts, SerializeIdentityCertificate)
-{
-  auto id_cert = GenerateIdentityCertificate();
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &id_cert[0], id_cert.size()));
-
-  std::vector<char> pem{};
-  pem.resize(4096, '\0');
-  int ret = oc_certs_serialize_chain_to_pem(&crt, pem.data(), pem.size());
-  EXPECT_LT(0, ret);
-  pem.resize(ret + 1); // +1 for nul-terminator
-
-  EXPECT_STREQ(stripNewLines(id_cert).c_str(), stripNewLines(pem).c_str());
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-TEST_F(TestObtCerts, ValidateIdentityCertificate)
-{
-  auto cert_buf = GenerateIdentityCertificate();
-
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &cert_buf[0], cert_buf.size()));
-  // identity == end entity test should succeed, others should fail
-  uint32_t flags{};
-  EXPECT_EQ(0, oc_certs_validate_end_entity_cert(&crt, &flags));
-  EXPECT_EQ(0, flags);
-  EXPECT_NE(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
-  EXPECT_NE(0, oc_certs_validate_role_cert(&crt, &flags));
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-TEST_F(TestObtCerts, GenerateRoleCertificateFail)
-{
-  oc_obt_generate_role_cert_data_t cert_data = {
-    /*.roles =*/roles_.Head(),
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp_.private_key.data(),
-    /*.issuer_private_key_size =*/kp_.private_key_size,
-  };
-
-  // bad buffer
-  std::array<unsigned char, 1> too_small{};
-  int err = oc_obt_generate_role_cert_pem(cert_data, too_small.data(),
-                                          too_small.size());
-  EXPECT_GT(0, err);
-
-  std::array<unsigned char, 4096> pem;
-  // bad subject
-  oc_obt_generate_role_cert_data_t bad_data{ cert_data };
-  std::string bad_subject =
-    "A=" + std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'a');
-  bad_data.subject_name = bad_subject.c_str();
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad public key
-  std::array<uint8_t, 1> bad_key{ '\0' };
-  bad_data = cert_data;
-  bad_data.public_key = bad_key.data();
-  bad_data.public_key_size = 1;
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad issuer
-  std::string bad_issuer =
-    "A=" + std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'b');
-  bad_data = cert_data;
-  bad_data.issuer_name = bad_issuer.c_str();
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad private key
-  bad_data = cert_data;
-  bad_data.issuer_private_key = bad_key.data();
-  bad_data.issuer_private_key_size = 1;
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad role - nullptr
-  bad_data = cert_data;
-  bad_data.roles = nullptr;
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-
-  // bad role - bad value
-  bad_data = cert_data;
-  Roles roles;
-  roles.Add(std::string(MBEDTLS_X509_MAX_DN_NAME_SIZE + 1, 'c'), "");
-  bad_data.roles = roles.Head();
-  err = oc_obt_generate_role_cert_pem(bad_data, pem.data(), pem.size());
-  EXPECT_GT(0, err);
-}
-
-TEST_F(TestObtCerts, GenerateValidRoleCertificate)
-{
-  auto role_cert = GenerateRoleCertificate();
-
-  std::array<char, 128> serial{};
-  int ret = oc_certs_parse_serial_number(&role_cert[0], role_cert.size(),
-                                         serial.data(), serial.size());
-  EXPECT_LT(0, ret);
-  OC_DBG("serial: %s", &serial[0]);
-
-  std::array<char, OC_UUID_LEN> uuid_cstr{};
-  EXPECT_TRUE(oc_certs_parse_CN_for_UUID(&role_cert[0], role_cert.size(),
-                                         uuid_cstr.data(), uuid_cstr.size()));
-  EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
-
-  std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&role_cert[0], role_cert.size(),
-                                   private_key.data(), private_key.size());
-  EXPECT_EQ(kp_.private_key_size, ret);
-
-  std::array<uint8_t, 200> public_key{};
-  ret = oc_certs_parse_public_key(&role_cert[0], role_cert.size(),
-                                  public_key.data(), public_key.size());
-  EXPECT_LT(0, ret);
-  EXPECT_EQ(0, memcmp(kp_.public_key.data(), public_key.data(), ret));
-
-  oc_string_t role{};
-  oc_string_t authority{};
-  EXPECT_TRUE(oc_certs_parse_first_role(&role_cert[0], role_cert.size(), &role,
-                                        &authority));
-  EXPECT_STREQ(oc_string(roles_.Get(0)->role), oc_string(role));
-  EXPECT_STREQ(oc_string(roles_.Get(0)->authority), oc_string(authority));
-  OC_DBG("role: %s", oc_string(role));
-  OC_DBG("authority: %s", oc_string(authority));
-  oc_free_string(&role);
-  oc_free_string(&authority);
-}
-
-TEST_F(TestObtCerts, SerializeRoleCertificate)
-{
-  auto role_cert = GenerateRoleCertificate();
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &role_cert[0], role_cert.size()));
-
-  std::vector<char> pem{};
-  pem.resize(4096, '\0');
-  int ret = oc_certs_serialize_chain_to_pem(&crt, pem.data(), pem.size());
-  EXPECT_LT(0, ret);
-  pem.resize(ret + 1); // +1 for nul-terminator
-
-  EXPECT_STREQ(stripNewLines(role_cert).c_str(), stripNewLines(pem).c_str());
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-TEST_F(TestObtCerts, ValidateRoleCertificate)
-{
-  auto cert_buf = GenerateRoleCertificate();
-
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &cert_buf[0], cert_buf.size()));
-  // role == role test should succeed, others should fail
-  uint32_t flags{};
-  EXPECT_EQ(0, oc_certs_validate_role_cert(&crt, &flags));
-  EXPECT_EQ(0, flags);
-  EXPECT_NE(0, oc_certs_validate_end_entity_cert(&crt, &flags));
-  EXPECT_NE(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
-
-  mbedtls_x509_crt_free(&crt);
-}
-
-class TestObtCertsWithDevice : public testing::Test {
-public:
-  void SetUp() override
-  {
-    EXPECT_TRUE(oc::TestDevice::StartServer());
-
-    oc_uuid_t uuid{};
-    oc_gen_uuid(&uuid);
-    std::array<char, 50> buf;
-    EXPECT_TRUE(oc_certs_encode_CN_with_UUID(&uuid, buf.data(), buf.size()));
-    uuid_ = buf.data();
-
-    int err = oc_generate_ecdsa_keypair(
-      kp_.public_key.data(), kp_.public_key.size(), &kp_.public_key_size,
-      kp_.private_key.data(), kp_.private_key.size(), &kp_.private_key_size);
-    EXPECT_EQ(0, err);
-
-    // if empty authority should be taken from the Common Name of the issuer
-    roles_.Add("user", "");
-  }
-
-  void TearDown() override { oc::TestDevice::StopServer(); }
-
-  std::string uuid_{};
-  keypair_t kp_{};
-  Roles roles_{};
+const std::string TestGenerateCerts::g_root_subject_name{
+  "IoTivity-Lite Test"
 };
+const std::string TestGenerateCerts::g_root_subject_CN{ "C=US, O=OCF, CN=" +
+                                                        g_root_subject_name };
+const std::vector<unsigned char> TestGenerateCerts::g_personalization_string =
+  []() {
+    auto ps = TestCerts::toArray<unsigned char>("IoTivity-Lite-Test");
+    ps.push_back('\0');
+    return ps;
+  }();
 
-TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
+std::vector<unsigned char>
+TestGenerateCerts::GeneratePEM(oc_certs_generate_t data)
 {
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.private_key =*/kp_.private_key.data(),
-    /*.private_key_size =*/kp_.private_key_size,
-  };
-
-  int credid =
-    oc_obt_generate_self_signed_root_cert(cert_data, oc::TestDevice::Index());
-  EXPECT_LT(0, credid);
-
-  oc_sec_cred_t *cred =
-    oc_sec_get_cred_by_credid(credid, oc::TestDevice::Index());
-  EXPECT_NE(nullptr, cred);
-  // is root CA
-  EXPECT_EQ(OC_CREDUSAGE_TRUSTCA, cred->credusage);
-
-  // public data should have a valid certificate in PEM format
-  EXPECT_EQ(OC_ENCODING_PEM, cred->publicdata.encoding);
-
-  mbedtls_x509_crt crt;
-  mbedtls_x509_crt_init(&crt);
-  EXPECT_EQ(0, mbedtls_x509_crt_parse(
-                 &crt, oc_cast(cred->publicdata.data, unsigned char),
-                 cred->publicdata.data.size));
-  uint32_t flags{};
-  EXPECT_EQ(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
-  EXPECT_EQ(0, flags);
-  mbedtls_x509_crt_free(&crt);
+  std::vector<unsigned char> pem{};
+  pem.resize(4096, '\0');
+  EXPECT_EQ(0, oc_certs_generate(data, pem.data(), pem.size()));
+  auto it = std::find(pem.begin(), pem.end(), static_cast<unsigned char>('\0'));
+  size_t pem_size =
+    std::distance(pem.begin(), it) + 1; // size with NULL terminator
+  EXPECT_NE(pem.end(), it);
+  EXPECT_TRUE(oc_certs_is_PEM(&pem[0], pem_size));
+  pem.resize(pem_size);
+  return pem;
 }
 
-TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
+mbedtls_x509_crt_uptr
+TestGenerateCerts::Generate(oc_certs_generate_t data)
 {
-  // need a trust anchor to verify Role Cert
-  oc_obt_generate_root_cert_data_t root_cert = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.private_key =*/kp_.private_key.data(),
-    /*.private_key_size =*/kp_.private_key_size,
-  };
-
-  int credid =
-    oc_obt_generate_self_signed_root_cert(root_cert, oc::TestDevice::Index());
-  EXPECT_LT(0, credid);
-
-  oc_obt_generate_role_cert_data_t role_cert = {
-    /*.roles =*/roles_.Head(),
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp_.public_key.data(),
-    /*.public_key_size =*/kp_.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp_.private_key.data(),
-    /*.issuer_private_key_size =*/kp_.private_key_size,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err =
-    oc_obt_generate_role_cert_pem(role_cert, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-
-  oc_uuid_t subjectuuid{};
-  subjectuuid.id[0] = '*';
-  oc_sec_cred_t *cred =
-    oc_sec_allocate_cred(&subjectuuid, OC_CREDTYPE_CERT, OC_CREDUSAGE_ROLE_CERT,
-                         oc::TestDevice::Index());
-  EXPECT_NE(nullptr, cred);
-  EXPECT_EQ(0, oc_certs_parse_role_certificate(&cert_buf[0], cert_buf.size(),
-                                               cred, false));
-  OC_DBG("role: %s", oc_string(cred->role.role));
-  EXPECT_STREQ(oc_string(roles_.Get(0)->role), oc_string(cred->role.role));
-
-  OC_DBG("authority: %s", oc_string(cred->role.authority));
-  EXPECT_STREQ(g_root_subject_name.c_str(), oc_string(cred->role.authority));
-
-  oc_sec_remove_cred(cred, oc::TestDevice::Index());
+  auto pem = GeneratePEM(data);
+  mbedtls_x509_crt_uptr crt(new mbedtls_x509_crt, [](mbedtls_x509_crt *crt) {
+    mbedtls_x509_crt_free(crt);
+    delete crt;
+  });
+  mbedtls_x509_crt_init(crt.get());
+  EXPECT_EQ(0, mbedtls_x509_crt_parse(crt.get(), pem.data(), pem.size()));
+  return crt;
 }
 
-#endif /* OC_SECURITY && OC_PKI && OC_DYNAMIC_ALLOCATION  */
+// TEST_F(TestGenerateCerts, SerialNumber)
+// {
+//   keypair_t kp{};
+//   int err = oc_generate_ecdsa_keypair(
+//     MBEDTLS_ECP_DP_SECP256R1, kp.public_key.data(), kp.public_key.size(),
+//     &kp.public_key_size, kp.private_key.data(), kp.private_key.size(),
+//     &kp.private_key_size);
+//   EXPECT_EQ(0, err);
+
+//   oc_certs_generate_t data{};
+//   data.personalization_string.value = g_personalization_string.data();
+//   data.personalization_string.size = g_personalization_string.size();
+//   // data.serial_number_size = 20;
+//   // data.validity.not_before = oc_certs_timestamp_now();
+//   data.subject.name = g_root_subject_CN.c_str();
+//   data.subject.public_key.value = kp.public_key.data();
+//   data.subject.public_key.size = kp.public_key_size;
+//   data.subject.private_key.value = kp.private_key.data();
+//   data.subject.private_key.size = kp.private_key_size;
+//   data.is_CA = true;
+//   // data.key_usage.key_usage =
+//   //   MBEDTLS_X509_KU_DIGITAL_SIGNATURE | MBEDTLS_X509_KU_KEY_AGREEMENT;
+//   data.signature_md = MBEDTLS_MD_SHA256;
+
+//   std::array<unsigned char, 4096> pem{};
+//   EXPECT_EQ(0, oc_certs_generate(data, pem.data(), pem.size()));
+// }
+
+TEST_F(TestGenerateCerts, MinimalCA)
+{
+  oc::keypair_t kp = oc::GetECPKeypair(MBEDTLS_ECP_DP_SECP256R1);
+
+  oc_certs_generate_t data{};
+  data.personalization_string.value = g_personalization_string.data();
+  data.personalization_string.size = g_personalization_string.size();
+  data.subject.name = g_root_subject_CN.c_str();
+  data.subject.public_key.value = kp.public_key.data();
+  data.subject.public_key.size = kp.public_key_size;
+  data.subject.private_key.value = kp.private_key.data();
+  data.subject.private_key.size = kp.private_key_size;
+  data.validity.not_before = oc_certs_timestamp_now();
+  data.is_CA = true;
+  data.signature_md = MBEDTLS_MD_SHA256;
+
+  auto cert = Generate(data);
+  EXPECT_NE(0, cert->ca_istrue);
+}
+
+#endif /* OC_SECURITY && OC_PKI  */

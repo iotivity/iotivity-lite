@@ -35,10 +35,6 @@
 extern "C" {
 #endif
 
-/// Fill with serial number of the certificates with random byte string of given
-/// size
-int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size);
-
 /// @brief Check that string is in PEM format.
 bool oc_certs_is_PEM(const unsigned char *cert, size_t cert_len);
 
@@ -174,25 +170,6 @@ bool oc_certs_extract_first_role(const mbedtls_x509_crt *cert,
 /// @see oc_certs_extract_first_role.
 bool oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
                                oc_string_t *role, oc_string_t *authority);
-
-/// Get current clocktime encoded as timestamp_t
-timestamp_t oc_certs_timestamp_now(void);
-
-/// Convert mbedtls_x509_time to UNIX timestamp
-uint64_t oc_certs_time_to_unix_timestamp(mbedtls_x509_time time);
-
-/**
- * @brief Convert timestamp into a UTC timezone string expected by the x509
- * certificate in the notBefore and notAfter fields.
- *
- * @param ts timestamp to convert
- * @param buffer output buffer (cannot be NULL)
- * @param buffer_size size of the output buffer
- * @return true on success
- * @return false on failure
- */
-bool oc_certs_timestamp_format(timestamp_t ts, char *buffer,
-                               size_t buffer_size);
 
 /// Serialize certificate chain to PEM string
 int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,

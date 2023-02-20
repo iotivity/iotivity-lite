@@ -28,8 +28,9 @@
 #include "oc_obt.h"
 #include "oc_store.h"
 #include "security/oc_certs_internal.h"
+#include "security/oc_certs_generate_internal.h"
 #include "security/oc_entropy_internal.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 
 #include <mbedtls/ctr_drbg.h>

@@ -39,7 +39,7 @@ extern "C" {
 #define OC_CSR_SIGNATURE_MD_SUPPORTED_MASK (OC_CSR_SIGNATURE_MD_SHA256_FLAG)
 
 /**
- * @brief
+ * @brief Verify CSR signature
  *
  * @param csr parsed CSR to check (cannot be NULL)
  * @param md_flags bitmask of allowed signatures (if 0 then signature is not

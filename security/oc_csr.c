@@ -28,7 +28,7 @@
 #include "security/oc_certs_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
-#include "security/oc_keypair.h"
+#include "security/oc_keypair_internal.h"
 #include "security/oc_tls.h"
 
 #include <assert.h>
@@ -140,6 +140,7 @@ bool
 oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
 {
   if (md_flags == 0) {
+    OC_DBG("signature verification disabled");
     return true;
   }
 

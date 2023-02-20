@@ -16,17 +16,19 @@
  *
  ****************************************************************************/
 
-#ifdef OC_SECURITY
-#ifdef OC_PKI
+#include "oc_config.h"
 
-#include "oc_keypair.h"
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+#include "oc_keypair_internal.h"
 #include "oc_api.h"
 #include "oc_store.h"
 #include "security/oc_entropy_internal.h"
 
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/pk.h"
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/ecp.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/pk.h>
 
 OC_MEMB(oc_keypairs_s, oc_ecdsa_keypair_t, OC_MAX_NUM_DEVICES);
 OC_LIST(oc_keypairs);
@@ -121,9 +123,10 @@ oc_sec_encode_ecdsa_keypair(size_t device)
 }
 
 int
-oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
-                          size_t *public_key_size, uint8_t *private_key,
-                          size_t private_key_buf_size, size_t *private_key_size)
+oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
+                          size_t public_key_buf_size, size_t *public_key_size,
+                          uint8_t *private_key, size_t private_key_buf_size,
+                          size_t *private_key_size)
 {
   mbedtls_pk_context pk;
   mbedtls_entropy_context entropy;
@@ -153,8 +156,8 @@ oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
     goto generate_ecdsa_keypair_error;
   }
 
-  ret = mbedtls_ecp_gen_key(MBEDTLS_ECP_DP_SECP256R1, mbedtls_pk_ec(pk),
-                            mbedtls_ctr_drbg_random, &ctr_drbg);
+  ret = mbedtls_ecp_gen_key(grpid, mbedtls_pk_ec(pk), mbedtls_ctr_drbg_random,
+                            &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error in ECDSA key generation");
     goto generate_ecdsa_keypair_error;
@@ -175,6 +178,7 @@ oc_generate_ecdsa_keypair(uint8_t *public_key, size_t public_key_buf_size,
     goto generate_ecdsa_keypair_error;
   }
   *public_key_size = (size_t)ret;
+  memmove(public_key, public_key + public_key_buf_size - ret, *public_key_size);
 
   mbedtls_entropy_free(&entropy);
   mbedtls_ctr_drbg_free(&ctr_drbg);
@@ -200,9 +204,10 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
   }
 
   size_t public_key_size = 0;
-  if (oc_generate_ecdsa_keypair(
-        kp->public_key, OC_ECDSA_PUBKEY_SIZE, &public_key_size, kp->private_key,
-        OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
+  if (oc_generate_ecdsa_keypair(MBEDTLS_ECP_DP_SECP256R1, kp->public_key,
+                                OC_ECDSA_PUBKEY_SIZE, &public_key_size,
+                                kp->private_key, OC_ECDSA_PRIVKEY_SIZE,
+                                &kp->private_key_size) < 0) {
     oc_memb_free(&oc_keypairs_s, kp);
     return -1;
   }
@@ -212,7 +217,4 @@ oc_generate_ecdsa_keypair_for_device(size_t device)
   return 0;
 }
 
-#else  /* OC_PKI */
-typedef int dummy_declaration;
-#endif /* !OC_PKI */
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY && OC_PKI */
