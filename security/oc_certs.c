@@ -20,11 +20,12 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
-#include "oc_certs_internal.h"
-#include "oc_certs_validate_internal.h"
+#include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "port/oc_assert.h"
+#include "security/oc_certs_internal.h"
+#include "security/oc_certs_validate_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_tls.h"
 #include "oc_uuid.h"
@@ -43,57 +44,40 @@
 #define CN_UUID_PREFIX_LEN (sizeof(CN_UUID_PREFIX) - 1)
 
 // allowed message digests signature algorithms
-static int g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
-                                MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384);
+static unsigned g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256);
 
 // message digest used for signature of generated certificates or certificate
 // signing requests
-static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA384;
+static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA256;
 
 mbedtls_md_type_t
-oc_certs_signature_md_algorithm()
+oc_sec_certs_md_signature_algorithm()
 {
   return g_signature_md;
 }
 
 void
-oc_certs_set_signature_md_algorithm(mbedtls_md_type_t md)
+oc_sec_certs_md_set_signature_algorithm(mbedtls_md_type_t md)
 {
   g_signature_md = md;
   OC_DBG("signature message digest: %d", (int)g_signature_md);
 }
 
 void
-oc_certs_md_algorithm_allow(mbedtls_md_type_t md)
+oc_sec_certs_md_set_algorithms_allowed(unsigned md_mask)
 {
-  g_allowed_mds_mask |= MBEDTLS_X509_ID_FLAG(md);
-  OC_DBG("allowed message digest:%d (mask: %x)", (int)md,
-         (int)g_allowed_mds_mask);
+  g_allowed_mds_mask = (md_mask & OCF_CERTS_SUPPORTED_MDS);
+  OC_DBG("allowed message digests mask: %u", g_allowed_mds_mask);
 }
 
-void
-oc_certs_md_algorithm_disallow(mbedtls_md_type_t md)
-{
-  g_allowed_mds_mask &= ~MBEDTLS_X509_ID_FLAG(md);
-  OC_DBG("disallowed message digest:%d (mask: %x)", (int)md,
-         (int)g_allowed_mds_mask);
-}
-
-void
-oc_certs_set_md_algorithm_allowed(int md_mask)
-{
-  g_allowed_mds_mask = md_mask;
-  OC_DBG("allowed message digests mask: %x", (int)g_allowed_mds_mask);
-}
-
-int
-oc_certs_md_algorithm_allowed(void)
+unsigned
+oc_sec_certs_md_algorithms_allowed(void)
 {
   return g_allowed_mds_mask;
 }
 
 bool
-oc_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
+oc_sec_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
 {
   return md != MBEDTLS_MD_NONE &&
          (MBEDTLS_X509_ID_FLAG(md) & g_allowed_mds_mask) != 0;
