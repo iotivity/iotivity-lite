@@ -23,6 +23,7 @@
 
 #include "oc_csr.h"
 #include "oc_api.h"
+#include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_uuid.h"
 #include "security/oc_certs_internal.h"
@@ -232,8 +233,8 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   size_t device = request->resource->device;
   unsigned char csr[512];
-  int ret = oc_sec_csr_generate(device, oc_certs_signature_md_algorithm(), csr,
-                                sizeof(csr));
+  int ret = oc_sec_csr_generate(device, oc_sec_certs_md_signature_algorithm(),
+                                csr, sizeof(csr));
   if (ret != 0) {
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;

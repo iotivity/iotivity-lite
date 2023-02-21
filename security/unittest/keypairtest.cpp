@@ -301,7 +301,7 @@ TEST_F(TestKeyPair, DecodeForMultipleDevices)
     oc_ecdsa_keypair_t *kp_out = oc_sec_get_ecdsa_keypair(/*device*/ i);
     EXPECT_NE(nullptr, kp_out);
 
-    auto kp_in = keypairs[i];
+    const auto &kp_in = keypairs[i];
     EXPECT_EQ(
       0, memcmp(&kp_in.public_key, &kp_out->public_key, OC_ECDSA_PUBKEY_SIZE));
     EXPECT_EQ(kp_in.private_key_size, kp_out->private_key_size);

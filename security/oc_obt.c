@@ -29,6 +29,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
 #include "api/oc_helpers_internal.h"
+#include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_csr.h"
 #include "oc_obt.h"
@@ -1804,7 +1805,7 @@ device_CSR(oc_client_response_t *data)
    */
   int ret = oc_sec_csr_validate(
     (const unsigned char *)csr, csr_len, MBEDTLS_PK_ECKEY,
-    oc_certs_md_algorithm_allowed(), &subject, pub_key, sizeof(pub_key));
+    oc_sec_certs_md_algorithms_allowed(), &subject, pub_key, sizeof(pub_key));
 
   if (ret < 0) {
     goto err_device_CSR;
@@ -1821,7 +1822,7 @@ device_CSR(oc_client_response_t *data)
       .issuer_name = g_root_subject,
       .issuer_private_key = g_private_key,
       .issuer_private_key_size = g_private_key_size,
-      .signature_md_alg = oc_certs_signature_md_algorithm(),
+      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
     };
     ret = oc_obt_generate_identity_cert_pem(gen, cert_pem, sizeof(cert_pem));
   } else {
@@ -1835,7 +1836,7 @@ device_CSR(oc_client_response_t *data)
       .issuer_name = g_root_subject,
       .issuer_private_key = g_private_key,
       .issuer_private_key_size = g_private_key_size,
-      .signature_md_alg = oc_certs_signature_md_algorithm(),
+      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
     };
     ret = oc_obt_generate_role_cert_pem(gen, cert_pem, sizeof(cert_pem));
   }
@@ -3697,7 +3698,7 @@ oc_obt_init(void)
       .public_key_size = OC_ECDSA_PUBKEY_SIZE,
       .private_key = g_private_key,
       .private_key_size = g_private_key_size,
-      .signature_md_alg = oc_certs_signature_md_algorithm(),
+      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
     };
     g_root_cert_credid = oc_obt_generate_self_signed_root_cert(cert_data, 0);
   }

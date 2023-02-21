@@ -18,6 +18,7 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
+#include "oc_certs.h"
 #include "oc_cred.h"
 #include "oc_uuid.h"
 #include "port/oc_random.h"
@@ -44,9 +45,9 @@ class TestCerts : public testing::Test {
 public:
   void TearDown() override
   {
-    oc_certs_set_signature_md_algorithm(MBEDTLS_MD_SHA384);
-    oc_certs_set_md_algorithm_allowed(MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
-                                      MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384));
+    oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA256);
+    oc_sec_certs_md_set_algorithms_allowed(
+      MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256));
   }
 
   template<class T>
@@ -103,8 +104,8 @@ TEST_F(TestCerts, SetSignatureMDAlgorithm)
   };
 
   for (auto md : all_mds) {
-    oc_certs_set_signature_md_algorithm(md);
-    EXPECT_EQ(md, oc_certs_signature_md_algorithm());
+    oc_sec_certs_md_set_signature_algorithm(md);
+    EXPECT_EQ(md, oc_sec_certs_md_signature_algorithm());
   }
 }
 
@@ -116,22 +117,40 @@ TEST_F(TestCerts, AllowedMDAlgorithms)
     MBEDTLS_MD_RIPEMD160
   };
 
-  // disable all
-  oc_certs_set_md_algorithm_allowed(MBEDTLS_MD_NONE);
-  EXPECT_EQ(0, oc_certs_md_algorithm_allowed());
+  std::vector<mbedtls_md_type_t> ocf_mds{};
+  std::vector<mbedtls_md_type_t> nonocf_mds{};
 
-  // enable all one by one
-  for (auto md : all_mds) {
-    EXPECT_FALSE(oc_certs_md_algorithm_is_allowed(md));
-    oc_certs_md_algorithm_allow(md);
-    EXPECT_TRUE(oc_certs_md_algorithm_is_allowed(md));
+  for (const auto md : all_mds) {
+    if ((MBEDTLS_X509_ID_FLAG(md) & OCF_CERTS_SUPPORTED_MDS) != 0) {
+      ocf_mds.push_back(md);
+    } else {
+      nonocf_mds.push_back(md);
+    }
   }
 
-  // disable all one by one
-  for (auto md : all_mds) {
-    EXPECT_TRUE(oc_certs_md_algorithm_is_allowed(md));
-    oc_certs_md_algorithm_disallow(md);
-    EXPECT_FALSE(oc_certs_md_algorithm_is_allowed(md));
+  // disable all
+  oc_sec_certs_md_set_algorithms_allowed(MBEDTLS_MD_NONE);
+  EXPECT_EQ(0, oc_sec_certs_md_algorithms_allowed());
+  for (const auto md : all_mds) {
+    EXPECT_FALSE(oc_sec_certs_md_algorithm_is_allowed(md));
+  }
+
+  // enable supported MDs one by one
+  unsigned ocf_mask = 0;
+  for (const auto md : ocf_mds) {
+    ocf_mask |= MBEDTLS_X509_ID_FLAG(md);
+    oc_sec_certs_md_set_algorithms_allowed(ocf_mask);
+    EXPECT_TRUE(oc_sec_certs_md_algorithm_is_allowed(md));
+  }
+
+  unsigned non_ocf_mask = ocf_mask;
+  // enabling unsupported MDs should not work, they should be stripped from the
+  // mask, keeping only the supported MDs
+  for (const auto md : nonocf_mds) {
+    non_ocf_mask |= MBEDTLS_X509_ID_FLAG(md);
+    oc_sec_certs_md_set_algorithms_allowed(non_ocf_mask);
+    EXPECT_FALSE(oc_sec_certs_md_algorithm_is_allowed(md));
+    EXPECT_EQ(ocf_mask, oc_sec_certs_md_algorithms_allowed());
   }
 }
 
@@ -190,7 +209,7 @@ TestObtCerts::GenerateSelfSignedRootCertificate()
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -220,7 +239,7 @@ TestObtCerts::GenerateIdentityCertificate()
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -252,7 +271,7 @@ TestObtCerts::GenerateRoleCertificate()
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
@@ -281,7 +300,7 @@ TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   // bad buffer
@@ -387,7 +406,7 @@ TEST_F(TestObtCerts, GenerateIdentityCertificateFail)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   // bad buffer
@@ -504,7 +523,7 @@ TEST_F(TestObtCerts, GenerateRoleCertificateFail)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   // bad buffer
@@ -669,7 +688,7 @@ TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   int credid =
@@ -706,7 +725,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
     /*.public_key_size =*/kp_.public_key_size,
     /*.private_key =*/kp_.private_key.data(),
     /*.private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   int credid =
@@ -721,7 +740,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
     /*.issuer_name =*/g_root_subject.c_str(),
     /*.issuer_private_key =*/kp_.private_key.data(),
     /*.issuer_private_key_size =*/kp_.private_key_size,
-    /*.signature_md_alg=*/oc_certs_signature_md_algorithm(),
+    /*.signature_md_alg=*/oc_sec_certs_md_signature_algorithm(),
   };
 
   std::vector<unsigned char> cert_buf{};
