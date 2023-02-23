@@ -927,13 +927,11 @@ add_message_to_waiting_session_locked(tcp_waiting_session_t *session,
   oc_list_add(session->messages, qm);
   return true;
 }
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 static int
-tcp_send_buffer_locked(ip_context_t *dev, oc_message_t *message,
-                       const struct sockaddr_storage *receiver)
+tcp_connect_and_send_buffer_locked(ip_context_t *dev, oc_message_t *message,
+                                   const struct sockaddr_storage *receiver)
 {
-#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   if (message->length == OC_SEND_MESSAGE_QUEUED) {
     return -1;
   }
@@ -954,29 +952,23 @@ tcp_send_buffer_locked(ip_context_t *dev, oc_message_t *message,
   }
   OC_ERR("cannot create TCP session");
   return -1;
-#else  /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-  (void)dev;
-  (void)receiver;
-  tcp_session_t *s = find_session_by_endpoint_locked(&message->endpoint);
-  if (s == NULL) {
-    return -1;
-  }
-  if ((message->endpoint.flags & ACCEPTED) != 0) {
-    OC_ERR("connection was closed");
-    return -1;
-  }
-  return tcp_send_message(s->sock, message);
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 }
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 int
 oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                    const struct sockaddr_storage *receiver)
 {
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   pthread_mutex_lock(&g_mutex);
-  int bytes_sent = tcp_send_buffer_locked(dev, message, receiver);
+  int bytes_sent = tcp_connect_and_send_buffer_locked(dev, message, receiver);
   pthread_mutex_unlock(&g_mutex);
   return bytes_sent;
+#else  /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  (void)dev;
+  (void)receiver;
+  return oc_tcp_send_buffer2(message, false);
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 }
 
 int
