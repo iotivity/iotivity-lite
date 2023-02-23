@@ -1165,11 +1165,13 @@ network_event_thread(void *data)
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
 
   udp_add_socks_to_rfd_set(dev);
-#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+#ifdef OC_TCP
   tcp_add_socks_to_rfd_set(dev);
+#endif /* OC_TCP */
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_clock_time_t expires_in = 0;
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-
   while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     struct timeval *timeout = NULL;
     fd_set rdfds = ip_context_rfds_fd_copy(dev);
