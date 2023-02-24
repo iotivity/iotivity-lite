@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_KEYPAIR_H
-#define OC_KEYPAIR_H
+#ifndef OC_KEYPAIR_INTERNAL_H
+#define OC_KEYPAIR_INTERNAL_H
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-#define OC_ECDSA_PUBKEY_SIZE (91)
+#define OC_ECDSA_PUBKEY_SIZE (120)
 #define OC_ECDSA_PRIVKEY_SIZE (200)
 
 typedef struct oc_ecdsa_keypair_t
@@ -39,6 +39,7 @@ typedef struct oc_ecdsa_keypair_t
   struct oc_ecdsa_keypair_t *next;
   size_t device;
   uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
+  size_t public_key_size;
   uint8_t private_key[OC_ECDSA_PRIVKEY_SIZE];
   size_t private_key_size;
 } oc_ecdsa_keypair_t;
@@ -46,7 +47,7 @@ typedef struct oc_ecdsa_keypair_t
 /**
  * @brief Generate an ECP key-pair.
  *
- * @param grpid Mbed TLS elliptic curve identifier
+ * @param grpid MbedTLS elliptic curve identifier
  * @param[out] public_key buffer to store generated public key
  * @param public_key_buf_size size of the public key buffer
  * @param[out] public_key_size size of the generated public key
@@ -56,11 +57,12 @@ typedef struct oc_ecdsa_keypair_t
  * @return 0 on success
  * @return -1 on failure
  */
-int oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
-                              size_t public_key_buf_size,
-                              size_t *public_key_size, uint8_t *private_key,
-                              size_t private_key_buf_size,
-                              size_t *private_key_size);
+int oc_sec_ecdsa_generate_keypair(mbedtls_ecp_group_id grpid,
+                                  uint8_t *public_key,
+                                  size_t public_key_buf_size,
+                                  size_t *public_key_size, uint8_t *private_key,
+                                  size_t private_key_buf_size,
+                                  size_t *private_key_size);
 
 /**
  * @brief Encode public and private key-pair to global encoder.
@@ -69,7 +71,7 @@ int oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_encode_ecdsa_keypair(const oc_ecdsa_keypair_t *kp);
+bool oc_sec_ecdsa_encode_keypair(const oc_ecdsa_keypair_t *kp);
 
 /**
  * @brief Decode public and private key.
@@ -80,7 +82,7 @@ bool oc_sec_encode_ecdsa_keypair(const oc_ecdsa_keypair_t *kp);
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_decode_ecdsa_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp);
+bool oc_sec_ecdsa_decode_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp);
 
 /**
  * @brief Generate a public and private key pair, store it in a global list of
@@ -90,12 +92,13 @@ bool oc_sec_decode_ecdsa_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp);
  * function is called multiple times with a single device then each successful
  * decoding ovewrites the previous key-pair associated with the device.
  *
- * @param rep representation to decode (cannot be NULL)
+ * @param grpid MbedTLS elliptic curve identifier
  * @param device device index
  * @return true on success
  * @return false on failure
  */
-bool oc_generate_ecdsa_keypair_for_device(size_t device);
+bool oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
+                                              size_t device);
 
 /**
  * @brief Decode public and private key, store it in a global list of key-pairs
@@ -110,7 +113,7 @@ bool oc_generate_ecdsa_keypair_for_device(size_t device);
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_decode_ecdsa_keypair_for_device(const oc_rep_t *rep, size_t device);
+bool oc_sec_ecdsa_decode_keypair_for_device(const oc_rep_t *rep, size_t device);
 
 /**
  * @brief Find key-pair associated with given device, encode it to the global
@@ -120,16 +123,16 @@ bool oc_sec_decode_ecdsa_keypair_for_device(const oc_rep_t *rep, size_t device);
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_encode_ecdsa_keypair_for_device(size_t device);
+bool oc_sec_ecdsa_encode_keypair_for_device(size_t device);
 
 /** Count the number of key-pair in the global list */
-size_t oc_sec_count_ecdsa_keypairs(void);
+size_t oc_sec_ecdsa_count_keypairs(void);
 
-/** Get the key-pair associated with the given index */
-oc_ecdsa_keypair_t *oc_sec_get_ecdsa_keypair(size_t device);
+/** Get the key-pair associated with the given device */
+oc_ecdsa_keypair_t *oc_sec_ecdsa_get_keypair(size_t device);
 
 /** Free all key-pairs in the global list */
-void oc_sec_free_ecdsa_keypairs(void);
+void oc_sec_ecdsa_free_keypairs(void);
 
 #ifdef __cplusplus
 }
@@ -137,4 +140,4 @@ void oc_sec_free_ecdsa_keypairs(void);
 
 #endif /* OC_SECURITY && OC_PKI */
 
-#endif /* OC_KEYPAIR_H */
+#endif /* OC_KEYPAIR_INTERNAL_H */

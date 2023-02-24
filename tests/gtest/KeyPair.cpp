@@ -28,7 +28,7 @@ keypair_t
 GetECPKeyPair(mbedtls_ecp_group_id grpid)
 {
   keypair_t kp{};
-  int err = oc_generate_ecdsa_keypair(
+  int err = oc_sec_ecdsa_generate_keypair(
     grpid, kp.public_key.data(), kp.public_key.size(), &kp.public_key_size,
     kp.private_key.data(), kp.private_key.size(), &kp.private_key_size);
   EXPECT_EQ(0, err);
@@ -40,7 +40,7 @@ GetOCKeyPair(mbedtls_ecp_group_id grpid)
 {
   oc_ecdsa_keypair_t kp{};
   size_t public_key_size{};
-  int err = oc_generate_ecdsa_keypair(
+  int err = oc_sec_ecdsa_generate_keypair(
     grpid, kp.public_key, sizeof(kp.public_key), &public_key_size,
     kp.private_key, sizeof(kp.private_key), &kp.private_key_size);
   EXPECT_EQ(0, err);

@@ -38,7 +38,8 @@
 
 // mask of OCF-supported elliptic curves
 #define OCF_CERTS_SUPPORTED_ELLIPTIC_CURVES                                    \
-  (MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1))
+  (MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1) |                            \
+   MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP384R1))
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +64,7 @@ OC_API
 mbedtls_md_type_t oc_sec_certs_md_signature_algorithm(void);
 
 /**
- * @brief Set the bitmask of globally allowed message digest types
+ * @brief Set the bitmask of globally allowed message digest types.
  *
  * @param md_mask bitmask of globally allowed message digest types
  */
@@ -81,7 +82,7 @@ OC_API
 unsigned oc_sec_certs_md_algorithms_allowed(void);
 
 /**
- * @brief Check if the message digest is allowed globally by IoTivity-lite
+ * @brief Check if the message digest is allowed globally by IoTivity-lite.
  *
  * @param md message digest to check
  * @return true md is allowed
@@ -91,6 +92,54 @@ unsigned oc_sec_certs_md_algorithms_allowed(void);
  */
 OC_API
 bool oc_sec_certs_md_algorithm_is_allowed(mbedtls_md_type_t md);
+
+/**
+ * @brief Set elliptic curve to be used when generating keys for CSRs or
+ * certificates.
+ *
+ * @param gid group identifier of the curve to be used
+ */
+OC_API
+void oc_sec_certs_ecp_set_group_id(mbedtls_ecp_group_id gid);
+
+/**
+ * @brief Get elliptic curve to be used when generating keys for CSRs or
+ * certificates.
+ *
+ * @return group identifier of the curve used in signatures
+ */
+OC_API
+mbedtls_ecp_group_id oc_sec_certs_ecp_group_id(void);
+
+/**
+ * @brief Set the bitmask of globally allowed elliptic curves.
+ *
+ * @param gid_mask bitmask of globally allowed elliptic curve groupids
+ */
+OC_API
+void oc_sec_certs_ecp_set_group_ids_allowed(unsigned gid_mask);
+
+/**
+ * @brief Return bitmask of globally allowed elliptic curves.
+ *
+ * @return bitmask of globally allowed elliptic curve groupids
+ *
+ * @see oc_sec_certs_ecp_set_group_ids_allowed
+ */
+OC_API
+unsigned oc_sec_certs_ecp_group_ids_allowed(void);
+
+/**
+ * @brief Check if the elliptic curve is allowed globally by IoTivity-lite.
+ *
+ * @param gid group id of the elliptic curve to check
+ * @return true elliptic curve is allowed
+ * @return false elliptic curve is not allowed
+ *
+ * @see oc_sec_certs_ecp_set_group_ids_allowed
+ */
+OC_API
+bool oc_sec_certs_ecp_group_id_is_allowed(mbedtls_ecp_group_id gid);
 
 #ifdef __cplusplus
 }

@@ -70,10 +70,8 @@ validate_x509v1_fields(const mbedtls_x509_crt *cert, uint32_t *flags)
     OC_WRN("certificate uses unsupported public key type");
     return -1;
   }
-  /* secp256r1 */
-  mbedtls_ecp_group_id gid = mbedtls_pk_ec(cert->pk)->grp.id;
-  if ((MBEDTLS_X509_ID_FLAG(gid) &
-       MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1)) == 0) {
+  /* elliptic curve */
+  if (!oc_sec_certs_ecp_group_id_is_allowed(mbedtls_pk_ec(cert->pk)->grp.id)) {
     OC_WRN("certificate advertises unsupported EC curve");
     return -1;
   }

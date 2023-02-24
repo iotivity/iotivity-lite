@@ -530,7 +530,7 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
                                oc_string_t public_key, size_t publicdata_size,
                                const uint8_t *publicdata)
 {
-  oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
+  oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (!kp) {
     return NULL;
   }

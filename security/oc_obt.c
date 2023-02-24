@@ -109,14 +109,14 @@ OC_LIST(oc_cache);
 /* Public/Private key-pair for the local domain's root of trust */
 #ifdef OC_PKI
 static const char *g_root_subject = "C=US, O=OCF, CN=IoTivity-Lite OBT Root";
-static uint8_t g_private_key[OC_ECDSA_PRIVKEY_SIZE];
-static size_t g_private_key_size;
-static int g_root_cert_credid;
+static uint8_t g_private_key[OC_ECDSA_PRIVKEY_SIZE] = { 0 };
+static size_t g_private_key_size = 0;
+static int g_root_cert_credid = 0;
 #endif /* OC_PKI */
 
 #ifdef OC_OSCORE
-static uint8_t g_groupid[OSCORE_CTXID_LEN];
-static uint8_t g_group_secret[OSCORE_MASTER_SECRET_LEN];
+static uint8_t g_groupid[OSCORE_CTXID_LEN] = { 0 };
+static uint8_t g_group_secret[OSCORE_MASTER_SECRET_LEN] = { 0 };
 #endif /* OC_OSCORE */
 
 /* Internal utility functions */
@@ -1765,6 +1765,80 @@ err_device_cred:
   free_credprov_ctx(p, -1);
 }
 
+static int
+device_generate_cert_for_CSR(const unsigned char *csr, size_t csr_len,
+                             const oc_role_t *roles, unsigned char *pem_buffer,
+                             size_t pem_buffer_size)
+{
+  mbedtls_x509_csr c;
+  int ret = mbedtls_x509_csr_parse(&c, csr, csr_len);
+  if (ret < 0) {
+    OC_ERR("unable to parse CSR %d", ret);
+    return -1;
+  }
+
+  /**  5) validate csr
+   */
+  if (!oc_sec_csr_validate(&c, MBEDTLS_PK_ECKEY,
+                           oc_sec_certs_md_algorithms_allowed())) {
+    goto err_device_generate_cert_for_CSR;
+  }
+
+  char subject[512] = { 0 };
+  if (oc_sec_csr_extract_subject_DN(&c, subject, sizeof(subject)) < 0) {
+    goto err_device_generate_cert_for_CSR;
+  }
+
+  uint8_t pub_key[OC_ECDSA_PUBKEY_SIZE] = { 0 };
+  ret = oc_sec_csr_extract_public_key(&c, pub_key, sizeof(pub_key));
+  if (ret < 0) {
+    goto err_device_generate_cert_for_CSR;
+  }
+  size_t pub_key_size = (size_t)ret;
+
+  if (roles == NULL) {
+    /**  5) generate identity cert
+     */
+    oc_obt_generate_identity_cert_data_t gen = {
+      .subject_name = subject,
+      .public_key = pub_key,
+      .public_key_size = pub_key_size,
+      .issuer_name = g_root_subject,
+      .issuer_private_key = g_private_key,
+      .issuer_private_key_size = g_private_key_size,
+      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
+    };
+    ret = oc_obt_generate_identity_cert_pem(gen, pem_buffer, pem_buffer_size);
+    if (ret < 0) {
+      goto err_device_generate_cert_for_CSR;
+    }
+    mbedtls_x509_csr_free(&c);
+    return ret;
+  }
+  /**  5) generate role cert
+   */
+  oc_obt_generate_role_cert_data_t gen = {
+    .roles = roles,
+    .subject_name = subject,
+    .public_key = pub_key,
+    .public_key_size = pub_key_size,
+    .issuer_name = g_root_subject,
+    .issuer_private_key = g_private_key,
+    .issuer_private_key_size = g_private_key_size,
+    .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
+  };
+  ret = oc_obt_generate_role_cert_pem(gen, pem_buffer, pem_buffer_size);
+  if (ret < 0) {
+    goto err_device_generate_cert_for_CSR;
+  }
+  mbedtls_x509_csr_free(&c);
+  return ret;
+
+err_device_generate_cert_for_CSR:
+  mbedtls_x509_csr_free(&c);
+  return -1;
+}
+
 static void
 device_CSR(oc_client_response_t *data)
 {
@@ -1773,73 +1847,29 @@ device_CSR(oc_client_response_t *data)
   }
 
   oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
-  oc_string_t subject;
-  oc_string_t cert;
-  memset(&subject, 0, sizeof(oc_string_t));
-  memset(&cert, 0, sizeof(oc_string_t));
-  uint8_t pub_key[OC_ECDSA_PUBKEY_SIZE];
-
   if (data->code >= OC_STATUS_BAD_REQUEST) {
+    goto err_device_CSR;
+  }
+
+  size_t encoding_len = 0;
+  char *encoding = NULL;
+  if (!oc_rep_get_string(data->payload, "encoding", &encoding, &encoding_len)) {
+    goto err_device_CSR;
+  }
+  if (encoding_len != 20 || memcmp(encoding, "oic.sec.encoding.pem", 20) != 0) {
     goto err_device_CSR;
   }
 
   size_t csr_len = 0;
   char *csr = NULL;
-  size_t encoding_len = 0;
-  char *encoding = NULL;
-
-  if (!oc_rep_get_string(data->payload, "encoding", &encoding, &encoding_len)) {
+  if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
     goto err_device_CSR;
   }
-
-  if (encoding_len == 20 && memcmp(encoding, "oic.sec.encoding.pem", 20) == 0) {
-    if (!oc_rep_get_string(data->payload, "csr", &csr, &csr_len)) {
-      goto err_device_CSR;
-    }
-    csr_len++;
-  } else {
-    goto err_device_CSR;
-  }
-
-  /**  5) validate csr
-   */
-  int ret = oc_sec_csr_validate(
-    (const unsigned char *)csr, csr_len, MBEDTLS_PK_ECKEY,
-    oc_sec_certs_md_algorithms_allowed(), &subject, pub_key, sizeof(pub_key));
-
-  if (ret < 0) {
-    goto err_device_CSR;
-  }
+  csr_len++;
 
   unsigned char cert_pem[4096] = { '\0' };
-  if (!p->roles) {
-    /**  5) generate identity cert
-     */
-    oc_obt_generate_identity_cert_data_t gen = {
-      .subject_name = oc_string(subject),
-      .public_key = pub_key,
-      .public_key_size = OC_ECDSA_PUBKEY_SIZE,
-      .issuer_name = g_root_subject,
-      .issuer_private_key = g_private_key,
-      .issuer_private_key_size = g_private_key_size,
-      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
-    };
-    ret = oc_obt_generate_identity_cert_pem(gen, cert_pem, sizeof(cert_pem));
-  } else {
-    /**  5) generate role cert
-     */
-    oc_obt_generate_role_cert_data_t gen = {
-      .roles = p->roles,
-      .subject_name = oc_string(subject),
-      .public_key = pub_key,
-      .public_key_size = OC_ECDSA_PUBKEY_SIZE,
-      .issuer_name = g_root_subject,
-      .issuer_private_key = g_private_key,
-      .issuer_private_key_size = g_private_key_size,
-      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
-    };
-    ret = oc_obt_generate_role_cert_pem(gen, cert_pem, sizeof(cert_pem));
-  }
+  int ret = device_generate_cert_for_CSR((const unsigned char *)csr, csr_len,
+                                         p->roles, cert_pem, sizeof(cert_pem));
   if (ret < 0) {
     goto err_device_CSR;
   }
@@ -1848,33 +1878,33 @@ device_CSR(oc_client_response_t *data)
    */
   oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &device_cred, HIGH_QOS, p)) {
-    oc_rep_start_root_object();
-    oc_rep_set_array(root, creds);
-    oc_rep_object_array_start_item(creds);
-
-    oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
-    oc_rep_set_text_string(creds, subjectuuid, "*");
-
-    oc_rep_set_object(creds, publicdata);
-    oc_rep_set_text_string(publicdata, data, (const char *)cert_pem);
-    oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
-    oc_rep_close_object(creds, publicdata);
-    if (p->roles) {
-      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.rolecert");
-    } else {
-      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.cert");
-    }
-    oc_rep_object_array_end_item(creds);
-    oc_rep_close_array(root, creds);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      oc_free_string(&subject);
-      return;
-    }
+  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device_cred, HIGH_QOS, p)) {
+    goto err_device_CSR;
   }
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, creds);
+  oc_rep_object_array_start_item(creds);
+
+  oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
+  oc_rep_set_text_string(creds, subjectuuid, "*");
+
+  oc_rep_set_object(creds, publicdata);
+  oc_rep_set_text_string(publicdata, data, (const char *)cert_pem);
+  oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+  oc_rep_close_object(creds, publicdata);
+  if (p->roles) {
+    oc_rep_set_text_string(creds, credusage, "oic.sec.cred.rolecert");
+  } else {
+    oc_rep_set_text_string(creds, credusage, "oic.sec.cred.cert");
+  }
+  oc_rep_object_array_end_item(creds);
+  oc_rep_close_array(root, creds);
+  oc_rep_end_root_object();
+  if (oc_do_post()) {
+    return;
+  }
+
 err_device_CSR:
-  oc_free_string(&subject);
   free_credprov_state(p, -1);
 }
 
@@ -3623,6 +3653,36 @@ oc_obt_set_sd_info(char *name, bool priv)
   oc_sec_dump_sdi(0);
 }
 
+#ifdef OC_PKI
+static int
+oc_obt_generate_root_cred(void)
+{
+  uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
+  size_t public_key_size = 0;
+  if (oc_sec_ecdsa_generate_keypair(oc_sec_certs_ecp_group_id(), public_key,
+                                    OC_ECDSA_PUBKEY_SIZE, &public_key_size,
+                                    g_private_key, sizeof(g_private_key),
+                                    &g_private_key_size) < 0) {
+    OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
+           "certificate");
+    return -1;
+  }
+  if (public_key_size > OC_ECDSA_PUBKEY_SIZE) {
+    OC_ERR("oc_obt: invalid ECDSA keypair for local domain root certificate");
+    return -1;
+  }
+  oc_obt_generate_root_cert_data_t cert_data = {
+    .subject_name = g_root_subject,
+    .public_key = public_key,
+    .public_key_size = public_key_size,
+    .private_key = g_private_key,
+    .private_key_size = g_private_key_size,
+    .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
+  };
+  return oc_obt_generate_self_signed_root_cert(cert_data, 0);
+}
+#endif /* OC_PKI */
+
 /* OBT initialization and shutdown */
 int
 oc_obt_init(void)
@@ -3680,31 +3740,10 @@ oc_obt_init(void)
   OC_DBG("oc_obt: generating OSCORE group secret");
   oc_random_buffer(g_group_secret, sizeof(g_group_secret));
 #endif /* OC_OSCORE */
-#ifdef OC_PKI
-  uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
-  size_t public_key_size = 0;
-  if (oc_generate_ecdsa_keypair(MBEDTLS_ECP_DP_SECP256R1, public_key,
-                                OC_ECDSA_PUBKEY_SIZE, &public_key_size,
-                                g_private_key, sizeof(g_private_key),
-                                &g_private_key_size) < 0) {
-    OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
-           "certificate");
-  } else if (public_key_size != OC_ECDSA_PUBKEY_SIZE) {
-    OC_ERR("oc_obt: invalid ECDSA keypair for local domain root certificate");
-  } else {
-    oc_obt_generate_root_cert_data_t cert_data = {
-      .subject_name = g_root_subject,
-      .public_key = public_key,
-      .public_key_size = OC_ECDSA_PUBKEY_SIZE,
-      .private_key = g_private_key,
-      .private_key_size = g_private_key_size,
-      .signature_md_alg = oc_sec_certs_md_signature_algorithm(),
-    };
-    g_root_cert_credid = oc_obt_generate_self_signed_root_cert(cert_data, 0);
-  }
-#endif /* OC_PKI */
+
 #if defined(OC_PKI) || defined(OC_OSCORE)
 #ifdef OC_PKI
+  g_root_cert_credid = oc_obt_generate_root_cred();
   if (g_root_cert_credid <= 0) {
     OC_DBG("oc_obt: returning from oc_obt_init() with errors");
     return -1;
