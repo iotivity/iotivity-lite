@@ -18,6 +18,7 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "oc_acl.h"
@@ -889,6 +890,14 @@ main(int argc, char *argv[])
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_max_app_data_size(8 * 1024 + num_resources * 200);
   oc_set_min_app_data_size(512);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  oc_sec_certs_md_set_algorithms_allowed(
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384));
+  oc_sec_certs_ecp_set_group_ids_allowed(
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1) |
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP384R1));
+#endif /* OC_SECURITY && OC_PKI */
   ret = oc_main_init(&handler);
   if (ret < 0)
     return ret;
