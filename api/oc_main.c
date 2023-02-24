@@ -399,7 +399,7 @@ oc_main_shutdown(void)
   oc_sec_ael_free();
   oc_sec_sp_free();
 #ifdef OC_PKI
-  oc_sec_free_ecdsa_keypairs();
+  oc_sec_ecdsa_free_keypairs();
 #endif /* OC_PKI */
   oc_sec_sdi_free();
 #endif /* OC_SECURITY */

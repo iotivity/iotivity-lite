@@ -43,12 +43,19 @@
 #define CN_UUID_PREFIX "CN=uuid:"
 #define CN_UUID_PREFIX_LEN (sizeof(CN_UUID_PREFIX) - 1)
 
+// message digest used for signature of generated certificates or certificate
+// signing requests (CSRs)
+static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA256;
+
 // allowed message digests signature algorithms
 static unsigned g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256);
 
-// message digest used for signature of generated certificates or certificate
-// signing requests
-static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA256;
+// groupid of the elliptic curve used for keys in generated certificates or CSRs
+static mbedtls_ecp_group_id g_ecp_grpid = MBEDTLS_ECP_DP_SECP256R1;
+
+// allowed groupids of elliptic curves
+static unsigned g_allowed_ecp_grpids_mask =
+  MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1);
 
 mbedtls_md_type_t
 oc_sec_certs_md_signature_algorithm()
@@ -81,6 +88,39 @@ oc_sec_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
 {
   return md != MBEDTLS_MD_NONE &&
          (MBEDTLS_X509_ID_FLAG(md) & g_allowed_mds_mask) != 0;
+}
+
+void
+oc_sec_certs_ecp_set_group_id(mbedtls_ecp_group_id gid)
+{
+  g_ecp_grpid = gid;
+  OC_DBG("elliptic curve groupid: %d", (int)g_ecp_grpid);
+}
+
+mbedtls_ecp_group_id
+oc_sec_certs_ecp_group_id(void)
+{
+  return g_ecp_grpid;
+}
+
+void
+oc_sec_certs_ecp_set_group_ids_allowed(unsigned gid_mask)
+{
+  g_allowed_ecp_grpids_mask = (gid_mask & OCF_CERTS_SUPPORTED_ELLIPTIC_CURVES);
+  OC_DBG("allowed elliptic curve groupids: %u", g_allowed_ecp_grpids_mask);
+}
+
+unsigned
+oc_sec_certs_ecp_group_ids_allowed(void)
+{
+  return g_allowed_ecp_grpids_mask;
+}
+
+bool
+oc_sec_certs_ecp_group_id_is_allowed(mbedtls_ecp_group_id gid)
+{
+  return gid != MBEDTLS_ECP_DP_NONE &&
+         (MBEDTLS_X509_ID_FLAG(gid) & g_allowed_ecp_grpids_mask) != 0;
 }
 
 int
@@ -199,7 +239,7 @@ oc_certs_extract_public_key(const mbedtls_x509_crt *cert, unsigned char *buffer,
   }
 
   if (ret > 0) {
-    // mbedtls_pk_write_key_der writes the key at the end of the buffer, we
+    // mbedtls_pk_write_pubkey_der writes the key at the end of the buffer, we
     // move it to the beginning
     memmove(buffer, buffer + buffer_size - ret, ret);
   }

@@ -33,36 +33,42 @@ extern "C" {
 #endif
 
 /**
- * @brief Verify CSR signature
+ * @brief Verify a CSR.
  *
- * @param csr parsed CSR to check (cannot be NULL)
+ * @param csr certificate signing request (cannot be NULL)
+ * @param pk_type expected public key type of the CSR
  * @param md_flags bitmask of allowed signatures (if 0 then signature is not
  * checked)
- * @return true on success
- * @return false on failure
+ * @return true CSR is valid
+ * @return false otherwise
  */
-bool oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags);
+bool oc_sec_csr_validate(mbedtls_x509_csr *csr, mbedtls_pk_type_t pk_type,
+                         int md_flags);
 
 /**
- * @brief Verify CSR and optionally extract data from the request.
+ * @brief Extract subject from a CSR.
  *
- * @param[in] csr CSR in PEM string format
- * @param[in] csr_len length of the CSR PEM string
- * @param[in] pk_type expected public key type of the CSR
- * @param[in] md_flags bitmask of allowed signatures (if 0 then signature is not
- * checked)
- * @param[out] subject_DN store subject parsed from a Distinguished Name of the
- * CSR, must be then freed by the caller (if NULL the subject won't be parsed)
- * @param[out] public_key buffer to store the parsed public key (if NULL then
- * public key won't be parsed)
- * @param[in] public_key_size size of the public key buffer
- * @return 0 on success
+ * @param csr certificate signing request (cannot be NULL)
+ * @param[out] buffer output buffer to store the subject
+ * @param buffer_size size of the output buffer
+ * @return >=0 on success, length of the extracted subject (without the
+ * terminating NUL)
  * @return -1 on error
  */
-int oc_sec_csr_validate(const unsigned char *csr, size_t csr_len,
-                        mbedtls_pk_type_t pk_type, int md_flags,
-                        oc_string_t *subject_DN, uint8_t *public_key,
-                        size_t public_key_size);
+int oc_sec_csr_extract_subject_DN(const mbedtls_x509_csr *csr, char *buffer,
+                                  size_t buffer_size);
+
+/**
+ * @brief Extract public key from a CSR.
+ *
+ * @param csr certificate signing request (cannot be NULL)
+ * @param[out] buffer output buffer to store the subject
+ * @param buffer_size size of the output buffer
+ * @return >=0 size of the extracted public key
+ * @return -1 on error
+ */
+int oc_sec_csr_extract_public_key(const mbedtls_x509_csr *csr, uint8_t *buffer,
+                                  size_t buffer_size);
 
 /// Get request handler for /oic/sec/csr
 void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);

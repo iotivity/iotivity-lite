@@ -20,21 +20,23 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
-#include "api/oc_rep_internal.h"
 #include "oc_keypair_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_api.h"
+#include "oc_certs.h"
 #include "oc_store.h"
 #include "security/oc_entropy_internal.h"
 
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/pk.h"
+#include <assert.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/pk.h>
 
 OC_MEMB(g_oc_keypairs_s, oc_ecdsa_keypair_t, OC_MAX_NUM_DEVICES);
 OC_LIST(g_oc_keypairs);
 
 oc_ecdsa_keypair_t *
-oc_sec_get_ecdsa_keypair(size_t device)
+oc_sec_ecdsa_get_keypair(size_t device)
 {
   oc_ecdsa_keypair_t *kp = (oc_ecdsa_keypair_t *)oc_list_head(g_oc_keypairs);
   while (kp != NULL) {
@@ -47,13 +49,13 @@ oc_sec_get_ecdsa_keypair(size_t device)
 }
 
 size_t
-oc_sec_count_ecdsa_keypairs()
+oc_sec_ecdsa_count_keypairs()
 {
   return (size_t)oc_list_length(g_oc_keypairs);
 }
 
 void
-oc_sec_free_ecdsa_keypairs(void)
+oc_sec_ecdsa_free_keypairs(void)
 {
   oc_ecdsa_keypair_t *kp = (oc_ecdsa_keypair_t *)oc_list_pop(g_oc_keypairs);
   while (kp) {
@@ -63,40 +65,47 @@ oc_sec_free_ecdsa_keypairs(void)
 }
 
 static oc_ecdsa_keypair_t *
-add_keypair(size_t device)
+ecdsa_allocate_keypair(void)
 {
   oc_ecdsa_keypair_t *kp = oc_memb_alloc(&g_oc_keypairs_s);
   if (kp == NULL) {
     OC_ERR("cannot allocate keypair");
     return NULL;
   }
-  kp->device = device;
-  oc_list_add(g_oc_keypairs, kp);
   return kp;
 }
 
+static void
+ecdsa_add_keypair(oc_ecdsa_keypair_t *kp, size_t device)
+{
+  assert(oc_sec_ecdsa_get_keypair(device) == NULL);
+  kp->device = device;
+  oc_list_add(g_oc_keypairs, kp);
+}
+
 bool
-oc_sec_decode_ecdsa_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp)
+oc_sec_ecdsa_decode_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp)
 {
 #define PROP_PUBLIC_KEY "public_key"
 #define PROP_PRIVATE_KEY "private_key"
 #define STR_LEN(x) (sizeof(x) - 1)
 
   const uint8_t *public_key = NULL;
+  size_t public_key_size = 0;
   const uint8_t *private_key = NULL;
-  uint8_t private_key_size = 0;
-
+  size_t private_key_size = 0;
   for (; rep != NULL; rep = rep->next) {
     if (rep->type != OC_REP_BYTE_STRING) {
       continue;
     }
 
     if (oc_rep_is_property(rep, PROP_PUBLIC_KEY, STR_LEN(PROP_PUBLIC_KEY))) {
-      if (oc_string_len(rep->value.string) != OC_ECDSA_PUBKEY_SIZE) {
+      if (oc_string_len(rep->value.string) > OC_ECDSA_PUBKEY_SIZE) {
         OC_ERR("decode ecp keypair: invalid public key");
         return false;
       }
       public_key = oc_cast(rep->value.string, uint8_t);
+      public_key_size = oc_string_len(rep->value.string);
       continue;
     }
 
@@ -106,7 +115,7 @@ oc_sec_decode_ecdsa_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp)
         return false;
       }
       private_key = oc_cast(rep->value.string, uint8_t);
-      private_key_size = (uint8_t)oc_string_len(rep->value.string);
+      private_key_size = oc_string_len(rep->value.string);
       continue;
     }
   }
@@ -120,18 +129,18 @@ oc_sec_decode_ecdsa_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp)
     return false;
   }
 
-  memcpy(kp->public_key, public_key, OC_ECDSA_PUBKEY_SIZE);
+  kp->public_key_size = public_key_size;
+  memcpy(kp->public_key, public_key, public_key_size);
   kp->private_key_size = private_key_size;
   memcpy(kp->private_key, private_key, private_key_size);
   return true;
 }
 
 bool
-oc_sec_encode_ecdsa_keypair(const oc_ecdsa_keypair_t *kp)
+oc_sec_ecdsa_encode_keypair(const oc_ecdsa_keypair_t *kp)
 {
   oc_rep_start_root_object();
-  oc_rep_set_byte_string(root, public_key, kp->public_key,
-                         OC_ECDSA_PUBKEY_SIZE);
+  oc_rep_set_byte_string(root, public_key, kp->public_key, kp->public_key_size);
   oc_rep_set_byte_string(root, private_key, kp->private_key,
                          kp->private_key_size);
   oc_rep_end_root_object();
@@ -144,34 +153,44 @@ oc_sec_encode_ecdsa_keypair(const oc_ecdsa_keypair_t *kp)
 }
 
 bool
-oc_sec_decode_ecdsa_keypair_for_device(const oc_rep_t *rep, size_t device)
+oc_sec_ecdsa_decode_keypair_for_device(const oc_rep_t *rep, size_t device)
 {
-  oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
-  if (!kp) {
-    kp = add_keypair(device);
+  oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
+  bool exists = kp != NULL;
+  if (!exists) {
+    kp = ecdsa_allocate_keypair();
     if (kp == NULL) {
       return false;
     }
   }
-  return oc_sec_decode_ecdsa_keypair(rep, kp);
+  if (!oc_sec_ecdsa_decode_keypair(rep, kp)) {
+    oc_memb_free(&g_oc_keypairs_s, kp);
+    return false;
+  }
+
+  if (!exists) {
+    ecdsa_add_keypair(kp, device);
+  }
+  return true;
 }
 
 bool
-oc_sec_encode_ecdsa_keypair_for_device(size_t device)
+oc_sec_ecdsa_encode_keypair_for_device(size_t device)
 {
-  const oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
+  const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (kp == NULL) {
     return false;
   }
 
-  return oc_sec_encode_ecdsa_keypair(kp);
+  return oc_sec_ecdsa_encode_keypair(kp);
 }
 
 int
-oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
-                          size_t public_key_buf_size, size_t *public_key_size,
-                          uint8_t *private_key, size_t private_key_buf_size,
-                          size_t *private_key_size)
+oc_sec_ecdsa_generate_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
+                              size_t public_key_buf_size,
+                              size_t *public_key_size, uint8_t *private_key,
+                              size_t private_key_buf_size,
+                              size_t *private_key_size)
 {
   mbedtls_pk_context pk;
   mbedtls_entropy_context entropy;
@@ -231,6 +250,10 @@ oc_generate_ecdsa_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
   *public_key_size = pk_size;
   memmove(public_key, public_key + public_key_buf_size - pk_size, pk_size);
 
+  OC_DBG(
+    "successfully generated private key (size=%zu) and public key(size=%zu)",
+    pk_priv_size, pk_size);
+
   mbedtls_entropy_free(&entropy);
   mbedtls_ctr_drbg_free(&ctr_drbg);
   mbedtls_pk_free(&pk);
@@ -244,25 +267,28 @@ generate_ecdsa_keypair_error:
 }
 
 bool
-oc_generate_ecdsa_keypair_for_device(size_t device)
+oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
+                                         size_t device)
 {
-  oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
-  if (kp == NULL) {
-    kp = add_keypair(device);
+  oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
+  bool exists = kp != NULL;
+  if (!exists) {
+    kp = ecdsa_allocate_keypair();
     if (kp == NULL) {
       return false;
     }
   }
 
-  size_t public_key_size = 0;
-  if (oc_generate_ecdsa_keypair(MBEDTLS_ECP_DP_SECP256R1, kp->public_key,
-                                OC_ECDSA_PUBKEY_SIZE, &public_key_size,
-                                kp->private_key, OC_ECDSA_PRIVKEY_SIZE,
-                                &kp->private_key_size) < 0) {
+  if (oc_sec_ecdsa_generate_keypair(
+        grpid, kp->public_key, OC_ECDSA_PUBKEY_SIZE, &kp->public_key_size,
+        kp->private_key, OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
     oc_memb_free(&g_oc_keypairs_s, kp);
     return false;
   }
 
+  if (!exists) {
+    ecdsa_add_keypair(kp, device);
+  }
   OC_DBG("successfully generated ECDSA keypair for device %zd", device);
   return true;
 }

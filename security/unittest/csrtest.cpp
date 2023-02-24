@@ -18,6 +18,7 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
+#include "oc_certs.h"
 #include "oc_csr.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_keypair_internal.h"
@@ -28,61 +29,29 @@
 #include <gtest/gtest.h>
 #include <mbedtls/x509_crt.h>
 
-class TestCSR : public testing::Test {
+class TestCSRWithDevice : public testing::Test {
 public:
-  void SetUp() override { EXPECT_TRUE(StartServer()); }
-
-  void TearDown() override { StopServer(); }
-
-private:
-  static int AppInit()
+  static void SetUpTestCase()
   {
-    int result = oc_init_platform("OCFCloud", nullptr, nullptr);
-    result |= oc_add_device("/oic/d", "oic.d.light", "Cloud's Light",
-                            "ocf.1.0.0", "ocf.res.1.0.0", nullptr, nullptr);
-    return result;
-  }
-
-  static void RegisterResources()
-  {
-    // no-op
-  }
-
-  static void SignalEventLoop() { s_device.SignalEventLoop(); }
-
-  static bool StartServer()
-  {
-    static oc_handler_t s_handler{};
-    s_handler.init = AppInit;
-    s_handler.signal_event_loop = SignalEventLoop;
-    s_handler.register_resources = RegisterResources;
-
-    int ret = oc_main_init(&s_handler);
-    if (ret < 0) {
-      s_is_device_started = false;
-      return false;
-    }
-    s_is_device_started = true;
-    s_device.PoolEventsMs(200); // give some time for everything to start-up
-    return true;
-  }
-
-  static void StopServer()
-  {
-    s_device.Terminate();
-    if (s_is_device_started) {
-      oc_main_shutdown();
+    for (int i = 1; i < MBEDTLS_ECP_DP_MAX; ++i) {
+      if ((MBEDTLS_X509_ID_FLAG(i) & OCF_CERTS_SUPPORTED_ELLIPTIC_CURVES) !=
+          0) {
+        auto ec = static_cast<mbedtls_ecp_group_id>(i);
+        g_ocf_ecs.push_back(ec);
+      }
     }
   }
 
-  static oc::Device s_device;
-  static bool s_is_device_started;
+  void SetUp() override { EXPECT_TRUE(oc::TestDevice::StartServer()); }
+
+  void TearDown() override { oc::TestDevice::StopServer(); }
+
+  static std::vector<mbedtls_ecp_group_id> g_ocf_ecs;
 };
 
-oc::Device TestCSR::s_device{};
-bool TestCSR::s_is_device_started{ false };
+std::vector<mbedtls_ecp_group_id> TestCSRWithDevice::g_ocf_ecs{};
 
-TEST_F(TestCSR, GenerateError)
+TEST_F(TestCSRWithDevice, GenerateError)
 {
   std::array<unsigned char, 1> too_small{};
   EXPECT_GT(0, oc_sec_csr_generate(/*device*/ -1, MBEDTLS_MD_SHA256,
@@ -99,7 +68,7 @@ TEST_F(TestCSR, GenerateError)
     << "invalid message digest type";
 }
 
-TEST_F(TestCSR, GenerateMDs)
+TEST_F(TestCSRWithDevice, GenerateMDs)
 {
   std::array<unsigned char, 512> csr{};
   EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_MD5, csr.data(),
@@ -126,91 +95,166 @@ TEST_F(TestCSR, GenerateMDs)
     << "sha512 disabled";
 }
 
-TEST_F(TestCSR, ValidateError)
+TEST_F(TestCSRWithDevice, ValidateFail)
 {
-  std::array<unsigned char, 512> csr{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224, csr.data(),
-                                   csr.size()));
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224,
+                                   csr_pem.data(), csr_pem.size()));
 
-  EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
                                    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
-                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
-                                   nullptr, nullptr, 0))
+                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)))
     << "sha224 signature not supported";
+
+  mbedtls_x509_csr_free(&csr);
 }
 
-TEST_F(TestCSR, Validate256)
+TEST_F(TestCSRWithDevice, ValidateSkipSignature)
 {
-  std::array<unsigned char, 512> csr{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256, csr.data(),
-                                   csr.size()));
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224,
+                                   csr_pem.data(), csr_pem.size()));
 
-  EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_OPAQUE,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
-                                   nullptr, nullptr, 0))
-    << "unexpected public key type";
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+  EXPECT_TRUE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY, 0));
 
-  std::array<unsigned char, 1> too_small{};
-  EXPECT_GT(0, oc_sec_csr_validate(
-                 too_small.data(), too_small.size(), MBEDTLS_PK_ECKEY,
-                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256), nullptr, nullptr, 0))
-    << "buffer too small";
-
-  EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
-                                   nullptr, nullptr, 0))
-    << "wrong signature type";
-
-  EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
-                                   nullptr, nullptr, 0));
-
-  oc_string_t subject{};
-  std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
-  EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
-                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
-                                   &subject, pk.data(), pk.size()));
-  EXPECT_LT(0, oc_string_len(subject));
-  OC_DBG("Subject: %s", oc_string(subject));
-  oc_free_string(&subject);
+  mbedtls_x509_csr_free(&csr);
 }
 
-TEST_F(TestCSR, Validate384)
+TEST_F(TestCSRWithDevice, Validate256)
 {
-  std::array<unsigned char, 512> csr{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA384, csr.data(),
-                                   csr.size()));
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
+                                   csr_pem.data(), csr_pem.size()));
 
-  EXPECT_GT(0, oc_sec_csr_validate(
-                 csr.data(), csr.size(), MBEDTLS_PK_RSASSA_PSS,
-                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384), nullptr, nullptr, 0))
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_OPAQUE,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)))
     << "unexpected public key type";
 
-  std::array<unsigned char, 1> too_small{};
-  EXPECT_GT(0, oc_sec_csr_validate(
-                 too_small.data(), too_small.size(), MBEDTLS_PK_ECKEY,
-                 MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384), nullptr, nullptr, 0))
-    << "buffer too small";
-
-  EXPECT_GT(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256),
-                                   nullptr, nullptr, 0))
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)))
     << "wrong signature type";
 
-  EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
-                                   nullptr, nullptr, 0));
+  EXPECT_TRUE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                  MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)));
 
-  oc_string_t subject{};
-  std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
-  EXPECT_EQ(0, oc_sec_csr_validate(csr.data(), csr.size(), MBEDTLS_PK_ECKEY,
-                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256) |
-                                     MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384),
-                                   &subject, pk.data(), pk.size()));
-  EXPECT_LT(0, oc_string_len(subject));
-  OC_DBG("Subject: %s", oc_string(subject));
-  oc_free_string(&subject);
+  std::array<char, 1> too_small_sub{};
+  EXPECT_GT(0, oc_sec_csr_extract_subject_DN(&csr, too_small_sub.data(),
+                                             too_small_sub.size()))
+    << "buffer too small";
+
+  std::array<char, 128> sub{};
+  EXPECT_LT(0, oc_sec_csr_extract_subject_DN(&csr, sub.data(), sub.size()))
+    << "cannot extract subject";
+  OC_DBG("Subject: %s", sub.data());
+
+  mbedtls_x509_csr_free(&csr);
+}
+
+static mbedtls_x509_csr
+generateValidCSR(mbedtls_md_type_t md, mbedtls_ecp_group_id grpid,
+                 size_t device)
+{
+  oc_sec_ecdsa_generate_keypair_for_device(grpid, device);
+  std::array<unsigned char, 1024> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(device, md, csr_pem.data(), csr_pem.size()));
+
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_TRUE(
+    oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY, MBEDTLS_X509_ID_FLAG(md)));
+  return csr;
+}
+
+TEST_F(TestCSRWithDevice, Valid256ExtractPublicKey)
+{
+  auto generate_and_extract_pk = [](mbedtls_ecp_group_id grpid, size_t device) {
+    OC_DBG("generate sha256 CSR with elliptic-curve %d for device %zu",
+           (int)grpid, device);
+    mbedtls_x509_csr csr = generateValidCSR(MBEDTLS_MD_SHA256, grpid, device);
+
+    std::array<uint8_t, 1> too_small_pk{};
+    EXPECT_GT(0, oc_sec_csr_extract_public_key(&csr, too_small_pk.data(),
+                                               too_small_pk.size()))
+      << "buffer too small";
+
+    std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
+    int ret = oc_sec_csr_extract_public_key(&csr, pk.data(), pk.size());
+    EXPECT_LT(0, ret) << "buffer too small";
+    OC_DBG("Public key size: %d", ret);
+
+    mbedtls_x509_csr_free(&csr);
+  };
+
+  for (auto ec : g_ocf_ecs) {
+    generate_and_extract_pk(ec, 0);
+  }
+}
+
+TEST_F(TestCSRWithDevice, Validate384)
+{
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA384,
+                                   csr_pem.data(), csr_pem.size()));
+
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_RSASSA_PSS,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)))
+    << "unexpected public key type";
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)))
+    << "wrong signature type";
+
+  EXPECT_TRUE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                  MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)));
+
+  std::array<char, 1> too_small_sub{};
+  EXPECT_GT(0, oc_sec_csr_extract_subject_DN(&csr, too_small_sub.data(),
+                                             too_small_sub.size()))
+    << "buffer too small";
+
+  std::array<char, 128> sub{};
+  EXPECT_LT(0, oc_sec_csr_extract_subject_DN(&csr, sub.data(), sub.size()))
+    << "cannot extract subject";
+  OC_DBG("Subject: %s", sub.data());
+
+  mbedtls_x509_csr_free(&csr);
+}
+
+TEST_F(TestCSRWithDevice, Valid384ExtractPublicKey)
+{
+  auto generate_and_extract_pk = [](mbedtls_ecp_group_id grpid, size_t device) {
+    OC_DBG("generate sha256 CSR with elliptic-curve %d for device %zu",
+           (int)grpid, device);
+    mbedtls_x509_csr csr = generateValidCSR(MBEDTLS_MD_SHA384, grpid, device);
+
+    std::array<uint8_t, 1> too_small_pk{};
+    EXPECT_GT(0, oc_sec_csr_extract_public_key(&csr, too_small_pk.data(),
+                                               too_small_pk.size()))
+      << "buffer too small";
+
+    std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pk{};
+    int ret = oc_sec_csr_extract_public_key(&csr, pk.data(), pk.size());
+    EXPECT_LT(0, ret) << "buffer too small";
+    OC_DBG("Public key size: %d", ret);
+
+    mbedtls_x509_csr_free(&csr);
+  };
+
+  for (auto ec : g_ocf_ecs) {
+    generate_and_extract_pk(ec, 0);
+  }
 }
 
 #endif /* OC_SECURITY && OC_PKI */

@@ -42,7 +42,7 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
                     size_t csr_size)
 {
   assert(csr != NULL);
-  const oc_ecdsa_keypair_t *kp = oc_sec_get_ecdsa_keypair(device);
+  const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (kp == NULL) {
     OC_ERR("could not find public/private key pair on device %zd", device);
     return -1;
@@ -70,7 +70,7 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
   mbedtls_pk_init(&pk);
 
   int ret =
-    mbedtls_pk_parse_public_key(&pk, kp->public_key, OC_ECDSA_PUBKEY_SIZE);
+    mbedtls_pk_parse_public_key(&pk, kp->public_key, kp->public_key_size);
   if (ret != 0) {
     OC_ERR("could not parse public key for device %zd", device);
     goto generate_csr_error;
@@ -137,7 +137,16 @@ generate_csr_error:
   return -1;
 }
 
-bool
+/**
+ * @brief Verify CSR signature
+ *
+ * @param csr parsed CSR to check (cannot be NULL)
+ * @param md_flags bitmask of allowed signatures (if 0 then signature is not
+ * checked)
+ * @return true on success
+ * @return false on failure
+ */
+static bool
 oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
 {
   if (md_flags == 0) {
@@ -159,7 +168,7 @@ oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
   int ret = mbedtls_md(mbedtls_md_info_from_type(csr->sig_md), csr->cri.p,
                        csr->cri.len, cri);
   if (ret < 0) {
-    OC_ERR("unable to hash CertificationRequestInfo in CSR %d", ret);
+    OC_ERR("unable to get hash CertificationRequestInfo in CSR %d", ret);
     return false;
   }
   ret =
@@ -171,59 +180,50 @@ oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
   return true;
 }
 
-int
-oc_sec_csr_validate(const unsigned char *csr, size_t csr_len,
-                    mbedtls_pk_type_t pk_type, int md_flags,
-                    oc_string_t *subject_DN, uint8_t *public_key,
-                    size_t public_key_size)
+bool
+oc_sec_csr_validate(mbedtls_x509_csr *csr, mbedtls_pk_type_t pk_type,
+                    int md_flags)
 {
   assert(csr != NULL);
-  mbedtls_x509_csr c;
-  int ret = mbedtls_x509_csr_parse(&c, csr, csr_len);
-  if (ret < 0) {
-    OC_ERR("unable to parse CSR %d", ret);
-    return -1;
-  }
-
-  mbedtls_pk_type_t pk = mbedtls_pk_get_type(&c.pk);
+  mbedtls_pk_type_t pk = mbedtls_pk_get_type(&csr->pk);
   if (pk != pk_type) {
     OC_ERR("invalid public key type(%d) in CSR", (int)pk);
-    ret = -1;
-    goto exit_csr;
+    return false;
   }
 
-  if (!oc_sec_csr_verify_signature(&c, md_flags)) {
-    ret = -1;
-    goto exit_csr;
-  }
+  return oc_sec_csr_verify_signature(csr, md_flags);
+}
 
-  if (subject_DN != NULL) {
-    char DN[512];
-    ret = mbedtls_x509_dn_gets(DN, sizeof(DN), &c.subject);
-    if (ret < 0) {
-      OC_ERR("unable to retrieve subject from CSR %d", ret);
-      goto exit_csr;
-    }
-    oc_new_string(subject_DN, DN, ret);
-  }
-
-  if (public_key != NULL) {
-    ret = mbedtls_pk_write_pubkey_der(&c.pk, public_key, public_key_size);
-    if (ret < 0) {
-      OC_ERR("unable to read public key from CSR %d", ret);
-      goto exit_csr;
-    }
-  }
-
-exit_csr:
-  mbedtls_x509_csr_free(&c);
+int
+oc_sec_csr_extract_subject_DN(const mbedtls_x509_csr *csr, char *buffer,
+                              size_t buffer_size)
+{
+  assert(csr != NULL);
+  int ret = mbedtls_x509_dn_gets(buffer, buffer_size, &csr->subject);
   if (ret < 0) {
-    OC_ERR("received invalid or non-compliant CSR");
-    oc_free_string(subject_DN);
+    OC_ERR("unable to retrieve subject from CSR %d", ret);
+    return -1;
+  }
+  return ret;
+}
+
+int
+oc_sec_csr_extract_public_key(const mbedtls_x509_csr *csr, uint8_t *buffer,
+                              size_t buffer_size)
+{
+  assert(csr != NULL);
+  int ret = mbedtls_pk_write_pubkey_der(&csr->pk, buffer, buffer_size);
+  if (ret < 0) {
+    OC_ERR("unable to read public key from CSR %d", ret);
     return -1;
   }
 
-  return 0;
+  if (ret > 0) {
+    // mbedtls_pk_write_pubkey_der writes the key at the end of the buffer, we
+    // move it to the beginning
+    memmove(buffer, buffer + buffer_size - ret, ret);
+  }
+  return ret;
 }
 
 void
