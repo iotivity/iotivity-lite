@@ -14,7 +14,22 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+    inputs:
+      cert_signature_algorithm:
+        type: choice
+        description: Signature algorithm used in generated certificates
+        options:
+          - ECDSA-SHA256
+          - ECDSA-SHA384
+          # - ECDSA-SHA512
+        default: ECDSA-SHA256
+      cert_elliptic_curve:
+        description: Elliptic curve used to generate keys in certificates
+        options:
+          - P256
+          - P384
+          # - P521
+        default: P256
 jobs:
   plgd-device-test:
     strategy:
@@ -66,7 +81,7 @@ jobs:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      file: docker/apps/Dockerfile.cloud-server-debug
-      tag: dbg
       build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.args }}
       build_type: Debug
+      cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
+      cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}

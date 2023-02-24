@@ -11,18 +11,22 @@ on:
       name:
         type: string
         required: true
-      file:
-        type: string
-        required: true
-      tag:
-        type: string
-        required: true
       build_args:
         type: string
         required: true
       build_type:
         type: string
         required: true
+      cert_signature_algorithm:
+        description: Signature algorithm used in generated certificates
+        type: string
+        required: false
+        default: ECDSA-SHA256
+      cert_elliptic_curve:
+        description: Elliptic curve used to generate keys in certificates
+        type: string
+        required: false
+        default: P256
       coverage:
         type: boolean
         required: false
@@ -31,6 +35,8 @@ env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/device/test-cloud-server:latest
   CERT_TOOL_IMAGE: ghcr.io/plgd-dev/hub/cert-tool:vnext
   CERT_PATH: .tmp/pki_certs
+  CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
+  CLOUD_SERVER_DOCKER_TAG: dbg
 
 jobs:
   plgd-device-test-with-cfg:
@@ -47,8 +53,8 @@ jobs:
         with:
           context: .
           push: false
-          file: ${{ inputs.file }}
-          tags: ${{ inputs.tag }}
+          file: ${{ env.CLOUD_SERVER_DOCKER_FILE }}
+          tags: ${{ env.CLOUD_SERVER_DOCKER_TAG }}
           build-args: |
             BUILD_ARGS=${{ inputs.build_args }}
             BUILD_TYPE=${{ inputs.build_type }}
@@ -60,16 +66,29 @@ jobs:
         run: |
           mkdir -p `pwd`/${{ env.CERT_PATH }}
           docker pull ${{ env.CERT_TOOL_IMAGE }}
-          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --outCert=/out/cloudca.pem --outKey=/out/cloudcakey.pem --cert.subject.cn="ca" --cmd.generateRootCA
-          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --signerCert=/out/cloudca.pem --signerKey=/out/cloudcakey.pem  --outCert=/out/intermediatecacrt.pem --outKey=/out/intermediatecakey.pem --cert.basicConstraints.maxPathLen=0 --cert.subject.cn="intermediateCA" --cmd.generateIntermediateCA
-          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --signerCert=/out/intermediatecacrt.pem --signerKey=/out/intermediatecakey.pem --outCert=/out/mfgcrt.pem --outKey=/out/mfgkey.pem --cert.san.domain=localhost --cert.san.ip=127.0.0.1 --cert.subject.cn="mfg" --cmd.generateCertificate
+          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --outCert=/out/cloudca.pem \
+            --outKey=/out/cloudcakey.pem --cert.subject.cn="ca" --cert.signatureAlgorithm="${{ inputs.cert_signature_algorithm }}" \
+            --cert.ellipticCurve="${{ inputs.cert_elliptic_curve }}" --cmd.generateRootCA
+          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --signerCert=/out/cloudca.pem \
+            --signerKey=/out/cloudcakey.pem  --outCert=/out/intermediatecacrt.pem --outKey=/out/intermediatecakey.pem \
+            --cert.basicConstraints.maxPathLen=0 --cert.subject.cn="intermediateCA" \
+            --cert.signatureAlgorithm="${{ inputs.cert_signature_algorithm }}" --cert.ellipticCurve="${{ inputs.cert_elliptic_curve }}" \
+            --cmd.generateIntermediateCA
+          docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --signerCert=/out/intermediatecacrt.pem \
+            --signerKey=/out/intermediatecakey.pem --outCert=/out/mfgcrt.pem --outKey=/out/mfgkey.pem --cert.san.domain=localhost \
+            --cert.san.ip=127.0.0.1 --cert.subject.cn="mfg" --cert.signatureAlgorithm="${{ inputs.cert_signature_algorithm }}" \
+            --cert.ellipticCurve="${{ inputs.cert_elliptic_curve }}" --cmd.generateCertificate
           sudo chmod -R 0777 ${{ env.CERT_PATH }}
 
       - name: Run cloud server container
-        run: docker run --privileged -d --network=host -v `pwd`/${{ env.CERT_PATH }}:/pki_certs -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.tag }} devsim-`hostname`
+        run: |
+          docker run --privileged -d --network=host -v `pwd`/${{ env.CERT_PATH }}:/pki_certs -v `pwd`/data:/tmp \
+            -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ env.CLOUD_SERVER_DOCKER_TAG }} devsim-`hostname`
 
       - name: Run plgd device tests image
-        run: docker run --rm --network=host -v `pwd`/${{ env.CERT_PATH }}:/pki_certs ${{ env.TEST_CLOUD_SERVER_IMAGE }} -test.parallel 1 -test.v
+        run: |
+          docker run --rm --network=host -v `pwd`/${{ env.CERT_PATH }}:/pki_certs ${{ env.TEST_CLOUD_SERVER_IMAGE }} \
+            -test.parallel 1 -test.v
 
       - name: Gather coverage data
         if: ${{ inputs.coverage }}
@@ -79,7 +98,8 @@ jobs:
           # restart to generate report from the .gcda files
           docker start ${{ inputs.name }}
           # see Dockerfile.cloud-server-debug for the absolute path with the iotivity-lite checkout
-          docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }} /bin/bash -c "./collect-coverage.sh --output /data/coverage/coverage-plgd-device.json"
+          docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }} /bin/bash -c "./collect-coverage.sh \
+            --output /data/coverage/coverage-plgd-device.json"
 
       - name: Upload coverage data
         if: ${{ inputs.coverage }}

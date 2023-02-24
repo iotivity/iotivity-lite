@@ -37,18 +37,16 @@ jobs:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: cloud-server-debug
-      file: docker/apps/Dockerfile.cloud-server-debug
-      tag: dbg
       build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DBUILD_TESTING=ON"
       build_type: Debug
+      cert_signature_algorithm: ECDSA-SHA384
+      cert_elliptic_curve: P384
       coverage: true
 
   plgd-hub-tests:
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: cloud-server-debug
-      file: docker/apps/Dockerfile.cloud-server-debug
-      tag: dbg
       build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DBUILD_TESTING=ON"
       build_type: Debug
       coverage: true

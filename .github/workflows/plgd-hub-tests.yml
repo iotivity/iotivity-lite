@@ -14,7 +14,22 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+    inputs:
+      cert_signature_algorithm:
+        type: choice
+        description: Signature algorithm used in generated certificates
+        options:
+          - ECDSA-SHA256
+          - ECDSA-SHA384
+          # - ECDSA-SHA512
+        default: ECDSA-SHA256
+      cert_elliptic_curve:
+        description: Elliptic curve used to generate keys in certificates
+        options:
+          - P256
+          - P384
+          # - P521
+        default: P256
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
 
@@ -30,31 +45,31 @@ jobs:
             build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
-          
+
           - name: cloud-server-time-2000-01-01
             build_args: ""
-            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
           - name: cloud-server-time-2000-01-01-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
-            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
           - name: cloud-server-time-2000-01-01-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
-            docker_args: "-e FAKETIME=\"@2000-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
 
           - name: cloud-server-time-2100-01-01
             build_args: ""
-            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2100-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
           - name: cloud-server-time-2100-01-01-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
-            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2100-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
           - name: cloud-server-time-2100-01-01-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
-            docker_args: "-e FAKETIME=\"@2100-01-01 11:12:13\""
+            docker_args: '-e FAKETIME="@2100-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
 
           - name: cloud-server-access-in-RFOTM
@@ -135,10 +150,10 @@ jobs:
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      file: docker/apps/Dockerfile.cloud-server-debug
-      tag: dbg
       build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.build_args }}
       build_type: Debug
       hub_args: ${{ matrix.hub_args }}
       args: ${{ matrix.args }}
       docker_args: ${{ matrix.docker_args }}
+      cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
+      cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
