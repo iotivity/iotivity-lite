@@ -67,7 +67,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-      
+
       - name: check tag
         id: tag
         run: |

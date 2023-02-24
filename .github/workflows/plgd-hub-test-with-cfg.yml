@@ -11,18 +11,22 @@ on:
       name:
         type: string
         required: true
-      file:
-        type: string
-        required: true
-      tag:
-        type: string
-        required: true
       build_args:
         type: string
         required: true
       build_type:
         type: string
         required: true
+      cert_signature_algorithm:
+        description: Signature algorithm used in generated certificates
+        type: string
+        required: false
+        default: ECDSA-SHA256
+      cert_elliptic_curve:
+        description: Elliptic curve used to generate keys in certificates
+        type: string
+        required: false
+        default: P256
       coverage:
         type: boolean
         required: false
@@ -41,6 +45,8 @@ on:
         default: ""
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
+  CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
+  CLOUD_SERVER_DOCKER_TAG: dbg
 
 jobs:
   plgd-hub-test-with-cfg:
@@ -59,14 +65,16 @@ jobs:
           build-args: |
             BUILD_ARGS=${{ inputs.build_args }}
             BUILD_TYPE=${{ inputs.build_type }}
-          file: ${{ inputs.file }}
-          tags: ${{ inputs.tag }}
+          file: ${{ env.CLOUD_SERVER_DOCKER_FILE }}
+          tags: ${{ env.CLOUD_SERVER_DOCKER_TAG }}
 
       - name: Pull plgd hub tests image
         run: docker pull ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
       - name: Run cloud server container
-        run: docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} ${{ inputs.docker_args }} ${{ inputs.tag }} ${{ inputs.args }} devsim-`hostname`
+        run: |
+          docker run --privileged -d --network=host -v `pwd`/data:/tmp -v `pwd`/data/coverage:/data/coverage --name ${{ inputs.name }} \
+            ${{ inputs.docker_args }} ${{ env.CLOUD_SERVER_DOCKER_TAG }} ${{ inputs.args }} devsim-`hostname`
 
       - name: Run plgd hub tests image
         run: docker run --rm --network=host ${{ inputs.hub_args }} ${{ env.TEST_CLOUD_SERVER_IMAGE }}
