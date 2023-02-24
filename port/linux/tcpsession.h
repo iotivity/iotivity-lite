@@ -38,12 +38,18 @@ extern "C" {
 /**
  * @brief Send a message through a TCP connection.
  *
+ * For applications capable of opening connections
+ * (OC_HAS_FEATURE_TCP_ASYNC_CONNECT is true):
  * If a connection to the address is not yet established then a signal is send
  * to network thread to open a connection.
  * The message cannot be sent until the connection is opened, so during this
  * interval the reference count of the message is increased, the message is
  * added to a queue associated with the connection. The messages queued for this
  * connection will be send once the connection has been opened.
+ *
+ * If the application cannot open a TCP connection
+ * (OC_HAS_FEATURE_TCP_ASYNC_CONNECT is false) then oc_tcp_send_buffer2 is
+ * called.
  *
  * @param dev the device network context (cannot be NULL)
  * @param message message with data to send (cannot be NULL)
@@ -62,7 +68,9 @@ int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
  * @brief Send a message through a TCP connection.
  *
  * Unlike oc_tcp_send_buffer this function will not try to open a TCP session
- * and it pressuposes that oc_tcp_connect has been already called previously.
+ * and it pressuposes that the connection is opened (either we are a client and
+ * the oc_tcp_connect has been already called previously or we are a server and
+ * we have accepted a connection).
  *
  * @param message message with endpoint address and data to send (cannot be
  * NULL)
