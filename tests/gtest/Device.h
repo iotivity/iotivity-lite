@@ -20,6 +20,7 @@
 
 #include "oc_api.h"
 #include "oc_config.h"
+#include "oc_endpoint.h"
 #include "util/oc_atomic.h"
 
 #if defined(_WIN32)
@@ -78,8 +79,14 @@ public:
     // no-op
   }
   static void SignalEventLoop() { device.SignalEventLoop(); }
+  static void PoolEvents(uint16_t seconds) { device.PoolEvents(seconds); }
+  static void PoolEventsMs(uint16_t mseconds) { device.PoolEventsMs(mseconds); }
+
   static bool StartServer();
   static void StopServer();
+  static void Terminate() { device.Terminate(); }
+
+  static const oc_endpoint_t *GetEndpoint(int flags = 0);
 
 private:
   static Device device;
