@@ -35,6 +35,9 @@
 extern "C" {
 #endif
 
+/// Restore certificate and CSR configuration to default values.
+void oc_sec_certs_default(void);
+
 /// Fill with serial number of the certificates with random byte string of given
 /// size
 int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size);

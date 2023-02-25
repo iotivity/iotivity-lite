@@ -57,6 +57,17 @@ static mbedtls_ecp_group_id g_ecp_grpid = MBEDTLS_ECP_DP_SECP256R1;
 static unsigned g_allowed_ecp_grpids_mask =
   MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1);
 
+void
+oc_sec_certs_default(void)
+{
+  oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA256);
+  oc_sec_certs_md_set_algorithms_allowed(
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256));
+  oc_sec_certs_ecp_set_group_id(MBEDTLS_ECP_DP_SECP256R1);
+  oc_sec_certs_ecp_set_group_ids_allowed(
+    MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1));
+}
+
 mbedtls_md_type_t
 oc_sec_certs_md_signature_algorithm()
 {

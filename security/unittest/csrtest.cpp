@@ -19,9 +19,12 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_certs.h"
+#include "oc_core_res.h"
 #include "oc_csr.h"
+#include "security/oc_certs_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_keypair_internal.h"
+#include "security/oc_obt_internal.h"
 #include "tests/gtest/Device.h"
 
 #include <algorithm>
@@ -44,7 +47,11 @@ public:
 
   void SetUp() override { EXPECT_TRUE(oc::TestDevice::StartServer()); }
 
-  void TearDown() override { oc::TestDevice::StopServer(); }
+  void TearDown() override
+  {
+    oc::TestDevice::StopServer();
+    oc_sec_certs_default();
+  }
 
   static std::vector<mbedtls_ecp_group_id> g_ocf_ecs;
 };
@@ -256,5 +263,38 @@ TEST_F(TestCSRWithDevice, Valid384ExtractPublicKey)
     generate_and_extract_pk(ec, 0);
   }
 }
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+TEST_F(TestCSRWithDevice, Resource)
+{
+  // biggest supported hash and elliptic curve to get the largest CSR payload
+  oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA384);
+  oc_sec_certs_ecp_set_group_id(MBEDTLS_ECP_DP_SECP384R1);
+
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(-SECURED);
+  EXPECT_NE(nullptr, ep);
+
+  oc_resource_t *csr =
+    oc_core_get_resource_by_index(OCF_SEC_CSR, oc::TestDevice::Index());
+  oc_resource_make_public(csr);
+  oc_resource_set_access_in_RFOTM(csr, true, OC_PERM_RETRIEVE);
+
+  auto csr_handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_OK, data->code);
+    oc::TestDevice::Terminate();
+    bool *invoked = static_cast<bool *>(data->user_data);
+    *invoked = true;
+  };
+
+  bool invoked = false;
+  EXPECT_TRUE(oc_do_get(OCF_SEC_CSR_URI, ep, "if=oic.if.baseline", csr_handler,
+                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEvents(5);
+
+  EXPECT_TRUE(invoked);
+}
+
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #endif /* OC_SECURITY && OC_PKI */

@@ -170,4 +170,26 @@ TestDevice::StopServer()
   }
 }
 
+const oc_endpoint_t *
+TestDevice::GetEndpoint(int flags)
+{
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(TestDevice::index);
+  while (ep != nullptr) {
+    if (flags == 0) {
+      return ep;
+    }
+    if (flags < 0) {
+      if ((ep->flags & -flags) == 0) {
+        return ep;
+      }
+    }
+
+    if ((ep->flags & flags) == flags) {
+      return ep;
+    }
+    ep = ep->next;
+  }
+  return nullptr;
+}
+
 } // namespace oc

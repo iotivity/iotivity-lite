@@ -32,12 +32,7 @@ public:
   void TearDown() override
   {
     // restore defaults
-    oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA256);
-    oc_sec_certs_md_set_algorithms_allowed(
-      MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256));
-    oc_sec_certs_ecp_set_group_id(MBEDTLS_ECP_DP_SECP256R1);
-    oc_sec_certs_ecp_set_group_ids_allowed(
-      MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1));
+    oc_sec_certs_default();
   }
 
   template<class T>
