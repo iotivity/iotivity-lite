@@ -195,7 +195,7 @@ inform_resource_python(const char *anchor, const char *uri, const char *types,
 }
 
 void
-print_rep(oc_rep_t *rep, bool pretty_print)
+print_rep(const oc_rep_t *rep, bool pretty_print)
 {
   char *json;
   size_t json_size;
@@ -214,7 +214,7 @@ get_response_payload(void)
 }
 
 void
-save_rep(oc_rep_t *rep, bool pretty_print)
+save_rep(const oc_rep_t *rep, bool pretty_print)
 {
   size_t json_size;
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
@@ -247,7 +247,7 @@ inform_client_python(const char *uuid, const char *state, const char *event)
 }
 
 device_handle_t *
-py_getdevice_from_uuid(char *uuid, int owned)
+py_getdevice_from_uuid(const char *uuid, int owned)
 {
   device_handle_t *device = NULL;
   if (owned == 1) {
@@ -378,7 +378,7 @@ ocf_event_thread(void *data)
 
 /* App utility functions */
 static device_handle_t *
-is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
@@ -411,7 +411,8 @@ get_obt_device(oc_uuid_t *uuid, const char *device_name)
 }
 
 static bool
-add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
+add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
+                   oc_list_t list)
 {
   device_handle_t *device = is_device_in_list(uuid, list);
 
@@ -486,9 +487,9 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
   (void)uuid;
-  // char di[37];
-  // oc_uuid_to_str(uuid, di, 37);
-  oc_endpoint_t *ep = eps;
+  // char di[OC_UUID_LEN];
+  // oc_uuid_to_str(uuid, di, sizeof(di));
+  const oc_endpoint_t *ep = eps;
 
   // while (eps != NULL) {
   // PRINTipaddr(*eps);
@@ -505,9 +506,9 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
   (void)data;
   (void)uuid;
   //(void) eps;
-  // char di[37];
-  // oc_uuid_to_str(uuid, di, 37);
-  oc_endpoint_t *ep = eps;
+  // char di[OC_UUID_LEN];
+  // oc_uuid_to_str(uuid, di, sizeof(di));
+  const oc_endpoint_t *ep = eps;
 
   // while (eps != NULL) {
   // PRINTipaddr(*eps);
@@ -571,8 +572,8 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
@@ -585,7 +586,7 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 void
-py_otm_rdp(char *uuid, char *pin)
+py_otm_rdp(const char *uuid, const char *pin)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
@@ -607,9 +608,9 @@ py_otm_rdp(char *uuid, char *pin)
   }
 
   otb_mutex_lock(app_sync_lock);
-  int ret = oc_obt_perform_random_pin_otm(
-    &devices[c]->uuid, (const unsigned char *)pin, strlen((const char *)pin),
-    otm_rdp_cb, devices[c]);
+  int ret =
+    oc_obt_perform_random_pin_otm(&devices[c]->uuid, (const unsigned char *)pin,
+                                  strlen(pin), otm_rdp_cb, devices[c]);
   if (ret >= 0) {
     PRINT("[C]\nSuccessfully issued request to perform Random PIN OTM\n");
     /* Having issued an OTM request, remove this item from the unowned device
@@ -627,8 +628,8 @@ static void
 random_pin_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully requested device %s to generate a Random PIN\n",
@@ -641,7 +642,7 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 void
-py_request_random_pin(char *uuid)
+py_request_random_pin(const char *uuid)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
@@ -680,8 +681,8 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device %s\n", di);
@@ -700,8 +701,8 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
@@ -748,7 +749,7 @@ py_list_owned_devices(void)
 }
 
 void
-py_otm_just_works(char *uuid)
+py_otm_just_works(const char *uuid)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
@@ -869,9 +870,9 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
 }
 
 void
-py_retrieve_acl2(char *uuid)
+py_retrieve_acl2(const char *uuid)
 {
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -892,15 +893,15 @@ py_retrieve_acl2(char *uuid)
 }
 
 void
-display_cred_rsrc(oc_sec_creds_t *creds)
+display_cred_rsrc(const oc_sec_creds_t *creds)
 {
   if (creds) {
     PRINT("[C]\n/oic/sec/cred:\n");
-    oc_sec_cred_t *cr = oc_list_head(creds->creds);
+    const oc_sec_cred_t *cr = oc_list_head(creds->creds);
     PRINT("[C]\n################################################\n");
     while (cr) {
-      char uuid[37];
-      oc_uuid_to_str(&cr->subjectuuid, uuid, 37);
+      char uuid[OC_UUID_LEN];
+      oc_uuid_to_str(&cr->subjectuuid, uuid, sizeof(uuid));
       PRINT("[C]credid: %d\n", cr->credid);
       PRINT("[C]subjectuuid: %s\n", uuid);
       PRINT("[C]credtype: %s\n", oc_cred_credtype_string(cr->credtype));
@@ -979,7 +980,7 @@ delete_cred_by_credid_cb(int status, void *data)
 static void
 reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
-  char di[37];
+  char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status < 0) {
@@ -1054,7 +1055,7 @@ get_device_name(int owned, int index)
 }
 
 const char *
-get_device_name_from_uuid(char *uuid)
+get_device_name_from_uuid(const char *uuid)
 {
   device_handle_t *device = NULL;
   device = (device_handle_t *)oc_list_head(owned_devices);
@@ -1090,7 +1091,7 @@ py_get_nr_unowned_devices(void)
 }
 
 void
-py_reset_device(char *uuid)
+py_reset_device(const char *uuid)
 {
   device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
 
@@ -1124,9 +1125,9 @@ provision_id_cert_cb(int status, void *data)
 }
 
 void
-py_provision_id_cert(char *uuid)
+py_provision_id_cert(const char *uuid)
 {
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
 
   if (device == NULL) {
     PRINT("[C]py_provision_id_cert ERROR: Invalid uuid\n");
@@ -1157,9 +1158,9 @@ provision_role_cert_cb(int status, void *data)
 }
 
 void
-py_provision_role_cert(char *uuid, char *role, char *auth)
+py_provision_role_cert(const char *uuid, const char *role, const char *auth)
 {
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
 
   if (device == NULL) {
     PRINT("[C]py_provision_role_cert ERROR: Invalid uuid\n");
@@ -1189,8 +1190,8 @@ void
 provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned rold * ACE to device %s\n", di);
@@ -1206,8 +1207,8 @@ void
 provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned group OSCORE context to device %s\n",
@@ -1242,7 +1243,7 @@ provision_credentials_cb(int status, void *data)
 }
 
 void
-py_provision_pairwise_credentials(char *uuid1, char *uuid2)
+py_provision_pairwise_credentials(const char *uuid1, const char *uuid2)
 {
   PRINT("[C] Source %s, Target %s", uuid1, uuid2);
   if (oc_list_length(owned_devices) == 0) {
@@ -1250,8 +1251,8 @@ py_provision_pairwise_credentials(char *uuid1, char *uuid2)
     return;
   }
 
-  device_handle_t *device1 = py_getdevice_from_uuid(uuid1, 1);
-  device_handle_t *device2 = py_getdevice_from_uuid(uuid2, 1);
+  const device_handle_t *device1 = py_getdevice_from_uuid(uuid1, 1);
+  const device_handle_t *device2 = py_getdevice_from_uuid(uuid2, 1);
   if (device1 == NULL) {
     PRINT("[C]py_provision_role_cert ERROR: Invalid uuid1 %s \n", uuid1);
     return;
@@ -1277,8 +1278,8 @@ void
 provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
@@ -1291,8 +1292,8 @@ static void
 provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("[C]\nSuccessfully provisioned ACE to device %s\n", di);
@@ -1304,10 +1305,10 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 void
-py_provision_ace_cloud_access(char *uuid)
+py_provision_ace_cloud_access(const char *uuid)
 {
 
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
 
   if (device == NULL) {
     PRINT("[C]py_provision_ace_cloud_access ERROR: Invalid uuid\n");
@@ -1342,10 +1343,10 @@ py_provision_ace_cloud_access(char *uuid)
 }
 
 void
-py_provision_ace_to_obt(char *uuid, char *res_uri)
+py_provision_ace_to_obt(const char *uuid, const char *res_uri)
 {
 
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
 
   if (device == NULL) {
     PRINT("[C]py_provision_ace_to_obt ERROR: Invalid uuid\n");
@@ -1377,10 +1378,11 @@ py_provision_ace_to_obt(char *uuid, char *res_uri)
 }
 
 void
-py_provision_ace_device_resources(char *device_uuid, char *subject_uuid)
+py_provision_ace_device_resources(const char *device_uuid,
+                                  const char *subject_uuid)
 {
 
-  device_handle_t *device = py_getdevice_from_uuid(device_uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(device_uuid, 1);
 
   oc_uuid_t subjectuuid;
   oc_str_to_uuid(subject_uuid, &subjectuuid);
@@ -1414,11 +1416,12 @@ py_provision_ace_device_resources(char *device_uuid, char *subject_uuid)
 }
 
 void
-py_provision_ace2(char *target, char *subject, char *href, char *crudn)
+py_provision_ace2(const char *target, const char *subject, const char *href,
+                  char *crudn)
 {
   PRINT("[C] Provision ACE2: %s,%s,%s,%s\n", target, subject, href, crudn);
-  device_handle_t *device = py_getdevice_from_uuid(target, 1);
-  device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(target, 1);
+  const device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
 
   /*check if subject is OBT device*/
   oc_uuid_t *obt_uuid = oc_core_get_device_id(0);
@@ -1458,7 +1461,7 @@ py_provision_ace2(char *target, char *subject, char *href, char *crudn)
   oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_href(res, href);
   oc_obt_ace_resource_set_wc(res, OC_ACE_NO_WC);
-  char *crudn_array = strtok(crudn, "|");
+  const char *crudn_array = strtok(crudn, "|");
 
   while (crudn_array != NULL) {
     PRINT("- %s\n", crudn_array);
@@ -1599,8 +1602,9 @@ post_response_cloud_config(oc_client_response_t *data)
 }
 
 void
-py_provision_cloud_config_info(char *uuid, char *cloud_access_token,
-                               char *cloud_apn, char *cloud_cis, char *cloud_id)
+py_provision_cloud_config_info(const char *uuid, const char *cloud_access_token,
+                               const char *cloud_apn, const char *cloud_cis,
+                               const char *cloud_id)
 {
   oc_uuid_t device_uuid;
   oc_str_to_uuid(uuid, &device_uuid);
@@ -1630,15 +1634,15 @@ trustanchorcb(int status, void *data)
 }
 
 void
-py_provision_cloud_trust_anchor(char *uuid, char *cloud_id,
-                                char *cloud_trust_anchor)
+py_provision_cloud_trust_anchor(const char *uuid, const char *cloud_id,
+                                const char *cloud_trust_anchor)
 {
   oc_uuid_t device_uuid;
   oc_str_to_uuid(uuid, &device_uuid);
 
   size_t cert_len = 545;
 
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -1669,9 +1673,9 @@ retrieve_d2dserverlist_cb(oc_client_response_t *data)
 }
 
 void
-py_retrieve_d2dserverlist(char *uuid)
+py_retrieve_d2dserverlist(const char *uuid)
 {
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -1713,7 +1717,7 @@ post_response_d2dserverlist(oc_client_response_t *data)
 }
 
 void
-py_post_d2dserverlist(char *cloud_proxy_uuid, char *query)
+py_post_d2dserverlist(const char *cloud_proxy_uuid, const char *query)
 {
   oc_uuid_t cloudproxyuuid;
   oc_str_to_uuid(cloud_proxy_uuid, &cloudproxyuuid);
@@ -1744,10 +1748,10 @@ py_general_get_cb(oc_client_response_t *data)
 }
 
 void
-py_general_get(char *uuid, char *url)
+py_general_get(const char *uuid, const char *url)
 {
   cb_result = false;
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -1792,8 +1796,9 @@ py_general_post_cb(oc_client_response_t *data)
 }
 
 void
-py_general_post(char *uuid, char *query, char *url, char **payload_properties,
-                char **payload_values, char **payload_types, int array_size)
+py_general_post(const char *uuid, const char *query, const char *url,
+                char **payload_properties, char **payload_values,
+                char **payload_types, int array_size)
 {
   cb_result = false;
   oc_uuid_t deviceuuid;
@@ -1833,10 +1838,10 @@ py_general_delete_cb(oc_client_response_t *data)
 }
 
 void
-py_general_delete(char *uuid, char *query, char *url)
+py_general_delete(const char *uuid, const char *query, const char *url)
 {
   cb_result = false;
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -2001,9 +2006,9 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
 }
 
 void
-py_discover_resources(char *uuid)
+py_discover_resources(const char *uuid)
 {
-  device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(uuid, 1);
   if (device == NULL) {
     device = py_getdevice_from_uuid(uuid, 0);
   }
@@ -2025,7 +2030,7 @@ py_discover_resources(char *uuid)
 }
 
 void
-py_post(char *uri, int value)
+py_post(const char *uri, int value)
 {
   PRINT("[C] POST_light: %s-> %d\n", uri, value);
   // int uri_len = strlen(uri);
@@ -2078,8 +2083,8 @@ static void
 so_otm_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, OC_UUID_LEN);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
@@ -2238,13 +2243,13 @@ discover_diplomat_for_observe(void)
 }
 
 void
-py_diplomat_set_observe(char *state)
+py_diplomat_set_observe(const char *state)
 {
   PRINT("[C] %s", state);
 }
 
 void
-py_diplomat_stop_observe(char *uuid)
+py_diplomat_stop_observe(const char *uuid)
 {
   (void)uuid;
   PRINT("Stopping OBSERVE\n");
@@ -2398,7 +2403,7 @@ discover_doxm(void)
 }
 
 void
-discover_resource(char *rt, char *uuid)
+discover_resource(const char *rt, const char *uuid)
 {
   PRINT("[C] rt:%s uuid:%s\n", rt, uuid);
   oc_do_ip_discovery(rt, &discovery_cb, NULL);

@@ -175,7 +175,8 @@ bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
  * @param user_data user data to be provided with the invocation of the callback
  * @return oc_client_cb_t* the client callback info
  */
-oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
+oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
+                                      const oc_endpoint_t *endpoint,
                                       oc_method_t method, const char *query,
                                       oc_client_handler_t handler, oc_qos_t qos,
                                       void *user_data);

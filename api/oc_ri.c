@@ -1987,7 +1987,7 @@ free_all_client_cbs(void)
 }
 
 oc_client_cb_t *
-oc_ri_alloc_client_cb(const char *uri, oc_endpoint_t *endpoint,
+oc_ri_alloc_client_cb(const char *uri, const oc_endpoint_t *endpoint,
                       oc_method_t method, const char *query,
                       oc_client_handler_t handler, oc_qos_t qos,
                       void *user_data)

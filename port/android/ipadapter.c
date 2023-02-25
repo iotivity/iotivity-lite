@@ -1667,7 +1667,7 @@ oc_connectivity_shutdown(size_t device)
 
 #ifdef OC_TCP
 void
-oc_connectivity_end_session(oc_endpoint_t *endpoint)
+oc_connectivity_end_session(const oc_endpoint_t *endpoint)
 {
   if (endpoint->flags & TCP) {
     ip_context_t *dev = get_ip_context_for_device(endpoint->device);

@@ -596,7 +596,7 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 }
 
 int
-oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
+oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, const oc_uuid_t *uuid,
               unsigned int c, uint8_t *key, uint32_t key_len)
 {
   mbedtls_md_context_t hmac_SHA256;
@@ -677,7 +677,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       OC_DBG("oc_tls: Set peer credential to SSL handle");
       return 0;
     }
-    oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
+    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
     if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
       if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
         OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
@@ -2282,8 +2282,9 @@ oc_tls_on_tcp_connect(const oc_endpoint_t *endpoint, int state, void *data)
 static void
 oc_tls_init_connection(oc_message_t *message)
 {
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
   if (pstat->s != OC_DOS_RFNOP) {
+    OC_ERR("error: device not in DOS_RFNOP state");
     oc_message_unref(message);
     return;
   }

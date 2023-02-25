@@ -213,19 +213,23 @@ typedef enum {
   OC_OBT_OTM_CERT
 } oc_obt_otm_t;
 
-oc_endpoint_t *oc_obt_get_unsecure_endpoint(oc_endpoint_t *endpoint);
-oc_endpoint_t *oc_obt_get_secure_endpoint(oc_endpoint_t *endpoint);
+const oc_endpoint_t *oc_obt_get_unsecure_endpoint(
+  const oc_endpoint_t *endpoint);
+const oc_endpoint_t *oc_obt_get_secure_endpoint(const oc_endpoint_t *endpoint);
 
-oc_device_t *oc_obt_get_cached_device_handle(oc_uuid_t *uuid);
-oc_device_t *oc_obt_get_owned_device_handle(oc_uuid_t *uuid);
+oc_device_t *oc_obt_get_cached_device_handle(const oc_uuid_t *uuid);
+oc_device_t *oc_obt_get_owned_device_handle(const oc_uuid_t *uuid);
 
-bool oc_obt_is_owned_device(oc_uuid_t *uuid);
+bool oc_obt_is_owned_device(const oc_uuid_t *uuid);
 oc_dostype_t oc_obt_parse_dos(oc_rep_t *rep);
 
 oc_otm_ctx_t *oc_obt_alloc_otm_ctx(void);
 void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx);
+
+// perform self-onboarding
+int oc_obt_self_own(size_t device);
 
 #ifdef OC_PKI
 

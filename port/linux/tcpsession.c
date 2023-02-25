@@ -1017,7 +1017,7 @@ tcp_session_handle_signal(void)
 }
 
 tcp_csm_state_t
-oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
+oc_tcp_get_csm_state(const oc_endpoint_t *endpoint)
 {
   if (endpoint == NULL) {
     return CSM_ERROR;
@@ -1036,7 +1036,7 @@ oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
 }
 
 int
-oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm)
+oc_tcp_update_csm_state(const oc_endpoint_t *endpoint, tcp_csm_state_t csm)
 {
   if (endpoint == NULL) {
     return -1;

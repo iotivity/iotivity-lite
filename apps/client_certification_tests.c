@@ -671,7 +671,7 @@ factory_presets_cb(size_t device, void *data)
 /* App utility functions */
 #if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_SECURITY)
 static device_handle_t *
-is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
@@ -732,9 +732,9 @@ static void
 unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
-  oc_endpoint_t *ep = eps;
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
+  const oc_endpoint_t *ep = eps;
 
   PRINT("\nDiscovered unowned device: %s at:\n", di);
   while (eps != NULL) {
@@ -753,8 +753,8 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
   (void)data;
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
   oc_memb_free(&device_handles, device);
 
   if (status >= 0) {
