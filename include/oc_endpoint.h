@@ -220,7 +220,7 @@ void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index);
  * @param dst desination endpoint
  * @param src source endpoint
  */
-void oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src);
+void oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src);
 
 /**
  * @brief copy list of endpoint
@@ -228,7 +228,7 @@ void oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src);
  * @param dst destination list of endpoints
  * @param src source list of endpoints
  */
-void oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src);
+void oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src);
 
 #ifdef __cplusplus
 }

@@ -71,8 +71,8 @@ obt_rdp_13(oc_client_response_t *data)
 
   /**  13) post pstat s=rfnop
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -103,11 +103,11 @@ obt_rdp_12(oc_client_response_t *data)
 
   /**  12) post acl2 with ACEs for res, p, d, csr, sp
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_13, HIGH_QOS, o)) {
     char uuid[OC_UUID_LEN];
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
 
     oc_rep_start_root_object();
@@ -211,8 +211,8 @@ obt_rdp_11(oc_client_response_t *data)
 
   /**  11) delete acl2
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_rdp_12, HIGH_QOS, o)) {
     return;
   }
@@ -236,8 +236,8 @@ obt_rdp_10(oc_client_response_t *data)
 
   /**  10) post pstat s=rfpro
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
@@ -275,8 +275,8 @@ obt_rdp_9(oc_client_response_t *data)
 
   /**  9) post doxm owned = true
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_10, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, owned, true);
@@ -309,8 +309,8 @@ obt_rdp_8(oc_client_response_t *data)
 
   /**  8) post sdi
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_rdp_9, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, uuid, sdi_uuid);
@@ -339,10 +339,10 @@ obt_rdp_7(oc_client_response_t *data)
     goto err_obt_rdp_7;
   }
 
-  oc_device_t *device = o->device;
+  const oc_device_t *device = o->device;
 
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
   char suuid[OC_UUID_LEN];
@@ -414,10 +414,10 @@ obt_rdp_6(oc_client_response_t *data)
 
   /**  6) post pstat rowneruuid
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_7, HIGH_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
 
@@ -448,11 +448,11 @@ obt_rdp_5(oc_client_response_t *data)
 
   /**  5) post acl rowneruuid
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
 
   if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_rdp_6, HIGH_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
 
@@ -483,11 +483,11 @@ obt_rdp_4(oc_client_response_t *data)
 
   /**  4) post doxm rowneruuid
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
 
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_5, HIGH_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
 
@@ -541,8 +541,8 @@ obt_rdp_3(oc_client_response_t *data)
     ep = ep->next;
   }
 
-  ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_4, HIGH_QOS, o)) {
+  const oc_endpoint_t *cep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (oc_init_post("/oic/sec/doxm", cep, NULL, &obt_rdp_4, HIGH_QOS, o)) {
 
     oc_rep_start_root_object();
     /* Set random uuid as deviceuuid */
@@ -572,10 +572,10 @@ obt_rdp_2(oc_client_response_t *data)
 
   /**  2) post doxm devowneruuid
    */
-  oc_device_t *device = o->device;
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_device_t *device = o->device;
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rdp_3, HIGH_QOS, o)) {
-    oc_uuid_t *my_uuid = oc_core_get_device_id(0);
+    const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char ouuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, ouuid, OC_UUID_LEN);
 
@@ -610,7 +610,7 @@ err_obt_rdp_2:
   14) <close DTLS>
 */
 int
-oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
+oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
                               size_t pin_len, oc_obt_device_status_cb_t cb,
                               void *data)
 {
@@ -661,7 +661,7 @@ oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
 
   /**  1) <Open-TLS-PSK>+post pstat om=4
    */
-  oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
   oc_tls_select_psk_ciphersuite();
   oc_tls_use_pin_obt_psk_identity();
@@ -736,8 +736,8 @@ obt_rrdp_2(oc_client_response_t *data)
 
     /**  2) post doxm oxmsel=1
      */
-    oc_device_t *device = o->device;
-    oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
+    const oc_device_t *device = o->device;
+    const oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
     if (oc_init_post("/oic/sec/doxm", ep, NULL, &obt_rrdp_3, HIGH_QOS, o)) {
       oc_rep_start_root_object();
       oc_rep_set_int(root, oxmsel, OC_OXMTYPE_RDP);
@@ -759,7 +759,7 @@ err_obt_rrdp_2:
   3) success/fail
 */
 int
-oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+oc_obt_request_random_pin(const oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                           void *data)
 {
   OC_DBG("In oc_obt_request_random_pin");
@@ -784,7 +784,7 @@ oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
 
   /**  1) get doxm
    */
-  oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
+  const oc_endpoint_t *ep = oc_obt_get_unsecure_endpoint(device->endpoint);
   if (oc_do_get("/oic/sec/doxm", ep, NULL, &obt_rrdp_2, HIGH_QOS, o)) {
     return 0;
   }

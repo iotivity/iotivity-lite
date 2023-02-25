@@ -267,7 +267,7 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 }
 
 static tcp_session_t *
-find_session_by_endpoint(oc_endpoint_t *endpoint)
+find_session_by_endpoint(const oc_endpoint_t *endpoint)
 {
   tcp_session_t *session = oc_list_head(session_list);
   while (session != NULL &&
@@ -445,7 +445,7 @@ oc_tcp_receive_message_done:
 }
 
 void
-oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
+oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
@@ -456,10 +456,10 @@ oc_tcp_end_session(ip_context_t *dev, oc_endpoint_t *endpoint)
 }
 
 static int
-get_session_socket(oc_endpoint_t *endpoint)
+get_session_socket(const oc_endpoint_t *endpoint)
 {
   int sock = -1;
-  tcp_session_t *session = find_session_by_endpoint(endpoint);
+  const tcp_session_t *session = find_session_by_endpoint(endpoint);
   if (!session) {
     return -1;
   }
@@ -840,7 +840,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
 }
 
 tcp_csm_state_t
-oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
+oc_tcp_get_csm_state(const oc_endpoint_t *endpoint)
 {
   if (!endpoint) {
     return CSM_ERROR;
@@ -855,7 +855,7 @@ oc_tcp_get_csm_state(oc_endpoint_t *endpoint)
 }
 
 int
-oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm)
+oc_tcp_update_csm_state(const oc_endpoint_t *endpoint, tcp_csm_state_t csm)
 {
   if (!endpoint) {
     return -1;

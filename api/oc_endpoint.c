@@ -719,7 +719,7 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 }
 
 void
-oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src)
+oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src)
 {
   if (dst && src) {
     memcpy(dst, src, sizeof(oc_endpoint_t));
@@ -728,7 +728,7 @@ oc_endpoint_copy(oc_endpoint_t *dst, oc_endpoint_t *src)
 }
 
 void
-oc_endpoint_list_copy(oc_endpoint_t **dst, oc_endpoint_t *src)
+oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
 {
   if (dst && src) {
     oc_endpoint_t *ep = oc_new_endpoint();

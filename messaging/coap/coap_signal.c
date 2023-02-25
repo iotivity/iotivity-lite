@@ -31,7 +31,7 @@ coap_make_token(coap_packet_t *packet)
 }
 
 static int
-coap_send_signal_message(oc_endpoint_t *endpoint, coap_packet_t *packet)
+coap_send_signal_message(const oc_endpoint_t *endpoint, coap_packet_t *packet)
 {
   oc_message_t *message = oc_internal_allocate_outgoing_message();
   if (!message) {
@@ -48,7 +48,7 @@ coap_send_signal_message(oc_endpoint_t *endpoint, coap_packet_t *packet)
 }
 
 int
-coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
+coap_send_csm_message(const oc_endpoint_t *endpoint, uint32_t max_message_size,
                       uint8_t blockwise_transfer_option)
 {
   (void)blockwise_transfer_option;
@@ -82,7 +82,7 @@ coap_send_csm_message(oc_endpoint_t *endpoint, uint32_t max_message_size,
 }
 
 int
-coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
+coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
                        uint8_t *token, uint8_t token_len)
 {
   if (!endpoint || !token || token_len == 0 || !(endpoint->flags & TCP))
@@ -113,7 +113,7 @@ coap_send_ping_message(oc_endpoint_t *endpoint, uint8_t custody_option,
 }
 
 int
-coap_send_pong_message(oc_endpoint_t *endpoint, void *packet)
+coap_send_pong_message(const oc_endpoint_t *endpoint, void *packet)
 {
   if (!endpoint || !packet)
     return 0;
@@ -136,7 +136,7 @@ coap_send_pong_message(oc_endpoint_t *endpoint, void *packet)
 }
 
 int
-coap_send_release_message(oc_endpoint_t *endpoint, const char *alt_addr,
+coap_send_release_message(const oc_endpoint_t *endpoint, const char *alt_addr,
                           size_t alt_addr_len, uint32_t hold_off)
 {
   if (!endpoint)
@@ -166,7 +166,7 @@ coap_send_release_message(oc_endpoint_t *endpoint, const char *alt_addr,
 }
 
 int
-coap_send_abort_message(oc_endpoint_t *endpoint, uint16_t opt,
+coap_send_abort_message(const oc_endpoint_t *endpoint, uint16_t opt,
                         const char *diagnostic, size_t diagnostic_len)
 {
   if (!endpoint)
@@ -211,7 +211,7 @@ coap_check_signal_message(void *packet)
 }
 
 int
-handle_coap_signal_message(void *packet, oc_endpoint_t *endpoint)
+handle_coap_signal_message(void *packet, const oc_endpoint_t *endpoint)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 

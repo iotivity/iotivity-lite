@@ -1855,7 +1855,8 @@ bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
  */
 bool oc_do_ip_discovery_at_endpoint(const char *rt,
                                     oc_discovery_handler_t handler,
-                                    oc_endpoint_t *endpoint, void *user_data);
+                                    const oc_endpoint_t *endpoint,
+                                    void *user_data);
 
 /**
  * Discover all resources in a specific endpoint.
@@ -1867,7 +1868,7 @@ bool oc_do_ip_discovery_at_endpoint(const char *rt,
  * @return Returns true if it successfully makes and dispatches a coap packet.
  */
 bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
-                                        oc_endpoint_t *endpoint,
+                                        const oc_endpoint_t *endpoint,
                                         void *user_data);
 
 /**
@@ -1912,8 +1913,9 @@ bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
  * @return True if the client successfully dispatched the CoAP GET request
  */
 OC_API
-bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
-               oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+bool oc_do_get(const char *uri, const oc_endpoint_t *endpoint,
+               const char *query, oc_response_handler_t handler, oc_qos_t qos,
+               void *user_data);
 
 /**
  * Issue a GET request to obtain the current value of all properties a resource.
@@ -1935,7 +1937,7 @@ bool oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * the response handler is invoked with OC_REQUEST_TIMEOUT code
  */
 OC_API
-bool oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+bool oc_do_get_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                             const char *query, uint16_t timeout_seconds,
                             oc_response_handler_t handler, oc_qos_t qos,
                             void *user_data);
@@ -1956,8 +1958,9 @@ bool oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
  * @return True if the client successfully dispatched the CoAP DELETE request
  */
 OC_API
-bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                  oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+bool oc_do_delete(const char *uri, const oc_endpoint_t *endpoint,
+                  const char *query, oc_response_handler_t handler,
+                  oc_qos_t qos, void *user_data);
 
 /**
  * Issue a DELETE request to delete a resource
@@ -1979,7 +1982,7 @@ bool oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
  * the response handler is invoked with OC_REQUEST_TIMEOUT code
  */
 OC_API
-bool oc_do_delete_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+bool oc_do_delete_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                                const char *query, uint16_t timeout_seconds,
                                oc_response_handler_t handler, oc_qos_t qos,
                                void *user_data);
@@ -2029,8 +2032,9 @@ bool oc_do_delete_with_timeout(const char *uri, oc_endpoint_t *endpoint,
  * @see oc_init_post
  */
 OC_API
-bool oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                 oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+bool oc_init_put(const char *uri, const oc_endpoint_t *endpoint,
+                 const char *query, oc_response_handler_t handler, oc_qos_t qos,
+                 void *user_data);
 
 /**
  * Dispatch the CoAP PUT request
@@ -2108,8 +2112,9 @@ bool oc_do_put_with_timeout(uint16_t timeout_seconds);
  * @see oc_init_put
  */
 OC_API
-bool oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                  oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+bool oc_init_post(const char *uri, const oc_endpoint_t *endpoint,
+                  const char *query, oc_response_handler_t handler,
+                  oc_qos_t qos, void *user_data);
 
 /**
  * Dispatch the CoAP POST request
@@ -2163,9 +2168,9 @@ bool oc_do_post_with_timeout(uint16_t timeout_seconds);
  *
  * @return True if the client successfully dispatched the CaAP observer request
  */
-bool oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
-                   oc_response_handler_t handler, oc_qos_t qos,
-                   void *user_data);
+bool oc_do_observe(const char *uri, const oc_endpoint_t *endpoint,
+                   const char *query, oc_response_handler_t handler,
+                   oc_qos_t qos, void *user_data);
 
 /**
  * Unsubscribe for notifications from a resource.
@@ -2271,7 +2276,7 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
  *
  * @param endpoint endpoint indicating a session
  */
-void oc_close_session(oc_endpoint_t *endpoint);
+void oc_close_session(const oc_endpoint_t *endpoint);
 
 #ifdef OC_TCP
 /**
@@ -2285,7 +2290,7 @@ void oc_close_session(oc_endpoint_t *endpoint);
  * @return true
  * @return false
  */
-bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
+bool oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,
                   void *user_data);
 #endif    /* OC_TCP */

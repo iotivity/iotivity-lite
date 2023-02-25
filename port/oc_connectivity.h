@@ -169,7 +169,7 @@ void oc_send_discovery_request(oc_message_t *message);
  *
  * @param endpoint the endpoint to close the session for
  */
-void oc_connectivity_end_session(oc_endpoint_t *endpoint);
+void oc_connectivity_end_session(const oc_endpoint_t *endpoint);
 
 #ifdef OC_DNS_LOOKUP
 /**
@@ -279,7 +279,7 @@ typedef enum {
  * @param endpoint the endpoint
  * @return tcp_csm_state_t the cms state
  */
-tcp_csm_state_t oc_tcp_get_csm_state(oc_endpoint_t *endpoint);
+tcp_csm_state_t oc_tcp_get_csm_state(const oc_endpoint_t *endpoint);
 
 /**
  * @brief update the csm state on the tcp connection
@@ -288,7 +288,7 @@ tcp_csm_state_t oc_tcp_get_csm_state(oc_endpoint_t *endpoint);
  * @param csm the cms state
  * @return int 0 = success
  */
-int oc_tcp_update_csm_state(oc_endpoint_t *endpoint, tcp_csm_state_t csm);
+int oc_tcp_update_csm_state(const oc_endpoint_t *endpoint, tcp_csm_state_t csm);
 #endif /* OC_TCP */
 
 #ifdef __cplusplus

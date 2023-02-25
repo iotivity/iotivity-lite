@@ -352,9 +352,9 @@ oc_get_diagnostic_message(const oc_client_response_t *response,
 }
 
 static oc_client_cb_t *
-oc_do_request(oc_method_t method, const char *uri, oc_endpoint_t *endpoint,
-              const char *query, oc_response_handler_t handler, oc_qos_t qos,
-              void *user_data)
+oc_do_request(oc_method_t method, const char *uri,
+              const oc_endpoint_t *endpoint, const char *query,
+              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   assert(handler != NULL);
   oc_client_handler_t client_handler = {
@@ -382,7 +382,7 @@ oc_do_request(oc_method_t method, const char *uri, oc_endpoint_t *endpoint,
 
 static bool
 oc_do_request_with_timeout(oc_method_t method, const char *uri,
-                           oc_endpoint_t *endpoint, const char *query,
+                           const oc_endpoint_t *endpoint, const char *query,
                            uint16_t timeout_seconds,
                            oc_response_handler_t handler, oc_qos_t qos,
                            void *user_data)
@@ -401,7 +401,7 @@ oc_do_request_with_timeout(oc_method_t method, const char *uri,
 }
 
 bool
-oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
+oc_do_delete(const char *uri, const oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_do_request(OC_DELETE, uri, endpoint, query, handler, qos,
@@ -409,7 +409,7 @@ oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
 }
 
 bool
-oc_do_delete_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+oc_do_delete_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                           const char *query, uint16_t timeout_seconds,
                           oc_response_handler_t handler, oc_qos_t qos,
                           void *user_data)
@@ -419,7 +419,7 @@ oc_do_delete_with_timeout(const char *uri, oc_endpoint_t *endpoint,
 }
 
 bool
-oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
+oc_do_get(const char *uri, const oc_endpoint_t *endpoint, const char *query,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_do_request(OC_GET, uri, endpoint, query, handler, qos, user_data) !=
@@ -427,7 +427,7 @@ oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
 }
 
 bool
-oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
+oc_do_get_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                        const char *query, uint16_t timeout_seconds,
                        oc_response_handler_t handler, oc_qos_t qos,
                        void *user_data)
@@ -439,7 +439,7 @@ oc_do_get_with_timeout(const char *uri, oc_endpoint_t *endpoint,
 // preparation step for sending coap request using async methods (POST or PUT)
 static bool
 oc_init_async_request(oc_method_t method, const char *uri,
-                      oc_endpoint_t *endpoint, const char *query,
+                      const oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, oc_qos_t qos,
                       void *user_data)
 {
@@ -484,7 +484,7 @@ oc_do_async_request_with_timeout(uint16_t timeout_seconds, oc_method_t method)
 }
 
 bool
-oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
+oc_init_put(const char *uri, const oc_endpoint_t *endpoint, const char *query,
             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_init_async_request(OC_PUT, uri, endpoint, query, handler, qos,
@@ -492,7 +492,7 @@ oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
 }
 
 bool
-oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
+oc_init_post(const char *uri, const oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_init_async_request(OC_POST, uri, endpoint, query, handler, qos,
@@ -524,7 +524,7 @@ oc_do_post_with_timeout(uint16_t timeout_seconds)
 }
 
 bool
-oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
+oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
               oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   oc_client_handler_t client_handler = {
@@ -587,8 +587,9 @@ oc_remove_ping_handler_async(void *data)
 }
 
 bool
-oc_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
-             oc_response_handler_t handler, void *user_data)
+oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
+             uint16_t timeout_seconds, oc_response_handler_t handler,
+             void *user_data)
 {
   oc_client_handler_t client_handler = {
     .response = handler,
@@ -750,8 +751,9 @@ oc_do_ip_multicast(const char *uri, const char *query,
 
 static bool
 dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
-                      oc_client_handler_t handler, oc_endpoint_t *endpoint,
-                      oc_qos_t qos, void *user_data)
+                      oc_client_handler_t handler,
+                      const oc_endpoint_t *endpoint, oc_qos_t qos,
+                      void *user_data)
 {
   if (!endpoint) {
     OC_ERR("require valid endpoint");
@@ -903,7 +905,8 @@ oc_do_ip_discovery_all(oc_discovery_all_handler_t handler, void *user_data)
 
 bool
 oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
-                                   oc_endpoint_t *endpoint, void *user_data)
+                                   const oc_endpoint_t *endpoint,
+                                   void *user_data)
 {
   oc_client_handler_t handlers = {
     .response = NULL,
@@ -916,7 +919,7 @@ oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
 
 bool
 oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
-                               oc_endpoint_t *endpoint, void *user_data)
+                               const oc_endpoint_t *endpoint, void *user_data)
 {
   oc_client_handler_t handlers = {
     .response = NULL,
@@ -936,7 +939,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 }
 
 void
-oc_close_session(oc_endpoint_t *endpoint)
+oc_close_session(const oc_endpoint_t *endpoint)
 {
   if (endpoint->flags & SECURED) {
 #ifdef OC_SECURITY

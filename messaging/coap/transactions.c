@@ -84,7 +84,7 @@ coap_register_as_transaction_handler(void)
 
 coap_transaction_t *
 coap_new_transaction(uint16_t mid, uint8_t *token, uint8_t token_len,
-                     oc_endpoint_t *endpoint)
+                     const oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {

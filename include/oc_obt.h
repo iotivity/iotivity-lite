@@ -352,7 +352,7 @@ int oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_discover_all_resources(oc_uuid_t *uuid,
+int oc_obt_discover_all_resources(const oc_uuid_t *uuid,
                                   oc_discovery_all_handler_t handler,
                                   void *data);
 /* Perform ownership transfer */
@@ -401,8 +401,8 @@ int oc_obt_discover_all_resources(oc_uuid_t *uuid,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                                  void *data);
+int oc_obt_perform_just_works_otm(const oc_uuid_t *uuid,
+                                  oc_obt_device_status_cb_t cb, void *data);
 
 /**
  * Ask device being onboarded to produce a random PIN for PIN ownership transfer
@@ -439,8 +439,8 @@ int oc_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  * @see oc_set_random_pin_callback
  * @see oc_random_pin_cb_t
  */
-int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                              void *data);
+int oc_obt_request_random_pin(const oc_uuid_t *uuid,
+                              oc_obt_device_status_cb_t cb, void *data);
 
 /**
  * Perform ownership transfer method (OTM) using Random PIN based OTM
@@ -517,9 +517,9 @@ int oc_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  * @see oc_set_random_pin_callback
  * @see oc_random_pin_cb_t
  */
-int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
-                                  size_t pin_len, oc_obt_device_status_cb_t cb,
-                                  void *data);
+int oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid,
+                                  const unsigned char *pin, size_t pin_len,
+                                  oc_obt_device_status_cb_t cb, void *data);
 
 /**
  * Perform ownership transfer method (OTM) using Manufacturer Certificate
@@ -538,7 +538,7 @@ int oc_obt_perform_random_pin_otm(oc_uuid_t *uuid, const unsigned char *pin,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
+int oc_obt_perform_cert_otm(const oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
                             void *data);
 
 /* RESET device state */
@@ -578,8 +578,8 @@ int oc_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
-                             void *data);
+int oc_obt_device_hard_reset(const oc_uuid_t *uuid,
+                             oc_obt_device_status_cb_t cb, void *data);
 
 /**
  * Provision pairwise 128-bit pre-shared key (PSK) credentials to a Client
@@ -617,7 +617,8 @@ int oc_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
+int oc_obt_provision_pairwise_credentials(const oc_uuid_t *uuid1,
+                                          const oc_uuid_t *uuid2,
                                           oc_obt_status_cb_t cb, void *data);
 
 #ifdef OC_OSCORE
@@ -635,8 +636,8 @@ int oc_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
-                                              oc_uuid_t *uuid2,
+int oc_obt_provision_pairwise_oscore_contexts(const oc_uuid_t *uuid1,
+                                              const oc_uuid_t *uuid2,
                                               oc_obt_status_cb_t cb,
                                               void *data);
 
@@ -654,7 +655,7 @@ int oc_obt_provision_pairwise_oscore_contexts(oc_uuid_t *uuid1,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
+int oc_obt_provision_client_group_oscore_context(const oc_uuid_t *uuid,
                                                  const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
@@ -674,8 +675,8 @@ int oc_obt_provision_client_group_oscore_context(oc_uuid_t *uuid,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
-                                                 oc_uuid_t *subjectuuid,
+int oc_obt_provision_server_group_oscore_context(const oc_uuid_t *uuid,
+                                                 const oc_uuid_t *subjectuuid,
                                                  const char *desc,
                                                  oc_obt_device_status_cb_t cb,
                                                  void *data);
@@ -720,7 +721,7 @@ int oc_obt_provision_server_group_oscore_context(oc_uuid_t *uuid,
  *   - `0` on success
  *   - `-1` on failure
  */
-int oc_obt_provision_identity_certificate(oc_uuid_t *uuid,
+int oc_obt_provision_identity_certificate(const oc_uuid_t *uuid,
                                           oc_obt_status_cb_t cb, void *data);
 
 #ifdef OC_OSCORE
@@ -792,7 +793,7 @@ int oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
  * @see oc_obt_add_roleid
  * @see oc_obt_free_roleid
  */
-int oc_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid,
+int oc_obt_provision_role_certificate(oc_role_t *roles, const oc_uuid_t *uuid,
                                       oc_obt_status_cb_t cb, void *data);
 
 /**
@@ -850,8 +851,8 @@ void oc_obt_free_roleid(oc_role_t *roles);
  * @see oc_obt_free_roleid
  */
 int oc_obt_provision_trust_anchor(const char *certificate,
-                                  size_t certificate_size, char *subject,
-                                  oc_uuid_t *uuid, oc_obt_status_cb_t cb,
+                                  size_t certificate_size, const char *subject,
+                                  const oc_uuid_t *uuid, oc_obt_status_cb_t cb,
                                   void *data);
 
 /* Provision access-control entries (ace2) */
@@ -870,7 +871,7 @@ int oc_obt_provision_trust_anchor(const char *certificate,
  * @see oc_obt_ace_add_permission
  * @see oc_obt_provision_ace
  */
-oc_sec_ace_t *oc_obt_new_ace_for_subject(oc_uuid_t *uuid);
+oc_sec_ace_t *oc_obt_new_ace_for_subject(const oc_uuid_t *uuid);
 
 /**
  * Create a new Access Control Entry (ACE) with connection type as the subject.
@@ -1047,7 +1048,7 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace,
+int oc_obt_provision_ace(const oc_uuid_t *subject, oc_sec_ace_t *ace,
                          oc_obt_device_status_cb_t cb, void *data);
 
 /**
@@ -1083,8 +1084,8 @@ void oc_obt_free_ace(oc_sec_ace_t *ace);
  * @see oc_obt_ace_add_permission
  * @see oc_obt_provision_ace
  */
-int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
-                                       const char *authority,
+int oc_obt_provision_role_wildcard_ace(const oc_uuid_t *subject,
+                                       const char *role, const char *authority,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
 
@@ -1111,7 +1112,7 @@ int oc_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role,
  * @see oc_obt_ace_add_permission
  * @see oc_obt_provision_ace
  */
-int oc_obt_provision_auth_wildcard_ace(oc_uuid_t *subject,
+int oc_obt_provision_auth_wildcard_ace(const oc_uuid_t *subject,
                                        oc_obt_device_status_cb_t cb,
                                        void *data);
 
@@ -1169,7 +1170,8 @@ typedef void (*oc_obt_creds_cb_t)(struct oc_sec_creds_t *creds, void *data);
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t cb, void *data);
+int oc_obt_retrieve_creds(const oc_uuid_t *subject, oc_obt_creds_cb_t cb,
+                          void *data);
 
 /**
  * Free a list of credentials
@@ -1193,7 +1195,7 @@ void oc_obt_free_creds(oc_sec_creds_t *creds);
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
+int oc_obt_delete_cred_by_credid(const oc_uuid_t *uuid, int credid,
                                  oc_obt_status_cb_t cb, void *data);
 
 /**
@@ -1223,7 +1225,7 @@ typedef void (*oc_obt_acl_cb_t)(oc_sec_acl_t *acl, void *data);
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data);
+int oc_obt_retrieve_acl(const oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data);
 
 /**
  * Free an Access Control List (ACL)
@@ -1251,7 +1253,7 @@ void oc_obt_free_acl(oc_sec_acl_t *acl);
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
+int oc_obt_delete_ace_by_aceid(const oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t cb, void *data);
 
 /**
@@ -1273,7 +1275,7 @@ int oc_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_update_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+int oc_obt_update_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
                                     const char *at, const char *apn,
                                     const char *cis, const char *sid,
                                     oc_response_handler_t cb, void *user_data);
@@ -1293,34 +1295,36 @@ int oc_obt_update_cloud_conf_device(oc_uuid_t *uuid, const char *url,
  *  - `0` on success
  *  - `-1` on failure
  */
-int oc_obt_retrieve_cloud_conf_device(oc_uuid_t *uuid, const char *url,
+int oc_obt_retrieve_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
                                       oc_response_handler_t cb,
                                       void *user_data);
 
-int oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
-                                  void *data);
+int oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid,
+                                  oc_response_handler_t cb, void *data);
 
-int oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *device_uuid,
+int oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
                               const char *url, oc_response_handler_t cb,
                               void *user_data);
 
-int oc_obt_retrieve_d2dserverlist(oc_uuid_t *uuid, oc_response_handler_t cb,
-                                  void *data);
+int oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid,
+                                  oc_response_handler_t cb, void *data);
 
-int oc_obt_post_d2dserverlist(oc_uuid_t *uuid, char *device_uuid,
+int oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
                               const char *url, oc_response_handler_t cb,
                               void *user_data);
 
-int oc_obt_general_get(oc_uuid_t *uuid, char *url, oc_response_handler_t cb,
-                       void *data);
+int oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
+                       oc_response_handler_t cb, void *data);
 
-int oc_obt_general_post(oc_uuid_t *uuid, char *query, const char *url,
-                        oc_response_handler_t cb, void *user_data,
-                        char **payload_properties, char **payload_values,
-                        char **payload_types, int array_size);
+int oc_obt_general_post(const oc_uuid_t *uuid, const char *query,
+                        const char *url, oc_response_handler_t cb,
+                        void *user_data, char **payload_properties,
+                        char **payload_values, char **payload_types,
+                        int array_size);
 
-int oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url,
-                          oc_response_handler_t cb, void *data);
+int oc_obt_general_delete(const oc_uuid_t *uuid, const char *query,
+                          const char *url, oc_response_handler_t cb,
+                          void *data);
 
 /**
  * sets the secure domain info
@@ -1328,7 +1332,7 @@ int oc_obt_general_delete(oc_uuid_t *uuid, char *query, char *url,
  * @param[in] name the name of the secure domain
  * @param[in] priv privacy indicator
  */
-void oc_obt_set_sd_info(char *name, bool priv);
+void oc_obt_set_sd_info(const char *name, bool priv);
 #ifdef __cplusplus
 }
 #endif

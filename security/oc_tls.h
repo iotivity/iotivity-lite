@@ -182,8 +182,9 @@ void oc_tls_use_pin_obt_psk_identity(void);
 #endif /* OC_CLIENT */
 
 /* Internal interface for deriving a PSK for the Random PIN OTM */
-int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, oc_uuid_t *uuid,
-                  unsigned int c, uint8_t *key, uint32_t key_len);
+int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len,
+                  const oc_uuid_t *uuid, unsigned int c, uint8_t *key,
+                  uint32_t key_len);
 
 #ifdef OC_PKI
 /**

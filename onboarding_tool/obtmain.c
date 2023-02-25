@@ -300,9 +300,9 @@ static void
 unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
-  oc_endpoint_t *ep = eps;
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
+  const oc_endpoint_t *ep = eps;
 
   PRINT("\nDiscovered unowned device: %s at:\n", di);
   while (eps != NULL) {
@@ -318,9 +318,9 @@ static void
 owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
-  oc_endpoint_t *ep = eps;
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
+  const oc_endpoint_t *ep = eps;
 
   PRINT("\nDiscovered owned device: %s at:\n", di);
   while (eps != NULL) {
@@ -367,8 +367,8 @@ otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
@@ -431,8 +431,8 @@ static void
 random_pin_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully requested device %s to generate a Random PIN\n", di);
@@ -487,8 +487,8 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device %s\n", di);
@@ -549,8 +549,8 @@ otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   memcpy(device->uuid.id, uuid->id, 16);
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully performed OTM on device with UUID %s\n", di);
@@ -951,8 +951,8 @@ static void
 reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   oc_memb_free(&device_handles, data);
 
@@ -1127,8 +1127,8 @@ static void
 provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned rold * ACE to device %s\n", di);
@@ -1201,8 +1201,8 @@ static void
 provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned group OSCORE context to device %s\n", di);
@@ -1428,8 +1428,8 @@ static void
 provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
@@ -1487,8 +1487,8 @@ static void
 provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
-  char di[37];
-  oc_uuid_to_str(uuid, di, 37);
+  char di[OC_UUID_LEN];
+  oc_uuid_to_str(uuid, di, sizeof(OC_UUID_LEN));
 
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned ACE to device %s\n", di);
