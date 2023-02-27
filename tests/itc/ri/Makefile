@@ -12,7 +12,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
                 $(GTEST_DIR)/include/gtest/internal/*.h
 GTEST = gtest_build
 TEST_CPPFLAGS += -isystem $(GTEST_DIR)/include
-TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++0x -fpermissive -DOC_CLIENT -DOC_SERVER -fprofile-arcs -ftest-coverage
+TEST_CXXFLAGS += -g -Wall -Wextra -pthread -std=c++17 -fpermissive -DOC_CLIENT -DOC_SERVER -fprofile-arcs -ftest-coverage
 IOTIVITY_HEADER_DIR = $(IOTIVITY_ROOT_DIR)/include
 
 API_TEST_DIR = $(IOTIVITY_ROOT_DIR)/tests/itc/$(MODULE)
