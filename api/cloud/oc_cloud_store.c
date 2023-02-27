@@ -340,6 +340,7 @@ cloud_store_deinitialize(oc_cloud_store_t *store)
   cloud_set_string(&store->sid, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
+  store->cps = OC_CPS_UNINITIALIZED;
 }
 
 #endif /* OC_CLOUD */
