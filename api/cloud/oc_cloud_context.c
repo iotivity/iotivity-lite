@@ -38,6 +38,31 @@
 OC_LIST(g_cloud_context_list);
 OC_MEMB(g_cloud_context_pool, oc_cloud_context_t, OC_MAX_NUM_DEVICES);
 
+static bool
+need_to_reinitialize_cloud_storage(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_SECURITY
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(ctx->device);
+  if (ps->s == OC_DOS_RFOTM || ps->s == OC_DOS_RESET) {
+    return true;
+  }
+#endif /* OC_SECURITY  */
+  return cloud_is_deregistering(ctx);
+}
+
+static void
+reinitialize_cloud_storage(oc_cloud_context_t *ctx)
+{
+  if (!need_to_reinitialize_cloud_storage(ctx)) {
+    return;
+  }
+  OC_DBG("reinitializing cloud context in storage");
+  cloud_store_initialize(&ctx->store);
+  if (cloud_store_dump(&ctx->store) < 0) {
+    OC_ERR("failed to dump cloud store");
+  }
+}
+
 oc_cloud_context_t *
 cloud_context_init(size_t device)
 {
@@ -56,13 +81,9 @@ cloud_context_init(size_t device)
   ctx->store.status &=
     ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
       OC_CLOUD_LOGGED_OUT | OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
-#ifdef OC_SECURITY
-  const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
-  if (ps->s == OC_DOS_RFOTM || ps->s == OC_DOS_RESET) {
-    // loaded configuration can have stored old cloud data
-    cloud_store_initialize(&ctx->store);
-  }
-#endif
+  // In the case of a factory reset and SEGFAULT occurs, the cloud data may
+  // remain on the device when the device is shut down during de-registration.
+  reinitialize_cloud_storage(ctx);
   ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
   ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);
   ctx->cloud_manager = false;
@@ -76,6 +97,9 @@ void
 cloud_context_deinit(oc_cloud_context_t *ctx)
 {
   cloud_rd_deinit(ctx);
+  // In the case of a factory reset, the cloud data may remain on the device
+  // when the device is shut down during de-registration.
+  reinitialize_cloud_storage(ctx);
   cloud_store_deinitialize(&ctx->store);
   cloud_close_endpoint(ctx->cloud_ep);
   oc_free_endpoint(ctx->cloud_ep);
