@@ -85,7 +85,7 @@ oc_sec_decode_sdi(oc_rep_t *rep, bool from_storage, size_t device)
 {
   bool suc = false;
   oc_sec_sdi_t *s = oc_sec_get_sdi(device);
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
 
   while (rep != NULL) {
     size_t len = oc_string_len(rep->name);

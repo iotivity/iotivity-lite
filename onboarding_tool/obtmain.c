@@ -228,7 +228,7 @@ ocf_event_thread(void *data)
 
 /* App utility functions */
 static device_handle_t *
-is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
+is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
@@ -241,7 +241,8 @@ is_device_in_list(oc_uuid_t *uuid, oc_list_t list)
 }
 
 static bool
-add_device_to_list(oc_uuid_t *uuid, const char *device_name, oc_list_t list)
+add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
+                   oc_list_t list)
 {
   device_handle_t *device = is_device_in_list(uuid, list);
 

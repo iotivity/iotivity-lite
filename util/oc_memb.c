@@ -115,11 +115,10 @@ _oc_memb_free(
   oc_mem_trace_add_pace(func, m->size, MEM_TRACE_FREE, ptr);
 #endif
 
-  char *ptr2 = NULL;
   if (m->num > 0) {
     /* Walk through the list of blocks and try to find the block to
        which the pointer "ptr" points to. */
-    ptr2 = (char *)m->mem;
+    const char *ptr2 = (char *)m->mem;
     for (int i = 0; i < m->num; ++i) {
       if (ptr2 == (char *)ptr) {
         /* We've found to block to which "ptr" points so we decrease the

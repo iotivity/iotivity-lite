@@ -118,7 +118,7 @@ restart_manager(void *user_data)
 }
 
 void
-cloud_close_endpoint(oc_endpoint_t *cloud_ep)
+cloud_close_endpoint(const oc_endpoint_t *cloud_ep)
 {
   OC_DBG("cloud_close_endpoint");
 #ifdef OC_SECURITY

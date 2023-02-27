@@ -110,7 +110,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_mid(uint16_t mid);
  * @return oc_blockwise_state_t* the blocktranfer
  */
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_token(
-  uint8_t *token, uint8_t token_len);
+  const uint8_t *token, uint8_t token_len);
 
 /**
  * @brief find the response by token
@@ -120,7 +120,7 @@ oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_token(
  * @return oc_blockwise_state_t* the blocktransfer
  */
 oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_token(
-  uint8_t *token, uint8_t token_len);
+  const uint8_t *token, uint8_t token_len);
 
 /**
  * @brief find the request by client callback & endpoint
@@ -130,7 +130,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_token(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
-  oc_endpoint_t *endpoint, void *client_cb);
+  const oc_endpoint_t *endpoint, void *client_cb);
 
 /**
  * @brief find the response by client callback & endpoint
@@ -140,7 +140,7 @@ oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
-  oc_endpoint_t *endpoint, void *client_cb);
+  const oc_endpoint_t *endpoint, void *client_cb);
 
 /**
  * @brief find request buffer based on more information
@@ -155,7 +155,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_request_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  const char *href, size_t href_len, const oc_endpoint_t *endpoint,
   oc_method_t method, const char *query, size_t query_len,
   oc_blockwise_role_t role);
 
@@ -172,7 +172,7 @@ oc_blockwise_state_t *oc_blockwise_find_request_buffer(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_response_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  const char *href, size_t href_len, const oc_endpoint_t *endpoint,
   oc_method_t method, const char *query, size_t query_len,
   oc_blockwise_role_t role);
 
@@ -188,7 +188,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  const char *href, size_t href_len, const oc_endpoint_t *endpoint,
   oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size);
 
 /**
@@ -203,7 +203,7 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
-  const char *href, size_t href_len, oc_endpoint_t *endpoint,
+  const char *href, size_t href_len, const oc_endpoint_t *endpoint,
   oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size);
 
 /**

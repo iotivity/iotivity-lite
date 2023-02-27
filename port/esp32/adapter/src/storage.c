@@ -83,7 +83,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 }
 
 long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
+oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
   OC_DBG("oc_storage_write: %s, %d", store, size);
   if (!path_set) {

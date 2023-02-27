@@ -989,10 +989,11 @@ oc_sec_acl_free(void)
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
 bool
-oc_sec_acl_add_created_resource_ace(const char *href, oc_endpoint_t *client,
-                                    size_t device, bool collection)
+oc_sec_acl_add_created_resource_ace(const char *href,
+                                    const oc_endpoint_t *client, size_t device,
+                                    bool collection)
 {
-  oc_uuid_t *uuid = &client->di;
+  const oc_uuid_t *uuid = &client->di;
 
   oc_ace_subject_t subject;
   memset(&subject, 0, sizeof(oc_ace_subject_t));

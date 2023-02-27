@@ -109,7 +109,7 @@ oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
 static void
 coap_send_empty_response(coap_message_type_t type, uint16_t mid,
                          const uint8_t *token, size_t token_len, uint8_t code,
-                         oc_endpoint_t *endpoint)
+                         const oc_endpoint_t *endpoint)
 {
   OC_DBG("CoAP send empty message: mid=%u, code=%u", mid, code);
   coap_packet_t msg[1]; // empty response
@@ -133,7 +133,7 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
 
 #ifdef OC_SECURITY
 static void
-coap_audit_log(oc_message_t *msg)
+coap_audit_log(const oc_message_t *msg)
 {
   char ipaddr[IPADDR_BUFF_SIZE];
   SNPRINTFipaddr(ipaddr, IPADDR_BUFF_SIZE, msg->endpoint);

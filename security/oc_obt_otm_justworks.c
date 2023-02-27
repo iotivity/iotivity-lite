@@ -527,7 +527,7 @@ obt_jw_5(oc_client_response_t *data)
   memcpy(device->uuid.id, dev_uuid.id, 16);
   oc_endpoint_t *ep = device->endpoint;
   while (ep) {
-    memcpy(ep->di.id, dev_uuid.id, 16);
+    oc_endpoint_set_di(ep, &dev_uuid);
     ep = ep->next;
   }
 

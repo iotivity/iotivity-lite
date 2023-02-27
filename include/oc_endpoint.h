@@ -120,6 +120,7 @@ typedef struct oc_endpoint_t
  *
  * @return oc_endpoint_t* created new endpoint
  */
+OC_API
 oc_endpoint_t *oc_new_endpoint(void);
 
 /**
@@ -127,15 +128,17 @@ oc_endpoint_t *oc_new_endpoint(void);
  *
  * @param endpoint endpoint to be freed
  */
+OC_API
 void oc_free_endpoint(oc_endpoint_t *endpoint);
 
 /**
  * @brief set device identifier (di) for the endpoint
  *
- * @param endpoint end point
- * @param di device identifier
+ * @param endpoint endpoint (cannot be NULL)
+ * @param di device identifier (cannot be NULL)
  */
-void oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di);
+OC_API
+void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di);
 
 /**
  * @brief convert the endpoint to a human readable string (e.g.
@@ -145,7 +148,9 @@ void oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di);
  * @param endpoint_str endpoint as human readable string
  * @return int 0 success
  */
-int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);
+OC_API
+int oc_endpoint_to_string(const oc_endpoint_t *endpoint,
+                          oc_string_t *endpoint_str);
 
 /**
  * @brief string to endpoint
@@ -155,6 +160,7 @@ int oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str);
  * @param uri the uri part of the endpoint
  * @return int 0 success
  */
+OC_API
 int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                           oc_string_t *uri);
 
@@ -166,6 +172,7 @@ int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
  * @return 0 on success
  * @return -1 on failure
  */
+OC_API
 int oc_endpoint_string_parse_path(const oc_string_t *endpoint_str,
                                   oc_string_t *path);
 
@@ -175,7 +182,8 @@ int oc_endpoint_string_parse_path(const oc_string_t *endpoint_str,
  * @param endpoint the endpoint to check
  * @return int 0 = endpoint is link local
  */
-int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
+OC_API
+int oc_ipv6_endpoint_is_link_local(const oc_endpoint_t *endpoint);
 
 /**
  * @brief compare endpoint
@@ -184,6 +192,7 @@ int oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint);
  * @param ep2 endpoint 2 to compare
  * @return int 0 = equal
  */
+OC_API
 int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
 
 /**
@@ -193,6 +202,7 @@ int oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2);
  * @param ep2 endpoint 2 to compare
  * @return int 0 = equal
  */
+OC_API
 int oc_endpoint_compare_address(const oc_endpoint_t *ep1,
                                 const oc_endpoint_t *ep2);
 
@@ -209,26 +219,37 @@ bool oc_endpoint_is_empty(const oc_endpoint_t *endpoint);
 /**
  * @brief set interface index on the endpoint
  *
- * @param ep the endpoing
+ * @param ep the endpoint (cannot be NULL)
  * @param interface_index the interface index
  */
+OC_API
 void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index);
 
 /**
  * @brief copy endpoint
  *
- * @param dst desination endpoint
- * @param src source endpoint
+ * @param dst destination endpoint (cannot be NULL)
+ * @param src source endpoint (cannot be NULL)
  */
+OC_API
 void oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src);
 
 /**
- * @brief copy list of endpoint
+ * @brief copy list of endpoints
  *
- * @param dst destination list of endpoints
+ * @param dst destination list of endpoints (cannot be NULL)
  * @param src source list of endpoints
  */
-void oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src);
+OC_API
+int oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src);
+
+/**
+ * @brief deallocate a linked list of endpoints
+ *
+ * @param eps linked list to deallocate
+ */
+OC_API
+void oc_endpoint_list_free(oc_endpoint_t *eps);
 
 #ifdef __cplusplus
 }

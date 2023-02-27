@@ -58,8 +58,9 @@ serialize_role_credential(CborEncoder *roles_array, const oc_sec_cred_t *cr)
 }
 
 bool
-oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
-               oc_response_handler_t handler, void *user_data)
+oc_assert_role(const char *role, const char *authority,
+               const oc_endpoint_t *endpoint, oc_response_handler_t handler,
+               void *user_data)
 {
   if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
     return false;
@@ -90,8 +91,8 @@ oc_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
 }
 
 void
-oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                    void *user_data)
+oc_assert_all_roles(const oc_endpoint_t *endpoint,
+                    oc_response_handler_t handler, void *user_data)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (oc_tls_uses_psk_cred(peer)) {

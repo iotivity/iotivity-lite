@@ -226,7 +226,7 @@ oc_dostype_t oc_obt_parse_dos(oc_rep_t *rep);
 oc_otm_ctx_t *oc_obt_alloc_otm_ctx(void);
 void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
-bool oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx);
+bool oc_obt_is_otm_ctx_valid(const oc_otm_ctx_t *ctx);
 
 // perform self-onboarding
 int oc_obt_self_own(size_t device);

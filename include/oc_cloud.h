@@ -299,7 +299,7 @@ OC_API
 int oc_cloud_publish_resources(size_t device);
 
 OC_API
-int oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+int oc_cloud_discover_resources(const oc_cloud_context_t *ctx,
                                 oc_discovery_all_handler_t handler,
                                 void *user_data);
 

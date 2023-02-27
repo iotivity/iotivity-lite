@@ -53,19 +53,20 @@
 #endif /* WIN32 */
 
 #ifdef OC_WKCORE
-static int
+static size_t
+clf_add_str_to_buffer(const char *str, size_t len)
+{
+  oc_rep_encode_raw((const uint8_t *)str, len);
+  return len;
+}
+
+static size_t
 clf_add_line_to_buffer(const char *line)
 {
-  int len = (int)strlen(line);
-  oc_rep_encode_raw((uint8_t *)line, len);
-  return len;
+  size_t len = strlen(line);
+  return clf_add_str_to_buffer(line, len);
 }
-static int
-clf_add_line_size_to_buffer(const char *line, int len)
-{
-  oc_rep_encode_raw((uint8_t *)line, len);
-  return len;
-}
+
 #endif /* OC_WKCORE */
 
 bool
@@ -774,7 +775,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *q;
   int ql = oc_get_query_value(request, "sduuid", &q);
   if (ql > 0) {
-    oc_sec_sdi_t *s = oc_sec_get_sdi(device);
+    const oc_sec_sdi_t *s = oc_sec_get_sdi(device);
     if (s->priv) {
       oc_ignore_request(request);
       OC_DBG("private sdi");
@@ -921,7 +922,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     // <coap://[fe80::b1d6]:1111/oic/res>;ct=10000;rt="oic.wk.res
     // oic.d.sensor";if="oic.if.11 oic.if.baseline"
 
-    int length = clf_add_line_to_buffer("<");
+    size_t length = clf_add_line_to_buffer("<");
     response_length += length;
 
     oc_endpoint_t *eps =
@@ -931,7 +932,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     while (eps != NULL) {
       if (eps->flags & SECURED) {
         if (oc_endpoint_to_string(eps, &ep) == 0) {
-          length = clf_add_line_to_buffer(oc_string(ep));
+          length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
           response_length += length;
           oc_free_string(&ep);
           break;
@@ -944,7 +945,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     response_length += length;
     length = clf_add_line_to_buffer("rt=\"oic.wk.res ");
     response_length += length;
-    length = clf_add_line_size_to_buffer(rt_device, rt_devlen);
+    length = clf_add_str_to_buffer(rt_device, rt_devlen);
     response_length += length;
     length = clf_add_line_to_buffer("\";");
     response_length += length;
@@ -997,9 +998,9 @@ oc_create_discovery_resource(int resource_idx, size_t device)
 
 #ifdef OC_CLIENT
 oc_discovery_flags_t
-oc_ri_process_discovery_payload(uint8_t *payload, int len,
+oc_ri_process_discovery_payload(const uint8_t *payload, int len,
                                 oc_client_handler_t client_handler,
-                                oc_endpoint_t *endpoint, void *user_data)
+                                const oc_endpoint_t *endpoint, void *user_data)
 {
   oc_discovery_handler_t handler = client_handler.discovery;
   oc_discovery_all_handler_t all_handler = client_handler.discovery_all;
@@ -1013,17 +1014,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
   oc_string_array_t *types = NULL;
   oc_interface_mask_t iface_mask = 0;
 
-#ifndef OC_DYNAMIC_ALLOCATION
-  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                 rep_objects_alloc, (void *)rep_objects_pool,
-                                 0 };
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-#endif /* OC_DYNAMIC_ALLOCATION */
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   oc_rep_set_pool(&rep_objects);
 
   oc_rep_t *links = 0, *rep, *p;
@@ -1130,7 +1121,7 @@ oc_ri_process_discovery_payload(uint8_t *payload, int len,
                     memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
                     eps_cur->next = NULL;
                     eps_cur->device = endpoint->device;
-                    memcpy(eps_cur->di.id, di.id, 16);
+                    oc_endpoint_set_di(eps_cur, &di);
                     eps_cur->interface_index = endpoint->interface_index;
                     oc_endpoint_set_local_address(eps_cur,
                                                   endpoint->interface_index);

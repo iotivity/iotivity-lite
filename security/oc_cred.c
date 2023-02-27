@@ -496,7 +496,7 @@ oc_sec_cred_set_subject(oc_sec_credusage_t credusage, const char *subjectuuid,
 }
 
 static bool
-oc_sec_is_duplicate_cred(oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
+oc_sec_is_duplicate_cred(const oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
                          oc_sec_credusage_t credusage, oc_uuid_t subject,
                          size_t privatedata_size, const uint8_t *privatedata,
                          size_t publicdata_size, const uint8_t *publicdata,
@@ -593,7 +593,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource, oc_tls_peer_t *client,
   }
 #endif /* OC_PKI */
 
-  oc_sec_cred_t *existing =
+  const oc_sec_cred_t *existing =
     oc_sec_is_existing_cred(credid, roles_resource, client, device);
   if (existing) {
     if (!roles_resource) {

@@ -48,9 +48,9 @@ extern "C" {
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
-bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-                uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
-                void *user_data);
+bool rd_publish(const oc_endpoint_t *endpoint, const oc_link_t *links,
+                size_t device, uint32_t ttl, oc_response_handler_t handler,
+                oc_qos_t qos, void *user_data);
 
 /**
   @brief Delete RD resource from Resource Directory.
@@ -63,8 +63,9 @@ bool rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
   @param user_data The user data passed from the registration function.
   @return Returns true if success.
 */
-bool rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
-               oc_response_handler_t handler, oc_qos_t qos, void *user_data);
+bool rd_delete(const oc_endpoint_t *endpoint, const oc_link_t *links,
+               size_t device, oc_response_handler_t handler, oc_qos_t qos,
+               void *user_data);
 
 #ifdef __cplusplus
 }

@@ -63,11 +63,9 @@ oc_free_endpoint(oc_endpoint_t *endpoint)
 }
 
 void
-oc_endpoint_set_di(oc_endpoint_t *endpoint, oc_uuid_t *di)
+oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
 {
-  if (endpoint && di) {
-    memcpy(endpoint->di.id, di->id, 16);
-  }
+  memcpy(endpoint->di.id, di->id, sizeof(di->id));
 }
 
 static const char *
@@ -89,13 +87,11 @@ oc_endpoint_flags_to_scheme(transport_flags flags)
 
 #ifdef OC_IPV4
 static void
-oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
+oc_ipv4_endpoint_to_string(const oc_endpoint_t *endpoint,
+                           oc_string_t *endpoint_str)
 {
-  if (!endpoint || !endpoint_str) {
-    return;
-  }
   char ip[OC_IPV4_ADDRSTRLEN + 6];
-  uint8_t *addr = endpoint->addr.ipv4.address;
+  const uint8_t *addr = endpoint->addr.ipv4.address;
   sprintf(ip, "%u.%u.%u.%u:%u", addr[0], addr[1], addr[2], addr[3],
           endpoint->addr.ipv4.port);
   oc_concat_strings(endpoint_str, oc_endpoint_flags_to_scheme(endpoint->flags),
@@ -104,15 +100,18 @@ oc_ipv4_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 #endif /* OC_IPV4 */
 
 static int
-oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
+oc_ipv6_endpoint_to_string(const oc_endpoint_t *endpoint,
+                           oc_string_t *endpoint_str)
 {
-  if (!endpoint || !endpoint_str) {
-    return -1;
-  }
-  uint8_t *addr = endpoint->addr.ipv6.address;
+  const uint8_t *addr = endpoint->addr.ipv6.address;
   char ip[OC_IPV6_ADDRSTRLEN + 8];
-  int addr_idx = 0, str_idx = 0, start_zeros = 0, last_zeros = OC_IPV6_ADDRLEN,
-      num_zeros = 0, max_zeros_start = 0, max_zeros_num = 0;
+  size_t addr_idx = 0;
+  size_t str_idx = 0;
+  size_t start_zeros = 0;
+  size_t last_zeros = OC_IPV6_ADDRLEN;
+  size_t num_zeros = 0;
+  size_t max_zeros_start = 0;
+  size_t max_zeros_num = 0;
   ip[str_idx++] = '[';
   while (addr_idx < OC_IPV6_ADDRLEN) {
     if (addr_idx % 2 == 0 && addr[addr_idx] == 0 && addr[addr_idx + 1] == 0) {
@@ -162,7 +161,7 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
   if (last_zeros == OC_IPV6_ADDRLEN - 2) {
     ip[str_idx++] = ':';
   }
-  int i = str_idx;
+  size_t i = str_idx;
   while (max_zeros_start != 0 && i > max_zeros_start) {
     ip[i] = ip[i - 1];
     i--;
@@ -178,7 +177,7 @@ oc_ipv6_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 }
 
 int
-oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
+oc_endpoint_to_string(const oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
   if (!endpoint || !endpoint_str) {
     return -1;
@@ -203,11 +202,9 @@ oc_endpoint_to_string(oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 static void
 oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
-  if (!address || !endpoint) {
-    return;
-  }
   uint8_t *addr = endpoint->addr.ipv4.address;
-  size_t str_idx = 0, addr_idx = 0;
+  size_t str_idx = 0;
+  size_t addr_idx = 0;
   char *next_seg;
   while (addr_idx < OC_IPV4_ADDRLEN && str_idx < len) {
     addr[addr_idx++] = (uint8_t)strtoul(&address[str_idx], &next_seg, 10);
@@ -221,88 +218,86 @@ oc_parse_ipv4_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 static uint8_t
 hex_to_bin(const char *hex, size_t len)
 {
-  size_t n = 0;
-  uint8_t h, b = 0;
-low_nibble:
-  h = hex[n];
-  switch (h) {
-  case '0':
-    break;
-  case '1':
-    b |= 0x01;
-    break;
-  case '2':
-    b |= 0x02;
-    break;
-  case '3':
-    b |= 0x03;
-    break;
-  case '4':
-    b |= 0x04;
-    break;
-  case '5':
-    b |= 0x05;
-    break;
-  case '6':
-    b |= 0x06;
-    break;
-  case '7':
-    b |= 0x07;
-    break;
-  case '8':
-    b |= 0x08;
-    break;
-  case '9':
-    b |= 0x09;
-    break;
-  case 'a':
-  case 'A':
-    b |= 0x0a;
-    break;
-  case 'b':
-  case 'B':
-    b |= 0x0b;
-    break;
-  case 'c':
-  case 'C':
-    b |= 0x0c;
-    break;
-  case 'd':
-  case 'D':
-    b |= 0x0d;
-    break;
-  case 'e':
-  case 'E':
-    b |= 0x0e;
-    break;
-  case 'f':
-  case 'F':
-    b |= 0x0f;
-    break;
-  default:
-    b |= h;
+  uint8_t b = 0;
+  for (size_t i = 0; i < len; ++i) {
+    uint8_t h = hex[i];
+    switch (h) {
+    case '0':
+      break;
+    case '1':
+      b |= 0x01;
+      break;
+    case '2':
+      b |= 0x02;
+      break;
+    case '3':
+      b |= 0x03;
+      break;
+    case '4':
+      b |= 0x04;
+      break;
+    case '5':
+      b |= 0x05;
+      break;
+    case '6':
+      b |= 0x06;
+      break;
+    case '7':
+      b |= 0x07;
+      break;
+    case '8':
+      b |= 0x08;
+      break;
+    case '9':
+      b |= 0x09;
+      break;
+    case 'a':
+    case 'A':
+      b |= 0x0a;
+      break;
+    case 'b':
+    case 'B':
+      b |= 0x0b;
+      break;
+    case 'c':
+    case 'C':
+      b |= 0x0c;
+      break;
+    case 'd':
+    case 'D':
+      b |= 0x0d;
+      break;
+    case 'e':
+    case 'E':
+      b |= 0x0e;
+      break;
+    case 'f':
+    case 'F':
+      b |= 0x0f;
+      break;
+    default:
+      b |= h;
+    }
+    if (len > 1 && i < len - 1) {
+      b <<= 4;
+    }
   }
-  if (n == 0 && len > 1) {
-    b <<= 4;
-    n = 1;
-    goto low_nibble;
-  }
+
   return b;
 }
 
 static void
 oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
 {
-  if (!address || !endpoint) {
-    return;
-  }
   uint8_t *addr = endpoint->addr.ipv6.address;
   memset(addr, 0, OC_IPV6_ADDRLEN);
-  int str_idx = 0, addr_idx = 0, split = -1;
+  size_t str_idx = 0;
+  size_t addr_idx = 0;
+  long split = -1;
   size_t seg_len = 0;
-  while (addr_idx < OC_IPV6_ADDRLEN - 1 && str_idx < (int)len) {
+  while (addr_idx < OC_IPV6_ADDRLEN - 1 && str_idx < len) {
     if (split == -1 && strncmp(&address[str_idx], "::", 2) == 0) {
-      split = addr_idx;
+      split = (long)addr_idx;
       str_idx += 2;
     }
     seg_len = len - str_idx;
@@ -342,7 +337,7 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
     }
   }
   if (split != -1) {
-    int i = addr_idx - 1;
+    long i = (long)(addr_idx - 1);
     addr_idx = OC_IPV6_ADDRLEN - 1;
     while (i >= split) {
 #if defined(__GNUC__) && !defined(__clang__)
@@ -520,9 +515,6 @@ static int
 oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                          oc_string_t *uri)
 {
-  if (!endpoint_str || !endpoint)
-    return -1;
-
   endpoint_uri_t ep_uri = { 0 };
   if (!parse_endpoint_uri(endpoint_str, &ep_uri, uri != NULL)) {
     return -1;
@@ -643,7 +635,7 @@ oc_endpoint_string_parse_path(const oc_string_t *endpoint_str,
 }
 
 int
-oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
+oc_ipv6_endpoint_is_link_local(const oc_endpoint_t *endpoint)
 {
   if (!endpoint || !(endpoint->flags & IPV6)) {
     return -1;
@@ -658,8 +650,9 @@ oc_ipv6_endpoint_is_link_local(oc_endpoint_t *endpoint)
 int
 oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
-  if (!ep1 || !ep2)
+  if (!ep1 || !ep2) {
     return -1;
+  }
 
   if ((ep1->flags & ep2->flags) & IPV6) {
     if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0) {
@@ -668,7 +661,7 @@ oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
     return -1;
   }
 #ifdef OC_IPV4
-  else if ((ep1->flags & ep2->flags) & IPV4) {
+  if ((ep1->flags & ep2->flags) & IPV4) {
     if (memcmp(ep1->addr.ipv4.address, ep2->addr.ipv4.address, 4) == 0) {
       return 0;
     }
@@ -682,8 +675,9 @@ oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 int
 oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
-  if (!ep1 || !ep2)
+  if (!ep1 || !ep2) {
     return -1;
+  }
 
   if ((ep1->flags & ~(MULTICAST | ACCEPTED)) !=
         (ep2->flags & ~(MULTICAST | ACCEPTED)) ||
@@ -721,26 +715,58 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 void
 oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src)
 {
-  if (dst && src) {
-    memcpy(dst, src, sizeof(oc_endpoint_t));
-    dst->next = NULL;
+  memcpy(dst, src, sizeof(oc_endpoint_t));
+  dst->next = NULL;
+}
+
+int
+oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
+{
+  assert(dst != NULL);
+  if (src == NULL) {
+    return 0;
   }
+
+  oc_endpoint_t *head = oc_new_endpoint();
+  if (head == NULL) {
+    OC_ERR("cannot allocate endpoint list head");
+    return -1;
+  }
+  int count = 0;
+  oc_endpoint_t *ep = head;
+  while (src != NULL) {
+    oc_endpoint_copy(ep, src);
+    ++count;
+    src = src->next;
+    if (src != NULL) {
+      ep->next = oc_new_endpoint();
+      if (ep->next == NULL) {
+        OC_ERR("cannot allocate endpoint list item");
+        goto oc_endpoint_list_copy_err;
+      }
+      ep = ep->next;
+    }
+  }
+  *dst = head;
+  return count;
+
+oc_endpoint_list_copy_err:
+  ep = head;
+  while (ep != NULL) {
+    oc_endpoint_t *next = ep->next;
+    oc_free_endpoint(ep);
+    ep = next;
+  }
+  return -1;
 }
 
 void
-oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
+oc_endpoint_list_free(oc_endpoint_t *eps)
 {
-  if (dst && src) {
-    oc_endpoint_t *ep = oc_new_endpoint();
-    *dst = ep;
-    while (src && ep) {
-      oc_endpoint_copy(ep, src);
-      src = src->next;
-      if (src) {
-        ep->next = oc_new_endpoint();
-        ep = ep->next;
-      }
-    }
+  while (eps != NULL) {
+    oc_endpoint_t *ep_next = eps->next;
+    oc_free_endpoint(eps);
+    eps = ep_next;
   }
 }
 
@@ -748,9 +774,6 @@ oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
 void
 oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
 {
-  if (!ep) {
-    return;
-  }
   oc_endpoint_t *e = oc_connectivity_get_endpoints(ep->device);
   transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;
   while (e) {

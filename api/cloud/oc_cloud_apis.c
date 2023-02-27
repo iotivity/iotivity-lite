@@ -346,7 +346,7 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 }
 
 int
-oc_cloud_discover_resources(oc_cloud_context_t *ctx,
+oc_cloud_discover_resources(const oc_cloud_context_t *ctx,
                             oc_discovery_all_handler_t handler, void *user_data)
 {
   if (!ctx) {
@@ -365,7 +365,7 @@ oc_cloud_discover_resources(oc_cloud_context_t *ctx,
 }
 
 bool
-cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+cloud_send_ping(const oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                 oc_response_handler_t handler, void *user_data)
 {
 #ifdef OC_SECURITY

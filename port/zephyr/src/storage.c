@@ -324,7 +324,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
  * The value should be multiple of the flash sector size.
  */
 long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
+oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
   int r = 0;
   struct memmap_key *key;

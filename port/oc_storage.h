@@ -55,7 +55,7 @@ long oc_storage_read(const char *store, uint8_t *buf, size_t size);
  * @return long >= 0 amount of bytes written on success
  * @return long < 0 on failure
  */
-long oc_storage_write(const char *store, uint8_t *buf, size_t size);
+long oc_storage_write(const char *store, const uint8_t *buf, size_t size);
 
 #ifdef __cplusplus
 }
