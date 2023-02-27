@@ -291,7 +291,7 @@ if (ENABLE_TESTING)
 
     macro(add_cxx_qt_test TESTNAME)
         add_qt_test(${TESTNAME} ${ARGN})
-        set_property(TARGET ${TESTNAME} PROPERTY CXX_STANDARD 11)
+        set_property(TARGET ${TESTNAME} PROPERTY CXX_STANDARD 17)
         set_property(TARGET ${TESTNAME} PROPERTY CXX_EXTENSIONS OFF)
         tinycbor_target_compile_and_link_options(${TESTNAME})
         target_compile_options(${TESTNAME} PRIVATE "-fpermissive")

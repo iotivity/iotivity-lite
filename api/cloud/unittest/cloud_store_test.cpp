@@ -24,6 +24,7 @@
 
 #include <gtest/gtest.h>
 #include <pthread.h>
+#include <filesystem>
 
 #define ACCESS_TOKEN ("access_token")
 #define AUTH_PROVIDER ("auth_provider")
@@ -35,6 +36,7 @@
 #define STATUS (OC_CLOUD_LOGGED_IN)
 #define UID ("uid")
 #define CPS (OC_CPS_READYTOREGISTER)
+#define CLOUD_STORAGE ("storage_cloud")
 
 #define DEFAULT_CLOUD_CIS ("coaps+tcp://127.0.0.1")
 #define DEFAULT_CLOUD_SID ("00000000-0000-0000-0000-000000000000")
@@ -132,7 +134,7 @@ public:
   {
     int ret;
 #ifdef OC_SECURITY
-    ret = oc_storage_config("storage_cloud");
+    ret = oc_storage_config(CLOUD_STORAGE);
     EXPECT_EQ(0, ret);
 #endif
     s_handler.init = &appInit;
@@ -164,6 +166,10 @@ public:
   void TearDown() override
   {
     freeStore(&m_store);
+    for (const auto &entry :
+         std::filesystem::directory_iterator(CLOUD_STORAGE)) {
+      std::filesystem::remove_all(entry.path());
+    }
   }
 
   oc_cloud_store_t m_store;
