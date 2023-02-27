@@ -1836,7 +1836,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
   cb->ref_count = 1;
 
-  uint8_t *payload = NULL;
+  const uint8_t *payload = NULL;
   int payload_len = 0;
   coap_packet_t *const pkt = (coap_packet_t *)response;
 
@@ -2009,7 +2009,9 @@ oc_ri_alloc_client_cb(const char *uri, const oc_endpoint_t *endpoint,
   cb->discovery = false;
   cb->timestamp = oc_clock_time();
   cb->observe_seq = -1;
-  oc_endpoint_copy(&cb->endpoint, endpoint);
+  if (endpoint != NULL) {
+    oc_endpoint_copy(&cb->endpoint, endpoint);
+  }
   if (query && strlen(query) > 0) {
     oc_new_string(&cb->query, query, strlen(query));
   }

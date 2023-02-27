@@ -70,7 +70,7 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 oc_collection_t *oc_collection_alloc(void);
 void oc_collection_free(oc_collection_t *collection);
 
-oc_collection_t *oc_get_next_collection_with_link(oc_resource_t *resource,
+oc_collection_t *oc_get_next_collection_with_link(const oc_resource_t *resource,
                                                   oc_collection_t *start);
 oc_collection_t *oc_get_collection_by_uri(const char *uri_path,
                                           size_t uri_path_len, size_t device);
@@ -78,7 +78,7 @@ oc_collection_t *oc_collection_get_all(void);
 oc_link_t *oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
                               int uri_path_len);
 
-bool oc_check_if_collection(oc_resource_t *resource);
+bool oc_check_if_collection(const oc_resource_t *resource);
 void oc_collection_add(oc_collection_t *collection);
 #ifdef OC_COLLECTIONS_IF_CREATE
 void oc_collections_free_rt_factories(void);

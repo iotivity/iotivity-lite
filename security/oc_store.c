@@ -95,7 +95,7 @@ oc_sec_load_doxm(size_t device)
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   memcpy(deviceuuid, &doxm->deviceuuid, sizeof(oc_uuid_t));
 }
 
@@ -565,11 +565,11 @@ oc_sec_dump_unique_ids(size_t device)
   oc_rep_new(oc_store_buf, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
-  oc_device_info_t *device_info = oc_core_get_device_info(device);
-  oc_platform_info_t *platform_info = oc_core_get_platform_info();
-
-  char pi[OC_UUID_LEN], piid[OC_UUID_LEN];
+  const oc_device_info_t *device_info = oc_core_get_device_info(device);
+  char piid[OC_UUID_LEN];
   oc_uuid_to_str(&device_info->piid, piid, OC_UUID_LEN);
+  const oc_platform_info_t *platform_info = oc_core_get_platform_info();
+  char pi[OC_UUID_LEN];
   oc_uuid_to_str(&platform_info->pi, pi, OC_UUID_LEN);
 
   oc_rep_start_root_object();

@@ -114,7 +114,7 @@ oc_ignore_request(oc_request_t *request)
 }
 
 void
-oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid)
+oc_set_immutable_device_identifier(size_t device, const oc_uuid_t *piid)
 {
   if (piid && device < oc_core_get_num_devices()) {
     oc_device_info_t *info = oc_core_get_device_info(device);
@@ -234,7 +234,7 @@ oc_process_baseline_interface(oc_resource_t *resource)
       // clang-format on
     }
   }
-  double *pos = resource->tag_pos_rel;
+  const double *pos = resource->tag_pos_rel;
   if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
     oc_rep_set_key(oc_rep_object(root), "tag-pos-rel");
     oc_rep_start_array(oc_rep_object(root), tag_pos_rel);
@@ -290,7 +290,7 @@ more_or_done:
 #ifdef OC_SERVER
 
 bool
-oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
+oc_get_request_payload_raw(const oc_request_t *request, const uint8_t **payload,
                            size_t *size, oc_content_format_t *content_format)
 {
   if (!request || !payload || !size || !content_format) {

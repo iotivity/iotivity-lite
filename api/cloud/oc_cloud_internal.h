@@ -74,7 +74,7 @@ void oc_cloud_register_handler(oc_client_response_t *data);
 void oc_cloud_login_handler(oc_client_response_t *data);
 void oc_cloud_refresh_token_handler(oc_client_response_t *data);
 
-void cloud_close_endpoint(oc_endpoint_t *cloud_ep);
+void cloud_close_endpoint(const oc_endpoint_t *cloud_ep);
 
 /// Remove callback (if it exists) and schedule it again
 void cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
@@ -166,13 +166,13 @@ int cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 /**
  * @brief Send a ping over the cloud connected connection
  *
- * @param endpoint endpoint to be used
+ * @param endpoint endpoint to be used (cannot be NULL)
  * @param timeout_seconds timeout for the ping
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
  * @return true on success
  */
-bool cloud_send_ping(oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+bool cloud_send_ping(const oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                      oc_response_handler_t handler, void *user_data);
 
 #ifdef __cplusplus

@@ -97,7 +97,7 @@ coap_transaction_t *coap_get_transaction_by_token(uint8_t *token,
                                                   uint8_t token_len);
 void coap_check_transactions(void);
 void coap_free_all_transactions(void);
-void coap_free_transactions_by_endpoint(oc_endpoint_t *endpoint);
+void coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint);
 
 #ifdef __cplusplus
 }

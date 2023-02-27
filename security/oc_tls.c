@@ -289,7 +289,7 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
   oc_list_remove(g_tls_peers, peer);
 
   size_t device = peer->endpoint.device;
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
     oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
   }
@@ -328,7 +328,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   oc_list_remove(g_tls_peers, peer);
 
   size_t device = peer->endpoint.device;
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
     oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
   }
@@ -651,7 +651,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
   }
   if (peer) {
     OC_DBG("oc_tls: Found peer object");
-    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    const oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
     /* To an OBT performing the PIN OTM, a device signals its identity
      * with the oic.sec.doxm.rdp: prefix.
      */
@@ -1063,7 +1063,7 @@ oc_tls_validate_identity_certs_consistency_for_device(size_t device)
          (OC_CREDUSAGE_MFG_CERT | OC_CREDUSAGE_IDENTITY_CERT)) != 0 &&
         !cred->child) {
       OC_DBG("search for identity cert for cred(%d)", cred->credid);
-      oc_x509_crt_t *cert = oc_tls_find_identity_cert(cred);
+      const oc_x509_crt_t *cert = oc_tls_find_identity_cert(cred);
       if (cert == NULL) {
         OC_DBG("\tidentity not found");
         return false;
@@ -1076,7 +1076,7 @@ oc_tls_validate_identity_certs_consistency_for_device(size_t device)
   oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
     OC_DBG("search for cred for identity cert(%p)", (void *)cert);
-    oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
+    const oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
     if (cred == NULL) {
       OC_DBG("\tcred not found");
       return false;
@@ -1158,7 +1158,7 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
           0 &&
         !cred->child) {
       OC_DBG("search for trust anchor for cred(%d)", cred->credid);
-      oc_x509_cacrt_t *cert = oc_tls_find_trust_anchor_for_cred(cred);
+      const oc_x509_cacrt_t *cert = oc_tls_find_trust_anchor_for_cred(cred);
       if (cert == NULL) {
         OC_DBG("\ttrust anchor not found");
         return false;
@@ -1172,7 +1172,7 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
   oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
   while (cert != NULL) {
     OC_DBG("search for cred for trust anchor(%p)", (void *)cert);
-    oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
+    const oc_sec_cred_t *cred = oc_tls_find_cert_cred(cert->device, cert->cred);
     if (cred == NULL) {
       OC_DBG("\tcred not found");
       return false;
@@ -1203,7 +1203,7 @@ oc_tls_validate_trust_anchors_consistency_for_device(size_t device)
   while (cert != NULL) {
     OC_DBG("search for mbedtls trust anchor for trust anchor(%p)",
            (void *)cert);
-    mbedtls_x509_crt *c = oc_tls_find_trust_anchor(cert);
+    const mbedtls_x509_crt *c = oc_tls_find_trust_anchor(cert);
     if (c == NULL) {
       OC_DBG("\tmbedtls trust anchor not found");
       return false;
@@ -1408,7 +1408,7 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
   bool loaded_chain = false;
 #endif /* OC_CLIENT */
   size_t device = endpoint->device;
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   /* Decide between configuring the identity cert chain vs manufacturer cert
    * chain for this device based on device ownership status.
    */
@@ -1425,11 +1425,11 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
   selected_mfg_cred = -1;
   selected_id_cred = -1;
 #endif /* OC_PKI */
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
     OC_DBG(
       "oc_tls_set_ciphersuites: server selecting OTM ciphersuite priority");
-    oc_sec_doxm_t *d = oc_sec_get_doxm(endpoint->device);
+    const oc_sec_doxm_t *d = oc_sec_get_doxm(endpoint->device);
     switch (d->oxmsel) {
     case OC_OXMTYPE_JW:
       OC_DBG("oc_tls: selected JW OTM priority");
@@ -1456,7 +1456,7 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
     ciphers = (int *)default_priority;
 #ifdef OC_CLIENT
     if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-      oc_sec_cred_t *cred =
+      const oc_sec_cred_t *cred =
         oc_sec_find_creds_for_subject(NULL, &endpoint->di, endpoint->device);
       if (cred && cred->credtype == OC_CREDTYPE_PSK) {
         OC_DBG("oc_tls_set_ciphersuites: client selecting PSK ciphersuite "
@@ -1515,7 +1515,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
      * after validating the end-entity certificate to authorize the
      * the peer per the OCF Specification. */
     oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
-    oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+    const oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
     if (oc_certs_validate_non_end_entity_cert(crt, true, ps->s == OC_DOS_RFOTM,
                                               depth, flags) < 0) {
       if (oc_certs_validate_non_end_entity_cert(
@@ -1546,7 +1546,8 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
   }
 
   if (depth == 0) {
-    oc_x509_crt_t *id_cert = get_identity_cert_for_session(&peer->ssl_conf);
+    const oc_x509_crt_t *id_cert =
+      get_identity_cert_for_session(&peer->ssl_conf);
 
     /* Parse the peer's subjectuuid from its end-entity certificate */
     char uuid[OC_UUID_LEN] = { 0 };
@@ -1579,7 +1580,7 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
         OC_DBG("could not find peer's root certificate");
         return -1;
       }
-      mbedtls_x509_crt *root_crt = id_cert->ctx->cert;
+      const mbedtls_x509_crt *root_crt = id_cert->ctx->cert;
 
       OC_DBG(
         "looking for a matching trustca entry currently tracked by oc_tls");
@@ -1681,7 +1682,7 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
     return -1;
   }
 
-  oc_uuid_t *device_id = oc_core_get_device_id(device);
+  const oc_uuid_t *device_id = oc_core_get_device_id(device);
 #ifdef OC_CLIENT
   if (role == MBEDTLS_SSL_IS_CLIENT && use_pin_obt_psk_identity) {
     use_pin_obt_psk_identity = false;
@@ -1695,8 +1696,8 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   {
     unsigned char identity_hint[33];
     size_t identity_hint_len = 33;
-    oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-    oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+    const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
     if (pstat->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
       memcpy(identity_hint, "oic.sec.doxm.rdp:", 17);
       memcpy(identity_hint + 17, device_id->id, 16);
@@ -1718,7 +1719,7 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
   mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   if ((ps->s > OC_DOS_RFOTM) || (role != MBEDTLS_SSL_IS_SERVER)) {
     mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_REQUIRED);
   }
@@ -2197,7 +2198,7 @@ oc_tls_peer_connected(const oc_tls_peer_t *peer)
 bool
 oc_tls_connected(const oc_endpoint_t *endpoint)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer != NULL) {
     return oc_tls_peer_connected(peer);
   }

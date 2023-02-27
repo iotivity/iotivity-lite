@@ -73,7 +73,8 @@ oc_oscore_context_t *oc_oscore_find_context_by_UUID(size_t device,
                                                     oc_uuid_t *uuid);
 
 oc_oscore_context_t *oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx,
-                                                   size_t device, uint8_t *kid,
+                                                   size_t device,
+                                                   const uint8_t *kid,
                                                    uint8_t kid_len);
 
 oc_oscore_context_t *oc_oscore_find_context_by_token_mid(

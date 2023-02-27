@@ -303,7 +303,7 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
 }
 
 bool
-oc_check_if_collection(oc_resource_t *resource)
+oc_check_if_collection(const oc_resource_t *resource)
 {
   oc_resource_t *collection = (oc_resource_t *)oc_list_head(oc_collections);
   while (collection != NULL) {
@@ -572,7 +572,7 @@ oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt)
 }
 
 oc_collection_t *
-oc_get_next_collection_with_link(oc_resource_t *resource,
+oc_get_next_collection_with_link(const oc_resource_t *resource,
                                  oc_collection_t *start)
 {
   oc_collection_t *collection = start;
@@ -680,7 +680,7 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
         }
 
         // tag-pos-rel
-        double *pos = link->resource->tag_pos_rel;
+        const double *pos = link->resource->tag_pos_rel;
         if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
           oc_rep_set_key(oc_rep_object(links), "tag-pos-rel");
           oc_rep_start_array(oc_rep_object(links), tag_pos_rel);
@@ -786,7 +786,7 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
       }
 
       // tag-pos-rel
-      double *pos = link->resource->tag_pos_rel;
+      const double *pos = link->resource->tag_pos_rel;
       if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
         oc_rep_set_key(oc_rep_object(links), "tag-pos-rel");
         oc_rep_start_array(oc_rep_object(links), tag_pos_rel);

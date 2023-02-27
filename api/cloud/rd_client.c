@@ -30,8 +30,8 @@
 #include <stdlib.h>
 
 static void
-_add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
-                      int64_t ins)
+_add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
+                      const char *rel, int64_t ins)
 {
   if (!parent || !resource) {
     OC_ERR("Error of input parameters");
@@ -52,7 +52,7 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource, char *rel,
 }
 
 static bool
-rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+rd_publish_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
                           const char *id, const char *name, uint32_t ttl,
                           oc_response_handler_t handler, oc_qos_t qos,
                           void *user_data)
@@ -70,7 +70,7 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
     oc_rep_set_int(root, ttl, ttl);
 
     oc_rep_set_array(root, links);
-    oc_link_t *link = links;
+    const oc_link_t *link = links;
     while (link != NULL) {
       _add_resource_payload(oc_rep_array(links), link->resource,
                             oc_string_array_get_item(link->rel, 0), link->ins);
@@ -87,40 +87,36 @@ rd_publish_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 }
 
 bool
-rd_publish(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+rd_publish(const oc_endpoint_t *endpoint, const oc_link_t *links, size_t device,
            uint32_t ttl, oc_response_handler_t handler, oc_qos_t qos,
            void *user_data)
 {
   char uuid[OC_UUID_LEN] = { 0 };
   oc_device_info_t *device_info = oc_core_get_device_info(device);
-  if (!device_info)
+  if (device_info == NULL) {
     return false;
+  }
   oc_uuid_to_str(&device_info->di, uuid, OC_UUID_LEN);
 
-  bool status = false;
-  if (!links) {
-    oc_link_t *link_p =
-      oc_new_link(oc_core_get_resource_by_index(OCF_P, device));
-    oc_link_t *link_d =
-      oc_new_link(oc_core_get_resource_by_index(OCF_D, device));
-    oc_list_add((oc_list_t)link_p, link_d);
-
-    status = rd_publish_with_device_id(endpoint, link_p, uuid,
-                                       oc_string(device_info->name), ttl,
-                                       handler, qos, user_data);
-    oc_delete_link(link_p);
-    oc_delete_link(link_d);
-  } else {
-    status = rd_publish_with_device_id(endpoint, links, uuid,
-                                       oc_string(device_info->name), ttl,
-                                       handler, qos, user_data);
+  if (links != NULL) {
+    return rd_publish_with_device_id(endpoint, links, uuid,
+                                     oc_string(device_info->name), ttl, handler,
+                                     qos, user_data);
   }
+  oc_link_t *link_p = oc_new_link(oc_core_get_resource_by_index(OCF_P, device));
+  oc_link_t *link_d = oc_new_link(oc_core_get_resource_by_index(OCF_D, device));
+  oc_list_add((oc_list_t)link_p, link_d);
 
+  bool status = rd_publish_with_device_id(endpoint, link_p, uuid,
+                                          oc_string(device_info->name), ttl,
+                                          handler, qos, user_data);
+  oc_delete_link(link_p);
+  oc_delete_link(link_d);
   return status;
 }
 
 static bool
-rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
+rd_delete_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
                          const char *id, oc_response_handler_t handler,
                          oc_qos_t qos, void *user_data)
 {
@@ -165,10 +161,10 @@ rd_delete_with_device_id(oc_endpoint_t *endpoint, oc_link_t *links,
 }
 
 bool
-rd_delete(oc_endpoint_t *endpoint, oc_link_t *links, size_t device,
+rd_delete(const oc_endpoint_t *endpoint, const oc_link_t *links, size_t device,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  oc_device_info_t *device_info = oc_core_get_device_info(device);
+  const oc_device_info_t *device_info = oc_core_get_device_info(device);
   if (device_info == NULL) {
     return false;
   }

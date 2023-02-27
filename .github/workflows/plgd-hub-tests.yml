@@ -24,6 +24,7 @@ on:
           # - ECDSA-SHA512
         default: ECDSA-SHA256
       cert_elliptic_curve:
+        type: choice
         description: Elliptic curve used to generate keys in certificates
         options:
           - P256

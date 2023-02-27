@@ -385,7 +385,7 @@ struct list
 };
 
 static bool
-is_item_in_list(oc_list_t list, void *item)
+is_item_in_list(oc_list_t list, const void *item)
 {
   struct list *h = oc_list_head(list);
   while (h != NULL) {
@@ -398,7 +398,7 @@ is_item_in_list(oc_list_t list, void *item)
 }
 
 bool
-oc_obt_is_otm_ctx_valid(oc_otm_ctx_t *ctx)
+oc_obt_is_otm_ctx_valid(const oc_otm_ctx_t *ctx)
 {
   return is_item_in_list(oc_otm_ctx_l, ctx);
 }
@@ -543,7 +543,7 @@ get_endpoints(oc_client_response_t *data)
                   memcpy(eps_cur, &temp_ep, sizeof(oc_endpoint_t));
                   eps_cur->next = NULL;
                   eps_cur->device = data->endpoint->device;
-                  memcpy(eps_cur->di.id, di.id, 16);
+                  oc_endpoint_set_di(eps_cur, &di);
                   eps_cur->interface_index = data->endpoint->interface_index;
                   oc_endpoint_set_local_address(
                     eps_cur, data->endpoint->interface_index);

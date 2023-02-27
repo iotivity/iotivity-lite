@@ -48,7 +48,7 @@ oc_oscore_find_group_context(void)
 
 oc_oscore_context_t *
 oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx, size_t device,
-                              uint8_t *kid, uint8_t kid_len)
+                              const uint8_t *kid, uint8_t kid_len)
 {
   if (!ctx) {
     ctx = (oc_oscore_context_t *)oc_list_head(contexts);

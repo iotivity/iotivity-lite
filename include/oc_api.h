@@ -1513,8 +1513,8 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code);
  * @return true
  * @return false
  */
-bool oc_get_request_payload_raw(oc_request_t *request, const uint8_t **payload,
-                                size_t *size,
+bool oc_get_request_payload_raw(const oc_request_t *request,
+                                const uint8_t **payload, size_t *size,
                                 oc_content_format_t *content_format);
 
 /**
@@ -2312,7 +2312,7 @@ bool oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
  * @param[in] device the logical device index
  * @param[in] piid the UUID for the immutable device identifier
  */
-void oc_set_immutable_device_identifier(size_t device, oc_uuid_t *piid);
+void oc_set_immutable_device_identifier(size_t device, const oc_uuid_t *piid);
 
 /**
  * Schedule a callback to be invoked after a set number of seconds.

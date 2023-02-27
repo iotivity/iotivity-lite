@@ -59,7 +59,7 @@ oc_storage_config(const char *store)
 }
 
 long
-oc_storage_write(const char *store, uint8_t *buf, size_t len)
+oc_storage_write(const char *store, const uint8_t *buf, size_t len)
 {
   size_t store_len = strlen(store);
   store_path[store_path_len] = '/';

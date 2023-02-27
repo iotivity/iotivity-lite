@@ -64,8 +64,8 @@ oc_role_t *oc_get_all_roles(void);
  * @return false otherwise
  */
 bool oc_assert_role(const char *role, const char *authority,
-                    oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                    void *user_data);
+                    const oc_endpoint_t *endpoint,
+                    oc_response_handler_t handler, void *user_data);
 
 /**
  * @brief set automatic role assertion (e.g. for all endpoints with a
@@ -82,8 +82,8 @@ void oc_auto_assert_roles(bool auto_assert);
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
  */
-void oc_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler,
-                         void *user_data);
+void oc_assert_all_roles(const oc_endpoint_t *endpoint,
+                         oc_response_handler_t handler, void *user_data);
 /** @} */ // end of doc_module_tag_asserting_roles
 
 #ifdef __cplusplus

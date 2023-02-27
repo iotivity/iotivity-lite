@@ -66,7 +66,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 }
 
 long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
+oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
   FILE *fp;
   size_t store_len = strlen(store);

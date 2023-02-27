@@ -74,7 +74,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 }
 
 static long
-write_and_flush(FILE *fp, uint8_t *buf, size_t size)
+write_and_flush(FILE *fp, const uint8_t *buf, size_t size)
 {
   oc_assert(fp != NULL);
   errno = 0;
@@ -95,7 +95,7 @@ write_and_flush(FILE *fp, uint8_t *buf, size_t size)
 }
 
 long
-oc_storage_write(const char *store, uint8_t *buf, size_t size)
+oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
   size_t store_len = strlen(store);
   if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE)) {
