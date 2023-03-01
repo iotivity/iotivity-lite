@@ -64,7 +64,8 @@ jobs:
 
       - name: Setup environment
         run: |
-          mkdir -p `pwd`/${{ env.CERT_PATH }}
+          mkdir -p "$(pwd)/${{ env.CERT_PATH }}"
+          chmod 0777 "$(pwd)/${{ env.CERT_PATH }}"
           docker pull ${{ env.CERT_TOOL_IMAGE }}
           docker run --rm -v `pwd`/${{ env.CERT_PATH }}:/out ${{ env.CERT_TOOL_IMAGE }} --outCert=/out/cloudca.pem \
             --outKey=/out/cloudcakey.pem --cert.subject.cn="ca" --cert.signatureAlgorithm="${{ inputs.cert_signature_algorithm }}" \
@@ -78,7 +79,8 @@ jobs:
             --signerKey=/out/intermediatecakey.pem --outCert=/out/mfgcrt.pem --outKey=/out/mfgkey.pem --cert.san.domain=localhost \
             --cert.san.ip=127.0.0.1 --cert.subject.cn="mfg" --cert.signatureAlgorithm="${{ inputs.cert_signature_algorithm }}" \
             --cert.ellipticCurve="${{ inputs.cert_elliptic_curve }}" --cmd.generateCertificate
-          sudo chmod -R 0777 ${{ env.CERT_PATH }}
+          sudo chown -R $(whoami) "$(pwd)/${{ env.CERT_PATH }}"
+          chmod -R 0777 "$(pwd)/${{ env.CERT_PATH }}"
 
       - name: Run cloud server container
         run: |
