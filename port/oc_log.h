@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "oc_clock_util.h"
 #ifndef __FILENAME__
 #ifdef WIN32
 #define __FILENAME__                                                           \
@@ -180,26 +181,38 @@ extern "C" {
 #else /* ! __ANDROID */
 #define OC_LOG(level, ...)                                                     \
   do {                                                                         \
-    PRINT("%s: %s <%s:%d>: ", level, __FILENAME__, __func__, __LINE__);        \
+    char oc_log_fn_buf[64] = { 0 };                                            \
+    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
+    PRINT("[OC %s] %s: %s <%s:%d>: ", oc_log_fn_buf, level, __FILENAME__,      \
+          __func__, __LINE__);                                                 \
     PRINT(__VA_ARGS__);                                                        \
     PRINT("\n");                                                               \
+    fflush(stdout);                                                            \
   } while (0)
 
 #if defined(OC_DEBUG)
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
-    PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
+    char oc_log_fn_buf[64] = { 0 };                                            \
+    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
+    PRINT("[OC %s] D: %s <%s:%d>: ", oc_log_fn_buf, __FILENAME__, __func__,    \
+          __LINE__);                                                           \
     PRINTipaddr(endpoint);                                                     \
     PRINT("\n");                                                               \
+    fflush(stdout);                                                            \
   } while (0)
 
 #ifndef OC_NO_LOG_BYTES
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
-    PRINT("DEBUG: %s <%s:%d>: ", __FILENAME__, __func__, __LINE__);            \
+    char oc_log_fn_buf[64] = { 0 };                                            \
+    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
+    PRINT("[OC %s] D: %s <%s:%d>: ", oc_log_fn_buf, __FILENAME__, __func__,    \
+          __LINE__);                                                           \
     for (size_t i = 0; i < (size_t)(length); i++)                              \
       PRINT(" %02X", (bytes)[i]);                                              \
     PRINT("\n");                                                               \
+    fflush(stdout);                                                            \
   } while (0)
 #else
 #endif /* NO_LOG_BYTES */

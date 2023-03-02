@@ -24,6 +24,10 @@
 #include "oc_config.h"
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief retrieve time as rfc3339 time (e.g. string)
  *
@@ -53,5 +57,9 @@ size_t oc_clock_encode_time_rfc3339(oc_clock_time_t time, char *out_buf,
  */
 oc_clock_time_t oc_clock_parse_time_rfc3339(const char *in_buf,
                                             size_t in_buf_len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_CLOCK_UTIL_H */
