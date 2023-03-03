@@ -210,6 +210,7 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
     .auth_provider_len = auth_provider != NULL ? strlen(auth_provider) : 0,
   };
   cloud_set_cloudconf(ctx, &data);
+  cloud_rd_reset_context(ctx);
 
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
@@ -246,6 +247,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   cloud_deregister_stop(ctx);
 
   cloud_set_cloudconf(ctx, data);
+  cloud_rd_reset_context(ctx);
 
   ctx->store.status = OC_CLOUD_INITIALIZED;
   ctx->store.cps = OC_CPS_READYTOREGISTER;
