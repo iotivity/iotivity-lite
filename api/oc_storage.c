@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2022 Daniel Adam, All Rights Reserved.
+ * Copyright 2023 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,28 @@
  *
  ****************************************************************************/
 
-#ifndef OC_FEATURES_H
-#define OC_FEATURES_H
-
 #include "oc_config.h"
-#if defined(__linux__) && !defined(__ANDROID_API__) && defined(OC_CLIENT) &&   \
-  defined(OC_TCP)
-/* Support asynchronous TCP connect */
-#define OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-#endif /* __linux__ && !__ANDROID_API__ && OC_CLIENT && OC_TCP */
 
-#if defined(OC_PUSH) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
-  defined(OC_DYNAMIC_ALLOCATION) && defined(OC_COLLECTIONS_IF_CREATE)
-#define OC_HAS_FEATURE_PUSH
-#endif
+#ifdef OC_STORAGE
 
-#if defined(OC_SECURITY) && defined(OC_RESOURCE_ACCESS_IN_RFOTM)
-#define OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-#endif
+#include "oc_storage_internal.h"
 
-#endif /* OC_FEATURES_H */
+#include <stdio.h>
+
+int
+oc_storage_gen_svr_tag(const char *name, size_t device_index, char *svr_tag,
+                       size_t svr_tag_size)
+{
+  int ret = snprintf(svr_tag, svr_tag_size, "%s_%zd", name, device_index);
+  if (ret < 0) {
+    return -1;
+  }
+
+  size_t svr_tag_len = (ret < OC_STORAGE_SVR_TAG_MAX - 1)
+                         ? (size_t)ret + 1
+                         : OC_STORAGE_SVR_TAG_MAX - 1;
+  svr_tag[svr_tag_len] = '\0';
+  return (int)svr_tag_len;
+}
+
+#endif /* OC_STORAGE */

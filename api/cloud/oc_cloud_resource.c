@@ -20,9 +20,10 @@
 
 #ifdef OC_CLOUD
 
+#include "oc_cloud_resource_internal.h"
+#include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
-#include "oc_cloud_resource_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 

@@ -508,18 +508,18 @@ oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
 #endif /* OC_SOFTWARE_UPDATE */
 
 bool
-oc_sec_decode_pstat(oc_rep_t *rep, bool from_storage, size_t device)
+oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
 {
-  bool transition_state = false, target_mode = false;
   oc_sec_pstat_t ps;
   memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
-
 #ifdef OC_DEBUG
   if (!from_storage) {
     dump_pstat_dos(&ps);
   }
 #endif /* OC_DEBUG */
 
+  bool transition_state = false;
+  bool target_mode = false;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_OBJECT: {

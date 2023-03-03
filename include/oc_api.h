@@ -945,9 +945,9 @@ void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
  * ```
  *
  * @param[in] resource the resource the baseline Common Properties will be read
- *            from to respond to the GET request
+ *            from to respond to the GET request (cannot be NULL)
  */
-void oc_process_baseline_interface(oc_resource_t *resource);
+void oc_process_baseline_interface(const oc_resource_t *resource);
 
 /**
  * @defgroup doc_module_tag_collections Collection Support

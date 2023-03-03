@@ -22,11 +22,14 @@
 #include "messaging/coap/observe.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_core_res_internal.h"
 #include "oc_discovery_internal.h"
+#include "util/oc_memb.h"
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "api/oc_resource_factory.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
-#include "util/oc_memb.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
 #endif /* OC_SECURITY */

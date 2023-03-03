@@ -58,7 +58,7 @@ typedef enum {
   OC_PUSHABLE = (1 << 2), ///< pushable
 #endif
   OC_SECURE = (1 << 4),       ///< secure
-  OC_PERIODIC = (1 << 6),     ///< periodiacal update
+  OC_PERIODIC = (1 << 6),     ///< periodical update
   OC_SECURE_MCAST = (1 << 8), ///< secure multicast (oscore)
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
@@ -196,10 +196,10 @@ typedef enum {
 typedef enum {
   OCF_P = 0,
   /* List of resources on a logical device: start */
-  /* List of Device Configuration Resources (DCRs): start */
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
+/* List of Device Configuration Resources (DCRs): start */
 #ifdef OC_WKCORE
   WELLKNOWNCORE,
 #endif
@@ -213,6 +213,7 @@ typedef enum {
 #ifdef OC_SOFTWARE_UPDATE
   OCF_SW_UPDATE,
 #endif /* OC_SOFTWARE_UPDATE */
+/* List of Secure Vertical Resources (SVRs): start */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
@@ -226,6 +227,7 @@ typedef enum {
   OCF_SEC_ROLES,
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
+  /* List of Secure Vertical Resources (SVRs): end */
   OCF_D
   /* List of Device Configuration Resources (DCRs): end */
   /* List of resources on a logical device: end */

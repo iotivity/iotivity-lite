@@ -75,13 +75,7 @@ oc_sec_load_doxm(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -118,13 +112,7 @@ oc_sec_load_pstat(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -162,13 +150,7 @@ oc_sec_load_sp(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -236,13 +218,7 @@ oc_sec_load_ecdsa_keypair(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -315,13 +291,7 @@ oc_sec_load_cred(size_t device)
 
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -354,13 +324,7 @@ oc_sec_load_acl(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -512,13 +476,7 @@ oc_sec_load_unique_ids(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -642,13 +600,7 @@ oc_sec_load_sdi(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -683,13 +635,7 @@ oc_sec_load_ael(size_t device)
   ret = oc_storage_read(svr_tag, oc_store_buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
 #ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */

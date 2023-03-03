@@ -107,7 +107,7 @@ clear_doxm_response(doxm_response_data_t *rd)
 static bool
 has_doxm_response_for_device(size_t device)
 {
-  doxm_response_data_t *rd =
+  const doxm_response_data_t *rd =
     (doxm_response_data_t *)oc_list_head(g_doxm_response_data_list);
   while (rd != NULL) {
     if (rd->device == device) {
@@ -528,7 +528,8 @@ sec_validate_doxm_default(const oc_rep_t *rep)
 }
 
 static bool
-sec_validate_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
+sec_validate_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
+                  size_t device)
 {
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   while (rep != NULL) {
@@ -569,7 +570,8 @@ sec_validate_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
 }
 
 bool
-oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc, size_t device)
+oc_sec_decode_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
+                   size_t device)
 {
   if (!sec_validate_doxm(rep, from_storage, doc, device)) {
     return false;

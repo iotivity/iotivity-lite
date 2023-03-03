@@ -112,9 +112,9 @@ string_to_sp(const char *sp_string)
 }
 
 bool
-oc_sec_decode_sp(oc_rep_t *rep, size_t device)
+oc_sec_decode_sp(const oc_rep_t *rep, size_t device)
 {
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFNOP) {
     return false;
   }

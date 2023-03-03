@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OC_COMPILER
-#define OC_COMPILER
+#ifndef OC_COMPILER_H
+#define OC_COMPILER_H
 
 #if defined(__MINGW32__) && (!defined(__GNUC__) || __GNUC__ < 9)
 #error "Unsupported compiler on MinGW platform"
@@ -30,9 +30,15 @@
 #endif
 
 #if defined(__clang__) || defined(__GNUC__)
+#define OC_NO_RETURN __attribute__((noreturn))
+#else
+#define OC_NO_RETURN
+#endif
+
+#if defined(__clang__) || defined(__GNUC__)
 #define OC_FALLTHROUGH __attribute__((fallthrough))
 #else
 #define OC_FALLTHROUGH
 #endif
 
-#endif // OC_COMPILER
+#endif // OC_COMPILER_H

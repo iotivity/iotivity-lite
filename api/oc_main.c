@@ -16,20 +16,19 @@
  *
  ****************************************************************************/
 
-#include <stdint.h>
-#include <stdio.h>
-
 #include "oc_config.h"
+#include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "oc_introspection_internal.h"
+#include "oc_main.h"
+#include "oc_signal_event_loop.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_etimer.h"
 #include "util/oc_process.h"
-#include "oc_api.h"
-#include "oc_core_res.h"
-#include "oc_introspection_internal.h"
-#include "oc_signal_event_loop.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
@@ -67,30 +66,31 @@
 #include "api/oc_push_internal.h"
 #endif
 
-#include "oc_main.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include <stdlib.h>
-static bool *drop_commands;
+static bool *g_drop_commands;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static bool drop_commands[OC_MAX_NUM_DEVICES];
+static bool g_drop_commands[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-static bool initialized = false;
-static const oc_handler_t *app_callbacks;
-static oc_factory_presets_t factory_presets;
+static bool g_initialized = false;
+static const oc_handler_t *g_app_callbacks;
+static oc_factory_presets_t g_factory_presets;
 
 void
 oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data)
 {
-  factory_presets.cb = cb;
-  factory_presets.data = data;
+  g_factory_presets.cb = cb;
+  g_factory_presets.data = data;
 }
 
 oc_factory_presets_t *
 oc_get_factory_presets_cb(void)
 {
-  return &factory_presets;
+  return &g_factory_presets;
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -256,12 +256,11 @@ oc_shutdown_all_devices(void)
 int
 oc_main_init(const oc_handler_t *handler)
 {
-  int ret;
-
-  if (initialized == true)
+  if (g_initialized == true) {
     return 0;
+  }
 
-  app_callbacks = handler;
+  g_app_callbacks = handler;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_init();
@@ -271,15 +270,15 @@ oc_main_init(const oc_handler_t *handler)
   oc_core_init();
   oc_network_event_handler_mutex_init();
 
-  ret = app_callbacks->init();
+  int ret = g_app_callbacks->init();
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
     goto err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  drop_commands = (bool *)calloc(oc_core_get_num_devices(), sizeof(bool));
-  if (!drop_commands) {
+  g_drop_commands = (bool *)calloc(oc_core_get_num_devices(), sizeof(bool));
+  if (g_drop_commands == NULL) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -334,17 +333,19 @@ oc_main_init(const oc_handler_t *handler)
 
 #ifdef OC_SERVER
   // initialize after cloud because their can be registered to cloud.
-  if (app_callbacks->register_resources)
-    app_callbacks->register_resources();
+  if (g_app_callbacks->register_resources) {
+    g_app_callbacks->register_resources();
+  }
 #endif /* OC_SERVER */
 
   OC_DBG("oc_main: stack initialized");
 
-  initialized = true;
+  g_initialized = true;
 
 #ifdef OC_CLIENT
-  if (app_callbacks->requests_entry)
-    app_callbacks->requests_entry();
+  if (g_app_callbacks->requests_entry) {
+    g_app_callbacks->requests_entry();
+  }
 #endif /* OC_CLIENT */
 
   return 0;
@@ -352,8 +353,8 @@ oc_main_init(const oc_handler_t *handler)
 err:
   OC_ERR("oc_main: error in stack initialization");
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(drop_commands);
-  drop_commands = NULL;
+  free(g_drop_commands);
+  g_drop_commands = NULL;
 #endif /* OC_DYNAMIC_ALLOCATION */
   return ret;
 }
@@ -371,10 +372,10 @@ oc_main_poll(void)
 void
 oc_main_shutdown(void)
 {
-  if (initialized == false)
+  if (g_initialized == false)
     return;
 
-  initialized = false;
+  g_initialized = false;
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   oc_cloud_shutdown();
@@ -411,13 +412,13 @@ oc_main_shutdown(void)
   oc_shutdown_all_devices();
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(drop_commands);
-  drop_commands = NULL;
+  free(g_drop_commands);
+  g_drop_commands = NULL;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  memset(drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
+  memset(g_drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  app_callbacks = NULL;
+  g_app_callbacks = NULL;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_shutdown();
@@ -427,14 +428,14 @@ oc_main_shutdown(void)
 bool
 oc_main_initialized(void)
 {
-  return initialized;
+  return g_initialized;
 }
 
 void
 _oc_signal_event_loop(void)
 {
-  if (app_callbacks) {
-    app_callbacks->signal_event_loop();
+  if (g_app_callbacks != NULL) {
+    g_app_callbacks->signal_event_loop();
   }
 }
 
@@ -442,15 +443,15 @@ void
 oc_set_drop_commands(size_t device, bool drop)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (drop_commands == NULL) {
+  if (g_drop_commands == NULL) {
     return;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  drop_commands[device] = drop;
+  g_drop_commands[device] = drop;
 }
 
 bool
 oc_drop_command(size_t device)
 {
-  return drop_commands[device];
+  return g_drop_commands[device];
 }

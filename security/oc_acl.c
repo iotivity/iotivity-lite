@@ -18,6 +18,7 @@
 
 #ifdef OC_SECURITY
 
+#include "api/oc_ri_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_certs_validate_internal.h"
@@ -47,9 +48,12 @@ static const char *wc_public = "-";
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
-   (OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES))
+   (OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +                    \
+    OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES))
 OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
-OC_MEMB(res_l, oc_ace_res_t, OC_MAX_APP_RESOURCES + OCF_D * OC_MAX_NUM_DEVICES);
+OC_MEMB(res_l, oc_ace_res_t,
+        OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +
+          OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES);
 
 void
 oc_sec_acl_init(void)

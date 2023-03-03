@@ -103,8 +103,9 @@ OC_MEMB(g_client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
 
 OC_LIST(g_timed_callbacks);
 OC_MEMB(g_event_callbacks_s, oc_event_callback_t,
-        1 + OCF_D * OC_MAX_NUM_DEVICES + OC_MAX_APP_RESOURCES +
-          OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
+        OC_NUM_CORE_PLATFORM_RESOURCES +
+          OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES +
+          OC_MAX_APP_RESOURCES + OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
 static oc_event_callback_t *g_currently_processed_event_cb = NULL;
 static bool g_currently_processed_event_cb_delete = false;
 static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
@@ -633,24 +634,22 @@ oc_ri_delete_resource(oc_resource_t *resource)
 bool
 oc_ri_add_resource(oc_resource_t *resource)
 {
-  if (!resource)
+  if (!resource) {
     return false;
-
-  bool valid = true;
-
-  if (!resource->get_handler.cb && !resource->put_handler.cb &&
-      !resource->post_handler.cb && !resource->delete_handler.cb)
-    valid = false;
-
-  if ((resource->properties & OC_PERIODIC) &&
-      resource->observe_period_seconds == 0)
-    valid = false;
-
-  if (valid) {
-    oc_list_add(g_app_resources, resource);
   }
 
-  return valid;
+  if (!resource->get_handler.cb && !resource->put_handler.cb &&
+      !resource->post_handler.cb && !resource->delete_handler.cb) {
+    return false;
+  }
+
+  if ((resource->properties & OC_PERIODIC) &&
+      resource->observe_period_seconds == 0) {
+    return false;
+  }
+
+  oc_list_add(g_app_resources, resource);
+  return true;
 }
 #endif /* OC_SERVER */
 
@@ -909,38 +908,50 @@ free_all_event_timers(void)
 oc_interface_mask_t
 oc_ri_get_interface_mask(const char *iface, size_t if_len)
 {
-  if (15 == if_len && strncmp(iface, "oic.if.baseline", if_len) == 0) {
+#define STRLEN(x) (sizeof(x) - 1)
+  if (STRLEN(OC_IF_BASELINE_STR) == if_len &&
+      strncmp(iface, OC_IF_BASELINE_STR, if_len) == 0) {
     return OC_IF_BASELINE;
   }
-  if (9 == if_len && strncmp(iface, "oic.if.ll", if_len) == 0) {
+  if (STRLEN(OC_IF_LL_STR) == if_len &&
+      strncmp(iface, OC_IF_LL_STR, if_len) == 0) {
     return OC_IF_LL;
   }
-  if (8 == if_len && strncmp(iface, "oic.if.b", if_len) == 0) {
+  if (STRLEN(OC_IF_B_STR) == if_len &&
+      strncmp(iface, OC_IF_B_STR, if_len) == 0) {
     return OC_IF_B;
   }
-  if (8 == if_len && strncmp(iface, "oic.if.r", if_len) == 0) {
+  if (STRLEN(OC_IF_R_STR) == if_len &&
+      strncmp(iface, OC_IF_R_STR, if_len) == 0) {
     return OC_IF_R;
   }
-  if (9 == if_len && strncmp(iface, "oic.if.rw", if_len) == 0) {
+  if (STRLEN(OC_IF_RW_STR) == if_len &&
+      strncmp(iface, OC_IF_RW_STR, if_len) == 0) {
     return OC_IF_RW;
   }
-  if (8 == if_len && strncmp(iface, "oic.if.a", if_len) == 0) {
+  if (STRLEN(OC_IF_A_STR) == if_len &&
+      strncmp(iface, OC_IF_A_STR, if_len) == 0) {
     return OC_IF_A;
   }
-  if (8 == if_len && strncmp(iface, "oic.if.s", if_len) == 0) {
+  if (STRLEN(OC_IF_S_STR) == if_len &&
+      strncmp(iface, OC_IF_S_STR, if_len) == 0) {
     return OC_IF_S;
   }
-  if (13 == if_len && strncmp(iface, "oic.if.create", if_len) == 0) {
+  if (STRLEN(OC_IF_CREATE_STR) == if_len &&
+      strncmp(iface, OC_IF_CREATE_STR, if_len) == 0) {
     return OC_IF_CREATE;
   }
-  if (14 == if_len && strncmp(iface, "oic.if.startup", if_len) == 0) {
+  if (STRLEN(OC_IF_W_STR) == if_len &&
+      strncmp(iface, OC_IF_W_STR, if_len) == 0) {
+    return OC_IF_W;
+  }
+  if (STRLEN(OC_IF_STARTUP_STR) == if_len &&
+      strncmp(iface, OC_IF_STARTUP_STR, if_len) == 0) {
     return OC_IF_STARTUP;
   }
-  if (21 == if_len && strncmp(iface, "oic.if.startup.revert", if_len) == 0) {
+  if (STRLEN(OC_IF_STARTUP_REVERT_STR) == if_len &&
+      strncmp(iface, OC_IF_STARTUP_REVERT_STR, if_len) == 0) {
     return OC_IF_STARTUP_REVERT;
-  }
-  if (8 == if_len && strncmp(iface, "oic.if.w", if_len) == 0) {
-    return OC_IF_W;
   }
   return 0;
 }
@@ -1152,13 +1163,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj.content_format = cf;
   request_obj.accept = accept;
 #ifndef OC_DYNAMIC_ALLOCATION
-  char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-  oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-  memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-  memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                 rep_objects_alloc, (void *)rep_objects_pool,
-                                 0 };
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
 #else  /* !OC_DYNAMIC_ALLOCATION */
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */

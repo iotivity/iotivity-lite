@@ -25,18 +25,19 @@
 #ifdef OC_HAS_FEATURE_PUSH
 
 #include "oc_push.h"
-#include "oc_push_internal.h"
 #include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "oc_endpoint.h"
 #include "oc_events.h"
 #include "oc_rep.h"
-#include "oc_endpoint.h"
+#include "oc_push_internal.h"
 #include "oc_ri.h"
-#include "oc_core_res.h"
 #include "oc_signal_event_loop.h"
-#include "util/oc_process.h"
+#include "util/oc_compiler.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
-#include "util/oc_compiler.h"
+#include "util/oc_process.h"
 #include <arpa/inet.h>
 
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
