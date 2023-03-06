@@ -19,6 +19,7 @@
 #include "Device.h"
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 
@@ -132,6 +133,7 @@ const DeviceToAdd defaultDevice = {
   /*name=*/"Test Device",
   /*spec_version=*/"ocf.1.0.0",
   /*data_model_version=*/"ocf.res.1.0.0",
+  /*uri=*/"/oic/d",
 };
 
 Device TestDevice::device{};
@@ -140,6 +142,9 @@ bool TestDevice::is_started{ false };
 std::vector<DeviceToAdd> TestDevice::server_devices{
   defaultDevice,
 };
+#ifdef OC_SERVER
+std::vector<oc_resource_t *> TestDevice::dynamic_resources{};
+#endif /* OC_SERVER */
 
 int
 TestDevice::AppInit()
@@ -149,14 +154,19 @@ TestDevice::AppInit()
   }
 
   for (const auto &sd : server_devices) {
-    if (oc_add_device("/oic/d", sd.rt.c_str(), sd.name.c_str(),
+    if (oc_add_device(sd.uri.c_str(), sd.rt.c_str(), sd.name.c_str(),
                       sd.spec_version.c_str(), sd.data_model_version.c_str(),
                       nullptr, nullptr) != 0) {
       return -1;
     }
   }
-  index = oc_core_get_num_devices() - 1;
   return 0;
+}
+
+size_t
+TestDevice::CountDevices()
+{
+  return oc_core_get_num_devices();
 }
 
 void
@@ -196,12 +206,16 @@ TestDevice::StopServer()
 {
   device.Terminate();
   if (is_started) {
+#ifdef OC_SERVER
+    ClearDynamicResources();
+#endif /* OC_SERVER */
     oc_main_shutdown();
   }
   ResetServerDevices();
 }
 
 #ifdef OC_SERVER
+
 oc_resource_t *
 TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
 {
@@ -234,25 +248,44 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
     oc_delete_resource(res);
     return nullptr;
   }
+
+  dynamic_resources.push_back(res);
   return res;
 }
+
+void
+TestDevice::ClearDynamicResources()
+{
+  for (auto *res : dynamic_resources) {
+    oc_delete_resource(res);
+  }
+  dynamic_resources.clear();
+}
+
 #endif /* OC_SERVER */
 
 const oc_endpoint_t *
-TestDevice::GetEndpoint(int flags)
+TestDevice::GetEndpoint(size_t device, int flags)
 {
-  oc_endpoint_t *ep = oc_connectivity_get_endpoints(TestDevice::index);
-  while (ep != nullptr) {
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+  auto has_matching_flags = [](const oc_endpoint_t *ep, int flags) {
     if (flags == 0) {
-      return ep;
+      return true;
     }
     if (flags < 0) {
       if ((ep->flags & -flags) == 0) {
-        return ep;
+        return true;
       }
     }
+    return (ep->flags & flags) == flags;
+  };
 
-    if ((ep->flags & flags) == flags) {
+  auto has_matching_device = [](const oc_endpoint_t *ep, size_t device) {
+    return device == SIZE_MAX || ep->device == device;
+  };
+
+  while (ep != nullptr) {
+    if (has_matching_flags(ep, flags) && has_matching_device(ep, device)) {
       return ep;
     }
     ep = ep->next;

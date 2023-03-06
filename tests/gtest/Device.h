@@ -41,6 +41,7 @@ struct DeviceToAdd
   std::string name;
   std::string spec_version;
   std::string data_model_version;
+  std::string uri;
 };
 
 class Device {
@@ -102,7 +103,7 @@ class TestDevice {
 public:
   TestDevice() = delete;
 
-  static size_t Index() { return index; }
+  static size_t CountDevices();
   static size_t IsStarted() { return is_started; }
 
   // IoTivity-lite application callbacks
@@ -128,8 +129,10 @@ public:
 #ifdef OC_SERVER
   static oc_resource_t *AddDynamicResource(const DynamicResourceToAdd &dr,
                                            size_t device);
+
+  static void ClearDynamicResources();
 #endif /* OC_SERVER */
-  static const oc_endpoint_t *GetEndpoint(int flags = 0);
+  static const oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
 
 private:
   static Device device;
@@ -137,7 +140,7 @@ private:
   static bool is_started;
   static std::vector<DeviceToAdd> server_devices;
 #ifdef OC_SERVER
-  std::vector<oc_resource_t *> dynamic_resources;
+  static std::vector<oc_resource_t *> dynamic_resources;
 #endif /* OC_SERVER */
 };
 

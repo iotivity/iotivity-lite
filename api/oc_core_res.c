@@ -27,6 +27,7 @@
 #include "oc_main.h"
 #include "port/oc_assert.h"
 #include "util/oc_atomic.h"
+#include "util/oc_compiler.h"
 #include "util/oc_features.h"
 
 #ifdef OC_CLOUD
@@ -47,6 +48,7 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -100,7 +102,6 @@ oc_core_free_platform_info_properties(void)
 static void
 oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
-
   if (oc_device_info_item) {
     oc_free_string(&(oc_device_info_item->name));
     oc_free_string(&(oc_device_info_item->icv));
@@ -146,8 +147,7 @@ oc_core_shutdown(void)
 }
 
 void
-oc_core_encode_interfaces_mask(CborEncoder *parent,
-                               oc_interface_mask_t iface_mask)
+oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
 {
   oc_rep_set_key((parent), "if");
   oc_rep_start_array((parent), if);
@@ -204,7 +204,7 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-  /* fall through */
+    OC_FALLTHROUGH;
   case OC_IF_R: {
     oc_rep_set_text_string(root, di, di);
     if (request->origin && request->origin->version != OIC_VER_1_1_0) {
@@ -471,23 +471,22 @@ static void
 oc_device_bind_rt(size_t device_index, const char *rt)
 {
   oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
-  oc_string_array_t types;
 
+  oc_string_array_t types;
   memcpy(&types, &r->types, sizeof(oc_string_array_t));
 
   size_t num_types = oc_string_array_get_allocated_size(types);
-  num_types++;
+  ++num_types;
 
   memset(&r->types, 0, sizeof(oc_string_array_t));
   oc_new_string_array(&r->types, num_types);
-  size_t i;
-  for (i = 0; i < num_types; i++) {
+  for (size_t i = 0; i < num_types; i++) {
     if (i == 0) {
       oc_string_array_add_item(r->types, rt);
-    } else {
-      oc_string_array_add_item(r->types,
-                               oc_string_array_get_item(types, (i - 1)));
+      continue;
     }
+    oc_string_array_add_item(r->types,
+                             oc_string_array_get_item(types, (i - 1)));
   }
   oc_free_string_array(&types);
 }
@@ -495,6 +494,7 @@ oc_device_bind_rt(size_t device_index, const char *rt)
 void
 oc_device_bind_resource_type(size_t device, const char *type)
 {
+  assert(type != NULL);
   oc_device_bind_rt(device, type);
 }
 

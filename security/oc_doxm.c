@@ -19,13 +19,15 @@
 #ifdef OC_SECURITY
 
 #include "oc_doxm.h"
-#include "port/oc_assert.h"
+#include "api/oc_rep_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "port/oc_assert.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -574,56 +576,56 @@ oc_sec_decode_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
                    size_t device)
 {
   if (!sec_validate_doxm(rep, from_storage, doc, device)) {
+    OC_ERR("decode doxm: invalid payload");
     return false;
   }
 
+  bool owned = false;
   bool owned_changed = false;
+  int oxmsel = -1;
+  int sct = -1;
+  const oc_string_t *deviceuuid_str = NULL;
+  const oc_string_t *devowneruuid_str = NULL;
+  const oc_string_t *rowneruuid_str = NULL;
   while (rep != NULL) {
-    size_t len = oc_string_len(rep->name);
     switch (rep->type) {
     /* owned */
     case OC_REP_BOOL:
-      if (len == OC_DOXM_OWNED_LEN &&
-          memcmp(oc_string(rep->name), OC_DOXM_OWNED, OC_DOXM_OWNED_LEN) == 0) {
-        g_doxm[device].owned = rep->value.boolean;
+      if (oc_rep_is_property(rep, OC_DOXM_OWNED, OC_DOXM_OWNED_LEN)) {
         owned_changed = true;
+        owned = rep->value.boolean;
+        break;
       }
+      OC_ERR("decode doxm: invalid bool property(%s)", oc_string(rep->name));
       break;
     /* oxmsel and sct */
     case OC_REP_INT:
-      if (len == OC_DOXM_OXMSEL_LEN &&
-          memcmp(oc_string(rep->name), OC_DOXM_OXMSEL, OC_DOXM_OXMSEL_LEN) ==
-            0) {
-        g_doxm[device].oxmsel = (int)rep->value.integer;
-        if (!from_storage && g_doxm[device].oxmsel == OC_OXMTYPE_RDP) {
-          oc_tls_generate_random_pin();
-        }
-      } else if (from_storage && len == OC_DOXM_SCT_LEN &&
-                 memcmp(oc_string(rep->name), OC_DOXM_SCT, OC_DOXM_SCT_LEN) ==
-                   0) {
-        g_doxm[device].sct = (int)rep->value.integer;
+      if (oc_rep_is_property(rep, OC_DOXM_OXMSEL, OC_DOXM_OXMSEL_LEN)) {
+        oxmsel = (int)rep->value.integer;
+        break;
       }
+      if (from_storage &&
+          oc_rep_is_property(rep, OC_DOXM_SCT, OC_DOXM_SCT_LEN)) {
+        sct = (int)rep->value.integer;
+        break;
+      }
+      OC_ERR("decode doxm: invalid int property(%s)", oc_string(rep->name));
       break;
     /* deviceuuid, devowneruuid and rowneruuid */
     case OC_REP_STRING:
-      if (len == OC_DOXM_DEVICEUUID_LEN &&
-          memcmp(oc_string(rep->name), OC_DOXM_DEVICEUUID,
-                 OC_DOXM_DEVICEUUID_LEN) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string),
-                       &g_doxm[device].deviceuuid);
-        oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
-        memcpy(deviceuuid->id, g_doxm[device].deviceuuid.id, 16);
-      } else if (len == OC_DOXM_DOWNERUUID_LEN &&
-                 memcmp(oc_string(rep->name), OC_DOXM_DOWNERUUID,
-                        OC_DOXM_DOWNERUUID_LEN) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string),
-                       &g_doxm[device].devowneruuid);
-      } else if (len == OC_DOXM_ROWNERUUID_LEN &&
-                 memcmp(oc_string(rep->name), OC_DOXM_ROWNERUUID,
-                        OC_DOXM_ROWNERUUID_LEN) == 0) {
-        oc_str_to_uuid(oc_string(rep->value.string),
-                       &g_doxm[device].rowneruuid);
+      if (oc_rep_is_property(rep, OC_DOXM_DEVICEUUID, OC_DOXM_DEVICEUUID_LEN)) {
+        deviceuuid_str = &rep->value.string;
+        break;
       }
+      if (oc_rep_is_property(rep, OC_DOXM_DOWNERUUID, OC_DOXM_DOWNERUUID_LEN)) {
+        devowneruuid_str = &rep->value.string;
+        break;
+      }
+      if (oc_rep_is_property(rep, OC_DOXM_ROWNERUUID, OC_DOXM_ROWNERUUID_LEN)) {
+        rowneruuid_str = &rep->value.string;
+        break;
+      }
+      OC_ERR("decode doxm: invalid string property(%s)", oc_string(rep->name));
       break;
     default:
       break;
@@ -631,10 +633,47 @@ oc_sec_decode_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
     rep = rep->next;
   }
 
+  OC_DBG("doxm update (from_storage=%d): owned=%d (changed:%d) oxmsel=%d "
+         "sct=%d, deviceuuid=%s, devowneruuid=%s, rowneruuid=%s",
+         (int)from_storage, (int)owned, (int)owned_changed, oxmsel, sct,
+         deviceuuid_str != NULL ? oc_string(*deviceuuid_str) : "NULL",
+         devowneruuid_str != NULL ? oc_string(*devowneruuid_str) : "NULL",
+         rowneruuid_str != NULL ? oc_string(*rowneruuid_str) : "NULL");
+
+  if (owned_changed) {
+    g_doxm[device].owned = owned;
+  }
+
+  if (oxmsel != -1) {
+    g_doxm[device].oxmsel = oxmsel;
+    if (!from_storage && g_doxm[device].oxmsel == OC_OXMTYPE_RDP) {
+      oc_tls_generate_random_pin();
+    }
+  }
+
+  if (sct != -1) {
+    g_doxm[device].sct = sct;
+  }
+
+  if (deviceuuid_str != NULL) {
+    oc_str_to_uuid(oc_string(*deviceuuid_str), &g_doxm[device].deviceuuid);
+    oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
+    memcpy(deviceuuid->id, g_doxm[device].deviceuuid.id,
+           sizeof(deviceuuid->id));
+  }
+
+  if (devowneruuid_str != NULL) {
+    oc_str_to_uuid(oc_string(*devowneruuid_str), &g_doxm[device].devowneruuid);
+  }
+
+  if (rowneruuid_str != NULL) {
+    oc_str_to_uuid(oc_string(*rowneruuid_str), &g_doxm[device].rowneruuid);
+  }
+
   if (owned_changed) {
     oc_doxm_owned_cb_t *doxm_cb_item =
       (oc_doxm_owned_cb_t *)oc_list_head(g_oc_doxm_owned_cb_list);
-    while (doxm_cb_item) {
+    while (doxm_cb_item != NULL) {
       oc_doxm_owned_cb_t *invokee = doxm_cb_item;
       doxm_cb_item = doxm_cb_item->next;
       (invokee->cb)(&g_doxm[device].deviceuuid, device, g_doxm[device].owned,
@@ -650,14 +689,15 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
   oc_tls_peer_t *p = oc_tls_get_peer(request->origin);
-  if (oc_sec_decode_doxm(request->request_payload, false,
-                         p != NULL ? p->doc : false,
-                         request->resource->device)) {
-    oc_send_response(request, OC_STATUS_CHANGED);
-    oc_sec_dump_doxm(request->resource->device);
-  } else {
+  if (!oc_sec_decode_doxm(request->request_payload, false,
+                          p != NULL ? p->doc : false,
+                          request->resource->device)) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    return;
   }
+
+  oc_send_response(request, OC_STATUS_CHANGED);
+  oc_sec_dump_doxm(request->resource->device);
 }
 
 void

@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <stdint.h>
+#include <string>
 #include <string.h>
 #include <vector>
 namespace oc {
@@ -41,6 +42,9 @@ public:
 
   /* convert global CborEncoder to oc_rep_t */
   oc_rep_unique_ptr ParsePayload();
+
+  static void CheckJson(const oc_rep_t *rep, const std::string &expected,
+                        bool pretty_print);
 
 private:
   size_t size_;

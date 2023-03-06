@@ -77,8 +77,7 @@ oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
  * @param parent the cbor encoder
  * @param iface_mask the interfaces (as bit mask)
  */
-void oc_core_encode_interfaces_mask(CborEncoder *parent,
-                                    oc_interface_mask_t iface_mask);
+void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask);
 
 /**
  * @brief store the uri as a string

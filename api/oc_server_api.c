@@ -269,15 +269,15 @@ bool
 oc_iterate_query_get_values(const oc_request_t *request, const char *key,
                             const char **value, int *value_len)
 {
-  const char *v = NULL;
-  size_t v_len;
+  size_t key_len = strlen(key);
   int pos = 0;
   do {
-    const char *current_key = NULL;
-    size_t key_len = 0;
-    pos = oc_iterate_query(request, &current_key, &key_len, &v, &v_len);
-    if (pos != -1 && strlen(key) == key_len &&
-        memcmp(key, current_key, key_len) == 0) {
+    const char *k = NULL;
+    size_t k_len = 0;
+    const char *v = NULL;
+    size_t v_len = 0;
+    pos = oc_iterate_query(request, &k, &k_len, &v, &v_len);
+    if (pos != -1 && key_len == k_len && memcmp(key, k, k_len) == 0) {
       *value = v;
       *value_len = (int)v_len;
       goto more_or_done;
