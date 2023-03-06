@@ -16,18 +16,22 @@
  *
  ****************************************************************************/
 
-#include "util/oc_features.h"
+#include "oc_api.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/separate.h"
-#include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "util/oc_features.h"
+
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
+
 #if defined(OC_CLOUD) && defined(OC_SERVER)
 #include "oc_server_api_internal.h"
 #endif /* OC_CLOUD && OC_SERVER */
+
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #endif /* OC_SECURITY */
@@ -201,7 +205,7 @@ oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn)
 }
 
 void
-oc_process_baseline_interface(oc_resource_t *resource)
+oc_process_baseline_interface(const oc_resource_t *resource)
 {
   if (oc_string_len(resource->name) > 0) {
     oc_rep_set_text_string(root, n, oc_string(resource->name));
@@ -265,26 +269,23 @@ bool
 oc_iterate_query_get_values(const oc_request_t *request, const char *key,
                             const char **value, int *value_len)
 {
-  const char *current_key = 0;
-  size_t key_len = 0, v_len;
+  size_t key_len = strlen(key);
   int pos = 0;
-
   do {
-    pos = oc_iterate_query(request, &current_key, &key_len, value, &v_len);
-    *value_len = (int)v_len;
-    if (pos != -1 && strlen(key) == key_len &&
-        memcmp(key, current_key, key_len) == 0) {
+    const char *k = NULL;
+    size_t k_len = 0;
+    const char *v = NULL;
+    size_t v_len = 0;
+    pos = oc_iterate_query(request, &k, &k_len, &v, &v_len);
+    if (pos != -1 && key_len == k_len && memcmp(key, k, k_len) == 0) {
+      *value = v;
+      *value_len = (int)v_len;
       goto more_or_done;
     }
   } while (pos != -1);
 
-  *value_len = -1;
-
 more_or_done:
-  if (pos == -1 || (size_t)pos >= request->query_len) {
-    return false;
-  }
-  return true;
+  return pos != -1 && (size_t)pos < request->query_len;
 }
 
 #ifdef OC_SERVER
@@ -419,7 +420,7 @@ oc_resource_set_default_interface(oc_resource_t *resource,
 void
 oc_resource_bind_resource_type(oc_resource_t *resource, const char *type)
 {
-  oc_string_array_add_item(resource->types, (char *)type);
+  oc_string_array_add_item(resource->types, type);
 }
 
 #ifdef OC_SECURITY

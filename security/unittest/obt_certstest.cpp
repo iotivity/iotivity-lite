@@ -293,8 +293,8 @@ TEST_F(TestObtCerts, ValidateSelfSignedCertificate)
   EXPECT_EQ(0, mbedtls_x509_crt_parse(&crt, &root_cert[0], root_cert.size()));
   // root == non end entity should succeed, others should fail
   uint32_t flags{};
-  EXPECT_EQ(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
+  EXPECT_EQ(0, oc_certs_validate_non_end_entity_cert(&crt, true, true,
+                                                     /*depth*/ 0, &flags));
   EXPECT_EQ(0, flags);
   EXPECT_NE(0, oc_certs_validate_end_entity_cert(&crt, &flags));
   EXPECT_NE(0, oc_certs_validate_role_cert(&crt, &flags));
@@ -411,8 +411,8 @@ TEST_F(TestObtCerts, ValidateIdentityCertificate)
   uint32_t flags{};
   EXPECT_EQ(0, oc_certs_validate_end_entity_cert(&crt, &flags));
   EXPECT_EQ(0, flags);
-  EXPECT_NE(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
+  EXPECT_NE(0, oc_certs_validate_non_end_entity_cert(&crt, true, true,
+                                                     /*depth*/ 0, &flags));
   EXPECT_NE(0, oc_certs_validate_role_cert(&crt, &flags));
 
   mbedtls_x509_crt_free(&crt);
@@ -554,8 +554,8 @@ TEST_F(TestObtCerts, ValidateRoleCertificate)
   EXPECT_EQ(0, oc_certs_validate_role_cert(&crt, &flags));
   EXPECT_EQ(0, flags);
   EXPECT_NE(0, oc_certs_validate_end_entity_cert(&crt, &flags));
-  EXPECT_NE(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
+  EXPECT_NE(0, oc_certs_validate_non_end_entity_cert(&crt, true, true,
+                                                     /*depth*/ 0, &flags));
 
   mbedtls_x509_crt_free(&crt);
 }
@@ -611,12 +611,11 @@ TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
     /*.signature_md_alg=*/MBEDTLS_MD_SHA256,
   };
 
-  int credid =
-    oc_obt_generate_self_signed_root_cert(cert_data, oc::TestDevice::Index());
+  size_t device = 0;
+  int credid = oc_obt_generate_self_signed_root_cert(cert_data, device);
   EXPECT_LT(0, credid);
 
-  oc_sec_cred_t *cred =
-    oc_sec_get_cred_by_credid(credid, oc::TestDevice::Index());
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
   EXPECT_NE(nullptr, cred);
   // is root CA
   EXPECT_EQ(OC_CREDUSAGE_TRUSTCA, cred->credusage);
@@ -630,8 +629,8 @@ TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
                  &crt, oc_cast(cred->publicdata.data, unsigned char),
                  cred->publicdata.data.size));
   uint32_t flags{};
-  EXPECT_EQ(0,
-            oc_certs_validate_non_end_entity_cert(&crt, true, true, 0, &flags));
+  EXPECT_EQ(0, oc_certs_validate_non_end_entity_cert(&crt, true, true,
+                                                     /*depth*/ 0, &flags));
   EXPECT_EQ(0, flags);
   mbedtls_x509_crt_free(&crt);
 }
@@ -650,8 +649,8 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
     /*.signature_md_alg=*/MBEDTLS_MD_SHA384,
   };
 
-  int credid =
-    oc_obt_generate_self_signed_root_cert(root_cert, oc::TestDevice::Index());
+  size_t device = 0;
+  int credid = oc_obt_generate_self_signed_root_cert(root_cert, device);
   EXPECT_LT(0, credid);
 
   oc_obt_generate_role_cert_data_t role_cert = {
@@ -673,9 +672,8 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
 
   oc_uuid_t subjectuuid{};
   subjectuuid.id[0] = '*';
-  oc_sec_cred_t *cred =
-    oc_sec_allocate_cred(&subjectuuid, OC_CREDTYPE_CERT, OC_CREDUSAGE_ROLE_CERT,
-                         oc::TestDevice::Index());
+  oc_sec_cred_t *cred = oc_sec_allocate_cred(&subjectuuid, OC_CREDTYPE_CERT,
+                                             OC_CREDUSAGE_ROLE_CERT, device);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(0, oc_certs_parse_role_certificate(&cert_buf[0], cert_buf.size(),
                                                cred, false));
@@ -685,7 +683,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
   OC_DBG("authority: %s", oc_string(cred->role.authority));
   EXPECT_STREQ(g_root_subject_name.c_str(), oc_string(cred->role.authority));
 
-  oc_sec_remove_cred(cred, oc::TestDevice::Index());
+  oc_sec_remove_cred(cred, device);
 }
 
 #endif /* OC_SECURITY && OC_PKI && OC_DYNAMIC_ALLOCATION  */

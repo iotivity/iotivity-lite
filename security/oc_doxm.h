@@ -51,7 +51,7 @@ typedef struct
 
 void oc_sec_doxm_init(void);
 void oc_sec_doxm_free(void);
-bool oc_sec_decode_doxm(oc_rep_t *rep, bool from_storage, bool doc,
+bool oc_sec_decode_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
                         size_t device);
 void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);

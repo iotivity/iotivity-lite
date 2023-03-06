@@ -20,6 +20,8 @@
 #ifdef OC_SOFTWARE_UPDATE
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "oc_storage_internal.h"
 #include "oc_swupdate.h"
 #include "oc_swupdate_internal.h"
 #ifdef OC_SECURITY
@@ -51,22 +53,14 @@ oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
   cb = swupdate_impl;
 }
 
-#define SVR_TAG_MAX (32)
-static void
-gen_svr_tag(const char *name, size_t device_index, char *svr_tag)
-{
-  int svr_tag_len =
-    snprintf(svr_tag, SVR_TAG_MAX, "%s_%zd", name, device_index);
-  svr_tag_len =
-    (svr_tag_len < SVR_TAG_MAX - 1) ? svr_tag_len + 1 : SVR_TAG_MAX - 1;
-  svr_tag[svr_tag_len] = '\0';
-}
-
 static void
 oc_load_sw(size_t device)
 {
-  long ret = 0;
-  oc_rep_t *rep = 0;
+  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
+  if (oc_storage_gen_svr_tag("sw", device, svr_tag, sizeof(svr_tag)) < 0) {
+    OC_ERR("cannot load swupdate: cannot generate svr tag");
+    return;
+  }
 
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
@@ -77,22 +71,11 @@ oc_load_sw(size_t device)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-  char svr_tag[SVR_TAG_MAX];
-  gen_svr_tag("sw", device, svr_tag);
-  ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
+  long ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
   if (ret > 0) {
-#ifndef OC_DYNAMIC_ALLOCATION
-    char rep_objects_alloc[OC_MAX_NUM_REP_OBJECTS];
-    oc_rep_t rep_objects_pool[OC_MAX_NUM_REP_OBJECTS];
-    memset(rep_objects_alloc, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
-    memset(rep_objects_pool, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), OC_MAX_NUM_REP_OBJECTS,
-                                   rep_objects_alloc, (void *)rep_objects_pool,
-                                   0 };
-#else  /* !OC_DYNAMIC_ALLOCATION */
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-#endif /* OC_DYNAMIC_ALLOCATION */
+    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     oc_rep_set_pool(&rep_objects);
+    oc_rep_t *rep = NULL;
     oc_parse_rep(buf, (int)ret, &rep);
     oc_swupdate_decode(rep, device);
     oc_free_rep(rep);
@@ -123,8 +106,8 @@ oc_dump_sw(size_t device)
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {
     OC_DBG("oc_store: encoded pstat size %d", size);
-    char svr_tag[SVR_TAG_MAX];
-    gen_svr_tag("sw", device, svr_tag);
+    char svr_tag[OC_STORAGE_SVR_TAG_MAX];
+    oc_storage_gen_svr_tag("sw", device, svr_tag, sizeof(svr_tag));
     oc_storage_write(svr_tag, buf, size);
   }
 

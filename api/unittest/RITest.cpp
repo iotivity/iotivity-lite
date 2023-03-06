@@ -17,6 +17,7 @@
  *
  ******************************************************************/
 
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_helpers.h"
@@ -48,6 +49,45 @@ protected:
     oc_network_event_handler_mutex_destroy();
   }
 };
+
+TEST_F(TestOcRi, GetInterfaceMask_P)
+{
+  EXPECT_EQ(0, oc_ri_get_interface_mask("", 0));
+
+  std::vector<oc_interface_mask_t> all_interfaces{
+    OC_IF_BASELINE,
+    OC_IF_LL,
+    OC_IF_B,
+    OC_IF_R,
+    OC_IF_RW,
+    OC_IF_A,
+    OC_IF_S,
+    OC_IF_CREATE,
+    OC_IF_W,
+    OC_IF_STARTUP,
+    OC_IF_STARTUP_REVERT,
+  };
+  std::vector<std::string> all_interface_strs{
+    OC_IF_BASELINE_STR,
+    OC_IF_LL_STR,
+    OC_IF_B_STR,
+    OC_IF_R_STR,
+    OC_IF_RW_STR,
+    OC_IF_A_STR,
+    OC_IF_S_STR,
+    OC_IF_CREATE_STR,
+    OC_IF_W_STR,
+    OC_IF_STARTUP_STR,
+    OC_IF_STARTUP_REVERT_STR,
+  };
+  ASSERT_EQ(all_interfaces.size(), all_interface_strs.size());
+
+  for (size_t i = 0; i < all_interface_strs.size(); ++i) {
+    oc_interface_mask_t ifm = oc_ri_get_interface_mask(
+      all_interface_strs[i].c_str(), all_interface_strs[i].length());
+    EXPECT_EQ(all_interfaces[i], ifm);
+  }
+}
 
 static void
 onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)

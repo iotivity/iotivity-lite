@@ -22,35 +22,31 @@
 #define OC_ASSERT_H
 
 #include "port/oc_log.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef __GNUC__
-#define GCC_NO_RETURN __attribute__((__noreturn__))
-#else
-#define GCC_NO_RETURN
-#endif /* __GNUC__ */
-
 /**
  * @brief abort application
  *
  */
-void abort_impl(void) GCC_NO_RETURN;
+void abort_impl(void) OC_NO_RETURN;
 
 /**
  * @brief exit the application
  *
  * @param status the exist status
  */
-void exit_impl(int status) GCC_NO_RETURN;
+void exit_impl(int status) OC_NO_RETURN;
 
 /**
  * @brief abort with message
  *
  * @param msg the message to be printed
  */
+OC_NO_RETURN
 static inline void
 oc_abort(const char *msg)
 {
@@ -74,6 +70,7 @@ oc_abort(const char *msg)
  *
  * @param status the exist status
  */
+OC_NO_RETURN
 static inline void
 oc_exit(int status)
 {

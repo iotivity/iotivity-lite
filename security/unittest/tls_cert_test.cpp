@@ -23,6 +23,7 @@
 #ifdef OC_DYNAMIC_ALLOCATION // need bigger OC_BYTES_POOL_SIZE for this test to
                              // pass
 
+#include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
@@ -30,6 +31,7 @@
 #include "oc_pki.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_tls.h"
+
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */

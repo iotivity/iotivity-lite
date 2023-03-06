@@ -16,18 +16,19 @@
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 */
 
+#include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
-#include <signal.h>
-#include <stdlib.h>
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
 #endif
 
+#include <signal.h>
+#include <stdlib.h>
 /* linux specific code */
 #include <pthread.h>
 static pthread_mutex_t mutex;

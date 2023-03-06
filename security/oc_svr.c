@@ -18,6 +18,7 @@
 
 #ifdef OC_SECURITY
 
+#include "api/oc_core_res_internal.h"
 #include "oc_svr.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"

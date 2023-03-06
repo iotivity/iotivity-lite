@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
+#include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include <inttypes.h>

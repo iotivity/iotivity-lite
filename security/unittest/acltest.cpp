@@ -16,15 +16,16 @@
  *
  ******************************************************************/
 
-#include "port/oc_network_event_handler_internal.h"
-#include "security/oc_acl_internal.h"
-#include "security/oc_pstat.h"
-#include "util/oc_list.h"
+#include "api/oc_core_res_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_tls.h"
 #include "oc_uuid.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_pstat.h"
+#include "util/oc_list.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -176,11 +177,9 @@ static const std::string kResourceURI = "/LightResourceURI";
 static const std::string kResourceName = "roomlights";
 
 static void
-onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
+onGet(oc_request_t *, oc_interface_mask_t, void *)
 {
-  (void)request;
-  (void)iface_mask;
-  (void)user_data;
+  // no-op
 }
 
 TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)

@@ -875,6 +875,7 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  *
  * @param[in] device index of a logical device
  * @param[in] type the Resource type to add to the Resource Type "rt" property
+ * (cannot be NULL)
  */
 void oc_device_bind_resource_type(size_t device, const char *type);
 
@@ -945,9 +946,9 @@ void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
  * ```
  *
  * @param[in] resource the resource the baseline Common Properties will be read
- *            from to respond to the GET request
+ *            from to respond to the GET request (cannot be NULL)
  */
-void oc_process_baseline_interface(oc_resource_t *resource);
+void oc_process_baseline_interface(const oc_resource_t *resource);
 
 /**
  * @defgroup doc_module_tag_collections Collection Support
@@ -1445,9 +1446,10 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  * ```
  *
  * @param[in] request the oc_request_t that contains the query parameters
- * @param[in] key the key being searched for
+ * @param[in] key the key being searched for (cannot be NULL)
  * @param[out] value pointer to the value string for to the key=value pair
- * @param[out] value_len the length of the value string
+ * (cannot be NULL)
+ * @param[out] value_len the length of the value string (cannot be NULL)
  *
  * @return True if there are more query parameters to iterate through
  */

@@ -19,7 +19,32 @@
 #ifndef OC_RI_INTERNAL_H
 #define OC_RI_INTERNAL_H
 
+#include "oc_blockwise.h"
+#include "oc_endpoint.h"
 #include "oc_ri.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define OC_IF_BASELINE_STR "oic.if.baseline"
+#define OC_IF_LL_STR "oic.if.ll"
+#define OC_IF_B_STR "oic.if.b"
+#define OC_IF_R_STR "oic.if.r"
+#define OC_IF_RW_STR "oic.if.rw"
+#define OC_IF_A_STR "oic.if.a"
+#define OC_IF_S_STR "oic.if.s"
+#define OC_IF_CREATE_STR "oic.if.create"
+#define OC_IF_W_STR "oic.if.w"
+#define OC_IF_STARTUP_STR "oic.if.startup"
+#define OC_IF_STARTUP_REVERT_STR "oic.if.startup.revert"
+
+// number of resources with a single instance on the whole platform
+#define OC_NUM_CORE_PLATFORM_RESOURCES (OCF_CON)
+
+// number of resources with an instance per logical device
+#define OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES                                   \
+  (OCF_D + 1 - OC_NUM_CORE_PLATFORM_RESOURCES)
 
 /**
  * @brief removes the client callback. This is silent remove client without
@@ -54,5 +79,9 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);
 #endif /* OC_TCP */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_RI_INTERNAL_H */

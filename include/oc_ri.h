@@ -58,7 +58,7 @@ typedef enum {
   OC_PUSHABLE = (1 << 2), ///< pushable
 #endif
   OC_SECURE = (1 << 4),       ///< secure
-  OC_PERIODIC = (1 << 6),     ///< periodiacal update
+  OC_PERIODIC = (1 << 6),     ///< periodical update
   OC_SECURE_MCAST = (1 << 8), ///< secure multicast (oscore)
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
@@ -196,10 +196,10 @@ typedef enum {
 typedef enum {
   OCF_P = 0,
   /* List of resources on a logical device: start */
-  /* List of Device Configuration Resources (DCRs): start */
   OCF_CON,
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
+/* List of Device Configuration Resources (DCRs): start */
 #ifdef OC_WKCORE
   WELLKNOWNCORE,
 #endif
@@ -213,6 +213,7 @@ typedef enum {
 #ifdef OC_SOFTWARE_UPDATE
   OCF_SW_UPDATE,
 #endif /* OC_SOFTWARE_UPDATE */
+/* List of Secure Vertical Resources (SVRs): start */
 #ifdef OC_SECURITY
   OCF_SEC_DOXM,
   OCF_SEC_PSTAT,
@@ -226,6 +227,7 @@ typedef enum {
   OCF_SEC_ROLES,
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
+  /* List of Secure Vertical Resources (SVRs): end */
   OCF_D
   /* List of Device Configuration Resources (DCRs): end */
   /* List of resources on a logical device: end */
@@ -503,6 +505,7 @@ int oc_status_code(oc_status_t key);
 OC_API
 const char *oc_status_to_str(oc_status_t key);
 
+#ifdef OC_SERVER
 /**
  * @brief retrieve the resource by uri and device indes
  *
@@ -521,7 +524,15 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
  */
 oc_resource_t *oc_ri_get_app_resources(void);
 
-#ifdef OC_SERVER
+/**
+ * @brief checks if the resource is valid
+ *
+ * @param resource resource to be tested
+ * @return true valid
+ * @return false not valid
+ */
+bool oc_ri_is_app_resource_valid(const oc_resource_t *resource);
+
 /**
  * @brief allocate a resource structure
  *
@@ -554,6 +565,7 @@ bool oc_ri_add_resource(oc_resource_t *resource);
  * @return false failure
  */
 bool oc_ri_delete_resource(oc_resource_t *resource);
+
 #endif /* OC_SERVER */
 
 /**
@@ -624,15 +636,6 @@ int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
  * @return oc_interface_mask_t the mask value of the interface
  */
 oc_interface_mask_t oc_ri_get_interface_mask(const char *iface, size_t if_len);
-
-/**
- * @brief checks if the resource is valid
- *
- * @param resource resource to be tested
- * @return true valid
- * @return false not valid
- */
-bool oc_ri_is_app_resource_valid(const oc_resource_t *resource);
 
 #ifdef __cplusplus
 }

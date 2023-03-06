@@ -22,6 +22,9 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_core_res.h"
+#include "oc_core_res_internal.h"
+#include "oc_endpoint.h"
 #include "oc_discovery.h"
 #include "oc_discovery_internal.h"
 #include "oc_enums.h"
@@ -36,9 +39,6 @@
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS  && OC_SERVER */
-
-#include "oc_core_res.h"
-#include "oc_endpoint.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
@@ -256,9 +256,9 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
   oc_concat_strings(&anchor, "ocf://", uuid);
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_P, 0), request,
-                      oc_string(anchor), links, device_index))
+                      oc_string(anchor), links, device_index)) {
     matches++;
-
+  }
   if (filter_resource(oc_core_get_resource_by_index(OCF_RES, device_index),
                       request, oc_string(anchor), links, device_index))
     matches++;
@@ -337,7 +337,6 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
         oc_string(anchor), links, device_index))
     matches++;
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {

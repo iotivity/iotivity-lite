@@ -682,7 +682,7 @@
     <ClInclude Include="..\..\..\security\oc_obt_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\api\oc_mnt.h">
+    <ClInclude Include="..\..\..\api\oc_mnt_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">

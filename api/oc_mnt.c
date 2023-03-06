@@ -17,13 +17,19 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+
 #ifdef OC_MNT
-#include "api/oc_mnt.h"
+
+#include "oc_mnt_internal.h"
 #include "oc_core_res.h"
-#include <stdio.h>
+#include "oc_core_res_internal.h"
+#include "util/oc_compiler.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
+
+#include <stdio.h>
 
 static void
 get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
@@ -33,7 +39,7 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-  /* fall through */
+    OC_FALLTHROUGH;
   case OC_IF_RW:
     oc_rep_set_boolean(root, fr, false);
     break;
@@ -50,17 +56,14 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
 
-  bool fr = false, success = false;
-  if (oc_rep_get_bool(request->request_payload, "fr", &fr)) {
-    if (fr) {
+  bool fr = false;
+  bool success = false;
+  if (oc_rep_get_bool(request->request_payload, "fr", &fr) && fr) {
 #ifdef OC_SECURITY
-      if (oc_pstat_reset_device(request->resource->device, false)) {
-        success = true;
-      }
+    success = oc_pstat_reset_device(request->resource->device, false);
 #else  /* OC_SECURITY */
-      success = true;
+    success = true;
 #endif /* !OC_SECURITY */
-    }
   }
 
   if (success) {
@@ -88,7 +91,7 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 oc_create_maintenance_resource(size_t device)
 {
-  OC_DBG("oc_introspection: Initializing maintehance resource");
+  OC_DBG("oc_introspection: Initializing maintenance resource");
 
   oc_core_populate_resource(
     OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,

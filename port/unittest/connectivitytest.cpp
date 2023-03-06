@@ -141,7 +141,7 @@ TestConnectivity::createEndpoint(const std::string &ep_str)
 {
   oc_string_t ep_ocstr;
   oc_new_string(&ep_ocstr, ep_str.c_str(), ep_str.length());
-  oc_endpoint_t ep;
+  oc_endpoint_t ep{};
   int ret = oc_string_to_endpoint(&ep_ocstr, &ep, nullptr);
   oc_free_string(&ep_ocstr);
   EXPECT_EQ(0, ret) << "cannot convert endpoint " << ep_str;
@@ -227,7 +227,7 @@ TEST_F(TestConnectivity, oc_remove_session_event_callback_invalid)
 TEST_F(TestConnectivity, handle_session_event_callback)
 {
   oc_add_session_event_callback(session_event_handler);
-  oc_endpoint_t ep;
+  oc_endpoint_t ep{};
   handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
   EXPECT_EQ(true, s_is_callback_received);
 }
@@ -236,7 +236,7 @@ TEST_F(TestConnectivity, handle_session_event_callback)
 #ifdef OC_TCP
 TEST_F(TestConnectivity, oc_tcp_get_csm_state_P)
 {
-  oc_endpoint_t ep;
+  oc_endpoint_t ep{};
   tcp_csm_state_t ret = oc_tcp_get_csm_state(&ep);
 
   EXPECT_EQ(CSM_NONE, ret);

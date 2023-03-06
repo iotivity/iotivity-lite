@@ -30,8 +30,19 @@
 #endif /* _WIN32 */
 
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 namespace oc {
+
+struct DeviceToAdd
+{
+  std::string rt;
+  std::string name;
+  std::string spec_version;
+  std::string data_model_version;
+  std::string uri;
+};
 
 class Device {
 public:
@@ -65,11 +76,34 @@ private:
   OC_ATOMIC_UINT8_T terminate_;
 };
 
+#ifdef OC_SERVER
+struct DynamicResourceHandler
+{
+  oc_request_callback_t onGet;
+  void *onGetData;
+  oc_request_callback_t onPost;
+  void *onPostData;
+  oc_request_callback_t onPut;
+  void *onPutData;
+  oc_request_callback_t onDelete;
+  void *onDeleteData;
+};
+
+struct DynamicResourceToAdd
+{
+  std::string name;
+  std::string uri;
+  const std::vector<std::string> rts;
+  const std::vector<oc_interface_mask_t> ifaces;
+  DynamicResourceHandler handlers;
+};
+#endif /* OC_SERVER */
+
 class TestDevice {
 public:
   TestDevice() = delete;
 
-  static size_t Index() { return index; }
+  static size_t CountDevices();
   static size_t IsStarted() { return is_started; }
 
   // IoTivity-lite application callbacks
@@ -82,16 +116,32 @@ public:
   static void PoolEvents(uint16_t seconds) { device.PoolEvents(seconds); }
   static void PoolEventsMs(uint16_t mseconds) { device.PoolEventsMs(mseconds); }
 
+  static void SetServerDevices(std::vector<DeviceToAdd> devices);
+  static void ResetServerDevices();
   static bool StartServer();
   static void StopServer();
   static void Terminate() { device.Terminate(); }
 
-  static const oc_endpoint_t *GetEndpoint(int flags = 0);
+  static void DummyHandler(oc_request_t *, oc_interface_mask_t, void *)
+  {
+    // no-op
+  }
+#ifdef OC_SERVER
+  static oc_resource_t *AddDynamicResource(const DynamicResourceToAdd &dr,
+                                           size_t device);
+
+  static void ClearDynamicResources();
+#endif /* OC_SERVER */
+  static const oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
 
 private:
   static Device device;
   static size_t index;
   static bool is_started;
+  static std::vector<DeviceToAdd> server_devices;
+#ifdef OC_SERVER
+  static std::vector<oc_resource_t *> dynamic_resources;
+#endif /* OC_SERVER */
 };
 
 } // namespace oc

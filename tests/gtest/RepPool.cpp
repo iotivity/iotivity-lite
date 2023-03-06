@@ -65,4 +65,16 @@ RepPool::ParsePayload()
   return oc_rep_unique_ptr(rep, &oc_free_rep);
 }
 
+void
+RepPool::CheckJson(const oc_rep_t *rep, const std::string &expected,
+                   bool pretty_print)
+{
+  size_t json_size = oc_rep_to_json(rep, nullptr, 0, pretty_print);
+  std::vector<char> json{};
+  json.reserve(json_size + 1);
+  size_t rep_len = oc_rep_to_json(rep, &json[0], json.capacity(), pretty_print);
+  EXPECT_EQ(expected.length(), rep_len);
+  EXPECT_STREQ(expected.c_str(), json.data());
+}
+
 } // namespace oc
