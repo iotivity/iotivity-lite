@@ -24,6 +24,7 @@
 #include "oc_uuid.h"
 #include "security/oc_tls.h"
 #include "security/oc_pstat.h"
+#include "mbedtls/x509_crt.h"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <iomanip>
@@ -259,6 +260,11 @@ public:
       oc_tls_peer_t *peer = oc_tls_add_peer(&ep, p.role);
       ASSERT_NE(nullptr, peer);
       peer->uuid = p.uuid;
+#ifdef OC_PKI
+      peer->user_data.data = calloc(1 /* dummy */, 1);
+      ASSERT_NE(nullptr, peer->user_data.data);
+      peer->user_data.free = free;
+#endif /* OC_PKI */
     }
   }
 };
@@ -398,5 +404,24 @@ TEST_F(TestTLSPeer, ResetDevice)
   poolEvents(2);
   ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
 }
+
+#ifdef OC_PKI
+TEST_F(TestTLSPeer, VerifyCertificate)
+{
+  oc_endpoint_t ep = getEndpoint("coaps://[ff02::43]:1338");
+  oc_tls_peer_t *peer = oc_tls_add_peer(&ep, MBEDTLS_SSL_IS_SERVER);
+  ASSERT_NE(nullptr, peer);
+  ASSERT_NE(nullptr, peer->ssl_conf.f_vrfy);
+  ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(nullptr, nullptr, 0, nullptr));
+
+  oc_pki_verify_certificate_cb_t verify_certificate = peer->verify_certificate;
+  peer->verify_certificate = nullptr;
+  ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(peer, nullptr, 0, nullptr));
+
+  mbedtls_x509_crt crt = { 0 };
+  peer->verify_certificate = verify_certificate;
+  ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(peer, &crt, 1, nullptr));
+}
+#endif /* OC_PKI */
 
 #endif /* OC_SECURITY */

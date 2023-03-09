@@ -369,8 +369,9 @@ oc_pki_set_verify_certificate_cb(oc_pki_verify_certificate_cb_t cb)
 }
 
 static int
-default_verify_certificate_cb(struct oc_tls_peer_t *peer, mbedtls_x509_crt *crt,
-                              int depth, uint32_t *flags)
+default_verify_certificate_cb(struct oc_tls_peer_t *peer,
+                              const mbedtls_x509_crt *crt, int depth,
+                              uint32_t *flags)
 {
   (void)peer;
   (void)depth;
