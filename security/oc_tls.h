@@ -21,6 +21,7 @@
 
 #include "mbedtls/ssl.h"
 #include "mbedtls/ctr_drbg.h"
+#include "oc_pki.h"
 #include "oc_uuid.h"
 #include "port/oc_connectivity.h"
 #include "security/oc_cred_internal.h"
@@ -41,6 +42,12 @@ typedef struct
   struct oc_etimer fin_timer;
   oc_clock_time_t int_ticks;
 } oc_tls_retr_timer_t;
+
+typedef struct
+{
+  void *data;
+  void (*free)(void *data);
+} oc_tls_peer_user_data_t;
 
 typedef struct oc_tls_peer_t
 {
@@ -64,6 +71,13 @@ typedef struct oc_tls_peer_t
 #ifdef OC_TCP
   oc_message_t *processed_recv_message;
 #endif /* OC_TCP */
+#ifdef OC_PKI
+  oc_tls_peer_user_data_t
+    user_data; // user data for the peer, can be used by application
+  oc_pki_verify_certificate_cb_t
+    verify_certificate; // callback for certificate verification, filled by
+                        // default callback
+#endif                  /* OC_PKI */
 } oc_tls_peer_t;
 
 /**

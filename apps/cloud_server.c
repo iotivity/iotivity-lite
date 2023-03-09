@@ -683,7 +683,7 @@ display_device_uuid(void)
 #if defined(OC_SECURITY) && defined(OC_PKI)
 static int
 disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
-                                   mbedtls_x509_crt *crt, int depth,
+                                   const mbedtls_x509_crt *crt, int depth,
                                    uint32_t *flags)
 {
   (void)peer;

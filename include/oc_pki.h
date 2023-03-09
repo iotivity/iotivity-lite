@@ -147,8 +147,8 @@ struct oc_tls_peer_t;
  * @return 0 if the certificate is valid, otherwise -1
  */
 typedef int (*oc_pki_verify_certificate_cb_t)(struct oc_tls_peer_t *peer,
-                                              mbedtls_x509_crt *crt, int depth,
-                                              uint32_t *flags);
+                                              const mbedtls_x509_crt *crt,
+                                              int depth, uint32_t *flags);
 
 /**
  * Set the verification callback for the certificate chain. It is invoked after

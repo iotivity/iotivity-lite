@@ -325,6 +325,11 @@ static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
   OC_DBG("\noc_tls: removing peer");
+#ifdef OC_PKI
+  if (peer->user_data.free != NULL) {
+    peer->user_data.free(peer->user_data.data);
+  }
+#endif /* OC_PKI */
   oc_list_remove(g_tls_peers, peer);
 
   size_t device = peer->endpoint.device;
@@ -1498,17 +1503,51 @@ oc_tls_select_anon_ciphersuite(void)
 static int
 verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
 {
-  oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   uint32_t f = 0;
   if (flags == NULL) {
     flags = &f;
   }
   OC_DBG("verifying certificate at depth %d with flags %u", depth, *flags);
-  const char *audit_message =
-    "DLTS handshake error, failed to verify end entity cert";
+  oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
+  if (!peer) {
+    OC_ERR("peer is null");
+    return -1;
+  }
+  if (!peer->verify_certificate) {
+    OC_ERR("peer->verify_certificate is null");
+    return -1;
+  }
+  if (!crt) {
+    OC_ERR("crt is null");
+    return -1;
+  }
+  int ret = peer->verify_certificate(peer, crt, depth, flags);
+  if (ret == 0) {
+    ret = oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags);
+    if (*flags != 0) {
+      ret = -1;
+    }
+  }
+  if (ret != 0) {
+    OC_ERR("failed in peer verify certificate callback with flags %u", *flags);
+    const char *audit_message =
+      "DLTS handshake error, failed to verify end entity cert";
+    if (depth > 0) {
+      audit_message =
+        "DLTS handshake error, failed to verify root or intermediate cert";
+    }
+    oc_tls_audit_log("AUTH-1", audit_message, 0x08, 1, peer);
+  }
+  return ret;
+}
+
+static int
+verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
+                                            const mbedtls_x509_crt *crt,
+                                            int depth, uint32_t *flags)
+{
+  OC_DBG("verifying manufacturer or identity certificate");
   if (depth > 0) {
-    audit_message =
-      "DLTS handshake error, failed to verify root or intermediate cert";
     /* For D2D handshakes involving identity certificates:
      * Find a trusted root that matches the peer's root and store it
      * as context accompanying the identity certificate. This is queried
@@ -1521,7 +1560,6 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
       if (oc_certs_validate_non_end_entity_cert(
             crt, false, ps->s == OC_DOS_RFOTM, depth, flags) < 0) {
         OC_ERR("failed to verify root or intermediate cert");
-        oc_tls_audit_log("AUTH-1", audit_message, 0x08, 1, peer);
         return -1;
       }
     } else {
@@ -1541,7 +1579,6 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     }
   } else if (oc_certs_validate_end_entity_cert(crt, flags) < 0) {
     OC_ERR("failed to verify end entity cert");
-    oc_tls_audit_log("AUTH-1", audit_message, 0x08, 1, peer);
     return -1;
   }
 
@@ -1630,31 +1667,18 @@ verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
     }
   }
   OC_DBG("verified certificate at depth %d", depth);
-  if ((oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags) != 0) ||
-      (*flags != 0)) {
-    OC_ERR("failed in global verify certificate callback with flags %u",
-           *flags);
-    oc_tls_audit_log("AUTH-1", audit_message, 0x08, 1, peer);
-    return -1;
-  }
   return 0;
 }
 
 #if defined(OC_CLOUD) && defined(OC_CLIENT)
 static int
-verify_cloud_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
-                         uint32_t *flags)
+verify_cloud_certificate(oc_tls_peer_t *peer, const mbedtls_x509_crt *crt,
+                         int depth, uint32_t *flags)
 {
-  oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
-  uint32_t f = 0;
-  if (flags == NULL) {
-    flags = &f;
-  }
-  OC_DBG("verifying cloud certificate at depth %d with flags %u", depth,
-         *flags);
-
+  (void)*flags;
+  OC_DBG("verifying cloud certificate");
   if (depth != 0) {
-    return oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags);
+    return 0;
   }
   char uuid[OC_UUID_LEN] = { 0 };
   if (!oc_certs_extract_CN_for_UUID(crt, uuid, sizeof(uuid))) {
@@ -1662,11 +1686,7 @@ verify_cloud_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
   } else {
     oc_str_to_uuid(uuid, &peer->uuid);
   }
-  if (oc_pki_get_verify_certificate_cb()(peer, crt, depth, flags) != 0) {
-    OC_ERR("failed in global verify certificate callback");
-    return -1;
-  }
-  return *flags == 0 ? 0 : -1;
+  return 0;
 }
 #endif /* OC_CLOUD && OC_CLIENT */
 #endif /* OC_PKI */
@@ -1811,12 +1831,13 @@ oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
 #ifdef OC_PKI
 #if defined(OC_CLOUD) && defined(OC_CLIENT)
   if (ciphers == cloud_priority) {
-    mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_cloud_certificate, peer);
+    peer->verify_certificate = verify_cloud_certificate;
   } else
 #endif /* OC_CLOUD && OC_CLIENT */
   {
-    mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
+    peer->verify_certificate = verify_manufacturer_or_identity_certificate;
   }
+  mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
 #endif /* OC_PKI */
 
   oc_tls_set_ciphersuites(&peer->ssl_conf, &peer->endpoint);
