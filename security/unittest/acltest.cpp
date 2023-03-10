@@ -16,6 +16,8 @@
  *
  ******************************************************************/
 
+#ifdef OC_SECURITY
+
 #include "api/oc_core_res_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -32,8 +34,6 @@
 
 #include "gtest/gtest.h"
 #include <string>
-
-#ifdef OC_SECURITY
 
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };

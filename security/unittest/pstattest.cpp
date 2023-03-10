@@ -79,12 +79,44 @@ public:
 
   static bool IsEqual(const oc_sec_pstat_t &lhs, const oc_sec_pstat_t &rhs)
   {
-
     return lhs.s == rhs.s && lhs.p == rhs.p && lhs.isop == rhs.isop &&
            lhs.cm == rhs.cm && lhs.tm == rhs.tm && lhs.om == rhs.om &&
            lhs.sm == rhs.sm && oc_uuid_is_equal(lhs.rowneruuid, rhs.rowneruuid);
   }
+
+  static void ExpectEqual(const oc_sec_pstat_t &lhs, const oc_sec_pstat_t &rhs)
+  {
+    EXPECT_EQ(lhs.s, rhs.s);
+    EXPECT_EQ(lhs.p, rhs.p);
+    EXPECT_EQ(lhs.isop, rhs.isop);
+    EXPECT_EQ(lhs.cm, rhs.cm);
+    EXPECT_EQ(lhs.tm, rhs.tm);
+    EXPECT_EQ(lhs.om, rhs.om);
+    EXPECT_EQ(lhs.sm, rhs.sm);
+  }
 };
+
+TEST_F(TestPstat, Copy)
+{
+  oc_sec_pstat_t ps1;
+  ps1.s = OC_DOS_SRESET;
+  ps1.p = true;
+  ps1.isop = true;
+  ps1.cm = OC_DPM_SSV;
+  ps1.tm = OC_DPM_NSA;
+  ps1.om = 4;
+  ps1.sm = 4;
+
+  oc_sec_pstat_t ps2{};
+  oc_sec_pstat_copy(&ps2, &ps1);
+  ExpectEqual(ps1, ps2);
+
+  oc_sec_pstat_copy(&ps1, &ps1);
+  ExpectEqual(ps2, ps1);
+
+  oc_sec_pstat_clear(&ps1);
+  EXPECT_FALSE(IsEqual(ps1, ps2));
+}
 
 TEST_F(TestPstat, DumpAndLoad)
 {
@@ -92,12 +124,8 @@ TEST_F(TestPstat, DumpAndLoad)
   oc_sec_pstat_default(0);
 
   oc_sec_pstat_t def{};
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(0);
-  ASSERT_NE(nullptr, ps);
-  memcpy(&def, ps, sizeof(oc_sec_pstat_t));
-  // overwrite pstat data with 0
-  memset(ps, 0, sizeof(oc_sec_pstat_t));
-
+  oc_sec_pstat_copy(&def, oc_sec_get_pstat(0));
+  oc_sec_pstat_clear(oc_sec_get_pstat(0));
   EXPECT_FALSE(IsEqual(def, *oc_sec_get_pstat(0)));
 
   // load values from storage

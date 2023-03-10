@@ -104,20 +104,6 @@ TEST_F(TestCloud, cloud_status)
   EXPECT_EQ(ctx->store.status, status);
 }
 
-TEST_F(TestCloud, cloud_set_string)
-{
-  oc_string_t str;
-  memset(&str, 0, sizeof(str));
-  cloud_set_string(&str, "a", 1);
-  EXPECT_STREQ("a", oc_string(str));
-
-  cloud_set_string(&str, nullptr, 1);
-  EXPECT_EQ(nullptr, oc_string(str));
-
-  cloud_set_string(&str, "b", 0);
-  EXPECT_EQ(nullptr, oc_string(str));
-}
-
 TEST_F(TestCloud, cloud_set_last_error)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);

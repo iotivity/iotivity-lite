@@ -82,7 +82,7 @@ _oc_mmem_alloc(
 #ifdef OC_DYNAMIC_ALLOCATION
     m->ptr = malloc(size);
     m->size = size;
-#else  /* OC_DYNAMIC_ALLOCATION */
+#else  /* !OC_DYNAMIC_ALLOCATION */
     if (avail_bytes < size) {
       OC_WRN("byte pool exhausted");
       return 0;
@@ -91,7 +91,7 @@ _oc_mmem_alloc(
     m->ptr = &bytes[OC_BYTES_POOL_SIZE - avail_bytes];
     m->size = size;
     avail_bytes -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
     bytes_allocated += size * sizeof(int64_t);

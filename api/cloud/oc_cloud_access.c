@@ -141,15 +141,16 @@ oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
   return oc_do_post();
 }
 
-oc_string_t
+void
 cloud_access_deregister_query(const char *uid, const char *access_token,
-                              size_t device)
+                              size_t device, oc_string_t *query)
 {
+  assert(query != NULL);
   oc_string_t q_uid;
   oc_concat_strings(&q_uid, "uid=", uid);
 
   char uuid[OC_UUID_LEN] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(device), uuid, OC_UUID_LEN);
+  oc_uuid_to_str(oc_core_get_device_id(device), uuid, sizeof(uuid));
   oc_string_t q_di;
   oc_concat_strings(&q_di, "&di=", uuid);
   oc_string_t q_uid_di;
@@ -157,18 +158,16 @@ cloud_access_deregister_query(const char *uid, const char *access_token,
   oc_free_string(&q_uid);
   oc_free_string(&q_di);
 
-  oc_string_t q_uid_di_at;
   if (access_token != NULL) {
     oc_string_t q_at;
     oc_concat_strings(&q_at, "&accesstoken=", access_token);
-    oc_concat_strings(&q_uid_di_at, oc_string(q_uid_di), oc_string(q_at));
+    oc_concat_strings(query, oc_string(q_uid_di), oc_string(q_at));
     oc_free_string(&q_at);
   } else {
-    oc_new_string(&q_uid_di_at, oc_string(q_uid_di), oc_string_len(q_uid_di));
+    oc_new_string(query, oc_string(q_uid_di), oc_string_len(q_uid_di));
   }
 
   oc_free_string(&q_uid_di);
-  return q_uid_di_at;
 }
 
 bool
@@ -187,8 +186,8 @@ oc_cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
   }
 #endif /* OC_SECURITY */
 
-  oc_string_t query =
-    cloud_access_deregister_query(uid, access_token, conf.device);
+  oc_string_t query;
+  cloud_access_deregister_query(uid, access_token, conf.device, &query);
 
   bool s;
   if (conf.timeout > 0) {

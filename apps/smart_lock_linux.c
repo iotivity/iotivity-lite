@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "util/oc_macros.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -338,7 +339,9 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   oc_smartlock_t *l = (oc_smartlock_t *)oc_memb_alloc(&smartlocks_m);
   if (l) {
     oc_endpoint_list_copy(&l->endpoint, endpoint);
-    int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
+    size_t uri_len = strlen(uri);
+    uri_len =
+      uri_len > OC_CHAR_ARRAY_LEN(l->uri) ? OC_CHAR_ARRAY_LEN(l->uri) : uri_len;
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
     oc_list_add(smartlocks, l);

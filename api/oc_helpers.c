@@ -23,10 +23,11 @@
 #include "port/oc_log.h"
 #include "port/oc_random.h"
 #include <assert.h>
-#include <stdbool.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <string.h>
 
-static bool mmem_initialized = false;
+static bool g_mmem_initialized = false;
 
 static void
 oc_malloc(
@@ -35,9 +36,9 @@ oc_malloc(
 #endif
   oc_handle_t *block, size_t num_items, pool pool_type)
 {
-  if (!mmem_initialized) {
+  if (!g_mmem_initialized) {
     oc_mmem_init();
-    mmem_initialized = true;
+    g_mmem_initialized = true;
   }
   size_t alloc_ret = _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
@@ -112,10 +113,43 @@ _oc_free_string(
 }
 
 void
-oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len)
+oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
 {
-  oc_free_string(ocstring);
-  oc_new_string(ocstring, str, str_len);
+  assert(dst != NULL);
+
+  if (str == NULL || str_len == 0) {
+    oc_free_string(dst);
+    memset(dst, 0, sizeof(*dst));
+    return;
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_free_string(dst);
+  oc_new_string(dst, str, str_len);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  oc_string_t copy;
+  // create a oc_string_t to ensure that str won't get invalidated by
+  // oc_free_string
+  oc_new_string(&copy, str, str_len);
+  oc_free_string(dst);
+  oc_new_string(dst, oc_string(copy), oc_string_len(copy));
+  oc_free_string(&copy);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_copy_string(oc_string_t *dst, const oc_string_t *src)
+{
+  assert(dst != NULL);
+  if (dst == src) {
+    return;
+  }
+
+  oc_free_string(dst);
+  if (src == NULL || oc_string(*src) == NULL) {
+    memset(dst, 0, sizeof(*dst));
+    return;
+  }
+  oc_new_string(dst, oc_string(*src), oc_string_len(*src));
 }
 
 void
@@ -178,9 +212,8 @@ _oc_alloc_string_array(
 #endif
     ocstringarray, size * STRING_ARRAY_ITEM_MAX_LEN);
 
-  size_t i, pos;
-  for (i = 0; i < size; i++) {
-    pos = i * STRING_ARRAY_ITEM_MAX_LEN;
+  for (size_t i = 0; i < size; ++i) {
+    size_t pos = i * STRING_ARRAY_ITEM_MAX_LEN;
     memcpy((char *)oc_string(*ocstringarray) + pos, (const char *)"", 1);
   }
 }
@@ -203,16 +236,13 @@ bool
 _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
                                const char str[], size_t str_len)
 {
-  bool success = false;
-  size_t i;
-  for (i = 0; i < oc_byte_string_array_get_allocated_size(*ocstringarray);
-       i++) {
+  for (size_t i = 0;
+       i < oc_byte_string_array_get_allocated_size(*ocstringarray); ++i) {
     if (oc_byte_string_array_get_item_size(*ocstringarray, i) == 0) {
-      success = oc_byte_string_array_set_item(*ocstringarray, str, str_len, i);
-      break;
+      return oc_byte_string_array_set_item(*ocstringarray, str, str_len, i);
     }
   }
-  return success;
+  return false;
 }
 
 bool
@@ -232,15 +262,13 @@ _oc_copy_string_to_array(oc_string_array_t *ocstringarray, const char str[],
 bool
 _oc_string_array_add_item(oc_string_array_t *ocstringarray, const char str[])
 {
-  bool success = false;
-  size_t i;
-  for (i = 0; i < oc_string_array_get_allocated_size(*ocstringarray); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(*ocstringarray);
+       ++i) {
     if (oc_string_array_get_item_size(*ocstringarray, i) == 0) {
-      success = oc_string_array_set_item(*ocstringarray, str, i);
-      break;
+      return oc_string_array_set_item(*ocstringarray, str, i);
     }
   }
-  return success;
+  return false;
 }
 
 void

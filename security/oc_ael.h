@@ -103,7 +103,7 @@ void post_ael(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 bool oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
                        bool to_storage);
-bool oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage);
+bool oc_sec_ael_decode(size_t device, const oc_rep_t *rep, bool from_storage);
 
 #ifdef __cplusplus
 }

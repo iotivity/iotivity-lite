@@ -340,7 +340,7 @@ $(PLATFORM_TEST_OBJ_DIR)/%.o: $(PLATFORM_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $< -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c
 
-platformtest: $(PLATFORM_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
+platformtest: $(PLATFORM_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -l:gtest_main.a -liotivity-lite-client-server -L$(OUT_DIR) -L$(GTEST_DIR)/make -lpthread $^ -o $@
 
 $(CLOUD_TEST_OBJ_DIR)/%.o: $(CLOUD_TEST_DIR)/%.cpp

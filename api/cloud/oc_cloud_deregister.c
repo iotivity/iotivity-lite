@@ -157,8 +157,10 @@ check_accesstoken_for_deregister(oc_cloud_context_t *ctx)
 // to the request query if the resulting query size is within the limit.
 #define DEREGISTER_EMPTY_QUERY_HEADER_SIZE 38
 
-  oc_string_t query = cloud_access_deregister_query(
-    oc_string(ctx->store.uid), oc_string(ctx->store.access_token), ctx->device);
+  oc_string_t query;
+  cloud_access_deregister_query(oc_string(ctx->store.uid),
+                                oc_string(ctx->store.access_token), ctx->device,
+                                &query);
   size_t query_size = oc_string_len(query);
   oc_free_string(&query);
 

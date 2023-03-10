@@ -43,7 +43,7 @@ bool oc_rep_is_property(const oc_rep_t *rep, const char *propname,
  * @brief Check whether the name and type of the property object matches one of
  * the Common resource properties.
  *
- * @param rep bject to check (cannot be NULL)
+ * @param rep object to check (cannot be NULL)
  * @return true if property name matches
  * @return false otherwise
  *

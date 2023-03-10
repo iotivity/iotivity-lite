@@ -41,14 +41,14 @@ typedef enum {
 
 typedef struct
 {
-  oc_dostype_t s;
-  bool p;
-  bool isop;
-  oc_dpmtype_t cm;
-  oc_dpmtype_t tm;
-  int om;
-  int sm;
-  oc_uuid_t rowneruuid;
+  oc_dostype_t s;       ///< Device Onboarding State
+  bool p;               ///< Pending state
+  bool isop;            ///< Is Device Operational oc_dpmtype_t cm;
+  oc_dpmtype_t cm;      ///< Current Mode
+  oc_dpmtype_t tm;      ///< Target Mode
+  int om;               ///< Operational Mode
+  int sm;               ///< Supported Mode
+  oc_uuid_t rowneruuid; ///< Resource Owner ID
 } oc_sec_pstat_t;
 
 void oc_sec_pstat_init(void);
@@ -57,8 +57,12 @@ bool oc_sec_is_operational(size_t device);
 bool oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
                          bool to_storage);
+
 oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
 void oc_sec_pstat_default(size_t device);
+void oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src);
+void oc_sec_pstat_clear(oc_sec_pstat_t *pstat);
+
 void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,

@@ -49,7 +49,7 @@
 #ifdef OC_PKI
 #include "security/oc_keypair_internal.h"
 #endif /* OC_PKI */
-#include "security/oc_sdi.h"
+#include "security/oc_sdi_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_CLOUD
@@ -407,10 +407,11 @@ oc_main_shutdown(void)
 
 #ifdef OC_SECURITY
   oc_tls_shutdown();
+
+  oc_sec_svr_free();
 #ifdef OC_PKI
   oc_sec_ecdsa_free_keypairs();
 #endif /* OC_PKI */
-  oc_sec_svr_free();
 #endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE

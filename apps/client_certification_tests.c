@@ -23,6 +23,7 @@
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
+#include "util/oc_macros.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -481,7 +482,9 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   resource_t *l = (resource_t *)oc_memb_alloc(&resources_m);
   if (l) {
     oc_endpoint_list_copy(&l->endpoint, endpoint);
-    int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
+    size_t uri_len = strlen(uri);
+    uri_len =
+      uri_len > OC_CHAR_ARRAY_LEN(l->uri) ? OC_CHAR_ARRAY_LEN(l->uri) : uri_len;
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
     oc_list_add(resources, l);
@@ -698,14 +701,15 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     oc_list_add(list, device);
   }
 
-  if (device_name) {
-    size_t len = strlen(device_name);
-    len = (len > 63) ? 63 : len;
-    strncpy(device->device_name, device_name, len);
-    device->device_name[len] = '\0';
-  } else {
-    device->device_name[0] = '\0';
+  size_t len = 0;
+  if (device_name != NULL) {
+    len = strlen(device_name);
+    len = (len > OC_CHAR_ARRAY_LEN(device->device_name))
+            ? OC_CHAR_ARRAY_LEN(device->device_name)
+            : len;
+    memcpy(device->device_name, device_name, len);
   }
+  device->device_name[len] = '\0';
   return true;
 }
 

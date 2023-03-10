@@ -42,7 +42,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
-#include "security/oc_sdi.h"
+#include "security/oc_sdi_internal.h"
 #include "security/oc_tls.h"
 #include <stdlib.h>
 
@@ -1044,7 +1044,7 @@ device1oscore_cred(oc_client_response_t *data)
     oc_rep_set_object(creds, privatedata);
     oc_rep_set_byte_string(privatedata, data, p->secret,
                            OSCORE_MASTER_SECRET_LEN);
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+    oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
     oc_rep_close_object(creds, privatedata);
 
     oc_rep_set_object(creds, oscore);
@@ -1105,7 +1105,7 @@ device2oscore_RFPRO(int status, void *data)
       oc_rep_set_object(creds, privatedata);
       oc_rep_set_byte_string(privatedata, data, p->secret,
                              OSCORE_MASTER_SECRET_LEN);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
       oc_rep_close_object(creds, privatedata);
 
       oc_rep_set_object(creds, oscore);
@@ -1288,7 +1288,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
       oc_rep_set_object(creds, privatedata);
       oc_rep_set_byte_string(privatedata, data, g_group_secret,
                              OSCORE_MASTER_SECRET_LEN);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
       oc_rep_close_object(creds, privatedata);
 
       oc_rep_set_object(creds, oscore);
@@ -1505,7 +1505,7 @@ device1_cred(oc_client_response_t *data)
 
     oc_rep_set_object(creds, privatedata);
     oc_rep_set_byte_string(privatedata, data, p->key, 16);
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+    oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
     oc_rep_close_object(creds, privatedata);
 
     oc_rep_object_array_end_item(creds);
@@ -1547,7 +1547,7 @@ device2_RFPRO(int status, void *data)
 
       oc_rep_set_object(creds, privatedata);
       oc_rep_set_byte_string(privatedata, data, p->key, 16);
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
       oc_rep_close_object(creds, privatedata);
 
       oc_rep_object_array_end_item(creds);
@@ -1857,12 +1857,14 @@ device_CSR(oc_client_response_t *data)
     goto err_device_CSR;
   }
 
-  size_t encoding_len = 0;
-  char *encoding = NULL;
-  if (!oc_rep_get_string(data->payload, "encoding", &encoding, &encoding_len)) {
+  size_t enc_len = 0;
+  char *enc = NULL;
+  if (!oc_rep_get_string(data->payload, "encoding", &enc, &enc_len) ||
+      enc_len == 0) {
     goto err_device_CSR;
   }
-  if (encoding_len != 20 || memcmp(encoding, "oic.sec.encoding.pem", 20) != 0) {
+  oc_sec_encoding_t encoding = oc_cred_encoding_from_string(enc, enc_len);
+  if (encoding != OC_ENCODING_PEM) {
     goto err_device_CSR;
   }
 
@@ -1896,12 +1898,12 @@ device_CSR(oc_client_response_t *data)
 
   oc_rep_set_object(creds, publicdata);
   oc_rep_set_text_string(publicdata, data, (const char *)cert_pem);
-  oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+  oc_rep_set_text_string(publicdata, encoding, OC_ENCODING_PEM_STR);
   oc_rep_close_object(creds, publicdata);
   if (p->roles) {
-    oc_rep_set_text_string(creds, credusage, "oic.sec.cred.rolecert");
+    oc_rep_set_text_string(creds, credusage, OC_CREDUSAGE_ROLE_CERT_STR);
   } else {
-    oc_rep_set_text_string(creds, credusage, "oic.sec.cred.cert");
+    oc_rep_set_text_string(creds, credusage, OC_CREDUSAGE_IDENTITY_CERT_STR);
   }
   oc_rep_object_array_end_item(creds);
   oc_rep_close_array(root, creds);
@@ -1969,10 +1971,10 @@ device_RFPRO(int status, void *data)
       oc_rep_set_object(creds, publicdata);
       oc_rep_set_text_string(publicdata, data,
                              oc_string(root->publicdata.data));
-      oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+      oc_rep_set_text_string(publicdata, encoding, OC_ENCODING_PEM_STR);
       oc_rep_close_object(creds, publicdata);
 
-      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.trustca");
+      oc_rep_set_text_string(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR);
 
       oc_rep_object_array_end_item(creds);
       oc_rep_close_array(root, creds);
@@ -2184,10 +2186,10 @@ trustanchor_device_RFPRO(int status, void *response_data)
 
       oc_rep_set_object(creds, publicdata);
       oc_rep_set_text_string(publicdata, data, p->trustanchor);
-      oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+      oc_rep_set_text_string(publicdata, encoding, OC_ENCODING_PEM_STR);
       oc_rep_close_object(creds, publicdata);
 
-      oc_rep_set_text_string(creds, credusage, "oic.sec.cred.trustca");
+      oc_rep_set_text_string(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR);
 
       oc_rep_object_array_end_item(creds);
       oc_rep_close_array(root, creds);
@@ -3655,7 +3657,7 @@ oc_obt_general_delete(const oc_uuid_t *uuid, const char *query, const char *url,
 void
 oc_obt_set_sd_info(const char *name, bool priv)
 {
-  oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
+  oc_sec_sdi_t *sdi = oc_sec_sdi_get(0);
   oc_free_string(&sdi->name);
   oc_new_string(&sdi->name, name, strlen(name));
   sdi->priv = priv;
@@ -3723,7 +3725,7 @@ oc_obt_self_own(size_t device)
 
   oc_sec_acl_add_bootstrap_acl(device);
 
-  oc_sec_sdi_t *sdi = oc_sec_get_sdi(device);
+  oc_sec_sdi_t *sdi = oc_sec_sdi_get(device);
   const oc_device_info_t *self = oc_core_get_device_info(device);
   oc_gen_uuid(&sdi->uuid);
   oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));

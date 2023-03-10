@@ -267,12 +267,23 @@ void _oc_free_array(
 /**
  * @brief reset ocstring contents
  *
- * @param ocstring ocstring to be reset
- * @param str not terminated string which will replace current str
+ * @param dst ocstring to be reset (cannot be NULL)
+ * @param str string which will replace current str (if NULL then the data of
+ * ocstring is freed and ocstring is memset to zeroes)
  * @param str_len size of the string
  */
 OC_API
-void oc_set_string(oc_string_t *ocstring, const char *str, size_t str_len);
+void oc_set_string(oc_string_t *dst, const char *str, size_t str_len);
+
+/**
+ * @brief copy ocstring
+ *
+ * @param dst destination (cannot be NULL)
+ * @param src source (if NULL data of destination is freed and the destination
+ * is memset to zeroes)
+ */
+OC_API
+void oc_copy_string(oc_string_t *dst, const oc_string_t *src);
 
 /**
  * @brief new array

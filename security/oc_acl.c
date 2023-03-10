@@ -103,12 +103,13 @@ get_new_aceid(size_t device)
 }
 
 static oc_ace_res_t *
-oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
+oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
                          const char *href, oc_ace_wildcard_t wildcard)
 {
   int skip = 0;
-  if (href && href[0] != '/')
+  if (href && href[0] != '/') {
     skip = 1;
+  }
   oc_ace_res_t *res = start;
   if (!res) {
     res = (oc_ace_res_t *)oc_list_head(ace->resources);
@@ -117,7 +118,8 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
   }
 
   while (res != NULL) {
-    bool positive = false, match = true;
+    bool positive = false;
+    bool match = true;
     if (href && oc_string_len(res->href) > 0) {
       if ((strlen(href) + skip) != oc_string_len(res->href) ||
           memcmp(oc_string(res->href) + skip, href,
@@ -218,11 +220,9 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 }
 
 static uint16_t
-oc_ace_get_permission(oc_sec_ace_t *ace, const oc_resource_t *resource,
+oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
                       bool is_DCR, bool is_public)
 {
-  uint16_t permission = 0;
-
   /* If the resource is discoverable and exposes >=1 unsecured endpoints
    * then match with ACEs bearing any of the 3 wildcard resources.
    * If the resource is discoverable and does not expose any unsecured endpoint,
@@ -243,9 +243,9 @@ oc_ace_get_permission(oc_sec_ace_t *ace, const oc_resource_t *resource,
     }
   }
 
+  uint16_t permission = 0;
   oc_ace_res_t *res =
     oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri), wc);
-
   while (res != NULL) {
     permission |= ace->permission;
 
@@ -317,14 +317,15 @@ dump_acl(size_t device)
 #endif /* OC_DEBUG */
 
 static uint16_t
-get_role_permissions(oc_sec_cred_t *role_cred, const oc_resource_t *resource,
-                     size_t device, bool is_DCR, bool is_public)
+get_role_permissions(const oc_sec_cred_t *role_cred,
+                     const oc_resource_t *resource, size_t device, bool is_DCR,
+                     bool is_public)
 {
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   do {
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
-                                    (oc_ace_subject_t *)&role_cred->role,
+                                    (const oc_ace_subject_t *)&role_cred->role,
                                     /*aceid*/ -1, /*permission*/ 0,
                                     /*tag*/ NULL, /*match_tag*/ false, device);
 
@@ -460,7 +461,6 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
   }
 
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
-  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   /* All unicast requests which are not received over the open Device DOC
    * shall be rejected with an appropriate error message (e.g. forbidden),
    * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
@@ -501,6 +501,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
    * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
    * Resource.
    */
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer && peer->doc && is_DCR) {
     OC_DBG("oc_sec_check_acl: connection is DOC and request directed to DCR - "
            "access granted");
@@ -568,7 +569,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
 
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
-  if (uuid) {
+  if (uuid != NULL) {
     do {
       match = oc_sec_acl_find_subject(
         match, OC_SUBJECT_UUID, (const oc_ace_subject_t *)uuid, /*aceid*/ -1,
@@ -598,9 +599,9 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     }
 #ifdef OC_PKI
     else {
-      oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL, *next;
+      const oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL;
       while (role_cred) {
-        next = role_cred->next;
+        const oc_sec_cred_t *next = role_cred->next;
         uint32_t flags = 0;
         if (oc_certs_validate_role_cert(role_cred->ctx, &flags) < 0 ||
             flags != 0) {
@@ -622,27 +623,28 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
 #endif /* OC_PKI */
   }
 
-  /* Access to SVRs via auth-crypt ACEs is prohibited */
-  if (!is_SVR && endpoint->flags & SECURED) {
-    oc_ace_subject_t _auth_crypt;
-    memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-    _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
-    do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt,
-                                      /*aceid*/ -1, /*permission*/ 0,
-                                      /*tag*/ NULL, /*match_tag*/ false,
-                                      endpoint->device);
-      if (match) {
-        permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
-        OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
-               "connection",
-               permission);
-      }
-    } while (match);
-  }
-
-  /* Access to SVRs via anon-clear ACEs is prohibited */
   if (!is_SVR) {
+    /* Access to SVRs via auth-crypt ACEs is prohibited */
+    if (endpoint->flags & SECURED) {
+      oc_ace_subject_t _auth_crypt;
+      memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
+      _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
+      do {
+        match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt,
+                                        /*aceid*/ -1, /*permission*/ 0,
+                                        /*tag*/ NULL, /*match_tag*/ false,
+                                        endpoint->device);
+        if (match) {
+          permission |=
+            oc_ace_get_permission(match, resource, is_DCR, is_public);
+          OC_DBG("oc_check_acl: Found ACE with permission %d for auth-crypt "
+                 "connection",
+                 permission);
+        }
+      } while (match);
+    }
+
+    /* Access to SVRs via anon-clear ACEs is prohibited */
     oc_ace_subject_t _anon_clear;
     memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
     _anon_clear.conn = OC_CONN_ANON_CLEAR;
@@ -1087,16 +1089,16 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
       }
       break;
     case OC_REP_OBJECT_ARRAY: {
-      oc_rep_t *aclist2 = rep->value.object_array;
+      const oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
         oc_ace_subject_t subject;
+        memset(&subject, 0, sizeof(oc_ace_subject_t));
         oc_ace_subject_type_t subject_type = 0;
         uint16_t permission = 0;
         int aceid = -1;
         char *tag = NULL;
-        oc_rep_t *resources = 0;
-        memset(&subject, 0, sizeof(oc_ace_subject_t));
-        oc_rep_t *ace = aclist2->value.object;
+        const oc_rep_t *resources = 0;
+        const oc_rep_t *ace = aclist2->value.object;
         while (ace != NULL) {
           len = oc_string_len(ace->name);
           switch (ace->type) {
@@ -1120,7 +1122,7 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
               resources = ace->value.object_array;
             break;
           case OC_REP_OBJECT: {
-            oc_rep_t *sub = ace->value.object;
+            const oc_rep_t *sub = ace->value.object;
             while (sub != NULL) {
               len = oc_string_len(sub->name);
               if (len == 4 && memcmp(oc_string(sub->name), "uuid", 4) == 0) {
@@ -1231,16 +1233,15 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
 
           /* The following code block attaches "coap" endpoints to
                    resources linked to an anon-clear ACE. This logic is being
-                   currently disabled to comply with the SH spec which requires
-                   that all vertical resources not expose a "coap" endpoint.
+                   currently disabled to comply with the SH spec which
+      requires that all vertical resources not expose a "coap" endpoint.
       #ifdef OC_SERVER
                 if (subject_type == OC_SUBJECT_CONN &&
                     subject.conn == OC_CONN_ANON_CLEAR) {
                   if (href) {
                     oc_resource_t *r =
-                      oc_ri_get_app_resource_by_uri(href, strlen(href), device);
-                    if (r) {
-                      oc_resource_make_public(r);
+                      oc_ri_get_app_resource_by_uri(href, strlen(href),
+      device); if (r) { oc_resource_make_public(r);
                     }
                   } else {
                     oc_resource_t *r = oc_ri_get_app_resources();

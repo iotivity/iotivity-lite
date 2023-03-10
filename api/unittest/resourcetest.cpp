@@ -25,6 +25,7 @@
 #include "oc_enums.h"
 #include "oc_ri.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/RepPool.h"
 
 #include <array>
 #include <gtest/gtest.h>

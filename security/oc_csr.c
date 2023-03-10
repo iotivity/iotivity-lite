@@ -246,7 +246,7 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       oc_core_get_resource_by_index(OCF_SEC_CSR, device));
   }
   oc_rep_set_text_string(root, csr, (const char *)csr);
-  oc_rep_set_text_string(root, encoding, "oic.sec.encoding.pem");
+  oc_rep_set_text_string(root, encoding, OC_ENCODING_PEM_STR);
   oc_rep_end_root_object();
 
   oc_send_response(request, OC_STATUS_OK);

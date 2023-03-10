@@ -380,9 +380,9 @@ TEST_F(TestKeyPair, DecodeForDevice)
 static std::vector<oc_ecdsa_keypair_t>
 generateKeypairs(mbedtls_ecp_group_id grpid, size_t count)
 {
-  oc::RepPool pool{};
   std::vector<oc_ecdsa_keypair_t> keypairs{};
   for (size_t i = 0; i < count; ++i) {
+    oc::RepPool pool{};
     oc_ecdsa_keypair_t kp_in = oc::GetOCKeyPair(grpid);
     keypairs.push_back(kp_in);
 
@@ -391,7 +391,6 @@ generateKeypairs(mbedtls_ecp_group_id grpid, size_t count)
     auto rep = pool.ParsePayload();
     EXPECT_TRUE(oc_sec_ecdsa_decode_keypair_for_device(rep.get(), /*device*/ i))
       << "error for ec(" << grpid << ")";
-    pool.Clear();
   }
   return keypairs;
 }

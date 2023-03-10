@@ -39,6 +39,20 @@ typedef struct
                     ///< credential replaced a previously existing one
 } oc_sec_add_new_cred_data_t;
 
+#define OC_ENCODING_BASE64_STR "oic.sec.encoding.base64"
+#define OC_ENCODING_RAW_STR "oic.sec.encoding.raw"
+#define OC_ENCODING_HANDLE_STR "oic.sec.encoding.handle"
+#ifdef OC_PKI
+#define OC_ENCODING_PEM_STR "oic.sec.encoding.pem"
+
+#define OC_CREDUSAGE_TRUSTCA_STR "oic.sec.cred.trustca"
+#define OC_CREDUSAGE_IDENTITY_CERT_STR "oic.sec.cred.cert"
+#define OC_CREDUSAGE_ROLE_CERT_STR "oic.sec.cred.rolecert"
+#define OC_CREDUSAGE_MFG_TRUSTCA_STR "oic.sec.cred.mfgtrustca"
+#define OC_CREDUSAGE_MFG_CERT_STR "oic.sec.cred.mfgcert"
+
+#endif /* OC_PKI */
+
 int oc_sec_add_new_cred(
   size_t device, bool roles_resource, const struct oc_tls_peer_t *client,
   int credid, oc_sec_credtype_t credtype, oc_sec_credusage_t credusage,
@@ -58,9 +72,28 @@ bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
                         const struct oc_tls_peer_t *client, size_t device,
                         oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                         void *on_apply_cred_data);
+
 /**
- * @brief Allocate and initialize a new credential and append it to global list
- * of device credentials.
+ * @brief Parse cred encoding from string
+ *
+ * @param str string (cannot be NULL)
+ * @param str_len length of \p str
+ * @return oc_sec_encoding_t parsed encoding
+ */
+oc_sec_encoding_t oc_cred_encoding_from_string(const char *str, size_t str_len);
+
+/**
+ * @brief Parse cred usage from string
+ *
+ * @param str string (cannot be NULL)
+ * @param str_len length of \p str
+ * @return oc_sec_credusage_t parsed usage
+ */
+oc_sec_credusage_t oc_cred_usage_from_string(const char *str, size_t str_len);
+
+/**
+ * @brief Allocate and initialize a new credential and append it to global
+ * list of device credentials.
  *
  * @param subjectuuid subject uuid (cannot be NULL)
  * @param credtype credential type

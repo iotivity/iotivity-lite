@@ -30,7 +30,7 @@
 #include "oc_doxm_internal.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
-#include "oc_sdi.h"
+#include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
 #include "port/oc_log.h"
 
@@ -39,8 +39,8 @@ oc_sec_svr_create(void)
 {
   oc_sec_doxm_init();
   oc_sec_pstat_init();
-  oc_sec_cred_init();
   oc_sec_acl_init();
+  oc_sec_cred_init();
   oc_sec_ael_init();
   oc_sec_sp_init();
   oc_sec_sdi_init();
@@ -68,9 +68,7 @@ oc_sec_svr_create(void)
     oc_core_populate_resource(
       OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
-    oc_core_populate_resource(
-      OCF_SEC_SDI, i, "/oic/sec/sdi", OC_IF_BASELINE | OC_IF_RW, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_sdi, 0, post_sdi, 0, 1, "oic.r.sdi");
+    oc_sec_sdi_create_resource(i);
 #ifdef OC_PKI
     oc_core_populate_resource(
       OCF_SEC_CSR, i, OCF_SEC_CSR_URI, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
@@ -89,8 +87,8 @@ oc_sec_svr_free(void)
   oc_sec_sdi_free();
   oc_sec_sp_free();
   oc_sec_ael_free();
-  oc_sec_acl_free();
   oc_sec_cred_free();
+  oc_sec_acl_free();
   oc_sec_pstat_free();
   oc_sec_doxm_free();
 }

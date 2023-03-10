@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "util/oc_macros.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -343,7 +344,10 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       PRINT("\n##Discovered light switch##\n");
       oc_endpoint_list_copy(&l->endpoint, endpoint);
       if (oc_list_length(light_switches) == 0) {
-        int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
+        size_t uri_len = strlen(uri);
+        uri_len = uri_len > OC_CHAR_ARRAY_LEN(mcast_uri)
+                    ? OC_CHAR_ARRAY_LEN(mcast_uri)
+                    : uri_len;
         memcpy(mcast_uri, uri, uri_len);
         mcast_uri[uri_len] = '\0';
       }

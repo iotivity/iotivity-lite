@@ -37,7 +37,6 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
                           size_t cert_size)
 {
   OC_DBG("attempting to add an intermediate CA certificate");
-  int ret = 0;
   oc_sec_creds_t *creds = oc_sec_get_creds(device);
   oc_sec_cred_t *c = oc_list_head(creds->creds);
   for (; c != NULL && c->credid != credid; c = c->next)
@@ -60,7 +59,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
     c_size += 1;
   }
 
-  ret = mbedtls_x509_crt_parse(&int_ca, cert, c_size);
+  int ret = mbedtls_x509_crt_parse(&int_ca, cert, c_size);
   if (ret < 0) {
     OC_ERR("could not parse intermediate cert: %d", ret);
     return -1;
@@ -103,36 +102,34 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   /* Confirm that the intermediate cert is the issuer of the last cert
    * in the chain, if not return.
    */
-  if (oc_certs_is_subject_the_issuer(&int_ca, id_cert) == 0) {
-    oc_string_t chain = c->publicdata.data;
-    size_t new_publicdata_size = oc_string_len(chain) + c_size;
-    oc_alloc_string(&c->publicdata.data, new_publicdata_size);
-    memcpy(oc_string(c->publicdata.data), oc_string(chain),
-           oc_string_len(chain));
-    memcpy(oc_string(c->publicdata.data) + oc_string_len(chain), cert,
-           cert_size);
-    oc_string(c->publicdata.data)[new_publicdata_size - 1] = '\0';
-    oc_free_string(&chain);
-    OC_DBG("adding a new intermediate CA cert to /oic/sec/cred");
-    oc_sec_dump_cred(device);
-    ret = 1;
-  } else {
-    OC_ERR("supplied intermediate CA cert is not issuer of identity cert");
-    ret = -1;
+  if (oc_certs_is_subject_the_issuer(&int_ca, id_cert) != 0) {
+    OC_ERR("could not add intermediate CA cert to /oic/sec/cred: supplied "
+           "intermediate CA cert is not issuer of identity cert");
+    mbedtls_x509_crt_free(&int_ca);
+    mbedtls_x509_crt_free(&id_cert_chain);
+    return -1;
   }
+
+  oc_string_t chain;
+  oc_new_string(&chain, oc_string(c->publicdata.data),
+                oc_string_len(c->publicdata.data));
+  oc_free_string(&c->publicdata.data);
+  size_t new_publicdata_size = oc_string_len(chain) + c_size;
+  oc_alloc_string(&c->publicdata.data, new_publicdata_size);
+  memcpy(oc_string(c->publicdata.data), oc_string(chain), oc_string_len(chain));
+  memcpy(oc_string(c->publicdata.data) + oc_string_len(chain), cert, cert_size);
+  oc_string(c->publicdata.data)[new_publicdata_size - 1] = '\0';
+  oc_free_string(&chain);
+  OC_DBG("adding a new intermediate CA cert to /oic/sec/cred");
+  oc_sec_dump_cred(device);
 
   mbedtls_x509_crt_free(&int_ca);
   mbedtls_x509_crt_free(&id_cert_chain);
 
-  if (ret > 0) {
-    OC_DBG(
-      "added intermediate CA(identity cred credid=%d) cert to /oic/sec/cred",
-      credid);
-    oc_tls_resolve_new_identity_certs();
-    return credid;
-  }
-  OC_ERR("could not add intermediate CA cert to /oic/sec/cred");
-  return -1;
+  OC_DBG("added intermediate CA(identity cred credid=%d) cert to /oic/sec/cred",
+         credid);
+  oc_tls_resolve_new_identity_certs();
+  return credid;
 }
 
 static int

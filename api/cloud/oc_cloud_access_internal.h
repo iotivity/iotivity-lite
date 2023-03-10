@@ -34,11 +34,17 @@ extern "C" {
 /**
  * @brief Generate URI query for deregister request.
  *
- * @return URI query, must be freed by caller
+ * The format of the generated string is uid=${uid}&di={device
+ * uuid}&at=${access_token} or uid=${uid}&di={device uuid} based on whether
+ * access token is NULL or not.
+ *
+ * @param uid uid (cannot be NULL)
+ * @param access_token access token
+ * @param device device index
+ * @param query output variable (cannot be NULL)
  */
-oc_string_t cloud_access_deregister_query(const char *uid,
-                                          const char *access_token,
-                                          size_t device);
+void cloud_access_deregister_query(const char *uid, const char *access_token,
+                                   size_t device, oc_string_t *query);
 #ifdef __cplusplus
 }
 #endif

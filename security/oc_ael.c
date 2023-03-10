@@ -283,10 +283,10 @@ oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
 }
 
 bool
-oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage)
+oc_sec_ael_decode(size_t device, const oc_rep_t *rep, bool from_storage)
 {
   oc_sec_ael_t *a = &ael[device];
-  oc_rep_t *repc = rep;
+  const oc_rep_t *repc = rep;
   for (; repc; repc = repc->next) {
     size_t len = oc_string_len(repc->name);
     switch (repc->type) {
@@ -295,15 +295,22 @@ oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage)
       if (len == 14 &&
           memcmp(oc_string(repc->name), "categoryfilter", 14) == 0) {
         a->categoryfilter = (uint8_t)repc->value.integer;
-      } else if (len == 14 &&
-                 memcmp(oc_string(repc->name), "priorityfilter", 14) == 0) {
+        continue;
+      }
+      if (len == 14 &&
+          memcmp(oc_string(repc->name), "priorityfilter", 14) == 0) {
         a->priorityfilter = (uint8_t)repc->value.integer;
-      } else if (from_storage && len == 8 &&
-                 memcmp(oc_string(repc->name), "maxspace", 8) == 0) {
+        continue;
+      }
+      if (from_storage && len == 8 &&
+          memcmp(oc_string(repc->name), "maxspace", 8) == 0) {
         a->maxsize = (size_t)repc->value.integer;
-      } else if (from_storage && len == 4 &&
-                 memcmp(oc_string(repc->name), "unit", 4) == 0) {
+        continue;
+      }
+      if (from_storage && len == 4 &&
+          memcmp(oc_string(repc->name), "unit", 4) == 0) {
         a->unit = (oc_sec_ael_unit_t)repc->value.integer;
+        continue;
       }
       break;
     default:
@@ -317,37 +324,42 @@ oc_sec_ael_decode(size_t device, oc_rep_t *rep, bool from_storage)
     case OC_REP_OBJECT_ARRAY:
       if (from_storage && len == 6 &&
           memcmp(oc_string(rep->name), "events", 6) == 0) {
-        for (oc_rep_t *event = rep->value.object_array; event;
+        for (const oc_rep_t *event = rep->value.object_array; event;
              event = event->next) {
           uint8_t category = 0;
           uint8_t priority = 0;
           oc_clock_time_t timestamp = 0;
-          char *aeid = NULL;
-          char *message = NULL;
+          const char *aeid = NULL;
+          const char *message = NULL;
           size_t aux_sz = 0;
-          char *aux[AEL_AUX_INFO_MAX_ITEMS] = { 0 };
-          for (oc_rep_t *r = event->value.object; r; r = r->next) {
+          const char *aux[AEL_AUX_INFO_MAX_ITEMS] = { 0 };
+          for (const oc_rep_t *r = event->value.object; r; r = r->next) {
             size_t l = oc_string_len(r->name);
             switch (r->type) {
             /* category, priority, timestamp */
             case OC_REP_INT:
               if (l == 8 && memcmp(oc_string(r->name), "category", 8) == 0) {
                 category = (uint8_t)r->value.integer;
-              } else if (l == 8 &&
-                         memcmp(oc_string(r->name), "priority", 8) == 0) {
+                continue;
+              }
+              if (l == 8 && memcmp(oc_string(r->name), "priority", 8) == 0) {
                 priority = (uint8_t)r->value.integer;
-              } else if (l == 9 &&
-                         memcmp(oc_string(r->name), "timestamp", 9) == 0) {
+                continue;
+              }
+              if (l == 9 && memcmp(oc_string(r->name), "timestamp", 9) == 0) {
                 timestamp = (oc_clock_time_t)r->value.integer;
+                continue;
               }
               break;
             /* aeid, message */
             case OC_REP_STRING:
               if (l == 4 && memcmp(oc_string(r->name), "aeid", 4) == 0) {
                 aeid = oc_string(r->value.string);
-              } else if (l == 7 &&
-                         memcmp(oc_string(r->name), "message", 7) == 0) {
+                continue;
+              }
+              if (l == 7 && memcmp(oc_string(r->name), "message", 7) == 0) {
                 message = oc_string(r->value.string);
+                continue;
               }
               break;
             /* auxiliaryinfo */

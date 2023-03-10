@@ -822,7 +822,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
     file(GLOB PLATFORMTEST_SRC port/unittest/*.cpp)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_test)
-    package_add_test(platformtest ${PLATFORMTEST_SRC})
+    package_add_test(platformtest ${COMMONTEST_SRC} ${PLATFORMTEST_SRC})
 
     file(GLOB MESSAGINGTEST_SRC messaging/coap/unittest/*.cpp)
     package_add_test(messagingtest ${MESSAGINGTEST_SRC})

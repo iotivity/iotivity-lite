@@ -147,7 +147,7 @@ public:
 
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
-  static const oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
+  static oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
 
 private:
   static int SetSystemTime(oc_clock_time_t time, void *user_data);

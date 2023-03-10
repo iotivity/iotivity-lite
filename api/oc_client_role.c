@@ -46,12 +46,12 @@ serialize_role_credential(CborEncoder *roles_array, const oc_sec_cred_t *cr)
     oc_rep_close_object(role, roleid);
   }
   /* credusage */
-  oc_rep_set_text_string(role, credusage, "oic.sec.cred.rolecert");
+  oc_rep_set_text_string(role, credusage, OC_CREDUSAGE_ROLE_CERT_STR);
   /* publicdata */
   if (oc_string_len(cr->publicdata.data) > 0) {
     oc_rep_set_object(role, publicdata);
     oc_rep_set_text_string(publicdata, data, oc_string(cr->publicdata.data));
-    oc_rep_set_text_string(publicdata, encoding, "oic.sec.encoding.pem");
+    oc_rep_set_text_string(publicdata, encoding, OC_ENCODING_PEM_STR);
     oc_rep_close_object(role, publicdata);
   }
   oc_rep_end_object(roles_array, role);

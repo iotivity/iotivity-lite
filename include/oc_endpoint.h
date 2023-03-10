@@ -161,8 +161,8 @@ int oc_endpoint_to_string(const oc_endpoint_t *endpoint,
  * @return int 0 success
  */
 OC_API
-int oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
-                          oc_string_t *uri);
+int oc_string_to_endpoint(const oc_string_t *endpoint_str,
+                          oc_endpoint_t *endpoint, oc_string_t *uri);
 
 /**
  * @brief parse path component (ie. the part after the first '/') of a uri

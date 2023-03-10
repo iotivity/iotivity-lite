@@ -30,7 +30,7 @@
 #include "security/oc_doxm_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
-#include "security/oc_sdi.h"
+#include "security/oc_sdi_internal.h"
 #include "security/oc_tls.h"
 
 /* Random PIN OTM */
@@ -174,7 +174,7 @@ obt_rdp_12(oc_client_response_t *data)
 
     if (o->sdi) {
       oc_rep_object_array_start_item(resources);
-      oc_rep_set_text_string(resources, href, "/oic/sec/sdi");
+      oc_rep_set_text_string(resources, href, OCF_SEC_SDI_URI);
       oc_rep_object_array_end_item(resources);
     }
 
@@ -303,7 +303,7 @@ obt_rdp_8(oc_client_response_t *data)
     goto err_obt_rdp_8;
   }
 
-  oc_sec_sdi_t *sdi = oc_sec_get_sdi(0);
+  const oc_sec_sdi_t *sdi = oc_sec_sdi_get(0);
   char sdi_uuid[OC_UUID_LEN];
   oc_uuid_to_str(&sdi->uuid, sdi_uuid, OC_UUID_LEN);
 
@@ -311,7 +311,7 @@ obt_rdp_8(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/sdi", ep, NULL, &obt_rdp_9, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_SDI_URI, ep, NULL, &obt_rdp_9, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, uuid, sdi_uuid);
     oc_rep_set_text_string(root, name, oc_string(sdi->name));
@@ -382,7 +382,7 @@ obt_rdp_7(oc_client_response_t *data)
     oc_rep_set_text_string(creds, subjectuuid, uuid);
 
     oc_rep_set_object(creds, privatedata);
-    oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+    oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
     oc_rep_set_byte_string(privatedata, data, (const uint8_t *)"", 0);
     oc_rep_close_object(creds, privatedata);
 
