@@ -343,12 +343,12 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   coap_remove_observer_by_client(&peer->endpoint);
 #endif /* OC_SERVER */
   /* remove all open transactions associated to this endpoint */
-  coap_free_transactions_by_endpoint(&peer->endpoint);
+  coap_free_transactions_by_endpoint(&peer->endpoint, OC_CONNECTION_CLOSED);
 #ifdef OC_CLIENT
   /* remove all remaining client_cbs awaiting a response from this endpoint and
    * notify a 5.03 status to the application.
    */
-  oc_ri_free_client_cbs_by_endpoint(&peer->endpoint);
+  oc_ri_free_client_cbs_by_endpoint_v1(&peer->endpoint, OC_CONNECTION_CLOSED);
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI

@@ -221,8 +221,19 @@ oc_client_cb_t *oc_ri_find_client_cb_by_token(const uint8_t *token,
 oc_client_cb_t *oc_ri_find_client_cb_by_mid(uint16_t mid);
 
 /**
- * @brief free the client callback information by endpoint
+ * @brief free the client callback information by endpoint with a specific code
  *
+ * @param endpoint the endpoint
+ * @param code the propagated code to client callback
+ */
+void oc_ri_free_client_cbs_by_endpoint_v1(const oc_endpoint_t *endpoint,
+                                          oc_status_t code);
+
+/**
+ * @brief free the client callback information by endpoint with code
+ * OC_CANCELLED
+ *
+ * @deprecated use oc_ri_free_client_cbs_by_endpoint_v1 instead
  * @param endpoint the endpoint
  */
 void oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint);
@@ -230,6 +241,16 @@ void oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint);
 /**
  * @brief free the client callback infomation by message id (mid)
  *
+ * @param mid the message id
+ * @param code the propagated code to client callback
+ */
+void oc_ri_free_client_cbs_by_mid_v1(uint16_t mid, oc_status_t code);
+
+/**
+ * @brief free the client callback infomation by message id (mid) with code
+ * OC_CANCELLED
+ *
+ * @deprecated use oc_ri_free_client_cbs_by_mid_v1 instead
  * @param mid the message id
  */
 void oc_ri_free_client_cbs_by_mid(uint16_t mid);

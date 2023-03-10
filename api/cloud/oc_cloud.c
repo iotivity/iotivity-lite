@@ -57,7 +57,8 @@ bool
 cloud_is_connection_error_code(oc_status_t code)
 {
   return code == OC_STATUS_SERVICE_UNAVAILABLE ||
-         code == OC_STATUS_GATEWAY_TIMEOUT;
+         code == OC_STATUS_GATEWAY_TIMEOUT || code == OC_CONNECTION_CLOSED ||
+         code == OC_TRANSACTION_TIMEOUT;
 }
 
 bool
