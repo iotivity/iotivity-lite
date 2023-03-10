@@ -1927,6 +1927,8 @@ void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler
 %ignore oc_ri_remove_client_cb_by_mid;
 %ignore oc_ri_free_client_cbs_by_endpoint;
 %ignore oc_ri_free_client_cbs_by_mid;
+%ignore oc_ri_free_client_cbs_by_endpoint_v1;
+%ignore oc_ri_free_client_cbs_by_mid_v1;
 %ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
 /*******************End oc_client_state.h*******************/

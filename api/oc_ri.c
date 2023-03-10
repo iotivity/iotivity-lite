@@ -1633,11 +1633,11 @@ oc_ri_remove_client_cb(void *data)
 }
 
 static void
-notify_client_cb_timeout(oc_client_cb_t *cb)
+notify_client_cb_with_code(oc_client_cb_t *cb, oc_status_t code)
 {
-  OC_DBG(
-    "notify_client_cb_timeout - calling handler with request timeout for %d %s",
-    cb->method, oc_string(cb->uri));
+  OC_DBG("notify_client_cb_with_code - calling handler with request timeout "
+         "for %d %s",
+         cb->method, oc_string(cb->uri));
   oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
   oc_ri_remove_timed_event_callback(
     cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
@@ -1648,7 +1648,7 @@ notify_client_cb_timeout(oc_client_cb_t *cb)
   client_response.endpoint = &cb->endpoint;
   client_response.observe_option = -1;
   client_response.user_data = cb->user_data;
-  client_response.code = OC_REQUEST_TIMEOUT;
+  client_response.code = code;
 
   oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
   handler(&client_response);
@@ -1667,12 +1667,12 @@ oc_event_callback_retval_t
 oc_ri_remove_client_cb_with_notify_timeout_async(void *data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)data;
-  notify_client_cb_timeout(cb);
+  notify_client_cb_with_code(cb, OC_REQUEST_TIMEOUT);
   return OC_EVENT_DONE;
 }
 
 void
-oc_ri_free_client_cbs_by_mid(uint16_t mid)
+oc_ri_free_client_cbs_by_mid_v1(uint16_t mid, oc_status_t code)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
   while (cb != NULL) {
@@ -1680,7 +1680,31 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
     if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
         cb->mid == mid) {
       cb->ref_count = 1;
-      notify_client_cb_timeout(cb);
+      notify_client_cb_with_code(cb, code);
+      cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
+      continue;
+    }
+    cb = next;
+  }
+}
+
+void
+oc_ri_free_client_cbs_by_mid(uint16_t mid)
+{
+  oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
+}
+
+void
+oc_ri_free_client_cbs_by_endpoint_v1(const oc_endpoint_t *endpoint,
+                                     oc_status_t code)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
+  while (cb != NULL) {
+    oc_client_cb_t *next = cb->next;
+    if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
+        oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
+      cb->ref_count = 1;
+      notify_client_cb_with_code(cb, code);
       cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
       continue;
     }
@@ -1691,18 +1715,7 @@ oc_ri_free_client_cbs_by_mid(uint16_t mid)
 void
 oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint)
 {
-  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
-  while (cb != NULL) {
-    oc_client_cb_t *next = cb->next;
-    if (!cb->multicast && !cb->discovery && cb->ref_count == 0 &&
-        oc_endpoint_compare(&cb->endpoint, endpoint) == 0) {
-      cb->ref_count = 1;
-      notify_client_cb_timeout(cb);
-      cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
-      continue;
-    }
-    cb = next;
-  }
+  oc_ri_free_client_cbs_by_endpoint_v1(endpoint, OC_CANCELLED);
 }
 
 oc_client_cb_t *
@@ -1886,7 +1899,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
                                           cb->user_data) == OC_STOP_DISCOVERY) {
         uint16_t mid = cb->mid;
         cb->ref_count = 0;
-        oc_ri_free_client_cbs_by_mid(mid);
+        oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
 #ifdef OC_BLOCK_WISE
         if (response_state) {
           *response_state = NULL;
@@ -1942,7 +1955,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
     if (cb->multicast) {
       if (cb->stop_multicast_receive) {
         uint16_t mid = cb->mid;
-        oc_ri_free_client_cbs_by_mid(mid);
+        oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
       }
     } else {
       oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);

@@ -94,9 +94,14 @@ typedef enum {
   __NUM_OC_STATUS_CODES__,
   OC_IGNORE,          ///< Ignore: do not respond to request
   OC_PING_TIMEOUT,    ///< Ping Time out
-  OC_REQUEST_TIMEOUT, ///< Timeout for requests created by
-                      ///< oc_do_get_with_timeout, oc_do_delete_with_timeout,
-                      ///< oc_do_put_with_timeout or oc_do_post_with_timeout
+  OC_REQUEST_TIMEOUT, ///< Timeout is returned when the timeout is reached for
+                      ///< requests created by oc_do_get_with_timeout,
+                      ///< oc_do_delete_with_timeout, oc_do_put_with_timeout, or
+                      ///< oc_do_post_with_timeout
+  OC_CONNECTION_CLOSED,   ///< Connection closed by peer, or client. eg. for
+                          ///< invalid TLS handshake
+  OC_TRANSACTION_TIMEOUT, ///< Blockwise transaction timed out's
+  OC_CANCELLED,           ///< Cancelled: request was cancelled by the client
 } oc_status_t;
 
 /**

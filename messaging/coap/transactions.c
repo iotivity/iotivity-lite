@@ -171,7 +171,7 @@ coap_send_transaction(coap_transaction_t *t)
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT
-      oc_ri_free_client_cbs_by_mid(t->mid);
+      oc_ri_free_client_cbs_by_mid_v1(t->mid, OC_TRANSACTION_TIMEOUT);
 #endif /* OC_CLIENT */
 
 #ifdef OC_BLOCK_WISE
@@ -271,8 +271,12 @@ coap_free_all_transactions(void)
 }
 
 void
-coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint)
+coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint,
+                                   oc_status_t code)
 {
+#ifndef OC_CLIENT
+  (void)code;
+#endif /* !OC_CLIENT */
   coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
                      *next;
   while (t != NULL) {
@@ -281,7 +285,7 @@ coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint)
       int removed = oc_list_length(transactions_list);
 #ifdef OC_CLIENT
       /* Remove the client callback tied to this transaction */
-      oc_ri_free_client_cbs_by_mid(t->mid);
+      oc_ri_free_client_cbs_by_mid_v1(t->mid, code);
 #endif /* OC_CLIENT */
       if ((removed - oc_list_length(transactions_list)) > 0) {
         t = (coap_transaction_t *)oc_list_head(transactions_list);
