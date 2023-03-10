@@ -29,127 +29,93 @@
 #include "oc_keypair_internal.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"
-#include "oc_sdi.h"
+#include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
 #include "oc_tls.h"
 #include "port/oc_storage.h"
 
+static int
+store_decode_doxm(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)data;
+  if (!oc_sec_decode_doxm(rep, /*from_storage*/ true, /*doc*/ false, device)) {
+    OC_ERR("cannot load doxm: cannot decode representation");
+    return -1;
+  }
+  return 0;
+}
+
 void
 oc_sec_load_doxm(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", "doxm");
+  if (oc_storage_load_resource("doxm", device, store_decode_doxm, NULL) <= 0) {
     oc_sec_doxm_default(device);
+    OC_ERR("failed to load doxm from storage for device(%zu)", device);
     return;
   }
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
-
-  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag("doxm", device, svr_tag, sizeof(svr_tag));
-  long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
-  if (ret > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_decode_doxm(rep, true, false, device);
-    oc_free_rep(rep);
-  }
-  oc_storage_free_buffer(sb);
+  OC_DBG("%s resource loaded from storage for device(%zu)", "doxm", device);
 
   oc_uuid_t *deviceuuid = oc_core_get_device_id(device);
   const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   memcpy(deviceuuid, &doxm->deviceuuid, sizeof(oc_uuid_t));
 }
 
+static int
+store_encode_doxm(size_t device, void *data)
+{
+  (void)data;
+  oc_sec_encode_doxm(device, /*iface_mask*/ 0, true);
+  return 0;
+}
+
 void
 oc_sec_dump_doxm(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", "doxm");
-    return;
+  long ret = oc_storage_save_resource("doxm", device, store_encode_doxm, NULL);
+  if (ret <= 0) {
+    OC_ERR("cannot dump doxm to storage: error(%ld)", ret);
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* OC_APP_DATA_STORAGE_BUFFER */
+}
 
-  oc_sec_encode_doxm(device, 0, true);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  sb.buffer = oc_rep_shrink_encoder_buf(sb.buffer);
-  sb.size = (size_t)oc_rep_get_encoder_buffer_size();
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
-  int size = oc_rep_get_encoded_payload_size();
-  if (size > 0) {
-    OC_DBG("oc_store: encoded doxm size %d", size);
-    char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag("doxm", device, svr_tag, sizeof(svr_tag));
-    oc_storage_write(svr_tag, sb.buffer, size);
+static int
+store_decode_pstat(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)data;
+  if (!oc_sec_decode_pstat(rep, true, device)) {
+    OC_ERR("cannot decode pstat");
+    return -1;
   }
-  oc_storage_free_buffer(sb);
+  return 0;
 }
 
 void
 oc_sec_load_pstat(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", "pstat");
+  if (oc_storage_load_resource("pstat", device, store_decode_pstat, NULL) <=
+      0) {
     oc_sec_pstat_default(device);
+    OC_ERR("failed to load pstat from storage for device(%zu)", device);
     return;
   }
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
+  OC_DBG("%s resource loaded from storage for device(%zu)", "pstat", device);
+}
 
-  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag("pstat", device, svr_tag, sizeof(svr_tag));
-  long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
-  if (ret > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_decode_pstat(rep, true, device);
-    oc_free_rep(rep);
-  }
-  oc_storage_free_buffer(sb);
-
-  if (ret <= 0) {
-    oc_sec_pstat_default(device);
-  }
+static int
+store_encode_pstat(size_t device, void *data)
+{
+  (void)data;
+  oc_sec_encode_pstat(device, /*iface_mask*/ 0, /*to_storage*/ true);
+  return 0;
 }
 
 void
 oc_sec_dump_pstat(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", "pstat");
-    return;
+  long ret =
+    oc_storage_save_resource("pstat", device, store_encode_pstat, NULL);
+  if (ret <= 0) {
+    OC_ERR("cannot dump pstat to storage: error(%ld)", ret);
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* OC_APP_DATA_STORAGE_BUFFER */
-
-  oc_sec_encode_pstat(device, 0, true);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  sb.buffer = oc_rep_shrink_encoder_buf(sb.buffer);
-  sb.size = (size_t)oc_rep_get_encoder_buffer_size();
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
-  int size = oc_rep_get_encoded_payload_size();
-  if (size > 0) {
-    OC_DBG("oc_store: encoded pstat size %d", size);
-    char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag("pstat", device, svr_tag, sizeof(svr_tag));
-    oc_storage_write(svr_tag, sb.buffer, size);
-  }
-  oc_storage_free_buffer(sb);
 }
 
 void
@@ -531,62 +497,44 @@ oc_sec_dump_ael(size_t device)
   oc_storage_free_buffer(sb);
 }
 
+static int
+store_decode_sdi(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)data;
+  if (!oc_sec_sdi_decode(device, rep, /*from_storage*/ true)) {
+    OC_ERR("cannot decode sdi");
+    return -1;
+  }
+  return 0;
+}
+
 void
 oc_sec_load_sdi(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", "sdi");
+  if (oc_storage_load_resource(OCF_SEC_SDI_STORE_NAME, device, store_decode_sdi,
+                               NULL) <= 0) {
+    OC_ERR("failed to load sdi from storage for device(%zu)", device);
     oc_sec_sdi_default(device);
     return;
   }
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
+  OC_DBG("%s resource loaded from storage for device(%zu)", "sdi", device);
+}
 
-  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag("sdi", device, svr_tag, sizeof(svr_tag));
-  long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
-  if (ret > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_decode_sdi(rep, true, device);
-    oc_free_rep(rep);
-  } else {
-    oc_sec_sdi_default(device);
-  }
-  oc_storage_free_buffer(sb);
+static int
+store_encode_sdi(size_t device, void *data)
+{
+  (void)data;
+  return oc_sec_sdi_encode(device, /*iface_mask*/ 0);
 }
 
 void
 oc_sec_dump_sdi(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", "sdi");
-    return;
+  long ret = oc_storage_save_resource(OCF_SEC_SDI_STORE_NAME, device,
+                                      store_encode_sdi, NULL);
+  if (ret <= 0) {
+    OC_ERR("cannot dump sdi to store: error(%ld)", ret);
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* OC_APP_DATA_STORAGE_BUFFER */
-
-  /* sdi */
-  oc_sec_encode_sdi(device, true);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  sb.buffer = oc_rep_shrink_encoder_buf(sb.buffer);
-  sb.size = (size_t)oc_rep_get_encoder_buffer_size();
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
-  int size = oc_rep_get_encoded_payload_size();
-  if (size > 0) {
-    OC_DBG("oc_store: encoded sdi size %d", size);
-    char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag("sdi", device, svr_tag, sizeof(svr_tag));
-    oc_storage_write(svr_tag, sb.buffer, size);
-  }
-  oc_storage_free_buffer(sb);
 }
 
 #endif /* OC_SECURITY */

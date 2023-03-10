@@ -108,7 +108,7 @@ oc_mem_trace_add_pace(const char *func, int size, int type, void *address)
   oc_list_add((&mInfo)->mem_log_list, mem_log_item);
 }
 
-void
+static void
 oc_mem_trace_print_paces(void)
 {
   int cnt = 0;
@@ -117,7 +117,7 @@ oc_mem_trace_print_paces(void)
 
   PRINT("==================================================================");
   PRINT("=================\n");
-  PRINT("  %2s   %-22s   %11s    %5s   %5s    %5s    %5s \n", "No.", "Func",
+  PRINT("  %2s   %-22s   %11s    %9s   %5s    %5s    %5s \n", "No.", "Func",
         "Address", "Size", "Req", "Cur", "Peak");
   PRINT("------------------------------------------------------------------");
   PRINT("-----------------\n");

@@ -273,7 +273,7 @@ TestDevice::ClearDynamicResources()
 
 #endif /* OC_SERVER */
 
-const oc_endpoint_t *
+oc_endpoint_t *
 TestDevice::GetEndpoint(size_t device, int flags)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);

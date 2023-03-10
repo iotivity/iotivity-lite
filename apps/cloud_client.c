@@ -20,6 +20,7 @@
 
 #include "oc_api.h"
 #include "oc_pki.h"
+#include "util/oc_macros.h"
 #include <inttypes.h>
 #include <signal.h>
 #if defined(_WIN32)
@@ -262,7 +263,9 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   resource_t *l = (resource_t *)oc_memb_alloc(&resources_m);
   if (l) {
     oc_endpoint_list_copy(&l->endpoint, endpoint);
-    int uri_len = (strlen(uri) >= 64) ? 63 : strlen(uri);
+    size_t uri_len = strlen(uri);
+    uri_len =
+      uri_len > OC_CHAR_ARRAY_LEN(l->uri) ? OC_CHAR_ARRAY_LEN(l->uri) : uri_len;
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
     oc_list_add(resources, l);

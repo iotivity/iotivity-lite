@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
+#include "util/oc_macros.h"
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
@@ -255,14 +256,15 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     oc_list_add(list, device);
   }
 
-  if (device_name) {
-    size_t len = strlen(device_name);
-    len = (len > 63) ? 63 : len;
-    strncpy(device->device_name, device_name, len);
-    device->device_name[len] = '\0';
-  } else {
-    device->device_name[0] = '\0';
+  size_t len = 0;
+  if (device_name != NULL) {
+    len = strlen(device_name);
+    len = len > OC_CHAR_ARRAY_LEN(device->device_name)
+            ? OC_CHAR_ARRAY_LEN(device->device_name)
+            : len;
+    memcpy(device->device_name, device_name, len);
   }
+  device->device_name[len] = '\0';
   return true;
 }
 

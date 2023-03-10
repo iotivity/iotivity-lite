@@ -18,11 +18,13 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_config.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
+#include "tests/gtest/Device.h"
 
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -45,52 +47,7 @@
 
 class TestCloudStore : public testing::Test {
 public:
-  static oc_handler_t s_handler;
-  static pthread_mutex_t s_mutex;
-  static pthread_cond_t s_cv;
   static oc_cloud_context_t s_context;
-
-  static int appInit(void)
-  {
-    int result = oc_init_platform("OCFCloud", nullptr, nullptr);
-    result |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                            "ocf.res.1.0.0", nullptr, nullptr);
-    return result;
-  }
-
-  static void signalEventLoop(void) { pthread_cond_signal(&s_cv); }
-
-  static oc_event_callback_retval_t quitEvent(void *data)
-  {
-    auto *quit = static_cast<bool *>(data);
-    *quit = true;
-    return OC_EVENT_DONE;
-  }
-
-  static void poolEvents(uint16_t seconds)
-  {
-    bool quit = false;
-    oc_set_delayed_callback(&quit, quitEvent, seconds);
-
-    while (true) {
-      pthread_mutex_lock(&s_mutex);
-      oc_clock_time_t next_event = oc_main_poll();
-      if (quit) {
-        pthread_mutex_unlock(&s_mutex);
-        break;
-      }
-      if (next_event == 0) {
-        pthread_cond_wait(&s_cv, &s_mutex);
-      } else {
-        struct timespec ts;
-        ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-        ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
-                                       OC_CLOCK_SECOND);
-        pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
-      }
-      pthread_mutex_unlock(&s_mutex);
-    }
-  }
 
   static void validateDefaults(const oc_cloud_store_t *store)
   {
@@ -105,7 +62,7 @@ public:
     EXPECT_EQ(0, store->cps);
   }
 
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   static void compareStores(const oc_cloud_store_t *s1,
                             const oc_cloud_store_t *s2)
   {
@@ -120,7 +77,7 @@ public:
     EXPECT_EQ(s1->cps, s2->cps);
     EXPECT_EQ(s1->status, s2->status);
   }
-#endif /* OC_SECURITY */
+#endif /* OC_STORAGE */
 
   static void freeStore(oc_cloud_store_t *store)
   {
@@ -134,22 +91,23 @@ public:
 
   static void SetUpTestCase()
   {
-#ifdef OC_SECURITY
-    EXPECT_EQ(0, oc_storage_config(CLOUD_STORAGE));
-#endif /* OC_SECURITY */
-    s_handler.init = &appInit;
-    s_handler.signal_event_loop = &signalEventLoop;
-    int ret = oc_main_init(&s_handler);
-    ASSERT_EQ(0, ret);
+#ifdef OC_STORAGE
+    ASSERT_EQ(0, oc_storage_config(CLOUD_STORAGE));
+#endif /* OC_STORAGE */
+    ASSERT_TRUE(oc::TestDevice::StartServer());
     memset(&s_context, 0, sizeof(s_context));
   }
 
   static void TearDownTestCase()
   {
-    oc_main_shutdown();
-#ifdef OC_SECURITY
+    oc::TestDevice::StopServer();
+#ifdef OC_STORAGE
     EXPECT_EQ(0, oc_storage_reset());
-#endif /* OC_SECURITY */
+    for (const auto &entry :
+         std::filesystem::directory_iterator(CLOUD_STORAGE)) {
+      std::filesystem::remove_all(entry.path());
+    }
+#endif /* OC_STORAGE */
   }
 
   void SetUp() override
@@ -169,35 +127,34 @@ public:
   void TearDown() override
   {
     freeStore(&m_store);
+#ifdef OC_STORAGE
     for (const auto &entry :
          std::filesystem::directory_iterator(CLOUD_STORAGE)) {
       std::filesystem::remove_all(entry.path());
     }
+#endif /* OC_STORAGE */
   }
 
   oc_cloud_store_t m_store;
 };
 
-oc_handler_t TestCloudStore::s_handler;
-pthread_mutex_t TestCloudStore::s_mutex;
-pthread_cond_t TestCloudStore::s_cv;
 oc_cloud_context_t TestCloudStore::s_context;
 
 TEST_F(TestCloudStore, dump_async)
 {
   cloud_store_dump_async(&m_store);
-  poolEvents(1);
+  oc::TestDevice::PoolEvents(1);
 
   oc_cloud_store_t store1;
   memset(&store1, 0, sizeof(store1));
   store1.device = m_store.device;
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   EXPECT_EQ(0, cloud_store_load(&store1));
   compareStores(&m_store, &store1);
-#else
+#else  /* !OC_STORAGE */
   EXPECT_NE(0, cloud_store_load(&store1));
   validateDefaults(&store1);
-#endif
+#endif /* OC_STORAGE */
 
   freeStore(&store1);
 }
@@ -214,21 +171,21 @@ TEST_F(TestCloudStore, load_defaults)
 
 TEST_F(TestCloudStore, dump)
 {
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   EXPECT_LE(0, cloud_store_dump(&m_store));
-#else
+#else  /* !OC_STORAGE */
   EXPECT_NE(0, cloud_store_dump(&m_store));
-#endif
+#endif /* OC_STORAGE */
   oc_cloud_store_t store1;
   memset(&store1, 0, sizeof(store1));
   store1.device = m_store.device;
-#ifdef OC_SECURITY
+#ifdef OC_STORAGE
   EXPECT_EQ(0, cloud_store_load(&store1));
   compareStores(&m_store, &store1);
-#else
+#else  /* !OC_STORAGE */
   EXPECT_NE(0, cloud_store_load(&store1));
   validateDefaults(&store1);
-#endif
+#endif /* OC_STORAGE */
 
   freeStore(&store1);
 }

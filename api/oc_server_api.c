@@ -209,10 +209,10 @@ oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn)
 }
 
 static void
-resource_encode_name(oc_string_t name)
+resource_encode_name(const char *name)
 {
-  if (oc_string_len(name) > 0) {
-    oc_rep_set_text_string(root, n, oc_string(name));
+  if (name != NULL) {
+    oc_rep_set_text_string(root, n, name);
   }
 }
 
@@ -282,7 +282,7 @@ oc_process_baseline_interface_with_filter(
   oc_process_baseline_interface_filter_fn_t filter, void *filter_data)
 {
   if (filter == NULL || filter(OC_BASELINE_PROP_NAME, filter_data)) {
-    resource_encode_name(resource->name);
+    resource_encode_name(oc_string(resource->name));
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_RT, filter_data)) {
     oc_rep_set_string_array(root, rt, resource->types);

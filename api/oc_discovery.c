@@ -44,7 +44,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
-#include "security/oc_sdi.h"
+#include "security/oc_sdi_internal.h"
 #include "security/oc_tls.h"
 #endif
 
@@ -810,7 +810,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *q;
   int ql = oc_get_query_value(request, "sduuid", &q);
   if (ql > 0) {
-    const oc_sec_sdi_t *s = oc_sec_get_sdi(device);
+    const oc_sec_sdi_t *s = oc_sec_sdi_get(device);
     if (s->priv) {
       oc_ignore_request(request);
       OC_DBG("private sdi");
@@ -862,7 +862,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_process_baseline_interface(
       oc_core_get_resource_by_index(OCF_RES, device));
 #ifdef OC_SECURITY
-    oc_sec_sdi_t *s = oc_sec_get_sdi(device);
+    const oc_sec_sdi_t *s = oc_sec_sdi_get(device);
     if (!s->priv) {
       char uuid[OC_UUID_LEN];
       oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
@@ -962,10 +962,11 @@ oc_wkcore_discovery_handler(oc_request_t *request,
 
     oc_endpoint_t *eps =
       oc_connectivity_get_endpoints(request->resource->device);
-    oc_string_t ep, uri;
+    oc_string_t uri;
     memset(&uri, 0, sizeof(oc_string_t));
     while (eps != NULL) {
       if (eps->flags & SECURED) {
+        oc_string_t ep;
         if (oc_endpoint_to_string(eps, &ep) == 0) {
           length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
           response_length += length;

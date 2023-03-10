@@ -369,7 +369,7 @@ typedef struct endpoint_uri_t
 } endpoint_uri_t;
 
 static int
-parse_endpoint_flags(oc_string_t *endpoint_str)
+parse_endpoint_flags(const oc_string_t *endpoint_str)
 {
   const char *ep = oc_string(*endpoint_str);
   size_t ep_len = oc_string_len(*endpoint_str);
@@ -395,8 +395,8 @@ parse_endpoint_flags(oc_string_t *endpoint_str)
 }
 
 static bool
-parse_endpoint_uri(oc_string_t *endpoint_str, endpoint_uri_t *endpoint_uri,
-                   bool parse_uri)
+parse_endpoint_uri(const oc_string_t *endpoint_str,
+                   endpoint_uri_t *endpoint_uri, bool parse_uri)
 {
   const char *ep = oc_string(*endpoint_str);
   int flags = parse_endpoint_flags(endpoint_str);
@@ -512,8 +512,8 @@ dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 #endif /* OC_DNS_LOOKUP && (OC_DNS_LOOKUP_IPV6 || OC_IPV4) */
 
 static int
-oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
-                         oc_string_t *uri)
+oc_parse_endpoint_string(const oc_string_t *endpoint_str,
+                         oc_endpoint_t *endpoint, oc_string_t *uri)
 {
   endpoint_uri_t ep_uri = { 0 };
   if (!parse_endpoint_uri(endpoint_str, &ep_uri, uri != NULL)) {
@@ -583,7 +583,7 @@ oc_parse_endpoint_string(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
 }
 
 int
-oc_string_to_endpoint(oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
+oc_string_to_endpoint(const oc_string_t *endpoint_str, oc_endpoint_t *endpoint,
                       oc_string_t *uri)
 {
   if (endpoint && endpoint_str) {

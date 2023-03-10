@@ -44,6 +44,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_sdi_internal.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
 
@@ -841,8 +842,8 @@ oc_core_get_resource_type_by_uri(const char *uri)
     return OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/sdi",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/sdi"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_SEC_SDI_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_SEC_SDI_URI))) {
     return OCF_SEC_SDI;
   }
 #endif /* OC_SECURITY */

@@ -50,6 +50,8 @@ RepPool::Clear()
 #else
   buffer_.resize(size_);
   oc_rep_new(buffer_.data(), buffer_.size());
+  memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
+  memset(rep_objects_pool_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

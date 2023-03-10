@@ -187,7 +187,7 @@ const char *oc_cred_read_credusage(oc_sec_credusage_t credusage);
  * @return oc_sec_credusage_t credential usage type
  */
 OC_API
-oc_sec_credusage_t oc_cred_parse_credusage(oc_string_t *credusage_string);
+oc_sec_credusage_t oc_cred_parse_credusage(const oc_string_t *credusage_string);
 
 #endif /* OC_PKI */
 
@@ -207,7 +207,7 @@ const char *oc_cred_read_encoding(oc_sec_encoding_t encoding);
  * @return oc_sec_encoding_t credential encoding type
  */
 OC_API
-oc_sec_encoding_t oc_cred_parse_encoding(oc_string_t *encoding_string);
+oc_sec_encoding_t oc_cred_parse_encoding(const oc_string_t *encoding_string);
 
 /**
  * @brief credential type to string

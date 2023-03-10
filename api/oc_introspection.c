@@ -109,11 +109,12 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   /* We are interested in only a single coap:// endpoint on this logical device.
    */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(request->resource->device);
-  oc_string_t ep, uri;
+  oc_string_t uri;
   memset(&uri, 0, sizeof(oc_string_t));
   while (eps != NULL) {
     if ((interface_index == -1 || eps->interface_index == interface_index) &&
         !(eps->flags & SECURED) && (eps->flags == conn)) {
+      oc_string_t ep;
       if (oc_endpoint_to_string(eps, &ep) == 0) {
         oc_concat_strings(&uri, oc_string(ep), "/oc/introspection");
         oc_free_string(&ep);

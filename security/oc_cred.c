@@ -33,6 +33,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
 #include "util/oc_list.h"
+#include "util/oc_macros.h"
 #include "util/oc_memb.h"
 #include <stdlib.h>
 
@@ -436,7 +437,7 @@ get_device_uuid(size_t device)
 static bool
 oc_sec_verify_role_cred(const oc_tls_peer_t *client,
                         oc_sec_credusage_t credusage, size_t public_key_len,
-                        oc_string_t public_key, size_t publicdata_size,
+                        const oc_string_t *public_key, size_t publicdata_size,
                         const uint8_t *publicdata)
 {
   if (credusage != OC_CREDUSAGE_ROLE_CERT) {
@@ -446,7 +447,7 @@ oc_sec_verify_role_cred(const oc_tls_peer_t *client,
     return false;
   }
   if (client->public_key.size > 0 &&
-      memcmp(oc_cast(public_key, uint8_t) + public_key.size - public_key_len,
+      memcmp(oc_cast(*public_key, uint8_t) + public_key->size - public_key_len,
              oc_cast(client->public_key, uint8_t) + client->public_key.size -
                public_key_len,
              public_key_len) != 0) {
@@ -468,13 +469,13 @@ oc_sec_is_equal_cred_data(oc_cred_data_t creddata, const uint8_t *data,
 }
 
 static bool
-oc_sec_is_equal_cred_tag(oc_string_t credtag, const char *tag)
+oc_sec_is_equal_cred_tag(const oc_string_t *credtag, const char *tag)
 {
-  size_t credtag_size = credtag.size;
+  size_t credtag_size = credtag->size;
   size_t tag_size = tag != NULL ? strlen(tag) + 1 : 0;
   return (credtag_size == tag_size) &&
          ((tag == NULL) ||
-          (memcmp(oc_string(credtag), tag, credtag_size) == 0));
+          (memcmp(oc_string(*credtag), tag, credtag_size) == 0));
 }
 
 static bool
@@ -508,7 +509,7 @@ oc_sec_is_duplicate_cred(const oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
       !oc_uuid_is_equal(cred->subjectuuid, subject) ||
       !oc_sec_is_equal_cred_data(cred->privatedata, privatedata,
                                  privatedata_size) ||
-      !oc_sec_is_equal_cred_tag(cred->tag, tag)) {
+      !oc_sec_is_equal_cred_tag(&cred->tag, tag)) {
     return false;
   }
 
@@ -529,7 +530,8 @@ oc_sec_is_duplicate_cred(const oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
 #ifdef OC_PKI
 static oc_ecdsa_keypair_t *
 oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
-                               oc_string_t public_key, size_t publicdata_size,
+                               const oc_string_t *public_key,
+                               size_t publicdata_size,
                                const uint8_t *publicdata)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
@@ -537,7 +539,7 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
     return NULL;
   }
   if (memcmp(kp->public_key,
-             oc_cast(public_key, uint8_t) + public_key.size - public_key_len,
+             oc_cast(*public_key, uint8_t) + public_key->size - public_key_len,
              public_key_len) != 0) {
     return NULL;
   }
@@ -575,8 +577,9 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
   }
 
   if (roles_resource &&
-      !oc_sec_verify_role_cred(client, credusage, (size_t)public_key_len,
-                               public_key, publicdata_size, publicdata)) {
+      (credtype != OC_CREDTYPE_CERT ||
+       !oc_sec_verify_role_cred(client, credusage, (size_t)public_key_len,
+                                &public_key, publicdata_size, publicdata))) {
     goto add_new_cred_error;
   }
 #endif /* OC_PKI */
@@ -589,7 +592,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
   oc_ecdsa_keypair_t *kp = NULL;
   if (credusage == OC_CREDUSAGE_IDENTITY_CERT && privatedata_size == 0) {
     kp = oc_sec_get_valid_ecdsa_keypair(
-      device, (size_t)public_key_len, public_key, publicdata_size, publicdata);
+      device, (size_t)public_key_len, &public_key, publicdata_size, publicdata);
     if (!kp) {
       goto add_new_cred_error;
     }
@@ -648,7 +651,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
             if (publicdata_size > 0 &&
                 oc_sec_is_equal_cred_data(cred->publicdata, publicdata,
                                           publicdata_size) &&
-                oc_sec_is_equal_cred_tag(cred->tag, tag)) {
+                oc_sec_is_equal_cred_tag(&cred->tag, tag)) {
               oc_free_string(&public_key);
               return cred->credid;
             }
@@ -666,7 +669,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
       /* Trying to add a duplicate role credential, so ignore */
       if (oc_sec_is_equal_cred_data(roles->publicdata, publicdata,
                                     publicdata_size) &&
-          oc_sec_is_equal_cred_tag(roles->tag, tag)) {
+          oc_sec_is_equal_cred_tag(&roles->tag, tag)) {
         oc_free_string(&public_key);
         return roles->credid;
       }
@@ -832,15 +835,15 @@ oc_cred_read_credusage(oc_sec_credusage_t credusage)
 {
   switch (credusage) {
   case OC_CREDUSAGE_TRUSTCA:
-    return "oic.sec.cred.trustca";
+    return OC_CREDUSAGE_TRUSTCA_STR;
   case OC_CREDUSAGE_IDENTITY_CERT:
-    return "oic.sec.cred.cert";
+    return OC_CREDUSAGE_IDENTITY_CERT_STR;
   case OC_CREDUSAGE_ROLE_CERT:
-    return "oic.sec.cred.rolecert";
+    return OC_CREDUSAGE_ROLE_CERT_STR;
   case OC_CREDUSAGE_MFG_TRUSTCA:
-    return "oic.sec.cred.mfgtrustca";
+    return OC_CREDUSAGE_MFG_TRUSTCA_STR;
   case OC_CREDUSAGE_MFG_CERT:
-    return "oic.sec.cred.mfgcert";
+    return OC_CREDUSAGE_MFG_CERT_STR;
   default:
     break;
   }
@@ -853,15 +856,15 @@ oc_cred_read_encoding(oc_sec_encoding_t encoding)
 {
   switch (encoding) {
   case OC_ENCODING_BASE64:
-    return "oic.sec.encoding.base64";
+    return OC_ENCODING_BASE64_STR;
   case OC_ENCODING_RAW:
-    return "oic.sec.encoding.raw";
+    return OC_ENCODING_RAW_STR;
 #ifdef OC_PKI
   case OC_ENCODING_PEM:
-    return "oic.sec.encoding.pem";
+    return OC_ENCODING_PEM_STR;
 #endif /* OC_PKI */
   case OC_ENCODING_HANDLE:
-    return "oic.sec.encoding.handle";
+    return OC_ENCODING_HANDLE_STR;
   default:
     break;
   }
@@ -977,7 +980,7 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
     if (strlen(encoding_string) > 7) {
       oc_rep_set_text_string(privatedata, encoding, encoding_string);
     } else {
-      oc_rep_set_text_string(privatedata, encoding, "oic.sec.encoding.raw");
+      oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
     }
     oc_rep_close_object(creds, privatedata);
 #ifdef OC_OSCORE
@@ -1052,30 +1055,36 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
 #ifdef OC_PKI
 
 oc_sec_credusage_t
-oc_cred_parse_credusage(oc_string_t *credusage_string)
+oc_cred_usage_from_string(const char *str, size_t str_len)
 {
-  oc_sec_credusage_t credusage = 0;
-  if (oc_string_len(*credusage_string) == 20 &&
-      memcmp("oic.sec.cred.trustca", oc_string(*credusage_string), 20) == 0) {
-    credusage = OC_CREDUSAGE_TRUSTCA;
-  } else if (oc_string_len(*credusage_string) == 17 &&
-             memcmp("oic.sec.cred.cert", oc_string(*credusage_string), 17) ==
-               0) {
-    credusage = OC_CREDUSAGE_IDENTITY_CERT;
-  } else if (oc_string_len(*credusage_string) == 21 &&
-             memcmp("oic.sec.cred.rolecert", oc_string(*credusage_string),
-                    21) == 0) {
-    credusage = OC_CREDUSAGE_ROLE_CERT;
-  } else if (oc_string_len(*credusage_string) == 23 &&
-             memcmp("oic.sec.cred.mfgtrustca", oc_string(*credusage_string),
-                    23) == 0) {
-    credusage = OC_CREDUSAGE_MFG_TRUSTCA;
-  } else if (oc_string_len(*credusage_string) == 20 &&
-             memcmp("oic.sec.cred.mfgcert", oc_string(*credusage_string), 20) ==
-               0) {
-    credusage = OC_CREDUSAGE_MFG_CERT;
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_TRUSTCA_STR) &&
+      memcmp(OC_CREDUSAGE_TRUSTCA_STR, str, str_len) == 0) {
+    return OC_CREDUSAGE_TRUSTCA;
   }
-  return credusage;
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_IDENTITY_CERT_STR) &&
+      memcmp(OC_CREDUSAGE_IDENTITY_CERT_STR, str, str_len) == 0) {
+    return OC_CREDUSAGE_IDENTITY_CERT;
+  }
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_ROLE_CERT_STR) &&
+      memcmp(OC_CREDUSAGE_ROLE_CERT_STR, str, str_len) == 0) {
+    return OC_CREDUSAGE_ROLE_CERT;
+  }
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_MFG_TRUSTCA_STR) &&
+      memcmp(OC_CREDUSAGE_MFG_TRUSTCA_STR, str, str_len) == 0) {
+    return OC_CREDUSAGE_MFG_TRUSTCA;
+  }
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_MFG_CERT_STR) &&
+      memcmp(OC_CREDUSAGE_MFG_CERT_STR, str, str_len) == 0) {
+    return OC_CREDUSAGE_MFG_CERT;
+  }
+  return OC_CREDUSAGE_NULL;
+}
+
+oc_sec_credusage_t
+oc_cred_parse_credusage(const oc_string_t *credusage_string)
+{
+  return oc_cred_usage_from_string(oc_string(*credusage_string),
+                                   oc_string_len(*credusage_string));
 }
 
 static bool
@@ -1194,29 +1203,34 @@ finish:
 #endif /* OC_PKI */
 
 oc_sec_encoding_t
-oc_cred_parse_encoding(oc_string_t *encoding_string)
+oc_cred_encoding_from_string(const char *str, size_t str_len)
 {
-  oc_sec_encoding_t encoding = 0;
-  if (oc_string_len(*encoding_string) == 23 &&
-      memcmp("oic.sec.encoding.base64", oc_string(*encoding_string), 23) == 0) {
-    encoding = OC_ENCODING_BASE64;
-  } else if (oc_string_len(*encoding_string) == 20 &&
-             memcmp("oic.sec.encoding.raw", oc_string(*encoding_string), 20) ==
-               0) {
-    encoding = OC_ENCODING_RAW;
-  } else if (oc_string_len(*encoding_string) == 23 &&
-             memcmp("oic.sec.encoding.handle", oc_string(*encoding_string),
-                    23) == 0) {
-    encoding = OC_ENCODING_HANDLE;
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_ENCODING_BASE64_STR) &&
+      memcmp(OC_ENCODING_BASE64_STR, str, str_len) == 0) {
+    return OC_ENCODING_BASE64;
+  }
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR) &&
+      memcmp(OC_ENCODING_RAW_STR, str, str_len) == 0) {
+    return OC_ENCODING_RAW;
+  }
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_ENCODING_HANDLE_STR) &&
+      memcmp(OC_ENCODING_HANDLE_STR, str, str_len) == 0) {
+    return OC_ENCODING_HANDLE;
   }
 #ifdef OC_PKI
-  else if (oc_string_len(*encoding_string) == 20 &&
-           memcmp("oic.sec.encoding.pem", oc_string(*encoding_string), 20) ==
-             0) {
-    encoding = OC_ENCODING_PEM;
+  if (str_len == OC_CHAR_ARRAY_LEN(OC_ENCODING_PEM_STR) &&
+      memcmp(OC_ENCODING_PEM_STR, str, str_len) == 0) {
+    return OC_ENCODING_PEM;
   }
 #endif /* OC_PKI */
-  return encoding;
+  return OC_ENCODING_UNSUPPORTED;
+}
+
+oc_sec_encoding_t
+oc_cred_parse_encoding(const oc_string_t *encoding_string)
+{
+  return oc_cred_encoding_from_string(oc_string(*encoding_string),
+                                      oc_string_len(*encoding_string));
 }
 
 #ifdef OC_OSCORE
@@ -1297,28 +1311,32 @@ oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
     case OC_REP_OBJECT_ARRAY: {
       if (len == 5 && (memcmp(oc_string(rep->name), "creds", 5) == 0 ||
                        memcmp(oc_string(rep->name), "roles", 5) == 0)) {
-        oc_rep_t *creds_array = rep->value.object_array;
+        const oc_rep_t *creds_array = rep->value.object_array;
         /* array of oic.sec.cred */
         while (creds_array != NULL) {
-          oc_rep_t *cred = creds_array->value.object;
+          const oc_rep_t *cred = creds_array->value.object;
           int credid = -1;
           oc_sec_credtype_t credtype = 0;
-          char *role = NULL, *authority = NULL, *subjectuuid = NULL,
-               *privatedata = NULL;
+          const char *role = NULL;
+          const char *authority = NULL;
+          const char *subjectuuid = NULL;
+          const char *privatedata = NULL;
           oc_sec_encoding_t privatedatatype = 0;
           size_t privatedata_size = 0;
 #ifdef OC_PKI
           oc_sec_credusage_t credusage = 0;
-          char *publicdata = NULL;
+          const char *publicdata = NULL;
           oc_sec_encoding_t publicdatatype = 0;
           size_t publicdata_size = 0;
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
-          const char *sid = NULL, *rid = NULL, *desc = NULL;
+          const char *sid = NULL;
+          const char *rid = NULL;
+          const char *desc = NULL;
           uint64_t ssn = 0;
 #endif /* OC_OSCORE */
           bool owner_cred = false;
-          char *tag = NULL;
+          const char *tag = NULL;
           bool non_empty = false;
           while (cred != NULL) {
             non_empty = true;
@@ -1361,7 +1379,7 @@ oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
 #endif /* OC_PKI */
               ) {
                 size_t *size = 0;
-                char **pubpriv = 0;
+                const char **pubpriv = 0;
                 oc_sec_encoding_t *encoding = 0;
                 if (len == 11) {
                   size = &privatedata_size;

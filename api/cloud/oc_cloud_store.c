@@ -189,38 +189,38 @@ cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
   assert(rep->type == OC_REP_STRING);
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_CI_SERVER),
                          CLOUD_XSTRLEN(CLOUD_CI_SERVER))) {
-    cloud_set_string(&store->ci_server, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->ci_server, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_SID),
                          CLOUD_XSTRLEN(CLOUD_SID))) {
-    cloud_set_string(&store->sid, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->sid, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
                          CLOUD_XSTRLEN(CLOUD_AUTH_PROVIDER))) {
-    cloud_set_string(&store->auth_provider, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->auth_provider, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_UID),
                          CLOUD_XSTRLEN(CLOUD_UID))) {
-    cloud_set_string(&store->uid, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->uid, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
                          CLOUD_XSTRLEN(CLOUD_ACCESS_TOKEN))) {
-    cloud_set_string(&store->access_token, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->access_token, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
                          CLOUD_XSTRLEN(CLOUD_REFRESH_TOKEN))) {
-    cloud_set_string(&store->refresh_token, oc_string(rep->value.string),
-                     oc_string_len(rep->value.string));
+    oc_set_string(&store->refresh_token, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
     return true;
   }
 
@@ -323,21 +323,21 @@ cloud_store_initialize(oc_cloud_store_t *store)
 {
   cloud_store_deinitialize(store);
 #define DEFAULT_CLOUD_CIS "coaps+tcp://127.0.0.1"
-  cloud_set_string(&store->ci_server, DEFAULT_CLOUD_CIS,
-                   strlen(DEFAULT_CLOUD_CIS));
+  oc_set_string(&store->ci_server, DEFAULT_CLOUD_CIS,
+                strlen(DEFAULT_CLOUD_CIS));
 #define DEFAULT_CLOUD_SID "00000000-0000-0000-0000-000000000000"
-  cloud_set_string(&store->sid, DEFAULT_CLOUD_SID, strlen(DEFAULT_CLOUD_SID));
+  oc_set_string(&store->sid, DEFAULT_CLOUD_SID, strlen(DEFAULT_CLOUD_SID));
 }
 
 void
 cloud_store_deinitialize(oc_cloud_store_t *store)
 {
-  cloud_set_string(&store->ci_server, NULL, 0);
-  cloud_set_string(&store->auth_provider, NULL, 0);
-  cloud_set_string(&store->uid, NULL, 0);
-  cloud_set_string(&store->access_token, NULL, 0);
-  cloud_set_string(&store->refresh_token, NULL, 0);
-  cloud_set_string(&store->sid, NULL, 0);
+  oc_set_string(&store->ci_server, NULL, 0);
+  oc_set_string(&store->auth_provider, NULL, 0);
+  oc_set_string(&store->uid, NULL, 0);
+  oc_set_string(&store->access_token, NULL, 0);
+  oc_set_string(&store->refresh_token, NULL, 0);
+  oc_set_string(&store->sid, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
   store->cps = OC_CPS_UNINITIALIZED;

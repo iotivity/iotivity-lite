@@ -78,19 +78,6 @@ cloud_manager_cb(oc_cloud_context_t *ctx)
   }
 }
 
-void
-cloud_set_string(oc_string_t *dst, const char *data, size_t len)
-{
-  if (oc_string(*dst)) {
-    oc_free_string(dst);
-  }
-  if (data && len) {
-    oc_new_string(dst, data, len);
-  } else {
-    memset(dst, 0, sizeof(*dst));
-  }
-}
-
 static oc_event_callback_retval_t
 start_manager(void *user_data)
 {
@@ -166,19 +153,18 @@ cloud_set_cloudconf(oc_cloud_context_t *ctx, const cloud_conf_update_t *data)
   assert(ctx != NULL);
   assert(data != NULL);
   if (data->auth_provider && data->auth_provider_len) {
-    cloud_set_string(&ctx->store.auth_provider, data->auth_provider,
-                     data->auth_provider_len);
+    oc_set_string(&ctx->store.auth_provider, data->auth_provider,
+                  data->auth_provider_len);
   }
   if (data->access_token && data->access_token_len) {
-    cloud_set_string(&ctx->store.access_token, data->access_token,
-                     data->access_token_len);
+    oc_set_string(&ctx->store.access_token, data->access_token,
+                  data->access_token_len);
   }
   if (data->ci_server && data->ci_server_len) {
-    cloud_set_string(&ctx->store.ci_server, data->ci_server,
-                     data->ci_server_len);
+    oc_set_string(&ctx->store.ci_server, data->ci_server, data->ci_server_len);
   }
   if (data->sid && data->sid_len) {
-    cloud_set_string(&ctx->store.sid, data->sid, data->sid_len);
+    oc_set_string(&ctx->store.sid, data->sid, data->sid_len);
   }
 }
 

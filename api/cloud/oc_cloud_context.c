@@ -177,7 +177,7 @@ cloud_context_has_permanent_access_token(const oc_cloud_context_t *ctx)
 void
 cloud_context_clear_access_token(oc_cloud_context_t *ctx)
 {
-  cloud_set_string(&ctx->store.access_token, NULL, 0);
+  oc_set_string(&ctx->store.access_token, NULL, 0);
   ctx->store.expires_in = 0;
 }
 

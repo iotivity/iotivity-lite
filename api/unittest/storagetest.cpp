@@ -53,6 +53,7 @@ public:
 
   static void TearDownTestCase()
   {
+    ASSERT_EQ(0, oc_storage_reset());
     for (const auto &entry : std::filesystem::directory_iterator(testStorage)) {
       std::filesystem::remove_all(entry.path());
     }

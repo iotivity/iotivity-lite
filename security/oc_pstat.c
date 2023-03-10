@@ -30,10 +30,11 @@
 #include "oc_cred_internal.h"
 #include "oc_doxm_internal.h"
 #include "oc_roles_internal.h"
-#include "oc_sdi.h"
+#include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
+#include "port/oc_assert.h"
 
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_internal.h"
@@ -47,20 +48,21 @@
 #include "api/oc_swupdate_internal.h"
 #endif /* OC_SOFTWARE_UPDATE */
 
+#include <assert.h>
+
 #ifdef OC_DYNAMIC_ALLOCATION
-#include "port/oc_assert.h"
 #include <stdlib.h>
-static oc_sec_pstat_t *pstat;
+static oc_sec_pstat_t *g_pstat = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_sec_pstat_t pstat[OC_MAX_NUM_DEVICES];
+static oc_sec_pstat_t g_pstat[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 void
 oc_sec_pstat_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (pstat) {
-    free(pstat);
+  if (g_pstat != NULL) {
+    free(g_pstat);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -69,19 +71,18 @@ void
 oc_sec_pstat_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  pstat =
+  g_pstat =
     (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
-  if (!pstat) {
+  if (!g_pstat) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static bool
-nil_uuid(oc_uuid_t *uuid)
+nil_uuid(const oc_uuid_t *uuid)
 {
-  int i;
-  for (i = 0; i < 16; i++) {
+  for (size_t i = 0; i < sizeof(uuid->id); ++i) {
     if (uuid->id[i] != 0) {
       return false;
     }
@@ -91,7 +92,7 @@ nil_uuid(oc_uuid_t *uuid)
 
 #ifdef OC_DEBUG
 static void
-dump_pstat_dos(oc_sec_pstat_t *ps)
+dump_pstat_dos(const oc_sec_pstat_t *ps)
 {
   switch (ps->s) {
   case OC_DOS_RESET:
@@ -116,7 +117,7 @@ dump_pstat_dos(oc_sec_pstat_t *ps)
 static bool
 valid_transition(size_t device, oc_dostype_t state)
 {
-  switch (pstat[device].s) {
+  switch (g_pstat[device].s) {
   case OC_DOS_RESET:
     if (state == OC_DOS_RESET || state == OC_DOS_RFOTM)
       return true;
@@ -151,13 +152,104 @@ close_all_tls_sessions(void *data)
 }
 
 static bool
+pstat_check_ps_state(const oc_sec_pstat_t *ps)
+{
+  switch (ps->s) {
+  case OC_DOS_RFPRO:
+    if (ps->isop || (ps->cm & 0xC3) != 0 || (ps->tm & 0xC3) != 0) {
+      return false;
+    }
+    break;
+  case OC_DOS_RFNOP:
+    if (!ps->isop || (ps->cm & 0xC3) != 0 || (ps->tm & 0xC3) != 0) {
+      return false;
+    }
+    break;
+  case OC_DOS_SRESET:
+    if (ps->isop || ps->cm != 1 || (ps->tm & 0xC3)) {
+      return false;
+    }
+    break;
+  case OC_DOS_RESET:
+  case OC_DOS_RFOTM:
+    if (ps->isop || (ps->cm & 0xC3) != 2 || (ps->tm & 0xC3) != 0) {
+      return false;
+    }
+    break;
+  default:
+    break;
+  }
+
+  return true;
+}
+
+static bool
+pstat_check_state(const oc_sec_pstat_t *ps, size_t device)
+{
+  if (!pstat_check_ps_state(ps)) {
+    OC_DBG("pstat:invalid state");
+    return false;
+  }
+
+  if (nil_uuid(&ps->rowneruuid)) {
+    OC_DBG("pstat:rowneruuid is nil");
+    return false;
+  }
+  if (!oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device)) {
+    OC_DBG("Could not find credential for pstat:rowneruuid");
+    return false;
+  }
+
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  if (!doxm->owned) {
+    OC_DBG("doxm:owned is false");
+    return false;
+  }
+  if (nil_uuid(&doxm->devowneruuid)) {
+    OC_DBG("doxm:devowneruuid is nil");
+    return false;
+  }
+  if (nil_uuid(&doxm->deviceuuid)) {
+    OC_DBG("doxm:deviceuuid is nil");
+    return false;
+  }
+  if (nil_uuid(&doxm->rowneruuid)) {
+    OC_DBG("doxm:rowneruuid is nil");
+    return false;
+  }
+  if (!oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device)) {
+    OC_DBG("Could not find credential for doxm:rowneruuid");
+    return false;
+  }
+
+  const oc_sec_acl_t *acl = oc_sec_get_acl(device);
+  if (nil_uuid(&acl->rowneruuid)) {
+    OC_DBG("acl2:rowneruuid is nil");
+    return false;
+  }
+  if (!oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device)) {
+    OC_DBG("Could not find credential for acl2:rowneruuid");
+    return false;
+  }
+
+  const oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  if (nil_uuid(&creds->rowneruuid)) {
+    OC_DBG("cred:rowneruuid is nil");
+    return false;
+  }
+  if (!oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
+    OC_DBG("Could not find credential for cred:rowneruuid");
+    return false;
+  }
+
+  return true;
+}
+
+static bool
 oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
                       bool close_all_tls_connections_immediately)
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
-  oc_sec_acl_t *acl = oc_sec_get_acl(device);
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  oc_sec_creds_t *creds = oc_sec_get_creds(device);
   switch (ps->s) {
   case OC_DOS_RESET: {
     ps->p = true;
@@ -205,13 +297,14 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->s = OC_DOS_RFOTM;
     ps->cm = 2;
     ps->tm = 0;
-    if (doxm->owned || !nil_uuid(&doxm->devowneruuid) || ps->isop ||
-        (ps->cm & 0xC3) != 2 || (ps->tm & 0xC3) != 0) {
+    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+    if (doxm->owned || !nil_uuid(&doxm->devowneruuid) ||
+        !pstat_check_ps_state(ps)) {
 #ifdef OC_DEBUG
       if (!nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("non-Nil doxm:devowneruuid in RFOTM");
+        OC_DBG("non-Nil doxm:devowneruuid in RFOTM");
       }
-      OC_ERR("ERROR in RFOTM\n");
+      OC_DBG("ERROR in RFOTM\n");
 #endif /* OC_DEBUG */
       goto pstat_state_error;
     }
@@ -232,11 +325,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       oc_set_drop_commands(device, true);
     }
     if (fp->cb != NULL) {
-      memcpy(&pstat[device], ps, sizeof(oc_sec_pstat_t));
+      oc_sec_pstat_copy(&g_pstat[device], ps);
       OC_DBG("oc_pstat: invoking the factory presets callback");
       fp->cb(device, fp->data);
       OC_DBG("oc_pstat: returned from the factory presets callback");
-      memcpy(ps, &pstat[device], sizeof(oc_sec_pstat_t));
+      oc_sec_pstat_copy(ps, &g_pstat[device]);
     }
     coap_set_global_status_code(status_code);
     ps->p = false;
@@ -246,51 +339,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->cm = 0;
     ps->tm = 0;
     ps->isop = false;
-    if (!doxm->owned || nil_uuid(&doxm->devowneruuid) ||
-        nil_uuid(&doxm->deviceuuid) || ps->isop || (ps->cm & 0xC3) != 0 ||
-        (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
-        nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
-        nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-#ifdef OC_DEBUG
-      if (!doxm->owned) {
-        OC_ERR("doxm:owned is false");
-      }
-      if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil");
-      }
-      if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil");
-      }
-      if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil");
-      }
-      if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid");
-      }
-      OC_ERR("ERROR in RFPRO\n");
-#endif /* OC_DEBUG */
+    if (!pstat_check_state(ps, device)) {
+      OC_DBG("ERROR in RFPRO\n");
       goto pstat_state_error;
     }
     ps->p = false;
@@ -300,51 +350,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->cm = 0;
     ps->tm = 0;
     ps->isop = true;
-    if (!doxm->owned || nil_uuid(&doxm->devowneruuid) ||
-        nil_uuid(&doxm->deviceuuid) || !ps->isop || (ps->cm & 0xC3) != 0 ||
-        (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
-        nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
-        nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-#ifdef OC_DEBUG
-      if (!doxm->owned) {
-        OC_ERR("doxm:owned is false");
-      }
-      if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil");
-      }
-      if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil");
-      }
-      if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil");
-      }
-      if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid");
-      }
-      OC_ERR("ERROR in RFNOP\n");
-#endif /* OC_DEBUG */
+    if (!pstat_check_state(ps, device)) {
+      OC_DBG("ERROR in RFNOP\n");
       goto pstat_state_error;
     }
     ps->p = false;
@@ -354,51 +361,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->cm = 1;
     ps->tm = 0;
     ps->isop = false;
-    if (!doxm->owned || nil_uuid(&doxm->devowneruuid) ||
-        nil_uuid(&doxm->deviceuuid) || ps->isop || ps->cm != 1 ||
-        (ps->tm & 0xC3) != 0 || nil_uuid(&ps->rowneruuid) ||
-        nil_uuid(&doxm->rowneruuid) || nil_uuid(&acl->rowneruuid) ||
-        nil_uuid(&creds->rowneruuid) ||
-        !oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device) ||
-        !oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-#ifdef OC_DEBUG
-      if (!doxm->owned) {
-        OC_ERR("doxm:owned is false");
-      }
-      if (nil_uuid(&doxm->devowneruuid)) {
-        OC_ERR("doxm:devowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->deviceuuid)) {
-        OC_ERR("doxm:deviceuuid is nil");
-      }
-      if (nil_uuid(&ps->rowneruuid)) {
-        OC_ERR("pstat:rowneruuid is nil");
-      }
-      if (nil_uuid(&doxm->rowneruuid)) {
-        OC_ERR("doxm:rowneruuid is nil");
-      }
-      if (nil_uuid(&acl->rowneruuid)) {
-        OC_ERR("acl2:rowneruuid is nil");
-      }
-      if (nil_uuid(&creds->rowneruuid)) {
-        OC_ERR("cred:rowneruuid is nil");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &ps->rowneruuid, device)) {
-        OC_ERR("Could not find credential for pstat:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &doxm->rowneruuid, device)) {
-        OC_ERR("Could not find credential for doxm:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &acl->rowneruuid, device)) {
-        OC_ERR("Could not find credential for acl2:rowneruuid");
-      }
-      if (!oc_sec_find_creds_for_subject(NULL, &creds->rowneruuid, device)) {
-        OC_ERR("Could not find credential for cred:rowneruuid");
-      }
-      OC_ERR("ERROR in SRESET\n");
-#endif /* OC_DEBUG */
+    if (!pstat_check_state(ps, device)) {
+      OC_DBG("ERROR in SRESET\n");
       goto pstat_state_error;
     }
     ps->p = false;
@@ -407,7 +371,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     return false;
     break;
   }
-  memmove(&pstat[device], ps, sizeof(oc_sec_pstat_t));
+  oc_sec_pstat_copy(&g_pstat[device], ps);
 #ifdef OC_SERVER
   switch (ps->s) {
   case OC_DOS_RESET:
@@ -434,15 +398,15 @@ oc_sec_pstat_t *
 oc_sec_get_pstat(size_t device)
 {
 #ifdef OC_DEBUG
-  dump_pstat_dos(&pstat[device]);
+  dump_pstat_dos(&g_pstat[device]);
 #endif /* OC_DEBUG */
-  return &pstat[device];
+  return &g_pstat[device];
 }
 
 bool
 oc_sec_is_operational(size_t device)
 {
-  return pstat[device].isop;
+  return g_pstat[device].isop;
 }
 
 void
@@ -454,11 +418,38 @@ oc_sec_pstat_default(size_t device)
 }
 
 void
+oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src)
+{
+  assert(src != NULL);
+  assert(dst != NULL);
+
+  if (dst == src) {
+    return;
+  }
+
+  dst->s = src->s;
+  dst->p = src->p;
+  dst->isop = src->isop;
+  dst->cm = src->cm;
+  dst->tm = src->tm;
+  dst->om = src->om;
+  dst->sm = src->sm;
+  memcpy(&dst->rowneruuid.id, src->rowneruuid.id, sizeof(src->rowneruuid.id));
+}
+
+void
+oc_sec_pstat_clear(oc_sec_pstat_t *ps)
+{
+  assert(ps != NULL);
+  memset(ps, 0, sizeof(*ps));
+}
+
+void
 oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
                     bool to_storage)
 {
 #ifdef OC_DEBUG
-  dump_pstat_dos(&pstat[device]);
+  dump_pstat_dos(&g_pstat[device]);
 #endif /* OC_DEBUG */
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
@@ -467,15 +458,15 @@ oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
       oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
   }
   oc_rep_set_object(root, dos);
-  oc_rep_set_boolean(dos, p, pstat[device].p);
-  oc_rep_set_int(dos, s, pstat[device].s);
+  oc_rep_set_boolean(dos, p, g_pstat[device].p);
+  oc_rep_set_int(dos, s, g_pstat[device].s);
   oc_rep_close_object(root, dos);
-  oc_rep_set_int(root, cm, pstat[device].cm);
-  oc_rep_set_int(root, tm, pstat[device].tm);
-  oc_rep_set_int(root, om, pstat[device].om);
-  oc_rep_set_int(root, sm, pstat[device].sm);
-  oc_rep_set_boolean(root, isop, pstat[device].isop);
-  oc_uuid_to_str(&pstat[device].rowneruuid, uuid, OC_UUID_LEN);
+  oc_rep_set_int(root, cm, g_pstat[device].cm);
+  oc_rep_set_int(root, tm, g_pstat[device].tm);
+  oc_rep_set_int(root, om, g_pstat[device].om);
+  oc_rep_set_int(root, sm, g_pstat[device].sm);
+  oc_rep_set_boolean(root, isop, g_pstat[device].isop);
+  oc_uuid_to_str(&g_pstat[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 }
@@ -499,7 +490,7 @@ oc_pstat_handle_target_mode(size_t device, oc_dpmtype_t *tm)
 void
 oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
 {
-  oc_sec_pstat_t *ps = &pstat[device];
+  oc_sec_pstat_t *ps = &g_pstat[device];
   ps->cm = cm;
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
@@ -511,7 +502,7 @@ bool
 oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
 {
   oc_sec_pstat_t ps;
-  memcpy(&ps, &pstat[device], sizeof(oc_sec_pstat_t));
+  oc_sec_pstat_copy(&ps, &g_pstat[device]);
 #ifdef OC_DEBUG
   if (!from_storage) {
     dump_pstat_dos(&ps);
@@ -603,7 +594,7 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
         oc_pstat_handle_state(&ps, device, from_storage, false);
       return transition_success;
     }
-    memcpy(&pstat[device], &ps, sizeof(oc_sec_pstat_t));
+    oc_sec_pstat_copy(&g_pstat[device], &ps);
     return true;
   }
   return false;

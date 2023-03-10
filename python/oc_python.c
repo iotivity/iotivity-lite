@@ -421,12 +421,12 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     if (!device) {
       return false;
     }
-    memcpy(device->uuid.id, uuid->id, 16);
+    memcpy(device->uuid.id, uuid->id, sizeof(device->uuid.id));
     oc_list_add(list, device);
   }
 
   size_t len = 0;
-  if (device_name) {
+  if (device_name != NULL) {
     len = strlen(device_name);
     len = (len > 63) ? 63 : len;
     memcpy(device->device_name, device_name, len);

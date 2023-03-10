@@ -256,10 +256,9 @@ cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
     return false;
   }
 
-  cloud_set_string(&ctx->store.access_token, access_token, access_token_size);
-  cloud_set_string(&ctx->store.refresh_token, refresh_token,
-                   refresh_token_size);
-  cloud_set_string(&ctx->store.uid, uid, uid_size);
+  oc_set_string(&ctx->store.access_token, access_token, access_token_size);
+  oc_set_string(&ctx->store.refresh_token, refresh_token, refresh_token_size);
+  oc_set_string(&ctx->store.uid, uid, uid_size);
   ctx->store.expires_in = expires_in;
   if (ctx->store.expires_in > 0) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
@@ -285,7 +284,7 @@ cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
       memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
       ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
     }
-    cloud_set_string(&ctx->store.ci_server, value, size);
+    oc_set_string(&ctx->store.ci_server, value, size);
     return true;
   }
 
@@ -699,8 +698,8 @@ cloud_manager_handle_refresh_token_response(oc_cloud_context_t *ctx,
     return false;
   }
 
-  cloud_set_string(&ctx->store.access_token, access_value, access_size);
-  cloud_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
+  oc_set_string(&ctx->store.access_token, access_value, access_size);
+  oc_set_string(&ctx->store.refresh_token, refresh_value, refresh_size);
   ctx->store.expires_in = expires_in;
   if (ctx->store.expires_in > 0) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;

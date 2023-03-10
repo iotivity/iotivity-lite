@@ -43,7 +43,7 @@ static oc_swupdate_t sw[OC_MAX_NUM_DEVICES];
 
 void oc_create_swupdate_resource(size_t device);
 void oc_swupdate_encode(oc_interface_mask_t interfaces, size_t device);
-void oc_swupdate_decode(oc_rep_t *rep, size_t device);
+void oc_swupdate_decode(const oc_rep_t *rep, size_t device);
 
 static const oc_swupdate_cb_t *cb;
 
@@ -53,37 +53,21 @@ oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
   cb = swupdate_impl;
 }
 
+static int
+oc_swupdate_on_load(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)data;
+  oc_swupdate_decode(rep, device);
+  return 0;
+}
+
 static void
 oc_load_sw(size_t device)
 {
-  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  if (oc_storage_gen_svr_tag("sw", device, svr_tag, sizeof(svr_tag)) < 0) {
-    OC_ERR("cannot load swupdate: cannot generate svr tag");
+  if (oc_storage_load_resource("sw", device, oc_swupdate_on_load, NULL) <= 0) {
+    OC_ERR("failed to load swupdate from storage");
     return;
   }
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
-  if (!buf) {
-    return;
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-  long ret = oc_storage_read(svr_tag, buf, OC_MAX_APP_DATA_SIZE);
-  if (ret > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(buf, (int)ret, &rep);
-    oc_swupdate_decode(rep, device);
-    oc_free_rep(rep);
-  }
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
-#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 static void
@@ -395,7 +379,7 @@ schedule_update(void *data)
 }
 
 void
-oc_swupdate_decode(oc_rep_t *rep, size_t device)
+oc_swupdate_decode(const oc_rep_t *rep, size_t device)
 {
   oc_swupdate_t *s = &sw[device];
   /* loop over all the properties in the input document */

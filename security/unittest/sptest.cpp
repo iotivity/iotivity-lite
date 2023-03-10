@@ -22,6 +22,7 @@
 #include "api/oc_storage_internal.h"
 #include "oc_api.h"
 #include "oc_ri.h"
+#include "oc_sp.h"
 #include "oc_store.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_network_event_handler_internal.h"
@@ -84,7 +85,56 @@ public:
            lhs.current_profile == rhs.current_profile &&
            lhs.credid == rhs.credid;
   }
+
+  static void ExpectEqual(const oc_sec_sp_t &lhs, const oc_sec_sp_t &rhs)
+  {
+    EXPECT_EQ(lhs.supported_profiles, rhs.supported_profiles);
+    EXPECT_EQ(lhs.current_profile, rhs.current_profile);
+    EXPECT_EQ(lhs.credid, rhs.credid);
+  }
 };
+
+TEST_F(TestSecurityProfile, Copy)
+{
+  oc_sec_sp_t sp1;
+  sp1.supported_profiles = OC_SP_BASELINE | OC_SP_BLACK | OC_SP_BLUE;
+  sp1.current_profile = OC_SP_BLACK;
+  sp1.credid = 42;
+
+  oc_sec_sp_t sp2{};
+  oc_sec_sp_copy(&sp2, &sp1);
+  ExpectEqual(sp1, sp2);
+
+  oc_sec_sp_copy(&sp1, &sp1);
+  ExpectEqual(sp2, sp1);
+
+  oc_sec_sp_clear(&sp1);
+  EXPECT_FALSE(IsEqual(sp1, sp2));
+}
+
+TEST_F(TestSecurityProfile, FromString)
+{
+  EXPECT_EQ(0, oc_sec_sp_type_from_string("", 0));
+
+  EXPECT_EQ(OC_SP_BASELINE, oc_sec_sp_type_from_string(
+                              OC_SP_BASELINE_OID, strlen(OC_SP_BASELINE_OID)));
+  EXPECT_EQ(OC_SP_BLACK, oc_sec_sp_type_from_string(OC_SP_BLACK_OID,
+                                                    strlen(OC_SP_BLACK_OID)));
+  EXPECT_EQ(OC_SP_BLUE,
+            oc_sec_sp_type_from_string(OC_SP_BLUE_OID, strlen(OC_SP_BLUE_OID)));
+  EXPECT_EQ(OC_SP_PURPLE, oc_sec_sp_type_from_string(OC_SP_PURPLE_OID,
+                                                     strlen(OC_SP_PURPLE_OID)));
+}
+
+TEST_F(TestSecurityProfile, ToString)
+{
+  EXPECT_EQ(nullptr, oc_sec_sp_type_to_string(static_cast<oc_sp_types_t>(0)));
+
+  EXPECT_STREQ(OC_SP_BASELINE_OID, oc_sec_sp_type_to_string(OC_SP_BASELINE));
+  EXPECT_STREQ(OC_SP_BLACK_OID, oc_sec_sp_type_to_string(OC_SP_BLACK));
+  EXPECT_STREQ(OC_SP_BLUE_OID, oc_sec_sp_type_to_string(OC_SP_BLUE));
+  EXPECT_STREQ(OC_SP_PURPLE_OID, oc_sec_sp_type_to_string(OC_SP_PURPLE));
+}
 
 TEST_F(TestSecurityProfile, DumpAndLoad)
 {
@@ -92,12 +142,8 @@ TEST_F(TestSecurityProfile, DumpAndLoad)
   oc_sec_sp_default(0);
 
   oc_sec_sp_t def{};
-  oc_sec_sp_t *sp = oc_sec_get_sp(0);
-  ASSERT_NE(nullptr, sp);
-  memcpy(&def, sp, sizeof(oc_sec_sp_t));
-  // overwrite doxm data with 0
-  memset(sp, 0, sizeof(oc_sec_sp_t));
-
+  oc_sec_sp_copy(&def, oc_sec_get_sp(0));
+  oc_sec_sp_clear(oc_sec_get_sp(0));
   EXPECT_FALSE(IsEqual(def, *oc_sec_get_sp(0)));
 
   // load values from storage
