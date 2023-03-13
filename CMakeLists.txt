@@ -64,6 +64,7 @@ if(OC_CLOUD_ENABLED AND OC_SECURITY_ENABLED AND NOT OC_PKI_ENABLED)
 endif()
 
 if(UNIX)
+    add_compile_options(${CMAKE_C_FLAGS_DEBUG} -O1 -fstack-protector-all -Wstack-protector -Wno-error=stack-protector)
     if(OC_ASAN_ENABLED)
         message(STATUS "Address sanitizer enabled")
         add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer)
