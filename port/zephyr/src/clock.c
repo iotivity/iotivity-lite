@@ -29,6 +29,12 @@ oc_clock_time(void)
   return k_uptime_get();
 }
 
+oc_clock_time_t
+oc_clock_time_monotonic(void)
+{
+  return k_uptime_get();
+}
+
 unsigned long
 oc_clock_seconds(void)
 {

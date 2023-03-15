@@ -89,6 +89,16 @@ void oc_clock_init(void);
 oc_clock_time_t oc_clock_time(void);
 
 /**
+ * Get the current monotonic clock time.
+ *
+ * This could be the number of seconds since startup, or
+ * since a standard epoch.
+ *
+ * \return The current clock monotonic time, measured in system ticks.
+ */
+oc_clock_time_t oc_clock_time_monotonic(void);
+
+/**
  * Get the current value of the platform seconds.
  *
  * This could be the number of seconds since startup, or

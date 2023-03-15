@@ -43,6 +43,12 @@ oc_clock_time(void)
   return (uint64_t)high_time << 32 | time;
 }
 
+oc_clock_time_t
+oc_clock_time_monotonic(void)
+{
+  return -1;
+}
+
 unsigned long
 oc_clock_seconds(void)
 {
