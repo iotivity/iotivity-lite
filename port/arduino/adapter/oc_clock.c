@@ -39,7 +39,13 @@ oc_clock_time_t
 oc_clock_time(void)
 {
   oc_clock_time_t time = (oc_clock_time_t)secondNow();
-  return time * OC_CLOCK_CONF_TICKS_PER_SECOND;
+  return time * OC_CLOCK_SECOND;
+}
+
+oc_clock_time_t
+oc_clock_time_monotonic(void)
+{
+  return -1;
 }
 
 unsigned long
@@ -52,7 +58,8 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  oc_clock_time_t interval = (oc_clock_time_t)ceil(t / 1.e09);
+  double multiplier = 1.e06 / OC_CLOCK_SECOND;
+  oc_clock_time_t interval = (oc_clock_time_t)ceil(t * multiplier);
   oc_clock_time_t beginWait = (oc_clock_time_t)micros();
   while ((micros() - beginWait) <= interval) {
     // nop

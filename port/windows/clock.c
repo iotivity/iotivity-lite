@@ -18,13 +18,20 @@
 
 #include "port/oc_clock.h"
 
+#include <assert.h>
 #include <time.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <Profileapi.h>
+
+static LONGLONG g_query_perm_frequency = 0;
 
 void
 oc_clock_init(void)
 {
+  LARGE_INTEGER freq;
+  QueryPerformanceFrequency(&freq);       // always succeeds
+  g_query_perm_frequency = freq.QuadPart; // doesn't change after system boot
 }
 
 oc_clock_time_t
@@ -50,6 +57,32 @@ oc_clock_time(void)
   return time;
 }
 
+oc_clock_time_t
+oc_clock_time_monotonic(void)
+{
+  assert(g_query_perm_frequency != 0);
+
+  LARGE_INTEGER qtime;
+  QueryPerformanceCounter(&qtime); // always succeeds
+  // 10 MHz is a very common QPC frequency on modern PC, so we can simplify the
+  // calculation
+  const LONGLONG tenMHz = 10000000;
+  if (g_query_perm_frequency == tenMHz) {
+    const double multiplier = (double)OC_CLOCK_SECOND / tenMHz;
+    return (LONGLONG)(qtime.QuadPart * multiplier);
+  }
+
+  // Instead of just having "(qtime * OC_CLOCK_SECOND) /
+  // g_query_perm_frequency", the algorithm below prevents overflow when qtime
+  // is sufficiently large.
+  const LONGLONG whole =
+    (qtime.QuadPart / g_query_perm_frequency) * OC_CLOCK_SECOND;
+  const LONGLONG part =
+    (LONGLONG)((qtime.QuadPart % g_query_perm_frequency) *
+               ((double)OC_CLOCK_SECOND / g_query_perm_frequency));
+  return whole + part;
+}
+
 unsigned long
 oc_clock_seconds(void)
 {
@@ -59,5 +92,6 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  Sleep((DWORD)(t * 1000));
+  DWORD interval = t * (OC_CLOCK_SECOND / 1000);
+  Sleep(interval);
 }

@@ -34,10 +34,21 @@ oc_clock_time(void)
   struct timespec t;
   if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
     time = (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
-           (oc_clock_time_t)ceil(t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
+           (oc_clock_time_t)ceil((double)t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
   }
 
   return time;
+}
+
+oc_clock_time_t
+oc_clock_time_monotonic(void)
+{
+  struct timespec t;
+  if (clock_gettime(CLOCK_MONOTONIC, &t) == -1) {
+    return -1;
+  }
+  return (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
+         (oc_clock_time_t)ceil((double)t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
 }
 
 unsigned long
@@ -53,5 +64,7 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  usleep(t * 1.e03);
+  double multiplier = ((double)OC_CLOCK_SECOND / 1.e06);
+  __useconds_t interval = (__useconds_t)((double)t * multiplier);
+  usleep(interval);
 }
