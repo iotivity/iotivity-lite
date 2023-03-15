@@ -127,11 +127,11 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 #ifdef OC_DNS_CACHE
       oc_dns_cache_domain(domain, &a);
 #endif /* OC_DNS_CACHE */
+      freeaddrinfo(result);
     } else {
       OC_ERR("failed to resolve address(%s) with error(%d): %s", domain, ret,
              gai_strerror(ret));
     }
-    freeaddrinfo(result);
 #ifdef OC_DNS_CACHE
   } else {
     ret = 0;
