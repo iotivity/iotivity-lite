@@ -1113,7 +1113,23 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
     }
   }
 
-  OC_DBG("no handler found for event");
+#ifdef OC_DEBUG
+  if (rdfds != NULL) {
+    for (int i = 0; i < FD_SETSIZE; ++i) {
+      if (FD_ISSET(i, rdfds)) {
+        OC_DBG("no handler found for read event (fd=%d)", i);
+      }
+    }
+  }
+  if (wfds != NULL) {
+    for (int i = 0; i < FD_SETSIZE; ++i) {
+      if (FD_ISSET(i, wfds)) {
+        OC_DBG("no handler found for write event (fd=%d)", i);
+      }
+    }
+  }
+#endif /* OC_DEBUG */
+
   return 0;
 }
 

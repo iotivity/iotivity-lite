@@ -106,6 +106,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("failed to create TCP IPv4 server socket");
     return -1;
   }
+  OC_DBG("created tcp server4_sock (fd=%d)", dev->tcp.server4_sock);
   dev->tcp.port4 = ntohs(((struct sockaddr_in *)&dev->tcp.server4)->sin_port);
 
 #ifdef OC_SECURITY
@@ -114,6 +115,7 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
     OC_ERR("failed to create TCP IPv4 secure socket");
     return -1;
   }
+  OC_DBG("created tcp secure4_sock (fd=%d)", dev->tcp.secure4_sock);
   dev->tcp.tls4_port =
     ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
@@ -150,10 +152,12 @@ tcp_connectivity_init(ip_context_t *dev)
     OC_ERR("failed to create TCP IPv6 server socket");
     return -1;
   }
+  OC_DBG("created tcp server_sock (fd=%d)", dev->tcp.server_sock);
   dev->tcp.port = ntohs(((struct sockaddr_in *)&dev->tcp.server)->sin_port);
 
 #ifdef OC_SECURITY
   dev->tcp.secure_sock = tcp_create_socket(AF_INET6, &dev->tcp.secure);
+  OC_DBG("created tcp secure_sock (fd=%d)", dev->tcp.secure_sock);
   if (dev->tcp.secure_sock < 0) {
     OC_ERR("failed to create TCP IPv6 secure socket");
     return -1;
