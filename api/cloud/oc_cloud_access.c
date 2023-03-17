@@ -22,6 +22,7 @@
 
 #ifdef OC_CLOUD
 
+#include "oc_cloud_access.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_core_res.h"
@@ -85,9 +86,9 @@ cloud_tls_add_peer(const oc_endpoint_t *endpoint, int selected_identity_cred_id)
 
 /* Internal APIs for accessing the OCF Cloud */
 bool
-cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
-                      const char *auth_code, const char *uid,
-                      const char *access_token)
+oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
+                         const char *auth_code, const char *uid,
+                         const char *access_token)
 {
   if (conf.endpoint == NULL || conf.handler == NULL ||
       ((auth_provider == NULL || auth_code == NULL) && access_token == NULL)) {
@@ -171,8 +172,8 @@ cloud_access_deregister_query(const char *uid, const char *access_token,
 }
 
 bool
-cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
-                        const char *access_token)
+oc_cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
+                           const char *access_token)
 {
   if (conf.endpoint == NULL || conf.handler == NULL) {
     OC_ERR("Error of input parameters");
@@ -248,22 +249,23 @@ cloud_access_login_out(oc_cloud_access_conf_t conf, const char *uid,
 }
 
 bool
-cloud_access_login(oc_cloud_access_conf_t conf, const char *uid,
-                   const char *access_token)
+oc_cloud_access_login(oc_cloud_access_conf_t conf, const char *uid,
+                      const char *access_token)
 {
   return cloud_access_login_out(conf, uid, access_token, /*is_sign_in*/ true);
 }
 
 bool
-cloud_access_logout(oc_cloud_access_conf_t conf, const char *uid,
-                    const char *access_token)
+oc_cloud_access_logout(oc_cloud_access_conf_t conf, const char *uid,
+                       const char *access_token)
 {
   return cloud_access_login_out(conf, uid, access_token, /*is_sign_in*/ false);
 }
 
 bool
-cloud_access_refresh_access_token(oc_cloud_access_conf_t conf, const char *uid,
-                                  const char *refresh_token)
+oc_cloud_access_refresh_access_token(oc_cloud_access_conf_t conf,
+                                     const char *auth_provider, const char *uid,
+                                     const char *refresh_token)
 {
   if (conf.endpoint == NULL || conf.handler == NULL || uid == NULL ||
       refresh_token == NULL) {
@@ -296,6 +298,9 @@ cloud_access_refresh_access_token(oc_cloud_access_conf_t conf, const char *uid,
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, uid, uid);
   oc_rep_set_text_string(root, di, uuid);
+  if (auth_provider != NULL) {
+    oc_rep_set_text_string(root, authprovider, auth_provider);
+  }
   oc_rep_set_text_string(root, granttype, OC_RSRVD_GRANT_TYPE_REFRESH_TOKEN);
   oc_rep_set_text_string(root, refreshtoken, refresh_token);
   oc_rep_end_root_object();

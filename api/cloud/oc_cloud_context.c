@@ -129,6 +129,12 @@ cloud_context_iterate(cloud_context_iterator_cb_t cb, void *user_data)
 void
 cloud_context_clear(oc_cloud_context_t *ctx)
 {
+  oc_cloud_context_clear(ctx, true);
+}
+
+void
+oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
+{
   assert(ctx != NULL);
 
   cloud_rd_reset_context(ctx);
@@ -142,7 +148,11 @@ cloud_context_clear(oc_cloud_context_t *ctx)
   ctx->store.cps = 0;
   ctx->selected_identity_cred_id = -1;
   ctx->keepalive.ping_timeout = 4;
-  cloud_store_dump_async(&ctx->store);
+  if (dump_async) {
+    cloud_store_dump_async(&ctx->store);
+  } else {
+    cloud_store_dump(&ctx->store);
+  }
 }
 
 size_t

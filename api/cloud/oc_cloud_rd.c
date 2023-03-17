@@ -281,6 +281,9 @@ cloud_rd_reset_context(oc_cloud_context_t *ctx)
 void
 oc_cloud_delete_resource(oc_resource_t *res)
 {
+  if (res == NULL) {
+    return;
+  }
   oc_cloud_context_t *ctx = oc_cloud_get_context(res->device);
   if (ctx == NULL) {
     return;

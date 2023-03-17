@@ -23,7 +23,7 @@
 #ifdef OC_CLOUD
 
 #include "oc_api.h"
-#include "oc_cloud_access_internal.h"
+#include "oc_cloud_access.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_manager_internal.h"
@@ -422,9 +422,9 @@ cloud_manager_register_async(void *data)
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (!cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
-                             oc_string(ctx->store.uid),
-                             oc_string(ctx->store.access_token))) {
+  if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
+                                oc_string(ctx->store.uid),
+                                oc_string(ctx->store.access_token))) {
     OC_ERR("failed to sent register request to cloud");
     goto retry;
   }
@@ -639,8 +639,8 @@ cloud_manager_login_async(void *data)
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (!cloud_access_login(conf, oc_string(ctx->store.uid),
-                          oc_string(ctx->store.access_token))) {
+  if (!oc_cloud_access_login(conf, oc_string(ctx->store.uid),
+                             oc_string(ctx->store.access_token))) {
     OC_ERR("failed to sent sign in request to cloud");
     goto retry;
   }
@@ -835,8 +835,9 @@ cloud_manager_refresh_token_async(void *data)
   }
   conf.endpoint = ctx->cloud_ep;
 
-  if (!cloud_access_refresh_access_token(conf, oc_string(ctx->store.uid),
-                                         oc_string(ctx->store.refresh_token))) {
+  if (!oc_cloud_access_refresh_access_token(
+        conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
+        oc_string(ctx->store.refresh_token))) {
     goto retry;
   }
 

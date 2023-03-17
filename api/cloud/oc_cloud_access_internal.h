@@ -31,32 +31,6 @@
 extern "C" {
 #endif
 
-// Common configuration arguments for cloud_access functions
-typedef struct oc_cloud_access_conf_t
-{
-  oc_endpoint_t *endpoint;       ///< cloud endpoint
-  size_t device;                 ///< index of the device
-  int selected_identity_cred_id; ///< selected identity certficate id
-  oc_response_handler_t handler; ///< response callback
-  void *user_data;               ///< data passed to response callback
-  uint16_t timeout;              ///< timeout for response
-} oc_cloud_access_conf_t;
-
-/**
- * @brief Send request to register device to cloud.
- *
- * @param conf cloud access configuration
- * @param auth_provider authorization provider
- * @param auth_code authorization code
- * @param uid user id
- * @param access_token access token
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_register(oc_cloud_access_conf_t conf,
-                           const char *auth_provider, const char *auth_code,
-                           const char *uid, const char *access_token);
-
 /**
  * @brief Generate URI query for deregister request.
  *
@@ -65,54 +39,6 @@ bool cloud_access_register(oc_cloud_access_conf_t conf,
 oc_string_t cloud_access_deregister_query(const char *uid,
                                           const char *access_token,
                                           size_t device);
-/**
- * @brief Send request to deregister device from cloud.
- *
- * The device must be registered and logged in for this call to succeed.
- *
- * @param conf cloud access configuration
- * @param uid user id
- * @param access_token access token
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
-                             const char *access_token);
-/**
- * @brief Send request to sign in the device to the cloud.
- *
- * @param conf cloud access configuration
- * @param uid user id
- * @param access_token access token
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_login(oc_cloud_access_conf_t conf, const char *uid,
-                        const char *access_token);
-/**
- * @brief Send request to sign out the device to the cloud.
- *
- * @param conf cloud access configuration
- * @param uid user id
- * @param access_token access token
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_logout(oc_cloud_access_conf_t conf, const char *uid,
-                         const char *access_token);
-/**
- * @brief Send request to refresh the device access token to the cloud.
- *
- * @param conf cloud access configuration
- * @param uid user id
- * @param refresh_token refresh token
- * @return true on success
- *         false otherwise
- */
-bool cloud_access_refresh_access_token(oc_cloud_access_conf_t conf,
-                                       const char *uid,
-                                       const char *refresh_token);
-
 #ifdef __cplusplus
 }
 #endif
