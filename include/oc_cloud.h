@@ -355,6 +355,17 @@ void oc_cloud_set_keepalive(
   oc_cloud_context_t *ctx,
   oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data);
 
+/**
+ * @brief Remove cloud context values, disconnect, and stop the cloud manager,
+ * without releasing the context.
+ *
+ * @param ctx Cloud context to clear, must not be NULL.
+ * @param dump_async If true, store the context to storage in an asynchronous
+ * manner; otherwise, perform the dump while executing this function.
+ */
+OC_API
+void oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async);
+
 #ifdef __cplusplus
 }
 #endif

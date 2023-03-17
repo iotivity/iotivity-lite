@@ -22,6 +22,7 @@
 
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_access.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
@@ -186,7 +187,7 @@ cloud_deregister_by_request(cloud_api_param_t *p, uint16_t timeout,
   }
   conf.endpoint = ctx->cloud_ep;
 
-  if (cloud_access_deregister(
+  if (oc_cloud_access_deregister(
         conf, oc_string(ctx->store.uid),
         useAccessToken ? oc_string(ctx->store.access_token) : NULL)) {
     return 0;

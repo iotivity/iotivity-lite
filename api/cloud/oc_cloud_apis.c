@@ -25,7 +25,7 @@
 #include "oc_api.h"
 #include "oc_client_state.h"
 #include "oc_cloud.h"
-#include "oc_cloud_access_internal.h"
+#include "oc_cloud_access.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
@@ -121,9 +121,9 @@ cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
     .user_data = p,
     .timeout = timeout,
   };
-  if (cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
-                            oc_string(ctx->store.uid),
-                            oc_string(ctx->store.access_token))) {
+  if (oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
+                               oc_string(ctx->store.uid),
+                               oc_string(ctx->store.access_token))) {
     ctx->store.cps = OC_CPS_REGISTERING;
     return 0;
   }
@@ -180,8 +180,8 @@ cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
   }
   conf.endpoint = ctx->cloud_ep;
 
-  if (cloud_access_login(conf, oc_string(ctx->store.uid),
-                         oc_string(ctx->store.access_token))) {
+  if (oc_cloud_access_login(conf, oc_string(ctx->store.uid),
+                            oc_string(ctx->store.access_token))) {
     return 0;
   }
 
@@ -266,8 +266,8 @@ cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
     goto error;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (cloud_access_logout(conf, oc_string(ctx->store.uid),
-                          oc_string(ctx->store.access_token))) {
+  if (oc_cloud_access_logout(conf, oc_string(ctx->store.uid),
+                             oc_string(ctx->store.access_token))) {
     return 0;
   }
 
@@ -325,8 +325,9 @@ cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
     goto error;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (cloud_access_refresh_access_token(conf, oc_string(ctx->store.uid),
-                                        oc_string(ctx->store.refresh_token))) {
+  if (oc_cloud_access_refresh_access_token(
+        conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
+        oc_string(ctx->store.refresh_token))) {
     return 0;
   }
 
