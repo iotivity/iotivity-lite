@@ -1090,7 +1090,7 @@ process_batch_observers(void *data)
       if (o->obs == obs) {
         create_batch_for_batch_observer(&links_array, o, &obs->endpoint);
         oc_list_remove(batch_observers_list, o);
-        oc_memb_free(&batch_observers_memb, o);
+        free_batch_observer(o);
       }
       o = next;
     }
