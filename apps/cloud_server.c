@@ -468,6 +468,24 @@ register_to_cloud(void *res)
   return OC_EVENT_DONE;
 }
 
+static void
+free_switch_instance(oc_resource_t *resource)
+{
+  OC_DBG("%s", __func__);
+  oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
+  while (cswitch) {
+    if (cswitch->resource == resource) {
+      oc_remove_delayed_callback(cswitch->resource, register_to_cloud);
+      oc_cloud_delete_resource(resource);
+      oc_delete_resource(resource);
+      oc_list_remove(switches, cswitch);
+      oc_memb_free(&switch_s, cswitch);
+      return;
+    }
+    cswitch = cswitch->next;
+  }
+}
+
 static oc_resource_t *
 get_switch_instance(const char *href, oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
@@ -497,6 +515,9 @@ get_switch_instance(const char *href, oc_string_array_t *types,
       oc_add_resource(cswitch->resource);
       oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
       oc_list_add(switches, cswitch);
+      free_switch_instance(r);
+      return NULL;
+
       return cswitch->resource;
     } else {
       oc_memb_free(&switch_s, cswitch);
@@ -505,23 +526,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-static void
-free_switch_instance(oc_resource_t *resource)
-{
-  OC_DBG("%s", __func__);
-  oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
-  while (cswitch) {
-    if (cswitch->resource == resource) {
-      oc_remove_delayed_callback(cswitch->resource, register_to_cloud);
-      oc_cloud_delete_resource(resource);
-      oc_delete_resource(resource);
-      oc_list_remove(switches, cswitch);
-      oc_memb_free(&switch_s, cswitch);
-      return;
-    }
-    cswitch = cswitch->next;
-  }
-}
+
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
