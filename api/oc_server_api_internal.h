@@ -75,7 +75,7 @@ typedef bool (*oc_process_baseline_interface_filter_fn_t)(
 /**
  * @brief Encode baseline resource properties to global encoder
  *
- * @param resource resource to encode
+ * @param resource resource to encode (cannot be NULL)
  * @param filter property filtering function (if NULL then all properties are
  * accepted)
  * @param filter_data custom user data sent to the property filtering function

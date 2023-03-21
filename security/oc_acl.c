@@ -35,6 +35,10 @@
 #include "util/oc_features.h"
 #include "util/oc_macros.h"
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "api/plgd/plgd_time_internal.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -373,6 +377,13 @@ oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
                  (uri_len == 6 && memcmp(uri, "/oic/p", 6) == 0))) {
     return true;
   }
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  if (uri_len == OC_CHAR_ARRAY_LEN(PLGD_TIME_URI) &&
+      memcmp(uri, PLGD_TIME_URI, OC_CHAR_ARRAY_LEN(PLGD_TIME_URI)) == 0) {
+    return true;
+  }
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #ifdef OC_WKCORE
   /* if enabled also the .well-known/core will be granted access, since this
@@ -1300,6 +1311,11 @@ oc_sec_acl_add_bootstrap_acl(size_t device)
     oc_sec_acl_anon_connection(device, "/.well-known/core", OC_PERM_RETRIEVE) &&
     ret;
 #endif /* OC_WKCORE */
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  ret =
+    oc_sec_acl_anon_connection(device, PLGD_TIME_URI, OC_PERM_RETRIEVE) && ret;
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
   return ret;
 }
 

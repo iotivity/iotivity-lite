@@ -230,6 +230,10 @@ ifeq ($(SWUPDATE),1)
 	export SWUPDATE
 endif
 
+ifeq ($(PLGD_DEV_TIME),1)
+	EXTRA_CFLAGS += -DPLGD_DEV_TIME
+endif
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/, oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
 			oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)

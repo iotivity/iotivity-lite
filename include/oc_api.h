@@ -764,7 +764,8 @@ void oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data);
  * ```
  *
  * @param[in] name the name of the new resource this will set the property `n`
- * @param[in] uri the Uniform Resource Identifier for the resource
+ * @param[in] uri the Uniform Resource Identifier for the resource (cannot be
+ * NULL)
  * @param[in] num_resource_types the number of Resource Types that will be
  *                               added/bound to the resource
  * @param[in] device index of the logical device the resource will be added to

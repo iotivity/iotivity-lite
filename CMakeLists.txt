@@ -50,6 +50,7 @@ set(OC_PUSH_ENABLED OFF CACHE BOOL "Enable Push Notification.")
 set(OC_PUSHDEBUG_ENABLED OFF CACHE BOOL "Enable debug messages for Push Notification.")
 set(OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED OFF CACHE BOOL "Enable resource access in RFOTM.")
 set(OC_MEMORY_TRACE_ENABLED OFF CACHE BOOL "Enable memory tracing.")
+set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -313,6 +314,13 @@ if(OC_MEMORY_TRACE_ENABLED)
     list(APPEND TEST_COMPILE_DEFINITIONS "OC_MEMORY_TRACE")
 endif()
 
+if(PLGD_DEV_TIME_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
+    endif()
+endif()
+
 if(BUILD_TESTING)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
 endif()
@@ -354,9 +362,16 @@ if(OC_PKI_ENABLED)
     )
 endif()
 
+if(PLGD_DEV_TIME_ENABLED)
+    file(GLOB PLGD_SRC
+        ${PROJECT_SOURCE_DIR}/api/plgd/*.c
+    )
+endif()
+
 file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/messaging/coap/*.c
     ${PROJECT_SOURCE_DIR}/api/*.c
+    ${PLGD_SRC}
 )
 set(CLIENT_SRC ${SERVER_SRC})
 
@@ -933,8 +948,18 @@ install(FILES
 # Header files
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "plgd" EXCLUDE
 )
+if (PLGD_DEV_TIME_ENABLED)
+    install(DIRECTORY include/plgd
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        FILES_MATCHING
+        PATTERN "*.h"
+    )
+endif()
+
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/port
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING

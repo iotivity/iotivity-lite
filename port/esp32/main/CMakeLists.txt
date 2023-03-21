@@ -41,6 +41,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_encode.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_to_json.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_resource.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_ri.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_server_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_session_events.c
@@ -134,6 +135,13 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_svr.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_tls.c
 		)
+endif()
+
+if (CONFIG_PLGD_DEV_TIME)
+	add_definitions(-DPLGD_DEV_TIME)
+	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/plgd/plgd_time.c
+	)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")

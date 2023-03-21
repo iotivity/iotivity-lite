@@ -213,6 +213,10 @@ ifeq ($(SWUPDATE),1)
 	export SWUPDATE
 endif
 
+ifeq ($(PLGD_DEV_TIME),1)
+	EXTRA_CFLAGS += -DPLGD_DEV_TIME
+endif
+
 
 # for PUSH NOTIFICATION
 ifeq ($(PUSH), 1)

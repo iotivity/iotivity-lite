@@ -19,12 +19,18 @@
 #ifdef OC_SECURITY
 
 #include "oc_security_internal.h"
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "api/plgd/plgd_time_internal.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #include <mbedtls/debug.h>
 #include <mbedtls/memory_buffer_alloc.h>
+#include <mbedtls/platform.h>
+#include <mbedtls/platform_time.h>
 
 #ifndef OC_DYNAMIC_ALLOCATION
-#include <mbedtls/platform.h>
 #define MBEDTLS_ALLOC_BUF_SIZE (20000)
 static unsigned char g_alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -32,6 +38,8 @@ static unsigned char g_alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #if defined(_WIN32) || defined(_WIN64)
 #include <mbedtls/platform.h>
 #endif /* WIN32 || _WIN64  */
+
+#include <time.h>
 
 void
 oc_mbedtls_init(void)
@@ -48,5 +56,39 @@ oc_mbedtls_init(void)
   mbedtls_debug_set_threshold(4);
 #endif /* OC_DEBUG */
 }
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+
+void
+oc_mbedtls_platform_time_init(void)
+{
+  mbedtls_platform_set_time(oc_mbedtls_platform_time);
+}
+
+void
+oc_mbedtls_platform_time_deinit(void)
+{
+  mbedtls_platform_set_time(MBEDTLS_PLATFORM_STD_TIME);
+}
+
+mbedtls_time_t
+oc_mbedtls_platform_time(mbedtls_time_t *timer)
+{
+  if (!plgd_time_is_active()) {
+    return MBEDTLS_PLATFORM_STD_TIME(timer);
+  }
+
+  unsigned long ct = plgd_time_seconds();
+  if (ct == (unsigned long)-1) {
+    return -1;
+  }
+  mbedtls_time_t t = (mbedtls_time_t)ct;
+  if (timer != NULL) {
+    *timer = t;
+  }
+  return t;
+}
+
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #endif /* OC_SECURITY */

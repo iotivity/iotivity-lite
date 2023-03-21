@@ -59,6 +59,7 @@
 #ifdef OC_SOFTWARE_UPDATE
 #include "oc_swupdate_internal.h"
 #endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_MEMORY_TRACE
 #include "util/oc_mem_trace.h"
 #endif /* OC_MEMORY_TRACE */
@@ -66,6 +67,10 @@
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "api/plgd/plgd_time_internal.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -293,6 +298,10 @@ oc_main_init(const oc_handler_t *handler)
   }
 #endif /* OC_SECURITY */
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  plgd_time_create_resource();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 #ifdef OC_SECURITY
   oc_sec_svr_create();
 #endif /* OC_SECURITY */
@@ -300,6 +309,11 @@ oc_main_init(const oc_handler_t *handler)
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_init();
 #endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  OC_DBG("oc_main_init(): loading plgd time");
+  plgd_time_load();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #ifdef OC_SECURITY
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
@@ -393,16 +407,10 @@ oc_main_shutdown(void)
 
 #ifdef OC_SECURITY
   oc_tls_shutdown();
-  oc_sec_acl_free();
-  oc_sec_cred_free();
-  oc_sec_doxm_free();
-  oc_sec_pstat_free();
-  oc_sec_ael_free();
-  oc_sec_sp_free();
 #ifdef OC_PKI
   oc_sec_ecdsa_free_keypairs();
 #endif /* OC_PKI */
-  oc_sec_sdi_free();
+  oc_sec_svr_free();
 #endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE

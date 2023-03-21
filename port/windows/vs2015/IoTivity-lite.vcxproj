@@ -277,7 +277,7 @@
     <ClInclude Include="..\..\..\security\oc_sdi.h" />
     <ClInclude Include="..\..\..\security\oc_sp_internal.h" />
     <ClInclude Include="..\..\..\security\oc_store.h" />
-    <ClInclude Include="..\..\..\security\oc_svr.h" />
+    <ClInclude Include="..\..\..\security\oc_svr_internal.h" />
     <ClInclude Include="..\..\..\security\oc_tls.h" />
     <ClInclude Include="..\..\..\util\oc_etimer.h" />
     <ClInclude Include="..\..\..\util\oc_list.h" />

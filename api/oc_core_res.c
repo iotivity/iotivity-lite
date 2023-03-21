@@ -24,6 +24,7 @@
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
+#include "oc_resource_internal.h"
 #include "oc_ri_internal.h"
 #include "oc_main.h"
 #include "port/oc_assert.h"
@@ -50,6 +51,10 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "api/plgd/plgd_time_internal.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -64,7 +69,7 @@ static oc_resource_t
                    (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES)];
 static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-static oc_platform_info_t g_oc_platform_info;
+static oc_platform_info_t g_oc_platform_info = { 0 };
 
 static bool g_announce_con_res = false;
 static int g_res_latency = 0;
@@ -89,6 +94,9 @@ oc_core_init(void)
   }
 
   g_oc_device_info = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_core_resources, 0, sizeof(g_core_resources));
+  memset(g_oc_device_info, 0, sizeof(g_oc_device_info));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -566,6 +574,37 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
   }
 }
 
+static oc_resource_t *
+core_get_resource_memory_by_index(int type, size_t device)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_core_resources == NULL) {
+    return NULL;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  if (type < 0 || type > OCF_D) {
+    return NULL;
+  }
+  if (type < OCF_CON) {
+    return &g_core_resources[type];
+  }
+  return &g_core_resources[OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device +
+                           type];
+}
+
+oc_resource_t *
+oc_core_get_resource_by_index(int type, size_t device)
+{
+  oc_resource_t *r = core_get_resource_memory_by_index(type, device);
+  if (r == NULL) {
+    return NULL;
+  }
+  if (!oc_resource_is_initialized(r)) {
+    return NULL;
+  }
+  return r;
+}
+
 void
 oc_core_populate_resource(int core_resource, size_t device_index,
                           const char *uri, oc_interface_mask_t iface_mask,
@@ -575,7 +614,8 @@ oc_core_populate_resource(int core_resource, size_t device_index,
                           oc_request_callback_t delete, int num_resource_types,
                           ...)
 {
-  oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
+  oc_resource_t *r =
+    core_get_resource_memory_by_index(core_resource, device_index);
   if (!r) {
     return;
   }
@@ -619,24 +659,6 @@ oc_platform_info_t *
 oc_core_get_platform_info(void)
 {
   return &g_oc_platform_info;
-}
-
-oc_resource_t *
-oc_core_get_resource_by_index(int type, size_t device)
-{
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_core_resources == NULL) {
-    return NULL;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  if (type < 0 || type > OCF_D) {
-    return NULL;
-  }
-  if (type < OCF_CON) {
-    return &g_core_resources[type];
-  }
-  return &g_core_resources[OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device +
-                           type];
 }
 
 #ifdef OC_SECURITY
@@ -756,6 +778,12 @@ oc_core_get_resource_type_by_uri(const char *uri)
                            OC_CHAR_ARRAY_LEN("/oc/wk/introspection"))) {
     return OCF_INTROSPECTION_WK;
   }
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  if (core_is_resource_uri(uri, uri_len, PLGD_TIME_URI,
+                           OC_CHAR_ARRAY_LEN(PLGD_TIME_URI))) {
+    return PLGD_TIME;
+  }
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
   if (core_is_resource_uri(uri, uri_len, "/oc/introspection",
                            OC_CHAR_ARRAY_LEN("/oc/introspection"))) {
     return OCF_INTROSPECTION_DATA;

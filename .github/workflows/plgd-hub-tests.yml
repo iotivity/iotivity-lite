@@ -31,9 +31,6 @@ on:
           - P384
           # - P521
         default: P256
-env:
-  TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
-
 jobs:
   plgd-hub-test:
     strategy:
@@ -72,6 +69,15 @@ jobs:
             build_args: "-DOC_TSAN_ENABLED=ON"
             docker_args: '-e FAKETIME="@2100-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
+
+          # - name: cloud-server-set-mbedtls-time-2000-01-01
+          #   build_args: ""
+          #   docker_args: -e FAKETIME="@2000-01-01 11:12:13"
+          #   args: --time $(date --iso-8601=seconds)
+          # - name: cloud-server-set-system-time-2000-01-01
+          #   build_args: ""
+          #   docker_args: -e FAKETIME="@2000-01-01 11:12:13"
+          #   args: --time $(date --iso-8601=seconds) --set-system-time
 
           - name: cloud-server-access-in-RFOTM
             build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"

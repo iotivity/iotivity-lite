@@ -1195,9 +1195,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
       oc_resource_t *resource =
         oc_core_get_resource_by_index(i, endpoint->device);
-      if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
-          strncmp((const char *)oc_string(resource->uri) + 1, uri_path,
-                  uri_path_len) == 0) {
+      if (resource != NULL &&
+          oc_string_len(resource->uri) == (uri_path_len + 1) &&
+          strncmp(oc_string(resource->uri) + 1, uri_path, uri_path_len) == 0) {
         request_obj.resource = cur_resource = resource;
         break;
       }

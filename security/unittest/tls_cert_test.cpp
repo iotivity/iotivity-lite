@@ -30,16 +30,17 @@
 #include "oc_cred_internal.h"
 #include "oc_pki.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "security/oc_svr_internal.h"
 #include "security/oc_tls.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
-#include "gtest/gtest.h"
 #include <array>
 #include <cstdio>
 #include <ctime>
+#include <gtest/gtest.h>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -298,7 +299,7 @@ protected:
       oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
                              "ocf.res.1.0.0", nullptr, nullptr);
     EXPECT_NE(nullptr, info);
-    oc_sec_cred_init();
+    oc_sec_svr_create();
 
     EXPECT_EQ(1, oc_core_get_num_devices());
     device_ = oc_core_get_num_devices() - 1;
@@ -321,9 +322,9 @@ protected:
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
     oc_connectivity_shutdown(device_);
-    oc_network_event_handler_mutex_destroy();
-    oc_sec_cred_free();
+    oc_sec_svr_free();
     oc_tls_shutdown();
+    oc_network_event_handler_mutex_destroy();
     oc_random_destroy();
     oc_core_shutdown();
   }
