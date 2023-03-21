@@ -19,13 +19,20 @@
 
 #include "oc_api.h"
 #include "oc_certs.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "oc_acl.h"
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "plgd/plgd_time.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+#include <errno.h>
+#include <getopt.h>
 #include <inttypes.h>
 #include <signal.h>
-#include <getopt.h>
-#include <errno.h>
 
 static int quit;
 
@@ -79,6 +86,8 @@ run(void)
 
 #elif defined(__linux__) || defined(__ANDROID_API__)
 #include <pthread.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -111,7 +120,7 @@ init(void)
   sigaction(SIGTERM, &sa, NULL);
 
   if (pthread_mutex_init(&mutex, NULL) != 0) {
-    OC_ERR("pthread_mutex_init failed!");
+    PRINT("ERROR: pthread_mutex_init failed!\n");
     return -1;
   }
   return 0;
@@ -134,6 +143,27 @@ run(void)
     pthread_mutex_unlock(&mutex);
   }
 }
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+
+static bool
+is_root(void)
+{
+  return geteuid() == 0;
+}
+
+static int
+set_system_time(oc_clock_time_t time, void *data)
+{
+  (void)data;
+  struct timeval now;
+  now.tv_sec = time / OC_CLOCK_SECOND;
+  oc_clock_time_t rem_ticks = time % OC_CLOCK_SECOND;
+  now.tv_usec = (__suseconds_t)(((double)rem_ticks * 1.e06) / OC_CLOCK_SECOND);
+  return settimeofday(&now, NULL);
+}
+
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #else
 #error "Unsupported OS"
@@ -160,6 +190,10 @@ static const char *auth_code = "test";
 static const char *sid = "00000000-0000-0000-0000-000000000001";
 static const char *apn = "plgd";
 #endif /* OC_SECURITY */
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+static oc_clock_time_t g_time = (oc_clock_time_t)-1;
+static bool g_set_system_time = false;
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 static void
 cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
@@ -195,14 +229,51 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+static int
+print_time(oc_clock_time_t time, void *data)
+{
+  (void)data;
+  char ts[64] = { 0 };
+  oc_clock_encode_time_rfc3339(time, ts, sizeof(ts));
+  PRINT("plgd time: %s\n", ts);
+  return 0;
+}
+
+static void
+plgd_time_init(void)
+{
+#if defined(__linux__) || defined(__ANDROID_API__)
+  if (g_set_system_time) {
+    PRINT("using settimeofday to set system time\n");
+    plgd_time_configure(/*use_in_mbedtls*/ false, set_system_time, NULL);
+    return;
+  }
+  PRINT("using plgd time in mbedTLS\n");
+  plgd_time_configure(/*use_in_mbedtls*/ true, print_time, NULL);
+#else  /* !__linux__ && !__ANDROID_API__ */
+  PRINT("using plgd time in mbedTLS\n");
+  plgd_time_configure(/*use_in_mbedtls*/ true, print_time, NULL);
+#endif /* __linux__ || __ANDROID_API__ */
+}
+
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 static int
 app_init(void)
 {
   oc_set_con_res_announced(true);
-  int ret = oc_init_platform(manufacturer, NULL, NULL);
-  ret |= oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                       data_model_version, NULL, NULL);
-  return ret;
+  if (oc_init_platform(manufacturer, NULL, NULL) != 0) {
+    return -1;
+  }
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  plgd_time_init();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+  if (oc_add_device("/oic/d", device_rt, device_name, spec_version,
+                    data_model_version, NULL, NULL) != 0) {
+    return -1;
+  }
+  return 0;
 }
 
 struct light_t
@@ -451,7 +522,7 @@ static void
 delete_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *user_data)
 {
-  OC_DBG("%s", __func__);
+  PRINT("%s\n", __func__);
   (void)request;
   (void)iface_mask;
   oc_switch_t *cswitch = (oc_switch_t *)user_data;
@@ -508,7 +579,7 @@ get_switch_instance(const char *href, oc_string_array_t *types,
 static void
 free_switch_instance(oc_resource_t *resource)
 {
-  OC_DBG("%s", __func__);
+  PRINT("%s\n", __func__);
   oc_switch_t *cswitch = (oc_switch_t *)oc_list_head(switches);
   while (cswitch) {
     if (cswitch->resource == resource) {
@@ -568,6 +639,15 @@ register_mnt(void)
 }
 #endif /* OC_MNT */
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+static void
+register_plgd_time(void)
+{
+  oc_resource_t *ptime_res = oc_core_get_resource_by_index(PLGD_TIME, 0);
+  oc_cloud_add_resource(ptime_res);
+}
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 static void
 register_resources(void)
 {
@@ -579,6 +659,9 @@ register_resources(void)
 #ifdef OC_MNT
   register_mnt();
 #endif /* OC_MNT */
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  register_plgd_time();
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -704,6 +787,9 @@ disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
 #define OPT_CLOUD_APN "cloud-auth-provider-name"
 #define OPT_CLOUD_SID "cloud-id"
 
+#define OPT_TIME "time"
+#define OPT_SET_SYSTEM_TIME "set-system-time"
+
 #define OPT_ARG_DEVICE_NAME OPT_DEVICE_NAME
 #define OPT_ARG_CLOUD_AUTH_CODE OPT_CLOUD_AUTH_CODE
 #define OPT_ARG_CLOUD_CIS OPT_CLOUD_CIS
@@ -730,6 +816,12 @@ printhelp(const char *exec_path)
   PRINT("  -d | --%-26s disable time verification during TLS handshake\n",
         OPT_DISABLE_TLS_VERIFY_TIME);
 #endif /* OC_SECURITY && OC_PKI */
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  PRINT("  -t | --%-26s set plgd time of device\n", OPT_TIME " <rfc3339 time>");
+  PRINT("  -s | --%-26s use plgd time to set system time (root required on "
+        "Linux)\n",
+        OPT_SET_SYSTEM_TIME);
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
   PRINT("ARGUMENTS:\n");
   PRINT("  %-33s device name (optional, default: cloud_server)\n",
         OPT_ARG_DEVICE_NAME);
@@ -763,12 +855,17 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 #if defined(OC_SECURITY) && defined(OC_PKI)
     { OPT_DISABLE_TLS_VERIFY_TIME, no_argument, NULL, 'd' },
 #endif /* OC_SECURITY && OC_PKI */
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+    { OPT_TIME, required_argument, NULL, 't' },
+    { OPT_SET_SYSTEM_TIME, no_argument, NULL, 's' },
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
     { NULL, 0, NULL, 0 },
   };
+
   while (true) {
     int option_index = 0;
     int opt =
-      getopt_long(argc, argv, "hdn:a:e:i:p:r:", long_options, &option_index);
+      getopt_long(argc, argv, "hdn:a:e:i:p:r:st:", long_options, &option_index);
     if (opt == -1) {
       break;
     }
@@ -815,6 +912,28 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
       num_resources = (int)val;
       break;
     }
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+    case 't': {
+      oc_clock_time_t time =
+        oc_clock_parse_time_rfc3339(optarg, strlen(optarg));
+      if (time == 0) {
+        PRINT("invalid plgd time value(%s)\n", optarg);
+        return false;
+      }
+      g_time = time;
+      break;
+    }
+    case 's': {
+#if defined(__linux__) || defined(__ANDROID_API__)
+      if (!is_root()) {
+        PRINT("root required for settimeofday: see man settimeofday\n");
+        return false;
+      }
+      g_set_system_time = true;
+#endif /* __linux__ || __ANDROID_API__ */
+      break;
+    }
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
     default:
       PRINT("invalid option(%s)\n", argv[optind]);
       return false;
@@ -910,6 +1029,12 @@ main(int argc, char *argv[])
     }
   }
   display_device_uuid();
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  if (g_time != (oc_clock_time_t)-1) {
+    plgd_time_set_time(g_time);
+  }
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
   run();
 
   oc_cloud_manager_stop(ctx);

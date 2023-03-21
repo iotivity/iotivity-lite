@@ -24,6 +24,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
+#include "port/oc_log.h"
 #include "util/oc_features.h"
 #include "util/oc_macros.h"
 
@@ -417,14 +418,15 @@ oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types,
                 size_t device)
 {
   oc_resource_t *resource = oc_ri_alloc_resource();
-  if (resource) {
-    resource->interfaces = OC_IF_BASELINE;
-    resource->default_interface = OC_IF_BASELINE;
-    resource->observe_period_seconds = 0;
-    resource->num_observers = 0;
-    oc_populate_resource_object(resource, name, uri, num_resource_types,
-                                device);
+  if (resource == NULL) {
+    OC_ERR("cannot allocate new resource");
+    return NULL;
   }
+  resource->interfaces = OC_IF_BASELINE;
+  resource->default_interface = OC_IF_BASELINE;
+  resource->observe_period_seconds = 0;
+  resource->num_observers = 0;
+  oc_populate_resource_object(resource, name, uri, num_resource_types, device);
   return resource;
 }
 

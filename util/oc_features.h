@@ -35,4 +35,9 @@
 #define OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 #endif
 
+#if defined(PLGD_DEV_TIME) && (defined(_WIN64) || defined(_WIN32) ||           \
+                               defined(__linux__) || defined(__ANDROID__))
+#define OC_HAS_FEATURE_PLGD_TIME
+#endif /* PLGD_DEV_TIME */
+
 #endif /* OC_FEATURES_H */

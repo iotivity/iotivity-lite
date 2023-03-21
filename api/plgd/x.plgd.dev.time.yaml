@@ -1,0 +1,78 @@
+swagger: "2.0"
+info:
+  title: Time Resource API
+  version: 1.0.0
+
+paths:
+  /x.plgd.dev/time:
+    get:
+      tags:
+        - Time
+      summary: Get the current time
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TimeResponse"
+    post:
+      tags:
+        - Time
+      summary: Set the time manually
+      consumes:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/TimeRequest"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TimeResponse"
+
+definitions:
+  TimeRequest:
+    type: object
+    properties:
+      time:
+        type: string
+        format: date-time
+        description: The new UTC time in RFC 3339 format
+    required:
+      - time
+  TimeResponse:
+    type: object
+    properties:
+      if:
+        type: array
+        description: The resource interfaces
+        items:
+          type: string
+          enum:
+            - "oic.if.rw"
+            - "oic.if.baseline"
+      rt:
+        type: array
+        description: The resource types
+        items:
+          type: string
+          enum:
+            - "x.plgd.dev.time"
+      time:
+        type: string
+        format: date-time
+        description: The UTC current time in RFC 3339 format. Update of this property doesn't trigger notification for observers.
+      status:
+        type: string
+        description: The current time status. Set time can take a few seconds to take effect.
+        enum:
+          - "syncing"
+          - "in-sync"
+      lastSyncedTime:
+        type: string
+        format: date-time
+        description: The UTC time in RFC 3339 format, when the time was last synced by manual/ntp/other device. Initialization uses this time when the RTC is unavailable and the current date is past.

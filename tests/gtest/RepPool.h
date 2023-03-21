@@ -43,8 +43,11 @@ public:
   /* convert global CborEncoder to oc_rep_t */
   oc_rep_unique_ptr ParsePayload();
 
+  static std::vector<char> GetJson(const oc_rep_t *rep,
+                                   bool pretty_print = false);
+
   static void CheckJson(const oc_rep_t *rep, const std::string &expected,
-                        bool pretty_print);
+                        bool pretty_print = false);
 
 private:
   size_t size_;

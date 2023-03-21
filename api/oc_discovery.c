@@ -28,6 +28,7 @@
 #include "oc_discovery_internal.h"
 #include "oc_endpoint.h"
 #include "oc_enums.h"
+#include "oc_resource_internal.h"
 #include "util/oc_features.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
@@ -116,11 +117,8 @@ static bool
 filter_resource(const oc_resource_t *resource, const oc_request_t *request,
                 const char *anchor, CborEncoder *links, size_t device_index)
 {
-  if (!oc_filter_resource_by_rt(resource, request)) {
-    return false;
-  }
-
-  if (!(resource->properties & OC_DISCOVERABLE)) {
+  if (resource == NULL || !oc_filter_resource_by_rt(resource, request) ||
+      (resource->properties & OC_DISCOVERABLE) == 0) {
     return false;
   }
 
@@ -255,6 +253,12 @@ process_device_core_resources(const oc_request_t *request, const char *anchor,
                       links, device_index)) {
     matches++;
   }
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  if (filter_resource(oc_core_get_resource_by_index(PLGD_TIME, 0), request,
+                      anchor, links, device_index)) {
+    matches++;
+  }
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
   if (filter_resource(oc_core_get_resource_by_index(OCF_RES, device_index),
                       request, anchor, links, device_index)) {
     matches++;
@@ -653,7 +657,7 @@ static void
 process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
                        const oc_endpoint_t *endpoint)
 {
-  if (!(resource->properties & OC_DISCOVERABLE)) {
+  if (resource == NULL || (resource->properties & OC_DISCOVERABLE) == 0) {
     return;
   }
 
@@ -727,6 +731,11 @@ process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
 {
   process_batch_response(links_array, oc_core_get_resource_by_index(OCF_P, 0),
                          endpoint);
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  process_batch_response(links_array,
+                         oc_core_get_resource_by_index(PLGD_TIME, 0), endpoint);
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
   process_batch_response(
     links_array, oc_core_get_resource_by_index(OCF_D, device_index), endpoint);
 

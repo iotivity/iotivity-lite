@@ -23,6 +23,13 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include "plgd/plgd_time.h"
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+#include <array>
+#include <vector>
+
 namespace oc {
 
 Device::Device()
@@ -145,6 +152,7 @@ std::vector<DeviceToAdd> TestDevice::server_devices{
 #ifdef OC_SERVER
 std::vector<oc_resource_t *> TestDevice::dynamic_resources{};
 #endif /* OC_SERVER */
+oc_clock_time_t TestDevice::system_time{ 0 };
 
 int
 TestDevice::AppInit()
@@ -152,7 +160,6 @@ TestDevice::AppInit()
   if (oc_init_platform("OCFTest", nullptr, nullptr) != 0) {
     return -1;
   }
-
   for (const auto &sd : server_devices) {
     if (oc_add_device(sd.uri.c_str(), sd.rt.c_str(), sd.name.c_str(),
                       sd.spec_version.c_str(), sd.data_model_version.c_str(),
@@ -187,7 +194,9 @@ TestDevice::StartServer()
   static oc_handler_t s_handler{};
   s_handler.init = AppInit;
   s_handler.signal_event_loop = SignalEventLoop;
+#ifdef OC_SERVER
   s_handler.register_resources = RegisterResources;
+#endif /* OC_SERVER */
 
   oc_set_con_res_announced(true);
 
@@ -292,5 +301,26 @@ TestDevice::GetEndpoint(size_t device, int flags)
   }
   return nullptr;
 }
+
+int
+TestDevice::SetSystemTime(oc_clock_time_t time, void *user_data)
+{
+  auto *v = static_cast<oc_clock_time_t *>(user_data);
+  *v = time;
+
+  std::array<char, 64> ts = { 0 };
+  oc_clock_encode_time_rfc3339(time, ts.data(), ts.size());
+  OC_DBG("set system_time: %s", ts.data());
+  return 0;
+}
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+void
+TestDevice::ConfigurePlgdTime(bool useInMbedTLS)
+{
+  plgd_time_configure(useInMbedTLS, TestDevice::SetSystemTime,
+                      &TestDevice::system_time);
+}
+#endif /*OC_HAS_FEATURE_PLGD_TIME*/
 
 } // namespace oc

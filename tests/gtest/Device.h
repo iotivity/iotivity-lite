@@ -21,7 +21,9 @@
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
+#include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+#include "util/oc_features.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -122,6 +124,19 @@ public:
   static void StopServer();
   static void Terminate() { device.Terminate(); }
 
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+  static void ConfigurePlgdTime(bool useInMbedTLS);
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+  static oc_clock_time_t GetSystemTime()
+  {
+    return system_time;
+  };
+  static void ClearSystemTime()
+  {
+    system_time = 0;
+  }
+
   static void DummyHandler(oc_request_t *, oc_interface_mask_t, void *)
   {
     // no-op
@@ -135,6 +150,8 @@ public:
   static const oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
 
 private:
+  static int SetSystemTime(oc_clock_time_t time, void *user_data);
+
   static Device device;
   static size_t index;
   static bool is_started;
@@ -142,6 +159,8 @@ private:
 #ifdef OC_SERVER
   static std::vector<oc_resource_t *> dynamic_resources;
 #endif /* OC_SERVER */
+
+  static oc_clock_time_t system_time;
 };
 
 } // namespace oc

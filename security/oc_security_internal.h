@@ -19,6 +19,12 @@
 #ifndef OC_SECURITY_INTERNAL_H
 #define OC_SECURITY_INTERNAL_H
 
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+#include <mbedtls/platform_time.h>
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +33,26 @@ extern "C" {
  * @brief Configure mbedTLS for IoTivity-lite.
  */
 void oc_mbedtls_init(void);
+
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+
+/**
+ * @brief Configure mbedTLS to use plgd time to get current time.
+ */
+void oc_mbedtls_platform_time_init(void);
+
+/**
+ * @brief Reset mbedTLS to use standard function (time) to get current time.
+ */
+void oc_mbedtls_platform_time_deinit(void);
+
+/**
+ * @brief Wrapper over plgd_time_seconds to match desired function signature for
+ * mbedtls_platform_set_time.
+ */
+mbedtls_time_t oc_mbedtls_platform_time(mbedtls_time_t *timer);
+
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #ifdef __cplusplus
 }

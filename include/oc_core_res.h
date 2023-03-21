@@ -101,6 +101,7 @@ oc_platform_info_t *oc_core_get_platform_info(void);
  * @param type the index of the resource
  * @param device the device index
  * @return oc_resource_t* the resource handle
+ * @return NULL on failure
  */
 oc_resource_t *oc_core_get_resource_by_index(int type, size_t device);
 
@@ -110,6 +111,7 @@ oc_resource_t *oc_core_get_resource_by_index(int type, size_t device);
  * @param uri the uri
  * @param device the device index
  * @return oc_resource_t* the resource handle
+ * @return NULL on failure
  */
 oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device);
 
