@@ -17,30 +17,44 @@
  ******************************************************************/
 
 #include "oc_config.h"
-#include "port/oc_storage.h"
 
 #ifdef OC_STORAGE
+#include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
+
 #include <errno.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
 #define STORE_PATH_SIZE 128
 
-static char store_path[STORE_PATH_SIZE];
-static int store_path_len;
-static bool path_set = false;
+static char g_store_path[STORE_PATH_SIZE] = { 0 };
+static size_t g_store_path_len = 0;
+static bool g_path_set = false;
 
 int
 oc_storage_config(const char *store)
 {
-  store_path_len = strlen(store);
-  if (store_path_len >= STORE_PATH_SIZE)
+  size_t store_len = strlen(store);
+  if (store_len >= STORE_PATH_SIZE) {
     return -ENOENT;
+  }
 
-  strncpy(store_path, store, store_path_len);
-  path_set = true;
+  g_store_path_len = store_len;
+  strncpy(g_store_path, store, g_store_path_len);
+  g_path_set = true;
 
+  return 0;
+}
+
+int
+oc_storage_reset(void)
+{
+  g_path_set = false;
+  g_store_path_len = 0;
+  g_store_path[0] = '\0';
   return 0;
 }
 
@@ -50,13 +64,14 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   FILE *fp = 0;
   size_t store_len = strlen(store);
 
-  if (!path_set || (1 + store_len + store_path_len >= STORE_PATH_SIZE))
+  if (!g_path_set || (1 + store_len + g_store_path_len >= STORE_PATH_SIZE)) {
     return -ENOENT;
+  }
 
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  fp = fopen(store_path, "rb");
+  g_store_path[g_store_path_len] = '/';
+  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  g_store_path[1 + g_store_path_len + store_len] = '\0';
+  fp = fopen(g_store_path, "rb");
   if (!fp)
     return -EINVAL;
 
@@ -68,16 +83,15 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 long
 oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
-  FILE *fp;
   size_t store_len = strlen(store);
-
-  if (!path_set || (store_len + store_path_len >= STORE_PATH_SIZE))
+  if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE)) {
     return -ENOENT;
+  }
 
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  fp = fopen(store_path, "wb");
+  g_store_path[g_store_path_len] = '/';
+  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  g_store_path[1 + g_store_path_len + store_len] = '\0';
+  FILE *fp = fopen(g_store_path, "wb");
   if (!fp)
     return -EINVAL;
 

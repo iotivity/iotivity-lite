@@ -25,33 +25,32 @@
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
-#include "oc_doxm.h"
+#include "oc_doxm_internal.h"
 #include "oc_pstat.h"
 #include "oc_rep.h"
 #include "oc_roles_internal.h"
 #include "oc_store.h"
 #include "oc_tls.h"
 #include "port/oc_assert.h"
+#include "util/oc_features.h"
+#include "util/oc_macros.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static oc_sec_acl_t *aclist;
+static oc_sec_acl_t *g_aclist;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_sec_acl_t aclist[OC_MAX_NUM_DEVICES];
+static oc_sec_acl_t g_aclist[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
-static const char *wc_all = "*";
-static const char *wc_secured = "+";
-static const char *wc_public = "-";
 
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
    (OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +                    \
     OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES))
-OC_MEMB(ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
-OC_MEMB(res_l, oc_ace_res_t,
+OC_MEMB(g_ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
+OC_MEMB(g_res_l, oc_ace_res_t,
         OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +
           OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES);
 
@@ -59,31 +58,31 @@ void
 oc_sec_acl_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  aclist =
+  g_aclist =
     (oc_sec_acl_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_acl_t));
-  if (!aclist) {
+  if (g_aclist == NULL) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
-    OC_LIST_STRUCT_INIT(&aclist[i], subjects);
+  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
+    OC_LIST_STRUCT_INIT(&g_aclist[i], subjects);
   }
 }
 
 oc_sec_acl_t *
 oc_sec_get_acl(size_t device)
 {
-  return &aclist[device];
+  return &g_aclist[device];
 }
 
 static bool
 unique_aceid(int aceid, size_t device)
 {
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
+  const oc_sec_ace_t *ace = oc_list_head(g_aclist[device].subjects);
   while (ace != NULL) {
-    if (ace->aceid == aceid)
+    if (ace->aceid == aceid) {
       return false;
+    }
     ace = ace->next;
   }
   return true;
@@ -147,13 +146,13 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, oc_sec_ace_t *ace,
 
 oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
-                        oc_ace_subject_t *subject, int aceid,
+                        const oc_ace_subject_t *subject, int aceid,
                         uint16_t permission, const char *tag, bool match_tag,
                         size_t device)
 {
   oc_sec_ace_t *ace = start;
   if (!ace) {
-    ace = (oc_sec_ace_t *)oc_list_head(aclist[device].subjects);
+    ace = (oc_sec_ace_t *)oc_list_head(g_aclist[device].subjects);
   } else {
     ace = ace->next;
   }
@@ -215,8 +214,8 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
 }
 
 static uint16_t
-oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource, bool is_DCR,
-                      bool is_public)
+oc_ace_get_permission(oc_sec_ace_t *ace, const oc_resource_t *resource,
+                      bool is_DCR, bool is_public)
 {
   uint16_t permission = 0;
 
@@ -256,8 +255,8 @@ oc_ace_get_permission(oc_sec_ace_t *ace, oc_resource_t *resource, bool is_DCR,
 static void
 dump_acl(size_t device)
 {
-  oc_sec_acl_t *a = &aclist[device];
-  oc_sec_ace_t *ace = oc_list_head(a->subjects);
+  const oc_sec_acl_t *a = &g_aclist[device];
+  const oc_sec_ace_t *ace = oc_list_head(a->subjects);
   PRINT("\nAccess Control List\n---------\n");
   while (ace != NULL) {
     PRINT("\n---------\nAce: %d\n---------\n", ace->aceid);
@@ -314,7 +313,7 @@ dump_acl(size_t device)
 #endif /* OC_DEBUG */
 
 static uint16_t
-get_role_permissions(oc_sec_cred_t *role_cred, oc_resource_t *resource,
+get_role_permissions(oc_sec_cred_t *role_cred, const oc_resource_t *resource,
                      size_t device, bool is_DCR, bool is_public)
 {
   uint16_t permission = 0;
@@ -362,9 +361,80 @@ eval_access(oc_method_t method, uint16_t permission)
   return false;
 }
 
+static bool
+oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
+{
+  const char *uri = oc_string(resource->uri);
+  size_t uri_len = oc_string_len(resource->uri);
+
+  /* Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be granted. */
+  if (is_otm && ((uri_len == 8 && memcmp(uri, "/oic/res", 8) == 0) ||
+                 (uri_len == 6 && memcmp(uri, "/oic/d", 6) == 0) ||
+                 (uri_len == 6 && memcmp(uri, "/oic/p", 6) == 0))) {
+    return true;
+  }
+
+#ifdef OC_WKCORE
+  /* if enabled also the .well-known/core will be granted access, since this
+   * also a discovery resource. */
+  if (uri_len == 17 && memcmp(uri, "/.well-known/core", 17) == 0) {
+    return true;
+  }
+#endif /* OC_WKCORE */
+
+/* GET requests to /oic/sec/doxm are always granted.
+ * This is to ensure that multicast discovery using UUID filtered requests
+ * to /oic/sec/doxm is not blocked.
+ *
+ * The security implications of allowing universal read access to
+ * /oic/sec/doxm have not been thoroughly discussed. Enabling the following
+ * define is FOR DEVELOPMENT USE ONLY.
+ */
+#ifdef OC_DOXM_UUID_FILTER
+  if (uri_len == 13 && method == OC_GET &&
+      memcmp(uri, "/oic/sec/doxm", 13) == 0) {
+    OC_DBG("oc_sec_check_acl: R access granted to /doxm");
+    return true;
+  }
+#endif /* OC_DOXM_UUID_FILTER */
+  return false;
+}
+
+static bool
+oc_sec_check_acl_by_uuid(const oc_uuid_t *uuid, size_t device,
+                         const oc_resource_t *resource)
+{
+  const char *uri = oc_string(resource->uri);
+  size_t uri_len = oc_string_len(resource->uri);
+  if (memcmp(uuid->id, g_aclist[device].rowneruuid.id, sizeof(uuid->id)) == 0 &&
+      uri_len == 13 && memcmp(uri, "/oic/sec/acl2", 13) == 0) {
+    OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
+    return true;
+  }
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  if (memcmp(uuid->id, doxm->rowneruuid.id, sizeof(uuid->id)) == 0 &&
+      uri_len == 13 && memcmp(uri, "/oic/sec/doxm", 13) == 0) {
+    OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid");
+    return true;
+  }
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  if (memcmp(uuid->id, pstat->rowneruuid.id, sizeof(uuid->id)) == 0 &&
+      uri_len == 14 && memcmp(uri, "/oic/sec/pstat", 14) == 0) {
+    OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid");
+    return true;
+  }
+  const oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  if (memcmp(uuid->id, creds->rowneruuid.id, sizeof(uuid->id)) == 0 &&
+      uri_len == 13 && memcmp(uri, "/oic/sec/cred", 13) == 0) {
+    OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid");
+    return true;
+  }
+  return false;
+}
+
 bool
-oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                 oc_endpoint_t *endpoint)
+oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
+                 const oc_endpoint_t *endpoint)
 {
 #ifdef OC_DEBUG
   dump_acl(endpoint->device);
@@ -378,8 +448,8 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     is_vertical = oc_core_is_vertical_resource(resource, resource->device);
   }
 
-  oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   /* All unicast requests which are not received over the open Device DOC
    * shall be rejected with an appropriate error message (e.g. forbidden),
    * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
@@ -425,44 +495,11 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
            "access granted");
     return true;
   }
-  /*  Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be
-      granted.
-      if enabled also the .well-known/core will be granted access,
-      since this also a discovery resource.
-  */
-  if (pstat->s == OC_DOS_RFOTM && method == OC_GET &&
-      ((oc_string_len(resource->uri) == 8 &&
-        memcmp(oc_string(resource->uri), "/oic/res", 8) == 0) ||
-       (oc_string_len(resource->uri) == 6 &&
-        memcmp(oc_string(resource->uri), "/oic/d", 6) == 0) ||
-       (oc_string_len(resource->uri) == 6 &&
-        memcmp(oc_string(resource->uri), "/oic/p", 6) == 0))) {
-    return true;
-  }
 
-#ifdef OC_WKCORE
   if (method == OC_GET &&
-      (oc_string_len(resource->uri) == 17 &&
-       memcmp(oc_string(resource->uri), "/.well-known/core", 17) == 0)) {
+      oc_sec_check_acl_on_get(resource, pstat->s == OC_DOS_RFOTM)) {
     return true;
   }
-#endif
-
-  /* GET requests to /oic/sec/doxm are always granted.
-   * This is to ensure that multicast discovery using UUID filtered requests
-   * to /oic/sec/doxm is not blocked.
-   *
-   * The security implications of allowing universal read access to
-   * /oic/sec/doxm have not been thoroughly discussed. Enabling the following
-   * define is FOR DEVELOPMENT USE ONLY.
-   */
-#ifdef OC_DOXM_UUID_FILTER
-  if (oc_string_len(resource->uri) == 13 && method == OC_GET &&
-      memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
-    OC_DBG("oc_sec_check_acl: R access granted to /doxm");
-    return true;
-  }
-#endif
 
   /* Requests over unsecured channel prior to DOC */
   if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
@@ -503,36 +540,11 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
     }
   }
 
-  oc_uuid_t *uuid = &endpoint->di;
-
-  if (uuid) {
-    oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
-    oc_sec_creds_t *creds = oc_sec_get_creds(endpoint->device);
-    if (memcmp(uuid->id, aclist[endpoint->device].rowneruuid.id, 16) == 0 &&
-        oc_string_len(resource->uri) == 13 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/acl2", 13) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches acl2's rowneruuid");
+  const oc_uuid_t *uuid = &endpoint->di;
+  if (uuid != NULL) {
+    if (oc_sec_check_acl_by_uuid(uuid, endpoint->device, resource)) {
       return true;
     }
-    if (memcmp(uuid->id, doxm->rowneruuid.id, 16) == 0 &&
-        oc_string_len(resource->uri) == 13 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid");
-      return true;
-    }
-    if (memcmp(uuid->id, pstat->rowneruuid.id, 16) == 0 &&
-        oc_string_len(resource->uri) == 14 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid");
-      return true;
-    }
-    if (memcmp(uuid->id, creds->rowneruuid.id, 16) == 0 &&
-        oc_string_len(resource->uri) == 13 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/cred", 13) == 0) {
-      OC_DBG("oc_acl: peer's UUID matches cred's rowneruuid");
-      return true;
-    }
-
     if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
          pstat->s == OC_DOS_SRESET) &&
         oc_string_len(resource->uri) == 14 &&
@@ -548,7 +560,7 @@ oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (uuid) {
     do {
       match = oc_sec_acl_find_subject(
-        match, OC_SUBJECT_UUID, (oc_ace_subject_t *)uuid, /*aceid*/ -1,
+        match, OC_SUBJECT_UUID, (const oc_ace_subject_t *)uuid, /*aceid*/ -1,
         /*permission*/ 0, /*tag*/ NULL, /*match_tag*/ false, endpoint->device);
 
       if (match) {
@@ -650,7 +662,7 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
       oc_core_get_resource_by_index(OCF_SEC_ACL, device));
   }
   oc_rep_set_array(root, aclist2);
-  oc_sec_ace_t *sub = oc_list_head(aclist[device].subjects);
+  const oc_sec_ace_t *sub = oc_list_head(g_aclist[device].subjects);
 
   while (sub != NULL) {
     oc_rep_object_array_start_item(aclist2);
@@ -690,13 +702,13 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
       } else {
         switch (res->wildcard) {
         case OC_ACE_WC_ALL_SECURED:
-          oc_rep_set_text_string(resources, wc, wc_secured);
+          oc_rep_set_text_string(resources, wc, OC_ACE_WC_ALL_SECURED_STR);
           break;
         case OC_ACE_WC_ALL_PUBLIC:
-          oc_rep_set_text_string(resources, wc, wc_public);
+          oc_rep_set_text_string(resources, wc, OC_ACE_WC_ALL_PUBLIC_STR);
           break;
         case OC_ACE_WC_ALL:
-          oc_rep_set_text_string(resources, wc, wc_all);
+          oc_rep_set_text_string(resources, wc, OC_ACE_WC_ALL_STR);
           break;
         default:
           break;
@@ -717,7 +729,7 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
     sub = sub->next;
   }
   oc_rep_close_array(root, aclist2);
-  oc_uuid_to_str(&aclist[device].rowneruuid, uuid, OC_UUID_LEN);
+  oc_uuid_to_str(&g_aclist[device].rowneruuid, uuid, OC_UUID_LEN);
   oc_rep_set_text_string(root, rowneruuid, uuid);
   oc_rep_end_root_object();
 
@@ -725,11 +737,11 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
 }
 
 static oc_sec_ace_t *
-oc_sec_add_new_ace(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
+oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
                    int aceid, uint16_t permission, const char *tag,
                    size_t device)
 {
-  oc_sec_ace_t *ace = oc_memb_alloc(&ace_l);
+  oc_sec_ace_t *ace = oc_memb_alloc(&g_ace_l);
   if (!ace) {
     OC_WRN("insufficient memory to add new ACE");
     return NULL;
@@ -776,7 +788,7 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
     oc_new_string(&ace->tag, tag, strlen(tag));
   }
 
-  oc_list_add(aclist[device].subjects, ace);
+  oc_list_add(g_aclist[device].subjects, ace);
   return ace;
 }
 
@@ -784,7 +796,7 @@ static oc_ace_res_t *
 oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
                        uint16_t permission)
 {
-  oc_ace_res_t *res = oc_memb_alloc(&res_l);
+  oc_ace_res_t *res = oc_memb_alloc(&g_res_l);
   if (!res) {
     OC_WRN("insufficient memory to add new resource to ACE");
     return NULL;
@@ -847,10 +859,11 @@ oc_sec_ace_get_res(oc_sec_ace_t *ace, const char *href,
 }
 
 bool
-oc_sec_ace_update_res(oc_ace_subject_type_t type, oc_ace_subject_t *subject,
-                      int aceid, uint16_t permission, const char *tag,
-                      const char *href, oc_ace_wildcard_t wildcard,
-                      size_t device, oc_sec_ace_update_data_t *data)
+oc_sec_ace_update_res(oc_ace_subject_type_t type,
+                      const oc_ace_subject_t *subject, int aceid,
+                      uint16_t permission, const char *tag, const char *href,
+                      oc_ace_wildcard_t wildcard, size_t device,
+                      oc_sec_ace_update_data_t *data)
 {
   oc_sec_ace_t *ace = oc_sec_acl_find_subject(
     NULL, type, subject, aceid, permission, tag, /*match_tag*/ true, device);
@@ -889,14 +902,14 @@ oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
          memcmp(href, oc_string(res->href), strlen(href)) == 0)) {
       oc_free_string(&res->href);
       oc_list_remove((*ace)->resources, res);
-      oc_memb_free(&res_l, res);
+      oc_memb_free(&g_res_l, res);
     }
     res = next;
   }
 
   if (href && oc_list_length((*ace)->resources) == 0) {
-    oc_list_remove(aclist[device].subjects, *ace);
-    oc_memb_free(&ace_l, *ace);
+    oc_list_remove(g_aclist[device].subjects, *ace);
+    oc_memb_free(&g_ace_l, *ace);
     *ace = NULL;
   }
 }
@@ -910,13 +923,13 @@ oc_acl_free_ace(oc_sec_ace_t *ace, size_t device)
     oc_free_string(&ace->subject.role.authority);
   }
   oc_free_string(&ace->tag);
-  oc_memb_free(&ace_l, ace);
+  oc_memb_free(&g_ace_l, ace);
 }
 
 oc_sec_ace_t *
 oc_sec_get_ace_by_aceid(int aceid, size_t device)
 {
-  oc_sec_ace_t *ace = oc_list_head(aclist[device].subjects);
+  oc_sec_ace_t *ace = oc_list_head(g_aclist[device].subjects);
   while (ace != NULL) {
     if (ace->aceid == aceid) {
       return ace;
@@ -929,7 +942,7 @@ oc_sec_get_ace_by_aceid(int aceid, size_t device)
 static oc_sec_ace_t *
 oc_acl_remove_ace_from_device(oc_sec_ace_t *ace, size_t device)
 {
-  return oc_list_remove2(aclist[device].subjects, ace);
+  return oc_list_remove2(g_aclist[device].subjects, ace);
 }
 
 static oc_sec_ace_t *
@@ -964,7 +977,7 @@ oc_sec_remove_ace_by_aceid(int aceid, size_t device)
 void
 oc_sec_acl_clear(size_t device, oc_sec_ace_filter_t filter, void *user_data)
 {
-  oc_sec_acl_t *acl_d = &aclist[device];
+  oc_sec_acl_t *acl_d = &g_aclist[device];
   oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_head(acl_d->subjects);
   while (ace != NULL) {
     oc_sec_ace_t *ace_next = ace->next;
@@ -979,13 +992,12 @@ oc_sec_acl_clear(size_t device, oc_sec_ace_filter_t filter, void *user_data)
 void
 oc_sec_acl_free(void)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     oc_sec_acl_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (aclist) {
-    free(aclist);
+  if (g_aclist != NULL) {
+    free(g_aclist);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -1018,17 +1030,17 @@ void
 oc_sec_acl_default(size_t device)
 {
   oc_sec_acl_clear(device, NULL, NULL);
-  memset(&aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
+  memset(&g_aclist[device].rowneruuid, 0, sizeof(oc_uuid_t));
   oc_sec_dump_acl(device);
 }
 
 bool
-oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
+oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
                   oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                   void *on_apply_ace_data)
 {
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
-  oc_rep_t *t = rep;
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  const oc_rep_t *t = rep;
   size_t len = 0;
 
   while (t != NULL) {
@@ -1060,7 +1072,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
     case OC_REP_STRING:
       if (len == 10 && memcmp(oc_string(rep->name), "rowneruuid", 10) == 0) {
         oc_str_to_uuid(oc_string(rep->value.string),
-                       &aclist[device].rowneruuid);
+                       &g_aclist[device].rowneruuid);
       }
       break;
     case OC_REP_OBJECT_ARRAY: {
@@ -1236,7 +1248,7 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
 
         if (on_apply_ace_cb != NULL) {
           if (upd_ace != NULL) {
-            oc_sec_on_apply_acl_data_t acl_data = { aclist[device].rowneruuid,
+            oc_sec_on_apply_acl_data_t acl_data = { g_aclist[device].rowneruuid,
                                                     upd_ace, replaced_ace,
                                                     created, created_resource };
             on_apply_ace_cb(acl_data, on_apply_ace_data);
@@ -1263,45 +1275,36 @@ oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
   return true;
 }
 
-bool
-oc_sec_acl_add_bootstrap_acl(size_t device)
+static bool
+oc_sec_acl_anon_connection(size_t device, const char *href, uint16_t permission)
 {
   oc_ace_subject_t _anon_clear;
   memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
   _anon_clear.conn = OC_CONN_ANON_CLEAR;
+  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, permission,
+                             NULL, href, OC_ACE_NO_WC, device, NULL)) {
+    OC_ERR("oc_acl: Failed to bootstrap %s resource", href);
+    return false;
+  }
+  return true;
+}
 
-  bool ret = true;
-  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
-                             OC_PERM_RETRIEVE, NULL, "/oic/res", OC_ACE_NO_WC,
-                             device, NULL)) {
-    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/res");
-    ret = false;
-  }
-  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
-                             OC_PERM_RETRIEVE, NULL, "/oic/d", OC_ACE_NO_WC,
-                             device, NULL)) {
-    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/d");
-    ret = false;
-  }
-  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
-                             OC_PERM_RETRIEVE, NULL, "/oic/p", OC_ACE_NO_WC,
-                             device, NULL)) {
-    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/oic/p");
-    ret = false;
-  }
+bool
+oc_sec_acl_add_bootstrap_acl(size_t device)
+{
+  bool ret = oc_sec_acl_anon_connection(device, "/oic/res", OC_PERM_RETRIEVE);
+  ret = oc_sec_acl_anon_connection(device, "/oic/d", OC_PERM_RETRIEVE) && ret;
+  ret = oc_sec_acl_anon_connection(device, "/oic/p", OC_PERM_RETRIEVE) && ret;
 #ifdef OC_WKCORE
-  if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &_anon_clear, -1,
-                             OC_PERM_RETRIEVE, NULL, "/.well-known/core",
-                             OC_ACE_NO_WC, device, NULL)) {
-    OC_ERR("oc_acl: Failed to bootstrap %s resource", "/.well-known/core");
-    ret = false;
-  }
-#endif
+  ret =
+    oc_sec_acl_anon_connection(device, "/.well-known/core", OC_PERM_RETRIEVE) &&
+    ret;
+#endif /* OC_WKCORE */
   return ret;
 }
 
 int
-oc_sec_apply_acl(oc_rep_t *rep, size_t device,
+oc_sec_apply_acl(const oc_rep_t *rep, size_t device,
                  oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                  void *on_apply_ace_data)
 {
@@ -1332,7 +1335,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
 
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
   if (ps->s == OC_DOS_RFNOP) {
     OC_ERR("oc_acl: Cannot DELETE ACE in RFNOP");
     oc_send_response(request, OC_STATUS_FORBIDDEN);

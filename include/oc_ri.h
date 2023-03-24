@@ -248,13 +248,13 @@ typedef struct oc_resource_s oc_resource_t;
  */
 typedef struct oc_request_t
 {
-  oc_endpoint_t *origin;     ///< origin of the request
-  oc_resource_t *resource;   ///< resource structure
-  const char *query;         ///< query (as string)
-  size_t query_len;          ///< query lenght
-  oc_rep_t *request_payload; ///< request payload structure
-  const uint8_t *_payload;   ///< payload of the request
-  size_t _payload_len;       ///< payload size
+  const oc_endpoint_t *origin; ///< origin of the request
+  oc_resource_t *resource;     ///< resource structure
+  const char *query;           ///< query (as string)
+  size_t query_len;            ///< query lenght
+  oc_rep_t *request_payload;   ///< request payload structure
+  const uint8_t *_payload;     ///< payload of the request
+  size_t _payload_len;         ///< payload size
   oc_content_format_t
     content_format; ///< content format (of the payload in the request)
   oc_content_format_t accept; ///< accept header

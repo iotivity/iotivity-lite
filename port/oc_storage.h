@@ -18,8 +18,8 @@
 /**
   @file
 */
-#ifndef OC_STORAGE_H
-#define OC_STORAGE_H
+#ifndef OC_PORT_STORAGE_H
+#define OC_PORT_STORAGE_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -31,8 +31,9 @@ extern "C" {
 /**
  * @brief open the storage
  *
- * @param store the storage (path)
- * @return int
+ * @param store the storage path (cannot be NULL)
+ * @return 0 on success
+ * @return <0 on failure
  */
 int oc_storage_config(const char *store);
 
@@ -61,4 +62,4 @@ long oc_storage_write(const char *store, const uint8_t *buf, size_t size);
 }
 #endif
 
-#endif /* OC_STORAGE_H */
+#endif /* OC_PORT_STORAGE_H */

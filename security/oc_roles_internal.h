@@ -28,12 +28,12 @@ extern "C" {
 #endif
 
 /* Used on the server-side for handling role assertions via /oic/sec/roles */
-oc_sec_cred_t *oc_sec_allocate_role(oc_tls_peer_t *client, size_t device);
-void oc_sec_free_role(oc_sec_cred_t *role, oc_tls_peer_t *client);
-oc_sec_cred_t *oc_sec_get_roles(oc_tls_peer_t *client);
-void oc_sec_free_roles(oc_tls_peer_t *client);
+oc_sec_cred_t *oc_sec_allocate_role(const oc_tls_peer_t *client, size_t device);
+void oc_sec_free_role(const oc_sec_cred_t *role, const oc_tls_peer_t *client);
+oc_sec_cred_t *oc_sec_get_roles(const oc_tls_peer_t *client);
+void oc_sec_free_roles(const oc_tls_peer_t *client);
 void oc_sec_free_roles_for_device(size_t device);
-int oc_sec_free_role_by_credid(int credid, oc_tls_peer_t *client);
+int oc_sec_free_role_by_credid(int credid, const oc_tls_peer_t *client);
 
 /* Used on the client-side for asserting roles that had been provisioned to
  * /oic/sec/cred.

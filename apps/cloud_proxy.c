@@ -1469,7 +1469,7 @@ doxm_discovery_cb(oc_client_response_t *response)
   oc_do_ip_discovery_all_at_endpoint(discovery, response->endpoint,
                                      response->user_data);
 }
-#endif
+#endif /* OC_DOXM_UUID_FILTER */
 
 /**
  * issue a discovery request
@@ -1485,13 +1485,13 @@ issue_requests(char *current_udn)
 
   oc_do_site_local_ipv6_multicast("/oic/sec/doxm", query, doxm_discovery_cb,
                                   current_udn);
-#else
+#else /* !OC_DOXM_UUID_FILTER */
   oc_do_site_local_ipv6_discovery_all(&discovery, current_udn);
   oc_do_realm_local_ipv6_discovery_all(&discovery, current_udn);
 #ifdef OC_IPV4
   oc_do_ip_discovery_all(&discovery, current_udn);
-#endif
-#endif
+#endif /* OC_IPV4 */
+#endif /* OC_DOXM_UUID_FILTER */
   // oc_do_ip_discovery_all(& discovery, NULL);
   // oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
 }
@@ -1507,13 +1507,13 @@ issue_requests_all(void)
 #ifdef OC_DOXM_UUID_FILTER
   oc_do_site_local_ipv6_multicast("/oic/sec/doxm", NULL, doxm_discovery_cb,
                                   NULL);
-#else
+#else /* !OC_DOXM_UUID_FILTER */
   oc_do_site_local_ipv6_discovery_all(&discovery, NULL);
   oc_do_realm_local_ipv6_discovery_all(&discovery, NULL);
 #ifdef OC_IPV4
   oc_do_ip_discovery_all(&discovery, NULL);
-#endif
-#endif
+#endif /* OC_IPV4 */
+#endif /* OC_DOXM_UUID_FILTER */
   // oc_do_ip_discovery_all(& discovery, NULL);
   // oc_do_ip_discovery("oic.wk.res", &discovery, NULL);
 }

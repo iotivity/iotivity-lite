@@ -18,8 +18,8 @@
 
 #ifdef OC_SECURITY
 
+#include "oc_svr_internal.h"
 #include "api/oc_core_res_internal.h"
-#include "oc_svr.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"
 #include "oc_api.h"
@@ -27,7 +27,7 @@
 #include "oc_cred_internal.h"
 #include "oc_csr_internal.h"
 #include "oc_csr.h"
-#include "oc_doxm.h"
+#include "oc_doxm_internal.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
 #include "oc_sdi.h"
@@ -35,7 +35,7 @@
 #include "port/oc_log.h"
 
 void
-oc_sec_create_svr(void)
+oc_sec_svr_create(void)
 {
   oc_sec_doxm_init();
   oc_sec_pstat_init();
@@ -45,8 +45,7 @@ oc_sec_create_svr(void)
   oc_sec_sp_init();
   oc_sec_sdi_init();
 
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
     oc_core_populate_resource(
       OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
@@ -82,6 +81,18 @@ oc_sec_create_svr(void)
                               post_cred, delete_cred, 1, "oic.r.roles");
 #endif /* OC_PKI */
   }
+}
+
+void
+oc_sec_svr_free(void)
+{
+  oc_sec_sdi_free();
+  oc_sec_sp_free();
+  oc_sec_ael_free();
+  oc_sec_acl_free();
+  oc_sec_cred_free();
+  oc_sec_pstat_free();
+  oc_sec_doxm_free();
 }
 
 #endif /* OC_SECURITY */

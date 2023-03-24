@@ -767,7 +767,7 @@ coap_remove_observers_on_dos_change(size_t device, bool reset)
 #endif /* OC_SECURITY */
 
 static bool
-fill_response(oc_resource_t *resource, oc_endpoint_t *endpoint,
+fill_response(oc_resource_t *resource, const oc_endpoint_t *endpoint,
               oc_interface_mask_t iface_mask, oc_response_t *response)
 {
   if (!resource || !response) {
@@ -808,7 +808,7 @@ fill_response(oc_resource_t *resource, oc_endpoint_t *endpoint,
 static int
 coap_notify_observers_internal(oc_resource_t *resource,
                                oc_response_buffer_t *response_buf,
-                               oc_endpoint_t *endpoint)
+                               const oc_endpoint_t *endpoint)
 {
   if (!resource) {
     OC_WRN("coap_notify_observers_internal: no resource passed; returning");
@@ -816,7 +816,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
   }
 
 #ifdef OC_SECURITY
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(resource->device);
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(resource->device);
   if (ps->s != OC_DOS_RFNOP) {
     OC_WRN("coap_notify_observers_internal: device not in RFNOP; skipping "
            "notification");
@@ -1283,7 +1283,7 @@ leave_notify_observers:
 int
 coap_notify_observers(oc_resource_t *resource,
                       oc_response_buffer_t *response_buf,
-                      oc_endpoint_t *endpoint)
+                      const oc_endpoint_t *endpoint)
 {
   int num = 0;
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE

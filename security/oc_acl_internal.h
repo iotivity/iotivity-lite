@@ -31,12 +31,16 @@
 extern "C" {
 #endif
 
+#define OC_ACE_WC_ALL_STR "*"
+#define OC_ACE_WC_ALL_SECURED_STR "+"
+#define OC_ACE_WC_ALL_PUBLIC_STR "-"
+
 void oc_sec_acl_init(void);
 void oc_sec_acl_free(void);
 void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
                        bool to_storage);
-bool oc_sec_decode_acl(oc_rep_t *rep, bool from_storage, size_t device,
+bool oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
                        oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                        void *on_apply_ace_data);
 void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -44,8 +48,8 @@ void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
 void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-bool oc_sec_check_acl(oc_method_t method, oc_resource_t *resource,
-                      oc_endpoint_t *endpoint);
+bool oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
+                      const oc_endpoint_t *endpoint);
 bool oc_sec_acl_add_created_resource_ace(const char *href,
                                          const oc_endpoint_t *client,
                                          size_t device, bool collection);
@@ -57,16 +61,17 @@ typedef struct
 } oc_sec_ace_update_data_t;
 
 bool oc_sec_ace_update_res(oc_ace_subject_type_t type,
-                           oc_ace_subject_t *subject, int aceid,
+                           const oc_ace_subject_t *subject, int aceid,
                            uint16_t permission, const char *tag,
                            const char *href, oc_ace_wildcard_t wildcard,
                            size_t device, oc_sec_ace_update_data_t *data);
 
 oc_sec_ace_t *oc_sec_acl_find_subject(oc_sec_ace_t *start,
                                       oc_ace_subject_type_t type,
-                                      oc_ace_subject_t *subject, int aceid,
-                                      uint16_t permission, const char *tag,
-                                      bool match_tag, size_t device);
+                                      const oc_ace_subject_t *subject,
+                                      int aceid, uint16_t permission,
+                                      const char *tag, bool match_tag,
+                                      size_t device);
 
 #ifdef __cplusplus
 }

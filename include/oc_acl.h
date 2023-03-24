@@ -222,7 +222,7 @@ typedef void (*oc_sec_on_apply_acl_cb_t)(oc_sec_on_apply_acl_data_t data,
  * @return 0 Payload was successfully parsed
  */
 OC_API
-int oc_sec_apply_acl(oc_rep_t *rep, size_t device,
+int oc_sec_apply_acl(const oc_rep_t *rep, size_t device,
                      oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                      void *on_apply_ace_data);
 

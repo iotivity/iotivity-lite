@@ -418,7 +418,7 @@ TEST_F(TestTLSPeer, VerifyCertificate)
   peer->verify_certificate = nullptr;
   ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(peer, nullptr, 0, nullptr));
 
-  mbedtls_x509_crt crt = { 0 };
+  mbedtls_x509_crt crt{};
   peer->verify_certificate = verify_certificate;
   ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(peer, &crt, 1, nullptr));
 }

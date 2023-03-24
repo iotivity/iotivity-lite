@@ -21,10 +21,12 @@
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
+#include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
 
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <pthread.h>
-#include <filesystem>
 
 #define ACCESS_TOKEN ("access_token")
 #define AUTH_PROVIDER ("auth_provider")
@@ -132,14 +134,12 @@ public:
 
   static void SetUpTestCase()
   {
-    int ret;
 #ifdef OC_SECURITY
-    ret = oc_storage_config(CLOUD_STORAGE);
-    EXPECT_EQ(0, ret);
-#endif
+    EXPECT_EQ(0, oc_storage_config(CLOUD_STORAGE));
+#endif /* OC_SECURITY */
     s_handler.init = &appInit;
     s_handler.signal_event_loop = &signalEventLoop;
-    ret = oc_main_init(&s_handler);
+    int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
     memset(&s_context, 0, sizeof(s_context));
   }
@@ -147,6 +147,9 @@ public:
   static void TearDownTestCase()
   {
     oc_main_shutdown();
+#ifdef OC_SECURITY
+    EXPECT_EQ(0, oc_storage_reset());
+#endif /* OC_SECURITY */
   }
 
   void SetUp() override

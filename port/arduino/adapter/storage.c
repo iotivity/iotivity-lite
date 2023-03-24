@@ -1,6 +1,7 @@
 #ifdef OC_SECURITY
 #include "port/oc_log.h"
 #include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
 #include "sdfat.h"
 #include <errno.h>
 #include <stdio.h>
@@ -56,6 +57,12 @@ oc_storage_config(const char *store)
   list_dir();
   sdfile_close(_file_holder);
   return 0;
+}
+
+int
+oc_storage_reset(void)
+{
+  return -1;
 }
 
 long

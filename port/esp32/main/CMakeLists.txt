@@ -24,12 +24,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/vfs_pipe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
 
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_etimer.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_list.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_memb.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_mmem.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_process.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_timer.c
+
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_base64.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_blockwise.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_buffer.c
@@ -38,6 +33,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_core_res.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_discovery.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_endpoint.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_enums.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_helpers.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_introspection.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_main.c
@@ -47,14 +43,20 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_to_json.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_ri.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_server_api.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_uuid.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_enums.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_session_events.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_storage.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_uuid.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/coap.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/engine.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/observe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/separate.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/transactions.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_etimer.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_list.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_memb.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_mmem.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_process.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_timer.c
 
 	main.c
 )
@@ -101,6 +103,12 @@ endif()
 if (CONFIG_SECURE)
 	add_definitions(-DOC_SECURITY -DOC_PKI -DAPP_DEBUG)
 	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_format.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_tm.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_valid.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_parse.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_compare.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_clock.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_audit.c
@@ -125,13 +133,7 @@ if (CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_store.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_svr.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_tls.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_clock.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_format.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_tm.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_valid.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_parse.c
-		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/c-timestamp/timestamp_compare.c
-	)
+		)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")

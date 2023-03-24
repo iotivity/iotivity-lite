@@ -631,7 +631,7 @@
     <ClInclude Include="..\..\..\security\oc_cred_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_doxm.h">
+    <ClInclude Include="..\..\..\security\oc_doxm_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_pstat.h">

@@ -28,6 +28,7 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_etimer.h"
+#include "util/oc_features.h"
 #include "util/oc_process.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
@@ -40,10 +41,10 @@
 #include "security/oc_acl_internal.h"
 #include "security/oc_ael.h"
 #include "security/oc_cred_internal.h"
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sp_internal.h"
-#include "security/oc_svr.h"
+#include "security/oc_svr_internal.h"
 #include "security/oc_tls.h"
 #ifdef OC_PKI
 #include "security/oc_keypair_internal.h"
@@ -64,7 +65,7 @@
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
-#endif
+#endif /* OC_HAS_FEATURE_PUSH */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -293,7 +294,7 @@ oc_main_init(const oc_handler_t *handler)
 #endif /* OC_SECURITY */
 
 #ifdef OC_SECURITY
-  oc_sec_create_svr();
+  oc_sec_svr_create();
 #endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE
@@ -301,8 +302,7 @@ oc_main_init(const oc_handler_t *handler)
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_SECURITY
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_load_unique_ids(device);
     OC_DBG("oc_main_init(): loading pstat");
     oc_sec_load_pstat(device);

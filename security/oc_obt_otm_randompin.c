@@ -27,7 +27,7 @@
 #include "oc_store.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_cred_internal.h"
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi.h"

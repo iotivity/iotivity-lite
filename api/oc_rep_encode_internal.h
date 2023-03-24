@@ -19,7 +19,7 @@
 #ifndef OC_REP_ENCODE_INTERNAL_H
 #define OC_REP_ENCODE_INTERNAL_H
 
-#include "cbor.h"
+#include <cbor.h>
 #include <stddef.h>
 #include <stdint.h>
 

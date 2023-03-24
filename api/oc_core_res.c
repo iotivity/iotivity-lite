@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_core_res_internal.h"
 #include "oc_discovery.h"
+#include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
 #include "oc_ri_internal.h"
@@ -29,6 +30,7 @@
 #include "util/oc_atomic.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
+#include "util/oc_macros.h"
 
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"
@@ -39,7 +41,7 @@
 #endif /* OC_MNT */
 
 #ifdef OC_SECURITY
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
@@ -53,7 +55,6 @@
 #include <stdint.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#include "oc_endpoint.h"
 #include <stdlib.h>
 static oc_resource_t *g_core_resources = NULL;
 static oc_device_info_t *g_oc_device_info = NULL;
@@ -73,9 +74,7 @@ static OC_ATOMIC_UINT32_T g_device_count = 0;
    accepted by the spec. Use a private prefix instead.
    Update OC_NAMELEN_CON_RES if changing the value.
    String must not have a leading slash. */
-#define OC_NAME_CON_RES "oc/con"
-/* Number of characters of OC_NAME_CON_RES */
-#define OC_NAMELEN_CON_RES (sizeof(OC_NAME_CON_RES) - 1)
+#define OC_NAME_CON_RES "/oc/con"
 
 void
 oc_core_init(void)
@@ -242,7 +241,7 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
     oic.wk.con attribute n. */
     oc_rep_set_text_string(root, n, oc_string(g_oc_device_info[device].name));
 
-    oc_locn_t oc_locn = oc_core_get_resource_by_index(OCF_D, 0)->tag_locn;
+    oc_locn_t oc_locn = oc_core_get_resource_by_index(OCF_D, device)->tag_locn;
     if (oc_locn > 0) {
       oc_rep_set_text_string(root, locn, oc_enum_locn_to_str(oc_locn));
     }
@@ -293,8 +292,8 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;
       }
-      oc_resource_t *device = oc_core_get_resource_by_index(OCF_D, 0);
-      if (device->tag_locn == 0) {
+      oc_resource_t *device_res = oc_core_get_resource_by_index(OCF_D, device);
+      if (device_res->tag_locn == 0) {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;
       }
@@ -302,7 +301,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
       bool oc_defined = false;
       oc_locn_t oc_locn = oc_str_to_enum_locn(rep->value.string, &oc_defined);
       if (oc_defined) {
-        oc_resource_tag_locn(device, oc_locn);
+        oc_resource_tag_locn(device_res, oc_locn);
         changed = true;
       }
     }
@@ -429,7 +428,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
 
-    oc_core_populate_resource(OCF_CON, device_count, "/" OC_NAME_CON_RES,
+    oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE,
                               oc_core_con_handler_get, oc_core_con_handler_post,
@@ -715,89 +714,113 @@ oc_core_is_DCR(const oc_resource_t *resource, size_t device)
   return false;
 }
 
+static bool
+core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
+                     size_t r_uri_len)
+{
+  if (uri[0] == '/') {
+    uri = &uri[1];
+    --uri_len;
+  }
+  if (r_uri[0] == '/') {
+    r_uri = &r_uri[1];
+    --r_uri_len;
+  }
+
+  return uri_len == r_uri_len &&
+         (uri_len == 0 || memcmp(uri, r_uri, uri_len) == 0);
+}
+
 int
 oc_core_get_resource_type_by_uri(const char *uri)
 {
-  int skip = 0;
-  if (uri[0] == '/') {
-    skip = 1;
+  size_t uri_len = strlen(uri);
+  if (core_is_resource_uri(uri, uri_len, "/oic/p",
+                           OC_CHAR_ARRAY_LEN("/oic/p"))) {
+    return OCF_P;
   }
-  size_t uri_len = strlen(uri) - skip;
-  if (uri_len == 5) {
-    if (memcmp(uri + skip, "oic/p", uri_len) == 0) {
-      return OCF_P;
-    }
-    if (memcmp(uri + skip, "oic/d", uri_len) == 0) {
-      return OCF_D;
-    }
-    return -1;
+  if (core_is_resource_uri(uri, uri_len, "/oic/d",
+                           OC_CHAR_ARRAY_LEN("/oic/p"))) {
+    return OCF_D;
   }
-  if (uri_len == 7 && memcmp(uri + skip, "oic/res", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/res",
+                           OC_CHAR_ARRAY_LEN("/oic/res"))) {
     return OCF_RES;
   }
-  if (oc_get_con_res_announced() && uri_len == OC_NAMELEN_CON_RES &&
-      memcmp(uri + skip, OC_NAME_CON_RES, uri_len) == 0) {
+  if (oc_get_con_res_announced() &&
+      core_is_resource_uri(uri, uri_len, OC_NAME_CON_RES,
+                           OC_CHAR_ARRAY_LEN(OC_NAME_CON_RES))) {
     return OCF_CON;
   }
-  if (uri_len == 19 &&
-      memcmp(uri + skip, "oc/wk/introspection", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oc/wk/introspection",
+                           OC_CHAR_ARRAY_LEN("/oc/wk/introspection"))) {
     return OCF_INTROSPECTION_WK;
   }
-  if (uri_len == 16 && memcmp(uri + skip, "oc/introspection", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oc/introspection",
+                           OC_CHAR_ARRAY_LEN("/oc/introspection"))) {
     return OCF_INTROSPECTION_DATA;
   }
 #ifdef OC_WKCORE
-  if (uri_len == 16 && memcmp(uri + skip, ".well-known/core", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/.well-known/core",
+                           OC_CHAR_ARRAY_LEN("/.well-known/core"))) {
     return WELLKNOWNCORE;
   }
 #endif /* OC_WKCORE */
 #ifdef OC_MNT
-  if (uri_len == 7 && memcmp(uri + skip, "oic/mnt", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/mnt",
+                           OC_CHAR_ARRAY_LEN("/oic/mnt"))) {
     return OCF_MNT;
   }
 #endif /* OC_MNT */
 #ifdef OC_CLOUD
-  if (uri_len == 19 &&
-      memcmp(uri + skip, "CoapCloudConfResURI", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/CoapCloudConfResURI",
+                           OC_CHAR_ARRAY_LEN("/CoapCloudConfResURI"))) {
     return OCF_COAPCLOUDCONF;
   }
 #endif /* OC_CLOUD */
 #ifdef OC_SECURITY
-  if (uri_len == 13 && memcmp(uri + skip, "oic/sec/pstat", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/pstat",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/pstat"))) {
     return OCF_SEC_PSTAT;
   }
-  if (uri_len == 12) {
-    if (memcmp(uri + skip, "oic/sec/doxm", uri_len) == 0) {
-      return OCF_SEC_DOXM;
-    }
-    if (memcmp(uri + skip, "oic/sec/acl2", uri_len) == 0) {
-      return OCF_SEC_ACL;
-    }
-    if (memcmp(uri + skip, "oic/sec/cred", uri_len) == 0) {
-      return OCF_SEC_CRED;
-    }
-    return -1;
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/doxm",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/doxm"))) {
+    return OCF_SEC_DOXM;
   }
-  if (uri_len == 11 && memcmp(uri + skip, "oic/sec/ael", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/acl2",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/acl2"))) {
+    return OCF_SEC_ACL;
+  }
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/cred",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/cred"))) {
+    return OCF_SEC_CRED;
+  }
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/ael",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/ael"))) {
     return OCF_SEC_AEL;
   }
-  if (uri_len == 10 && memcmp(uri + skip, "oic/sec/sp", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/sp",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/sp"))) {
     return OCF_SEC_SP;
   }
 #ifdef OC_PKI
-  if (uri_len == 11 && memcmp(uri + skip, "oic/sec/csr", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/csr",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/csr"))) {
     return OCF_SEC_CSR;
   }
-  if (uri_len == 13 && memcmp(uri + skip, "oic/sec/roles", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/roles",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/roles"))) {
     return OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */
-  if (uri_len == 11 && memcmp(uri + skip, "oic/sec/sdi", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oic/sec/sdi",
+                           OC_CHAR_ARRAY_LEN("/oic/sec/sdi"))) {
     return OCF_SEC_SDI;
   }
 #endif /* OC_SECURITY */
 #ifdef OC_SOFTWARE_UPDATE
-  if (uri_len == 6 && memcmp(uri + skip, "oc/swu", uri_len) == 0) {
+  if (core_is_resource_uri(uri, uri_len, "/oc/swu",
+                           OC_CHAR_ARRAY_LEN("/oc/swu"))) {
     return OCF_SW_UPDATE;
   }
 #endif /* OC_SOFTWARE_UPDATE */

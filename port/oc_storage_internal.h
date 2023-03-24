@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2018-2019 Intel Corporation
+ * Copyright 2023 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,22 @@
  *
  ****************************************************************************/
 
-#ifndef OC_SP_INTERNAL_H
-#define OC_SP_INTERNAL_H
-
-#include "oc_sp.h"
-#include "oc_ri.h"
+#ifndef OC_PORT_STORAGE_INTERNAL_H
+#define OC_PORT_STORAGE_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct
-{
-  unsigned supported_profiles; // mask of supported oc_sp_types_t
-  oc_sp_types_t current_profile;
-  int credid;
-} oc_sec_sp_t;
-
-void oc_sec_sp_init(void);
-void oc_sec_sp_free(void);
-bool oc_sec_decode_sp(const oc_rep_t *rep, size_t device);
-void oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask,
-                      bool to_storage);
-oc_sec_sp_t *oc_sec_get_sp(size_t device);
-void oc_sec_sp_default(size_t device);
-void get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
-void post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+/**
+ * @brief disable the storage
+ * @return 0 on success
+ * @return <0 on failure
+ */
+int oc_storage_reset(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_SP_INTERNAL_H */
+#endif /* OC_PORT_STORAGE_INTERNAL_H */

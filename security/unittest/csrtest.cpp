@@ -282,7 +282,7 @@ TEST_F(TestCSRWithDevice, Resource)
   auto csr_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
-    bool *invoked = static_cast<bool *>(data->user_data);
+    auto *invoked = static_cast<bool *>(data->user_data);
     *invoked = true;
   };
 

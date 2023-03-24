@@ -16,16 +16,15 @@
  *
  ****************************************************************************/
 
-#ifndef OC_DOXM_H
-#define OC_DOXM_H
+#ifndef OC_DOXM_INTERNAL_H
+#define OC_DOXM_INTERNAL_H
 
-#include "oc_uuid.h"
-#include "port/oc_log.h"
-#include "util/oc_list.h"
-#include "util/oc_memb.h"
-
+#include "oc_rep.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
+
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,6 +56,7 @@ void oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);
 oc_sec_doxm_t *oc_sec_get_doxm(size_t device);
 void oc_sec_doxm_default(size_t device);
+void oc_sec_doxm_set_default(oc_sec_doxm_t *doxm);
 void get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
               void *data);
 void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -66,4 +66,4 @@ void post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 #endif
 
-#endif /* OC_DOXM_H */
+#endif /* OC_DOXM_INTERNAL_H */

@@ -172,7 +172,7 @@ int oc_tls_num_peers(size_t device);
 bool oc_tls_connected(const oc_endpoint_t *endpoint);
 
 size_t oc_tls_send_message(oc_message_t *message);
-bool oc_tls_uses_psk_cred(oc_tls_peer_t *peer);
+bool oc_tls_uses_psk_cred(const oc_tls_peer_t *peer);
 
 /* Public APIs for selecting certificate credentials */
 void oc_tls_select_cert_ciphersuite(void);

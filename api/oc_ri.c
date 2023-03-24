@@ -1004,7 +1004,7 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
                   aux_arr[3], aux_arr[4], aux_arr[5] };
   size_t idx = 1;
   SNPRINTFipaddr(aux[0], LINE_WIDTH, *endpoint);
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     oc_uuid_to_str(&peer->uuid, aux[idx++], LINE_WIDTH);
   }
@@ -1162,11 +1162,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj._payload_len = (size_t)payload_len;
   request_obj.content_format = cf;
   request_obj.accept = accept;
-#ifndef OC_DYNAMIC_ALLOCATION
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-#endif /* OC_DYNAMIC_ALLOCATION */
   oc_rep_set_pool(&rep_objects);
 
   if (payload_len > 0 &&

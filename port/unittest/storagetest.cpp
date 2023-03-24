@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
 
 #ifdef OC_SECURITY
 
@@ -26,6 +27,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
+
+static const std::string testStorage{ "storage_test" };
 
 TEST(TestStorage, oc_storage_config_fail_with_length_over)
 {
@@ -38,27 +41,29 @@ TEST(TestStorage, oc_storage_config_fail_with_length_over)
 TEST(TestStorage, oc_storage_read_fail)
 {
   std::array<uint8_t, 100> buf{};
-  auto ret = oc_storage_read("storage_store", buf.data(), buf.size());
+  auto ret = oc_storage_read("storage_fail", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
 
 TEST(TestStorage, oc_storage_write_fail)
 {
   std::array<uint8_t, 100> buf{};
-  auto ret = oc_storage_write("storage_store", buf.data(), buf.size());
+  auto ret = oc_storage_write("storage_fail", buf.data(), buf.size());
   EXPECT_NE(0, ret);
 }
 
 TEST(TestStorage, oc_storage_config)
 {
-  auto ret = oc_storage_config("./storage_test");
-  EXPECT_EQ(0, ret);
+  EXPECT_EQ(0, oc_storage_config(testStorage.c_str()));
+  EXPECT_EQ(0, oc_storage_reset());
 }
 
 TEST(TestStorage, oc_storage_write)
 {
-  std::string file_name = "storage_store";
-  std::string str = "storage";
+  EXPECT_EQ(0, oc_storage_config(testStorage.c_str()));
+
+  std::string file_name = "st_file";
+  std::string str = "storage data";
   std::vector<uint8_t> in{};
   std::copy(str.begin(), str.end(), std::back_inserter(in));
   auto ret = oc_storage_write(file_name.c_str(), in.data(), in.size());
@@ -70,5 +75,7 @@ TEST(TestStorage, oc_storage_write)
   std::string out{};
   std::copy_n(buf.begin(), static_cast<size_t>(ret), std::back_inserter(out));
   EXPECT_STREQ(str.c_str(), out.c_str());
+
+  EXPECT_EQ(0, oc_storage_reset());
 }
 #endif /* OC_SECURITY */

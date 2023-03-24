@@ -18,7 +18,7 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_doxm.h"
+#include "oc_doxm_internal.h"
 #include "api/oc_rep_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
@@ -57,7 +57,7 @@
 #include <stdlib.h>
 static oc_sec_doxm_t *g_doxm;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_sec_doxm_t g_doxm[OC_MAX_NUM_DEVICES];
+static oc_sec_doxm_t g_doxm[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 typedef struct oc_doxm_owned_cb_s
@@ -184,6 +184,32 @@ evaluate_supported_oxms(size_t device)
 }
 
 void
+oc_sec_doxm_set_default(oc_sec_doxm_t *doxm)
+{
+  /* In RESET, oxmsel shall be set to (4) "oic.sec.oxm.self" */
+  doxm->oxmsel = 4;
+#ifdef OC_PKI
+  doxm->sct = 9;
+#else  /* OC_PKI */
+  doxm->sct = 1;
+#endif /* !OC_PKI */
+#ifdef OC_OSCORE
+  doxm->sct |= OC_CREDTYPE_OSCORE;
+#ifdef OC_CLIENT
+  doxm->sct |= OC_CREDTYPE_OSCORE_MCAST_CLIENT;
+#endif /* OC_CLIENT */
+#ifdef OC_SERVER
+  doxm->sct |= OC_CREDTYPE_OSCORE_MCAST_SERVER;
+#endif /* OC_SERVER */
+#endif /* OC_OSCORE */
+  doxm->owned = false;
+  memset(doxm->devowneruuid.id, 0, sizeof(doxm->devowneruuid.id));
+  memset(doxm->rowneruuid.id, 0, sizeof(doxm->rowneruuid.id));
+  /* Generate a new temporary device UUID */
+  oc_gen_uuid(&doxm->deviceuuid);
+}
+
+void
 oc_sec_doxm_default(size_t device)
 {
   // invoke the device owned changed cb before the deviceuuid is reset
@@ -197,29 +223,9 @@ oc_sec_doxm_default(size_t device)
     }
   }
 
-  /* In RESET, oxmsel shall be set to (4) "oic.sec.oxm.self" */
-  g_doxm[device].oxmsel = 4;
-#ifdef OC_PKI
-  g_doxm[device].sct = 9;
-#else  /* OC_PKI */
-  g_doxm[device].sct = 1;
-#endif /* !OC_PKI */
-#ifdef OC_OSCORE
-  g_doxm[device].sct |= OC_CREDTYPE_OSCORE;
-#ifdef OC_CLIENT
-  g_doxm[device].sct |= OC_CREDTYPE_OSCORE_MCAST_CLIENT;
-#endif /* OC_CLIENT */
-#ifdef OC_SERVER
-  g_doxm[device].sct |= OC_CREDTYPE_OSCORE_MCAST_SERVER;
-#endif /* OC_SERVER */
-#endif /* OC_OSCORE */
-  g_doxm[device].owned = false;
-  memset(g_doxm[device].devowneruuid.id, 0, 16);
-  memset(g_doxm[device].rowneruuid.id, 0, 16);
-  /* Generate a new temporary device UUID */
+  oc_sec_doxm_set_default(&g_doxm[device]);
   oc_device_info_t *d = oc_core_get_device_info(device);
-  oc_gen_uuid(&g_doxm[device].deviceuuid);
-  memcpy(d->di.id, g_doxm[device].deviceuuid.id, 16);
+  memcpy(d->di.id, g_doxm[device].deviceuuid.id, sizeof(d->di.id));
   oc_sec_dump_doxm(device);
 }
 

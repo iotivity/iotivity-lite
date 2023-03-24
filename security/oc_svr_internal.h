@@ -16,17 +16,25 @@
  *
  ****************************************************************************/
 
-#ifndef OC_SVR_H
-#define OC_SVR_H
+#ifndef OC_SVR_INTERNAL_H
+#define OC_SVR_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void oc_sec_create_svr(void);
+/**
+ * @brief Initialize secure vertical resources.
+ */
+void oc_sec_svr_create(void);
+
+/**
+ * @brief Deinitialize secure vertical resources;
+ */
+void oc_sec_svr_free(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_SVR_H */
+#endif /* OC_SVR_INTERNAL_H */

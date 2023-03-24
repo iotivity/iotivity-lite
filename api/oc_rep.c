@@ -20,9 +20,11 @@
 #include "oc_rep.h"
 #include "oc_rep_internal.h"
 #include "oc_rep_encode_internal.h"
+#include "oc_ri_internal.h"
 #include "oc_config.h"
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
+#include "util/oc_macros.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
 
@@ -823,4 +825,35 @@ oc_rep_is_property(const oc_rep_t *rep, const char *propname,
   assert(propname != NULL);
   return oc_string_len(rep->name) == propname_len &&
          memcmp(oc_string((rep)->name), propname, propname_len) == 0;
+}
+
+bool
+oc_rep_is_baseline_interface_property(const oc_rep_t *rep)
+{
+  // Common properties grouped by type:
+  // OC_REP_STRING: n, tag-pos-desc, tag-func-desc, tag-locn
+  if (rep->type == OC_REP_STRING) {
+    return oc_rep_is_property(rep, OC_BASELINE_PROP_NAME,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_NAME)) ||
+           oc_rep_is_property(
+             rep, OC_BASELINE_PROP_TAG_POS_DESC,
+             OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_POS_DESC)) ||
+           oc_rep_is_property(rep, OC_BASELINE_PROP_FUNC_DESC,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_FUNC_DESC)) ||
+           oc_rep_is_property(rep, OC_BASELINE_PROP_TAG_LOCN,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_LOCN));
+  }
+  // OC_REP_STRING_ARRAY: rt, if
+  if (rep->type == OC_REP_STRING_ARRAY) {
+    return oc_rep_is_property(rep, OC_BASELINE_PROP_RT,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_RT)) ||
+           oc_rep_is_property(rep, OC_BASELINE_PROP_IF,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_IF));
+  }
+  // OC_REP_DOUBLE_ARRAY: tag-pos-rel
+  if (rep->type == OC_REP_DOUBLE_ARRAY) {
+    return oc_rep_is_property(rep, OC_BASELINE_PROP_TAG_POS_REL,
+                              OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_POS_REL));
+  }
+  return false;
 }

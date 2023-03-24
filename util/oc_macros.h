@@ -1,6 +1,6 @@
-/******************************************************************
+/****************************************************************************
  *
- * Copyright (c) 2016 Intel Corporation
+ * Copyright 2023 Daniel Adam All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,15 @@
  *
  ******************************************************************/
 
-#include "port/oc_clock.h"
+#ifndef OC_MACROS_H
+#define OC_MACROS_H
 
-void
-oc_clock_init(void)
-{
-}
+#define OC_TO_STR(x) #x
 
-oc_clock_time_t
-oc_clock_time(void)
-{
-  return k_uptime_get();
-}
+// use only for C-string constants to get string length and not size of a
+// pointer, OC_CHAR_ARRAY_LEN(x) should be equal to strlen(x)
+#define OC_CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
 
-oc_clock_time_t
-oc_clock_time_monotonic(void)
-{
-  return -1;
-}
+#define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-unsigned long
-oc_clock_seconds(void)
-{
-  return (oc_clock_time() + OC_CLOCK_SECOND - 1) / OC_CLOCK_SECOND;
-}
-
-void
-oc_clock_wait(oc_clock_time_t t)
-{
-  k_sleep(t);
-}
+#endif // OC_MACROS_H

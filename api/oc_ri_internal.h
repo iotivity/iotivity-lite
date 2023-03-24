@@ -46,6 +46,14 @@ extern "C" {
 #define OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES                                   \
   (OCF_D + 1 - OC_NUM_CORE_PLATFORM_RESOURCES)
 
+#define OC_BASELINE_PROP_NAME "n"
+#define OC_BASELINE_PROP_RT "rt"
+#define OC_BASELINE_PROP_IF "if"
+#define OC_BASELINE_PROP_TAG_LOCN "tag-locn"
+#define OC_BASELINE_PROP_TAG_POS_REL "tag-pos-rel"
+#define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
+#define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
+
 /**
  * @brief removes the client callback. This is silent remove client without
  * trigger 'cb.handler'.

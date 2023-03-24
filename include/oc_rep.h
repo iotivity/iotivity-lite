@@ -22,7 +22,7 @@
 #ifndef OC_REP_H
 #define OC_REP_H
 
-#include "cbor.h"
+#include <cbor.h>
 #include "oc_export.h"
 #include "oc_helpers.h"
 #include "util/oc_memb.h"

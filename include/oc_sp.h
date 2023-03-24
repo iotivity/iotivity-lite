@@ -126,8 +126,7 @@ typedef enum {
  * @param[in] mfg_credid the credential ID of the /oic/sec/cred entry containing
  *                       the manufactures end-entity certificate
  */
-void oc_pki_set_security_profile(size_t device,
-                                 oc_sp_types_t supported_profiles,
+void oc_pki_set_security_profile(size_t device, unsigned supported_profiles,
                                  oc_sp_types_t current_profile, int mfg_credid);
 
 #ifdef __cplusplus

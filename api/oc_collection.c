@@ -181,7 +181,8 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
     // to find a unique index for a new link.
     // Example of list sorted in this order:
     // ["/lights", "/switch", "/lights/1", "/lights/2", "/lights/10"]
-    oc_link_t *next = oc_list_head(c->links), *prev = NULL;
+    oc_link_t *next = oc_list_head(c->links);
+    oc_link_t *prev = NULL;
     while (next != NULL) {
       if ((next->resource != NULL) &&
           (oc_string_len(next->resource->uri) > 0)) {
@@ -415,13 +416,12 @@ oc_handle_collection_create_request(oc_method_t method, oc_request_t *request)
     while (rep) {
       switch (rep->type) {
       case OC_REP_STRING_ARRAY: {
-        size_t i;
         if (oc_string_len(rep->name) == 2 &&
             strncmp(oc_string(rep->name), "rt", 2) == 0) {
           rt = &rep->value.array;
         } else {
-          for (i = 0; i < oc_string_array_get_allocated_size(rep->value.array);
-               i++) {
+          for (size_t i = 0;
+               i < oc_string_array_get_allocated_size(rep->value.array); ++i) {
             interfaces |= oc_ri_get_interface_mask(
               oc_string_array_get_item(rep->value.array, i),
               oc_string_array_get_item_size(rep->value.array, i));
