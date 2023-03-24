@@ -24,10 +24,11 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
-#include "oc_endpoint.h"
 #include "oc_discovery.h"
 #include "oc_discovery_internal.h"
+#include "oc_endpoint.h"
 #include "oc_enums.h"
+#include "util/oc_features.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
 #include "oc_server_api_internal.h"
@@ -246,97 +247,121 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
 }
 
 static int
-process_device_resources(CborEncoder *links, const oc_request_t *request,
-                         size_t device_index)
+process_device_core_resources(const oc_request_t *request, const char *anchor,
+                              CborEncoder *links, size_t device_index)
 {
   int matches = 0;
-  char uuid[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
-  oc_string_t anchor;
-  oc_concat_strings(&anchor, "ocf://", uuid);
-
-  if (filter_resource(oc_core_get_resource_by_index(OCF_P, 0), request,
-                      oc_string(anchor), links, device_index)) {
+  if (filter_resource(oc_core_get_resource_by_index(OCF_P, 0), request, anchor,
+                      links, device_index)) {
     matches++;
   }
   if (filter_resource(oc_core_get_resource_by_index(OCF_RES, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
-
+  }
   if (filter_resource(oc_core_get_resource_by_index(OCF_D, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
-        request, oc_string(anchor), links, device_index))
+        request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (oc_get_con_res_announced() &&
       filter_resource(oc_core_get_resource_by_index(OCF_CON, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 #ifdef OC_MNT
   if (filter_resource(oc_core_get_resource_by_index(OCF_MNT, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 #endif /* OC_MNT */
 #ifdef OC_SOFTWARE_UPDATE
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index), request,
-        oc_string(anchor), links, device_index))
+        anchor, links, device_index)) {
     matches++;
+  }
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_SECURITY
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_DOXM, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SEC_PSTAT, device_index), request,
-        oc_string(anchor), links, device_index))
+        anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_ACL, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_AEL, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CRED, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SP, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
 #ifdef OC_PKI
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_CSR, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_SEC_ROLES, device_index), request,
-        oc_string(anchor), links, device_index))
+        anchor, links, device_index)) {
     matches++;
+  }
 #endif /* OC_PKI */
 
   if (filter_resource(oc_core_get_resource_by_index(OCF_SEC_SDI, device_index),
-                      request, oc_string(anchor), links, device_index))
+                      request, anchor, links, device_index)) {
     matches++;
+  }
 
 #endif /* OC_SECURITY */
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index), request,
-        oc_string(anchor), links, device_index))
+        anchor, links, device_index)) {
     matches++;
+  }
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+  return matches;
+}
+
+static int
+process_device_resources(CborEncoder *links, const oc_request_t *request,
+                         size_t device_index)
+{
+  char uuid[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(device_index), uuid, OC_UUID_LEN);
+  oc_string_t anchor;
+  oc_concat_strings(&anchor, "ocf://", uuid);
+
+  int matches = process_device_core_resources(request, oc_string(anchor), links,
+                                              device_index);
 #ifdef OC_SERVER
   oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
@@ -345,8 +370,9 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
       continue;
 
     if (filter_resource(resource, request, oc_string(anchor), links,
-                        device_index))
+                        device_index)) {
       matches++;
+    }
   }
 
 #if defined(OC_COLLECTIONS)
@@ -357,8 +383,9 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
       continue;
 
     if (filter_resource(collection, request, oc_string(anchor), links,
-                        device_index))
+                        device_index)) {
       matches++;
+    }
   }
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
@@ -624,7 +651,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
 #ifdef OC_RES_BATCH_SUPPORT
 static void
 process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
-                       oc_endpoint_t *endpoint)
+                       const oc_endpoint_t *endpoint)
 {
   if (!(resource->properties & OC_DISCOVERABLE)) {
     return;
@@ -689,13 +716,13 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
 void
 oc_discovery_create_batch_for_resource(CborEncoder *links_array,
                                        oc_resource_t *resource,
-                                       oc_endpoint_t *endpoint)
+                                       const oc_endpoint_t *endpoint)
 {
   process_batch_response(links_array, resource, endpoint);
 }
 
 static void
-process_batch_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
+process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
                       size_t device_index)
 {
   process_batch_response(links_array, oc_core_get_resource_by_index(OCF_P, 0),
@@ -1071,14 +1098,13 @@ oc_ri_process_discovery_payload(const uint8_t *payload, int len,
         }
       } break;
       case OC_REP_STRING_ARRAY: {
-        size_t i;
         if (oc_string_len(link->name) == 2 &&
             strncmp(oc_string(link->name), "rt", 2) == 0) {
           types = &link->value.array;
         } else {
           iface_mask = 0;
-          for (i = 0; i < oc_string_array_get_allocated_size(link->value.array);
-               i++) {
+          for (size_t i = 0;
+               i < oc_string_array_get_allocated_size(link->value.array); ++i) {
             iface_mask |= oc_ri_get_interface_mask(
               oc_string_array_get_item(link->value.array, i),
               oc_string_array_get_item_size(link->value.array, i));

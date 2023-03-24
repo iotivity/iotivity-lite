@@ -17,35 +17,47 @@
  ******************************************************************/
 
 #include "oc_config.h"
-#include "port/oc_storage.h"
 
 #ifdef OC_STORAGE
 #include "port/oc_assert.h"
 #include "port/oc_log.h"
+#include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
 #include <errno.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
 #define STORE_PATH_SIZE 64
 
-static char g_store_path[STORE_PATH_SIZE];
-static size_t g_store_path_len;
+static char g_store_path[STORE_PATH_SIZE] = { 0 };
+static size_t g_store_path_len = 0;
 static bool g_path_set = false;
 
 int
 oc_storage_config(const char *store)
 {
-  g_store_path_len = strlen(store);
-  if (g_store_path_len >= STORE_PATH_SIZE) {
+  size_t store_len = strlen(store);
+  if (store_len >= STORE_PATH_SIZE) {
     return -ENOENT;
   }
 
+  g_store_path_len = store_len;
   memcpy(g_store_path, store, g_store_path_len);
   g_store_path[g_store_path_len] = '\0';
   g_path_set = true;
 
+  return 0;
+}
+
+int
+oc_storage_reset(void)
+{
+  g_path_set = false;
+  g_store_path_len = 0;
+  g_store_path[0] = '\0';
   return 0;
 }
 

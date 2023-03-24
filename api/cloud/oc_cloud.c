@@ -408,7 +408,7 @@ oc_cloud_init(void)
     if (cloud_context_init(device) == NULL) {
       return -1;
     }
-    oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, device));
+    oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, 0));
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_D, device));
   }
   return 0;

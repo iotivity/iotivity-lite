@@ -19,9 +19,19 @@
 #ifndef OC_SERVER_API_INTERNAL_H
 #define OC_SERVER_API_INTERNAL_H
 
-#ifdef OC_CLOUD
+#include "oc_ri.h"
 
+#ifdef OC_CLOUD
 #include "oc_api.h"
+#endif /* OC_CLOUD */
+
+#ifdef OC_RES_BATCH_SUPPORT
+#include "oc_endpoint.h"
+#include "oc_uuid.h"
+#include <cbor.h>
+#endif /* OC_RES_BATCH_SUPPORT */
+
+#ifdef OC_CLOUD
 
 /**
  * @brief Callback invoked on resource before it is deleted by
@@ -42,7 +52,9 @@ typedef void (*oc_delete_resource_cb_t)(oc_resource_t *resource);
 void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
 
 #endif /* OC_CLOUD */
+
 #ifdef OC_RES_BATCH_SUPPORT
+
 /**
  * The OCF URI is specified in the following form:
  * ocf://<authority>/<path>?<query>
@@ -53,7 +65,23 @@ void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
 
 void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
                                             oc_resource_t *resource,
-                                            oc_endpoint_t *endpoint);
+                                            const oc_endpoint_t *endpoint);
+
 #endif /* OC_RES_BATCH_SUPPORT */
+
+typedef bool (*oc_process_baseline_interface_filter_fn_t)(
+  const char *property_name, void *data);
+
+/**
+ * @brief Encode baseline resource properties to global encoder
+ *
+ * @param resource resource to encode
+ * @param filter property filtering function (if NULL then all properties are
+ * accepted)
+ * @param filter_data custom user data sent to the property filtering function
+ */
+void oc_process_baseline_interface_with_filter(
+  const oc_resource_t *resource,
+  oc_process_baseline_interface_filter_fn_t filter, void *filter_data);
 
 #endif /* OC_SERVER_API_INTERNAL_H */

@@ -20,8 +20,8 @@
 #include "tests/gtest/RepPool.h"
 #include "oc_rep.h"
 
-#include "gtest/gtest.h"
 #include <array>
+#include <gtest/gtest.h>
 #include <memory>
 #include <stdlib.h>
 #include <string>

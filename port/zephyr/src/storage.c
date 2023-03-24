@@ -20,6 +20,9 @@
 
 #ifdef OC_STORAGE
 
+#include "port/oc_storage.h"
+#include "port/oc_storage_internal.h"
+
 #include <device.h>
 #include <flash.h>
 #include <zephyr.h>
@@ -28,8 +31,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "port/oc_storage.h"
 
 #ifndef OC_MEMORY_KEY_NUMBER
 #define OC_MEMORY_KEY_NUMBER 4
@@ -252,6 +253,12 @@ oc_storage_config(const char *path)
 err:
   memmap.flash = NULL;
   return -errno;
+}
+
+int
+oc_storage_reset(void)
+{
+  return -1;
 }
 
 static struct memmap_key *

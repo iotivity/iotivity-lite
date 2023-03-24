@@ -29,6 +29,10 @@
 static unsigned char g_alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <mbedtls/platform.h>
+#endif /* WIN32 || _WIN64  */
+
 void
 oc_mbedtls_init(void)
 {

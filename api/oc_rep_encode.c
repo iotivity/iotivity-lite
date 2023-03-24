@@ -181,8 +181,9 @@ oc_rep_get_encoded_payload_size(void)
            (int)needed);
     (void)needed;
   }
-  if (g_err != CborNoError)
+  if (g_err != CborNoError) {
     return -1;
+  }
   return (int)size;
 }
 

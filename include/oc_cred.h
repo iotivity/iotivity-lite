@@ -253,8 +253,8 @@ typedef void (*oc_sec_on_apply_cred_cb_t)(oc_sec_on_apply_cred_data_t data,
  * @return int 0 payload was successfully parsed
  */
 OC_API
-int oc_sec_apply_cred(oc_rep_t *rep, oc_resource_t *resource,
-                      oc_endpoint_t *endpoint,
+int oc_sec_apply_cred(const oc_rep_t *rep, const oc_resource_t *resource,
+                      const oc_endpoint_t *endpoint,
                       oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                       void *on_apply_cred_data);
 

@@ -67,8 +67,7 @@ oc_clock_wait(oc_clock_time_t t)
   oc_clock_time_t rem_ticks = t % OC_CLOCK_SECOND;
   struct timespec time = {
     .tv_sec = sec,
-    .tv_nsec =
-      (__syscall_slong_t)(((double)rem_ticks * 1.e09) / OC_CLOCK_SECOND),
+    .tv_nsec = (long)(((double)rem_ticks * 1.e09) / OC_CLOCK_SECOND),
   };
   nanosleep(&time, NULL);
 }

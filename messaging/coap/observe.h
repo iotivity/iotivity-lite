@@ -94,7 +94,7 @@ void coap_free_all_observers(void);
 void coap_notify_discovery_batch_observers(oc_resource_t *resource);
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
-                          oc_endpoint_t *endpoint);
+                          const oc_endpoint_t *endpoint);
 bool coap_want_be_notified(oc_resource_t *resource);
 void notify_resource_defaults_observer(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask,

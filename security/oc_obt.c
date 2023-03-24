@@ -38,7 +38,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_certs_internal.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_csr_internal.h"
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"

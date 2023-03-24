@@ -78,7 +78,7 @@ TEST_F(TestRDClient, rd_publish_p)
 TEST_F(TestRDClient, rd_publish_f)
 {
   // Given
-  oc_endpoint_t *ep = nullptr;
+  const oc_endpoint_t *ep = nullptr;
 
   // When
   bool ret = rd_publish(ep, nullptr, 0, 0, nullptr, LOW_QOS, nullptr);
@@ -100,7 +100,7 @@ TEST_F(TestRDClient, rd_delete_p)
 TEST_F(TestRDClient, rd_delete_f)
 {
   // Given
-  oc_endpoint_t *ep = nullptr;
+  const oc_endpoint_t *ep = nullptr;
 
   // When
   bool ret = rd_delete(ep, nullptr, 0, nullptr, LOW_QOS, nullptr);

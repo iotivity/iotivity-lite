@@ -97,7 +97,7 @@ typedef struct oc_sec_roles_t
 {
   struct oc_sec_roles_t *next;
   OC_LIST_STRUCT(roles);
-  oc_tls_peer_t *client;
+  const oc_tls_peer_t *client;
   size_t device;
 } oc_sec_roles_t;
 
@@ -107,7 +107,7 @@ OC_MEMB(clients_s, oc_sec_roles_t, OC_MAX_NUM_DEVICES);
 OC_LIST(clients);
 
 static oc_sec_roles_t *
-get_roles_for_client(oc_tls_peer_t *client)
+get_roles_for_client(const oc_tls_peer_t *client)
 {
   oc_sec_roles_t *roles = (oc_sec_roles_t *)oc_list_head(clients);
   while (roles) {
@@ -120,7 +120,7 @@ get_roles_for_client(oc_tls_peer_t *client)
 }
 
 static oc_sec_roles_t *
-allocate_roles_for_client(oc_tls_peer_t *client, size_t device)
+allocate_roles_for_client(const oc_tls_peer_t *client, size_t device)
 {
   oc_sec_roles_t *roles = (oc_sec_roles_t *)oc_memb_alloc(&clients_s);
   if (!roles) {
@@ -134,7 +134,7 @@ allocate_roles_for_client(oc_tls_peer_t *client, size_t device)
 }
 
 oc_sec_cred_t *
-oc_sec_allocate_role(oc_tls_peer_t *client, size_t device)
+oc_sec_allocate_role(const oc_tls_peer_t *client, size_t device)
 {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (!roles) {
@@ -156,7 +156,7 @@ oc_sec_allocate_role(oc_tls_peer_t *client, size_t device)
 }
 
 oc_sec_cred_t *
-oc_sec_get_roles(oc_tls_peer_t *client)
+oc_sec_get_roles(const oc_tls_peer_t *client)
 {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
@@ -174,7 +174,7 @@ free_cred_properties(oc_sec_cred_t *cred)
 }
 
 void
-oc_sec_free_role(oc_sec_cred_t *role, oc_tls_peer_t *client)
+oc_sec_free_role(const oc_sec_cred_t *role, const oc_tls_peer_t *client)
 {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
@@ -207,7 +207,7 @@ oc_sec_free_roles_for_device(size_t device)
 }
 
 void
-oc_sec_free_roles(oc_tls_peer_t *client)
+oc_sec_free_roles(const oc_tls_peer_t *client)
 {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {
@@ -225,7 +225,7 @@ oc_sec_free_roles(oc_tls_peer_t *client)
 }
 
 int
-oc_sec_free_role_by_credid(int credid, oc_tls_peer_t *client)
+oc_sec_free_role_by_credid(int credid, const oc_tls_peer_t *client)
 {
   oc_sec_roles_t *roles = get_roles_for_client(client);
   if (roles) {

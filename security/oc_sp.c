@@ -24,14 +24,16 @@
 #include "oc_pki.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
+#include "util/oc_macros.h"
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include <stdlib.h>
-static oc_sec_sp_t *sp;
-static oc_sec_sp_t *sp_mfg_default;
+static oc_sec_sp_t *g_sp = NULL;
+static oc_sec_sp_t *g_sp_mfg_default = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_sec_sp_t sp[OC_MAX_NUM_DEVICES];
-static oc_sec_sp_t sp_mfg_default[OC_MAX_NUM_DEVICES];
+static oc_sec_sp_t g_sp[OC_MAX_NUM_DEVICES] = { 0 };
+static oc_sec_sp_t g_sp_mfg_default[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #define OC_SP_BASELINE_OID "1.3.6.1.4.1.51414.0.0.1.0"
@@ -40,34 +42,33 @@ static oc_sec_sp_t sp_mfg_default[OC_MAX_NUM_DEVICES];
 #define OC_SP_PURPLE_OID "1.3.6.1.4.1.51414.0.0.4.0"
 
 void
-oc_pki_set_security_profile(size_t device, oc_sp_types_t supported_profiles,
+oc_pki_set_security_profile(size_t device, unsigned supported_profiles,
                             oc_sp_types_t current_profile, int mfg_credid)
 {
-  sp_mfg_default[device].supported_profiles |= supported_profiles;
-  sp_mfg_default[device].current_profile = current_profile;
-  sp_mfg_default[device].credid = mfg_credid;
-  sp[device] = sp_mfg_default[device];
+  g_sp_mfg_default[device].supported_profiles |= supported_profiles;
+  g_sp_mfg_default[device].current_profile = current_profile;
+  g_sp_mfg_default[device].credid = mfg_credid;
+  g_sp[device] = g_sp_mfg_default[device];
 }
 
 void
 oc_sec_sp_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  sp = (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
-  if (!sp) {
+  g_sp = (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
+  if (!g_sp) {
     oc_abort("Insufficient memory");
   }
-  sp_mfg_default =
+  g_sp_mfg_default =
     (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
-  if (!sp_mfg_default) {
+  if (!g_sp_mfg_default) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
-    sp_mfg_default[device].current_profile = OC_SP_BASELINE;
-    sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
-    sp_mfg_default[device].credid = -1;
+  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
+    g_sp_mfg_default[device].current_profile = OC_SP_BASELINE;
+    g_sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
+    g_sp_mfg_default[device].credid = -1;
   }
 }
 
@@ -75,11 +76,11 @@ void
 oc_sec_sp_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (sp) {
-    free(sp);
+  if (g_sp) {
+    free(g_sp);
   }
-  if (sp_mfg_default) {
-    free(sp_mfg_default);
+  if (g_sp_mfg_default) {
+    free(g_sp_mfg_default);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -87,28 +88,34 @@ oc_sec_sp_free(void)
 void
 oc_sec_sp_default(size_t device)
 {
-  sp[device] = sp_mfg_default[device];
+  g_sp[device] = g_sp_mfg_default[device];
 }
 
 static oc_sp_types_t
-string_to_sp(const char *sp_string)
+sp_from_string(const char *sp_string)
 {
-  oc_sp_types_t sp = 0;
-  if (strlen(sp_string) == strlen(OC_SP_BASELINE_OID) &&
-      memcmp(OC_SP_BASELINE_OID, sp_string, strlen(OC_SP_BASELINE_OID)) == 0) {
-    sp = OC_SP_BASELINE;
-  } else if (strlen(sp_string) == strlen(OC_SP_BLACK_OID) &&
-             memcmp(OC_SP_BLACK_OID, sp_string, strlen(OC_SP_BLACK_OID)) == 0) {
-    sp = OC_SP_BLACK;
-  } else if (strlen(sp_string) == strlen(OC_SP_BLUE_OID) &&
-             memcmp(OC_SP_BLUE_OID, sp_string, strlen(OC_SP_BLUE_OID)) == 0) {
-    sp = OC_SP_BLUE;
-  } else if (strlen(sp_string) == strlen(OC_SP_PURPLE_OID) &&
-             memcmp(OC_SP_PURPLE_OID, sp_string, strlen(OC_SP_PURPLE_OID)) ==
-               0) {
-    sp = OC_SP_PURPLE;
+  size_t sp_string_len = strlen(sp_string);
+  if (sp_string_len == OC_CHAR_ARRAY_LEN(OC_SP_BASELINE_OID) &&
+      memcmp(OC_SP_BASELINE_OID, sp_string,
+             OC_CHAR_ARRAY_LEN(OC_SP_BASELINE_OID)) == 0) {
+    return OC_SP_BASELINE;
   }
-  return sp;
+  if (sp_string_len == OC_CHAR_ARRAY_LEN(OC_SP_BLACK_OID) &&
+      memcmp(OC_SP_BLACK_OID, sp_string, OC_CHAR_ARRAY_LEN(OC_SP_BLACK_OID)) ==
+        0) {
+    return OC_SP_BLACK;
+  }
+  if (sp_string_len == OC_CHAR_ARRAY_LEN(OC_SP_BLUE_OID) &&
+      memcmp(OC_SP_BLUE_OID, sp_string, OC_CHAR_ARRAY_LEN(OC_SP_BLUE_OID)) ==
+        0) {
+    return OC_SP_BLUE;
+  }
+  if (sp_string_len == OC_CHAR_ARRAY_LEN(OC_SP_PURPLE_OID) &&
+      memcmp(OC_SP_PURPLE_OID, sp_string,
+             OC_CHAR_ARRAY_LEN(OC_SP_PURPLE_OID)) == 0) {
+    return OC_SP_PURPLE;
+  }
+  return 0;
 }
 
 bool
@@ -125,25 +132,23 @@ oc_sec_decode_sp(const oc_rep_t *rep, size_t device)
       if (len == 14 &&
           memcmp("currentprofile", oc_string(rep->name), 14) == 0) {
         oc_sp_types_t current_profile =
-          string_to_sp(oc_string(rep->value.string));
-        if ((current_profile & sp[device].supported_profiles) == 0) {
+          sp_from_string(oc_string(rep->value.string));
+        if ((current_profile & g_sp[device].supported_profiles) == 0) {
           return false;
         }
-        sp[device].current_profile = current_profile;
+        g_sp[device].current_profile = current_profile;
       }
       break;
     case OC_REP_STRING_ARRAY:
       if (len == 17 &&
           memcmp("supportedprofiles", oc_string(rep->name), 17) == 0) {
-        oc_sp_types_t supported_profiles = 0;
-        size_t profile;
-        for (profile = 0;
-             profile < oc_string_array_get_allocated_size(rep->value.array);
-             profile++) {
-          const char *p = oc_string_array_get_item(rep->value.array, profile);
-          supported_profiles |= string_to_sp(p);
+        unsigned supported_profiles = 0;
+        for (size_t i = 0;
+             i < oc_string_array_get_allocated_size(rep->value.array); ++i) {
+          const char *p = oc_string_array_get_item(rep->value.array, i);
+          supported_profiles |= sp_from_string(p);
         }
-        sp[device].supported_profiles = supported_profiles;
+        g_sp[device].supported_profiles = supported_profiles;
       }
       break;
     default:
@@ -180,18 +185,18 @@ oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
       oc_core_get_resource_by_index(OCF_SEC_SP, device));
   }
   oc_rep_set_text_string(root, currentprofile,
-                         sp_to_string(sp[device].current_profile));
+                         sp_to_string(g_sp[device].current_profile));
   oc_rep_set_array(root, supportedprofiles);
-  if ((sp[device].supported_profiles & OC_SP_BASELINE) != 0) {
+  if ((g_sp[device].supported_profiles & OC_SP_BASELINE) != 0) {
     oc_rep_add_text_string(supportedprofiles, sp_to_string(OC_SP_BASELINE));
   }
-  if ((sp[device].supported_profiles & OC_SP_BLACK) != 0) {
+  if ((g_sp[device].supported_profiles & OC_SP_BLACK) != 0) {
     oc_rep_add_text_string(supportedprofiles, sp_to_string(OC_SP_BLACK));
   }
-  if ((sp[device].supported_profiles & OC_SP_BLUE) != 0) {
+  if ((g_sp[device].supported_profiles & OC_SP_BLUE) != 0) {
     oc_rep_add_text_string(supportedprofiles, sp_to_string(OC_SP_BLUE));
   }
-  if ((sp[device].supported_profiles & OC_SP_PURPLE) != 0) {
+  if ((g_sp[device].supported_profiles & OC_SP_PURPLE) != 0) {
     oc_rep_add_text_string(supportedprofiles, sp_to_string(OC_SP_PURPLE));
   }
   oc_rep_close_array(root, supportedprofiles);
@@ -201,7 +206,7 @@ oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
 oc_sec_sp_t *
 oc_sec_get_sp(size_t device)
 {
-  return &sp[device];
+  return &g_sp[device];
 }
 
 void

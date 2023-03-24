@@ -40,22 +40,22 @@ typedef struct
 } oc_sec_add_new_cred_data_t;
 
 int oc_sec_add_new_cred(
-  size_t device, bool roles_resource, struct oc_tls_peer_t *client, int credid,
-  oc_sec_credtype_t credtype, oc_sec_credusage_t credusage, const char *subject,
-  oc_sec_encoding_t privatedata_encoding, size_t privatedata_size,
-  const uint8_t *privatedata, oc_sec_encoding_t publicdata_encoding,
-  size_t publicdata_size, const uint8_t *publicdata, const char *role,
-  const char *authority, const char *tag,
-  oc_sec_add_new_cred_data_t *new_cred_data);
+  size_t device, bool roles_resource, const struct oc_tls_peer_t *client,
+  int credid, oc_sec_credtype_t credtype, oc_sec_credusage_t credusage,
+  const char *subject, oc_sec_encoding_t privatedata_encoding,
+  size_t privatedata_size, const uint8_t *privatedata,
+  oc_sec_encoding_t publicdata_encoding, size_t publicdata_size,
+  const uint8_t *publicdata, const char *role, const char *authority,
+  const char *tag, oc_sec_add_new_cred_data_t *new_cred_data);
 
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
 void oc_sec_cred_free(void);
-void oc_sec_encode_cred(bool persist, size_t device,
-                        oc_interface_mask_t iface_mask, bool to_storage);
-bool oc_sec_decode_cred(oc_rep_t *rep, oc_sec_cred_t **owner, bool from_storage,
-                        bool roles_resource, struct oc_tls_peer_t *client,
-                        size_t device,
+void oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
+                        bool to_storage);
+bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
+                        bool from_storage, bool roles_resource,
+                        const struct oc_tls_peer_t *client, size_t device,
                         oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                         void *on_apply_cred_data);
 /**

@@ -20,7 +20,6 @@
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_tls.h"
 #include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_acl_internal.h"
@@ -47,13 +46,12 @@ class TestAcl : public testing::Test {
 protected:
   void SetUp() override
   {
-    oc_ri_init();
     oc_network_event_handler_mutex_init();
+    oc_ri_init();
     oc_core_init();
-    oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
-    oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(), kDeviceName.c_str(),
-                  kOCFSpecVersion.c_str(), kOCFDataModelVersion.c_str(),
-                  nullptr, nullptr);
+    ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
+                               kDeviceName.c_str(), kOCFSpecVersion.c_str(),
+                               kOCFDataModelVersion.c_str(), nullptr, nullptr));
     device_id_ = 0;
     oc_sec_acl_init();
   }
@@ -64,11 +62,10 @@ protected:
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
     oc_sec_acl_free();
-    oc_ri_shutdown();
-    oc_tls_shutdown();
-    oc_connectivity_shutdown(0);
-    oc_network_event_handler_mutex_destroy();
+    oc_connectivity_shutdown(device_id_);
     oc_core_shutdown();
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
   }
 
 public:

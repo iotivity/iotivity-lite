@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Configure mbedTLS for IoTivity-lite.
+ */
 void oc_mbedtls_init(void);
 
 #ifdef __cplusplus

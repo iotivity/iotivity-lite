@@ -38,12 +38,11 @@
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit.h"
 #include "security/oc_cred_internal.h"
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
-#include "security/oc_svr.h"
 
 #ifdef OC_PKI
 #include "oc_certs_internal.h"
@@ -2362,7 +2361,7 @@ oc_tls_init_connection(oc_message_t *message)
 #endif /* OC_CLIENT */
 
 bool
-oc_tls_uses_psk_cred(oc_tls_peer_t *peer)
+oc_tls_uses_psk_cred(const oc_tls_peer_t *peer)
 {
   if (!peer) {
     return false;
