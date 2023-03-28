@@ -57,6 +57,10 @@
 #include "oc_push_internal.h"
 #endif /*OC_HAS_FEATURE_PUSH  */
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd_wot_internal.h"
+#endif
+
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit.h"
@@ -1050,9 +1054,9 @@ oc_ri_get_resource_by_uri(size_t device, const char *uri_path,
                           bool *resource_is_collection, bool *is_wot)
 {
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  if (uri_path_len > 3 && strncmp(uri_path, "wot/", 4) == 0) {
-    uri_path = uri_path + 4;
-    uri_path_len = uri_path_len - 4;
+  if (uri_path_len > sizeof(PLGD_WOT_URI_PREFIX) && strncmp(uri_path, PLGD_WOT_URI_PREFIX "/", sizeof(PLGD_WOT_URI_PREFIX)) == 0) {
+    uri_path = uri_path + sizeof(PLGD_WOT_URI_PREFIX);
+    uri_path_len = uri_path_len - sizeof(PLGD_WOT_URI_PREFIX);
     if (is_wot) {
       *is_wot = true;
     }
@@ -1067,7 +1071,7 @@ oc_ri_get_resource_by_uri(size_t device, const char *uri_path,
     if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
         strncmp(oc_string(resource->uri) + 1, uri_path,
                 uri_path_len) == 0) {
-      if (*cur_resource) {
+      if (cur_resource) {
         *cur_resource = resource;
       }
       if (resource_is_collection) {

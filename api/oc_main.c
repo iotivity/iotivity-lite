@@ -30,7 +30,10 @@
 #include "util/oc_etimer.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
-#include "plgd_wot.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd_wot_internal.h"
+#endif
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)

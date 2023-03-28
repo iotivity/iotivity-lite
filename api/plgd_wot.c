@@ -30,7 +30,7 @@
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
 #include "oc_discovery_internal.h"
-#include "plgd_wot.h"
+#include "plgd_wot_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
 
@@ -66,11 +66,12 @@ process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
   oc_rep_set_text_string(links, rel, "item");
   oc_rep_set_text_string(links, type, "application/vnd.ocf+cbor");
 
-  char href[32 + 6 + 256];
+  char href[512];
   memset(href, 0, sizeof(href));
-  size_t len = strlen(scheme_host);
   memcpy(href, scheme_host, strlen(scheme_host));
-  memcpy(href + len, oc_string(resource->uri), oc_string_len(resource->uri));
+  memcpy(href + strlen(href), "/", 1);
+  memcpy(href + strlen(href), PLGD_WOT_URI_PREFIX, strlen(PLGD_WOT_URI_PREFIX));
+  memcpy(href + strlen(href), oc_string(resource->uri), oc_string_len(resource->uri));
   oc_rep_set_text_string(links, href, href);
   oc_rep_end_object((links_array), links);
 }

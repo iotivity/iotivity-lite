@@ -16,10 +16,12 @@
  *
  ****************************************************************************/
 
-#ifndef PLGD_WOT_H
-#define PLGD_WOT_H
+#ifndef PLGD_WOT_INTERNAL_H
+#define PLGD_WOT_INTERNAL_H
 
 #include <stddef.h>
+
+#define PLGD_WOT_URI_PREFIX "wot"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,4 +33,4 @@ void plgd_wot_init(void);
 }
 #endif
 
-#endif /* PLGD_WOT_H */
+#endif /* PLGD_WOT_INTERNAL_H */
