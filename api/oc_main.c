@@ -30,6 +30,7 @@
 #include "util/oc_etimer.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
+#include "plgd_wot.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
@@ -344,6 +345,10 @@ oc_main_init(const oc_handler_t *handler)
   oc_cloud_init();
   OC_DBG("oc_main_init(): loading cloud");
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#if defined(OC_HAS_FEATURE_PLGD_WOT)
+  plgd_wot_init();
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 #ifdef OC_SERVER
   // initialize after cloud because their can be registered to cloud.

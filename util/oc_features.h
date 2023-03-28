@@ -48,4 +48,8 @@
 #define OC_HAS_FEATURE_PLGD_TIME
 #endif /* PLGD_DEV_TIME */
 
+#if defined(PLGD_WOT)
+#define OC_HAS_FEATURE_PLGD_WOT
+#endif
+
 #endif /* OC_FEATURES_H */

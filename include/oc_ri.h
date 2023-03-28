@@ -64,6 +64,9 @@ typedef enum {
   OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
                                 ///< ownership transfer method(RFOTM) state
 #endif
+#ifdef OC_HAS_FEATURE_WOT
+  OC_WOT_TD = (1 << 10) ///< create a WOT resource Thing Description
+#endif
 } oc_resource_properties_t;
 
 /**
