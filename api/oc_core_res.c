@@ -558,6 +558,9 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #ifdef OC_CLOUD
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  properties |= PLGD_WOT_THING_DESCRIPTION;
+#endif
   if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
     oc_core_populate_resource(OCF_D, device_count, uri,
                               OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
@@ -579,10 +582,13 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
-
+    properties = OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    properties |= PLGD_WOT_THING_DESCRIPTION;
+#endif
     oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE,
+                              properties,
                               oc_core_con_handler_get, oc_core_con_handler_post,
                               oc_core_con_handler_post, 0, 1, "oic.wk.con");
   }
@@ -703,6 +709,9 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 #ifdef OC_CLOUD
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  properties |= PLGD_WOT_THING_DESCRIPTION;
+#endif
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
                             OC_IF_R, properties, oc_core_platform_handler, 0, 0,
                             0, 1, "oic.wk.p");

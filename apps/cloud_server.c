@@ -369,6 +369,9 @@ register_lights(void)
     oc_resource_set_access_in_RFOTM(res, true,
                                     OC_PERM_UPDATE | OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    res->properties |= PLGD_WOT_THING_DESCRIPTION;
+#endif
     oc_resource_set_request_handler(res, OC_GET, get_handler, &lights[i]);
     oc_resource_set_request_handler(res, OC_POST, post_handler, &lights[i]);
     oc_cloud_add_resource(res);

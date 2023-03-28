@@ -80,7 +80,7 @@ process_wot_response(CborEncoder *links_array, oc_resource_t *resource,
                      oc_endpoint_t *endpoint)
 {
   (void)endpoint;
-  if (!(resource->properties & OC_DISCOVERABLE)) {
+  if (!(resource->properties & PLGD_WOT_THING_DESCRIPTION)) {
     return;
   }
 

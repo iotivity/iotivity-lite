@@ -64,8 +64,8 @@ typedef enum {
   OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
                                 ///< ownership transfer method(RFOTM) state
 #endif
-#ifdef OC_HAS_FEATURE_WOT
-  OC_WOT_TD = (1 << 10) ///< create a WOT resource Thing Description
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  PLGD_WOT_THING_DESCRIPTION = (1 << 10) ///< create a WOT resource Thing Description
 #endif
 } oc_resource_properties_t;
 
@@ -360,6 +360,9 @@ struct oc_resource_s
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   oc_ace_permissions_t
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
+#endif
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  oc_request_handler_t get_wot_handler;      ///< callback for GET WoT TD
 #endif
 };
 

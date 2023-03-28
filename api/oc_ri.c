@@ -1044,6 +1044,60 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
 }
 #endif /* OC_SECURITY */
 
+static bool
+oc_ri_get_resource_by_uri(size_t device, const char *uri_path,
+                          size_t uri_path_len, oc_resource_t **cur_resource,
+                          bool *resource_is_collection, bool *is_wot)
+{
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  if (uri_path_len > 3 && strncmp(uri_path, "wot/", 4) == 0) {
+    uri_path = uri_path + 4;
+    uri_path_len = uri_path_len - 4;
+    if (is_wot) {
+      *is_wot = true;
+    }
+  }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+
+  /* Check against list of declared core resources.
+   */
+
+  for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
+    oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
+    if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
+        strncmp(oc_string(resource->uri) + 1, uri_path,
+                uri_path_len) == 0) {
+      if (*cur_resource) {
+        *cur_resource = resource;
+      }
+      if (resource_is_collection) {
+        *resource_is_collection = false;
+      }
+      return true;
+    }
+  }
+
+#ifdef OC_SERVER
+  /* Check against list of declared application resources.
+   */
+  oc_resource_t *resource =
+    oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, device);
+  if (resource) {
+    if (cur_resource) {
+      *cur_resource = resource;
+    }
+#if defined(OC_COLLECTIONS)
+    if (resource_is_collection && oc_check_if_collection(resource)) {
+      *resource_is_collection = true;
+    }
+#endif /* OC_COLLECTIONS */
+    return true;
+  }
+#endif
+
+  return false;
+}
+
 #ifdef OC_BLOCK_WISE
 bool
 oc_ri_invoke_coap_entity_handler(void *request, void *response,
@@ -1072,9 +1126,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif /* OC_SPEC_VER_OIC */
 
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+  //#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
-#endif /* OC_COLLECTIONS && OC_SERVER */
+  //#endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
   bool authorized = true;
@@ -1196,39 +1250,17 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 
   oc_resource_t *cur_resource = NULL;
-
+  bool is_wot_request = false;
   /* If there were no errors thus far, attempt to locate the specific
    * resource object that will handle the request using the request uri.
    */
-  /* Check against list of declared core resources.
-   */
   if (!bad_request) {
-    for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
-      oc_resource_t *resource =
-        oc_core_get_resource_by_index(i, endpoint->device);
-      if (resource != NULL &&
-          oc_string_len(resource->uri) == (uri_path_len + 1) &&
-          strncmp(oc_string(resource->uri) + 1, uri_path, uri_path_len) == 0) {
-        request_obj.resource = cur_resource = resource;
-        break;
-      }
+    if (oc_ri_get_resource_by_uri(endpoint->device, uri_path, uri_path_len,
+                                  &cur_resource, &resource_is_collection,
+                                  &is_wot_request)) {
+      request_obj.resource = cur_resource;
     }
   }
-
-#ifdef OC_SERVER
-  /* Check against list of declared application resources.
-   */
-  if (!cur_resource && !bad_request) {
-    request_obj.resource = cur_resource =
-      oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
-
-#if defined(OC_COLLECTIONS)
-    if (cur_resource && oc_check_if_collection(cur_resource)) {
-      resource_is_collection = true;
-    }
-#endif /* OC_COLLECTIONS */
-  }
-#endif /* OC_SERVER */
 
   oc_interface_mask_t iface_mask = 0;
   if (cur_resource) {
@@ -1342,16 +1374,24 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
          * its handler for the requested method. If it has not
          * implemented that method, then return a 4.05 response.
          */
-        if (method == OC_GET && cur_resource->get_handler.cb) {
+        if (!is_wot_request && method == OC_GET &&
+            cur_resource->get_handler.cb) {
           cur_resource->get_handler.cb(&request_obj, iface_mask,
                                        cur_resource->get_handler.user_data);
-        } else if (method == OC_POST && cur_resource->post_handler.cb) {
+        } else if (is_wot_request && method == OC_POST &&
+                   cur_resource->post_handler.cb) {
+          cur_resource->get_handler.cb(&request_obj, iface_mask,
+                                       cur_resource->get_handler.user_data);
+        } else if (method == OC_POST && cur_resource->post_handler.cb &&
+                   !is_wot_request) {
           cur_resource->post_handler.cb(&request_obj, iface_mask,
                                         cur_resource->post_handler.user_data);
-        } else if (method == OC_PUT && cur_resource->put_handler.cb) {
+        } else if (method == OC_PUT && cur_resource->put_handler.cb &&
+                   !is_wot_request) {
           cur_resource->put_handler.cb(&request_obj, iface_mask,
                                        cur_resource->put_handler.user_data);
-        } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
+        } else if (method == OC_DELETE && cur_resource->delete_handler.cb &&
+                   !is_wot_request) {
           cur_resource->delete_handler.cb(
             &request_obj, iface_mask, cur_resource->delete_handler.user_data);
         } else {
@@ -1427,7 +1467,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    *  observe option.
    */
   uint32_t observe = 2;
-  if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST) &&
+  if (!is_wot_request && success &&
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST) &&
       coap_get_header_observe(request, &observe)) {
     /* Check if the resource is OBSERVABLE */
     if (cur_resource->properties & OC_OBSERVABLE) {
