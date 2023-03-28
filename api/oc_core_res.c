@@ -57,6 +57,10 @@
 #include "api/plgd/plgd_time_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd_wot_internal.h"
+#endif
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -193,6 +197,11 @@ oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
   if ((iface_mask & OC_IF_STARTUP_REVERT) != 0) {
     oc_rep_add_text_string(if, OC_IF_STARTUP_REVERT_STR);
   }
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  if ((iface_mask & PLGD_IF_WOT_TD) != 0) {
+    oc_rep_add_text_string(if, PLGD_IF_WOT_TD_STR);
+  }
+#endif
   oc_rep_end_array((parent), if);
 }
 
@@ -803,6 +812,10 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   r->put_handler.cb = put;
   r->post_handler.cb = post;
   r->delete_handler.cb = delete;
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  r->interfaces |= PLGD_IF_WOT_TD;
+  r->wot_get_handler.cb = plgd_wot_get_handler;
+#endif
 }
 
 oc_uuid_t *

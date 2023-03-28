@@ -171,6 +171,9 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
     OC_IF_W_STR,
     OC_IF_STARTUP_STR,
     OC_IF_STARTUP_REVERT_STR,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    PLGD_IF_WOT_TD_STR,
+#endif
   };
   ASSERT_EQ(all_ifs.size(), all_ifstrs.size());
 

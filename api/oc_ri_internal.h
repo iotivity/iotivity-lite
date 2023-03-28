@@ -22,6 +22,7 @@
 #include "oc_blockwise.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
+#include "util/oc_features.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -41,6 +42,10 @@ extern "C" {
 #define OC_IF_W_STR "oic.if.w"
 #define OC_IF_STARTUP_STR "oic.if.startup"
 #define OC_IF_STARTUP_REVERT_STR "oic.if.startup.revert"
+
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#define PLGD_IF_WOT_TD_STR "x.plgd.if.wot"
+#endif
 
 // number of resources with a single instance on the whole platform
 #define OC_NUM_CORE_PLATFORM_RESOURCES (OCF_CON)
@@ -100,6 +105,13 @@ extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);
 #endif /* OC_TCP */
+
+typedef bool (*iterate_over_all_resources_cbk_t)(oc_resource_t *resource,
+                                                 void *data);
+
+void oc_ri_iterate_over_all_resources(size_t device,
+                                      iterate_over_all_resources_cbk_t cbk,
+                                      void *data);
 
 #ifdef __cplusplus
 }

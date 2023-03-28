@@ -199,6 +199,9 @@ typedef enum {
   OC_IF_W = 1 << 9,              ///< oic.if.w
   OC_IF_STARTUP = 1 << 10,       ///< oic.if.startup
   OC_IF_STARTUP_REVERT = 1 << 11 ///< oic.if.startup.revert
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  , PLGD_IF_WOT_TD = 1 << 12, ///< plgd.dev.if.wot.device
+#endif
 } oc_interface_mask_t;
 
 typedef enum {
@@ -362,7 +365,7 @@ struct oc_resource_s
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 #endif
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  oc_request_handler_t get_wot_handler;      ///< callback for GET WoT TD
+  oc_request_handler_t wot_get_handler;      ///< callback for GET WoT TD
 #endif
 };
 

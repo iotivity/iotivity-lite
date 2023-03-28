@@ -79,6 +79,9 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
     OC_IF_W_STR,
     OC_IF_STARTUP_STR,
     OC_IF_STARTUP_REVERT_STR,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    PLGD_IF_WOT_TD_STR,
+#endif
   };
   ASSERT_EQ(all_interfaces.size(), all_interface_strs.size());
 
