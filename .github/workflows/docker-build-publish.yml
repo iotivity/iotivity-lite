@@ -7,6 +7,13 @@ name: Create and publish docker images
 
 on:
   push:
+    branches:
+      - 'master'
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - master
 
 env:
   REGISTRY: ghcr.io
@@ -57,31 +64,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels) for docker image
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
           tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
+            type=raw,enable={{is_default_branch}},value=vnext
+            type=sha,enable={{is_default_branch}},prefix=vnext-,format=short
+            type=ref,event=pr,prefix=vnext-pr,suffix=-{{sha}}
+            type=ref,event=pr,prefix=vnext-pr
+            type=ref,enable={{is_default_branch}},event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
-      - name: check tag
-        id: tag
-        run: |
-          if [[ "${GITHUB_REF}" == *"refs/tags/"* ]]; then
-            echo "exist=true" >> $GITHUB_OUTPUT
-          else
-            echo "exist=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build and push cloud-server docker image
+      - name: Build and publish cloud-server docker images
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: ${{ github.ref == 'refs/heads/master' || steps.tag.exist == 'true' }}
+          push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           builder: ${{ steps.buildx.outputs.name }}
           file: ${{ matrix.file }}
