@@ -537,23 +537,13 @@ oc_create_device_configuration_resource(size_t device_count) {
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
     size_t num_types = 1;
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-    num_types++;
-#endif /* OC_HAS_FEATURE_PLGD_WOT */
     oc_resource_properties_t properties = OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
-    oc_resource_t* r = oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
+    oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               properties,
                               oc_core_con_handler_get, oc_core_con_handler_post,
-                              oc_core_con_handler_post, 0, num_types, "oic.wk.con"
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-                              , PLGD_WOT_THING_DESCRIPTION_RT
-#endif /* OC_HAS_FEATURE_PLGD_WOT */                                 
+                              oc_core_con_handler_post, 0, num_types, "oic.wk.con"                                 
                               );
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-    r->interfaces |= PLGD_IF_WOT_TD;
-    r->wot_get_handler.cb = plgd_wot_get_handler;
-#endif
   }
 }
 
