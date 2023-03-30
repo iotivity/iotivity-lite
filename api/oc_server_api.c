@@ -415,10 +415,6 @@ oc_populate_resource_object(oc_resource_t *resource, const char *name,
   oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_RES, device),
                               0);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-  resource->interfaces |= PLGD_IF_WOT_TD;
-  resource->wot_get_handler.cb = plgd_wot_get_handler;
-#endif
 }
 
 oc_resource_t *

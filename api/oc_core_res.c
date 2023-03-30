@@ -512,6 +512,51 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_rep_end_links_array();
 }
 
+static void
+oc_create_device_resource(size_t device_count, const char *uri, const char *rt) {
+  /* Construct device resource */
+  int properties = OC_DISCOVERABLE;
+#ifdef OC_CLOUD
+  properties |= OC_OBSERVABLE;
+#endif /* OC_CLOUD */
+  size_t num_types = 1;
+  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
+    oc_core_populate_resource(OCF_D, device_count, uri,
+                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
+                              oc_core_device_handler, 0, 0, 0, num_types, rt);
+  } else {
+    num_types += 1;
+    oc_core_populate_resource(
+      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
+      oc_core_device_handler, 0, 0, 0, num_types, rt, "oic.wk.d");
+  }
+}
+
+static void
+oc_create_device_configuration_resource(size_t device_count) {
+  if (oc_get_con_res_announced()) {
+    /* Construct oic.wk.con resource for this device. */
+    size_t num_types = 1;
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    num_types++;
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+    oc_resource_properties_t properties = OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
+    oc_resource_t* r = oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
+                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+                              properties,
+                              oc_core_con_handler_get, oc_core_con_handler_post,
+                              oc_core_con_handler_post, 0, num_types, "oic.wk.con"
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+                              , PLGD_WOT_THING_DESCRIPTION_RT
+#endif /* OC_HAS_FEATURE_PLGD_WOT */                                 
+                              );
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    r->interfaces |= PLGD_IF_WOT_TD;
+    r->wot_get_handler.cb = plgd_wot_get_handler;
+#endif
+  }
+}
+
 oc_device_info_t *
 oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                        const char *spec_version, const char *data_model_version,
@@ -561,27 +606,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_gen_uuid(&g_oc_device_info[device_count].di);
-
-  /* Construct device resource */
-  int properties = OC_DISCOVERABLE;
-#ifdef OC_CLOUD
-  properties |= OC_OBSERVABLE;
-#endif /* OC_CLOUD */
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-  properties |= PLGD_WOT_THING_DESCRIPTION;
-#endif
-  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
-    oc_core_populate_resource(OCF_D, device_count, uri,
-                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-                              oc_core_device_handler, 0, 0, 0, 1, rt);
-  } else {
-    oc_core_populate_resource(
-      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-      oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
-  }
-
   oc_gen_uuid(&g_oc_device_info[device_count].piid);
-
   oc_new_string(&g_oc_device_info[device_count].name, name, strlen(name));
   oc_new_string(&g_oc_device_info[device_count].icv, spec_version,
                 strlen(spec_version));
@@ -589,18 +614,10 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
                 strlen(data_model_version));
   g_oc_device_info[device_count].add_device_cb = add_device_cb;
 
-  if (oc_get_con_res_announced()) {
-    /* Construct oic.wk.con resource for this device. */
-    properties = OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-    properties |= PLGD_WOT_THING_DESCRIPTION;
-#endif
-    oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              properties,
-                              oc_core_con_handler_get, oc_core_con_handler_post,
-                              oc_core_con_handler_post, 0, 1, "oic.wk.con");
-  }
+  /* Construct device resource */
+  oc_create_device_resource(device_count, uri, rt);
+
+  oc_create_device_configuration_resource(device_count);
 
   oc_create_discovery_resource(OCF_RES, device_count);
 
@@ -718,13 +735,10 @@ oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
 #ifdef OC_CLOUD
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-  properties |= PLGD_WOT_THING_DESCRIPTION;
-#endif
+  size_t num_types = 1;
   oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
                             OC_IF_R, properties, oc_core_platform_handler, 0, 0,
-                            0, 1, "oic.wk.p");
-
+                            0, num_types, "oic.wk.p");
   oc_gen_uuid(&g_oc_platform_info.pi);
 
   oc_new_string(&g_oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
@@ -782,7 +796,7 @@ oc_core_get_resource_by_index(int type, size_t device)
   return r;
 }
 
-void
+oc_resource_t *
 oc_core_populate_resource(int core_resource, size_t device_index,
                           const char *uri, oc_interface_mask_t iface_mask,
                           oc_interface_mask_t default_interface, int properties,
@@ -794,7 +808,7 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   oc_resource_t *r =
     core_get_resource_memory_by_index(core_resource, device_index);
   if (!r) {
-    return;
+    return NULL;
   }
   r->device = device_index;
   oc_store_uri(uri, &r->uri);
@@ -812,10 +826,7 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   r->put_handler.cb = put;
   r->post_handler.cb = post;
   r->delete_handler.cb = delete;
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-  r->interfaces |= PLGD_IF_WOT_TD;
-  r->wot_get_handler.cb = plgd_wot_get_handler;
-#endif
+  return r;
 }
 
 oc_uuid_t *

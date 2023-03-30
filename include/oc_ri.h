@@ -30,6 +30,7 @@
 #include "util/oc_etimer.h"
 #include "util/oc_features.h"
 #include <stdbool.h>
+#include <cbor.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,9 +64,6 @@ typedef enum {
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   OC_ACCESS_IN_RFOTM = (1 << 9) ///< allow access to resource in ready for
                                 ///< ownership transfer method(RFOTM) state
-#endif
-#ifdef OC_HAS_FEATURE_PLGD_WOT
-  PLGD_WOT_THING_DESCRIPTION = (1 << 10) ///< create a WOT resource Thing Description
 #endif
 } oc_resource_properties_t;
 
@@ -308,6 +306,24 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
 typedef void (*oc_payload_callback_t)(void);
 #endif
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+/**
+ * @brief application should define this callback which builds properties, actions and events
+ * of WoT TD
+ */
+typedef void (*plgd_wot_extend_thing_description_cb_t)(CborEncoder* parent_map, const oc_request_t *request, void *data);
+
+/**
+ * @brief wot request handler type
+ *
+ */
+typedef struct plgd_wot_extend_thing_description_handler_s
+{
+  plgd_wot_extend_thing_description_cb_t cb;
+  void *user_data;
+} plgd_wot_extend_thing_description_handler_t;
+#endif
+
 /**
  * @brief properties callback structure
  *
@@ -366,6 +382,7 @@ struct oc_resource_s
 #endif
 #ifdef OC_HAS_FEATURE_PLGD_WOT
   oc_request_handler_t wot_get_handler;      ///< callback for GET WoT TD
+  plgd_wot_extend_thing_description_handler_t wot_extend_thing_description_handler; ///< callback to set properties, actions and events
 #endif
 };
 
