@@ -1617,6 +1617,18 @@ OC_API
 size_t oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
                       bool pretty_print);
 
+typedef enum oc_rep_encoder_type_t {
+  OC_REP_CBOR_ENCODER = 0 /* default encoder */,
+  OC_REP_JSON_ENCODER = 1,
+} oc_rep_encoder_type_t;
+
+OC_API
+void oc_rep_encoder_set_encoder_type(oc_rep_encoder_type_t encoder_type);
+
+OC_API
+oc_rep_encoder_type_t oc_rep_encoder_get_encoder_type(void);
+
+
 #ifdef __cplusplus
 }
 #endif

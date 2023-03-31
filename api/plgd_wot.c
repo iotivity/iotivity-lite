@@ -285,6 +285,7 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
   size_t device_index = request->origin->device;
+  oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
@@ -301,6 +302,7 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
+  request->response->response_buffer->content_format = APPLICATION_JSON;
 }
 
 void
@@ -309,6 +311,7 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)data;
+  oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
@@ -334,6 +337,7 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
+  request->response->response_buffer->content_format = APPLICATION_JSON;
 }
 
 typedef struct default_td_s {
