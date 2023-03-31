@@ -252,5 +252,5 @@ OC_PROCESS_NAME(oc_etimer_process);
 #endif
 
 #endif /* OC_ETIMER_H */
-/** @} */
+
 /** @} */

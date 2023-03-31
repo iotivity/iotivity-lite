@@ -83,7 +83,7 @@ typedef unsigned char oc_process_num_events_t;
  *             not be posted.
  */
 #define OC_PROCESS_ERR_FULL 1
-/* @} */
+/** @} */
 
 #define OC_PROCESS_NONE NULL
 
@@ -548,3 +548,5 @@ extern struct oc_process *oc_process_list;
 #endif
 
 #endif /* OC_PROCESS_H */
+
+/** @} */
