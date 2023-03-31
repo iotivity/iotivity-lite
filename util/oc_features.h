@@ -16,6 +16,14 @@
  *
  ****************************************************************************/
 
+/**
+ * @file oc_features.h
+ *
+ * @brief Compile time features.
+ *
+ * @author Daniel Adam
+ */
+
 #ifndef OC_FEATURES_H
 #define OC_FEATURES_H
 

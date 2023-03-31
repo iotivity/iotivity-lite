@@ -16,6 +16,14 @@
  *
  ******************************************************************/
 
+/**
+ * @file oc_atomic.h
+ *
+ * @brief Platform-specific C implementation of atomic variables.
+ *
+ * @author Daniel Adam
+ */
+
 #ifndef OC_ATOMIC_H
 #define OC_ATOMIC_H
 

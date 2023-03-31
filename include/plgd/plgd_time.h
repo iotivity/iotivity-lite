@@ -16,12 +16,29 @@
  *
  ****************************************************************************/
 
+/**
+ * @file plgd_time.h
+ *
+ * @brief Time synchronization from an external endpoint.
+ *
+ * @author Daniel Adam
+ */
+
 #ifndef PLGD_TIME_H
 #define PLGD_TIME_H
 
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
+
+/**
+ * \defgroup time_synchronization Time synchronization
+ *
+ * A facitility to synchronize time for SSL certificates validation or for the
+ * whole system.
+ *
+ * @{
+ */
 
 #include "port/oc_clock.h"
 #include <stdbool.h>
@@ -57,8 +74,6 @@ typedef int (*plgd_set_system_time_fn_t)(oc_clock_time_t time, void *user_data);
  * example: a wrapper over the settimeofday function on Linux) whenever the
  * plgd time is modified (by plgd_time_set_time or a POST request)
  * @param set_system_time_data user data passed to set_system_time
- * @return 0 on success
- * @return <0 on failure
  *
  * @note to report synchronization status use plgd_time_set_status
  *
@@ -143,6 +158,8 @@ bool plgd_time_dump(void);
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 

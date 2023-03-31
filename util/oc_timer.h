@@ -94,3 +94,5 @@ oc_clock_time_t oc_timer_remaining(struct oc_timer *t);
 #endif
 
 #endif /* OC_TIMER_H */
+
+/** @} */

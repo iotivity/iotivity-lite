@@ -33,7 +33,7 @@
  */
 
 /**
- * \addtogroup pt
+ * \defgroup pt Protothreads
  * @{
  */
 

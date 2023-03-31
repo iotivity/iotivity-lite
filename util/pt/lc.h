@@ -51,7 +51,7 @@
  */
 
 /**
- * \file core/sys/lc.h
+ * \file lc.h
  * Local continuations
  * \author
  * Adam Dunkels <adam@sics.se>

@@ -16,6 +16,14 @@
  *
  ******************************************************************/
 
+/**
+ * @file oc_compiler.h
+ *
+ * @brief Compiler-specific features.
+ *
+ * @author Daniel Adam
+ */
+
 #ifndef OC_COMPILER_H
 #define OC_COMPILER_H
 
