@@ -72,7 +72,8 @@ definitions:
         enum:
           - "syncing"
           - "in-sync"
+          - "in-sync-from-storage"
       lastSyncedTime:
         type: string
         format: date-time
-        description: The UTC time in RFC 3339 format, when the time was last synced by manual/ntp/other device. Initialization uses this time when the RTC is unavailable and the current date is past.
+        description: The UTC time in RFC 3339 format, when the time was last set. Initialization uses this time when the current date is in the past.
