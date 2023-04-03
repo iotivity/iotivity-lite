@@ -70,7 +70,7 @@ process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
   }
   oc_rep_start_object((links_array), links);
   oc_rep_set_text_string(links, rel, "item");
-  oc_rep_set_text_string(links, type, "application/cbor+td");
+  oc_rep_set_text_string(links, type, "application/json");
 
   char href[512];
   memset(href, 0, sizeof(href));
