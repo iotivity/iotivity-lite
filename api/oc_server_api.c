@@ -111,9 +111,11 @@ oc_send_response(oc_request_t *request, oc_status_t response_code)
     request->response->response_buffer->content_format = APPLICATION_CBOR;
   } else
 #endif /* OC_SPEC_VER_OIC */
-  {
-    request->response->response_buffer->content_format =
-      APPLICATION_VND_OCF_CBOR;
+  if (request->accept == APPLICATION_NOT_DEFINED){
+    // if no accept header is present, use APPLICATION_VND_OCF_CBOR
+    request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
+  } else {
+    request->response->response_buffer->content_format = request->accept;
   }
   request->response->response_buffer->response_length = response_length();
   request->response->response_buffer->code = oc_status_code(response_code);

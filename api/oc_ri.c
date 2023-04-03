@@ -1154,7 +1154,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   endpoint->version = OCF_VER_1_0_0;
 #ifdef OC_SPEC_VER_OIC
-  unsigned int accept = 0;
+  unsigned int accept = APPLICATION_NOT_DEFINED;
   if (coap_get_header_accept(request, &accept) == 1) {
     if (accept == APPLICATION_CBOR) {
       endpoint->version = OIC_VER_1_1_0;
@@ -1220,7 +1220,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   coap_get_header_content_format(request, &cf);
 
   /* Read the accept CoAP option in the request */
-  unsigned int accept = 0;
+  unsigned int accept = APPLICATION_NOT_DEFINED;
   coap_get_header_accept(request, &accept);
 
   /* Initialize OCF interface selector. */
@@ -1386,7 +1386,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 #else  /* OC_DYNAMIC_ALLOCATION */
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-
+    oc_rep_encoder_set_type_by_accept(accept);
 #ifdef OC_SECURITY
     /* If cur_resource is a coaps:// resource, then query ACL to check if
      * the requestor (the subject) is authorized to issue this request to

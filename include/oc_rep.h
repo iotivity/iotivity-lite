@@ -25,6 +25,7 @@
 #include <cbor.h>
 #include "oc_export.h"
 #include "oc_helpers.h"
+#include "oc_enums.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
 #include <oc_config.h>
@@ -1623,10 +1624,13 @@ typedef enum oc_rep_encoder_type_t {
 } oc_rep_encoder_type_t;
 
 OC_API
-void oc_rep_encoder_set_encoder_type(oc_rep_encoder_type_t encoder_type);
+void oc_rep_encoder_set_type(oc_rep_encoder_type_t encoder_type);
 
 OC_API
-oc_rep_encoder_type_t oc_rep_encoder_get_encoder_type(void);
+oc_rep_encoder_type_t oc_rep_encoder_get_type(void);
+
+OC_API bool oc_rep_encoder_set_type_by_accept(oc_content_format_t accept);
+
 
 
 #ifdef __cplusplus

@@ -283,28 +283,11 @@ set_security(CborEncoder *obj_map)
   oc_rep_set_text_string(*obj, security, "nosec_sc");
 }
 
-static bool
-set_rep_encoder(oc_content_format_t accept)
-{
-  if (accept == APPLICATION_JSON || accept == APPLICATION_TD_JSON) {
-    oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
-  } else if (accept == APPLICATION_CBOR || accept == APPLICATION_VND_OCF_CBOR) {
-    oc_rep_encoder_set_encoder_type(OC_REP_CBOR_ENCODER);
-  } else {
-    return false;
-  }
-  return true;
-}
-
 static void
 wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
-  if (!set_rep_encoder(request->accept)) {
-    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
-    return;
-  }
   size_t device_index = request->origin->device;
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
@@ -322,7 +305,6 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  request->response->response_buffer->content_format = request->accept;
 }
 
 void
@@ -331,10 +313,6 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)data;
-  if (!set_rep_encoder(request->accept)) {
-    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
-    return;
-  }
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
@@ -363,7 +341,6 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  request->response->response_buffer->content_format = request->accept;
 }
 
 typedef struct default_td_s

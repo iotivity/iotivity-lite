@@ -125,15 +125,30 @@ realloc_buffer(size_t needed)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 void
-oc_rep_encoder_set_encoder_type(oc_rep_encoder_type_t encoder_type)
+oc_rep_encoder_set_type(oc_rep_encoder_type_t encoder_type)
 {
   g_encoder_type = encoder_type;
 }
 
 oc_rep_encoder_type_t
-oc_rep_encoder_get_encoder_type()
+oc_rep_encoder_get_type()
 {
   return g_encoder_type;
+}
+
+bool
+oc_rep_encoder_set_type_by_accept(oc_content_format_t accept)
+{
+  if (accept == APPLICATION_CBOR || accept == APPLICATION_VND_OCF_CBOR || accept == APPLICATION_NOT_DEFINED) {
+    oc_rep_encoder_set_type(OC_REP_CBOR_ENCODER);
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  } else if (accept == APPLICATION_JSON || accept == APPLICATION_TD_JSON) {
+    oc_rep_encoder_set_type(OC_REP_JSON_ENCODER);
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+  } else {
+    return false;
+  }
+  return true;
 }
 
 void
