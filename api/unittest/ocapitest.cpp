@@ -16,12 +16,14 @@
  *
  ******************************************************************/
 
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "oc_uuid.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 #include "oc_acl.h"
 #include "security/oc_acl_internal.h"
@@ -387,6 +389,15 @@ public:
       { /*.cb =*/ApiHelper::onDelete, /*.response =*/OC_STATUS_DELETED },
     };
   }
+
+  static void getAndRemoveClientCb(const ApiResource &resource,
+                                   oc_method_t method)
+  {
+    oc_client_cb_t *cb = oc_ri_get_client_cb(resource.resource_uri.c_str(),
+                                             &resource.endpoint, method);
+    ASSERT_NE(nullptr, cb);
+    oc_ri_remove_client_cb(cb);
+  }
 };
 
 pthread_mutex_t ApiHelper::s_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -597,117 +608,152 @@ TEST_F(TestServerClient, DiscoverDeviceIDWithResources)
 }
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
+
+static void
+failResponse(oc_client_response_t *)
+{
+  ADD_FAILURE();
+}
+
 TEST_F(TestServerClient, GetWithTimeout)
 {
   DiscoverTestResources();
 
-  auto GetDevice = [](oc_client_response_t *data) {
-    OC_DBG("GetDevice code=%d\n", (int)data->code);
+  auto onGetDevice = [](oc_client_response_t *data) {
+    OC_DBG("onGetDevice code=%d\n", (int)data->code);
     HandleClientResponse(data);
   };
 
-  int expected = ApiHelper::s_TestResource.onGet.response;
   oc_status_t code = OC_STATUS_OK;
-  EXPECT_TRUE(
-    oc_do_get_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
-                           &ApiHelper::s_TestResource.endpoint, nullptr,
-                           /*timeout*/ 3, GetDevice, HIGH_QOS, &code));
-  ApiHelper::poolEvents(5);
+  auto doGet = [&code](const ApiResource &resource,
+                       oc_response_handler_t handler, uint16_t timeout) {
+    EXPECT_TRUE(oc_do_get_with_timeout(resource.resource_uri.c_str(),
+                                       &resource.endpoint, nullptr, timeout,
+                                       handler, HIGH_QOS, &code));
+  };
+
+  int expected = ApiHelper::s_TestResource.onGet.response;
+  doGet(ApiHelper::s_TestResource, onGetDevice, 2);
+  ApiHelper::poolEvents(4);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onGet.response = -1; // disable sending of response
   expected = OC_REQUEST_TIMEOUT;
-  EXPECT_TRUE(
-    oc_do_get_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
-                           &ApiHelper::s_TestResource.endpoint, nullptr,
-                           /*timeout*/ 3, GetDevice, HIGH_QOS, &code));
-  ApiHelper::poolEvents(5);
+  doGet(ApiHelper::s_TestResource, onGetDevice, 1);
+  ApiHelper::poolEvents(2);
   EXPECT_EQ(expected, code);
+
+  // test clean-up
+  code = OC_STATUS_OK;
+  doGet(ApiHelper::s_TestResource, failResponse, 1);
+  ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_GET);
+  ApiHelper::poolEvents(2); // wait for timeout
+  EXPECT_EQ(OC_STATUS_OK, code);
 }
 
 TEST_F(TestServerClient, DeleteWithTimeout)
 {
   DiscoverTestResources();
 
-  auto DeleteDevice = [](oc_client_response_t *data) {
-    OC_DBG("DeleteDevice code=%d\n", (int)data->code);
+  auto onDeleteDevice = [](oc_client_response_t *data) {
+    OC_DBG("onDeleteDevice code=%d\n", (int)data->code);
     HandleClientResponse(data);
   };
 
-  int expected = ApiHelper::s_TestResource.onDelete.response;
   oc_status_t code = OC_STATUS_OK;
-  EXPECT_TRUE(
-    oc_do_delete_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
-                              &ApiHelper::s_TestResource.endpoint, nullptr,
-                              /*timeout*/ 3, DeleteDevice, HIGH_QOS, &code));
-  ApiHelper::poolEvents(5);
+  auto doDelete = [&code](const ApiResource &resource,
+                          oc_response_handler_t handler, uint16_t timeout) {
+    EXPECT_TRUE(oc_do_delete_with_timeout(resource.resource_uri.c_str(),
+                                          &resource.endpoint, nullptr, timeout,
+                                          handler, HIGH_QOS, &code));
+  };
+
+  int expected = ApiHelper::s_TestResource.onDelete.response;
+  doDelete(ApiHelper::s_TestResource, onDeleteDevice, 2);
+  ApiHelper::poolEvents(4);
   EXPECT_EQ(expected, code);
 
-  ApiHelper::s_TestResource.onDelete.response =
-    -1; // disable sending of response
-  expected = OC_REQUEST_TIMEOUT;
-  EXPECT_TRUE(
-    oc_do_delete_with_timeout(ApiHelper::s_TestResource.resource_uri.c_str(),
-                              &ApiHelper::s_TestResource.endpoint, nullptr,
-                              /*timeout*/ 3, DeleteDevice, HIGH_QOS, &code));
-  ApiHelper::poolEvents(5);
-  EXPECT_EQ(expected, code);
+  ApiHelper::s_TestResource.onDelete.response = -1; // disable response
+  doDelete(ApiHelper::s_TestResource, onDeleteDevice, 1);
+  ApiHelper::poolEvents(2);
+  EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
+
+  // test clean-up
+  code = OC_STATUS_OK;
+  doDelete(ApiHelper::s_TestResource, failResponse, 1);
+  ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_DELETE);
+  ApiHelper::poolEvents(2); // wait for timeout
+  EXPECT_EQ(OC_STATUS_OK, code);
 }
 
 TEST_F(TestServerClient, PostWithTimeout)
 {
   DiscoverTestResources();
 
-  auto PostDevice = [](oc_client_response_t *data) {
-    OC_DBG("PostDevice code=%d\n", (int)data->code);
+  auto onPostDevice = [](oc_client_response_t *data) {
+    OC_DBG("onPostDevice code=%d\n", (int)data->code);
     HandleClientResponse(data);
   };
 
-  int expected = ApiHelper::s_TestResource.onPost.response;
   oc_status_t code = OC_STATUS_OK;
-  EXPECT_TRUE(oc_init_post(ApiHelper::s_TestResource.resource_uri.c_str(),
-                           &ApiHelper::s_TestResource.endpoint, nullptr,
-                           PostDevice, HIGH_QOS, &code));
-  EXPECT_TRUE(oc_do_post_with_timeout(3));
-  ApiHelper::poolEvents(5);
+  auto doPost = [&code](const ApiResource &resource,
+                        oc_response_handler_t handler, uint16_t timeout) {
+    EXPECT_TRUE(oc_init_post(resource.resource_uri.c_str(), &resource.endpoint,
+                             nullptr, handler, HIGH_QOS, &code));
+    EXPECT_TRUE(oc_do_post_with_timeout(timeout));
+  };
+
+  int expected = ApiHelper::s_TestResource.onPost.response;
+  doPost(ApiHelper::s_TestResource, onPostDevice, 2);
+  ApiHelper::poolEvents(4);
   EXPECT_EQ(expected, code);
 
-  ApiHelper::s_TestResource.onPost.response = -1; // disable sending of
-  expected = OC_REQUEST_TIMEOUT;
-  EXPECT_TRUE(oc_init_post(ApiHelper::s_TestResource.resource_uri.c_str(),
-                           &ApiHelper::s_TestResource.endpoint, nullptr,
-                           PostDevice, HIGH_QOS, &code));
-  EXPECT_TRUE(oc_do_post_with_timeout(/*timeout*/ 3));
-  ApiHelper::poolEvents(5);
-  EXPECT_EQ(expected, code);
+  ApiHelper::s_TestResource.onPost.response = -1; // disable response
+  doPost(ApiHelper::s_TestResource, onPostDevice, 1);
+  ApiHelper::poolEvents(2);
+  EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
+
+  // test clean-up
+  code = OC_STATUS_OK;
+  doPost(ApiHelper::s_TestResource, failResponse, 1);
+  ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_POST);
+  ApiHelper::poolEvents(2); // wait for timeout
+  EXPECT_EQ(OC_STATUS_OK, code);
 }
 
 TEST_F(TestServerClient, PutWithTimeout)
 {
   DiscoverTestResources();
 
-  auto PutDevice = [](oc_client_response_t *data) {
-    OC_DBG("PutDevice code=%d\n", (int)data->code);
+  auto onPutDevice = [](oc_client_response_t *data) {
+    OC_DBG("onPutDevice code=%d\n", (int)data->code);
     HandleClientResponse(data);
   };
 
-  int expected = ApiHelper::s_TestResource.onPut.response;
   oc_status_t code = OC_STATUS_OK;
-  EXPECT_TRUE(oc_init_put(ApiHelper::s_TestResource.resource_uri.c_str(),
-                          &ApiHelper::s_TestResource.endpoint, nullptr,
-                          PutDevice, HIGH_QOS, &code));
-  EXPECT_TRUE(oc_do_put_with_timeout(3));
-  ApiHelper::poolEvents(5);
+  auto doPut = [&code](const ApiResource &resource,
+                       oc_response_handler_t handler, uint16_t timeout) {
+    EXPECT_TRUE(oc_init_put(resource.resource_uri.c_str(), &resource.endpoint,
+                            nullptr, handler, HIGH_QOS, &code));
+    EXPECT_TRUE(oc_do_put_with_timeout(timeout));
+  };
+
+  int expected = ApiHelper::s_TestResource.onPut.response;
+  doPut(ApiHelper::s_TestResource, onPutDevice, 2);
+  ApiHelper::poolEvents(4);
   EXPECT_EQ(expected, code);
 
-  ApiHelper::s_TestResource.onPut.response = -1; // disable sending of
-  expected = OC_REQUEST_TIMEOUT;
-  EXPECT_TRUE(oc_init_put(ApiHelper::s_TestResource.resource_uri.c_str(),
-                          &ApiHelper::s_TestResource.endpoint, nullptr,
-                          PutDevice, HIGH_QOS, &code));
-  EXPECT_TRUE(oc_do_put_with_timeout(/*timeout*/ 3));
-  ApiHelper::poolEvents(5);
-  EXPECT_EQ(expected, code);
+  ApiHelper::s_TestResource.onPut.response = -1; // disable response
+  doPut(ApiHelper::s_TestResource, onPutDevice, 1);
+  ApiHelper::poolEvents(2);
+  EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
+
+  // test clean-up
+  code = OC_STATUS_OK;
+  doPut(ApiHelper::s_TestResource, failResponse, 1);
+  ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_PUT);
+  ApiHelper::poolEvents(2); // wait for timeout
+  EXPECT_EQ(OC_STATUS_OK, code);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
