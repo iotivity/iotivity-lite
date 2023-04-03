@@ -62,9 +62,9 @@
 
 static void
 process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
-                              const char *scheme_host, void* user_data)
+                              const char *scheme_host, void *user_data)
 {
-  (void) user_data;
+  (void)user_data;
   if ((resource->interfaces & PLGD_IF_WOT_TD) == 0) {
     return;
   }
@@ -77,7 +77,8 @@ process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
   memcpy(href, scheme_host, strlen(scheme_host));
   memcpy(href + strlen(href), oc_string(resource->uri),
          oc_string_len(resource->uri));
-  memcpy(href + strlen(href), "?if=" PLGD_IF_WOT_TD_STR, strlen("?if=" PLGD_IF_WOT_TD_STR));
+  memcpy(href + strlen(href), "?if=" PLGD_IF_WOT_TD_STR,
+         strlen("?if=" PLGD_IF_WOT_TD_STR));
   oc_rep_set_text_string(links, href, href);
   oc_rep_end_object((links_array), links);
 }
@@ -91,10 +92,10 @@ typedef enum oc_wot_operation_t {
   observeAllProperties = 1 << 5,
 } oc_wot_operation_t;
 
-
 static void
 process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
-                              const char *scheme_host, oc_wot_operation_t op_flags)
+                              const char *scheme_host,
+                              oc_wot_operation_t op_flags)
 {
   char href[512];
   memset(href, 0, sizeof(href));
@@ -102,47 +103,49 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
   memcpy(href + strlen(href), oc_string(resource->uri),
          oc_string_len(resource->uri));
 
-  struct form_s {
+  struct form_s
+  {
     oc_wot_operation_t op_flag;
     const char **op;
     size_t op_len;
     const char *cov_method;
     const char *subprotocol;
-  } forms [] = {
+  } forms[] = {
     {
       .op_flag = readProperty,
-      .op = (const char *[]){ "readproperty"},
+      .op = (const char *[]){ "readproperty" },
       .op_len = 1,
       .cov_method = "GET",
     },
     {
       .op_flag = writeProperty,
-      .op = (const char *[]){ "writeproperty"},
+      .op = (const char *[]){ "writeproperty" },
       .op_len = 1,
       .cov_method = "POST",
     },
     {
       .op_flag = observeProperty,
-      .op = (const char *[]){ "observeproperty", "unobserveproperty"},
+      .op = (const char *[]){ "observeproperty", "unobserveproperty" },
       .op_len = 2,
       .cov_method = "GET",
       .subprotocol = "cov:observe",
     },
     {
       .op_flag = readAllProperties,
-      .op = (const char *[]){ "readallproperties"},
+      .op = (const char *[]){ "readallproperties" },
       .op_len = 1,
       .cov_method = "GET",
     },
     {
       .op_flag = writeMultipleProperties,
-      .op = (const char *[]){ "writemultipleproperties"},
+      .op = (const char *[]){ "writemultipleproperties" },
       .op_len = 1,
       .cov_method = "POST",
     },
     {
       .op_flag = observeAllProperties,
-      .op = (const char *[]){ "observeallproperties", "unobserveallproperties"},
+      .op =
+        (const char *[]){ "observeallproperties", "unobserveallproperties" },
       .op_len = 2,
       .cov_method = "GET",
       .subprotocol = "cov:observe",
@@ -161,7 +164,7 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
         }
         oc_rep_set_string_array(forms, op, op);
         oc_free_string_array(&op);
-        oc_rep_set_text_string(forms, cov:method, forms[i].cov_method);
+        oc_rep_set_text_string(forms, cov : method, forms[i].cov_method);
         if (forms[i].subprotocol) {
           oc_rep_set_text_string(forms, subprotocol, forms[i].subprotocol);
         }
@@ -174,8 +177,9 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
 }
 
 static void
-process_wot_response_set_form_all(CborEncoder *forms_array, oc_resource_t *resource,
-                              const char *scheme_host, void *user_data)
+process_wot_response_set_form_all(CborEncoder *forms_array,
+                                  oc_resource_t *resource,
+                                  const char *scheme_host, void *user_data)
 {
   (void)user_data;
   oc_wot_operation_t op_flags = 0;
@@ -193,14 +197,13 @@ process_wot_response_set_form_all(CborEncoder *forms_array, oc_resource_t *resou
 
 typedef void (*set_endpoint_cbk_t)(CborEncoder *links_array,
                                    oc_resource_t *resource,
-                                   const char *scheme_host,
-                                   void *user_data);
+                                   const char *scheme_host, void *user_data);
 
-  static void process_wot_response_set_endpoint_cbk(CborEncoder *links_array,
-                                                    oc_resource_t *resource,
-                                                    oc_endpoint_t *endpoint,
-                                                    set_endpoint_cbk_t cbk,
-                                                    void *user_data)
+static void
+process_wot_response_set_endpoint_cbk(CborEncoder *links_array,
+                                      oc_resource_t *resource,
+                                      oc_endpoint_t *endpoint,
+                                      set_endpoint_cbk_t cbk, void *user_data)
 {
   size_t device_index = resource->device;
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(device_index);
@@ -249,7 +252,8 @@ iterate_over_all_resources_cbk(oc_resource_t *resource, void *data)
   iterate_over_all_resources_cbk_data_t *cbk_data =
     (iterate_over_all_resources_cbk_data_t *)data;
   process_wot_response_set_endpoint_cbk(
-    cbk_data->array, resource, cbk_data->endpoint, cbk_data->endpoint_cbk, cbk_data->user_data);
+    cbk_data->array, resource, cbk_data->endpoint, cbk_data->endpoint_cbk,
+    cbk_data->user_data);
   return true;
 }
 
@@ -268,8 +272,8 @@ process_wot_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
                                    &data);
 }
 
-static
-void set_security(CborEncoder *obj_map)
+static void
+set_security(CborEncoder *obj_map)
 {
   oc_rep_set_object(*obj, securityDefinitions);
   oc_rep_set_object(securityDefinitions, nosec_sc);
@@ -279,13 +283,29 @@ void set_security(CborEncoder *obj_map)
   oc_rep_set_text_string(*obj, security, "nosec_sc");
 }
 
+static bool
+set_rep_encoder(oc_content_format_t accept)
+{
+  if (accept == APPLICATION_JSON || accept == APPLICATION_TD_JSON) {
+    oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
+  } else if (accept == APPLICATION_CBOR || accept == APPLICATION_VND_OCF_CBOR) {
+    oc_rep_encoder_set_encoder_type(OC_REP_CBOR_ENCODER);
+  } else {
+    return false;
+  }
+  return true;
+}
+
 static void
 wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
+  if (!set_rep_encoder(request->accept)) {
+    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
+    return;
+  }
   size_t device_index = request->origin->device;
-  oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
@@ -302,16 +322,19 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  request->response->response_buffer->content_format = APPLICATION_JSON;
+  request->response->response_buffer->content_format = request->accept;
 }
 
 void
 plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-                void *data)
+                     void *data)
 {
   (void)iface_mask;
   (void)data;
-  oc_rep_encoder_set_encoder_type(OC_REP_JSON_ENCODER);
+  if (!set_rep_encoder(request->accept)) {
+    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
+    return;
+  }
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
@@ -327,114 +350,116 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   // forms
   oc_rep_set_array(root, forms);
-  process_wot_response_set_endpoint_cbk(&forms_array, request->resource, request->origin,
-                                        process_wot_response_set_form_all, NULL);
+  process_wot_response_set_endpoint_cbk(
+    &forms_array, request->resource, request->origin,
+    process_wot_response_set_form_all, NULL);
   oc_rep_close_array(root, forms);
 
   if (request->resource->wot_extend_thing_description_handler.cb) {
-    request->resource->wot_extend_thing_description_handler.cb(&root_map, request, request->resource->wot_extend_thing_description_handler.user_data);
+    request->resource->wot_extend_thing_description_handler.cb(
+      &root_map, request,
+      request->resource->wot_extend_thing_description_handler.user_data);
   }
 
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  request->response->response_buffer->content_format = APPLICATION_JSON;
+  request->response->response_buffer->content_format = request->accept;
 }
 
-typedef struct default_td_s {
-  oc_core_resource_t id ;
+typedef struct default_td_s
+{
+  oc_core_resource_t id;
   size_t properties_size;
   const plgd_wot_property_t *properties;
 } default_td_t;
 
 static plgd_wot_property_t default_device_properties[] = {
-      {
-        .name = "di",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .description = "Device Identifier",
-        .read_only = true,
-      },
-      { 
-        .name = "piid",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .read_only = true,
-        .description = "Platform Instance Identifier"
-      },
-      {
-        .name = "n",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .read_only = true,
-        .observable = true,
-        .description = "Device Name"
-      },
-      { 
-        .name = "icv",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .read_only = true,
-        .description = "Interoperability Specification Version"
-      },
-      {
-        .name = "dmv",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .read_only = true,
-        .description = "Data Model Version"
-      },
+  {
+    .name = "di",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .description = "Device Identifier",
+    .read_only = true,
+  },
+  { .name = "piid",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .description = "Platform Instance Identifier" },
+  { .name = "n",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .observable = true,
+    .description = "Device Name" },
+  { .name = "icv",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .description = "Interoperability Specification Version" },
+  { .name = "dmv",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .description = "Data Model Version" },
 };
 
 static plgd_wot_property_t default_platform_properties[] = {
-    {
-      .name = "pi",
-      .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-      .read_only = true, 
-      .description = "Unique identifier for the physical platform.",
-    },
-    {
-      .name = "mnmn",
-      .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-      .read_only = true, 
-      .description = "Name of manufacturer."
-    },
+  {
+    .name = "pi",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .description = "Unique identifier for the physical platform.",
+  },
+  { .name = "mnmn",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .read_only = true,
+    .description = "Name of manufacturer." },
 };
 
 static plgd_wot_property_t default_device_configuration_properties[] = {
-      {
-        .name = "n",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
-        .observable = true,
-        .description = "Device Name"
-      },
+  { .name = "n",
+    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .observable = true,
+    .description = "Device Name" },
 };
 
 static default_td_t default_td[] = {
   {
     .id = OCF_D,
     .properties = default_device_properties,
-    .properties_size = sizeof(default_device_properties) / sizeof(plgd_wot_property_t),
+    .properties_size =
+      sizeof(default_device_properties) / sizeof(plgd_wot_property_t),
   },
   {
     .id = OCF_P,
     .properties = default_platform_properties,
-    .properties_size = sizeof(default_platform_properties) / sizeof(plgd_wot_property_t),
+    .properties_size =
+      sizeof(default_platform_properties) / sizeof(plgd_wot_property_t),
   },
   {
     .id = OCF_CON,
     .properties = default_device_configuration_properties,
-    .properties_size = sizeof(default_device_configuration_properties) / sizeof(plgd_wot_property_t),
+    .properties_size = sizeof(default_device_configuration_properties) /
+                       sizeof(plgd_wot_property_t),
   }
 };
 
-static void set_properties_for_ocf_resources(CborEncoder* parent_map, const oc_request_t *request, void *data) {
-  default_td_t *td = (default_td_t*)data;
-  plgd_wot_resource_set_td_properties_num(parent_map, request, td->properties, td->properties_size);
+static void
+set_properties_for_ocf_resources(CborEncoder *parent_map,
+                                 const oc_request_t *request, void *data)
+{
+  default_td_t *td = (default_td_t *)data;
+  plgd_wot_resource_set_td_properties_num(parent_map, request, td->properties,
+                                          td->properties_size);
 }
 
 void
-plgd_wot_resource_set_td_properties(CborEncoder* parent_map, const oc_request_t *request, const plgd_wot_property_t *properties)
+plgd_wot_resource_set_td_properties(CborEncoder *parent_map,
+                                    const oc_request_t *request,
+                                    const plgd_wot_property_t *properties)
 {
   size_t properties_size = 0;
-  for (const plgd_wot_property_t* p = properties; p->name != NULL; p++  ) {
+  for (const plgd_wot_property_t *p = properties; p->name != NULL; p++) {
     ++properties_size;
   }
-  plgd_wot_resource_set_td_properties_num(parent_map, request, properties, properties_size);
+  plgd_wot_resource_set_td_properties_num(parent_map, request, properties,
+                                          properties_size);
 }
 
 static void
@@ -454,9 +479,11 @@ wot_init(size_t device)
     if (default_td[i].id == OCF_P) {
       d = 0;
     }
-    oc_resource_t *resource = oc_core_get_resource_by_index(default_td[i].id, d);
+    oc_resource_t *resource =
+      oc_core_get_resource_by_index(default_td[i].id, d);
     if (resource) {
-      plgd_wot_resource_set_thing_description(resource, set_properties_for_ocf_resources, &default_td[i]);
+      plgd_wot_resource_set_thing_description(
+        resource, set_properties_for_ocf_resources, &default_td[i]);
     }
   }
 }
@@ -469,35 +496,43 @@ plgd_wot_init()
   }
 }
 
-void plgd_wot_resource_set_thing_description(oc_resource_t* resource,  plgd_wot_extend_thing_description_cb_t cb, void* data)
+void
+plgd_wot_resource_set_thing_description(
+  oc_resource_t *resource, plgd_wot_extend_thing_description_cb_t cb,
+  void *data)
 {
   if (resource == NULL) {
     return;
   }
   bool add_rt = true;
-  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types); i++) {
-    if (oc_string_array_get_item_size(resource->types, i) == strlen(PLGD_WOT_THING_DESCRIPTION_RT) &&
-        memcmp(oc_string_array_get_item(resource->types, i), PLGD_WOT_THING_DESCRIPTION_RT, strlen(PLGD_WOT_THING_DESCRIPTION_RT)) == 0) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
+       i++) {
+    if (oc_string_array_get_item_size(resource->types, i) ==
+          strlen(PLGD_WOT_THING_DESCRIPTION_RT) &&
+        memcmp(oc_string_array_get_item(resource->types, i),
+               PLGD_WOT_THING_DESCRIPTION_RT,
+               strlen(PLGD_WOT_THING_DESCRIPTION_RT)) == 0) {
       add_rt = false;
       break;
     }
   }
   if (add_rt) {
-      oc_string_array_t types;
-      memcpy(&types, &resource->types, sizeof(oc_string_array_t));
-      size_t num_types = oc_string_array_get_allocated_size(types);
-      ++num_types;
-      memset(&resource->types, 0, sizeof(oc_string_array_t));
-      oc_new_string_array(&resource->types, num_types);
-      for (size_t i = 0; i < num_types; i++) {
-        if (i == 0) {
-          oc_string_array_add_item(resource->types, PLGD_WOT_THING_DESCRIPTION_RT);
-          continue;
-        }
+    oc_string_array_t types;
+    memcpy(&types, &resource->types, sizeof(oc_string_array_t));
+    size_t num_types = oc_string_array_get_allocated_size(types);
+    ++num_types;
+    memset(&resource->types, 0, sizeof(oc_string_array_t));
+    oc_new_string_array(&resource->types, num_types);
+    for (size_t i = 0; i < num_types; i++) {
+      if (i == 0) {
         oc_string_array_add_item(resource->types,
-                                oc_string_array_get_item(types, (i - 1)));
+                                 PLGD_WOT_THING_DESCRIPTION_RT);
+        continue;
       }
-      oc_free_string_array(&types);
+      oc_string_array_add_item(resource->types,
+                               oc_string_array_get_item(types, (i - 1)));
+    }
+    oc_free_string_array(&types);
   }
   resource->wot_extend_thing_description_handler.cb = cb;
   resource->wot_extend_thing_description_handler.user_data = data;
@@ -505,70 +540,86 @@ void plgd_wot_resource_set_thing_description(oc_resource_t* resource,  plgd_wot_
   resource->wot_get_handler.cb = plgd_wot_get_handler;
 }
 
-const char* plgd_wot_property_str(plgd_wot_property_type_t p) {
+const char *
+plgd_wot_property_str(plgd_wot_property_type_t p)
+{
   switch (p) {
-    case PLGD_WOT_PROPERTY_TYPE_BOOLEAN:
-      return "boolean";
-    case PLGD_WOT_PROPERTY_TYPE_INTEGER:
-      return "integer";
-    case PLGD_WOT_PROPERTY_TYPE_NUMBER:
-      return "double";
-    case PLGD_WOT_PROPERTY_TYPE_STRING:
-      return "string";
-    case PLGD_WOT_PROPERTY_TYPE_OBJECT:
-      return "object";
-    case PLGD_WOT_PROPERTY_TYPE_ARRAY:
-      return "array";
-    case PLGD_WOT_PROPERTY_TYPE_NULL:
-      return "null";
-    default:
-      return "unknown";
+  case PLGD_WOT_PROPERTY_TYPE_BOOLEAN:
+    return "boolean";
+  case PLGD_WOT_PROPERTY_TYPE_INTEGER:
+    return "integer";
+  case PLGD_WOT_PROPERTY_TYPE_NUMBER:
+    return "double";
+  case PLGD_WOT_PROPERTY_TYPE_STRING:
+    return "string";
+  case PLGD_WOT_PROPERTY_TYPE_OBJECT:
+    return "object";
+  case PLGD_WOT_PROPERTY_TYPE_ARRAY:
+    return "array";
+  case PLGD_WOT_PROPERTY_TYPE_NULL:
+    return "null";
+  default:
+    return "unknown";
   }
 }
 
 static void
-process_wot_response_set_form_property(CborEncoder *forms_array, oc_resource_t *resource,
-                              const char *scheme_host, void *user_data)
+process_wot_response_set_form_property(CborEncoder *forms_array,
+                                       oc_resource_t *resource,
+                                       const char *scheme_host, void *user_data)
 {
-  plgd_wot_property_t* property = (plgd_wot_property_t*)user_data;
+  plgd_wot_property_t *property = (plgd_wot_property_t *)user_data;
   oc_wot_operation_t op_flags = 0;
-  if (resource->properties & OC_OBSERVABLE && property->observable && resource->get_handler.cb && !property->write_only) {
+  if (resource->properties & OC_OBSERVABLE && property->observable &&
+      resource->get_handler.cb && !property->write_only) {
     op_flags |= observeProperty;
   }
   if (resource->get_handler.cb && !property->write_only) {
     op_flags |= readProperty;
   }
-  if ((resource->post_handler.cb || resource->put_handler.cb) && !property->read_only) {
+  if ((resource->post_handler.cb || resource->put_handler.cb) &&
+      !property->read_only) {
     op_flags |= writeProperty;
   }
   process_wot_response_set_form(forms_array, resource, scheme_host, op_flags);
 }
 
-void plgd_wot_resource_set_td_properties_num(CborEncoder* parent_map, const oc_request_t *request, const plgd_wot_property_t* props, size_t props_count)
+void
+plgd_wot_resource_set_td_properties_num(CborEncoder *parent_map,
+                                        const oc_request_t *request,
+                                        const plgd_wot_property_t *props,
+                                        size_t props_count)
 {
   if (props == NULL || props_count == 0) {
     return;
   }
-  g_err |= oc_rep_encode_text_string(parent_map, "properties", strlen("properties"));
+  g_err |=
+    oc_rep_encode_text_string(parent_map, "properties", strlen("properties"));
   oc_rep_begin_object(parent_map, properties);
   for (size_t i = 0; i < props_count; ++i) {
-    g_err |= oc_rep_encode_text_string(&properties_map, props[i].name, strlen(props[i].name));
+    g_err |= oc_rep_encode_text_string(&properties_map, props[i].name,
+                                       strlen(props[i].name));
     oc_rep_begin_object(&properties_map, property);
-    oc_rep_set_text_string(property, type, plgd_wot_property_str(PLGD_WOT_PROPERTY_TYPE_OBJECT));
-    
+    oc_rep_set_text_string(
+      property, type, plgd_wot_property_str(PLGD_WOT_PROPERTY_TYPE_OBJECT));
+
     // ocf:property
-    g_err |= oc_rep_encode_text_string(&property_map, "properties", strlen("properties"));
+    g_err |= oc_rep_encode_text_string(&property_map, "properties",
+                                       strlen("properties"));
     oc_rep_begin_object(&property_map, property_properties);
-    g_err |= oc_rep_encode_text_string(&property_properties_map, props[i].name, strlen(props[i].name));
+    g_err |= oc_rep_encode_text_string(&property_properties_map, props[i].name,
+                                       strlen(props[i].name));
     oc_rep_begin_object(&property_properties_map, property_properties_property);
-    oc_rep_set_text_string(property_properties_property, type, plgd_wot_property_str(props[i].type));
+    oc_rep_set_text_string(property_properties_property, type,
+                           plgd_wot_property_str(props[i].type));
     oc_rep_end_object(&property_properties_map, property_properties_property);
     oc_rep_end_object(&property_map, property_properties);
-   
+
     if (props[i].description) {
       oc_rep_set_text_string(property, description, props[i].description);
     }
-    if (props[i].observable && (request->resource->properties & OC_OBSERVABLE)) {
+    if (props[i].observable &&
+        (request->resource->properties & OC_OBSERVABLE)) {
       oc_rep_set_boolean(property, observable, props[i].observable);
     }
     if (props[i].read_only) {
@@ -578,8 +629,9 @@ void plgd_wot_resource_set_td_properties_num(CborEncoder* parent_map, const oc_r
       oc_rep_set_boolean(property, writeOnly, props[i].write_only);
     }
     oc_rep_set_array(property, forms);
-    process_wot_response_set_endpoint_cbk(&forms_array, request->resource, request->origin,
-                                        process_wot_response_set_form_property, (void*)&props[i]);
+    process_wot_response_set_endpoint_cbk(
+      &forms_array, request->resource, request->origin,
+      process_wot_response_set_form_property, (void *)&props[i]);
     oc_rep_close_array(property, forms);
     oc_rep_close_object(properties, property);
   }
