@@ -69,6 +69,7 @@ typedef struct oc_blockwise_state_s
   uint16_t mid;                  ///< the message id
   void *client_cb;               ///< client callback
 #endif                           /* OC_CLIENT */
+  oc_content_format_t            content_format; ///< the content format
 } oc_blockwise_state_t;
 
 typedef struct oc_blockwise_request_state_s

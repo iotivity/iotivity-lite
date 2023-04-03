@@ -429,8 +429,13 @@ coap_receive(oc_message_t *msg)
                 transaction->mid = response->mid;
                 coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
               }
-              coap_set_header_content_format(response,
+              if (response_buffer->content_format > 0) {
+                coap_set_header_content_format(response,
+                                         response_buffer->content_format);
+              } else {
+                coap_set_header_content_format(response,
                                              APPLICATION_VND_OCF_CBOR);
+              }
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);
               oc_blockwise_response_state_t *response_state =
@@ -575,6 +580,7 @@ coap_receive(oc_message_t *msg)
                                                COAP_MAX_HEADER_SIZE,
                                              &msg->endpoint)) {
 #endif /* !OC_BLOCK_WISE */
+          response_buffer->content_format = response->content_format;
 #ifdef OC_BLOCK_WISE
           uint32_t payload_size = 0;
 #ifdef OC_TCP
