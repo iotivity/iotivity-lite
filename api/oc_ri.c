@@ -1623,6 +1623,8 @@ free_client_cb(oc_client_cb_t *cb)
 oc_event_callback_retval_t
 oc_ri_remove_client_cb(void *data)
 {
+  oc_ri_remove_timed_event_callback(
+    data, &oc_ri_remove_client_cb_with_notify_timeout_async);
   free_client_cb(data);
   return OC_EVENT_DONE;
 }
@@ -1825,6 +1827,8 @@ oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
         OC_DBG("Freeing cb %s, token 0x%02X%02X", uri, dup_cb->token[0],
                dup_cb->token[1]);
         oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
+        oc_ri_remove_timed_event_callback(
+          dup_cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
         free_client_cb(dup_cb);
         break;
       }
