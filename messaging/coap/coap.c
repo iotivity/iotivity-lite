@@ -65,6 +65,7 @@
 #include "security/oc_audit.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
+#include "util/oc_features.h"
 
 /* option format serialization */
 #define COAP_SERIALIZE_INT_OPTION(number, field, text)                         \
@@ -683,6 +684,10 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
 #ifdef OC_SPEC_VER_OIC
           && coap_pkt->content_format != APPLICATION_CBOR
 #endif /* OC_SPEC_VER_OIC */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+          && coap_pkt->content_format != APPLICATION_JSON
+          && coap_pkt->content_format != APPLICATION_TD_JSON
+#endif
       )
         return UNSUPPORTED_MEDIA_TYPE_4_15;
       break;
@@ -719,6 +724,10 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
 #ifdef OC_CBOR
           && coap_pkt->accept != APPLICATION_CBOR
 #endif /* OC_SPEC_VER_OIC */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+          && coap_pkt->accept != APPLICATION_JSON
+          && coap_pkt->accept != APPLICATION_TD_JSON
+#endif
       )
         return NOT_ACCEPTABLE_4_06;
       break;
