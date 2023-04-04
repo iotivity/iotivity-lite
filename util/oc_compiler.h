@@ -49,4 +49,10 @@
 #define OC_FALLTHROUGH
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+#define OC_DEPRECATED(...) __attribute__((deprecated(__VA_ARGS__)))
+#else
+#define OC_DEPRECATED(...)
+#endif
+
 #endif // OC_COMPILER_H

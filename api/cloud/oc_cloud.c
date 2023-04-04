@@ -251,13 +251,15 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
 #ifdef OC_SESSION_EVENTS
 static void
 cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
-                               oc_session_state_t state)
+                               oc_session_state_t state, void *user_data)
 {
-  oc_cloud_context_t *ctx = oc_cloud_get_context(endpoint->device);
-  if (ctx == NULL || oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
+  if (oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
+    OC_DBG("session handler skipped: endpoint does not match");
     return;
   }
-  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d", (int)state);
+  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d (current: %d)",
+         (int)state, (int)ctx->cloud_ep_state);
   bool state_changed = ctx->cloud_ep_state != state;
   if (!state_changed) {
     return;
@@ -353,9 +355,10 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   cloud_manager_start(ctx);
   ctx->cloud_manager = true;
 #ifdef OC_SESSION_EVENTS
-  oc_remove_session_event_callback(cloud_ep_session_event_handler);
+  oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
+                                      false);
   oc_remove_network_interface_event_callback(cloud_interface_event_handler);
-  oc_add_session_event_callback(cloud_ep_session_event_handler);
+  oc_add_session_event_callback_v1(cloud_ep_session_event_handler, ctx);
   oc_add_network_interface_event_callback(cloud_interface_event_handler);
 #endif /* OC_SESSION_EVENTS */
 
@@ -369,8 +372,9 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
     return -1;
   }
 #ifdef OC_SESSION_EVENTS
+  oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
+                                      false);
   if (cloud_context_size() == 0) {
-    oc_remove_session_event_callback(cloud_ep_session_event_handler);
     oc_remove_network_interface_event_callback(cloud_interface_event_handler);
   }
 #endif /* OC_SESSION_EVENTS */
@@ -410,6 +414,10 @@ oc_cloud_shutdown(void)
       continue;
     }
     cloud_manager_stop(ctx);
+#ifdef OC_SESSION_EVENTS
+    oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
+                                        false);
+#endif /* OC_SESSION_EVENTS */
     cloud_context_deinit(ctx);
     OC_DBG("cloud_shutdown for %d", (int)device);
   }

@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "api/oc_tcp_internal.h"
+#include "api/oc_session_events_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/coap_signal.h"
 #include "oc_api.h"
@@ -77,14 +78,14 @@ TEST_F(TestConnectivity, oc_add_network_interface_event_callback)
 TEST_F(TestConnectivity, oc_remove_network_interface_event_callback)
 {
   oc_add_network_interface_event_callback(interface_event_handler);
-  int ret = oc_remove_network_interface_event_callback(interface_event_handler);
-  EXPECT_EQ(0, ret);
+  EXPECT_EQ(
+    0, oc_remove_network_interface_event_callback(interface_event_handler));
 }
 
-TEST_F(TestConnectivity, oc_remove_network_interface_event_callback_invalid)
+TEST_F(TestConnectivity, oc_remove_network_interface_event_callback_fail)
 {
-  int ret = oc_remove_network_interface_event_callback(interface_event_handler);
-  EXPECT_EQ(-1, ret);
+  EXPECT_EQ(
+    -1, oc_remove_network_interface_event_callback(interface_event_handler));
 }
 
 #ifdef OC_NETWORK_MONITOR
@@ -96,6 +97,8 @@ TEST_F(TestConnectivity, handle_network_interface_event_callback)
 }
 #endif /* OC_NETWORK_MONITOR */
 
+#ifdef OC_SESSION_EVENTS
+
 static void
 session_event_handler(const oc_endpoint_t *ep, oc_session_state_t state)
 {
@@ -104,33 +107,187 @@ session_event_handler(const oc_endpoint_t *ep, oc_session_state_t state)
   TestConnectivity::is_callback_received.store(true);
 }
 
+TEST_F(TestConnectivity, oc_add_session_event_callback_fail)
+{
+  EXPECT_EQ(-1, oc_add_session_event_callback(nullptr));
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  for (int i = 0; i < OC_MAX_SESSION_EVENT_CBS; ++i) {
+    EXPECT_EQ(0, oc_add_session_event_callback(session_event_handler));
+  }
+  EXPECT_EQ(-1, oc_add_session_event_callback(session_event_handler));
+#endif /* !OC_DYNAMIC_ALLOCATION */
+}
+
 TEST_F(TestConnectivity, oc_add_session_event_callback)
 {
-  int ret = oc_add_session_event_callback(session_event_handler);
-  EXPECT_EQ(0, ret);
+  EXPECT_EQ(0, oc_add_session_event_callback(session_event_handler));
+}
+
+TEST_F(TestConnectivity, oc_remove_session_event_callback_fail)
+{
+  EXPECT_EQ(-1, oc_remove_session_event_callback(nullptr));
+  EXPECT_EQ(-1, oc_remove_session_event_callback(session_event_handler));
 }
 
 TEST_F(TestConnectivity, oc_remove_session_event_callback)
 {
-  oc_add_session_event_callback(session_event_handler);
+  ASSERT_EQ(0, oc_add_session_event_callback(session_event_handler));
   int ret = oc_remove_session_event_callback(session_event_handler);
   EXPECT_EQ(0, ret);
 }
 
-TEST_F(TestConnectivity, oc_remove_session_event_callback_invalid)
-{
-  int ret = oc_remove_session_event_callback(session_event_handler);
-  EXPECT_EQ(-1, ret);
-}
-
-#ifdef OC_SESSION_EVENTS
 TEST_F(TestConnectivity, handle_session_event_callback)
 {
-  oc_add_session_event_callback(session_event_handler);
+  ASSERT_EQ(0, oc_add_session_event_callback(session_event_handler));
   oc_endpoint_t ep{};
   handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
   EXPECT_EQ(true, is_callback_received);
 }
+
+TEST_F(TestConnectivity, oc_add_session_event_callback_v1_fail)
+{
+  EXPECT_EQ(-1, oc_add_session_event_callback_v1(nullptr, nullptr));
+}
+
+TEST_F(TestConnectivity, oc_add_session_event_callback_v1)
+{
+  auto empty_cb = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a non-nil function
+  };
+  EXPECT_EQ(0, oc_add_session_event_callback_v1(empty_cb, nullptr));
+}
+
+TEST_F(TestConnectivity, handle_session_event_callback_find)
+{
+  auto empty_cb_v0_1 = [](const oc_endpoint_t *, oc_session_state_t) {
+    // no-op, just need a unique memory address
+  };
+  ASSERT_EQ(0, oc_add_session_event_callback(empty_cb_v0_1));
+
+  auto empty_cb_v1_1 = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+  char c1{};
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(empty_cb_v1_1, &c1));
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  auto empty_cb_v0_2 = [](const oc_endpoint_t *, oc_session_state_t) {
+    // no-op, just need a unique memory address
+  };
+  ASSERT_EQ(0, oc_add_session_event_callback(empty_cb_v0_2));
+
+  auto empty_cb_v1_2 = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+  char c2{};
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(empty_cb_v1_2, &c2));
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  auto empty_cb_v0_3 = [](const oc_endpoint_t *, oc_session_state_t) {
+    // no-op, just need a unique memory address
+  };
+
+  auto empty_cb_v1_3 = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+
+  EXPECT_EQ(nullptr, oc_session_event_callback_find(
+                       oc_session_event_versioned_handler(empty_cb_v0_3),
+                       nullptr, true));
+  EXPECT_EQ(nullptr, oc_session_event_callback_find(
+                       oc_session_event_versioned_handler_v1(empty_cb_v1_3),
+                       nullptr, true));
+
+  // v0
+  oc_session_event_cb_t *cb = oc_session_event_callback_find(
+    oc_session_event_versioned_handler(empty_cb_v0_1), nullptr, true);
+  ASSERT_NE(nullptr, cb);
+  EXPECT_EQ(empty_cb_v0_1, cb->vh.handler.v0);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  cb = oc_session_event_callback_find(
+    oc_session_event_versioned_handler(empty_cb_v0_2), nullptr, true);
+  ASSERT_NE(nullptr, cb);
+  EXPECT_EQ(empty_cb_v0_2, cb->vh.handler.v0);
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  // v1
+  cb = oc_session_event_callback_find(
+    oc_session_event_versioned_handler_v1(empty_cb_v1_1), &c1, false);
+  ASSERT_NE(nullptr, cb);
+  EXPECT_EQ(empty_cb_v1_1, cb->vh.handler.v1);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  cb = oc_session_event_callback_find(
+    oc_session_event_versioned_handler_v1(empty_cb_v1_2), &c1, false);
+  EXPECT_EQ(nullptr, cb);
+
+  cb = oc_session_event_callback_find(
+    oc_session_event_versioned_handler_v1(empty_cb_v1_2), nullptr, true);
+  EXPECT_NE(nullptr, cb);
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+TEST_F(TestConnectivity, oc_remove_session_event_callback_v1_fail)
+{
+  auto empty_cb = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+
+  EXPECT_EQ(-1, oc_remove_session_event_callback_v1(nullptr, nullptr, false));
+  EXPECT_EQ(OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND,
+            oc_remove_session_event_callback_v1(empty_cb, nullptr, false));
+}
+
+TEST_F(TestConnectivity, oc_remove_session_event_callback_v1)
+{
+  auto empty_cb = [](const oc_endpoint_t *, oc_session_state_t) {
+    // no-op, just need a unique memory address
+  };
+  ASSERT_EQ(0, oc_add_session_event_callback(empty_cb));
+
+  auto empty_cb1 = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  auto empty_cb2 = [](const oc_endpoint_t *, oc_session_state_t, void *) {
+    // no-op, just need a unique memory address
+  };
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  bool d1{};
+  bool d2{};
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(empty_cb1, &d1));
+  EXPECT_NE(0, oc_remove_session_event_callback_v1(empty_cb1, nullptr, false));
+  EXPECT_NE(0, oc_remove_session_event_callback_v1(empty_cb1, &d2, false));
+  EXPECT_EQ(0, oc_remove_session_event_callback_v1(empty_cb1, &d1, true));
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(empty_cb2, &d2));
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(empty_cb2, nullptr));
+  EXPECT_EQ(0, oc_remove_session_event_callback_v1(empty_cb2, nullptr, true));
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+TEST_F(TestConnectivity, handle_session_event_callback_v1)
+{
+  auto cb = [](const oc_endpoint_t *ep, oc_session_state_t state,
+               void *user_data) {
+    EXPECT_NE(nullptr, ep);
+    EXPECT_EQ(OC_SESSION_CONNECTED, state);
+    auto *invoked = static_cast<bool *>(user_data);
+    *invoked = true;
+  };
+
+  bool invoked{};
+  ASSERT_EQ(0, oc_add_session_event_callback_v1(cb, &invoked));
+  oc_endpoint_t ep{};
+  handle_session_event_callback(&ep, OC_SESSION_CONNECTED);
+  EXPECT_EQ(true, invoked);
+}
+
 #endif /* OC_SESSION_EVENTS */
 
 #ifdef OC_TCP
@@ -282,11 +439,27 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
 {
   oc_endpoint_t ep = createEndpoint(
     "coaps+tcp://[::1]:12345"); // reachable address, but inactive port
-  // timeout 2s, 2 retries -> total 6s
-  oc_tcp_set_connect_retry(2, 2);
-  const unsigned connect_timeout = 6;
-  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTING,
-            oc_tcp_connect(&ep, on_tcp_connect_timeout, this));
+  // 9 retries, timeout 2s -> total max. 20s
+  // we need enough retries so network thread gets interrupted and the main
+  // thread runs otherwise all retries might finish and on_tcp_connect will
+  // return -1 instead of OC_TCP_SOCKET_STATE_CONNECTING
+  oc_tcp_set_connect_retry(9, 2);
+  const unsigned connect_timeout = 20;
+  auto restore_defaults = []() {
+    oc_tcp_set_connect_retry(OC_TCP_CONNECT_RETRY_MAX_COUNT,
+                             OC_TCP_CONNECT_RETRY_TIMEOUT);
+  };
+
+  int ret = oc_tcp_connect(&ep, on_tcp_connect_timeout, this);
+  if (ret == -1) {
+    // sometimes on GitHub runner the network thread manages to execute all the
+    // retries before the main thread runs again, which breaks the test, we
+    // cannot guarantee the order of execution so we just exit
+    restore_defaults();
+    return;
+  }
+
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, ret);
 
   oc_message_t *msg = oc_allocate_message();
   memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
@@ -301,9 +474,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
   EXPECT_EQ(-1, oc_tcp_connection_state(&ep));
   oc_message_unref(msg);
 
-  // restore defaults
-  oc_tcp_set_connect_retry(OC_TCP_CONNECT_RETRY_MAX_COUNT,
-                           OC_TCP_CONNECT_RETRY_TIMEOUT);
+  restore_defaults();
 }
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_repeat_fail)

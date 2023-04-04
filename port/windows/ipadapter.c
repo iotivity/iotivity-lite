@@ -30,6 +30,7 @@
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 #include "api/oc_network_events_internal.h"
+#include "api/oc_session_events_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
@@ -41,9 +42,13 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+
 #ifdef OC_TCP
 #include "tcpadapter.h"
 #endif /* OC_TCP */
+#ifdef OC_SESSION_EVENTS
+#include "api/oc_session_events_internal.h"
+#endif /* OC_SESSION_EVENTS */
 
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
@@ -184,10 +189,6 @@ oc_network_event_handler_mutex_unlock(void)
   mutex_unlock(mutex);
 }
 
-#ifdef OC_SESSION_EVENTS
-static void remove_all_session_event_cbs(void);
-#endif /* OC_SESSION_EVENTS */
-
 void
 oc_network_event_handler_mutex_destroy(void)
 {
@@ -203,7 +204,7 @@ oc_network_event_handler_mutex_destroy(void)
   remove_all_network_interface_cbs();
 #endif /* OC_NETWORK_MONITOR */
 #ifdef OC_SESSION_EVENTS
-  remove_all_session_event_cbs();
+  oc_session_events_remove_all_callbacks();
 #endif /* OC_SESSION_EVENTS */
   WSACleanup();
 }
@@ -1416,73 +1417,6 @@ handle_network_interface_event_callback(oc_interface_event_t event)
   mutex_unlock(oc_network_interface_cb_mutex);
 }
 #endif /* OC_NETWORK_MONITOR */
-
-#ifdef OC_SESSION_EVENTS
-OC_LIST(oc_session_event_cb_list);
-OC_MEMB(oc_session_event_cb_s, oc_session_event_cb_t, OC_MAX_SESSION_EVENT_CBS);
-
-static void
-remove_all_session_event_cbs(void)
-{
-  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list),
-                        *next;
-  while (cb_item != NULL) {
-    next = cb_item->next;
-    oc_list_remove(oc_session_event_cb_list, cb_item);
-    oc_memb_free(&oc_session_event_cb_s, cb_item);
-    cb_item = next;
-  }
-}
-
-int
-oc_add_session_event_callback(session_event_handler_t cb)
-{
-  if (!cb)
-    return -1;
-
-  oc_session_event_cb_t *cb_item = oc_memb_alloc(&oc_session_event_cb_s);
-  if (!cb_item) {
-    OC_ERR("session event callback item alloc failed");
-    return -1;
-  }
-
-  cb_item->handler = cb;
-  oc_list_add(oc_session_event_cb_list, cb_item);
-  return 0;
-}
-
-int
-oc_remove_session_event_callback(session_event_handler_t cb)
-{
-  if (!cb)
-    return -1;
-
-  oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
-  while (cb_item != NULL && cb_item->handler != cb) {
-    cb_item = cb_item->next;
-  }
-  if (!cb_item) {
-    return -1;
-  }
-  oc_list_remove(oc_session_event_cb_list, cb_item);
-
-  oc_memb_free(&oc_session_event_cb_s, cb_item);
-  return 0;
-}
-
-void
-handle_session_event_callback(const oc_endpoint_t *endpoint,
-                              oc_session_state_t state)
-{
-  if (oc_list_length(oc_session_event_cb_list) > 0) {
-    oc_session_event_cb_t *cb_item = oc_list_head(oc_session_event_cb_list);
-    while (cb_item) {
-      cb_item->handler(endpoint, state);
-      cb_item = cb_item->next;
-    }
-  }
-}
-#endif /* OC_SESSION_EVENTS */
 
 int
 oc_connectivity_init(size_t device)

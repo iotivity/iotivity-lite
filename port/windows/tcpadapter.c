@@ -185,7 +185,7 @@ free_tcp_session(tcp_session_t *session)
   free_tcp_session_locked(session, &endpoint, &sock, &sock_event);
   WSACloseEvent(sock_event);
   closesocket(sock);
-  if (!oc_session_events_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing()) {
     oc_session_end_event(&endpoint);
   }
 
@@ -1042,7 +1042,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
       free_tcp_session_locked(session, &endpoint, &sock, &sock_event);
       WSACloseEvent(sock_event);
       closesocket(sock);
-      if (!oc_session_events_is_ongoing()) {
+      if (!oc_session_events_disconnect_is_ongoing()) {
         oc_session_end_event(&endpoint);
       }
       OC_DBG("freed TCP session");
