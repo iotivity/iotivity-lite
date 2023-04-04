@@ -42,6 +42,11 @@
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS  && OC_SERVER */
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd_wot_internal.h"
+#include "oc_ri_internal.h"
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #include "security/oc_sdi_internal.h"
@@ -58,6 +63,8 @@
 static size_t
 clf_add_str_to_buffer(const char *str, size_t len)
 {
+  if (len == 0 || str == NULL)
+    return 0;
   oc_rep_encode_raw((const uint8_t *)str, len);
   return len;
 }
@@ -894,42 +901,16 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 #ifdef OC_WKCORE
-static void
-oc_wkcore_discovery_handler(oc_request_t *request,
-                            oc_interface_mask_t iface_mask, void *data)
+static bool
+oc_wk_core_oic_res(const oc_request_t *request, const char *rt_request,
+                   size_t rt_len, size_t *response_length)
 {
-  (void)data;
-  (void)iface_mask;
-  size_t response_length = 0;
-  int matches = 0;
-
-  /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
-    return;
-  }
-
-  const char *value = NULL;
-  size_t value_len;
-  const char *key;
-  const char *rt_request = 0;
-  int rt_len = 0;
+  bool ret = false;
   const char *rt_device = 0;
   int rt_devlen = 0;
-  size_t key_len;
-
-  oc_init_query_iterator();
-  while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
-    if (strncmp(key, "rt", key_len) == 0) {
-      rt_request = value;
-      rt_len = (int)value_len;
-    }
-  }
-
   if (rt_request != 0 && strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
     /* request for all devices */
-    matches = 1;
+    ret = true;
   }
   size_t device = request->resource->device;
   oc_resource_t *resource = oc_core_get_resource_by_uri("oic/d", device);
@@ -949,16 +930,15 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   if (rt_request != 0 && rt_device != 0 &&
       strncmp(rt_request, rt_device, rt_len) == 0) {
     /* request for specific device type */
-    matches = 1;
+    ret = true;
   }
 
-  if (matches > 0) {
+  if (ret) {
     // create the following line:
     // <coap://[fe80::b1d6]:1111/oic/res>;ct=10000;rt="oic.wk.res
-    // oic.d.sensor";if="oic.if.11 oic.if.baseline"
+    // oic.d.sensor";if="oic.if.ll oic.if.baseline"
 
     size_t length = clf_add_line_to_buffer("<");
-    response_length += length;
 
     oc_endpoint_t *eps =
       oc_connectivity_get_endpoints(request->resource->device);
@@ -968,8 +948,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
       if (eps->flags & SECURED) {
         oc_string_t ep;
         if (oc_endpoint_to_string(eps, &ep) == 0) {
-          length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
-          response_length += length;
+          length += clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
           oc_free_string(&ep);
           break;
         }
@@ -977,18 +956,161 @@ oc_wkcore_discovery_handler(oc_request_t *request,
       eps = eps->next;
     }
 
-    length = clf_add_line_to_buffer("/oic/res>;");
-    response_length += length;
-    length = clf_add_line_to_buffer("rt=\"oic.wk.res ");
-    response_length += length;
-    length = clf_add_str_to_buffer(rt_device, rt_devlen);
-    response_length += length;
-    length = clf_add_line_to_buffer("\";");
-    response_length += length;
-    length =
-      clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");
-    response_length += length;
+    length += clf_add_line_to_buffer("/oic/res>;ct=10000;");
+    length += clf_add_line_to_buffer("rt=\"oic.wk.res ");
+    length += clf_add_str_to_buffer(rt_device, rt_devlen);
+    length += clf_add_line_to_buffer("\";");
+    length +=
+      clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\"");
+    *response_length = length;
   }
+  return ret;
+}
+
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+
+typedef struct
+{
+  oc_request_t *request;
+  size_t response_length;
+} iterate_over_all_resources_cbk_data_t;
+
+static size_t
+oc_wk_core_wot_add_line(const oc_resource_t *resource, const char *endpoint,
+                        size_t endpoint_len)
+{
+  // create the following line:
+  // <coaps://[fe80::b1d6]:1111/oic/d>;ct=432;rt="wot.thing";if="x.plgd.if.wot"
+  // or
+  // </oic/d>;ct=432;rt="wot.thing";if="x.plgd.if.wot"
+
+  size_t length = clf_add_line_to_buffer("<");
+  length += clf_add_str_to_buffer(endpoint, endpoint_len);
+  if (endpoint_len > 0) {
+    length += clf_add_line_to_buffer("/");
+  }
+  length += clf_add_str_to_buffer(oc_string(resource->uri),
+                                  oc_string_len(resource->uri));
+  length += clf_add_line_to_buffer(">;ct=432;");
+  length += clf_add_line_to_buffer("rt=\"" PLGD_WOT_THING_DESCRIPTION_RT "\";");
+  length += clf_add_line_to_buffer("if=\"" PLGD_IF_WOT_TD_STR "\"");
+  return length;
+}
+
+static bool
+iterate_over_all_resources_cbk(oc_resource_t *resource, void *data)
+{
+  iterate_over_all_resources_cbk_data_t *cbk_data =
+    (iterate_over_all_resources_cbk_data_t *)data;
+
+  bool match = false;
+  for (int i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
+       i++) {
+    size_t size = oc_string_array_get_item_size(resource->types, i);
+    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
+    if (strlen(PLGD_WOT_THING_DESCRIPTION_RT) == size &&
+        strncmp(t, PLGD_WOT_THING_DESCRIPTION_RT, size) == 0) {
+      match = true;
+      break;
+    }
+  }
+  if (!match) {
+    return true;
+  }
+  size_t device_index = cbk_data->request->resource->device;
+#ifdef OC_SECURITY
+  bool owned_for_SVRs =
+    (oc_core_is_SVR(resource, device_index) &&
+     (((oc_sec_get_pstat(device_index))->s != OC_DOS_RFOTM) ||
+      oc_tls_num_peers(device_index) != 0));
+#else  /* OC_SECURITY */
+  bool owned_for_SVRs = false;
+#endif /* OC_SECURITY */
+
+  oc_endpoint_t *eps = oc_connectivity_get_endpoints(device_index);
+  oc_string_t ep;
+  memset(&ep, 0, sizeof(oc_string_t));
+  for (; eps != NULL; eps = eps->next) {
+    if (oc_filter_out_ep_for_resource(eps, resource, cbk_data->request->origin,
+                                      device_index, owned_for_SVRs)) {
+      continue;
+    }
+    if (eps->flags & SECURED) {
+      if (oc_endpoint_to_string(eps, &ep) == 0) {
+        break;
+      }
+      continue;
+    }
+  }
+  if (cbk_data->response_length > 0) {
+    size_t length = clf_add_line_to_buffer(",");
+    cbk_data->response_length += length;
+  }
+  cbk_data->response_length +=
+    oc_wk_core_wot_add_line(resource, oc_string(ep), oc_string_len(ep));
+  oc_free_string(&ep);
+  return true;
+}
+
+static bool
+oc_wk_core_wot(oc_request_t *request, size_t *response_length)
+{
+  iterate_over_all_resources_cbk_data_t data = {
+    .request = request,
+    .response_length = 0,
+  };
+  oc_ri_iterate_over_all_resources(request->resource->device,
+                                   iterate_over_all_resources_cbk, &data);
+  *response_length = data.response_length;
+  return data.response_length > 0;
+}
+
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+
+static void
+oc_wkcore_discovery_handler(oc_request_t *request,
+                            oc_interface_mask_t iface_mask, void *data)
+{
+  (void)data;
+  (void)iface_mask;
+  size_t response_length = 0;
+  int matches = 0;
+
+  /* check if the accept header is link-format */
+  if (request->accept == APPLICATION_NOT_DEFINED) {
+    request->accept = APPLICATION_LINK_FORMAT;
+  }
+  if (request->accept != APPLICATION_LINK_FORMAT) {
+    request->response->response_buffer->code =
+      oc_status_code(OC_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  const char *value = NULL;
+  size_t value_len;
+  const char *rt_request = 0;
+  int rt_len = 0;
+  const char *key;
+  size_t key_len;
+
+  oc_init_query_iterator();
+  while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
+    if (strncmp(key, "rt", key_len) == 0) {
+      rt_request = value;
+      rt_len = (int)value_len;
+    }
+  }
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  if (rt_request != 0 &&
+      strncmp(rt_request, PLGD_WOT_THING_DESCRIPTION_RT, rt_len) == 0 &&
+      oc_wk_core_wot(request, &response_length)) {
+    /* request for all devices */
+    matches = 1;
+  } else
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+    if (oc_wk_core_oic_res(request, rt_request, rt_len, &response_length)) {
+      matches = 1;
+    }
 
   request->response->response_buffer->content_format = APPLICATION_LINK_FORMAT;
   if (matches && response_length > 0) {

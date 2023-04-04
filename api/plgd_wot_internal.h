@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#define PLGD_WOT_THING_DESCRIPTION_RT ("wot.thing")
+#define PLGD_WOT_THING_DESCRIPTION_RT "wot.thing"
 
 void plgd_wot_init(void);
 void plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);

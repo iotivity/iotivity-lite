@@ -70,7 +70,7 @@ process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
   }
   oc_rep_start_object((links_array), links);
   oc_rep_set_text_string(links, rel, "item");
-  oc_rep_set_text_string(links, type, "application/json");
+  oc_rep_set_text_string(links, type, "application/td+json");
 
   char href[512];
   memset(href, 0, sizeof(href));
@@ -153,7 +153,7 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
   };
   while (op_flags != 0) {
     oc_rep_start_object((forms_array), forms);
-    oc_rep_set_text_string(forms, type, "application/vnd.ocf+cbor");
+    oc_rep_set_text_string(forms, type, "application/cbor");
     oc_rep_set_text_string(forms, href, href);
     for (size_t i = 0; i < (sizeof(forms) / sizeof(forms[0])); ++i) {
       if (op_flags & forms[i].op_flag) {
