@@ -444,7 +444,6 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
     req->token_len = obs->token_len;
 
     coap_set_header_uri_path(req, oc_string(uri), oc_string_len(uri));
-
     OC_DBG("send_notification: creating separate response for "
            "notification");
 #ifdef OC_BLOCK_WISE
@@ -521,6 +520,8 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
           }
           memcpy(response_state->buffer, response->response_buffer->buffer,
                  response->response_buffer->response_length);
+          response_state->content_format =
+            response->response_buffer->content_format;
           response_state->payload_size =
             response->response_buffer->response_length;
           uint32_t payload_size = 0;

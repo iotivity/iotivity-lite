@@ -24,7 +24,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <compilersupport_p.h>
 
 CborEncoder g_encoder;
 static uint8_t *g_buf;
@@ -319,7 +318,7 @@ static bool json_would_overflow(json_encoder_t *encoder, size_t len)
     ptrdiff_t remaining = (ptrdiff_t)encoder->end;
     remaining -= remaining ? (ptrdiff_t)encoder->data.ptr : encoder->data.bytes_needed;
     remaining -= (ptrdiff_t)len;
-    return unlikely(remaining < 0);
+    return remaining < 0;
 }
 
 static void json_advance_ptr(json_encoder_t *encoder, size_t n)
