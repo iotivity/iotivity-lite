@@ -161,7 +161,7 @@ free_tcp_session(tcp_session_t *session)
 {
   oc_list_remove(session_list, session);
 
-  if (!oc_session_events_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing()) {
     oc_session_end_event(&session->endpoint);
   }
 

@@ -19,11 +19,12 @@
 #ifndef OC_CONNECTIVITY_INTERNAL_H
 #define OC_CONNECTIVITY_INTERNAL_H
 
-#include "util/oc_features.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
+#include "port/oc_connectivity.h"
+#include "util/oc_features.h"
 #include <limits.h>
 #include <stdbool.h>
 

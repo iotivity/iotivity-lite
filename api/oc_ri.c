@@ -72,7 +72,7 @@
 
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
-#include "oc_session_events.h"
+#include "api/oc_session_events_internal.h"
 #endif /* OC_TCP */
 
 #include <stdbool.h>

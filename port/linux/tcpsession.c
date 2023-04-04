@@ -276,7 +276,7 @@ free_session_locked(tcp_session_t *session, bool signal)
   oc_list_remove(g_session_list, session);
   oc_list_remove(g_free_session_list_async, session);
 
-  if (!oc_session_events_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing()) {
     oc_session_end_event(&session->endpoint);
   }
 
