@@ -395,7 +395,7 @@ process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
 
 static void
 process_wot_response(CborEncoder *links_array, oc_resource_t *resource,
-                     oc_endpoint_t *endpoint)
+                     const oc_endpoint_t *endpoint)
 {
   (void)endpoint;
   if (!(resource->properties & OC_DISCOVERABLE)) {
@@ -445,7 +445,7 @@ process_wot_response(CborEncoder *links_array, oc_resource_t *resource,
 }
 
 static void
-process_wot_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
+process_wot_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
                     size_t device_index)
 {
   process_wot_response(links_array, oc_core_get_resource_by_index(OCF_P, 0),

@@ -202,7 +202,7 @@ typedef void (*set_endpoint_cbk_t)(CborEncoder *links_array,
 static void
 process_wot_response_set_endpoint_cbk(CborEncoder *links_array,
                                       oc_resource_t *resource,
-                                      oc_endpoint_t *endpoint,
+                                      const oc_endpoint_t *endpoint,
                                       set_endpoint_cbk_t cbk, void *user_data)
 {
   size_t device_index = resource->device;
@@ -241,7 +241,7 @@ process_wot_response_set_endpoint_cbk(CborEncoder *links_array,
 typedef struct
 {
   CborEncoder *array;
-  oc_endpoint_t *endpoint;
+  const oc_endpoint_t *endpoint;
   set_endpoint_cbk_t endpoint_cbk;
   void *user_data;
 } iterate_over_all_resources_cbk_data_t;
@@ -258,7 +258,7 @@ iterate_over_all_resources_cbk(oc_resource_t *resource, void *data)
 }
 
 static void
-process_wot_request(CborEncoder *links_array, oc_endpoint_t *endpoint,
+process_wot_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
                     size_t device_index)
 {
   iterate_over_all_resources_cbk_data_t data = {
