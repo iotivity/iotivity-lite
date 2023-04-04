@@ -1,7 +1,7 @@
 name: Delete old ghcr images
 on:
   schedule:
-    - cron: "15 1 * * *"  # every day at 1:15am
+    - cron: "15 1 * * *" # every day at 1:15am
   pull_request:
     types: [closed]
 
@@ -29,9 +29,9 @@ jobs:
         uses: snok/container-retention-policy@v1
         with:
           image-names: cloud-server*, iotivity-lite*
-          cut-off: A hour ago UTC
+          cut-off: One month ago UTC
           account-type: org
           org-name: iotivity
           filter-tags: vnext-*
-          skip-tags: vnext-pr*
+          skip-tags: vnext-pr*, master
           token: ${{ secrets.GHCR_CLEANUP_PAT }}
