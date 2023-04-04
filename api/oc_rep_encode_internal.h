@@ -22,6 +22,7 @@
 #include <cbor.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "oc_rep.h"
 
 #ifdef __cplusplus
 extern "C" {
