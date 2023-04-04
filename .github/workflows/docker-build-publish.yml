@@ -42,7 +42,7 @@ jobs:
             type: Debug
           - name: cloud-server-wot-unsecure-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "-DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DPLGD_WOT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SECURITY_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=OFF"
+            args: "-DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DPLGD_DEV_WOT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SECURITY_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=OFF"
             type: Debug
     permissions:
       contents: read

@@ -35,7 +35,7 @@
 #include <signal.h>
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "plgd_wot.h"
+#include "plgd/plgd_wot.h"
 #endif
 
 static int quit;
@@ -354,19 +354,19 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 static plgd_wot_property_t light_properties[] = {
       {
         .name = "name",
-        .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+        .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
         .description = "Light name",
         .read_only = true,
       },
       {
         .name = "state",
-        .type = PLGD_WOT_PROPERTY_TYPE_BOOLEAN,
+        .type = PLGD_DEV_WOT_PROPERTY_TYPE_BOOLEAN,
         .observable = true,
         .description = "Turn On/Off",
       },
       {
         .name = "power",
-        .type = PLGD_WOT_PROPERTY_TYPE_INTEGER,
+        .type = PLGD_DEV_WOT_PROPERTY_TYPE_INTEGER,
         .observable = true,
         .description = "Power Level",
       },

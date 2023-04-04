@@ -41,7 +41,7 @@
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "plgd_wot_internal.h"
+#include "api/plgd/plgd_wot_internal.h"
 #endif
 
 #include <assert.h>

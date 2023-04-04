@@ -16,10 +16,18 @@
  *
  ****************************************************************************/
 /**
-  @file
+ * @file plgd_wot.h
+ *
+ * @brief Web of Things
+ *
+ * @author Jozef Kralik
 */
 #ifndef PLGD_WOT_H
 #define PLGD_WOT_H
+
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 
 #include "oc_ri.h"
 
@@ -27,13 +35,13 @@ OC_API
 void plgd_wot_resource_set_thing_description(oc_resource_t* resource, plgd_wot_extend_thing_description_cb_t cb, void* data);
 
 typedef enum plgd_wot_property_type_e {
-    PLGD_WOT_PROPERTY_TYPE_BOOLEAN,
-    PLGD_WOT_PROPERTY_TYPE_INTEGER,
-    PLGD_WOT_PROPERTY_TYPE_NUMBER,
-    PLGD_WOT_PROPERTY_TYPE_STRING,
-    PLGD_WOT_PROPERTY_TYPE_OBJECT,
-    PLGD_WOT_PROPERTY_TYPE_ARRAY,
-    PLGD_WOT_PROPERTY_TYPE_NULL,
+    PLGD_DEV_WOT_PROPERTY_TYPE_BOOLEAN,
+    PLGD_DEV_WOT_PROPERTY_TYPE_INTEGER,
+    PLGD_DEV_WOT_PROPERTY_TYPE_NUMBER,
+    PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
+    PLGD_DEV_WOT_PROPERTY_TYPE_OBJECT,
+    PLGD_DEV_WOT_PROPERTY_TYPE_ARRAY,
+    PLGD_DEV_WOT_PROPERTY_TYPE_NULL,
 } plgd_wot_property_type_t;
 
 OC_API
@@ -73,5 +81,7 @@ void plgd_wot_resource_set_td_properties_num(CborEncoder* parent_map, const oc_r
  */
 OC_API
 void plgd_wot_resource_set_td_properties(CborEncoder* parent_map, const oc_request_t *request, const plgd_wot_property_t* properties);
+
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 #endif /* PLGD_WOT_H */

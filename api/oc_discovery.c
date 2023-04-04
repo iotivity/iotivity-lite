@@ -43,7 +43,7 @@
 #endif /* OC_COLLECTIONS  && OC_SERVER */
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "plgd_wot_internal.h"
+#include "api/plgd/plgd_wot_internal.h"
 #include "oc_ri_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_WOT */
 
@@ -992,7 +992,7 @@ oc_wk_core_wot_add_line(const oc_resource_t *resource, const char *endpoint,
   length += clf_add_str_to_buffer(oc_string(resource->uri),
                                   oc_string_len(resource->uri));
   length += clf_add_line_to_buffer(">;ct=432;");
-  length += clf_add_line_to_buffer("rt=\"" PLGD_WOT_THING_DESCRIPTION_RT "\";");
+  length += clf_add_line_to_buffer("rt=\"" PLGD_DEV_WOT_THING_DESCRIPTION_RT "\";");
   length += clf_add_line_to_buffer("if=\"" PLGD_IF_WOT_TD_STR "\"");
   return length;
 }
@@ -1008,8 +1008,8 @@ iterate_over_all_resources_cbk(oc_resource_t *resource, void *data)
        i++) {
     size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (strlen(PLGD_WOT_THING_DESCRIPTION_RT) == size &&
-        strncmp(t, PLGD_WOT_THING_DESCRIPTION_RT, size) == 0) {
+    if (strlen(PLGD_DEV_WOT_THING_DESCRIPTION_RT) == size &&
+        strncmp(t, PLGD_DEV_WOT_THING_DESCRIPTION_RT, size) == 0) {
       match = true;
       break;
     }
@@ -1102,7 +1102,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   }
 #ifdef OC_HAS_FEATURE_PLGD_WOT
   if (rt_request != 0 &&
-      strncmp(rt_request, PLGD_WOT_THING_DESCRIPTION_RT, rt_len) == 0 &&
+      strncmp(rt_request, PLGD_DEV_WOT_THING_DESCRIPTION_RT, rt_len) == 0 &&
       oc_wk_core_wot(request, &response_length)) {
     /* request for all devices */
     matches = 1;

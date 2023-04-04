@@ -51,7 +51,7 @@ set(OC_PUSHDEBUG_ENABLED OFF CACHE BOOL "Enable debug messages for Push Notifica
 set(OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED OFF CACHE BOOL "Enable resource access in RFOTM.")
 set(OC_MEMORY_TRACE_ENABLED OFF CACHE BOOL "Enable memory tracing.")
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
-set(PLGD_WOT_ENABLED OFF CACHE BOOL "Enable WoT.")
+set(PLGD_DEV_WOT_ENABLED OFF CACHE BOOL "Enable WoT.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -244,8 +244,8 @@ if(OC_DYNAMIC_ALLOCATION_ENABLED)
     endif()
 endif()
 
-if (PLGD_WOT_ENABLED)
-    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_WOT")
+if (PLGD_DEV_WOT_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_WOT")
 endif()
 
 if(OC_SECURITY_ENABLED)
@@ -378,7 +378,13 @@ endif()
 
 if(PLGD_DEV_TIME_ENABLED)
     file(GLOB PLGD_SRC
-        ${PROJECT_SOURCE_DIR}/api/plgd/*.c
+        ${PROJECT_SOURCE_DIR}/api/plgd/plgd_time.c
+    )
+endif()
+
+if(PLGD_DEV_WOT_ENABLED)
+    file(GLOB PLGD_SRC
+        ${PROJECT_SOURCE_DIR}/api/plgd/plgd_wot.c
     )
 endif()
 

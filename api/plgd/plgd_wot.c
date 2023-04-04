@@ -19,20 +19,19 @@
 #include "oc_core_res.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
-#include "oc_core_res_internal.h"
+#include "api/oc_core_res_internal.h"
 #include "oc_discovery.h"
-#include "oc_introspection_internal.h"
+#include "api/oc_introspection_internal.h"
 #include "oc_rep.h"
-#include "oc_ri_internal.h"
-#include "oc_main.h"
+#include "api/oc_ri_internal.h"
+#include "api/oc_main.h"
 #include "port/oc_assert.h"
 #include "util/oc_atomic.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
-#include "oc_discovery_internal.h"
-#include "plgd_wot.h"
-#include "plgd_wot_internal.h"
-#include "oc_json_to_cbor_internal.h"
+#include "api/oc_discovery_internal.h"
+#include "plgd/plgd_wot.h"
+#include "api/plgd/plgd_wot_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
 
@@ -59,29 +58,6 @@
 #include <stdint.h>
 #include "oc_endpoint.h"
 #include <stdlib.h>
-
-static void
-process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
-                              const char *scheme_host, void *user_data)
-{
-  (void)user_data;
-  if ((resource->interfaces & PLGD_IF_WOT_TD) == 0) {
-    return;
-  }
-  oc_rep_start_object((links_array), links);
-  oc_rep_set_text_string(links, rel, "item");
-  oc_rep_set_text_string(links, type, "application/td+json");
-
-  char href[512];
-  memset(href, 0, sizeof(href));
-  memcpy(href, scheme_host, strlen(scheme_host));
-  memcpy(href + strlen(href), oc_string(resource->uri),
-         oc_string_len(resource->uri));
-  memcpy(href + strlen(href), "?if=" PLGD_IF_WOT_TD_STR,
-         strlen("?if=" PLGD_IF_WOT_TD_STR));
-  oc_rep_set_text_string(links, href, href);
-  oc_rep_end_object((links_array), links);
-}
 
 typedef enum oc_wot_operation_t {
   readProperty = 1 << 0,
@@ -238,6 +214,43 @@ process_wot_response_set_endpoint_cbk(CborEncoder *links_array,
 #endif /* OC_OSCORE */
 }
 
+static void
+set_security(CborEncoder *obj_map)
+{
+  oc_rep_set_object(*obj, securityDefinitions);
+  oc_rep_set_object(securityDefinitions, nosec_sc);
+  oc_rep_set_text_string(nosec_sc, scheme, "nosec");
+  oc_rep_close_object(securityDefinitions, nosec_sc);
+  oc_rep_close_object(*obj, securityDefinitions);
+  oc_rep_set_text_string(*obj, security, "nosec_sc");
+}
+
+
+#ifdef OC_SERVER
+
+static void
+process_wot_response_set_link(CborEncoder *links_array, oc_resource_t *resource,
+                              const char *scheme_host, void *user_data)
+{
+  (void)user_data;
+  if ((resource->interfaces & PLGD_IF_WOT_TD) == 0) {
+    return;
+  }
+  oc_rep_start_object((links_array), links);
+  oc_rep_set_text_string(links, rel, "item");
+  oc_rep_set_text_string(links, type, "application/td+json");
+
+  char href[512];
+  memset(href, 0, sizeof(href));
+  memcpy(href, scheme_host, strlen(scheme_host));
+  memcpy(href + strlen(href), oc_string(resource->uri),
+         oc_string_len(resource->uri));
+  memcpy(href + strlen(href), "?if=" PLGD_IF_WOT_TD_STR,
+         strlen("?if=" PLGD_IF_WOT_TD_STR));
+  oc_rep_set_text_string(links, href, href);
+  oc_rep_end_object((links_array), links);
+}
+
 typedef struct
 {
   CborEncoder *array;
@@ -273,17 +286,6 @@ process_wot_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
 }
 
 static void
-set_security(CborEncoder *obj_map)
-{
-  oc_rep_set_object(*obj, securityDefinitions);
-  oc_rep_set_object(securityDefinitions, nosec_sc);
-  oc_rep_set_text_string(nosec_sc, scheme, "nosec");
-  oc_rep_close_object(securityDefinitions, nosec_sc);
-  oc_rep_close_object(*obj, securityDefinitions);
-  oc_rep_set_text_string(*obj, security, "nosec_sc");
-}
-
-static void
 wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
@@ -306,6 +308,7 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
 }
+#endif /* OC_SERVER */
 
 void
 plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -353,25 +356,25 @@ typedef struct default_td_s
 static plgd_wot_property_t default_device_properties[] = {
   {
     .name = "di",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .description = "Device Identifier",
     .read_only = true,
   },
   { .name = "piid",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .description = "Platform Instance Identifier" },
   { .name = "n",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .observable = true,
     .description = "Device Name" },
   { .name = "icv",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .description = "Interoperability Specification Version" },
   { .name = "dmv",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .description = "Data Model Version" },
 };
@@ -379,19 +382,19 @@ static plgd_wot_property_t default_device_properties[] = {
 static plgd_wot_property_t default_platform_properties[] = {
   {
     .name = "pi",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .description = "Unique identifier for the physical platform.",
   },
   { .name = "mnmn",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .read_only = true,
     .description = "Name of manufacturer." },
 };
 
 static plgd_wot_property_t default_device_configuration_properties[] = {
   { .name = "n",
-    .type = PLGD_WOT_PROPERTY_TYPE_STRING,
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
     .observable = true,
     .description = "Device Name" },
 };
@@ -442,14 +445,17 @@ plgd_wot_resource_set_td_properties(CborEncoder *parent_map,
 static void
 wot_init(size_t device)
 {
+
+#ifdef OC_SERVER
   oc_resource_t *root_wot =
     oc_new_resource("Root WoT", "/.well-known/wot", 1, device);
-  oc_resource_bind_resource_type(root_wot, PLGD_WOT_THING_DESCRIPTION_RT);
+  oc_resource_bind_resource_type(root_wot, PLGD_DEV_WOT_THING_DESCRIPTION_RT);
   oc_resource_bind_resource_interface(root_wot, PLGD_IF_WOT_TD);
   oc_resource_set_default_interface(root_wot, OC_IF_BASELINE);
   oc_resource_set_discoverable(root_wot, true);
   oc_resource_set_request_handler(root_wot, OC_GET, wot_root_get, NULL);
   oc_add_resource(root_wot);
+#endif /* OC_SERVER */
 
   for (size_t i = 0; i < sizeof(default_td) / sizeof(default_td_t); ++i) {
     size_t d = device;
@@ -485,10 +491,10 @@ plgd_wot_resource_set_thing_description(
   for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
        i++) {
     if (oc_string_array_get_item_size(resource->types, i) ==
-          strlen(PLGD_WOT_THING_DESCRIPTION_RT) &&
+          strlen(PLGD_DEV_WOT_THING_DESCRIPTION_RT) &&
         memcmp(oc_string_array_get_item(resource->types, i),
-               PLGD_WOT_THING_DESCRIPTION_RT,
-               strlen(PLGD_WOT_THING_DESCRIPTION_RT)) == 0) {
+               PLGD_DEV_WOT_THING_DESCRIPTION_RT,
+               strlen(PLGD_DEV_WOT_THING_DESCRIPTION_RT)) == 0) {
       add_rt = false;
       break;
     }
@@ -503,7 +509,7 @@ plgd_wot_resource_set_thing_description(
     for (size_t i = 0; i < num_types; i++) {
       if (i == 0) {
         oc_string_array_add_item(resource->types,
-                                 PLGD_WOT_THING_DESCRIPTION_RT);
+                                 PLGD_DEV_WOT_THING_DESCRIPTION_RT);
         continue;
       }
       oc_string_array_add_item(resource->types,
@@ -521,19 +527,19 @@ const char *
 plgd_wot_property_str(plgd_wot_property_type_t p)
 {
   switch (p) {
-  case PLGD_WOT_PROPERTY_TYPE_BOOLEAN:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_BOOLEAN:
     return "boolean";
-  case PLGD_WOT_PROPERTY_TYPE_INTEGER:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_INTEGER:
     return "integer";
-  case PLGD_WOT_PROPERTY_TYPE_NUMBER:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_NUMBER:
     return "double";
-  case PLGD_WOT_PROPERTY_TYPE_STRING:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_STRING:
     return "string";
-  case PLGD_WOT_PROPERTY_TYPE_OBJECT:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_OBJECT:
     return "object";
-  case PLGD_WOT_PROPERTY_TYPE_ARRAY:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_ARRAY:
     return "array";
-  case PLGD_WOT_PROPERTY_TYPE_NULL:
+  case PLGD_DEV_WOT_PROPERTY_TYPE_NULL:
     return "null";
   default:
     return "unknown";
@@ -578,7 +584,7 @@ plgd_wot_resource_set_td_properties_num(CborEncoder *parent_map,
                                        strlen(props[i].name));
     oc_rep_begin_object(&properties_map, property);
     oc_rep_set_text_string(
-      property, type, plgd_wot_property_str(PLGD_WOT_PROPERTY_TYPE_OBJECT));
+      property, type, plgd_wot_property_str(PLGD_DEV_WOT_PROPERTY_TYPE_OBJECT));
 
     // ocf:property
     g_err |= oc_rep_encode_text_string(&property_map, "properties",

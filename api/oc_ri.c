@@ -58,7 +58,7 @@
 #endif /*OC_HAS_FEATURE_PUSH  */
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "plgd_wot_internal.h"
+#include "api/plgd/plgd_wot_internal.h"
 #endif
 
 #ifdef OC_SECURITY
@@ -1073,14 +1073,13 @@ oc_ri_iterate_over_all_resources(size_t device,
       }
     }
   }
-
+#ifdef OC_SERVER
   for (oc_resource_t *resource = oc_ri_get_app_resources(); resource != NULL;
        resource = resource->next) {
     if (!cbk(resource, data)) {
       return;
     }
   }
-
 #ifdef OC_COLLECTIONS
   for (oc_collection_t *collection = oc_collection_get_all();
        collection != NULL; collection = (oc_collection_t *)collection->res.next) {
@@ -1089,6 +1088,7 @@ oc_ri_iterate_over_all_resources(size_t device,
     }
   }
 #endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
 }
 
 static bool

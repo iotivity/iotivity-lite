@@ -32,7 +32,7 @@
 #include "util/oc_process.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "plgd_wot_internal.h"
+#include "api/plgd/plgd_wot_internal.h"
 #endif
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \

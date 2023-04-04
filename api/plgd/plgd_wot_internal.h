@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2023 plgd.dev s.r.o.
+ * Copyright (c) 2022 Daniel Adam, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,23 @@
  *
  ****************************************************************************/
 
-#ifndef OC_JSON_TO_CBOR_INTERNAL_H
-#define OC_JSON_TO_CBOR_INTERNAL_H
+#ifndef PLGD_DEV_WOT_INTERNAL_H
+#define PLGD_DEV_WOT_INTERNAL_H
 
 #include <stddef.h>
-#include <cbor.h>
+#include <oc_ri.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool oc_json_to_cbor(const char *json, size_t json_len, bool embedded, CborEncoder *encoder);
+#define PLGD_DEV_WOT_THING_DESCRIPTION_RT "wot.thing"
+
+void plgd_wot_init(void);
+void plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_JSON_TO_CBOR_INTERNAL_H */
+#endif /* PLGD_DEV_WOT_INTERNAL_H */
