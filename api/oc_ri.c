@@ -1082,7 +1082,8 @@ oc_ri_iterate_over_all_resources(size_t device,
   }
 #ifdef OC_COLLECTIONS
   for (oc_collection_t *collection = oc_collection_get_all();
-       collection != NULL; collection = (oc_collection_t *)collection->res.next) {
+       collection != NULL;
+       collection = (oc_collection_t *)collection->res.next) {
     if (!cbk((oc_resource_t *)collection, data)) {
       return;
     }
@@ -1097,12 +1098,11 @@ oc_ri_get_resource_by_uri(size_t device, const char *uri_path,
                           bool *resource_is_collection)
 {
   /* Check against list of declared core resources.
-  */
+   */
   for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
     oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
-    if (oc_string_len(resource->uri) == (uri_path_len + 1) &&
-        strncmp(oc_string(resource->uri) + 1, uri_path,
-                uri_path_len) == 0) {
+    if (resource && oc_string_len(resource->uri) == (uri_path_len + 1) &&
+        strncmp(oc_string(resource->uri) + 1, uri_path, uri_path_len) == 0) {
       if (cur_resource) {
         *cur_resource = resource;
       }
@@ -1319,7 +1319,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
       oc_audit_log(endpoint->device, "COMM-1", "Operation not supported", 0x40,
                    2, NULL, 0);
 #endif
-    } 
+    }
 #ifdef OC_HAS_FEATURE_PLGD_WOT
     else if (iface_mask & PLGD_IF_WOT_TD) {
       is_wot_request = true;
@@ -1410,37 +1410,36 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         }
       } else
 #endif /* OC_COLLECTIONS && OC_SERVER */
-        /* If cur_resource is a non-collection resource, invoke
-         * its handler for the requested method. If it has not
-         * implemented that method, then return a 4.05 response.
-         */
+       /* If cur_resource is a non-collection resource, invoke
+        * its handler for the requested method. If it has not
+        * implemented that method, then return a 4.05 response.
+        */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
         if (is_wot_request && method == OC_GET &&
             cur_resource->wot_get_handler.cb) {
-          cur_resource->wot_get_handler.cb(&request_obj, iface_mask,
-                                       cur_resource->wot_get_handler.user_data);
-        } else
+        cur_resource->wot_get_handler.cb(
+          &request_obj, iface_mask, cur_resource->wot_get_handler.user_data);
+      } else
 #endif
-        if (method == OC_GET &&
-            cur_resource->get_handler.cb) {
-          cur_resource->get_handler.cb(&request_obj, iface_mask,
-                                       cur_resource->get_handler.user_data);
+        if (method == OC_GET && cur_resource->get_handler.cb) {
+        cur_resource->get_handler.cb(&request_obj, iface_mask,
+                                     cur_resource->get_handler.user_data);
 
-        } else if (method == OC_POST && cur_resource->post_handler.cb &&
-                   !is_wot_request) {
-          cur_resource->post_handler.cb(&request_obj, iface_mask,
-                                        cur_resource->post_handler.user_data);
-        } else if (method == OC_PUT && cur_resource->put_handler.cb &&
-                   !is_wot_request) {
-          cur_resource->put_handler.cb(&request_obj, iface_mask,
-                                       cur_resource->put_handler.user_data);
-        } else if (method == OC_DELETE && cur_resource->delete_handler.cb &&
-                   !is_wot_request) {
-          cur_resource->delete_handler.cb(
-            &request_obj, iface_mask, cur_resource->delete_handler.user_data);
-        } else {
-          method_impl = false;
-        }
+      } else if (method == OC_POST && cur_resource->post_handler.cb &&
+                 !is_wot_request) {
+        cur_resource->post_handler.cb(&request_obj, iface_mask,
+                                      cur_resource->post_handler.user_data);
+      } else if (method == OC_PUT && cur_resource->put_handler.cb &&
+                 !is_wot_request) {
+        cur_resource->put_handler.cb(&request_obj, iface_mask,
+                                     cur_resource->put_handler.user_data);
+      } else if (method == OC_DELETE && cur_resource->delete_handler.cb &&
+                 !is_wot_request) {
+        cur_resource->delete_handler.cb(&request_obj, iface_mask,
+                                        cur_resource->delete_handler.user_data);
+      } else {
+        method_impl = false;
+      }
     }
   }
 
