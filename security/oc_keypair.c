@@ -26,6 +26,7 @@
 #include "oc_certs.h"
 #include "oc_store.h"
 #include "security/oc_entropy_internal.h"
+#include "security/oc_pki_internal.h"
 
 #include <assert.h>
 #include <mbedtls/ctr_drbg.h>
@@ -186,8 +187,8 @@ oc_sec_ecdsa_encode_keypair_for_device(size_t device)
 }
 
 int
-oc_sec_ecdsa_generate_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
-                              size_t public_key_buf_size,
+oc_sec_ecdsa_generate_keypair(size_t device, mbedtls_ecp_group_id grpid,
+                              uint8_t *public_key, size_t public_key_buf_size,
                               size_t *public_key_size, uint8_t *private_key,
                               size_t private_key_buf_size,
                               size_t *private_key_size)
@@ -223,21 +224,22 @@ oc_sec_ecdsa_generate_keypair(mbedtls_ecp_group_id grpid, uint8_t *public_key,
     goto generate_ecdsa_keypair_error;
   }
 
-  ret = mbedtls_ecp_gen_key(grpid, mbedtls_pk_ec(pk), mbedtls_ctr_drbg_random,
-                            &ctr_drbg);
+  ret = oc_mbedtls_pk_ecp_gen_key(device, grpid, &pk, mbedtls_ctr_drbg_random,
+                                  &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error in ECDSA key generation: %d", ret);
     goto generate_ecdsa_keypair_error;
   }
 
-  ret = mbedtls_pk_write_key_der(&pk, private_key, private_key_buf_size);
+  ret =
+    oc_mbedtls_pk_write_key_der(device, &pk, private_key, private_key_buf_size);
   if (ret < 0) {
     OC_ERR("error writing EC private key to internal structure: %d", ret);
     goto generate_ecdsa_keypair_error;
   }
   pk_priv_size = (size_t)ret;
 
-  ret = mbedtls_pk_write_pubkey_der(&pk, public_key, public_key_buf_size);
+  ret = oc_mbedtls_pk_write_pubkey_der(&pk, public_key, public_key_buf_size);
   if (ret < 0) {
     OC_ERR("error writing EC public key to internal structure: %d", ret);
     goto generate_ecdsa_keypair_error;
@@ -279,9 +281,10 @@ oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
     }
   }
 
-  if (oc_sec_ecdsa_generate_keypair(
-        grpid, kp->public_key, OC_ECDSA_PUBKEY_SIZE, &kp->public_key_size,
-        kp->private_key, OC_ECDSA_PRIVKEY_SIZE, &kp->private_key_size) < 0) {
+  if (oc_sec_ecdsa_generate_keypair(device, grpid, kp->public_key,
+                                    OC_ECDSA_PUBKEY_SIZE, &kp->public_key_size,
+                                    kp->private_key, OC_ECDSA_PRIVKEY_SIZE,
+                                    &kp->private_key_size) < 0) {
     oc_memb_free(&g_oc_keypairs_s, kp);
     return false;
   }
@@ -291,6 +294,27 @@ oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
   }
   OC_DBG("successfully generated ECDSA keypair for device %zd", device);
   return true;
+}
+
+void
+oc_sec_ecdsa_reset_keypair(size_t device)
+{
+  oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
+  if (kp != NULL) {
+    if (!oc_pk_free_key(device, kp->private_key, kp->private_key_size)) {
+      OC_DBG("oc_pk_free_key the associated private key for device %zd is "
+             "still valid",
+             device);
+      return;
+    }
+    oc_list_remove(g_oc_keypairs, kp);
+    oc_memb_free(&g_oc_keypairs_s, kp);
+  }
+  if (!oc_sec_ecdsa_generate_keypair_for_device(oc_sec_certs_ecp_group_id(),
+                                                device)) {
+    OC_ERR("error generating ECDSA keypair for device %zd", device);
+  }
+  oc_sec_dump_ecdsa_keypair(device);
 }
 
 #endif /* OC_SECURITY && OC_PKI */

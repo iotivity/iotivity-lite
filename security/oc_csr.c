@@ -30,6 +30,7 @@
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"
+#include "security/oc_pki_internal.h"
 #include "security/oc_tls_internal.h"
 
 #include <assert.h>
@@ -37,15 +38,51 @@
 #include <mbedtls/entropy.h>
 #include <mbedtls/x509_csr.h>
 
+static bool
+load_pk_context(size_t device, mbedtls_pk_context *pk)
+{
+  const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
+  if (kp == NULL) {
+    OC_ERR("could not find public/private key pair on device %zd", device);
+    return -1;
+  }
+  int ret =
+    mbedtls_pk_parse_public_key(pk, kp->public_key, kp->public_key_size);
+  if (ret != 0) {
+    OC_ERR("could not parse public key for device %zd", device);
+    return false;
+  }
+
+  ret = oc_mbedtls_pk_parse_key(
+    device, pk, kp->private_key, kp->private_key_size, 0, 0,
+    mbedtls_ctr_drbg_random, oc_tls_ctr_drbg_context());
+  if (ret != 0) {
+    OC_ERR("could not parse private key for device %zd %d", device, ret);
+    return false;
+  }
+  return true;
+}
+
 int
 oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
                     size_t csr_size)
 {
   assert(csr != NULL);
-  const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
-  if (kp == NULL) {
-    OC_ERR("could not find public/private key pair on device %zd", device);
-    return -1;
+
+  mbedtls_pk_context pk;
+  mbedtls_pk_init(&pk);
+  if (!load_pk_context(device, &pk)) {
+    mbedtls_pk_free(&pk);
+    mbedtls_pk_init(&pk);
+    OC_DBG(
+      "could not load keypair for device %zd - try to regenerating the new one",
+      device);
+    oc_sec_ecdsa_reset_keypair(device);
+    if (!load_pk_context(device, &pk)) {
+      mbedtls_pk_free(&pk);
+      OC_ERR("could not load pk for device %zd", device);
+      return -1;
+    }
   }
 
   const oc_uuid_t *uuid = oc_core_get_device_id(device);
@@ -66,29 +103,14 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
   mbedtls_entropy_init(&entropy);
   oc_entropy_add_source(&entropy);
 
-  mbedtls_pk_context pk;
-  mbedtls_pk_init(&pk);
-
-  int ret =
-    mbedtls_pk_parse_public_key(&pk, kp->public_key, kp->public_key_size);
-  if (ret != 0) {
-    OC_ERR("could not parse public key for device %zd", device);
-    goto generate_csr_error;
-  }
-
-  ret =
-    mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0,
-                         mbedtls_ctr_drbg_random, oc_tls_ctr_drbg_context());
-  if (ret != 0) {
-    OC_ERR("could not parse private key for device %zd %d", device, ret);
-    goto generate_csr_error;
-  }
+  mbedtls_x509write_csr request;
+  memset(&request, 0, sizeof(mbedtls_x509write_csr));
 
 #define PERSONALIZATION_DATA "IoTivity-Lite-CSR-Generation"
 
-  ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                              (const unsigned char *)PERSONALIZATION_DATA,
-                              sizeof(PERSONALIZATION_DATA));
+  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                  (const unsigned char *)PERSONALIZATION_DATA,
+                                  sizeof(PERSONALIZATION_DATA));
 
 #undef PERSONALIZATION_DATA
 
@@ -97,8 +119,6 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
     goto generate_csr_error;
   }
 
-  mbedtls_x509write_csr request;
-  memset(&request, 0, sizeof(mbedtls_x509write_csr));
   mbedtls_x509write_csr_init(&request);
   mbedtls_x509write_csr_set_md_alg(&request, md);
   mbedtls_x509write_csr_set_key(&request, &pk);
@@ -213,7 +233,7 @@ oc_sec_csr_extract_public_key(const mbedtls_x509_csr *csr, uint8_t *buffer,
                               size_t buffer_size)
 {
   assert(csr != NULL);
-  int ret = mbedtls_pk_write_pubkey_der(&csr->pk, buffer, buffer_size);
+  int ret = oc_mbedtls_pk_write_pubkey_der(&csr->pk, buffer, buffer_size);
   if (ret < 0) {
     OC_ERR("unable to read public key from CSR %d", ret);
     return -1;

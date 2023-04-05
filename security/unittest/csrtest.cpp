@@ -165,6 +165,141 @@ TEST_F(TestCSRWithDevice, Validate256)
   mbedtls_x509_csr_free(&csr);
 }
 
+class TestCSRWithDeviceTPM : public TestCSRWithDevice {
+public:
+  void SetUp() override
+  {
+    static oc_pki_pk_functions_t pk_functions;
+    pk_functions.mbedtls_pk_ecp_gen_key =
+      TestCSRWithDeviceTPM::simulate_tpm_mbedtls_pk_ecp_gen_key;
+    pk_functions.mbedtls_pk_parse_key =
+      TestCSRWithDeviceTPM::simulate_tpm_mbedtls_pk_parse_key;
+    pk_functions.mbedtls_pk_write_key_der =
+      TestCSRWithDeviceTPM::simulate_tpm_mbedtls_pk_write_key_der;
+    memset(&public_key[0], 0, public_key.size());
+    public_key_size = 0;
+    oc_pki_set_pk_functions(&pk_functions);
+    TestCSRWithDevice::SetUp();
+  }
+
+  void TearDown() override
+  {
+    TestCSRWithDevice::TearDown();
+    oc_pki_set_pk_functions(nullptr);
+    public_key_size = 0;
+    memset(&public_key[0], 0, public_key.size());
+  }
+
+protected:
+  static std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> public_key;
+  static size_t public_key_size;
+  static std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key;
+  static size_t private_key_size;
+
+  static int simulate_tpm_mbedtls_pk_parse_key(
+    size_t /*device*/, mbedtls_pk_context *pk, const unsigned char *key,
+    size_t keylen, const unsigned char *pwd, size_t pwdlen,
+    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+  {
+    if (keylen == public_key_size &&
+        memcmp(key, &public_key[0], public_key_size) == 0) {
+      return mbedtls_pk_parse_key(pk, &private_key[0], private_key_size, pwd,
+                                  pwdlen, f_rng, p_rng);
+    }
+    return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+  }
+
+  static int simulate_tpm_mbedtls_pk_write_key_der(size_t /*device*/,
+                                                   const mbedtls_pk_context *pk,
+                                                   unsigned char *buf,
+                                                   size_t size)
+  {
+    std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pub_key;
+    int ret = mbedtls_pk_write_pubkey_der(pk, &pub_key[0], sizeof(pub_key));
+    if (ret > 0) {
+      memmove(&pub_key[0], &pub_key[0] + pub_key.size() - ret, ret);
+    } else {
+      return ret;
+    }
+    if (((size_t)ret) != public_key_size) {
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    if (memcmp(&pub_key[0], &public_key[0], ret) != 0) {
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    if (size < (size_t)ret) {
+      return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
+    }
+    memcpy(buf + size - ret, &pub_key[0], ret);
+    return ret;
+  }
+
+  static int simulate_tpm_mbedtls_pk_ecp_gen_key(
+    size_t device, mbedtls_ecp_group_id grp_id, mbedtls_pk_context *pk,
+    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+  {
+    (void)device;
+    int ret = mbedtls_ecp_gen_key(grp_id, (mbedtls_ecp_keypair *)pk->pk_ctx,
+                                  f_rng, p_rng);
+    if (ret == 0) {
+      ret = mbedtls_pk_write_pubkey_der(pk, &public_key[0], public_key.size());
+      if (ret > 0) {
+        memmove(&public_key[0], &public_key[0] + public_key.size() - ret, ret);
+        public_key_size = ret;
+        ret = 0;
+      }
+    }
+    if (ret == 0) {
+      ret = mbedtls_pk_write_key_der(pk, &private_key[0], private_key.size());
+      if (ret > 0) {
+        memmove(&private_key[0], &private_key[0] + private_key.size() - ret,
+                ret);
+        private_key_size = ret;
+        ret = 0;
+      }
+    }
+    return ret;
+  }
+};
+
+std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> TestCSRWithDeviceTPM::public_key;
+size_t TestCSRWithDeviceTPM::public_key_size;
+std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> TestCSRWithDeviceTPM::private_key;
+size_t TestCSRWithDeviceTPM::private_key_size;
+
+TEST_F(TestCSRWithDeviceTPM, Validate256SimulateTPM)
+{
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
+                                   csr_pem.data(), csr_pem.size()));
+
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_OPAQUE,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)))
+    << "unexpected public key type";
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)))
+    << "wrong signature type";
+
+  EXPECT_TRUE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                  MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)));
+
+  std::array<char, 1> too_small_sub{};
+  EXPECT_GT(0, oc_sec_csr_extract_subject_DN(&csr, too_small_sub.data(),
+                                             too_small_sub.size()))
+    << "buffer too small";
+
+  std::array<char, 128> sub{};
+  EXPECT_LT(0, oc_sec_csr_extract_subject_DN(&csr, sub.data(), sub.size()))
+    << "cannot extract subject";
+  OC_DBG("Subject: %s", sub.data());
+
+  mbedtls_x509_csr_free(&csr);
+}
+
 static mbedtls_x509_csr
 generateValidCSR(mbedtls_md_type_t md, mbedtls_ecp_group_id grpid,
                  size_t device)

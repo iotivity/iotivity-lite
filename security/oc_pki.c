@@ -23,14 +23,18 @@
 #include "oc_pki.h"
 #include "oc_certs_internal.h"
 #include "oc_cred_internal.h"
+#include "oc_pki_internal.h"
 #include "oc_store.h"
 #include "oc_tls_internal.h"
 #include "port/oc_connectivity.h"
 
+#include <mbedtls/ecp.h>
 #include <mbedtls/pk.h>
 #include <mbedtls/x509_crt.h>
 
 static oc_pki_verify_certificate_cb_t g_verify_certificate_cb;
+static oc_pki_pk_functions_t g_pk_functions;
+static bool g_pk_functions_set = false;
 
 static int
 pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
@@ -158,8 +162,8 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   /* Parse identity cert's private key */
   int ret =
-    mbedtls_pk_parse_key(&pkey, key, k_size, NULL, 0, mbedtls_ctr_drbg_random,
-                         oc_tls_ctr_drbg_context());
+    oc_mbedtls_pk_parse_key(device, &pkey, key, k_size, NULL, 0,
+                            mbedtls_ctr_drbg_random, oc_tls_ctr_drbg_context());
   if (ret != 0) {
     OC_ERR("could not parse identity cert's private key %d", ret);
     return -1;
@@ -168,7 +172,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   /* Serialize identity cert's private key to DER */
   uint8_t privkbuf[200];
-  ret = mbedtls_pk_write_key_der(&pkey, privkbuf, 200);
+  ret = oc_mbedtls_pk_write_key_der(device, &pkey, privkbuf, 200);
 
   mbedtls_pk_free(&pkey);
 
@@ -414,6 +418,102 @@ oc_pki_get_verify_certificate_cb(void)
     return &default_verify_certificate_cb;
   }
   return g_verify_certificate_cb;
+}
+
+int
+oc_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
+                        const unsigned char *key, size_t keylen,
+                        const unsigned char *pwd, size_t pwdlen,
+                        int (*f_rng)(void *, unsigned char *, size_t),
+                        void *p_rng)
+{
+  if (!g_pk_functions_set) {
+    return mbedtls_pk_parse_key(pk, key, keylen, pwd, pwdlen, f_rng, p_rng);
+  }
+  if (g_pk_functions.mbedtls_pk_parse_key == NULL) {
+    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
+  }
+  return g_pk_functions.mbedtls_pk_parse_key(device, pk, key, keylen, pwd,
+                                             pwdlen, f_rng, p_rng);
+}
+
+int
+oc_mbedtls_pk_write_key_der(size_t device, const mbedtls_pk_context *ctx,
+                            unsigned char *buf, size_t size)
+{
+  if (!g_pk_functions_set) {
+    return mbedtls_pk_write_key_der(ctx, buf, size);
+  }
+  if (g_pk_functions.mbedtls_pk_write_key_der == NULL) {
+    return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
+  }
+  return g_pk_functions.mbedtls_pk_write_key_der(device, ctx, buf, size);
+}
+
+int
+oc_mbedtls_pk_write_pubkey_der(const mbedtls_pk_context *ctx,
+                               unsigned char *buf, size_t size)
+{
+  return mbedtls_pk_write_pubkey_der(ctx, buf, size);
+}
+
+int
+oc_mbedtls_pk_ecp_gen_key(size_t device, mbedtls_ecp_group_id grp_id,
+                          mbedtls_pk_context *pk,
+                          int (*f_rng)(void *, unsigned char *, size_t),
+                          void *p_rng)
+{
+  if (!g_pk_functions_set) {
+    return mbedtls_ecp_gen_key(grp_id, mbedtls_pk_ec(*pk), f_rng, p_rng);
+  }
+  if (g_pk_functions.mbedtls_pk_ecp_gen_key == NULL) {
+    return MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE;
+  }
+  return g_pk_functions.mbedtls_pk_ecp_gen_key(device, grp_id, pk, f_rng,
+                                               p_rng);
+}
+
+bool
+oc_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
+{
+  if (!g_pk_functions_set) {
+    return false;
+  }
+  if (g_pk_functions.pk_free_key == NULL) {
+    return false;
+  }
+  return g_pk_functions.pk_free_key(device, key, keylen);
+}
+
+bool
+oc_pki_set_pk_functions(const oc_pki_pk_functions_t *pk_functions)
+{
+  if (pk_functions == NULL) {
+    g_pk_functions_set = false;
+    return true;
+  }
+  if (pk_functions->mbedtls_pk_ecp_gen_key == NULL ||
+      pk_functions->mbedtls_pk_parse_key == NULL ||
+      pk_functions->mbedtls_pk_write_key_der == NULL ||
+      pk_functions->pk_free_key == NULL) {
+    return false;
+  }
+  g_pk_functions_set = true;
+  g_pk_functions.mbedtls_pk_ecp_gen_key = pk_functions->mbedtls_pk_ecp_gen_key;
+  g_pk_functions.mbedtls_pk_parse_key = pk_functions->mbedtls_pk_parse_key;
+  g_pk_functions.mbedtls_pk_write_key_der =
+    pk_functions->mbedtls_pk_write_key_der;
+  g_pk_functions.pk_free_key = pk_functions->pk_free_key;
+  return true;
+}
+
+bool
+oc_pki_get_pk_functions(oc_pki_pk_functions_t *pk_functions)
+{
+  if (pk_functions != NULL) {
+    *pk_functions = g_pk_functions;
+  }
+  return g_pk_functions_set;
 }
 
 #endif /* OC_SECURITY && OC_PKI */

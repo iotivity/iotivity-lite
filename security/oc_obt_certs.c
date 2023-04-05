@@ -31,6 +31,7 @@
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
+#include "security/oc_pki_internal.h"
 
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
@@ -109,8 +110,8 @@ oc_obt_generate_self_signed_root_cert_pem(
     goto exit;
   }
 
-  ret = mbedtls_pk_parse_key(
-    &pk, cert_data.private_key, cert_data.private_key_size,
+  ret = oc_mbedtls_pk_parse_key(
+    0, &pk, cert_data.private_key, cert_data.private_key_size,
     /*pwd*/ NULL, /*pwd_len*/ 0, mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing root cert's private key %d", ret);
@@ -249,9 +250,10 @@ oc_obt_generate_identity_cert_pem(
     goto exit;
   }
 
-  ret = mbedtls_pk_parse_key(&issuer_priv_key, cert_data.issuer_private_key,
-                             cert_data.issuer_private_key_size, /*pwd*/ NULL,
-                             /*pwdlen*/ 0, mbedtls_ctr_drbg_random, &ctr_drbg);
+  ret =
+    oc_mbedtls_pk_parse_key(0, &issuer_priv_key, cert_data.issuer_private_key,
+                            cert_data.issuer_private_key_size, /*pwd*/ NULL,
+                            /*pwdlen*/ 0, mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing issuer's private key %d", ret);
     goto exit;
@@ -510,9 +512,10 @@ oc_obt_generate_role_cert_pem(oc_obt_generate_role_cert_data_t cert_data,
     goto exit;
   }
 
-  ret = mbedtls_pk_parse_key(&issuer_priv_key, cert_data.issuer_private_key,
-                             cert_data.issuer_private_key_size, 0, 0,
-                             mbedtls_ctr_drbg_random, &ctr_drbg);
+  ret =
+    oc_mbedtls_pk_parse_key(0, &issuer_priv_key, cert_data.issuer_private_key,
+                            cert_data.issuer_private_key_size, 0, 0,
+                            mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error parsing issuer's private key %d", ret);
     goto exit;

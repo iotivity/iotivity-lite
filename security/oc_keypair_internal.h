@@ -47,6 +47,7 @@ typedef struct oc_ecdsa_keypair_t
 /**
  * @brief Generate an ECP key-pair.
  *
+ * @param device device index
  * @param grpid MbedTLS elliptic curve identifier
  * @param[out] public_key buffer to store generated public key
  * @param public_key_buf_size size of the public key buffer
@@ -57,7 +58,7 @@ typedef struct oc_ecdsa_keypair_t
  * @return 0 on success
  * @return -1 on failure
  */
-int oc_sec_ecdsa_generate_keypair(mbedtls_ecp_group_id grpid,
+int oc_sec_ecdsa_generate_keypair(size_t device, mbedtls_ecp_group_id grpid,
                                   uint8_t *public_key,
                                   size_t public_key_buf_size,
                                   size_t *public_key_size, uint8_t *private_key,
@@ -133,6 +134,9 @@ oc_ecdsa_keypair_t *oc_sec_ecdsa_get_keypair(size_t device);
 
 /** Free all key-pairs in the global list */
 void oc_sec_ecdsa_free_keypairs(void);
+
+/** Free the key-pair associated with the given device and generate new one */
+void oc_sec_ecdsa_reset_keypair(size_t device);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,162 @@
+/****************************************************************************
+ *
+ * Copyright (c) 2023 plgd.dev s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
+
+#ifndef OC_PKI_INTERNAL_H
+#define OC_PKI_INTERNAL_H
+
+#include <stddef.h>
+#include <mbedtls/ecp.h>
+#include <mbedtls/pk.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief           This function loads a private key for use with identity or
+ * manufacturer certificates stored in the credential resource of a device. The
+ * private key can be provided in either PEM or DER format, or by reference to a
+ * previously stored private key in TPM. The function parses the provided
+ * private key and returns a loaded private key object, which can then be used
+ * in cryptographic operations.
+ *
+ * @param device    The device index the key belongs to.
+ * @param pk       The PK context to fill. It must have been initialized
+ *                  but not set up.
+ * @param key       Input buffer to parse.
+ *                  The buffer must contain the input exactly, with no
+ *                  extra trailing material. For PEM, the buffer must
+ *                  contain a null-terminated string. It could be PEM, DER or
+ *                  the reference key (eg in TPM).
+ * @param keylen    Size of \b key in bytes.
+ *                  For PEM data, this includes the terminating null byte,
+ *                  so \p keylen must be equal to `strlen(key) + 1`.
+ * @param pwd       Optional password for decryption.
+ *                  Pass \c NULL if expecting a non-encrypted key.
+ *                  Pass a string of \p pwdlen bytes if expecting an encrypted
+ *                  key; a non-encrypted key will also be accepted.
+ *                  The empty password is not supported.
+ * @param pwdlen    Size of the password in bytes.
+ *                  Ignored if \p pwd is \c NULL.
+ * @param f_rng     RNG function, must not be \c NULL. Used for blinding.
+ * @param p_rng     RNG parameter
+ *
+ * @note            On entry, pk must be empty, either freshly initialised
+ *                  with mbedtls_pk_init() or reset with mbedtls_pk_free(). If
+ * you need a specific key type, check the result with mbedtls_pk_can_do().
+ *
+ * @note            The key is also checked for correctness.
+ *
+ * @return          0 if successful, or a specific PK or PEM error code
+ * @see
+ * https://arm-software.github.io/CMSIS-mbedTLS/latest/pk_8h.html#aad02107b63f2a47020e6e1ef328e4393
+ */
+int oc_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
+                            const unsigned char *key, size_t keylen,
+                            const unsigned char *pwd, size_t pwdlen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng);
+/**
+ * @brief            This function writes a private key to the credential
+ * resource for storage. The private key can be provided as an object and will
+ * be written in either PKCS#1 or SEC1 DER structure, depending on the specified
+ * format. Alternatively, a reference to a private key stored in TPM can be
+ * provided, and the function will write the reference to the credential
+ * resource. Once the private key is written, it can be used with identity or
+ * manufacturer certificates for cryptographic operations. Note: data is written
+ * at the end of the buffer! Use the return value to determine where you should
+ * start using the buffer
+ *
+ * @param device    The device index the key belongs to.
+ * @param pk       PK context which must contain a valid private key.
+ * @param buf       buffer to write to
+ * @param size      size of the buffer
+ *
+ * @return          length of data written if successful, or a specific
+ *                  error code
+ * @see
+ * https://arm-software.github.io/CMSIS-mbedTLS/latest/pk_8h.html#a2cf4ebaa430cc90954c9556ace2d4dc0
+ */
+int oc_mbedtls_pk_write_key_der(size_t device, const mbedtls_pk_context *pk,
+                                unsigned char *buf, size_t size);
+
+/**
+ * @brief           Write a public key to a SubjectPublicKeyInfo DER structure
+ *                  Note: data is written at the end of the buffer! Use the
+ *                        return value to determine where you should start
+ *                        using the buffer
+ *
+ * @param pk       PK context which must contain a valid public or private key.
+ * @param buf       buffer to write to
+ * @param size      size of the buffer
+ *
+ * @return          length of data written if successful, or a specific
+ *                  error code
+ * @see
+ * https://arm-software.github.io/CMSIS-mbedTLS/latest/pk_8h.html#a7316929f00feaecc18c1384d3fa05751
+ */
+int oc_mbedtls_pk_write_pubkey_der(const mbedtls_pk_context *pk,
+                                   unsigned char *buf, size_t size);
+/**
+ * @brief           This function generates the ECP key for the identity
+ * certificate of the device. If the device has a TPM, the function will
+ * generate a private key within the TPM and store it there. The generated key
+ * is returned as an object that can be used to create an identity certificate.
+ *
+ * @param device    The device index the key belongs to.
+ * @param grp_id    The ECP group identifier.
+ * @param pk       The destination key. The key is initialized by
+ * MBEDTLS_PK_ECKEY.
+ * @param f_rng     The RNG function to use. This must not be \c NULL.
+ * @param p_rng     The RNG context to be passed to \p f_rng. This may
+ *                  be \c NULL if \p f_rng doesn't need a context argument.
+ *
+ * \return          \c 0 on success.
+ * \return          An \c MBEDTLS_ERR_ECP_XXX or \c MBEDTLS_MPI_XXX error code
+ *                  on failure.
+ * @see
+ * https://arm-software.github.io/CMSIS-mbedTLS/latest/ecp_8h.html#a0c9a407214f019493ba5d7bc27fa57dc
+ */
+int oc_mbedtls_pk_ecp_gen_key(size_t device, mbedtls_ecp_group_id grp_id,
+                              mbedtls_pk_context *pk,
+                              int (*f_rng)(void *, unsigned char *, size_t),
+                              void *p_rng);
+
+/**
+ * @brief          This function frees the private key of the device generated
+ * by oc_mbedtls_pk_ecp_gen_key. It is called when factory reset is performed or
+ * during generating csr when the key-pair is not valid.
+ *
+ * @param device   The device index the key belongs to.
+ * @param key      The private key to free.
+ * @param keylen   The length of the private key.
+ *
+ * @return         true, the key is invalid and needs to be regenerated
+ * @return         false, the key is still valid
+ *
+ * @note default implementation returns false, so the key is same as before.
+ *
+ * @see oc_mbedtls_pk_ecp_gen_key
+ */
+bool oc_pk_free_key(size_t device, const unsigned char *key, size_t keylen);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* OC_PKI_INTERNAL_H */

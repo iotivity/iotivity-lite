@@ -89,13 +89,13 @@ TEST_F(TestKeyPair, GenerateFail_SmallBuffers)
   std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
   size_t public_key_size = 0;
   int ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP256R1, too_small.data(), too_small.size(),
+    0, MBEDTLS_ECP_DP_SECP256R1, too_small.data(), too_small.size(),
     &public_key_size, private_key.data(), private_key.size(),
     &private_key_size);
   EXPECT_NE(0, ret);
 
   ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP256R1, public_key.data(), public_key.size(),
+    0, MBEDTLS_ECP_DP_SECP256R1, public_key.data(), public_key.size(),
     &public_key_size, too_small.data(), too_small.size(), &private_key_size);
   EXPECT_NE(0, ret);
 }
@@ -107,7 +107,7 @@ TEST_F(TestKeyPair, GenerateFail_UnsupportedECP)
   std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
   size_t public_key_size = 0;
   int ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP192R1, public_key.data(), public_key.size(),
+    0, MBEDTLS_ECP_DP_SECP192R1, public_key.data(), public_key.size(),
     &public_key_size, private_key.data(), private_key.size(),
     &private_key_size);
   EXPECT_NE(0, ret);
@@ -122,7 +122,7 @@ TEST_F(TestKeyPair, Generate)
     std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
     size_t public_key_size = 0;
     int ret = oc_sec_ecdsa_generate_keypair(
-      grpid, public_key.data(), public_key.size(), &public_key_size,
+      0, grpid, public_key.data(), public_key.size(), &public_key_size,
       private_key.data(), private_key.size(), &private_key_size);
     EXPECT_EQ(0, ret) << "error for ec(" << grpid << ")";
 

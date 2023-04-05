@@ -29,6 +29,7 @@
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
 #include "security/oc_entropy_internal.h"
+#include "security/oc_pki_internal.h"
 #include "security/oc_tls_internal.h"
 #include "util/oc_macros.h"
 
@@ -207,10 +208,10 @@ oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
 }
 
 int
-oc_certs_extract_private_key(const mbedtls_x509_crt *cert,
+oc_certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
                              unsigned char *buffer, size_t buffer_size)
 {
-  int ret = mbedtls_pk_write_key_der(&cert->pk, buffer, buffer_size);
+  int ret = oc_mbedtls_pk_write_key_der(device, &cert->pk, buffer, buffer_size);
   if (ret < 0) {
     OC_ERR("could not extract private key from cert %d", ret);
     return ret;
@@ -224,8 +225,9 @@ oc_certs_extract_private_key(const mbedtls_x509_crt *cert,
 }
 
 int
-oc_certs_parse_private_key(const unsigned char *cert, size_t cert_size,
-                           unsigned char *buffer, size_t buffer_size)
+oc_certs_parse_private_key(size_t device, const unsigned char *cert,
+                           size_t cert_size, unsigned char *buffer,
+                           size_t buffer_size)
 {
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
@@ -236,7 +238,7 @@ oc_certs_parse_private_key(const unsigned char *cert, size_t cert_size,
     return -1;
   }
 
-  ret = oc_certs_extract_private_key(&crt, buffer, buffer_size);
+  ret = oc_certs_extract_private_key(device, &crt, buffer, buffer_size);
   mbedtls_x509_crt_free(&crt);
   return ret;
 }
@@ -245,7 +247,7 @@ int
 oc_certs_extract_public_key(const mbedtls_x509_crt *cert, unsigned char *buffer,
                             size_t buffer_size)
 {
-  int ret = mbedtls_pk_write_pubkey_der(&cert->pk, buffer, buffer_size);
+  int ret = oc_mbedtls_pk_write_pubkey_der(&cert->pk, buffer, buffer_size);
   if (ret < 0) {
     OC_ERR("could not extract public key from cert %d", ret);
     return ret;
