@@ -287,6 +287,12 @@
     <ClCompile Include="..\..\..\api\oc_session_events.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_tcp.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_udp.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\security\oc_certs.c">
       <Filter>Security</Filter>
     </ClCompile>
@@ -679,13 +685,16 @@
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_tcp_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_udp_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\security\oc_obt_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_mnt_internal.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_acl.h">

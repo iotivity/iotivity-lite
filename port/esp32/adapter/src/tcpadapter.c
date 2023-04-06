@@ -20,6 +20,7 @@
 
 #include "tcpadapter.h"
 #include "api/oc_session_events_internal.h"
+#include "api/oc_tcp_internal.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
 #include "oc_endpoint.h"
@@ -401,12 +402,24 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     want_read -= (size_t)count;
 
     if (total_length == 0) {
+      memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_SECURITY
+      if (message->endpoint.flags & SECURED) {
+        message->encrypted = 1;
+      }
+#endif /* OC_SECURITY */
+      if (!oc_tcp_is_valid_header(message)) {
+        OC_ERR("invalid header");
+        free_tcp_session(session);
+        ret_with_code(ADAPTER_STATUS_ERROR);
+      }
       total_length = get_total_length_from_header(message, &session->endpoint);
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
         OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
                total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         OC_ERR("It may occur buffer overflow.");
+        free_tcp_session(session);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
       OC_DBG("tcp packet total length : %zu bytes.", total_length);
@@ -415,12 +428,10 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     }
   } while (total_length > message->length);
 
-  memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
-#ifdef OC_SECURITY
-  if (message->endpoint.flags & SECURED) {
-    message->encrypted = 1;
+  if (!oc_tcp_is_valid_message(message)) {
+    free_tcp_session(session);
+    ret_with_code(ADAPTER_STATUS_ERROR);
   }
-#endif /* OC_SECURITY */
 
   FD_CLR(session->sock, fds);
   ret = ADAPTER_STATUS_RECEIVE;

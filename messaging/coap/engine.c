@@ -195,11 +195,11 @@ coap_receive(oc_message_t *msg)
   coap_status_t status;
 #ifdef OC_TCP
   if (msg->endpoint.flags & TCP) {
-    status = coap_tcp_parse_message(message, msg->data, (uint32_t)msg->length);
+    status = coap_tcp_parse_message(message, msg->data, msg->length, false);
   } else
 #endif /* OC_TCP */
   {
-    status = coap_udp_parse_message(message, msg->data, (uint16_t)msg->length);
+    status = coap_udp_parse_message(message, msg->data, msg->length, false);
   }
   coap_set_global_status_code(status);
 

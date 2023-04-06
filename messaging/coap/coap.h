@@ -180,12 +180,36 @@ size_t coap_serialize_message(void *packet, uint8_t *buffer);
 size_t coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
                                      bool outer, bool oscore);
 void coap_send_message(oc_message_t *message);
-coap_status_t coap_oscore_parse_options(void *packet, uint8_t *data,
-                                        uint32_t data_len,
+
+/**
+ * @brief Parse CoAP message options
+ *
+ * @param packet pointer to coap_packet_t struct
+ * @param data raw message data
+ * @param data_len length of raw message data
+ * @param current_option offset of current option in raw message data
+ * @param inner oscore inner option
+ * @param outer oscore outer option
+ * @param oscore oscore used
+ * @param validate if true, it doesn't modify data, and validation stops on
+ * first BAD_REQUEST
+ * @return coap_status_t
+ */
+coap_status_t coap_oscore_parse_options(void *packet, const uint8_t *data,
+                                        size_t data_len,
                                         uint8_t *current_option, bool inner,
-                                        bool outer, bool oscore);
+                                        bool outer, bool oscore, bool validate);
+/**
+ * @brief Parse UDP CoAP message
+ *
+ * @param request pointer to coap_packet_t struct
+ * @param data raw message data
+ * @param data_len length of raw message data
+ * @param validate if true, it doesn't modify data
+ * @return coap_status_t
+ */
 coap_status_t coap_udp_parse_message(void *request, uint8_t *data,
-                                     uint16_t data_len);
+                                     size_t data_len, bool validate);
 
 int coap_get_query_variable(void *packet, const char *name,
                             const char **output);
@@ -286,8 +310,17 @@ void coap_tcp_init_message(void *packet, uint8_t code);
 
 size_t coap_tcp_get_packet_size(const uint8_t *data);
 
+/**
+ * @brief Parse TCP CoAP message
+ *
+ * @param request pointer to coap_packet_t struct
+ * @param data raw message data
+ * @param data_len length of raw message data
+ * @param validate if true, it doesn't modify data
+ * @return coap_status_t
+ */
 coap_status_t coap_tcp_parse_message(void *packet, uint8_t *data,
-                                     uint32_t data_len);
+                                     size_t data_len, bool validate);
 
 void coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
                                    uint8_t *num_extended_length_bytes);

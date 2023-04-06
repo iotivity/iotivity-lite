@@ -17,7 +17,9 @@
  ****************************************************************************/
 
 #include "oc_network_events_internal.h"
+#include "oc_udp_internal.h"
 #include "api/oc_buffer_internal.h"
+#include "messaging/coap/coap.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_network_event_handler_internal.h"
@@ -91,7 +93,18 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
 void
 oc_network_receive_event(oc_message_t *message)
 {
+  if (!message) {
+    return;
+  }
   if (!oc_process_is_running(&oc_network_events)) {
+    oc_message_unref(message);
+    return;
+  }
+  // validate UDP/DTLS message, TCP messages is validated directly in the port
+  // layer for closing the connection
+  if (((message->endpoint.flags & TCP) == 0) &&
+      !oc_udp_is_valid_message(message)) {
+    OC_ERR("invalid header - dropping message");
     oc_message_unref(message);
     return;
   }

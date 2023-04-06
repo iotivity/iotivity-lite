@@ -625,7 +625,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
 
   coap_packet_t parse_packet{};
   coap_status_t ret =
-    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
+    coap_tcp_parse_message(&parse_packet, buffer.data(), buffer_len, false);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -645,7 +645,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PING)
 
   coap_packet_t parse_packet{};
   coap_status_t ret =
-    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
+    coap_tcp_parse_message(&parse_packet, buffer.data(), buffer_len, false);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -664,7 +664,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PONG)
 
   coap_packet_t parse_packet{};
   coap_status_t ret =
-    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
+    coap_tcp_parse_message(&parse_packet, buffer.data(), buffer_len, false);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -688,7 +688,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
 
   coap_packet_t parse_packet{};
   coap_status_t ret =
-    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
+    coap_tcp_parse_message(&parse_packet, buffer.data(), buffer_len, false);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
@@ -715,7 +715,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
 
   coap_packet_t parse_packet{};
   coap_status_t ret =
-    coap_tcp_parse_message(&parse_packet, buffer.data(), (uint32_t)buffer_len);
+    coap_tcp_parse_message(&parse_packet, buffer.data(), buffer_len, false);
 
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);

@@ -401,7 +401,7 @@ oscore_parse_inner_message(uint8_t *data, size_t data_len,
 
   /* Parse inner options */
   coap_status_t ret = coap_oscore_parse_options(
-    packet, data, data_len, current_option, true, false, true);
+    packet, data, data_len, current_option, true, false, true, false);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed! %d", ret);
     return ret;
@@ -552,7 +552,7 @@ oscore_parse_outer_message(oc_message_t *msg, coap_packet_t *packet)
 
   /* Parse outer options */
   coap_status_t ret = coap_oscore_parse_options(
-    packet, msg->data, msg->length, current_option, false, true, true);
+    packet, msg->data, msg->length, current_option, false, true, true, false);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed! %d", ret);
     return ret;

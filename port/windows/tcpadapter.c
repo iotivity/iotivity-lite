@@ -19,6 +19,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
+#include "api/oc_tcp_internal.h"
 #include "port/oc_assert.h"
 #include "util/oc_memb.h"
 #include "ipcontext.h"
@@ -537,6 +538,17 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
     want_read -= (size_t)count;
 
     if (total_length == 0) {
+      memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_SECURITY
+      if (message->endpoint.flags & SECURED) {
+        message->encrypted = 1;
+      }
+#endif /* OC_SECURITY */
+      if (!oc_tcp_is_valid_header(message)) {
+        OC_ERR("invalid header");
+        free_tcp_session(session);
+        return ADAPTER_STATUS_ERROR;
+      }
       total_length = get_total_length_from_header(message, &session->endpoint);
       if (total_length >
           (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
@@ -544,6 +556,7 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
                total_length,
                (size_t)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
         OC_ERR("It may occur buffer overflow.");
+        free_tcp_session(session);
         return ADAPTER_STATUS_ERROR;
       }
       OC_DBG("tcp packet total length : %zu bytes.", total_length);
@@ -552,12 +565,10 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
     }
   } while (total_length > message->length);
 
-  memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
-#ifdef OC_SECURITY
-  if (message->endpoint.flags & SECURED) {
-    message->encrypted = 1;
+  if (!oc_tcp_is_valid_message(message)) {
+    free_tcp_session(session);
+    return ADAPTER_STATUS_ERROR;
   }
-#endif /* OC_SECURITY */
 
   return ADAPTER_STATUS_RECEIVE;
 }
