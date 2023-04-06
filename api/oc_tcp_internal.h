@@ -21,7 +21,7 @@
 
 #include "util/oc_features.h"
 
-#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+#ifdef OC_TCP
 
 #include "port/oc_connectivity.h"
 #include "oc_endpoint.h"
@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 typedef struct oc_tcp_on_connect_event_s
 {
   struct oc_tcp_on_connect_data_s *next;
@@ -46,10 +47,17 @@ oc_tcp_on_connect_event_t *oc_tcp_on_connect_event_create(
 /** @brief Free TCP on connect event */
 void oc_tcp_on_connect_event_free(oc_tcp_on_connect_event_t *event);
 
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+/** @brief Check if the message is a valid CoAP/TLS header */
+bool oc_tcp_is_valid_header(const oc_message_t *message);
+
+/** @brief Check if the message is a valid for CoAP TCP */
+bool oc_tcp_is_valid_message(oc_message_t *message);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-
+#endif /* OC_TCP */
 #endif /* OC_TCP_INTERNAL_H */

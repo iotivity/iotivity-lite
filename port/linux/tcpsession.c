@@ -411,6 +411,17 @@ tcp_session_receive_message(tcp_session_t *session, oc_message_t *message)
     want_read -= (size_t)count;
 
     if (total_length == 0) {
+      memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+#ifdef OC_SECURITY
+      if ((message->endpoint.flags & SECURED) != 0) {
+        message->encrypted = 1;
+      }
+#endif /* OC_SECURITY */
+      if (!oc_tcp_is_valid_header(message)) {
+        OC_ERR("invalid header");
+        free_session_locked(session, true);
+        return ADAPTER_STATUS_ERROR;
+      }
       total_length = get_total_length_from_header(message, &session->endpoint);
       // check to avoid buffer overflow
       if (total_length >
@@ -426,6 +437,11 @@ tcp_session_receive_message(tcp_session_t *session, oc_message_t *message)
       want_read = total_length - (size_t)count;
     }
   } while (total_length > message->length);
+
+  if (!oc_tcp_is_valid_message(message)) {
+    free_session_locked(session, true);
+    return ADAPTER_STATUS_ERROR;
+  }
 
   return ADAPTER_STATUS_RECEIVE;
 }
@@ -456,13 +472,6 @@ tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   if (ret != ADAPTER_STATUS_RECEIVE) {
     goto tcp_receive_message_done;
   }
-
-  memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
-#ifdef OC_SECURITY
-  if ((message->endpoint.flags & SECURED) != 0) {
-    message->encrypted = 1;
-  }
-#endif /* OC_SECURITY */
 
 tcp_receive_message_done:
   pthread_mutex_unlock(&g_mutex);

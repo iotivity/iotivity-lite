@@ -386,8 +386,8 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     /* Parse CoAP message */
     coap_packet_t coap_pkt[1];
     coap_status_t code = 0;
-    code = coap_udp_parse_message(coap_pkt, message->data,
-                                  (uint16_t)message->length);
+    code =
+      coap_udp_parse_message(coap_pkt, message->data, message->length, false);
 
     if (code != COAP_NO_ERROR) {
       OC_ERR("***error parsing CoAP packet***");
@@ -578,13 +578,13 @@ oc_oscore_send_message(oc_message_t *msg)
     coap_status_t code = 0;
 #ifdef OC_TCP
     if (message->endpoint.flags & TCP) {
-      code = coap_tcp_parse_message(coap_pkt, message->data,
-                                    (uint32_t)message->length);
+      code =
+        coap_tcp_parse_message(coap_pkt, message->data, message->length, false);
     } else
 #endif /* OC_TCP */
     {
-      code = coap_udp_parse_message(coap_pkt, message->data,
-                                    (uint16_t)message->length);
+      code =
+        coap_udp_parse_message(coap_pkt, message->data, message->length, false);
     }
 
     if (code != COAP_NO_ERROR) {

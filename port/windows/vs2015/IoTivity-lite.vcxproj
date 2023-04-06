@@ -222,6 +222,8 @@
     <ClInclude Include="..\..\..\api\oc_resource_factory.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_swupdate_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_tcp_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_udp_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_acl.h" />
@@ -337,6 +339,8 @@
     <ClCompile Include="..\..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\..\api\oc_session_events.c" />
     <ClCompile Include="..\..\..\api\oc_swupdate.c" />
+    <ClCompile Include="..\..\..\api\oc_tcp.c" />
+    <ClCompile Include="..\..\..\api\oc_udp.c" />
     <ClCompile Include="..\..\..\api\oc_uuid.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aes.c" />
     <ClCompile Include="..\..\..\deps\mbedtls\library\aesni.c" />

@@ -580,7 +580,8 @@ TEST_F(TestOSCORE, ClientRequest1_P)
             0);
 
   coap_packet_t coap_pkt[1];
-  coap_status_t code = coap_udp_parse_message(coap_pkt, buffer, buffer_len);
+  coap_status_t code =
+    coap_udp_parse_message(coap_pkt, buffer, buffer_len, false);
 
   EXPECT_EQ(code, COAP_NO_ERROR);
 
@@ -694,7 +695,8 @@ TEST_F(TestOSCORE, ClientRequest2_P)
             0);
 
   coap_packet_t coap_pkt[1];
-  coap_status_t code = coap_udp_parse_message(coap_pkt, buffer, buffer_len);
+  coap_status_t code =
+    coap_udp_parse_message(coap_pkt, buffer, buffer_len, false);
 
   EXPECT_EQ(code, COAP_NO_ERROR);
 
@@ -807,7 +809,8 @@ TEST_F(TestOSCORE, ClientRequest3_P)
             0);
 
   coap_packet_t coap_pkt[1];
-  coap_status_t code = coap_udp_parse_message(coap_pkt, buffer, buffer_len);
+  coap_status_t code =
+    coap_udp_parse_message(coap_pkt, buffer, buffer_len, false);
 
   EXPECT_EQ(code, COAP_NO_ERROR);
 
@@ -929,7 +932,8 @@ TEST_F(TestOSCORE, ServerResponse1_P)
             0);
 
   coap_packet_t coap_pkt[1];
-  coap_status_t code = coap_udp_parse_message(coap_pkt, buffer, buffer_len);
+  coap_status_t code =
+    coap_udp_parse_message(coap_pkt, buffer, buffer_len, false);
 
   EXPECT_EQ(code, COAP_NO_ERROR);
 
@@ -1046,7 +1050,8 @@ TEST_F(TestOSCORE, ServerResponse2_P)
             0);
 
   coap_packet_t coap_pkt[1];
-  coap_status_t code = coap_udp_parse_message(coap_pkt, buffer, buffer_len);
+  coap_status_t code =
+    coap_udp_parse_message(coap_pkt, buffer, buffer_len, false);
 
   EXPECT_EQ(code, COAP_NO_ERROR);
 

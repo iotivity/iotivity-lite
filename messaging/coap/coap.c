@@ -646,86 +646,20 @@ coap_parse_signal_options(void *packet, unsigned int option_number,
 #endif /* OC_TCP */
 /*---------------------------------------------------------------------------*/
 
-coap_status_t
-coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
-                          uint8_t *current_option, bool inner, bool outer,
-                          bool oscore)
+static coap_status_t
+coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
+                         bool inner, bool outer, bool oscore, bool validate,
+                         unsigned int option_number, size_t option_length)
 {
   (void)oscore;
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
-
-  /* parse options */
-  memset(coap_pkt->options, 0, sizeof(coap_pkt->options));
-
-  unsigned int option_number = 0;
-  unsigned int option_delta = 0;
-  size_t option_length = 0;
-
-  while (current_option < data + data_len) {
-    /* payload marker 0xFF, currently only checking for 0xF* because rest is
-     * reserved */
-    if ((current_option[0] & 0xF0) == 0xF0) {
-      coap_pkt->payload = ++current_option;
-      coap_pkt->payload_len = data_len - (uint32_t)(coap_pkt->payload - data);
-
-      if (coap_pkt->transport_type == COAP_TRANSPORT_UDP &&
-          coap_pkt->payload_len > (uint32_t)OC_MAX_APP_DATA_SIZE) {
-        coap_pkt->payload_len = (uint32_t)OC_MAX_APP_DATA_SIZE;
-        /* null-terminate payload */
-      }
-      coap_pkt->payload[coap_pkt->payload_len] = '\0';
-
-      OC_DBG("Got payload:");
-      OC_LOGbytes(coap_pkt->payload, coap_pkt->payload_len);
-      break;
-    }
-
-    option_delta = current_option[0] >> 4;
-    option_length = current_option[0] & 0x0F;
-    ++current_option;
-
-    if (option_delta == 13) {
-      option_delta += current_option[0];
-      ++current_option;
-    } else if (option_delta == 14) {
-      option_delta += 255;
-      option_delta += current_option[0] << 8;
-      ++current_option;
-      option_delta += current_option[0];
-      ++current_option;
-    }
-
-    if (option_length == 13) {
-      option_length += current_option[0];
-      ++current_option;
-    } else if (option_length == 14) {
-      option_length += 255;
-      option_length += current_option[0] << 8;
-      ++current_option;
-      option_length += current_option[0];
-      ++current_option;
-    }
-
-    option_number += option_delta;
-
-    if (option_number <= COAP_OPTION_SIZE1) {
-      OC_DBG("OPTION %u (delta %u, len %zu):", option_number, option_delta,
-             option_length);
-      SET_OPTION(coap_pkt, option_number);
-    }
-    if (current_option + option_length > data + data_len) {
-      OC_WRN("Unsupported option");
-      return BAD_OPTION_4_02;
-    }
 
 #ifdef OC_TCP
-    if (coap_check_signal_message(packet)) {
-      coap_parse_signal_options(packet, option_number, current_option,
-                                option_length, inner);
-      current_option += option_length;
-      continue;
-    }
+  if (coap_check_signal_message(coap_pkt)) {
+    return coap_parse_signal_options(coap_pkt, option_number, current_option,
+                                     option_length, inner);
+  } else
 #endif /* OC_TCP */
+  {
     switch (option_number) {
 #if defined(OC_OSCORE) && defined(OC_SECURITY)
     case COAP_OPTION_OSCORE:
@@ -792,6 +726,9 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
       if (!outer) {
         return BAD_OPTION_4_02;
       }
+      if (validate) {
+        break;
+      }
       /* coap_merge_multi_option() operates in-place on the IPBUF, but final
        * packet field should be const string -> cast to string */
       coap_merge_multi_option((char **)&(coap_pkt->proxy_uri),
@@ -853,6 +790,9 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
       if (!inner) {
         return BAD_OPTION_4_02;
       }
+      if (validate) {
+        break;
+      }
       /* coap_merge_multi_option() operates in-place on the IPBUF, but final
        * packet field should be const string -> cast to string */
       coap_merge_multi_option((char **)&(coap_pkt->uri_path),
@@ -864,6 +804,9 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
     case COAP_OPTION_URI_QUERY:
       if (!inner) {
         return BAD_OPTION_4_02;
+      }
+      if (validate) {
+        break;
       }
       /* coap_merge_multi_option() operates in-place on the IPBUF, but final
        * packet field should be const string -> cast to string */
@@ -972,11 +915,106 @@ coap_oscore_parse_options(void *packet, uint8_t *data, uint32_t data_len,
         return BAD_OPTION_4_02;
       }
     }
+  }
+  return COAP_NO_ERROR;
+}
+
+coap_status_t
+coap_oscore_parse_options(void *packet, const uint8_t *data, size_t data_len,
+                          uint8_t *current_option, bool inner, bool outer,
+                          bool oscore, bool validate)
+{
+  if (data_len > UINT32_MAX) {
+    OC_WRN("message size(%zu) exceeds limit for coap message(%u)", data_len,
+           UINT32_MAX);
+    return BAD_REQUEST_4_00;
+  }
+  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+
+  /* parse options */
+  memset(coap_pkt->options, 0, sizeof(coap_pkt->options));
+
+  unsigned int option_number = 0;
+  unsigned int option_delta = 0;
+  size_t option_length = 0;
+  coap_status_t last_error = COAP_NO_ERROR;
+
+  while (current_option < data + data_len) {
+    /* payload marker 0xFF, currently only checking for 0xF* because rest is
+     * reserved */
+    if ((current_option[0] & 0xF0) == 0xF0) {
+      coap_pkt->payload = ++current_option;
+      coap_pkt->payload_len = (uint32_t)(data_len - (coap_pkt->payload - data));
+
+      if (coap_pkt->transport_type == COAP_TRANSPORT_UDP &&
+          coap_pkt->payload_len > (uint32_t)OC_MAX_APP_DATA_SIZE) {
+        coap_pkt->payload_len = (uint32_t)OC_MAX_APP_DATA_SIZE;
+        /* null-terminate payload */
+      }
+      if (!validate) {
+        coap_pkt->payload[coap_pkt->payload_len] = '\0';
+        OC_DBG("Got payload:");
+        OC_LOGbytes(coap_pkt->payload, coap_pkt->payload_len);
+      }
+      break;
+    }
+
+    option_delta = current_option[0] >> 4;
+    option_length = current_option[0] & 0x0F;
+    ++current_option;
+
+    if (option_delta == 13) {
+      option_delta += current_option[0];
+      ++current_option;
+    } else if (option_delta == 14) {
+      option_delta += 255;
+      option_delta += current_option[0] << 8;
+      ++current_option;
+      option_delta += current_option[0];
+      ++current_option;
+    }
+
+    if (option_length == 13) {
+      option_length += current_option[0];
+      ++current_option;
+    } else if (option_length == 14) {
+      option_length += 255;
+      option_length += current_option[0] << 8;
+      ++current_option;
+      option_length += current_option[0];
+      ++current_option;
+    }
+
+    option_number += option_delta;
+
+    if (option_number <= COAP_OPTION_SIZE1) {
+      OC_DBG("OPTION %u (delta %u, len %zu):", option_number, option_delta,
+             option_length);
+      SET_OPTION(coap_pkt, option_number);
+    }
+    if (current_option + option_length > data + data_len) {
+      OC_WRN("Invalid option - option length exceeds packet length");
+      return BAD_REQUEST_4_00;
+    }
+    coap_status_t s =
+      coap_oscore_parse_option(coap_pkt, current_option, inner, outer, oscore,
+                               validate, option_number, option_length);
+    if (s != COAP_NO_ERROR) {
+      if (!validate) {
+        return s;
+      }
+      if (s == BAD_REQUEST_4_00) {
+        return s;
+      }
+      if (last_error < s) {
+        last_error = s;
+      }
+    }
     current_option += option_length;
   } /* for */
   OC_DBG("-Done parsing-------");
 
-  return COAP_NO_ERROR;
+  return last_error;
 }
 /*---------------------------------------------------------------------------*/
 #ifdef OC_TCP
@@ -1314,8 +1352,14 @@ coap_serialize_message(void *packet, uint8_t *buffer)
 }
 /*---------------------------------------------------------------------------*/
 coap_status_t
-coap_udp_parse_message(void *packet, uint8_t *data, uint16_t data_len)
+coap_udp_parse_message(void *packet, uint8_t *data, size_t data_len,
+                       bool validate)
 {
+  if (data_len > UINT16_MAX) {
+    OC_WRN("message size(%zu) exceeds limit for UDP message(%u)", data_len,
+           UINT16_MAX);
+    return BAD_REQUEST_4_00;
+  }
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   /* initialize packet */
   memset(coap_pkt, 0, sizeof(coap_packet_t));
@@ -1351,7 +1395,7 @@ coap_udp_parse_message(void *packet, uint8_t *data, uint16_t data_len)
   current_option += coap_pkt->token_len;
 
   coap_status_t ret = coap_oscore_parse_options(
-    packet, data, data_len, current_option, true, true, false);
+    packet, data, data_len, current_option, true, true, false, validate);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed! %d", ret);
     return ret;
@@ -1380,8 +1424,14 @@ coap_tcp_get_packet_size(const uint8_t *data)
 }
 /*---------------------------------------------------------------------------*/
 coap_status_t
-coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len)
+coap_tcp_parse_message(void *packet, uint8_t *data, size_t data_len,
+                       bool validate)
 {
+  if (data_len > UINT32_MAX) {
+    OC_WRN("message size(%zu) exceeds limit for TCP message(%u)", data_len,
+           UINT32_MAX);
+    return BAD_REQUEST_4_00;
+  }
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   /* initialize packet */
@@ -1417,7 +1467,7 @@ coap_tcp_parse_message(void *packet, uint8_t *data, uint32_t data_len)
   current_option += coap_pkt->token_len;
 
   coap_status_t ret = coap_oscore_parse_options(
-    packet, data, data_len, current_option, true, true, false);
+    packet, data, data_len, current_option, true, true, false, validate);
   if (COAP_NO_ERROR != ret) {
     OC_DBG("coap_oscore_parse_options failed!");
     return ret;
