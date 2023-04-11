@@ -1418,34 +1418,33 @@ send_ipv6_discovery_request(oc_message_t *message,
   IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
   const struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
-  if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
-    unsigned int mif = if_nametoindex(interface->ifa_name);
-    if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
-                   sizeof(mif)) == -1) {
-      OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d", errno);
-      return false;
-    }
-    message->endpoint.interface_index = mif;
-    if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
-      message->endpoint.addr.ipv6.scope = mif;
-      unsigned int hops = 1;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-    } else if (IN6_IS_ADDR_MC_REALM_LOCAL(
-                 message->endpoint.addr.ipv6.address)) {
-      unsigned int hops = 255;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-      message->endpoint.addr.ipv6.scope = 0;
-    } else if (IN6_IS_ADDR_MC_SITELOCAL(message->endpoint.addr.ipv6.address)) {
-      unsigned int hops = 255;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-      message->endpoint.addr.ipv6.scope = 0;
-    }
-    if (oc_send_buffer(message) < 0) {
-      OC_WRN("failed to send ipv6 discovery request");
-    }
+  unsigned int mif = if_nametoindex(interface->ifa_name);
+  if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
+                  sizeof(mif)) == -1) {
+    OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d", errno);
+    return false;
+  }
+  message->endpoint.interface_index = mif;
+  if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
+    message->endpoint.addr.ipv6.scope = mif;
+    unsigned int hops = 1;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                sizeof(hops));
+  } else if (IN6_IS_ADDR_MC_REALM_LOCAL(
+                message->endpoint.addr.ipv6.address)) {
+    unsigned int hops = 255;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                sizeof(hops));
+    message->endpoint.addr.ipv6.scope = 0;
+  } else if (IN6_IS_ADDR_MC_SITELOCAL(message->endpoint.addr.ipv6.address)) {
+    unsigned int hops = 255;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+                sizeof(hops));
+    message->endpoint.addr.ipv6.scope = 0;
+  }
+  memcpy(message->endpoint.addr_local.ipv6.address, addr->sin6_addr.__in6_u.__u6_addr8, 16);
+  if (oc_send_buffer(message) < 0) {
+    OC_WRN("failed to send ipv6 discovery request");
   }
 #undef IN6_IS_ADDR_MC_REALM_LOCAL
   return true;
