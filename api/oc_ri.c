@@ -1194,7 +1194,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
    *  in order to reducing peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
    */
   memset(&response_buffer, 0, sizeof(response_buffer));
-
+  response_buffer.content_format = APPLICATION_NOT_DEFINED;
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
 

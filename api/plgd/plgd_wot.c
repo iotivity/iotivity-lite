@@ -289,6 +289,11 @@ wot_root_get(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)iface_mask;
   (void)data;
+  if (request->accept == APPLICATION_NOT_DEFINED) {
+    // default to application/td+json
+    oc_rep_encoder_set_type(OC_REP_JSON_ENCODER);
+    request->response->response_buffer->content_format = APPLICATION_TD_JSON;
+  }
   size_t device_index = request->origin->device;
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
@@ -315,6 +320,11 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)data;
+  if (request->accept == APPLICATION_NOT_DEFINED) {
+    // default to application/td+json
+    oc_rep_encoder_set_type(OC_REP_JSON_ENCODER);
+    request->response->response_buffer->content_format = APPLICATION_TD_JSON;
+  }
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, @context, "https://www.w3.org/2022/wot/td/v1.1");
   oc_rep_set_text_string(root, @type, "Thing");
