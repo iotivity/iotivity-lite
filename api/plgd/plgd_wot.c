@@ -44,7 +44,7 @@
 #endif /* OC_MNT */
 
 #ifdef OC_SECURITY
-#include "security/oc_doxm.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
@@ -129,7 +129,7 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
   };
   while (op_flags != 0) {
     oc_rep_start_object((forms_array), forms);
-    oc_rep_set_text_string(forms, type, "application/cbor");
+    oc_rep_set_text_string(forms, contentType, "application/cbor");
     oc_rep_set_text_string(forms, href, href);
     for (size_t i = 0; i < (sizeof(forms) / sizeof(forms[0])); ++i) {
       if (op_flags & forms[i].op_flag) {
@@ -224,7 +224,6 @@ set_security(CborEncoder *obj_map)
   oc_rep_close_object(*obj, securityDefinitions);
   oc_rep_set_text_string(*obj, security, "nosec_sc");
 }
-
 
 #ifdef OC_SERVER
 
@@ -329,17 +328,17 @@ plgd_wot_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_rep_set_text_string(root, title, title);
   set_security(&root_map);
 
-  // forms
-  oc_rep_set_array(root, forms);
-  process_wot_response_set_endpoint_cbk(
-    &forms_array, request->resource, request->origin,
-    process_wot_response_set_form_all, NULL);
-  oc_rep_close_array(root, forms);
-
   if (request->resource->wot_extend_thing_description_handler.cb) {
     request->resource->wot_extend_thing_description_handler.cb(
       &root_map, request,
       request->resource->wot_extend_thing_description_handler.user_data);
+  } else {
+    // forms
+    oc_rep_set_array(root, forms);
+    process_wot_response_set_endpoint_cbk(
+      &forms_array, request->resource, request->origin,
+      process_wot_response_set_form_all, NULL);
+    oc_rep_close_array(root, forms);
   }
 
   oc_rep_end_root_object();
@@ -547,23 +546,12 @@ plgd_wot_property_str(plgd_wot_property_type_t p)
 }
 
 static void
-process_wot_response_set_form_property(CborEncoder *forms_array,
-                                       oc_resource_t *resource,
-                                       const char *scheme_host, void *user_data)
+process_wot_response_set_for_form_resource(CborEncoder *forms_array,
+                                           oc_resource_t *resource,
+                                           const char *scheme_host,
+                                           void *user_data)
 {
-  plgd_wot_property_t *property = (plgd_wot_property_t *)user_data;
-  oc_wot_operation_t op_flags = 0;
-  if (resource->properties & OC_OBSERVABLE && property->observable &&
-      resource->get_handler.cb && !property->write_only) {
-    op_flags |= observeProperty;
-  }
-  if (resource->get_handler.cb && !property->write_only) {
-    op_flags |= readProperty;
-  }
-  if ((resource->post_handler.cb || resource->put_handler.cb) &&
-      !property->read_only) {
-    op_flags |= writeProperty;
-  }
+  oc_wot_operation_t op_flags = (oc_wot_operation_t)user_data;
   process_wot_response_set_form(forms_array, resource, scheme_host, op_flags);
 }
 
@@ -576,49 +564,67 @@ plgd_wot_resource_set_td_properties_num(CborEncoder *parent_map,
   if (props == NULL || props_count == 0) {
     return;
   }
-  g_err |=
-    oc_rep_encode_text_string(parent_map, "properties", strlen("properties"));
-  oc_rep_begin_object(parent_map, properties);
+
+  (void)request;
+  oc_wot_operation_t op_flags = 0;
+  oc_resource_t *resource = request->resource;
+  g_err |= oc_rep_encode_text_string(parent_map, "properties",
+                                     strlen("properties")); // properties:
+  oc_rep_begin_object(parent_map, wot_properties);          // {
+  oc_rep_set_object(wot_properties, content);               //     content: {
+
+  oc_rep_set_text_string( //       type: "object",
+    content, type, plgd_wot_property_str(PLGD_DEV_WOT_PROPERTY_TYPE_OBJECT));
+
+  oc_rep_set_object(content, properties); //       properties: {
   for (size_t i = 0; i < props_count; ++i) {
-    g_err |= oc_rep_encode_text_string(&properties_map, props[i].name,
-                                       strlen(props[i].name));
-    oc_rep_begin_object(&properties_map, property);
-    oc_rep_set_text_string(
-      property, type, plgd_wot_property_str(PLGD_DEV_WOT_PROPERTY_TYPE_OBJECT));
-
-    // ocf:property
-    g_err |= oc_rep_encode_text_string(&property_map, "properties",
-                                       strlen("properties"));
-    oc_rep_begin_object(&property_map, property_properties);
-    g_err |= oc_rep_encode_text_string(&property_properties_map, props[i].name,
-                                       strlen(props[i].name));
-    oc_rep_begin_object(&property_properties_map, property_properties_property);
-    oc_rep_set_text_string(property_properties_property, type,
-                           plgd_wot_property_str(props[i].type));
-    oc_rep_end_object(&property_properties_map, property_properties_property);
-    oc_rep_end_object(&property_map, property_properties);
-
-    if (props[i].description) {
-      oc_rep_set_text_string(property, description, props[i].description);
+    if (resource->properties & OC_OBSERVABLE && props[i].observable &&
+        resource->get_handler.cb && !props[i].write_only) {
+      op_flags |= observeProperty;
     }
-    if (props[i].observable &&
-        (request->resource->properties & OC_OBSERVABLE)) {
-      oc_rep_set_boolean(property, observable, props[i].observable);
+    if (resource->get_handler.cb && !props[i].write_only) {
+      op_flags |= readProperty;
+    }
+    if ((resource->post_handler.cb || resource->put_handler.cb) &&
+        !props[i].read_only) {
+      op_flags |= writeProperty;
+    }
+    g_err |= oc_rep_encode_text_string(&properties_map,
+                                       props[i].name, //      props[i].name:
+                                       strlen(props[i].name));
+    oc_rep_begin_object(&properties_map, property); //       {
+
+    oc_rep_set_text_string(
+      property, type,
+      plgd_wot_property_str(props[i].type)); //         type: "props[i].type",
+    if (props[i].description) {
+      oc_rep_set_text_string(
+        property, description,
+        props[i].description); //         description: "props[i].description",
+    }
+    if (props[i].observable && (resource->properties & OC_OBSERVABLE)) {
+      oc_rep_set_boolean(property, observable,
+                         props[i].observable); //         observable: true,
     }
     if (props[i].read_only) {
-      oc_rep_set_boolean(property, readOnly, props[i].read_only);
+      oc_rep_set_boolean(property, readOnly,
+                         props[i].read_only); //         readOnly: true,
     }
     if (props[i].write_only) {
-      oc_rep_set_boolean(property, writeOnly, props[i].write_only);
+      oc_rep_set_boolean(property, writeOnly,
+                         props[i].write_only); //         writeOnly: true,
     }
-    oc_rep_set_array(property, forms);
-    process_wot_response_set_endpoint_cbk(
-      &forms_array, request->resource, request->origin,
-      process_wot_response_set_form_property, (void *)&props[i]);
-    oc_rep_close_array(property, forms);
-    oc_rep_close_object(properties, property);
+    oc_rep_end_object(&properties_map, property); //       },
   }
-  oc_rep_end_object(parent_map, properties);
+
+  oc_rep_close_object(content, properties); //     },
+  oc_rep_set_array(content, forms);         //      forms: [
+  process_wot_response_set_endpoint_cbk(
+    &forms_array, resource, request->origin,
+    process_wot_response_set_for_form_resource, (void *)op_flags);
+  oc_rep_close_array(content, forms);            //     ]
+  oc_rep_close_object(wot_properties, content);  //   }
+  oc_rep_end_object(parent_map, wot_properties); // }
 }
 
 #endif /* OC_HAS_FEATURE_PLGD_WOT */
