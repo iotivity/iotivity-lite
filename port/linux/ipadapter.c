@@ -86,7 +86,7 @@ struct sockaddr_nl g_ifchange_nl;
 int g_ifchange_sock;
 bool g_ifchange_initialized;
 
-uint8_t g_addr_local[16] = {0x0};
+uint8_t g_routable_addr[16] = {0x0};
 
 OC_LIST(g_ip_contexts);
 OC_MEMB(g_ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
@@ -864,7 +864,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       if (!multicast) {
         memcpy(endpoint->addr_local.ipv6.address, pktinfo->ipi6_addr.s6_addr,
                16);
-        memcpy(g_addr_local, pktinfo->ipi6_addr.s6_addr,
+        memcpy(g_routable_addr, pktinfo->ipi6_addr.s6_addr,
                16);
       } else {
         memset(endpoint->addr_local.ipv6.address, 0, 16);
@@ -1397,15 +1397,15 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
     send_sock = dev->server_sock;
   }
 #endif /* OC_IPV4 */
-  bool is_g_addr_empty = true;
+  bool has_routable_addr = true;
   for (int i = 0; i < 16; i++) {
-    if (g_addr_local[i] != 0x0) {
-      is_g_addr_empty = false;
+    if (g_routable_addr[i] != 0x0) {
+      has_routable_addr = false;
     }
     break;
   }
-  if (!is_g_addr_empty) {
-    memcpy(message->endpoint.addr_local.ipv6.address, g_addr_local, 16);
+  if (!has_routable_addr) {
+    memcpy(message->endpoint.addr_local.ipv6.address, g_routable_addr, 16);
   }
   return send_msg(send_sock, &receiver, message);
 }
