@@ -869,9 +869,6 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       } else {
         memset(endpoint->addr_local.ipv6.address, 0, 16);
       }
-      char myaddr[INET6_ADDRSTRLEN];
-      inet_ntop(AF_INET6, &pktinfo->ipi6_addr, myaddr, INET6_ADDRSTRLEN);
-      PRINT("[recv_msg] address = %s\n", myaddr);
       break;
     }
 #ifdef OC_IPV4
@@ -1267,9 +1264,6 @@ send_msg(int sock, struct sockaddr_storage *receiver,
      * from the endpoint's addr_local attribute.
      */
     memcpy(&pktinfo->ipi6_addr, message->endpoint.addr_local.ipv6.address, 16);
-    char myaddr[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &pktinfo->ipi6_addr, myaddr, INET6_ADDRSTRLEN);
-    PRINT("[send_msg] address = %s\n", myaddr);
   }
 #ifdef OC_IPV4
   else if (message->endpoint.flags & IPV4) {
@@ -1348,11 +1342,11 @@ oc_get_socket_address(const oc_endpoint_t *endpoint,
 static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
-// #ifdef OC_DEBUG
+#ifdef OC_DEBUG
   PRINT("Outgoing message of size %zd bytes to ", message->length);
   PRINTipaddr(message->endpoint);
   PRINT("\n\n");
-// #endif /* OC_DEBUG */
+#endif /* OC_DEBUG */
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));
@@ -1411,7 +1405,6 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
     break;
   }
   if (!is_g_addr_empty) {
-    PRINT("zzzzzzzzzzzzz\n");
     memcpy(message->endpoint.addr_local.ipv6.address, g_addr_local, 16);
   }
   return send_msg(send_sock, &receiver, message);
@@ -1463,9 +1456,6 @@ send_ipv6_discovery_request(oc_message_t *message,
     message->endpoint.addr.ipv6.scope = 0;
   }
   memcpy(message->endpoint.addr_local.ipv6.address, addr->sin6_addr.__in6_u.__u6_addr8, 16);
-  char myaddr[INET6_ADDRSTRLEN];
-  inet_ntop(AF_INET6, &addr->sin6_addr, myaddr, INET6_ADDRSTRLEN);
-  PRINT("[send_ipv6_discovery_request] address = %s\n", myaddr);
   if (oc_send_buffer(message) < 0) {
     OC_WRN("failed to send ipv6 discovery request");
   }
