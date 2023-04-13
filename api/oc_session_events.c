@@ -46,7 +46,7 @@ OC_MEMB(oc_session_event_cb_s, oc_session_event_cb_t, OC_MAX_SESSION_EVENT_CBS);
 OC_LIST(g_session_start_events);
 OC_LIST(g_session_end_events);
 
-static int g_session_state_free_delay_secs;
+static int g_session_state_free_delay_secs = 0;
 static OC_ATOMIC_UINT8_T g_session_end_ref = 0;
 
 static int
@@ -342,6 +342,7 @@ handle_session_disconnected(const oc_endpoint_t *endpoint)
 void
 oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
+  OC_DBG("handle session: state=%d", (int)state);
   if (state == OC_SESSION_DISCONNECTED) {
     handle_session_disconnected(endpoint);
   }

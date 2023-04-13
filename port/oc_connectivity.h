@@ -24,14 +24,16 @@
 #define OC_CONNECTIVITY_H
 
 #include "messaging/coap/conf.h"
+#include "oc_config.h"
+#include "oc_endpoint.h"
+#include "oc_export.h"
+#include "oc_network_events.h"
+#include "oc_session_events.h"
 #include "port/oc_log.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
-#include "oc_config.h"
-#include "oc_endpoint.h"
-#include "oc_network_events.h"
-#include "oc_session_events.h"
+
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -247,6 +249,7 @@ typedef void (*on_tcp_connect_t)(const oc_endpoint_t *endpoint, int state,
  * established without delay (the on_tcp_connect and on_tcp_connect_data
  * arguments used in this invocation will be ignored)
  */
+OC_API
 int oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
                    void *on_tcp_connect_data);
 
@@ -261,6 +264,7 @@ int oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
  * established
  * @return -1 otherwise
  */
+OC_API
 int oc_tcp_connection_state(const oc_endpoint_t *endpoint);
 
 /**
@@ -279,6 +283,7 @@ typedef enum {
  * @param endpoint the endpoint
  * @return tcp_csm_state_t the cms state
  */
+OC_API
 tcp_csm_state_t oc_tcp_get_csm_state(const oc_endpoint_t *endpoint);
 
 /**
@@ -288,6 +293,7 @@ tcp_csm_state_t oc_tcp_get_csm_state(const oc_endpoint_t *endpoint);
  * @param csm the cms state
  * @return int 0 = success
  */
+OC_API
 int oc_tcp_update_csm_state(const oc_endpoint_t *endpoint, tcp_csm_state_t csm);
 #endif /* OC_TCP */
 

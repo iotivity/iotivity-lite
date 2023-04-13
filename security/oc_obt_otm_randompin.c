@@ -35,8 +35,6 @@
 
 /* Random PIN OTM */
 
-void oc_tls_use_pin_obt_psk_identity(void);
-
 static void
 obt_rdp_14(oc_client_response_t *data)
 {

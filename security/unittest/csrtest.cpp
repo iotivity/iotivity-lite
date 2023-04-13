@@ -272,7 +272,8 @@ TEST_F(TestCSRWithDevice, Resource)
   oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA384);
   oc_sec_certs_ecp_set_group_id(MBEDTLS_ECP_DP_SECP384R1);
 
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   oc_resource_t *csr = oc_core_get_resource_by_index(OCF_SEC_CSR, /*device*/ 0);

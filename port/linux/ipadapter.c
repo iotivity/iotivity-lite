@@ -18,13 +18,6 @@
 
 #define _GNU_SOURCE
 #include "api/oc_network_events_internal.h"
-#include "port/oc_assert.h"
-#include "port/oc_clock.h"
-#include "port/oc_connectivity.h"
-#include "port/oc_connectivity_internal.h"
-#include "port/oc_network_event_handler_internal.h"
-#include "util/oc_atomic.h"
-#include "util/oc_features.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
 #include "oc_config.h"
@@ -32,6 +25,13 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/oc_assert.h"
+#include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_atomic.h"
+#include "util/oc_features.h"
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"

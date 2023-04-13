@@ -147,7 +147,16 @@ public:
 
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
-  static oc_endpoint_t *GetEndpoint(size_t device, int flags = 0);
+  /**
+   * @brief Get the Endpoint object
+   *
+   * @param device index of device associated with the endpoint
+   * @param flags flags that the endpoint flags must contain
+   * @param exclude_flags flags that the endpoint flags cannot contain
+   * @return oc_endpoint_t* matching endpoint or nullptr
+   */
+  static oc_endpoint_t *GetEndpoint(size_t device, unsigned flags = 0,
+                                    unsigned exclude_flags = 0);
 
 private:
   static int SetSystemTime(oc_clock_time_t time, void *user_data);

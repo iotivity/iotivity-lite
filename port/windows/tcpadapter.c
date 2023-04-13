@@ -1056,6 +1056,18 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
   OC_DBG("oc_tcp_connectivity_shutdown for device %zd", dev->device);
 }
 
+int
+oc_tcp_connection_state(const oc_endpoint_t *endpoint)
+{
+  oc_tcp_adapter_mutex_lock();
+  tcp_session_t *session = find_session_by_endpoint_locked(endpoint);
+  oc_tcp_adapter_mutex_unlock();
+  if (session != NULL) {
+    return OC_TCP_SOCKET_STATE_CONNECTED;
+  }
+  return -1;
+}
+
 tcp_csm_state_t
 oc_tcp_get_csm_state(const oc_endpoint_t *endpoint)
 {

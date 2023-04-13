@@ -69,7 +69,7 @@ oc_sec_certs_default(void)
 }
 
 mbedtls_md_type_t
-oc_sec_certs_md_signature_algorithm()
+oc_sec_certs_md_signature_algorithm(void)
 {
   return g_signature_md;
 }

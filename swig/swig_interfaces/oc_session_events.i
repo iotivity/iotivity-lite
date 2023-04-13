@@ -63,4 +63,5 @@ void jni_session_events_set_event_delay(int secs)
 #endif /* !OC_TCP */
 }
 %}
+#define OC_API
 %include "oc_session_events.h"

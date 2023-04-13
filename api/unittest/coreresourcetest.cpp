@@ -420,7 +420,8 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsVerticalResource_P)
 
 TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {

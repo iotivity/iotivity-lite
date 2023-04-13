@@ -32,6 +32,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 
+#include <array>
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <string>
@@ -236,7 +237,8 @@ TEST_F(TestSdiWithServer, GetResourceByURI)
 TEST_F(TestSdiWithServer, GetRequest)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -260,7 +262,8 @@ TEST_F(TestSdiWithServer, GetRequest)
 
 TEST_F(TestSdiWithServer, PostRequest)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto post_handler = [](oc_client_response_t *data) {

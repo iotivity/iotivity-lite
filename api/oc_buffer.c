@@ -17,20 +17,21 @@
  ****************************************************************************/
 
 #include "messaging/coap/engine.h"
+#include "oc_buffer.h"
+#include "oc_buffer_internal.h"
+#include "oc_config.h"
+#include "oc_events.h"
+#include "oc_signal_event_loop.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "util/oc_features.h"
+#include "util/oc_memb.h"
+
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
 #include "security/oc_oscore.h"
 #endif /* OC_OSCORE */
 #include "security/oc_tls.h"
 #endif /* OC_SECURITY */
-#include "util/oc_features.h"
-#include "util/oc_memb.h"
-#include "oc_buffer.h"
-#include "oc_buffer_internal.h"
-#include "oc_config.h"
-#include "oc_events.h"
-#include "oc_signal_event_loop.h"
 
 #include <stdint.h>
 #include <stdio.h>

@@ -78,9 +78,12 @@ int oc_add_session_event_callback_v1(session_event_handler_v1_t cb,
  * @param cb The callback to be removed. Must not be NULL.
  * @return 0 on success
  * @return -1 on error
+ *
+ * @deprecated replaced by oc_remove_session_event_callback_v1 in v2.2.5.4
  */
 OC_API
-int oc_remove_session_event_callback(session_event_handler_t cb);
+int oc_remove_session_event_callback(session_event_handler_t cb) OC_DEPRECATED(
+  "replaced by oc_remove_session_event_callback_v1, deprecated in v2.2.5.4");
 
 /**
  * @brief Remove the callback with to receive session event notifications.
