@@ -25,32 +25,6 @@
 %ignore oc_session_event_cb;
 %ignore oc_session_events;
 
-%ignore oc_session_start_event;
-%rename (startEvent) jni_session_start_event;
-%inline %{
-void jni_session_start_event(oc_endpoint_t *endpoint)
-{
-#ifdef OC_TCP
-  oc_session_start_event(endpoint);
-#else /* OC_TCP */
-  OC_DBG("JNI: %s - Must build with OC_TCP defined to use this function.\n", __func__);
-#endif /* !OC_TCP */
-}
-%}
-
-%ignore oc_session_end_event;
-%rename (endEvent) jni_session_end_event;
-%inline %{
-void jni_session_end_event(oc_endpoint_t *endpoint)
-{
-#ifdef OC_TCP
-  oc_session_end_event(endpoint);
-#else /* OC_TCP */
-  OC_DBG("JNI: %s - Must build with OC_TCP defined to use this function.\n", __func__);
-#endif /* !OC_TCP */
-}
-%}
-
 %ignore oc_session_events_set_event_delay;
 %rename (setEventDelay) jni_session_events_set_event_delay;
 %inline %{
@@ -64,4 +38,5 @@ void jni_session_events_set_event_delay(int secs)
 }
 %}
 #define OC_API
+#define OC_DEPRECATED(...)
 %include "oc_session_events.h"
