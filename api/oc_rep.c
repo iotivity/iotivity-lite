@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "oc_rep.h"
+#include "jsmn.h"
 #include "oc_rep_internal.h"
 #include "oc_rep_encode_internal.h"
 #include "oc_ri_internal.h"
@@ -33,12 +34,26 @@ CborEncoder root_map;
 CborEncoder links_array;
 int g_err;
 
+static oc_rep_decoder_type_t g_decoder_type = OC_REP_CBOR_DECODER;
+
 typedef enum oc_rep_error_t {
   OC_REP_NO_ERROR = 0,
 
   OC_REP_ERROR_INTERNAL = -1,
   OC_REP_ERROR_OUT_OF_MEMORY = -2,
 } oc_rep_error_t;
+
+void
+oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type)
+{
+  g_decoder_type = decoder_type;
+}
+
+oc_rep_decoder_type_t
+oc_rep_decoder_get_type()
+{
+  return g_decoder_type;
+}
 
 void
 oc_rep_set_pool(struct oc_memb *rep_objects_pool)
@@ -549,8 +564,9 @@ oc_parse_rep_object(CborValue *value, oc_rep_t **rep)
   return CborNoError;
 }
 
-int
-oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
+static int
+oc_parse_cbor_rep(const uint8_t *in_payload, size_t payload_size,
+                  oc_rep_t **out_rep)
 {
   if (out_rep == NULL) {
     return -1;
@@ -608,6 +624,480 @@ oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
     return err;
   }
   return CborNoError;
+}
+
+typedef struct
+{
+  oc_rep_t *root;
+  oc_rep_t *previous;
+  oc_rep_t *cur;
+  int err;
+} rep_data_t;
+
+static void
+json_parse_string_value(rep_data_t *data, const char *str, size_t len)
+{
+  data->cur->type = OC_REP_STRING;
+  oc_new_string(&data->cur->value.string, str, len);
+  data->cur = NULL;
+}
+
+static bool
+json_set_rep(rep_data_t *data, oc_rep_value_type_t value_type)
+{
+  if (data->cur == NULL) {
+    data->cur = alloc_rep_internal();
+    if (data->cur == NULL) {
+      data->err = CborErrorOutOfMemory;
+      return false;
+    }
+    if (data->root == NULL) {
+      data->root = data->cur;
+    }
+    if (data->previous != NULL) {
+      data->previous->next = data->cur;
+    }
+    data->previous = data->cur;
+  } else if (data->cur->name.size == 0) {
+    data->err = CborErrorIllegalType;
+    return false;
+  }
+  data->cur->type = value_type;
+  return true;
+}
+
+#define OC_REP_UNKNOWN_TYPE 255
+
+static bool
+json_parse_string(rep_data_t *data, const char *str, size_t len)
+{
+  if (data->cur) {
+    if (data->cur->name.size == 0) {
+      data->err = CborErrorIllegalType;
+      return false;
+    }
+    json_parse_string_value(data, str, len);
+    return true;
+  }
+  if (!json_set_rep(data, OC_REP_UNKNOWN_TYPE)) {
+    return false;
+  }
+  oc_new_string(&data->cur->name, str, len);
+  return true;
+}
+
+static bool
+json_parse_primitive(rep_data_t *data, const char *str, size_t len)
+{
+  (void)len;
+  if (data->cur == NULL) {
+    data->err = CborErrorIllegalType;
+    return false;
+  }
+  if (str[0] == 't') {
+    data->cur->type = OC_REP_BOOL;
+    data->cur->value.boolean = true;
+  } else if (str[0] == 'f') {
+    data->cur->type = OC_REP_BOOL;
+    data->cur->value.boolean = false;
+  } else if (str[0] == 'n') {
+    data->cur->type = OC_REP_NIL;
+  } else {
+    data->cur->type = OC_REP_INT;
+    data->cur->value.integer = strtoll(str, NULL, 10);
+  }
+  data->cur = NULL;
+  return true;
+}
+
+static bool json_encode_token(const jsmntok_t *token, const char *js,
+                              void *data);
+
+static bool
+json_parse_object(rep_data_t *data, const char *start, size_t len)
+{
+  rep_data_t obj_data = {
+    .root = NULL, .previous = NULL, .cur = NULL, .err = CborNoError
+  };
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  int r = jsmn_parse(&parser, start, len, json_encode_token, &obj_data);
+  if (obj_data.err != CborNoError) {
+    oc_free_rep(obj_data.root);
+    data->err = obj_data.err;
+    return false;
+  }
+  if (r < 0) {
+    oc_free_rep(obj_data.root);
+    return CborErrorUnexpectedEOF;
+  }
+  if (!json_set_rep(data, OC_REP_OBJECT)) {
+    oc_free_rep(obj_data.root);
+    return false;
+  }
+  data->cur->value.object = obj_data.root;
+  data->cur = NULL;
+  return true;
+}
+
+typedef struct
+{
+  oc_rep_value_type_t type;
+  int size;
+  CborError err;
+} array_scan_data_t;
+
+static bool
+json_scan_array_type(const jsmntok_t *token, const char *js, void *data)
+{
+  array_scan_data_t *array_data = (array_scan_data_t *)data;
+  oc_rep_value_type_t type = OC_REP_UNKNOWN_TYPE;
+  if (token->type == JSMN_PRIMITIVE) {
+    if (js[token->start] == 't' || js[token->start] == 'f') {
+      type = OC_REP_BOOL;
+    } else if (js[token->start] == 'n') {
+      type = OC_REP_NIL;
+    } else {
+      type = OC_REP_INT;
+    }
+  } else if (token->type == JSMN_STRING) {
+    type = OC_REP_STRING;
+  } else if (token->type == JSMN_OBJECT) {
+    type = OC_REP_OBJECT;
+  } else if (token->type == JSMN_ARRAY) {
+    type = OC_REP_ARRAY;
+  }
+  if (type == OC_REP_UNKNOWN_TYPE) {
+    array_data->err = CborErrorIllegalType;
+    return false;
+  }
+  if (array_data->type == OC_REP_UNKNOWN_TYPE) {
+    array_data->type = type;
+  }
+  if (array_data->type != type) {
+    array_data->err = CborErrorIllegalType;
+    return false;
+  }
+  array_data->type = type;
+  array_data->size++;
+  return true;
+}
+
+typedef struct
+{
+  oc_array_t array;
+  size_t idx;
+  CborError err;
+} json_array_values_t;
+
+static bool
+json_parse_array_bool_values(const jsmntok_t *token, const char *js, void *data)
+{
+  json_array_values_t *d = (json_array_values_t *)data;
+  switch (token->type) {
+  case JSMN_PRIMITIVE:
+    if (js[token->start] == 't') {
+      *(oc_bool_array(d->array) + d->idx) = true;
+    } else if (js[token->start] == 'f') {
+      *(oc_bool_array(d->array) + d->idx) = false;
+    } else {
+      d->err = CborErrorIllegalType;
+      return false;
+    }
+    d->idx++;
+    return true;
+  default:
+    d->err = CborErrorIllegalType;
+    return false;
+  }
+}
+
+static bool
+json_parse_array_bool(rep_data_t *data, const char *start, size_t len,
+                      size_t array_size)
+{
+  if (!json_set_rep(data, OC_REP_BOOL_ARRAY)) {
+    return false;
+  }
+  oc_new_bool_array(&data->cur->value.array, array_size);
+  json_array_values_t arr_data = { .array = data->cur->value.array,
+                                   .idx = 0,
+                                   .err = CborNoError };
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  int r =
+    jsmn_parse(&parser, start, len, json_parse_array_bool_values, &arr_data);
+  if (arr_data.err != CborNoError) {
+    data->err = arr_data.err;
+    return false;
+  }
+  if (r < 0) {
+    data->err = CborErrorUnexpectedEOF;
+    return false;
+  }
+
+  return true;
+}
+
+static bool
+json_parse_array_int_values(const jsmntok_t *token, const char *js, void *data)
+{
+  json_array_values_t *d = (json_array_values_t *)data;
+  switch (token->type) {
+  case JSMN_PRIMITIVE:
+    if (js[token->start] == 't') {
+      d->err = CborErrorIllegalType;
+      return false;
+    } else if (js[token->start] == 'f') {
+      d->err = CborErrorIllegalType;
+      return false;
+    } else if (js[token->start] == 'n') {
+      d->err = CborErrorIllegalType;
+      return false;
+    }
+    int64_t v = strtoll(js + token->start, NULL, 10);
+    *(oc_int_array(d->array) + d->idx) = v;
+    d->idx++;
+    return true;
+  default:
+    d->err = CborErrorIllegalType;
+    return false;
+  }
+}
+
+static bool
+json_parse_array_int(rep_data_t *data, const char *start, size_t len,
+                     size_t array_size)
+{
+  if (!json_set_rep(data, OC_REP_INT_ARRAY)) {
+    return false;
+  }
+  oc_new_int_array(&data->cur->value.array, array_size);
+  json_array_values_t arr_data = { .array = data->cur->value.array,
+                                   .idx = 0,
+                                   .err = CborNoError };
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  int r =
+    jsmn_parse(&parser, start, len, json_parse_array_int_values, &arr_data);
+  if (arr_data.err != CborNoError) {
+    data->err = arr_data.err;
+    return false;
+  }
+  if (r < 0) {
+    data->err = CborErrorUnexpectedEOF;
+    return false;
+  }
+  return true;
+}
+
+static bool
+json_parse_array_string_values(const jsmntok_t *token, const char *js,
+                               void *data)
+{
+  json_array_values_t *d = (json_array_values_t *)data;
+  switch (token->type) {
+  case JSMN_STRING: {
+    size_t len = token->end - token->start;
+    if (len >= STRING_ARRAY_ITEM_MAX_LEN) {
+      len = STRING_ARRAY_ITEM_MAX_LEN - 1;
+    }
+    memcpy(oc_string_array_get_item(d->array, d->idx), js + token->start, len);
+    oc_string_array_get_item(d->array, d->idx)[len] = '\0';
+    d->idx++;
+    return true;
+  }
+  default:
+    d->err = CborErrorIllegalType;
+    return false;
+  }
+}
+
+static bool
+json_parse_array_string(rep_data_t *data, const char *start, size_t len,
+                        size_t array_size)
+{
+  if (!json_set_rep(data, OC_REP_STRING_ARRAY)) {
+    return false;
+  }
+  oc_new_string_array(&data->cur->value.array, array_size);
+  json_array_values_t arr_data = { .array = data->cur->value.array,
+                                   .idx = 0,
+                                   .err = CborNoError };
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  int r =
+    jsmn_parse(&parser, start, len, json_parse_array_string_values, &arr_data);
+  if (arr_data.err != CborNoError) {
+    data->err = arr_data.err;
+    return false;
+  }
+  if (r < 0) {
+    data->err = CborErrorUnexpectedEOF;
+    return false;
+  }
+  return true;
+}
+
+static bool
+json_parse_array_object_values(const jsmntok_t *token, const char *js,
+                               void *data)
+{
+  rep_data_t *d = (rep_data_t *)data;
+  switch (token->type) {
+  case JSMN_OBJECT:
+    return json_parse_object(d, js + token->start, token->end - token->start);
+  default:
+    d->err = CborErrorIllegalType;
+    return false;
+  }
+}
+
+static bool
+json_parse_array_object(rep_data_t *data, const char *start, size_t len,
+                        size_t array_size)
+{
+  (void)array_size;
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  rep_data_t obj_data = {
+    .root = NULL,
+    .cur = NULL,
+    .previous = NULL,
+    .err = CborNoError,
+  };
+  int r =
+    jsmn_parse(&parser, start, len, json_parse_array_object_values, &obj_data);
+  if (r < 1) {
+    return CborErrorUnexpectedEOF;
+  }
+  if (obj_data.err != CborNoError) {
+    oc_free_rep(obj_data.cur);
+    return obj_data.err;
+  }
+  if (!json_set_rep(data, OC_REP_OBJECT_ARRAY)) {
+    return false;
+  }
+  data->cur->value.object_array = obj_data.root;
+  return true;
+}
+
+typedef bool (*json_array_value_parser_t)(rep_data_t *data, const char *start,
+                                          size_t len, size_t array_size);
+
+static bool
+json_parse_array(rep_data_t *data, const char *start, size_t len)
+{
+  array_scan_data_t array_scan_data = {
+    .type = OC_REP_UNKNOWN_TYPE,
+    .size = 0,
+    .err = CborNoError,
+  };
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  int r =
+    jsmn_parse(&parser, start, len, json_scan_array_type, &array_scan_data);
+  if (array_scan_data.err != CborNoError) {
+    data->err = array_scan_data.err;
+    return false;
+  }
+  if (r < 0) {
+    return CborErrorUnexpectedEOF;
+  }
+  json_array_value_parser_t value_parser_fn = NULL;
+  switch (array_scan_data.type) {
+  case OC_REP_ARRAY:
+    data->err = CborErrorIllegalType;
+    return false;
+  case OC_REP_BOOL:
+    value_parser_fn = json_parse_array_bool;
+    break;
+  case OC_REP_INT:
+    value_parser_fn = json_parse_array_int;
+    break;
+  case OC_REP_STRING:
+    value_parser_fn = json_parse_array_string;
+    break;
+  case OC_REP_OBJECT:
+    value_parser_fn = json_parse_array_object;
+    break;
+  default:
+    if (!json_set_rep(data, OC_REP_NIL)) {
+      return false;
+    }
+    break;
+  }
+  if (value_parser_fn != NULL) {
+    if (!value_parser_fn(data, start, len, array_scan_data.size)) {
+      return false;
+    }
+  }
+  data->cur = NULL;
+  return true;
+}
+
+static bool
+json_encode_token(const jsmntok_t *token, const char *js, void *data)
+{
+  rep_data_t *d = (rep_data_t *)data;
+  switch (token->type) {
+  case JSMN_PRIMITIVE:
+    return json_parse_primitive(d, js + token->start,
+                                token->end - token->start);
+  case JSMN_STRING:
+    return json_parse_string(d, js + token->start, token->end - token->start);
+  case JSMN_OBJECT:
+    return json_parse_object(d, js + token->start, token->end - token->start);
+  case JSMN_ARRAY:
+    return json_parse_array(d, js + token->start, token->end - token->start);
+  default:
+    break;
+  }
+  return true;
+}
+
+static int
+oc_parse_json_rep(const uint8_t *json, size_t json_len, oc_rep_t **out_rep)
+{
+  jsmn_parser parser;
+  jsmn_init(&parser);
+  rep_data_t data = {
+    .root = NULL,
+    .cur = NULL,
+    .previous = NULL,
+    .err = CborNoError,
+  };
+  int r =
+    jsmn_parse(&parser, (const char *)json, json_len, json_encode_token, &data);
+  if (r < 1) {
+    return CborErrorUnexpectedEOF;
+  }
+  if (data.err != CborNoError) {
+    oc_free_rep(data.root);
+    return data.err;
+  }
+  if ((data.root->type == OC_REP_OBJECT_ARRAY ||
+       data.root->type == OC_REP_OBJECT) &&
+      data.root->name.size == 0 && data.root->next == NULL) {
+    *out_rep = data.root->value.object_array;
+    data.root->value.object_array = NULL;
+    oc_free_rep(data.root);
+  } else {
+    *out_rep = data.root;
+  }
+  return CborNoError;
+}
+
+int
+oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
+{
+  if (out_rep == NULL) {
+    return -1;
+  }
+  if (g_decoder_type == OC_REP_CBOR_DECODER) {
+    return oc_parse_cbor_rep(in_payload, payload_size, out_rep);
+  }
+  return oc_parse_json_rep(in_payload, payload_size, out_rep);
 }
 
 static bool

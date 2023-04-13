@@ -61,19 +61,31 @@ oc_rep_encoder_convert_ptr_to_offset(CborEncoder *encoder)
   return encoder;
 }
 
-typedef CborError (*oc_rep_encode_null_t) (CborEncoder *encoder);
-typedef CborError (*oc_rep_encode_bool_t) (CborEncoder *encoder, bool value);
-typedef CborError (*oc_rep_encode_int_t) (CborEncoder *encoder, int64_t value);
-typedef CborError (*oc_rep_encode_uint_t) (CborEncoder *encoder, uint64_t value);
-typedef CborError (*oc_rep_encode_floating_point_t) (CborEncoder *encoder, CborType fpType, const void *value);
-typedef CborError (*oc_rep_encode_double_t) (CborEncoder *encoder, double value);
-typedef CborError (*oc_rep_encode_text_string_t) (CborEncoder *encoder, const char *string, size_t length);
-typedef CborError (*oc_rep_encode_byte_string_t) (CborEncoder *encoder, const uint8_t *string, size_t length);
-typedef CborError (*oc_rep_encoder_create_array_t) (CborEncoder *encoder, CborEncoder *arrayEncoder, size_t length);
-typedef CborError (*oc_rep_encoder_create_map_t) (CborEncoder *encoder, CborEncoder *mapEncoder, size_t length);
-typedef CborError (*oc_rep_encoder_close_container_t) (CborEncoder *encoder, const CborEncoder *containerEncoder);
+typedef CborError (*oc_rep_encode_null_t)(CborEncoder *encoder);
+typedef CborError (*oc_rep_encode_bool_t)(CborEncoder *encoder, bool value);
+typedef CborError (*oc_rep_encode_int_t)(CborEncoder *encoder, int64_t value);
+typedef CborError (*oc_rep_encode_uint_t)(CborEncoder *encoder, uint64_t value);
+typedef CborError (*oc_rep_encode_floating_point_t)(CborEncoder *encoder,
+                                                    CborType fpType,
+                                                    const void *value);
+typedef CborError (*oc_rep_encode_double_t)(CborEncoder *encoder, double value);
+typedef CborError (*oc_rep_encode_text_string_t)(CborEncoder *encoder,
+                                                 const char *string,
+                                                 size_t length);
+typedef CborError (*oc_rep_encode_byte_string_t)(CborEncoder *encoder,
+                                                 const uint8_t *string,
+                                                 size_t length);
+typedef CborError (*oc_rep_encoder_create_array_t)(CborEncoder *encoder,
+                                                   CborEncoder *arrayEncoder,
+                                                   size_t length);
+typedef CborError (*oc_rep_encoder_create_map_t)(CborEncoder *encoder,
+                                                 CborEncoder *mapEncoder,
+                                                 size_t length);
+typedef CborError (*oc_rep_encoder_close_container_t)(
+  CborEncoder *encoder, const CborEncoder *containerEncoder);
 
-typedef struct oc_rep_encoder_t {
+typedef struct oc_rep_encoder_t
+{
   oc_rep_encode_null_t encode_null;
   oc_rep_encode_bool_t encode_bool;
   oc_rep_encode_int_t encode_int;
@@ -138,7 +150,8 @@ oc_rep_encoder_get_type()
 bool
 oc_rep_encoder_set_type_by_accept(oc_content_format_t accept)
 {
-  if (accept == APPLICATION_CBOR || accept == APPLICATION_VND_OCF_CBOR || accept == APPLICATION_NOT_DEFINED) {
+  if (accept == APPLICATION_CBOR || accept == APPLICATION_VND_OCF_CBOR ||
+      accept == APPLICATION_NOT_DEFINED) {
     oc_rep_encoder_set_type(OC_REP_CBOR_ENCODER);
 #ifdef OC_HAS_FEATURE_PLGD_WOT
   } else if (accept == APPLICATION_JSON || accept == APPLICATION_TD_JSON) {
@@ -151,7 +164,8 @@ oc_rep_encoder_set_type_by_accept(oc_content_format_t accept)
 }
 
 void
-oc_rep_encoder_init_v1(uint8_t *buffer, size_t size, oc_rep_encoder_type_t encoder_type)
+oc_rep_encoder_init_v1(uint8_t *buffer, size_t size,
+                       oc_rep_encoder_type_t encoder_type)
 {
   g_buf = buffer;
   g_encoder_type = encoder_type;
@@ -173,7 +187,8 @@ oc_rep_encoder_init(uint8_t *buffer, size_t size)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 void
-oc_rep_encoder_realloc_init_v1(uint8_t **buffer, size_t size, size_t max_size, oc_rep_encoder_type_t encoder_type)
+oc_rep_encoder_realloc_init_v1(uint8_t **buffer, size_t size, size_t max_size,
+                               oc_rep_encoder_type_t encoder_type)
 {
   assert(buffer != NULL);
   g_enable_realloc = true;
@@ -303,7 +318,6 @@ oc_rep_encode_raw(const uint8_t *data, size_t len)
   oc_rep_encoder_convert_ptr_to_offset(&g_encoder);
 }
 
-
 typedef CborEncoder json_encoder_t;
 
 typedef enum json_types_t {
@@ -313,43 +327,48 @@ typedef enum json_types_t {
   MapType = 1 << 3,
 } json_types_t;
 
-static bool json_would_overflow(json_encoder_t *encoder, size_t len)
+static bool
+json_would_overflow(json_encoder_t *encoder, size_t len)
 {
-    ptrdiff_t remaining = (ptrdiff_t)encoder->end;
-    remaining -= remaining ? (ptrdiff_t)encoder->data.ptr : encoder->data.bytes_needed;
-    remaining -= (ptrdiff_t)len;
-    return remaining < 0;
+  ptrdiff_t remaining = (ptrdiff_t)encoder->end;
+  remaining -=
+    remaining ? (ptrdiff_t)encoder->data.ptr : encoder->data.bytes_needed;
+  remaining -= (ptrdiff_t)len;
+  return remaining < 0;
 }
 
-static void json_advance_ptr(json_encoder_t *encoder, size_t n)
+static void
+json_advance_ptr(json_encoder_t *encoder, size_t n)
 {
-    if (encoder->end)
-        encoder->data.ptr += n;
-    else
-        encoder->data.bytes_needed += n;
+  if (encoder->end)
+    encoder->data.ptr += n;
+  else
+    encoder->data.bytes_needed += n;
 }
 
-static CborError json_append_to_buffer(json_encoder_t *encoder, const void *data, size_t len)
+static CborError
+json_append_to_buffer(json_encoder_t *encoder, const void *data, size_t len)
 {
-    if (json_would_overflow(encoder, len)) {
-        if (encoder->end != NULL) {
-            len -= encoder->end - encoder->data.ptr;
-            encoder->end = NULL;
-            encoder->data.bytes_needed = 0;
-        }
-
-        json_advance_ptr(encoder, len);
-        return CborErrorOutOfMemory;
+  if (json_would_overflow(encoder, len)) {
+    if (encoder->end != NULL) {
+      len -= encoder->end - encoder->data.ptr;
+      encoder->end = NULL;
+      encoder->data.bytes_needed = 0;
     }
 
-    memcpy(encoder->data.ptr, data, len);
-    encoder->data.ptr += len;
-    return CborNoError;
+    json_advance_ptr(encoder, len);
+    return CborErrorOutOfMemory;
+  }
+
+  memcpy(encoder->data.ptr, data, len);
+  encoder->data.ptr += len;
+  return CborNoError;
 }
 
-static CborError json_append_separator(json_encoder_t *encoder)
+static CborError
+json_append_separator(json_encoder_t *encoder)
 {
-  if (encoder->flags & MapType){
+  if (encoder->flags & MapType) {
     if (encoder->flags & KeyType) {
       return json_append_to_buffer(encoder, ":", 1);
     } else if (encoder->flags & ValueType) {
@@ -370,18 +389,13 @@ oc_rep_json_encode_null_internal(json_encoder_t *encoder)
   if (((encoder->flags & KeyType) == 0) && (encoder->flags & MapType)) {
     return CborErrorImproperValue;
   }
-  oc_rep_encoder_convert_offset_to_ptr(encoder);
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
   const char *value_str = "null";
-  err = json_append_to_buffer(encoder, value_str, strlen(value_str));
+  err |= json_append_to_buffer(encoder, value_str, strlen(value_str));
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
   }
-  oc_rep_encoder_convert_ptr_to_offset(encoder);
   return err;
 }
 
@@ -392,14 +406,11 @@ oc_rep_json_encode_boolean_internal(json_encoder_t *encoder, bool value)
     return CborErrorImproperValue;
   }
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
   const char *value_str = "true";
   if (!value) {
     value_str = "false";
   }
-  err = json_append_to_buffer(encoder, value_str, strlen(value_str));
+  err |= json_append_to_buffer(encoder, value_str, strlen(value_str));
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
@@ -410,10 +421,10 @@ oc_rep_json_encode_boolean_internal(json_encoder_t *encoder, bool value)
 static CborError
 oc_rep_json_encode_int_internal(json_encoder_t *encoder, int64_t value)
 {
-  if (value > 1LL<<53) {
+  if (value > 1LL << 53) {
     return CborErrorDataTooLarge;
   }
-  if (value < ~(1LL<<52)) {
+  if (value < ~(1LL << 52)) {
     return CborErrorDataTooLarge;
   }
   if (((encoder->flags & KeyType) == 0) && (encoder->flags & MapType)) {
@@ -425,10 +436,7 @@ oc_rep_json_encode_int_internal(json_encoder_t *encoder, int64_t value)
     return CborErrorUnexpectedEOF;
   }
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, buf, len);
+  err |= json_append_to_buffer(encoder, buf, len);
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
@@ -439,7 +447,7 @@ oc_rep_json_encode_int_internal(json_encoder_t *encoder, int64_t value)
 static CborError
 oc_rep_json_encode_uint_internal(json_encoder_t *encoder, uint64_t value)
 {
-  if (value > 1LL<<53) {
+  if (value > 1LL << 53) {
     return CborErrorDataTooLarge;
   }
   if (((encoder->flags & KeyType) == 0) && (encoder->flags & MapType)) {
@@ -451,10 +459,7 @@ oc_rep_json_encode_uint_internal(json_encoder_t *encoder, uint64_t value)
     return CborErrorUnexpectedEOF;
   }
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, buf, len);
+  err |= json_append_to_buffer(encoder, buf, len);
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
@@ -474,10 +479,7 @@ oc_rep_json_encode_double_internal(json_encoder_t *encoder, double value)
     return CborErrorUnexpectedEOF;
   }
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, buf, len);
+  err |= json_append_to_buffer(encoder, buf, len);
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
@@ -486,22 +488,13 @@ oc_rep_json_encode_double_internal(json_encoder_t *encoder, double value)
 }
 
 static CborError
-oc_rep_json_encode_text_string_internal(json_encoder_t *encoder, const char *string,
-                                   size_t length)
+oc_rep_json_encode_text_string_internal(json_encoder_t *encoder,
+                                        const char *string, size_t length)
 {
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, "\"", 1);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, string, length);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, "\"", 1);
+  err |= json_append_to_buffer(encoder, "\"", 1);
+  err |= json_append_to_buffer(encoder, string, length);
+  err |= json_append_to_buffer(encoder, "\"", 1);
   if (err != CborNoError) {
     return err;
   }
@@ -526,7 +519,8 @@ oc_rep_json_encode_text_string_internal(json_encoder_t *encoder, const char *str
 }
 
 static void
-json_prepare_container(json_encoder_t *encoder, json_encoder_t *container, json_types_t json_type)
+json_prepare_container(json_encoder_t *encoder, json_encoder_t *container,
+                       json_types_t json_type)
 {
   container->data.ptr = encoder->data.ptr;
   container->end = encoder->end;
@@ -535,66 +529,68 @@ json_prepare_container(json_encoder_t *encoder, json_encoder_t *container, json_
 
 static CborError
 oc_rep_json_encoder_create_array_internal(json_encoder_t *encoder,
-                                     json_encoder_t *container, size_t length)
+                                          json_encoder_t *container,
+                                          size_t length)
 {
   (void)length;
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, "[", 1);
+  err |= json_append_to_buffer(encoder, "[", 1);
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
     json_prepare_container(encoder, container, ArrayType);
+  } else if (err == CborErrorOutOfMemory) {
+    memcpy(container, encoder, sizeof(json_encoder_t));
   }
   return err;
 }
 
 static CborError
 oc_rep_json_encoder_create_map_internal(json_encoder_t *encoder,
-                                   json_encoder_t *container, size_t length)
+                                        json_encoder_t *container,
+                                        size_t length)
 {
   (void)length;
   CborError err = json_append_separator(encoder);
-  if (err != CborNoError) {
-    return err;
-  }
-  err = json_append_to_buffer(encoder, "{", 1);
+  err |= json_append_to_buffer(encoder, "{", 1);
   if (err == CborNoError) {
     encoder->flags &= ~KeyType;
     encoder->flags |= ValueType;
     json_prepare_container(encoder, container, MapType);
+  } else if (err == CborErrorOutOfMemory) {
+    memcpy(container, encoder, sizeof(json_encoder_t));
   }
   return err;
 }
 
 static CborError
-oc_rep_json_encoder_close_container_internal(json_encoder_t *parentEncoder,
-                                        const json_encoder_t *containerEncoder) {
-    // synchronise buffer state with that of the container
-    parentEncoder->end = containerEncoder->end;
-    parentEncoder->data = containerEncoder->data;
-    const char* break_byte = (containerEncoder->flags & MapType) ? "}" : "]"; 
-    return json_append_to_buffer(parentEncoder, break_byte, 1);
+oc_rep_json_encoder_close_container_internal(
+  json_encoder_t *parentEncoder, const json_encoder_t *containerEncoder)
+{
+  // synchronise buffer state with that of the container
+  parentEncoder->end = containerEncoder->end;
+  parentEncoder->data = containerEncoder->data;
+  const char *break_byte = (containerEncoder->flags & MapType) ? "}" : "]";
+  return json_append_to_buffer(parentEncoder, break_byte, 1);
 }
 
 static CborError
-oc_rep_json_encode_byte_string_internal(CborEncoder *encoder, const uint8_t *string,
-                                   size_t length)
+oc_rep_json_encode_byte_string_internal(CborEncoder *encoder,
+                                        const uint8_t *string, size_t length)
 {
-  (void) encoder;
-  (void) string;
-  (void) length;
+  (void)encoder;
+  (void)string;
+  (void)length;
   return CborErrorUnsupportedType;
 }
 
 static CborError
-oc_rep_json_encode_floating_point_internal(CborEncoder *encoder, CborType fpType, const void *value)
+oc_rep_json_encode_floating_point_internal(CborEncoder *encoder,
+                                           CborType fpType, const void *value)
 {
-  (void) encoder;
-  (void) fpType;
-  (void) value;
+  (void)encoder;
+  (void)fpType;
+  (void)value;
   return CborErrorUnsupportedType;
 }
 
@@ -752,7 +748,8 @@ oc_rep_encode_floating_point_internal(CborEncoder *encoder, CborType fpType,
                                       const void *value)
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
-  CborError err = g_encoders[g_encoder_type].encode_floating_point(encoder, fpType, value);
+  CborError err =
+    g_encoders[g_encoder_type].encode_floating_point(encoder, fpType, value);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   return err;
 }
@@ -814,7 +811,8 @@ oc_rep_encode_text_string_internal(CborEncoder *encoder, const char *string,
                                    size_t length)
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
-  CborError err = g_encoders[g_encoder_type].encode_text_string(encoder, string, length);
+  CborError err =
+    g_encoders[g_encoder_type].encode_text_string(encoder, string, length);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   return err;
 }
@@ -846,7 +844,8 @@ oc_rep_encode_byte_string_internal(CborEncoder *encoder, const uint8_t *string,
                                    size_t length)
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
-  CborError err = g_encoders[g_encoder_type].encode_byte_string(encoder, string, length);
+  CborError err =
+    g_encoders[g_encoder_type].encode_byte_string(encoder, string, length);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   return err;
 }
@@ -879,7 +878,8 @@ oc_rep_encoder_create_array_internal(CborEncoder *encoder,
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
   oc_rep_encoder_convert_offset_to_ptr(arrayEncoder);
-  CborError err = g_encoders[g_encoder_type].create_array(encoder, arrayEncoder, length);
+  CborError err =
+    g_encoders[g_encoder_type].create_array(encoder, arrayEncoder, length);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   oc_rep_encoder_convert_ptr_to_offset(arrayEncoder);
   return err;
@@ -917,7 +917,8 @@ oc_rep_encoder_create_map_internal(CborEncoder *encoder,
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
   oc_rep_encoder_convert_offset_to_ptr(mapEncoder);
-  CborError err = g_encoders[g_encoder_type].create_map(encoder, mapEncoder, length);
+  CborError err =
+    g_encoders[g_encoder_type].create_map(encoder, mapEncoder, length);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   oc_rep_encoder_convert_ptr_to_offset(mapEncoder);
   return err;
@@ -955,7 +956,8 @@ oc_rep_encoder_close_container_internal(CborEncoder *encoder,
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder);
   oc_rep_encoder_convert_offset_to_ptr(containerEncoder);
-  CborError err = g_encoders[g_encoder_type].close_container(encoder, containerEncoder);
+  CborError err =
+    g_encoders[g_encoder_type].close_container(encoder, containerEncoder);
   oc_rep_encoder_convert_ptr_to_offset(encoder);
   oc_rep_encoder_convert_ptr_to_offset(containerEncoder);
   return err;

@@ -129,7 +129,7 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
   };
   while (op_flags != 0) {
     oc_rep_start_object((forms_array), forms);
-    oc_rep_set_text_string(forms, contentType, "application/cbor");
+    oc_rep_set_text_string(forms, contentType, "application/json");
     oc_rep_set_text_string(forms, href, href);
     for (size_t i = 0; i < (sizeof(forms) / sizeof(forms[0])); ++i) {
       if (op_flags & forms[i].op_flag) {
@@ -140,7 +140,8 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
         }
         oc_rep_set_string_array(forms, op, op);
         oc_free_string_array(&op);
-        oc_rep_set_text_string(forms, cov : method, forms[i].cov_method);
+        oc_rep_set_text_string(forms, cov:method, forms[i].cov_method);
+        oc_rep_set_int(forms, cov:accept, APPLICATION_JSON);
         if (forms[i].subprotocol) {
           oc_rep_set_text_string(forms, subprotocol, forms[i].subprotocol);
         }

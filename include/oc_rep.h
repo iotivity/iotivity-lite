@@ -1631,7 +1631,19 @@ oc_rep_encoder_type_t oc_rep_encoder_get_type(void);
 
 OC_API bool oc_rep_encoder_set_type_by_accept(oc_content_format_t accept);
 
+typedef enum oc_rep_decoder_type_t {
+  OC_REP_CBOR_DECODER = 0 /* default decoder */,
+  OC_REP_JSON_DECODER = 1,
+} oc_rep_decoder_type_t;
 
+OC_API
+void oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type);
+
+OC_API
+oc_rep_decoder_type_t oc_rep_decoder_get_type(void);
+
+OC_API bool oc_rep_decoder_set_type_by_content_format(
+  oc_content_format_t content_format);
 
 #ifdef __cplusplus
 }
