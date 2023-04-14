@@ -23,12 +23,12 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
+#include "oc_uuid.h"
 #include "port/oc_assert.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
 #include "security/oc_entropy_internal.h"
-#include "security/oc_tls.h"
-#include "oc_uuid.h"
+#include "security/oc_tls_internal.h"
 
 #include <mbedtls/bignum.h>
 #include <mbedtls/ctr_drbg.h>

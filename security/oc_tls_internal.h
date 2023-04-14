@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_TLS_H
-#define OC_TLS_H
+#ifndef OC_TLS_INTERNAL_H
+#define OC_TLS_INTERNAL_H
 
 #include "mbedtls/ssl.h"
 #include "mbedtls/ctr_drbg.h"
@@ -305,4 +305,4 @@ bool oc_tls_validate_trust_anchors_consistency(void);
 }
 #endif
 
-#endif /* OC_TLS_H */
+#endif /* OC_TLS_INTERNAL_H */

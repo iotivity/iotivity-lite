@@ -21,7 +21,7 @@
 
 #include "oc_roles_internal.h"
 #include "port/oc_log.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 #include <mbedtls/x509_crt.h>
 

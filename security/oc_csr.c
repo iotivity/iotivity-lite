@@ -30,7 +30,7 @@
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 #include <assert.h>
 #include <mbedtls/ctr_drbg.h>

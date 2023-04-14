@@ -30,7 +30,7 @@
 #ifdef OC_OSCORE
 #include "security/oc_oscore.h"
 #endif /* OC_OSCORE */
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 #include <stdint.h>

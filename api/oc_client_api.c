@@ -19,14 +19,17 @@
 #include "api/oc_helpers_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
+#include "oc_api.h"
+#include "oc_ri_internal.h"
+
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
-#include "oc_api.h"
-#include "oc_ri_internal.h"
+
 #ifdef OC_SECURITY
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
+
 #include <assert.h>
 
 #ifdef OC_CLIENT

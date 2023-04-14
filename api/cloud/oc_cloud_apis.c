@@ -33,8 +33,9 @@
 #include "oc_core_res.h"
 #include "rd_client.h"
 #include "port/oc_log.h"
+
 #ifdef OC_SECURITY
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 #include <assert.h>

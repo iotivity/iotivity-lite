@@ -21,7 +21,7 @@
 
 #include "oc_role.h"
 #include "security/oc_cred_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 #ifdef __cplusplus
 extern "C" {

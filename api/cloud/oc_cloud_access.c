@@ -29,7 +29,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 /** Account URI.*/

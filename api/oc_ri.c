@@ -21,14 +21,6 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
-#include "port/oc_assert.h"
-#include "port/oc_random.h"
-#include "util/oc_etimer.h"
-#include "util/oc_list.h"
-#include "util/oc_memb.h"
-#include "util/oc_process.h"
-#include "util/oc_features.h"
-
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -38,6 +30,13 @@
 #include "oc_ri.h"
 #include "oc_ri_internal.h"
 #include "oc_uuid.h"
+#include "port/oc_assert.h"
+#include "port/oc_random.h"
+#include "util/oc_etimer.h"
+#include "util/oc_list.h"
+#include "util/oc_memb.h"
+#include "util/oc_process.h"
+#include "util/oc_features.h"
 
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
@@ -63,7 +62,7 @@
 #include "security/oc_audit.h"
 #include "security/oc_pstat.h"
 #include "security/oc_roles_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore.h"
 #include "security/oc_oscore.h"

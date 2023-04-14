@@ -41,7 +41,7 @@ typedef enum {
   OC_SESSION_DISCONNECTED, ///< session disconnected
 } oc_session_state_t;
 
-#define OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND -2
+#define OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND (-2)
 
 /**
  * @brief Callback function to pass the session event infomation to App.

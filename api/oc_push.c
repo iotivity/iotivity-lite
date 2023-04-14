@@ -898,13 +898,9 @@ _build_rep_payload(CborEncoder *parent, oc_rep_t *rep)
     /* oc_rep_add_text_string(xxxx, str) */
     for (int i = 0;
          i < (int)oc_string_array_get_allocated_size(rep->value.array); i++) {
-      if ((const char *)oc_string_array_get_item(rep->value.array, i) != NULL) {
-        g_err |= oc_rep_encode_text_string(
-          &child, oc_string_array_get_item(rep->value.array, i),
-          oc_string_array_get_item_size(rep->value.array, i));
-      } else {
-        g_err |= oc_rep_encode_text_string(&child, "", 0);
-      }
+      g_err |= oc_rep_encode_text_string(
+        &child, oc_string_array_get_item(rep->value.array, i),
+        oc_string_array_get_item_size(rep->value.array, i));
     }
 
     /* oc_rep_close_array(root, xxxx) */

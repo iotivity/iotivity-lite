@@ -31,7 +31,7 @@
 #include "oc_rep.h"
 #include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "port/oc_storage.h"
 
 static int

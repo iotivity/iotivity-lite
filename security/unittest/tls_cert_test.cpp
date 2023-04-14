@@ -31,7 +31,7 @@
 #include "oc_pki.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_svr_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"

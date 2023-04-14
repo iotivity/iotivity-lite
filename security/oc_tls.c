@@ -18,7 +18,7 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "api/oc_network_events_internal.h"
@@ -34,7 +34,6 @@
 #include "oc_pki.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
-#include "util/oc_features.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit.h"
 #include "security/oc_cred_internal.h"
@@ -43,10 +42,11 @@
 #include "security/oc_pstat.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
+#include "util/oc_features.h"
 
 #ifdef OC_PKI
-#include "oc_certs_internal.h"
-#include "oc_certs_validate_internal.h"
+#include "security/oc_certs_internal.h"
+#include "security/oc_certs_validate_internal.h"
 #endif /* OC_PKI */
 
 #ifdef OC_OSCORE

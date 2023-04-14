@@ -28,8 +28,9 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_list.h"
+
 #ifdef OC_SECURITY
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 #if defined(OC_SERVER)
 #include "messaging/coap/observe.h"

@@ -24,7 +24,7 @@
 #include "oc_certs_internal.h"
 #include "oc_cred_internal.h"
 #include "oc_store.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "port/oc_connectivity.h"
 
 #include <mbedtls/pk.h>

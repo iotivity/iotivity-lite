@@ -18,7 +18,6 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 #include "api/oc_events.h"
-#include "mbedtls/ccm.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oscore.h"
@@ -30,8 +29,10 @@
 #include "oc_oscore_crypto.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "util/oc_process.h"
+
+#include <mbedtls/ccm.h>
 
 #include <inttypes.h>
 
