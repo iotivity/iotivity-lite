@@ -33,10 +33,12 @@
 #include "rd_client.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
+
 #include <assert.h>
 #include <stdint.h>
 

@@ -22,10 +22,12 @@
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_uuid.h"
-#include "security/oc_tls.h"
 #include "security/oc_pstat.h"
-#include "mbedtls/x509_crt.h"
+#include "security/oc_tls_internal.h"
+
 #include <gtest/gtest.h>
+#include <mbedtls/x509_crt.h>
+
 #include <iostream>
 #include <iomanip>
 #include <string>

@@ -30,7 +30,7 @@
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 #include <assert.h>
 #include <mbedtls/ctr_drbg.h>
@@ -76,8 +76,9 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
     goto generate_csr_error;
   }
 
-  ret = mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0,
-                             mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
+  ret =
+    mbedtls_pk_parse_key(&pk, kp->private_key, kp->private_key_size, 0, 0,
+                         mbedtls_ctr_drbg_random, oc_tls_ctr_drbg_context());
   if (ret != 0) {
     OC_ERR("could not parse private key for device %zd %d", device, ret);
     goto generate_csr_error;

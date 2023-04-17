@@ -31,11 +31,9 @@
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 /* Random PIN OTM */
-
-void oc_tls_use_pin_obt_psk_identity(void);
 
 static void
 obt_rdp_14(oc_client_response_t *data)

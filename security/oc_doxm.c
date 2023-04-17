@@ -25,7 +25,7 @@
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "port/oc_assert.h"
 
 #include <assert.h>

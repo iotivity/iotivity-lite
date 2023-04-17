@@ -27,8 +27,8 @@
 extern "C" {
 #endif
 
-#define OC_SESSION_EVENT_API_V0 0
-#define OC_SESSION_EVENT_API_V1 1
+#define OC_SESSION_EVENT_API_V0 (0)
+#define OC_SESSION_EVENT_API_V1 (1)
 
 /**
  * @brief Structure to hold versioned session events handlers

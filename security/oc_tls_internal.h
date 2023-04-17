@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_TLS_H
-#define OC_TLS_H
+#ifndef OC_TLS_INTERNAL_H
+#define OC_TLS_INTERNAL_H
 
 #include "mbedtls/ssl.h"
 #include "mbedtls/ctr_drbg.h"
@@ -91,10 +91,15 @@ typedef struct oc_tls_peer_t
 typedef bool (*oc_tls_peer_filter_t)(const oc_tls_peer_t *peer,
                                      void *user_data);
 
-extern mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
-
 int oc_tls_init_context(void);
 void oc_tls_shutdown(void);
+
+/**
+ * @brief Get global ctr_dbrg context
+ *
+ * @note The pointer is valid after initialization by oc_tls_init_context
+ */
+mbedtls_ctr_drbg_context *oc_tls_ctr_drbg_context(void);
 
 void oc_tls_close_connection(const oc_endpoint_t *endpoint);
 
@@ -300,4 +305,4 @@ bool oc_tls_validate_trust_anchors_consistency(void);
 }
 #endif
 
-#endif /* OC_TLS_H */
+#endif /* OC_TLS_INTERNAL_H */

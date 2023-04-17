@@ -308,7 +308,8 @@ TEST_F(TestPlgdTimeWithServer, GetResource)
 TEST_F(TestPlgdTimeWithServer, GetRequest)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -339,7 +340,8 @@ TEST_F(TestPlgdTimeWithServer, GetRequest)
 
 TEST_F(TestPlgdTimeWithServer, GetRequestEmpty)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -378,7 +380,8 @@ encodeSystemClock(oc_clock_time_t lst)
 
 TEST_F(TestPlgdTimeWithServer, PostRequestFail)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   bool invoked = false;
@@ -411,7 +414,8 @@ TEST_F(TestPlgdTimeWithServer, PostRequestFail)
 
 TEST_F(TestPlgdTimeWithServer, PostRequest)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto post_handler = [](oc_client_response_t *data) {
@@ -448,7 +452,8 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
 
 TEST_F(TestPlgdTimeWithServer, DeleteRequestFail)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto delete_handler = [](oc_client_response_t *data) {
@@ -468,7 +473,8 @@ TEST_F(TestPlgdTimeWithServer, DeleteRequestFail)
 
 TEST_F(TestPlgdTimeWithServer, PutRequestFail)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, -SECURED);
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto put_handler = [](oc_client_response_t *data) {

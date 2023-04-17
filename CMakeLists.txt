@@ -194,12 +194,21 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     endif()
 
     list(APPEND PRIVATE_COMPILE_OPTIONS -Werror)
-    oc_add_compile_options(FLAGS -Wno-error=cast-align)
-    if(C_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN)
-        # TODO: alignment warnings appear on some 32-bit compilers, keep those just
-        # as warnings for now
-        list(APPEND PRIVATE_COMPILE_OPTIONS -Wno-error=cast-align)
+
+    oc_add_compile_options(FLAGS -Wdocumentation)
+    if(C_COMPILER_SUPPORTS_WDOCUMENTATION)
+        list(APPEND PRIVATE_COMPILE_OPTIONS -Wdocumentation)
     endif()
+
+    # oc_add_compile_options(FLAGS -Wstack-usage=8192)
+    # if(CXX_COMPILER_SUPPORTS_WSTACK_USAGE_8192)
+    #     list(APPEND PRIVATE_COMPILE_OPTIONS -Wstack-usage=8192)
+    # endif()
+
+    # TODO: alignment warnings appear on some 32-bit compilers, keep those just
+    # as warnings for now
+    oc_add_compile_options(GLOBAL FLAGS -Wno-error=cast-align -Wno-error=deprecated-declarations
+        -Wno-error=documentation)
 endif()
 
 # Release compile and linker options

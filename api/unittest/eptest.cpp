@@ -283,7 +283,7 @@ TEST_F(TestEndpoint, StringToEndpointTCP)
 }
 #endif /* OC_TCP */
 
-TEST_F(TestEndpoint, StringToEndpoint)
+TEST_F(TestEndpoint, DNSStringToEndpoint)
 {
   std::vector<std::string> spu1 = {
     "coap://openconnectivity.org",
@@ -296,13 +296,6 @@ TEST_F(TestEndpoint, StringToEndpoint)
     int ret = EndpointFromString(spu1[i], &ep, &uri);
 #if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     EXPECT_EQ(ret, 0) << "spu1[" << i << "] " << spu1[i];
-#else
-    EXPECT_EQ(ret, -1) << "spu1[" << i << "] " << spu1[i];
-    EXPECT_TRUE(oc_endpoint_is_empty(&ep));
-    EXPECT_EQ(nullptr, oc_string(uri));
-    oc_free_string(&uri);
-    continue;
-#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
 
     switch (i) {
     case 0:
@@ -341,6 +334,12 @@ TEST_F(TestEndpoint, StringToEndpoint)
     default:
       break;
     }
+#else  /* !OC_IPV4 && !OC_DNS_LOOKUP_IPV6 */
+    EXPECT_EQ(ret, -1) << "spu1[" << i << "] " << spu1[i];
+    EXPECT_TRUE(oc_endpoint_is_empty(&ep));
+    EXPECT_EQ(nullptr, oc_string(uri));
+#endif /* OC_IPV4 || OC_DNS_LOOKUP_IPV6 */
+
     oc_free_string(&uri);
   }
 }

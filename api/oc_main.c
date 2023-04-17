@@ -45,7 +45,7 @@
 #include "security/oc_pstat.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_svr_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #ifdef OC_PKI
 #include "security/oc_keypair_internal.h"
 #endif /* OC_PKI */

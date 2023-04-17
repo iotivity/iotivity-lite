@@ -30,7 +30,7 @@
 #include "oc_rep.h"
 #include "oc_roles_internal.h"
 #include "oc_store.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
 #include "util/oc_macros.h"

@@ -24,7 +24,7 @@
 #include "oc_certs_internal.h"
 #include "oc_cred_internal.h"
 #include "oc_store.h"
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "port/oc_connectivity.h"
 
 #include <mbedtls/pk.h>
@@ -157,8 +157,9 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
   }
 
   /* Parse identity cert's private key */
-  int ret = mbedtls_pk_parse_key(&pkey, key, k_size, NULL, 0,
-                                 mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
+  int ret =
+    mbedtls_pk_parse_key(&pkey, key, k_size, NULL, 0, mbedtls_ctr_drbg_random,
+                         oc_tls_ctr_drbg_context());
   if (ret != 0) {
     OC_ERR("could not parse identity cert's private key %d", ret);
     return -1;

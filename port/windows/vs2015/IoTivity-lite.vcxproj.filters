@@ -643,7 +643,7 @@
     <ClInclude Include="..\..\..\security\oc_svr_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_tls.h">
+    <ClInclude Include="..\..\..\security\oc_tls_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_csr_internal.h">

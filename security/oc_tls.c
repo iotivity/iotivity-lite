@@ -18,7 +18,7 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_tls.h"
+#include "oc_tls_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "api/oc_network_events_internal.h"
@@ -34,7 +34,6 @@
 #include "oc_pki.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
-#include "util/oc_features.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit.h"
 #include "security/oc_cred_internal.h"
@@ -43,10 +42,11 @@
 #include "security/oc_pstat.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
+#include "util/oc_features.h"
 
 #ifdef OC_PKI
-#include "oc_certs_internal.h"
-#include "oc_certs_validate_internal.h"
+#include "security/oc_certs_internal.h"
+#include "security/oc_certs_validate_internal.h"
 #endif /* OC_PKI */
 
 #ifdef OC_OSCORE
@@ -77,7 +77,7 @@ OC_MEMB(g_tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
 OC_LIST(g_tls_peers);
 
 static mbedtls_entropy_context g_entropy_ctx;
-mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
+static mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx g_cookie_ctx;
 static oc_random_pin_t g_random_pin;
 #define PIN_LEN (8)
@@ -157,10 +157,10 @@ OC_LIST(g_identity_certs);
 #define AES256_KEY_LENGTH (32)
 #define SHA256_MAC_KEY_LENGTH (32)
 
-static int *ciphers = NULL;
+static const int *g_ciphers = NULL;
 #ifdef OC_PKI
-static int selected_mfg_cred = -1;
-static int selected_id_cred = -1;
+static int g_selected_mfg_cred = -1;
+static int g_selected_id_cred = -1;
 #ifdef OC_CLOUD
 static const int default_priority[12] = {
 #else  /* OC_CLOUD */
@@ -283,7 +283,7 @@ static oc_event_callback_retval_t oc_tls_inactive(void *data);
 static void
 oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 {
-  OC_DBG("\noc_tls: removing invalid peer");
+  OC_DBG("oc_tls: freeing invalid peer(%p)", (void *)peer);
 
   oc_list_remove(g_tls_peers, peer);
 
@@ -323,7 +323,7 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
-  OC_DBG("\noc_tls: removing peer");
+  OC_DBG("oc_tls: freeing peer(%p)", (void *)peer);
 #ifdef OC_PKI
   if (peer->user_data.free != NULL) {
     peer->user_data.free(peer->user_data.data);
@@ -1093,7 +1093,7 @@ oc_tls_validate_identity_certs_consistency_for_device(size_t device)
 }
 
 bool
-oc_tls_validate_identity_certs_consistency()
+oc_tls_validate_identity_certs_consistency(void)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     if (!oc_tls_validate_identity_certs_consistency_for_device(device)) {
@@ -1336,17 +1336,17 @@ oc_tls_resolve_new_trust_anchors(void)
 
 #ifdef OC_CLIENT
 void
-oc_tls_reset_ciphersuite()
+oc_tls_reset_ciphersuite(void)
 {
   OC_DBG("oc_tls: client resets ciphersuite priority");
-  ciphers = (int *)NULL;
+  g_ciphers = NULL;
 }
 
 void
 oc_tls_select_cert_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting cert ciphersuite priority");
-  ciphers = (int *)cert_priority;
+  g_ciphers = cert_priority;
 }
 
 #ifdef OC_CLOUD
@@ -1354,7 +1354,7 @@ void
 oc_tls_select_cloud_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting cloud ciphersuite priority");
-  ciphers = (int *)cloud_priority;
+  g_ciphers = cloud_priority;
 }
 #endif /* OC_CLOUD */
 #endif /* OC_CLIENT */
@@ -1362,13 +1362,13 @@ oc_tls_select_cloud_ciphersuite(void)
 void
 oc_tls_select_mfg_cert_chain(int credid)
 {
-  selected_mfg_cred = credid;
+  g_selected_mfg_cred = credid;
 }
 
 void
 oc_tls_select_identity_cert_chain(int credid)
 {
-  selected_id_cred = credid;
+  g_selected_id_cred = credid;
 }
 
 static int
@@ -1417,17 +1417,18 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
    * chain for this device based on device ownership status.
    */
   if (doxm->owned &&
-      oc_tls_load_identity_cert_chain(conf, device, selected_id_cred) == 0) {
+      oc_tls_load_identity_cert_chain(conf, device, g_selected_id_cred) == 0) {
 #ifdef OC_CLIENT
     loaded_chain = true;
 #endif /* OC_CLIENT */
-  } else if (oc_tls_load_mfg_cert_chain(conf, device, selected_mfg_cred) == 0) {
+  } else if (oc_tls_load_mfg_cert_chain(conf, device, g_selected_mfg_cred) ==
+             0) {
 #ifdef OC_CLIENT
     loaded_chain = true;
 #endif /* OC_CLIENT */
   }
-  selected_mfg_cred = -1;
-  selected_id_cred = -1;
+  g_selected_mfg_cred = -1;
+  g_selected_id_cred = -1;
 #endif /* OC_PKI */
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
@@ -1437,27 +1438,27 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
     switch (d->oxmsel) {
     case OC_OXMTYPE_JW:
       OC_DBG("oc_tls: selected JW OTM priority");
-      ciphers = (int *)jw_otm_priority;
+      g_ciphers = jw_otm_priority;
       break;
     case OC_OXMTYPE_RDP:
       OC_DBG("oc_tls: selected PIN OTM priority");
-      ciphers = (int *)pin_otm_priority;
+      g_ciphers = pin_otm_priority;
       break;
 #ifdef OC_PKI
     case OC_OXMTYPE_MFG_CERT:
       OC_DBG("oc_tls: selected cert OTM priority");
-      ciphers = (int *)cert_otm_priority;
+      g_ciphers = cert_otm_priority;
       break;
 #endif /* OC_PKI */
     default:
       OC_DBG("oc_tls: selected default OTM priority");
-      ciphers = (int *)default_priority;
+      g_ciphers = default_priority;
       break;
     }
-  } else if (!ciphers) {
+  } else if (!g_ciphers) {
     OC_DBG("oc_tls_set_ciphersuites: server selecting default ciphersuite "
            "priority");
-    ciphers = (int *)default_priority;
+    g_ciphers = default_priority;
 #ifdef OC_CLIENT
     if (conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
       const oc_sec_cred_t *cred =
@@ -1465,20 +1466,20 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
       if (cred && cred->credtype == OC_CREDTYPE_PSK) {
         OC_DBG("oc_tls_set_ciphersuites: client selecting PSK ciphersuite "
                "priority");
-        ciphers = (int *)psk_priority;
+        g_ciphers = psk_priority;
       }
 #ifdef OC_PKI
       else if (loaded_chain) {
         OC_DBG("oc_tls_set_ciphersuites: client selecting cert ciphersuite "
                "priority");
-        ciphers = (int *)cert_priority;
+        g_ciphers = cert_priority;
       }
 #endif /* OC_PKI */
     }
 #endif /* OC_CLIENT */
   }
-  mbedtls_ssl_conf_ciphersuites(conf, ciphers);
-  ciphers = NULL;
+  mbedtls_ssl_conf_ciphersuites(conf, g_ciphers);
+  g_ciphers = NULL;
   OC_DBG("oc_tls: resetting ciphersuite selection for next handshakes");
 }
 
@@ -1487,14 +1488,14 @@ void
 oc_tls_select_psk_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting PSK ciphersuite priority");
-  ciphers = (int *)psk_priority;
+  g_ciphers = psk_priority;
 }
 
 void
 oc_tls_select_anon_ciphersuite(void)
 {
   OC_DBG("oc_tls: client requesting anon ECDH ciphersuite priority");
-  ciphers = (int *)anon_ecdh_priority;
+  g_ciphers = anon_ecdh_priority;
 }
 #endif /* OC_CLIENT */
 
@@ -1774,7 +1775,7 @@ oc_tls_peer_allocate(const oc_endpoint_t *endpoint, int role, bool doc)
     OC_WRN("TLS peers exhausted");
     return NULL;
   }
-  OC_DBG("oc_tls: Allocating new peer");
+  OC_DBG("oc_tls: allocated new peer(%p)", (void *)peer);
   memcpy(&peer->endpoint, endpoint, sizeof(oc_endpoint_t));
   OC_LIST_STRUCT_INIT(peer, recv_q);
   OC_LIST_STRUCT_INIT(peer, send_q);
@@ -1808,7 +1809,7 @@ oc_tls_export_keys(void *p_expkey, mbedtls_ssl_key_export_type type,
 
   memcpy(peer->client_server_random, client_random, 32);
   memcpy(peer->client_server_random + 32, server_random, 32);
-  OC_DBG("oc_tls: Got nonce\n");
+  OC_DBG("oc_tls: Got nonce");
   OC_LOGbytes(peer->client_server_random, sizeof(peer->client_server_random));
 }
 
@@ -1829,7 +1830,7 @@ oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
 
 #ifdef OC_PKI
 #if defined(OC_CLOUD) && defined(OC_CLIENT)
-  if (ciphers == cloud_priority) {
+  if (g_ciphers == cloud_priority) {
     peer->verify_certificate = verify_cloud_certificate;
   } else
 #endif /* OC_CLOUD && OC_CLIENT */
@@ -1939,6 +1940,12 @@ oc_tls_shutdown(void)
   mbedtls_ctr_drbg_free(&g_oc_ctr_drbg_ctx);
   mbedtls_ssl_cookie_free(&g_cookie_ctx);
   mbedtls_entropy_free(&g_entropy_ctx);
+}
+
+mbedtls_ctr_drbg_context *
+oc_tls_ctr_drbg_context(void)
+{
+  return &g_oc_ctr_drbg_ctx;
 }
 
 int

@@ -16,10 +16,6 @@
  *
  ****************************************************************************/
 
-#ifdef OC_CLIENT
-#include "oc_client_state.h"
-#endif /* OC_CLIENT */
-
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -30,6 +26,10 @@
 #include "oc_enums.h"
 #include "oc_resource_internal.h"
 #include "util/oc_features.h"
+
+#ifdef OC_CLIENT
+#include "oc_client_state.h"
+#endif /* OC_CLIENT */
 
 #ifdef OC_RES_BATCH_SUPPORT
 #include "oc_server_api_internal.h"
@@ -45,7 +45,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #include "security/oc_sdi_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif
 
 #ifdef WIN32

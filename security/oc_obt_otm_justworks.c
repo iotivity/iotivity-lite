@@ -31,7 +31,7 @@
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi_internal.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 
 /* Just-works ownership transfer */
 static void

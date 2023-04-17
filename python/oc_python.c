@@ -256,14 +256,12 @@ py_getdevice_from_uuid(const char *uuid, int owned)
     device = (device_handle_t *)oc_list_head(unowned_devices);
   }
 
-  int i = 0;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     if (strcmp(di, uuid) == 0) {
       return device;
     }
-    i++;
     device = device->next;
   }
   return NULL;
@@ -1059,26 +1057,22 @@ get_device_name_from_uuid(const char *uuid)
 {
   device_handle_t *device = NULL;
   device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     if (strcmp(di, uuid) == 0) {
       return device->device_name;
     }
-    i++;
     device = device->next;
   }
 
   device = (device_handle_t *)oc_list_head(unowned_devices);
-  i = 0;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     if (strcmp(di, uuid) == 0) {
       return device->device_name;
     }
-    i++;
     device = device->next;
   }
   return " empty ";

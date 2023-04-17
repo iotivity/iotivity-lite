@@ -49,7 +49,7 @@ oc_sec_ecdsa_get_keypair(size_t device)
 }
 
 size_t
-oc_sec_ecdsa_count_keypairs()
+oc_sec_ecdsa_count_keypairs(void)
 {
   return (size_t)oc_list_length(g_oc_keypairs);
 }

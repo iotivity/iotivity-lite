@@ -27,6 +27,7 @@
 
 #include "oc_export.h"
 #include "oc_endpoint.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +41,7 @@ typedef enum {
   OC_SESSION_DISCONNECTED, ///< session disconnected
 } oc_session_state_t;
 
-#define OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND -2
+#define OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND (-2)
 
 /**
  * @brief Callback function to pass the session event infomation to App.
@@ -51,7 +52,9 @@ typedef enum {
  * @deprecated replaced by session_event_handler_v1_t in v2.2.5.4
  */
 typedef void (*session_event_handler_t)(const oc_endpoint_t *endpoint,
-                                        oc_session_state_t state);
+                                        oc_session_state_t state)
+  OC_DEPRECATED(
+    "replaced by session_event_handler_v1_t, deprecated in v2.2.5.4");
 
 /**
  * @brief Callback function to pass the session event infomation to App.

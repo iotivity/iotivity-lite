@@ -529,7 +529,7 @@ plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 void
-plgd_time_create_resource()
+plgd_time_create_resource(void)
 {
   OC_DBG("plgd time: create resource");
   oc_core_populate_resource(PLGD_TIME, /*device*/ 0, PLGD_TIME_URI,

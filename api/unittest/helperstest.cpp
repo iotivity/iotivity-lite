@@ -145,7 +145,7 @@ TEST(Helpers, ByteStringArray)
   }
 
   // adding item past the allocated size fails
-  fail = { "fail" };
+  fail = "fail";
   EXPECT_FALSE(
     oc_byte_string_array_add_item(barray, fail.c_str(), fail.length()));
 
