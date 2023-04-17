@@ -228,9 +228,6 @@ void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(const oc_otm_ctx_t *ctx);
 
-// perform self-onboarding
-int oc_obt_self_own(size_t device);
-
 #ifdef OC_PKI
 
 typedef struct oc_obt_generate_root_cert_data_t

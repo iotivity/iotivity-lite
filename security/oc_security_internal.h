@@ -34,6 +34,15 @@ extern "C" {
  */
 void oc_mbedtls_init(void);
 
+/**
+ * @brief Perform self-onboarding.
+ *
+ * @param device device index
+ * @return 0 on success
+ * @return -1 on failure
+ */
+int oc_sec_self_own(size_t device);
+
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
 /**

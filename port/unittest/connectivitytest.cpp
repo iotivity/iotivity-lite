@@ -29,6 +29,7 @@
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/Endpoint.h"
 
 #include <array>
 #include <atomic>
@@ -320,7 +321,6 @@ public:
   void TearDown() override { oc::TestDevice::StopServer(); }
 
   static oc_endpoint_t *findEndpoint(size_t device);
-  static oc_endpoint_t createEndpoint(const std::string &ep_str);
 
   static std::atomic<bool> is_callback_received;
 };
@@ -343,18 +343,6 @@ TestConnectivityWithServer::findEndpoint(size_t device)
 
   oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(device, flags);
   EXPECT_NE(nullptr, ep);
-  return ep;
-}
-
-oc_endpoint_t
-TestConnectivityWithServer::createEndpoint(const std::string &ep_str)
-{
-  oc_string_t ep_ocstr;
-  oc_new_string(&ep_ocstr, ep_str.c_str(), ep_str.length());
-  oc_endpoint_t ep{};
-  int ret = oc_string_to_endpoint(&ep_ocstr, &ep, nullptr);
-  oc_free_string(&ep_ocstr);
-  EXPECT_EQ(0, ret) << "cannot convert endpoint " << ep_str;
   return ep;
 }
 
@@ -424,8 +412,8 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_N)
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_fail)
 {
-  oc_endpoint_t ep =
-    createEndpoint("coaps+tcp://[ff02::158]:12345"); // unreachable address
+  oc_endpoint_t ep = oc::endpoint::FromString(
+    "coaps+tcp://[ff02::158]:12345"); // unreachable address
   EXPECT_EQ(-1, oc_tcp_connect(&ep, nullptr, this));
 }
 
@@ -440,7 +428,7 @@ on_tcp_connect_timeout(const oc_endpoint_t *, int state, void *)
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
 {
-  oc_endpoint_t ep = createEndpoint(
+  oc_endpoint_t ep = oc::endpoint::FromString(
     "coaps+tcp://[::1]:12345"); // reachable address, but inactive port
   // enough retries so they will run the whole duration of this test
   oc_tcp_set_connect_retry(UINT8_MAX, 5);
@@ -468,6 +456,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
   EXPECT_EQ(OC_SEND_MESSAGE_QUEUED, oc_send_buffer2(msg, true));
 
   OC_DBG("oc_tcp_connect_timeout wait");
+  oc_tcp_set_connect_retry(0, 2);
   oc::TestDevice::PoolEvents(2);
 
   EXPECT_EQ(-1, oc_tcp_connection_state(&ep));
@@ -492,7 +481,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_repeat_fail)
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connecting_repeat_fail)
 {
-  oc_endpoint_t ep = createEndpoint(
+  oc_endpoint_t ep = oc::endpoint::FromString(
     "coaps+tcp://[::1]:12345"); // reachable address, but inactive port
   EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, oc_tcp_connect(&ep, nullptr, this));
   EXPECT_EQ(OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING,
@@ -529,13 +518,13 @@ TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2)
  * session */
 TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2_not_connected)
 {
-  oc_endpoint_t ep = createEndpoint("coaps+tcp://[ff02::158]:12345");
+  oc_endpoint_t ep = oc::endpoint::FromString("coaps+tcp://[ff02::158]:12345");
   oc_message_t *msg = oc_allocate_message();
   memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
   EXPECT_EQ(OC_TCP_SOCKET_ERROR_NOT_CONNECTED, oc_send_buffer2(msg, true));
 
 #ifdef OC_IPV4
-  oc_endpoint_t ep_ipv4 = createEndpoint("coaps+tcp://1.1.1.1:12345");
+  oc_endpoint_t ep_ipv4 = oc::endpoint::FromString("coaps+tcp://1.1.1.1:12345");
   memcpy(&msg->endpoint, &ep_ipv4, sizeof(oc_endpoint_t));
   EXPECT_EQ(OC_TCP_SOCKET_ERROR_NOT_CONNECTED, oc_send_buffer2(msg, true));
 #endif /* OC_IPV4 */
@@ -551,7 +540,8 @@ TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2_drop)
   // timeout 2s, 2 retries -> total 6s
   oc_tcp_set_connect_retry(2, 2);
 
-  oc_endpoint_t ep = createEndpoint("coap+tcp://openconnectivity.org:3456");
+  oc_endpoint_t ep =
+    oc::endpoint::FromString("coap+tcp://openconnectivity.org:3456");
   ASSERT_EQ(OC_TCP_SOCKET_STATE_CONNECTING,
             oc_tcp_connect(&ep, on_tcp_connect_timeout, this));
 

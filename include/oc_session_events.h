@@ -27,7 +27,6 @@
 
 #include "oc_export.h"
 #include "oc_endpoint.h"
-#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,12 +48,11 @@ typedef enum {
  * @param endpoint endpoint info which the session event is happened.
  * @param state enum values in oc_session_state_t.
  *
- * @deprecated replaced by session_event_handler_v1_t in v2.2.5.4
+ * @note will be removed with deprecated functions oc_add_session_event_callback
+ * and oc_remove_session_event_callback in the future
  */
 typedef void (*session_event_handler_t)(const oc_endpoint_t *endpoint,
-                                        oc_session_state_t state)
-  OC_DEPRECATED(
-    "replaced by session_event_handler_v1_t, deprecated in v2.2.5.4");
+                                        oc_session_state_t state);
 
 /**
  * @brief Callback function to pass the session event infomation to App.

@@ -23,6 +23,9 @@
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,6 +56,11 @@ extern "C" {
 #define OC_BASELINE_PROP_TAG_POS_REL "tag-pos-rel"
 #define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
 #define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
+
+/** Check if the code is one of the internal terminating code while
+ * automatically deallocate the client_cb via the notify_client_cb_with_code
+ * mechanism */
+bool oc_ri_client_cb_terminated(oc_status_t code);
 
 /**
  * @brief removes the client callback. This is silent remove client without

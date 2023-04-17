@@ -21,6 +21,7 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/oc_random.h"
+#include "tests/gtest/Endpoint.h"
 
 #include <array>
 #include <cstdlib>
@@ -52,32 +53,18 @@ public:
 #endif /* _WIN32 */
   }
 
-  static int EndpointFromString(const std::string &addr, oc_endpoint_t *ep,
-                                oc_string_t *uri)
-  {
-    oc_string_t s;
-    oc_new_string(&s, addr.c_str(), addr.length());
-    int ret = oc_string_to_endpoint(&s, ep, uri);
-    oc_free_string(&s);
-    return ret;
-  }
-
   static int EndpointCompareAddress(const std::string &addr1,
                                     const std::string &addr2)
   {
-    oc_endpoint_t ep1{};
-    EXPECT_EQ(0, EndpointFromString(addr1, &ep1, nullptr));
-    oc_endpoint_t ep2{};
-    EXPECT_EQ(0, EndpointFromString(addr2, &ep2, nullptr));
+    oc_endpoint_t ep1 = oc::endpoint::FromString(addr1);
+    oc_endpoint_t ep2 = oc::endpoint::FromString(addr2);
     return oc_endpoint_compare_address(&ep1, &ep2);
   }
 
   static int EndpointCompare(const std::string &addr1, const std::string &addr2)
   {
-    oc_endpoint_t ep1{};
-    EXPECT_EQ(0, EndpointFromString(addr1, &ep1, nullptr));
-    oc_endpoint_t ep2{};
-    EXPECT_EQ(0, EndpointFromString(addr2, &ep2, nullptr));
+    oc_endpoint_t ep1 = oc::endpoint::FromString(addr1);
+    oc_endpoint_t ep2 = oc::endpoint::FromString(addr2);
     return oc_endpoint_compare(&ep1, &ep2);
   }
 };
@@ -140,7 +127,7 @@ TEST_F(TestEndpoint, StringToEndpointIPv4)
   std::string spu0 = { "coaps://10.211.55.3:56789/a/light" };
   oc_endpoint_t ep{};
   oc_string_t uri{};
-  int ret = EndpointFromString(spu0, &ep, &uri);
+  int ret = oc::endpoint::FromString(spu0, &ep, &uri);
   EXPECT_EQ(ret, 0) << "spu0 " << spu0;
 
   EXPECT_TRUE(ep.flags & IPV4);
@@ -166,7 +153,7 @@ TEST_F(TestEndpoint, StringToEndpointTCP)
   for (size_t i = 0; i < spu2.size(); i++) {
     oc_endpoint_t ep{};
     oc_string_t uri{};
-    int ret = EndpointFromString(spu2[i], &ep, &uri);
+    int ret = oc::endpoint::FromString(spu2[i], &ep, &uri);
     EXPECT_EQ(ret, 0) << "spu2[" << i << "] " << spu2[i];
 
     switch (i) {
@@ -203,7 +190,7 @@ TEST_F(TestEndpoint, StringToEndpointTCP)
   for (size_t i = 0; i < spu3.size(); i++) {
     oc_endpoint_t ep{};
     oc_string_t uri{};
-    int ret = EndpointFromString(spu3[i], &ep, &uri);
+    int ret = oc::endpoint::FromString(spu3[i], &ep, &uri);
     switch (i) {
     case 0:
 #if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
@@ -277,7 +264,7 @@ TEST_F(TestEndpoint, StringToEndpointTCP)
   };
   for (size_t i = 0; i < spu4.size(); i++) {
     oc_endpoint_t ep{};
-    int ret = EndpointFromString(spu4[i], &ep, nullptr);
+    int ret = oc::endpoint::FromString(spu4[i], &ep, nullptr);
     EXPECT_EQ(ret, 0) << "spu4[" << i << "] " << spu4[i];
   }
 }
@@ -293,7 +280,7 @@ TEST_F(TestEndpoint, DNSStringToEndpoint)
   for (size_t i = 0; i < spu1.size(); i++) {
     oc_endpoint_t ep{};
     oc_string_t uri{};
-    int ret = EndpointFromString(spu1[i], &ep, &uri);
+    int ret = oc::endpoint::FromString(spu1[i], &ep, &uri);
 #if defined(OC_IPV4) || defined(OC_DNS_LOOKUP_IPV6)
     EXPECT_EQ(ret, 0) << "spu1[" << i << "] " << spu1[i];
 
@@ -471,7 +458,7 @@ TEST_F(TestEndpoint, IsEmpty)
   EXPECT_TRUE(oc_endpoint_is_empty(&endpoint));
 
   std::string ep_str = "coap://[ff02::158]";
-  EXPECT_EQ(0, EndpointFromString(ep_str, &endpoint, nullptr));
+  EXPECT_EQ(0, oc::endpoint::FromString(ep_str, &endpoint, nullptr));
   EXPECT_FALSE(oc_endpoint_is_empty(&endpoint));
 }
 
@@ -492,7 +479,7 @@ TEST_F(TestEndpoint, IsIPv6LinkLocal)
 
   for (const auto &addr : addrs_nonLL) {
     oc_endpoint_t ep{};
-    EXPECT_EQ(0, EndpointFromString(addr, &ep, nullptr));
+    EXPECT_EQ(0, oc::endpoint::FromString(addr, &ep, nullptr));
     EXPECT_EQ(-1, oc_ipv6_endpoint_is_link_local(&ep));
   }
 
@@ -504,7 +491,7 @@ TEST_F(TestEndpoint, IsIPv6LinkLocal)
 
   for (const auto &addr : addrs_LL) {
     oc_endpoint_t ep{};
-    EXPECT_EQ(0, EndpointFromString(addr, &ep, nullptr));
+    EXPECT_EQ(0, oc::endpoint::FromString(addr, &ep, nullptr));
     EXPECT_EQ(0, oc_ipv6_endpoint_is_link_local(&ep));
   }
 }
@@ -569,9 +556,7 @@ TEST_F(TestEndpoint, ListCopy)
   oc_endpoint_t *eps_copy = nullptr;
   EXPECT_EQ(0, oc_endpoint_list_copy(&eps_copy, nullptr));
 
-  oc_endpoint_t model;
-  EXPECT_EQ(0, EndpointFromString("coap://[ff02::158]", &model, nullptr));
-
+  oc_endpoint_t model = oc::endpoint::FromString("coap://[ff02::158]");
   auto make_endpoint_list = [&model](size_t size) {
     oc_endpoint_t *head = nullptr;
     for (size_t i = 0; i < size; ++i) {

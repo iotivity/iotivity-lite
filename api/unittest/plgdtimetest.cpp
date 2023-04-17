@@ -21,21 +21,25 @@
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/plgd/plgd_time_internal.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
+#include "oc_network_monitor.h"
 #include "oc_ri.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/Endpoint.h"
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_security_internal.h"
+#include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -436,6 +440,8 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
   EXPECT_TRUE(oc_do_post());
   oc::TestDevice::PoolEvents(5);
 
+  EXPECT_EQ(PLGD_TIME_STATUS_IN_SYNC, plgd_time_status());
+
   EXPECT_EQ(yesterday, pt.lst);
   EXPECT_EQ(plgd_time_status(), pt.status);
 
@@ -495,6 +501,129 @@ TEST_F(TestPlgdTimeWithServer, PutRequestFail)
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+#ifdef OC_CLIENT
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
+{
+  unsigned flags = 0;
+#ifdef OC_SECURITY
+  flags |= SECURED;
+#endif /* OC_SECURITY */
+#ifdef OC_TCP
+  flags |= TCP;
+#endif /* OC_TCP */
+
+  std::string ep_str =
+    std::string(oc_endpoint_flags_to_scheme(flags)) + "[ff02::158]:12345";
+  oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
+
+  auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {
+    OC_DBG("fetch time handler timeout");
+    EXPECT_TRUE(oc_ri_client_cb_terminated(code));
+    *(static_cast<bool *>(data)) = true;
+    oc::TestDevice::Terminate();
+  };
+
+#ifdef OC_SECURITY
+  if ((ep.flags & SECURED) != 0) {
+    oc_sec_self_own(/*device*/ 0);
+  }
+#endif /* OC_SECURITY */
+
+  bool invoked = false;
+  unsigned fetch_flags = 0;
+  EXPECT_TRUE(plgd_time_fetch(
+    plgd_time_fetch_config(&ep, PLGD_TIME_URI, fetch_handler, &invoked,
+                           /*timeout*/ 5, /*selected_identity_credid*/ -1,
+                           /*disable_time_verification*/ true),
+    &fetch_flags));
+
+  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(invoked);
+
+#ifdef OC_SECURITY
+  oc_pstat_reset_device(/*device*/ 0, true);
+#endif /* OC_SECURITY */
+}
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecure)
+{
+  unsigned flags = 0;
+#ifdef OC_TCP
+  flags |= TCP;
+#endif /* OC_TCP */
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
+    OC_DBG("fetch time handler");
+    EXPECT_EQ(OC_STATUS_OK, code);
+    auto *t = static_cast<oc_clock_time_t *>(data);
+    *t = time;
+    oc::TestDevice::Terminate();
+  };
+
+#if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
+  struct TCPSessionData
+  {
+    bool disconnected;
+    const oc_endpoint_t *ep;
+  };
+
+  auto tcp_events = [](const oc_endpoint_t *endpoint, oc_session_state_t state,
+                       void *data) {
+#ifdef OC_DEBUG
+    oc_string_t ep_str{};
+    oc_endpoint_to_string(endpoint, &ep_str);
+    OC_DBG("session event endpoint=%s state=%d", oc_string(ep_str), (int)state);
+    oc_free_string(&ep_str);
+#endif /* OC_DEBUG */
+    auto *tsd = static_cast<TCPSessionData *>(data);
+    if ((oc_endpoint_compare(endpoint, tsd->ep) == 0) &&
+        (state == OC_SESSION_DISCONNECTED)) {
+      tsd->disconnected = true;
+      oc::TestDevice::Terminate();
+    }
+  };
+
+  TCPSessionData tsd{};
+  tsd.ep = ep;
+  if ((ep->flags & TCP) != 0) {
+    EXPECT_EQ(0, oc_add_session_event_callback_v1(tcp_events, &tsd));
+  }
+#endif /* OC_TCP && OC_SESSION_EVENTS */
+
+  oc_clock_time_t time = 0;
+  unsigned fetch_flags = 0;
+  EXPECT_TRUE(plgd_time_fetch(
+    plgd_time_fetch_config(ep, PLGD_TIME_URI, fetch_handler, &time,
+                           /*timeout*/ 5, /*selected_identity_credid*/ -1,
+                           /*disable_time_verification*/ true),
+    &fetch_flags));
+
+  oc::TestDevice::PoolEvents(5);
+  EXPECT_NE(0, time);
+
+#if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
+  if (!tsd.disconnected &&
+      (fetch_flags & PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED) != 0) {
+    oc::TestDevice::PoolEvents(5);
+  }
+  if ((ep->flags & TCP) != 0) {
+    EXPECT_EQ(0,
+              oc_remove_session_event_callback_v1(tcp_events, nullptr, true));
+  }
+#endif /* OC_TCP && OC_SESSION_EVENTS */
+}
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnected)
+{
+  // TODO: use already connected endpoint
+}
+
+#endif /* OC_CLIENT */
 
 #ifdef OC_SECURITY
 

@@ -17,11 +17,12 @@
  *
  ******************************************************************/
 
-#include <gtest/gtest.h>
-
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "rd_client.h"
+#include "tests/gtest/Endpoint.h"
+
+#include <gtest/gtest.h>
 
 class TestRDClient : public testing::Test {
 public:
@@ -54,10 +55,7 @@ protected:
     int ret = oc_main_init(&s_handler);
     ASSERT_EQ(0, ret);
 
-    oc_string_t ep_str;
-    oc_new_string(&ep_str, "coap://224.0.1.187:5683", 23);
-    oc_string_to_endpoint(&ep_str, &s_endpoint, nullptr);
-    oc_free_string(&ep_str);
+    s_endpoint = oc::endpoint::FromString("coap://224.0.1.187:5683");
   }
 
   static void TearDownTestCase() { oc_main_shutdown(); }

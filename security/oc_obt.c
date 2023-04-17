@@ -38,10 +38,9 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_certs_internal.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_csr_internal.h"
-#include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_security_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_tls_internal.h"
 #include <stdlib.h>
@@ -3694,53 +3693,6 @@ oc_obt_generate_root_cred(void)
 }
 #endif /* OC_PKI */
 
-int
-oc_obt_self_own(size_t device)
-{
-  OC_DBG("oc_obt: performing self-onboarding of device(%zu)", device);
-  const oc_uuid_t *uuid = oc_core_get_device_id(device);
-  if (uuid == NULL) {
-    return -1;
-  }
-
-  oc_sec_acl_t *acl = oc_sec_get_acl(device);
-  memcpy(acl->rowneruuid.id, uuid->id, sizeof(uuid->id));
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  memcpy(doxm->devowneruuid.id, uuid->id, sizeof(uuid->id));
-  memcpy(doxm->deviceuuid.id, uuid->id, sizeof(uuid->id));
-  memcpy(doxm->rowneruuid.id, uuid->id, sizeof(uuid->id));
-  doxm->owned = true;
-  doxm->oxmsel = 0;
-
-  oc_sec_creds_t *creds = oc_sec_get_creds(device);
-  memcpy(creds->rowneruuid.id, uuid->id, sizeof(uuid->id));
-
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
-  memcpy(ps->rowneruuid.id, uuid->id, sizeof(uuid->id));
-  ps->tm = 0;
-  ps->cm = 0;
-  ps->isop = true;
-  ps->s = OC_DOS_RFNOP;
-
-  oc_sec_acl_add_bootstrap_acl(device);
-
-  oc_sec_sdi_t *sdi = oc_sec_sdi_get(device);
-  const oc_device_info_t *self = oc_core_get_device_info(device);
-  oc_gen_uuid(&sdi->uuid);
-  oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
-  sdi->priv = false;
-
-  oc_sec_dump_pstat(device);
-  oc_sec_dump_doxm(device);
-  oc_sec_dump_cred(device);
-  oc_sec_dump_acl(device);
-  oc_sec_dump_ael(device);
-  oc_sec_dump_sdi(device);
-
-  return 0;
-}
-
 /* OBT initialization and shutdown */
 int
 oc_obt_init(void)
@@ -3754,7 +3706,7 @@ oc_obt_init(void)
     return 0;
   }
 
-  if (oc_obt_self_own(/*device*/ 0) != 0) {
+  if (oc_sec_self_own(/*device*/ 0) != 0) {
     OC_DBG("oc_obt: returning from oc_obt_init() with errors");
     return -1;
   }

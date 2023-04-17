@@ -21,6 +21,7 @@
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
 #include "plgd_time_internal.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"
@@ -34,16 +35,53 @@
 #include "port/oc_log.h"
 #include "util/oc_compiler.h"
 #include "util/oc_macros.h"
+#include "util/oc_memb.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #include "security/oc_security_internal.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
+#include <assert.h>
 #include <inttypes.h>
 #include <math.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef OC_SECURITY
+#include <mbedtls/x509.h>
+#endif /* OC_SECURITY */
+
+#ifdef OC_CLIENT
+
+typedef struct time_fetch_param_t
+{
+  plgd_time_on_fetch_fn_t on_fetch;
+  void *on_fetch_data;
+#if defined(OC_TCP) || defined(OC_SECURITY)
+  bool close_peer_after_fetch;
+#endif
+} time_fetch_param_t;
+
+OC_MEMB(g_fetch_params_s, time_fetch_param_t, OC_MAX_NUM_DEVICES);
+
+static uint16_t PLGD_TIME_FETCH_TIMEOUT = 4;
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+typedef struct time_verify_certificate_params_t
+{
+  oc_pki_verify_certificate_cb_t verify_certificate;
+  oc_tls_peer_user_data_t peer_data;
+} time_verify_certificate_params_t;
+
+OC_MEMB(g_time_verify_certificate_params_s, time_verify_certificate_params_t,
+        OC_MAX_NUM_DEVICES);
+
+#endif /* OC_SECURITY && OC_PKI  */
+
+#endif /* OC_CLIENT */
 
 static plgd_time_t g_oc_plgd_time = { 0 };
 
@@ -63,7 +101,7 @@ dev_set_system_time(void)
     OC_ERR("failed to set system time: error(%d)", ret);
     return;
   }
-  OC_DBG("system time set to: %ld", (long)pt);
+  OC_DBG("plgd-time: system time set to %ld", (long)pt);
 }
 
 void
@@ -99,14 +137,14 @@ static int
 dev_time_set_time(oc_clock_time_t lst, bool dump, bool notify)
 {
   if (lst == 0) {
-    OC_DBG("plgd time reset");
+    OC_DBG("plgd-time reset");
     plgd_time_set(0, 0, dump, notify);
     return 0;
   }
 
   oc_clock_time_t updateTime = oc_clock_time_monotonic();
   if (updateTime == (oc_clock_time_t)-1) {
-    OC_ERR("cannot set plgd time: cannot obtain system uptime");
+    OC_ERR("cannot set plgd-time: cannot obtain system uptime");
     return -1;
   }
 
@@ -114,7 +152,7 @@ dev_time_set_time(oc_clock_time_t lst, bool dump, bool notify)
   char lst_ts[64] = { 0 };
   oc_clock_encode_time_rfc3339(lst, lst_ts, sizeof(lst_ts));
   uint64_t ut_s = (uint64_t)(updateTime / (double)OC_CLOCK_SECOND);
-  OC_DBG("plgd time: %s (update: %" PRIu64 ")", lst_ts, ut_s);
+  OC_DBG("plgd-time: %s (update: %" PRIu64 ")", lst_ts, ut_s);
 #endif /* OC_DEBUG */
 
   plgd_time_set(lst, updateTime, dump, notify);
@@ -149,13 +187,13 @@ static oc_clock_time_t
 dev_plgd_time(plgd_time_t pt)
 {
   if (!dev_time_is_active(pt)) {
-    OC_ERR("cannot get plgd time: not active");
+    OC_ERR("cannot get plgd-time: not active");
     return -1;
   }
 
   oc_clock_time_t cur = oc_clock_time_monotonic();
   if (cur == (oc_clock_time_t)-1) {
-    OC_ERR("cannot get plgd time: cannot obtain system uptime");
+    OC_ERR("cannot get plgd-time: cannot obtain system uptime");
     return -1;
   }
 
@@ -171,7 +209,7 @@ dev_plgd_time(plgd_time_t pt)
   char ts[64] = { 0 };
   oc_clock_encode_time_rfc3339(time, ts, sizeof(ts));
   long diff = (time - ptime) / OC_CLOCK_SECOND;
-  OC_DBG("calculated plgd time: %s, system time: %s, diff: %lds", pt_ts, ts,
+  OC_DBG("calculated plgd-time: %s, system time: %s, diff: %lds", pt_ts, ts,
          diff);
 #endif /* OC_DEBUG */
   return ptime;
@@ -194,7 +232,7 @@ plgd_time_set_status(plgd_time_status_t status)
 {
 #ifdef OC_DEBUG
   const char *status_str = plgd_time_status_to_str(status);
-  OC_DBG("plgd time status: %s", status_str != NULL ? status_str : "NULL");
+  OC_DBG("plgd-time status: %s", status_str != NULL ? status_str : "NULL");
 #endif /* OC_DEBUG */
   g_oc_plgd_time.status = status;
 }
@@ -294,7 +332,7 @@ dev_time_encode_property_time(plgd_time_t pt, int flags)
 {
 #ifdef OC_SECURITY
   if (!dev_time_property_is_accessible(PLGD_TIME_PROP_TIME, flags)) {
-    OC_DBG("cannot access property(%s)", PLGD_TIME_PROP_TIME);
+    OC_DBG("plgd-time: cannot access property(%s)", PLGD_TIME_PROP_TIME);
     return 0;
   }
 #else  /* !OC_SECURITY */
@@ -305,7 +343,7 @@ dev_time_encode_property_time(plgd_time_t pt, int flags)
     oc_clock_time_t ct = dev_plgd_time(pt);
     if (ct == (oc_clock_time_t)-1 ||
         oc_clock_encode_time_rfc3339(ct, time, sizeof(time)) == 0) {
-      OC_ERR("cannot encode plgd time: cannot encode time in rfc3339 format");
+      OC_ERR("cannot encode plgd-time: cannot encode time in rfc3339 format");
       return -1;
     }
   }
@@ -318,7 +356,7 @@ dev_time_encode_property_status(plgd_time_t pt, int flags)
 {
 #ifdef OC_SECURITY
   if (!dev_time_property_is_accessible(PLGD_TIME_PROP_STATUS, flags)) {
-    OC_DBG("cannot access property(%s)", PLGD_TIME_PROP_STATUS);
+    OC_DBG("plgd-time: cannot access property(%s)", PLGD_TIME_PROP_STATUS);
     return;
   }
 #else  /* !OC_SECURITY */
@@ -339,7 +377,8 @@ dev_time_encode_property_last_synced_time(plgd_time_t pt, int flags)
   if ((flags & PLGD_TIME_ENCODE_FLAG_TO_STORAGE) == 0 &&
       !dev_time_property_is_accessible(PLGD_TIME_PROP_LAST_SYNCED_TIME,
                                        flags)) {
-    OC_DBG("cannot access property(%s)", PLGD_TIME_PROP_LAST_SYNCED_TIME);
+    OC_DBG("plgd-time: cannot access property(%s)",
+           PLGD_TIME_PROP_LAST_SYNCED_TIME);
     return 0;
   }
 #else  /* !OC_SECURITY */
@@ -350,7 +389,7 @@ dev_time_encode_property_last_synced_time(plgd_time_t pt, int flags)
   if (dev_time_is_active(pt) &&
       (oc_clock_encode_time_rfc3339(pt.store.last_synced_time, lst,
                                     sizeof(lst)) == 0)) {
-    OC_ERR("cannot encode plgd time: cannot encode last_synced_time");
+    OC_ERR("cannot encode plgd-time: cannot encode last_synced_time");
     return -1;
   }
   oc_rep_set_text_string(root, lastSyncedTime, lst);
@@ -361,7 +400,7 @@ int
 plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface_mask, int flags)
 {
   if ((iface_mask & PLGD_TIME_IF_MASK) != iface_mask) {
-    OC_ERR("cannot encode plgd time: invalid interface(%d)", (int)iface_mask);
+    OC_ERR("cannot encode plgd-time: invalid interface(%d)", (int)iface_mask);
     return -1;
   }
 
@@ -408,12 +447,12 @@ plgd_time_decode(const oc_rep_t *rep, plgd_time_t *pt)
       lst_rfc3339 = &rep->value.string;
       continue;
     }
-    OC_WRN("plgd time: unknown property (%s:%d)", oc_string(rep->name),
+    OC_WRN("plgd-time: unknown property (%s:%d)", oc_string(rep->name),
            (int)rep->type);
   }
 
   if (lst_rfc3339 == NULL) {
-    OC_ERR("cannot decode plgd time: property %s not found",
+    OC_ERR("cannot decode plgd-time: property %s not found",
            PLGD_TIME_PROP_LAST_SYNCED_TIME);
     return false;
   }
@@ -441,7 +480,7 @@ plgd_time_dump(void)
   long ret = oc_storage_save_resource(PLGD_TIME_STORE_NAME, /*device*/ 0,
                                       store_encode_plgd_time, &g_oc_plgd_time);
   if (ret <= 0) {
-    OC_ERR("cannot dump plgd time to storage: error(%ld)", ret);
+    OC_ERR("cannot dump plgd-time to storage: error(%ld)", ret);
     return false;
   }
   return true;
@@ -453,7 +492,7 @@ store_decode_plgd_time(const oc_rep_t *rep, size_t device, void *data)
   (void)device;
   plgd_time_t *pt = (plgd_time_t *)data;
   if (!plgd_time_decode(rep, pt)) {
-    OC_ERR("cannot load plgd time: cannot decode representation");
+    OC_ERR("cannot load plgd-time: cannot decode representation");
     return -1;
   }
   return 0;
@@ -465,11 +504,11 @@ plgd_time_load(void)
   plgd_time_t pt = { 0 };
   if (oc_storage_load_resource(PLGD_TIME_STORE_NAME, 0, store_decode_plgd_time,
                                &pt) <= 0) {
-    OC_ERR("failed to load plgd time from storage");
+    OC_ERR("failed to load plgd-time from storage");
     return false;
   }
 
-  OC_DBG("plgd time loaded from storage");
+  OC_DBG("plgd-time loaded from storage");
   if (dev_time_set_time(pt.store.last_synced_time, false, false) != 0) {
     return false;
   }
@@ -485,7 +524,7 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)data;
   plgd_time_t pt = { 0 };
   if (!plgd_time_decode(request->request_payload, &pt)) {
-    OC_ERR("cannot decode data for plgd time resource");
+    OC_ERR("cannot decode data for plgd-time resource");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -498,7 +537,7 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   int flags = PLGD_TIME_ENCODE_FLAG_SECURE; // post is protected by acls, so we
                                             // must have secure access
   if (plgd_time_encode(g_oc_plgd_time, OC_IF_RW, flags) != 0) {
-    OC_ERR("cannot encode plgd time resource");
+    OC_ERR("cannot encode plgd-time resource");
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
@@ -520,7 +559,7 @@ plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 #endif /* OC_SECURITY */
   if (plgd_time_encode(g_oc_plgd_time, iface_mask, flags) != 0) {
-    OC_ERR("cannot encode plgd time resource");
+    OC_ERR("cannot encode plgd-time resource");
     oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
@@ -531,7 +570,7 @@ plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
 void
 plgd_time_create_resource(void)
 {
-  OC_DBG("plgd time: create resource");
+  OC_DBG("plgd-time: create resource");
   oc_core_populate_resource(PLGD_TIME, /*device*/ 0, PLGD_TIME_URI,
                             PLGD_TIME_IF_MASK, PLGD_TIME_DEFAULT_IF,
                             OC_DISCOVERABLE | OC_OBSERVABLE,
@@ -545,7 +584,7 @@ plgd_time_configure(bool use_in_mbedtls,
                     plgd_set_system_time_fn_t set_system_time,
                     void *set_system_time_data)
 {
-  OC_DBG("plgd time: initialize feature");
+  OC_DBG("plgd-time: initialize feature");
 #ifdef OC_SECURITY
   if (use_in_mbedtls) {
     oc_mbedtls_platform_time_init();
@@ -559,5 +598,255 @@ plgd_time_configure(bool use_in_mbedtls,
   g_oc_plgd_time.set_system_time = set_system_time;
   g_oc_plgd_time.set_system_time_data = set_system_time_data;
 }
+
+#ifdef OC_CLIENT
+
+plgd_time_fetch_config_t
+plgd_time_fetch_config(const oc_endpoint_t *endpoint, const char *uri,
+                       plgd_time_on_fetch_fn_t on_fetch, void *on_fetch_data,
+                       uint16_t timeout, int selected_identity_credid,
+                       bool disable_time_verification)
+{
+  plgd_time_fetch_config_t fetch = {
+    .endpoint = endpoint,
+    .uri = uri,
+    .on_fetch = on_fetch,
+    .on_fetch_data = on_fetch_data,
+    .timeout = timeout,
+  };
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  fetch.selected_identity_credid = selected_identity_credid;
+  fetch.disable_time_verification = disable_time_verification;
+#else  /* !OC_SECURITY || !OC_PKI */
+  (void)selected_identity_credid;
+  (void)disable_time_verification;
+#endif /* OC_SECURITY && OC_PKI */
+
+  return fetch;
+}
+
+static bool
+dev_time_parse_fetch_response(const oc_rep_t *rep, oc_clock_time_t *time)
+{
+  assert(clock != NULL);
+
+  const char *time_str = NULL;
+  size_t time_str_len = 0;
+  if (!oc_rep_get_string(rep, "time", (char **)&time_str, &time_str_len)) {
+    OC_ERR("fetch plgd-time failed: cannot find time property");
+    return false;
+  }
+
+  oc_clock_time_t ct = oc_clock_parse_time_rfc3339(time_str, time_str_len);
+  if (ct == (oc_clock_time_t)-1) {
+    OC_ERR("fetch plgd-time failed: parse clock time from string(%s)",
+           time_str);
+    return false;
+  }
+
+  *time = ct;
+  return true;
+}
+
+static void
+dev_time_on_fetch(oc_client_response_t *data)
+{
+  time_fetch_param_t *fp = (time_fetch_param_t *)data->user_data;
+  oc_clock_time_t time = 0;
+  oc_status_t code = data->code;
+  if (code == OC_STATUS_OK &&
+      !dev_time_parse_fetch_response(data->payload, &time)) {
+    code = OC_STATUS_INTERNAL_SERVER_ERROR;
+  }
+
+  OC_DBG("plgd-time: on_fetch time=%d time=%u", (int)code, (unsigned)time);
+  fp->on_fetch(code, time, fp->on_fetch_data);
+#if defined(OC_TCP) || defined(OC_SECURITY)
+  // session is closed automatically on timeout, close or cancel
+  if (fp->close_peer_after_fetch && oc_ri_client_cb_terminated(code)) {
+    OC_DBG("plgd-time: close fetch time session");
+    oc_close_session(data->endpoint);
+  }
+#endif /* OC_TCP || OC_SECURITY */
+
+  oc_memb_free(&g_fetch_params_s, fp);
+}
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+static void
+time_verify_certificate_params_free(void *data)
+{
+  if (data == NULL) {
+    return;
+  }
+  time_verify_certificate_params_t *vcp =
+    (time_verify_certificate_params_t *)data;
+  if (vcp->peer_data.free != NULL) {
+    vcp->peer_data.free(vcp->peer_data.data);
+  }
+  oc_memb_free(&g_time_verify_certificate_params_s, vcp);
+}
+
+static int
+dev_time_verify_certificate(oc_tls_peer_t *peer, const mbedtls_x509_crt *crt,
+                            int depth, uint32_t *flags)
+{
+  OC_DBG("plgd-time: verifying certificate at depth %d, flags %u", depth,
+         *flags);
+
+  time_verify_certificate_params_t *vcp =
+    (time_verify_certificate_params_t *)peer->user_data.data;
+  // set expected user data for verify_certificate
+  peer->user_data.data = vcp->peer_data.data;
+  peer->user_data.free = vcp->peer_data.free;
+  int ret = vcp->verify_certificate(peer, crt, depth, flags);
+  OC_DBG("plgd-time: default verification done (depth=%d, flags=%u)", depth,
+         *flags);
+  // restore overriden data for correct deallocation
+  peer->user_data.data = vcp;
+  peer->user_data.free = time_verify_certificate_params_free;
+  *flags &=
+    ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED | MBEDTLS_X509_BADCERT_FUTURE));
+  OC_DBG("plgd-time: removed validity errors (flags=%u)", *flags);
+
+  return ret;
+}
+
+static bool
+dev_time_add_peer(const oc_endpoint_t *ep, bool disable_time_verification)
+{
+  OC_DBG("plgd-time: add new peer");
+
+  time_verify_certificate_params_t *vcp = NULL;
+  if (disable_time_verification) {
+    vcp = (time_verify_certificate_params_t *)oc_memb_alloc(
+      &g_time_verify_certificate_params_s);
+    if (vcp == NULL) {
+      OC_ERR("plgd-time add peer failed: cannot allocate verify certificate "
+             "parameters");
+      return false;
+    }
+  }
+
+  oc_tls_peer_t *peer = oc_tls_add_peer(ep, MBEDTLS_SSL_IS_CLIENT);
+  if (peer == NULL) {
+    OC_ERR("plgd-time add peer failed: oc_tls_add_peer failed");
+    oc_memb_free(&g_time_verify_certificate_params_s, vcp);
+    return false;
+  }
+
+  if (vcp != NULL) {
+    OC_DBG("plgd-time: disable time verification for peer");
+    vcp->verify_certificate = peer->verify_certificate;
+    vcp->peer_data.data = peer->user_data.data;
+    vcp->peer_data.free = peer->user_data.free;
+    peer->user_data.data = vcp;
+    peer->user_data.free = time_verify_certificate_params_free;
+    peer->verify_certificate = dev_time_verify_certificate;
+  }
+
+  return true;
+}
+
+#endif /* OC_SECURITY && OC_PKI */
+
+#if defined(OC_TCP) || defined(OC_SECURITY)
+
+static bool
+dev_time_has_session(const oc_endpoint_t *endpoint)
+{
+#ifdef OC_SECURITY
+  if ((endpoint->flags & SECURED) != 0) {
+    const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+    OC_DBG("plgd-time: peer state=%d", peer != NULL ? peer->ssl_ctx.state : -1);
+    return peer != NULL;
+  }
+#endif /* OC_SECURITY */
+
+#ifdef OC_TCP
+  if ((endpoint->flags & TCP) != 0) {
+    int tcp = oc_tcp_connection_state(endpoint);
+    OC_DBG("plgd-time: session state=%d", tcp);
+    return tcp <= 0;
+  }
+#endif /* OC_TCP */
+  return false;
+}
+
+#endif /* OC_SECURITY && OC_PKI */
+
+bool
+plgd_time_fetch(plgd_time_fetch_config_t fetch, unsigned *flags)
+{
+#ifndef OC_TCP
+  (void)flags;
+#endif /* !OC_TCP */
+  assert(fetch.endpoint != NULL);
+  assert(fetch.uri != NULL);
+
+  if (fetch.timeout == 0) {
+    fetch.timeout = PLGD_TIME_FETCH_TIMEOUT;
+  }
+
+  time_fetch_param_t *fetch_params =
+    (time_fetch_param_t *)oc_memb_alloc(&g_fetch_params_s);
+  if (fetch_params == NULL) {
+    OC_ERR("cannot allocate fetch plgd-time parameters");
+    return false;
+  }
+
+#if defined(OC_TCP) || defined(OC_SECURITY)
+  bool has_session = dev_time_has_session(fetch.endpoint);
+  OC_DBG("plgd-time: has_session=%d", (int)has_session);
+
+  if (!has_session) {
+#ifdef OC_TCP
+    if ((fetch.endpoint->flags & TCP) != 0 && flags != NULL) {
+      OC_DBG("plgd-time: append TCP_SESSION_OPENED to output flags");
+      *flags |= PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED;
+    }
+#endif /* OC_TCP */
+
+    // no session was opened -> new one will be opened for fetching of time and
+    // closed when it is done
+    fetch_params->close_peer_after_fetch = true;
+  }
+#endif /* OC_TCP || OC_SECURITY */
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  // dtls or tls -> if we don't have a connected peer already create a new one
+  // with disabled time verification on certificates
+  bool add_insecure_peer =
+    (fetch.endpoint->flags & SECURED) != 0 && !has_session;
+  if (add_insecure_peer) {
+    oc_tls_select_identity_cert_chain(fetch.selected_identity_credid);
+
+    if (!dev_time_add_peer(fetch.endpoint, fetch.disable_time_verification)) {
+      oc_memb_free(&g_fetch_params_s, fetch_params);
+      return false;
+    }
+  }
+#endif /* OC_SECURITY && OC_PKI */
+
+  fetch_params->on_fetch = fetch.on_fetch;
+  fetch_params->on_fetch_data = fetch.on_fetch_data;
+
+  if (!oc_do_get_with_timeout(fetch.uri, fetch.endpoint, "", fetch.timeout,
+                              dev_time_on_fetch, HIGH_QOS, fetch_params)) {
+    OC_ERR("failed to send fetch plgd-time request to endpoint");
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    if (add_insecure_peer) {
+      oc_tls_remove_peer(fetch.endpoint);
+    }
+#endif /* OC_SECURITY && OC_PKI */
+    oc_memb_free(&g_fetch_params_s, fetch_params);
+    return false;
+  }
+  return true;
+}
+
+#endif /* OC_CLIENT */
 
 #endif /* OC_HAS_FEATURE_PLGD_TIME */

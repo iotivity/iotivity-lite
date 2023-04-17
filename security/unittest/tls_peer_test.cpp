@@ -24,12 +24,12 @@
 #include "oc_uuid.h"
 #include "security/oc_pstat.h"
 #include "security/oc_tls_internal.h"
+#include "tests/gtest/Endpoint.h"
 
 #include <gtest/gtest.h>
-#include <mbedtls/x509_crt.h>
-
 #include <iostream>
 #include <iomanip>
+#include <mbedtls/x509_crt.h>
 #include <string>
 #include <vector>
 
@@ -202,16 +202,6 @@ public:
     }
   }
 
-  static oc_endpoint_t getEndpoint(const std::string &ep)
-  {
-    oc_string_t ep_str;
-    oc_new_string(&ep_str, ep.c_str(), ep.length());
-    oc_endpoint_t endpoint;
-    EXPECT_EQ(0, oc_string_to_endpoint(&ep_str, &endpoint, nullptr));
-    oc_free_string(&ep_str);
-    return endpoint;
-  }
-
   static std::vector<Peer> getClients()
   {
     std::vector<Peer> clients{ createPeer("coaps://[ff02::41]:1336",
@@ -258,7 +248,7 @@ public:
   static void addPeers(const std::vector<Peer> &peers)
   {
     for (const auto &p : peers) {
-      oc_endpoint_t ep = getEndpoint(p.address);
+      oc_endpoint_t ep = oc::endpoint::FromString(p.address);
       oc_tls_peer_t *peer = oc_tls_add_peer(&ep, p.role);
       ASSERT_NE(nullptr, peer);
       peer->uuid = p.uuid;
@@ -310,13 +300,13 @@ TEST_F(TestTLSPeer, GetPeer)
 
   auto clients = getClients();
   for (const auto &c : clients) {
-    oc_endpoint_t ep = getEndpoint(c.address);
+    oc_endpoint_t ep = oc::endpoint::FromString(c.address);
     ASSERT_EQ(nullptr, oc_tls_get_peer(&ep));
     ASSERT_EQ(nullptr, oc_tls_get_peer_uuid(&ep));
   }
 
   for (const auto &s : servers) {
-    oc_endpoint_t ep = getEndpoint(s.address);
+    oc_endpoint_t ep = oc::endpoint::FromString(s.address);
     const oc_tls_peer_t *peer = oc_tls_get_peer(&ep);
     ASSERT_NE(nullptr, peer);
     ASSERT_EQ(MBEDTLS_SSL_IS_SERVER, peer->role);
@@ -410,7 +400,7 @@ TEST_F(TestTLSPeer, ResetDevice)
 #ifdef OC_PKI
 TEST_F(TestTLSPeer, VerifyCertificate)
 {
-  oc_endpoint_t ep = getEndpoint("coaps://[ff02::43]:1338");
+  oc_endpoint_t ep = oc::endpoint::FromString("coaps://[ff02::43]:1338");
   oc_tls_peer_t *peer = oc_tls_add_peer(&ep, MBEDTLS_SSL_IS_SERVER);
   ASSERT_NE(nullptr, peer);
   ASSERT_NE(nullptr, peer->ssl_conf.f_vrfy);
