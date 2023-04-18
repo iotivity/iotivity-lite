@@ -29,6 +29,8 @@
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
 
+#include <stdlib.h>
+
 static struct oc_memb *g_rep_objects;
 CborEncoder root_map;
 CborEncoder links_array;
@@ -1351,11 +1353,13 @@ oc_rep_is_baseline_interface_property(const oc_rep_t *rep)
 bool
 oc_rep_decoder_set_type_by_content_format(oc_content_format_t content_format)
 {
-  if (content_format == APPLICATION_CBOR || content_format == APPLICATION_VND_OCF_CBOR ||
+  if (content_format == APPLICATION_CBOR ||
+      content_format == APPLICATION_VND_OCF_CBOR ||
       content_format == APPLICATION_NOT_DEFINED) {
     oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  } else if (content_format == APPLICATION_JSON || content_format == APPLICATION_TD_JSON) {
+  } else if (content_format == APPLICATION_JSON ||
+             content_format == APPLICATION_TD_JSON) {
     oc_rep_decoder_set_type(OC_REP_JSON_DECODER);
 #endif /* OC_HAS_FEATURE_PLGD_WOT */
   } else {

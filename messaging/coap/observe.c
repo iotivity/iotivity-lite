@@ -636,6 +636,7 @@ coap_notify_collection(oc_collection_t *collection,
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -710,6 +711,7 @@ coap_notify_collections(oc_resource_t *resource)
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -854,6 +856,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
 #endif /* OC_DYNAMIC_ALLOCATION */
     if (!has_response) {
       response_buffer.buffer = buffer;
+      response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
       response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
       response.response_buffer = &response_buffer;
       if (resource != NULL && endpoint != NULL) {
@@ -957,6 +960,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
   /* iterate over observers */
   for (coap_observer_t *obs = (coap_observer_t *)oc_list_head(observers_list);
@@ -1054,6 +1058,7 @@ process_batch_observers(void *data)
          batch_observer_get_resource_uri(batch_obs));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   while (batch_obs != NULL) {
     if (!batch_obs->resource &&
         !oc_string_len(batch_obs->removed_resource_uri)) {
@@ -1250,6 +1255,7 @@ notify_discovery_observers(oc_resource_t *resource)
   oc_response_buffer_t response_buffer = { 0 };
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
 
   /* iterate over observers */
