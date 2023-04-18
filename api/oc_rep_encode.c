@@ -318,6 +318,7 @@ oc_rep_encode_raw(const uint8_t *data, size_t len)
   oc_rep_encoder_convert_ptr_to_offset(&g_encoder);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 typedef CborEncoder json_encoder_t;
 
 typedef enum json_types_t {
@@ -593,6 +594,7 @@ oc_rep_json_encode_floating_point_internal(CborEncoder *encoder,
   (void)value;
   return CborErrorUnsupportedType;
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 static oc_rep_encoder_t g_encoders[] = {
   [OC_REP_CBOR_ENCODER] = {
@@ -608,6 +610,7 @@ static oc_rep_encoder_t g_encoders[] = {
     .create_map = cbor_encoder_create_map,
     .close_container = cbor_encoder_close_container,
   },
+#ifdef OC_HAS_FEATURE_PLGD_WOT
   [OC_REP_JSON_ENCODER] = {
     .encode_null = oc_rep_json_encode_null_internal,
     .encode_bool = oc_rep_json_encode_boolean_internal,
@@ -621,6 +624,7 @@ static oc_rep_encoder_t g_encoders[] = {
     .create_map = oc_rep_json_encoder_create_map_internal,
     .close_container = oc_rep_json_encoder_close_container_internal,
   },
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 };
 
 static CborError
