@@ -81,6 +81,11 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
 oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
   void *cb);
 
+/** @brief The callback and data pair is currently being processed by
+ * poll_event_callback_timers */
+bool oc_timed_event_callback_is_currently_processed(
+  const void *cb_data, oc_trigger_t event_callback);
+
 #ifdef OC_BLOCK_WISE
 extern bool oc_ri_invoke_coap_entity_handler(
   void *request, void *response, oc_blockwise_state_t **request_state,
