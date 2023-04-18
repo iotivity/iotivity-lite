@@ -27,6 +27,10 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd/plgd_wot.h"
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+
 #include <array>
 #include <gtest/gtest.h>
 #include <vector>
@@ -80,8 +84,15 @@ checkBaselineProperties(const oc_rep_t *rep)
   oc_string_array_t arr{};
   size = 0;
   EXPECT_TRUE(oc_rep_get_string_array(rep, "rt", &arr, &size));
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  EXPECT_EQ(2, size);
+  EXPECT_STREQ(PLGD_DEV_WOT_THING_DESCRIPTION_RT,
+               oc_string_array_get_item(arr, 0));
+  EXPECT_STREQ("oic.wk.con", oc_string_array_get_item(arr, 1));
+#else  /* OC_HAS_FEATURE_PLGD_WOT */
   EXPECT_EQ(1, size);
   EXPECT_STREQ("oic.wk.con", oc_string_array_get_item(arr, 0));
+#endif /* !OC_HAS_FEATURE_PLGD_WOT */
 
   str = nullptr;
   size = 0;

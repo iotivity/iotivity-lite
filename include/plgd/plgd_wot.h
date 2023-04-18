@@ -29,6 +29,8 @@
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
 
+#define PLGD_DEV_WOT_THING_DESCRIPTION_RT "wot.thing"
+
 #include "oc_ri.h"
 
 OC_API

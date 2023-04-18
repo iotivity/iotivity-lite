@@ -29,6 +29,10 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "plgd/plgd_wot.h"
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
+
 #include <algorithm>
 #include <cstdlib>
 #include <gtest/gtest.h>
@@ -157,6 +161,9 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
     OC_IF_W,
     OC_IF_STARTUP,
     OC_IF_STARTUP_REVERT,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    PLGD_IF_WOT_TD,
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
   };
 
   std::vector<std::string> all_ifstrs{
@@ -173,7 +180,7 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
     OC_IF_STARTUP_REVERT_STR,
 #ifdef OC_HAS_FEATURE_PLGD_WOT
     PLGD_IF_WOT_TD_STR,
-#endif
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
   };
   ASSERT_EQ(all_ifs.size(), all_ifstrs.size());
 
@@ -472,7 +479,12 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
   oc::TestDevice::PoolEvents(5);
   sort(rts.begin(), rts.end());
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+  std::vector<std::string> exp_rts{ PLGD_DEV_WOT_THING_DESCRIPTION_RT,
+                                    "oic.wk.d", "oic.d.test1" };
+#else  /* OC_HAS_FEATURE_PLGD_WOT */
   std::vector<std::string> exp_rts{ "oic.wk.d", "oic.d.test1" };
+#endif /* !OC_HAS_FEATURE_PLGD_WOT */
   sort(exp_rts.begin(), exp_rts.end());
 
   auto rts_equal = [](const std::vector<std::string> &lhs,

@@ -43,7 +43,7 @@
 #endif /* OC_COLLECTIONS  && OC_SERVER */
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-#include "api/plgd/plgd_wot_internal.h"
+#include "plgd/plgd_wot.h"
 #include "oc_ri_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_WOT */
 

@@ -66,6 +66,9 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
     OC_IF_W,
     OC_IF_STARTUP,
     OC_IF_STARTUP_REVERT,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+    PLGD_IF_WOT_TD,
+#endif
   };
   std::vector<std::string> all_interface_strs{
     OC_IF_BASELINE_STR,
