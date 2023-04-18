@@ -296,7 +296,7 @@ typedef enum {
   APPLICATION_OSCORE = 10001,             ///< application/oscore
   APPLICATION_VND_OMA_LWM2M_TLV = 11542,  ///< application/vnd.oma.lwm2m+tlv
   APPLICATION_VND_OMA_LWM2M_JSON = 11543, ///< application/vnd.oma.lwm2m+json
-  APPLICATION_VND_OMA_LWM2M_CBOR = 11544,  ///< application/vnd.oma.lwm2m+cbor
+  APPLICATION_VND_OMA_LWM2M_CBOR = 11544, ///< application/vnd.oma.lwm2m+cbor
 
   APPLICATION_NOT_DEFINED = 0xFFFF, ///< not defined
 } oc_content_format_t;

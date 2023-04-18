@@ -1628,8 +1628,7 @@ typedef enum oc_rep_encoder_type_t {
 /**
  * @brief Set the encoder type to encode the response payload.
  *
- * @param encoder_type encoder
- * @return OC_API
+ * @param encoder_type encoder type
  */
 OC_API
 void oc_rep_encoder_set_type(oc_rep_encoder_type_t encoder_type);
@@ -1669,7 +1668,7 @@ void oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type);
 /**
  * @brief Get the decoder type to decode the request payload to oc_rep_t.
  *
- * @return OC_API
+ * @return decoder
  */
 OC_API
 oc_rep_decoder_type_t oc_rep_decoder_get_type(void);

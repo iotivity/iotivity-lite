@@ -352,28 +352,28 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
 static plgd_wot_property_t light_properties[] = {
-      {
-        .name = "name",
-        .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
-        .description = "Light name",
-        .read_only = true,
-      },
-      {
-        .name = "state",
-        .type = PLGD_DEV_WOT_PROPERTY_TYPE_BOOLEAN,
-        .observable = true,
-        .description = "Turn On/Off",
-      },
-      {
-        .name = "power",
-        .type = PLGD_DEV_WOT_PROPERTY_TYPE_INTEGER,
-        .observable = true,
-        .description = "Power Level",
-      },
-      {
-        /* sentinel */
-        .name = NULL,
-      },
+  {
+    .name = "name",
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_STRING,
+    .description = "Light name",
+    .read_only = true,
+  },
+  {
+    .name = "state",
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_BOOLEAN,
+    .observable = true,
+    .description = "Turn On/Off",
+  },
+  {
+    .name = "power",
+    .type = PLGD_DEV_WOT_PROPERTY_TYPE_INTEGER,
+    .observable = true,
+    .description = "Power Level",
+  },
+  {
+    /* sentinel */
+    .name = NULL,
+  },
 };
 #endif
 
@@ -401,7 +401,11 @@ register_lights(void)
                                     OC_PERM_UPDATE | OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-    plgd_wot_resource_set_thing_description(res, (plgd_wot_extend_thing_description_cb_t)plgd_wot_resource_set_td_properties, light_properties);
+    plgd_wot_resource_set_thing_description(
+      res,
+      (plgd_wot_extend_thing_description_cb_t)
+        plgd_wot_resource_set_td_properties,
+      light_properties);
 #endif
     oc_resource_set_request_handler(res, OC_GET, get_handler, &lights[i]);
     oc_resource_set_request_handler(res, OC_POST, post_handler, &lights[i]);

@@ -1067,10 +1067,9 @@ oc_ri_iterate_over_all_resources(size_t device,
 
   for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
     oc_resource_t *resource = oc_core_get_resource_by_index(i, device);
-    if (resource) {
-      if (!cbk(resource, data)) {
-        return;
-      }
+    if (resource != NULL && !cbk(resource, data)) {
+      // Stop iterating if the callback returns false
+      return;
     }
   }
 #ifdef OC_SERVER
@@ -1162,9 +1161,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif /* OC_SPEC_VER_OIC */
 
-  //#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
   bool resource_is_collection = false;
-  //#endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
   bool authorized = true;
@@ -1289,11 +1286,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* If there were no errors thus far, attempt to locate the specific
    * resource object that will handle the request using the request uri.
    */
-  if (!bad_request) {
-    if (oc_ri_get_resource_by_uri(endpoint->device, uri_path, uri_path_len,
-                                  &cur_resource, &resource_is_collection)) {
-      request_obj.resource = cur_resource;
-    }
+  if (!bad_request &&
+      oc_ri_get_resource_by_uri(endpoint->device, uri_path, uri_path_len,
+                                &cur_resource, &resource_is_collection)) {
+    request_obj.resource = cur_resource;
   }
 
   oc_interface_mask_t iface_mask = 0;
