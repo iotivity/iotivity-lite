@@ -1266,8 +1266,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   oc_rep_set_pool(&rep_objects);
 
-  if (payload_len > 0 &&
-      (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR)) {
+  if (payload_len > 0 && oc_rep_decoder_set_type_by_content_format(cf)) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
      * functions. The result of this parse is a tree of oc_rep_t structures
      * which will reflect the schema of the payload.
