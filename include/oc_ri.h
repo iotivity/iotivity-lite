@@ -329,7 +329,6 @@ struct oc_resource_s
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 #endif
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  oc_request_handler_t wot_get_handler; ///< callback for GET WoT TD
   plgd_wot_extend_thing_description_handler_t
     wot_extend_thing_description_handler; ///< callback to set properties,
                                           ///< actions and events

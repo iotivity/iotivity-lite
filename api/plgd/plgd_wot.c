@@ -530,7 +530,6 @@ plgd_wot_resource_set_thing_description(
   resource->wot_extend_thing_description_handler.cb = cb;
   resource->wot_extend_thing_description_handler.user_data = data;
   resource->interfaces |= PLGD_IF_WOT_TD;
-  resource->wot_get_handler.cb = plgd_wot_get_handler;
 }
 
 const char *

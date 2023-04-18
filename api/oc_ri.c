@@ -1411,9 +1411,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
         if (is_wot_request && method == OC_GET &&
-            cur_resource->wot_get_handler.cb) {
-        cur_resource->wot_get_handler.cb(
-          &request_obj, iface_mask, cur_resource->wot_get_handler.user_data);
+            cur_resource->wot_extend_thing_description_handler.cb) {
+        plgd_wot_get_handler(&request_obj, iface_mask, NULL);
       } else
 #endif
         if (method == OC_GET && cur_resource->get_handler.cb) {
