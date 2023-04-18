@@ -46,7 +46,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
-#include "security/oc_tls.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_PUSH
