@@ -19,16 +19,22 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_certs.h"
+#include "port/oc_random.h"
 #include "security/oc_certs_internal.h"
 
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <mbedtls/asn1.h>
 #include <string>
 #include <vector>
 
 class TestCerts : public testing::Test {
 public:
+  static void SetUpTestCase() { oc_random_init(); }
+
+  static void TearDownTestCase() { oc_random_destroy(); }
+
   void TearDown() override
   {
     // restore defaults
@@ -38,8 +44,8 @@ public:
   template<class T>
   static std::vector<T> toArray(const std::string &str)
   {
-    std::vector<T> res;
-    std::copy(str.begin(), str.end(), std::back_inserter(res));
+    std::vector<T> res{};
+    std::copy(std::begin(str), std::end(str), std::back_inserter(res));
     return res;
   }
 };
@@ -202,6 +208,66 @@ TEST_F(TestCerts, AllowedEllipticCurves)
     EXPECT_FALSE(oc_sec_certs_ecp_group_id_is_allowed(ec));
     EXPECT_EQ(ocf_mask, oc_sec_certs_ecp_group_ids_allowed());
   }
+}
+
+static mbedtls_asn1_buf
+getMbedTLSAsn1Buffer(std::vector<unsigned char> &bytes)
+{
+  mbedtls_asn1_buf buf{};
+  buf.p = bytes.data();
+  buf.len = bytes.size();
+  return buf;
+}
+
+static std::string
+getUUID(const std::string &prefix = "")
+{
+  oc_uuid_t uuid{};
+  oc_gen_uuid(&uuid);
+  std::array<char, OC_UUID_LEN> uuid_str{};
+  oc_uuid_to_str(&uuid, uuid_str.data(), uuid_str.size());
+  return prefix + uuid_str.data();
+}
+
+TEST_F(TestCerts, ExtractUUIDFromCommonNameFail)
+{
+  // invalid CN: empty str
+  auto empty = toArray<unsigned char>("");
+  std::array<char, OC_UUID_LEN> CN_uuid{};
+  EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(empty), CN_uuid.data(), CN_uuid.size()));
+
+  // invalid CN: invalid format (missing prefix "uuid:")
+  auto invalid_uuid = toArray<unsigned char>(getUUID());
+  EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
+
+  // invalid CN: invalid format (invalid prefix "leet:")
+  invalid_uuid = toArray<unsigned char>(getUUID("leet:"));
+  EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
+
+  // correct format (uuid:<UUID string>), but buffer is too small
+  auto valid_uuid = toArray<unsigned char>(getUUID("uuid:"));
+  std::array<char, OC_UUID_LEN - 1> too_small{};
+  EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(valid_uuid), too_small.data(), too_small.size()));
+}
+
+TEST_F(TestCerts, ExtractUUIDFromCommonName)
+{
+  std::string uuid = getUUID();
+  auto uuid_encoded = toArray<unsigned char>("uuid:" + uuid);
+  std::array<char, OC_UUID_LEN> CN_uuid{};
+  EXPECT_TRUE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(uuid_encoded), CN_uuid.data(), CN_uuid.size()));
+  EXPECT_STREQ(uuid.c_str(), CN_uuid.data());
+
+  uuid_encoded =
+    toArray<unsigned char>("prefix data in the CN field, uuid:" + uuid);
+  EXPECT_TRUE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(uuid_encoded), CN_uuid.data(), CN_uuid.size()));
+  EXPECT_STREQ(uuid.c_str(), CN_uuid.data());
 }
 
 #endif /* OC_SECURITY && OC_PKI */

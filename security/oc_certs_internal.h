@@ -123,6 +123,10 @@ int oc_certs_parse_public_key_to_oc_string(const unsigned char *cert,
 bool oc_certs_encode_CN_with_UUID(const oc_uuid_t *uuid, char *buf,
                                   size_t buf_len);
 
+/** @brief Helper function to extract encoded UUID in a mbedTLS buffer */
+bool oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
+                                       size_t buffer_size);
+
 /**
  * @brief Extract uuid stored in the subject's Common name field in a x509
  * certificate.

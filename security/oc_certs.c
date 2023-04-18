@@ -25,10 +25,12 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/oc_assert.h"
+#include "port/oc_log.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_tls_internal.h"
+#include "util/oc_macros.h"
 
 #include <mbedtls/bignum.h>
 #include <mbedtls/ctr_drbg.h>
@@ -39,9 +41,9 @@
 #include <string.h>
 
 #define UUID_PREFIX "uuid:"
-#define UUID_PREFIX_LEN (sizeof(UUID_PREFIX) - 1)
+#define UUID_PREFIX_LEN (OC_CHAR_ARRAY_LEN(UUID_PREFIX))
 #define CN_UUID_PREFIX "CN=uuid:"
-#define CN_UUID_PREFIX_LEN (sizeof(CN_UUID_PREFIX) - 1)
+#define CN_UUID_PREFIX_LEN (OC_CHAR_ARRAY_LEN(CN_UUID_PREFIX))
 
 // message digest used for signature of generated certificates or certificate
 // signing requests (CSRs)
@@ -395,14 +397,53 @@ oc_certs_encode_CN_with_UUID(const oc_uuid_t *uuid, char *buf, size_t buf_len)
   return true;
 }
 
+static const char *
+certs_find_uuid_prefix(const char *haystack, size_t haystack_len)
+{
+  for (size_t i = 0; i < haystack_len - UUID_PREFIX_LEN + 1; ++i) {
+    const char *start = haystack + i;
+    if (memcmp(start, UUID_PREFIX, UUID_PREFIX_LEN) == 0) {
+      return start;
+    }
+  }
+  return NULL;
+}
+
 bool
-oc_certs_extract_CN_for_UUID(const mbedtls_x509_crt *cert, char *buffer,
-                             size_t buffer_size)
+oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
+                                  size_t buffer_size)
 {
   if (buffer_size < OC_UUID_LEN) {
     OC_ERR("buffer too small");
     return false;
   }
+
+  const char *uuid_CN = (const char *)val.p;
+  const char *uuid_prefix = NULL;
+  if (val.len >= UUID_PREFIX_LEN + OC_UUID_LEN -
+                   1) { // -1 because val is not nul-terminated
+    uuid_prefix = certs_find_uuid_prefix(uuid_CN, val.len);
+  }
+  if (uuid_prefix == NULL) {
+#ifdef OC_DEBUG
+    oc_string_t cn;
+    oc_new_string(&cn, uuid_CN, val.len);
+    OC_ERR("invalid Common Name field (tag:%d val:%s)", val.tag, oc_string(cn));
+    oc_free_string(&cn);
+#endif /* OC_DEBUG */
+    return false;
+  }
+
+  size_t uuid_prefix_len = (uuid_prefix - uuid_CN) + UUID_PREFIX_LEN;
+  memcpy(buffer, val.p + uuid_prefix_len, OC_UUID_LEN - 1);
+  buffer[OC_UUID_LEN - 1] = '\0';
+  return true;
+}
+
+bool
+oc_certs_extract_CN_for_UUID(const mbedtls_x509_crt *cert, char *buffer,
+                             size_t buffer_size)
+{
 
   const mbedtls_asn1_named_data *subject =
     (mbedtls_asn1_named_data *)&(cert->subject);
@@ -417,18 +458,7 @@ oc_certs_extract_CN_for_UUID(const mbedtls_x509_crt *cert, char *buffer,
     return false;
   }
 
-  if (subject->val.len < UUID_PREFIX_LEN + OC_UUID_LEN -
-                           1) { // -1 because val is not nul-terminated
-    OC_ERR("invalid Common Name field");
-    return false;
-  }
-  const char *uuid_CN = (const char *)subject->val.p;
-  const char *uuid_prefix = strstr(uuid_CN, UUID_PREFIX);
-  size_t uuid_prefix_len = (uuid_CN - uuid_prefix) + UUID_PREFIX_LEN;
-
-  memcpy(buffer, subject->val.p + uuid_prefix_len, OC_UUID_LEN - 1);
-  buffer[OC_UUID_LEN - 1] = '\0';
-  return true;
+  return oc_certs_parse_CN_buffer_for_UUID(subject->val, buffer, buffer_size);
 }
 
 bool
@@ -523,7 +553,8 @@ oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
       if (oc_certs_DN_is_CN(directoryName)) {
         dnRole = directoryName;
       }
-      /* Look for an Organizational Unit (OU) component in the directoryName */
+      /* Look for an Organizational Unit (OU) component in the directoryName
+       */
       else if (oc_certs_DN_is_OU(directoryName)) {
         dnAuthority = directoryName;
       }
@@ -538,10 +569,10 @@ oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
     }
 
     if (dnAuthority == NULL) {
-      /* If the OU component was absent in the directoryName, it is assumed that
-       * the issuer of this role certificate is the "authority". Accordingly,
-       * extract the issuer's name from the issuer's Common Name (CN) component
-       * and store it.
+      /* If the OU component was absent in the directoryName, it is assumed
+       * that the issuer of this role certificate is the "authority".
+       * Accordingly, extract the issuer's name from the issuer's Common Name
+       * (CN) component and store it.
        */
       dnAuthority = oc_certs_CN_extract_issuer(cert);
     }
