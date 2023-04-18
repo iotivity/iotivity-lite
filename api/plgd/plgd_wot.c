@@ -140,8 +140,8 @@ process_wot_response_set_form(CborEncoder *forms_array, oc_resource_t *resource,
         }
         oc_rep_set_string_array(forms, op, op);
         oc_free_string_array(&op);
-        oc_rep_set_text_string(forms, cov:method, forms[i].cov_method);
-        oc_rep_set_int(forms, cov:accept, APPLICATION_JSON);
+        oc_rep_set_text_string(forms, cov : method, forms[i].cov_method);
+        oc_rep_set_int(forms, cov : accept, APPLICATION_JSON);
         if (forms[i].subprotocol) {
           oc_rep_set_text_string(forms, subprotocol, forms[i].subprotocol);
         }

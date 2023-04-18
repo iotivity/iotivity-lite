@@ -377,7 +377,8 @@ oc_set_con_res_announced(bool announce)
 }
 
 static void
-oc_create_device_resource(size_t device_count, const char *uri, const char *rt) {
+oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
+{
   /* Construct device resource */
   int properties = OC_DISCOVERABLE;
 #ifdef OC_CLOUD
@@ -397,17 +398,17 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt) 
 }
 
 static void
-oc_create_device_configuration_resource(size_t device_count) {
+oc_create_device_configuration_resource(size_t device_count)
+{
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
     size_t num_types = 1;
-    oc_resource_properties_t properties = OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
-    oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              properties,
-                              oc_core_con_handler_get, oc_core_con_handler_post,
-                              oc_core_con_handler_post, 0, num_types, "oic.wk.con"                                 
-                              );
+    oc_resource_properties_t properties =
+      OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE;
+    oc_core_populate_resource(
+      OCF_CON, device_count, OC_NAME_CON_RES, OC_IF_RW | OC_IF_BASELINE,
+      OC_IF_RW, properties, oc_core_con_handler_get, oc_core_con_handler_post,
+      oc_core_con_handler_post, 0, num_types, "oic.wk.con");
   }
 }
 

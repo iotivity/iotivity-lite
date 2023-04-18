@@ -68,9 +68,12 @@ CborEncoder *oc_rep_encoder_convert_ptr_to_offset(CborEncoder *encoder);
  */
 CborEncoder *oc_rep_encoder_convert_offset_to_ptr(CborEncoder *encoder);
 
-void oc_rep_encoder_init_v1(uint8_t *buffer, size_t size, oc_rep_encoder_type_t encoder_type);
+void oc_rep_encoder_init_v1(uint8_t *buffer, size_t size,
+                            oc_rep_encoder_type_t encoder_type);
 
-void oc_rep_encoder_realloc_init_v1(uint8_t **buffer, size_t size, size_t max_size, oc_rep_encoder_type_t encoder_type);
+void oc_rep_encoder_realloc_init_v1(uint8_t **buffer, size_t size,
+                                    size_t max_size,
+                                    oc_rep_encoder_type_t encoder_type);
 
 #ifdef __cplusplus
 }

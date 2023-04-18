@@ -18,7 +18,6 @@
 
 #include "oc_api.h"
 #include "oc_rep.h"
-#include "jsmn.h"
 #include "oc_rep_internal.h"
 #include "oc_rep_encode_internal.h"
 #include "oc_ri_internal.h"
@@ -29,7 +28,10 @@
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
+#include "jsmn.h"
 #include <stdlib.h>
+#endif
 
 static struct oc_memb *g_rep_objects;
 CborEncoder root_map;
@@ -628,6 +630,7 @@ oc_parse_cbor_rep(const uint8_t *in_payload, size_t payload_size,
   return CborNoError;
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 typedef struct
 {
   oc_rep_t *root;
@@ -1089,6 +1092,7 @@ oc_parse_json_rep(const uint8_t *json, size_t json_len, oc_rep_t **out_rep)
   }
   return CborNoError;
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 int
 oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
@@ -1099,7 +1103,11 @@ oc_parse_rep(const uint8_t *in_payload, size_t payload_size, oc_rep_t **out_rep)
   if (g_decoder_type == OC_REP_CBOR_DECODER) {
     return oc_parse_cbor_rep(in_payload, payload_size, out_rep);
   }
+#ifdef OC_HAS_FEATURE_PLGD_WOT
   return oc_parse_json_rep(in_payload, payload_size, out_rep);
+#else  /* OC_HAS_FEATURE_PLGD_WOT */
+  return -1;
+#endif /* !OC_HAS_FEATURE_PLGD_WOT */
 }
 
 static bool

@@ -90,6 +90,7 @@ private:
   oc::RepPool pool_{};
 };
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 class TestRepWithPoolJSON : public TestRepWithPool {
   void SetUp() override
   {
@@ -102,6 +103,7 @@ class TestRepWithPoolJSON : public TestRepWithPool {
     oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
   }
 };
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * Most code done here is to enable testing without passing the code through the
@@ -129,11 +131,7 @@ TEST_F(TestRepWithPool, OCRepInvalidFormat)
   oc_free_rep(rep);
 }
 
-/*
- * Most code done here is to enable testing without passing the code through the
- * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
- * and oc_parse_rep
- */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepInvalidFormat)
 {
   oc_rep_start_root_object();
@@ -156,6 +154,7 @@ TEST_F(TestRepWithPoolJSON, OCRepInvalidFormat)
 
   oc_free_rep(rep);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepInvalidArray)
 {
@@ -186,6 +185,7 @@ TEST_F(TestRepWithPool, OCRepInvalidArray)
   oc_free_rep(rep);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepInvalidArray)
 {
   oc_rep_start_root_object();
@@ -214,6 +214,7 @@ TEST_F(TestRepWithPoolJSON, OCRepInvalidArray)
 
   oc_free_rep(rep);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetNull)
 {
@@ -242,6 +243,7 @@ TEST_F(TestRepWithPool, OCRepSetGetNull)
   CheckJson(rep.get(), "{\n  \"nothing\" : null\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetNull)
 {
   /* add null value to root object */
@@ -269,6 +271,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetNull)
   CheckJson(rep.get(), "{\"nothing\":null}", false);
   CheckJson(rep.get(), "{\n  \"nothing\" : null\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetDouble)
 {
@@ -344,6 +347,7 @@ TEST_F(TestRepWithPool, OCRepSetGetInt)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetInt)
 {
   /* add values to root object */
@@ -389,6 +393,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetInt)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * Working with uint is a little unusual there is a macro to set the uint type
@@ -455,6 +460,7 @@ TEST_F(TestRepWithPool, OCRepSetGetUint)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetUint)
 {
   /* add values to root object */
@@ -507,6 +513,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetUint)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /* why do we have set_boolean but get_bool shouldn't the function names match */
 TEST_F(TestRepWithPool, OCRepSetGetBool)
@@ -547,6 +554,7 @@ TEST_F(TestRepWithPool, OCRepSetGetBool)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetBool)
 {
   /* add values to root object */
@@ -584,6 +592,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetBool)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * This test assumes text in this file is saved using a utf8 format. This is
@@ -654,6 +663,7 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetTextString)
 {
   /* add text string value "hal9000":"Dave" to root object */
@@ -710,6 +720,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetTextString)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * TODO is there a max byte array length? If so consider adding a test that
@@ -802,6 +813,7 @@ TEST_F(TestRepWithPool, OCRepSetGetEmptyIntArray)
   CheckJson(rep.get(), "{\n  \"emptyInt\" : null\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyIntArray)
 {
   /*
@@ -823,6 +835,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyIntArray)
   CheckJson(rep.get(), "{\"emptyInt\":null}", false);
   CheckJson(rep.get(), "{\n  \"emptyInt\" : null\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetIntArray)
 {
@@ -867,6 +880,7 @@ TEST_F(TestRepWithPool, OCRepSetGetIntArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetIntArray)
 {
   /* add values to root object */
@@ -909,6 +923,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetIntArray)
     "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * This test uses oc_rep_add_int to build the cbor array instead of
@@ -954,6 +969,7 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepAddGetIntArray)
 {
   /* add values to root object */
@@ -993,6 +1009,7 @@ TEST_F(TestRepWithPoolJSON, OCRepAddGetIntArray)
     "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * This test uses oc_rep_add_int to build the cbor array instead of
@@ -1039,6 +1056,7 @@ TEST_F(TestRepWithPool, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
 {
   /* add values to root object */
@@ -1079,6 +1097,7 @@ TEST_F(TestRepWithPoolJSON, OCRepAddGetIntArrayUsingSetKeyAndBeginArray)
     "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetEmptyBoolArray)
 {
@@ -1102,6 +1121,7 @@ TEST_F(TestRepWithPool, OCRepSetGetEmptyBoolArray)
   CheckJson(rep.get(), "{\n  \"emptyBool\" : null\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyBoolArray)
 {
   /*
@@ -1123,6 +1143,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyBoolArray)
   CheckJson(rep.get(), "{\"emptyBool\":null}", false);
   CheckJson(rep.get(), "{\n  \"emptyBool\" : null\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
 {
@@ -1164,6 +1185,7 @@ TEST_F(TestRepWithPool, OCRepSetGetBoolArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetBoolArray)
 {
   /* add values to root object */
@@ -1203,6 +1225,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetBoolArray)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /*
  * Test the oc_rep_add_boolean to build a boolean array instead of
@@ -1246,6 +1269,7 @@ TEST_F(TestRepWithPool, OCRepAddGetBoolArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepAddGetBoolArray)
 {
   /* add values to root object */
@@ -1283,6 +1307,7 @@ TEST_F(TestRepWithPoolJSON, OCRepAddGetBoolArray)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetEmptyDoubleArray)
 {
@@ -1423,6 +1448,7 @@ TEST_F(TestRepWithPool, OCRepSetGetEmptyObject)
   CheckJson(rep.get(), "{\n  \"empty\" : {\n  }\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyObject)
 {
   /*
@@ -1447,6 +1473,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyObject)
   CheckJson(rep.get(), "{\"empty\":{}}", false);
   CheckJson(rep.get(), "{\n  \"empty\" : {\n  }\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetObject)
 {
@@ -1507,6 +1534,7 @@ TEST_F(TestRepWithPool, OCRepSetGetObject)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetObject)
 {
   /*
@@ -1565,6 +1593,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetObject)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 #ifndef OC_DYNAMIC_ALLOCATION
 
@@ -1643,6 +1672,7 @@ TEST_F(TestRepWithPool, OCRepSetGetEmptyObjectArray)
   CheckJson(rep.get(), "{\n  \"emptyObj\" : null\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyObjectArray)
 {
   /*
@@ -1667,6 +1697,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyObjectArray)
   CheckJson(rep.get(), "{\"emptyObj\":null}", false);
   CheckJson(rep.get(), "{\n  \"emptyObj\" : null\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
 {
@@ -1788,6 +1819,7 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetObjectArray)
 {
   /*
@@ -1907,6 +1939,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetObjectArray)
                             "}\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
 {
@@ -2014,6 +2047,7 @@ TEST_F(TestRepWithPool, OCRepSetGetEmptyStringArray)
   CheckJson(rep.get(), "{\n  \"emptyStr\" : null\n}\n", true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyStringArray)
 {
   /*
@@ -2037,6 +2071,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetEmptyStringArray)
   CheckJson(rep.get(), "{\"emptyStr\":null}", false);
   CheckJson(rep.get(), "{\n  \"emptyStr\" : null\n}\n", true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /* use oc_rep_set_string_array to build the string array. */
 TEST_F(TestRepWithPool, OCRepSetGetStringArray)
@@ -2125,7 +2160,7 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
-/* use oc_rep_set_string_array to build the string array. */
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepSetGetStringArray)
 {
   /* Strings for testing
@@ -2211,6 +2246,7 @@ TEST_F(TestRepWithPoolJSON, OCRepSetGetStringArray)
   // clang-format on
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 /* use oc_rep_add_text_string to build string array */
 TEST_F(TestRepWithPool, OCRepAddGetStringArray)
@@ -2302,6 +2338,7 @@ TEST_F(TestRepWithPool, OCRepAddGetStringArray)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepAddGetStringArray)
 {
   /* Strings for testing
@@ -2390,6 +2427,7 @@ TEST_F(TestRepWithPoolJSON, OCRepAddGetStringArray)
   // clang-format on
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 
 TEST_F(TestRepWithPool, OCRepRootArrayObject)
 {
@@ -2487,6 +2525,7 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
   CheckJson(rep.get(), pretty_json, true);
 }
 
+#ifdef OC_HAS_FEATURE_PLGD_WOT
 TEST_F(TestRepWithPoolJSON, OCRepRootArrayObject)
 {
   /*
@@ -2582,3 +2621,4 @@ TEST_F(TestRepWithPoolJSON, OCRepRootArrayObject)
                             "]\n";
   CheckJson(rep.get(), pretty_json, true);
 }
+#endif /* OC_HAS_FEATURE_PLGD_WOT */

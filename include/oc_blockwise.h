@@ -64,12 +64,12 @@ typedef struct oc_blockwise_state_s
   oc_string_t uri_query; ///< the query
   oc_blockwise_finish_cb_t *finish_cb;
 #ifdef OC_CLIENT
-  uint8_t token[COAP_TOKEN_LEN]; ///< the token
-  uint8_t token_len;             ///< token lenght
-  uint16_t mid;                  ///< the message id
-  void *client_cb;               ///< client callback
-#endif                           /* OC_CLIENT */
-  oc_content_format_t            content_format; ///< the content format
+  uint8_t token[COAP_TOKEN_LEN];      ///< the token
+  uint8_t token_len;                  ///< token lenght
+  uint16_t mid;                       ///< the message id
+  void *client_cb;                    ///< client callback
+#endif                                /* OC_CLIENT */
+  oc_content_format_t content_format; ///< the content format
 } oc_blockwise_state_t;
 
 typedef struct oc_blockwise_request_state_s

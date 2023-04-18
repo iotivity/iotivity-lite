@@ -144,7 +144,8 @@ typedef enum {
   OC_IF_STARTUP = 1 << 10,       ///< oic.if.startup
   OC_IF_STARTUP_REVERT = 1 << 11 ///< oic.if.startup.revert
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  , PLGD_IF_WOT_TD = 1 << 12, ///< plgd.dev.if.wot.device
+  ,
+  PLGD_IF_WOT_TD = 1 << 12, ///< plgd.dev.if.wot.device
 #endif
 } oc_interface_mask_t;
 
@@ -254,10 +255,11 @@ typedef void (*oc_payload_callback_t)(void);
 
 #ifdef OC_HAS_FEATURE_PLGD_WOT
 /**
- * @brief application should define this callback which builds properties, actions and events
- * of WoT TD
+ * @brief application should define this callback which builds properties,
+ * actions and events of WoT TD
  */
-typedef void (*plgd_wot_extend_thing_description_cb_t)(CborEncoder* parent_map, const oc_request_t *request, void *data);
+typedef void (*plgd_wot_extend_thing_description_cb_t)(
+  CborEncoder *parent_map, const oc_request_t *request, void *data);
 
 /**
  * @brief wot request handler type
@@ -327,8 +329,10 @@ struct oc_resource_s
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 #endif
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-  oc_request_handler_t wot_get_handler;      ///< callback for GET WoT TD
-  plgd_wot_extend_thing_description_handler_t wot_extend_thing_description_handler; ///< callback to set properties, actions and events
+  oc_request_handler_t wot_get_handler; ///< callback for GET WoT TD
+  plgd_wot_extend_thing_description_handler_t
+    wot_extend_thing_description_handler; ///< callback to set properties,
+                                          ///< actions and events
 #endif
 };
 

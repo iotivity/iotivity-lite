@@ -685,8 +685,8 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
           && coap_pkt->content_format != APPLICATION_CBOR
 #endif /* OC_SPEC_VER_OIC */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-          && coap_pkt->content_format != APPLICATION_JSON
-          && coap_pkt->content_format != APPLICATION_TD_JSON
+          && coap_pkt->content_format != APPLICATION_JSON &&
+          coap_pkt->content_format != APPLICATION_TD_JSON
 #endif
       )
         return UNSUPPORTED_MEDIA_TYPE_4_15;
@@ -725,8 +725,8 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
           && coap_pkt->accept != APPLICATION_CBOR
 #endif /* OC_SPEC_VER_OIC */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
-          && coap_pkt->accept != APPLICATION_JSON
-          && coap_pkt->accept != APPLICATION_TD_JSON
+          && coap_pkt->accept != APPLICATION_JSON &&
+          coap_pkt->accept != APPLICATION_TD_JSON
 #endif
       )
         return NOT_ACCEPTABLE_4_06;

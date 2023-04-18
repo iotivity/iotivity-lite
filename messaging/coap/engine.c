@@ -431,10 +431,10 @@ coap_receive(oc_message_t *msg)
               }
               if (response_buffer->content_format > 0) {
                 coap_set_header_content_format(response,
-                                         response_buffer->content_format);
+                                               response_buffer->content_format);
               } else {
                 coap_set_header_content_format(response,
-                                             APPLICATION_VND_OCF_CBOR);
+                                               APPLICATION_VND_OCF_CBOR);
               }
               coap_set_payload(response, payload, payload_size);
               coap_set_header_block2(response, block2_num, more, block2_size);

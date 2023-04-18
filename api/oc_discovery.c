@@ -960,8 +960,7 @@ oc_wk_core_oic_res(const oc_request_t *request, const char *rt_request,
     length += clf_add_line_to_buffer("rt=\"oic.wk.res ");
     length += clf_add_str_to_buffer(rt_device, rt_devlen);
     length += clf_add_line_to_buffer("\";");
-    length +=
-      clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\"");
+    length += clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\"");
     *response_length = length;
   }
   return ret;
@@ -992,7 +991,8 @@ oc_wk_core_wot_add_line(const oc_resource_t *resource, const char *endpoint,
   length += clf_add_str_to_buffer(oc_string(resource->uri),
                                   oc_string_len(resource->uri));
   length += clf_add_line_to_buffer(">;ct=432;");
-  length += clf_add_line_to_buffer("rt=\"" PLGD_DEV_WOT_THING_DESCRIPTION_RT "\";");
+  length +=
+    clf_add_line_to_buffer("rt=\"" PLGD_DEV_WOT_THING_DESCRIPTION_RT "\";");
   length += clf_add_line_to_buffer("if=\"" PLGD_IF_WOT_TD_STR "\"");
   return length;
 }

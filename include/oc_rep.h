@@ -1620,28 +1620,67 @@ size_t oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
 
 typedef enum oc_rep_encoder_type_t {
   OC_REP_CBOR_ENCODER = 0 /* default encoder */,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
   OC_REP_JSON_ENCODER = 1,
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 } oc_rep_encoder_type_t;
 
+/**
+ * @brief Set the encoder type to encode the response payload.
+ *
+ * @param encoder_type encoder
+ * @return OC_API
+ */
 OC_API
 void oc_rep_encoder_set_type(oc_rep_encoder_type_t encoder_type);
 
+/**
+ * @brief Get the encoder type to encode the response payload.
+ *
+ * @return encoder
+ */
 OC_API
 oc_rep_encoder_type_t oc_rep_encoder_get_type(void);
 
+/**
+ * @brief Set the encoder type to encode the response payload according to the
+ * accept option.
+ *
+ * @param accept the accept option
+ * @return true if the encoder type is set successfully
+ */
 OC_API bool oc_rep_encoder_set_type_by_accept(oc_content_format_t accept);
 
 typedef enum oc_rep_decoder_type_t {
   OC_REP_CBOR_DECODER = 0 /* default decoder */,
+#ifdef OC_HAS_FEATURE_PLGD_WOT
   OC_REP_JSON_DECODER = 1,
+#endif /* OC_HAS_FEATURE_PLGD_WOT */
 } oc_rep_decoder_type_t;
 
+/**
+ * @brief Set the decoder type to decode the request payload to oc_rep_t.
+ *
+ * @param decoder_type decoder
+ */
 OC_API
 void oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type);
 
+/**
+ * @brief Get the decoder type to decode the request payload to oc_rep_t.
+ *
+ * @return OC_API
+ */
 OC_API
 oc_rep_decoder_type_t oc_rep_decoder_get_type(void);
 
+/**
+ * @brief Set the decoder type to decode the request payload to oc_rep_t
+ * according to the content format.
+ *
+ * @param content_format the content format
+ * @return true if the decoder type is set successfully.
+ */
 OC_API bool oc_rep_decoder_set_type_by_content_format(
   oc_content_format_t content_format);
 

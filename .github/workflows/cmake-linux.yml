@@ -50,6 +50,8 @@ jobs:
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
           # cloud on (ipv4+tcp on), collections create on, maintenance resource on
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON "
+          # debug on, cloud on (ipv4+tcp on), software update on, collections create on, maintenance resource on, WoT on, well-known core resource on, access in RFOTM on, batch observation on, oscore off
+          - args: "-DOC_DEBUG_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DPLGD_DEV_WOT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON  -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
           # debug on, well-known core resource on
           - args: "-DOC_DEBUG_ENABLED=ON"
           # debug on, cloud on (ipv4+tcp on)
