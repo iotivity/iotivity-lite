@@ -1,4 +1,4 @@
-/* file oc_core_res.i */
+/* file oc_session_events.i */
 %module OCSessionEvents
 
 %include "enums.swg"

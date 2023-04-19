@@ -50,4 +50,5 @@
 %rename (filterResourceByRt) oc_filter_resource_by_rt;
 %rename (isDCR) oc_core_is_DCR;
 
+#define OC_NONNULL(...)
 %include "oc_core_res.h"

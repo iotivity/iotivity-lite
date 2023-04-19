@@ -1447,6 +1447,7 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  * ```
  *
  * @param[in] request the oc_request_t that contains the query parameters
+ * (cannot be NULL)
  * @param[in] key the key being searched for (cannot be NULL)
  * @param[out] value pointer to the value string for to the key=value pair
  * (cannot be NULL)

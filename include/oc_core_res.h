@@ -22,6 +22,7 @@
 #define OC_CORE_RES_H
 
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -108,12 +109,13 @@ oc_resource_t *oc_core_get_resource_by_index(int type, size_t device);
 /**
  * @brief retrieve the resource by uri
  *
- * @param uri the uri
+ * @param uri the uri (cannot be NULL)
  * @param device the device index
  * @return oc_resource_t* the resource handle
  * @return NULL on failure
  */
-oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device);
+oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device)
+  OC_NONNULL();
 
 /**
  * @brief determine if a resource is a Device Configuration Resource
