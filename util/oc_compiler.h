@@ -55,4 +55,10 @@
 #define OC_DEPRECATED(...)
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+#define OC_NONNULL(...) __attribute__((nonnull(__VA_ARGS__)))
+#else
+#define OC_NONNULL(...)
+#endif
+
 #endif // OC_COMPILER_H

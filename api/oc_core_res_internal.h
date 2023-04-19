@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 
 #include <cbor.h>
 #include <stddef.h>
@@ -43,23 +44,23 @@ void oc_core_shutdown(void);
 /**
  * @brief initialize the platform
  *
- * @param mfg_name the manufactorer name
+ * @param mfg_name the manufactorer name (cannot be NULL)
  * @param init_cb the callback
  * @param data  the user data
  * @return oc_platform_info_t* the platform information
  */
 oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
                                           oc_core_init_platform_cb_t init_cb,
-                                          void *data);
+                                          void *data) OC_NONNULL(1);
 
 /**
  * @brief Add new devide to the platform
  *
- * @param uri the uri of the device
- * @param rt the device type of the device
- * @param name the friendly name
- * @param spec_version specification version
- * @param data_model_version  data model version
+ * @param uri the uri of the device (cannot be NULL)
+ * @param rt the device type of the device (cannot be NULL)
+ * @param name the friendly name (cannot be NULL)
+ * @param spec_version specification version (cannot be NULL)
+ * @param data_model_version  data model version (cannot be NULL)
  * @param add_device_cb callback
  * @param data supplied user data
  * @return oc_device_info_t* the device information
@@ -69,23 +70,24 @@ oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
                                          const char *spec_version,
                                          const char *data_model_version,
                                          oc_core_add_device_cb_t add_device_cb,
-                                         void *data);
+                                         void *data) OC_NONNULL(1, 2, 3, 4, 5);
 
 /**
  * @brief encode the interfaces with the cbor (payload) encoder
  *
- * @param parent the cbor encoder
+ * @param parent the cbor encoder (cannot be NULL)
  * @param iface_mask the interfaces (as bit mask)
  */
-void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask);
+void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
+  OC_NONNULL();
 
 /**
  * @brief store the uri as a string
  *
- * @param s_uri source string
- * @param d_uri destination (to be allocated) to store the uri
+ * @param s_uri source string (cannot be NULL)
+ * @param d_uri destination (to be allocated) to store the uri (cannot be NULL)
  */
-void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
+void oc_store_uri(const char *s_uri, oc_string_t *d_uri) OC_NONNULL();
 
 /**
  * @brief populate resource
@@ -93,7 +95,7 @@ void oc_store_uri(const char *s_uri, oc_string_t *d_uri);
  *
  * @param core_resource the resource index
  * @param device_index the device index
- * @param uri the uri for the resource
+ * @param uri the uri for the resource (cannot be NULL)
  * @param iface_mask interfaces (as mask) to be implemented on the resource
  * @param default_interface the default interface
  * @param properties the properties (as mask)
@@ -112,19 +114,19 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
                                oc_request_callback_t put_cb,
                                oc_request_callback_t post_cb,
                                oc_request_callback_t delete_cb,
-                               int num_resource_types, ...);
+                               int num_resource_types, ...) OC_NONNULL(3);
 
 /**
  * @brief filter if the query param of the request contains the resource
  * (determined by resource type "rt")
  *
- * @param resource the resource to look for
- * @param request the request to scan
+ * @param resource the resource to look for (cannot be NULL)
+ * @param request the request to scan (cannot be NULL)
  * @return true resource is in the request
  * @return false resource is not in the request
  */
 bool oc_filter_resource_by_rt(const oc_resource_t *resource,
-                              const oc_request_t *request);
+                              const oc_request_t *request) OC_NONNULL();
 
 /**
  * @brief Convert URI of a core resource to oc_core_resource_t.
@@ -133,7 +135,7 @@ bool oc_filter_resource_by_rt(const oc_resource_t *resource,
  * @return oc_core_resource_t on success
  * @return -1 on failure
  */
-int oc_core_get_resource_type_by_uri(const char *uri);
+int oc_core_get_resource_type_by_uri(const char *uri) OC_NONNULL();
 
 #ifdef __cplusplus
 }

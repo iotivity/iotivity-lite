@@ -1,4 +1,4 @@
-/* file oc_core_res.i */
+/* file oc_cloud.i */
 %module OCCloud
 
 %include "enums.swg"
@@ -425,5 +425,4 @@ int jni_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
 #endif /* !OC_CLOUD */
 }
 %}
-
 %include "oc_cloud.h"
