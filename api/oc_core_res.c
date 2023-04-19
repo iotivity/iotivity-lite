@@ -336,6 +336,12 @@ oc_core_get_num_devices(void)
   return OC_ATOMIC_LOAD32(g_device_count);
 }
 
+static bool
+device_is_valid(size_t device)
+{
+  return device < OC_ATOMIC_LOAD32(g_device_count);
+}
+
 bool
 oc_get_con_res_announced(void)
 {
@@ -479,6 +485,9 @@ static void
 oc_device_bind_rt(size_t device_index, const char *rt)
 {
   oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
+  if (!r) {
+    return;
+  }
 
   oc_string_array_t types;
   memcpy(&types, &r->types, sizeof(oc_string_array_t));
@@ -589,6 +598,9 @@ core_get_resource_memory_by_index(int type, size_t device)
   if (type < OCF_CON) {
     return &g_core_resources[type];
   }
+  if (!device_is_valid(device)) {
+    return NULL;
+  }
   return &g_core_resources[OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device +
                            type];
 }
@@ -641,7 +653,7 @@ oc_core_populate_resource(int core_resource, size_t device_index,
 oc_uuid_t *
 oc_core_get_device_id(size_t device)
 {
-  if (device >= OC_ATOMIC_LOAD32(g_device_count)) {
+  if (!device_is_valid(device)) {
     return NULL;
   }
   return &g_oc_device_info[device].di;
@@ -650,7 +662,7 @@ oc_core_get_device_id(size_t device)
 oc_device_info_t *
 oc_core_get_device_info(size_t device)
 {
-  if (device >= OC_ATOMIC_LOAD32(g_device_count)) {
+  if (!device_is_valid(device)) {
     return NULL;
   }
   return &g_oc_device_info[device];
@@ -667,6 +679,9 @@ bool
 oc_core_is_SVR(const oc_resource_t *resource, size_t device)
 {
   if (resource == NULL) {
+    return false;
+  }
+  if (!device_is_valid(device)) {
     return false;
   }
 
@@ -695,6 +710,10 @@ oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device)
     }
   }
 
+  if (!device_is_valid(device)) {
+    return false;
+  }
+
   size_t device_resources = OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device;
   size_t DCRs_start = device_resources + OCF_CON;
   size_t DCRs_end = device_resources + OCF_D;
@@ -718,6 +737,10 @@ oc_core_is_DCR(const oc_resource_t *resource, size_t device)
     if (resource == &g_core_resources[i]) {
       return true;
     }
+  }
+
+  if (!device_is_valid(device)) {
+    return false;
   }
 
   size_t device_resources = OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device;
@@ -865,6 +888,9 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   }
   if (type < OCF_CON) {
     return &g_core_resources[type];
+  }
+  if (!device_is_valid(device)) {
+    return NULL;
   }
 
   size_t res = OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device + type;

@@ -263,6 +263,13 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByIndex_F)
 {
   EXPECT_EQ(nullptr, oc_core_get_resource_by_index(-1, /*device*/ 0));
   EXPECT_EQ(nullptr, oc_core_get_resource_by_index(OCF_D + 1, /*device*/ 0));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_index(OCF_D, SIZE_MAX));
+}
+
+TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_F)
+{
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri("", 0));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri("/oic/d", SIZE_MAX));
 }
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceByIndex_P)
@@ -333,7 +340,8 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsDCR_P)
 {
   EXPECT_FALSE(oc_core_is_DCR(nullptr, 0));
-
+  EXPECT_FALSE(
+    oc_core_is_DCR(oc_core_get_resource_by_index(OCF_D, 0), SIZE_MAX));
   // platform-wide resources are DCRs
   for (int i = 0; i < OCF_CON; ++i) {
     EXPECT_TRUE(oc_core_is_DCR(oc_core_get_resource_by_index(i, 0), 0));
@@ -394,6 +402,9 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsSVR_P)
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsVerticalResource_P)
 {
   EXPECT_FALSE(oc_core_is_vertical_resource(nullptr, 0));
+
+  EXPECT_FALSE(oc_core_is_vertical_resource(
+    oc_core_get_resource_by_index(OCF_D, 0), SIZE_MAX));
 
   // platform-wide resources are DCRs
   for (int i = 0; i < OCF_CON; ++i) {
