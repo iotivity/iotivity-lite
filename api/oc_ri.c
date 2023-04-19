@@ -74,6 +74,7 @@
 #include "api/oc_session_events_internal.h"
 #endif /* OC_TCP */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -678,6 +679,17 @@ oc_ri_has_timed_event_callback(const void *cb_data, oc_trigger_t event_callback,
     event_cb = event_cb->next;
   }
   return false;
+}
+
+bool
+oc_timed_event_callback_is_currently_processed(const void *cb_data,
+                                               oc_trigger_t event_callback)
+{
+  if (g_currently_processed_event_cb == NULL) {
+    return false;
+  }
+  return g_currently_processed_event_cb->callback == event_callback &&
+         g_currently_processed_event_cb->data == cb_data;
 }
 
 void
@@ -1611,7 +1623,15 @@ free_client_cb(oc_client_cb_t *cb)
   if (!cb) {
     return;
   }
-  oc_list_remove(g_client_cbs, cb);
+  // assert that we don't leave a dangling pointer
+  assert(!oc_ri_is_client_cb_valid(cb));
+  assert(oc_timed_event_callback_is_currently_processed(
+           cb, oc_ri_remove_client_cb) ||
+         !oc_ri_has_timed_event_callback(cb, oc_ri_remove_client_cb, false));
+  assert(oc_timed_event_callback_is_currently_processed(
+           cb, oc_ri_remove_client_cb_with_notify_timeout_async) ||
+         !oc_ri_has_timed_event_callback(
+           cb, oc_ri_remove_client_cb_with_notify_timeout_async, false));
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
@@ -1620,13 +1640,30 @@ free_client_cb(oc_client_cb_t *cb)
   oc_memb_free(&g_client_cbs_s, cb);
 }
 
+static void
+ri_remove_client_cb_from_lists(oc_client_cb_t *cb)
+{
+  oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+  oc_ri_remove_timed_event_callback(
+    cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
+  oc_list_remove(g_client_cbs, cb);
+}
+
 oc_event_callback_retval_t
 oc_ri_remove_client_cb(void *data)
 {
-  oc_ri_remove_timed_event_callback(
-    data, &oc_ri_remove_client_cb_with_notify_timeout_async);
+  oc_client_cb_t *cb = (oc_client_cb_t *)data;
+  ri_remove_client_cb_from_lists(cb);
   free_client_cb(data);
   return OC_EVENT_DONE;
+}
+
+bool
+oc_ri_client_cb_terminated(oc_status_t code)
+{
+  return code == OC_PING_TIMEOUT || code == OC_REQUEST_TIMEOUT ||
+         code == OC_CONNECTION_CLOSED || code == OC_TRANSACTION_TIMEOUT ||
+         code == OC_CANCELLED;
 }
 
 static void
@@ -1635,9 +1672,7 @@ notify_client_cb_with_code(oc_client_cb_t *cb, oc_status_t code)
   OC_DBG("notify_client_cb_with_code - calling handler with request timeout "
          "for %d %s",
          cb->method, oc_string(cb->uri));
-  oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-  oc_ri_remove_timed_event_callback(
-    cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
+  ri_remove_client_cb_from_lists(cb);
 
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
@@ -1826,9 +1861,7 @@ oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
           oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
         OC_DBG("Freeing cb %s, token 0x%02X%02X", uri, dup_cb->token[0],
                dup_cb->token[1]);
-        oc_ri_remove_timed_event_callback(dup_cb, &oc_ri_remove_client_cb);
-        oc_ri_remove_timed_event_callback(
-          dup_cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
+        ri_remove_client_cb_from_lists(dup_cb);
         free_client_cb(dup_cb);
         break;
       }
@@ -1957,9 +1990,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
       }
     } else {
-      oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
-      oc_ri_remove_timed_event_callback(
-        cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
+      ri_remove_client_cb_from_lists(cb);
       free_client_cb(cb);
     }
 #ifdef OC_BLOCK_WISE

@@ -17,22 +17,15 @@
  ****************************************************************************/
 
 #include "oc_endpoint.h"
+#include "oc_endpoint_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "util/oc_macros.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define OC_SCHEME_COAP "coap://"
-#define OC_SCHEME_COAP_LEN (sizeof(OC_SCHEME_COAP) - 1)
-#define OC_SCHEME_COAPS "coaps://"
-#define OC_SCHEME_COAPS_LEN (sizeof(OC_SCHEME_COAPS) - 1)
-#define OC_SCHEME_COAP_TCP "coap+tcp://"
-#define OC_SCHEME_COAP_TCP_LEN (sizeof(OC_SCHEME_COAP_TCP) - 1)
-#define OC_SCHEME_COAPS_TCP "coaps+tcp://"
-#define OC_SCHEME_COAPS_TCP_LEN (sizeof(OC_SCHEME_COAPS_TCP) - 1)
 
 #define OC_IPV6_ADDRSTRLEN (46)
 #define OC_IPV4_ADDRSTRLEN (16)
@@ -68,8 +61,8 @@ oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
   memcpy(endpoint->di.id, di->id, sizeof(di->id));
 }
 
-static const char *
-oc_endpoint_flags_to_scheme(transport_flags flags)
+const char *
+oc_endpoint_flags_to_scheme(unsigned flags)
 {
 #ifdef OC_TCP
   if ((flags & TCP) != 0) {
@@ -374,21 +367,23 @@ parse_endpoint_flags(const oc_string_t *endpoint_str)
   const char *ep = oc_string(*endpoint_str);
   size_t ep_len = oc_string_len(*endpoint_str);
 #ifdef OC_TCP
-  if (ep_len > OC_SCHEME_COAPS_TCP_LEN &&
-      memcmp(OC_SCHEME_COAPS_TCP, ep, OC_SCHEME_COAPS_TCP_LEN) == 0) {
+  if (ep_len > OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP) &&
+      memcmp(OC_SCHEME_COAPS_TCP, ep, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP)) ==
+        0) {
     return TCP | SECURED;
   }
-  if (ep_len > OC_SCHEME_COAP_TCP_LEN &&
-      memcmp(OC_SCHEME_COAP_TCP, ep, OC_SCHEME_COAP_TCP_LEN) == 0) {
+  if (ep_len > OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP) &&
+      memcmp(OC_SCHEME_COAP_TCP, ep, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP)) ==
+        0) {
     return TCP;
   }
 #endif /* OC_TCP */
-  if (ep_len > OC_SCHEME_COAPS_LEN &&
-      memcmp(OC_SCHEME_COAPS, ep, OC_SCHEME_COAPS_LEN) == 0) {
+  if (ep_len > OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS) &&
+      memcmp(OC_SCHEME_COAPS, ep, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS)) == 0) {
     return SECURED;
   }
-  if (ep_len > OC_SCHEME_COAP_LEN &&
-      memcmp(OC_SCHEME_COAP, ep, OC_SCHEME_COAP_LEN) == 0) {
+  if (ep_len > OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP) &&
+      memcmp(OC_SCHEME_COAP, ep, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP)) == 0) {
     return 0;
   }
   return -1;
@@ -410,17 +405,17 @@ parse_endpoint_uri(const oc_string_t *endpoint_str,
   switch (flags) {
 #ifdef OC_TCP
   case TCP | SECURED:
-    address = ep + OC_SCHEME_COAPS_TCP_LEN;
+    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP);
     break;
   case TCP:
-    address = ep + OC_SCHEME_COAP_TCP_LEN;
+    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP);
     break;
 #endif /* OC_TCP */
   case SECURED:
-    address = ep + OC_SCHEME_COAPS_LEN;
+    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS);
     break;
   case 0:
-    address = ep + OC_SCHEME_COAP_LEN;
+    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP);
     break;
   default:
     OC_ERR("invalid endpoint(%s) uri scheme: %d", ep != NULL ? ep : "", flags);

@@ -35,8 +35,9 @@ extern "C" {
 #include <stddef.h>
 
 #include "oc_sp.h"
-#include "mbedtls/mbedtls_config.h"
-#include "mbedtls/x509_crt.h"
+#include <mbedtls/build_info.h>
+#include <mbedtls/mbedtls_config.h>
+#include <mbedtls/x509_crt.h>
 
 /**
  * Add a PKI identity certificate.

@@ -22,8 +22,8 @@
 #include "port/oc_random.h"
 #include "security/oc_oscore_crypto.h"
 #include "security/oc_tls_internal.h"
-#include <gtest/gtest.h>
 #include <cstdlib>
+#include <gtest/gtest.h>
 
 class TestOSCOREHKDF : public testing::Test {
 protected:

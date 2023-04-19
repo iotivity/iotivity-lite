@@ -19,17 +19,20 @@
 #ifndef OC_TLS_INTERNAL_H
 #define OC_TLS_INTERNAL_H
 
-#include "mbedtls/ssl.h"
-#include "mbedtls/ctr_drbg.h"
 #include "oc_pki.h"
 #include "oc_uuid.h"
 #include "port/oc_connectivity.h"
 #include "security/oc_cred_internal.h"
-#include "security/oc_keypair_internal.h"
 #include "util/oc_etimer.h"
 #include "util/oc_list.h"
 #include "util/oc_process.h"
+
+#include <mbedtls/build_info.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/ssl.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

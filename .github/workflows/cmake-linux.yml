@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # default (secure on, pki on, dynamic allocation on, tcp off, oscore on, cloud off, maintenance resource off, software update off, well-known core resource off)
+          # default (secure on, pki on, dynamic allocation on, tcp off, oscore on, cloud off, maintenance resource on, software update on, well-known core resource on, push notifications on, plgd-time on)
           - args: ""
           # ipv4 on
           - args: "-DOC_IPV4_ENABLED=ON"
@@ -49,11 +49,11 @@ jobs:
           # ipv4 on, tcp on, pki off
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
           # cloud on (ipv4+tcp on), collections create on, maintenance resource on
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON"
-          # debug on, cloud on (ipv4+tcp on), software update on
-          - args: "-DOC_DEBUG_ENABLED=ON -DOC_CLOUD_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON"
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON "
           # debug on, well-known core resource on
-          - args: "-DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON"
+          - args: "-DOC_DEBUG_ENABLED=ON"
+          # debug on, cloud on (ipv4+tcp on)
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_DEBUG_ENABLED=ON "
           # secure off, ipv4 on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON"
           # secure off, tcp on
@@ -61,12 +61,12 @@ jobs:
           # secure off, ipv4 on, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
           # collection create if on, push notification on
-          - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
-          # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off)
-          - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF"
+          - args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON"
+          # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off, well-known core resource off, software update off, push notifications off, plgd-time off)
+          - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF -DOC_WKCORE_ENABLED=OFF -DOC_SOFTWARE_UPDATE_ENABLED=OFF -DOC_MNT_ENABLED=OFF -DOC_PUSH_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=OFF"
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: ${{ matrix.args }}
+      build_args: -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON ${{ matrix.args }}
       build_type: Debug
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
@@ -76,8 +76,8 @@ jobs:
   cmake_linux_preinstalled:
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      # cloud on (ipv4+tcp on), collections create on, maintenance resource on, well-known core resource on, software update on, push notification on
-      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON
+      # cloud on (ipv4+tcp on), collections create on, maintenance resource on, well-known core resource on, software update on, push notification on, plgd-time on
+      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON
       build_type: Debug
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
@@ -101,7 +101,7 @@ jobs:
           # - args: -DOC_MSAN_ENABLED=ON
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}
+      build_args: -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON ${{ matrix.args }}
       build_type: Debug
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false

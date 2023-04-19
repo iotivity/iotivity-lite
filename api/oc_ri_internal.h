@@ -23,6 +23,9 @@
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,6 +57,11 @@ extern "C" {
 #define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
 #define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
 
+/** Check if the code is one of the internal terminating code while
+ * automatically deallocate the client_cb via the notify_client_cb_with_code
+ * mechanism */
+bool oc_ri_client_cb_terminated(oc_status_t code);
+
 /**
  * @brief removes the client callback. This is silent remove client without
  * trigger 'cb.handler'.
@@ -72,6 +80,11 @@ oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
  */
 oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
   void *cb);
+
+/** @brief The callback and data pair is currently being processed by
+ * poll_event_callback_timers */
+bool oc_timed_event_callback_is_currently_processed(
+  const void *cb_data, oc_trigger_t event_callback);
 
 #ifdef OC_BLOCK_WISE
 extern bool oc_ri_invoke_coap_entity_handler(

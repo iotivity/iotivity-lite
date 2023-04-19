@@ -147,6 +147,7 @@ public:
 
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
+
   /**
    * @brief Get the Endpoint object
    *
