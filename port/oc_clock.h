@@ -92,7 +92,8 @@ oc_clock_time_t oc_clock_time(void);
  * Get the current monotonic clock time.
  *
  * This could be the number of seconds since startup, or
- * since a standard epoch.
+ * since a standard epoch. This time is guaranteed to be monotonic, and not
+ * effected by any changes in system.
  *
  * \return The current clock monotonic time, measured in system ticks.
  */

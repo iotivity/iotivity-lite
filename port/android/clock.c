@@ -43,7 +43,7 @@ oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
   struct timespec t;
-  if (clock_gettime(CLOCK_MONOTONIC, &t) == -1) {
+  if (clock_gettime(CLOCK_MONOTONIC_RAW, &t) == -1) {
     return -1;
   }
   return (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
