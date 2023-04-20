@@ -22,6 +22,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <esp_timer.h>
+
 void
 oc_clock_init(void)
 {
@@ -43,12 +45,9 @@ oc_clock_time(void)
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
-  struct timespec t;
-  if (clock_gettime(CLOCK_MONOTONIC, &t) == -1) {
-    return -1;
-  }
-  return (oc_clock_time_t)t.tv_sec * OC_CLOCK_SECOND +
-         (oc_clock_time_t)ceil((double)t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
+  // return esp_timer_get_time returns microseconds from the boot time
+  return (oc_clock_time_t)ceil(
+    (double)(esp_timer_get_time() / (1.e06 / OC_CLOCK_SECOND)));
 }
 
 unsigned long
