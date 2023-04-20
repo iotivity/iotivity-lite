@@ -156,7 +156,7 @@ oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
 }
 
 size_t
-cloud_context_size()
+cloud_context_size(void)
 {
   return oc_list_length(g_cloud_context_list);
 }

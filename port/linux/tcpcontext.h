@@ -52,7 +52,7 @@ typedef struct tcp_context_t
 #endif /* OC_IPV4 */
   int connect_pipe[2];
   pthread_mutex_t cfds_mutex;
-  fd_set cfds; //< set of tcp sockets waiting for connection
+  fd_set cfds; ///< set of tcp sockets waiting for connection
 } tcp_context_t;
 
 /**

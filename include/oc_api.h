@@ -41,6 +41,7 @@
 #include "oc_role.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_storage.h"
+#include "util/oc_compiler.h"
 #include "util/oc_features.h"
 
 #ifdef __cplusplus
@@ -700,9 +701,9 @@ bool oc_is_owned_device(size_t device_index);
  * *num_oxms to 1.
  *
  * @param[in] device_index of the logical device that changed ownership
- * @param[inout] oxms array of supported ownership types(oc_sec_doxmtype_t).
+ * @param[in,out] oxms array of supported ownership types(oc_sec_doxmtype_t).
  * Filters out non-supported methods.
- * @param[inout] num_oxms number of supported ownership methods.
+ * @param[in,out] num_oxms number of supported ownership methods.
  * @param[in] user_data context pointer
  */
 typedef void (*oc_select_oxms_cb_t)(size_t device_index, int *oxms,
@@ -2333,16 +2334,19 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
 /**
  * Schedule a callback to be invoked after a set number of milliseconds.
  *
- * @deprecated use oc_set_delayed_callback_ms_v1 instead
  * @param[in] cb_data user defined context pointer that is passed to the
  *                    oc_trigger_t callback
  * @param[in] callback the callback invoked after the set number of milliseconds
  * @param[in] milliseconds the number of milliseconds to wait till the callback
  * is invoked
+ *
+ * @deprecated replaced by use oc_set_delayed_callback_ms_v1 in v2.2.5.4
  */
 OC_API
 void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                                uint16_t milliseconds);
+                                uint16_t milliseconds)
+  OC_DEPRECATED("replaced by oc_set_delayed_callback_ms_v1 in v2.2.5.4");
+
 /**
  * Schedule a callback to be invoked after a set number of milliseconds.
  *

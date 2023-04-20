@@ -70,7 +70,7 @@ size_t cloud_manager_get_retry(uint8_t *buffer, size_t buffer_size);
  * cloud context.
  *
  * @param[in] ctx cloud context (cannot be NULL)
- * @param[in] data sing-up server response (cannot be NULL)
+ * @param[in] payload sing-up server response (cannot be NULL)
  * @return true on success
  * @return false on failure
  */
@@ -81,7 +81,7 @@ bool cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
  * @brief Parse received response and handle redirect key if it is present.
  *
  * @param[in] ctx cloud context (cannot be NULL)
- * @param[in] data server response (cannot be NULL)
+ * @param[in] payload server response (cannot be NULL)
  * @return true valid redirect key was found in the response
  * @return false otherwise
  */
@@ -93,7 +93,7 @@ bool cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
  * data to cloud context.
  *
  * @param[in] ctx cloud context (cannot be NULL)
- * @param[in] data refresh token server response (cannot be NULL)
+ * @param[in] payload refresh token server response (cannot be NULL)
  * @return true on success
  * @return false on failure
  */

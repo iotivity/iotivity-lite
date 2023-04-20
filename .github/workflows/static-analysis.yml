@@ -25,9 +25,10 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y clang-15 clang-tidy-15
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 10
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 10
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 10
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 200
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 200
+          update-alternatives --verbose --display clang
 
       - name: Build with clang and analyze with clang-tidy
         run: |

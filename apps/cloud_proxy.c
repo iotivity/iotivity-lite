@@ -265,7 +265,7 @@ void issue_requests_all(void);
  * function to print the returned cbor as JSON
  *
  * @param rep the cbor representation
- * @param print_print nice printing, e.g. nicely indented json
+ * @param pretty_print nice printing, e.g. nicely indented json
  */
 STATIC void
 print_rep(oc_rep_t *rep, bool pretty_print)
@@ -308,7 +308,7 @@ url_to_local_url(const char *url, char *local_url)
  * function to retrieve the udn from the anchor
  *
  * @param anchor url with udn
- * @param anchor url without the anchor part
+ * @param[out] udn url without the anchor part
  */
 STATIC void
 anchor_to_udn(const char *anchor, char *udn)
@@ -338,11 +338,7 @@ is_udn_listed_index(char *udn)
 }
 
 /**
- * function to retrieve the index based on udn
- * using global discovered_server list
- *
- * @param udn to check if it is in the list
- * @return index, -1 is not in list
+ * function to print discovered_server list
  */
 STATIC void
 list_udn(void)
@@ -358,10 +354,8 @@ list_udn(void)
 }
 
 /**
- * function to find an empty slot in
- * the global discovered_server list
+ * function to print empty slots in the global discovered_server list
  *
- * @param udn to check if it is in the list
  * @return index, -1 full
  */
 STATIC int
@@ -1609,13 +1603,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 #endif // OC_CLOUD
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
-/**
- * read certificate in PEM format
- *
- * @param ctx the cloud context
- * @param status the cloud status
- * @param data the user data supplied to the callback
- */
+/** read certificate in PEM format */
 STATIC int
 read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {

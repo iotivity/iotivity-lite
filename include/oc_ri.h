@@ -630,8 +630,8 @@ int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
  * @param query_len the lenght of the query
  * @param key the key to be checked if exist, key is not null terminated
  * @param key_len the key length
- * @param n
- * @return int
+ * @param n index of the key
+ * @return int -1 = not exists
  */
 int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
                                const char **key, size_t *key_len, size_t n);

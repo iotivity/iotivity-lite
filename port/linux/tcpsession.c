@@ -58,9 +58,9 @@ typedef struct tcp_session_t
 } tcp_session_t;
 
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
-OC_LIST(g_session_list); //< opened sessions; guarded by g_mutex
+OC_LIST(g_session_list); ///< opened sessions; guarded by g_mutex
 OC_LIST(
-  g_free_session_list_async); //< sessions to be closed; guarded by g_mutex
+  g_free_session_list_async); ///< sessions to be closed; guarded by g_mutex
 OC_MEMB(g_tcp_session_s, tcp_session_t, OC_MAX_TCP_PEERS);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -92,12 +92,12 @@ typedef struct tcp_waiting_session_t
   void *on_tcp_connect_data;
 } tcp_waiting_session_t;
 
-OC_LIST(g_waiting_session_list); //< sessions waiting to open a connection,
-                                 // guarded by g_mutex
-OC_LIST(g_free_waiting_session_list_async); //< waiting sessions to be closed,
-                                            // guarded by g_mutex
+OC_LIST(g_waiting_session_list); ///< sessions waiting to open a connection,
+                                 /// guarded by g_mutex
+OC_LIST(g_free_waiting_session_list_async); ///< waiting sessions to be closed,
+                                            /// guarded by g_mutex
 OC_MEMB(g_tcp_waiting_session_s, tcp_waiting_session_t,
-        OC_MAX_TCP_PEERS); //< guarded by g_mutex
+        OC_MAX_TCP_PEERS); ///< guarded by g_mutex
 
 static oc_tcp_connect_retry_t g_connect_retry = {
   .max_count = OC_TCP_CONNECT_RETRY_MAX_COUNT,

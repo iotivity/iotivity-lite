@@ -295,7 +295,7 @@ int oc_obt_generate_identity_cert_pem(
  * @brief Encode linked list of role and authority pairs into linked list of
  * mbedtls_x509_general_names*
  *
- * @param[in] roles
+ * @param[in] roles linked list of role-authority pairs
  * @param[out] general_names output pointer to store linked list of
  * mbedtls_x509_general_names * (cannot be NULL, must be deallocated by
  * oc_obt_free_encoded_roles)

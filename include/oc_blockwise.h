@@ -252,14 +252,14 @@ bool oc_blockwise_handle_block(oc_blockwise_state_t *buffer,
 /**
  * @brief free all blocks that are handled (refcount = 0)
  *
- * @param all : including ref count != 0
+ * @param all including ref count != 0
  */
 void oc_blockwise_scrub_buffers(bool all);
 
 /**
  * @brief scrub blocks for client side
  *
- * @param cb
+ * @param cb client callback
  */
 void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
 

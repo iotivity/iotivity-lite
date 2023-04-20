@@ -22,15 +22,19 @@
 #define OC_CLIENT_STATE_H
 
 #include "messaging/coap/constants.h"
+#include "oc_endpoint.h"
+#include "oc_ri.h"
+#include "util/oc_compiler.h"
+
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore_constants.h"
 #endif /* OC_OSCORE */
-#include "oc_endpoint.h"
-#include "oc_ri.h"
-#include <stdbool.h>
+
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -233,10 +237,11 @@ void oc_ri_free_client_cbs_by_endpoint_v1(const oc_endpoint_t *endpoint,
  * @brief free the client callback information by endpoint with code
  * OC_CANCELLED
  *
- * @deprecated use oc_ri_free_client_cbs_by_endpoint_v1 instead
+ * @deprecated replaced by oc_ri_free_client_cbs_by_endpoint_v1 in v2.2.5.4
  * @param endpoint the endpoint
  */
-void oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint);
+void oc_ri_free_client_cbs_by_endpoint(const oc_endpoint_t *endpoint)
+  OC_DEPRECATED("replaced by oc_ri_free_client_cbs_by_endpoint_v1 in v2.2.5.4");
 
 /**
  * @brief free the client callback infomation by message id (mid)
@@ -250,10 +255,11 @@ void oc_ri_free_client_cbs_by_mid_v1(uint16_t mid, oc_status_t code);
  * @brief free the client callback infomation by message id (mid) with code
  * OC_CANCELLED
  *
- * @deprecated use oc_ri_free_client_cbs_by_mid_v1 instead
+ * @deprecated replaced by oc_ri_free_client_cbs_by_mid_v1 in v2.2.5.4
  * @param mid the message id
  */
-void oc_ri_free_client_cbs_by_mid(uint16_t mid);
+void oc_ri_free_client_cbs_by_mid(uint16_t mid)
+  OC_DEPRECATED("replaced by oc_ri_free_client_cbs_by_mid_v1 in v2.2.5.4");
 
 /**
  * @brief handle the discovery payload (e.g. parse the oic/res response and do

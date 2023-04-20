@@ -58,8 +58,8 @@ int oc_remove_network_interface_event_callback(interface_event_handler_t cb);
  * @deprecated replaced by oc_add_session_event_callback_v1 in v2.2.5.4
  */
 OC_API
-int oc_add_session_event_callback(session_event_handler_t cb) OC_DEPRECATED(
-  "replaced by oc_add_session_event_callback_v1, deprecated in v2.2.5.4");
+int oc_add_session_event_callback(session_event_handler_t cb)
+  OC_DEPRECATED("replaced by oc_add_session_event_callback_v1 in v2.2.5.4");
 
 /**
  * @brief Add the callback to receive session event notifications.
@@ -82,8 +82,8 @@ int oc_add_session_event_callback_v1(session_event_handler_v1_t cb,
  * @deprecated replaced by oc_remove_session_event_callback_v1 in v2.2.5.4
  */
 OC_API
-int oc_remove_session_event_callback(session_event_handler_t cb) OC_DEPRECATED(
-  "replaced by oc_remove_session_event_callback_v1, deprecated in v2.2.5.4");
+int oc_remove_session_event_callback(session_event_handler_t cb)
+  OC_DEPRECATED("replaced by oc_remove_session_event_callback_v1 in v2.2.5.4");
 
 /**
  * @brief Remove the callback with to receive session event notifications.

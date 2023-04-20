@@ -1823,6 +1823,8 @@ void jni_oc_remove_delayed_callback(jobject callback) {
   jni_list_remove(item);
 }
 %}
+#define OC_API
+#define OC_DEPRECATED(...)
 %include "oc_api.h"
 
 /*******************Begin oc_role.h*****************/

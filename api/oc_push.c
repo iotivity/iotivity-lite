@@ -2254,7 +2254,7 @@ oc_create_pushreceiver_resource(size_t device_index)
 }
 
 void
-oc_push_init()
+oc_push_init(void)
 {
   oc_list_init(g_ns_list);
   oc_list_init(g_recvs_list);

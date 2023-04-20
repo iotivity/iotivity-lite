@@ -37,7 +37,7 @@
 #include "util/oc_memb.h"
 
 OC_MEMB(g_oc_tcp_on_connect_event_s, oc_tcp_on_connect_event_t,
-        OC_MAX_TCP_PEERS); //< guarded by oc_network_event_handler_mutex
+        OC_MAX_TCP_PEERS); ///< guarded by oc_network_event_handler_mutex
 
 static oc_tcp_on_connect_event_t *
 oc_tcp_on_connect_event_allocate(void)

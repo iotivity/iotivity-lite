@@ -87,7 +87,7 @@ void oc_sec_sdi_clear(oc_sec_sdi_t *sdi);
 /**
  * @brief Encode sdi to global encoder
  *
- * @param device device index
+ * @param sdi sdi to encode
  * @param sdi_res resource with baseline properties (only used when iface_mask
  * contains OC_IF_BASELINE)
  * @param iface_mask encoding interface
@@ -130,7 +130,7 @@ bool oc_sec_sdi_decode(size_t device, const oc_rep_t *rep, bool from_storage);
  *
  * @param device device index
  */
-void oc_sec_sdi_create_resource(size_t);
+void oc_sec_sdi_create_resource(size_t device);
 
 #ifdef __cplusplus
 }
