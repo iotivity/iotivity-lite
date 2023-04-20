@@ -71,6 +71,11 @@ foreach(target ${mbedtls_targets})
         PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS}
     )
 
+    if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
+        # TODO: fix unused variable t mbedtls/library/bignum.c
+        target_compile_options(${target} PRIVATE -Wno-error=unused)
+    endif()
+
     # do not treat warnings as errors on Windows
     if(MSVC)
         target_compile_options(${target} PRIVATE /W1 /WX-)

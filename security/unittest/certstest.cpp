@@ -237,8 +237,13 @@ TEST_F(TestCerts, ExtractUUIDFromCommonNameFail)
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(empty), CN_uuid.data(), CN_uuid.size()));
 
+  // invalid CN: invalid format (valid prefix, but invalid uuid string)
+  auto invalid_uuid = toArray<unsigned char>("uuid:invalid");
+  EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
+    getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
+
   // invalid CN: invalid format (missing prefix "uuid:")
-  auto invalid_uuid = toArray<unsigned char>(getUUID());
+  invalid_uuid = toArray<unsigned char>(getUUID());
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
 

@@ -313,7 +313,7 @@ size_t coap_tcp_get_packet_size(const uint8_t *data);
 /**
  * @brief Parse TCP CoAP message
  *
- * @param request pointer to coap_packet_t struct
+ * @param packet pointer to coap_packet_t struct
  * @param data raw message data
  * @param data_len length of raw message data
  * @param validate if true, it doesn't modify data

@@ -105,7 +105,7 @@ void oc_store_uri(const char *s_uri, oc_string_t *d_uri) OC_NONNULL();
  * @param delete_cb delete callback function
  * @param num_resource_types amount of resource types, listed as variable
  * arguments after this argument
- * @param ...
+ * @param ... variadic args with C-string representing resource types
  */
 void oc_core_populate_resource(int core_resource, size_t device_index,
                                const char *uri, oc_interface_mask_t iface_mask,

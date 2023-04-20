@@ -420,11 +420,16 @@ oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
 
   const char *uuid_CN = (const char *)val.p;
   const char *uuid_prefix = NULL;
-  if (val.len >= UUID_PREFIX_LEN + OC_UUID_LEN -
-                   1) { // -1 because val is not nul-terminated
+  if (val.len > UUID_PREFIX_LEN) {
     uuid_prefix = certs_find_uuid_prefix(uuid_CN, val.len);
   }
-  if (uuid_prefix == NULL) {
+  size_t uuid_prefix_len = 0;
+  if (uuid_prefix != NULL) {
+    uuid_prefix_len = (uuid_prefix - uuid_CN) + UUID_PREFIX_LEN;
+  }
+  if (uuid_prefix_len == 0 ||
+      val.len - uuid_prefix_len <
+        OC_UUID_LEN - 1) { // -1 because val is not nul-terminated
 #ifdef OC_DEBUG
     oc_string_t cn;
     oc_new_string(&cn, uuid_CN, val.len);
@@ -434,7 +439,6 @@ oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
     return false;
   }
 
-  size_t uuid_prefix_len = (uuid_prefix - uuid_CN) + UUID_PREFIX_LEN;
   memcpy(buffer, val.p + uuid_prefix_len, OC_UUID_LEN - 1);
   buffer[OC_UUID_LEN - 1] = '\0';
   return true;

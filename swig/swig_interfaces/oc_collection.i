@@ -1,4 +1,4 @@
-/* File oc_api.i */
+/* File oc_collection.i */
 %module OCCollectionUtil
 
 %include "stdint.i";

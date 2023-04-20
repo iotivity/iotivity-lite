@@ -49,9 +49,9 @@ int oc_send_buffer2(oc_message_t *message, bool queue);
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 typedef struct
 {
-  uint8_t max_count; //< maximal number of retries for opening a single TCP
-                     // connection (default: 5)
-  uint16_t timeout;  //< timeout of a single retry in seconds (default: 5)
+  uint8_t max_count; ///< maximal number of retries for opening a single TCP
+                     /// connection (default: 5)
+  uint16_t timeout;  ///< timeout of a single retry in seconds (default: 5)
 } oc_tcp_connect_retry_t;
 
 #define OC_TCP_CONNECT_RETRY_MAX_COUNT 5

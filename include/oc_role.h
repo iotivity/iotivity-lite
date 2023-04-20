@@ -71,7 +71,7 @@ bool oc_assert_role(const char *role, const char *authority,
  * @brief set automatic role assertion (e.g. for all endpoints with a
  * connection)
  *
- * @param auto_assert
+ * @param auto_assert set to true to enable automatic role assertion
  */
 void oc_auto_assert_roles(bool auto_assert);
 

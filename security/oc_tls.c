@@ -112,11 +112,11 @@ oc_tls_use_pin_obt_psk_identity(void)
 #endif /* OC_CLIENT */
 
 #ifdef OC_PKI
-static bool auto_assert_all_roles = true;
+static bool g_auto_assert_all_roles = true;
 void
 oc_auto_assert_roles(bool auto_assert)
 {
-  auto_assert_all_roles = auto_assert;
+  g_auto_assert_all_roles = auto_assert;
 }
 
 typedef struct oc_x509_cacrt_t
@@ -606,8 +606,10 @@ oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, const oc_uuid_t *uuid,
   mbedtls_md_context_t hmac_SHA256;
   mbedtls_md_init(&hmac_SHA256);
 
-  mbedtls_md_setup(&hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
-                   1);
+  if (mbedtls_md_setup(&hmac_SHA256,
+                       mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1) != 0) {
+    return -1;
+  }
 
   memset(key, 0, key_len);
 
@@ -2531,7 +2533,7 @@ read_application_data(oc_tls_peer_t *peer)
       oc_handle_session(&peer->endpoint, OC_SESSION_CONNECTED);
 #ifdef OC_CLIENT
 #ifdef OC_PKI
-      if (auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
+      if (g_auto_assert_all_roles && !oc_tls_uses_psk_cred(peer) &&
           oc_get_all_roles()) {
         oc_assert_all_roles(&peer->endpoint, assert_all_roles_internal, peer);
       } else
