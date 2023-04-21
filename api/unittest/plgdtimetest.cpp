@@ -380,6 +380,7 @@ encodeSystemClock(oc_clock_time_t lst)
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, lastSyncedTime, lst_rfc3339.data());
   oc_rep_end_root_object();
+  ASSERT_EQ(0, g_err);
 }
 
 TEST_F(TestPlgdTimeWithServer, PostRequestFail)

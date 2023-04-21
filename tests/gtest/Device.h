@@ -52,8 +52,8 @@ public:
   ~Device() = default;
 
   void SignalEventLoop();
-  void PoolEvents(uint16_t seconds);
-  void PoolEventsMs(uint16_t mseconds);
+  void PoolEvents(uint64_t seconds);
+  void PoolEventsMs(uint64_t mseconds);
   void Terminate();
 
 private:

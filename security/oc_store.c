@@ -118,63 +118,44 @@ oc_sec_dump_pstat(size_t device)
   }
 }
 
+static int
+store_decode_sp(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)data;
+  if (!oc_sec_sp_decode_for_device(rep, device)) {
+    OC_ERR("cannot decode sp for device(%zu)", device);
+    return -1;
+  }
+  return 0;
+}
+
 void
 oc_sec_load_sp(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", "sp");
+  if (oc_storage_load_resource(OCF_SEC_SP_STORE_NAME, device, store_decode_sp,
+                               NULL) <= 0) {
+    OC_ERR("failed to load sp from storage for device(%zu)", device);
     oc_sec_sp_default(device);
     return;
   }
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
+  OC_DBG("sp resource loaded from storage for device(%zu)", device);
+}
 
-  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag("sp", device, svr_tag, sizeof(svr_tag));
-  long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
-  if (ret > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_decode_sp(rep, device);
-    oc_free_rep(rep);
-  }
-  oc_storage_free_buffer(sb);
-
-  if (ret <= 0) {
-    oc_sec_sp_default(device);
-  }
+static int
+store_encode_sp(size_t device, void *data)
+{
+  (void)data;
+  return oc_sec_sp_encode_for_device(device, /*flags*/ 0) ? 0 : -1;
 }
 
 void
 oc_sec_dump_sp(size_t device)
 {
-  oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", "sp");
-    return;
+  long ret = oc_storage_save_resource(OCF_SEC_SP_STORE_NAME, device,
+                                      store_encode_sp, NULL);
+  if (ret <= 0) {
+    OC_ERR("cannot dump sp for device(%zu) to store: error(%ld)", device, ret);
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
-#endif /* OC_APP_DATA_STORAGE_BUFFER */
-
-  oc_sec_encode_sp(device, 0, true);
-#ifndef OC_APP_DATA_STORAGE_BUFFER
-  sb.buffer = oc_rep_shrink_encoder_buf(sb.buffer);
-  sb.size = (size_t)oc_rep_get_encoder_buffer_size();
-#endif /* !OC_APP_DATA_STORAGE_BUFFER */
-  int size = oc_rep_get_encoded_payload_size();
-  if (size > 0) {
-    OC_DBG("oc_store: encoded sp size %d", size);
-    char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag("sp", device, svr_tag, sizeof(svr_tag));
-    oc_storage_write(svr_tag, sb.buffer, size);
-  }
-  oc_storage_free_buffer(sb);
 }
 
 #ifdef OC_PKI
