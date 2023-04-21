@@ -110,13 +110,13 @@ Device::Terminate()
 }
 
 void
-Device::PoolEvents(uint16_t seconds)
+Device::PoolEvents(uint64_t seconds)
 {
   PoolEventsMs(seconds * 1000);
 }
 
 void
-Device::PoolEventsMs(uint16_t mseconds)
+Device::PoolEventsMs(uint64_t mseconds)
 {
   OC_ATOMIC_STORE8(terminate_, 0);
   oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, mseconds);

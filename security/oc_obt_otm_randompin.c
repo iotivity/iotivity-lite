@@ -31,6 +31,7 @@
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_sdi_internal.h"
+#include "security/oc_sp_internal.h"
 #include "security/oc_tls_internal.h"
 
 /* Random PIN OTM */
@@ -122,7 +123,7 @@ obt_rdp_12(oc_client_response_t *data)
     oc_rep_set_array(aclist2, resources);
 
     oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string(resources, href, "/oic/sec/sp");
+    oc_rep_set_text_string(resources, href, OCF_SEC_SP_URI);
     oc_rep_object_array_end_item(resources);
 
     oc_rep_close_array(aclist2, resources);
