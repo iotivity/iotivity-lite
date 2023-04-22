@@ -44,6 +44,12 @@
 #include "oc_export.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
+#include "util/oc_compiler.h"
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+#include "oc_pki.h"
+#endif /* OC_SECURITY && OC_PKI */
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -184,6 +190,19 @@ typedef void (*plgd_time_on_fetch_fn_t)(oc_status_t code, oc_clock_time_t time,
 
 typedef struct
 {
+  oc_pki_verify_certificate_cb_t
+    verify; ///< callback for certificate verification, if NULL then
+            ///< it will be filled by a default function based on the value of
+            ///< disable_time_verification
+  oc_pki_user_data_t verify_data; ///< user data for the verify callback,
+                                  ///< ignored if verify callback is NULL
+  bool disable_time_verification; ///< ignore time validity checks when creating
+                                  ///< a new TLS session for plgd-time fetch,
+                                  ///< ignored if verify callback is not NULL
+} plgd_time_fetch_verification_config_t;
+
+typedef struct
+{
   const oc_endpoint_t
     *endpoint;     ///< endpoint to fetch the time (cannot be NULL)
   const char *uri; ///< uri of the resource (cannot be NULL)
@@ -195,20 +214,30 @@ typedef struct
                     ///< value defined by PLGD_TIME_FETCH_TIMEOUT is used if
                     ///< value is 0)
 #if defined(OC_SECURITY) && defined(OC_PKI)
+  plgd_time_fetch_verification_config_t verification; ///< certificate
   int
     selected_identity_credid; ///< identity certificate to use for a created
                               ///< TLS session (set to -1 to use any available)
-  bool disable_time_verification; ///< ignore time validity checks when creating
-                                  ///< a new TLS session for plgd-time fetch
 #endif
 } plgd_time_fetch_config_t;
 
-/** Convenience wrapper to create plgd_time_fetch_config_t from arguments */
+/** Convenience wrapper to create plgd_time_fetch_config_t with default \
+ * verification function */
 OC_API
 plgd_time_fetch_config_t plgd_time_fetch_config(
   const oc_endpoint_t *endpoint, const char *uri,
   plgd_time_on_fetch_fn_t on_fetch, void *on_fetch_data, uint16_t timeout,
-  int selected_identity_credid, bool disable_time_verification);
+  int selected_identity_credid, bool disable_time_verification)
+  OC_NONNULL(1, 2, 3);
+
+/** Convenience wrapper to create plgd_time_fetch_config_t with a custom
+ * verification function */
+OC_API
+plgd_time_fetch_config_t plgd_time_fetch_config_with_custom_verification(
+  const oc_endpoint_t *endpoint, const char *uri,
+  plgd_time_on_fetch_fn_t on_fetch, void *on_fetch_data, uint16_t timeout,
+  int selected_identity_credid, oc_pki_verify_certificate_cb_t verify,
+  oc_pki_user_data_t verify_data) OC_NONNULL(1, 2, 3, 7);
 
 #ifdef OC_TCP
 typedef enum {
@@ -221,26 +250,26 @@ typedef enum {
 /**
  * @brief Fetch time from an endpoint by a GET request
  *
- * For TLS/DTLS/TCP communication the request will use an existing session or a
- * peer. If there is no existing session or peer then it will attempt to create
- * it and after the request is finished it will be closed. (If the session or
- * peer existed before the fetch time request it won't be closed.)
+ * For TLS/DTLS/TCP communication the request will use an existing session or
+ * a peer. If there is no existing session or peer then it will attempt to
+ * create it and after the request is finished it will be closed. (If the
+ * session or peer existed before the fetch time request it won't be closed.)
  *
- * The closing of TCP sessions in iotivity-lite is asynchronous and is executed
- * on the network thread. There are no guarantees about the timing. The session
- * might've be already closed before plgd_time_fetch returns or it might be
- * closed some time later. This might cause an issue if you try to create a TCP
- * connection to the same endpoint right away after calling plgd_time_fetch. If
- * the asynchronous closing of the previous session hasn't finished yet then it
- * will close your session, because in the current implementation sessions are
- * indexed by the endpoint address and not by some unique IDs. You can avoid
- * this problem by checking for PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED. The
- * flag is appended to \p flags when plgd_time_fetch opens a new TCP session.
- * (When a new session is opened by plgd_time_fetch it will always be scheduled
- * to close before the function returns). To check if a session is closed use
- * oc_tcp_connection_state. To wait for a session to close use
- * oc_add_session_event_callback_v1, which will invoke a custom callback when
- * a session is disconnected.
+ * The closing of TCP sessions in iotivity-lite is asynchronous and is
+ * executed on the network thread. There are no guarantees about the timing.
+ * The session might've be already closed before plgd_time_fetch returns or it
+ * might be closed some time later. This might cause an issue if you try to
+ * create a TCP connection to the same endpoint right away after calling
+ * plgd_time_fetch. If the asynchronous closing of the previous session hasn't
+ * finished yet then it will close your session, because in the current
+ * implementation sessions are indexed by the endpoint address and not by some
+ * unique IDs. You can avoid this problem by checking for
+ * PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED. The flag is appended to \p flags
+ * when plgd_time_fetch opens a new TCP session. (When a new session is opened
+ * by plgd_time_fetch it will always be scheduled to close before the function
+ * returns). To check if a session is closed use oc_tcp_connection_state. To
+ * wait for a session to close use oc_add_session_event_callback_v1, which
+ * will invoke a custom callback when a session is disconnected.
  *
  * @param fetch fetch time configuration
  * @param[out] flags output flags

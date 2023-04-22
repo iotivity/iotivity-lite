@@ -18,7 +18,7 @@
 
 #include "RepPool.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace oc {
 
