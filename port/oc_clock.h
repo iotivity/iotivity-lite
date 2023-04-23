@@ -49,8 +49,8 @@
 /**
   @file
 */
-#ifndef OC_CLOCK_H
-#define OC_CLOCK_H
+#ifndef OC_PORT_CLOCK_H
+#define OC_PORT_CLOCK_H
 
 #include "oc_clock_util.h"
 #include <stdint.h>
@@ -120,4 +120,4 @@ void oc_clock_wait(oc_clock_time_t t);
 }
 #endif
 
-#endif /* OC_CLOCK_H */
+#endif /* OC_PORT_CLOCK_H */

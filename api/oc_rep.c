@@ -23,7 +23,7 @@
 #include "oc_ri_internal.h"
 #include "oc_config.h"
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_macros.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"

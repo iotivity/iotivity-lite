@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_CONNECTIVITY_INTERNAL_H
-#define OC_CONNECTIVITY_INTERNAL_H
+#ifndef OC_PORT_CONNECTIVITY_INTERNAL_H
+#define OC_PORT_CONNECTIVITY_INTERNAL_H
 
 #include "oc_config.h"
 #include "oc_endpoint.h"
@@ -84,4 +84,4 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
 }
 #endif
 
-#endif /* OC_CONNECTIVITY_INTERNAL_H */
+#endif /* OC_PORT_CONNECTIVITY_INTERNAL_H */

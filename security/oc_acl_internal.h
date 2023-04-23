@@ -22,7 +22,7 @@
 #include "oc_acl.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include <stdbool.h>

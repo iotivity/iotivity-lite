@@ -35,7 +35,7 @@
 #include "oc_mmem.h"
 #include "oc_config.h"
 #include "oc_list.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <stdint.h>
 #include <string.h>
 #ifdef OC_MEMORY_TRACE

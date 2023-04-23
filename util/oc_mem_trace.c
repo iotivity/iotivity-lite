@@ -24,7 +24,7 @@
 
 #include "oc_list.h"
 #include "oc_mem_trace.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #define FUNC_NAME_LEN 30
 

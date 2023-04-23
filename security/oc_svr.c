@@ -32,7 +32,7 @@
 #include "oc_ri.h"
 #include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 void
 oc_sec_svr_create(void)

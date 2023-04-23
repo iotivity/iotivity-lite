@@ -25,7 +25,7 @@
 #include "oc_core_res.h"
 #include "oc_store.h"
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"

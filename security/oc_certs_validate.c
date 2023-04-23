@@ -23,7 +23,7 @@
 
 #include "oc_certs_validate_internal.h"
 #include "oc_certs.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 
 #include <assert.h>

@@ -19,7 +19,7 @@
 #include "oc_api.h"
 #include "oc_base64.h"
 #include "oc_rep.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>

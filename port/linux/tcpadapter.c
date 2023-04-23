@@ -21,7 +21,7 @@
 #include "ipcontext.h"
 #include "tcpsession.h"
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>

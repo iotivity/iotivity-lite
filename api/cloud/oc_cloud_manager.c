@@ -29,7 +29,7 @@
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_endpoint.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "rd_client.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"

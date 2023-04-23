@@ -23,7 +23,7 @@
 #include "mbedtls/md.h"
 #include "messaging/coap/oscore_constants.h"
 #include "oc_rep.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #define HMAC_SHA256_HASHLEN (32)
 #define HKDF_OUTPUT_MAXLEN (512)

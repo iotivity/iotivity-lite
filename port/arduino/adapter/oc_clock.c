@@ -17,7 +17,7 @@
  ******************************************************************/
 #include "port/oc_clock.h"
 #include "TimeLib.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <Arduino.h>
 #include <stdlib.h>
 

@@ -21,7 +21,7 @@
 
 #include "oc_audit.h"
 #include "oc_ael.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <stdbool.h>
 #include <stdlib.h>
 

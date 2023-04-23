@@ -41,9 +41,9 @@
 #include <arpa/inet.h>
 
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
-#define OC_PUSH_DBG(...) OC_LOG("D", __VA_ARGS__)
-#define OC_PUSH_WRN(...) OC_LOG("W", __VA_ARGS__)
-#define OC_PUSH_ERR(...) OC_LOG("E", __VA_ARGS__)
+#define OC_PUSH_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define OC_PUSH_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define OC_PUSH_ERR(...) OC_LOG(OC_LOG_LEVEL_ERROR, __VA_ARGS__)
 #else
 #define OC_PUSH_DBG(...)
 #define OC_PUSH_WRN(...)

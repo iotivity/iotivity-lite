@@ -26,7 +26,7 @@ jobs:
         include:
           - name: cloud-server
             file: docker/apps/Dockerfile.cloud-server
-            args: ""
+            args: "-DOC_DEBUG_ENABLED=ON"
             type: Release
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
@@ -34,7 +34,7 @@ jobs:
             type: Debug
           - name: cloud-server-discovery-resource-observable
             file: docker/apps/Dockerfile.cloud-server
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_DEBUG_ENABLED=ON"
             type: Release
           - name: cloud-server-discovery-resource-observable-debug
             file: docker/apps/Dockerfile.cloud-server-debug
