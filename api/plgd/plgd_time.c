@@ -639,6 +639,8 @@ plgd_time_fetch_config(const oc_endpoint_t *endpoint, const char *uri,
   return fetch;
 }
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
 plgd_time_fetch_config_t
 plgd_time_fetch_config_with_custom_verification(
   const oc_endpoint_t *endpoint, const char *uri,
@@ -669,6 +671,8 @@ plgd_time_fetch_config_with_custom_verification(
 
   return fetch;
 }
+
+#endif /* OC_SECURITY && OC_PKI */
 
 static bool
 dev_time_parse_fetch_response(const oc_rep_t *rep, oc_clock_time_t *time)

@@ -188,6 +188,8 @@ bool plgd_time_dump(void);
 typedef void (*plgd_time_on_fetch_fn_t)(oc_status_t code, oc_clock_time_t time,
                                         void *data);
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
 typedef struct
 {
   oc_pki_verify_certificate_cb_t
@@ -200,6 +202,8 @@ typedef struct
                                   ///< a new TLS session for plgd-time fetch,
                                   ///< ignored if verify callback is not NULL
 } plgd_time_fetch_verification_config_t;
+
+#endif /* OC_SECURITY || OC_PKI */
 
 typedef struct
 {
@@ -230,6 +234,8 @@ plgd_time_fetch_config_t plgd_time_fetch_config(
   int selected_identity_credid, bool disable_time_verification)
   OC_NONNULL(1, 2, 3);
 
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
 /** Convenience wrapper to create plgd_time_fetch_config_t with a custom
  * verification function */
 OC_API
@@ -238,6 +244,8 @@ plgd_time_fetch_config_t plgd_time_fetch_config_with_custom_verification(
   plgd_time_on_fetch_fn_t on_fetch, void *on_fetch_data, uint16_t timeout,
   int selected_identity_credid, oc_pki_verify_certificate_cb_t verify,
   oc_pki_user_data_t verify_data) OC_NONNULL(1, 2, 3, 7);
+
+#endif /* OC_SECURITY && OC_PKI */
 
 #ifdef OC_TCP
 typedef enum {

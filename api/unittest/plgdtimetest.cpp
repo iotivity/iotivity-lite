@@ -32,7 +32,6 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
-#include "security/oc_tls_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/PKI.h"
@@ -42,6 +41,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_security_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -272,7 +272,7 @@ public:
     oc::TestDevice::ClearSystemTime();
   }
 
-  static PlgdTime DecodePayload(const oc_rep_t *rep)
+  static PlgdTime decodePayload(const oc_rep_t *rep)
   {
     PlgdTime pt{};
     pt.status = -1;
@@ -307,6 +307,55 @@ public:
     }
     return pt;
   }
+
+#ifdef OC_SECURITY
+  static void prepareSecureDevice(size_t device)
+  {
+    oc_sec_self_own(device);
+
+    // valid from Nov 29, 2018 to Nov 29, 2068
+    oc::pki::TrustAnchor trustCA{
+      "pki_certs/certification_tests_rootca1.pem",
+      true,
+    };
+    ASSERT_TRUE(trustCA.Add(device));
+
+    // valid from Nov 29, 2018 to Nov 29, 2068
+    oc::pki::IdentityCertificate mfgCertificate{
+      "pki_certs/certification_tests_ee.pem",
+      "pki_certs/certification_tests_key.pem",
+      true,
+    };
+    ASSERT_TRUE(mfgCertificate.Add(device));
+
+    // expired: was valid from Apr 14, 2020 to May 14, 2020
+    // TODO: get a valid certificate and remove oc_pki_set_verify_certificate_cb
+    oc::pki::IntermediateCertificate subCertificate{
+      "pki_certs/certification_tests_subca1.pem"
+    };
+    ASSERT_TRUE(subCertificate.Add(device, mfgCertificate.CredentialID()));
+
+    oc_pki_set_verify_certificate_cb(
+      [](oc_tls_peer_t *peer, const mbedtls_x509_crt *, int, uint32_t *flags) {
+        if (peer->role == MBEDTLS_SSL_IS_SERVER) {
+          OC_DBG("disable time verification for server (peer=%p)",
+                 (void *)peer);
+          *flags &= ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED |
+                                 MBEDTLS_X509_BADCERT_FUTURE));
+        }
+        return 0;
+      });
+  }
+
+  static void resetSecureDevice(size_t device)
+  {
+    oc_pki_set_verify_certificate_cb(nullptr);
+    oc_pstat_reset_device(device, true);
+    // need to wait for closing of TLS sessions
+    oc::TestDevice::PoolEventsMs(200);
+  }
+
+#endif /* OC_SECURITY */
 };
 
 TEST_F(TestPlgdTimeWithServer, GetResource)
@@ -326,7 +375,7 @@ TEST_F(TestPlgdTimeWithServer, GetRequest)
     oc::TestDevice::Terminate();
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_status(PLGD_TIME_STATUS_SYNCING);
@@ -358,7 +407,7 @@ TEST_F(TestPlgdTimeWithServer, GetRequestEmpty)
     oc::TestDevice::Terminate();
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_time(0);
@@ -432,7 +481,7 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_status(PLGD_TIME_STATUS_SYNCING);
@@ -602,9 +651,15 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 #ifdef OC_TCP
   flags |= TCP;
 #endif /* OC_TCP */
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, SECURED);
+#ifdef OC_SECURITY
+  flags |= SECURED;
+#endif /* OC_SECURITY */
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, flags);
   ASSERT_NE(nullptr, ep);
+
+#ifdef OC_SECURITY
+  prepareSecureDevice(/*device*/ 0);
+#endif /* OC_SECURITY */
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
   TCPSessionData tcp_data{};
@@ -642,6 +697,10 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
               oc_remove_session_event_callback_v1(tcp_events, nullptr, true));
   }
 #endif /* OC_TCP && OC_SESSION_EVENTS */
+
+#ifdef OC_SECURITY
+  resetSecureDevice(/*device*/ 0);
+#endif /* OC_SECURITY */
 }
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedInsecure)
@@ -650,44 +709,6 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedInsecure)
 }
 
 #ifdef OC_SECURITY
-
-static void
-prepareSecureDevice(size_t device)
-{
-  oc_sec_self_own(device);
-
-  // valid from Nov 29, 2018 to Nov 29, 2068
-  oc::pki::TrustAnchor trustCA{
-    "pki_certs/certification_tests_rootca1.pem",
-    true,
-  };
-  ASSERT_TRUE(trustCA.Add(device));
-
-  // valid from Nov 29, 2018 to Nov 29, 2068
-  oc::pki::IdentityCertificate mfgCertificate{
-    "pki_certs/certification_tests_ee.pem",
-    "pki_certs/certification_tests_key.pem",
-    true,
-  };
-  ASSERT_TRUE(mfgCertificate.Add(device));
-
-  // expired: was valid from Apr 14, 2020 to May 14, 2020
-  // TODO: get a valid certificate and remove oc_pki_set_verify_certificate_cb
-  oc::pki::IntermediateCertificate subCertificate{
-    "pki_certs/certification_tests_subca1.pem"
-  };
-  ASSERT_TRUE(subCertificate.Add(device, mfgCertificate.CredentialID()));
-
-  oc_pki_set_verify_certificate_cb(
-    [](oc_tls_peer_t *peer, const mbedtls_x509_crt *, int, uint32_t *flags) {
-      if (peer->role == MBEDTLS_SSL_IS_SERVER) {
-        OC_DBG("disable time verification for server (peer=%p)", (void *)peer);
-        *flags &= ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED |
-                               MBEDTLS_X509_BADCERT_FUTURE));
-      }
-      return 0;
-    });
-}
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
 {
@@ -745,8 +766,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
   }
 #endif /* OC_TCP && OC_SESSION_EVENTS */
 
-  oc_pki_set_verify_certificate_cb(nullptr);
-  oc_pstat_reset_device(/*device*/ 0, true);
+  resetSecureDevice(/*device*/ 0);
 }
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
@@ -754,7 +774,11 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
   // TODO: use already connected endpoint
 }
 
+#endif /* OC_SECURITY */
+
 #endif /* OC_CLIENT */
+
+#ifdef OC_SECURITY
 
 class TestMbedTLSPlgdTime : public testing::Test {
 public:

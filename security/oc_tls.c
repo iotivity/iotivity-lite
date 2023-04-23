@@ -2635,11 +2635,8 @@ oc_tls_recv_message(oc_message_t *message)
 #ifdef OC_DEBUG
   char u[OC_UUID_LEN];
   oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
-  OC_DBG("oc_tls: Received message from device %s", u);
-  if (peer->endpoint.flags & TCP) {
-    OC_DBG("oc_tls_recv_message_tcp: length=%zu  peer=%p", message->length,
-           (void *)peer);
-  }
+  OC_DBG("oc_tls: Received message from device(uuid=%s): length=%zu  peer=%p",
+         u, message->length, (void *)peer);
 #endif /* OC_DEBUG */
 
   oc_list_add(peer->recv_q, message);
