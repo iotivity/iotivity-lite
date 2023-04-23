@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "oc_acl.h"
+#include "oc_log.h"
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -33,6 +34,7 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <signal.h>
+#include <stdarg.h>
 
 static int quit;
 
@@ -786,6 +788,7 @@ disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
 #define OPT_CLOUD_CIS "cloud-endpoint"
 #define OPT_CLOUD_APN "cloud-auth-provider-name"
 #define OPT_CLOUD_SID "cloud-id"
+#define OPT_LOG_LEVEL "log-level"
 
 #define OPT_TIME "time"
 #define OPT_SET_SYSTEM_TIME "set-system-time"
@@ -822,6 +825,9 @@ printhelp(const char *exec_path)
         "Linux)\n",
         OPT_SET_SYSTEM_TIME);
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+  PRINT("  -l | --%-26s set log level (supported values: disabled, verbose, "
+        "debug, info, warning, error)\n",
+        OPT_LOG_LEVEL " <level>");
   PRINT("ARGUMENTS:\n");
   PRINT("  %-33s device name (optional, default: cloud_server)\n",
         OPT_ARG_DEVICE_NAME);
@@ -842,6 +848,27 @@ typedef struct
 } parse_options_result_t;
 
 static bool
+parse_log_level(const char *log_level, oc_log_level_t *level)
+{
+  if (strcmp(log_level, "trace") == 0) {
+    *level = OC_LOG_LEVEL_TRACE;
+  } else if (strcmp(log_level, "debug") == 0) {
+    *level = OC_LOG_LEVEL_DEBUG;
+  } else if (strcmp(log_level, "info") == 0) {
+    *level = OC_LOG_LEVEL_INFO;
+  } else if (strcmp(log_level, "warning") == 0) {
+    *level = OC_LOG_LEVEL_WARNING;
+  } else if (strcmp(log_level, "error") == 0) {
+    *level = OC_LOG_LEVEL_ERROR;
+  } else if (strcmp(log_level, "disabled") == 0) {
+    *level = OC_LOG_LEVEL_DISABLED;
+  } else {
+    return false;
+  }
+  return true;
+}
+
+static bool
 parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 {
   static struct option long_options[] = {
@@ -852,6 +879,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_CLOUD_SID, required_argument, NULL, 'i' },
     { OPT_CLOUD_APN, required_argument, NULL, 'p' },
     { OPT_NUM_RESOURCES, required_argument, NULL, 'r' },
+    { OPT_LOG_LEVEL, required_argument, NULL, 'l' },
 #if defined(OC_SECURITY) && defined(OC_PKI)
     { OPT_DISABLE_TLS_VERIFY_TIME, no_argument, NULL, 'd' },
 #endif /* OC_SECURITY && OC_PKI */
@@ -864,8 +892,8 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 
   while (true) {
     int option_index = 0;
-    int opt =
-      getopt_long(argc, argv, "hdn:a:e:i:p:r:st:", long_options, &option_index);
+    int opt = getopt_long(argc, argv, "hdn:a:e:i:p:r:l:st:", long_options,
+                          &option_index);
     if (opt == -1) {
       break;
     }
@@ -910,6 +938,15 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
         return false;
       }
       num_resources = (int)val;
+      break;
+    }
+    case 'l': {
+      oc_log_level_t level;
+      if (!parse_log_level(optarg, &level)) {
+        PRINT("invalid log level(%s)\n", optarg);
+        return false;
+      }
+      oc_log_set_level(level);
       break;
     }
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -961,6 +998,25 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
   return true;
 }
 
+static void
+cloud_server_log(oc_log_level_t log_level, oc_log_component_t component,
+                 const char *file, int line, const char *func, const char *fmt,
+                 ...)
+{
+  (void)component;
+  char log_time_buf[64] = { 0 };
+  oc_clock_time_rfc3339(log_time_buf, sizeof(log_time_buf));
+
+  printf("[OC %s] %s: %s:%d <%s>: ", log_time_buf,
+         oc_log_level_to_label(log_level), file, line, func);
+  va_list ap;
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  printf("\n");
+  fflush(stdout);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -986,6 +1042,7 @@ main(int argc, char *argv[])
   PRINT("disable_tls_time_verification: %s, ",
         parsed_options.disable_tls_verify_time ? "true" : "false");
 #endif /* OC_SECURITY && OC_PKI */
+  PRINT("log_level: %s", oc_log_level_to_label(oc_log_get_level()));
   PRINT("\n");
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -1003,6 +1060,7 @@ main(int argc, char *argv[])
                                         .signal_event_loop = signal_event_loop,
                                         .register_resources =
                                           register_resources };
+  oc_log_set_function(cloud_server_log);
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */

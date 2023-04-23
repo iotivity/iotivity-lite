@@ -20,7 +20,7 @@
 
 #include "PKI.h"
 #include "oc_pki.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #include <filesystem>
 #include <fstream>

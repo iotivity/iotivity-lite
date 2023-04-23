@@ -61,4 +61,16 @@
 #define OC_NONNULL(...)
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+#define OC_RETURNS_NONNULL __attribute__((returns_nonnull))
+#else
+#define OC_RETURNS_NONNULL
+#endif
+
+#if defined(__clang__) || defined(__GNUC__)
+#define OC_PRINTF_FORMAT(...) __attribute__((format(printf, __VA_ARGS__)))
+#else
+#define OC_PRINTF_FORMAT(...)
+#endif
+
 #endif // OC_COMPILER_H

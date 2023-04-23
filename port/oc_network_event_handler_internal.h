@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_NETWORK_EVENT_HANDLER_INTERNAL_H
-#define OC_NETWORK_EVENT_HANDLER_INTERNAL_H
+#ifndef OC_PORT_NETWORK_EVENT_HANDLER_INTERNAL_H
+#define OC_PORT_NETWORK_EVENT_HANDLER_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +47,4 @@ void oc_network_event_handler_mutex_destroy(void);
 }
 #endif
 
-#endif /* OC_NETWORK_EVENT_HANDLER_INTERNAL_H */
+#endif /* OC_PORT_NETWORK_EVENT_HANDLER_INTERNAL_H */

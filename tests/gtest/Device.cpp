@@ -119,7 +119,7 @@ void
 Device::PoolEventsMs(uint16_t mseconds)
 {
   OC_ATOMIC_STORE8(terminate_, 0);
-  oc_set_delayed_callback_ms(this, Device::QuitEvent, mseconds);
+  oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, mseconds);
 
   while (OC_ATOMIC_LOAD8(terminate_) == 0) {
     Lock();

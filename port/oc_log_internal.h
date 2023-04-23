@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -15,10 +16,11 @@
  * limitations under the License.
  *
  ******************************************************************/
-/**
-  @file
 
-  generic logging functions:
+/**
+  @file oc_log_internal.h
+
+  generic logging functions for ports:
   - OC_LOGipaddr
     prints the endpoint information to stdout
   - OC_LOGbytes
@@ -32,17 +34,18 @@
 
   compile flags:
   - OC_DEBUG
-    enables output of logging functions
+    enables output of logging functions for android
   - OC_NO_LOG_BYTES
     disables output of OC_LOGbytes logging function
     if OC_DEBUG is enabled.
 */
-#ifndef OC_LOG_H
-#define OC_LOG_H
 
-#include <stdio.h>
-#include <string.h>
-#include "oc_clock_util.h"
+#ifndef OC_PORT_LOG_INTERNAL_H
+#define OC_PORT_LOG_INTERNAL_H
+
+#include "api/oc_log_internal.h"
+#include "oc_log.h"
+
 #ifndef __FILENAME__
 #ifdef WIN32
 #define __FILENAME__                                                           \
@@ -53,23 +56,107 @@
 #endif
 #endif /* !__FILENAME__ */
 
-#ifdef __ANDROID__
-#include "android/oc_log_android.h"
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __ANDROID__
-#define TAG "OC-JNI"
-#define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
-#else
-#define PRINT(...) printf(__VA_ARGS__)
-#endif
-
 #define SPRINTF(...) sprintf(__VA_ARGS__)
 #define SNPRINTF(...) snprintf(__VA_ARGS__)
+
+#ifdef __ANDROID__
+#include "android/oc_log_android.h"
+#define TAG "OC-JNI"
+#define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+
+#if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
+#define OC_LOG(level, ...)                                                     \
+  android_log(oc_log_level_to_label(level), __FILE__, __func__, __LINE__,      \
+              __VA_ARGS__)
+#define OC_LOGipaddr(endpoint)                                                 \
+  android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
+#define OC_LOGbytes(bytes, length)                                             \
+  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
+#else /* defined(OC_DEBUG) || defined(OC_PUSHDEBUG) */
+#define OC_LOG(level, ...)
+#define OC_LOGipaddr(endpoint)
+#define OC_LOGbytes(bytes, length)
+#endif /* !defined(OC_DEBUG) && !defined(OC_PUSHDEBUG) */
+#endif
+
+#ifndef PRINT
+#define PRINT(...) printf(__VA_ARGS__)
+#endif /* !PRINT */
+
+// port's layer can override this macro to provide its own logger
+#ifndef OC_LOG
+#define OC_LOG(log_level, ...)                                                 \
+  do {                                                                         \
+    oc_logger_t *logger = oc_log_get_logger();                                 \
+    if (logger->level < (log_level)) {                                         \
+      break;                                                                   \
+    }                                                                          \
+    if (logger->fn != NULL) {                                                  \
+      logger->fn(log_level, OC_LOG_COMPONENT_DEFAULT, __FILENAME__, __LINE__,  \
+                 __func__, __VA_ARGS__);                                       \
+      break;                                                                   \
+    }                                                                          \
+    char _oc_log_fn_buf[64] = { 0 };                                           \
+    oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
+    PRINT("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                          \
+          oc_log_level_to_label(log_level), __FILENAME__, __LINE__, __func__); \
+    PRINT(__VA_ARGS__);                                                        \
+    PRINT("\n");                                                               \
+    fflush(stdout);                                                            \
+  } while (0)
+#endif /* !OC_LOG */
+
+#ifndef OC_LOG_MAXIMUM_LEVEL
+#define OC_LOG_MAXIMUM_LEVEL OC_LOG_LEVEL_DISABLED_MACRO
+#endif /* !OC_LOG_MAXIMUM_LEVEL */
+
+#ifndef OC_TRACE
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE_MACRO)
+#define OC_TRACE(...) OC_LOG(OC_LOG_LEVEL_TRACE, __VA_ARGS__)
+#else
+#define OC_TRACE(...)
+#endif
+#endif /* !OC_TRACE */
+
+#ifndef OC_DBG
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
+#define OC_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#else
+#define OC_DBG(...)
+#endif
+#endif /* !OC_DBG */
+
+#ifndef OC_INFO
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_INFO_MACRO)
+#define OC_INFO(...) OC_LOG(OC_LOG_LEVEL_INFO, __VA_ARGS__)
+#else
+#define OC_INFO(...)
+#endif
+#endif /* !OC_INFO */
+
+#ifndef OC_NOTE
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_NOTICE_MACRO)
+#define OC_NOTE(...) OC_LOG(OC_LOG_LEVEL_NOTICE, __VA_ARGS__)
+#else
+#define OC_NOTE(...)
+#endif
+#endif /* !OC_NOTE */
+
+#ifndef OC_WRN
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_WARNING_MACRO)
+#define OC_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
+#else
+#define OC_WRN(...)
+#endif
+#endif /* !OC_WRN */
+
+#ifndef OC_ERR
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_ERROR_MACRO)
+#define OC_ERR(...) OC_LOG(OC_LOG_LEVEL_ERROR, __VA_ARGS__)
+#else
+#define OC_ERR(...)
+#endif
+#endif /* !OC_ERR */
 
 #define PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                               \
   do {                                                                         \
@@ -170,79 +257,61 @@ extern "C" {
     }                                                                          \
   } while (0)
 
-#if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
-#ifdef __ANDROID__
-#define OC_LOG(level, ...)                                                     \
-  android_log(level, __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define OC_LOGipaddr(endpoint)                                                 \
-  android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
-#define OC_LOGbytes(bytes, length)                                             \
-  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
-#else /* ! __ANDROID */
-#define OC_LOG(level, ...)                                                     \
-  do {                                                                         \
-    char oc_log_fn_buf[64] = { 0 };                                            \
-    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
-    PRINT("[OC %s] %s: %s <%s:%d>: ", oc_log_fn_buf, level, __FILENAME__,      \
-          __func__, __LINE__);                                                 \
-    PRINT(__VA_ARGS__);                                                        \
-    PRINT("\n");                                                               \
-    fflush(stdout);                                                            \
-  } while (0)
-
-#if defined(OC_DEBUG)
+#ifndef OC_LOGipaddr
+#if defined(OC_DEBUG) && OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
 #define OC_LOGipaddr(endpoint)                                                 \
   do {                                                                         \
-    char oc_log_fn_buf[64] = { 0 };                                            \
-    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
-    PRINT("[OC %s] D: %s <%s:%d>: ", oc_log_fn_buf, __FILENAME__, __func__,    \
-          __LINE__);                                                           \
-    PRINTipaddr(endpoint);                                                     \
-    PRINT("\n");                                                               \
-    fflush(stdout);                                                            \
+    oc_logger_t *logger = oc_log_get_logger();                                 \
+    if (logger->level < OC_LOG_LEVEL_DEBUG) {                                  \
+      break;                                                                   \
+    }                                                                          \
+    char _oc_log_endpoint_buf[256];                                            \
+    memset(_oc_log_endpoint_buf, 0, sizeof(_oc_log_endpoint_buf));             \
+    SNPRINTFipaddr(_oc_log_endpoint_buf, sizeof(_oc_log_endpoint_buf),         \
+                   endpoint);                                                  \
+    if (logger->fn != NULL) {                                                  \
+      logger->fn(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
+                 __LINE__, __func__, "%s", _oc_log_endpoint_buf);              \
+    } else {                                                                   \
+      char _oc_log_fn_buf[64] = { 0 };                                         \
+      oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));           \
+      PRINT("[OC %s] D: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,            \
+            __FILENAME__, __LINE__, __func__, _oc_log_endpoint_buf);           \
+      fflush(stdout);                                                          \
+    }                                                                          \
   } while (0)
+#else /* OC_DEBUG */
+#define OC_LOGipaddr(endpoint)
+#endif /* !OC_DEBUG */
+#endif /* !OC_LOGipaddr */
 
-#ifndef OC_NO_LOG_BYTES
+#ifndef OC_LOGbytes
+#if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \
+  !OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE)
+#define OC_LOGbytes(bytes, length)
+#else /* OC_NO_LOG_BYTES || !OC_DEBUG */
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
-    char oc_log_fn_buf[64] = { 0 };                                            \
-    oc_clock_time_rfc3339(oc_log_fn_buf, sizeof(oc_log_fn_buf));               \
-    PRINT("[OC %s] D: %s <%s:%d>: ", oc_log_fn_buf, __FILENAME__, __func__,    \
-          __LINE__);                                                           \
-    for (size_t i = 0; i < (size_t)(length); i++)                              \
-      PRINT(" %02X", (bytes)[i]);                                              \
-    PRINT("\n");                                                               \
+    oc_logger_t *logger = oc_log_get_logger();                                 \
+    if (logger->level < OC_LOG_LEVEL_TRACE) {                                  \
+      break;                                                                   \
+    }                                                                          \
+    char _oc_log_bytes_buf[2048];                                              \
+    memset(_oc_log_bytes_buf, 0, sizeof(_oc_log_bytes_buf));                   \
+    SNPRINTFbytes(_oc_log_bytes_buf, sizeof(_oc_log_bytes_buf), bytes,         \
+                  (size_t)length);                                             \
+    if (logger->fn != NULL) {                                                  \
+      logger->fn(OC_LOG_LEVEL_TRACE, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
+                 __LINE__, __func__, "%s", _oc_log_bytes_buf);                 \
+      break;                                                                   \
+    }                                                                          \
+    char _oc_log_fn_buf[64] = { 0 };                                           \
+    oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
+    PRINT("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf, __FILENAME__,   \
+          __LINE__, __func__, _oc_log_bytes_buf);                              \
     fflush(stdout);                                                            \
   } while (0)
-#else
-#endif /* NO_LOG_BYTES */
-#else
-#define OC_LOGipaddr(endpoint)
-#define OC_LOGbytes(bytes, length)
-#endif /* OC_DEBUG */
-#endif /* __ANDROID__ */
+#endif /* !OC_NO_LOG_BYTES && OC_DEBUG */
+#endif /* !OC_LOGbytes */
 
-#if defined(OC_DEBUG)
-#define OC_DBG(...) OC_LOG("D", __VA_ARGS__)
-#define OC_WRN(...) OC_LOG("W", __VA_ARGS__)
-#define OC_ERR(...) OC_LOG("E", __VA_ARGS__)
-#else
-#define OC_DBG(...)
-#define OC_WRN(...)
-#define OC_ERR(...)
-#endif
-
-#else
-#define OC_LOG(...)
-#define OC_DBG(...)
-#define OC_WRN(...)
-#define OC_ERR(...)
-#define OC_LOGipaddr(endpoint)
-#define OC_LOGbytes(bytes, length)
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* OC_LOG_H */
+#endif /* OC_PORT_LOG_INTERNAL_H */

@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 
 #include <openthread/platform/random.h>

@@ -17,7 +17,7 @@
  ****************************************************************************/
 
 #include "oc_iotivity_lite_jni.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_storage.h"
 #include <assert.h>
 #include <jni.h>

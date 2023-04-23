@@ -20,7 +20,7 @@
 #include "oc_config.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <ctype.h>
 
 OCResult_t

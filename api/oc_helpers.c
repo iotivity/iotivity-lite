@@ -20,7 +20,7 @@
 #include "oc_helpers.h"
 #include "oc_helpers_internal.h"
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include <assert.h>
 #include <inttypes.h>

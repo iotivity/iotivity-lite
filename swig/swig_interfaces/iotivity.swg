@@ -10,7 +10,7 @@
 %{
 #include "oc_iotivity_lite_jni.h"
 #include "oc_collection.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 %}
 
 

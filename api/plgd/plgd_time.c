@@ -32,7 +32,7 @@
 #include "oc_core_res.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_macros.h"
 #include "util/oc_memb.h"

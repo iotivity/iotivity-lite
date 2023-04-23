@@ -61,7 +61,7 @@
 #include "oc_config.h"
 #include "oc_ri.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 
 #ifdef __cplusplus

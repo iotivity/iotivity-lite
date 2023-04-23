@@ -29,9 +29,9 @@ CORE_HEADERS  =$(addprefix -I$(ROOT_DIR)/, messaging/coap util util/pt include  
 CFLAGS += -I. $(CORE_HEADERS) $(LIB_HEADERS) $(DEPS_HEADERS)
 
 ifeq ($(VERBOSE),1)
-	CFLAGS += -DOC_DEBUG -DOC_LOG_L1
+	CFLAGS += -DOC_DEBUG -DOC_LOG_L1 -DOC_LOG_MAXIMUM_LEVEL=8
 else ifeq ($(VERBOSE),2)
-	CFLAGS += -DOC_DEBUG  -DOC_LOG_L2
+	CFLAGS += -DOC_DEBUG  -DOC_LOG_L2 -DOC_LOG_MAXIMUM_LEVEL=8
 endif
 
 ifeq ($(DYNAMIC),1)

@@ -25,7 +25,7 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"
 #include "security/oc_entropy_internal.h"

@@ -18,10 +18,10 @@
 /**
   @file
 */
-#ifndef OC_ASSERT_H
-#define OC_ASSERT_H
+#ifndef OC_PORT_ASSERT_H
+#define OC_PORT_ASSERT_H
 
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 
 #ifdef __cplusplus
@@ -81,4 +81,4 @@ oc_exit(int status)
 }
 #endif
 
-#endif /* OC_ASSERT_H */
+#endif /* OC_PORT_ASSERT_H */
