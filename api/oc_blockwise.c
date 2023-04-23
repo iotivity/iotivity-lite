@@ -22,7 +22,7 @@
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
 #include "oc_endpoint.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include <inttypes.h>

@@ -22,7 +22,7 @@
 
 #include "oc_helpers.h"
 #include "oc_endpoint.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_connectivity.h"
 #include "util/oc_memb.h"
 #include <arpa/inet.h>

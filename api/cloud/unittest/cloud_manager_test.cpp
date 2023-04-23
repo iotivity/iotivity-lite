@@ -17,7 +17,7 @@
  *
  ******************************************************************/
 
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "tests/gtest/RepPool.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"

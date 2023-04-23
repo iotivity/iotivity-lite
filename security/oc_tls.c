@@ -71,6 +71,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(g_tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);
@@ -1510,7 +1511,8 @@ tls_verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
   if (flags == NULL) {
     flags = &f;
   }
-  OC_DBG("verifying certificate at depth %d with flags %u", depth, *flags);
+  OC_DBG("verifying certificate at depth %d with flags %" PRIu32, depth,
+         *flags);
   oc_tls_peer_t *peer = (oc_tls_peer_t *)opq;
   if (!peer) {
     OC_ERR("peer is null");
@@ -1532,7 +1534,8 @@ tls_verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
     }
   }
   if (ret != 0) {
-    OC_ERR("failed in peer verify certificate callback with flags %u", *flags);
+    OC_ERR("failed in peer verify certificate callback with flags %" PRIu32,
+           *flags);
     const char *audit_message =
       "DLTS handshake error, failed to verify end entity cert";
     if (depth > 0) {

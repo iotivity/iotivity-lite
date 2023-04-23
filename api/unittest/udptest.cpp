@@ -20,7 +20,7 @@
 #include "oc_endpoint.h"
 #include "oc_buffer.h"
 #include "api/oc_udp_internal.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 
 #include <array>

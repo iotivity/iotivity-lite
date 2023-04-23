@@ -196,7 +196,7 @@ OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
-	EXTRA_CFLAGS += -DOC_DEBUG
+	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8
 ifeq ($(DEBUG_TLS),1)
 	EXTRA_CFLAGS += -DOC_DEBUG_TLS
 endif

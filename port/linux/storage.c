@@ -20,7 +20,7 @@
 
 #ifdef OC_STORAGE
 #include "port/oc_assert.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
 #include <errno.h>

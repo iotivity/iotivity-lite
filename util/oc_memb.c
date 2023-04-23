@@ -33,7 +33,7 @@
  */
 
 #include "oc_memb.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <string.h>
 
 #ifdef OC_MEMORY_TRACE

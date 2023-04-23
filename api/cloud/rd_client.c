@@ -26,7 +26,7 @@
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <inttypes.h>
 #include <stdlib.h>
 

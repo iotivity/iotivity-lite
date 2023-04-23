@@ -1731,8 +1731,12 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 #endif /* OC_DNS_CACHE */
       freeaddrinfo(result);
     } else {
+#ifdef OC_DEBUG
       OC_ERR("failed to resolve address(%s) with error(%d): %s", domain, ret,
              gai_strerror(ret));
+#else  /* OC_DEBUG */
+    OC_ERR("failed to resolve address(%s) with error(%d)", domain, ret);
+#endif /* !OC_DEBUG */
     }
 #ifdef OC_DNS_CACHE
   } else {

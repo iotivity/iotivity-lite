@@ -21,7 +21,7 @@
 #define WIN32_LEAN_AND_MEAN
 // clang-format off
 #include "network_addresses.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #include <inttypes.h>
 #include <malloc.h>

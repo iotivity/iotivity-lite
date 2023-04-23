@@ -36,6 +36,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_enums.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_helpers.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_introspection.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_log.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_main.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_network_events.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep.c
@@ -64,7 +65,7 @@ set(sources
 )
 
 if (CONFIG_OC_DEBUG)
-  add_definitions(-DOC_DEBUG)
+  add_definitions(-DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8)
 endif()
 
 if (CONFIG_IPV4)

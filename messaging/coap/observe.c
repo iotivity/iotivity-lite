@@ -102,7 +102,7 @@ OC_MEMB(batch_observers_memb, batch_observer_t, COAP_MAX_OBSERVERS);
 
 typedef bool cmp_batch_observer_t(batch_observer_t *o, void *ctx);
 
-#ifdef OC_DEBUG
+#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
 static const char *
 batch_observer_get_resource_uri(batch_observer_t *batch_obs)
 {
@@ -111,7 +111,7 @@ batch_observer_get_resource_uri(batch_observer_t *batch_obs)
   }
   return oc_string(batch_obs->removed_resource_uri);
 }
-#endif /* OC_DEBUG */
+#endif
 
 static bool
 cmp_batch_by_observer(batch_observer_t *o, void *ctx)

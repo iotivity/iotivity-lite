@@ -925,8 +925,8 @@ coap_oscore_parse_options(void *packet, const uint8_t *data, size_t data_len,
                           bool oscore, bool validate)
 {
   if (data_len > UINT32_MAX) {
-    OC_WRN("message size(%zu) exceeds limit for coap message(%u)", data_len,
-           UINT32_MAX);
+    OC_WRN("message size(%zu) exceeds limit for coap message(%lu)", data_len,
+           (long unsigned)UINT32_MAX);
     return BAD_REQUEST_4_00;
   }
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1357,7 +1357,7 @@ coap_udp_parse_message(void *packet, uint8_t *data, size_t data_len,
 {
   if (data_len > UINT16_MAX) {
     OC_WRN("message size(%zu) exceeds limit for UDP message(%u)", data_len,
-           UINT16_MAX);
+           (unsigned)UINT16_MAX);
     return BAD_REQUEST_4_00;
   }
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1428,8 +1428,8 @@ coap_tcp_parse_message(void *packet, uint8_t *data, size_t data_len,
                        bool validate)
 {
   if (data_len > UINT32_MAX) {
-    OC_WRN("message size(%zu) exceeds limit for TCP message(%u)", data_len,
-           UINT32_MAX);
+    OC_WRN("message size(%zu) exceeds limit for TCP message(%lu)", data_len,
+           (long unsigned)UINT32_MAX);
     return BAD_REQUEST_4_00;
   }
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;

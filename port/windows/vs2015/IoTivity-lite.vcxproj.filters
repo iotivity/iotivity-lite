@@ -287,6 +287,9 @@
     <ClCompile Include="..\..\..\api\oc_session_events.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_log.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_tcp.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -616,6 +619,9 @@
     <ClInclude Include="..\..\..\include\oc_sp.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_log.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\server_introspection.dat.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -683,6 +689,9 @@
       <Filter>Core\cloud</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_log_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_tcp_internal.h">

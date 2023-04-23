@@ -34,8 +34,8 @@
 /**
   @file
 */
-#ifndef OC_RANDOM_H
-#define OC_RANDOM_H
+#ifndef OC_PORT_RANDOM_H
+#define OC_PORT_RANDOM_H
 
 #include "oc_export.h"
 
@@ -68,4 +68,4 @@ void oc_random_destroy(void);
 }
 #endif
 
-#endif /* OC_RANDOM_H */
+#endif /* OC_PORT_RANDOM_H */

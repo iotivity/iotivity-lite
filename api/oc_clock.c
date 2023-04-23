@@ -18,7 +18,7 @@
 
 #include "port/oc_clock.h"
 #include "c-timestamp/timestamp.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 
 #define OC_NSEC_PER_SEC 1000000000
 

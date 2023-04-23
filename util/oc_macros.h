@@ -25,6 +25,6 @@
 // pointer, OC_CHAR_ARRAY_LEN(x) should be equal to strlen(x)
 #define OC_CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
 
-#define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #endif // OC_MACROS_H

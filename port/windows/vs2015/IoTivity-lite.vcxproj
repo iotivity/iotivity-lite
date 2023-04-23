@@ -224,6 +224,7 @@
     <ClInclude Include="..\..\..\api\oc_swupdate_internal.h" />
     <ClInclude Include="..\..\..\api\oc_tcp_internal.h" />
     <ClInclude Include="..\..\..\api\oc_udp_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_log_internal.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cbor.h" />
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h" />
     <ClInclude Include="..\..\..\include\oc_acl.h" />
@@ -243,6 +244,7 @@
     <ClInclude Include="..\..\..\include\oc_enums.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
     <ClInclude Include="..\..\..\include\oc_introspection.h" />
+    <ClInclude Include="..\..\..\include\oc_log.h" />
     <ClInclude Include="..\..\..\include\oc_network_events.h" />
     <ClInclude Include="..\..\..\include\oc_network_monitor.h" />
     <ClInclude Include="..\..\..\include\oc_obt.h" />
@@ -330,6 +332,7 @@
     <ClCompile Include="..\..\..\api\oc_enums.c" />
     <ClCompile Include="..\..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
+    <ClCompile Include="..\..\..\api\oc_log.c" />
     <ClCompile Include="..\..\..\api\oc_main.c" />
     <ClCompile Include="..\..\..\api\oc_mnt.c" />
     <ClCompile Include="..\..\..\api\oc_network_events.c" />

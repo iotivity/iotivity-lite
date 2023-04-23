@@ -24,7 +24,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros.h"
 

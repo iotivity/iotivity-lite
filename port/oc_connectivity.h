@@ -20,8 +20,8 @@
  * @file
  */
 
-#ifndef OC_CONNECTIVITY_H
-#define OC_CONNECTIVITY_H
+#ifndef OC_PORT_CONNECTIVITY_H
+#define OC_PORT_CONNECTIVITY_H
 
 #include "messaging/coap/conf.h"
 #include "oc_config.h"
@@ -29,7 +29,7 @@
 #include "oc_export.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
@@ -301,4 +301,4 @@ int oc_tcp_update_csm_state(const oc_endpoint_t *endpoint, tcp_csm_state_t csm);
 }
 #endif
 
-#endif /* OC_CONNECTIVITY_H */
+#endif /* OC_PORT_CONNECTIVITY_H */

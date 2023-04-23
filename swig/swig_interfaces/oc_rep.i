@@ -24,7 +24,7 @@
 #include "oc_rep.h"
 #include "oc_collection.h"
 #include "oc_helpers.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include <assert.h>
 
 
