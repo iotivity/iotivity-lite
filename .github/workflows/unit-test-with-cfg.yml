@@ -74,6 +74,10 @@ jobs:
           cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} ${{ inputs.install_mbedtls && '-DBUILD_MBEDTLS=OFF' || '' }} ${{ inputs.install_tinycbor && '-DBUILD_TINYCBOR=OFF' || '' }} -DBUILD_TESTING=ON ..
           make oc-unittests
 
+      - name: Setup firewall to drop TCP IPV6 with destination port 12345 (for timeout tests)
+        run: |
+          sudo ip6tables -I OUTPUT -p tcp --dport 12345 -j DROP
+      
       - name: Run unit tests
         run: |
           cd build

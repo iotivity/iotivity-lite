@@ -52,6 +52,7 @@ TEST_F(TestDNS, oc_dns_lookup_invalid)
                               static_cast<transport_flags>(0)));
 
   oc_string_t addr;
+  memset(&addr, 0, sizeof(oc_string_t));
   EXPECT_EQ(-1, oc_dns_lookup(nullptr, &addr, static_cast<transport_flags>(0)));
 
   EXPECT_NE(0, oc_dns_lookup("openconnectivity", &addr,
@@ -61,6 +62,7 @@ TEST_F(TestDNS, oc_dns_lookup_invalid)
 TEST_F(TestDNS, oc_dns_lookup)
 {
   oc_string_t addr;
+  memset(&addr, 0, sizeof(oc_string_t));
   EXPECT_EQ(0, oc_dns_lookup("localhost", &addr, IPV6));
   oc_free_string(&addr);
 }
@@ -70,6 +72,7 @@ TEST_F(TestDNS, oc_dns_lookup)
 TEST_F(TestDNS, oc_dns_lookup_ipv4)
 {
   oc_string_t addr;
+  memset(&addr, 0, sizeof(oc_string_t));
   EXPECT_EQ(0, oc_dns_lookup("localhost", &addr, IPV4));
   oc_free_string(&addr);
 }
