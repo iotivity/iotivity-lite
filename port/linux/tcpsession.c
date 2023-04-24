@@ -86,6 +86,7 @@ typedef struct tcp_waiting_session_t
     oc_clock_time_t start;
     uint8_t count;
     uint8_t force;
+    int error;
   } retry;
   OC_LIST_STRUCT(messages);
   on_tcp_connect_t on_tcp_connect;
@@ -1115,7 +1116,7 @@ tcp_cleanup_connected_waiting_session_locked(tcp_waiting_session_t *ws,
 }
 
 static bool
-tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws)
+tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws, int *err)
 {
   assert(ws != NULL && ws->sock != -1);
   int error = 0;
@@ -1125,6 +1126,7 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws)
     return false; /* Solaris pending error */
   }
   if (error != 0) {
+    *err = error;
     OC_ERR("socket error: %d", error);
     return false;
   }
@@ -1154,6 +1156,7 @@ enum {
   TCP_WAITING_SESSION_VALID,
   TCP_WAITING_SESSION_RETRY,
   TCP_WAITING_SESSION_EXPIRED,
+  TCP_WAITING_SESSION_ERROR,
 };
 
 static int
@@ -1161,6 +1164,9 @@ tcp_waiting_session_check(const tcp_waiting_session_t *session,
                           oc_clock_time_t now,
                           oc_tcp_connect_retry_t connect_retry)
 {
+  if (session->retry.error != 0) {
+    return TCP_WAITING_SESSION_ERROR;
+  }
   bool retry = session->retry.force != 0;
   if (!retry) {
     oc_clock_time_t expires_in = connect_retry.timeout * OC_CLOCK_SECOND;
@@ -1247,6 +1253,9 @@ tcp_check_expiring_sessions(oc_clock_time_t now)
       }
       break;
     }
+    case TCP_WAITING_SESSION_ERROR:
+      free_waiting_session_locked(ws, false, false);
+      break;
     case TCP_WAITING_SESSION_EXPIRED:
       free_waiting_session_locked(ws, true, false);
       break;
@@ -1262,14 +1271,21 @@ tcp_check_expiring_sessions(oc_clock_time_t now)
 static void
 tcp_process_waiting_session_locked(tcp_waiting_session_t *ws)
 {
-  if (!tcp_try_connect_waiting_session_locked(ws)) {
+  int error = 0;
+  if (!tcp_try_connect_waiting_session_locked(ws, &error)) {
     OC_DBG("failed to connect session(%p, fd=%d)", (void *)ws, ws->sock);
     if (ws->sock >= 0) {
       tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
       close(ws->sock);
       ws->sock = -1;
     }
-    ws->retry.force = 1;
+    if (error == 0) {
+      ws->retry.force = 1;
+      ws->retry.error = 0;
+    } else {
+      // close the connection
+      ws->retry.error = 1;
+    }
   }
 }
 

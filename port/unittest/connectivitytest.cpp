@@ -431,7 +431,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
   oc_endpoint_t ep = oc::endpoint::FromString(
     "coaps+tcp://[::1]:12345"); // reachable address, but inactive port
   // enough retries so they will run the whole duration of this test
-  oc_tcp_set_connect_retry(UINT8_MAX, 5);
+  oc_tcp_set_connect_retry(0, 5);
   auto restore_defaults = []() {
     oc_tcp_set_connect_retry(OC_TCP_CONNECT_RETRY_MAX_COUNT,
                              OC_TCP_CONNECT_RETRY_TIMEOUT);
@@ -456,8 +456,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
   EXPECT_EQ(OC_SEND_MESSAGE_QUEUED, oc_send_buffer2(msg, true));
 
   OC_DBG("oc_tcp_connect_timeout wait");
-  oc_tcp_set_connect_retry(0, 2);
-  oc::TestDevice::PoolEvents(2);
+  oc::TestDevice::PoolEvents(10);
 
   EXPECT_EQ(-1, oc_tcp_connection_state(&ep));
   oc_message_unref(msg);
