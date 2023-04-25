@@ -34,12 +34,14 @@
 #include "port/oc_storage_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
+#include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_security_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -52,6 +54,9 @@
 
 #ifdef OC_SECURITY
 #include <mbedtls/platform_time.h>
+#ifdef OC_PKI
+#include <mbedtls/ssl.h>
+#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
 static const std::string testStorage{ "storage_test" };
@@ -267,7 +272,7 @@ public:
     oc::TestDevice::ClearSystemTime();
   }
 
-  static PlgdTime DecodePayload(const oc_rep_t *rep)
+  static PlgdTime decodePayload(const oc_rep_t *rep)
   {
     PlgdTime pt{};
     pt.status = -1;
@@ -302,6 +307,75 @@ public:
     }
     return pt;
   }
+
+#ifdef OC_SECURITY
+  static bool prepareSecureDevice(size_t device, bool addCertificates = true)
+  {
+#if defined(OC_PKI) && !defined(OC_DYNAMIC_ALLOCATION)
+    if (addCertificates) {
+      OC_ERR(
+        "cannot allocate multiple certificates without dynamic allocation, "
+        "default bytes pool too small");
+      return false;
+    }
+#endif /* OC_PKI && OC_DYNAMIC_ALLOCATION */
+
+    oc_sec_self_own(device);
+
+#ifdef OC_PKI
+    if (addCertificates) {
+      // valid from Nov 29, 2018 to Nov 29, 2068
+      oc::pki::TrustAnchor trustCA{
+        "pki_certs/certification_tests_rootca1.pem",
+        true,
+      };
+      EXPECT_TRUE(trustCA.Add(device));
+
+      // valid from Nov 29, 2018 to Nov 29, 2068
+      oc::pki::IdentityCertificate mfgCertificate{
+        "pki_certs/certification_tests_ee.pem",
+        "pki_certs/certification_tests_key.pem",
+        true,
+      };
+      EXPECT_TRUE(mfgCertificate.Add(device));
+
+      // expired: was valid from Apr 14, 2020 to May 14, 2020
+      // TODO: get a valid certificate and remove
+      // oc_pki_set_verify_certificate_cb
+      oc::pki::IntermediateCertificate subCertificate{
+        "pki_certs/certification_tests_subca1.pem"
+      };
+      EXPECT_TRUE(subCertificate.Add(device, mfgCertificate.CredentialID()));
+
+      oc_pki_set_verify_certificate_cb([](oc_tls_peer_t *peer,
+                                          const mbedtls_x509_crt *, int,
+                                          uint32_t *flags) {
+        if (peer->role == MBEDTLS_SSL_IS_SERVER) {
+          OC_DBG("disable time verification for server (peer=%p)",
+                 (void *)peer);
+          *flags &= ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED |
+                                 MBEDTLS_X509_BADCERT_FUTURE));
+        }
+        return 0;
+      });
+    }
+#else  /* !OC_PKI */
+    (void)addCertificates;
+#endif /* OC_PKI */
+    return true;
+  }
+
+  static void resetSecureDevice(size_t device)
+  {
+#ifdef OC_PKI
+    oc_pki_set_verify_certificate_cb(nullptr);
+#endif /* OC_PKI */
+    oc_pstat_reset_device(device, true);
+    // need to wait for closing of TLS sessions
+    oc::TestDevice::PoolEventsMs(200);
+  }
+
+#endif /* OC_SECURITY */
 };
 
 TEST_F(TestPlgdTimeWithServer, GetResource)
@@ -321,7 +395,7 @@ TEST_F(TestPlgdTimeWithServer, GetRequest)
     oc::TestDevice::Terminate();
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_status(PLGD_TIME_STATUS_SYNCING);
@@ -353,7 +427,7 @@ TEST_F(TestPlgdTimeWithServer, GetRequestEmpty)
     oc::TestDevice::Terminate();
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_time(0);
@@ -427,7 +501,7 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
-    *pt = DecodePayload(data->payload);
+    *pt = decodePayload(data->payload);
   };
 
   plgd_time_set_status(PLGD_TIME_STATUS_SYNCING);
@@ -506,16 +580,23 @@ TEST_F(TestPlgdTimeWithServer, PutRequestFail)
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
 {
-  unsigned flags = 0;
 #ifdef OC_SECURITY
-  flags |= SECURED;
+  if (!prepareSecureDevice(/*device*/ 0, false)) {
+    OC_WRN("Test skipped");
+    return;
+  }
+#endif /* OC_SECURITY */
+
+  unsigned ep_flags = 0;
+#ifdef OC_SECURITY
+  ep_flags |= SECURED;
 #endif /* OC_SECURITY */
 #ifdef OC_TCP
-  flags |= TCP;
+  ep_flags |= TCP;
 #endif /* OC_TCP */
 
   std::string ep_str =
-    std::string(oc_endpoint_flags_to_scheme(flags)) + "[ff02::158]:12345";
+    std::string(oc_endpoint_flags_to_scheme(ep_flags)) + "[ff02::158]:12345";
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {
@@ -525,15 +606,9 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
     oc::TestDevice::Terminate();
   };
 
-#ifdef OC_SECURITY
-  if ((ep.flags & SECURED) != 0) {
-    oc_sec_self_own(/*device*/ 0);
-  }
-#endif /* OC_SECURITY */
-
   bool invoked = false;
   unsigned fetch_flags = 0;
-  EXPECT_TRUE(plgd_time_fetch(
+  ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(&ep, PLGD_TIME_URI, fetch_handler, &invoked,
                            /*timeout*/ 5, /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
@@ -543,35 +618,21 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
   EXPECT_TRUE(invoked);
 
 #ifdef OC_SECURITY
-  oc_pstat_reset_device(/*device*/ 0, true);
+  resetSecureDevice(/*device*/ 0);
 #endif /* OC_SECURITY */
 }
 
-TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecure)
-{
-  unsigned flags = 0;
-#ifdef OC_TCP
-  flags |= TCP;
-#endif /* OC_TCP */
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, SECURED);
-  ASSERT_NE(nullptr, ep);
-
-  auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
-    OC_DBG("fetch time handler");
-    EXPECT_EQ(OC_STATUS_OK, code);
-    auto *t = static_cast<oc_clock_time_t *>(data);
-    *t = time;
-    oc::TestDevice::Terminate();
-  };
-
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
-  struct TCPSessionData
-  {
-    bool disconnected;
-    const oc_endpoint_t *ep;
-  };
 
+struct TCPSessionData
+{
+  bool disconnected;
+  const oc_endpoint_t *ep;
+};
+
+static session_event_handler_v1_t
+addTCPEventCallback(TCPSessionData *tcp_data)
+{
   auto tcp_events = [](const oc_endpoint_t *endpoint, oc_session_state_t state,
                        void *data) {
 #ifdef OC_DEBUG
@@ -583,21 +644,69 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecure)
     auto *tsd = static_cast<TCPSessionData *>(data);
     if ((oc_endpoint_compare(endpoint, tsd->ep) == 0) &&
         (state == OC_SESSION_DISCONNECTED)) {
+      OC_DBG("tcp session disconnected");
       tsd->disconnected = true;
       oc::TestDevice::Terminate();
     }
   };
 
-  TCPSessionData tsd{};
-  tsd.ep = ep;
+  EXPECT_EQ(0, oc_add_session_event_callback_v1(tcp_events, tcp_data));
+  return tcp_events;
+}
+
+static void
+waitForTCPEventCallback(const TCPSessionData *tcp_data)
+{
+  if (!tcp_data->disconnected) {
+    OC_DBG("waiting to close insecure TCP session");
+    oc::TestDevice::PoolEvents(5);
+  }
+  EXPECT_TRUE(tcp_data->disconnected);
+}
+
+#endif /* OC_TCP || OC_SESSION_EVENTS */
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
+{
+  unsigned include_flags = 0;
+  unsigned exclude_flags = 0;
+#ifdef OC_TCP
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  if (!prepareSecureDevice(/*device*/ 0)) {
+    OC_WRN("Test skipped");
+    return;
+  }
+  include_flags |= SECURED;
+#endif /* OC_SECURITY && OC_PKI */
+  include_flags |= TCP;
+#else
+  // TODO: fix DTLS openning of connection by client_api
+  exclude_flags = SECURED;
+#endif /* OC_TCP */
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
+  ASSERT_NE(nullptr, ep);
+
+#if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
+  TCPSessionData tcp_data{};
+  session_event_handler_v1_t tcp_events{};
   if ((ep->flags & TCP) != 0) {
-    EXPECT_EQ(0, oc_add_session_event_callback_v1(tcp_events, &tsd));
+    tcp_data.ep = ep;
+    tcp_events = addTCPEventCallback(&tcp_data);
   }
 #endif /* OC_TCP && OC_SESSION_EVENTS */
 
+  auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
+    OC_DBG("fetch time handler");
+    EXPECT_EQ(OC_STATUS_OK, code);
+    auto *t = static_cast<oc_clock_time_t *>(data);
+    *t = time;
+    oc::TestDevice::Terminate();
+  };
+
   oc_clock_time_t time = 0;
   unsigned fetch_flags = 0;
-  EXPECT_TRUE(plgd_time_fetch(
+  ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(ep, PLGD_TIME_URI, fetch_handler, &time,
                            /*timeout*/ 5, /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
@@ -607,21 +716,101 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecure)
   EXPECT_NE(0, time);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
-  if (!tsd.disconnected &&
+  if (tcp_events != nullptr &&
       (fetch_flags & PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED) != 0) {
-    oc::TestDevice::PoolEvents(5);
-  }
-  if ((ep->flags & TCP) != 0) {
+    waitForTCPEventCallback(&tcp_data);
     EXPECT_EQ(0,
               oc_remove_session_event_callback_v1(tcp_events, nullptr, true));
   }
 #endif /* OC_TCP && OC_SESSION_EVENTS */
+
+#ifdef OC_SECURITY
+  resetSecureDevice(/*device*/ 0);
+#endif /* OC_SECURITY */
 }
 
-TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnected)
+TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedInsecure)
 {
   // TODO: use already connected endpoint
 }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
+{
+#ifdef OC_SECURITY
+  if (!prepareSecureDevice(/*device*/ 0)) {
+    OC_WRN("Test skipped");
+    return;
+  }
+#endif /* OC_SECURITY */
+
+  unsigned include_flags = 0;
+  unsigned exclude_flags = 0;
+#ifdef OC_TCP
+  include_flags |= SECURED | TCP;
+#else
+  // TODO: fix DTLS openning of connection by client_api
+  exclude_flags = SECURED;
+#endif /* OC_TCP */
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
+  ASSERT_NE(nullptr, ep);
+
+#if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
+  session_event_handler_v1_t tcp_events{};
+  TCPSessionData tcp_data{};
+  if ((ep->flags & TCP) != 0) {
+    tcp_data.ep = ep;
+    tcp_events = addTCPEventCallback(&tcp_data);
+  }
+#endif /* OC_TCP && OC_SESSION_EVENTS */
+
+  auto verify_connection = [](oc_tls_peer_t *, const mbedtls_x509_crt *, int,
+                              uint32_t *flags) {
+    OC_DBG("skip verification for fetch time connection");
+    *flags = 0;
+    return 0;
+  };
+
+  auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
+    OC_DBG("fetch time handler");
+    EXPECT_EQ(OC_STATUS_OK, code);
+    auto *t = static_cast<oc_clock_time_t *>(data);
+    *t = time;
+    oc::TestDevice::Terminate();
+  };
+
+  oc_clock_time_t time = 0;
+  unsigned fetch_flags = 0;
+  ASSERT_TRUE(
+    plgd_time_fetch(plgd_time_fetch_config_with_custom_verification(
+                      ep, PLGD_TIME_URI, fetch_handler, &time,
+                      /*timeout*/ 5,
+                      /*selected_identity_credid*/ -1, verify_connection, {}),
+                    &fetch_flags));
+
+  oc::TestDevice::PoolEvents(5);
+  EXPECT_NE(0, time);
+
+#if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
+  if (tcp_events != nullptr &&
+      (fetch_flags & PLGD_TIME_FETCH_FLAG_TCP_SESSION_OPENED) != 0) {
+    waitForTCPEventCallback(&tcp_data);
+    EXPECT_EQ(0,
+              oc_remove_session_event_callback_v1(tcp_events, nullptr, true));
+  }
+#endif /* OC_TCP && OC_SESSION_EVENTS */
+
+  resetSecureDevice(/*device*/ 0);
+}
+
+TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
+{
+  // TODO: use already connected endpoint
+}
+
+#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */
 

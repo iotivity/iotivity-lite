@@ -32,6 +32,7 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
+#include "tests/gtest/PKI.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -45,250 +46,8 @@
 #include <stdexcept>
 #include <vector>
 
-class Certificate {
-public:
-  Certificate() = default;
-
-  bool Load(const std::string &path);
-
-  static long ReadPemFile(std::string &file_path, char *buffer,
-                          size_t buffer_size);
-
-  std::string path_{};
-  char data_[8192]{};
-  size_t dataLen_{ 0 };
-};
-
-bool
-Certificate::Load(const std::string &path)
-{
-  path_ = path;
-  dataLen_ = 0;
-  long ret = Certificate::ReadPemFile(path_, data_, sizeof(data_));
-  if (ret < 0) {
-    return false;
-  }
-  dataLen_ = static_cast<size_t>(ret);
-  return true;
-}
-
-long
-Certificate::ReadPemFile(std::string &file_path, char *buffer,
-                         size_t buffer_size)
-{
-  FILE *fp = fopen(file_path.c_str(), "r");
-  if (fp == nullptr) {
-    printf("%s:%d\n", __func__, __LINE__);
-    return -1;
-  }
-  if (fseek(fp, 0, SEEK_END) != 0) {
-    printf("%s:%d\n", __func__, __LINE__);
-    fclose(fp);
-    return -1;
-  }
-  long pem_len = ftell(fp);
-  if (pem_len < 0) {
-    printf("%s:%d\n", __func__, __LINE__);
-    fclose(fp);
-    return -1;
-  }
-  if (pem_len >= (long)buffer_size) {
-    printf("%s:%d\n", __func__, __LINE__);
-    fclose(fp);
-    return -1;
-  }
-  if (fseek(fp, 0, SEEK_SET) != 0) {
-    printf("%s:%d\n", __func__, __LINE__);
-    fclose(fp);
-    return -1;
-  }
-  auto to_read = static_cast<size_t>(pem_len);
-  if (fread(buffer, 1, to_read, fp) < to_read) {
-    printf("%s:%d\n", __func__, __LINE__);
-    fclose(fp);
-    return -1;
-  }
-  fclose(fp);
-  buffer[pem_len] = '\0';
-  return pem_len;
-}
-
-class CertificateKey {
-public:
-  CertificateKey() = default;
-
-  bool Load(const std::string &path);
-
-  std::string path_{};
-  char data_[4096]{};
-  size_t dataLen_{ 0 };
-};
-
-bool
-CertificateKey::Load(const std::string &path)
-{
-  path_ = path;
-  dataLen_ = 0;
-  long ret = Certificate::ReadPemFile(path_, data_, sizeof(data_));
-  if (ret < 0) {
-    return false;
-  }
-  dataLen_ = static_cast<size_t>(ret);
-  return true;
-}
-
-class IdentityCertificate {
-public:
-  IdentityCertificate() = default;
-
-  bool Add(size_t device);
-  bool Load(const std::string &certificatePath, const std::string &keyPath);
-  bool LoadAndAdd(const std::string &certificatePath,
-                  const std::string &keyPath, size_t device);
-
-  int credid_{ -1 };
-  Certificate cert_;
-  CertificateKey key_;
-};
-
-bool
-IdentityCertificate::Load(const std::string &certificatePath,
-                          const std::string &keyPath)
-{
-  return cert_.Load(certificatePath) && key_.Load(keyPath);
-}
-
-bool
-IdentityCertificate::Add(size_t device)
-{
-  if (cert_.dataLen_ == 0 || key_.dataLen_ == 0) {
-    return false;
-  }
-  if (credid_ != -1) {
-    return false;
-  }
-
-  int credid = oc_pki_add_mfg_cert(
-    device, reinterpret_cast<const unsigned char *>(cert_.data_),
-    cert_.dataLen_, reinterpret_cast<const unsigned char *>(key_.data_),
-    key_.dataLen_);
-  if (credid < 0) {
-    return false;
-  }
-  credid_ = credid;
-  return true;
-}
-
-bool
-IdentityCertificate::LoadAndAdd(const std::string &certificatePath,
-                                const std::string &keyPath, size_t device)
-{
-  if (!cert_.Load(certificatePath) || !key_.Load(keyPath)) {
-    return false;
-  }
-  return Add(device);
-}
-
-class IntermediateCertificate {
-public:
-  IntermediateCertificate() = default;
-
-  bool Add(size_t device, int entity_credid);
-  bool Load(const std::string &path);
-  bool LoadAndAdd(const std::string &path, size_t device, int entity_credid);
-
-  int credid_{ -1 };
-  Certificate cert_;
-};
-
-bool
-IntermediateCertificate::Add(size_t device, int entity_credid)
-{
-  if (cert_.dataLen_ == 0) {
-    return false;
-  }
-  if (credid_ != -1) {
-    return false;
-  }
-  if (entity_credid == -1) {
-    return false;
-  }
-
-  int credid = oc_pki_add_mfg_intermediate_cert(
-    device, entity_credid, reinterpret_cast<const unsigned char *>(cert_.data_),
-    cert_.dataLen_);
-  if (credid < 0) {
-    return false;
-  }
-  credid_ = credid;
-  return true;
-}
-
-bool
-IntermediateCertificate::Load(const std::string &path)
-{
-  return cert_.Load(path);
-}
-
-bool
-IntermediateCertificate::LoadAndAdd(const std::string &path, size_t device,
-                                    int entity_credid)
-{
-  if (!cert_.Load(path)) {
-    return false;
-  }
-  return Add(device, entity_credid);
-}
-
-class TrustAnchor {
-public:
-  TrustAnchor() = default;
-
-  bool Add(size_t device);
-  bool Load(const std::string &path);
-  bool LoadAndAdd(const std::string &path, size_t device);
-
-  int credid_{ -1 };
-  Certificate cert_;
-};
-
-bool
-TrustAnchor::Add(size_t device)
-{
-  if (cert_.dataLen_ == 0) {
-    return false;
-  }
-  if (credid_ != -1) {
-    return false;
-  }
-
-  int credid = oc_pki_add_mfg_trust_anchor(
-    device, reinterpret_cast<const unsigned char *>(cert_.data_),
-    cert_.dataLen_);
-  if (credid < 0) {
-    return false;
-  }
-  credid_ = credid;
-  return true;
-}
-
-bool
-TrustAnchor::Load(const std::string &path)
-{
-  return cert_.Load(path);
-}
-
-bool
-TrustAnchor::LoadAndAdd(const std::string &path, size_t device)
-{
-  if (!cert_.Load(path)) {
-    return false;
-  }
-  return Add(device);
-}
-
 class TestTlsCertificates : public testing::Test {
-protected:
+public:
   void SetUp() override
   {
     oc_core_init();
@@ -304,16 +63,12 @@ protected:
     EXPECT_EQ(1, oc_core_get_num_devices());
     device_ = oc_core_get_num_devices() - 1;
     EXPECT_GE(device_, 0);
-    EXPECT_TRUE(
-      idcert1_.LoadAndAdd("pki_certs/ee.pem", "pki_certs/key.pem", device_));
-    EXPECT_TRUE(
-      subca1_.LoadAndAdd("pki_certs/subca1.pem", device_, idcert1_.credid_));
-    EXPECT_EQ(idcert1_.credid_, subca1_.credid_);
-    EXPECT_TRUE(idcert2_.LoadAndAdd("pki_certs/certification_tests_ee.pem",
-                                    "pki_certs/certification_tests_key.pem",
-                                    device_));
-    EXPECT_TRUE(rootca1_.LoadAndAdd("pki_certs/rootca1.pem", device_));
-    EXPECT_TRUE(rootca2_.LoadAndAdd("pki_certs/rootca2.pem", device_));
+
+    ASSERT_TRUE(idcert1_.Add(device_));
+    ASSERT_TRUE(subca1_.Add(device_, idcert1_.CredentialID()));
+    ASSERT_TRUE(idcert2_.Add(device_));
+    ASSERT_TRUE(rootca1_.Add(device_));
+    ASSERT_TRUE(rootca2_.Add(device_));
   }
 
   void TearDown() override
@@ -330,13 +85,16 @@ protected:
   }
 
   int device_{ -1 };
-  IdentityCertificate idcert1_;
-  IdentityCertificate idcert2_;
-  IntermediateCertificate subca1_;
-  TrustAnchor rootca1_;
-  TrustAnchor rootca2_;
+  oc::pki::IdentityCertificate idcert1_{ "pki_certs/ee.pem",
+                                         "pki_certs/key.pem", true };
+  oc::pki::IdentityCertificate idcert2_{
+    "pki_certs/certification_tests_ee.pem",
+    "pki_certs/certification_tests_key.pem", true
+  };
+  oc::pki::IntermediateCertificate subca1_{ "pki_certs/subca1.pem" };
+  oc::pki::TrustAnchor rootca1_{ "pki_certs/rootca1.pem", true };
+  oc::pki::TrustAnchor rootca2_{ "pki_certs/rootca2.pem", true };
 
-public:
   static time_t now_;
 };
 
@@ -364,27 +122,29 @@ TEST_F(TestTlsCertificates, ClearCertificates)
     device_, [](const oc_sec_cred_t *, void *) { return false; }, nullptr);
   EXPECT_EQ(4, oc_sec_cred_count(device_));
 
-  EXPECT_NE(nullptr, oc_sec_get_cred_by_credid(idcert1_.credid_, device_));
+  EXPECT_NE(nullptr,
+            oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_));
   oc_sec_cred_clear(
     device_,
     [](const oc_sec_cred_t *cred, void *data) {
-      const auto *cert = static_cast<IdentityCertificate *>(data);
-      return cred->credid == cert->credid_;
+      const auto *cert = static_cast<oc::pki::IdentityCertificate *>(data);
+      return cred->credid == cert->CredentialID();
     },
     &idcert1_);
   EXPECT_EQ(3, oc_sec_cred_count(device_));
-  EXPECT_EQ(nullptr, oc_sec_get_cred_by_credid(idcert1_.credid_, device_));
+  EXPECT_EQ(nullptr,
+            oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_));
 
-#ifdef OC_PKI
-  EXPECT_NE(nullptr, oc_sec_get_cred_by_credid(idcert2_.credid_, device_));
+  EXPECT_NE(nullptr,
+            oc_sec_get_cred_by_credid(idcert2_.CredentialID(), device_));
   auto removeMfgCert = [](const oc_sec_cred_t *cred, void *) {
     return cred->credtype == OC_CREDTYPE_CERT &&
            cred->credusage == OC_CREDUSAGE_MFG_CERT;
   };
   oc_sec_cred_clear(device_, removeMfgCert, nullptr);
   EXPECT_EQ(2, oc_sec_cred_count(device_));
-  EXPECT_EQ(nullptr, oc_sec_get_cred_by_credid(idcert2_.credid_, device_));
-#endif /* OC_PKI */
+  EXPECT_EQ(nullptr,
+            oc_sec_get_cred_by_credid(idcert2_.CredentialID(), device_));
 
   oc_sec_cred_clear(device_, nullptr, nullptr);
   EXPECT_EQ(0, oc_sec_cred_count(device_));
@@ -395,18 +155,18 @@ TEST_F(TestTlsCertificates, ClearCertificates)
 TEST_F(TestTlsCertificates, RemoveIdentityCertificates)
 {
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert1_.credid_, device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert1_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert2_.credid_, device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert2_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
 }
 
 TEST_F(TestTlsCertificates, RemoveTrustAnchors)
 {
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca1_.credid_, device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca1_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca2_.credid_, device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca2_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
 }
 
@@ -425,13 +185,14 @@ TEST_F(TestTlsCertificates, VerifyCredCerts)
                           &invalid, verify_cert_validity, nullptr));
 
   // valid - rootca1_ valid_from: 30.11.2018, valid_to: 27.11.2028
-  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(rootca1_.credid_, device_);
+  oc_sec_cred_t *cred =
+    oc_sec_get_cred_by_credid(rootca1_.CredentialID(), device_);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(
     0, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));
 
   // expired - idcert1_ valid_from: 14.4.2020, valid_to: 14.5.2020
-  cred = oc_sec_get_cred_by_credid(idcert1_.credid_, device_);
+  cred = oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(
     1, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));

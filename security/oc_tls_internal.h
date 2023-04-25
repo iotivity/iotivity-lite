@@ -46,12 +46,6 @@ typedef struct
   oc_clock_time_t int_ticks;
 } oc_tls_retr_timer_t;
 
-typedef struct
-{
-  void *data;
-  void (*free)(void *data);
-} oc_tls_peer_user_data_t;
-
 typedef struct oc_tls_peer_t
 {
   struct oc_tls_peer_t *next;
@@ -75,11 +69,11 @@ typedef struct oc_tls_peer_t
   oc_message_t *processed_recv_message;
 #endif /* OC_TCP */
 #ifdef OC_PKI
-  oc_tls_peer_user_data_t
-    user_data; // user data for the peer, can be used by application
+  oc_pki_user_data_t
+    user_data; ///< user data for the peer, can be used by application
   oc_pki_verify_certificate_cb_t
-    verify_certificate; // callback for certificate verification, filled by
-                        // default callback
+    verify_certificate; ///< callback for certificate verification, filled by
+                        ///< default callback
 #endif                  /* OC_PKI */
 } oc_tls_peer_t;
 
@@ -119,11 +113,48 @@ bool oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
  * created and the existing one is used instead.
  *
  * @param endpoint the endpoint
- * @param role MBEDTLS_SSL_IS_CLIENT or MBEDTLS_SSL_IS_SERVER
+ * @param role MBEDTLS_SSL_IS_CLIENT or MBEDTLS_SSL_IS_SERVER (ignored if an
+ * existing peer was found)
+ * @param[out] created true if a new peer was created, false if an existing peer
+ * was found (value is valid only on success, ie. if the returned value is
+ * non-NULL)
  * @return peer for given endpoint on success
  * @return NULL on error
  */
-oc_tls_peer_t *oc_tls_add_peer(const oc_endpoint_t *endpoint, int role);
+oc_tls_peer_t *oc_tls_add_or_get_peer(const oc_endpoint_t *endpoint, int role,
+                                      bool *created);
+
+typedef struct oc_tls_new_peer_params_t
+{
+  const oc_endpoint_t *endpoint; ///< endpoint of the peer (cannot be NULL)
+  int role;
+#ifdef OC_PKI
+  oc_pki_user_data_t user_data;
+  oc_pki_verify_certificate_cb_t verify_certificate;
+#endif /* OC_PKI */
+} oc_tls_new_peer_params_t;
+
+/**
+ * @brief Create a new peer based on the input parameters
+ *
+ * @param params parameters for the new peer
+ * @return created peer on success
+ * @return NULL on error
+ */
+oc_tls_peer_t *oc_tls_add_new_peer(oc_tls_new_peer_params_t params);
+
+#ifdef OC_PKI
+
+typedef struct oc_tls_pki_verification_params_t
+{
+  oc_pki_user_data_t user_data;
+  oc_pki_verify_certificate_cb_t verify_certificate;
+} oc_tls_pki_verification_params_t;
+
+oc_tls_pki_verification_params_t oc_tls_peer_pki_default_verification_params(
+  void);
+
+#endif /* OC_PKI */
 
 /**
  * @brief Remove and deallocate the peer for the endpoint.

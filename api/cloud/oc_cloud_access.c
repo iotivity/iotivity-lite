@@ -75,10 +75,12 @@ cloud_tls_add_peer(const oc_endpoint_t *endpoint, int selected_identity_cred_id)
     }
     OC_DBG("cloud need to initialized from the device");
     oc_tls_close_connection(endpoint);
+    // TODO: might need to wait for closing of TLS connection before adding a
+    // new peer
   }
   oc_tls_select_cloud_ciphersuite();
   oc_tls_select_identity_cert_chain(selected_identity_cred_id);
-  peer = oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_CLIENT);
+  peer = oc_tls_add_or_get_peer(endpoint, MBEDTLS_SSL_IS_CLIENT, NULL);
   return peer != NULL;
 }
 

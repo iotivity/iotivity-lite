@@ -73,7 +73,7 @@ static uint16_t PLGD_TIME_FETCH_TIMEOUT = 4;
 typedef struct time_verify_certificate_params_t
 {
   oc_pki_verify_certificate_cb_t verify_certificate;
-  oc_tls_peer_user_data_t peer_data;
+  oc_pki_user_data_t peer_data;
 } time_verify_certificate_params_t;
 
 OC_MEMB(g_time_verify_certificate_params_s, time_verify_certificate_params_t,
@@ -152,7 +152,7 @@ dev_time_set_time(oc_clock_time_t lst, bool dump, bool notify)
   char lst_ts[64] = { 0 };
   oc_clock_encode_time_rfc3339(lst, lst_ts, sizeof(lst_ts));
   uint64_t ut_s = (uint64_t)(updateTime / (double)OC_CLOCK_SECOND);
-  OC_DBG("plgd-time: %s (update: %" PRIu64 ")", lst_ts, ut_s);
+  OC_DBG("plgd-time: %s (update: %" PRIu64 "s)", lst_ts, ut_s);
 #endif /* OC_DEBUG */
 
   plgd_time_set(lst, updateTime, dump, notify);
@@ -197,18 +197,28 @@ dev_plgd_time(plgd_time_t pt)
     return -1;
   }
 
-  long shift = cur - pt.update_time;
-  assert(shift >= 0);
-  oc_clock_time_t ptime = (pt.store.last_synced_time + shift);
+  long elapsed = cur - pt.update_time;
+  assert(elapsed >= 0);
+  oc_clock_time_t ptime = (pt.store.last_synced_time + elapsed);
 
 #ifdef OC_DEBUG
-  char pt_ts[64] = { 0 };
-  oc_clock_encode_time_rfc3339(pt.store.last_synced_time, pt_ts, sizeof(pt_ts));
+#define RFC3339_BUFFER_SIZE 64
+  double to_micros = (10000000 / (double)OC_CLOCK_SECOND);
+  char lst_ts[RFC3339_BUFFER_SIZE] = { 0 };
+  oc_clock_encode_time_rfc3339(pt.store.last_synced_time, lst_ts,
+                               sizeof(lst_ts));
+  OC_DBG("calculating plgd-time: last_synced_time=%s, update_time=%ldus, "
+         "current_time=%ldus, elapsed_time=%ldus",
+         lst_ts, (long)(pt.update_time * to_micros), (long)(cur * to_micros),
+         (long)(elapsed * to_micros));
+
+  char pt_ts[RFC3339_BUFFER_SIZE] = { 0 };
+  oc_clock_encode_time_rfc3339(ptime, pt_ts, sizeof(pt_ts));
 
   oc_clock_time_t time = oc_clock_time();
-  char ts[64] = { 0 };
+  char ts[RFC3339_BUFFER_SIZE] = { 0 };
   oc_clock_encode_time_rfc3339(time, ts, sizeof(ts));
-  long diff = (time - ptime) / OC_CLOCK_SECOND;
+  long diff = (long)((time - ptime) / (double)OC_CLOCK_SECOND);
   OC_DBG("calculated plgd-time: %s, system time: %s, diff: %lds", pt_ts, ts,
          diff);
 #endif /* OC_DEBUG */
@@ -607,6 +617,9 @@ plgd_time_fetch_config(const oc_endpoint_t *endpoint, const char *uri,
                        uint16_t timeout, int selected_identity_credid,
                        bool disable_time_verification)
 {
+  assert(endpoint != NULL);
+  assert(uri != NULL);
+  assert(on_fetch != NULL);
   plgd_time_fetch_config_t fetch = {
     .endpoint = endpoint,
     .uri = uri,
@@ -617,7 +630,7 @@ plgd_time_fetch_config(const oc_endpoint_t *endpoint, const char *uri,
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
   fetch.selected_identity_credid = selected_identity_credid;
-  fetch.disable_time_verification = disable_time_verification;
+  fetch.verification.disable_time_verification = disable_time_verification;
 #else  /* !OC_SECURITY || !OC_PKI */
   (void)selected_identity_credid;
   (void)disable_time_verification;
@@ -625,6 +638,41 @@ plgd_time_fetch_config(const oc_endpoint_t *endpoint, const char *uri,
 
   return fetch;
 }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+
+plgd_time_fetch_config_t
+plgd_time_fetch_config_with_custom_verification(
+  const oc_endpoint_t *endpoint, const char *uri,
+  plgd_time_on_fetch_fn_t on_fetch, void *on_fetch_data, uint16_t timeout,
+  int selected_identity_credid, oc_pki_verify_certificate_cb_t verify,
+  oc_pki_user_data_t verify_data)
+{
+  assert(endpoint != NULL);
+  assert(uri != NULL);
+  assert(on_fetch != NULL);
+  assert(verify != NULL);
+
+  plgd_time_fetch_config_t fetch = {
+    .endpoint = endpoint,
+    .uri = uri,
+    .on_fetch = on_fetch,
+    .on_fetch_data = on_fetch_data,
+    .timeout = timeout,
+  };
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  fetch.selected_identity_credid = selected_identity_credid;
+  fetch.verification.verify = verify;
+  fetch.verification.verify_data = verify_data;
+#else  /* !OC_SECURITY || !OC_PKI */
+  (void)selected_identity_credid;
+#endif /* OC_SECURITY && OC_PKI */
+
+  return fetch;
+}
+
+#endif /* OC_SECURITY && OC_PKI */
 
 static bool
 dev_time_parse_fetch_response(const oc_rep_t *rep, oc_clock_time_t *time)
@@ -664,7 +712,7 @@ dev_time_on_fetch(oc_client_response_t *data)
   fp->on_fetch(code, time, fp->on_fetch_data);
 #if defined(OC_TCP) || defined(OC_SECURITY)
   // session is closed automatically on timeout, close or cancel
-  if (fp->close_peer_after_fetch && oc_ri_client_cb_terminated(code)) {
+  if (fp->close_peer_after_fetch && !oc_ri_client_cb_terminated(code)) {
     OC_DBG("plgd-time: close fetch time session");
     oc_close_session(data->endpoint);
   }
@@ -715,12 +763,15 @@ dev_time_verify_certificate(oc_tls_peer_t *peer, const mbedtls_x509_crt *crt,
 }
 
 static bool
-dev_time_add_peer(const oc_endpoint_t *ep, bool disable_time_verification)
+dev_time_add_peer(const oc_endpoint_t *endpoint,
+                  plgd_time_fetch_verification_config_t verify_config)
 {
+  // must be only called when there is no peer yet for the endpoint
+  assert(oc_tls_get_peer(endpoint) == NULL);
   OC_DBG("plgd-time: add new peer");
 
   time_verify_certificate_params_t *vcp = NULL;
-  if (disable_time_verification) {
+  if (verify_config.verify == NULL && verify_config.disable_time_verification) {
     vcp = (time_verify_certificate_params_t *)oc_memb_alloc(
       &g_time_verify_certificate_params_s);
     if (vcp == NULL) {
@@ -730,23 +781,30 @@ dev_time_add_peer(const oc_endpoint_t *ep, bool disable_time_verification)
     }
   }
 
-  oc_tls_peer_t *peer = oc_tls_add_peer(ep, MBEDTLS_SSL_IS_CLIENT);
+  oc_tls_new_peer_params_t peer_params = {
+    .endpoint = endpoint,
+    .role = MBEDTLS_SSL_IS_CLIENT,
+  };
+  if (vcp != NULL) {
+    oc_tls_pki_verification_params_t pki_params =
+      oc_tls_peer_pki_default_verification_params();
+    OC_DBG("plgd-time: disable time verification for peer");
+    vcp->verify_certificate = pki_params.verify_certificate;
+    vcp->peer_data = pki_params.user_data;
+    peer_params.user_data.data = vcp;
+    peer_params.user_data.free = time_verify_certificate_params_free;
+    peer_params.verify_certificate = dev_time_verify_certificate;
+  } else if (verify_config.verify != NULL) {
+    OC_DBG("plgd-time: custom verification for peer");
+    peer_params.user_data = verify_config.verify_data;
+    peer_params.verify_certificate = verify_config.verify;
+  }
+  const oc_tls_peer_t *peer = oc_tls_add_new_peer(peer_params);
   if (peer == NULL) {
     OC_ERR("plgd-time add peer failed: oc_tls_add_peer failed");
     oc_memb_free(&g_time_verify_certificate_params_s, vcp);
     return false;
   }
-
-  if (vcp != NULL) {
-    OC_DBG("plgd-time: disable time verification for peer");
-    vcp->verify_certificate = peer->verify_certificate;
-    vcp->peer_data.data = peer->user_data.data;
-    vcp->peer_data.free = peer->user_data.free;
-    peer->user_data.data = vcp;
-    peer->user_data.free = time_verify_certificate_params_free;
-    peer->verify_certificate = dev_time_verify_certificate;
-  }
-
   return true;
 }
 
@@ -769,7 +827,7 @@ dev_time_has_session(const oc_endpoint_t *endpoint)
   if ((endpoint->flags & TCP) != 0) {
     int tcp = oc_tcp_connection_state(endpoint);
     OC_DBG("plgd-time: session state=%d", tcp);
-    return tcp <= 0;
+    return tcp > 0;
   }
 #endif /* OC_TCP */
   return false;
@@ -823,7 +881,7 @@ plgd_time_fetch(plgd_time_fetch_config_t fetch, unsigned *flags)
   if (add_insecure_peer) {
     oc_tls_select_identity_cert_chain(fetch.selected_identity_credid);
 
-    if (!dev_time_add_peer(fetch.endpoint, fetch.disable_time_verification)) {
+    if (!dev_time_add_peer(fetch.endpoint, fetch.verification)) {
       oc_memb_free(&g_fetch_params_s, fetch_params);
       return false;
     }

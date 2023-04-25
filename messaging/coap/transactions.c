@@ -157,7 +157,8 @@ coap_send_transaction(coap_transaction_t *t)
       oc_etimer_restart(&t->retrans_timer); /* interval updated above */
       OC_PROCESS_CONTEXT_END(transaction_handler_process);
 
-      oc_message_add_ref(t->message);
+      oc_message_add_ref(t->message); // TODO: this add_ref seems to be causing
+                                      // a leak for DTLS that timeouts
 
       coap_send_message(t->message);
 
@@ -274,13 +275,13 @@ void
 coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint,
                                    oc_status_t code)
 {
+  OC_DBG("coap_free_transactions_by_endpoint");
 #ifndef OC_CLIENT
   (void)code;
 #endif /* !OC_CLIENT */
-  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
-                     *next;
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list);
   while (t != NULL) {
-    next = t->next;
+    coap_transaction_t *next = t->next;
     if (oc_endpoint_compare(&t->message->endpoint, endpoint) == 0) {
       int removed = oc_list_length(transactions_list);
 #ifdef OC_CLIENT

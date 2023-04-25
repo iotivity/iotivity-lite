@@ -128,9 +128,15 @@ int oc_pki_add_mfg_trust_anchor(size_t device, const unsigned char *cert,
 int oc_pki_add_trust_anchor(size_t device, const unsigned char *cert,
                             size_t cert_size);
 
+typedef struct
+{
+  void *data;           ///< pointer to custom user data
+  void (*free)(void *); ///< function to deallocate custom user data (set to
+                        ///< NULL if the data shouldn't be deallocated)
+} oc_pki_user_data_t;
+
 /**
  * @brief TLS peer connection
- *
  */
 struct oc_tls_peer_t;
 

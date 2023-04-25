@@ -249,8 +249,9 @@ public:
   {
     for (const auto &p : peers) {
       oc_endpoint_t ep = oc::endpoint::FromString(p.address);
-      oc_tls_peer_t *peer = oc_tls_add_peer(&ep, p.role);
+      oc_tls_peer_t *peer = oc_tls_add_or_get_peer(&ep, p.role, nullptr);
       ASSERT_NE(nullptr, peer);
+      ASSERT_EQ(p.role, peer->role);
       peer->uuid = p.uuid;
 #ifdef OC_PKI
       peer->user_data.data = calloc(1 /* dummy */, 1);
@@ -401,8 +402,10 @@ TEST_F(TestTLSPeer, ResetDevice)
 TEST_F(TestTLSPeer, VerifyCertificate)
 {
   oc_endpoint_t ep = oc::endpoint::FromString("coaps://[ff02::43]:1338");
-  oc_tls_peer_t *peer = oc_tls_add_peer(&ep, MBEDTLS_SSL_IS_SERVER);
+  oc_tls_peer_t *peer =
+    oc_tls_add_or_get_peer(&ep, MBEDTLS_SSL_IS_SERVER, nullptr);
   ASSERT_NE(nullptr, peer);
+  ASSERT_EQ(MBEDTLS_SSL_IS_SERVER, peer->role);
   ASSERT_NE(nullptr, peer->ssl_conf.f_vrfy);
   ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(nullptr, nullptr, 0, nullptr));
 
