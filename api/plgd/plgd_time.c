@@ -799,7 +799,7 @@ dev_time_add_peer(const oc_endpoint_t *endpoint,
     peer_params.user_data = verify_config.verify_data;
     peer_params.verify_certificate = verify_config.verify;
   }
-  oc_tls_peer_t *peer = oc_tls_add_new_peer(peer_params);
+  const oc_tls_peer_t *peer = oc_tls_add_new_peer(peer_params);
   if (peer == NULL) {
     OC_ERR("plgd-time add peer failed: oc_tls_add_peer failed");
     oc_memb_free(&g_time_verify_certificate_params_s, vcp);

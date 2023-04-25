@@ -587,16 +587,16 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
   }
 #endif /* OC_SECURITY */
 
-  unsigned flags = 0;
+  unsigned ep_flags = 0;
 #ifdef OC_SECURITY
-  flags |= SECURED;
+  ep_flags |= SECURED;
 #endif /* OC_SECURITY */
 #ifdef OC_TCP
-  flags |= TCP;
+  ep_flags |= TCP;
 #endif /* OC_TCP */
 
   std::string ep_str =
-    std::string(oc_endpoint_flags_to_scheme(flags)) + "[ff02::158]:12345";
+    std::string(oc_endpoint_flags_to_scheme(ep_flags)) + "[ff02::158]:12345";
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {
@@ -655,7 +655,7 @@ addTCPEventCallback(TCPSessionData *tcp_data)
 }
 
 static void
-waitForTCPEventCallback(TCPSessionData *tcp_data)
+waitForTCPEventCallback(const TCPSessionData *tcp_data)
 {
   if (!tcp_data->disconnected) {
     OC_DBG("waiting to close insecure TCP session");
@@ -668,7 +668,7 @@ waitForTCPEventCallback(TCPSessionData *tcp_data)
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 {
-  unsigned flags = 0;
+  unsigned include_flags = 0;
   unsigned exclude_flags = 0;
 #ifdef OC_TCP
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -676,15 +676,15 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
     OC_WRN("Test skipped");
     return;
   }
-  flags |= SECURED;
+  include_flags |= SECURED;
 #endif /* OC_SECURITY && OC_PKI */
-  flags |= TCP;
+  include_flags |= TCP;
 #else
   // TODO: fix DTLS openning of connection by client_api
   exclude_flags = SECURED;
 #endif /* OC_TCP */
   const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, exclude_flags);
+    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
   ASSERT_NE(nullptr, ep);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
@@ -745,16 +745,16 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
   }
 #endif /* OC_SECURITY */
 
-  unsigned flags = 0;
+  unsigned include_flags = 0;
   unsigned exclude_flags = 0;
 #ifdef OC_TCP
-  flags |= SECURED | TCP;
+  include_flags |= SECURED | TCP;
 #else
   // TODO: fix DTLS openning of connection by client_api
   exclude_flags = SECURED;
 #endif /* OC_TCP */
   const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, exclude_flags);
+    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
   ASSERT_NE(nullptr, ep);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
