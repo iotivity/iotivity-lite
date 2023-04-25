@@ -46,7 +46,7 @@
 #include <mbedtls/platform_util.h>
 #endif /* OC_PKI */
 
-OC_MEMB(creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
+OC_MEMB(g_creds, oc_sec_cred_t, OC_MAX_NUM_DEVICES *OC_MAX_NUM_SUBJECTS + 1);
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
 #define OXM_RANDOM_DEVICE_PIN "oic.sec.doxm.rdp"
 #define OXM_MANUFACTURER_CERTIFICATE "oic.sec.doxm.mfgcert"
@@ -273,7 +273,7 @@ oc_sec_free_cred(oc_sec_cred_t *cred)
   }
 #endif /* OC_PKI */
   oc_free_string(&cred->tag);
-  oc_memb_free(&creds, cred);
+  oc_memb_free(&g_creds, cred);
 }
 
 void
@@ -376,7 +376,7 @@ oc_sec_allocate_cred(const oc_uuid_t *subjectuuid, oc_sec_credtype_t credtype,
 {
   (void)credusage;
 
-  oc_sec_cred_t *cred = oc_memb_alloc(&creds);
+  oc_sec_cred_t *cred = oc_memb_alloc(&g_creds);
   if (cred == NULL) {
     OC_WRN("insufficient memory to add new credential");
     return NULL;

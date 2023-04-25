@@ -309,34 +309,47 @@ public:
   }
 
 #ifdef OC_SECURITY
-  static void prepareSecureDevice(size_t device)
+  static bool prepareSecureDevice(size_t device, bool addCertificates = true)
   {
+#if defined(OC_PKI) && !defined(OC_DYNAMIC_ALLOCATION)
+    if (addCertificates) {
+      OC_ERR(
+        "cannot allocate multiple certificates without dynamic allocation, "
+        "default bytes pool too small");
+      return false;
+    }
+#endif /* OC_PKI && OC_DYNAMIC_ALLOCATION */
+
     oc_sec_self_own(device);
 
-    // valid from Nov 29, 2018 to Nov 29, 2068
-    oc::pki::TrustAnchor trustCA{
-      "pki_certs/certification_tests_rootca1.pem",
-      true,
-    };
-    ASSERT_TRUE(trustCA.Add(device));
+#ifdef OC_PKI
+    if (addCertificates) {
+      // valid from Nov 29, 2018 to Nov 29, 2068
+      oc::pki::TrustAnchor trustCA{
+        "pki_certs/certification_tests_rootca1.pem",
+        true,
+      };
+      EXPECT_TRUE(trustCA.Add(device));
 
-    // valid from Nov 29, 2018 to Nov 29, 2068
-    oc::pki::IdentityCertificate mfgCertificate{
-      "pki_certs/certification_tests_ee.pem",
-      "pki_certs/certification_tests_key.pem",
-      true,
-    };
-    ASSERT_TRUE(mfgCertificate.Add(device));
+      // valid from Nov 29, 2018 to Nov 29, 2068
+      oc::pki::IdentityCertificate mfgCertificate{
+        "pki_certs/certification_tests_ee.pem",
+        "pki_certs/certification_tests_key.pem",
+        true,
+      };
+      EXPECT_TRUE(mfgCertificate.Add(device));
 
-    // expired: was valid from Apr 14, 2020 to May 14, 2020
-    // TODO: get a valid certificate and remove oc_pki_set_verify_certificate_cb
-    oc::pki::IntermediateCertificate subCertificate{
-      "pki_certs/certification_tests_subca1.pem"
-    };
-    ASSERT_TRUE(subCertificate.Add(device, mfgCertificate.CredentialID()));
+      // expired: was valid from Apr 14, 2020 to May 14, 2020
+      // TODO: get a valid certificate and remove
+      // oc_pki_set_verify_certificate_cb
+      oc::pki::IntermediateCertificate subCertificate{
+        "pki_certs/certification_tests_subca1.pem"
+      };
+      EXPECT_TRUE(subCertificate.Add(device, mfgCertificate.CredentialID()));
 
-    oc_pki_set_verify_certificate_cb(
-      [](oc_tls_peer_t *peer, const mbedtls_x509_crt *, int, uint32_t *flags) {
+      oc_pki_set_verify_certificate_cb([](oc_tls_peer_t *peer,
+                                          const mbedtls_x509_crt *, int,
+                                          uint32_t *flags) {
         if (peer->role == MBEDTLS_SSL_IS_SERVER) {
           OC_DBG("disable time verification for server (peer=%p)",
                  (void *)peer);
@@ -345,11 +358,18 @@ public:
         }
         return 0;
       });
+    }
+#else  /* !OC_PKI */
+    (void)addCertificates;
+#endif /* OC_PKI */
+    return true;
   }
 
   static void resetSecureDevice(size_t device)
   {
+#ifdef OC_PKI
     oc_pki_set_verify_certificate_cb(nullptr);
+#endif /* OC_PKI */
     oc_pstat_reset_device(device, true);
     // need to wait for closing of TLS sessions
     oc::TestDevice::PoolEventsMs(200);
@@ -560,6 +580,13 @@ TEST_F(TestPlgdTimeWithServer, PutRequestFail)
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
 {
+#ifdef OC_SECURITY
+  if (!prepareSecureDevice(/*device*/ 0, false)) {
+    OC_WRN("Test skipped");
+    return;
+  }
+#endif /* OC_SECURITY */
+
   unsigned flags = 0;
 #ifdef OC_SECURITY
   flags |= SECURED;
@@ -579,15 +606,9 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
     oc::TestDevice::Terminate();
   };
 
-#ifdef OC_SECURITY
-  if ((ep.flags & SECURED) != 0) {
-    oc_sec_self_own(/*device*/ 0);
-  }
-#endif /* OC_SECURITY */
-
   bool invoked = false;
   unsigned fetch_flags = 0;
-  EXPECT_TRUE(plgd_time_fetch(
+  ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(&ep, PLGD_TIME_URI, fetch_handler, &invoked,
                            /*timeout*/ 5, /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
@@ -597,7 +618,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
   EXPECT_TRUE(invoked);
 
 #ifdef OC_SECURITY
-  oc_pstat_reset_device(/*device*/ 0, true);
+  resetSecureDevice(/*device*/ 0);
 #endif /* OC_SECURITY */
 }
 
@@ -648,18 +669,23 @@ waitForTCPEventCallback(TCPSessionData *tcp_data)
 TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 {
   unsigned flags = 0;
+  unsigned exclude_flags = 0;
 #ifdef OC_TCP
-  flags |= TCP;
-#endif /* OC_TCP */
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  if (!prepareSecureDevice(/*device*/ 0)) {
+    OC_WRN("Test skipped");
+    return;
+  }
   flags |= SECURED;
-#endif /* OC_SECURITY */
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, flags);
+#endif /* OC_SECURITY && OC_PKI */
+  flags |= TCP;
+#else
+  // TODO: fix DTLS openning of connection by client_api
+  exclude_flags = SECURED;
+#endif /* OC_TCP */
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, exclude_flags);
   ASSERT_NE(nullptr, ep);
-
-#ifdef OC_SECURITY
-  prepareSecureDevice(/*device*/ 0);
-#endif /* OC_SECURITY */
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
   TCPSessionData tcp_data{};
@@ -680,7 +706,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 
   oc_clock_time_t time = 0;
   unsigned fetch_flags = 0;
-  EXPECT_TRUE(plgd_time_fetch(
+  ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(ep, PLGD_TIME_URI, fetch_handler, &time,
                            /*timeout*/ 5, /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
@@ -708,18 +734,28 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedInsecure)
   // TODO: use already connected endpoint
 }
 
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) && defined(OC_PKI)
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
 {
-  unsigned flags = SECURED;
-#ifdef OC_TCP
-  flags |= TCP;
-#endif /* OC_TCP */
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(/*device*/ 0, flags);
-  ASSERT_NE(nullptr, ep);
+#ifdef OC_SECURITY
+  if (!prepareSecureDevice(/*device*/ 0)) {
+    OC_WRN("Test skipped");
+    return;
+  }
+#endif /* OC_SECURITY */
 
-  prepareSecureDevice(/*device*/ 0);
+  unsigned flags = 0;
+  unsigned exclude_flags = 0;
+#ifdef OC_TCP
+  flags |= SECURED | TCP;
+#else
+  // TODO: fix DTLS openning of connection by client_api
+  exclude_flags = SECURED;
+#endif /* OC_TCP */
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, flags, exclude_flags);
+  ASSERT_NE(nullptr, ep);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
   session_event_handler_v1_t tcp_events{};
@@ -747,7 +783,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
 
   oc_clock_time_t time = 0;
   unsigned fetch_flags = 0;
-  EXPECT_TRUE(
+  ASSERT_TRUE(
     plgd_time_fetch(plgd_time_fetch_config_with_custom_verification(
                       ep, PLGD_TIME_URI, fetch_handler, &time,
                       /*timeout*/ 5,
@@ -774,7 +810,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
   // TODO: use already connected endpoint
 }
 
-#endif /* OC_SECURITY */
+#endif /* OC_SECURITY && OC_PKI */
 
 #endif /* OC_CLIENT */
 

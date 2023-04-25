@@ -1503,7 +1503,8 @@ oc_tls_select_anon_ciphersuite(void)
 
 #ifdef OC_PKI
 static int
-verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth, uint32_t *flags)
+tls_verify_certificate(void *opq, mbedtls_x509_crt *crt, int depth,
+                       uint32_t *flags)
 {
   uint32_t f = 0;
   if (flags == NULL) {
@@ -1830,18 +1831,6 @@ oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
     return -1;
   }
 
-#ifdef OC_PKI
-#if defined(OC_CLOUD) && defined(OC_CLIENT)
-  if (g_ciphers == cloud_priority) {
-    peer->verify_certificate = verify_cloud_certificate;
-  } else
-#endif /* OC_CLOUD && OC_CLIENT */
-  {
-    peer->verify_certificate = verify_manufacturer_or_identity_certificate;
-  }
-  mbedtls_ssl_conf_verify(&peer->ssl_conf, verify_certificate, peer);
-#endif /* OC_PKI */
-
   oc_tls_set_ciphersuites(&peer->ssl_conf, &peer->endpoint);
 
   int err = mbedtls_ssl_setup(&peer->ssl_ctx, &peer->ssl_conf);
@@ -1869,33 +1858,68 @@ oc_tls_peer_ssl_init(oc_tls_peer_t *peer)
   return 0;
 }
 
-oc_tls_peer_t *
-oc_tls_add_peer(const oc_endpoint_t *endpoint, int role)
+static bool
+tls_is_valid_doc(size_t device)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer != NULL) {
-    return peer;
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  if (doxm->oxmsel == 4) {
+    /* Prior to a successful anonymous Update of "oxmsel" in
+     *  "/oic/sec/doxm", all attempts to establish new DTLS connections
+     * shall be rejected.
+     */
+    OC_ERR("oc_tls: DOC not valid: oxmsel not set");
+    return false;
   }
+  if (oc_list_length(g_tls_peers) != 0) {
+    OC_ERR("oc_tls: DOC not valid: multiple DOC peers not allowed");
+    /* Allow only a single DOC */
+    return false;
+  }
+  return true;
+}
 
+#ifdef OC_PKI
+
+oc_tls_pki_verification_params_t
+oc_tls_peer_pki_default_verification_params(void)
+{
+  oc_tls_pki_verification_params_t params = {
+    .user_data = { NULL, NULL },
+    .verify_certificate = verify_manufacturer_or_identity_certificate,
+  };
+#if defined(OC_CLOUD) && defined(OC_CLIENT)
+  if (g_ciphers == cloud_priority) {
+    params.verify_certificate = verify_cloud_certificate;
+  }
+#endif /* OC_CLOUD && OC_CLIENT */
+  return params;
+}
+
+static void
+oc_tls_peer_pki_init(oc_tls_peer_t *peer, oc_pki_user_data_t user_data,
+                     oc_pki_verify_certificate_cb_t verify_certificate)
+{
+  peer->user_data = user_data;
+  peer->verify_certificate = verify_certificate;
+  mbedtls_ssl_conf_verify(&peer->ssl_conf, tls_verify_certificate, peer);
+}
+
+#endif /* OC_PKI */
+
+oc_tls_peer_t *
+oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
+{
   /* Check if this a Device Ownership Connection (DOC) */
   bool doc = false;
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(params.endpoint->device);
   if (pstat->s == OC_DOS_RFOTM) {
-    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
-    if (doxm->oxmsel == 4) {
-      /* Prior to a successful anonymous Update of "oxmsel" in
-       *  "/oic/sec/doxm", all attempts to establish new DTLS connections
-       * shall be rejected.
-       */
-      return NULL;
-    }
-    if (oc_list_length(g_tls_peers) != 0) {
-      /* Allow only a single DOC */
+    if (!tls_is_valid_doc(params.endpoint->device)) {
       return NULL;
     }
     doc = true;
   }
-  peer = oc_tls_peer_allocate(endpoint, role, doc);
+
+  oc_tls_peer_t *peer = oc_tls_peer_allocate(params.endpoint, params.role, doc);
   if (peer == NULL) {
     return NULL;
   }
@@ -1905,13 +1929,50 @@ oc_tls_add_peer(const oc_endpoint_t *endpoint, int role)
     return NULL;
   }
 
-  oc_list_add(g_tls_peers, peer);
+#ifdef OC_PKI
+  oc_tls_peer_pki_init(peer, params.user_data, params.verify_certificate);
+#endif /* OC_PKI */
 
-  if ((endpoint->flags & TCP) == 0) {
+  if ((params.endpoint->flags & TCP) == 0) {
     mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
                              ssl_get_timer);
     oc_ri_add_timed_event_callback_seconds(
       peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
+  }
+
+  oc_list_add(g_tls_peers, peer);
+  OC_DBG("oc_tls: new peer(%p) added", (void *)peer);
+  return peer;
+}
+
+oc_tls_peer_t *
+oc_tls_add_or_get_peer(const oc_endpoint_t *endpoint, int role, bool *created)
+{
+  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  if (peer != NULL) {
+    if (created != NULL) {
+      *created = false;
+    }
+    return peer;
+  }
+
+  oc_tls_new_peer_params_t params = {
+    .endpoint = endpoint,
+    .role = role,
+  };
+#ifdef OC_PKI
+  oc_tls_pki_verification_params_t pki_params =
+    oc_tls_peer_pki_default_verification_params();
+  params.user_data = pki_params.user_data;
+  params.verify_certificate = pki_params.verify_certificate;
+#endif /* OC_PKI */
+
+  peer = oc_tls_add_new_peer(params);
+  if (peer == NULL) {
+    return NULL;
+  }
+  if (created != NULL) {
+    *created = true;
   }
   return peer;
 }
@@ -2326,46 +2387,49 @@ oc_tls_init_connection(oc_message_t *message)
   }
 
   if (peer == NULL) {
-    peer = oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT);
+    peer =
+      oc_tls_add_or_get_peer(&message->endpoint, MBEDTLS_SSL_IS_CLIENT, NULL);
   }
 
-  if (peer != NULL) {
-    oc_message_t *duplicate = oc_list_head(peer->send_q);
-    while (duplicate != NULL) {
-      if (duplicate == message) {
-        break;
-      }
-      duplicate = duplicate->next;
+  if (peer == NULL || peer->role != MBEDTLS_SSL_IS_CLIENT) {
+    OC_ERR("oc_tls: failed to get a valid client peer");
+    oc_message_unref(message);
+    return;
+  }
+  oc_message_t *duplicate = oc_list_head(peer->send_q);
+  while (duplicate != NULL) {
+    if (duplicate == message) {
+      break;
     }
-    if (duplicate == NULL) {
-      oc_message_add_ref(message);
-      oc_list_add(peer->send_q, message);
-    }
+    duplicate = duplicate->next;
+  }
+  if (duplicate == NULL) {
+    oc_message_add_ref(message);
+    oc_list_add(peer->send_q, message);
+  }
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-    if ((peer->endpoint.flags & TCP) != 0) {
-      int state = oc_tcp_connect(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
-      if (state == OC_TCP_SOCKET_STATE_CONNECTED ||
-          state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED) {
-        oc_tls_handshake(peer);
-        oc_message_unref(message);
-        return;
-      }
-      if (state == OC_TCP_SOCKET_STATE_CONNECTING ||
-          state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING) {
-        // just wait for connection to be established; oc_tls_handshake or
-        // oc_tls_free_peer will be called from oc_tls_on_tcp_connect
-        oc_message_unref(message);
-        return;
-      }
-
-      oc_tls_free_peer(peer, false);
+  if ((peer->endpoint.flags & TCP) != 0) {
+    int state = oc_tcp_connect(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
+    if (state == OC_TCP_SOCKET_STATE_CONNECTED ||
+        state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED) {
+      oc_tls_handshake(peer);
       oc_message_unref(message);
       return;
     }
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-    oc_tls_handshake(peer);
+    if (state == OC_TCP_SOCKET_STATE_CONNECTING ||
+        state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING) {
+      // just wait for connection to be established; oc_tls_handshake or
+      // oc_tls_free_peer will be called from oc_tls_on_tcp_connect
+      oc_message_unref(message);
+      return;
+    }
+
+    oc_tls_free_peer(peer, false);
+    oc_message_unref(message);
+    return;
   }
-  oc_message_unref(message);
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  oc_tls_handshake(peer);
 }
 #endif /* OC_CLIENT */
 
@@ -2626,16 +2690,17 @@ static void
 oc_tls_recv_message(oc_message_t *message)
 {
   oc_tls_peer_t *peer =
-    oc_tls_add_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER);
+    oc_tls_add_or_get_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER, NULL);
 
   if (peer == NULL) {
+    OC_ERR("oc_tls: failed to get a valid peer");
     oc_message_unref(message);
     return;
   }
 #ifdef OC_DEBUG
   char u[OC_UUID_LEN];
   oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
-  OC_DBG("oc_tls: Received message from device(uuid=%s): length=%zu  peer=%p",
+  OC_DBG("oc_tls: Received message from device(uuid=%s): length=%zu, peer=%p",
          u, message->length, (void *)peer);
 #endif /* OC_DEBUG */
 

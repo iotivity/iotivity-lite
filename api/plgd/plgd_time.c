@@ -781,29 +781,29 @@ dev_time_add_peer(const oc_endpoint_t *endpoint,
     }
   }
 
-  oc_tls_peer_t *peer = oc_tls_add_peer(endpoint, MBEDTLS_SSL_IS_CLIENT);
+  oc_tls_new_peer_params_t peer_params = {
+    .endpoint = endpoint,
+    .role = MBEDTLS_SSL_IS_CLIENT,
+  };
+  if (vcp != NULL) {
+    oc_tls_pki_verification_params_t pki_params =
+      oc_tls_peer_pki_default_verification_params();
+    OC_DBG("plgd-time: disable time verification for peer");
+    vcp->verify_certificate = pki_params.verify_certificate;
+    vcp->peer_data = pki_params.user_data;
+    peer_params.user_data.data = vcp;
+    peer_params.user_data.free = time_verify_certificate_params_free;
+    peer_params.verify_certificate = dev_time_verify_certificate;
+  } else if (verify_config.verify != NULL) {
+    OC_DBG("plgd-time: custom verification for peer");
+    peer_params.user_data = verify_config.verify_data;
+    peer_params.verify_certificate = verify_config.verify;
+  }
+  oc_tls_peer_t *peer = oc_tls_add_new_peer(peer_params);
   if (peer == NULL) {
     OC_ERR("plgd-time add peer failed: oc_tls_add_peer failed");
     oc_memb_free(&g_time_verify_certificate_params_s, vcp);
     return false;
-  }
-
-  if (vcp != NULL) {
-    OC_DBG("plgd-time: disable time verification for peer");
-    vcp->verify_certificate = peer->verify_certificate;
-    vcp->peer_data.data = peer->user_data.data;
-    vcp->peer_data.free = peer->user_data.free;
-    peer->user_data.data = vcp;
-    peer->user_data.free = time_verify_certificate_params_free;
-    peer->verify_certificate = dev_time_verify_certificate;
-  } else if (verify_config.verify != NULL) {
-    OC_DBG("plgd-time: custom verification for peer");
-    if (peer->user_data.free != NULL &&
-        verify_config.verify_data.data != peer->user_data.data) {
-      peer->user_data.free(peer->user_data.data);
-    }
-    peer->user_data = verify_config.verify_data;
-    peer->verify_certificate = verify_config.verify;
   }
   return true;
 }

@@ -84,6 +84,8 @@ allocate_message(struct oc_memb *pool)
     OC_WRN("buffer: No free TX/RX buffers!");
   }
 #endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+  OC_DBG("buffer: allocated message(%p) from pool(%p)", (void *)message,
+         (void *)pool);
   return message;
 }
 
@@ -135,9 +137,10 @@ oc_message_unref(oc_message_t *message)
   }
   bool dealloc = false;
   uint8_t count = OC_ATOMIC_LOAD8(message->ref_count);
+  uint8_t new_count = 0;
   while (count > 0) {
     bool swapped = false;
-    uint8_t new_count = count - 1;
+    new_count = count - 1;
     OC_ATOMIC_COMPARE_AND_SWAP8(message->ref_count, count, new_count, swapped);
     if (swapped) {
       dealloc = new_count == 0;
@@ -145,18 +148,24 @@ oc_message_unref(oc_message_t *message)
     }
   }
 
-  if (dealloc) {
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-    free(message->data);
-#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
-    struct oc_memb *pool = message->pool;
-    oc_network_event_handler_mutex_lock();
-    oc_memb_free(pool, message);
-    oc_network_event_handler_mutex_unlock();
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
-    OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+  if (!dealloc) {
+    OC_DBG("buffer: message(%p) unreferenced, ref_count=%d", (void *)message,
+           (int)new_count);
+    return;
   }
+
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+  free(message->data);
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
+  struct oc_memb *pool = message->pool;
+  oc_network_event_handler_mutex_lock();
+  oc_memb_free(pool, message);
+  oc_network_event_handler_mutex_unlock();
+  OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
+         (void *)pool);
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
+  OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
 }
 
 void
