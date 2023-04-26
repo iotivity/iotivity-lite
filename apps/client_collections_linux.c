@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
@@ -88,7 +89,7 @@ post_lights_oic_if_create(oc_client_response_t *data)
       PRINT("\n");
     } break;
     case OC_REP_INT:
-      PRINT(" %d\n", rep->value.integer);
+      PRINT(" %" PRId64 "\n", rep->value.integer);
       break;
     case OC_REP_OBJECT: {
       oc_rep_t *policy = rep->value.object;
@@ -98,7 +99,7 @@ post_lights_oic_if_create(oc_client_response_t *data)
         PRINT("\t\t%s\t\t", oc_string(policy->name));
         switch (policy->type) {
         case OC_REP_INT:
-          PRINT(" %d ", policy->value.integer);
+          PRINT(" %" PRId64 " ", policy->value.integer);
           break;
         default:
           break;
@@ -191,7 +192,8 @@ post_lights_oic_if_b(oc_client_response_t *data)
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT(" %s : %lld ", oc_string(rep->name), rep->value.integer);
+            PRINT(" %s : %" PRId64 " ", oc_string(rep->name),
+                  rep->value.integer);
             break;
           default:
             break;
@@ -239,7 +241,8 @@ get_lights_oic_if_b(oc_client_response_t *data)
             PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT(" %s : %lld ", oc_string(rep->name), rep->value.integer);
+            PRINT(" %s : %" PRId64 " ", oc_string(rep->name),
+                  rep->value.integer);
             break;
           default:
             break;
@@ -325,7 +328,7 @@ get_lights_oic_if_ll(oc_client_response_t *data)
             PRINT("%d ", rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT("%lld ", rep->value.integer);
+            PRINT("%" PRId64 " ", rep->value.integer);
             break;
           case OC_REP_STRING:
             PRINT("%s ", oc_string(rep->value.string));

@@ -2299,7 +2299,7 @@ get_light_cb(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%" PRId64 "\n", rep->value.integer);
+      PRINT("%d \n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
