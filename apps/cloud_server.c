@@ -1196,6 +1196,21 @@ cloud_server_log(oc_log_level_t log_level, oc_log_component_t component,
   fflush(stdout);
 }
 
+static void
+cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
+{
+  const char *uri = "???";
+  if (request->resource != NULL) {
+    uri = oc_string(request->resource->uri);
+  }
+  const char *response_code_str = oc_status_to_str(response_code);
+  const char *method_str = oc_method_to_str(request->method);
+  PRINT(
+    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s\n",
+    request->method, method_str, uri, response_code, response_code_str);
+  fflush(stdout);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1255,6 +1270,7 @@ main(int argc, char *argv[])
                                         .register_resources =
                                           register_resources };
   oc_log_set_function(cloud_server_log);
+  oc_set_send_response_cb(cloud_server_send_response_cb);
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */

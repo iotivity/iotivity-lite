@@ -84,4 +84,8 @@ void oc_process_baseline_interface_with_filter(
   const oc_resource_t *resource,
   oc_process_baseline_interface_filter_fn_t filter, void *filter_data);
 
+/** Notify callback about send the response */
+void oc_trigger_send_response_callback(oc_request_t *request,
+                                       oc_status_t response_code);
+
 #endif /* OC_SERVER_API_INTERNAL_H */

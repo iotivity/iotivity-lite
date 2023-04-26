@@ -28,6 +28,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#ifdef OC_SERVER
+#include "oc_server_api_internal.h"
+#endif
+
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
 #else /* OC_IDD_API */
@@ -88,15 +92,22 @@ oc_core_introspection_data_handler(oc_request_t *request,
 #endif /* OC_IDD_API */
   request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
+    oc_status_t code = OC_STATUS_OK;
+#ifdef OC_SERVER
+    oc_trigger_send_response_callback(request, code);
+#endif
     request->response->response_buffer->response_length = IDD_size;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+    request->response->response_buffer->code = oc_status_code(code);
   } else {
+    oc_status_t code = OC_STATUS_INTERNAL_SERVER_ERROR;
+#ifdef OC_SERVER
+    oc_trigger_send_response_callback(request, code);
+#endif
     OC_ERR(
       "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
       IDD_size, (long)OC_MAX_APP_DATA_SIZE);
     request->response->response_buffer->response_length = 0;
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_INTERNAL_SERVER_ERROR);
+    request->response->response_buffer->code = oc_status_code(code);
   }
 }
 

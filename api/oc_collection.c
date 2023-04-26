@@ -24,6 +24,7 @@
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_discovery_internal.h"
+#include "oc_server_api_internal.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_COLLECTIONS_IF_CREATE
@@ -845,6 +846,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   response.response_buffer = &response_buffer;
   rest_request.response = &response;
   rest_request.origin = request->origin;
+  rest_request.method = method;
 
   oc_rep_start_links_array();
   memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
@@ -1101,6 +1103,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   request->response->response_buffer->response_length = size;
   request->response->response_buffer->code = code;
+
+  oc_trigger_send_response_callback(request, code);
 
   if ((method == OC_PUT || method == OC_POST) &&
       code < oc_status_code(OC_STATUS_BAD_REQUEST)) {

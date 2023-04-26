@@ -46,6 +46,7 @@
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 static size_t g_query_iterator;
+static oc_send_response_cb_t g_oc_send_response_cb;
 
 #if defined(OC_CLOUD) && defined(OC_SERVER)
 static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
@@ -100,8 +101,31 @@ response_length(void)
 }
 
 void
-oc_send_response(oc_request_t *request, oc_status_t response_code)
+oc_set_send_response_cb(oc_send_response_cb_t cb)
 {
+  g_oc_send_response_cb = cb;
+}
+
+void
+oc_trigger_send_response_callback(oc_request_t *request,
+                                  oc_status_t response_code)
+{
+  if (g_oc_send_response_cb == NULL) {
+    return;
+  }
+  g_oc_send_response_cb(request, response_code);
+}
+
+void
+oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
+                    bool trigger_cb)
+{
+  if (!request) {
+    return;
+  }
+  if (trigger_cb) {
+    oc_trigger_send_response_callback(request, response_code);
+  }
 #ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     request->response->response_buffer->content_format = APPLICATION_CBOR;
@@ -113,6 +137,12 @@ oc_send_response(oc_request_t *request, oc_status_t response_code)
   }
   request->response->response_buffer->response_length = response_length();
   request->response->response_buffer->code = oc_status_code(response_code);
+}
+
+void
+oc_send_response(oc_request_t *request, oc_status_t response_code)
+{
+  oc_send_response_v1(request, response_code, true);
 }
 
 void
@@ -640,7 +670,7 @@ oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
 {
   request->response->separate_response = response;
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_v1(request, OC_STATUS_OK, false);
 }
 
 void

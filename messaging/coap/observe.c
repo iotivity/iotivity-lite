@@ -102,7 +102,7 @@ OC_MEMB(batch_observers_memb, batch_observer_t, COAP_MAX_OBSERVERS);
 
 typedef bool cmp_batch_observer_t(batch_observer_t *o, void *ctx);
 
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
+#if OC_DBG_IS_ENABLED
 static const char *
 batch_observer_get_resource_uri(batch_observer_t *batch_obs)
 {
@@ -638,6 +638,8 @@ coap_notify_collection(oc_collection_t *collection,
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
+  request.method = OC_GET;
+
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
                      OC_MAX_OBSERVE_SIZE);
@@ -712,6 +714,7 @@ coap_notify_collections(oc_resource_t *resource)
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
+  request.method = OC_GET;
 
   for (oc_collection_t *collection =
          oc_get_next_collection_with_link(resource, NULL);
@@ -778,6 +781,7 @@ fill_response(oc_resource_t *resource, const oc_endpoint_t *endpoint,
   request.origin = endpoint;
   request.response = response;
   request.request_payload = NULL;
+  request.method = OC_GET;
   if (iface_mask == 0) {
     iface_mask = resource->default_interface;
   }
