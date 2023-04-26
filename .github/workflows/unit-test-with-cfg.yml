@@ -77,7 +77,7 @@ jobs:
       - name: Setup firewall to drop TCP IPV6 with destination port 12345 (for timeout tests)
         run: |
           sudo ip6tables -I OUTPUT -p tcp --dport 12345 -j DROP
-      
+
       - name: Run unit tests
         run: |
           cd build
