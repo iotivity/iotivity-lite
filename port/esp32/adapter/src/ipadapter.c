@@ -454,11 +454,11 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
         return;
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
-      OC_DBG("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure,
+      OC_DBG("add ep: %d %d %d %d", (int)family, (int)port, (int)secure,
              (int)tcp);
       OC_LOGipaddr(ep);
-      OC_DBG(" index %d", ep.interface_index);
-      OC_DBG("\n\n");
+      OC_DBG("interface index %d", ep.interface_index);
+      OC_DBG("%s", "");
       oc_list_add(dev->eps, new_ep);
     } else
 #endif /* OC_IPV4 */
@@ -477,11 +477,11 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
             return;
           }
           memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
-          OC_DBG("add ep: %d %d %d %d ", (int)family, (int)port, (int)secure,
+          OC_DBG("add ep: %d %d %d %d", (int)family, (int)port, (int)secure,
                  (int)tcp);
           OC_LOGipaddr(ep);
-          OC_DBG(" index %d", ep.interface_index);
-          OC_DBG("\n\n");
+          OC_DBG("interface index %d", ep.interface_index);
+          OC_DBG("%s", "");
           oc_list_add(dev->eps, new_ep);
         }
       }
@@ -859,10 +859,10 @@ network_event_thread(void *data)
       continue;
 
     common:
-      OC_DBG("Incoming message of size %zd bytes from ", message->length);
+      OC_DBG("Incoming message of size %zd bytes from", message->length);
       OC_LOGipaddr(message->endpoint);
-      OC_DBG("index %d", message->endpoint.interface_index);
-      OC_DBG("\n\n");
+      OC_DBG("interface index %d", message->endpoint.interface_index);
+      OC_DBG("%s", "");
 
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
       void *tmp = realloc(message->data, message->length);
@@ -964,11 +964,11 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message of size %zd bytes to ", message->length);
+  OC_DBG("Outgoing message of size %zd bytes to", message->length);
   OC_LOGipaddr_local(message->endpoint);
   OC_DBG("-->");
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n\n");
+  OC_DBG("%s", "");
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));

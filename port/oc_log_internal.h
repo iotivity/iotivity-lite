@@ -292,8 +292,9 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    PRINT("[OC %s] D: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,              \
-          __FILENAME__, __LINE__, __func__, _oc_log_endpoint_buf);             \
+    PRINT("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,             \
+          oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__, __LINE__,   \
+          __func__, _oc_log_endpoint_buf);                                     \
     fflush(stdout);                                                            \
   } while (0)
 #ifndef OC_LOGipaddr

@@ -261,54 +261,54 @@ print_acls(size_t device)
 {
   const oc_sec_acl_t *a = &g_aclist[device];
   const oc_sec_ace_t *ace = oc_list_head(a->subjects);
-  OC_DBG("\nAccess Control List\n---------\n");
+  OC_DBG("\nAccess Control List\n---------");
   while (ace != NULL) {
-    OC_DBG("\n---------\nAce: %d\n---------\n", ace->aceid);
+    OC_DBG("\n---------\nAce: %d\n---------", ace->aceid);
     switch (ace->subject_type) {
     case OC_SUBJECT_UUID: {
       char u[OC_UUID_LEN];
       oc_uuid_to_str(&ace->subject.uuid, u, OC_UUID_LEN);
-      OC_DBG("UUID: %s\n", u);
+      OC_DBG("UUID: %s", u);
     } break;
     case OC_SUBJECT_CONN: {
       switch (ace->subject.conn) {
       case OC_CONN_AUTH_CRYPT:
-        OC_DBG("CONN: auth-crypt\n");
+        OC_DBG("CONN: auth-crypt");
         break;
       case OC_CONN_ANON_CLEAR:
-        OC_DBG("CONN: anon-clear\n");
+        OC_DBG("CONN: anon-clear");
         break;
       }
     } break;
     case OC_SUBJECT_ROLE: {
-      OC_DBG("Role_RoleId: %s\n", oc_string(ace->subject.role.role));
+      OC_DBG("Role_RoleId: %s", oc_string(ace->subject.role.role));
       if (oc_string_len(ace->subject.role.authority) > 0) {
-        OC_DBG("Role_Authority: %s\n", oc_string(ace->subject.role.authority));
+        OC_DBG("Role_Authority: %s", oc_string(ace->subject.role.authority));
       }
     } break;
     }
 
     oc_ace_res_t *r = oc_list_head(ace->resources);
-    OC_DBG("\nResources:\n");
+    OC_DBG("\nResources:");
     while (r != NULL) {
       if (oc_string_len(r->href) > 0) {
-        OC_DBG("href: %s\n", oc_string(r->href));
+        OC_DBG("href: %s", oc_string(r->href));
       }
       switch (r->wildcard) {
       case OC_ACE_NO_WC:
-        OC_DBG("No wildcard\n");
+        OC_DBG("No wildcard");
         break;
       case OC_ACE_WC_ALL:
-        OC_DBG("Wildcard: *\n");
+        OC_DBG("Wildcard: *");
         break;
       case OC_ACE_WC_ALL_SECURED:
-        OC_DBG("Wildcard: +\n");
+        OC_DBG("Wildcard: +");
         break;
       case OC_ACE_WC_ALL_PUBLIC:
-        OC_DBG("Wildcard: -\n");
+        OC_DBG("Wildcard: -");
         break;
       }
-      OC_DBG("Permission: %d\n", ace->permission);
+      OC_DBG("Permission: %d", ace->permission);
       r = r->next;
     }
     ace = ace->next;

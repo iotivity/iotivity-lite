@@ -484,16 +484,15 @@ log_tcp_session(const void *session, const oc_endpoint_t *endpoint,
                 bool is_connected)
 {
   if (session == NULL) {
-    OC_DBG("could not find %s TCP session for endpoint:",
+    OC_DBG("could not find %s TCP session for",
            is_connected ? "ongoing" : "waiting");
     OC_LOGipaddr(*endpoint);
-    OC_DBG("\n");
+    OC_DBG("%s", "");
     return;
   }
-  OC_DBG("found %s TCP session for endpoint:",
-         is_connected ? "ongoing" : "waiting");
+  OC_DBG("found %s TCP session for", is_connected ? "ongoing" : "waiting");
   OC_LOGipaddr(*endpoint);
-  OC_DBG("\n");
+  OC_DBG("%s", "");
 }
 #endif /* OC_DBG_IS_ENABLED */
 

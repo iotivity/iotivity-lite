@@ -307,14 +307,14 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   }
 
   if (!session) {
-    OC_DBG("could not find ongoing TCP session for endpoint:");
+    OC_DBG("could not find ongoing TCP session for");
     OC_LOGipaddr(*endpoint);
-    OC_DBG("\n");
+    OC_DBG("%s", "");
     return NULL;
   }
-  OC_DBG("found TCP session for endpoint:");
+  OC_DBG("found TCP session for");
   OC_LOGipaddr(*endpoint);
-  OC_DBG("\n");
+  OC_DBG("%s", "");
   return session;
 }
 
@@ -594,9 +594,9 @@ recv_message(SOCKET s, void *ctx)
     return;
   }
 
-  OC_DBG("Incoming message of size %zd bytes from ", message->length);
+  OC_DBG("Incoming message of size %zd bytes from", message->length);
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n\n");
+  OC_DBG("%s", "");
   oc_network_receive_event(message);
 }
 

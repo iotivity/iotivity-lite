@@ -262,14 +262,14 @@ find_session_by_endpoint(const oc_endpoint_t *endpoint)
   }
 
   if (!session) {
-    OC_DBG("could not find ongoing TCP session for endpoint:");
+    OC_DBG("could not find ongoing TCP session for");
     OC_LOGipaddr(*endpoint);
-    OC_DBG("\n");
+    OC_DBG("%s", "");
     return NULL;
   }
-  OC_DBG("found TCP session for endpoint:");
+  OC_DBG("found TCP session for");
   OC_LOGipaddr(*endpoint);
-  OC_DBG("\n");
+  OC_DBG("%s", "");
   return session;
 }
 

@@ -128,9 +128,9 @@ oc_network_receive(struct net_context *context, struct net_pkt *pkt, int status,
     message->endpoint.device = 0;
 
     OC_DBG("oc_network_receive: received %d bytes", (int)message->length);
-    OC_DBG("oc_network_receive: incoming message from ");
+    OC_DBG("oc_network_receive: incoming message from");
     OC_LOGipaddr(message->endpoint);
-    OC_DBG("\n\n");
+    OC_DBG("%s", "");
     oc_network_receive_event(message);
   }
 
@@ -150,9 +150,9 @@ udp_sent(struct net_context *context, int status, void *token, void *user_data)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("oc_send_buffer: outgoing message to ");
+  OC_DBG("oc_send_buffer: outgoing message to");
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n\n");
+  OC_DBG("%s", "");
 
   /* Populate destination address structure */
   struct sockaddr_in6 peer_addr;

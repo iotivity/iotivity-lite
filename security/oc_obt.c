@@ -2133,7 +2133,7 @@ trustanchor_device_RFNOP_complete(int status, void *response_data)
 static void
 trustanchor_device_RFNOP(oc_client_response_t *data)
 {
-  OC_DBG("trustanchor_device_RFNOP\n");
+  OC_DBG("trustanchor_device_RFNOP");
   if (!is_item_in_list(oc_installtrust_ctx_l, data->user_data)) {
     return;
   }
@@ -2158,7 +2158,7 @@ static void
 // trustanchor_device_RFPRO(oc_client_response_t* response_data)
 trustanchor_device_RFPRO(int status, void *response_data)
 {
-  OC_DBG("trustanchor_device_RFPRO\n");
+  OC_DBG("trustanchor_device_RFPRO");
   if (!is_item_in_list(oc_installtrust_ctx_l, response_data)) {
     return;
   }
@@ -2206,7 +2206,7 @@ err_trustanchor_device_RFPRO:
 static void
 trustanchor_supports_cert_creds(oc_client_response_t *data)
 {
-  OC_DBG("trustanchor_supports_cert_creds\n");
+  OC_DBG("trustanchor_supports_cert_creds");
   if (!is_item_in_list(oc_installtrust_ctx_l, data->user_data)) {
     return;
   }
@@ -3382,21 +3382,21 @@ oc_obt_update_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
 #if OC_ERR_IS_ENABLED
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
-    OC_ERR("Could not find device from udn %s\n", di);
+    OC_ERR("Could not find device from udn %s", di);
 #endif /* OC_ERR_IS_ENABLED */
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (ep == NULL) {
-    OC_ERR("Could not find ep from device \n");
+    OC_ERR("Could not find ep from device");
     return -1;
   }
 
-  OC_DBG("at %s \n", at);
-  OC_DBG("apn %s \n", apn);
-  OC_DBG("cis %s \n", cis);
-  OC_DBG("sid %s \n", sid);
+  OC_DBG("at %s", at);
+  OC_DBG("apn %s", apn);
+  OC_DBG("cis %s", cis);
+  OC_DBG("sid %s", sid);
   if (oc_init_post(url, ep, NULL, cb, LOW_QOS, user_data)) {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, at, at);
@@ -3405,13 +3405,13 @@ oc_obt_update_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
     oc_rep_set_text_string(root, sid, sid);
     oc_rep_end_root_object();
     if (oc_do_post())
-      OC_DBG("Sent POST request\n");
+      OC_DBG("Sent POST request");
     else {
-      OC_ERR("Could not send POST request\n");
+      OC_ERR("Could not send POST request");
       return -1;
     }
   } else {
-    OC_ERR("Could not init POST request\n");
+    OC_ERR("Could not init POST request");
     return -1;
   }
 
@@ -3432,14 +3432,14 @@ oc_obt_retrieve_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
 #if OC_ERR_IS_ENABLED
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
-    OC_ERR("Could not find device from udn %s\n", di);
+    OC_ERR("Could not find device from udn %s", di);
 #endif /* OC_ERR_IS_ENABLED */
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (ep == NULL) {
-    OC_ERR("Could not find ep from device \n");
+    OC_ERR("Could not find ep from device");
     return -1;
   }
 
@@ -3482,26 +3482,26 @@ oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
 #if OC_ERR_IS_ENABLED
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
-    OC_ERR("Could not find cloud_proxy from udn %s\n", di);
+    OC_ERR("Could not find cloud_proxy from udn %s", di);
 #endif /* OC_ERR_IS_ENABLED */
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(cloud_proxy->endpoint);
   if (ep == NULL) {
-    OC_ERR("Could not find ep from cloud_proxy \n");
+    OC_ERR("Could not find ep from cloud_proxy");
     return -1;
   }
 
   if (oc_init_post(url, ep, query, cb, LOW_QOS, user_data)) {
     if (oc_do_post())
-      OC_DBG("Sent POST request %s?%s\n", url, query);
+      OC_DBG("Sent POST request %s?%s", url, query);
     else {
-      OC_ERR("Could not send POST request\n");
+      OC_ERR("Could not send POST request");
       return -1;
     }
   } else {
-    OC_ERR("Could not init POST request\n");
+    OC_ERR("Could not init POST request");
     return -1;
   }
 
@@ -3525,7 +3525,7 @@ oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
 
   char di[OC_UUID_LEN];
   oc_uuid_to_str(&(device->uuid), di, sizeof(di));
-  OC_DBG("[C] Target uuid = %s \n", di);
+  OC_DBG("[C] Target uuid = %s", di);
 
   oc_tls_select_psk_ciphersuite();
 
@@ -3553,14 +3553,14 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
 #if OC_ERR_IS_ENABLED
     char di[OC_UUID_LEN];
     oc_uuid_to_str(uuid, di, OC_UUID_LEN);
-    OC_ERR("Could not find device from udn %s\n", di);
+    OC_ERR("Could not find device from udn %s", di);
 #endif /* OC_ERR_IS_ENABLED */
     return -1;
   }
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (ep == NULL) {
-    OC_ERR("Could not find ep from device \n");
+    OC_ERR("Could not find ep from device");
     return -1;
   }
 
@@ -3615,13 +3615,13 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
     oc_rep_end_root_object();
 
     if (oc_do_post())
-      OC_DBG("\n\n\nSent POST request %s?%s\n\n\n", url, query);
+      OC_DBG("\n\n\nSent POST request %s?%s\n\n", url, query);
     else {
-      OC_ERR("Could not send POST request\n");
+      OC_ERR("Could not send POST request");
       return -1;
     }
   } else {
-    OC_ERR("Could not init POST request\n");
+    OC_ERR("Could not init POST request");
     return -1;
   }
 
@@ -3644,7 +3644,7 @@ oc_obt_general_delete(const oc_uuid_t *uuid, const char *query, const char *url,
 
   char di[OC_UUID_LEN];
   oc_uuid_to_str(&(device->uuid), di, sizeof(di));
-  OC_DBG("[C] Target uuid = %s \n", di);
+  OC_DBG("[C] Target uuid = %s", di);
 
   oc_tls_select_psk_ciphersuite();
 

@@ -422,9 +422,9 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
-      OC_DBG("Adding address for interface %ld\n", ifaddr->if_index);
+      OC_DBG("Adding address for interface %ld", ifaddr->if_index);
       OC_LOGipaddr(ep);
-      OC_DBG("\n\n");
+      OC_DBG("%s", "");
       continue;
     }
 #ifdef OC_IPV4
@@ -440,9 +440,9 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       }
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
-      OC_DBG("Adding address for interface %ld\n", ifaddr->if_index);
+      OC_DBG("Adding address for interface %ld", ifaddr->if_index);
       OC_LOGipaddr(ep);
-      OC_DBG("\n\n");
+      OC_DBG("%s", "");
       continue;
     }
 #endif
@@ -874,9 +874,9 @@ network_event_thread(void *data)
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
       common:
-        OC_DBG("Incoming message of size %zd bytes from ", message->length);
+        OC_DBG("Incoming message of size %zd bytes from", message->length);
         OC_LOGipaddr(message->endpoint);
-        OC_DBG("\n\n");
+        OC_DBG("%s", "");
         oc_network_receive_event(message);
       }
     }
@@ -1112,9 +1112,9 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message of size %zd bytes to ", message->length);
+  OC_DBG("Outgoing message of size %zd bytes to", message->length);
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n");
+  OC_DBG("%s", "");
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(receiver));
 #ifdef OC_IPV4

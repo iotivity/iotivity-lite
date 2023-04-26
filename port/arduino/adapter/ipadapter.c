@@ -122,9 +122,9 @@ oc_connectivity_get_endpoints(size_t device)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message to: ");
+  OC_DBG("Outgoing message to");
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\r\n");
+  OC_DBG("%s", "");
 
   uint8_t send_sock = 0;
   uint16_t send_port = 0;
@@ -332,9 +332,9 @@ OC_PROCESS_THREAD(ip_adapter_process, ev, data)
           oc_message_unref(message);
           continue;
         common:
-          OC_DBG("Incoming message of size %u bytes from ", message->length);
+          OC_DBG("Incoming message of size %u bytes from", message->length);
           OC_LOGipaddr(message->endpoint);
-          OC_DBG("\r\n");
+          OC_DBG("%s", "");
           oc_network_receive_event(message);
         }
       }

@@ -1048,9 +1048,9 @@ process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
   return s == ADAPTER_STATUS_NONE ? 0 : 1;
 
 receive:
-  OC_DBG("Incoming message of size %zd bytes from ", message->length);
+  OC_DBG("Incoming message of size %zd bytes from", message->length);
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n\n");
+  OC_DBG("%s", "");
 
   // TODO: oc_message_shrink_buffer
   oc_network_receive_event(message);
@@ -1323,9 +1323,9 @@ oc_get_socket_address(const oc_endpoint_t *endpoint,
 static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
-  OC_DBG("Outgoing message of size %zd bytes to ", message->length);
+  OC_DBG("Outgoing message of size %zd bytes to", message->length);
   OC_LOGipaddr(message->endpoint);
-  OC_DBG("\n\n");
+  OC_DBG("%s", "");
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));

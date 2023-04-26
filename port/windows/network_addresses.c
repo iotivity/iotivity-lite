@@ -150,7 +150,7 @@ get_network_addresses(void)
           getnameinfo((const SOCKADDR *)addr, sizeof(struct sockaddr_in6),
                       dotname, sizeof(dotname), NULL, 0, NI_NUMERICHOST);
           OC_DBG("%s is not IN6_IS_ADDR_LINKLOCAL and not "
-                 "IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.\n",
+                 "IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.",
                  dotname);
 #endif /* OC_DBG_IS_ENABLED */
           continue;
