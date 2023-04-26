@@ -453,13 +453,13 @@ coap_serialize_options(void *packet, uint8_t *option_array, bool inner,
   unsigned int current_number = 0;
   size_t option_length = 0;
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   if (option) {
     OC_DBG("Serializing options at %p", (void *)option);
   } else {
     OC_DBG("Calculating size of options");
   }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 #ifdef OC_TCP
   if (coap_check_signal_message(packet)) {

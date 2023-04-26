@@ -32,12 +32,12 @@ oc_audit_log(size_t device, const char *aeid, const char *message,
 {
   bool ret =
     oc_sec_ael_add(device, category, priority, aeid, message, aux, aux_len);
-#ifndef OC_DEBUG
-  (void)ret;
-#else
+#if OC_DBG_IS_ENABLED
   OC_DBG("audit_log: %s %s %u %u; status = %d", aeid, message, category,
          priority, ret);
-#endif
+#else  /* !OC_DBG_IS_ENABLED */
+  (void)ret;
+#endif /* OC_DBG_IS_ENABLED */
 }
 
 #endif /* OC_SECURITY */

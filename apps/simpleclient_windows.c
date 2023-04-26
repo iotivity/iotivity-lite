@@ -65,7 +65,7 @@ observe_light(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%lld\n", rep->value.integer);
+      PRINT("%d\n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
@@ -157,7 +157,7 @@ get_light(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%lld\n", rep->value.integer);
+      PRINT("%d\n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
@@ -198,8 +198,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   int i;
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  PRINT("\n\nDISCOVERYCB %s %s %zd\n\n", anchor, uri,
-        oc_string_array_get_allocated_size(types));
+  PRINT("\n\nDISCOVERYCB %s %s %d\n\n", anchor, uri,
+        (int)oc_string_array_get_allocated_size(types));
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     PRINT("\n\nDISCOVERED RES %s\n\n\n", t);

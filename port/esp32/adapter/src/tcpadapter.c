@@ -262,18 +262,14 @@ find_session_by_endpoint(const oc_endpoint_t *endpoint)
   }
 
   if (!session) {
-#ifdef OC_DEBUG
-    PRINT("could not find ongoing TCP session for endpoint:");
-    PRINTipaddr(*endpoint);
-    PRINT("\n");
-#endif /* OC_DEBUG */
+    OC_DBG("could not find ongoing TCP session for");
+    OC_LOGipaddr(*endpoint);
+    OC_DBG("%s", "");
     return NULL;
   }
-#ifdef OC_DEBUG
-  PRINT("found TCP session for endpoint:");
-  PRINTipaddr(*endpoint);
-  PRINT("\n");
-#endif /* OC_DEBUG */
+  OC_DBG("found TCP session for");
+  OC_LOGipaddr(*endpoint);
+  OC_DBG("%s", "");
   return session;
 }
 

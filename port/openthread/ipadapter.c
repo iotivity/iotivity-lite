@@ -59,12 +59,9 @@ udp_receive_cbk(void *context, otMessage *ot_message,
            ot_message_info->mPeerAddr.mFields.m8, OT_IP6_ADDRESS_SIZE);
     oc_message->endpoint.addr.ipv6.port = ot_message_info->mPeerPort;
 
-#ifdef OC_DEBUG
-    PRINT("Incoming message from ");
-    PRINTipaddr(message->endpoint);
-    PRINT("\n\n");
-#endif /* OC_DEBUG */
-
+    OC_DBG("Incoming message from");
+    OC_LOGipaddr(message->endpoint);
+    OC_DBG("%s", "");
     oc_network_receive_event(oc_message);
   }
 }
@@ -114,7 +111,6 @@ oc_connectivity_get_endpoints(size_t device)
     ep->addr.ipv6.port = OCF_SERVER_PORT_UNSECURED;
     ep->device = 0;
 
-    OC_DBG("Endpoint");
     OC_LOGipaddr(*ep);
     address = address->mNext;
   }
@@ -147,12 +143,9 @@ oc_send_buffer(oc_message_t *message)
          OT_IP6_ADDRESS_SIZE);
   message_info.mPeerPort = message->endpoint.addr.ipv6.port;
 
-#ifdef OC_DEBUG
-  PRINT("Outgoing message to ");
-  PRINTipaddr(message->endpoint);
-  PRINT("\n\n");
-#endif /* OC_DEBUG */
-
+  OC_DBG("Outgoing message to");
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("%s", "");
   if (otUdpSend(&unicast_socket, ot_message, &message_info) != OT_ERROR_NONE) {
     OC_ERR("Can't send message");
     return -1;

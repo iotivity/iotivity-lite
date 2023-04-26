@@ -612,9 +612,9 @@ oc_ri_delete_resource(oc_resource_t *resource)
     int removed_num = coap_remove_observer_by_resource(resource);
     OC_DBG("removing resource observers: removed(%d) vs expected(%d)",
            removed_num, resource->num_observers);
-#ifndef OC_DEBUG
+#if !OC_DBG_IS_ENABLED
     (void)removed_num;
-#endif
+#endif /* !OC_DBG_IS_ENABLED */
   }
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
   coap_remove_discovery_batch_observers_by_resource(resource);

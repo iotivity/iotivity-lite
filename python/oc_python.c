@@ -25,6 +25,7 @@
 #include "oc_obt.h"
 #include "oc_python.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_obt_internal.h"
@@ -2299,7 +2300,7 @@ get_light_cb(oc_client_response_t *data)
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%" PRId64 "\n", rep->value.integer);
+      PRINT("%d \n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:

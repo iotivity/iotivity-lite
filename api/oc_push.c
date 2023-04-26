@@ -40,6 +40,7 @@
 #include "util/oc_process.h"
 #include <arpa/inet.h>
 
+// TODO: add push component to logs and use standard logging functions
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
 #define OC_PUSH_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define OC_PUSH_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
@@ -49,6 +50,15 @@
 #define OC_PUSH_WRN(...)
 #define OC_PUSH_ERR(...)
 #endif
+
+#ifdef __ANDROID__
+#include "android/oc_log_android.h"
+#define TAG "OC-JNI"
+#define OC_PUSH_PRINT(...)                                                     \
+  __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#else /* !__ANDROID__ */
+#define OC_PUSH_PRINT(...) printf(__VA_ARGS__)
+#endif /* __ANDROID__ */
 
 /**
  * @brief Push Proxy state
@@ -1306,95 +1316,101 @@ oc_print_pushd_resource(const oc_rep_t *payload)
   }
 
   if (depth == 1)
-    PRINT("\n\n");
+    OC_PUSH_PRINT("\n\n");
 
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name),
-            rep->value.boolean);
+      OC_PUSH_PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name),
+                    rep->value.boolean);
       break;
 
     case OC_REP_BOOL_ARRAY:
-      PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       for (i = 0; i < (int)oc_bool_array_size(rep->value.array); i++) {
-        PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str,
-              oc_bool_array(rep->value.array)[i]);
+        OC_PUSH_PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str,
+                      oc_bool_array(rep->value.array)[i]);
       }
-      PRINT("%s]\n", depth_prefix);
+      OC_PUSH_PRINT("%s]\n", depth_prefix);
       break;
 
     case OC_REP_INT:
-      PRINT("%s%s: %ld\n", depth_prefix, oc_string(rep->name),
-            rep->value.integer);
+      OC_PUSH_PRINT("%s%s: %ld\n", depth_prefix, oc_string(rep->name),
+                    rep->value.integer);
       break;
 
     case OC_REP_INT_ARRAY:
-      PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        PRINT("%s%s\"%ld\"\n", depth_prefix, prefix_str,
-              oc_int_array(rep->value.array)[i]);
+        OC_PUSH_PRINT("%s%s\"%ld\"\n", depth_prefix, prefix_str,
+                      oc_int_array(rep->value.array)[i]);
       }
-      PRINT("%s]\n", depth_prefix);
+      OC_PUSH_PRINT("%s]\n", depth_prefix);
       break;
 
     case OC_REP_DOUBLE:
-      PRINT("%s%s: %f\n", depth_prefix, oc_string(rep->name),
-            rep->value.double_p);
+      OC_PUSH_PRINT("%s%s: %f\n", depth_prefix, oc_string(rep->name),
+                    rep->value.double_p);
       break;
 
     case OC_REP_DOUBLE_ARRAY:
-      PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       for (i = 0; i < (int)oc_double_array_size(rep->value.array); i++) {
-        PRINT("%s%s\"%f\"\n", depth_prefix, prefix_str,
-              oc_double_array(rep->value.array)[i]);
+        OC_PUSH_PRINT("%s%s\"%f\"\n", depth_prefix, prefix_str,
+                      oc_double_array(rep->value.array)[i]);
       }
-      PRINT("%s]\n", depth_prefix);
+      OC_PUSH_PRINT("%s]\n", depth_prefix);
       break;
 
     case OC_REP_STRING:
-      PRINT("%s%s: \"%s\"\n", depth_prefix, oc_string(rep->name),
-            oc_string(rep->value.string));
+      OC_PUSH_PRINT("%s%s: \"%s\"\n", depth_prefix, oc_string(rep->name),
+                    oc_string(rep->value.string));
       break;
 
     case OC_REP_STRING_ARRAY:
-      PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       for (i = 0; i < (int)oc_string_array_get_allocated_size(rep->value.array);
            i++) {
-        PRINT("%s%s\"%s\"\n", depth_prefix, prefix_str,
-              oc_string_array_get_item(rep->value.array, i));
+        OC_PUSH_PRINT("%s%s\"%s\"\n", depth_prefix, prefix_str,
+                      oc_string_array_get_item(rep->value.array, i));
       }
-      PRINT("%s]\n", depth_prefix);
+      OC_PUSH_PRINT("%s]\n", depth_prefix);
       break;
 
     case OC_REP_OBJECT:
-      PRINT("%s%s: \n%s{ \n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s{ \n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       oc_print_pushd_resource(rep->value.object);
-      PRINT("%s}\n", depth_prefix);
+      OC_PUSH_PRINT("%s}\n", depth_prefix);
       break;
 
     case OC_REP_OBJECT_ARRAY:
     case OC_REP_NIL:
-      PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name), depth_prefix);
+      OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
+                    depth_prefix);
       depth++;
       obj = rep->value.object_array;
       while (obj) {
-        PRINT("%s%s{\n", depth_prefix, prefix_str);
+        OC_PUSH_PRINT("%s%s{\n", depth_prefix, prefix_str);
         oc_print_pushd_resource(obj->value.object);
         obj = obj->next;
-        PRINT("%s%s}", depth_prefix, prefix_str);
+        OC_PUSH_PRINT("%s%s}", depth_prefix, prefix_str);
         if (obj)
-          PRINT(",\n");
+          OC_PUSH_PRINT(",\n");
         else
-          PRINT("\n");
+          OC_PUSH_PRINT("\n");
       }
       depth--;
-      PRINT("%s]\n", depth_prefix);
+      OC_PUSH_PRINT("%s]\n", depth_prefix);
       break;
 
     default:
-      PRINT("%s%s: unknown type: %d ???\n", depth_prefix, oc_string(rep->name),
-            rep->type);
+      OC_PUSH_PRINT("%s%s: unknown type: %d ???\n", depth_prefix,
+                    oc_string(rep->name), rep->type);
       break;
     }
     rep = rep->next;
@@ -1580,7 +1596,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
         result = OC_STATUS_INTERNAL_SERVER_ERROR;
       } else {
 #ifdef OC_PUSHDEBUG
-//				PRINT("\npushed target resource: %s\n",
+//				OC_PUSH_PRINT("\npushed target resource: %s\n",
 // oc_string(pushd_rsc_rep->resource->uri));
 //				oc_print_pushd_resource(pushd_rsc_rep->rep);
 #endif
@@ -2603,33 +2619,34 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
     if (oc_string_array_get_allocated_size(ns_instance->prt) > 0) {
       if (!_check_string_array_inclusion(&ns_instance->prt, &resource->types)) {
 #ifdef OC_PUSHDEBUG
-        PRINT("%s:prt exists, but mismatches (prt: [",
-              oc_string(ns_instance->resource->uri));
+        OC_PUSH_PRINT("%s:prt exists, but mismatches (prt: [",
+                      oc_string(ns_instance->resource->uri));
         for (size_t i = 0;
              i < oc_string_array_get_allocated_size(ns_instance->prt); i++) {
-          PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
+          OC_PUSH_PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
         }
-        PRINT("] - rt of updated rsc: [");
+        OC_PUSH_PRINT("] - rt of updated rsc: [");
         for (size_t i = 0;
              i < oc_string_array_get_allocated_size(resource->types); i++) {
-          PRINT("%s ", oc_string_array_get_item(resource->types, i));
+          OC_PUSH_PRINT("%s ", oc_string_array_get_item(resource->types, i));
         }
-        PRINT("])\n");
+        OC_PUSH_PRINT("])\n");
 #endif
         all_matched = 0;
       } else {
 #ifdef OC_PUSHDEBUG
-        PRINT("%s:prt matches (prt: [", oc_string(ns_instance->resource->uri));
+        OC_PUSH_PRINT("%s:prt matches (prt: [",
+                      oc_string(ns_instance->resource->uri));
         for (size_t i = 0;
              i < oc_string_array_get_allocated_size(ns_instance->prt); i++) {
-          PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
+          OC_PUSH_PRINT("%s ", oc_string_array_get_item(ns_instance->prt, i));
         }
-        PRINT("] - rt of updated rsc: [");
+        OC_PUSH_PRINT("] - rt of updated rsc: [");
         for (size_t i = 0;
              i < oc_string_array_get_allocated_size(resource->types); i++) {
-          PRINT("%s ", oc_string_array_get_item(resource->types, i));
+          OC_PUSH_PRINT("%s ", oc_string_array_get_item(resource->types, i));
         }
-        PRINT("])\n");
+        OC_PUSH_PRINT("])\n");
 #endif
       }
     } else {

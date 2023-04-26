@@ -80,13 +80,13 @@ get_network_addresses(void)
       continue;
     }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     if (iface->FriendlyName) {
 #ifdef _MSC_VER
       OC_DBG("processing iface %ws:", iface->FriendlyName);
 #endif /* _MSC_VER */
     }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
        //  Process all IPv4 addresses on this interface.
 #ifdef OC_IPV4
     for (address = iface->FirstUnicastAddress; address;
@@ -145,14 +145,14 @@ get_network_addresses(void)
         // If we see a non link-local and non DNS_ELIGIBLE address, ignore it.
         if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
             !(address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
           char dotname[NI_MAXHOST] = { 0 };
           getnameinfo((const SOCKADDR *)addr, sizeof(struct sockaddr_in6),
                       dotname, sizeof(dotname), NULL, 0, NI_NUMERICHOST);
-          PRINT("%s is not IN6_IS_ADDR_LINKLOCAL and not "
-                "IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.\n",
-                dotname);
-#endif /* OC_DEBUG */
+          OC_DBG("%s is not IN6_IS_ADDR_LINKLOCAL and not "
+                 "IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.",
+                 dotname);
+#endif /* OC_DBG_IS_ENABLED */
           continue;
         }
       }

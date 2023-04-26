@@ -255,66 +255,66 @@ oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
   return permission;
 }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 static void
-dump_acl(size_t device)
+print_acls(size_t device)
 {
   const oc_sec_acl_t *a = &g_aclist[device];
   const oc_sec_ace_t *ace = oc_list_head(a->subjects);
-  PRINT("\nAccess Control List\n---------\n");
+  OC_DBG("\nAccess Control List\n---------");
   while (ace != NULL) {
-    PRINT("\n---------\nAce: %d\n---------\n", ace->aceid);
+    OC_DBG("\n---------\nAce: %d\n---------", ace->aceid);
     switch (ace->subject_type) {
     case OC_SUBJECT_UUID: {
       char u[OC_UUID_LEN];
       oc_uuid_to_str(&ace->subject.uuid, u, OC_UUID_LEN);
-      PRINT("UUID: %s\n", u);
+      OC_DBG("UUID: %s", u);
     } break;
     case OC_SUBJECT_CONN: {
       switch (ace->subject.conn) {
       case OC_CONN_AUTH_CRYPT:
-        PRINT("CONN: auth-crypt\n");
+        OC_DBG("CONN: auth-crypt");
         break;
       case OC_CONN_ANON_CLEAR:
-        PRINT("CONN: anon-clear\n");
+        OC_DBG("CONN: anon-clear");
         break;
       }
     } break;
     case OC_SUBJECT_ROLE: {
-      PRINT("Role_RoleId: %s\n", oc_string(ace->subject.role.role));
+      OC_DBG("Role_RoleId: %s", oc_string(ace->subject.role.role));
       if (oc_string_len(ace->subject.role.authority) > 0) {
-        PRINT("Role_Authority: %s\n", oc_string(ace->subject.role.authority));
+        OC_DBG("Role_Authority: %s", oc_string(ace->subject.role.authority));
       }
     } break;
     }
 
     oc_ace_res_t *r = oc_list_head(ace->resources);
-    PRINT("\nResources:\n");
+    OC_DBG("\nResources:");
     while (r != NULL) {
       if (oc_string_len(r->href) > 0) {
-        PRINT("href: %s\n", oc_string(r->href));
+        OC_DBG("href: %s", oc_string(r->href));
       }
       switch (r->wildcard) {
       case OC_ACE_NO_WC:
-        PRINT("No wildcard\n");
+        OC_DBG("No wildcard");
         break;
       case OC_ACE_WC_ALL:
-        PRINT("Wildcard: *\n");
+        OC_DBG("Wildcard: *");
         break;
       case OC_ACE_WC_ALL_SECURED:
-        PRINT("Wildcard: +\n");
+        OC_DBG("Wildcard: +");
         break;
       case OC_ACE_WC_ALL_PUBLIC:
-        PRINT("Wildcard: -\n");
+        OC_DBG("Wildcard: -");
         break;
       }
-      PRINT("Permission: %d\n", ace->permission);
+      OC_DBG("Permission: %d", ace->permission);
       r = r->next;
     }
     ace = ace->next;
   }
 }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 static uint16_t
 get_role_permissions(const oc_sec_cred_t *role_cred,
@@ -448,9 +448,9 @@ bool
 oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
                  const oc_endpoint_t *endpoint)
 {
-#ifdef OC_DEBUG
-  dump_acl(endpoint->device);
-#endif /* OC_DEBUG */
+#if OC_DBG_IS_ENABLED
+  print_acls(endpoint->device);
+#endif /* OC_DBG_IS_ENABLED */
 
   bool is_DCR = oc_core_is_DCR(resource, resource->device);
   bool is_SVR = oc_core_is_SVR(resource, resource->device);
@@ -773,7 +773,7 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
     }
   } else {
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     if (type == OC_SUBJECT_UUID) {
       char c[OC_UUID_LEN];
       oc_uuid_to_str(&ace->subject.uuid, c, OC_UUID_LEN);
@@ -785,7 +785,7 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
         OC_DBG("Adding ACE for auth-crypt connection");
       }
     }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   }
 
   ace->subject_type = type;
@@ -818,7 +818,7 @@ oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
   if (wildcard != OC_ACE_NO_WC) {
     res->wildcard = wildcard;
   }
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   switch (res->wildcard) {
   case OC_ACE_WC_ALL_SECURED:
     OC_DBG("Adding wildcard resource + with permission %d", permission);
@@ -832,9 +832,9 @@ oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
   default:
     break;
   }
-#else  /* !OC_DEBUG */
+#else  /* !OC_DBG_IS_ENABLED */
   (void)permission;
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   if (href) {
     oc_new_string(&res->href, href, strlen(href));

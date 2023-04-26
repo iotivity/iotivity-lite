@@ -825,7 +825,7 @@ printhelp(const char *exec_path)
         "Linux)\n",
         OPT_SET_SYSTEM_TIME);
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
-  PRINT("  -l | --%-26s set log level (supported values: disabled, verbose, "
+  PRINT("  -l | --%-26s set log level (supported values: disabled, trace, "
         "debug, info, warning, error)\n",
         OPT_LOG_LEVEL " <level>");
   PRINT("ARGUMENTS:\n");
