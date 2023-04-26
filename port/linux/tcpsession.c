@@ -173,7 +173,7 @@ get_interface_index(int sock)
   return interface_index;
 }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 static void
 log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 {
@@ -187,8 +187,7 @@ log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
          addr, endpoint->interface_index, sock, (int)is_connected);
   oc_free_string(&ep);
 }
-
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 static void
 connect_session_locked(tcp_session_t *session, tcp_csm_state_t state,
@@ -224,9 +223,9 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   endpoint->interface_index = iface_index;
 
   connect_session_locked(session, state, iface_index);
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   log_new_session(&session->endpoint, sock, true);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   return session;
 }
 
@@ -479,24 +478,24 @@ tcp_receive_message_done:
   return ret;
 }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 static void
 log_tcp_session(const void *session, const oc_endpoint_t *endpoint,
                 bool is_connected)
 {
   if (session == NULL) {
-    PRINT("could not find %s TCP session for endpoint:",
-          is_connected ? "ongoing" : "waiting");
-    PRINTipaddr(*endpoint);
-    PRINT("\n");
+    OC_DBG("could not find %s TCP session for endpoint:",
+           is_connected ? "ongoing" : "waiting");
+    OC_LOGipaddr(*endpoint);
+    OC_DBG("\n");
     return;
   }
-  PRINT("found %s TCP session for endpoint:",
-        is_connected ? "ongoing" : "waiting");
-  PRINTipaddr(*endpoint);
-  PRINT("\n");
+  OC_DBG("found %s TCP session for endpoint:",
+         is_connected ? "ongoing" : "waiting");
+  OC_LOGipaddr(*endpoint);
+  OC_DBG("\n");
 }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 static tcp_session_t *
 find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
@@ -506,9 +505,9 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
          oc_endpoint_compare(&session->endpoint, endpoint) != 0) {
     session = session->next;
   }
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   log_tcp_session(session, endpoint, true);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   return session;
 }
 
@@ -616,9 +615,9 @@ find_waiting_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   while (ws != NULL && oc_endpoint_compare(&ws->endpoint, endpoint) != 0) {
     ws = ws->next;
   }
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   log_tcp_session(ws, endpoint, false);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   return ws;
 }
 
@@ -645,9 +644,9 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
   ws->on_tcp_connect = on_tcp_connect;
   ws->on_tcp_connect_data = on_tcp_connect_data;
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   log_new_session(&ws->endpoint, sock, false);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(g_waiting_session_list, ws);
   return ws;

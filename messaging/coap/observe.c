@@ -620,11 +620,11 @@ coap_notify_collection(oc_collection_t *collection,
 #else /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (!buffer) {
-#ifdef OC_DEBUG
+#if OC_WRN_IS_ENABLED
     const char *iface = get_iface_query(iface_mask);
     OC_WRN("coap_notify_collection(%s): out of memory allocating buffer",
            iface != NULL ? iface : "NULL");
-#endif /* OC_DEBUG */
+#endif /* OC_WRN_IS_ENABLED */
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -649,11 +649,11 @@ coap_notify_collection(oc_collection_t *collection,
 
   int err = 0;
   if (!oc_handle_collection_request(OC_GET, &request, iface_mask, NULL)) {
-#ifdef OC_DEBUG
+#if OC_WRN_IS_ENABLED
     const char *iface = get_iface_query(iface_mask);
     OC_WRN("coap_notify_collection(%s): failed to handle collection request",
            iface != NULL ? iface : "NULL");
-#endif /* OC_DEBUG */
+#endif /* OC_WRN_IS_ENABLED */
     err = -1;
     goto cleanup;
   }
@@ -887,7 +887,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
         continue;
       }
       if (!has_response) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
         oc_string_t ep_str;
         memset(&ep_str, 0, sizeof(oc_string_t));
         const char *ep_cstr = "";
@@ -898,7 +898,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
                "%s for endpoint %s\n\n",
                oc_string(resource->uri), ep_cstr);
         oc_free_string(&ep_str);
-#endif
+#endif /* OC_DBG_IS_ENABLED */
         if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
           goto leave_notify_observers;
         }

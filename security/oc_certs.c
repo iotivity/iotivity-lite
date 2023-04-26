@@ -430,12 +430,12 @@ oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
   if (uuid_prefix_len == 0 ||
       val.len - uuid_prefix_len <
         OC_UUID_LEN - 1) { // -1 because val is not nul-terminated
-#ifdef OC_DEBUG
+#if OC_ERR_IS_ENABLED
     oc_string_t cn;
     oc_new_string(&cn, uuid_CN, val.len);
     OC_ERR("invalid Common Name field (tag:%d val:%s)", val.tag, oc_string(cn));
     oc_free_string(&cn);
-#endif /* OC_DEBUG */
+#endif /* OC_ERR_IS_ENABLED */
     return false;
   }
 

@@ -1009,11 +1009,11 @@ process_socket_signal_event(const ip_context_t *dev, fd_set *rdfds)
   }
   FD_CLR(dev->tcp.connect_pipe[0], rdfds);
   adapter_receive_state_t status = tcp_receive_signal(&dev->tcp);
-#ifndef OC_DEBUG
-  (void)status;
-#endif /* OC_DEBUG */
   OC_DBG("Signal event received(fd=%d, status=%d)", dev->tcp.connect_pipe[0],
          status);
+#if !OC_DBG_IS_ENABLED
+  (void)status;
+#endif /* OC_DBG_IS_ENABLED */
   return true;
 #else  /* !OC_TCP */
   (void)dev;
@@ -1048,11 +1048,9 @@ process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
   return s == ADAPTER_STATUS_NONE ? 0 : 1;
 
 receive:
-#ifdef OC_DEBUG
-  PRINT("Incoming message of size %zd bytes from ", message->length);
-  PRINTipaddr(message->endpoint);
-  PRINT("\n\n");
-#endif /* OC_DEBUG */
+  OC_DBG("Incoming message of size %zd bytes from ", message->length);
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n\n");
 
   // TODO: oc_message_shrink_buffer
   oc_network_receive_event(message);
@@ -1100,7 +1098,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
     }
   }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   if (rdfds != NULL) {
     for (int i = 0; i < FD_SETSIZE; ++i) {
       if (FD_ISSET(i, rdfds)) {
@@ -1115,7 +1113,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
       }
     }
   }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   return 0;
 }
@@ -1325,11 +1323,9 @@ oc_get_socket_address(const oc_endpoint_t *endpoint,
 static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
-#ifdef OC_DEBUG
-  PRINT("Outgoing message of size %zd bytes to ", message->length);
-  PRINTipaddr(message->endpoint);
-  PRINT("\n\n");
-#endif /* OC_DEBUG */
+  OC_DBG("Outgoing message of size %zd bytes to ", message->length);
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n\n");
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));

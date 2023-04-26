@@ -110,48 +110,54 @@
 #define OC_LOG_MAXIMUM_LEVEL OC_LOG_LEVEL_DISABLED_MACRO
 #endif /* !OC_LOG_MAXIMUM_LEVEL */
 
+#define OC_TRACE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE_MACRO)
 #ifndef OC_TRACE
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE_MACRO)
+#if OC_TRACE_IS_ENABLED
 #define OC_TRACE(...) OC_LOG(OC_LOG_LEVEL_TRACE, __VA_ARGS__)
 #else
 #define OC_TRACE(...)
 #endif
 #endif /* !OC_TRACE */
 
+#define OC_DBG_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
 #ifndef OC_DBG
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
+#if OC_DBG_IS_ENABLED
 #define OC_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #else
 #define OC_DBG(...)
 #endif
 #endif /* !OC_DBG */
 
+#define OC_INFO_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_INFO_MACRO)
 #ifndef OC_INFO
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_INFO_MACRO)
+#if OC_INFO_IS_ENABLED
 #define OC_INFO(...) OC_LOG(OC_LOG_LEVEL_INFO, __VA_ARGS__)
 #else
 #define OC_INFO(...)
 #endif
 #endif /* !OC_INFO */
 
+#define OC_NOTE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_NOTICE_MACRO)
 #ifndef OC_NOTE
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_NOTICE_MACRO)
+#if OC_NOTE_IS_ENABLED
 #define OC_NOTE(...) OC_LOG(OC_LOG_LEVEL_NOTICE, __VA_ARGS__)
 #else
 #define OC_NOTE(...)
 #endif
 #endif /* !OC_NOTE */
 
+#define OC_WRN_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_WARNING_MACRO)
 #ifndef OC_WRN
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_WARNING_MACRO)
+#if OC_WRN_IS_ENABLED
 #define OC_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
 #else
 #define OC_WRN(...)
 #endif
 #endif /* !OC_WRN */
 
+#define OC_ERR_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_ERROR_MACRO)
 #ifndef OC_ERR
-#if OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_ERROR_MACRO)
+#if OC_ERR_IS_ENABLED
 #define OC_ERR(...) OC_LOG(OC_LOG_LEVEL_ERROR, __VA_ARGS__)
 #else
 #define OC_ERR(...)
@@ -206,7 +212,7 @@
 
 #define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6%scope]:port = 63 bytes
 
-#define SNPRINTFipaddr(str, size, endpoint)                                    \
+#define SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)                  \
   do {                                                                         \
     const char *scheme = "coap";                                               \
     if ((endpoint).flags & SECURED)                                            \
@@ -218,34 +224,44 @@
     memset(str, 0, size);                                                      \
     if ((endpoint).flags & IPV4) {                                             \
       SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                       \
-               ((endpoint).addr.ipv4.address)[0],                              \
-               ((endpoint).addr.ipv4.address)[1],                              \
-               ((endpoint).addr.ipv4.address)[2],                              \
-               ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);  \
+               ((endpoint).addr_memb.ipv4.address)[0],                         \
+               ((endpoint).addr_memb.ipv4.address)[1],                         \
+               ((endpoint).addr_memb.ipv4.address)[2],                         \
+               ((endpoint).addr_memb.ipv4.address)[3],                         \
+               (endpoint).addr_memb.ipv4.port);                                \
     } else {                                                                   \
       char scope[5] = { 0 };                                                   \
-      if ((endpoint).addr.ipv6.scope > 0) {                                    \
+      if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
         SNPRINTF(scope, sizeof(scope), "%%%d",                                 \
-                 (int)(endpoint).addr.ipv6.scope);                             \
+                 (int)(endpoint).addr_memb.ipv6.scope);                        \
       }                                                                        \
       SNPRINTF(                                                                \
         str, size,                                                             \
         "%s://"                                                                \
         "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
         "%02x%02x%s]:%d",                                                      \
-        scheme, ((endpoint).addr.ipv6.address)[0],                             \
-        ((endpoint).addr.ipv6.address)[1], ((endpoint).addr.ipv6.address)[2],  \
-        ((endpoint).addr.ipv6.address)[3], ((endpoint).addr.ipv6.address)[4],  \
-        ((endpoint).addr.ipv6.address)[5], ((endpoint).addr.ipv6.address)[6],  \
-        ((endpoint).addr.ipv6.address)[7], ((endpoint).addr.ipv6.address)[8],  \
-        ((endpoint).addr.ipv6.address)[9], ((endpoint).addr.ipv6.address)[10], \
-        ((endpoint).addr.ipv6.address)[11],                                    \
-        ((endpoint).addr.ipv6.address)[12],                                    \
-        ((endpoint).addr.ipv6.address)[13],                                    \
-        ((endpoint).addr.ipv6.address)[14],                                    \
-        ((endpoint).addr.ipv6.address)[15], scope, (endpoint).addr.ipv6.port); \
+        scheme, ((endpoint).addr_memb.ipv6.address)[0],                        \
+        ((endpoint).addr_memb.ipv6.address)[1],                                \
+        ((endpoint).addr_memb.ipv6.address)[2],                                \
+        ((endpoint).addr_memb.ipv6.address)[3],                                \
+        ((endpoint).addr_memb.ipv6.address)[4],                                \
+        ((endpoint).addr_memb.ipv6.address)[5],                                \
+        ((endpoint).addr_memb.ipv6.address)[6],                                \
+        ((endpoint).addr_memb.ipv6.address)[7],                                \
+        ((endpoint).addr_memb.ipv6.address)[8],                                \
+        ((endpoint).addr_memb.ipv6.address)[9],                                \
+        ((endpoint).addr_memb.ipv6.address)[10],                               \
+        ((endpoint).addr_memb.ipv6.address)[11],                               \
+        ((endpoint).addr_memb.ipv6.address)[12],                               \
+        ((endpoint).addr_memb.ipv6.address)[13],                               \
+        ((endpoint).addr_memb.ipv6.address)[14],                               \
+        ((endpoint).addr_memb.ipv6.address)[15], scope,                        \
+        (endpoint).addr_memb.ipv6.port);                                       \
     }                                                                          \
   } while (0)
+
+#define SNPRINTFipaddr(str, size, endpoint)                                    \
+  SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr)
 
 #define SNPRINTFbytes(buff, size, data, len)                                   \
   do {                                                                         \
@@ -257,9 +273,8 @@
     }                                                                          \
   } while (0)
 
-#ifndef OC_LOGipaddr
-#if defined(OC_DEBUG) && OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
-#define OC_LOGipaddr(endpoint)                                                 \
+#if OC_DBG_IS_ENABLED
+#define OC_LOG_ENDPOINT_ADDR(endpoint, addr_memb)                              \
   do {                                                                         \
     oc_logger_t *logger = oc_log_get_logger();                                 \
     if (logger->level < OC_LOG_LEVEL_DEBUG) {                                  \
@@ -267,23 +282,29 @@
     }                                                                          \
     char _oc_log_endpoint_buf[256];                                            \
     memset(_oc_log_endpoint_buf, 0, sizeof(_oc_log_endpoint_buf));             \
-    SNPRINTFipaddr(_oc_log_endpoint_buf, sizeof(_oc_log_endpoint_buf),         \
-                   endpoint);                                                  \
+    SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf, sizeof(_oc_log_endpoint_buf),  \
+                          endpoint, addr_memb);                                \
     if (logger->fn != NULL) {                                                  \
       logger->fn(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
                  __LINE__, __func__, "%s", _oc_log_endpoint_buf);              \
-    } else {                                                                   \
-      char _oc_log_fn_buf[64] = { 0 };                                         \
-      oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));           \
-      PRINT("[OC %s] D: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,            \
-            __FILENAME__, __LINE__, __func__, _oc_log_endpoint_buf);           \
-      fflush(stdout);                                                          \
+      break;                                                                   \
     }                                                                          \
+    char _oc_log_fn_buf[64] = { 0 };                                           \
+    oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
+    PRINT("[OC %s] D: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,              \
+          __FILENAME__, __LINE__, __func__, _oc_log_endpoint_buf);             \
+    fflush(stdout);                                                            \
   } while (0)
-#else /* OC_DEBUG */
-#define OC_LOGipaddr(endpoint)
-#endif /* !OC_DEBUG */
+#ifndef OC_LOGipaddr
+#define OC_LOGipaddr(endpoint) OC_LOG_ENDPOINT_ADDR(endpoint, addr)
 #endif /* !OC_LOGipaddr */
+#ifndef OC_LOGipaddr_local
+#define OC_LOGipaddr_local(endpoint) OC_LOG_ENDPOINT_ADDR(endpoint, addr_local)
+#endif /* !OC_LOGipaddr_local */
+#else  /* OC_DBG_IS_ENABLED */
+#define OC_LOGipaddr(endpoint)
+#define OC_LOGipaddr_local(endpoint)
+#endif /* !OC_DBG_IS_ENABLED */
 
 #ifndef OC_LOGbytes
 #if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \

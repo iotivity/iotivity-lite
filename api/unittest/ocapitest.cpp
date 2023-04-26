@@ -589,7 +589,7 @@ public:
       std::vector<char> json{};
       json.reserve(256);
       oc_rep_to_json(data->payload, &json[0], json.capacity(), true);
-      OC_DBG("%s\n", json.data());
+      PRINT("%s\n", json.data());
     }
 #endif /* OC_DEBUG */
 
