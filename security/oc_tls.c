@@ -62,7 +62,8 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 #include <mbedtls/timing.h>
-#ifdef OC_DEBUG
+/// TODO update mbedtls_config.h to use LOG_LEVEL instead of OC_DEBUG
+#if defined(OC_DEBUG)
 #include <mbedtls/debug.h>
 #include <mbedtls/error.h>
 #include <mbedtls/platform.h>
@@ -253,7 +254,13 @@ oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
 {
   (void)ctx;
   (void)level;
-  PRINT("mbedtls_log: %s:%04d: %s", file, line, str);
+#if OC_DBG_IS_ENABLED
+  OC_DBG("mbedtls_log: %s:%04d: %s", file, line, str);
+#else  /* !OC_DBG_IS_ENABLED */
+  (void)file;
+  (void)line;
+  (void)str;
+#endif /* OC_DBG_IS_ENABLED */
 }
 #endif /* OC_DEBUG */
 
@@ -572,11 +579,11 @@ check_retr_timers(void)
         }
         if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
             ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
           char buf[256];
-          mbedtls_strerror(ret, buf, 256);
+          mbedtls_strerror(ret, buf, sizeof(buf));
           OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
           oc_tls_free_peer(peer, false);
         }
       }
@@ -828,7 +835,7 @@ next_cred_in_chain:
           mbedtls_x509_crt_free(&cert_in_cred);
           return true;
         }
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
         mbedtls_x509_crt *c = &certs->cert;
         int chain_length = 0;
         while (c) {
@@ -836,7 +843,7 @@ next_cred_in_chain:
           c = c->next;
         }
         OC_DBG("identity cert chain is now of size %d", chain_length);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
         if (cert->next) {
           OC_DBG("processing other new certs, if any, further down the chain");
@@ -899,7 +906,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
     cred = cred->chain;
   }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   mbedtls_x509_crt *c = &cert->cert;
   int chain_length = 0;
   while (c) {
@@ -907,7 +914,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
     c = c->next;
   }
   OC_DBG("adding new identity cert chain of size %d", chain_length);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(g_identity_certs, cert);
 
@@ -998,23 +1005,23 @@ oc_tls_reload_trust_anchors(void)
     }
 
     mbedtls_x509_crt *c = &g_trust_anchors;
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     int chain_length = 1;
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
     while (c->next) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
       ++chain_length;
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
       c = c->next;
     }
     cert->cert = c;
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     char buf[256];
     if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
       OC_DBG("trust anchor(serial: %s) added to chain", buf);
     }
     OC_DBG("trust anchor chain is now of size %d", chain_length);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
     cert = cert->next;
   }
@@ -1307,23 +1314,23 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
   cert->device = device;
   cert->cred = cred;
   mbedtls_x509_crt *c = &g_trust_anchors;
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   int chain_length = 1;
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   while (c->next) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     ++chain_length;
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
     c = c->next;
   }
   cert->cert = c;
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   char buf[256];
   if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
     OC_DBG("trust anchor(serial: %s) added to chain", buf);
   }
   OC_DBG("trust anchor chain is now of size %d", chain_length);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(g_ca_certs, cert);
   OC_DBG("appended new trust anchor to ca certs");
@@ -1640,7 +1647,7 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
         }
         OC_DBG("found matching trustca; check if trustca's cred entry has a "
                "UUID matching with the peer's UUID, or *");
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
         if (ca_cert->cred->subjectuuid.id[0] != '*') {
           char ca_uuid[OC_UUID_LEN] = { 0 };
           oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid, sizeof(ca_uuid));
@@ -1648,7 +1655,7 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
         } else {
           OC_DBG("trustca cred UUID is the wildcard *");
         }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
         if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id, 16) != 0) {
           if (memcmp(ca_cert->cred->subjectuuid.id, wildcard_sub.id, 16) != 0) {
             OC_DBG("trustca cred's UUID does not match with with peer's UUID "
@@ -2268,11 +2275,11 @@ oc_tls_send_message(oc_message_t *message)
     }
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
       char buf[256];
-      mbedtls_strerror(ret, buf, 256);
+      mbedtls_strerror(ret, buf, sizeof(buf));
       OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       oc_tls_free_peer(peer, false);
     } else {
       length = message->length;
@@ -2322,11 +2329,11 @@ write_application_data(oc_tls_peer_t *peer)
     oc_message_unref(message);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
       char buf[256];
-      mbedtls_strerror(ret, buf, 256);
+      mbedtls_strerror(ret, buf, sizeof(buf));
       OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_ERR_IS_ENABLED */
       oc_tls_free_peer(peer, false);
       break;
     }
@@ -2340,11 +2347,11 @@ oc_tls_handshake(oc_tls_peer_t *peer)
   int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
   if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
       ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
     char buf[256];
     mbedtls_strerror(ret, buf, sizeof(buf));
     OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
     oc_tls_free_peer(peer, false);
     return;
   }
@@ -2523,11 +2530,11 @@ read_application_data_tcp(oc_tls_peer_t *peer)
         } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
           OC_DBG("oc_tls_tcp: Client wants to reconnect");
         } else {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
           char buf[256];
-          mbedtls_strerror(ret, buf, 256);
+          mbedtls_strerror(ret, buf, sizeof(buf));
           OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
         }
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             (peer->endpoint.flags & TCP) == 0) {
@@ -2584,11 +2591,11 @@ read_application_data(oc_tls_peer_t *peer)
         }
       } else if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
                  ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
         char buf[256];
-        mbedtls_strerror(ret, buf, 256);
+        mbedtls_strerror(ret, buf, sizeof(buf));
         OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
         oc_tls_free_peer(peer, false);
         return;
       }
@@ -2639,11 +2646,11 @@ read_application_data(oc_tls_peer_t *peer)
       } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
         OC_DBG("oc_tls: Client wants to reconnect");
       } else {
-#ifdef OC_DEBUG
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
         char buf[256];
-        mbedtls_strerror(ret, buf, 256);
+        mbedtls_strerror(ret, buf, sizeof(256));
         OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG */
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       }
       if (peer->role == MBEDTLS_SSL_IS_SERVER &&
           (peer->endpoint.flags & TCP) == 0) {
@@ -2700,12 +2707,12 @@ oc_tls_recv_message(oc_message_t *message)
     oc_message_unref(message);
     return;
   }
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   char u[OC_UUID_LEN];
   oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
   OC_DBG("oc_tls: Received message from device(uuid=%s): length=%zu, peer=%p",
          u, message->length, (void *)peer);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(peer->recv_q, message);
   peer->timestamp = oc_clock_time();

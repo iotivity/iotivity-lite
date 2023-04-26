@@ -90,9 +90,9 @@ nil_uuid(const oc_uuid_t *uuid)
   return true;
 }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 static void
-dump_pstat_dos(const oc_sec_pstat_t *ps)
+print_pstat_dos(const oc_sec_pstat_t *ps)
 {
   switch (ps->s) {
   case OC_DOS_RESET:
@@ -112,7 +112,7 @@ dump_pstat_dos(const oc_sec_pstat_t *ps)
     break;
   }
 }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 static bool
 valid_transition(size_t device, oc_dostype_t state)
@@ -300,12 +300,12 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
     if (doxm->owned || !nil_uuid(&doxm->devowneruuid) ||
         !pstat_check_ps_state(ps)) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
       if (!nil_uuid(&doxm->devowneruuid)) {
         OC_DBG("non-Nil doxm:devowneruuid in RFOTM");
       }
       OC_DBG("ERROR in RFOTM\n");
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
       goto pstat_state_error;
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
@@ -397,9 +397,9 @@ pstat_state_error:
 oc_sec_pstat_t *
 oc_sec_get_pstat(size_t device)
 {
-#ifdef OC_DEBUG
-  dump_pstat_dos(&g_pstat[device]);
-#endif /* OC_DEBUG */
+#if OC_DBG_IS_ENABLED
+  print_pstat_dos(&g_pstat[device]);
+#endif /* OC_DBG_IS_ENABLED */
   return &g_pstat[device];
 }
 
@@ -448,9 +448,9 @@ void
 oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
                     bool to_storage)
 {
-#ifdef OC_DEBUG
-  dump_pstat_dos(&g_pstat[device]);
-#endif /* OC_DEBUG */
+#if OC_DBG_IS_ENABLED
+  print_pstat_dos(&g_pstat[device]);
+#endif /* OC_DBG_IS_ENABLED */
   char uuid[OC_UUID_LEN];
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
@@ -503,11 +503,11 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
 {
   oc_sec_pstat_t ps;
   oc_sec_pstat_copy(&ps, &g_pstat[device]);
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   if (!from_storage) {
-    dump_pstat_dos(&ps);
+    print_pstat_dos(&ps);
   }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   bool transition_state = false;
   bool target_mode = false;

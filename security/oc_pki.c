@@ -373,10 +373,7 @@ default_verify_certificate_cb(struct oc_tls_peer_t *peer,
 {
   (void)peer;
   (void)depth;
-#ifndef OC_DEBUG
-  (void)crt;
-  (void)flags;
-#else  /* OC_DEBUG */
+#if OC_ERR_IS_ENABLED
   if (flags != NULL && (*flags & MBEDTLS_X509_BADCERT_EXPIRED) != 0) {
     char buf[256];
     int ret = mbedtls_x509_dn_gets(buf, sizeof(buf) - 1, &crt->subject);
@@ -403,7 +400,10 @@ default_verify_certificate_cb(struct oc_tls_peer_t *peer,
            crt->valid_from.year, crt->valid_from.mon, crt->valid_from.day,
            crt->valid_from.hour, crt->valid_from.min, crt->valid_from.sec);
   }
-#endif /* OC_DEBUG */
+#else  /* !OC_ERR_IS_ENABLED */
+  (void)crt;
+  (void)flags;
+#endif /* OC_ERR_IS_ENABLED */
   return 0;
 }
 

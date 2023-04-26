@@ -911,12 +911,9 @@ network_event_thread(void *data)
       continue;
 
     common:
-#ifdef OC_DEBUG
-      PRINT("Incoming message of size %zd bytes from ", message->length);
-      PRINTipaddr(message->endpoint);
-      PRINT("\n\n");
-#endif /* OC_DEBUG */
-
+      OC_DBG("Incoming message of size %zd bytes from ", message->length);
+      OC_LOGipaddr(message->endpoint);
+      OC_DBG("\n\n");
       oc_network_receive_event(message);
     }
   }
@@ -1012,11 +1009,9 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 int
 oc_send_buffer(oc_message_t *message)
 {
-#ifdef OC_DEBUG
-  PRINT("Outgoing message of size %zd bytes to ", message->length);
-  PRINTipaddr(message->endpoint);
-  PRINT("\n\n");
-#endif /* OC_DEBUG */
+  OC_DBG("Outgoing message of size %zd bytes to ", message->length);
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("\n\n");
 
   struct sockaddr_storage receiver;
   memset(&receiver, 0, sizeof(struct sockaddr_storage));

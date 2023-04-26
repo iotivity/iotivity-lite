@@ -24,6 +24,7 @@
 #include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
+#include "port/oc_log_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -54,7 +55,10 @@ oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
   char idd_tag[MAX_TAG_LENGTH];
   gen_idd_tag("IDD", device, idd_tag);
   long rr = oc_storage_write(idd_tag, IDD, IDD_size);
-  PRINT("\tIntrospection data set written data size: %d [bytes]\n", (int)rr);
+  OC_DBG("\tIntrospection data set written data size: %ld [bytes]\n", rr);
+#if !OC_DBG_IS_ENABLED
+  (void)rr;
+#endif /* !OC_DBG_IS_ENABLED */
 }
 #endif /*OC_IDD_API*/
 

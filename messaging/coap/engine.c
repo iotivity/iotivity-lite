@@ -204,7 +204,7 @@ coap_receive(oc_message_t *msg)
   coap_set_global_status_code(status);
 
   if (status == COAP_NO_ERROR) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u",
            message->version, message->token[0], message->token[1],
            message->mid);
@@ -224,7 +224,7 @@ coap_receive(oc_message_t *msg)
     default:
       break;
     }
-#endif
+#endif /* OC_DBG_IS_ENABLED */
 
 #ifdef OC_TCP
     if (coap_check_signal_message(message)) {
@@ -260,7 +260,7 @@ coap_receive(oc_message_t *msg)
     /* handle requests */
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
       switch (message->code) {
       case COAP_GET:
         OC_DBG("  method: GET");
@@ -278,7 +278,7 @@ coap_receive(oc_message_t *msg)
       OC_DBG("  URL: %.*s", (int)message->uri_path_len, message->uri_path);
       OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
       OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
-#endif
+#endif /* OC_DBG_IS_ENABLED */
       const char *href;
       size_t href_len = coap_get_header_uri_path(message, &href);
 #ifdef OC_TCP
