@@ -112,6 +112,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Remove cloud server container
+        if: ${{ always() }}
+        run: |
+          # enough time for sanitized build to generate report on exit
+          docker stop --time 300 ${{ inputs.name }} || :
+          docker rm -f ${{ inputs.name }} || :
+
       - name: Collect cloud server logs when the test fails
         if: ${{ failure() }}
         run: cat `pwd`/data/0.log
@@ -125,6 +132,3 @@ jobs:
           if ls `pwd`/data/0.tsan.log* 1> /dev/null 2>&1; then \
             sudo cat `pwd`/data/0.tsan.log*; \
           fi
-
-      - name: Remove cloud server container
-        run: docker rm -f ${{ inputs.name }}

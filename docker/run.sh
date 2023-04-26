@@ -14,9 +14,9 @@ mkdir -p /tmp/logbt-coredumps
 pids=()
 echo "called_from_lib:libfaketimeMT.so.1" > /tmp/tsan.suppressions
 for ((i=0;i<$NUM_DEVICES;i++)); do
-    export ASAN_OPTIONS="log_path=/tmp/${i}.asan.log verify_asan_link_order=0"
+    export ASAN_OPTIONS="verbosity=1:atexit=1:log_path=/tmp/${i}.asan.log:verify_asan_link_order=0"
     # abort on first tsan problem found
-    export TSAN_OPTIONS="halt_on_error=1 abort_on_error=1 log_path=/tmp/${i}.tsan.log suppressions=/tmp/tsan.suppressions"
+    export TSAN_OPTIONS="verbosity=1:halt_on_error=1:abort_on_error=1:log_path=/tmp/${i}.tsan.log:suppressions=/tmp/tsan.suppressions"
     export LD_PRELOAD=/usr/local/lib/faketime/libfaketimeMT.so.1
     ${PREFIX_EXEC} /iotivity-lite/port/linux/service $@ > /tmp/$i.log 2>&1 &
     pids+=($!)

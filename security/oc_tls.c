@@ -2440,6 +2440,7 @@ oc_tls_init_connection(oc_message_t *message)
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   oc_tls_handshake(peer);
+  oc_message_unref(message);
 }
 #endif /* OC_CLIENT */
 

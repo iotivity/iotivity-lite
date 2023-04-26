@@ -8,7 +8,7 @@ name: Create and publish docker images
 on:
   push:
     branches:
-      - 'master'
+      - "master"
     tags:
       - "*"
   pull_request:
