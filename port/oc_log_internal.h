@@ -47,6 +47,8 @@
 #include "oc_log.h"
 #include "oc_helpers.h"
 
+#include <inttypes.h>
+
 #ifndef __FILENAME__
 #ifdef WIN32
 #define __FILENAME__                                                           \
@@ -268,9 +270,15 @@
   do {                                                                         \
     char *beg = (buff);                                                        \
     char *end = (buff) + (size);                                               \
-    for (size_t i = 0; beg <= (end - 3) && i < (size_t)(len); i++) {           \
-      beg += (i == 0) ? SPRINTF(beg, "%02x", (data)[i])                        \
-                      : SPRINTF(beg, ":%02x", (data)[i]);                      \
+    /* without _oc_log_ret = 9 has sometimes */                                \
+    uint8_t *_oc_log_data = (uint8_t *)(data);                                 \
+    for (size_t i = 0; (beg <= (end - 3)) && (i < (size_t)(len)); i++) {       \
+      int _oc_log_ret = (i == 0) ? SPRINTF(beg, "%02x", _oc_log_data[i])       \
+                                 : SPRINTF(beg, ":%02x", _oc_log_data[i]);     \
+      if (_oc_log_ret < 0) {                                                   \
+        break;                                                                 \
+      }                                                                        \
+      beg += _oc_log_ret;                                                      \
     }                                                                          \
   } while (0)
 
@@ -315,11 +323,15 @@
 #else /* OC_NO_LOG_BYTES || !OC_DEBUG */
 #define OC_LOGbytes(bytes, length)                                             \
   do {                                                                         \
+    if (length == 0) {                                                         \
+      break;                                                                   \
+    }                                                                          \
     oc_logger_t *logger = oc_log_get_logger();                                 \
     if (logger->level < OC_LOG_LEVEL_TRACE) {                                  \
       break;                                                                   \
     }                                                                          \
     oc_string_t _oc_log_bytes_buf;                                             \
+    memset(&_oc_log_bytes_buf, 0, sizeof(_oc_log_bytes_buf));                  \
     oc_alloc_string(&_oc_log_bytes_buf,                                        \
                     length * 3 + 1 < 2048 ? length * 3 + 1 : 2048);            \
     size_t _oc_log_bytes_buf_size = oc_string_len(_oc_log_bytes_buf);          \
