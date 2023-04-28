@@ -31,6 +31,11 @@ on:
         type: boolean
         required: false
         default: false
+      skip:
+        description: Skip this run of the job
+        type: boolean
+        required: false
+        default: false
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/device/test-cloud-server:latest
   CERT_TOOL_IMAGE: ghcr.io/plgd-dev/hub/cert-tool:vnext
@@ -40,6 +45,7 @@ env:
 
 jobs:
   plgd-device-test-with-cfg:
+    if: ${{ !inputs.skip }}
     runs-on: ubuntu-22.04
 
     steps:
@@ -123,8 +129,8 @@ jobs:
         if: ${{ failure() }}
         run: cat `pwd`/data/0.log
 
-      - name: Collect sanitizers cloud server logs when the test fails
-        if: ${{ failure() }}
+      - name: Collect sanitizers cloud server logs
+        if: ${{ always() }}
         run: |
           if ls `pwd`/data/0.asan.log* 1> /dev/null 2>&1; then \
             sudo cat `pwd`/data/0.asan.log*; \

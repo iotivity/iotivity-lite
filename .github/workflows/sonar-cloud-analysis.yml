@@ -21,15 +21,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON"
+          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           # dynamic allocation off
-          - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON"
+          - build_args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           # security off
-          - args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON"
+          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
 
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON ${{ matrix.args }}"
+      build_args: "-DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON ${{ matrix.build_args }}"
       build_type: Debug
       coverage: true
 
@@ -37,19 +37,28 @@ jobs:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: cloud-server-debug
-      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DBUILD_TESTING=ON"
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
       build_type: Debug
       cert_signature_algorithm: ECDSA-SHA384
       cert_elliptic_curve: P384
       coverage: true
 
   plgd-hub-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cloud-server-debug
+            hub_args: ""
+          - name: dtls-cloud-server-debug
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
-      name: cloud-server-debug
+      name: ${{ matrix.name }}
       build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DBUILD_TESTING=ON"
       build_type: Debug
       coverage: true
+      hub_args: ${{ matrix.hub_args }}
 
   sonar-cloud-scan:
     name: Sonar Cloud scan

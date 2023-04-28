@@ -39,6 +39,8 @@ jobs:
         include:
           - name: cloud-server
             args: ""
+            # same configuration as "cloud-server-debug" in the SonarCloud scan job
+            skip: (github.event_name != 'workflow_dispatch')
           - name: cloud-server-asan
             args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
@@ -86,3 +88,4 @@ jobs:
       build_type: Debug
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      skip: ${{ matrix.skip || false }}
