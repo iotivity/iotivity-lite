@@ -36,9 +36,10 @@ jobs:
   plgd-device-tests:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
-      name: cloud-server-debug
-      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF"
+      name: cloud-server
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_COVERAGE_ENABLED=ON"
       build_type: Debug
+      # try with SHA384
       cert_signature_algorithm: ECDSA-SHA384
       cert_elliptic_curve: P384
       coverage: true
@@ -48,14 +49,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: cloud-server-debug
-            hub_args: ""
-          - name: dtls-cloud-server-debug
+          - name: cloud-server-access-in-RFOTM
+            build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: dtls-cloud-server
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DBUILD_TESTING=ON"
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_COVERAGE_ENABLED=ON ${{ matrix.build_args }}"
       build_type: Debug
       coverage: true
       hub_args: ${{ matrix.hub_args }}
@@ -103,7 +104,7 @@ jobs:
           mkdir build && cd build
           # sonar-scanner currently cannot handle multi configuration configuration (ie. compilation of the same file with different defines),
           # so we enable as many features as possible so we get max. amount of code analysis
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DBUILD_TESTING=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DBUILD_TESTING=ON ..
           cd ..
           # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
           # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled

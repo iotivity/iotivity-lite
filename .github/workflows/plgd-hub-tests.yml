@@ -39,8 +39,6 @@ jobs:
         include:
           - name: cloud-server
             build_args: ""
-            # same configuration as "cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
-            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
@@ -83,6 +81,8 @@ jobs:
 
           - name: cloud-server-access-in-RFOTM
             build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            # same configuration as "cloud-server-access-in-RFOTM" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: cloud-server-asan-access-in-RFOTM
             build_args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
@@ -119,7 +119,7 @@ jobs:
           - name: dtls-cloud-server
             build_args: ""
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
-            # same configuration as "dtls-cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
+            # same configuration as "dtls-cloud-server" in the SonarCloud scan job, skip for events that trigger both jobs
             skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: dtls-cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
