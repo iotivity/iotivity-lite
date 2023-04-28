@@ -8,10 +8,8 @@ name: Run plgd/device test with cloud_server and a single configuration
 on:
   workflow_call:
     inputs:
-      name:
-        type: string
-        required: true
       build_args:
+        description: build arguments forwarded to CMake in docker/apps/Dockerfile.cloud-server-debug
         type: string
         required: true
       build_type:
@@ -31,6 +29,9 @@ on:
         type: boolean
         required: false
         default: false
+      name:
+        type: string
+        required: true
       skip:
         description: Skip this run of the job
         type: boolean
@@ -98,6 +99,13 @@ jobs:
           docker run --rm --network=host -v `pwd`/${{ env.CERT_PATH }}:/pki_certs ${{ env.TEST_CLOUD_SERVER_IMAGE }} \
             -test.parallel 1 -test.v
 
+      - name: Get output file name
+        if: ${{ inputs.coverage }}
+        id: coverage
+        run: |
+          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} ${{ inputs.name }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
+          echo "filename=coverage-plgd-device-${SUFFIX}.json" >> $GITHUB_OUTPUT
+
       - name: Gather coverage data
         if: ${{ inputs.coverage }}
         run: |
@@ -107,14 +115,14 @@ jobs:
           docker start ${{ inputs.name }}
           # see Dockerfile.cloud-server-debug for the absolute path with the iotivity-lite checkout
           docker exec --workdir "/iotivity-lite/tools" ${{ inputs.name }} /bin/bash -c "./collect-coverage.sh \
-            --output /data/coverage/coverage-plgd-device.json"
+            --output /data/coverage/${{ steps.coverage.outputs.filename }}"
 
       - name: Upload coverage data
         if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v3
         with:
           name: plgd-device-coverage
-          path: data/coverage/coverage-plgd-device.json
+          path: data/coverage/${{ steps.coverage.outputs.filename }}
           if-no-files-found: error
           retention-days: 1
 

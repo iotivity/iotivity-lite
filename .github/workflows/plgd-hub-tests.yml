@@ -40,8 +40,7 @@ jobs:
           - name: cloud-server
             build_args: ""
             # same configuration as "cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
-            skip: (github.event_name != 'workflow_dispatch')
-
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
@@ -121,7 +120,7 @@ jobs:
             build_args: ""
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
             # same configuration as "dtls-cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
-            skip: (github.event_name != 'workflow_dispatch')
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: dtls-cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"

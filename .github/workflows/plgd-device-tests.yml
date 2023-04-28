@@ -39,8 +39,8 @@ jobs:
         include:
           - name: cloud-server
             args: ""
-            # same configuration as "cloud-server-debug" in the SonarCloud scan job
-            skip: (github.event_name != 'workflow_dispatch')
+            # same configuration as "cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: cloud-server-asan
             args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
