@@ -39,6 +39,8 @@ jobs:
         include:
           - name: cloud-server
             build_args: ""
+            # same configuration as "cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
@@ -116,51 +118,54 @@ jobs:
 
           - name: dtls-cloud-server
             build_args: ""
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
+            # same configuration as "dtls-cloud-server-debug" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
           - name: dtls-cloud-server-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-asan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-rep-realloc
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-rep-realloc-asan
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-rep-realloc-tsan
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-asan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            hub_args: "-e TEST_COAP_GATEWAY_UDP_ENABLED=true"
+            hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF ${{ matrix.build_args }}
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.build_args }}
       build_type: Debug
       hub_args: ${{ matrix.hub_args }}
       args: ${{ matrix.args }}
       docker_args: ${{ matrix.docker_args }}
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      skip: ${{ matrix.skip || false }}
