@@ -70,9 +70,8 @@ oc_sec_svr_create(void)
       OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
     oc_sec_sdi_create_resource(i);
 #ifdef OC_PKI
-    oc_core_populate_resource(
-      OCF_SEC_CSR, i, OCF_SEC_CSR_URI, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_csr, 0, 0, 0, 1, OCF_SEC_CSR_RT);
+    oc_sec_csr_create_resource(i);
+
     oc_core_populate_resource(OCF_SEC_ROLES, i, "/oic/sec/roles",
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_cred, 0,

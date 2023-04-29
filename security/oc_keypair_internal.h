@@ -137,7 +137,7 @@ oc_ecdsa_keypair_t *oc_sec_ecdsa_get_keypair(size_t device);
 void oc_sec_ecdsa_free_keypairs(void);
 
 /** Free the key-pair associated with the given device and generate new one */
-int oc_sec_ecdsa_reset_keypair(size_t device);
+int oc_sec_ecdsa_reset_keypair(size_t device, bool keep_valid);
 
 #ifdef __cplusplus
 }

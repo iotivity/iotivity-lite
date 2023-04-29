@@ -26,6 +26,7 @@
 #include <mbedtls/build_info.h>
 #include <mbedtls/x509_csr.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -70,8 +71,12 @@ int oc_sec_csr_extract_subject_DN(const mbedtls_x509_csr *csr, char *buffer,
 int oc_sec_csr_extract_public_key(const mbedtls_x509_csr *csr, uint8_t *buffer,
                                   size_t buffer_size);
 
-/// Get request handler for /oic/sec/csr
-void get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
+/**
+ * @brief Create CSR (/oic/sec/csr) resource for given device.
+ *
+ * @param device device index
+ */
+void oc_sec_csr_create_resource(size_t device);
 
 #ifdef __cplusplus
 }

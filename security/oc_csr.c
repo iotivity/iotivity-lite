@@ -22,6 +22,7 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_csr.h"
+#include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
@@ -64,29 +65,25 @@ csr_init_pk_context(size_t device, mbedtls_pk_context *pk)
 }
 
 static bool
-csr_init_pk_context_with_retry(size_t device, mbedtls_pk_context *pk, int retry)
+csr_init_pk_context_with_reset(size_t device, mbedtls_pk_context *pk)
 {
   assert(pk != NULL);
-  mbedtls_pk_init(pk);
 
   OC_DBG("oc_csr: init pk context");
+  mbedtls_pk_init(pk);
   if (csr_init_pk_context(device, pk)) {
     return true;
   }
-  for (int i = 0; i < retry; ++i) {
-    OC_DBG("oc_csr: init pk context (%d)", i);
-    mbedtls_pk_free(pk);
-    mbedtls_pk_init(pk);
-    OC_DBG(
-      "could not load keypair for device %zd - try to regenerating the new one",
-      device);
-    if (oc_sec_ecdsa_reset_keypair(device) != 0) {
-      OC_ERR("could not regenerate keypair for device(%zd)", device);
-      continue;
-    }
-    if (csr_init_pk_context(device, pk)) {
-      return true;
-    }
+
+  OC_DBG("oc_csr: init pk context, reset keypair");
+  mbedtls_pk_free(pk);
+  mbedtls_pk_init(pk);
+  OC_DBG(
+    "could not load keypair for device %zd - try to regenerating the new one",
+    device);
+  if (oc_sec_ecdsa_reset_keypair(device, true) == 0 &&
+      csr_init_pk_context(device, pk)) {
+    return true;
   }
   mbedtls_pk_free(pk);
   return false;
@@ -110,7 +107,9 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
   }
 
   mbedtls_pk_context pk;
-  csr_init_pk_context_with_retry(device, &pk, /*retry*/ 1);
+  if (!csr_init_pk_context_with_reset(device, &pk)) {
+    return -1;
+  }
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -263,8 +262,9 @@ oc_sec_csr_extract_public_key(const mbedtls_x509_csr *csr, uint8_t *buffer,
   return ret;
 }
 
-void
-get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+static void
+csr_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
+                 void *data)
 {
   (void)data;
 
@@ -287,6 +287,15 @@ get_csr(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_rep_end_root_object();
 
   oc_send_response(request, OC_STATUS_OK);
+}
+
+void
+oc_sec_csr_create_resource(size_t device)
+{
+  oc_core_populate_resource(
+    OCF_SEC_CSR, device, OCF_SEC_CSR_URI, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OC_DISCOVERABLE | OC_SECURE, csr_resource_get, /*put*/ NULL, /*post*/ NULL,
+    /*delete*/ NULL, 1, OCF_SEC_CSR_RT);
 }
 
 #endif /* OC_SECURITY && OC_PKI */

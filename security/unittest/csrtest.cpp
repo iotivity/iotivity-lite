@@ -46,7 +46,11 @@ public:
     }
   }
 
-  void SetUp() override { EXPECT_TRUE(oc::TestDevice::StartServer()); }
+  void SetUp() override
+  {
+    EXPECT_TRUE(oc::TestDevice::StartServer());
+    g_device = oc::TestDevice::CountDevices() - 1;
+  }
 
   void TearDown() override
   {
@@ -55,9 +59,11 @@ public:
   }
 
   static std::vector<mbedtls_ecp_group_id> g_ocf_ecs;
+  static size_t g_device;
 };
 
 std::vector<mbedtls_ecp_group_id> TestCSRWithDevice::g_ocf_ecs{};
+size_t TestCSRWithDevice::g_device;
 
 TEST_F(TestCSRWithDevice, GenerateError)
 {
@@ -166,12 +172,6 @@ TEST_F(TestCSRWithDevice, Validate256)
   mbedtls_x509_csr_free(&csr);
 }
 
-TEST_F(TestCSRWithDevice, Reset)
-{
-  // TODO: test positive path
-  // compare oc_sec_ecdsa_get_keypair(device) before and after
-}
-
 static mbedtls_x509_csr
 generateValidCSR(mbedtls_md_type_t md, mbedtls_ecp_group_id grpid,
                  size_t device)
@@ -269,6 +269,18 @@ TEST_F(TestCSRWithDevice, Valid384ExtractPublicKey)
   for (auto ec : g_ocf_ecs) {
     generate_and_extract_pk(ec, 0);
   }
+}
+
+TEST_F(TestCSRWithDevice, RegenerateDeviceKeypair)
+{
+  oc_sec_ecdsa_free_keypairs();
+  ASSERT_EQ(0, oc_sec_ecdsa_count_keypairs());
+
+  std::array<unsigned char, 512> csr{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256, csr.data(),
+                                   csr.size()));
+
+  ASSERT_LT(0, oc_sec_ecdsa_count_keypairs());
 }
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -447,12 +459,6 @@ TEST_F(TestCSRWithDeviceTPM, Validate256SimulateTPM)
   OC_DBG("Subject: %s", sub.data());
 
   mbedtls_x509_csr_free(&csr);
-}
-
-TEST_F(TestCSRWithDeviceTPM, Reset)
-{
-  // TODO: override oc_pk_free_key -> return false
-  // compare oc_sec_ecdsa_get_keypair(device) before and after
 }
 
 #endif /* OC_SECURITY && OC_PKI */

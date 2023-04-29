@@ -426,6 +426,11 @@ on_tcp_connect_timeout(const oc_endpoint_t *, int state, void *)
   oc::TestDevice::Terminate();
 }
 
+#ifdef __linux__
+
+// run on your linux machine:
+// sudo ip6tables -I OUTPUT -p tcp --dport 12345 -j DROP
+
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
 {
   oc_endpoint_t ep = oc::endpoint::FromString(
@@ -463,6 +468,8 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
 
   restore_defaults();
 }
+
+#endif /* __linux__ */
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_repeat_fail)
 {

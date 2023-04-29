@@ -297,11 +297,12 @@ oc_sec_ecdsa_update_or_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
 }
 
 int
-oc_sec_ecdsa_reset_keypair(size_t device)
+oc_sec_ecdsa_reset_keypair(size_t device, bool keep_valid)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (kp != NULL) {
-    if (!oc_pk_free_key(device, kp->private_key, kp->private_key_size)) {
+    if (keep_valid &&
+        !oc_pk_free_key(device, kp->private_key, kp->private_key_size)) {
       OC_DBG("oc_pk_free_key the associated private key for device %zd is "
              "still valid",
              device);

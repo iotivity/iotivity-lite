@@ -20,10 +20,12 @@
 
 #include "oc_certs.h"
 #include "oc_config.h"
+#include "oc_pki.h"
 #include "port/oc_random.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_security_internal.h"
 #include "tests/gtest/KeyPair.h"
+#include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
 
 #include <array>
@@ -433,6 +435,51 @@ TEST_F(TestKeyPair, DecodeForMultipleDevices)
       << "error for ec(" << ec << ")";
 #endif /* !OC_DYNAMIC_ALLOCATION */
   }
+}
+
+TEST_F(TestKeyPair, Reset)
+{
+  ASSERT_TRUE(oc_sec_ecdsa_update_or_generate_keypair_for_device(
+    oc_sec_certs_ecp_group_id(),
+    /*device*/ 0));
+
+  oc_ecdsa_keypair_t *ockp = oc_sec_ecdsa_get_keypair(/*device*/ 0);
+  ASSERT_NE(nullptr, ockp);
+  oc::keypair_t kp_copy(*ockp);
+  EXPECT_TRUE(kp_copy.IsEqual(ockp->public_key, ockp->public_key_size,
+                              ockp->private_key, ockp->private_key_size));
+  EXPECT_EQ(0, oc_sec_ecdsa_reset_keypair(/*device*/ 0, false));
+
+  ockp = oc_sec_ecdsa_get_keypair(/*device*/ 0);
+  ASSERT_NE(nullptr, ockp);
+  EXPECT_FALSE(kp_copy.IsEqual(ockp->public_key, ockp->public_key_size,
+                               ockp->private_key, ockp->private_key_size));
+}
+
+TEST_F(TestKeyPair, ResetTPM)
+{
+  ASSERT_TRUE(oc_sec_ecdsa_update_or_generate_keypair_for_device(
+    oc_sec_certs_ecp_group_id(),
+    /*device*/ 0));
+  oc_ecdsa_keypair_t *ockp = oc_sec_ecdsa_get_keypair(/*device*/ 0);
+  ASSERT_NE(nullptr, ockp);
+  oc::keypair_t kp_copy(*ockp);
+  EXPECT_TRUE(kp_copy.IsEqual(ockp->public_key, ockp->public_key_size,
+                              ockp->private_key, ockp->private_key_size));
+
+  oc_pki_pk_functions_t pk_functions =
+    oc::pki::PKDummyFunctions::GetPKFunctions();
+  pk_functions.pk_free_key = [](size_t /*device*/,
+                                const unsigned char * /*key*/,
+                                size_t /*keylen*/) { return false; };
+  EXPECT_TRUE(oc_pki_set_pk_functions(&pk_functions));
+  // should not regenerate
+  EXPECT_EQ(0, oc_sec_ecdsa_reset_keypair(/*device*/ 0, true));
+  ockp = oc_sec_ecdsa_get_keypair(/*device*/ 0);
+  ASSERT_NE(nullptr, ockp);
+  EXPECT_TRUE(kp_copy.IsEqual(ockp->public_key, ockp->public_key_size,
+                              ockp->private_key, ockp->private_key_size));
+  ASSERT_TRUE(oc_pki_set_pk_functions(nullptr));
 }
 
 #endif /* OC_SECURITY && OC_PKI */
