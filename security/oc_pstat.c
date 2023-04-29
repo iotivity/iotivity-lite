@@ -286,7 +286,9 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #ifdef OC_PKI
     oc_sec_free_roles_for_device(device);
     // regenerate the key-pair for the identity device certificate.
-    oc_sec_ecdsa_reset_keypair(device);
+    if (oc_sec_ecdsa_reset_keypair(device, true) < 0) {
+      goto pstat_state_error;
+    }
 #endif /* OC_PKI */
     oc_sec_sp_default(device);
 #ifdef OC_SERVER

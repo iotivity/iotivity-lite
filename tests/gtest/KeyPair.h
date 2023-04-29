@@ -23,8 +23,8 @@
 #include "security/oc_keypair_internal.h"
 
 #include <array>
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 namespace oc {
 
@@ -34,6 +34,45 @@ struct keypair_t
   size_t public_key_size{ 0 };
   std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
   size_t private_key_size{ 0 };
+
+  keypair_t() = default;
+  keypair_t(const oc_ecdsa_keypair_t &ockp);
+
+  keypair_t(const keypair_t &other) = default;
+  keypair_t &operator=(const keypair_t &other) = default;
+  keypair_t(keypair_t &&other) noexcept = default;
+  keypair_t &operator=(keypair_t &&other) noexcept = default;
+
+  bool IsEqualPublicKey(const uint8_t *pubkey, size_t pubkey_size) const
+  {
+    return public_key_size == pubkey_size &&
+           memcmp(public_key.data(), pubkey, public_key_size);
+  }
+
+  bool IsEqualPrivateKey(const uint8_t *pkey, size_t pkey_size) const
+  {
+    return private_key_size == pkey_size &&
+           memcmp(private_key.data(), pkey, public_key_size);
+  }
+
+  bool IsEqual(const uint8_t *pubkey, size_t pubkey_size, const uint8_t *pkey,
+               size_t pkey_size) const
+  {
+    return public_key_size == pubkey_size && private_key_size == pkey_size &&
+           memcmp(public_key.data(), pubkey, public_key_size) == 0 &&
+           memcmp(private_key.data(), pkey, private_key_size) == 0;
+  }
+
+  friend bool operator==(const keypair_t &lhs, const keypair_t &rhs)
+  {
+    return lhs.IsEqual(rhs.public_key.data(), rhs.public_key_size,
+                       rhs.private_key.data(), rhs.private_key_size);
+  }
+
+  friend bool operator!=(const keypair_t &lhs, const keypair_t &rhs)
+  {
+    return !operator==(lhs, rhs);
+  }
 };
 
 keypair_t GetECPKeyPair(mbedtls_ecp_group_id grpid);

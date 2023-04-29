@@ -29,6 +29,11 @@
 
 namespace oc::pki {
 
+bool PKDummyFunctions::freeKeyInvoked = false;
+bool PKDummyFunctions::genKeyInvoked = false;
+bool PKDummyFunctions::writeKeyDerInvoked = false;
+bool PKDummyFunctions::parseKeyInvoked = false;
+
 std::vector<unsigned char>
 ReadPem(const std::string &path)
 {
@@ -156,6 +161,26 @@ IntermediateCertificate::Add(size_t device, int entity_credid)
   entity_credid_ = entity_credid;
   credid_ = credid;
   return true;
+}
+
+void
+PKDummyFunctions::Clear()
+{
+  freeKeyInvoked = false;
+  genKeyInvoked = false;
+  writeKeyDerInvoked = false;
+  parseKeyInvoked = false;
+}
+
+oc_pki_pk_functions_t
+PKDummyFunctions::GetPKFunctions()
+{
+  oc_pki_pk_functions_t pk_functions;
+  pk_functions.mbedtls_pk_parse_key = ParseKey;
+  pk_functions.mbedtls_pk_write_key_der = WriteKeyDer;
+  pk_functions.mbedtls_pk_ecp_gen_key = GenKey;
+  pk_functions.pk_free_key = FreeKey;
+  return pk_functions;
 }
 
 } // namespace oc::pki

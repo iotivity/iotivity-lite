@@ -20,9 +20,22 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
 namespace oc {
+
+keypair_t::keypair_t(const oc_ecdsa_keypair_t &ockp)
+  : public_key_size{ ockp.public_key_size }
+  , private_key_size{ ockp.private_key_size }
+{
+  std::copy(std::cbegin(ockp.public_key),
+            std::cbegin(ockp.public_key) + public_key_size,
+            std::begin(public_key));
+  std::copy(std::cbegin(ockp.private_key),
+            std::cbegin(ockp.private_key) + private_key_size,
+            std::begin(private_key));
+}
 
 keypair_t
 GetECPKeyPair(mbedtls_ecp_group_id grpid)

@@ -20,6 +20,8 @@
 
 #ifdef OC_PKI
 
+#include <oc_pki.h>
+
 #include <string>
 #include <vector>
 
@@ -92,6 +94,51 @@ private:
   int credid_{ -1 };
   size_t device_{ static_cast<size_t>(-1) };
 };
+
+class PKDummyFunctions {
+public:
+  static bool FreeKey(size_t /*device*/, const unsigned char * /*key*/,
+                      size_t /*keylen*/)
+  {
+    freeKeyInvoked = true;
+    return true;
+  }
+
+  static int GenKey(size_t /*device*/, mbedtls_ecp_group_id /*grp_id*/,
+                    mbedtls_pk_context * /*pk*/,
+                    int (* /*f_rng*/)(void *, unsigned char *, size_t),
+                    void * /*p_rng*/)
+  {
+    genKeyInvoked = true;
+    return 0;
+  }
+
+  static int ParseKey(size_t /*device*/, mbedtls_pk_context * /*pk*/,
+                      const unsigned char * /*key*/, size_t /*keylen*/,
+                      const unsigned char * /*pwd*/, size_t /*pwdlen*/,
+                      int (* /*f_rng*/)(void *, unsigned char *, size_t),
+                      void * /*p_rng*/)
+  {
+    parseKeyInvoked = true;
+    return 0;
+  }
+
+  static int WriteKeyDer(size_t /*device*/, const mbedtls_pk_context * /*pk*/,
+                         unsigned char * /*buf*/, size_t /*size*/)
+  {
+    writeKeyDerInvoked = true;
+    return 0;
+  }
+
+  static void Clear();
+  static oc_pki_pk_functions_t GetPKFunctions();
+
+  static bool freeKeyInvoked;
+  static bool genKeyInvoked;
+  static bool writeKeyDerInvoked;
+  static bool parseKeyInvoked;
+};
+
 } // namespace oc::pki
 
 #endif /* OC_PKI */
