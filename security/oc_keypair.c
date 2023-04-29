@@ -269,8 +269,8 @@ generate_ecdsa_keypair_error:
 }
 
 bool
-oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
-                                         size_t device)
+oc_sec_ecdsa_update_or_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
+                                                   size_t device)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   bool exists = kp != NULL;
@@ -296,7 +296,7 @@ oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
   return true;
 }
 
-void
+int
 oc_sec_ecdsa_reset_keypair(size_t device)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
@@ -305,16 +305,18 @@ oc_sec_ecdsa_reset_keypair(size_t device)
       OC_DBG("oc_pk_free_key the associated private key for device %zd is "
              "still valid",
              device);
-      return;
+      return 0;
     }
     oc_list_remove(g_oc_keypairs, kp);
     oc_memb_free(&g_oc_keypairs_s, kp);
   }
-  if (!oc_sec_ecdsa_generate_keypair_for_device(oc_sec_certs_ecp_group_id(),
-                                                device)) {
+  if (!oc_sec_ecdsa_update_or_generate_keypair_for_device(
+        oc_sec_certs_ecp_group_id(), device)) {
     OC_ERR("error generating ECDSA keypair for device %zd", device);
+    return -1;
   }
   oc_sec_dump_ecdsa_keypair(device);
+  return 0;
 }
 
 #endif /* OC_SECURITY && OC_PKI */

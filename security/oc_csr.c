@@ -39,12 +39,12 @@
 #include <mbedtls/x509_csr.h>
 
 static bool
-load_pk_context(size_t device, mbedtls_pk_context *pk)
+csr_init_pk_context(size_t device, mbedtls_pk_context *pk)
 {
   const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (kp == NULL) {
     OC_ERR("could not find public/private key pair on device %zd", device);
-    return -1;
+    return false;
   }
   int ret =
     mbedtls_pk_parse_public_key(pk, kp->public_key, kp->public_key_size);
@@ -63,27 +63,40 @@ load_pk_context(size_t device, mbedtls_pk_context *pk)
   return true;
 }
 
+static bool
+csr_init_pk_context_with_retry(size_t device, mbedtls_pk_context *pk, int retry)
+{
+  assert(pk != NULL);
+  mbedtls_pk_init(pk);
+
+  OC_DBG("oc_csr: init pk context");
+  if (csr_init_pk_context(device, pk)) {
+    return true;
+  }
+  for (int i = 0; i < retry; ++i) {
+    OC_DBG("oc_csr: init pk context (%d)", i);
+    mbedtls_pk_free(pk);
+    mbedtls_pk_init(pk);
+    OC_DBG(
+      "could not load keypair for device %zd - try to regenerating the new one",
+      device);
+    if (oc_sec_ecdsa_reset_keypair(device) != 0) {
+      OC_ERR("could not regenerate keypair for device(%zd)", device);
+      continue;
+    }
+    if (csr_init_pk_context(device, pk)) {
+      return true;
+    }
+  }
+  mbedtls_pk_free(pk);
+  return false;
+}
+
 int
 oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
                     size_t csr_size)
 {
   assert(csr != NULL);
-
-  mbedtls_pk_context pk;
-  mbedtls_pk_init(&pk);
-  if (!load_pk_context(device, &pk)) {
-    mbedtls_pk_free(&pk);
-    mbedtls_pk_init(&pk);
-    OC_DBG(
-      "could not load keypair for device %zd - try to regenerating the new one",
-      device);
-    oc_sec_ecdsa_reset_keypair(device);
-    if (!load_pk_context(device, &pk)) {
-      mbedtls_pk_free(&pk);
-      OC_ERR("could not load pk for device %zd", device);
-      return -1;
-    }
-  }
 
   const oc_uuid_t *uuid = oc_core_get_device_id(device);
   if (uuid == NULL) {
@@ -95,6 +108,9 @@ oc_sec_csr_generate(size_t device, mbedtls_md_type_t md, unsigned char *csr,
   if (!oc_certs_encode_CN_with_UUID(uuid, subject, sizeof(subject))) {
     return -1;
   }
+
+  mbedtls_pk_context pk;
+  csr_init_pk_context_with_retry(device, &pk, /*retry*/ 1);
 
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);

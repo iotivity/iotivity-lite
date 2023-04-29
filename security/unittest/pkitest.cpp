@@ -109,13 +109,12 @@ TEST_F(TestPKIPK, pk_functions)
   pk_functions.pk_free_key = nullptr;
   EXPECT_FALSE(oc_pki_set_pk_functions(&pk_functions));
 
-  oc_pki_pk_functions_t get_pk_functions;
-  memset(&get_pk_functions, 0, sizeof(oc_pki_pk_functions_t));
+  oc_pki_pk_functions_t get_pk_functions{};
   EXPECT_TRUE(oc_pki_get_pk_functions(&get_pk_functions));
-  EXPECT_EQ(get_pk_functions.mbedtls_pk_parse_key, MbedtlsPKParseKey);
-  EXPECT_EQ(get_pk_functions.mbedtls_pk_write_key_der, MbedtlsPKWriteKeyDer);
-  EXPECT_EQ(get_pk_functions.mbedtls_pk_ecp_gen_key, MbedtlsPKEcpGenKey);
-  EXPECT_EQ(get_pk_functions.pk_free_key, PKFreeKey);
+  EXPECT_EQ(get_pk_functions.mbedtls_pk_parse_key, &MbedtlsPKParseKey);
+  EXPECT_EQ(get_pk_functions.mbedtls_pk_write_key_der, &MbedtlsPKWriteKeyDer);
+  EXPECT_EQ(get_pk_functions.mbedtls_pk_ecp_gen_key, &MbedtlsPKEcpGenKey);
+  EXPECT_EQ(get_pk_functions.pk_free_key, &PKFreeKey);
 }
 
 TEST_F(TestPKIPK, pk_free_key)

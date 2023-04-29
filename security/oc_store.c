@@ -207,8 +207,8 @@ oc_sec_load_ecdsa_keypair(size_t device)
   oc_storage_free_buffer(sb);
 
   if (ret <= 0) {
-    if (!oc_sec_ecdsa_generate_keypair_for_device(oc_sec_certs_ecp_group_id(),
-                                                  device)) {
+    if (!oc_sec_ecdsa_update_or_generate_keypair_for_device(
+          oc_sec_certs_ecp_group_id(), device)) {
       OC_ERR("error generating ECDSA keypair for device %zd", device);
     }
     oc_sec_dump_ecdsa_keypair(device);

@@ -86,8 +86,9 @@ bool oc_sec_ecdsa_encode_keypair(const oc_ecdsa_keypair_t *kp);
 bool oc_sec_ecdsa_decode_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp);
 
 /**
- * @brief Generate a public and private key pair, store it in a global list of
- * key-pairs and associate it with the given device.
+ * @brief Update an already existing public and private key pair associated with
+ * a given device or generate a new one if it doesn't yet exist and tore it in a
+ * global list of key-pairs and associate it with the given device.
  *
  * @note Each device can be associated with only a single key-pair. If this
  * function is called multiple times with a single device then each successful
@@ -98,8 +99,8 @@ bool oc_sec_ecdsa_decode_keypair(const oc_rep_t *rep, oc_ecdsa_keypair_t *kp);
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_ecdsa_generate_keypair_for_device(mbedtls_ecp_group_id grpid,
-                                              size_t device);
+bool oc_sec_ecdsa_update_or_generate_keypair_for_device(
+  mbedtls_ecp_group_id grpid, size_t device);
 
 /**
  * @brief Decode public and private key, store it in a global list of key-pairs
@@ -136,7 +137,7 @@ oc_ecdsa_keypair_t *oc_sec_ecdsa_get_keypair(size_t device);
 void oc_sec_ecdsa_free_keypairs(void);
 
 /** Free the key-pair associated with the given device and generate new one */
-void oc_sec_ecdsa_reset_keypair(size_t device);
+int oc_sec_ecdsa_reset_keypair(size_t device);
 
 #ifdef __cplusplus
 }
