@@ -26,6 +26,7 @@
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/KeyPair.h"
 
 #include <algorithm>
 #include <array>
@@ -165,11 +166,17 @@ TEST_F(TestCSRWithDevice, Validate256)
   mbedtls_x509_csr_free(&csr);
 }
 
+TEST_F(TestCSRWithDevice, Reset)
+{
+  // TODO: test positive path
+  // compare oc_sec_ecdsa_get_keypair(device) before and after
+}
+
 static mbedtls_x509_csr
 generateValidCSR(mbedtls_md_type_t md, mbedtls_ecp_group_id grpid,
                  size_t device)
 {
-  oc_sec_ecdsa_generate_keypair_for_device(grpid, device);
+  oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid, device);
   std::array<unsigned char, 1024> csr_pem{};
   EXPECT_EQ(0, oc_sec_csr_generate(device, md, csr_pem.data(), csr_pem.size()));
 
@@ -296,5 +303,156 @@ TEST_F(TestCSRWithDevice, Resource)
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+class TestCSRWithDeviceTPM : public TestCSRWithDevice {
+public:
+  void SetUp() override
+  {
+    TestCSRWithDevice::SetUp();
+    static oc_pki_pk_functions_t pk_functions{
+      /*mbedtls_pk_parse_key=*/TestCSRWithDeviceTPM::
+        simulate_tpm_mbedtls_pk_parse_key,
+      /*mbedtls_pk_write_key_der*/
+      TestCSRWithDeviceTPM::simulate_tpm_mbedtls_pk_write_key_der,
+      /*mbedtls_pk_ecp_gen_key=*/
+      TestCSRWithDeviceTPM::simulate_tpm_mbedtls_pk_ecp_gen_key,
+      /*pk_free_key=*/nullptr,
+    };
+    oc_pki_set_pk_functions(&pk_functions);
+    clear_keypair();
+  }
+
+  void TearDown() override
+  {
+    oc_pki_set_pk_functions(nullptr);
+    clear_keypair();
+    TestCSRWithDevice::TearDown();
+  }
+
+protected:
+  static oc::keypair_t g_key_pair;
+
+  static void clear_keypair()
+  {
+    memset(&g_key_pair.public_key[0], 0, g_key_pair.public_key.size());
+    g_key_pair.public_key_size = 0;
+    memset(&g_key_pair.private_key[0], 0, g_key_pair.private_key.size());
+    g_key_pair.private_key_size = 0;
+  }
+
+  static int simulate_tpm_mbedtls_pk_parse_key(
+    size_t /*device*/, mbedtls_pk_context *pk, const unsigned char *key,
+    size_t keylen, const unsigned char *pwd, size_t pwdlen,
+    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+  {
+    if (keylen == g_key_pair.public_key_size &&
+        memcmp(key, &g_key_pair.public_key[0], g_key_pair.public_key_size) ==
+          0) {
+      return mbedtls_pk_parse_key(pk, &g_key_pair.private_key[0],
+                                  g_key_pair.private_key_size, pwd, pwdlen,
+                                  f_rng, p_rng);
+    }
+    return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+  }
+
+  static int simulate_tpm_mbedtls_pk_write_key_der(size_t /*device*/,
+                                                   const mbedtls_pk_context *pk,
+                                                   unsigned char *buf,
+                                                   size_t size)
+  {
+    std::array<uint8_t, OC_ECDSA_PUBKEY_SIZE> pub_key;
+    int ret = mbedtls_pk_write_pubkey_der(pk, &pub_key[0], sizeof(pub_key));
+    if (ret > 0) {
+      memmove(&pub_key[0], &pub_key[0] + pub_key.size() - ret, ret);
+    } else {
+      return ret;
+    }
+    if (((size_t)ret) != g_key_pair.public_key_size) {
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    if (memcmp(&pub_key[0], &g_key_pair.public_key[0], ret) != 0) {
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    if (size < (size_t)ret) {
+      return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
+    }
+    memcpy(buf + size - ret, &pub_key[0], ret);
+    return ret;
+  }
+
+  static int simulate_tpm_mbedtls_pk_ecp_gen_key(
+    size_t device, mbedtls_ecp_group_id grp_id, mbedtls_pk_context *pk,
+    int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+  {
+    (void)device;
+    int ret = mbedtls_ecp_gen_key(grp_id, (mbedtls_ecp_keypair *)pk->pk_ctx,
+                                  f_rng, p_rng);
+    if (ret == 0) {
+      ret = mbedtls_pk_write_pubkey_der(pk, &g_key_pair.public_key[0],
+                                        g_key_pair.public_key.size());
+      if (ret > 0) {
+        memmove(&g_key_pair.public_key[0],
+                &g_key_pair.public_key[0] + g_key_pair.public_key.size() - ret,
+                ret);
+        g_key_pair.public_key_size = ret;
+        ret = 0;
+      }
+    }
+    if (ret == 0) {
+      ret = mbedtls_pk_write_key_der(pk, &g_key_pair.private_key[0],
+                                     g_key_pair.private_key.size());
+      if (ret > 0) {
+        memmove(&g_key_pair.private_key[0],
+                &g_key_pair.private_key[0] + g_key_pair.private_key.size() -
+                  ret,
+                ret);
+        g_key_pair.private_key_size = ret;
+        ret = 0;
+      }
+    }
+    return ret;
+  }
+};
+
+oc::keypair_t TestCSRWithDeviceTPM::g_key_pair{};
+
+TEST_F(TestCSRWithDeviceTPM, Validate256SimulateTPM)
+{
+  std::array<unsigned char, 512> csr_pem{};
+  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
+                                   csr_pem.data(), csr_pem.size()));
+
+  mbedtls_x509_csr csr;
+  EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_OPAQUE,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)))
+    << "unexpected public key type";
+
+  EXPECT_FALSE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                   MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA384)))
+    << "wrong signature type";
+
+  EXPECT_TRUE(oc_sec_csr_validate(&csr, MBEDTLS_PK_ECKEY,
+                                  MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256)));
+
+  std::array<char, 1> too_small_sub{};
+  EXPECT_GT(0, oc_sec_csr_extract_subject_DN(&csr, too_small_sub.data(),
+                                             too_small_sub.size()))
+    << "buffer too small";
+
+  std::array<char, 128> sub{};
+  EXPECT_LT(0, oc_sec_csr_extract_subject_DN(&csr, sub.data(), sub.size()))
+    << "cannot extract subject";
+  OC_DBG("Subject: %s", sub.data());
+
+  mbedtls_x509_csr_free(&csr);
+}
+
+TEST_F(TestCSRWithDeviceTPM, Reset)
+{
+  // TODO: override oc_pk_free_key -> return false
+  // compare oc_sec_ecdsa_get_keypair(device) before and after
+}
 
 #endif /* OC_SECURITY && OC_PKI */

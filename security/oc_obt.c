@@ -3677,7 +3677,7 @@ oc_obt_generate_root_cred(void)
 {
   uint8_t public_key[OC_ECDSA_PUBKEY_SIZE];
   size_t public_key_size = 0;
-  if (oc_sec_ecdsa_generate_keypair(oc_sec_certs_ecp_group_id(), public_key,
+  if (oc_sec_ecdsa_generate_keypair(0, oc_sec_certs_ecp_group_id(), public_key,
                                     OC_ECDSA_PUBKEY_SIZE, &public_key_size,
                                     g_private_key, sizeof(g_private_key),
                                     &g_private_key_size) < 0) {

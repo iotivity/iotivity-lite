@@ -186,6 +186,12 @@ static const char *cis;
 static const char *auth_code;
 static const char *sid;
 static const char *apn;
+#ifdef OC_PKI
+#include <mbedtls/sha256.h>
+static bool simulate_tpm = false;
+static uint8_t manufacturer_private_key[4096];
+const char *manufacturer_reference_private_key = "IDevID";
+#endif /* OC_PKI */
 #else  /* OC_SECURITY */
 static const char *cis = "coap+tcp://127.0.0.1:5683";
 static const char *auth_code = "test";
@@ -734,17 +740,28 @@ factory_presets_cb(size_t device, void *data)
   }
 
   unsigned char mfg_crt[4096];
-  size_t mfg_crt_len = 4096;
+  size_t mfg_crt_len = sizeof(mfg_crt);
   if (read_pem("pki_certs/mfgcrt.pem", (char *)mfg_crt, &mfg_crt_len) < 0) {
     PRINT("ERROR: unable to read pki_certs/mfgcrt.pem\n");
     return;
   }
   unsigned char mfg_key[4096];
-  size_t mfg_key_len = 4096;
+  size_t mfg_key_len = sizeof(mfg_key) - 1;
   if (read_pem("pki_certs/mfgkey.pem", (char *)mfg_key, &mfg_key_len) < 0) {
     PRINT("ERROR: unable to read pki_certs/mfgkey.pem\n");
     return;
   }
+  if (simulate_tpm) {
+    // set the manufacturer private key to the internal storage
+    memcpy(manufacturer_private_key, mfg_key, mfg_key_len);
+    manufacturer_private_key[mfg_key_len] = '\0';
+    // set reference private key as mfg_key
+    memcpy(mfg_key, manufacturer_reference_private_key,
+           strlen(manufacturer_reference_private_key));
+    mfg_key[strlen(manufacturer_reference_private_key)] = 0;
+    mfg_key_len = strlen(manufacturer_reference_private_key);
+  }
+
   int mfg_credid =
     oc_pki_add_mfg_cert(0, (const unsigned char *)mfg_crt, mfg_crt_len,
                         (const unsigned char *)mfg_key, mfg_key_len);
@@ -778,6 +795,160 @@ disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
     ~((uint32_t)(MBEDTLS_X509_BADCERT_EXPIRED | MBEDTLS_X509_BADCERT_FUTURE));
   return 0;
 }
+
+static bool
+get_file(const char *directory, const uint8_t *hash, size_t len, char *buf,
+         size_t size)
+{
+  int j = snprintf(buf, size, "%s", directory);
+  if (j < 0) {
+    return false;
+  }
+  for (size_t i = 0; i < len; i++) {
+    int v = snprintf(buf + j, size - j, "%02x", hash[i]);
+    if (v < 0) {
+      return false;
+    }
+    j += v;
+  }
+  if ((size_t)j == size) {
+    return false;
+  }
+  buf[j] = '\0';
+  return true;
+}
+
+static int
+simulate_tpm_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
+                                  const unsigned char *key, size_t keylen,
+                                  const unsigned char *pwd, size_t pwdlen,
+                                  int (*f_rng)(void *, unsigned char *, size_t),
+                                  void *p_rng)
+{
+  (void)device;
+  if (keylen == 32) {
+    char buf[256];
+    if (!get_file("", key, keylen, buf, sizeof(buf))) {
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    FILE *f = fopen(buf, "r");
+    if (!f) {
+      OC_ERR("simulate_tpm_mbedtls_pk_parse_key: fopen failed: %s", buf);
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    uint8_t identity_private_key[4096];
+    int ret = fread(identity_private_key, 1, sizeof(identity_private_key), f);
+    fclose(f);
+    if (ret < 0) {
+      OC_ERR("simulate_tpm_mbedtls_pk_parse_key: fread failed: %s", buf);
+      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+    }
+    return mbedtls_pk_parse_key(pk, identity_private_key, ret, NULL, 0, f_rng,
+                                p_rng);
+  } else if (keylen == strlen(manufacturer_reference_private_key)) {
+    return mbedtls_pk_parse_key(pk, manufacturer_private_key,
+                                strlen((const char *)manufacturer_private_key) +
+                                  1,
+                                pwd, pwdlen, f_rng, p_rng);
+  }
+  return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+}
+
+static int
+simulate_tpm_mbedtls_pk_write_key_der(size_t device,
+                                      const mbedtls_pk_context *pk,
+                                      unsigned char *buf, size_t size)
+{
+  (void)device;
+  int ret = mbedtls_pk_write_pubkey_der(pk, buf, size);
+  if (ret < 0) {
+    return ret;
+  }
+  uint8_t pub_key_sha256[32];
+  mbedtls_sha256(buf + size - ret, ret, pub_key_sha256, 0);
+  const uint8_t *key = pub_key_sha256;
+  size_t key_size = sizeof(pub_key_sha256);
+  char path[256];
+  if (!get_file("", pub_key_sha256, sizeof(pub_key_sha256), path,
+                sizeof(path))) {
+    return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+  }
+  FILE *f = fopen(path, "r");
+  if (!f) {
+    key = (const uint8_t *)manufacturer_reference_private_key;
+    key_size = strlen(manufacturer_reference_private_key);
+  } else {
+    fclose(f);
+  }
+  if (size < key_size) {
+    return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
+  }
+  memcpy(buf + size - key_size, key, key_size);
+  return key_size;
+}
+
+static int
+simulate_tpm_mbedtls_pk_ecp_gen_key(
+  size_t device, mbedtls_ecp_group_id grp_id, mbedtls_pk_context *pk,
+  int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+{
+  (void)device;
+  int ret = mbedtls_ecp_gen_key(grp_id, (mbedtls_ecp_keypair *)pk->pk_ctx,
+                                f_rng, p_rng);
+  uint8_t identity_public_key_sha256[32];
+  if (ret == 0) {
+    uint8_t pub_key[200];
+    ret = mbedtls_pk_write_pubkey_der(pk, pub_key, sizeof(pub_key));
+    if (ret > 0) {
+      mbedtls_sha256(pub_key + sizeof(pub_key) - ret, ret,
+                     identity_public_key_sha256, 0);
+      ret = 0;
+    }
+  }
+  if (ret == 0) {
+    uint8_t identity_private_key[4096];
+    ret = mbedtls_pk_write_key_der(pk, identity_private_key,
+                                   sizeof(identity_private_key));
+    if (ret > 0) {
+      char buf[256];
+      if (get_file("", identity_public_key_sha256,
+                   sizeof(identity_public_key_sha256), buf, sizeof(buf))) {
+        FILE *f = fopen(buf, "w");
+        if (f) {
+          ret =
+            fwrite(identity_private_key + sizeof(identity_private_key) - ret, 1,
+                   ret, f);
+          if (ret < 0) {
+            OC_ERR(
+              "simulate_tpm_mbedtls_pk_ecp_gen_key: could not write to file %s",
+              buf);
+          }
+          fclose(f);
+        } else {
+          OC_ERR("simulate_tpm_mbedtls_pk_ecp_gen_key: could not open file %s",
+                 buf);
+        }
+      }
+      ret = 0;
+    }
+  }
+  return ret;
+}
+
+static bool
+simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
+{
+  (void)device;
+  char buf[256];
+  if (!get_file("", key, keylen, buf, sizeof(buf))) {
+    OC_ERR("simulate_tpm_pk_free_key: could not get file name");
+  }
+  if (remove(buf) != 0) {
+    OC_ERR("simulate_tpm_pk_free_key: could not remove file %s", buf);
+  }
+  return true;
+}
+
 #endif /* OC_SECURITY && OC_PKI */
 
 #define OPT_DISABLE_TLS_VERIFY_TIME "disable-tls-verify-time"
@@ -789,6 +960,7 @@ disable_time_verify_certificate_cb(struct oc_tls_peer_t *peer,
 #define OPT_CLOUD_APN "cloud-auth-provider-name"
 #define OPT_CLOUD_SID "cloud-id"
 #define OPT_LOG_LEVEL "log-level"
+#define OPT_SIMULATE_TPM "simulate-tpm"
 
 #define OPT_TIME "time"
 #define OPT_SET_SYSTEM_TIME "set-system-time"
@@ -818,6 +990,7 @@ printhelp(const char *exec_path)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   PRINT("  -d | --%-26s disable time verification during TLS handshake\n",
         OPT_DISABLE_TLS_VERIFY_TIME);
+  PRINT("  -m | --%-26s simulate TPM chip\n", OPT_SIMULATE_TPM);
 #endif /* OC_SECURITY && OC_PKI */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   PRINT("  -t | --%-26s set plgd time of device\n", OPT_TIME " <rfc3339 time>");
@@ -844,6 +1017,7 @@ typedef struct
   bool help;
 #if defined(OC_SECURITY) && defined(OC_PKI)
   bool disable_tls_verify_time;
+  bool simulate_tpm;
 #endif /* OC_SECURITY && OC_PKI */
 } parse_options_result_t;
 
@@ -882,6 +1056,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_LOG_LEVEL, required_argument, NULL, 'l' },
 #if defined(OC_SECURITY) && defined(OC_PKI)
     { OPT_DISABLE_TLS_VERIFY_TIME, no_argument, NULL, 'd' },
+    { OPT_SIMULATE_TPM, no_argument, NULL, 'm' },
 #endif /* OC_SECURITY && OC_PKI */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
     { OPT_TIME, required_argument, NULL, 't' },
@@ -892,7 +1067,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 
   while (true) {
     int option_index = 0;
-    int opt = getopt_long(argc, argv, "hdn:a:e:i:p:r:l:st:", long_options,
+    int opt = getopt_long(argc, argv, "hdmn:a:e:i:p:r:l:st:", long_options,
                           &option_index);
     if (opt == -1) {
       break;
@@ -911,6 +1086,9 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 #if defined(OC_SECURITY) && defined(OC_PKI)
     case 'd':
       parsed_options->disable_tls_verify_time = true;
+      break;
+    case 'm':
+      parsed_options->simulate_tpm = true;
       break;
 #endif /* OC_SECURITY && OC_PKI */
     case 'n':
@@ -1024,6 +1202,7 @@ main(int argc, char *argv[])
     .help = false,
 #if defined(OC_SECURITY) && defined(OC_PKI)
     .disable_tls_verify_time = false,
+    .simulate_tpm = false,
 #endif /* OC_SECURITY && OC_PKI */
   };
   if (!parse_options(argc, argv, &parsed_options)) {
@@ -1041,6 +1220,7 @@ main(int argc, char *argv[])
 #if defined(OC_SECURITY) && defined(OC_PKI)
   PRINT("disable_tls_time_verification: %s, ",
         parsed_options.disable_tls_verify_time ? "true" : "false");
+  PRINT("simulate_tpm: %s, ", parsed_options.simulate_tpm ? "true" : "false");
 #endif /* OC_SECURITY && OC_PKI */
   PRINT("log_level: %s", oc_log_level_to_label(oc_log_get_level()));
   PRINT("\n");
@@ -1048,6 +1228,19 @@ main(int argc, char *argv[])
 #if defined(OC_SECURITY) && defined(OC_PKI)
   if (parsed_options.disable_tls_verify_time) {
     oc_pki_set_verify_certificate_cb(&disable_time_verify_certificate_cb);
+  }
+  if (parsed_options.simulate_tpm) {
+    simulate_tpm = true;
+    oc_pki_pk_functions_t pk_functions = {
+      .mbedtls_pk_parse_key = simulate_tpm_mbedtls_pk_parse_key,
+      .mbedtls_pk_write_key_der = simulate_tpm_mbedtls_pk_write_key_der,
+      .mbedtls_pk_ecp_gen_key = simulate_tpm_mbedtls_pk_ecp_gen_key,
+      .pk_free_key = simulate_tpm_pk_free_key,
+    };
+    if (!oc_pki_set_pk_functions(&pk_functions)) {
+      PRINT("ERROR: Failed to set PKI functions\n");
+      return -1;
+    }
   }
 #endif /* OC_SECURITY && OC_PKI */
 

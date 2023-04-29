@@ -44,6 +44,10 @@ jobs:
           - name: cloud-server-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
 
+          - name: cloud-server-simulate-tpm-asan
+            build_args: "-DOC_ASAN_ENABLED=ON"
+            args: "--simulate-tpm"
+            
           - name: cloud-server-time-2000-01-01
             build_args: ""
             docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'

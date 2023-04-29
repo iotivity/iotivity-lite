@@ -253,7 +253,7 @@ TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
   OC_DBG("serial: %s", &serial[0]);
 
   std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&cert_buf[0], cert_buf.size(),
+  ret = oc_certs_parse_private_key(0, &cert_buf[0], cert_buf.size(),
                                    private_key.data(), private_key.size());
   EXPECT_EQ(kp256_.private_key_size, ret);
 
@@ -369,7 +369,7 @@ TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
 
   std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&id_cert[0], id_cert.size(),
+  ret = oc_certs_parse_private_key(0, &id_cert[0], id_cert.size(),
                                    private_key.data(), private_key.size());
   EXPECT_EQ(kp256_.private_key_size, ret);
 
@@ -500,7 +500,7 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
 
   std::array<uint8_t, 200> private_key{};
-  ret = oc_certs_parse_private_key(&role_cert[0], role_cert.size(),
+  ret = oc_certs_parse_private_key(0, &role_cert[0], role_cert.size(),
                                    private_key.data(), private_key.size());
   EXPECT_EQ(kp256_.private_key_size, ret);
 

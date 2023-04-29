@@ -39,6 +39,7 @@
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_entropy_internal.h"
+#include "security/oc_pki_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
@@ -891,14 +892,18 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
       goto add_new_identity_cert_error;
     }
     if (oc_string_len(cred->privatedata.data) > 0) {
-      ret = mbedtls_pk_parse_key(
-        &cert->pk,
+      size_t privatedata_len = oc_string_len(cred->privatedata.data);
+      if (oc_certs_is_PEM(
+            (const unsigned char *)oc_cast(cred->privatedata.data, uint8_t),
+            privatedata_len)) {
+        privatedata_len++;
+      }
+      ret = oc_mbedtls_pk_parse_key(
+        device, &cert->pk,
         (const unsigned char *)oc_cast(cred->privatedata.data, uint8_t),
-        oc_string_len(cred->privatedata.data) + 1, NULL, 0,
-        mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
+        privatedata_len, NULL, 0, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
       if (ret != 0) {
-        OC_ERR("could not parse private key %zd",
-               oc_string_len(cred->privatedata.data));
+        OC_ERR("could not parse private key %zd", privatedata_len);
         goto add_new_identity_cert_error;
       }
     }

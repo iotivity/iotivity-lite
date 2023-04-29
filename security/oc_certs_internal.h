@@ -73,13 +73,14 @@ int oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
  * @return <0 on error
  * @return >=0 on success, length of data written
  */
-int oc_certs_extract_private_key(const mbedtls_x509_crt *cert,
+int oc_certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
                                  unsigned char *buffer, size_t buffer_size);
 
 /// @brief Parse PEM string into a x509 certificate and extract public key
 /// @see oc_certs_extract_private_key
-int oc_certs_parse_private_key(const unsigned char *cert, size_t cert_size,
-                               unsigned char *buffer, size_t buffer_size);
+int oc_certs_parse_private_key(size_t device, const unsigned char *cert,
+                               size_t cert_size, unsigned char *buffer,
+                               size_t buffer_size);
 
 /**
  * @brief Extract public key from a x509 certificate.

@@ -89,13 +89,13 @@ TEST_F(TestKeyPair, GenerateFail_SmallBuffers)
   std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
   size_t public_key_size = 0;
   int ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP256R1, too_small.data(), too_small.size(),
+    0, MBEDTLS_ECP_DP_SECP256R1, too_small.data(), too_small.size(),
     &public_key_size, private_key.data(), private_key.size(),
     &private_key_size);
   EXPECT_NE(0, ret);
 
   ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP256R1, public_key.data(), public_key.size(),
+    0, MBEDTLS_ECP_DP_SECP256R1, public_key.data(), public_key.size(),
     &public_key_size, too_small.data(), too_small.size(), &private_key_size);
   EXPECT_NE(0, ret);
 }
@@ -107,7 +107,7 @@ TEST_F(TestKeyPair, GenerateFail_UnsupportedECP)
   std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
   size_t public_key_size = 0;
   int ret = oc_sec_ecdsa_generate_keypair(
-    MBEDTLS_ECP_DP_SECP192R1, public_key.data(), public_key.size(),
+    0, MBEDTLS_ECP_DP_SECP192R1, public_key.data(), public_key.size(),
     &public_key_size, private_key.data(), private_key.size(),
     &private_key_size);
   EXPECT_NE(0, ret);
@@ -122,7 +122,7 @@ TEST_F(TestKeyPair, Generate)
     std::array<uint8_t, OC_ECDSA_PRIVKEY_SIZE> private_key{};
     size_t public_key_size = 0;
     int ret = oc_sec_ecdsa_generate_keypair(
-      grpid, public_key.data(), public_key.size(), &public_key_size,
+      0, grpid, public_key.data(), public_key.size(), &public_key_size,
       private_key.data(), private_key.size(), &private_key_size);
     EXPECT_EQ(0, ret) << "error for ec(" << grpid << ")";
 
@@ -265,8 +265,8 @@ TEST_F(TestKeyPair, Decode)
 TEST_F(TestKeyPair, GenerateForDeviceFail_UnsupportedEllipticCurve)
 {
   EXPECT_FALSE(
-    oc_sec_ecdsa_generate_keypair_for_device(MBEDTLS_ECP_DP_SECP192R1,
-                                             /*device*/ 0));
+    oc_sec_ecdsa_update_or_generate_keypair_for_device(MBEDTLS_ECP_DP_SECP192R1,
+                                                       /*device*/ 0));
 }
 
 TEST_F(TestKeyPair, GenerateForDevice)
@@ -275,12 +275,14 @@ TEST_F(TestKeyPair, GenerateForDevice)
     OC_DBG("generate ecdsa keypair with elliptic-curve %d", (int)grpid);
     EXPECT_EQ(0, oc_sec_ecdsa_count_keypairs())
       << "error for ec(" << grpid << ")";
-    EXPECT_TRUE(oc_sec_ecdsa_generate_keypair_for_device(grpid,
+    EXPECT_TRUE(
+      oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid,
                                                          /*device*/ 0))
       << "error for ec(" << grpid << ")";
     EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs())
       << "error for ec(" << grpid << ")";
-    EXPECT_TRUE(oc_sec_ecdsa_generate_keypair_for_device(grpid,
+    EXPECT_TRUE(
+      oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid,
                                                          /*device*/ 0))
       << "error for ec(" << grpid << ")";
     EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs())
@@ -303,7 +305,7 @@ TEST_F(TestKeyPair, GenerateForMultipleDevices)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   for (size_t i = 0; i < 4; ++i) {
-    EXPECT_TRUE(oc_sec_ecdsa_generate_keypair_for_device(
+    EXPECT_TRUE(oc_sec_ecdsa_update_or_generate_keypair_for_device(
       MBEDTLS_ECP_DP_SECP256R1, /*device*/ i));
   }
   EXPECT_EQ(4, oc_sec_ecdsa_count_keypairs());
@@ -311,13 +313,13 @@ TEST_F(TestKeyPair, GenerateForMultipleDevices)
   // without dynamic allocation, the number of items is limited to
   // OC_MAX_NUM_DEVICES
   for (size_t i = 0; i < OC_MAX_NUM_DEVICES; ++i) {
-    EXPECT_TRUE(oc_sec_ecdsa_generate_keypair_for_device(
+    EXPECT_TRUE(oc_sec_ecdsa_update_or_generate_keypair_for_device(
       MBEDTLS_ECP_DP_SECP256R1, /*device*/ i));
   }
   EXPECT_EQ(OC_MAX_NUM_DEVICES, oc_sec_ecdsa_count_keypairs());
 
   // additional allocations should fail
-  EXPECT_FALSE(oc_sec_ecdsa_generate_keypair_for_device(
+  EXPECT_FALSE(oc_sec_ecdsa_update_or_generate_keypair_for_device(
     MBEDTLS_ECP_DP_SECP256R1, /*device*/ OC_MAX_NUM_DEVICES));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -332,7 +334,8 @@ TEST_F(TestKeyPair, EncodeForDevice)
     EXPECT_FALSE(oc_sec_ecdsa_encode_keypair_for_device(device))
       << "error for ec(" << grpid << ")";
 
-    EXPECT_TRUE(oc_sec_ecdsa_generate_keypair_for_device(grpid, device))
+    EXPECT_TRUE(
+      oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid, device))
       << "error for ec(" << grpid << ")";
     EXPECT_TRUE(oc_sec_ecdsa_encode_keypair_for_device(device))
       << "error for ec(" << grpid << ")";
