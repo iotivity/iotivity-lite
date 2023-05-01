@@ -601,7 +601,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {
     OC_DBG("fetch time handler timeout");
-    EXPECT_TRUE(oc_ri_client_cb_terminated(code));
+    EXPECT_TRUE(code == OC_CONNECTION_CLOSED || code == OC_REQUEST_TIMEOUT);
     *(static_cast<bool *>(data)) = true;
     oc::TestDevice::Terminate();
   };
