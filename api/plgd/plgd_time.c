@@ -711,8 +711,7 @@ dev_time_on_fetch(oc_client_response_t *data)
   OC_DBG("plgd-time: on_fetch time=%d time=%u", (int)code, (unsigned)time);
   fp->on_fetch(code, time, fp->on_fetch_data);
 #if defined(OC_TCP) || defined(OC_SECURITY)
-  // session is closed automatically on timeout, close or cancel
-  if (fp->close_peer_after_fetch && !oc_ri_client_cb_terminated(code)) {
+  if (fp->close_peer_after_fetch && (code != OC_CONNECTION_CLOSED)) {
     OC_DBG("plgd-time: close fetch time session");
     oc_close_session(data->endpoint);
   }

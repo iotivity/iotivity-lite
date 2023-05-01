@@ -1658,14 +1658,6 @@ oc_ri_remove_client_cb(void *data)
   return OC_EVENT_DONE;
 }
 
-bool
-oc_ri_client_cb_terminated(oc_status_t code)
-{
-  return code == OC_PING_TIMEOUT || code == OC_REQUEST_TIMEOUT ||
-         code == OC_CONNECTION_CLOSED || code == OC_TRANSACTION_TIMEOUT ||
-         code == OC_CANCELLED;
-}
-
 static void
 notify_client_cb_with_code(oc_client_cb_t *cb, oc_status_t code)
 {
