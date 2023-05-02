@@ -1555,7 +1555,32 @@ int oc_query_value_exists(const oc_request_t *request, const char *key);
  * oc_request_callback_t to inform the caller about the status of the requested
  * action.
  *
- * @note This function does not trigger oc_send_response_cb_t callback function.
+ *
+ * @param[in] request the request being responded to
+ * @param[in] response_code the status of the response
+ * @param[in] trigger_cb if true, the send response callback will be triggered
+ *
+ * @note For libraries it is recommended to set trigger_cb to true to allow
+ * modify the response body.
+ *
+ * @see oc_request_callback_t
+ * @see oc_ignore_request
+ * @see oc_indicate_separate_response
+ */
+OC_API
+void oc_send_response_with_callback(oc_request_t *request,
+                                    oc_status_t response_code, bool trigger_cb);
+
+/**
+ * Called after the response to a GET, PUT, POST or DELETE call has been
+ * prepared completed
+ *
+ * The function oc_send_response is called at the end of a
+ * oc_request_callback_t to inform the caller about the status of the requested
+ * action.
+ *
+ * @note This function just calls oc_send_response_with_callback with trigger_cb
+ * set to false.
  *
  * @param[in] request the request being responded to
  * @param[in] response_code the status of the response
@@ -1563,6 +1588,7 @@ int oc_query_value_exists(const oc_request_t *request, const char *key);
  * @see oc_request_callback_t
  * @see oc_ignore_request
  * @see oc_indicate_separate_response
+ * @see oc_send_response_with_callback
  */
 OC_API
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
@@ -1587,7 +1613,8 @@ typedef void (*oc_send_response_cb_t)(oc_request_t *request,
  * @note This function is not thread safe. It should be called before
  * oc_main_init().
  *
- * @param cb that will be triggered for each response from the stack.
+ * @param cb that will be triggered by oc_send_response_with_callback when the
+ * trigger_cb is true.
  */
 OC_API
 void oc_set_send_response_cb(oc_send_response_cb_t cb);

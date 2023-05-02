@@ -32,10 +32,6 @@
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
-#if defined(OC_CLOUD) && defined(OC_SERVER)
-#include "oc_server_api_internal.h"
-#endif /* OC_CLOUD && OC_SERVER */
-
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #endif /* OC_SECURITY */
@@ -133,8 +129,8 @@ oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
 }
 
 void
-oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
-                    bool trigger_cb)
+oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
+                               bool trigger_cb)
 {
   if (!request) {
     return;
@@ -152,7 +148,7 @@ oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
 void
 oc_send_response(oc_request_t *request, oc_status_t response_code)
 {
-  oc_send_response_v1(request, response_code, false);
+  oc_send_response_with_callback(request, response_code, false);
 }
 
 void
@@ -680,7 +676,7 @@ oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
 {
   request->response->separate_response = response;
-  oc_send_response_v1(request, OC_STATUS_OK, false);
+  oc_send_response_with_callback(request, OC_STATUS_OK, false);
 }
 
 void

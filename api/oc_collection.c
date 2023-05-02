@@ -1078,23 +1078,23 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     return false;
   }
 
-  int code = oc_status_code(OC_STATUS_BAD_REQUEST);
+  oc_status_t code = OC_STATUS_BAD_REQUEST;
   if (ecode < oc_status_code(OC_STATUS_BAD_REQUEST) &&
       pcode < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     switch (method) {
     case OC_GET:
-      code = oc_status_code(OC_STATUS_OK);
+      code = OC_STATUS_OK;
       break;
     case OC_POST:
     case OC_PUT:
       if (iface_mask == OC_IF_CREATE) {
-        code = oc_status_code(OC_STATUS_CREATED);
+        code = OC_STATUS_CREATED;
       } else {
-        code = oc_status_code(OC_STATUS_CHANGED);
+        code = OC_STATUS_CHANGED;
       }
       break;
     case OC_DELETE:
-      code = oc_status_code(OC_STATUS_DELETED);
+      code = OC_STATUS_DELETED;
       break;
     default:
       break;
@@ -1104,7 +1104,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                             true);
 
   if ((method == OC_PUT || method == OC_POST) &&
-      code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      oc_status_code(code) < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
         collection, request->response->response_buffer, iface_mask);

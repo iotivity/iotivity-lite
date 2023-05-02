@@ -21,7 +21,6 @@
 #include "oc_pstat.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main.h"
-#include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
@@ -614,7 +613,7 @@ get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   case OC_IF_RW:
   case OC_IF_BASELINE: {
     oc_sec_encode_pstat(request->resource->device, iface_mask, false);
-    oc_send_response_v1(request, OC_STATUS_OK, true);
+    oc_send_response_with_callback(request, OC_STATUS_OK, true);
   } break;
   default:
     break;
@@ -629,11 +628,11 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   size_t device = request->resource->device;
   if (oc_sec_decode_pstat(request->request_payload, false, device)) {
     request->response->response_buffer->response_length = 0;
-    oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
     request->response->response_buffer->response_length = 0;
     oc_sec_dump_pstat(device);
   } else {
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 

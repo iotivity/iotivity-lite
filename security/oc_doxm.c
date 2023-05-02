@@ -365,7 +365,7 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     // respond to unicasts immediately
     oc_sec_encode_doxm(device, iface_mask, false);
     // TODO: shrink buffer
-    oc_send_response_v1(request, OC_STATUS_OK, true);
+    oc_send_response_with_callback(request, OC_STATUS_OK, true);
   } break;
   default:
     break;
@@ -699,11 +699,11 @@ post_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   if (!oc_sec_decode_doxm(request->request_payload, false,
                           p != NULL ? p->doc : false,
                           request->resource->device)) {
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
-  oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   oc_sec_dump_doxm(request->resource->device);
 }
 

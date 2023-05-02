@@ -24,7 +24,6 @@
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_store.h"
-#include "api/oc_server_api_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
@@ -1618,7 +1617,7 @@ get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     oc_sec_encode_roles(client, request->resource->device, iface_mask);
   }
 #endif /* OC_PKI */
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 bool
@@ -1664,7 +1663,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     const oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
     if (ps->s == OC_DOS_RFNOP) {
       OC_ERR("oc_cred: Cannot DELETE ACE in RFNOP");
-      oc_send_response_v1(request, OC_STATUS_FORBIDDEN, true);
+      oc_send_response_with_callback(request, OC_STATUS_FORBIDDEN, true);
       return;
     }
   }
@@ -1702,10 +1701,10 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 
   if (success) {
-    oc_send_response_v1(request, OC_STATUS_DELETED, true);
+    oc_send_response_with_callback(request, OC_STATUS_DELETED, true);
     oc_sec_dump_cred(request->resource->device);
   } else {
-    oc_send_response_v1(request, OC_STATUS_NOT_FOUND, true);
+    oc_send_response_with_callback(request, OC_STATUS_NOT_FOUND, true);
   }
 }
 
@@ -1792,9 +1791,9 @@ post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
                                    /*on_apply_cred_data*/ NULL) == 0;
 
   if (!success) {
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   } else {
-    oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
     oc_sec_dump_cred(request->resource->device);
   }
 }

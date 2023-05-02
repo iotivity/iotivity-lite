@@ -231,7 +231,7 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   oc_rep_end_root_object();
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 static void
@@ -262,7 +262,7 @@ oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   oc_rep_end_root_object();
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 static void
@@ -277,7 +277,7 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), "n") == 0) {
       if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
-        oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
         return;
       }
 
@@ -299,12 +299,12 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     if (strcmp(oc_string(rep->name), "locn") == 0) {
       if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
-        oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
         return;
       }
       oc_resource_t *device_res = oc_core_get_resource_by_index(OCF_D, device);
       if (device_res->tag_locn == 0) {
-        oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
         return;
       }
 
@@ -325,9 +325,9 @@ oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   if (changed) {
-    oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   } else {
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 
@@ -542,7 +542,7 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   oc_rep_end_root_object();
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 oc_platform_info_t *

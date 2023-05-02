@@ -399,7 +399,7 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
 
 static void
 send_response(oc_request_t *request, oc_content_format_t content_format,
-              int matches, int response_length)
+              int matches, size_t response_length)
 {
   oc_status_t code = OC_STATUS_OK;
   if (matches && response_length) {
@@ -654,8 +654,9 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     break;
   }
 
+  int response_length = oc_rep_get_encoded_payload_size();
   send_response(request, APPLICATION_CBOR, matches,
-                oc_rep_get_encoded_payload_size());
+                response_length < 0 ? 0 : (size_t)response_length);
 }
 #endif /* OC_SPEC_VER_OIC */
 
@@ -888,8 +889,10 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   default:
     break;
   }
+
+  int response_length = oc_rep_get_encoded_payload_size();
   send_response(request, APPLICATION_VND_OCF_CBOR, matches,
-                oc_rep_get_encoded_payload_size());
+                response_length < 0 ? 0 : (size_t)response_length);
 }
 
 #ifdef OC_WKCORE

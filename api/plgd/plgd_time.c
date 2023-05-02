@@ -535,12 +535,13 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   plgd_time_t pt = { 0 };
   if (!plgd_time_decode(request->request_payload, &pt)) {
     OC_ERR("cannot decode data for plgd-time resource");
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
   if (dev_time_set_time(pt.store.last_synced_time, false, false) != 0) {
-    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
 
@@ -548,11 +549,12 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
                                             // must have secure access
   if (plgd_time_encode(g_oc_plgd_time, OC_IF_RW, flags) != 0) {
     OC_ERR("cannot encode plgd-time resource");
-    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
 
-  oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   plgd_time_dump();
 }
 
@@ -570,11 +572,12 @@ plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
 #endif /* OC_SECURITY */
   if (plgd_time_encode(g_oc_plgd_time, iface_mask, flags) != 0) {
     OC_ERR("cannot encode plgd-time resource");
-    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
 
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 void

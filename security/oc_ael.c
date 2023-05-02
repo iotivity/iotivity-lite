@@ -26,7 +26,6 @@
 
 #include "oc_ael.h"
 #include "oc_api.h"
-#include "api/oc_server_api_internal.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_pstat.h"
@@ -172,9 +171,9 @@ get_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     case OC_IF_BASELINE:
     case OC_IF_RW:
       if (oc_sec_ael_encode(request->resource->device, iface_mask, false)) {
-        oc_send_response_v1(request, OC_STATUS_OK, true);
+        oc_send_response_with_callback(request, OC_STATUS_OK, true);
       } else {
-        oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
       }
       break;
     default:
@@ -191,7 +190,7 @@ post_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
     if (ps->s == OC_DOS_RFNOP) {
       OC_ERR("oc_ael: Cannot UPDATE AEL in RFNOP");
-      oc_send_response_v1(request, OC_STATUS_FORBIDDEN, true);
+      oc_send_response_with_callback(request, OC_STATUS_FORBIDDEN, true);
       return;
     }
     switch (iface_mask) {
@@ -199,10 +198,10 @@ post_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     case OC_IF_RW:
       if (oc_sec_ael_decode(request->resource->device, request->request_payload,
                             false)) {
-        oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+        oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
         oc_sec_dump_ael(request->resource->device);
       } else {
-        oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
       }
       break;
     default:

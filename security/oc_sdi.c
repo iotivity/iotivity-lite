@@ -20,7 +20,6 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_rep_internal.h"
-#include "api/oc_server_api_internal.h"
 #include "oc_sdi_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -289,10 +288,11 @@ sdi_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   int err = oc_sec_sdi_encode(request->resource->device, iface_mask);
   if (err != CborNoError) {
     OC_ERR("oc_sdi: cannot encode GET request data(error=%d)", err);
-    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
-  oc_send_response_v1(request, OC_STATUS_OK, true);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 static void
@@ -303,10 +303,10 @@ sdi_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)data;
   size_t device = request->resource->device;
   if (!oc_sec_sdi_decode(device, request->request_payload, false)) {
-    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
-  oc_send_response_v1(request, OC_STATUS_CHANGED, true);
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   oc_sec_dump_sdi(device);
 }
 
