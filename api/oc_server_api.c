@@ -106,7 +106,7 @@ oc_set_send_response_cb(oc_send_response_cb_t cb)
   g_oc_send_response_cb = cb;
 }
 
-void
+static void
 oc_trigger_send_response_callback(oc_request_t *request,
                                   oc_status_t response_code)
 {
@@ -117,26 +117,36 @@ oc_trigger_send_response_callback(oc_request_t *request,
 }
 
 void
+oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
+                          oc_content_format_t content_format,
+                          size_t response_length, bool trigger_cb)
+{
+  if (!request) {
+    return;
+  }
+  request->response->response_buffer->content_format = content_format;
+  request->response->response_buffer->response_length = response_length;
+  request->response->response_buffer->code = oc_status_code(response_code);
+  if (trigger_cb) {
+    oc_trigger_send_response_callback(request, response_code);
+  }
+}
+
+void
 oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
                     bool trigger_cb)
 {
   if (!request) {
     return;
   }
-  if (trigger_cb) {
-    oc_trigger_send_response_callback(request, response_code);
-  }
+  oc_content_format_t content_format = APPLICATION_VND_OCF_CBOR;
 #ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
-    request->response->response_buffer->content_format = APPLICATION_CBOR;
-  } else
-#endif /* OC_SPEC_VER_OIC */
-  {
-    request->response->response_buffer->content_format =
-      APPLICATION_VND_OCF_CBOR;
+    content_format = APPLICATION_CBOR;
   }
-  request->response->response_buffer->response_length = response_length();
-  request->response->response_buffer->code = oc_status_code(response_code);
+#endif /* OC_SPEC_VER_OIC */
+  oc_send_response_internal(request, response_code, content_format,
+                            response_length(), trigger_cb);
 }
 
 void

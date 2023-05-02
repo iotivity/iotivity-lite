@@ -24,13 +24,10 @@
 #include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
+#include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include <inttypes.h>
 #include <stdio.h>
-
-#ifdef OC_SERVER
-#include "oc_server_api_internal.h"
-#endif
 
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
@@ -90,25 +87,19 @@ oc_core_introspection_data_handler(oc_request_t *request,
   IDD_size = oc_storage_read(
     idd_tag, request->response->response_buffer->buffer, OC_MAX_APP_DATA_SIZE);
 #endif /* OC_IDD_API */
-  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
+  oc_status_t code = OC_STATUS_INTERNAL_SERVER_ERROR;
+  size_t response_length = 0;
   if (IDD_size >= 0 && IDD_size < OC_MAX_APP_DATA_SIZE) {
-    oc_status_t code = OC_STATUS_OK;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->response_length = IDD_size;
-    request->response->response_buffer->code = oc_status_code(code);
+    code = OC_STATUS_OK;
+    response_length = IDD_size;
   } else {
-    oc_status_t code = OC_STATUS_INTERNAL_SERVER_ERROR;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
+    // do nothing - response is already set to internal server error
     OC_ERR(
       "oc_core_introspection_data_handler : %ld is too big for buffer %ld \n",
       IDD_size, (long)OC_MAX_APP_DATA_SIZE);
-    request->response->response_buffer->response_length = 0;
-    request->response->response_buffer->code = oc_status_code(code);
   }
+  oc_send_response_internal(request, code, APPLICATION_VND_OCF_CBOR,
+                            response_length, code != OC_IGNORE);
 }
 
 static void

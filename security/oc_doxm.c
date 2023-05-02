@@ -20,6 +20,7 @@
 
 #include "oc_doxm_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -27,10 +28,6 @@
 #include "oc_store.h"
 #include "oc_tls_internal.h"
 #include "port/oc_assert.h"
-
-#ifdef OC_SERVER
-#include "api/oc_server_api_internal.h"
-#endif
 
 #include <assert.h>
 #include <stdbool.h>
@@ -307,13 +304,10 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
          (g_doxm[device].owned == 0 && strncasecmp(q, "true", 4) == 0))) {
       if (request->origin != NULL &&
           (request->origin->flags & MULTICAST) == 0) {
-        oc_status_t code = OC_STATUS_BAD_REQUEST;
-#ifdef OC_SERVER
-        oc_trigger_send_response_callback(request, code);
-#endif
         // reply with BAD_REQUEST if ownership status does not match query
         // of unicast request
-        request->response->response_buffer->code = oc_status_code(code);
+        oc_send_response_internal(request, OC_STATUS_BAD_REQUEST,
+                                  APPLICATION_VND_OCF_CBOR, 0, true);
         return;
       }
       // ignore if ownership status does not match query of multicast request
@@ -355,11 +349,8 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
       doxm_response_data_t *rd =
         add_doxm_response_for_device(device, iface_mask);
       if (rd == NULL) {
-        oc_status_t code = OC_STATUS_INTERNAL_SERVER_ERROR;
-#ifdef OC_SERVER
-        oc_trigger_send_response_callback(request, code);
-#endif
-        request->response->response_buffer->code = oc_status_code(code);
+        oc_send_response_internal(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                  APPLICATION_VND_OCF_CBOR, 0, true);
         return;
       }
 

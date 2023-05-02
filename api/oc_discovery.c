@@ -25,15 +25,12 @@
 #include "oc_endpoint.h"
 #include "oc_enums.h"
 #include "oc_resource_internal.h"
+#include "oc_server_api_internal.h"
 #include "util/oc_features.h"
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
-
-#if defined(OC_SERVER) || defined(OC_RES_BATCH_SUPPORT)
-#include "oc_server_api_internal.h"
-#endif /* OC_SERVER || OC_RES_BATCH_SUPPORT */
 
 #if defined(OC_SECURITY) && defined(OC_RES_BATCH_SUPPORT)
 #include "security/oc_acl_internal.h"
@@ -400,6 +397,24 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
   return matches;
 }
 
+static void
+send_response(oc_request_t *request, oc_content_format_t content_format,
+              int matches, int response_length)
+{
+  oc_status_t code = OC_STATUS_OK;
+  if (matches && response_length) {
+    //  do nothing - response already set up
+  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    code = OC_STATUS_BAD_REQUEST;
+    response_length = 0;
+  } else {
+    code = OC_IGNORE;
+    response_length = 0;
+  }
+  oc_send_response_internal(request, code, content_format, response_length,
+                            code != OC_IGNORE);
+}
+
 #ifdef OC_SPEC_VER_OIC
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
@@ -639,24 +654,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
     break;
   }
 
-  int response_length = oc_rep_get_encoded_payload_size();
-  request->response->response_buffer->content_format = APPLICATION_CBOR;
-  if (matches && response_length) {
-    oc_status_t code = OC_STATUS_OK;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(code);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    oc_status_t code = OC_STATUS_BAD_REQUEST;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->code = oc_status_code(code);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_CBOR, matches,
+                oc_rep_get_encoded_payload_size());
 }
 #endif /* OC_SPEC_VER_OIC */
 
@@ -889,24 +888,8 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   default:
     break;
   }
-  int response_length = oc_rep_get_encoded_payload_size();
-  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
-  if (matches && response_length > 0) {
-    oc_status_t code = OC_STATUS_OK;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(code);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    oc_status_t code = OC_STATUS_BAD_REQUEST;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->code = oc_status_code(code);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_VND_OCF_CBOR, matches,
+                oc_rep_get_encoded_payload_size());
 }
 
 #ifdef OC_WKCORE
@@ -921,11 +904,8 @@ oc_wkcore_discovery_handler(oc_request_t *request,
 
   /* check if the accept header is link-format */
   if (request->accept != APPLICATION_LINK_FORMAT) {
-    oc_status_t code = OC_STATUS_BAD_REQUEST;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->code = oc_status_code(code);
+    oc_send_response_internal(request, OC_STATUS_BAD_REQUEST, TEXT_PLAIN, 0,
+                              true);
     return;
   }
 
@@ -1009,23 +989,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     response_length += length;
   }
 
-  request->response->response_buffer->content_format = APPLICATION_LINK_FORMAT;
-  if (matches && response_length > 0) {
-    oc_status_t code = OC_STATUS_OK;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(code);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    oc_status_t code = OC_STATUS_BAD_REQUEST;
-#ifdef OC_SERVER
-    oc_trigger_send_response_callback(request, code);
-#endif
-    request->response->response_buffer->code = oc_status_code(code);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_LINK_FORMAT, matches, response_length);
 }
 #endif /* OC_WKCORE */
 

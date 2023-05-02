@@ -1100,11 +1100,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       break;
     }
   }
-  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
-  request->response->response_buffer->response_length = size;
-  request->response->response_buffer->code = code;
-
-  oc_trigger_send_response_callback(request, code);
+  oc_send_response_internal(request, code, APPLICATION_VND_OCF_CBOR, size,
+                            true);
 
   if ((method == OC_PUT || method == OC_POST) &&
       code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
