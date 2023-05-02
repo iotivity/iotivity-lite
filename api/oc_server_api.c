@@ -152,7 +152,7 @@ oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
 void
 oc_send_response(oc_request_t *request, oc_status_t response_code)
 {
-  oc_send_response_v1(request, response_code, true);
+  oc_send_response_v1(request, response_code, false);
 }
 
 void

@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
+#include "oc_server_api_internal.h"
 #include "oc_storage_internal.h"
 #include "oc_swupdate.h"
 #include "oc_swupdate_internal.h"
@@ -555,11 +556,11 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     /* set the response */
     oc_swupdate_encode(OC_IF_RW, request->resource->device);
 
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_v1(request, OC_STATUS_CHANGED, true);
 
     oc_dump_sw(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
+    oc_send_response_v1(request, OC_STATUS_NOT_ACCEPTABLE, true);
   }
 }
 
@@ -581,7 +582,7 @@ get_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
   (void)user_data;
   oc_swupdate_encode(interfaces, request->resource->device);
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_v1(request, OC_STATUS_OK, true);
 }
 
 void

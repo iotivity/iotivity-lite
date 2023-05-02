@@ -89,4 +89,24 @@ void oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
                                oc_content_format_t content_format,
                                size_t response_length, bool trigger_cb);
 
+/**
+ * Called after the response to a GET, PUT, POST or DELETE call has been
+ * prepared completed
+ *
+ * The function oc_send_response is called at the end of a
+ * oc_request_callback_t to inform the caller about the status of the requested
+ * action.
+ *
+ *
+ * @param[in] request the request being responded to
+ * @param[in] response_code the status of the response
+ * @param[in] trigger_cb if true, the send response callback will be triggered
+ *
+ * @see oc_request_callback_t
+ * @see oc_ignore_request
+ * @see oc_indicate_separate_response
+ */
+void oc_send_response_v1(oc_request_t *request, oc_status_t response_code,
+                         bool trigger_cb);
+
 #endif /* OC_SERVER_API_INTERNAL_H */

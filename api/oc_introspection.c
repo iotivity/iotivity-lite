@@ -132,7 +132,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   if (oc_string_len(uri) <= 0) {
     OC_ERR("could not obtain introspection resource uri");
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
@@ -155,7 +155,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
   }
 
   oc_rep_end_root_object();
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_v1(request, OC_STATUS_OK, true);
 
   OC_DBG("got introspection resource uri %s", oc_string(uri));
   oc_free_string(&uri);

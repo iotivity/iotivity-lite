@@ -22,6 +22,7 @@
 
 #include "oc_cloud_resource_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
@@ -99,13 +100,13 @@ get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   (void)interface;
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
   if (!ctx) {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
     return;
   }
   OC_DBG("GET request received");
 
   cloud_response(ctx);
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_v1(request, OC_STATUS_OK, true);
 }
 
 static bool
@@ -151,7 +152,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   (void)interface;
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
   if (!ctx) {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_v1(request, OC_STATUS_INTERNAL_SERVER_ERROR, true);
     return;
   }
   OC_DBG("POST request received");
@@ -177,21 +178,21 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
   }
   }
   if (request_invalid_in_state) {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
   char *cps;
   size_t cps_len = 0;
   if (oc_rep_get_string(request->request_payload, "cps", &cps, &cps_len)) {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_v1(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
   bool changed = cloud_update_from_request(ctx, request);
   cloud_response(ctx);
-  oc_send_response(request,
-                   changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST);
+  oc_send_response_v1(
+    request, changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST, true);
   if (changed) {
     cloud_store_dump_async(&ctx->store);
   }
