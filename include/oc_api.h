@@ -1617,7 +1617,7 @@ typedef void (*oc_send_response_cb_t)(oc_request_t *request,
  * trigger_cb is true.
  */
 OC_API
-void oc_set_send_response_cb(oc_send_response_cb_t cb);
+void oc_set_send_response_callback(oc_send_response_cb_t cb);
 
 /**
  * @brief retrieve the payload from the request, no processing

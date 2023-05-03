@@ -1270,7 +1270,7 @@ main(int argc, char *argv[])
                                         .register_resources =
                                           register_resources };
   oc_log_set_function(cloud_server_log);
-  oc_set_send_response_cb(cloud_server_send_response_cb);
+  oc_set_send_response_callback(cloud_server_send_response_cb);
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */

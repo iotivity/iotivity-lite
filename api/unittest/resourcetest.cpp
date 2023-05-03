@@ -35,7 +35,7 @@ class TestResourceWithDevice : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-    oc_set_send_response_cb(SendResponseCallback);
+    oc_set_send_response_callback(SendResponseCallback);
     EXPECT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, /*device*/ 0);
@@ -48,7 +48,7 @@ public:
   static void TearDownTestCase()
   {
     oc::TestDevice::StopServer();
-    oc_set_send_response_cb(nullptr);
+    oc_set_send_response_callback(nullptr);
     m_send_response_cb_invoked = false;
   }
   static void SendResponseCallback(oc_request_t *request,

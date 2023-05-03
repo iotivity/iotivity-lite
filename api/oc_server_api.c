@@ -97,7 +97,7 @@ response_length(void)
 }
 
 void
-oc_set_send_response_cb(oc_send_response_cb_t cb)
+oc_set_send_response_callback(oc_send_response_cb_t cb)
 {
   g_oc_send_response_cb = cb;
 }
