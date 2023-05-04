@@ -26,19 +26,19 @@ jobs:
         include:
           - name: cloud-server
             file: docker/apps/Dockerfile.cloud-server
-            args: "-DOC_DEBUG_ENABLED=ON"
+            args: ""
             type: Release
           - name: cloud-server-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "-DOC_DEBUG_ENABLED=ON"
+            args: ""
             type: Debug
           - name: cloud-server-discovery-resource-observable
             file: docker/apps/Dockerfile.cloud-server
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_DEBUG_ENABLED=ON"
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
             type: Release
           - name: cloud-server-discovery-resource-observable-debug
             file: docker/apps/Dockerfile.cloud-server-debug
-            args: "-DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
             type: Debug
     permissions:
       contents: read
@@ -90,5 +90,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BUILD_ARGS=-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.args }}
+            BUILD_ARGS=-DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON ${{ matrix.args }}
             BUILD_TYPE=${{ matrix.type }}
