@@ -551,7 +551,7 @@ oc_ri_init(void)
 }
 
 static const char *method_strs[] = {
-  "EMPTY",  /* 0 */
+  "",       /* 0 */
   "GET",    /* OC_GET */
   "POST",   /* OC_POST */
   "PUT",    /* OC_PUT */
@@ -563,7 +563,7 @@ const char *
 oc_method_to_str(oc_method_t method)
 {
   if (method < 0 || method >= sizeof(method_strs) / sizeof(method_strs[0]))
-    return "";
+    return method_strs[0];
   return method_strs[method];
 }
 
