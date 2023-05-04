@@ -89,6 +89,7 @@ run(void)
 #elif defined(__linux__) || defined(__ANDROID_API__)
 #include <pthread.h>
 #include <sys/time.h>
+#include <sys/types.h> // suseconds_t
 #include <unistd.h>
 
 static pthread_mutex_t mutex;
@@ -161,7 +162,7 @@ set_system_time(oc_clock_time_t time, void *data)
   struct timeval now;
   now.tv_sec = time / OC_CLOCK_SECOND;
   oc_clock_time_t rem_ticks = time % OC_CLOCK_SECOND;
-  now.tv_usec = (__suseconds_t)(((double)rem_ticks * 1.e06) / OC_CLOCK_SECOND);
+  now.tv_usec = (suseconds_t)(((double)rem_ticks * 1.e06) / OC_CLOCK_SECOND);
   return settimeofday(&now, NULL);
 }
 
