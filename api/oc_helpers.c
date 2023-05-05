@@ -226,7 +226,7 @@ _oc_copy_byte_string_to_array(oc_string_array_t *ocstringarray,
     return false;
   }
   size_t pos = index * STRING_ARRAY_ITEM_MAX_LEN;
-  oc_string(*ocstringarray)[pos] = (uint8_t)str_len;
+  oc_cast(*ocstringarray, uint8_t)[pos] = (uint8_t)str_len;
   pos++;
   memcpy(oc_string(*ocstringarray) + pos, (const uint8_t *)str, str_len);
   return true;

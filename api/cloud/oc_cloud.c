@@ -21,7 +21,8 @@
 
 #ifdef OC_CLOUD
 
-#include "api/oc_server_api_internal.h"
+#include "api/oc_ri_internal.h"
+#include "api/oc_ri_server_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
@@ -36,22 +37,6 @@
 #ifdef OC_SECURITY
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
-
-void
-cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
-                             uint16_t seconds)
-{
-  oc_remove_delayed_callback(cb_data, callback);
-  oc_set_delayed_callback(cb_data, callback, seconds);
-}
-
-void
-cloud_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                                uint64_t milliseconds)
-{
-  oc_remove_delayed_callback(cb_data, callback);
-  oc_set_delayed_callback_ms_v1(cb_data, callback, milliseconds);
-}
 
 bool
 cloud_is_connection_error_code(oc_status_t code)
@@ -393,7 +378,9 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 int
 oc_cloud_init(void)
 {
-  oc_set_on_delayed_delete_resource_cb(oc_cloud_delete_resource);
+  if (!oc_ri_on_delete_resource_add_callback(oc_cloud_delete_resource)) {
+    return -1;
+  }
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     if (cloud_context_init(device) == NULL) {
       return -1;
@@ -421,5 +408,6 @@ oc_cloud_shutdown(void)
     cloud_context_deinit(ctx);
     OC_DBG("cloud_shutdown for %d", (int)device);
   }
+  oc_ri_on_delete_resource_remove_callback(oc_cloud_delete_resource);
 }
 #endif /* OC_CLOUD */

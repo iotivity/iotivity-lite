@@ -76,12 +76,6 @@ void oc_cloud_refresh_token_handler(oc_client_response_t *data);
 
 void cloud_close_endpoint(const oc_endpoint_t *cloud_ep);
 
-/// Remove callback (if it exists) and schedule it again
-void cloud_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
-                                  uint16_t seconds);
-void cloud_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                                     uint64_t milliseconds);
-
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
 void cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps);

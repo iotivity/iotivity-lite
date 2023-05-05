@@ -20,12 +20,13 @@
 
 #ifdef OC_CLOUD
 
+#include "oc_cloud_deregister_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_access.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_context_internal.h"
-#include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 
@@ -64,7 +65,7 @@ cloud_deregister_on_reset_async_handler(oc_cloud_context_t *ctx,
   // oc_ri_remove_client_cb_with_notify_timeout_async for this call, causing
   // memory issues. We schedule the context clear in a delayed callback, so this
   // call removes itself from the queue of calls for the endpoint.
-  cloud_reset_delayed_callback(ctx, cloud_deregister_context_clear_async, 0);
+  oc_reset_delayed_callback(ctx, cloud_deregister_context_clear_async, 0);
 }
 
 static int
@@ -110,7 +111,7 @@ cloud_deregister_on_reset(oc_cloud_context_t *ctx, bool sync, uint16_t timeout)
   }
   p->ctx = ctx;
   p->timeout = timeout;
-  cloud_reset_delayed_callback(p, cloud_deregister_on_reset_async, 0);
+  oc_reset_delayed_callback(p, cloud_deregister_on_reset_async, 0);
   return true;
 }
 

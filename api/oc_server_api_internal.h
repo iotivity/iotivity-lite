@@ -21,37 +21,19 @@
 
 #include "oc_ri.h"
 
-#ifdef OC_CLOUD
-#include "oc_api.h"
-#endif /* OC_CLOUD */
-
 #ifdef OC_RES_BATCH_SUPPORT
 #include "oc_endpoint.h"
 #include "oc_uuid.h"
 #include <cbor.h>
 #endif /* OC_RES_BATCH_SUPPORT */
 
-#ifdef OC_CLOUD
+#include <stdint.h>
 
-/**
- * @brief Callback invoked on resource before it is deleted by
- * oc_delayed_delete_resource.
- *
- * @param resource Resource to be deleted
- */
-typedef void (*oc_delete_resource_cb_t)(oc_resource_t *resource);
-
-/**
- * Sets the callback that gets invoked by oc_delayed_delete_resource
- * before each resource is deleted.
- *
- * @param callback The callback to set or NULL to unset it. If the function
- *                 is invoked a second time, then the previously set callback is
- *                 simply replaced.
- */
-void oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback);
-
-#endif /* OC_CLOUD */
+/// Remove callback (if it exists) and schedule it again
+void oc_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
+                               uint16_t seconds);
+void oc_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                                  uint64_t milliseconds);
 
 #ifdef OC_RES_BATCH_SUPPORT
 

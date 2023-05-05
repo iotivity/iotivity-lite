@@ -30,8 +30,6 @@
 extern "C" {
 #endif
 
-OC_PROCESS_NAME(message_buffer_handler);
-
 /**
  * @brief function to allocate a message
  *

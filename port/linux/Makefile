@@ -122,13 +122,13 @@ SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/oc_config.h
 
-HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
-HEADERS_UTIL = $(wildcard ../../util/*.h)
-HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
+HEADERS_COAP = $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
+HEADERS_UTIL = $(filter-out %_internal.h,$(wildcard ../../util/*.h))
+HEADERS_UTIL_PT = $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
 HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 HEADERS_TINYCBOR = $(addprefix ../../deps/tinycbor/src/,cbor.h cborjson.h tinycbor-version.h)
 
-CFLAGS_CLOUD=-I../../api/cloud
+CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -I../../api -std=gnu99 -Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic #-Wl,-Map,client.map
 CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
@@ -141,7 +141,8 @@ OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 # $(info    OBJ_PYTHON is $(OBJ_PYTHON))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:../../service/cloud/src/:../../service/resource-directory/client/src/:
+VPATH=../../api/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../python/:../../util/:
+VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
@@ -390,11 +391,7 @@ obj/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
-#obj/python/%.o: %.c
-#	@mkdir -p ${@D}
-#	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
-
-$(OBJ_PYTHON) : $(SRC_PYTHON)
+obj/python/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 

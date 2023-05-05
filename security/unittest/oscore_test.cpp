@@ -18,13 +18,14 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/oscore.h"
+#include "oc_helpers.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_oscore.h"
 #include "security/oc_oscore_context.h"
 #include "security/oc_oscore_crypto.h"
-#include "oc_helpers.h"
 
 #include "gtest/gtest.h"
 #include <cstdlib>

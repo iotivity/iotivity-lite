@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_ri_internal.h"
 #include "api/oc_storage_internal.h"
 #include "oc_api.h"
 #include "oc_ri.h"

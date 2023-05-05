@@ -24,6 +24,8 @@
 #include "util/oc_features.h"
 #include <stddef.h>
 
+OC_PROCESS_NAME(oc_message_buffer_handler);
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 /**
  * @brief finish connecting tcp session

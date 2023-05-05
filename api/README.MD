@@ -81,3 +81,55 @@ oc_new_string(&second, "second", strlen("second"));
 oc_free_string(&first);
 printf("%s", oc_string(second));
 ```
+
+## Resources (Server API)
+
+### Add a resource
+
+To create and initialize a new resource instance use:
+
+```C
+oc_resource_t *oc_new_resource(const char *name, const char *uri, uint8_t num_resource_types, size_t device);
+```
+
+To futher configure the resource examine the following functions:
+
+* `oc_resource_bind_resource_interface`
+* `oc_resource_set_default_interface`
+* `oc_resource_bind_resource_type`
+* `oc_resource_tag_pos_desc`
+* `oc_resource_tag_pos_rel`
+* `oc_resource_tag_func_desc`
+* `oc_resource_tag_locn`
+* `oc_resource_make_public`
+* `oc_resource_set_discoverable`
+* `oc_resource_set_pushable`
+* `oc_resource_set_observable`
+* `oc_resource_set_periodic_observable`
+* `oc_resource_set_request_handler`
+
+To add the created resource to the application you must call `oc_ri_add_resource`. The resource will now be available to configured request handlers (CREATE/GET/POST/PUT/DELETE).
+
+### Delete a resource
+
+To remove a resource from the application and deallocate its data use:
+
+```C
+bool oc_ri_delete_resource(oc_resource_t *resource);
+```
+
+However, this function shouldn't always be used directly. The paradigmatic case when it should be avoided is from the DELETE request handler. The processing of a request that occurrs after the DELETE request handler invocation still uses some resource data. Therefore `oc_ri_delete_resource` must only be called after the processing of the request is done.
+
+#### Delete a resource from a DELETE request handler
+
+To solve this issue use:
+
+```C
+void oc_delayed_delete_resource(oc_resource_t *resource)
+```
+
+Which schedules `oc_ri_delete_resource` in a delayed callback, which guarantees that the deallocation will occur on the next tick of the main run loop.
+
+If you need to deallocate some custom data associated with the `oc_resource_t*` that is about to be deallocated, or do some other operation before the resource is deallocated then you can use `oc_ri_on_delete_resource_add_callback` to add a callback which will be invoked with resource just before the call to `oc_ri_delete_resource`.
+
+<!-- ## Collections -->

@@ -16,6 +16,9 @@
  *
  ***************************************************************************/
 
+#include "oc_ri.h"
+#include "oc_ri_internal.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/constants.h"
@@ -27,16 +30,16 @@
 #include "oc_discovery.h"
 #include "oc_events.h"
 #include "oc_network_events_internal.h"
-#include "oc_ri.h"
-#include "oc_ri_internal.h"
+#include "oc_ri_server_internal.h"
 #include "oc_uuid.h"
 #include "port/oc_assert.h"
 #include "port/oc_random.h"
 #include "util/oc_etimer.h"
-#include "util/oc_list.h"
-#include "util/oc_memb.h"
-#include "util/oc_process.h"
 #include "util/oc_features.h"
+#include "util/oc_list.h"
+#include "util/oc_macros.h"
+#include "util/oc_memb.h"
+#include "util/oc_process_internal.h"
 
 #ifdef OC_BLOCK_WISE
 #include "oc_blockwise.h"
@@ -44,6 +47,10 @@
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
+#endif /* OC_CLIENT */
+
+#ifdef OC_SERVER
+#include "api/oc_server_api_internal.h"
 #endif /* OC_CLIENT */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
@@ -90,6 +97,7 @@ OC_PROCESS_NAME(oc_push_process);
 
 #ifdef OC_SERVER
 OC_LIST(g_app_resources);
+OC_LIST(g_app_resources_to_be_deleted);
 OC_LIST(g_observe_callbacks);
 OC_MEMB(g_app_resources_s, oc_resource_t, OC_MAX_APP_RESOURCES);
 OC_MEMB(g_resource_default_s, oc_resource_defaults_data_t,
@@ -111,13 +119,13 @@ static bool g_currently_processed_event_cb_delete = false;
 static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
   NULL;
 
-OC_PROCESS(g_timed_callback_events, "OC timed callbacks");
+OC_PROCESS(oc_timed_callback_events, "OC timed callbacks");
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
 
 oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
 
-const char *cli_status_strs[] = {
+static const char *oc_status_strs[] = {
   "OC_STATUS_OK",                       /* 0 */
   "OC_STATUS_CREATED",                  /* 1 */
   "OC_STATUS_CHANGED",                  /* 2 */
@@ -191,16 +199,17 @@ set_mpro_status_codes(void)
 }
 
 #ifdef OC_SERVER
+
 oc_resource_t *
 oc_ri_get_app_resources(void)
 {
   return oc_list_head(g_app_resources);
 }
 
-bool
-oc_ri_is_app_resource_valid(const oc_resource_t *resource)
+static bool
+ri_app_resource_is_in_list(oc_list_t list, const oc_resource_t *resource)
 {
-  oc_resource_t *res = oc_ri_get_app_resources();
+  const oc_resource_t *res = oc_list_head(list);
   while (res) {
     if (res == resource) {
       return true;
@@ -209,7 +218,47 @@ oc_ri_is_app_resource_valid(const oc_resource_t *resource)
   }
   return false;
 }
-#endif
+
+bool
+oc_ri_is_app_resource_valid(const oc_resource_t *resource)
+{
+  return ri_app_resource_is_in_list(g_app_resources, resource);
+}
+
+bool
+oc_ri_is_app_resource_to_be_deleted(const oc_resource_t *resource)
+{
+  return ri_app_resource_is_in_list(g_app_resources_to_be_deleted, resource);
+}
+
+static void
+ri_app_resource_to_be_deleted(oc_resource_t *resource)
+{
+  oc_list_remove2(g_app_resources, resource);
+  if (!oc_ri_is_app_resource_to_be_deleted(resource)) {
+    oc_list_add(g_app_resources_to_be_deleted, resource);
+  }
+}
+
+static oc_event_callback_retval_t
+oc_delayed_delete_resource_cb(void *data)
+{
+  oc_resource_t *resource = (oc_resource_t *)data;
+  OC_DBG("delayed delete resource(%p)", (void *)resource);
+  oc_ri_on_delete_resource_invoke(resource);
+  oc_delete_resource(resource);
+  return OC_EVENT_DONE;
+}
+
+void
+oc_delayed_delete_resource(oc_resource_t *resource)
+{
+  OC_DBG("(re)scheduling delayed delete resource(%p)", (void *)resource);
+  ri_app_resource_to_be_deleted(resource);
+  oc_reset_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
+}
+
+#endif /* OC_SERVER */
 
 int
 oc_status_code(oc_status_t key)
@@ -221,9 +270,10 @@ oc_status_code(oc_status_t key)
 const char *
 oc_status_to_str(oc_status_t key)
 {
-  if (key < 0 || key >= sizeof(cli_status_strs) / sizeof(cli_status_strs[0]))
+  if (key < 0 || key >= OC_ARRAY_SIZE(oc_status_strs)) {
     return "";
-  return cli_status_strs[key];
+  }
+  return oc_status_strs[key];
 }
 
 // representation of query key-value pairs (&key=value)
@@ -440,9 +490,9 @@ start_processes(void)
 {
   allocate_events();
   oc_process_start(&oc_etimer_process, NULL);
-  oc_process_start(&g_timed_callback_events, NULL);
+  oc_process_start(&oc_timed_callback_events, NULL);
   oc_process_start(&g_coap_engine, NULL);
-  oc_process_start(&message_buffer_handler, NULL);
+  oc_process_start(&oc_message_buffer_handler, NULL);
 
 #ifdef OC_SECURITY
   oc_process_start(&oc_tls_handler, NULL);
@@ -469,7 +519,7 @@ stop_processes(void)
 #endif /* OC_TCP */
   oc_process_exit(&oc_network_events);
   oc_process_exit(&oc_etimer_process);
-  oc_process_exit(&g_timed_callback_events);
+  oc_process_exit(&oc_timed_callback_events);
   oc_process_exit(&g_coap_engine);
 
 #ifdef OC_SECURITY
@@ -479,7 +529,7 @@ stop_processes(void)
   oc_process_exit(&oc_tls_handler);
 #endif /* OC_SECURITY */
 
-  oc_process_exit(&message_buffer_handler);
+  oc_process_exit(&oc_message_buffer_handler);
 
 #ifdef OC_HAS_FEATURE_PUSH
   oc_process_exit(&oc_push_process);
@@ -490,27 +540,31 @@ stop_processes(void)
 oc_resource_t *
 oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 {
-  if (!uri || uri_len == 0)
+  if (!uri || uri_len == 0) {
     return NULL;
+  }
+
   int skip = 0;
-  if (uri[0] != '/')
+  if (uri[0] != '/') {
     skip = 1;
+  }
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
     if (oc_string_len(res->uri) == (uri_len + skip) &&
         strncmp(uri, oc_string(res->uri) + skip, uri_len) == 0 &&
-        res->device == device)
+        res->device == device) {
       return res;
+    }
     res = res->next;
   }
 
 #ifdef OC_COLLECTIONS
-  if (!res) {
-    res = (oc_resource_t *)oc_get_collection_by_uri(uri, uri_len, device);
+  oc_collection_t *col = oc_get_collection_by_uri(uri, uri_len, device);
+  if (col != NULL) {
+    return &col->res;
   }
 #endif /* OC_COLLECTIONS */
-
-  return res;
+  return NULL;
 }
 
 static void
@@ -520,6 +574,12 @@ oc_ri_delete_all_app_resources(void)
   while (res) {
     oc_ri_delete_resource(res);
     res = oc_ri_get_app_resources();
+  }
+
+  res = oc_list_head(g_app_resources_to_be_deleted);
+  while (res) {
+    oc_ri_delete_resource(res);
+    res = oc_list_head(g_app_resources_to_be_deleted);
   }
 }
 #endif /* OC_SERVER */
@@ -533,6 +593,7 @@ oc_ri_init(void)
 
 #ifdef OC_SERVER
   oc_list_init(g_app_resources);
+  oc_list_init(g_app_resources_to_be_deleted);
   oc_list_init(g_observe_callbacks);
 #endif /* OC_SERVER */
 
@@ -595,8 +656,17 @@ oc_ri_dealloc_resource_defaults(oc_resource_defaults_data_t *data)
 bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
-  if (!resource)
+  if (!resource) {
     return false;
+  }
+  OC_DBG("delete resource(%p)", (void *)resource);
+
+  oc_list_remove(g_app_resources, resource);
+  oc_list_remove(g_app_resources_to_be_deleted, resource);
+
+#ifdef OC_SERVER
+  oc_remove_delayed_callback(resource, oc_delayed_delete_resource_cb);
+#endif /* OC_SERVER */
 
 #if defined(OC_COLLECTIONS)
 #if defined(OC_COLLECTIONS_IF_CREATE)
@@ -643,7 +713,6 @@ oc_ri_delete_resource(oc_resource_t *resource)
     oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
-  oc_list_remove(g_app_resources, resource);
   oc_ri_free_resource_properties(resource);
   oc_ri_dealloc_resource(resource);
   return true;
@@ -666,6 +735,16 @@ oc_ri_add_resource(oc_resource_t *resource)
     return false;
   }
 
+  if (oc_ri_is_app_resource_valid(resource)) {
+    OC_ERR("resource(%s) already exists in IoTivity stack",
+           oc_string(resource->uri));
+    return false;
+  }
+  if (oc_ri_is_app_resource_to_be_deleted(resource)) {
+    OC_ERR("resource(%s) is scheduled to be deleted", oc_string(resource->uri));
+    return false;
+  }
+
   oc_list_add(g_app_resources, resource);
   return true;
 }
@@ -674,12 +753,10 @@ oc_ri_add_resource(oc_resource_t *resource)
 void
 oc_ri_free_resource_properties(oc_resource_t *resource)
 {
-  if (resource) {
-    oc_free_string(&(resource->name));
-    oc_free_string(&(resource->uri));
-    if (oc_string_array_get_allocated_size(resource->types) > 0) {
-      oc_free_string_array(&(resource->types));
-    }
+  oc_free_string(&(resource->name));
+  oc_free_string(&(resource->uri));
+  if (oc_string_array_get_allocated_size(resource->types) > 0) {
+    oc_free_string_array(&(resource->types));
   }
 }
 
@@ -728,9 +805,9 @@ oc_ri_remove_timed_event_callback_by_filter(
     if (g_currently_processed_event_cb == event_cb) {
       want_to_delete_currently_processed_event_cb = true;
     } else {
-      OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+      OC_PROCESS_CONTEXT_BEGIN(&oc_timed_callback_events)
       oc_etimer_stop(&event_cb->timer);
-      OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+      OC_PROCESS_CONTEXT_END(&oc_timed_callback_events)
       oc_list_remove(g_timed_callbacks, event_cb);
       if (on_delete != NULL) {
         on_delete(event_cb->data);
@@ -776,9 +853,9 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
   if (event_cb) {
     event_cb->data = cb_data;
     event_cb->callback = event_callback;
-    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_BEGIN(&oc_timed_callback_events)
     oc_etimer_set(&event_cb->timer, ticks);
-    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_END(&oc_timed_callback_events)
     oc_list_add(g_timed_callbacks, event_cb);
   } else {
     OC_WRN("insufficient memory to add timed event callback");
@@ -807,9 +884,9 @@ poll_event_callback_timers(oc_list_t list, struct oc_memb *cb_pool)
       event_cb = (oc_event_callback_t *)oc_list_head(list);
       continue;
     }
-    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_BEGIN(&oc_timed_callback_events)
     oc_etimer_restart(&event_cb->timer);
-    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_END(&oc_timed_callback_events)
     event_cb = (oc_event_callback_t *)oc_list_head(list);
     continue;
   }
@@ -900,10 +977,10 @@ add_periodic_observe_callback(oc_resource_t *resource)
 
     event_cb->data = resource;
     event_cb->callback = periodic_observe_handler;
-    OC_PROCESS_CONTEXT_BEGIN(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_BEGIN(&oc_timed_callback_events)
     oc_etimer_set(&event_cb->timer,
                   resource->observe_period_seconds * OC_CLOCK_SECOND);
-    OC_PROCESS_CONTEXT_END(&g_timed_callback_events);
+    OC_PROCESS_CONTEXT_END(&oc_timed_callback_events)
     oc_list_add(g_observe_callbacks, event_cb);
   }
 
@@ -935,51 +1012,50 @@ free_all_event_timers(void)
 }
 
 oc_interface_mask_t
-oc_ri_get_interface_mask(const char *iface, size_t if_len)
+oc_ri_get_interface_mask(const char *iface, size_t iface_len)
 {
-#define STRLEN(x) (sizeof(x) - 1)
-  if (STRLEN(OC_IF_BASELINE_STR) == if_len &&
-      strncmp(iface, OC_IF_BASELINE_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_BASELINE_STR) == iface_len &&
+      strncmp(iface, OC_IF_BASELINE_STR, iface_len) == 0) {
     return OC_IF_BASELINE;
   }
-  if (STRLEN(OC_IF_LL_STR) == if_len &&
-      strncmp(iface, OC_IF_LL_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_LL_STR) == iface_len &&
+      strncmp(iface, OC_IF_LL_STR, iface_len) == 0) {
     return OC_IF_LL;
   }
-  if (STRLEN(OC_IF_B_STR) == if_len &&
-      strncmp(iface, OC_IF_B_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_B_STR) == iface_len &&
+      strncmp(iface, OC_IF_B_STR, iface_len) == 0) {
     return OC_IF_B;
   }
-  if (STRLEN(OC_IF_R_STR) == if_len &&
-      strncmp(iface, OC_IF_R_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_R_STR) == iface_len &&
+      strncmp(iface, OC_IF_R_STR, iface_len) == 0) {
     return OC_IF_R;
   }
-  if (STRLEN(OC_IF_RW_STR) == if_len &&
-      strncmp(iface, OC_IF_RW_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_RW_STR) == iface_len &&
+      strncmp(iface, OC_IF_RW_STR, iface_len) == 0) {
     return OC_IF_RW;
   }
-  if (STRLEN(OC_IF_A_STR) == if_len &&
-      strncmp(iface, OC_IF_A_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_A_STR) == iface_len &&
+      strncmp(iface, OC_IF_A_STR, iface_len) == 0) {
     return OC_IF_A;
   }
-  if (STRLEN(OC_IF_S_STR) == if_len &&
-      strncmp(iface, OC_IF_S_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_S_STR) == iface_len &&
+      strncmp(iface, OC_IF_S_STR, iface_len) == 0) {
     return OC_IF_S;
   }
-  if (STRLEN(OC_IF_CREATE_STR) == if_len &&
-      strncmp(iface, OC_IF_CREATE_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_CREATE_STR) == iface_len &&
+      strncmp(iface, OC_IF_CREATE_STR, iface_len) == 0) {
     return OC_IF_CREATE;
   }
-  if (STRLEN(OC_IF_W_STR) == if_len &&
-      strncmp(iface, OC_IF_W_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_W_STR) == iface_len &&
+      strncmp(iface, OC_IF_W_STR, iface_len) == 0) {
     return OC_IF_W;
   }
-  if (STRLEN(OC_IF_STARTUP_STR) == if_len &&
-      strncmp(iface, OC_IF_STARTUP_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_STARTUP_STR) == iface_len &&
+      strncmp(iface, OC_IF_STARTUP_STR, iface_len) == 0) {
     return OC_IF_STARTUP;
   }
-  if (STRLEN(OC_IF_STARTUP_REVERT_STR) == if_len &&
-      strncmp(iface, OC_IF_STARTUP_REVERT_STR, if_len) == 0) {
+  if (OC_CHAR_ARRAY_LEN(OC_IF_STARTUP_REVERT_STR) == iface_len &&
+      strncmp(iface, OC_IF_STARTUP_REVERT_STR, iface_len) == 0) {
     return OC_IF_STARTUP_REVERT;
   }
   return 0;
@@ -1062,49 +1138,99 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
 }
 #endif /* OC_SECURITY */
 
+static oc_status_t
+ri_invoke_request_handler(oc_resource_t *resource, oc_method_t method,
+                          const oc_endpoint_t *endpoint, oc_request_t *request,
+                          oc_interface_mask_t iface_mask, bool is_collection)
+{
+#ifdef OC_SECURITY
+  /* If resource is a coaps:// resource, then query ACL to check if
+   * the requestor (the subject) is authorized to issue this request to
+   * the resource.
+   */
+  if (!oc_sec_check_acl(method, resource, endpoint)) {
+    return OC_STATUS_UNAUTHORIZED;
+  }
+#else  /* !OC_SECURITY */
+  (void)endpoint;
+#endif /* OC_SECURITY */
+  /* If resource is a collection resource, invoke the framework's internal
+   * handler for collections.
+   */
+#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+  if (is_collection) {
+    if (!oc_handle_collection_request(method, request, iface_mask, NULL)) {
+      OC_WRN("ocri: failed to handle collection request");
+      return OC_STATUS_BAD_REQUEST;
+    }
+    return OC_STATUS_OK;
+  }
+#else  /* !OC_COLLECTIONS || !OC_SERVER */
+  (void)is_collection;
+#endif /* OC_COLLECTIONS && OC_SERVER */
+  /* If cur_resource is a non-collection resource, invoke
+   * its handler for the requested method. If it has not
+   * implemented that method, then return a 4.05 response.
+   */
+  if (method == OC_GET && resource->get_handler.cb) {
+    resource->get_handler.cb(request, iface_mask,
+                             resource->get_handler.user_data);
+    return OC_STATUS_OK;
+  }
+  if (method == OC_POST && resource->post_handler.cb) {
+    resource->post_handler.cb(request, iface_mask,
+                              resource->post_handler.user_data);
+    return OC_STATUS_OK;
+  }
+  if (method == OC_PUT && resource->put_handler.cb) {
+    resource->put_handler.cb(request, iface_mask,
+                             resource->put_handler.user_data);
+    return OC_STATUS_OK;
+  }
+  if (method == OC_DELETE && resource->delete_handler.cb) {
+    resource->delete_handler.cb(request, iface_mask,
+                                resource->delete_handler.user_data);
+    return OC_STATUS_OK;
+  }
+  return OC_STATUS_METHOD_NOT_ALLOWED;
+}
+
+static ocf_version_t
+ri_get_ocf_version_from_header(const coap_packet_t *request)
+{
+#ifdef OC_SPEC_VER_OIC
+  unsigned int accept = 0;
+  if (coap_get_header_accept(request, &accept) == 1) {
+    if (accept == APPLICATION_CBOR) {
+      return = OIC_VER_1_1_0;
+    }
+  }
+#else  /* !OC_SPEC_VER_OIC */
+  (void)request;
+#endif /* OC_SPEC_VER_OIC */
+  return OCF_VER_1_0_0;
+}
+
 #ifdef OC_BLOCK_WISE
 bool
-oc_ri_invoke_coap_entity_handler(void *request, void *response,
+oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
+                                 coap_packet_t *response,
                                  oc_blockwise_state_t **request_state,
                                  oc_blockwise_state_t **response_state,
                                  uint16_t block2_size, oc_endpoint_t *endpoint)
 #else  /* OC_BLOCK_WISE */
 bool
-oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
+oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
+                                 coap_packet_t *response, uint8_t *buffer,
                                  oc_endpoint_t *endpoint)
 #endif /* !OC_BLOCK_WISE */
 {
-  /* Flags that capture status along various stages of processing
-   *  the request.
-   */
-  bool method_impl = true, bad_request = false, success = false,
-       forbidden = false, entity_too_large = false;
-
-  endpoint->version = OCF_VER_1_0_0;
-#ifdef OC_SPEC_VER_OIC
-  unsigned int accept = 0;
-  if (coap_get_header_accept(request, &accept) == 1) {
-    if (accept == APPLICATION_CBOR) {
-      endpoint->version = OIC_VER_1_1_0;
-    }
-  }
-#endif /* OC_SPEC_VER_OIC */
-
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
-  bool resource_is_collection = false;
-#endif /* OC_COLLECTIONS && OC_SERVER */
-
-#ifdef OC_SECURITY
-  bool authorized = true;
-#endif /* OC_SECURITY */
-
-  /* Parsed CoAP PDU structure. */
-  coap_packet_t *const packet = (coap_packet_t *)request;
+  endpoint->version = ri_get_ocf_version_from_header(request);
 
   /* This function is a server-side entry point solely for requests.
    *  Hence, "code" contains the CoAP method code.
    */
-  oc_method_t method = packet->code;
+  oc_method_t method = request->code;
 
   /* Initialize request/response objects to be sent up to the app layer. */
   oc_request_t request_obj;
@@ -1136,11 +1262,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj._payload_len = 0;
   request_obj.method = method;
 
-  /* Obtain request uri from the CoAP packet. */
+  /* Obtain request uri from the CoAP request. */
   const char *uri_path = NULL;
   size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
-  /* Obtain query string from CoAP packet. */
+  /* Obtain query string from CoAP request. */
   const char *uri_query = 0;
   size_t uri_query_len = coap_get_header_uri_query(request, &uri_query);
 
@@ -1155,7 +1281,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Initialize OCF interface selector. */
   oc_interface_mask_t iface_query = 0;
   if (uri_query_len) {
-
     // Check if the request is a multicast request and if the device id in query
     // matches the device id
     if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
@@ -1169,11 +1294,11 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     request_obj.query = uri_query;
     request_obj.query_len = (int)uri_query_len;
     /* Check if query string includes interface selection. */
-    const char *iface;
-    int if_len =
+    const char *iface = NULL;
+    int iface_len =
       oc_ri_get_query_value(uri_query, (int)uri_query_len, "if", &iface);
-    if (if_len != -1) {
-      iface_query |= oc_ri_get_interface_mask(iface, (size_t)if_len);
+    if (iface_len != -1 && iface != NULL) {
+      iface_query |= oc_ri_get_interface_mask(iface, (size_t)iface_len);
     }
   }
 
@@ -1195,6 +1320,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   oc_rep_set_pool(&rep_objects);
 
+  bool bad_request = false;
+  bool entity_too_large = false;
   if (payload_len > 0 &&
       (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR)) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
@@ -1208,8 +1335,9 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     if (parse_error != 0) {
       OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
              parse_error);
-      if (parse_error == CborErrorUnexpectedEOF)
+      if (parse_error == CborErrorUnexpectedEOF) {
         entity_too_large = true;
+      }
       bad_request = true;
     }
   }
@@ -1234,6 +1362,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     }
   }
 
+  bool resource_is_collection = false;
 #ifdef OC_SERVER
   /* Check against list of declared application resources.
    */
@@ -1249,6 +1378,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   }
 #endif /* OC_SERVER */
 
+  bool forbidden = false;
   oc_interface_mask_t iface_mask = 0;
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
@@ -1313,8 +1443,12 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
-  if (cur_resource && !bad_request) {
+  bool method_impl = true;
+#ifdef OC_SECURITY
+  bool authorized = true;
+#endif /* OC_SECURITY */
 
+  if (cur_resource && !bad_request) {
     /* Process a request against a valid resource, request payload, and
      * interface.
      */
@@ -1334,48 +1468,24 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+    oc_status_t ret =
+      ri_invoke_request_handler(cur_resource, method, endpoint, &request_obj,
+                                iface_mask, resource_is_collection);
+    switch (ret) {
+    case OC_STATUS_OK:
+      break;
+    case OC_STATUS_METHOD_NOT_ALLOWED:
+      method_impl = false;
+      break;
 #ifdef OC_SECURITY
-    /* If cur_resource is a coaps:// resource, then query ACL to check if
-     * the requestor (the subject) is authorized to issue this request to
-     * the resource.
-     */
-    if (!oc_sec_check_acl(method, cur_resource, endpoint)) {
+    case OC_STATUS_UNAUTHORIZED:
       authorized = false;
       oc_ri_audit_log(method, cur_resource, endpoint);
-    } else
+      break;
 #endif /* OC_SECURITY */
-    {
-/* If cur_resource is a collection resource, invoke the framework's
- * internal handler for collections.
- */
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
-      if (resource_is_collection) {
-        if (!oc_handle_collection_request(method, &request_obj, iface_mask,
-                                          NULL)) {
-          OC_WRN("ocri: failed to handle collection request");
-          bad_request = true;
-        }
-      } else
-#endif /* OC_COLLECTIONS && OC_SERVER */
-        /* If cur_resource is a non-collection resource, invoke
-         * its handler for the requested method. If it has not
-         * implemented that method, then return a 4.05 response.
-         */
-        if (method == OC_GET && cur_resource->get_handler.cb) {
-          cur_resource->get_handler.cb(&request_obj, iface_mask,
-                                       cur_resource->get_handler.user_data);
-        } else if (method == OC_POST && cur_resource->post_handler.cb) {
-          cur_resource->post_handler.cb(&request_obj, iface_mask,
-                                        cur_resource->post_handler.user_data);
-        } else if (method == OC_PUT && cur_resource->put_handler.cb) {
-          cur_resource->put_handler.cb(&request_obj, iface_mask,
-                                       cur_resource->put_handler.user_data);
-        } else if (method == OC_DELETE && cur_resource->delete_handler.cb) {
-          cur_resource->delete_handler.cb(
-            &request_obj, iface_mask, cur_resource->delete_handler.user_data);
-        } else {
-          method_impl = false;
-        }
+    default:
+      bad_request = true;
+      break;
     }
   }
 
@@ -1386,7 +1496,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   // for realloc we need reassign memory again.
   if (enable_realloc_rep) {
     response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-    if (response_state != NULL && (*response_state) != NULL) {
+    if ((*response_state) != NULL) {
       (*response_state)->buffer = response_buffer.buffer;
     }
   }
@@ -1400,6 +1510,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
     oc_free_rep(request_obj.request_payload);
   }
 
+  bool success = false;
   if (forbidden) {
     OC_WRN("ocri: Forbidden request");
     response_buffer.response_length = 0;
@@ -1507,8 +1618,8 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
         if (set_observe_option) {
           coap_set_header_observe(response, 0);
         } else {
-          coap_remove_observer_by_token(endpoint, packet->token,
-                                        packet->token_len);
+          coap_remove_observer_by_token(endpoint, request->token,
+                                        request->token_len);
         }
       }
       /* If the observe option is set to 1, make an attempt to remove
@@ -2102,6 +2213,8 @@ oc_ri_shutdown(void)
   oc_process_shutdown();
 
 #ifdef OC_SERVER
+  oc_ri_on_delete_resource_remove_all();
+
 #ifdef OC_COLLECTIONS
   oc_collection_t *collection = oc_collection_get_all();
   while (collection != NULL) {
@@ -2117,7 +2230,7 @@ oc_ri_shutdown(void)
   oc_random_destroy();
 }
 
-OC_PROCESS_THREAD(g_timed_callback_events, ev, data)
+OC_PROCESS_THREAD(oc_timed_callback_events, ev, data)
 {
   (void)data;
   OC_PROCESS_BEGIN();

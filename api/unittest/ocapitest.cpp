@@ -487,11 +487,7 @@ protected:
     ApiHelper::poolEvents(1); // give some time for everything to start-up
   }
 
-  void TearDown() override
-  {
-    ApiHelper::unregisterResources();
-    ApiHelper::stopServer();
-  }
+  void TearDown() override { ApiHelper::stopServer(); }
 
 public:
   static oc_discovery_flags_t onResourceDiscovered(
@@ -673,8 +669,8 @@ TEST_F(TestServerClient, DeleteWithTimeout)
   ApiHelper::poolEvents(4);
   EXPECT_EQ(expected, code);
 
-  ApiHelper::s_TestResource.onDelete.response = -1; // disable response
-  doDelete(ApiHelper::s_TestResource, onDeleteDevice, 1);
+  ApiHelper::s_SwitchResource.onDelete.response = -1; // disable response
+  doDelete(ApiHelper::s_SwitchResource, onDeleteDevice, 1);
   ApiHelper::poolEvents(2);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
@@ -776,7 +772,6 @@ protected:
   void TearDown() override
   {
     oc_obt_shutdown();
-    ApiHelper::unregisterResources();
     ApiHelper::stopServer();
   }
 

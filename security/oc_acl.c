@@ -469,7 +469,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
   if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
       oc_tls_num_peers(endpoint->device) == 1) {
     OC_DBG("oc_sec_check_acl: unencrypted request received while DOC is open - "
-           "acess forbidden");
+           "access forbidden");
     return false;
   }
 

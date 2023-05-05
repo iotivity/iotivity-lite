@@ -19,6 +19,7 @@
 #if defined(OC_TCP) && defined(OC_SECURITY)
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"

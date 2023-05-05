@@ -23,7 +23,16 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 
-TEST(TestLog, LogToStdout)
+class TestLog : public testing::Test {
+public:
+  static void TearDownTestCase()
+  {
+    oc_log_set_function(nullptr);
+    oc_log_set_level(OC_LOG_LEVEL_INFO);
+  }
+};
+
+TEST_F(TestLog, LogToStdout)
 {
   OC_ERR("error");
   OC_WRN("warning");
@@ -55,7 +64,7 @@ expectWarningOrError(oc_log_level_t log_level, oc_log_component_t component,
   fflush(stdout);
 }
 
-TEST(TestLog, LogToFunction)
+TEST_F(TestLog, LogToFunction)
 {
   oc_log_set_level(OC_LOG_LEVEL_ERROR);
   oc_log_set_function(expectWarningOrError);
@@ -68,7 +77,7 @@ TEST(TestLog, LogToFunction)
   OC_LOG(OC_LOG_LEVEL_TRACE, "trace");
 }
 
-TEST(TestLog, LogLevelToLabel)
+TEST_F(TestLog, LogLevelToLabel)
 {
   oc_log_set_level(OC_LOG_LEVEL_ERROR);
   oc_log_set_function(expectWarningOrError);
@@ -82,7 +91,7 @@ TEST(TestLog, LogLevelToLabel)
   EXPECT_STREQ(oc_log_level_to_label(OC_LOG_LEVEL_TRACE), "TRACE");
 }
 
-TEST(TestLog, LogComponentName)
+TEST_F(TestLog, LogComponentName)
 {
   EXPECT_STREQ(oc_log_component_name(static_cast<oc_log_component_t>(-1)), "");
 

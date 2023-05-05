@@ -1547,9 +1547,9 @@ coap_set_header_content_format(void *packet, oc_content_format_t format)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_accept(void *packet, unsigned int *accept)
+coap_get_header_accept(const void *packet, unsigned int *accept)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+  const coap_packet_t *coap_pkt = (const coap_packet_t *)packet;
 
   if (!IS_OPTION(coap_pkt, COAP_OPTION_ACCEPT)) {
     return 0;

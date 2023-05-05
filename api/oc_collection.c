@@ -19,6 +19,7 @@
 #include "oc_collection.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -68,35 +69,36 @@ oc_collection_alloc(void)
 void
 oc_collection_free(oc_collection_t *collection)
 {
-  if (collection != NULL) {
-    oc_list_remove(oc_collections, collection);
-    oc_ri_free_resource_properties((oc_resource_t *)collection);
-
-    oc_link_t *link;
-    while ((link = (oc_link_t *)oc_list_pop(collection->links)) != NULL) {
-      oc_delete_link(link);
-    }
-
-    if (oc_list_length(collection->supported_rts) > 0) {
-      oc_rt_t *rtt = (oc_rt_t *)oc_list_pop(collection->supported_rts);
-      while (rtt) {
-        oc_free_string(&rtt->rt);
-        oc_memb_free(&rtt_s, rtt);
-        rtt = (oc_rt_t *)oc_list_pop(collection->supported_rts);
-      }
-    }
-
-    if (oc_list_length(collection->mandatory_rts) > 0) {
-      oc_rt_t *rtt = (oc_rt_t *)oc_list_pop(collection->mandatory_rts);
-      while (rtt) {
-        oc_free_string(&rtt->rt);
-        oc_memb_free(&rtt_s, rtt);
-        rtt = (oc_rt_t *)oc_list_pop(collection->mandatory_rts);
-      }
-    }
-
-    oc_memb_free(&oc_collections_s, collection);
+  if (collection == NULL) {
+    return;
   }
+  oc_list_remove(oc_collections, collection);
+  oc_ri_free_resource_properties((oc_resource_t *)collection);
+
+  oc_link_t *link;
+  while ((link = (oc_link_t *)oc_list_pop(collection->links)) != NULL) {
+    oc_delete_link(link);
+  }
+
+  if (oc_list_length(collection->supported_rts) > 0) {
+    oc_rt_t *rtt = (oc_rt_t *)oc_list_pop(collection->supported_rts);
+    while (rtt) {
+      oc_free_string(&rtt->rt);
+      oc_memb_free(&rtt_s, rtt);
+      rtt = (oc_rt_t *)oc_list_pop(collection->supported_rts);
+    }
+  }
+
+  if (oc_list_length(collection->mandatory_rts) > 0) {
+    oc_rt_t *rtt = (oc_rt_t *)oc_list_pop(collection->mandatory_rts);
+    while (rtt) {
+      oc_free_string(&rtt->rt);
+      oc_memb_free(&rtt_s, rtt);
+      rtt = (oc_rt_t *)oc_list_pop(collection->mandatory_rts);
+    }
+  }
+
+  oc_memb_free(&oc_collections_s, collection);
 }
 
 oc_link_t *
@@ -312,8 +314,9 @@ oc_check_if_collection(const oc_resource_t *resource)
 {
   oc_resource_t *collection = (oc_resource_t *)oc_list_head(oc_collections);
   while (collection != NULL) {
-    if (resource == collection)
+    if (resource == collection) {
       return true;
+    }
     collection = collection->next;
   }
   return false;

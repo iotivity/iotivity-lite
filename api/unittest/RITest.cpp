@@ -18,23 +18,12 @@
  ******************************************************************/
 
 #include "api/oc_ri_internal.h"
-#include "oc_api.h"
-#include "oc_config.h"
-#include "oc_helpers.h"
-#include "oc_ri.h"
-#include "oc_collection.h"
 #include "port/oc_network_event_handler_internal.h"
 
-#include <cstdlib>
 #include <gtest/gtest.h>
 #include <map>
-#include <stdio.h>
 #include <string>
 #include <vector>
-
-static const std::string kResourceURI = "/LightResourceURI";
-static const std::string kResourceName = "roomlights";
-static constexpr uint16_t kObservePeriodSeconds = 1;
 
 class TestOcRi : public testing::Test {
 protected:
@@ -87,89 +76,6 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
       all_interface_strs[i].c_str(), all_interface_strs[i].length());
     EXPECT_EQ(all_interfaces[i], ifm);
   }
-}
-
-static void
-onGet(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
-{
-  (void)request;
-  (void)iface_mask;
-  (void)user_data;
-}
-
-TEST_F(TestOcRi, GetAppResourceByUri_P)
-{
-  oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
-  bool add_check = oc_ri_add_resource(res);
-  EXPECT_TRUE(add_check);
-
-  res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
-                                      kResourceURI.length(), 0);
-  EXPECT_NE(nullptr, res);
-  bool del_check = oc_ri_delete_resource(res);
-  EXPECT_TRUE(del_check);
-}
-
-TEST_F(TestOcRi, GetAppResourceByUri_N)
-{
-  oc_resource_t *res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
-                                                     kResourceURI.length(), 0);
-  EXPECT_EQ(nullptr, res);
-}
-
-TEST_F(TestOcRi, RiGetAppResource_P)
-{
-  oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
-  bool add_check = oc_ri_add_resource(res);
-  EXPECT_TRUE(add_check);
-  res = oc_ri_get_app_resources();
-  EXPECT_NE(nullptr, res);
-  bool del_check = oc_ri_delete_resource(res);
-  EXPECT_TRUE(del_check);
-}
-
-TEST_F(TestOcRi, RiGetAppResource_N)
-{
-  oc_resource_t *res = oc_ri_get_app_resources();
-  EXPECT_EQ(nullptr, res);
-}
-
-TEST_F(TestOcRi, RiAllocResource_P)
-{
-  oc_resource_t *res = oc_ri_alloc_resource();
-  EXPECT_NE(nullptr, res);
-  oc_ri_dealloc_resource(res);
-}
-
-TEST_F(TestOcRi, RiFreeResourceProperties_P)
-{
-  oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_ri_free_resource_properties(res);
-  EXPECT_EQ(0, oc_string_len(res->name));
-  bool del_check = oc_ri_delete_resource(res);
-  EXPECT_EQ(true, del_check);
-}
-
-TEST_F(TestOcRi, RiAddResource_P)
-{
-  oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
-  bool add_check = oc_ri_add_resource(res);
-  EXPECT_EQ(true, add_check);
-  bool del_check = oc_ri_delete_resource(res);
-  EXPECT_EQ(true, del_check);
 }
 
 TEST_F(TestOcRi, RIGetQueryValueEmpty_N)
@@ -245,63 +151,6 @@ TEST_F(TestOcRi, RIQueryExists_P)
                        << "key2";
   }
 }
-
-#ifdef OC_COLLECTIONS
-
-static bool
-find_resource_in_collections(const oc_resource_t *resource)
-{
-  oc_collection_t *collection = oc_collection_get_all();
-  while (collection) {
-    const auto *link =
-      static_cast<oc_link_t *>(oc_list_head(collection->links));
-    while (link) {
-      if (link->resource == resource) {
-        return true;
-      }
-      link = link->next;
-    }
-    collection = reinterpret_cast<oc_collection_t *>(collection->res.next);
-  }
-  return false;
-}
-
-TEST_F(TestOcRi, RiCleanupCollection_P)
-{
-  oc_resource_t *col = oc_new_collection(nullptr, "/switches", 1, 0);
-  oc_resource_bind_resource_type(col, "oic.wk.col");
-  oc_resource_set_discoverable(col, true);
-  oc_resource_set_observable(col, true);
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
-  oc_add_collection(col);
-
-  oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
-  oc_resource_set_request_handler(res, OC_GET, onGet, nullptr);
-
-  oc_link_t *l = oc_new_link(res);
-  oc_collection_add_link(col, l);
-  bool add_check = oc_ri_add_resource(res);
-  EXPECT_TRUE(add_check);
-  bool find_check = find_resource_in_collections(res);
-  EXPECT_TRUE(find_check);
-
-  res = oc_ri_get_app_resources();
-  EXPECT_NE(nullptr, res);
-  bool del_check = oc_ri_delete_resource(res);
-  EXPECT_TRUE(del_check);
-
-  find_check = find_resource_in_collections(res);
-  EXPECT_FALSE(find_check);
-  oc_delete_collection(col);
-  res = oc_ri_get_app_resources();
-  EXPECT_EQ(nullptr, res);
-}
-
-#endif /* OC_COLLECTIONS */
 
 static oc_event_callback_retval_t
 test_timed_callback(void *data)

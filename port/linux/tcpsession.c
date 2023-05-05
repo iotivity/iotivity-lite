@@ -384,7 +384,8 @@ get_ready_to_read_session_locked(const fd_set *setfds)
 }
 
 static adapter_receive_state_t
-tcp_session_receive_message(tcp_session_t *session, oc_message_t *message)
+tcp_session_receive_message_locked(tcp_session_t *session,
+                                   oc_message_t *message)
 {
   size_t total_length = 0;
   size_t want_read = DEFAULT_RECEIVE_SIZE;
@@ -468,7 +469,7 @@ tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   OC_DBG("tcp receive session(fd=%d)", session->sock);
   FD_CLR(session->sock, fds);
 
-  ret = tcp_session_receive_message(session, message);
+  ret = tcp_session_receive_message_locked(session, message);
   if (ret != ADAPTER_STATUS_RECEIVE) {
     goto tcp_receive_message_done;
   }

@@ -29,6 +29,7 @@
 #include "oc_uuid.h"
 #include "util/oc_etimer.h"
 #include "util/oc_features.h"
+#include "util/oc_compiler.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -301,7 +302,8 @@ typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
  * of pushable Resource
  */
 typedef void (*oc_payload_callback_t)(void);
-#endif
+
+#endif /* OC_HAS_FEATURE_PUSH */
 
 /**
  * @brief properties callback structure
@@ -340,9 +342,11 @@ struct oc_resource_s
   oc_request_handler_t put_handler;      ///< callback for PUT
   oc_request_handler_t post_handler;     ///< callback for POST
   oc_request_handler_t delete_handler;   ///< callback for DELETE
-  oc_properties_cb_t get_properties;     ///< callback for get properties
-  oc_properties_cb_t set_properties;     ///< callback for set properties
-  double tag_pos_rel[3];                 ///< tag relative position [x,y,z]
+#if defined(OC_COLLECTIONS)
+  oc_properties_cb_t get_properties; ///< callback for get properties
+  oc_properties_cb_t set_properties; ///< callback for set properties
+#endif
+  double tag_pos_rel[3];             ///< tag relative position [x,y,z]
   oc_pos_description_t tag_pos_desc; ///< tag (value) for position description
   oc_enum_t tag_func_desc;           ///< tag (value) for function description
   oc_locn_t tag_locn;                ///< tag (value) for location description
@@ -384,18 +388,6 @@ typedef struct oc_event_callback_s
 } oc_event_callback_t;
 
 /**
- * @brief initialize the resource implementation handler
- *
- */
-void oc_ri_init(void);
-
-/**
- * @brief shut down the resource implementation handler
- *
- */
-void oc_ri_shutdown(void);
-
-/**
  * @brief Filtering function used to match scheduled timed events by context
  * data.
  *
@@ -422,13 +414,13 @@ typedef void (*oc_ri_timed_event_on_delete_t)(void *cb_data);
  * @brief add timed event callback
  *
  * @param cb_data the timed event callback info
- * @param event_callback the callback
+ * @param event_callback the callback (cannot be NULL)
  * @param ticks time in ticks
  */
 OC_API
 void oc_ri_add_timed_event_callback_ticks(void *cb_data,
                                           oc_trigger_t event_callback,
-                                          oc_clock_time_t ticks);
+                                          oc_clock_time_t ticks) OC_NONNULL(2);
 
 /**
  * @brief add timed event callback in seconds
@@ -454,7 +446,7 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
  * 2) the callback info pointers must be equal or ignore_cb_data must be true
  *
  * @param cb_data the timed event callback info
- * @param event_callback the callback
+ * @param event_callback the callback (cannot be NULL)
  * @param ignore_cb_data don't compare the timed event callback info pointers
  * @return true matching timed event callback was found
  * @return false otherwise
@@ -462,12 +454,12 @@ void oc_ri_add_timed_event_callback_ticks(void *cb_data,
 OC_API
 bool oc_ri_has_timed_event_callback(const void *cb_data,
                                     oc_trigger_t event_callback,
-                                    bool ignore_cb_data);
+                                    bool ignore_cb_data) OC_NONNULL(2);
 
 /**
  * @brief remove the timed event callback by filter
  *
- * @param cb timed event callback
+ * @param cb timed event callback (cannot be NULL)
  * @param filter filtering function (cannot be NULL)
  * @param filter_data user data provided to the filtering function
  * @param match_all iterate over all timed events (otherwise the iteration will
@@ -485,7 +477,7 @@ bool oc_ri_has_timed_event_callback(const void *cb_data,
 OC_API
 void oc_ri_remove_timed_event_callback_by_filter(
   oc_trigger_t cb, oc_ri_timed_event_filter_t filter, const void *filter_data,
-  bool match_all, oc_ri_timed_event_on_delete_t on_delete);
+  bool match_all, oc_ri_timed_event_on_delete_t on_delete) OC_NONNULL(1, 2);
 
 /**
  * @brief remove the timed event callback
@@ -495,7 +487,8 @@ void oc_ri_remove_timed_event_callback_by_filter(
  */
 OC_API
 void oc_ri_remove_timed_event_callback(const void *cb_data,
-                                       oc_trigger_t event_callback);
+                                       oc_trigger_t event_callback)
+  OC_NONNULL(2);
 
 /**
  * @brief convert the status code to integer
@@ -525,9 +518,21 @@ const char *oc_status_to_str(oc_status_t key);
 OC_API
 const char *oc_method_to_str(oc_method_t method);
 
+/**
+ * @brief retrieve the interface mask from the interface name
+ *
+ * @param iface the interface string (e.g. "oic.if.s", cannot be NULL)
+ * @param iface_len length of the interface string
+ * @return 0 on failure
+ * @return oc_interface_mask_t the mask value of the interface
+ */
+OC_API
+oc_interface_mask_t oc_ri_get_interface_mask(const char *iface,
+                                             size_t iface_len) OC_NONNULL();
+
 #ifdef OC_SERVER
 /**
- * @brief retrieve the resource by uri and device indes
+ * @brief retrieve the resource by uri and device index
  *
  * @param uri the uri of the resource
  * @param uri_len the lenght of the uri
@@ -551,21 +556,21 @@ oc_resource_t *oc_ri_get_app_resources(void);
  * @return true valid
  * @return false not valid
  */
+OC_API
 bool oc_ri_is_app_resource_valid(const oc_resource_t *resource);
 
 /**
- * @brief allocate a resource structure
+ * @brief Check if the resource has been scheduled to by deleted by
+ * oc_delayed_delete_resource. Such resource should not be used.
  *
- * @return oc_resource_t*
- */
-oc_resource_t *oc_ri_alloc_resource(void);
-
-/**
- * @brief deallocate a resource structure
+ * @param resource resource to be checked
+ * @return true resource is about to be deleted
+ * @return false otherwise
  *
- * @param resource the resource to be deallocated
+ * @see oc_delayed_delete_resource
  */
-void oc_ri_dealloc_resource(oc_resource_t *resource);
+OC_API
+bool oc_ri_is_app_resource_to_be_deleted(const oc_resource_t *resource);
 
 /**
  * @brief add resource to the system
@@ -574,6 +579,7 @@ void oc_ri_dealloc_resource(oc_resource_t *resource);
  * @return true success
  * @return false failure
  */
+OC_API
 bool oc_ri_add_resource(oc_resource_t *resource);
 
 /**
@@ -584,16 +590,42 @@ bool oc_ri_add_resource(oc_resource_t *resource);
  * @return true success
  * @return false failure
  */
+OC_API
 bool oc_ri_delete_resource(oc_resource_t *resource);
 
-#endif /* OC_SERVER */
+/**
+ * @brief Callback invoked on resource before it is deleted by
+ * oc_delayed_delete_resource.
+ *
+ * @param resource Resource to be deleted
+ */
+typedef void (*oc_ri_delete_resource_cb_t)(oc_resource_t *resource);
 
 /**
- * @brief free the properties of the resource
+ * @brief Add to the global list of callbacks invoked by
+ * oc_delayed_delete_resource before each resource is deleted.
  *
- * @param resource the resource
+ * @param cb the callback to be added (cannot be NULL)
+ * @return true on success
+ * @return false on error
  */
-void oc_ri_free_resource_properties(oc_resource_t *resource);
+OC_API
+bool oc_ri_on_delete_resource_add_callback(oc_ri_delete_resource_cb_t cb)
+  OC_NONNULL();
+
+/**
+ * @brief Remove callback from the list of callbacks invoked by
+ * oc_delayed_delete_resource.
+ *
+ * @param cb the callback to be removed (cannot be NULL)
+ * @return true callback was found and removed
+ * @return false callback was not found
+ */
+OC_API
+bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
+  OC_NONNULL();
+
+#endif /* OC_SERVER */
 
 /**
  * @brief retrieve the query value at the nth position
@@ -647,15 +679,6 @@ int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
  */
 int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
                                const char **key, size_t *key_len, size_t n);
-
-/**
- * @brief retrieve the interface mask from the interface name
- *
- * @param iface the interface (e.g. "if=oic.if.s")
- * @param if_len the interface lenght
- * @return oc_interface_mask_t the mask value of the interface
- */
-oc_interface_mask_t oc_ri_get_interface_mask(const char *iface, size_t if_len);
 
 #ifdef __cplusplus
 }

@@ -17,8 +17,8 @@
 %}
 
 %{
-#include "oc_log.h"
 #include "oc_session_events.h"
+#include "port/oc_log_internal.h"
 %}
 
 %rename (OCSessionState) oc_session_state_t;

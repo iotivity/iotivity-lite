@@ -31,8 +31,9 @@
 #include <pthread.h>
 #endif /* _WIN32 */
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace oc {
@@ -103,6 +104,7 @@ struct DynamicResourceToAdd
   const std::vector<std::string> rts;
   const std::vector<oc_interface_mask_t> ifaces;
   DynamicResourceHandler handlers;
+  bool isPublic;
 };
 #endif /* OC_SERVER */
 
@@ -120,8 +122,8 @@ public:
     // no-op
   }
   static void SignalEventLoop() { device.SignalEventLoop(); }
-  static void PoolEvents(uint16_t seconds) { device.PoolEvents(seconds); }
-  static void PoolEventsMs(uint16_t mseconds) { device.PoolEventsMs(mseconds); }
+  static void PoolEvents(uint64_t seconds) { device.PoolEvents(seconds); }
+  static void PoolEventsMs(uint64_t mseconds) { device.PoolEventsMs(mseconds); }
 
   static void SetServerDevices(std::vector<DeviceToAdd> devices);
   static void ResetServerDevices();
@@ -150,6 +152,10 @@ public:
   static oc_resource_t *AddDynamicResource(const DynamicResourceToAdd &dr,
                                            size_t device);
 
+  static oc_resource_t *GetDynamicResource(size_t device, size_t index);
+
+  static void ClearDynamicResource(size_t device, size_t index, bool doDelete);
+
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
 
@@ -172,7 +178,8 @@ private:
   static bool is_started;
   static std::vector<DeviceToAdd> server_devices;
 #ifdef OC_SERVER
-  static std::vector<oc_resource_t *> dynamic_resources;
+  static std::unordered_map<size_t, std::vector<oc_resource_t *>>
+    dynamic_resources;
 #endif /* OC_SERVER */
 
   static oc_clock_time_t system_time;
