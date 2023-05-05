@@ -81,7 +81,6 @@
 %ignore oc_ri_get_app_resource_by_uri;
 %ignore oc_ri_get_app_resources;
 %ignore oc_ri_alloc_resource;
-%ignore oc_ri_alloc_resource;
 %ignore oc_ri_add_resource;
 %ignore oc_ri_delete_resource;
 %ignore oc_ri_free_resource_properties;
@@ -127,4 +126,5 @@ typedef struct oc_response_buffer_s
 } oc_response_buffer_t;
 
 #define OC_API
+#define OC_NONNULL(...)
 %include "oc_ri.h"

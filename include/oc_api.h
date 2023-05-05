@@ -798,7 +798,8 @@ void oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data);
  */
 OC_API
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
-                               uint8_t num_resource_types, size_t device);
+                               uint8_t num_resource_types, size_t device)
+  OC_NONNULL(2);
 
 /**
  * Add the supported interface(s) to the resource.
@@ -985,7 +986,7 @@ void oc_process_baseline_interface(const oc_resource_t *resource);
  * @{
  */
 
-#if defined(OC_COLLECTIONS)
+#ifdef OC_COLLECTIONS
 /**
  * Creates a new empty collection.
  *
@@ -1177,6 +1178,24 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 OC_API
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
+/**
+ * @brief sets the callback properties for set properties and get properties
+ *
+ * @param resource the resource for the callback data
+ * @param get_properties callback function for retrieving the properties
+ * @param get_props_user_data the user data for the get_properties callback
+ * function
+ * @param set_properties callback function for setting the properties
+ * @param set_props_user_data the user data for the set_properties callback
+ * function
+ */
+OC_API
+void oc_resource_set_properties_cbs(oc_resource_t *resource,
+                                    oc_get_properties_cb_t get_properties,
+                                    void *get_props_user_data,
+                                    oc_set_properties_cb_t set_properties,
+                                    void *set_props_user_data);
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 /**
  * Callback invoked to retrieve an resource
@@ -1207,6 +1226,7 @@ OC_API
 bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
+
 #endif    /* OC_COLLECTIONS_IF_CREATE */
 #endif    /* OC_COLLECTIONS */
 /** @} */ // end of doc_module_tag_collections
@@ -1223,6 +1243,7 @@ bool oc_collections_add_rt_factory(const char *rt,
  *
  * @see oc_new_resource
  */
+OC_API
 void oc_resource_make_public(oc_resource_t *resource);
 
 /**
@@ -1245,7 +1266,6 @@ void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
  * @param[in] state if true the resource will be pushable if false the
  *                  resource will be non-pushable
  */
-OC_API
 OC_API
 void oc_resource_set_pushable(oc_resource_t *resource, bool state);
 #endif
@@ -1321,25 +1341,6 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
                                      void *user_data);
-
-/**
- * @brief sets the callback properties for set properties and get properties
- *
- * @param resource the resource for the callback data
- * @param get_properties callback function for retrieving the properties
- * @param get_props_user_data the user data for the get_properties callback
- * function
- * @param set_properties callback function for setting the properties
- * @param set_props_user_data the user data for the set_properties callback
- * function
- */
-OC_API
-void oc_resource_set_properties_cbs(oc_resource_t *resource,
-                                    oc_get_properties_cb_t get_properties,
-                                    void *get_props_user_data,
-                                    oc_set_properties_cb_t set_properties,
-                                    void *set_props_user_data);
-
 #ifdef OC_OSCORE
 /**
  * @brief sets the support of the secure multicast feature

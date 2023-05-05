@@ -153,12 +153,11 @@ coap_send_transaction(coap_transaction_t *t)
         OC_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
       }
 
-      OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process);
+      OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process)
       oc_etimer_restart(&t->retrans_timer); /* interval updated above */
-      OC_PROCESS_CONTEXT_END(transaction_handler_process);
+      OC_PROCESS_CONTEXT_END(transaction_handler_process)
 
-      oc_message_add_ref(t->message); // TODO: this add_ref seems to be causing
-                                      // a leak for DTLS that timeouts
+      oc_message_add_ref(t->message);
 
       coap_send_message(t->message);
 

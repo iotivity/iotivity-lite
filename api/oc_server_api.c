@@ -28,6 +28,10 @@
 #include "util/oc_features.h"
 #include "util/oc_macros.h"
 
+#ifdef OC_SERVER
+#include "api/oc_ri_server_internal.h"
+#endif /* OC_SERVER */
+
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
@@ -43,10 +47,6 @@
 
 static size_t g_query_iterator;
 static oc_send_response_cb_t g_oc_send_response_cb;
-
-#if defined(OC_CLOUD) && defined(OC_SERVER)
-static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
-#endif /* OC_CLOUD && OC_SERVER */
 
 int
 oc_add_device(const char *uri, const char *rt, const char *name,
@@ -193,6 +193,21 @@ oc_set_delayed_callback_ms_v1(void *cb_data, oc_trigger_t callback,
 {
   oc_clock_time_t ticks = milliseconds * OC_CLOCK_SECOND / 1000;
   oc_ri_add_timed_event_callback_ticks(cb_data, callback, ticks);
+}
+
+void
+oc_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
+                          uint16_t seconds)
+{
+  oc_reset_delayed_callback_ms(cb_data, callback, seconds * 1000);
+}
+
+void
+oc_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                             uint64_t milliseconds)
+{
+  oc_remove_delayed_callback(cb_data, callback);
+  oc_set_delayed_callback_ms_v1(cb_data, callback, milliseconds);
 }
 
 bool
@@ -499,6 +514,20 @@ oc_collection_get_collections(void)
 {
   return (oc_resource_t *)oc_collection_get_all();
 }
+
+void
+oc_resource_set_properties_cbs(oc_resource_t *resource,
+                               oc_get_properties_cb_t get_properties,
+                               void *get_props_user_data,
+                               oc_set_properties_cb_t set_properties,
+                               void *set_props_user_data)
+{
+  resource->get_properties.cb.get_props = get_properties;
+  resource->get_properties.user_data = get_props_user_data;
+  resource->set_properties.cb.set_props = set_properties;
+  resource->set_properties.user_data = set_props_user_data;
+}
+
 #endif /* OC_COLLECTIONS */
 
 void
@@ -547,7 +576,7 @@ oc_resource_set_pushable(oc_resource_t *resource, bool state)
   else
     resource->properties &= ~OC_PUSHABLE;
 }
-#endif
+#endif /* OC_HAS_FEATURE_PUSH */
 
 void
 oc_resource_set_observable(oc_resource_t *resource, bool state)
@@ -563,19 +592,6 @@ oc_resource_set_periodic_observable(oc_resource_t *resource, uint16_t seconds)
 {
   resource->properties |= OC_OBSERVABLE | OC_PERIODIC;
   resource->observe_period_seconds = seconds;
-}
-
-void
-oc_resource_set_properties_cbs(oc_resource_t *resource,
-                               oc_get_properties_cb_t get_properties,
-                               void *get_props_user_data,
-                               oc_set_properties_cb_t set_properties,
-                               void *set_props_user_data)
-{
-  resource->get_properties.cb.get_props = get_properties;
-  resource->get_properties.user_data = get_props_user_data;
-  resource->set_properties.cb.set_props = set_properties;
-  resource->set_properties.user_data = set_props_user_data;
 }
 
 void
@@ -642,33 +658,6 @@ bool
 oc_delete_resource(oc_resource_t *resource)
 {
   return oc_ri_delete_resource(resource);
-}
-
-#ifdef OC_CLOUD
-void
-oc_set_on_delayed_delete_resource_cb(oc_delete_resource_cb_t callback)
-{
-  g_delayed_delete_resource_cb = callback;
-}
-#endif /* OC_CLOUD */
-
-static oc_event_callback_retval_t
-oc_delayed_delete_resource_cb(void *data)
-{
-  oc_resource_t *resource = (oc_resource_t *)data;
-#ifdef OC_CLOUD
-  if (g_delayed_delete_resource_cb) {
-    g_delayed_delete_resource_cb(resource);
-  }
-#endif /* OC_CLOUD */
-  oc_delete_resource(resource);
-  return OC_EVENT_DONE;
-}
-
-void
-oc_delayed_delete_resource(oc_resource_t *resource)
-{
-  oc_set_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
 }
 
 void

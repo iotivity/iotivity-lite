@@ -182,6 +182,7 @@ endfunction()
 
 # Global compile options
 set(PRIVATE_COMPILE_OPTIONS "")
+set(MBEDTLS_COMPILE_OPTIONS "")
 if(MSVC)
     # TODO: Enable and fix issues
     # list(APPEND PRIVATE_COMPILE_OPTIONS /WX)
@@ -204,6 +205,7 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     oc_add_compile_options(FLAGS -Wdocumentation)
     if(C_COMPILER_SUPPORTS_WDOCUMENTATION)
         list(APPEND PRIVATE_COMPILE_OPTIONS -Wdocumentation)
+        list(APPEND MBEDTLS_COMPILE_OPTIONS -Wno-documentation)
     endif()
 
     # oc_add_compile_options(FLAGS -Wstack-usage=8192)
@@ -562,7 +564,7 @@ endif()
 
 if(OC_CLOUD_ENABLED)
     add_library(cloud-obj OBJECT ${CLOUD_SRC})
-    target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
+    target_compile_definitions(cloud-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
     target_compile_options(cloud-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
     target_include_directories(cloud-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
     target_link_libraries(cloud-obj PRIVATE ${TINYCBOR_DEP})

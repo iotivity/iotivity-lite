@@ -98,6 +98,9 @@ typedef uint32_t oc_clock_time_t;
 /* Maximum number of concurrent (D)TLS sessions */
 #define OC_MAX_TLS_PEERS (1)
 
+/* Maximal number of callbacks invoked before a dynamic resource is deleted */
+#define OC_MAX_ON_DELETE_RESOURCE_CBS (2)
+
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 /* Wipe device name during reset, when oic/con is enabled */

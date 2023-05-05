@@ -19,6 +19,7 @@
 #ifndef OC_RI_INTERNAL_H
 #define OC_RI_INTERNAL_H
 
+#include "messaging/coap/coap.h"
 #include "oc_blockwise.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
@@ -57,10 +58,24 @@ extern "C" {
 #define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
 #define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
 
-/** Check if the code is one of the internal terminating code while
- * automatically deallocate the client_cb via the notify_client_cb_with_code
- * mechanism */
-bool oc_ri_client_cb_terminated(oc_status_t code);
+OC_PROCESS_NAME(oc_timed_callback_events);
+
+/**
+ * @brief initialize the resource implementation handler
+ */
+void oc_ri_init(void);
+
+/**
+ * @brief shut down the resource implementation handler
+ */
+void oc_ri_shutdown(void);
+
+/**
+ * @brief free the properties of the resource
+ *
+ * @param resource the resource (cannot be NULL)
+ */
+void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
 
 /**
  * @brief removes the client callback. This is silent remove client without
@@ -86,15 +101,18 @@ oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
 bool oc_timed_event_callback_is_currently_processed(
   const void *cb_data, oc_trigger_t event_callback);
 
+/**/
 #ifdef OC_BLOCK_WISE
-extern bool oc_ri_invoke_coap_entity_handler(
-  void *request, void *response, oc_blockwise_state_t **request_state,
-  oc_blockwise_state_t **response_state, uint16_t block2_size,
-  oc_endpoint_t *endpoint);
+bool oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
+                                      coap_packet_t *response,
+                                      oc_blockwise_state_t **request_state,
+                                      oc_blockwise_state_t **response_state,
+                                      uint16_t block2_size,
+                                      oc_endpoint_t *endpoint) OC_NONNULL();
 #else  /* OC_BLOCK_WISE */
-extern bool oc_ri_invoke_coap_entity_handler(void *request, void *response,
-                                             uint8_t *buffer,
-                                             oc_endpoint_t *endpoint);
+bool oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
+                                      coap_packet_t *response, uint8_t *buffer,
+                                      oc_endpoint_t *endpoint) OC_NONNULL();
 #endif /* !OC_BLOCK_WISE */
 
 #ifdef OC_TCP

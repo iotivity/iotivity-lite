@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_ri_internal.h"
 #include "oc_config.h"
 #include "oc_api.h"
 #include "oc_core_res.h"

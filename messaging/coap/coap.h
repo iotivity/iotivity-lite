@@ -224,7 +224,7 @@ int coap_set_token(void *packet, const uint8_t *token, size_t token_len);
 int coap_get_header_content_format(void *packet, oc_content_format_t *format);
 int coap_set_header_content_format(void *packet, oc_content_format_t format);
 
-int coap_get_header_accept(void *packet, unsigned int *accept);
+int coap_get_header_accept(const void *packet, unsigned int *accept);
 int coap_set_header_accept(void *packet, unsigned int accept);
 
 int coap_get_header_max_age(void *packet, uint32_t *age);

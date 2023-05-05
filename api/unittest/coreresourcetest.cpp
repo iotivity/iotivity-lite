@@ -204,6 +204,7 @@ public:
           OC_IF_R,
         },
         handlers,
+        false,
       },
       {
         "Dynamic Device 2",
@@ -217,6 +218,7 @@ public:
           OC_IF_RW,
         },
         handlers,
+        false,
       },
     };
     size_t device = 0;

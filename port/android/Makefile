@@ -158,12 +158,12 @@ endif
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/android/oc_config.h
 
-HEADERS_COAP = $(wildcard ../../messaging/coap/*.h)
-HEADERS_UTIL = $(wildcard ../../util/*.h)
-HEADERS_UTIL_PT = $(wildcard ../../util/pt/*.h)
+HEADERS_COAP = $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
+HEADERS_UTIL = $(filter-out %_internal.h,$(wildcard ../../util/*.h))
+HEADERS_UTIL_PT = $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
 HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 
-CFLAGS_CLOUD=-I../../api/cloud
+CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
@@ -174,7 +174,8 @@ else
 OBJ_CLOUD =
 endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../deps/mbedtls/library:../../api/c-timestamp:
+VPATH=../../api/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../util/:
+VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -llog
 
 # Skip building the native samples if JAVA=1

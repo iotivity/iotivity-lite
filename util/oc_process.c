@@ -33,6 +33,7 @@
  */
 
 #include "oc_process.h"
+#include "oc_process_internal.h"
 #include "oc_buffer.h"
 #include "util/oc_atomic.h"
 #include <stdio.h>
@@ -71,22 +72,30 @@ static oc_process_num_events_t OC_PROCESS_NUMEVENTS = 10;
 #define OC_PROCESS_NUMEVENTS 10
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-static oc_process_num_events_t nevents, fevent;
+static oc_process_num_events_t g_nevents;
+static oc_process_num_events_t g_fevent;
 #ifdef OC_DYNAMIC_ALLOCATION
-static struct event_data *events;
+static struct event_data *g_events;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static struct event_data events[OC_PROCESS_NUMEVENTS];
+static struct event_data g_events[OC_PROCESS_NUMEVENTS];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-#if OC_PROCESS_CONF_STATS
-oc_process_num_events_t process_maxevents;
-#endif
+#ifdef OC_TEST
+#define OC_PROCESS_QUEUED_NUMEVENTS 128
+static struct event_data g_queued_events[OC_PROCESS_QUEUED_NUMEVENTS] = { 0 };
+static oc_process_num_events_t g_queued_nevents = 0;
+static oc_process_num_events_t g_queued_fevent = 0;
+#endif /* OC_TEST */
 
 static OC_ATOMIC_INT8_T g_poll_requested;
 
 #define OC_PROCESS_STATE_NONE 0
 #define OC_PROCESS_STATE_RUNNING 1
 #define OC_PROCESS_STATE_CALLED 2
+
+#ifdef OC_TEST
+#define OC_PROCESS_STATE_SUSPENDED 64
+#endif /* OC_TEST */
 
 static void call_process(struct oc_process *p, oc_process_event_t ev,
                          oc_process_data_t data);
@@ -135,6 +144,10 @@ exit_process(struct oc_process *p, struct oc_process *fromprocess)
   if (q == NULL) {
     return;
   }
+
+#ifdef OC_TEST
+  oc_process_resume(p);
+#endif /* OC_TEST */
 
   int8_t state = OC_ATOMIC_LOAD8(p->state);
   while (state != OC_PROCESS_STATE_NONE) {
@@ -190,6 +203,13 @@ call_process(struct oc_process *p, oc_process_event_t ev,
   }
 
   int8_t state = OC_ATOMIC_LOAD8(p->state);
+#ifdef OC_TEST
+  if ((state & OC_PROCESS_STATE_SUSPENDED) != 0) {
+    oc_process_queue_event(p, ev, data);
+    return;
+  }
+#endif /* OC_TEST */
+
   while ((state & OC_PROCESS_STATE_RUNNING) != 0) {
     bool swapped;
     OC_ATOMIC_COMPARE_AND_SWAP8(p->state, state, OC_PROCESS_STATE_CALLED,
@@ -218,7 +238,7 @@ void
 oc_process_shutdown(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(events);
+  free(g_events);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -226,20 +246,16 @@ void
 oc_process_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  events = (struct event_data *)calloc(OC_PROCESS_NUMEVENTS,
-                                       sizeof(struct event_data));
-  if (!events) {
+  g_events = (struct event_data *)calloc(OC_PROCESS_NUMEVENTS,
+                                         sizeof(struct event_data));
+  if (!g_events) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   lastevent = OC_PROCESS_EVENT_MAX;
 
-  nevents = fevent = 0;
-#if OC_PROCESS_CONF_STATS
-  process_maxevents = 0;
-#endif /* OC_PROCESS_CONF_STATS */
-
+  g_nevents = g_fevent = 0;
   oc_process_current = oc_process_list = NULL;
 }
 /*---------------------------------------------------------------------------*/
@@ -250,11 +266,9 @@ oc_process_init(void)
 static void
 do_poll(void)
 {
-  struct oc_process *p;
-
   OC_ATOMIC_STORE8(g_poll_requested, 0);
   /* Call the processes that needs to be polled. */
-  for (p = oc_process_list; p != NULL; p = p->next) {
+  for (struct oc_process *p = oc_process_list; p != NULL; p = p->next) {
     bool exchanged;
     int8_t expected = 1;
     OC_ATOMIC_COMPARE_AND_SWAP8(p->needspoll, expected, 0, exchanged);
@@ -286,43 +300,43 @@ do_event(void)
    * call the poll handlers inbetween.
    */
 
-  if (nevents > 0) {
+  if (g_nevents <= 0) {
+    return;
+  }
 
-    /* There are events that we should deliver. */
-    ev = events[fevent].ev;
+  /* There are events that we should deliver. */
+  ev = g_events[g_fevent].ev;
+  data = g_events[g_fevent].data;
+  receiver = g_events[g_fevent].p;
 
-    data = events[fevent].data;
-    receiver = events[fevent].p;
+  /* Since we have seen the new event, we move pointer upwards
+     and decrease the number of events. */
+  g_fevent = (g_fevent + 1) % OC_PROCESS_NUMEVENTS;
+  --g_nevents;
 
-    /* Since we have seen the new event, we move pointer upwards
-       and decrease the number of events. */
-    fevent = (fevent + 1) % OC_PROCESS_NUMEVENTS;
-    --nevents;
+  /* If this is a broadcast event, we deliver it to all events, in
+     order of their priority. */
+  if (receiver == OC_PROCESS_BROADCAST) {
+    for (p = oc_process_list; p != NULL; p = p->next) {
 
-    /* If this is a broadcast event, we deliver it to all events, in
-       order of their priority. */
-    if (receiver == OC_PROCESS_BROADCAST) {
-      for (p = oc_process_list; p != NULL; p = p->next) {
-
-        /* If we have been requested to poll a process, we do this in
-           between processing the broadcast event. */
-        if (OC_ATOMIC_LOAD8(g_poll_requested)) {
-          do_poll();
-        }
-        call_process(p, ev, data);
+      /* If we have been requested to poll a process, we do this in
+         between processing the broadcast event. */
+      if (OC_ATOMIC_LOAD8(g_poll_requested)) {
+        do_poll();
       }
-    } else {
-      /* This is not a broadcast event, so we deliver it to the
-   specified process. */
-      /* If the event was an INIT event, we should also update the
-   state of the process. */
-      if (ev == OC_PROCESS_EVENT_INIT) {
-        OC_ATOMIC_STORE8(receiver->state, OC_PROCESS_STATE_RUNNING);
-      }
-
-      /* Make sure that the process actually is running. */
-      call_process(receiver, ev, data);
+      call_process(p, ev, data);
     }
+  } else {
+    /* This is not a broadcast event, so we deliver it to the
+ specified process. */
+    /* If the event was an INIT event, we should also update the
+ state of the process. */
+    if (ev == OC_PROCESS_EVENT_INIT) {
+      OC_ATOMIC_STORE8(receiver->state, OC_PROCESS_STATE_RUNNING);
+    }
+
+    /* Make sure that the process actually is running. */
+    call_process(receiver, ev, data);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -337,13 +351,13 @@ oc_process_run(void)
   /* Process one event from the queue */
   do_event();
 
-  return (int)nevents + OC_ATOMIC_LOAD8(g_poll_requested);
+  return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 /*---------------------------------------------------------------------------*/
 int
 oc_process_nevents(void)
 {
-  return (int)nevents + OC_ATOMIC_LOAD8(g_poll_requested);
+  return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 /*---------------------------------------------------------------------------*/
 #ifdef OC_SECURITY
@@ -356,10 +370,9 @@ oc_process_is_closing_all_tls_sessions(void)
 
   const oc_process_event_t tls_close =
     oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS);
-  for (oc_process_num_events_t i = 0; i < nevents; ++i) {
-    oc_process_num_events_t index =
-      (oc_process_num_events_t)(fevent + i) % OC_PROCESS_NUMEVENTS;
-    if (events[index].ev == tls_close) {
+  for (oc_process_num_events_t i = 0; i < g_nevents; ++i) {
+    oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
+    if (g_events[index].ev == tls_close) {
       return true;
     }
   }
@@ -373,41 +386,37 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
 {
   static oc_process_num_events_t snum;
 
-  if (nevents == OC_PROCESS_NUMEVENTS) {
+  if (g_nevents == OC_PROCESS_NUMEVENTS) {
 #ifdef OC_DYNAMIC_ALLOCATION
     OC_PROCESS_NUMEVENTS <<= 1;
-    events = (struct event_data *)realloc(events, OC_PROCESS_NUMEVENTS *
-                                                    sizeof(struct event_data));
-    if (!events) {
+    g_events = (struct event_data *)realloc(
+      g_events, OC_PROCESS_NUMEVENTS * sizeof(struct event_data));
+    if (!g_events) {
       oc_abort("Insufficient memory");
     }
-    oc_process_num_events_t i = fevent, n = nevents - fevent, j = 0;
+    oc_process_num_events_t i = g_fevent;
+    oc_process_num_events_t n = g_nevents - g_fevent;
+    oc_process_num_events_t j = 0;
     while (i < (OC_PROCESS_NUMEVENTS - n)) {
-      if (i < nevents) {
-        memcpy(&events[OC_PROCESS_NUMEVENTS - n + j], &events[i],
+      if (i < g_nevents) {
+        memcpy(&g_events[OC_PROCESS_NUMEVENTS - n + j], &g_events[i],
                sizeof(struct event_data));
         j++;
       }
-      memset(&events[i], 0, sizeof(struct event_data));
+      memset(&g_events[i], 0, sizeof(struct event_data));
       i++;
     }
-    fevent = OC_PROCESS_NUMEVENTS - n;
+    g_fevent = OC_PROCESS_NUMEVENTS - n;
 #else  /* OC_DYNAMIC_ALLOCATION */
     return OC_PROCESS_ERR_FULL;
 #endif /* !OC_DYNAMIC_ALLOCATION */
   }
 
-  snum = (oc_process_num_events_t)(fevent + nevents) % OC_PROCESS_NUMEVENTS;
-  events[snum].ev = ev;
-  events[snum].data = data;
-  events[snum].p = p;
-  ++nevents;
-
-#if OC_PROCESS_CONF_STATS
-  if (nevents > process_maxevents) {
-    process_maxevents = nevents;
-  }
-#endif /* OC_PROCESS_CONF_STATS */
+  snum = (g_fevent + g_nevents) % OC_PROCESS_NUMEVENTS;
+  g_events[snum].ev = ev;
+  g_events[snum].data = data;
+  g_events[snum].p = p;
+  ++g_nevents;
 
   return OC_PROCESS_ERR_OK;
 }
@@ -440,3 +449,70 @@ oc_process_is_running(struct oc_process *p)
   return OC_ATOMIC_LOAD8(p->state) != OC_PROCESS_STATE_NONE;
 }
 /*---------------------------------------------------------------------------*/
+
+#ifdef OC_TEST
+
+void
+oc_process_suspend(struct oc_process *p)
+{
+  int8_t state = OC_ATOMIC_LOAD8(p->state);
+  while ((state & OC_PROCESS_STATE_SUSPENDED) == 0) {
+    bool swapped;
+    OC_ATOMIC_COMPARE_AND_SWAP8(p->state, state,
+                                state | OC_PROCESS_STATE_SUSPENDED, swapped);
+    if (!swapped) {
+      continue;
+    }
+    return;
+  }
+}
+
+void
+oc_process_resume(struct oc_process *p)
+{
+  int8_t state = OC_ATOMIC_LOAD8(p->state);
+  while ((state & OC_PROCESS_STATE_SUSPENDED) != 0) {
+    bool swapped;
+    OC_ATOMIC_COMPARE_AND_SWAP8(p->state, state,
+                                state & ~OC_PROCESS_STATE_SUSPENDED, swapped);
+    if (!swapped) {
+      continue;
+    }
+    oc_process_unqueue_events();
+    return;
+  }
+}
+
+int
+oc_process_queue_event(struct oc_process *p, oc_process_event_t ev,
+                       oc_process_data_t data)
+{
+  if (g_queued_nevents == OC_PROCESS_QUEUED_NUMEVENTS) {
+    return OC_PROCESS_ERR_FULL;
+  }
+  oc_process_num_events_t snum =
+    (g_queued_fevent + g_queued_nevents) % OC_PROCESS_QUEUED_NUMEVENTS;
+  g_queued_events[snum].ev = ev;
+  g_queued_events[snum].data = data;
+  g_queued_events[snum].p = p;
+  ++g_queued_nevents;
+
+  return OC_PROCESS_ERR_OK;
+}
+
+void
+oc_process_unqueue_events(void)
+{
+  while (g_queued_nevents > 0) {
+    oc_process_event_t event = g_queued_events[g_queued_fevent].ev;
+    oc_process_data_t data = g_queued_events[g_queued_fevent].data;
+    struct oc_process *process = g_queued_events[g_queued_fevent].p;
+
+    oc_process_post(process, event, data);
+
+    g_queued_fevent = (g_queued_fevent + 1) % OC_PROCESS_QUEUED_NUMEVENTS;
+    --g_queued_nevents;
+  }
+}
+
+#endif /* OC_TEST */

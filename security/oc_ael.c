@@ -85,7 +85,7 @@ static inline size_t
 oc_sec_ael_max_space(size_t device)
 {
   oc_sec_ael_t *a = &ael[device];
-  size_t res = OC_SEC_AEL_MAX_SIZE;
+  size_t res = (size_t)OC_SEC_AEL_MAX_SIZE;
   switch (a->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
     res = a->maxsize;
@@ -147,7 +147,7 @@ oc_sec_ael_default(size_t device)
   oc_sec_ael_t *a = &ael[device];
   a->categoryfilter = OC_SEC_AEL_CATEGORYFILTER_DEFAULT;
   a->priorityfilter = OC_SEC_AEL_PRIORITYFILTER_DEFAULT;
-  a->maxsize = OC_SEC_AEL_MAX_SIZE;
+  a->maxsize = (size_t)OC_SEC_AEL_MAX_SIZE;
   a->unit = OC_SEC_AEL_UNIT_DEFAULT;
   a->events_size = 0;
   oc_sec_dump_ael(device);

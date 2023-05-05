@@ -602,9 +602,9 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
     oc_etimer_stop(&timer->fin_timer);
     timer->fin_timer.timer.interval =
       (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
-    OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler);
+    OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler)
     oc_etimer_restart(&timer->fin_timer);
-    OC_PROCESS_CONTEXT_END(&oc_tls_handler);
+    OC_PROCESS_CONTEXT_END(&oc_tls_handler)
   }
 }
 

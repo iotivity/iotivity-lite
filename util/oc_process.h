@@ -430,7 +430,7 @@ extern struct oc_process *oc_process_current;
 #define OC_PROCESS_CONTEXT_BEGIN(p)                                            \
   {                                                                            \
     struct oc_process *tmp_current = OC_PROCESS_CURRENT();                     \
-    oc_process_current = p
+    oc_process_current = p;
 
 /**
  * End a context switch
@@ -482,16 +482,6 @@ void oc_process_poll(struct oc_process *p);
  * \name Functions called by the system and boot-up code
  * @{
  */
-
-/**
- * \brief      Initialize the process module.
- *
- *             This function initializes the process module and should
- *             be called by the system boot-up code.
- */
-void oc_process_init(void);
-
-void oc_process_shutdown(void);
 
 /**
  * Run the system once - call poll handlers and process one event.

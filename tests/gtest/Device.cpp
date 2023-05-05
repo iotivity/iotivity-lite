@@ -20,6 +20,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_ri_internal.h"
+#include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 
@@ -204,7 +205,8 @@ std::vector<DeviceToAdd> TestDevice::server_devices{
   defaultDevice,
 };
 #ifdef OC_SERVER
-std::vector<oc_resource_t *> TestDevice::dynamic_resources{};
+std::unordered_map<size_t, std::vector<oc_resource_t *>>
+  TestDevice::dynamic_resources{};
 #endif /* OC_SERVER */
 oc_clock_time_t TestDevice::system_time{ 0 };
 
@@ -291,36 +293,73 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
     oc_resource_bind_resource_interface(res, iface);
   }
 
+  unsigned permission = 0;
   if (dr.handlers.onGet != nullptr) {
     oc_resource_set_request_handler(res, OC_GET, dr.handlers.onGet,
                                     dr.handlers.onGetData);
+    permission |= OC_PERM_RETRIEVE;
   }
   if (dr.handlers.onPost != nullptr) {
     oc_resource_set_request_handler(res, OC_POST, dr.handlers.onPost,
                                     dr.handlers.onPostData);
+    permission |= OC_PERM_UPDATE;
   }
   if (dr.handlers.onPut != nullptr) {
     oc_resource_set_request_handler(res, OC_PUT, dr.handlers.onPut,
                                     dr.handlers.onPutData);
+    permission |= OC_PERM_UPDATE;
   }
   if (dr.handlers.onDelete != nullptr) {
     oc_resource_set_request_handler(res, OC_DELETE, dr.handlers.onDelete,
                                     dr.handlers.onDeleteData);
+    permission |= OC_PERM_DELETE;
   }
+
+#ifdef OC_SECURITY
+  if (dr.isPublic) {
+    oc_resource_make_public(res);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    oc_resource_set_access_in_RFOTM(
+      res, true, static_cast<oc_ace_permissions_t>(permission));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  }
+#else  /* !OC_SECURITY */
+  (void)permission;
+#endif /* OC_SECURITY */
+
   if (!oc_add_resource(res)) {
     oc_delete_resource(res);
     return nullptr;
   }
 
-  dynamic_resources.push_back(res);
+  dynamic_resources[device].push_back(res);
   return res;
+}
+
+oc_resource_t *
+TestDevice::GetDynamicResource(size_t device, size_t index)
+{
+  return dynamic_resources[device].at(index);
+}
+
+void
+TestDevice::ClearDynamicResource(size_t device, size_t index, bool doDelete)
+{
+  auto it = dynamic_resources[device].begin() + index;
+  oc_resource_t *res = *it;
+  dynamic_resources[device].erase(it);
+  if (doDelete) {
+    oc_delete_resource(res);
+  }
 }
 
 void
 TestDevice::ClearDynamicResources()
 {
-  for (auto *res : dynamic_resources) {
-    oc_delete_resource(res);
+  for (auto it : dynamic_resources) {
+    for (auto *res : it.second) {
+      oc_delete_resource(res);
+    }
   }
   dynamic_resources.clear();
 }

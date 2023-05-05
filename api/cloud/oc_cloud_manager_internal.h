@@ -19,6 +19,7 @@
 #ifndef OC_CLOUD_MANAGER_INTERNAL_H
 #define OC_CLOUD_MANAGER_INTERNAL_H
 
+#include "oc_cloud.h"
 #include "oc_rep.h"
 
 #include <stddef.h>

@@ -60,6 +60,9 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of concurrent DTLS sessions */
 #define OC_MAX_DTLS_PEERS (1)
 
+/* Maximal number of callbacks invoked before a dynamic resource is deleted */
+#define OC_MAX_ON_DELETE_RESOURCE_CBS (2)
+
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (10)
 

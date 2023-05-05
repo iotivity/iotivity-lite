@@ -1491,7 +1491,7 @@ provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(OC_UUID_LEN));
+  oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
     PRINT("\nSuccessfully provisioned ACE to device %s\n", di);

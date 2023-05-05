@@ -109,6 +109,9 @@ typedef uint64_t oc_clock_time_t;
 /* Maximal number of callbacks for ownership status changes */
 #define OC_MAX_DOXM_OWNED_CBS (2)
 
+/* Maximal number of callbacks invoked before a dynamic resource is deleted */
+#define OC_MAX_ON_DELETE_RESOURCE_CBS (2)
+
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 /* library features that require persistent storage */

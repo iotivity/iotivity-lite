@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-OC_PROCESS(message_buffer_handler, "OC Message Buffer Handler");
+OC_PROCESS(oc_message_buffer_handler, "OC Message Buffer Handler");
 #ifdef OC_INOUT_BUFFER_POOL
 OC_MEMB_STATIC(oc_incoming_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
 OC_MEMB_STATIC(oc_outgoing_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
@@ -171,7 +171,8 @@ oc_message_unref(oc_message_t *message)
 void
 oc_recv_message(oc_message_t *message)
 {
-  if (oc_process_post(&message_buffer_handler, oc_events[INBOUND_NETWORK_EVENT],
+  if (oc_process_post(&oc_message_buffer_handler,
+                      oc_events[INBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
   }
@@ -180,7 +181,7 @@ oc_recv_message(oc_message_t *message)
 void
 oc_send_message(oc_message_t *message)
 {
-  if (oc_process_post(&message_buffer_handler,
+  if (oc_process_post(&oc_message_buffer_handler,
                       oc_events[OUTBOUND_NETWORK_EVENT],
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
@@ -192,7 +193,8 @@ oc_send_message(oc_message_t *message)
 void
 oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
 {
-  if (oc_process_post(&message_buffer_handler, oc_events[TCP_CONNECT_SESSION],
+  if (oc_process_post(&oc_message_buffer_handler,
+                      oc_events[TCP_CONNECT_SESSION],
                       event) == OC_PROCESS_ERR_FULL) {
     oc_tcp_on_connect_event_free(event);
   }
@@ -204,7 +206,7 @@ oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
 void
 oc_close_all_tls_sessions_for_device(size_t device)
 {
-  oc_process_post(&message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
+  oc_process_post(&oc_message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
                   (oc_process_data_t)device);
 }
 
@@ -300,7 +302,7 @@ handle_tcp_connect_event(oc_process_data_t data)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-OC_PROCESS_THREAD(message_buffer_handler, ev, data)
+OC_PROCESS_THREAD(oc_message_buffer_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
   OC_DBG("Started buffer handler process");

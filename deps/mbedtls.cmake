@@ -16,7 +16,7 @@ option(ENABLE_TESTING "Build mbed TLS tests." OFF)
 if(OC_INSTALL_MBEDTLS)
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
 else()
-  add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls EXCLUDE_FROM_ALL)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls EXCLUDE_FROM_ALL)
 endif()
 
 set(COMPILABLE_TYPES STATIC_LIBRARY MODULE_LIBRARY SHARED_LIBRARY OBJECT_LIBRARY EXECUTABLE)
@@ -67,14 +67,14 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
 endif()
 
 foreach(target ${mbedtls_targets})
-    target_compile_definitions(${target}
-        PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS}
-    )
+    target_compile_definitions(${target} PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS})
 
     if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
         # TODO: fix unused variable t mbedtls/library/bignum.c
         target_compile_options(${target} PRIVATE -Wno-error=unused)
     endif()
+
+    target_compile_options(${target} PRIVATE ${MBEDTLS_COMPILE_OPTIONS})
 
     # do not treat warnings as errors on Windows
     if(MSVC)
