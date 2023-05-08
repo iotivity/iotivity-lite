@@ -167,20 +167,17 @@ oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
   const oc_string_t *currentprofile = NULL;
   const oc_array_t *supportedprofiles = NULL;
   for (; rep != NULL; rep = rep->next) {
-    if (rep->type == OC_REP_STRING) {
-      if (oc_rep_is_property(
-            rep, OC_SEC_SP_PROP_CURRENTPROFILE,
-            OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_CURRENTPROFILE))) {
-        currentprofile = &rep->value.string;
-        continue;
-      }
-    } else if (rep->type == OC_REP_STRING_ARRAY) {
-      if (oc_rep_is_property(
-            rep, OC_SEC_SP_PROP_SUPPORTEDPROFILES,
-            OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_SUPPORTEDPROFILES))) {
-        supportedprofiles = &rep->value.array;
-        continue;
-      }
+    if (oc_rep_is_property_with_type(
+          rep, OC_REP_STRING, OC_SEC_SP_PROP_CURRENTPROFILE,
+          OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_CURRENTPROFILE))) {
+      currentprofile = &rep->value.string;
+      continue;
+    }
+    if (oc_rep_is_property_with_type(
+          rep, OC_REP_STRING_ARRAY, OC_SEC_SP_PROP_SUPPORTEDPROFILES,
+          OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_SUPPORTEDPROFILES))) {
+      supportedprofiles = &rep->value.array;
+      continue;
     }
 
     if ((flags & OC_SEC_SP_DECODE_FLAG_IGNORE_UNKNOWN_PROPERTIES) == 0) {
@@ -190,17 +187,6 @@ oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
     }
     OC_DBG("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
            (int)rep->type);
-  }
-
-  if (currentprofile != NULL) {
-    oc_sp_types_t profile = oc_sec_sp_type_from_string(
-      oc_string(*currentprofile), oc_string_len(*currentprofile));
-    if (profile == 0) {
-      OC_ERR("oc_sp: invalid currentprofile value(%s)",
-             oc_string(*currentprofile));
-      return false;
-    }
-    dst->current_profile = profile;
   }
 
   if (supportedprofiles != NULL) {
@@ -217,6 +203,23 @@ oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
     }
     dst->supported_profiles = profiles;
   }
+
+  if (currentprofile != NULL) {
+    oc_sp_types_t profile = oc_sec_sp_type_from_string(
+      oc_string(*currentprofile), oc_string_len(*currentprofile));
+    if (profile == 0) {
+      OC_ERR("oc_sp: invalid currentprofile value(%s)",
+             oc_string(*currentprofile));
+      return false;
+    }
+    if ((profile & dst->supported_profiles) == 0) {
+      OC_ERR("oc_sp: currentprofile value(%s) not supported",
+             oc_string(*currentprofile));
+      return false;
+    }
+    dst->current_profile = profile;
+  }
+
   return true;
 }
 

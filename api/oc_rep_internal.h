@@ -20,6 +20,7 @@
 #define OC_REP_INTERNAL_H
 
 #include "oc_rep.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 
@@ -28,7 +29,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Check whether the name of the property object matches parameters.
+ * @brief Check whether property matches by name.
  *
  * @param rep object to check (cannot be NULL)
  * @param propname property name (cannot be NULL)
@@ -37,7 +38,22 @@ extern "C" {
  * @return false otherwise
  */
 bool oc_rep_is_property(const oc_rep_t *rep, const char *propname,
-                        size_t propname_len);
+                        size_t propname_len) OC_NONNULL();
+
+/**
+ * @brief Check whether property matches by type and name.
+ *
+ * @param rep object to check (cannot be NULL)
+ * @param proptype property type
+ * @param propname property name (cannot be NULL)
+ * @param propname_len length of property name
+ * @return true
+ * @return false
+ */
+bool oc_rep_is_property_with_type(const oc_rep_t *rep,
+                                  oc_rep_value_type_t proptype,
+                                  const char *propname, size_t propname_len)
+  OC_NONNULL();
 
 /**
  * @brief Check whether the name and type of the property object matches one of

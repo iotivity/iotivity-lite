@@ -828,6 +828,14 @@ oc_rep_is_property(const oc_rep_t *rep, const char *propname,
 }
 
 bool
+oc_rep_is_property_with_type(const oc_rep_t *rep, oc_rep_value_type_t proptype,
+                             const char *propname, size_t propname_len)
+{
+  return rep->type == proptype &&
+         oc_rep_is_property(rep, propname, propname_len);
+}
+
+bool
 oc_rep_is_baseline_interface_property(const oc_rep_t *rep)
 {
   // Common properties grouped by type:

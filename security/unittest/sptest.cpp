@@ -193,6 +193,7 @@ TEST_F(TestSecurityProfile, Decode_FailInvalidProperty)
   oc_rep_start_root_object();
   oc_rep_set_int(root, myAttribute, 1337);
   oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   auto rep = pool.ParsePayload();
   oc_sec_sp_t sp_parsed{};
@@ -205,8 +206,57 @@ TEST_F(TestSecurityProfile, Decode_FailInvalidPropertyType)
 
   oc_rep_start_root_object();
   oc_rep_set_int(root, currentprofile, 42);
-  oc_rep_set_int(root, supportedprofiles, 1337);
   oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  auto rep = pool.ParsePayload();
+  oc_sec_sp_t sp_parsed{};
+  EXPECT_FALSE(oc_sec_sp_decode(rep.get(), /*flags*/ 0, &sp_parsed));
+}
+
+TEST_F(TestSecurityProfile, Decode_FailInvalidSupportedProfiles)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, supportedprofiles);
+  oc_rep_add_text_string(supportedprofiles, "invalid");
+  oc_rep_close_array(root, supportedprofiles);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  auto rep = pool.ParsePayload();
+  oc_sec_sp_t sp_parsed{};
+  EXPECT_FALSE(oc_sec_sp_decode(rep.get(), /*flags*/ 0, &sp_parsed));
+}
+
+TEST_F(TestSecurityProfile, Decode_FailInvalidCurrentProfile)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, supportedprofiles);
+  oc_rep_add_text_string(supportedprofiles,
+                         oc_sec_sp_type_to_string(OC_SP_BASELINE));
+  oc_rep_close_array(root, supportedprofiles);
+  oc_rep_set_text_string(root, currentprofile,
+                         oc_sec_sp_type_to_string(OC_SP_PURPLE));
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  auto rep = pool.ParsePayload();
+  oc_sec_sp_t sp_parsed{};
+  EXPECT_FALSE(oc_sec_sp_decode(rep.get(), /*flags*/ 0, &sp_parsed));
+}
+
+TEST_F(TestSecurityProfile, Decode_FailUnsupportedCurrentProfile)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_text_string(root, currentprofile, "invalid");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
   auto rep = pool.ParsePayload();
   oc_sec_sp_t sp_parsed{};
@@ -227,7 +277,6 @@ TEST_F(TestSecurityProfile, EncodeAndDecodeForDevice)
   ASSERT_TRUE(oc_sec_sp_encode_for_device(/*device*/ 0, /*flags*/ 0));
 
   oc_sec_sp_clear(profile);
-  profile->supported_profiles = OC_SP_BLACK; // TODO:remove
   profile->credid = profile_copy.credid;
   EXPECT_FALSE(isEqual(*oc_sec_sp_get(/*device*/ 0), profile_copy));
 
@@ -242,7 +291,6 @@ class TestSecurityProfileWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG); // TODO: rm
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
