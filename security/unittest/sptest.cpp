@@ -90,11 +90,14 @@ public:
            lhs.credid == rhs.credid;
   }
 
-  static void expectEqual(const oc_sec_sp_t &lhs, const oc_sec_sp_t &rhs)
+  static void expectEqual(const oc_sec_sp_t &lhs, const oc_sec_sp_t &rhs,
+                          bool ignoreCredid = false)
   {
     EXPECT_EQ(lhs.supported_profiles, rhs.supported_profiles);
     EXPECT_EQ(lhs.current_profile, rhs.current_profile);
-    EXPECT_EQ(lhs.credid, rhs.credid);
+    if (!ignoreCredid) {
+      EXPECT_EQ(lhs.credid, rhs.credid);
+    }
   }
 };
 
@@ -183,6 +186,33 @@ TEST_F(TestSecurityProfile, DumpAndLoad)
   EXPECT_TRUE(isEqual(def, *oc_sec_sp_get(0)));
 }
 
+TEST_F(TestSecurityProfile, Decode_FailInvalidProperty)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, myAttribute, 1337);
+  oc_rep_end_root_object();
+
+  auto rep = pool.ParsePayload();
+  oc_sec_sp_t sp_parsed{};
+  EXPECT_FALSE(oc_sec_sp_decode(rep.get(), /*flags*/ 0, &sp_parsed));
+}
+
+TEST_F(TestSecurityProfile, Decode_FailInvalidPropertyType)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, currentprofile, 42);
+  oc_rep_set_int(root, supportedprofiles, 1337);
+  oc_rep_end_root_object();
+
+  auto rep = pool.ParsePayload();
+  oc_sec_sp_t sp_parsed{};
+  EXPECT_FALSE(oc_sec_sp_decode(rep.get(), /*flags*/ 0, &sp_parsed));
+}
+
 TEST_F(TestSecurityProfile, EncodeAndDecodeForDevice)
 {
   oc_sec_sp_t *profile = oc_sec_sp_get(/*device*/ 0);
@@ -194,7 +224,7 @@ TEST_F(TestSecurityProfile, EncodeAndDecodeForDevice)
   oc_sec_sp_copy(&profile_copy, profile);
 
   oc::RepPool pool{};
-  oc_sec_sp_encode_for_device(/*device*/ 0, /*flags*/ 0);
+  ASSERT_TRUE(oc_sec_sp_encode_for_device(/*device*/ 0, /*flags*/ 0));
 
   oc_sec_sp_clear(profile);
   profile->supported_profiles = OC_SP_BLACK; // TODO:remove
@@ -212,6 +242,7 @@ class TestSecurityProfileWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
   {
+    oc_log_set_level(OC_LOG_LEVEL_DEBUG); // TODO: rm
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -220,7 +251,8 @@ public:
     oc_resource_make_public(sp);
     oc_resource_set_access_in_RFOTM(
       sp, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE));
+      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+                                        OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
@@ -265,24 +297,98 @@ TEST_F(TestSecurityProfileWithServer, GetRequest)
   TestSecurityProfile::expectEqual(*oc_sec_sp_get(/*device*/ 0), sp);
 }
 
+static oc_sec_sp_t
+encodePayload(unsigned supported_profiles, oc_sp_types_t current_profile)
+{
+  oc_sec_sp_t sp_new{};
+  sp_new.supported_profiles = supported_profiles;
+  sp_new.current_profile = current_profile;
+  EXPECT_EQ(0, oc_sec_sp_encode_with_resource(&sp_new, /*sp_res*/ nullptr,
+                                              /*flags*/ 0));
+  return sp_new;
+}
+
 TEST_F(TestSecurityProfileWithServer, PostRequest)
 {
-  // TODO
+  // get insecure connection to the testing device
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  oc_sec_sp_t *profile = oc_sec_sp_get(/*device*/ 0);
+  ASSERT_NE(nullptr, profile);
+  profile->supported_profiles = OC_SP_BLACK | OC_SP_BLUE | OC_SP_PURPLE;
+  profile->current_profile = OC_SP_PURPLE;
+
+  oc_sec_sp_t profile_copy{};
+  oc_sec_sp_copy(&profile_copy, profile);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
+    oc::TestDevice::Terminate();
+    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
+    auto *invoked = static_cast<bool *>(data->user_data);
+    *invoked = true;
+  };
+
+  bool invoked = false;
+  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, ep, nullptr, post_handler, HIGH_QOS,
+                           &invoked));
+
+  oc_sec_sp_t sp_new = encodePayload(OC_SP_BASELINE | OC_SP_BLACK, OC_SP_BLACK);
+  ASSERT_TRUE(oc_do_post());
+  oc::TestDevice::PoolEvents(5);
+
+  ASSERT_TRUE(invoked);
+  TestSecurityProfile::expectEqual(*oc_sec_sp_get(/*device*/ 0), sp_new, true);
 }
 
-TEST_F(TestSecurityProfileWithServer, PostRequest_F)
+TEST_F(TestSecurityProfileWithServer, PostRequest_FailInvalidData)
 {
-  // TODO
+  // get insecure connection to the testing device
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_BAD_REQUEST, data->code);
+    oc::TestDevice::Terminate();
+    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
+    auto *invoked = static_cast<bool *>(data->user_data);
+    *invoked = true;
+  };
+
+  bool invoked = false;
+
+  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, ep, nullptr, post_handler, HIGH_QOS,
+                           &invoked));
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, myAttribute, 1337);
+  oc_rep_end_root_object();
+  ASSERT_TRUE(oc_do_post());
+  oc::TestDevice::PoolEvents(5);
+
+  ASSERT_TRUE(invoked);
 }
 
-TEST_F(TestSecurityProfileWithServer, PutRequest_F)
+TEST_F(TestSecurityProfileWithServer, PutRequest_FailMethodNotSupported)
 {
-  // TODO
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto encode_payload = []() {
+    encodePayload(OC_SP_BASELINE | OC_SP_BLACK, OC_SP_BLACK);
+  };
+  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SEC_SP_URI, encode_payload);
 }
 
-TEST_F(TestSecurityProfileWithServer, DeleteRequest_F)
+TEST_F(TestSecurityProfileWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  // TODO
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SP_URI, nullptr);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM  */

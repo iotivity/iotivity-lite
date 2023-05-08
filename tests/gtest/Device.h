@@ -37,6 +37,11 @@
 
 namespace oc {
 
+using encodePayloadFn = void (*)();
+
+void testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
+                            const std::string &uri, encodePayloadFn payloadFn);
+
 struct DeviceToAdd
 {
   std::string rt;

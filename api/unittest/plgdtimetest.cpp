@@ -251,7 +251,8 @@ public:
     oc_resource_make_public(sc);
     oc_resource_set_access_in_RFOTM(
       sc, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE));
+      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+                                        OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
@@ -531,48 +532,22 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
   EXPECT_NE(0, oc::TestDevice::GetSystemTime());
 }
 
-TEST_F(TestPlgdTimeWithServer, DeleteRequestFail)
+TEST_F(TestPlgdTimeWithServer, PutRequest_FailMethodNotSupported)
 {
   const oc_endpoint_t *ep =
     oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
-  auto delete_handler = [](oc_client_response_t *data) {
-    EXPECT_LT(OC_STATUS_NOT_MODIFIED, data->code);
-    oc::TestDevice::Terminate();
-    bool *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
-  };
-
-  bool invoked = false;
-  EXPECT_TRUE(oc_do_delete(PLGD_TIME_URI, ep, nullptr, delete_handler, HIGH_QOS,
-                           &invoked));
-  oc::TestDevice::PoolEvents(5);
-
-  EXPECT_TRUE(invoked);
+  auto encode_payload = []() { encodeSystemClock(oc_clock_time()); };
+  oc::testNotSupportedMethod(OC_PUT, ep, PLGD_TIME_URI, encode_payload);
 }
 
-TEST_F(TestPlgdTimeWithServer, PutRequestFail)
+TEST_F(TestPlgdTimeWithServer, DeleteRequest_FailMethodNotSupported)
 {
   const oc_endpoint_t *ep =
     oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
-
-  auto put_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_METHOD_NOT_ALLOWED, data->code);
-    oc::TestDevice::Terminate();
-    bool *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
-  };
-
-  bool invoked = false;
-  ASSERT_TRUE(
-    oc_init_put(PLGD_TIME_URI, ep, nullptr, put_handler, HIGH_QOS, &invoked));
-  encodeSystemClock(oc_clock_time());
-  EXPECT_TRUE(oc_do_put());
-  oc::TestDevice::PoolEvents(5);
-
-  EXPECT_TRUE(invoked);
+  oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI, nullptr);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

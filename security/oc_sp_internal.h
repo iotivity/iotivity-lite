@@ -80,12 +80,22 @@ typedef enum oc_sec_sp_encode_flag_t {
 } oc_sec_sp_encode_flag_t;
 
 /**
- * @brief Encode security profile properties to the global encoder.
+ * @brief Encode security profile to global encoder
  *
- * @param device device index
- * @param flags mask of encoding flags
- * @return true on success
- * @return false on failure
+ * @param sp security profile to encode
+ * @param sp_res resource with baseline properties (only used when flags contain
+ * OC_SEC_SP_ENCODE_INCLUDE_BASELINE)
+ * @param flags encoding flags
+ * @return 0 on success
+ * @return <0 on error
+ */
+int oc_sec_sp_encode_with_resource(const oc_sec_sp_t *sp,
+                                   const oc_resource_t *sp_res, int flags)
+  OC_NONNULL(1);
+
+/**
+ * @brief Convenience wrapper for oc_sec_sp_encode_with_resource. Will encode
+ * global security profile data and resource associated with given device.
  */
 bool oc_sec_sp_encode_for_device(size_t device, int flags);
 
@@ -102,8 +112,7 @@ typedef enum oc_sec_sp_decode_flag_t {
  * @return true on success
  * @return false on failure
  */
-bool oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
-  OC_NONNULL();
+bool oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst);
 
 /**
  * @brief Decode payload and update security profile for given device
@@ -115,8 +124,7 @@ bool oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
  * @return true on success, payload was decoded and data for device were updated
  * @return false on failure
  */
-bool oc_sec_sp_decode_for_device(const oc_rep_t *rep, size_t device)
-  OC_NONNULL();
+bool oc_sec_sp_decode_for_device(const oc_rep_t *rep, size_t device);
 
 /**
  * @brief Parse security profile type from string

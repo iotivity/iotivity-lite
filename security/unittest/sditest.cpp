@@ -203,7 +203,8 @@ public:
     ASSERT_NE(nullptr, sdi);
     oc_resource_set_access_in_RFOTM(
       sdi, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE));
+      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+                                        OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
@@ -287,9 +288,32 @@ TEST_F(TestSdiWithServer, PostRequest)
   EXPECT_TRUE(oc_do_post());
   oc::TestDevice::PoolEvents(5);
 
+  EXPECT_TRUE(invoked);
   TestSdi::expectEqual(*oc_sec_sdi_get(0), sdi_new);
 
   oc_free_string(&sdi_new.name);
+}
+
+TEST_F(TestSdiWithServer, PutRequest_FailMethodNotSupported)
+{
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto encode_payload = []() {
+    oc_sec_sdi_t sdi_new{};
+    oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr,
+                                    static_cast<oc_interface_mask_t>(0));
+  };
+  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SEC_SDI_URI, encode_payload);
+}
+
+TEST_F(TestSdiWithServer, DeleteRequest_FailMethodNotSupported)
+{
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SDI_URI, nullptr);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

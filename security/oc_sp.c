@@ -183,11 +183,13 @@ oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
       }
     }
 
-    OC_DBG("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
-           (int)rep->type);
     if ((flags & OC_SEC_SP_DECODE_FLAG_IGNORE_UNKNOWN_PROPERTIES) == 0) {
+      OC_ERR("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
+             (int)rep->type);
       return false;
     }
+    OC_DBG("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
+           (int)rep->type);
   }
 
   if (currentprofile != NULL) {
@@ -225,38 +227,7 @@ oc_sec_sp_decode_for_device(const oc_rep_t *rep, size_t device)
   if (pstat->s == OC_DOS_RFNOP) {
     return false;
   }
-  while (rep != NULL) {
-    size_t len = oc_string_len(rep->name);
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (len == 14 &&
-          memcmp("currentprofile", oc_string(rep->name), 14) == 0) {
-        oc_sp_types_t current_profile = oc_sec_sp_type_from_string(
-          oc_string(rep->value.string), oc_string_len(rep->value.string));
-        if ((current_profile & g_sp[device].supported_profiles) == 0) {
-          return false;
-        }
-        g_sp[device].current_profile = current_profile;
-      }
-      break;
-    case OC_REP_STRING_ARRAY:
-      if (len == 17 &&
-          memcmp("supportedprofiles", oc_string(rep->name), 17) == 0) {
-        unsigned supported_profiles = 0;
-        for (size_t i = 0;
-             i < oc_string_array_get_allocated_size(rep->value.array); ++i) {
-          const char *p = oc_string_array_get_item(rep->value.array, i);
-          supported_profiles |= oc_sec_sp_type_from_string(p, strlen(p));
-        }
-        g_sp[device].supported_profiles = supported_profiles;
-      }
-      break;
-    default:
-      return false;
-    }
-    rep = rep->next;
-  }
-  return true;
+  return oc_sec_sp_decode(rep, 0, &g_sp[device]);
 }
 
 static bool
@@ -291,34 +262,40 @@ sp_encode_supported_profiles(unsigned profiles)
   return g_err == 0;
 }
 
-bool
-oc_sec_sp_encode_for_device(size_t device, int flags)
+int
+oc_sec_sp_encode_with_resource(const oc_sec_sp_t *sp,
+                               const oc_resource_t *sp_res, int flags)
 {
-  // TODO: add oc_sec_sp_encode + tests
+  assert(oc_rep_get_cbor_errno() == CborNoError);
+  assert(sp != NULL);
 
   oc_rep_start_root_object();
   if ((flags & OC_SEC_SP_ENCODE_INCLUDE_BASELINE) != 0) {
-    const oc_resource_t *sp_resource =
-      oc_core_get_resource_by_index(OCF_SEC_SP, device);
-    if (sp_resource != NULL) {
-      oc_process_baseline_interface(sp_resource);
-      if (g_err != 0) {
-        OC_ERR("oc_sp: failed to encode baseline properties");
-        return false;
-      }
-    }
+    assert(sp_res != NULL);
+    oc_process_baseline_interface(sp_res);
   }
 
-  if (!sp_encode_current_profile(g_sp[device].current_profile)) {
+  if (!sp_encode_current_profile(sp->current_profile)) {
     OC_ERR("oc_sp: failed to encode current_profile");
-    return false;
+    return -1;
   }
-  if (!sp_encode_supported_profiles(g_sp[device].supported_profiles)) {
+  if (!sp_encode_supported_profiles(sp->supported_profiles)) {
     OC_ERR("oc_sp: failed to encode supported_profiles");
-    return false;
+    return -1;
   }
   oc_rep_end_root_object();
-  return g_err == 0;
+  return g_err;
+}
+
+bool
+oc_sec_sp_encode_for_device(size_t device, int flags)
+{
+  const oc_sec_sp_t *sp = oc_sec_sp_get(device);
+  const oc_resource_t *sp_res = NULL;
+  if ((flags & OC_SEC_SP_ENCODE_INCLUDE_BASELINE) != 0) {
+    sp_res = oc_core_get_resource_by_index(OCF_SEC_SP, device);
+  }
+  return oc_sec_sp_encode_with_resource(sp, sp_res, flags) == 0;
 }
 
 static void
@@ -326,17 +303,24 @@ sp_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data)
 {
   (void)data;
+  oc_status_t code = OC_STATUS_BAD_REQUEST;
   switch (iface_mask) {
   case OC_IF_RW:
-  case OC_IF_BASELINE: {
-    oc_sec_sp_encode_for_device(
-      request->resource->device,
-      iface_mask == OC_IF_BASELINE ? OC_SEC_SP_ENCODE_INCLUDE_BASELINE : 0);
-    oc_send_response_with_callback(request, OC_STATUS_OK, true);
-  } break;
+  case OC_IF_BASELINE:
+    if (!oc_sec_sp_encode_for_device(request->resource->device,
+                                     iface_mask == OC_IF_BASELINE
+                                       ? OC_SEC_SP_ENCODE_INCLUDE_BASELINE
+                                       : 0)) {
+
+      code = OC_STATUS_INTERNAL_SERVER_ERROR;
+      break;
+    }
+    code = OC_STATUS_OK;
+    break;
   default:
     break;
   }
+  oc_send_response_with_callback(request, code, true);
 }
 
 static void
