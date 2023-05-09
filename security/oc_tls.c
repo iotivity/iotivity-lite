@@ -329,10 +329,42 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 }
 #endif /* OC_CLIENT */
 
+static bool
+process_drop_event_for_removed_endpoint(oc_process_event_t ev,
+                                        oc_process_data_t data,
+                                        const void *user_data)
+{
+  const oc_endpoint_t *endpoint = (const oc_endpoint_t *)user_data;
+  if (ev != oc_events[RI_TO_TLS_EVENT] && ev != oc_events[UDP_TO_TLS_EVENT]) {
+    return false;
+  }
+  oc_message_t *message = (oc_message_t *)data;
+  if (oc_endpoint_compare(&message->endpoint, endpoint) == 0) {
+#if OC_DBG_IS_ENABLED
+    oc_string_t endpoint_str;
+    oc_endpoint_to_string(&message->endpoint, &endpoint_str);
+    OC_DBG("oc_tls: dropping %s message for removed endpoint(%s)",
+           (ev == oc_events[RI_TO_TLS_EVENT]) ? "sent" : "received",
+           oc_string(endpoint_str));
+    oc_free_string(&endpoint_str);
+#endif /* OC_DBG_IS_ENABLED */
+    oc_message_unref(message);
+    return true;
+  }
+  return false;
+}
+
 static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 {
-  OC_DBG("oc_tls: freeing peer(%p)", (void *)peer);
+#if OC_DBG_IS_ENABLED
+  oc_string_t endpoint_str;
+  oc_endpoint_to_string(&peer->endpoint, &endpoint_str);
+  OC_DBG("oc_tls: freeing peer(%p): endpoint(%s), role(%s)", (void *)peer,
+         oc_string(endpoint_str),
+         peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
+  oc_free_string(&endpoint_str);
+#endif /* OC_DBG_IS_ENABLED */
 #ifdef OC_PKI
   if (peer->user_data.free != NULL) {
     peer->user_data.free(peer->user_data.data);
@@ -390,6 +422,8 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
     oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->recv_q);
   }
+  oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
+                  &peer->endpoint);
 #ifdef OC_PKI
   oc_free_string(&peer->public_key);
 #endif /* OC_PKI */
@@ -418,6 +452,9 @@ oc_tls_remove_peer(const oc_endpoint_t *endpoint)
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer != NULL) {
     oc_tls_free_peer(peer, false);
+  } else {
+    oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
+                    (void *)endpoint);
   }
 }
 
@@ -1956,7 +1993,15 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
   }
 
   oc_list_add(g_tls_peers, peer);
-  OC_DBG("oc_tls: new peer(%p) added", (void *)peer);
+#if OC_DBG_IS_ENABLED
+  oc_string_t endpoint_str;
+  oc_endpoint_to_string(&peer->endpoint, &endpoint_str);
+  OC_DBG("oc_tls: new peer(%p) added: endpoint(%s), role(%s)", (void *)peer,
+         oc_string(endpoint_str),
+         peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
+  oc_free_string(&endpoint_str);
+#endif /* OC_DBG_IS_ENABLED */
+
   return peer;
 }
 
@@ -2261,8 +2306,8 @@ ssl_write_tcp(mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len)
 }
 #endif
 
-size_t
-oc_tls_send_message(oc_message_t *message)
+static size_t
+oc_tls_send_message_internal(oc_message_t *message)
 {
   size_t length = 0;
   oc_tls_peer_t *peer = oc_tls_get_peer(&message->endpoint);
@@ -2448,6 +2493,18 @@ oc_tls_init_connection(oc_message_t *message)
   oc_message_unref(message);
 }
 #endif /* OC_CLIENT */
+
+size_t
+oc_tls_send_message(oc_message_t *message)
+{
+#if defined(OC_CLIENT)
+  if (!oc_tls_connected(&message->endpoint)) {
+    oc_tls_init_connection(message);
+    return 0;
+  }
+#endif /* OC_CLIENT */
+  return oc_tls_send_message_internal(message);
+}
 
 bool
 oc_tls_uses_psk_cred(const oc_tls_peer_t *peer)
@@ -2705,8 +2762,41 @@ read_application_data(oc_tls_peer_t *peer)
 static void
 oc_tls_recv_message(oc_message_t *message)
 {
-  oc_tls_peer_t *peer =
-    oc_tls_add_or_get_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER, NULL);
+  oc_tls_peer_t *peer = NULL;
+#ifdef OC_TCP
+  if ((message->endpoint.flags & (TCP | ACCEPTED)) == TCP) {
+    /*
+      The connection was established through oc_tls_init_connection, and the
+      message originates from the peer that was created through this
+      connection. However, it is not possible to create a new peer at this point
+      since the message is not an initialization TLS handshake message, which
+      only comes from a (TCP | ACCEPTED) peer.
+
+      Unfortunately, there is a problem that arises when the message is in the
+      buffer and the peer has been deleted by oc_tls_free_peer. This occurs
+      because the closing of the TCP connection and the processing of messages
+      are not synchronized. Therefore, to avoid this issue, we must obtain only
+      the peer.
+    */
+    peer = oc_tls_get_peer(&message->endpoint);
+    if (peer != NULL && peer->role != MBEDTLS_SSL_IS_CLIENT) {
+#if OC_ERR_IS_ENABLED
+      oc_string_t endpoint_str;
+      oc_endpoint_to_string(&message->endpoint, &endpoint_str);
+      // The peer is not a client, so it is not possible to receive a message.
+      OC_ERR("oc_tls: TCP-TLS peer %p with endpoint(%s) is not in role as "
+             "client but as server",
+             (void *)peer, oc_string(endpoint_str));
+      oc_free_string(&endpoint_str);
+#endif /* OC_ERR_IS_ENABLED */
+      peer = NULL;
+    }
+  } else
+#endif /* OC_TCP */
+  {
+    peer =
+      oc_tls_add_or_get_peer(&message->endpoint, MBEDTLS_SSL_IS_SERVER, NULL);
+  }
 
   if (peer == NULL) {
     OC_ERR("oc_tls: failed to get a valid peer");
@@ -2762,12 +2852,6 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
       oc_tls_recv_message(data);
       continue;
     }
-#ifdef OC_CLIENT
-    if (ev == oc_events[INIT_TLS_CONN_EVENT]) {
-      oc_tls_init_connection(data);
-      continue;
-    }
-#endif /* OC_CLIENT */
     if (ev == oc_events[RI_TO_TLS_EVENT]) {
       oc_tls_send_message(data);
       continue;

@@ -381,6 +381,38 @@ oc_process_is_closing_all_tls_sessions(void)
 #endif /* OC_SECURITY */
 /*---------------------------------------------------------------------------*/
 int
+oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
+                const void *user_data)
+{
+  int dropped = 0;
+
+  if (!p || !drop_event) {
+    return dropped;
+  }
+
+  oc_process_num_events_t i = 0;
+  while (i < g_nevents) {
+    oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
+    const struct event_data *event = &g_events[index];
+    if (event->p != p || !drop_event(event->ev, event->data, user_data)) {
+      // move to the next event
+      ++i;
+      continue;
+    }
+    // we have a match, drop the event and move the last event to its position
+    if (g_nevents > 1) {
+      oc_process_num_events_t last_index =
+        (g_fevent + g_nevents - 1) % OC_PROCESS_NUMEVENTS;
+      g_events[index] = g_events[last_index];
+    }
+    --g_nevents;
+    ++dropped;
+  }
+  return dropped;
+}
+
+/*---------------------------------------------------------------------------*/
+int
 oc_process_post(struct oc_process *p, oc_process_event_t ev,
                 oc_process_data_t data)
 {

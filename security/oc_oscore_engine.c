@@ -795,16 +795,8 @@ oscore_send_dispatch:
   OC_DBG("#################################");
   /* Dispatch oc_message_t to the TLS layer */
   OC_DBG("Outbound network event: forwarding to TLS");
-#ifdef OC_CLIENT
-  if (!oc_tls_connected(&message->endpoint)) {
-    OC_DBG("Posting INIT_TLS_CONN_EVENT");
-    oc_process_post(&oc_tls_handler, oc_events[INIT_TLS_CONN_EVENT], message);
-  } else
-#endif /* OC_CLIENT */
-  {
-    OC_DBG("Posting RI_TO_TLS_EVENT");
-    oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], message);
-  }
+  OC_DBG("Posting RI_TO_TLS_EVENT");
+  oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], message);
   return 0;
 
 oscore_send_error:
