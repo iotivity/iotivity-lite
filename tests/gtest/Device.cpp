@@ -28,9 +28,63 @@
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #include <array>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace oc {
+
+void
+testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
+                       const std::string &uri, encodePayloadFn payloadFn)
+{
+  auto handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_METHOD_NOT_ALLOWED, data->code);
+    oc::TestDevice::Terminate();
+    bool *invoked = static_cast<bool *>(data->user_data);
+    *invoked = true;
+  };
+
+  bool invoked = false;
+  switch (method) {
+  case OC_GET:
+  case OC_DELETE:
+    break;
+  case OC_POST:
+    ASSERT_TRUE(
+      oc_init_post(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    break;
+  case OC_PUT:
+    ASSERT_TRUE(
+      oc_init_put(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    break;
+  default:
+    GTEST_FAIL();
+  }
+  if (payloadFn != nullptr) {
+    payloadFn();
+  }
+  switch (method) {
+  case OC_GET:
+    EXPECT_TRUE(
+      oc_do_get(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    break;
+  case OC_DELETE:
+    EXPECT_TRUE(
+      oc_do_delete(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    break;
+  case OC_POST:
+    ASSERT_TRUE(oc_do_post());
+    break;
+  case OC_PUT:
+    ASSERT_TRUE(oc_do_put());
+    break;
+  default:
+    GTEST_FAIL();
+  }
+  oc::TestDevice::PoolEvents(5);
+
+  EXPECT_TRUE(invoked);
+}
 
 Device::Device()
 {
@@ -110,13 +164,13 @@ Device::Terminate()
 }
 
 void
-Device::PoolEvents(uint16_t seconds)
+Device::PoolEvents(uint64_t seconds)
 {
   PoolEventsMs(seconds * 1000);
 }
 
 void
-Device::PoolEventsMs(uint16_t mseconds)
+Device::PoolEventsMs(uint64_t mseconds)
 {
   OC_ATOMIC_STORE8(terminate_, 0);
   oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, mseconds);

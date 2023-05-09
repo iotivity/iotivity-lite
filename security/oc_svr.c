@@ -65,9 +65,7 @@ oc_sec_svr_create(void)
       OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
 
-    oc_core_populate_resource(
-      OCF_SEC_SP, i, "/oic/sec/sp", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_sp, 0, post_sp, 0, 1, "oic.r.sp");
+    oc_sec_sp_create_resource(i);
     oc_sec_sdi_create_resource(i);
 #ifdef OC_PKI
     oc_sec_csr_create_resource(i);

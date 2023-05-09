@@ -17,6 +17,9 @@
  ****************************************************************************/
 
 #ifdef OC_SECURITY
+
+#include "api/oc_core_res_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_sp.h"
 #include "oc_sp_internal.h"
 #include "oc_api.h"
@@ -86,6 +89,13 @@ void
 oc_sec_sp_default(size_t device)
 {
   g_sp[device] = g_sp_mfg_default[device];
+  oc_sec_dump_sp(device);
+}
+
+oc_sec_sp_t *
+oc_sec_sp_get(size_t device)
+{
+  return &g_sp[device];
 }
 
 void
@@ -149,113 +159,197 @@ oc_sec_sp_type_to_string(oc_sp_types_t sp_type)
 }
 
 bool
-oc_sec_decode_sp(const oc_rep_t *rep, size_t device)
+oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
+{
+#define OC_SEC_SP_PROP_CURRENTPROFILE "currentprofile"
+#define OC_SEC_SP_PROP_SUPPORTEDPROFILES "supportedprofiles"
+
+  const oc_string_t *currentprofile = NULL;
+  const oc_array_t *supportedprofiles = NULL;
+  for (; rep != NULL; rep = rep->next) {
+    if (oc_rep_is_property_with_type(
+          rep, OC_REP_STRING, OC_SEC_SP_PROP_CURRENTPROFILE,
+          OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_CURRENTPROFILE))) {
+      currentprofile = &rep->value.string;
+      continue;
+    }
+    if (oc_rep_is_property_with_type(
+          rep, OC_REP_STRING_ARRAY, OC_SEC_SP_PROP_SUPPORTEDPROFILES,
+          OC_CHAR_ARRAY_LEN(OC_SEC_SP_PROP_SUPPORTEDPROFILES))) {
+      supportedprofiles = &rep->value.array;
+      continue;
+    }
+
+    if ((flags & OC_SEC_SP_DECODE_FLAG_IGNORE_UNKNOWN_PROPERTIES) == 0) {
+      OC_ERR("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
+             (int)rep->type);
+      return false;
+    }
+    OC_DBG("oc_sp: unknown property (name=%s, type=%d)", oc_string(rep->name),
+           (int)rep->type);
+  }
+
+  if (supportedprofiles != NULL) {
+    unsigned profiles = 0;
+    for (size_t i = 0;
+         i < oc_string_array_get_allocated_size(*supportedprofiles); ++i) {
+      const char *p = oc_string_array_get_item(*supportedprofiles, i);
+      oc_sp_types_t profile = oc_sec_sp_type_from_string(p, strlen(p));
+      if (profile == 0) {
+        OC_ERR("oc_sp: invalid supportedprofiles item value([%zu]=%s)", i, p);
+        return false;
+      }
+      profiles |= profile;
+    }
+    dst->supported_profiles = profiles;
+  }
+
+  if (currentprofile != NULL) {
+    oc_sp_types_t profile = oc_sec_sp_type_from_string(
+      oc_string(*currentprofile), oc_string_len(*currentprofile));
+    if (profile == 0) {
+      OC_ERR("oc_sp: invalid currentprofile value(%s)",
+             oc_string(*currentprofile));
+      return false;
+    }
+    if ((profile & dst->supported_profiles) == 0) {
+      OC_ERR("oc_sp: currentprofile value(%s) not supported",
+             oc_string(*currentprofile));
+      return false;
+    }
+    dst->current_profile = profile;
+  }
+
+  return true;
+}
+
+bool
+oc_sec_sp_decode_for_device(const oc_rep_t *rep, size_t device)
 {
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFNOP) {
     return false;
   }
-  while (rep != NULL) {
-    size_t len = oc_string_len(rep->name);
-    switch (rep->type) {
-    case OC_REP_STRING:
-      if (len == 14 &&
-          memcmp("currentprofile", oc_string(rep->name), 14) == 0) {
-        oc_sp_types_t current_profile = oc_sec_sp_type_from_string(
-          oc_string(rep->value.string), oc_string_len(rep->value.string));
-        if ((current_profile & g_sp[device].supported_profiles) == 0) {
-          return false;
-        }
-        g_sp[device].current_profile = current_profile;
-      }
-      break;
-    case OC_REP_STRING_ARRAY:
-      if (len == 17 &&
-          memcmp("supportedprofiles", oc_string(rep->name), 17) == 0) {
-        unsigned supported_profiles = 0;
-        for (size_t i = 0;
-             i < oc_string_array_get_allocated_size(rep->value.array); ++i) {
-          const char *p = oc_string_array_get_item(rep->value.array, i);
-          supported_profiles |= oc_sec_sp_type_from_string(p, strlen(p));
-        }
-        g_sp[device].supported_profiles = supported_profiles;
-      }
-      break;
-    default:
-      return false;
-      break;
-    }
-    rep = rep->next;
-  }
-  return true;
+  return oc_sec_sp_decode(rep, 0, &g_sp[device]);
 }
 
-void
-oc_sec_encode_sp(size_t device, oc_interface_mask_t iface_mask, bool to_storage)
+static bool
+sp_encode_current_profile(oc_sp_types_t profile)
 {
-  oc_rep_start_root_object();
-  if (to_storage || iface_mask & OC_IF_BASELINE) {
-    oc_process_baseline_interface(
-      oc_core_get_resource_by_index(OCF_SEC_SP, device));
-  }
-  oc_rep_set_text_string(
-    root, currentprofile,
-    oc_sec_sp_type_to_string(g_sp[device].current_profile));
+  oc_rep_set_text_string(root, currentprofile,
+                         oc_sec_sp_type_to_string(profile));
+  return g_err == 0;
+}
+
+static bool
+sp_encode_supported_profiles(unsigned profiles)
+{
   oc_rep_set_array(root, supportedprofiles);
-  if ((g_sp[device].supported_profiles & OC_SP_BASELINE) != 0) {
+  if ((profiles & OC_SP_BASELINE) != 0) {
     oc_rep_add_text_string(supportedprofiles,
                            oc_sec_sp_type_to_string(OC_SP_BASELINE));
   }
-  if ((g_sp[device].supported_profiles & OC_SP_BLACK) != 0) {
+  if ((profiles & OC_SP_BLACK) != 0) {
     oc_rep_add_text_string(supportedprofiles,
                            oc_sec_sp_type_to_string(OC_SP_BLACK));
   }
-  if ((g_sp[device].supported_profiles & OC_SP_BLUE) != 0) {
+  if ((profiles & OC_SP_BLUE) != 0) {
     oc_rep_add_text_string(supportedprofiles,
                            oc_sec_sp_type_to_string(OC_SP_BLUE));
   }
-  if ((g_sp[device].supported_profiles & OC_SP_PURPLE) != 0) {
+  if ((profiles & OC_SP_PURPLE) != 0) {
     oc_rep_add_text_string(supportedprofiles,
                            oc_sec_sp_type_to_string(OC_SP_PURPLE));
   }
   oc_rep_close_array(root, supportedprofiles);
-  oc_rep_end_root_object();
+  return g_err == 0;
 }
 
-oc_sec_sp_t *
-oc_sec_get_sp(size_t device)
+int
+oc_sec_sp_encode_with_resource(const oc_sec_sp_t *sp,
+                               const oc_resource_t *sp_res, int flags)
 {
-  return &g_sp[device];
+  assert(oc_rep_get_cbor_errno() == CborNoError);
+  assert(sp != NULL);
+
+  oc_rep_start_root_object();
+  if ((flags & OC_SEC_SP_ENCODE_INCLUDE_BASELINE) != 0) {
+    assert(sp_res != NULL);
+    oc_process_baseline_interface(sp_res);
+  }
+
+  if (!sp_encode_current_profile(sp->current_profile)) {
+    OC_ERR("oc_sp: failed to encode current_profile");
+    return -1;
+  }
+  if (!sp_encode_supported_profiles(sp->supported_profiles)) {
+    OC_ERR("oc_sp: failed to encode supported_profiles");
+    return -1;
+  }
+  oc_rep_end_root_object();
+  return g_err;
 }
 
-void
-get_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+bool
+oc_sec_sp_encode_for_device(size_t device, int flags)
+{
+  const oc_sec_sp_t *sp = oc_sec_sp_get(device);
+  const oc_resource_t *sp_res = NULL;
+  if ((flags & OC_SEC_SP_ENCODE_INCLUDE_BASELINE) != 0) {
+    sp_res = oc_core_get_resource_by_index(OCF_SEC_SP, device);
+  }
+  return oc_sec_sp_encode_with_resource(sp, sp_res, flags) == 0;
+}
+
+static void
+sp_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
+                void *data)
 {
   (void)data;
+  oc_status_t code = OC_STATUS_BAD_REQUEST;
   switch (iface_mask) {
   case OC_IF_RW:
-  case OC_IF_BASELINE: {
-    oc_sec_encode_sp(request->resource->device, iface_mask, false);
-    oc_send_response_with_callback(request, OC_STATUS_OK, true);
-  } break;
+  case OC_IF_BASELINE:
+    if (!oc_sec_sp_encode_for_device(request->resource->device,
+                                     iface_mask == OC_IF_BASELINE
+                                       ? OC_SEC_SP_ENCODE_INCLUDE_BASELINE
+                                       : 0)) {
+
+      code = OC_STATUS_INTERNAL_SERVER_ERROR;
+      break;
+    }
+    code = OC_STATUS_OK;
+    break;
   default:
     break;
   }
+  oc_send_response_with_callback(request, code, true);
 }
 
-void
-post_sp(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+static void
+sp_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
+                 void *data)
 {
   (void)iface_mask;
   (void)data;
   size_t device = request->resource->device;
-  if (oc_sec_decode_sp(request->request_payload, device)) {
-    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
-    request->response->response_buffer->response_length = 0;
-    oc_sec_dump_sp(device);
-  } else {
+  if (!oc_sec_sp_decode_for_device(request->request_payload, device)) {
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
+    return;
   }
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
+  request->response->response_buffer->response_length = 0;
+  oc_sec_dump_sp(device);
+}
+
+void
+oc_sec_sp_create_resource(size_t device)
+{
+  oc_core_populate_resource(OCF_SEC_SP, device, OCF_SEC_SP_URI,
+                            OCF_SEC_SP_IF_MASK, OCF_SEC_SP_DEFAULT_IF,
+                            OC_DISCOVERABLE | OC_SECURE, sp_resource_get,
+                            /*put*/ NULL, sp_resource_post,
+                            /*delete*/ NULL, 1, OCF_SEC_SP_RT);
 }
 
 #endif /* OC_SECURITY */

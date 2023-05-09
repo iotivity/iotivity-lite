@@ -37,6 +37,11 @@
 
 namespace oc {
 
+using encodePayloadFn = void (*)();
+
+void testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
+                            const std::string &uri, encodePayloadFn payloadFn);
+
 struct DeviceToAdd
 {
   std::string rt;
@@ -52,8 +57,8 @@ public:
   ~Device() = default;
 
   void SignalEventLoop();
-  void PoolEvents(uint16_t seconds);
-  void PoolEventsMs(uint16_t mseconds);
+  void PoolEvents(uint64_t seconds);
+  void PoolEventsMs(uint64_t mseconds);
   void Terminate();
 
 private:

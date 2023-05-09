@@ -105,7 +105,7 @@ typedef enum plgd_time_encode_flag_t {
  * @brief Encode plgd time properties to the global encoder.
  *
  * @param pt plgd time to encode
- * @param iface_mask encoding interace
+ * @param iface_mask encoding interface
  * @param flags mask of encoding flags
  * @return 0 on success
  * @return -1 on error
