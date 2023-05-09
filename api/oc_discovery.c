@@ -25,18 +25,16 @@
 #include "oc_endpoint.h"
 #include "oc_enums.h"
 #include "oc_resource_internal.h"
+#include "oc_server_api_internal.h"
 #include "util/oc_features.h"
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
-#ifdef OC_RES_BATCH_SUPPORT
-#include "oc_server_api_internal.h"
-#ifdef OC_SECURITY
+#if defined(OC_SECURITY) && defined(OC_RES_BATCH_SUPPORT)
 #include "security/oc_acl_internal.h"
-#endif /* OC_SECURITY */
-#endif /* OC_RES_BATCH_SUPPORT */
+#endif /* OC_SECURITY && OC_RES_BATCH_SUPPORT*/
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
@@ -399,6 +397,24 @@ process_device_resources(CborEncoder *links, const oc_request_t *request,
   return matches;
 }
 
+static void
+send_response(oc_request_t *request, oc_content_format_t content_format,
+              int matches, size_t response_length)
+{
+  oc_status_t code = OC_STATUS_OK;
+  if (matches && response_length) {
+    //  do nothing - response already set up
+  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    code = OC_STATUS_BAD_REQUEST;
+    response_length = 0;
+  } else {
+    code = OC_IGNORE;
+    response_length = 0;
+  }
+  oc_send_response_internal(request, code, content_format, response_length,
+                            code != OC_IGNORE);
+}
+
 #ifdef OC_SPEC_VER_OIC
 static bool
 filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
@@ -639,16 +655,8 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   }
 
   int response_length = oc_rep_get_encoded_payload_size();
-  request->response->response_buffer->content_format = APPLICATION_CBOR;
-  if (matches && response_length) {
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_CBOR, matches,
+                response_length < 0 ? 0 : (size_t)response_length);
 }
 #endif /* OC_SPEC_VER_OIC */
 
@@ -669,6 +677,7 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
   rest_request.origin = endpoint;
   rest_request.query = 0;
   rest_request.query_len = 0;
+  rest_request.method = OC_GET;
 #ifdef OC_SECURITY
   if (oc_sec_check_acl(OC_GET, resource, endpoint)) {
 #endif /* OC_SECURITY */
@@ -880,17 +889,10 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   default:
     break;
   }
+
   int response_length = oc_rep_get_encoded_payload_size();
-  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
-  if (matches && response_length > 0) {
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_VND_OCF_CBOR, matches,
+                response_length < 0 ? 0 : (size_t)response_length);
 }
 
 #ifdef OC_WKCORE
@@ -905,8 +907,8 @@ oc_wkcore_discovery_handler(oc_request_t *request,
 
   /* check if the accept header is link-format */
   if (request->accept != APPLICATION_LINK_FORMAT) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
+    oc_send_response_internal(request, OC_STATUS_BAD_REQUEST, TEXT_PLAIN, 0,
+                              true);
     return;
   }
 
@@ -990,16 +992,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     response_length += length;
   }
 
-  request->response->response_buffer->content_format = APPLICATION_LINK_FORMAT;
-  if (matches && response_length > 0) {
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
-  } else {
-    request->response->response_buffer->code = OC_IGNORE;
-  }
+  send_response(request, APPLICATION_LINK_FORMAT, matches, response_length);
 }
 #endif /* OC_WKCORE */
 

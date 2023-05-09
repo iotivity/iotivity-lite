@@ -1339,10 +1339,10 @@ post_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)data;
   if (oc_sec_decode_acl(request->request_payload, false,
                         request->resource->device, NULL, NULL)) {
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
     oc_sec_dump_acl(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 
@@ -1355,7 +1355,7 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
   if (ps->s == OC_DOS_RFNOP) {
     OC_ERR("oc_acl: Cannot DELETE ACE in RFNOP");
-    oc_send_response(request, OC_STATUS_FORBIDDEN);
+    oc_send_response_with_callback(request, OC_STATUS_FORBIDDEN, true);
     return;
   }
 
@@ -1376,10 +1376,10 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 
   if (success) {
-    oc_send_response(request, OC_STATUS_DELETED);
+    oc_send_response_with_callback(request, OC_STATUS_DELETED, true);
     oc_sec_dump_acl(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_NOT_FOUND);
+    oc_send_response_with_callback(request, OC_STATUS_NOT_FOUND, true);
   }
 }
 
@@ -1388,9 +1388,10 @@ get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 {
   (void)data;
   if (oc_sec_encode_acl(request->resource->device, iface_mask, false)) {
-    oc_send_response(request, OC_STATUS_OK);
+    oc_send_response_with_callback(request, OC_STATUS_OK, true);
   } else {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
   }
 }
 

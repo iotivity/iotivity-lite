@@ -555,11 +555,11 @@ post_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     /* set the response */
     oc_swupdate_encode(OC_IF_RW, request->resource->device);
 
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
 
     oc_dump_sw(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_NOT_ACCEPTABLE);
+    oc_send_response_with_callback(request, OC_STATUS_NOT_ACCEPTABLE, true);
   }
 }
 
@@ -581,7 +581,7 @@ get_swu(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
 {
   (void)user_data;
   oc_swupdate_encode(interfaces, request->resource->device);
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 void

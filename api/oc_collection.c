@@ -24,6 +24,7 @@
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_discovery_internal.h"
+#include "oc_server_api_internal.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_COLLECTIONS_IF_CREATE
@@ -845,6 +846,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   response.response_buffer = &response_buffer;
   rest_request.response = &response;
   rest_request.origin = request->origin;
+  rest_request.method = method;
 
   oc_rep_start_links_array();
   memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
@@ -1076,34 +1078,33 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
     return false;
   }
 
-  int code = oc_status_code(OC_STATUS_BAD_REQUEST);
+  oc_status_t code = OC_STATUS_BAD_REQUEST;
   if (ecode < oc_status_code(OC_STATUS_BAD_REQUEST) &&
       pcode < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     switch (method) {
     case OC_GET:
-      code = oc_status_code(OC_STATUS_OK);
+      code = OC_STATUS_OK;
       break;
     case OC_POST:
     case OC_PUT:
       if (iface_mask == OC_IF_CREATE) {
-        code = oc_status_code(OC_STATUS_CREATED);
+        code = OC_STATUS_CREATED;
       } else {
-        code = oc_status_code(OC_STATUS_CHANGED);
+        code = OC_STATUS_CHANGED;
       }
       break;
     case OC_DELETE:
-      code = oc_status_code(OC_STATUS_DELETED);
+      code = OC_STATUS_DELETED;
       break;
     default:
       break;
     }
   }
-  request->response->response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
-  request->response->response_buffer->response_length = size;
-  request->response->response_buffer->code = code;
+  oc_send_response_internal(request, code, APPLICATION_VND_OCF_CBOR, size,
+                            true);
 
   if ((method == OC_PUT || method == OC_POST) &&
-      code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      oc_status_code(code) < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
         collection, request->response->response_buffer, iface_mask);

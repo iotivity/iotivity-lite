@@ -628,7 +628,7 @@ static void
 get_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   get_ns_properties(request->resource, iface_mask, user_data);
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 /**
@@ -649,9 +649,9 @@ post_ns(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 
   if (set_ns_properties(request->resource, request->request_payload,
                         user_data)) {
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 
@@ -674,9 +674,9 @@ delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask,
               oc_string(request->resource->uri));
 
   if (oc_delete_resource(request->resource)) {
-    oc_send_response(request, OC_STATUS_DELETED);
+    oc_send_response_with_callback(request, OC_STATUS_DELETED, true);
   } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 
@@ -1103,13 +1103,13 @@ get_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     oc_rep_end_root_object();
 
-    oc_send_response(request, result);
+    oc_send_response_with_callback(request, result, true);
   } else {
     OC_PUSH_ERR("resource representation for pushed resource (%s) is found, "
                 "but no resource representation for it is built yet!",
                 oc_string(request->resource->uri));
 
-    oc_send_response(request, OC_STATUS_NOT_FOUND);
+    oc_send_response_with_callback(request, OC_STATUS_NOT_FOUND, true);
   }
 }
 
@@ -1622,7 +1622,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_resource_set_discoverable(pushd_rsc_rep->resource, true);
   }
 
-  oc_send_response(request, result);
+  oc_send_response_with_callback(request, result, true);
 }
 
 /**
@@ -1687,7 +1687,7 @@ get_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
   oc_rep_end_root_object();
 
-  oc_send_response(request, result);
+  oc_send_response_with_callback(request, result, true);
 }
 
 /**
@@ -2137,7 +2137,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
 exit:
-  oc_send_response(request, result);
+  oc_send_response_with_callback(request, result, true);
 }
 
 /**
@@ -2220,7 +2220,7 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
     recvs_instance = recvs_instance->next;
   }
 
-  oc_send_response(request, result);
+  oc_send_response_with_callback(request, result, true);
 }
 
 /**

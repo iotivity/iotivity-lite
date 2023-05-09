@@ -261,20 +261,7 @@ coap_receive(oc_message_t *msg)
     if (message->code >= COAP_GET && message->code <= COAP_DELETE) {
 
 #if OC_DBG_IS_ENABLED
-      switch (message->code) {
-      case COAP_GET:
-        OC_DBG("  method: GET");
-        break;
-      case COAP_PUT:
-        OC_DBG("  method: PUT");
-        break;
-      case COAP_POST:
-        OC_DBG("  method: POST");
-        break;
-      case COAP_DELETE:
-        OC_DBG("  method: DELETE");
-        break;
-      }
+      OC_DBG("  method: %s", oc_method_to_str((oc_method_t)message->code));
       OC_DBG("  URL: %.*s", (int)message->uri_path_len, message->uri_path);
       OC_DBG("  QUERY: %.*s", (int)message->uri_query_len, message->uri_query);
       OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);

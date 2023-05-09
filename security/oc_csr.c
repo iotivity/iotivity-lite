@@ -273,7 +273,8 @@ csr_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   int ret = oc_sec_csr_generate(device, oc_sec_certs_md_signature_algorithm(),
                                 csr, sizeof(csr));
   if (ret != 0) {
-    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
 
@@ -286,7 +287,7 @@ csr_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_rep_set_text_string(root, encoding, OC_ENCODING_PEM_STR);
   oc_rep_end_root_object();
 
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 void

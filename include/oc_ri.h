@@ -254,7 +254,7 @@ typedef struct oc_request_t
   const oc_endpoint_t *origin; ///< origin of the request
   oc_resource_t *resource;     ///< resource structure
   const char *query;           ///< query (as string)
-  size_t query_len;            ///< query lenght
+  size_t query_len;            ///< query length
   oc_rep_t *request_payload;   ///< request payload structure
   const uint8_t *_payload;     ///< payload of the request
   size_t _payload_len;         ///< payload size
@@ -262,6 +262,7 @@ typedef struct oc_request_t
     content_format; ///< content format (of the payload in the request)
   oc_content_format_t accept; ///< accept header
   oc_response_t *response;    ///< pointer to the response
+  oc_method_t method;         ///< method of the request
 } oc_request_t;
 
 /**
@@ -502,16 +503,27 @@ void oc_ri_remove_timed_event_callback(const void *cb_data,
  * @param key the application level key of the code
  * @return int the CoAP status code
  */
+OC_API
 int oc_status_code(oc_status_t key);
 
 /**
- * @brief convert the status code to string
+ * @brief Convert the status code to string
  *
  * @param[in] key key the application level key of the code
- * @return char* CoAP status code string
+ * @return CoAP status code in const char *
+ * @return Empty string for an invalid log level value
  */
 OC_API
 const char *oc_status_to_str(oc_status_t key);
+
+/**
+ * @brief Convert method to string. It is thread safe.
+ *
+ * @return Method in const char *.
+ * @return Empty string for an invalid log level value
+ */
+OC_API
+const char *oc_method_to_str(oc_method_t method);
 
 #ifdef OC_SERVER
 /**

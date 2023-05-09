@@ -32,10 +32,6 @@
 #include "oc_collection.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
-#if defined(OC_CLOUD) && defined(OC_SERVER)
-#include "oc_server_api_internal.h"
-#endif /* OC_CLOUD && OC_SERVER */
-
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #endif /* OC_SECURITY */
@@ -46,6 +42,7 @@
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 static size_t g_query_iterator;
+static oc_send_response_cb_t g_oc_send_response_cb;
 
 #if defined(OC_CLOUD) && defined(OC_SERVER)
 static oc_delete_resource_cb_t g_delayed_delete_resource_cb = NULL;
@@ -100,19 +97,58 @@ response_length(void)
 }
 
 void
-oc_send_response(oc_request_t *request, oc_status_t response_code)
+oc_set_send_response_callback(oc_send_response_cb_t cb)
 {
+  g_oc_send_response_cb = cb;
+}
+
+static void
+oc_trigger_send_response_callback(oc_request_t *request,
+                                  oc_status_t response_code)
+{
+  if (g_oc_send_response_cb == NULL) {
+    return;
+  }
+  g_oc_send_response_cb(request, response_code);
+}
+
+void
+oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
+                          oc_content_format_t content_format,
+                          size_t response_length, bool trigger_cb)
+{
+  if (!request) {
+    return;
+  }
+  request->response->response_buffer->content_format = content_format;
+  request->response->response_buffer->response_length = response_length;
+  request->response->response_buffer->code = oc_status_code(response_code);
+  if (trigger_cb) {
+    oc_trigger_send_response_callback(request, response_code);
+  }
+}
+
+void
+oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
+                               bool trigger_cb)
+{
+  if (!request) {
+    return;
+  }
+  oc_content_format_t content_format = APPLICATION_VND_OCF_CBOR;
 #ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
-    request->response->response_buffer->content_format = APPLICATION_CBOR;
-  } else
-#endif /* OC_SPEC_VER_OIC */
-  {
-    request->response->response_buffer->content_format =
-      APPLICATION_VND_OCF_CBOR;
+    content_format = APPLICATION_CBOR;
   }
-  request->response->response_buffer->response_length = response_length();
-  request->response->response_buffer->code = oc_status_code(response_code);
+#endif /* OC_SPEC_VER_OIC */
+  oc_send_response_internal(request, response_code, content_format,
+                            response_length(), trigger_cb);
+}
+
+void
+oc_send_response(oc_request_t *request, oc_status_t response_code)
+{
+  oc_send_response_with_callback(request, response_code, false);
 }
 
 void
@@ -640,7 +676,7 @@ oc_indicate_separate_response(oc_request_t *request,
                               oc_separate_response_t *response)
 {
   request->response->separate_response = response;
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, false);
 }
 
 void

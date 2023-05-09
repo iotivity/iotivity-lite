@@ -1617,7 +1617,7 @@ get_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     oc_sec_encode_roles(client, request->resource->device, iface_mask);
   }
 #endif /* OC_PKI */
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 bool
@@ -1663,7 +1663,7 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     const oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
     if (ps->s == OC_DOS_RFNOP) {
       OC_ERR("oc_cred: Cannot DELETE ACE in RFNOP");
-      oc_send_response(request, OC_STATUS_FORBIDDEN);
+      oc_send_response_with_callback(request, OC_STATUS_FORBIDDEN, true);
       return;
     }
   }
@@ -1701,10 +1701,10 @@ delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 
   if (success) {
-    oc_send_response(request, OC_STATUS_DELETED);
+    oc_send_response_with_callback(request, OC_STATUS_DELETED, true);
     oc_sec_dump_cred(request->resource->device);
   } else {
-    oc_send_response(request, OC_STATUS_NOT_FOUND);
+    oc_send_response_with_callback(request, OC_STATUS_NOT_FOUND, true);
   }
 }
 
@@ -1791,9 +1791,9 @@ post_cred(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
                                    /*on_apply_cred_data*/ NULL) == 0;
 
   if (!success) {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   } else {
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
     oc_sec_dump_cred(request->resource->device);
   }
 }

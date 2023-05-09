@@ -218,10 +218,11 @@ oc_status_code(oc_status_t key)
   return (int)oc_coap_status_codes[key];
 }
 
-OC_API
 const char *
 oc_status_to_str(oc_status_t key)
 {
+  if (key < 0 || key >= sizeof(cli_status_strs) / sizeof(cli_status_strs[0]))
+    return "";
   return cli_status_strs[key];
 }
 
@@ -547,6 +548,23 @@ oc_ri_init(void)
 
   oc_process_init();
   start_processes();
+}
+
+static const char *method_strs[] = {
+  "",       /* 0 */
+  "GET",    /* OC_GET */
+  "POST",   /* OC_POST */
+  "PUT",    /* OC_PUT */
+  "DELETE", /* OC_DELETE */
+  "FETCH",  /*OC_FETCH */
+};
+
+const char *
+oc_method_to_str(oc_method_t method)
+{
+  if (method < 0 || method >= sizeof(method_strs) / sizeof(method_strs[0]))
+    return method_strs[0];
+  return method_strs[method];
 }
 
 #ifdef OC_SERVER
@@ -1116,6 +1134,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   request_obj.origin = endpoint;
   request_obj._payload = NULL;
   request_obj._payload_len = 0;
+  request_obj.method = method;
 
   /* Obtain request uri from the CoAP packet. */
   const char *uri_path = NULL;

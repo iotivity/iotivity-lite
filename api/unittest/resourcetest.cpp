@@ -35,6 +35,7 @@ class TestResourceWithDevice : public testing::Test {
 public:
   static void SetUpTestCase()
   {
+    oc_set_send_response_callback(SendResponseCallback);
     EXPECT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, /*device*/ 0);
@@ -47,8 +48,26 @@ public:
   static void TearDownTestCase()
   {
     oc::TestDevice::StopServer();
+    oc_set_send_response_callback(nullptr);
+    m_send_response_cb_invoked = false;
   }
+  static void SendResponseCallback(oc_request_t *request,
+                                   oc_status_t response_code)
+  {
+    (void)request;
+    (void)response_code;
+    m_send_response_cb_invoked = true;
+  }
+  static bool IsSendResponseCallbackInvoked()
+  {
+    return m_send_response_cb_invoked;
+  }
+
+private:
+  static bool m_send_response_cb_invoked;
 };
+
+bool TestResourceWithDevice::m_send_response_cb_invoked = false;
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
@@ -140,6 +159,8 @@ TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
   EXPECT_TRUE(oc_do_get("/oc/con", ep, "if=" OC_IF_BASELINE_STR, get_handler,
                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEvents(5);
+
+  EXPECT_TRUE(IsSendResponseCallbackInvoked());
 
   EXPECT_TRUE(invoked);
 }

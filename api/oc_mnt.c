@@ -47,7 +47,7 @@ get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     break;
   }
   oc_rep_end_root_object();
-  oc_send_response(request, OC_STATUS_OK);
+  oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
 static void
@@ -82,9 +82,9 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     request->response->response_buffer->buffer =
       oc_rep_shrink_encoder_buf(request->response->response_buffer->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
-    oc_send_response(request, OC_STATUS_CHANGED);
+    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
   } else {
-    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
   }
 }
 

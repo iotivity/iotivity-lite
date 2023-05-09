@@ -257,6 +257,7 @@ typedef void (*oc_add_device_cb_t)(void *data);
  * @see oc_set_random_pin_callback
  * @see oc_storage_config
  */
+OC_API
 int oc_main_init(const oc_handler_t *handler);
 
 /**
@@ -265,11 +266,13 @@ int oc_main_init(const oc_handler_t *handler);
  * @return
  *  - time for the next poll event
  */
+OC_API
 oc_clock_time_t oc_main_poll(void);
 
 /**
  * Shutdown and free all stack related resources
  */
+OC_API
 void oc_main_shutdown(void);
 
 /**
@@ -366,6 +369,7 @@ typedef void (*oc_factory_presets_cb_t)(size_t device, void *data);
  *                 the pointer must be a valid pointer till after oc_main_init()
  *                 call completes.
  */
+OC_API
 void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
 
 /**
@@ -417,6 +421,7 @@ void oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data);
  *
  * @see init
  */
+OC_API
 int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
@@ -457,6 +462,7 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
  * @see init
  * @see oc_init_platform_cb_t
  */
+OC_API
 int oc_init_platform(const char *mfg_name,
                      oc_init_platform_cb_t init_platform_cb, void *data);
 
@@ -529,6 +535,7 @@ typedef void (*oc_random_pin_cb_t)(const unsigned char *pin, size_t pin_len,
  * @see oc_random_pin_cb_t
  * @see oc_main_init
  */
+OC_API
 void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
 
 /**
@@ -541,6 +548,7 @@ void oc_set_random_pin_callback(oc_random_pin_cb_t cb, void *data);
  * @see oc_set_con_res_announced
  * @see oc_set_con_write_cb
  */
+OC_API
 bool oc_get_con_res_announced(void);
 
 /**
@@ -553,6 +561,7 @@ bool oc_get_con_res_announced(void);
  * @see oc_get_con_res_announced
  * @see oc_set_con_write_cb
  */
+OC_API
 void oc_set_con_res_announced(bool announce);
 
 /**
@@ -571,6 +580,7 @@ void oc_set_con_res_announced(bool announce);
  * @note A device connected to a cloud is not unregistered from the cloud since
  * the connection has been closed immediately.
  */
+OC_API
 void oc_reset(void);
 
 /**
@@ -591,6 +601,7 @@ void oc_reset(void);
  * delay. Set to false if the device is connected to a cloud and you want to
  * unregister it.
  */
+OC_API
 void oc_reset_v1(bool close_all_tls_connections_immediately);
 
 /**
@@ -610,6 +621,7 @@ void oc_reset_v1(bool close_all_tls_connections_immediately);
  *
  * @param[in] device index of the logical device to reset
  */
+OC_API
 void oc_reset_device(size_t device);
 
 /**
@@ -632,6 +644,7 @@ void oc_reset_device(size_t device);
  * delay. Set to false if the device is connected to a cloud and you want to
  * unregister it.
  */
+OC_API
 bool oc_reset_device_v1(size_t device,
                         bool close_all_tls_connections_immediately);
 
@@ -663,6 +676,7 @@ typedef void (*oc_ownership_status_cb_t)(const oc_uuid_t *device_uuid,
  * @param[in] user_data context pointer passed to the oc_ownership_status_cb_t
  * callback the pointer must remain valid till callback is removed.
  */
+OC_API
 void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
 
 /**
@@ -674,6 +688,7 @@ void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
  * @param[in] cb callback function to remove
  * @param[in] user_data the context pointer used when the callback was added
  */
+OC_API
 void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
                                    void *user_data);
 
@@ -691,6 +706,7 @@ void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
  *
  * @return true if the device is owned by an onboarding tool
  */
+OC_API
 bool oc_is_owned_device(size_t device_index);
 
 /**
@@ -721,6 +737,7 @@ typedef void (*oc_select_oxms_cb_t)(size_t device_index, int *oxms,
  *                 simply replaced.
  * @param[in] user_data context pointer
  */
+OC_API
 void oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data);
 
 /* Server side */
@@ -779,6 +796,7 @@ void oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data);
  * @see oc_resource_set_periodic_observable
  * @see oc_resource_set_request_handler
  */
+OC_API
 oc_resource_t *oc_new_resource(const char *name, const char *uri,
                                uint8_t num_resource_types, size_t device);
 
@@ -821,6 +839,7 @@ oc_resource_t *oc_new_resource(const char *name, const char *uri,
  * @see oc_interface_mask_t
  * @see oc_resource_set_default_interface
  */
+OC_API
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
                                          oc_interface_mask_t iface_mask);
 
@@ -840,6 +859,7 @@ void oc_resource_bind_resource_interface(oc_resource_t *resource,
  * @param[in] iface_mask a single interface that will will be used as the
  *                       default interface
  */
+OC_API
 void oc_resource_set_default_interface(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
 
@@ -867,6 +887,7 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
  * @see oc_new_resource
  * @see oc_device_bind_resource_type
  */
+OC_API
 void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
 
 /**
@@ -879,6 +900,7 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  * @param[in] type the Resource type to add to the Resource Type "rt" property
  * (cannot be NULL)
  */
+OC_API
 void oc_device_bind_resource_type(size_t device, const char *type);
 
 /**
@@ -887,6 +909,7 @@ void oc_device_bind_resource_type(size_t device, const char *type);
  * @param resource the resource
  * @param pos the descriptive text for the tag
  */
+OC_API
 void oc_resource_tag_pos_desc(oc_resource_t *resource,
                               oc_pos_description_t pos);
 
@@ -898,6 +921,7 @@ void oc_resource_tag_pos_desc(oc_resource_t *resource,
  * @param y the y value in 3D space
  * @param z the z value in 3D space
  */
+OC_API
 void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
                              double z);
 
@@ -907,6 +931,7 @@ void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
  * @param resource the resource to apply the tag too.
  * @param func the function description
  */
+OC_API
 void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
 
 /**
@@ -915,6 +940,7 @@ void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
  * @param resource the resource to apply the tag too.
  * @param locn the location
  */
+OC_API
 void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
 
 /**
@@ -950,6 +976,7 @@ void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
  * @param[in] resource the resource the baseline Common Properties will be read
  *            from to respond to the GET request (cannot be NULL)
  */
+OC_API
 void oc_process_baseline_interface(const oc_resource_t *resource);
 
 /**
@@ -984,6 +1011,7 @@ void oc_process_baseline_interface(const oc_resource_t *resource);
  * @see oc_add_collection
  * @see oc_collection_add_link
  */
+OC_API
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
                                  uint8_t num_resource_types, size_t device);
 
@@ -1002,6 +1030,7 @@ oc_resource_t *oc_new_collection(const char *name, const char *uri,
  * @see oc_collection_get_links
  * @see oc_delete_link
  */
+OC_API
 void oc_delete_collection(oc_resource_t *collection);
 
 /**
@@ -1016,6 +1045,7 @@ void oc_delete_collection(oc_resource_t *collection);
  * @see oc_collection_add_link
  * @see oc_new_resource
  */
+OC_API
 oc_link_t *oc_new_link(oc_resource_t *resource);
 
 /**
@@ -1027,6 +1057,7 @@ oc_link_t *oc_new_link(oc_resource_t *resource);
  * @param[in,out] link The link to delete. The function does nothing, if the
  *                     parameter is NULL
  */
+OC_API
 void oc_delete_link(oc_link_t *link);
 
 /**
@@ -1035,6 +1066,7 @@ void oc_delete_link(oc_link_t *link);
  * @param[in,out] link Link to add the relation to. Must not be NULL
  * @param[in] rel Relation to add. Must not be NULL
  */
+OC_API
 void oc_link_add_rel(oc_link_t *link, const char *rel);
 
 /**
@@ -1044,6 +1076,7 @@ void oc_link_add_rel(oc_link_t *link, const char *rel);
  * @param[in] key Key to identify the link parameter. Must not be NULL
  * @param[in] value Link parameter value. Must not be NULL
  */
+OC_API
 void oc_link_add_link_param(oc_link_t *link, const char *key,
                             const char *value);
 
@@ -1059,6 +1092,7 @@ void oc_link_add_link_param(oc_link_t *link, const char *key,
  * @see oc_new_link
  * @see oc_collection_remove_link
  */
+OC_API
 void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
 
 /**
@@ -1070,6 +1104,7 @@ void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
  *                 part of the collection. The link and its resource are not
  *                 freed.
  */
+OC_API
 void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
 
 /**
@@ -1082,6 +1117,7 @@ void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
  *
  * @see oc_collection_add_link
  */
+OC_API
 oc_link_t *oc_collection_get_links(oc_resource_t *collection);
 
 /**
@@ -1097,6 +1133,7 @@ oc_link_t *oc_collection_get_links(oc_resource_t *collection);
  * @see oc_resource_set_discoverable
  * @see oc_new_collection
  */
+OC_API
 void oc_add_collection(oc_resource_t *collection);
 
 /**
@@ -1107,6 +1144,7 @@ void oc_add_collection(oc_resource_t *collection);
  *         Collections created only via oc_new_collection() but not added will
  *         not be returned by this function.
  */
+OC_API
 oc_resource_t *oc_collection_get_collections(void);
 
 /**
@@ -1121,6 +1159,7 @@ oc_resource_t *oc_collection_get_collections(void);
  *
  * @return true on success
  */
+OC_API
 bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
 
 /**
@@ -1135,6 +1174,7 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
  *
  * @return true on success
  */
+OC_API
 bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
@@ -1163,6 +1203,7 @@ typedef void (*oc_resource_free_instance_t)(oc_resource_t *);
  * @return true
  * @return false
  */
+OC_API
 bool oc_collections_add_rt_factory(const char *rt,
                                    oc_resource_get_instance_t get_instance,
                                    oc_resource_free_instance_t free_instance);
@@ -1193,6 +1234,7 @@ void oc_resource_make_public(oc_resource_t *resource);
  *
  * @see oc_new_resource for example code using this function
  */
+OC_API
 void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -1203,6 +1245,7 @@ void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
  * @param[in] state if true the resource will be pushable if false the
  *                  resource will be non-pushable
  */
+OC_API
 OC_API
 void oc_resource_set_pushable(oc_resource_t *resource, bool state);
 #endif
@@ -1221,6 +1264,7 @@ void oc_resource_set_pushable(oc_resource_t *resource, bool state);
  * @see oc_new_resource to see example code using this function
  * @see oc_resource_set_periodic_observable
  */
+OC_API
 void oc_resource_set_observable(oc_resource_t *resource, bool state);
 
 /**
@@ -1237,6 +1281,7 @@ void oc_resource_set_observable(oc_resource_t *resource, bool state);
  * @param[in] seconds the frequency in seconds that the resource will send out
  *                    an notification of is property values.
  */
+OC_API
 void oc_resource_set_periodic_observable(oc_resource_t *resource,
                                          uint16_t seconds);
 
@@ -1271,6 +1316,7 @@ void oc_resource_set_periodic_observable(oc_resource_t *resource,
  *
  * @see oc_new_resource to see example code using this function
  */
+OC_API
 void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
@@ -1287,6 +1333,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
  * @param set_props_user_data the user data for the set_properties callback
  * function
  */
+OC_API
 void oc_resource_set_properties_cbs(oc_resource_t *resource,
                                     oc_get_properties_cb_t get_properties,
                                     void *get_props_user_data,
@@ -1300,6 +1347,7 @@ void oc_resource_set_properties_cbs(oc_resource_t *resource,
  * @param resource the resource
  * @param supported true: supported
  */
+OC_API
 void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
 #endif /* OC_OSCORE */
 
@@ -1314,6 +1362,7 @@ void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
  *  - true: the resource was successfully added to the stack.
  *  - false: the resource can not be added to the stack.
  */
+OC_API
 bool oc_add_resource(oc_resource_t *resource);
 
 /**
@@ -1329,6 +1378,7 @@ bool oc_add_resource(oc_resource_t *resource);
  *  - true: when the resource has been deleted and memory freed.
  *  - false: there was an issue deleting the resource.
  */
+OC_API
 bool oc_delete_resource(oc_resource_t *resource);
 
 /**
@@ -1336,6 +1386,7 @@ bool oc_delete_resource(oc_resource_t *resource);
  *
  * @param[in] resource the resource to delete
  */
+OC_API
 void oc_delayed_delete_resource(oc_resource_t *resource);
 
 /**
@@ -1374,6 +1425,7 @@ typedef void (*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
  *                 is invoked a second time, then the previously set callback is
  *                 simply replaced.
  */
+OC_API
 void oc_set_con_write_cb(oc_con_write_cb_t callback);
 
 /**
@@ -1383,6 +1435,7 @@ void oc_set_con_write_cb(oc_con_write_cb_t callback);
  * oc_iterate_query() to iterate through query parameter of a URI that are part
  * of an `oc_request_t`
  */
+OC_API
 void oc_init_query_iterator(void);
 
 /**
@@ -1417,6 +1470,7 @@ void oc_init_query_iterator(void);
  *   - The position in the query string of the next key=value string pair
  *   - `-1` if there are no additional query parameters
  */
+OC_API
 int oc_iterate_query(const oc_request_t *request, const char **key,
                      size_t *key_len, const char **value, size_t *value_len);
 
@@ -1456,6 +1510,7 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  *
  * @return True if there are more query parameters to iterate through
  */
+OC_API
 bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
                                  const char **value, int *value_len);
 
@@ -1475,6 +1530,7 @@ bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
  *   - The position in the query string of the next key=value string pair
  *   - `-1` if there are no additional query parameters
  */
+OC_API
 int oc_get_query_value(const oc_request_t *request, const char *key,
                        const char **value);
 
@@ -1488,6 +1544,7 @@ int oc_get_query_value(const oc_request_t *request, const char *key,
  *   - 1 exist
  *   - -1 does not exist
  */
+OC_API
 int oc_query_value_exists(const oc_request_t *request, const char *key);
 
 /**
@@ -1501,12 +1558,66 @@ int oc_query_value_exists(const oc_request_t *request, const char *key);
  *
  * @param[in] request the request being responded to
  * @param[in] response_code the status of the response
+ * @param[in] trigger_cb if true, the send response callback will be triggered
+ *
+ * @note For libraries it is recommended to set trigger_cb to true to allow
+ * modify the response body.
  *
  * @see oc_request_callback_t
  * @see oc_ignore_request
  * @see oc_indicate_separate_response
  */
+OC_API
+void oc_send_response_with_callback(oc_request_t *request,
+                                    oc_status_t response_code, bool trigger_cb);
+
+/**
+ * Called after the response to a GET, PUT, POST or DELETE call has been
+ * prepared completed
+ *
+ * The function oc_send_response is called at the end of a
+ * oc_request_callback_t to inform the caller about the status of the requested
+ * action.
+ *
+ * @note This function just calls oc_send_response_with_callback with trigger_cb
+ * set to false.
+ *
+ * @param[in] request the request being responded to
+ * @param[in] response_code the status of the response
+ *
+ * @see oc_request_callback_t
+ * @see oc_ignore_request
+ * @see oc_indicate_separate_response
+ * @see oc_send_response_with_callback
+ */
+OC_API
 void oc_send_response(oc_request_t *request, oc_status_t response_code);
+
+/**
+ * @brief Callback function is triggered by oc_send_response before the response
+ * is set. In this callback, the application can set/override the response
+ * payload.
+ *
+ * @note For separate message, pong message, and notification, this callback is
+ * not triggered.
+ *
+ * @param request the request being responded to
+ * @param response_code the status of the response
+ */
+typedef void (*oc_send_response_cb_t)(oc_request_t *request,
+                                      oc_status_t response_code);
+
+/**
+ * @brief Set the send response callback function.
+ *
+ * @note This function is not thread safe. It should be called before
+ * oc_main_init().
+ *
+ * @param cb that will be triggered by oc_send_response_with_callback when the
+ * trigger_cb is true.
+ */
+OC_API
+void oc_set_send_response_callback(oc_send_response_cb_t cb);
 
 /**
  * @brief retrieve the payload from the request, no processing
@@ -1518,6 +1629,7 @@ void oc_send_response(oc_request_t *request, oc_status_t response_code);
  * @return true
  * @return false
  */
+OC_API
 bool oc_get_request_payload_raw(const oc_request_t *request,
                                 const uint8_t **payload, size_t *size,
                                 oc_content_format_t *content_format);
@@ -1531,6 +1643,7 @@ bool oc_get_request_payload_raw(const oc_request_t *request,
  * @param content_format the content format
  * @param response_code the response code to send
  */
+OC_API
 void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
                           size_t size, oc_content_format_t content_format,
                           oc_status_t response_code);
@@ -1545,6 +1658,7 @@ void oc_send_response_raw(oc_request_t *request, const uint8_t *payload,
  * @return true - retrieved payload
  * @return false
  */
+OC_API
 bool oc_get_response_payload_raw(const oc_client_response_t *response,
                                  const uint8_t **payload, size_t *size,
                                  oc_content_format_t *content_format);
@@ -1557,6 +1671,7 @@ bool oc_get_response_payload_raw(const oc_client_response_t *response,
  * @param msg_len the lenght of the message
  * @param response_code the coap response code
  */
+OC_API
 void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
                                 size_t msg_len, oc_status_t response_code);
 
@@ -1569,6 +1684,7 @@ void oc_send_diagnostic_message(oc_request_t *request, const char *msg,
  * @return true - retrieved payload
  * @return false
  */
+OC_API
 bool oc_get_diagnostic_message(const oc_client_response_t *response,
                                const char **msg, size_t *size);
 
@@ -1588,6 +1704,7 @@ bool oc_get_diagnostic_message(const oc_client_response_t *response,
  * @see oc_request_callback_t
  * @see oc_send_response
  */
+OC_API
 void oc_ignore_request(oc_request_t *request);
 
 /**
@@ -1633,6 +1750,7 @@ void oc_ignore_request(oc_request_t *request);
  * @see oc_set_separate_response_buffer
  * @see oc_send_separate_response
  */
+OC_API
 void oc_indicate_separate_response(oc_request_t *request,
                                    oc_separate_response_t *response);
 
@@ -1649,6 +1767,7 @@ void oc_indicate_separate_response(oc_request_t *request,
  * @see oc_indicate_separate_response
  * @see oc_send_separate_response
  */
+OC_API
 void oc_set_separate_response_buffer(oc_separate_response_t *handle);
 
 /**
@@ -1666,6 +1785,7 @@ void oc_set_separate_response_buffer(oc_separate_response_t *handle);
  * @see oc_send_response
  * @see oc_ignore_request
  */
+OC_API
 void oc_send_separate_response(oc_separate_response_t *handle,
                                oc_status_t response_code);
 
@@ -1681,6 +1801,7 @@ void oc_send_separate_response(oc_separate_response_t *handle,
  *  - the number observers notified on success
  *  - `0` on failure could also mean no registered observers
  */
+OC_API
 int oc_notify_observers(oc_resource_t *resource);
 
 /**
@@ -1692,6 +1813,7 @@ int oc_notify_observers(oc_resource_t *resource);
  * @param[in] resource the oc_resource_t that has a modified property
  * @param[in] seconds the number of seconds to wait till the callback is invoked
  */
+OC_API
 void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
 
 /**
@@ -1704,6 +1826,7 @@ void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
  * @param[in] milliseconds the number of milliseconds to wait till the callback
  * is invoked
  */
+OC_API
 void oc_notify_observers_delayed_ms(oc_resource_t *resource,
                                     uint16_t milliseconds);
 
@@ -1740,6 +1863,7 @@ extern "C" {
  *
  * @return true on success
  */
+OC_API
 bool oc_do_site_local_ipv6_discovery(const char *rt,
                                      oc_discovery_handler_t handler,
                                      void *user_data);
@@ -1760,6 +1884,7 @@ bool oc_do_site_local_ipv6_discovery(const char *rt,
  *
  * @return true on success
  */
+OC_API
 bool oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
                                          void *user_data);
 
@@ -1781,6 +1906,7 @@ bool oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
  *
  * @return true on success
  */
+OC_API
 bool oc_do_realm_local_ipv6_discovery(const char *rt,
                                       oc_discovery_handler_t handler,
                                       void *user_data);
@@ -1802,6 +1928,7 @@ bool oc_do_realm_local_ipv6_discovery(const char *rt,
  *
  * @return true on success
  */
+OC_API
 bool oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
                                           void *user_data);
 
@@ -1824,6 +1951,7 @@ bool oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
  *
  * @return true on success
  */
+OC_API
 bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
                         void *user_data);
 
@@ -1845,6 +1973,7 @@ bool oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
  *
  * @return true on success
  */
+OC_API
 bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
                             void *user_data);
 
@@ -1858,6 +1987,7 @@ bool oc_do_ip_discovery_all(oc_discovery_all_handler_t handler,
  *
  * @return Returns true if it successfully makes and dispatches a coap packet.
  */
+OC_API
 bool oc_do_ip_discovery_at_endpoint(const char *rt,
                                     oc_discovery_handler_t handler,
                                     const oc_endpoint_t *endpoint,
@@ -1872,6 +2002,7 @@ bool oc_do_ip_discovery_at_endpoint(const char *rt,
  *
  * @return Returns true if it successfully makes and dispatches a coap packet.
  */
+OC_API
 bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
                                         const oc_endpoint_t *endpoint,
                                         void *user_data);
@@ -2173,6 +2304,7 @@ bool oc_do_post_with_timeout(uint16_t timeout_seconds);
  *
  * @return True if the client successfully dispatched the CaAP observer request
  */
+OC_API
 bool oc_do_observe(const char *uri, const oc_endpoint_t *endpoint,
                    const char *query, oc_response_handler_t handler,
                    oc_qos_t qos, void *user_data);
@@ -2186,6 +2318,7 @@ bool oc_do_observe(const char *uri, const oc_endpoint_t *endpoint,
  * @return True if the client successfully dispatched the CaAP stop observer
  *         request
  */
+OC_API
 bool oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint);
 
 /**
@@ -2201,6 +2334,7 @@ bool oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint);
  * @return True if the client successfully dispatched the multicast discovery
  *         request
  */
+OC_API
 bool oc_do_ip_multicast(const char *uri, const char *query,
                         oc_response_handler_t handler, void *user_data);
 
@@ -2217,6 +2351,7 @@ bool oc_do_ip_multicast(const char *uri, const char *query,
  * @return True if the client successfully dispatched the multicast discovery
  *         request
  */
+OC_API
 bool oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
                                       oc_response_handler_t handler,
                                       void *user_data);
@@ -2234,6 +2369,7 @@ bool oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
  * @return True if the client successfully dispatched the multicast discovery
  *         request
  */
+OC_API
 bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
                                      oc_response_handler_t handler,
                                      void *user_data);
@@ -2243,6 +2379,7 @@ bool oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
  *
  * @param[in] response the response that should not be handled.
  */
+OC_API
 void oc_stop_multicast(oc_client_response_t *response);
 
 #ifdef OC_OSCORE
@@ -2254,6 +2391,7 @@ void oc_stop_multicast(oc_client_response_t *response);
  * @return true
  * @return false
  */
+OC_API
 bool oc_init_multicast_update(const char *uri, const char *query);
 
 /**
@@ -2262,6 +2400,7 @@ bool oc_init_multicast_update(const char *uri, const char *query);
  * @return true
  * @return false
  */
+OC_API
 bool oc_do_multicast_update(void);
 #endif /* OC_OSCORE */
 
@@ -2274,6 +2413,7 @@ bool oc_do_multicast_update(void);
  *
  * @param[in,out] endpoint the endpoint list to free
  */
+OC_API
 void oc_free_server_endpoints(oc_endpoint_t *endpoint);
 
 /**
@@ -2281,6 +2421,7 @@ void oc_free_server_endpoints(oc_endpoint_t *endpoint);
  *
  * @param endpoint endpoint indicating a session
  */
+OC_API
 void oc_close_session(const oc_endpoint_t *endpoint);
 
 #ifdef OC_TCP
@@ -2295,6 +2436,7 @@ void oc_close_session(const oc_endpoint_t *endpoint);
  * @return true
  * @return false
  */
+OC_API
 bool oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
                   uint16_t timeout_seconds, oc_response_handler_t handler,
                   void *user_data);
@@ -2317,6 +2459,7 @@ bool oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
  * @param[in] device the logical device index
  * @param[in] piid the UUID for the immutable device identifier
  */
+OC_API
 void oc_set_immutable_device_identifier(size_t device, const oc_uuid_t *piid);
 
 /**
