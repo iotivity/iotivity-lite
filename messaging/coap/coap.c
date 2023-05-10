@@ -681,7 +681,7 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
         (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Content-Format [%u]", coap_pkt->content_format);
       if (coap_pkt->content_format != APPLICATION_VND_OCF_CBOR
-#ifdef OC_SPEC_VER_OIC
+#if defined(OC_SPEC_VER_OIC) || defined(OC_HAS_FEATURE_PLGD_WOT)
           && coap_pkt->content_format != APPLICATION_CBOR
 #endif /* OC_SPEC_VER_OIC */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
@@ -715,15 +715,13 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
         (uint16_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Accept [%u]", coap_pkt->accept);
       if (coap_pkt->accept != APPLICATION_VND_OCF_CBOR
-#ifdef OC_SPEC_VER_OIC
+#if defined(OC_SPEC_VER_OIC) || defined(OC_HAS_FEATURE_PLGD_WOT) ||            \
+  defined(OC_CBOR)
           && coap_pkt->accept != APPLICATION_CBOR
-#endif /* OC_SPEC_VER_OIC */
+#endif /* OC_SPEC_VER_OIC || OC_HAS_FEATURE_PLGD_WOT || OC_CBOR */
 #ifdef OC_WKCORE
           && coap_pkt->accept != APPLICATION_LINK_FORMAT
-#endif /* OC_SPEC_VER_OIC */
-#ifdef OC_CBOR
-          && coap_pkt->accept != APPLICATION_CBOR
-#endif /* OC_SPEC_VER_OIC */
+#endif /* OC_WKCORE */
 #ifdef OC_HAS_FEATURE_PLGD_WOT
           && coap_pkt->accept != APPLICATION_JSON &&
           coap_pkt->accept != APPLICATION_TD_JSON

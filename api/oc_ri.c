@@ -1152,14 +1152,16 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
        forbidden = false, entity_too_large = false;
 
   endpoint->version = OCF_VER_1_0_0;
-#ifdef OC_SPEC_VER_OIC
+
+  /* Read the accept CoAP option in the request */
   unsigned int accept = APPLICATION_NOT_DEFINED;
   if (coap_get_header_accept(request, &accept) == 1) {
+#ifdef OC_SPEC_VER_OIC
     if (accept == APPLICATION_CBOR) {
       endpoint->version = OIC_VER_1_1_0;
     }
-  }
 #endif /* OC_SPEC_VER_OIC */
+  }
 
   bool resource_is_collection = false;
 
@@ -1215,10 +1217,6 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   /* Read the Content-Format CoAP option in the request */
   oc_content_format_t cf = 0;
   coap_get_header_content_format(request, &cf);
-
-  /* Read the accept CoAP option in the request */
-  unsigned int accept = APPLICATION_NOT_DEFINED;
-  coap_get_header_accept(request, &accept);
 
   /* Initialize OCF interface selector. */
   oc_interface_mask_t iface_query = 0;
