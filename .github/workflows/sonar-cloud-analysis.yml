@@ -60,6 +60,7 @@ jobs:
       build_type: Debug
       coverage: true
       hub_args: ${{ matrix.hub_args }}
+      args: ${{ matrix.args }}
 
   sonar-cloud-scan:
     name: Sonar Cloud scan

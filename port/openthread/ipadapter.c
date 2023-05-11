@@ -161,8 +161,10 @@ oc_send_buffer2(oc_message_t *message, bool queue)
 }
 
 int
-oc_connectivity_init(size_t device)
+oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
+  // TODO set ports
+  (void)ports;
   (void)device;
 
   OC_DBG("Connectivity init");

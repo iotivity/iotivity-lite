@@ -244,8 +244,10 @@ oc_connectivity_get_endpoints(size_t device)
 }
 
 int
-oc_connectivity_init(size_t device)
+oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
+  // TODO set ports
+  (void)ports;
   (void)device;
   int ret;
 

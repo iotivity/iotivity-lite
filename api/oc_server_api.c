@@ -53,11 +53,23 @@ oc_add_device(const char *uri, const char *rt, const char *name,
               const char *spec_version, const char *data_model_version,
               oc_add_device_cb_t add_device_cb, void *data)
 {
-  if (!oc_core_add_new_device(uri, rt, name, spec_version, data_model_version,
-                              add_device_cb, data)) {
-    return -1;
-  }
-  return 0;
+  oc_add_new_device_t cfg = {
+    .uri = uri,
+    .rt = rt,
+    .name = name,
+    .spec_version = spec_version,
+    .data_model_version = data_model_version,
+    .add_device_cb = add_device_cb,
+    .add_device_cb_data = data,
+  };
+  memset(&cfg.ports, 0, sizeof(cfg.ports));
+  return oc_add_device_v1(cfg);
+}
+
+int
+oc_add_device_v1(oc_add_new_device_t cfg)
+{
+  return oc_core_add_new_device(cfg) == NULL ? -1 : 0;
 }
 
 int

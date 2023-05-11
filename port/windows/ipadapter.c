@@ -1411,8 +1411,10 @@ handle_network_interface_event_callback(oc_interface_event_t event)
 #endif /* OC_NETWORK_MONITOR */
 
 int
-oc_connectivity_init(size_t device)
+oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
+  // TODO set ports
+  (void)ports;
   if (!ifchange_initialized) {
     WSADATA wsadata;
     WSAStartup(MAKEWORD(2, 2), &wsadata);

@@ -1333,8 +1333,10 @@ got_ip6_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
 }
 
 int
-oc_connectivity_init(size_t device)
+oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
+  // TODO set ports
+  (void)ports;
   OC_DBG("Initializing connectivity for device %zd", device);
 
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);

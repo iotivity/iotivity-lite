@@ -343,6 +343,9 @@ void jni_oc_add_device_callback(void *user_data)
   $2 = user_data;
 }
 %ignore oc_add_device;
+%ignore oc_add_new_device_s;
+%ignore oc_connectivity_ports_s;
+%ignore oc_add_device_v1;
 %rename(addDevice) jni_oc_add_device;
 %inline %{
 int jni_oc_add_device(const char *uri, const char *rt, const char *name,

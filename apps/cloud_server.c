@@ -181,6 +181,7 @@ static const char *device_rt = "oic.d.cloudDevice";
 static const char *device_name = "CloudServer";
 
 static const char *manufacturer = "ocfcloud.com";
+static oc_connectivity_ports_t g_ports;
 
 #ifdef OC_SECURITY
 static const char *cis;
@@ -278,8 +279,17 @@ app_init(void)
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   plgd_time_init();
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
-  if (oc_add_device("/oic/d", device_rt, device_name, spec_version,
-                    data_model_version, NULL, NULL) != 0) {
+  oc_add_new_device_t new_device = {
+    .uri = "oic/d",
+    .rt = device_rt,
+    .name = device_name,
+    .spec_version = spec_version,
+    .data_model_version = data_model_version,
+    .add_device_cb = NULL,
+    .add_device_cb_data = NULL,
+    .ports = g_ports,
+  };
+  if (oc_add_device_v1(new_device) != 0) {
     return -1;
   }
   return 0;
@@ -962,6 +972,16 @@ simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
 #define OPT_CLOUD_SID "cloud-id"
 #define OPT_LOG_LEVEL "log-level"
 #define OPT_SIMULATE_TPM "simulate-tpm"
+#define OPT_LISTEN_UDP_PORT4 "udp-port4"
+#define OPT_LISTEN_TCP_PORT4 "tcp-port4"
+#define OPT_LISTEN_UDP_PORT "udp-port"
+#define OPT_LISTEN_TCP_PORT "tcp-port"
+#ifdef OC_SECURITY
+#define OPT_LISTEN_DTLS_PORT4 "dtls-port4"
+#define OPT_LISTEN_TLS_PORT4 "tls-port4"
+#define OPT_LISTEN_DTLS_PORT "dtls-port"
+#define OPT_LISTEN_TLS_PORT "tls-port"
+#endif /* OC_SECURITY */
 
 #define OPT_TIME "time"
 #define OPT_SET_SYSTEM_TIME "set-system-time"
@@ -1002,6 +1022,28 @@ printhelp(const char *exec_path)
   PRINT("  -l | --%-26s set log level (supported values: disabled, trace, "
         "debug, info, warning, error)\n",
         OPT_LOG_LEVEL " <level>");
+#ifdef OC_IPV4
+  PRINT("  -4 | --%-26s IPv4 UDP port (use -1 to disable it)\n",
+        OPT_LISTEN_UDP_PORT4 " <port>");
+  PRINT("  -5 | --%-26s IPv4 TCP port (use -1 to disable it)\n",
+        OPT_LISTEN_TCP_PORT4 " <port>");
+#endif /* OC_IPV4 */
+  PRINT("  -6 | --%-26s IPv6 UDP port (use -1 to disable it)\n",
+        OPT_LISTEN_UDP_PORT " <port>");
+  PRINT("  -7 | --%-26s IPv6 TCP port (use -1 to disable it)\n",
+        OPT_LISTEN_TCP_PORT " <port>");
+#ifdef OC_SECURITY
+#ifdef OC_IPV4
+  PRINT("  -u | --%-26s IPv4 DTLS port (use -1 to disable it)\n",
+        OPT_LISTEN_DTLS_PORT4 " <port>");
+  PRINT("  -v | --%-26s IPv4 TLS port (use -1 to disable it)\n",
+        OPT_LISTEN_TLS_PORT4 " <port>");
+#endif /* OC_IPV4 */
+  PRINT("  -w | --%-26s IPv6 DTLS port (use -1 to disable it)\n",
+        OPT_LISTEN_DTLS_PORT " <port>");
+  PRINT("  -x | --%-26s IPv6 TLS port (use -1 to disable it)\n",
+        OPT_LISTEN_TLS_PORT " <port>");
+#endif /* OC_SECURITY */
   PRINT("ARGUMENTS:\n");
   PRINT("  %-33s device name (optional, default: cloud_server)\n",
         OPT_ARG_DEVICE_NAME);
@@ -1020,6 +1062,7 @@ typedef struct
   bool disable_tls_verify_time;
   bool simulate_tpm;
 #endif /* OC_SECURITY && OC_PKI */
+  oc_connectivity_ports_t ports;
 } parse_options_result_t;
 
 static bool
@@ -1044,6 +1087,23 @@ parse_log_level(const char *log_level, oc_log_level_t *level)
 }
 
 static bool
+parse_port(const char *port, uint16_t *p, bool *disabled)
+{
+  char *eptr = NULL;
+  errno = 0;
+  long port_num = strtol(port, &eptr, 10); // NOLINT(readability-magic-numbers)
+  if (errno != 0 || eptr == port || (*port) == '\0' || port_num > UINT16_MAX) {
+    return false;
+  }
+  if (port_num == -1) {
+    *disabled = true;
+    return true;
+  }
+  *p = (uint16_t)port_num;
+  return true;
+}
+
+static bool
 parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 {
   static struct option long_options[] = {
@@ -1063,12 +1123,27 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_TIME, required_argument, NULL, 't' },
     { OPT_SET_SYSTEM_TIME, no_argument, NULL, 's' },
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+#ifdef OC_IPV4
+    { OPT_LISTEN_UDP_PORT4, required_argument, NULL, '4' },
+    { OPT_LISTEN_TCP_PORT4, required_argument, NULL, '5' },
+#endif /* OC_IPV4 */
+    { OPT_LISTEN_UDP_PORT, required_argument, NULL, '6' },
+    { OPT_LISTEN_TCP_PORT, required_argument, NULL, '7' },
+#if defined(OC_SECURITY)
+#ifdef OC_IPV4
+    { OPT_LISTEN_DTLS_PORT4, required_argument, NULL, 'u' },
+    { OPT_LISTEN_TLS_PORT4, required_argument, NULL, 'v' },
+#endif /* OC_IPV4 */
+    { OPT_LISTEN_DTLS_PORT, required_argument, NULL, 'w' },
+    { OPT_LISTEN_TLS_PORT, required_argument, NULL, 'x' },
+#endif /* OC_SECURITY */
     { NULL, 0, NULL, 0 },
   };
 
   while (true) {
     int option_index = 0;
-    int opt = getopt_long(argc, argv, "hdmn:a:e:i:p:r:l:st:", long_options,
+    int opt = getopt_long(argc, argv,
+                          "hdmn:a:e:i:p:r:l:st:4:5:u:v:6:7:w:x:", long_options,
                           &option_index);
     if (opt == -1) {
       break;
@@ -1150,6 +1225,124 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
       break;
     }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+#ifdef OC_IPV4
+    case '4': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.udp.port4, &disabled)) {
+        PRINT("invalid IPv4 UDP port(%s)\n", optarg);
+        return false;
+      }
+      if (parsed_options->ports.udp.port4 == 5683) {
+        PRINT("invalid IPv4 UDP port(%s) - reserved for multicast\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.udp.flags |= OC_CONNECTIVITY_DISABLE_IPV4_PORT;
+      }
+      break;
+    }
+    case '5': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.tcp.port4, &disabled)) {
+        PRINT("invalid IPv4 TCP port(%s)\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.tcp.flags |= OC_CONNECTIVITY_DISABLE_IPV4_PORT;
+      }
+      break;
+    }
+#endif /* OC_IPV4 */
+    case '6': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.udp.port, &disabled)) {
+        PRINT("invalid IPv6 UDP port(%s)\n", optarg);
+        return false;
+      }
+      if (parsed_options->ports.udp.port == 5683) {
+        PRINT("invalid IPv6 UDP port(%s) - reserved for multicast\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.udp.flags |= OC_CONNECTIVITY_DISABLE_IPV6_PORT;
+      }
+      break;
+    }
+    case '7': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.tcp.port, &disabled)) {
+        PRINT("invalid IPv6 TCP port(%s)\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.tcp.flags |= OC_CONNECTIVITY_DISABLE_IPV6_PORT;
+      }
+      break;
+    }
+#ifdef OC_SECURITY
+#ifdef OC_IPV4
+    case 'u': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.udp.secure_port4,
+                      &disabled)) {
+        PRINT("invalid IPv4 DTLS port(%s)\n", optarg);
+        return false;
+      }
+      if (parsed_options->ports.udp.secure_port4 == 5683) {
+        PRINT("invalid IPv4 DTLS port(%s) - reserved for multicast\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.udp.flags |=
+          OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT;
+      }
+      break;
+    }
+    case 'v': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.tcp.secure_port4,
+                      &disabled)) {
+        PRINT("invalid IPv4 TLS port(%s)\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.tcp.flags |=
+          OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT;
+      }
+      break;
+    }
+#endif /* OC_IPV4 */
+    case 'w': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.udp.secure_port,
+                      &disabled)) {
+        PRINT("invalid IPv6 DTLS port(%s)\n", optarg);
+        return false;
+      }
+      if (parsed_options->ports.udp.secure_port == 5683) {
+        PRINT("invalid IPv6 DTLS port(%s) - reserved for multicast\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.udp.flags |=
+          OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT;
+      }
+      break;
+    }
+    case 'x': {
+      bool disabled = false;
+      if (!parse_port(optarg, &parsed_options->ports.tcp.secure_port,
+                      &disabled)) {
+        PRINT("invalid IPv6 TLS port(%s)\n", optarg);
+        return false;
+      }
+      if (disabled) {
+        parsed_options->ports.tcp.flags |=
+          OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT;
+      }
+      break;
+    }
+#endif /* OC_SECURITY */
     default:
       PRINT("invalid option(%s)\n", argv[optind]);
       return false;
@@ -1221,6 +1414,7 @@ main(int argc, char *argv[])
     .simulate_tpm = false,
 #endif /* OC_SECURITY && OC_PKI */
   };
+  memset(&parsed_options.ports, 0, sizeof(parsed_options.ports));
   if (!parse_options(argc, argv, &parsed_options)) {
     return -1;
   }
@@ -1240,6 +1434,46 @@ main(int argc, char *argv[])
 #endif /* OC_SECURITY && OC_PKI */
   PRINT("log_level: %s", oc_log_level_to_label(oc_log_get_level()));
   PRINT("\n");
+  PRINT("ports:\n");
+#ifdef OC_IPV4
+  PRINT("  tcp4: %d\n",
+        (parsed_options.ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT)
+          ? -1
+          : (int)parsed_options.ports.tcp.port4);
+  PRINT("  udp4: %d\n",
+        (parsed_options.ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT)
+          ? -1
+          : (int)parsed_options.ports.udp.port4);
+#endif /* OC_IPV4 */
+  PRINT("  tcp: %d\n",
+        (parsed_options.ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT)
+          ? -1
+          : (int)parsed_options.ports.tcp.port);
+  PRINT("  udp: %d\n",
+        (parsed_options.ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT)
+          ? -1
+          : (int)parsed_options.ports.udp.port);
+#ifdef OC_SECURITY
+#ifdef OC_IPV4
+  PRINT("  tls4: %d\n", (parsed_options.ports.tcp.flags &
+                         OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT)
+                          ? -1
+                          : (int)parsed_options.ports.tcp.secure_port4);
+  PRINT("  dtls4: %d\n", (parsed_options.ports.udp.flags &
+                          OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT)
+                           ? -1
+                           : (int)parsed_options.ports.udp.secure_port4);
+#endif /* OC_IPV4 */
+  PRINT("  tls: %d\n", (parsed_options.ports.tcp.flags &
+                        OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT)
+                         ? -1
+                         : (int)parsed_options.ports.tcp.secure_port);
+  PRINT("  dtls: %d\n", (parsed_options.ports.udp.flags &
+                         OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT)
+                          ? -1
+                          : (int)parsed_options.ports.udp.secure_port);
+#endif /* OC_SECURITY */
+  g_ports = parsed_options.ports;
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
   if (parsed_options.disable_tls_verify_time) {

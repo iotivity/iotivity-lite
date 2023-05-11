@@ -19,9 +19,11 @@
 #ifndef OC_CORE_RES_INTERNAL_H
 #define OC_CORE_RES_INTERNAL_H
 
+#include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "oc_ri.h"
+#include "port/oc_connectivity_internal.h"
 #include "util/oc_compiler.h"
 
 #include <cbor.h>
@@ -52,25 +54,13 @@ void oc_core_shutdown(void);
 oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
                                           oc_core_init_platform_cb_t init_cb,
                                           void *data) OC_NONNULL(1);
-
 /**
- * @brief Add new devide to the platform
+ * @brief Add new device to the platform
  *
- * @param uri the uri of the device (cannot be NULL)
- * @param rt the device type of the device (cannot be NULL)
- * @param name the friendly name (cannot be NULL)
- * @param spec_version specification version (cannot be NULL)
- * @param data_model_version  data model version (cannot be NULL)
- * @param add_device_cb callback
- * @param data supplied user data
+ * @param cfg device configuration
  * @return oc_device_info_t* the device information
  */
-oc_device_info_t *oc_core_add_new_device(const char *uri, const char *rt,
-                                         const char *name,
-                                         const char *spec_version,
-                                         const char *data_model_version,
-                                         oc_core_add_device_cb_t add_device_cb,
-                                         void *data) OC_NONNULL(1, 2, 3, 4, 5);
+oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
 
 /**
  * @brief encode the interfaces with the cbor (payload) encoder

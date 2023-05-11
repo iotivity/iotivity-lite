@@ -376,6 +376,10 @@ if(MINGW)
     if(BUILD_MBEDTLS)
         list(APPEND MBEDTLS_COMPILE_DEFINITIONS "WINVER=0x0600" "_WIN32_WINNT=0x0600")
     endif()
+
+    # force the use mingw_printf because the default doesn't support '%zu'
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=1")
+    list(APPEND TEST_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=1")
 endif()
 
 if(MSVC)

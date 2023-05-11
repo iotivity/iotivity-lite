@@ -19,6 +19,7 @@
 #ifndef TCP_ADAPTER_H
 #define TCP_ADAPTER_H
 
+#include "oc_api.h"
 #include "ipcontext.h"
 #include "tcpcontext.h"
 
@@ -35,7 +36,7 @@ extern "C" {
  * @return 0 on success
  * @return -1 on error
  */
-int tcp_connectivity_init(ip_context_t *dev);
+int tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports);
 
 /**
  * @brief Deinitialize all TCP members of the device network context.

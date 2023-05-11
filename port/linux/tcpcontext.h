@@ -19,6 +19,8 @@
 #ifndef TCPCONTEXT_H
 #define TCPCONTEXT_H
 
+#include "socklistener.h"
+
 #include <pthread.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -32,22 +34,14 @@ extern "C" {
 
 typedef struct tcp_context_t
 {
-  struct sockaddr_storage server;
-  int server_sock;
-  uint16_t port;
+  oc_sock_listener_t server;
 #ifdef OC_SECURITY
-  struct sockaddr_storage secure;
-  int secure_sock;
-  uint16_t tls_port;
+  oc_sock_listener_t secure;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  struct sockaddr_storage server4;
-  int server4_sock;
-  uint16_t port4;
+  oc_sock_listener_t server4;
 #ifdef OC_SECURITY
-  struct sockaddr_storage secure4;
-  int secure4_sock;
-  uint16_t tls4_port;
+  oc_sock_listener_t secure4;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   int connect_pipe[2];

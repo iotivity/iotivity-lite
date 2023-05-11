@@ -20,6 +20,7 @@
 #define IPCONTEXT_H
 
 #include "oc_endpoint.h"
+#include "socklistener.h"
 #include "util/oc_atomic.h"
 #ifdef OC_TCP
 #include "tcpcontext.h"
@@ -49,26 +50,16 @@ typedef struct ip_context_t
 {
   struct ip_context_t *next;
   OC_LIST_STRUCT(eps); /// < not thread-safe, must be used only from main thread
-  struct sockaddr_storage mcast;
-  struct sockaddr_storage server;
   int mcast_sock;
-  int server_sock;
-  uint16_t port;
+  oc_sock_listener_t server;
 #ifdef OC_SECURITY
-  struct sockaddr_storage secure;
-  int secure_sock;
-  uint16_t dtls_port;
+  oc_sock_listener_t secure;
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  struct sockaddr_storage mcast4;
-  struct sockaddr_storage server4;
   int mcast4_sock;
-  int server4_sock;
-  uint16_t port4;
+  oc_sock_listener_t server4;
 #ifdef OC_SECURITY
-  struct sockaddr_storage secure4;
-  int secure4_sock;
-  uint16_t dtls4_port;
+  oc_sock_listener_t secure4;
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #ifdef OC_TCP

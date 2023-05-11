@@ -368,30 +368,9 @@ oc_set_con_res_announced(bool announce)
   g_announce_con_res = announce;
 }
 
-oc_device_info_t *
-oc_core_add_new_device(const char *uri, const char *rt, const char *name,
-                       const char *spec_version, const char *data_model_version,
-                       oc_core_add_device_cb_t add_device_cb, void *data)
+static void
+core_update_device_data(uint32_t device_count, oc_add_new_device_t cfg)
 {
-  (void)data;
-  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
-
-  bool exchanged = false;
-  while (!exchanged) {
-#ifndef OC_DYNAMIC_ALLOCATION
-    if (device_count == OC_MAX_NUM_DEVICES) {
-      OC_ERR("device limit reached");
-      return NULL;
-    }
-#endif /* !OC_DYNAMIC_ALLOCATION */
-    if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
-      OC_ERR("limit of value type of g_device_count reached");
-      return NULL;
-    }
-    OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count, device_count + 1,
-                                 exchanged);
-  }
-
 #ifdef OC_DYNAMIC_ALLOCATION
   size_t new_num = OC_NUM_CORE_PLATFORM_RESOURCES +
                    (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (device_count + 1));
@@ -413,34 +392,64 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
     oc_abort("Insufficient memory");
   }
   memset(&g_oc_device_info[device_count], 0, sizeof(oc_device_info_t));
-
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_gen_uuid(&g_oc_device_info[device_count].di);
+  oc_gen_uuid(&g_oc_device_info[device_count].piid);
+
+  oc_new_string(&g_oc_device_info[device_count].name, cfg.name,
+                strlen(cfg.name));
+  oc_new_string(&g_oc_device_info[device_count].icv, cfg.spec_version,
+                strlen(cfg.spec_version));
+  oc_new_string(&g_oc_device_info[device_count].dmv, cfg.data_model_version,
+                strlen(cfg.data_model_version));
+  g_oc_device_info[device_count].add_device_cb = cfg.add_device_cb;
+  g_oc_device_info[device_count].data = cfg.add_device_cb_data;
+}
+
+oc_device_info_t *
+oc_core_add_new_device(oc_add_new_device_t cfg)
+{
+  assert(cfg.uri != NULL);
+  assert(cfg.rt != NULL);
+  assert(cfg.name != NULL);
+  assert(cfg.spec_version != NULL);
+  assert(cfg.data_model_version != NULL);
+
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+  bool exchanged = false;
+  while (!exchanged) {
+#ifndef OC_DYNAMIC_ALLOCATION
+    if (device_count == OC_MAX_NUM_DEVICES) {
+      OC_ERR("device limit reached");
+      return NULL;
+    }
+#endif /* !OC_DYNAMIC_ALLOCATION */
+    if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
+      OC_ERR("limit of value type of g_device_count reached");
+      return NULL;
+    }
+    OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count, device_count + 1,
+                                 exchanged);
+  }
+
+  core_update_device_data(device_count, cfg);
 
   /* Construct device resource */
   int properties = OC_DISCOVERABLE;
 #ifdef OC_CLOUD
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
-  if (strlen(rt) == 8 && strncmp(rt, "oic.wk.d", 8) == 0) {
-    oc_core_populate_resource(OCF_D, device_count, uri,
+  if (strlen(cfg.rt) == 8 && strncmp(cfg.rt, "oic.wk.d", 8) == 0) {
+    oc_core_populate_resource(OCF_D, device_count, cfg.uri,
                               OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-                              oc_core_device_handler, 0, 0, 0, 1, rt);
+                              oc_core_device_handler, 0, 0, 0, 1, cfg.rt);
   } else {
     oc_core_populate_resource(
-      OCF_D, device_count, uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-      oc_core_device_handler, 0, 0, 0, 2, rt, "oic.wk.d");
+      OCF_D, device_count, cfg.uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
+      properties, oc_core_device_handler, 0, 0, 0, 2, cfg.rt, "oic.wk.d");
   }
-
-  oc_gen_uuid(&g_oc_device_info[device_count].piid);
-
-  oc_new_string(&g_oc_device_info[device_count].name, name, strlen(name));
-  oc_new_string(&g_oc_device_info[device_count].icv, spec_version,
-                strlen(spec_version));
-  oc_new_string(&g_oc_device_info[device_count].dmv, data_model_version,
-                strlen(data_model_version));
-  g_oc_device_info[device_count].add_device_cb = add_device_cb;
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
@@ -472,9 +481,7 @@ oc_core_add_new_device(const char *uri, const char *rt, const char *name,
   oc_create_pushreceiver_resource(device_count);
 #endif /* OC_HAS_FEATURE_PUSH */
 
-  g_oc_device_info[device_count].data = data;
-
-  if (oc_connectivity_init(device_count) < 0) {
+  if (oc_connectivity_init(device_count, cfg.ports) < 0) {
     oc_abort("error initializing connectivity for device");
   }
 

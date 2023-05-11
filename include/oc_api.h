@@ -426,6 +426,116 @@ int oc_add_device(const char *uri, const char *rt, const char *name,
                   const char *spec_version, const char *data_model_version,
                   oc_add_device_cb_t add_device_cb, void *data);
 
+typedef enum oc_connectivity_listening_port_flags_e {
+  OC_CONNECTIVITY_DISABLE_IPV6_PORT = 0x01, /**< Disable port on IPv6 */
+#ifdef OC_IPV4
+  OC_CONNECTIVITY_DISABLE_IPV4_PORT = 0x02, /**< Disable port on IPv4 */
+#endif                                      /* OC_IPV4 */
+#ifdef OC_SECURITY
+  OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT = 0x04, /**< Disable port on
+                                    IPv6 for secure connections */
+#ifdef OC_IPV4
+  OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT = 0x08, /**< Disable port on
+                                    IPv4 for secure connections */
+#endif                                             /* OC_IPV4 */
+#endif                                             /* OC_SECURITY */
+  OC_CONNECTIVITY_DISABLE_ALL_PORTS = 0x0F         /**< Disable all ports */
+} oc_connectivity_listening_port_flags_t;
+
+/**
+ * @brief The structure includes flags that can be used to disable listening on
+ * certain IP interfaces. If a port is set to 0, the system will determine which
+ * port to open by default. On the other hand, if a port is specified, the stack
+ * will open that particular port.
+ */
+typedef struct oc_connectivity_listening_ports_s
+{
+  oc_connectivity_listening_port_flags_t
+    flags;       /**< Flags for the listening ports. */
+  uint16_t port; /**< The IPv6 port for unsecure connections. */
+#ifdef OC_SECURITY
+  uint16_t secure_port; /**< The IPv6 port for secure connections. */
+#endif                  /* OC_SECURITY */
+#ifdef OC_IPV4
+  uint16_t port4; /**< The IPv4 port for unsecure connections. */
+#ifdef OC_SECURITY
+  uint16_t secure_port4; /**< The IPv4 port for secure connections. */
+#endif                   /* OC_SECURITY */
+#endif                   /* OC_IPV4 */
+} oc_connectivity_listening_ports_t;
+
+typedef struct oc_connectivity_ports_s
+{
+  oc_connectivity_listening_ports_t
+    udp; /**< Define the UDP ports. When unsecure/secure ports are disabled, the
+            stack also disables the client-side because it uses the same socket
+            for both server and client. Port 5683 is reserved for multicast
+            binding for both IPv4 and IPv6. */
+#ifdef OC_TCP
+  oc_connectivity_listening_ports_t
+    tcp; /**< Define the TCP listening ports. The clients are not affected
+            because each connection has its own socket. */
+#endif   /* OC_TCP */
+} oc_connectivity_ports_t;
+
+typedef struct oc_add_new_device_s
+{
+  const char *uri;  ///< The device URI. The wellknown default URI "/oic/d" is
+                    ///< hosted by every server. Used to expose device specific
+                    ///< information (cannot be NULL).
+  const char *rt;   ///< The resource type (cannot be NULL).
+  const char *name; ///< User readable name of the device (cannot be NULL).
+  const char *spec_version; ///< The version of the OCF Server. This is the
+                            ///< "icv" device property (cannot be NULL).
+  const char *data_model_version; ///< Spec version of the resource and device
+                                  ///< specifications to which this device data
+                                  ///< model is implemented. This is the "dmv"
+                                  ///< device property (cannot be NULL).
+  oc_add_device_cb_t
+    add_device_cb; ///< Callback function invoked during oc_add_device() The
+                   ///< purpose is to add additional device properties that are
+                   ///< not supplied to oc_add_device() function call.
+  void *add_device_cb_data; ///< Data context pointer that is passed to the
+                            ///< oc_add_device_cb_t
+
+  oc_connectivity_ports_t ports; ///< The UDP and TCP ports configuration.
+} oc_add_new_device_t;
+
+/**
+ * Add an ocf device to the the stack.
+ *
+ * This function is typically called as part of the stack initialization
+ * process from inside the `init` callback handler.
+ *
+ * The `oc_add_device_v1` function may be called as many times as needed.
+ * Each call will add a new device to the stack with its own port address.
+ * Each device is automatically assigned a number starting with zero and
+ * incremented by one each time the function is called. This number is not
+ * returned therefore it is important to know the order devices are added.
+ *
+ * Example:
+ * ```
+ * //app_init is an instance of the `init` callback handler.
+ * static int app_init(void)
+ * {
+ *   int ret = oc_init_platform("Refrigerator", NULL, NULL);
+ *   ret |= oc_add_device_v1(device1);
+ *   ret |= oc_add_device_v1(device2);
+ *   return ret;
+ * }
+ * ```
+ *
+ * @param[in] cfg the configuration of the new device
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ *
+ * @see init
+ */
+OC_API
+int oc_add_device_v1(oc_add_new_device_t cfg);
+
 /**
  * Set custom device property
  *
@@ -2484,7 +2594,7 @@ void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
  * @param[in] milliseconds the number of milliseconds to wait till the callback
  * is invoked
  *
- * @deprecated replaced by use oc_set_delayed_callback_ms_v1 in v2.2.5.4
+ * @deprecated replaced by oc_set_delayed_callback_ms_v1 in v2.2.5.4
  */
 OC_API
 void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,

@@ -55,7 +55,7 @@ struct DeviceToAdd
 class Device {
 public:
   Device();
-  ~Device() = default;
+  ~Device();
 
   void SignalEventLoop();
   void PoolEvents(uint64_t seconds);
@@ -74,7 +74,7 @@ private:
     return OC_EVENT_DONE;
   }
 
-#if defined(_WIN32)
+#ifdef _WIN32
   CRITICAL_SECTION mutex_;
   CONDITION_VARIABLE cv_;
 #else  /* !_WIN32 */

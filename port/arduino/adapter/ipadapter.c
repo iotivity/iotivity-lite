@@ -179,8 +179,10 @@ oc_send_discovery_request(oc_message_t *message)
 #endif /* OC_CLIENT */
 
 int
-oc_connectivity_init(size_t device)
+oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
+  // TODO set ports
+  (void)ports;
   OC_DBG("Initializing IPv4 connectivity for device %d", device);
   ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&ip_context_s);
   if (!dev) {
