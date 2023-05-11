@@ -320,11 +320,11 @@ static adapter_receive_state_t
 tcp_receive_server_message_locked(ip_context_t *dev, fd_set *fds,
                                   oc_message_t *message)
 {
-  if (FD_ISSET(dev->tcp.server_sock, fds)) {
-    OC_DBG("tcp receive server_sock(fd=%d)", dev->tcp.server_sock);
-    FD_CLR(dev->tcp.server_sock, fds);
+  if (oc_sock_listener_fd_isset(&dev->tcp.server, fds)) {
+    OC_DBG("tcp receive server_sock(fd=%d)", dev->tcp.server.sock);
+    FD_CLR(dev->tcp.server.sock, fds);
     message->endpoint.flags = IPV6 | TCP | ACCEPTED;
-    if (accept_new_session_locked(dev, dev->tcp.server_sock, fds,
+    if (accept_new_session_locked(dev, dev->tcp.server.sock, fds,
                                   &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       return ADAPTER_STATUS_ERROR;
@@ -332,11 +332,11 @@ tcp_receive_server_message_locked(ip_context_t *dev, fd_set *fds,
     return ADAPTER_STATUS_ACCEPT;
   }
 #ifdef OC_SECURITY
-  if (FD_ISSET(dev->tcp.secure_sock, fds)) {
-    OC_DBG("tcp receive secure_sock(fd=%d)", dev->tcp.secure_sock);
-    FD_CLR(dev->tcp.secure_sock, fds);
+  if (oc_sock_listener_fd_isset(&dev->tcp.secure, fds)) {
+    OC_DBG("tcp receive secure_sock(fd=%d)", dev->tcp.secure.sock);
+    FD_CLR(dev->tcp.secure.sock, fds);
     message->endpoint.flags = IPV6 | SECURED | TCP | ACCEPTED;
-    if (accept_new_session_locked(dev, dev->tcp.secure_sock, fds,
+    if (accept_new_session_locked(dev, dev->tcp.secure.sock, fds,
                                   &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       return ADAPTER_STATUS_ERROR;
@@ -345,11 +345,11 @@ tcp_receive_server_message_locked(ip_context_t *dev, fd_set *fds,
   }
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  if (FD_ISSET(dev->tcp.server4_sock, fds)) {
-    OC_DBG("tcp receive server4_sock(fd=%d)", dev->tcp.server4_sock);
-    FD_CLR(dev->tcp.server4_sock, fds);
+  if (oc_sock_listener_fd_isset(&dev->tcp.server4, fds)) {
+    OC_DBG("tcp receive server4_sock(fd=%d)", dev->tcp.server4.sock);
+    FD_CLR(dev->tcp.server4.sock, fds);
     message->endpoint.flags = IPV4 | TCP | ACCEPTED;
-    if (accept_new_session_locked(dev, dev->tcp.server4_sock, fds,
+    if (accept_new_session_locked(dev, dev->tcp.server4.sock, fds,
                                   &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       return ADAPTER_STATUS_ERROR;
@@ -357,11 +357,11 @@ tcp_receive_server_message_locked(ip_context_t *dev, fd_set *fds,
     return ADAPTER_STATUS_ACCEPT;
   }
 #ifdef OC_SECURITY
-  if (FD_ISSET(dev->tcp.secure4_sock, fds)) {
-    OC_DBG("tcp receive secure4_sock(fd=%d)", dev->tcp.secure4_sock);
-    FD_CLR(dev->tcp.secure4_sock, fds);
+  if (oc_sock_listener_fd_isset(&dev->tcp.secure4, fds)) {
+    OC_DBG("tcp receive secure4_sock(fd=%d)", dev->tcp.secure4.sock);
+    FD_CLR(dev->tcp.secure4.sock, fds);
     message->endpoint.flags = IPV4 | SECURED | TCP | ACCEPTED;
-    if (accept_new_session_locked(dev, dev->tcp.secure4_sock, fds,
+    if (accept_new_session_locked(dev, dev->tcp.secure4.sock, fds,
                                   &message->endpoint) < 0) {
       OC_ERR("accept new session fail");
       return ADAPTER_STATUS_ERROR;

@@ -78,9 +78,13 @@ TEST_F(TestCoreResource, CoreInitPlatform_P)
 
 TEST_F(TestCoreResource, CoreDevice_P)
 {
-  oc_device_info_t *addcoredevice = oc_core_add_new_device(
-    kDeviceURI.c_str(), kDeviceType.c_str(), kDeviceName.c_str(),
-    kOCFSpecVersion.c_str(), kOCFDataModelVersion.c_str(), nullptr, nullptr);
+  oc_add_new_device_t cfg{};
+  cfg.name = kDeviceName.c_str();
+  cfg.uri = kDeviceURI.c_str();
+  cfg.rt = kDeviceType.c_str();
+  cfg.spec_version = kOCFSpecVersion.c_str();
+  cfg.data_model_version = kOCFDataModelVersion.c_str();
+  oc_device_info_t *addcoredevice = oc_core_add_new_device(cfg);
   ASSERT_NE(addcoredevice, nullptr);
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);

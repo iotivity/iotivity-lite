@@ -102,6 +102,14 @@ Device::Device()
 #endif /* _WIN32 */
 }
 
+Device::~Device()
+{
+#ifndef _WIN32
+  pthread_cond_destroy(&cv_);
+  pthread_mutex_destroy(&mutex_);
+#endif /* _WIN32 */
+}
+
 void
 Device::SignalEventLoop()
 {
@@ -109,7 +117,7 @@ Device::SignalEventLoop()
   WakeConditionVariable(&cv_);
 #else
   pthread_cond_signal(&cv_);
-#endif
+#endif /* _WIN32 */
 }
 
 void
@@ -119,7 +127,7 @@ Device::Lock()
   EnterCriticalSection(&mutex_);
 #else
   pthread_mutex_lock(&mutex_);
-#endif
+#endif /* _WIN32 */
 }
 
 void
@@ -129,7 +137,7 @@ Device::Unlock()
   LeaveCriticalSection(&mutex_);
 #else
   pthread_mutex_unlock(&mutex_);
-#endif
+#endif /* _WIN32 */
 }
 
 void
@@ -155,13 +163,14 @@ Device::WaitForEvent(oc_clock_time_t next_event)
   ts.tv_nsec =
     static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND);
   pthread_cond_timedwait(&cv_, &mutex_, &ts);
-#endif
+#endif /* _WIN32 */
 }
 
 void
 Device::Terminate()
 {
   OC_ATOMIC_STORE8(terminate_, 1);
+  SignalEventLoop();
 }
 
 void

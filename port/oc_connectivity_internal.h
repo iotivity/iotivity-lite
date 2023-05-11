@@ -20,6 +20,7 @@
 #define OC_PORT_CONNECTIVITY_INTERNAL_H
 
 #include "oc_config.h"
+#include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
@@ -27,12 +28,29 @@
 #include "util/oc_features.h"
 #include <limits.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define OC_SEND_MESSAGE_QUEUED INT_MAX
+
+/**
+ * @brief initialize the connectivity (e.g. open sockets) for the device
+ *
+ * @param device the device index
+ * @param ports the ports to listen on
+ * @return int 0 = success
+ */
+int oc_connectivity_init(size_t device, oc_connectivity_ports_t ports);
+
+/**
+ * @brief shut down the connectivity for device at device index
+ *
+ * @param device the device index
+ */
+void oc_connectivity_shutdown(size_t device);
 
 /**
  * @brief Send message to endpoint.

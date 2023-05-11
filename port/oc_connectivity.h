@@ -145,21 +145,6 @@ typedef struct oc_message_s
 int oc_send_buffer(oc_message_t *message);
 
 /**
- * @brief initialize the connectivity (e.g. open sockets) for the device
- *
- * @param device the device index
- * @return int 0 = success
- */
-int oc_connectivity_init(size_t device);
-
-/**
- * @brief shut down the connectivity for device at device index
- *
- * @param device the device index
- */
-void oc_connectivity_shutdown(size_t device);
-
-/**
  * @brief send discovery request
  *
  * @param message the message

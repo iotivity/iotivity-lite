@@ -82,42 +82,54 @@ tcp_create_socket(int domain, struct sockaddr_storage *sock_info)
 
 #ifdef OC_IPV4
 static void
-tcp_ipv4_addr_init(struct sockaddr_storage *addr)
+tcp_ipv4_addr_init(struct sockaddr_storage *addr, uint16_t port)
 {
   memset(addr, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in *l = (struct sockaddr_in *)addr;
   l->sin_family = AF_INET;
   l->sin_addr.s_addr = INADDR_ANY;
-  l->sin_port = 0;
+  l->sin_port = htons(port);
+}
+
+static bool
+initialize_tcp_context_ipv4(oc_sock_listener_t *server, bool enabled,
+                            uint16_t port)
+{
+  if (!enabled) {
+    server->sock = -1;
+    return true;
+  }
+  struct sockaddr_storage sockaddr;
+  tcp_ipv4_addr_init(&sockaddr, port);
+  server->sock = tcp_create_socket(AF_INET, &sockaddr);
+  if (server->sock < 0) {
+    OC_ERR("failed to create socket");
+    return false;
+  }
+  return true;
 }
 
 static int
-tcp_connectivity_ipv4_init(ip_context_t *dev)
+tcp_connectivity_ipv4_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 {
   OC_DBG("Initializing TCP adapter IPv4 for device %zd", dev->device);
 
-  tcp_ipv4_addr_init(&dev->tcp.server4);
-#ifdef OC_SECURITY
-  tcp_ipv4_addr_init(&dev->tcp.secure4);
-#endif /* OC_SECURITY */
-
-  dev->tcp.server4_sock = tcp_create_socket(AF_INET, &dev->tcp.server4);
-  if (dev->tcp.server4_sock < 0) {
-    OC_ERR("failed to create TCP IPv4 server socket");
+  if (initialize_tcp_context_ipv4(
+        &dev->tcp.server4,
+        (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT) == 0,
+        ports.tcp.port4) == false) {
+    OC_ERR("failed to initialize TCP IPv4 server context");
     return -1;
   }
-  OC_DBG("created tcp server4_sock (fd=%d)", dev->tcp.server4_sock);
-  dev->tcp.port4 = ntohs(((struct sockaddr_in *)&dev->tcp.server4)->sin_port);
 
 #ifdef OC_SECURITY
-  dev->tcp.secure4_sock = tcp_create_socket(AF_INET, &dev->tcp.secure4);
-  if (dev->tcp.secure4_sock < 0) {
-    OC_ERR("failed to create TCP IPv4 secure socket");
+  if (initialize_tcp_context_ipv4(
+        &dev->tcp.secure4,
+        (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT) == 0,
+        ports.tcp.secure_port4) == false) {
+    OC_ERR("failed to initialize TCP IPv4 secure server context");
     return -1;
   }
-  OC_DBG("created tcp secure4_sock (fd=%d)", dev->tcp.secure4_sock);
-  dev->tcp.tls4_port =
-    ntohs(((struct sockaddr_in *)&dev->tcp.secure4)->sin_port);
 #endif /* OC_SECURITY */
 
   OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
@@ -128,45 +140,58 @@ tcp_connectivity_ipv4_init(ip_context_t *dev)
 #endif /* OC_IPV4 */
 
 static void
-tcp_addr_init(struct sockaddr_storage *addr)
+tcp_addr_init(struct sockaddr_storage *addr, uint16_t port)
 {
   memset(addr, 0, sizeof(struct sockaddr_storage));
   struct sockaddr_in6 *l = (struct sockaddr_in6 *)addr;
   l->sin6_family = AF_INET6;
   l->sin6_addr = in6addr_any;
-  l->sin6_port = 0;
+  l->sin6_port = htons(port);
+}
+
+static bool
+initialize_tcp_context_ipv6(oc_sock_listener_t *server, bool enabled,
+                            uint16_t port)
+{
+  if (!enabled) {
+    server->sock = -1;
+    return true;
+  }
+  struct sockaddr_storage sockaddr;
+  tcp_addr_init(&sockaddr, port);
+  server->sock = tcp_create_socket(AF_INET6, &sockaddr);
+  if (server->sock < 0) {
+    OC_ERR("failed to create socket");
+    return false;
+  }
+  return true;
 }
 
 int
-tcp_connectivity_init(ip_context_t *dev)
+tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 {
   OC_DBG("Initializing TCP adapter for device %zd", dev->device);
 
-  tcp_addr_init(&dev->tcp.server);
-#ifdef OC_SECURITY
-  tcp_addr_init(&dev->tcp.secure);
-#endif /* OC_SECURITY */
-
-  dev->tcp.server_sock = tcp_create_socket(AF_INET6, &dev->tcp.server);
-  if (dev->tcp.server_sock < 0) {
-    OC_ERR("failed to create TCP IPv6 server socket");
+  if (initialize_tcp_context_ipv6(
+        &dev->tcp.server,
+        (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT) == 0,
+        ports.tcp.port) == false) {
+    OC_ERR("failed to initialize TCP IPv6 server context");
     return -1;
   }
-  OC_DBG("created tcp server_sock (fd=%d)", dev->tcp.server_sock);
-  dev->tcp.port = ntohs(((struct sockaddr_in *)&dev->tcp.server)->sin_port);
 
 #ifdef OC_SECURITY
-  dev->tcp.secure_sock = tcp_create_socket(AF_INET6, &dev->tcp.secure);
-  OC_DBG("created tcp secure_sock (fd=%d)", dev->tcp.secure_sock);
-  if (dev->tcp.secure_sock < 0) {
-    OC_ERR("failed to create TCP IPv6 secure socket");
+  if (initialize_tcp_context_ipv6(
+        &dev->tcp.secure,
+        (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT) == 0,
+        ports.tcp.secure_port) == false) {
+    OC_ERR("failed to initialize TCP IPv6 secure server context");
     return -1;
   }
-  dev->tcp.tls_port = ntohs(((struct sockaddr_in *)&dev->tcp.secure)->sin_port);
 #endif /* OC_SECURITY */
 
 #ifdef OC_IPV4
-  if (tcp_connectivity_ipv4_init(dev) != 0) {
+  if (tcp_connectivity_ipv4_init(dev, ports) != 0) {
     OC_ERR("Could not initialize IPv4 for TCP");
   }
 #endif /* OC_IPV4 */
@@ -186,14 +211,14 @@ tcp_connectivity_init(ip_context_t *dev)
   }
 
   OC_DBG("=======tcp port info.========");
-  OC_DBG("  ipv6 port   : %u", dev->tcp.port);
+  OC_DBG("  ipv6 port   : %d", oc_sock_listener_get_port(&dev->tcp.server));
 #ifdef OC_SECURITY
-  OC_DBG("  ipv6 secure : %u", dev->tcp.tls_port);
+  OC_DBG("  ipv6 secure : %d", oc_sock_listener_get_port(&dev->tcp.secure));
 #endif /* OC_SECURITY */
 #ifdef OC_IPV4
-  OC_DBG("  ipv4 port   : %u", dev->tcp.port4);
+  OC_DBG("  ipv4 port   : %d", oc_sock_listener_get_port(&dev->tcp.server4));
 #ifdef OC_SECURITY
-  OC_DBG("  ipv4 secure : %u", dev->tcp.tls4_port);
+  OC_DBG("  ipv4 secure : %d", oc_sock_listener_get_port(&dev->tcp.secure4));
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 
@@ -204,15 +229,15 @@ tcp_connectivity_init(ip_context_t *dev)
 void
 tcp_connectivity_shutdown(ip_context_t *dev)
 {
-  close(dev->tcp.server_sock);
+  oc_sock_listener_close(&dev->tcp.server);
 #ifdef OC_IPV4
-  close(dev->tcp.server4_sock);
+  oc_sock_listener_close(&dev->tcp.server4);
 #endif /* OC_IPV4 */
 
 #ifdef OC_SECURITY
-  close(dev->tcp.secure_sock);
+  oc_sock_listener_close(&dev->tcp.secure);
 #ifdef OC_IPV4
-  close(dev->tcp.secure4_sock);
+  oc_sock_listener_close(&dev->tcp.secure4);
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
@@ -228,15 +253,15 @@ tcp_connectivity_shutdown(ip_context_t *dev)
 void
 tcp_add_socks_to_rfd_set(ip_context_t *dev)
 {
-  FD_SET(dev->tcp.server_sock, &dev->rfds);
+  oc_sock_listener_fd_set(&dev->tcp.server, &dev->rfds);
 #ifdef OC_SECURITY
-  FD_SET(dev->tcp.secure_sock, &dev->rfds);
+  oc_sock_listener_fd_set(&dev->tcp.secure, &dev->rfds);
 #endif /* OC_SECURITY */
 
 #ifdef OC_IPV4
-  FD_SET(dev->tcp.server4_sock, &dev->rfds);
+  oc_sock_listener_fd_set(&dev->tcp.server4, &dev->rfds);
 #ifdef OC_SECURITY
-  FD_SET(dev->tcp.secure4_sock, &dev->rfds);
+  oc_sock_listener_fd_set(&dev->tcp.secure4, &dev->rfds);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
   FD_SET(dev->tcp.connect_pipe[0], &dev->rfds);

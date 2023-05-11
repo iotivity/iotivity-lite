@@ -47,7 +47,7 @@ jobs:
           - name: cloud-server-simulate-tpm-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
             args: "--simulate-tpm"
-            
+
           - name: cloud-server-time-2000-01-01
             build_args: ""
             docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'
@@ -119,6 +119,12 @@ jobs:
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-rep-realloc-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+
+          # ports
+          - name: cloud-server-tcp-disabled
+            args: "--udp-port 61234 --udp-port4 61234 --dtls-port 61235 --dtls-port4 61235 --tcp-port -1 --tcp-port4 -1 --tls-port -1 --tls-port4 -1"
+          - name: cloud-server-ipv6-disabled
+            args: "--udp-port -1 --udp-port4 61234 --dtls-port -1 --dtls-port4 61235 --tcp-port -1 --tcp-port4 61234 --tls-port -1 --tls-port4 61235"
 
           - name: dtls-cloud-server
             build_args: ""

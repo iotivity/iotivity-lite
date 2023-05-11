@@ -54,9 +54,13 @@ public:
     oc_random_init();
     oc_network_event_handler_mutex_init();
     oc_tls_init_context();
-    oc_device_info_t *info =
-      oc_core_add_new_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                             "ocf.res.1.0.0", nullptr, nullptr);
+    oc_add_new_device_t cfg{};
+    cfg.name = "Lamp";
+    cfg.uri = "/oic/d";
+    cfg.rt = "oic.d.light";
+    cfg.spec_version = "ocf.1.0.0";
+    cfg.data_model_version = "ocf.res.1.0.0";
+    oc_device_info_t *info = oc_core_add_new_device(cfg);
     EXPECT_NE(nullptr, info);
     oc_sec_svr_create();
 

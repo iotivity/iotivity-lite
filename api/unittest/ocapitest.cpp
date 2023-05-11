@@ -34,9 +34,15 @@
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
-#include <pthread.h>
 #include <unistd.h>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#else /* !_WIN32 */
+#include <pthread.h>
+#include <stdexcept>
+#endif /* _WIN32 */
 
 #ifdef OC_DYNAMIC_ALLOCATION
 // discovery requests are so large that they only work with dynamic allocation
@@ -73,8 +79,13 @@ struct ApiResource
 
 class ApiHelper {
 private:
+#ifdef _WIN32
+  static CRITICAL_SECTION s_mutex;
+  static CONDITION_VARIABLE s_cv;
+#else  /* !_WIN32 */
   static pthread_mutex_t s_mutex;
   static pthread_cond_t s_cv;
+#endif /* _WIN32 */
   static oc_handler_t s_handler;
   static OC_ATOMIC_UINT8_T s_terminate;
   static bool s_isServerStarted;
@@ -174,9 +185,54 @@ public:
     registerResource(s_TestResource);
   }
 
+  static void init()
+  {
+#ifdef _WIN32
+    InitializeCriticalSection(&s_mutex);
+    InitializeConditionVariable(&s_cv);
+#else
+    if (pthread_mutex_init(&s_mutex, nullptr) != 0) {
+      throw std::runtime_error("cannot initialize mutex");
+    }
+    if (pthread_cond_init(&s_cv, nullptr) != 0) {
+      throw std::runtime_error("cannot initialize conditional variable");
+    }
+#endif /* _WIN32 */
+  }
+
+  static void deinit()
+  {
+#ifndef _WIN32
+    pthread_cond_destroy(&s_cv);
+    pthread_mutex_destroy(&s_mutex);
+#endif /* _WIN32 */
+  }
+
+  static void lock()
+  {
+#ifdef _WIN32
+    EnterCriticalSection(&s_mutex);
+#else
+    pthread_mutex_lock(&s_mutex);
+#endif /* _WIN32 */
+  }
+
+  static void unlock()
+  {
+#ifdef _WIN32
+    LeaveCriticalSection(&s_mutex);
+#else
+    pthread_mutex_unlock(&s_mutex);
+#endif /* _WIN32 */
+  }
+
   static void signalEventLoop(void)
   {
+#ifdef _WIN32
+    WakeConditionVariable(&s_cv);
+#else
     pthread_cond_signal(&s_cv);
+#endif /* _WIN32 */
   }
 
   static oc_event_callback_retval_t quitEvent(void *)
@@ -188,30 +244,53 @@ public:
   static void terminate()
   {
     OC_ATOMIC_STORE8(s_terminate, 1);
+    signalEventLoop();
   }
 
-  static void poolEvents(uint16_t seconds)
+  static void poolEvents(uint64_t secs)
+  {
+    poolEventsMs(secs * 1000U);
+  }
+
+  static void waitForEvent(oc_clock_time_t next_event)
+  {
+#ifdef _WIN32
+    if (next_event == 0) {
+      SleepConditionVariableCS(&s_cv, &s_mutex, INFINITE);
+      return;
+    }
+    oc_clock_time_t now = oc_clock_time();
+    if (now < next_event) {
+      SleepConditionVariableCS(
+        &s_cv, &s_mutex, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+    }
+#else
+    if (next_event == 0) {
+      pthread_cond_wait(&s_cv, &s_mutex);
+      return;
+    }
+    struct timespec ts;
+    ts.tv_sec = (next_event / OC_CLOCK_SECOND);
+    ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
+                                   OC_CLOCK_SECOND);
+    pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
+#endif
+  }
+
+  static void poolEventsMs(uint64_t msecs)
   {
     OC_ATOMIC_STORE8(s_terminate, 0);
-    oc_set_delayed_callback(nullptr, quitEvent, seconds);
+    oc_set_delayed_callback_ms_v1(nullptr, quitEvent, msecs);
 
     while (OC_ATOMIC_LOAD8(s_terminate) == 0) {
-      pthread_mutex_lock(&s_mutex);
+      lock();
       oc_clock_time_t next_event = oc_main_poll();
       if (OC_ATOMIC_LOAD8(s_terminate) != 0) {
-        pthread_mutex_unlock(&s_mutex);
+        unlock();
         break;
       }
-      if (next_event == 0) {
-        pthread_cond_wait(&s_cv, &s_mutex);
-      } else {
-        struct timespec ts;
-        ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-        ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
-                                       OC_CLOCK_SECOND);
-        pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
-      }
-      pthread_mutex_unlock(&s_mutex);
+      waitForEvent(next_event);
+      unlock();
     }
 
     oc_remove_delayed_callback(nullptr, quitEvent);
@@ -400,8 +479,13 @@ public:
   }
 };
 
-pthread_mutex_t ApiHelper::s_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t ApiHelper::s_cv = PTHREAD_COND_INITIALIZER;
+#ifdef _WIN32
+CRITICAL_SECTION ApiHelper::s_mutex;
+CONDITION_VARIABLE ApiHelper::s_cv;
+#else  /* !_WIN32 */
+pthread_mutex_t ApiHelper::s_mutex;
+pthread_cond_t ApiHelper::s_cv;
+#endif /* _WIN32 */
 oc_handler_t ApiHelper::s_handler{};
 OC_ATOMIC_UINT8_T ApiHelper::s_terminate{ 0 };
 bool ApiHelper::s_isServerStarted{ false };
@@ -476,6 +560,9 @@ public:
 
 class TestServerClient : public testing::Test {
 protected:
+  static void SetUpTestCase() { ApiHelper::init(); }
+  static void TearDownTestCase() { ApiHelper::deinit(); }
+
   void SetUp() override
   {
     ApiHelper::setApiResources();
@@ -484,7 +571,7 @@ protected:
     ApiHelper::s_TestResource.enabled = true;
     std::string msg = "";
     EXPECT_TRUE(ApiHelper::startServer(msg)) << msg;
-    ApiHelper::poolEvents(1); // give some time for everything to start-up
+    ApiHelper::poolEventsMs(200); // give some time for everything to start-up
   }
 
   void TearDown() override { ApiHelper::stopServer(); }
@@ -757,6 +844,9 @@ TEST_F(TestServerClient, PutWithTimeout)
 #ifdef OC_SECURITY
 class TestObt : public testing::Test {
 protected:
+  static void SetUpTestCase() { ApiHelper::init(); }
+  static void TearDownTestCase() { ApiHelper::deinit(); }
+
   void SetUp() override
   {
     ApiHelper::setApiResources();

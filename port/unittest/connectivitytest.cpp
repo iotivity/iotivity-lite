@@ -56,9 +56,70 @@ public:
 
 std::atomic<bool> TestConnectivity::is_callback_received{ false };
 
-TEST(TestConnectivity_init, oc_connectivity_init)
+TEST(TestConnectivity_init, oc_connectivity_initDefault)
 {
-  int ret = oc_connectivity_init(g_device);
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(oc_connectivity_ports_t));
+  int ret = oc_connectivity_init(g_device, ports);
+  EXPECT_EQ(0, ret);
+  oc_connectivity_shutdown(g_device);
+}
+
+TEST(TestConnectivity_init, oc_connectivity_initTCPDisabled)
+{
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(oc_connectivity_ports_t));
+#ifdef OC_TCP
+  ports.tcp.flags = OC_CONNECTIVITY_DISABLE_ALL_PORTS;
+#endif /* OC_TCP */
+#if defined(OC_IPV4)
+  ports.udp.port4 = 5683;
+#if defined(OC_SECURITY)
+  ports.udp.secure_port4 = 5684;
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+  // ipv6
+  ports.udp.port = 15683;
+#if defined(OC_SECURITY)
+  ports.udp.secure_port = 5684;
+#endif /* OC_SECURITY */
+  int ret = oc_connectivity_init(g_device, ports);
+  EXPECT_EQ(0, ret);
+  oc_connectivity_shutdown(g_device);
+}
+
+TEST(TestConnectivity_init, oc_connectivity_initUDPDisabled)
+{
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(oc_connectivity_ports_t));
+  ports.udp.flags = OC_CONNECTIVITY_DISABLE_ALL_PORTS;
+#ifdef OC_TCP
+#if defined(OC_IPV4)
+  ports.tcp.port4 = 5683;
+#if defined(OC_SECURITY)
+  ports.tcp.secure_port4 = 5684;
+#endif /* OC_SECURITY */
+#endif /* OC_IPV4 */
+  // ipv6
+  ports.tcp.port = 5683;
+#if defined(OC_SECURITY)
+  ports.tcp.secure_port = 5684;
+#endif /* OC_SECURITY */
+#endif /* OC_TCP */
+  int ret = oc_connectivity_init(g_device, ports);
+  EXPECT_EQ(0, ret);
+  oc_connectivity_shutdown(g_device);
+}
+
+TEST(TestConnectivity_init, oc_connectivity_initAllDisabled)
+{
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(oc_connectivity_ports_t));
+  ports.udp.flags = OC_CONNECTIVITY_DISABLE_ALL_PORTS;
+#ifdef OC_TCP
+  ports.tcp.flags = OC_CONNECTIVITY_DISABLE_ALL_PORTS;
+#endif /* OC_TCP */
+  int ret = oc_connectivity_init(g_device, ports);
   EXPECT_EQ(0, ret);
   oc_connectivity_shutdown(g_device);
 }

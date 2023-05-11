@@ -151,6 +151,7 @@ jobs:
               -D OC_CLOUD_ENABLED=ON
               -D OC_COLLECTIONS_IF_CREATE_ENABLED=ON
               -D OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON
+              -D OC_DEBUG_ENABLED=ON
               -G Ninja
               -D CMAKE_MAKE_PROGRAM=${ninja_program}
             RESULT_VARIABLE result
