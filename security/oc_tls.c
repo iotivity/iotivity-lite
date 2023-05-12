@@ -378,19 +378,6 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
     oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
   }
 
-#ifdef OC_SERVER
-  /* remove all observations by this peer */
-  coap_remove_observer_by_client(&peer->endpoint);
-#endif /* OC_SERVER */
-  /* remove all open transactions associated to this endpoint */
-  coap_free_transactions_by_endpoint(&peer->endpoint, OC_CONNECTION_CLOSED);
-#ifdef OC_CLIENT
-  /* remove all remaining client_cbs awaiting a response from this endpoint and
-   * notify a 5.03 status to the application.
-   */
-  oc_ri_free_client_cbs_by_endpoint_v1(&peer->endpoint, OC_CONNECTION_CLOSED);
-#endif /* OC_CLIENT */
-
 #ifdef OC_PKI
   /* Free all roles bound to this (D)TLS session */
   oc_sec_free_roles(peer);
@@ -400,13 +387,8 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   if (peer->processed_recv_message != NULL) {
     oc_message_unref(peer->processed_recv_message);
   }
-  if (peer->endpoint.flags & TCP) {
-    oc_connectivity_end_session(&peer->endpoint);
-  } else
 #endif /* OC_TCP */
-  {
-    oc_handle_session(&peer->endpoint, OC_SESSION_DISCONNECTED);
-  }
+
 
   if (!inactivity_cb) {
     oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
@@ -429,7 +411,32 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #endif /* OC_PKI */
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
+  
+  oc_endpoint_t endpoint;
+  oc_endpoint_copy(&endpoint, &peer->endpoint);
   oc_memb_free(&g_tls_peers_s, peer);
+
+#ifdef OC_SERVER
+  /* remove all observations by this peer */
+  coap_remove_observer_by_client(&endpoint);
+#endif /* OC_SERVER */
+  /* remove all open transactions associated to this endpoint */
+  coap_free_transactions_by_endpoint(&endpoint, OC_CONNECTION_CLOSED);
+#ifdef OC_CLIENT
+  /* remove all remaining client_cbs awaiting a response from this endpoint and
+   * notify a 5.03 status to the application.
+   */
+  oc_ri_free_client_cbs_by_endpoint_v1(&endpoint, OC_CONNECTION_CLOSED);
+#endif /* OC_CLIENT */
+
+#ifdef OC_TCP
+  if (endpoint.flags & TCP) {
+    oc_connectivity_end_session(&endpoint);
+  } else
+#endif /* OC_TCP */
+  {
+    oc_handle_session(&endpoint, OC_SESSION_DISCONNECTED);
+  }
 }
 
 oc_tls_peer_t *
