@@ -16,6 +16,7 @@
  *
  ******************************************************************/
 
+#include "api/client/oc_client_cb_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -475,7 +476,7 @@ public:
     oc_client_cb_t *cb = oc_ri_get_client_cb(resource.resource_uri.c_str(),
                                              &resource.endpoint, method);
     ASSERT_NE(nullptr, cb);
-    oc_ri_remove_client_cb(cb);
+    oc_client_cb_free(cb);
   }
 };
 

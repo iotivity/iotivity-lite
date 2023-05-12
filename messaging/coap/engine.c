@@ -68,6 +68,7 @@
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_CLIENT
+#include "api/client/oc_client_cb_internal.h"
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
@@ -783,14 +784,14 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_BLOCK_WISE */
 
       if (client_cb) {
-        OC_DBG("calling oc_ri_invoke_client_cb");
+        OC_DBG("calling oc_client_cb_invoke");
 #ifdef OC_BLOCK_WISE
         if (request_buffer) {
           request_buffer->ref_count = 0;
         }
 
-        oc_ri_invoke_client_cb(message, &response_buffer, client_cb,
-                               &msg->endpoint);
+        oc_client_cb_invoke(message, &response_buffer, client_cb,
+                            &msg->endpoint);
         /* Do not free the response buffer in case of a separate response
          * signal from the server. In this case, the client_cb continues
          * to live until the response arrives (or it times out).
@@ -806,7 +807,7 @@ coap_receive(oc_message_t *msg)
         }
         goto send_message;
 #else  /* OC_BLOCK_WISE */
-        oc_ri_invoke_client_cb(message, client_cb, &msg->endpoint);
+        oc_client_cb_invoke(message, client_cb, &msg->endpoint);
 #endif /* OC_BLOCK_WISE */
       }
 #endif /* OC_CLIENT */

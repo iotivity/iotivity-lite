@@ -866,7 +866,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     file(GLOB COMMONTEST_SRC tests/gtest/*.cpp)
 
     # Unit tests
-    file(GLOB APITEST_SRC api/unittest/*.cpp)
+    file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)
     package_add_test(apitest ${COMMONTEST_SRC} ${APITEST_SRC})
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)

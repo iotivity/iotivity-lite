@@ -28,7 +28,6 @@
 #include <stdlib.h>
 
 #ifdef OC_CLOUD
-#include "rd_client.h"
 #include "oc_cloud.h"
 #endif /* OC_CLOUD */
 

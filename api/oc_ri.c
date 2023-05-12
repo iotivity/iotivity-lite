@@ -255,9 +255,6 @@ oc_delayed_delete_resource(oc_resource_t *resource)
 int
 oc_status_code(oc_status_t key)
 {
-  if (key < 0 || key >= __NUM_OC_STATUS_CODES__) {
-    return -1;
-  }
   // safe: no status code is larger than INT_MAX
   return (int)oc_coap_status_codes[key];
 }

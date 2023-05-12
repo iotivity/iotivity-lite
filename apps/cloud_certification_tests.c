@@ -22,7 +22,6 @@
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "rd_client.h"
 #include "util/oc_atomic.h"
 #include <pthread.h>
 #include <signal.h>

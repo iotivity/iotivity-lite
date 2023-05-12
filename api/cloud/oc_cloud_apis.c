@@ -31,8 +31,8 @@
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
-#include "rd_client.h"
 #include "port/oc_log_internal.h"
+#include "rd_client_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_tls_internal.h"

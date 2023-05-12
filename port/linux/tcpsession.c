@@ -69,7 +69,6 @@ typedef struct queued_message_t
 {
   struct queued_message_t *next;
   oc_message_t *message;
-  oc_clock_time_t timestamp; // timestamp of when the message was queued
 } queued_message_t;
 
 OC_MEMB(g_queued_message_s, queued_message_t,
@@ -933,7 +932,6 @@ add_message_to_waiting_session_locked(tcp_waiting_session_t *session,
   OC_DBG("message added to waiting session queue(%p)", (void *)message);
   oc_message_add_ref(message);
   qm->message = message;
-  qm->timestamp = oc_clock_time();
   oc_list_add(session->messages, qm);
   return true;
 }

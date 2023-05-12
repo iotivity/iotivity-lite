@@ -23,6 +23,7 @@
 
 #include "oc_client_cb_internal.h"
 
+#include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_client_state.h"
@@ -38,6 +39,8 @@
 #include "messaging/coap/oscore.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
+
+#include <assert.h>
 
 OC_LIST(g_client_cbs);
 OC_MEMB(g_client_cbs_s, oc_client_cb_t, OC_MAX_NUM_CONCURRENT_REQUESTS + 1);
@@ -90,7 +93,7 @@ oc_ri_alloc_client_cb(const char *uri, const oc_endpoint_t *endpoint,
 }
 
 oc_client_cb_t *
-client_cb_find_by_filter(oc_client_cb_filter_t filter, const void *user_data)
+oc_client_cb_find_by_filter(oc_client_cb_filter_t filter, const void *user_data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
   while (cb != NULL) {
@@ -112,7 +115,8 @@ client_cb_filter_is_equal(const oc_client_cb_t *client_cb,
 bool
 oc_ri_is_client_cb_valid(const oc_client_cb_t *client_cb)
 {
-  return client_cb_find_by_filter(client_cb_filter_is_equal, client_cb) != NULL;
+  return oc_client_cb_find_by_filter(client_cb_filter_is_equal, client_cb) !=
+         NULL;
 }
 
 static bool
@@ -132,7 +136,8 @@ oc_ri_find_client_cb_by_token(const uint8_t *token, uint8_t token_len)
     .data = token,
     .length = token_len,
   };
-  return client_cb_find_by_filter(client_cb_filter_is_equal_by_token, &match);
+  return oc_client_cb_find_by_filter(client_cb_filter_is_equal_by_token,
+                                     &match);
 }
 
 static bool
@@ -146,7 +151,7 @@ client_cb_filter_is_equal_by_mid(const oc_client_cb_t *client_cb,
 oc_client_cb_t *
 oc_ri_find_client_cb_by_mid(uint16_t mid)
 {
-  return client_cb_find_by_filter(client_cb_filter_is_equal_by_mid, &mid);
+  return oc_client_cb_find_by_filter(client_cb_filter_is_equal_by_mid, &mid);
 }
 
 static bool
@@ -154,7 +159,7 @@ client_cb_filter_is_equal_by_address(const oc_client_cb_t *client_cb,
                                      const void *user_data)
 {
   const client_cb_match_address_t *match =
-    (client_cb_match_address_t *)user_data;
+    (const client_cb_match_address_t *)user_data;
   return oc_string_is_cstr_equal(&client_cb->uri, match->uri,
                                  strlen(match->uri)) &&
          oc_endpoint_compare(&client_cb->endpoint, match->endpoint) == 0 &&
@@ -170,46 +175,53 @@ oc_ri_get_client_cb(const char *uri, const oc_endpoint_t *endpoint,
     .endpoint = endpoint,
     .method = method,
   };
-  return client_cb_find_by_filter(client_cb_filter_is_equal_by_address, &match);
+  return oc_client_cb_find_by_filter(client_cb_filter_is_equal_by_address,
+                                     &match);
 }
 
 static void
 client_cb_remove_from_lists(oc_client_cb_t *cb)
 {
-  oc_ri_remove_timed_event_callback(cb, &oc_ri_remove_client_cb);
+  oc_ri_remove_timed_event_callback(cb, &oc_client_cb_remove_async);
   oc_ri_remove_timed_event_callback(
-    cb, &oc_ri_remove_client_cb_with_notify_timeout_async);
+    cb, &oc_client_cb_remove_with_notify_timeout_async);
   oc_list_remove(g_client_cbs, cb);
 }
 
 oc_event_callback_retval_t
-oc_ri_remove_client_cb(void *data)
+oc_client_cb_remove_async(void *data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)data;
-  client_cb_remove_from_lists(cb);
-  client_cb_free(data);
+  oc_client_cb_free(cb);
   return OC_EVENT_DONE;
 }
 
-void
-client_cb_free(oc_client_cb_t *cb)
+static void
+oc_client_cb_dealloc(oc_client_cb_t *cb)
 {
   assert(cb != NULL);
   // assert that we don't leave a dangling pointer
   assert(!oc_ri_is_client_cb_valid(cb));
   assert(oc_timed_event_callback_is_currently_processed(
-           cb, oc_ri_remove_client_cb) ||
-         !oc_ri_has_timed_event_callback(cb, oc_ri_remove_client_cb, false));
+           cb, oc_client_cb_remove_async) ||
+         !oc_ri_has_timed_event_callback(cb, oc_client_cb_remove_async, false));
   assert(oc_timed_event_callback_is_currently_processed(
-           cb, oc_ri_remove_client_cb_with_notify_timeout_async) ||
+           cb, oc_client_cb_remove_with_notify_timeout_async) ||
          !oc_ri_has_timed_event_callback(
-           cb, oc_ri_remove_client_cb_with_notify_timeout_async, false));
+           cb, oc_client_cb_remove_with_notify_timeout_async, false));
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
   oc_free_string(&cb->uri);
   oc_free_string(&cb->query);
   oc_memb_free(&g_client_cbs_s, cb);
+}
+
+void
+oc_client_cb_free(oc_client_cb_t *cb)
+{
+  client_cb_remove_from_lists(cb);
+  oc_client_cb_dealloc(cb);
 }
 
 static void
@@ -228,7 +240,7 @@ client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
   client_response.user_data = cb->user_data;
   client_response.code = code;
 
-  oc_response_handler_t handler = (oc_response_handler_t)cb->handler.response;
+  oc_response_handler_t handler = cb->handler.response;
   handler(&client_response);
 
 #ifdef OC_TCP
@@ -238,11 +250,11 @@ client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
   }
 #endif /* OC_TCP */
 
-  client_cb_free(cb);
+  oc_client_cb_dealloc(cb);
 }
 
 oc_event_callback_retval_t
-oc_ri_remove_client_cb_with_notify_timeout_async(void *data)
+oc_client_cb_remove_with_notify_timeout_async(void *data)
 {
   oc_client_cb_t *cb = (oc_client_cb_t *)data;
   client_cb_notify_with_code(cb, OC_REQUEST_TIMEOUT);
@@ -310,19 +322,16 @@ ri_get_ocf_version(oc_content_format_t cf)
 }
 
 static oc_client_response_t
-oc_ri_prepare_client_response(const coap_packet_t *packet,
-                              oc_blockwise_state_t **response_state,
-                              oc_client_cb_t *cb, oc_endpoint_t *endpoint,
-                              oc_content_format_t cf)
+ri_prepare_client_response(const coap_packet_t *packet,
+                           oc_blockwise_state_t **response_state,
+                           oc_client_cb_t *cb, oc_endpoint_t *endpoint,
+                           oc_content_format_t cf)
 {
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.client_cb = cb;
   client_response.endpoint = endpoint;
   client_response.observe_option = -1;
-  client_response.payload = 0;
-  client_response._payload = NULL;
-  client_response._payload_len = 0;
   client_response.content_format = cf;
   client_response.user_data = cb->user_data;
 
@@ -334,7 +343,7 @@ oc_ri_prepare_client_response(const coap_packet_t *packet,
 #ifdef OC_BLOCK_WISE
   if (response_state != NULL) {
     const oc_blockwise_response_state_t *bwt_response_state =
-      (oc_blockwise_response_state_t *)*response_state;
+      (const oc_blockwise_response_state_t *)*response_state;
     if (bwt_response_state != NULL) {
       client_response.observe_option = bwt_response_state->observe_seq;
     }
@@ -348,8 +357,8 @@ oc_ri_prepare_client_response(const coap_packet_t *packet,
 }
 
 static void
-oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
-                                const oc_endpoint_t *endpoint)
+ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
+                             const oc_endpoint_t *endpoint)
 {
   cb->observe_seq = observe_seq;
 
@@ -364,8 +373,7 @@ oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
           oc_endpoint_compare(&dup_cb->endpoint, endpoint) == 0) {
         OC_DBG("Freeing cb %s, token 0x%02X%02X", oc_string(cb->uri),
                dup_cb->token[0], dup_cb->token[1]);
-        client_cb_remove_from_lists(dup_cb);
-        client_cb_free(dup_cb);
+        oc_client_cb_free(dup_cb);
         break;
       }
       dup_cb = dup_cb->next;
@@ -375,12 +383,13 @@ oc_ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
 
 #ifdef OC_BLOCK_WISE
 bool
-oc_ri_invoke_client_cb(void *response, oc_blockwise_state_t **response_state,
-                       oc_client_cb_t *cb, oc_endpoint_t *endpoint)
+oc_client_cb_invoke(const coap_packet_t *response,
+                    oc_blockwise_state_t **response_state, oc_client_cb_t *cb,
+                    oc_endpoint_t *endpoint)
 #else  /* !OC_BLOCK_WISE */
 bool
-oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
-                       oc_endpoint_t *endpoint)
+oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
+                    oc_endpoint_t *endpoint)
 #endif /* OC_BLOCK_WISE */
 {
   oc_content_format_t cf = 0;
@@ -389,14 +398,12 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
 
   cb->ref_count = 1;
 
-  coap_packet_t *const pkt = (coap_packet_t *)response;
-
 #ifdef OC_BLOCK_WISE
   oc_client_response_t client_response =
-    oc_ri_prepare_client_response(pkt, response_state, cb, endpoint, cf);
+    ri_prepare_client_response(response, response_state, cb, endpoint, cf);
 #else  /* !OC_BLOCK_WISE */
   oc_client_response_t client_response =
-    oc_ri_prepare_client_response(pkt, NULL, cb, endpoint, cf);
+    ri_prepare_client_response(response, NULL, cb, endpoint, cf);
 #endif /* OC_BLOCK_WISE */
 
 #if defined(OC_OSCORE) && defined(OC_SECURITY)
@@ -413,9 +420,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   const uint8_t *payload = NULL;
   int payload_len = 0;
 #ifdef OC_BLOCK_WISE
-  if (response_state != NULL && *response_state != NULL) {
+  if (*response_state != NULL) {
     payload = (*response_state)->buffer;
-    payload_len = (*response_state)->payload_size;
+    payload_len = (int)(*response_state)->payload_size;
   }
 #else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
@@ -423,25 +430,23 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   client_response._payload = payload;
   client_response._payload_len = (size_t)payload_len;
 
-  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  oc_rep_set_pool(&rep_objects);
   bool separate = false;
   if (payload_len) {
     if (cb->discovery) {
-      if (oc_ri_process_discovery_payload(payload, payload_len, cb->handler,
-                                          endpoint,
-                                          cb->user_data) == OC_STOP_DISCOVERY) {
+      if (oc_discovery_process_payload(payload, payload_len, cb->handler,
+                                       endpoint,
+                                       cb->user_data) == OC_STOP_DISCOVERY) {
         uint16_t mid = cb->mid;
         cb->ref_count = 0;
         oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
 #ifdef OC_BLOCK_WISE
-        if (response_state) {
-          *response_state = NULL;
-        }
+        *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
         return true;
       }
     } else {
+      OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+      oc_rep_set_pool(&rep_objects);
       int err = 0;
       /* Do not parse an incoming payload when the Content-Format option
        * has not been set to the CBOR encoding.
@@ -461,7 +466,7 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
       }
     }
   } else {
-    if (pkt->type == COAP_TYPE_ACK && pkt->code == 0) {
+    if (response->type == COAP_TYPE_ACK && response->code == 0) {
       separate = true;
       cb->separate = 1;
     } else if (!cb->discovery) {
@@ -472,9 +477,9 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
   }
 
 #ifdef OC_TCP
-  if (pkt->code == PONG_7_03 ||
+  if (response->code == PONG_7_03 ||
       (oc_string_len(cb->uri) == 5 &&
-       memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
+       memcmp(oc_string(cb->uri), "/ping", 5) == 0)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
@@ -492,18 +497,14 @@ oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
         oc_ri_free_client_cbs_by_mid_v1(mid, OC_CANCELLED);
       }
     } else {
-      client_cb_remove_from_lists(cb);
-      client_cb_free(cb);
+      oc_client_cb_free(cb);
     }
 #ifdef OC_BLOCK_WISE
-    if (response_state) {
-      *response_state = NULL;
-    }
+    *response_state = NULL;
 #endif /* OC_BLOCK_WISE */
-  } else {
-    oc_ri_client_cb_set_observe_seq(cb, client_response.observe_option,
-                                    endpoint);
+    return true;
   }
+  ri_client_cb_set_observe_seq(cb, client_response.observe_option, endpoint);
   return true;
 }
 
@@ -512,7 +513,7 @@ client_cb_free_all(void)
 {
   oc_client_cb_t *cb = oc_list_pop(g_client_cbs);
   while (cb != NULL) {
-    client_cb_free(cb);
+    oc_client_cb_dealloc(cb);
     cb = oc_list_pop(g_client_cbs);
   }
 }

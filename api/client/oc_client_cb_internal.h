@@ -20,8 +20,10 @@
 #ifndef OC_CLIENT_CB_INTERNAL_H
 #define OC_CLIENT_CB_INTERNAL_H
 
-#include "oc_ri.h"
+#include "messaging/coap/coap.h"
 #include "oc_client_state.h"
+#include "oc_endpoint.h"
+#include "oc_ri.h"
 #include "util/oc_compiler.h"
 
 #include <stdbool.h>
@@ -51,21 +53,70 @@ typedef bool (*oc_client_cb_filter_t)(const oc_client_cb_t *cb,
  * @return NULL if not element matches the filter
  * @return oc_client_cb_t * the first element that matches the filter
  */
-oc_client_cb_t *client_cb_find_by_filter(oc_client_cb_filter_t filter,
-                                         const void *user_data) OC_NONNULL(1);
+oc_client_cb_t *oc_client_cb_find_by_filter(oc_client_cb_filter_t filter,
+                                            const void *user_data)
+  OC_NONNULL(1);
 
 /**
- * @brief Deallocate client callback.
+ * @brief Remove callback from global list and deallocate.
  *
  * @param cb callback to deallocate (cannot be NULL)
  */
-void client_cb_free(oc_client_cb_t *cb) OC_NONNULL();
+void oc_client_cb_free(oc_client_cb_t *cb) OC_NONNULL();
+
+#ifdef OC_BLOCK_WISE
+/**
+ * @brief invoke the Client callback when a response is received
+ *
+ * @param response the response
+ * @param response_state the state of the blockwise transfer
+ * @param cb the callback
+ * @param endpoint the endpoint
+ * @return true
+ * @return false
+ */
+bool oc_client_cb_invoke(const coap_packet_t *response,
+                         oc_blockwise_state_t **response_state,
+                         oc_client_cb_t *cb, oc_endpoint_t *endpoint)
+  OC_NONNULL();
+#else  /* !OC_BLOCK_WISE */
+/**
+ * @brief invoke the Client callback when a response is received
+ *
+ * @param response the response
+ * @param cb the callback
+ * @param endpoint the endpoint
+ * @return true
+ * @return false
+ */
+bool oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
+                         oc_endpoint_t *endpoint) OC_NONNULL();
+#endif /* OC_BLOCK_WISE */
 
 /** @brief Initialize client callbacks. */
 void oc_client_cbs_init(void);
 
 /** @brief Deinitialize client callbacks. */
 void oc_client_cbs_shutdown(void);
+
+/**
+ * @brief Removes the client callback. This is silent remove client without
+ * triggering of 'cb.handler'.
+ *
+ * @param cb is oc_client_cb_t* type
+ * @return OC_EVENT_DONE
+ */
+oc_event_callback_retval_t oc_client_cb_remove_async(void *cb);
+
+/**
+ * @brief removes the client callback with triggering OC_REQUEST_TIMEOUT to
+ * handler.
+ *
+ * @param cb is oc_client_cb_t* type
+ * @return OC_EVENT_DONE
+ */
+oc_event_callback_retval_t oc_client_cb_remove_with_notify_timeout_async(
+  void *cb);
 
 #endif /* OC_CLIENT */
 

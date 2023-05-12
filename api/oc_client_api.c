@@ -16,7 +16,12 @@
  *
  ****************************************************************************/
 
+#include "oc_config.h"
+
+#ifdef OC_CLIENT
+
 #include "api/oc_helpers_internal.h"
+#include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
@@ -31,8 +36,6 @@
 #endif /* OC_SECURITY */
 
 #include <assert.h>
-
-#ifdef OC_CLIENT
 
 typedef struct oc_dispatch_context_t
 {
@@ -110,17 +113,18 @@ dispatch_coap_request(void)
 
     if (g_dispatch.client_cb->observe_seq == -1) {
       if (g_dispatch.client_cb->qos == LOW_QOS)
-        oc_set_delayed_callback(g_dispatch.client_cb, &oc_ri_remove_client_cb,
-                                OC_NON_LIFETIME);
+        oc_set_delayed_callback(g_dispatch.client_cb,
+                                &oc_client_cb_remove_async, OC_NON_LIFETIME);
       else
-        oc_set_delayed_callback(g_dispatch.client_cb, &oc_ri_remove_client_cb,
+        oc_set_delayed_callback(g_dispatch.client_cb,
+                                &oc_client_cb_remove_async,
                                 OC_EXCHANGE_LIFETIME);
     }
 
     success = true;
   } else {
     coap_clear_transaction(g_dispatch.transaction);
-    oc_ri_remove_client_cb(g_dispatch.client_cb);
+    oc_client_cb_free(g_dispatch.client_cb);
   }
 
 #ifdef OC_BLOCK_WISE
@@ -377,7 +381,7 @@ oc_do_request(oc_method_t method, const char *uri,
     status = dispatch_coap_request();
   }
   if (!status) {
-    oc_ri_remove_client_cb(cb);
+    oc_client_cb_free(cb);
     cb = NULL;
   }
   return cb;
@@ -397,8 +401,8 @@ oc_do_request_with_timeout(oc_method_t method, const char *uri,
     return false;
   }
   if (timeout_seconds > 0) {
-    oc_set_delayed_callback(
-      cb, oc_ri_remove_client_cb_with_notify_timeout_async, timeout_seconds);
+    oc_set_delayed_callback(cb, oc_client_cb_remove_with_notify_timeout_async,
+                            timeout_seconds);
   }
   return true;
 }
@@ -459,7 +463,7 @@ oc_init_async_request(oc_method_t method, const char *uri,
   }
 
   if (!prepare_coap_request(cb)) {
-    oc_ri_remove_client_cb(cb);
+    oc_client_cb_free(cb);
     return false;
   }
   return true;
@@ -480,8 +484,8 @@ oc_do_async_request_with_timeout(uint16_t timeout_seconds, oc_method_t method)
   }
 
   if (timeout_seconds > 0) {
-    oc_set_delayed_callback(
-      cb, oc_ri_remove_client_cb_with_notify_timeout_async, timeout_seconds);
+    oc_set_delayed_callback(cb, oc_client_cb_remove_with_notify_timeout_async,
+                            timeout_seconds);
   }
   return true;
 }
@@ -586,7 +590,7 @@ oc_remove_ping_handler_async(void *data)
   timeout_response.user_data = cb->user_data;
   cb->handler.response(&timeout_response);
 
-  return oc_ri_remove_client_cb(cb);
+  return oc_client_cb_remove_async(cb);
 }
 
 bool
@@ -607,7 +611,7 @@ oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
 
   if (!coap_send_ping_message(endpoint, custody ? 1 : 0, cb->token,
                               cb->token_len)) {
-    oc_ri_remove_client_cb(cb);
+    oc_client_cb_free(cb);
     return false;
   }
 
@@ -714,7 +718,7 @@ multi_scope_ipv6_multicast(const oc_client_cb_t *cb4, uint8_t scope,
       coap_clear_transaction(g_dispatch.transaction);
       g_dispatch.transaction = NULL;
     }
-    oc_ri_remove_client_cb(cb);
+    oc_client_cb_free(cb);
     g_dispatch.client_cb = NULL;
   }
   return false;
@@ -784,7 +788,7 @@ dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
     g_dispatch.transaction = NULL;
   }
 
-  oc_ri_remove_client_cb(cb);
+  oc_client_cb_free(cb);
   g_dispatch.client_cb = NULL;
   return false;
 }
