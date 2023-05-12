@@ -393,7 +393,7 @@ oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
   oc_process_num_events_t i = 0;
   while (i < g_nevents) {
     oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
-    const struct event_data *event = &g_events[index];
+    struct event_data *event = &g_events[index];
     if (event->p != p || !drop_event(event->ev, event->data, user_data)) {
       // move to the next event
       ++i;
@@ -403,7 +403,18 @@ oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
     if (g_nevents > 1) {
       oc_process_num_events_t last_index =
         (g_fevent + g_nevents - 1) % OC_PROCESS_NUMEVENTS;
-      g_events[index] = g_events[last_index];
+
+      if (last_index >= index) {
+        memmove(event, event + 1,
+                (last_index - index) * sizeof(struct event_data));
+      } else {
+        // Handle rotation when last_index is wrapped around to the beginning of
+        // the array
+        memmove(event, event + 1,
+                (OC_PROCESS_NUMEVENTS - 1 - index) * sizeof(struct event_data));
+        g_events[OC_PROCESS_NUMEVENTS - 1] = g_events[0];
+        memmove(g_events, g_events + 1, last_index * sizeof(struct event_data));
+      }
     }
     --g_nevents;
     ++dropped;
