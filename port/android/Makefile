@@ -146,8 +146,9 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON:=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
-SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+SRC_COMMON=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
+SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
+SRC_CLIENT=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
 # From API level 24 on Android supports getifaddrs itself.
@@ -166,15 +167,15 @@ HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
-OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o)))
+OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 ifeq ($(CLOUD),1)
 OBJ_CLOUD=$(addprefix ${OBJDIR}/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
 else
 OBJ_CLOUD =
 endif
-OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o)))
-VPATH=../../api/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../util/:
+OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../util/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -llog
 
@@ -278,7 +279,7 @@ all: $(CONSTRAINED_LIBS) $(NATIVE_SAMPLES) $(SWIG)
 
 .PHONY: clean
 
-${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
+${SRC} ${SRC_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
 
 ${OBJDIR}/%.o: %.c
 	@mkdir -p ${@D}

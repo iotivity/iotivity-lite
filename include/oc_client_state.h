@@ -22,6 +22,7 @@
 #define OC_CLIENT_STATE_H
 
 #include "messaging/coap/constants.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
@@ -121,7 +122,7 @@ typedef struct oc_client_cb_t
   oc_client_handler_t handler;   ///< handler information
   void *user_data;               ///< user data for the callbacks
   int32_t observe_seq;           ///< observe sequence number
-  oc_clock_time_t timestamp;     ///< time stamp
+  oc_clock_time_t timestamp;     ///< creation (monotonic) timestamp
   oc_qos_t qos;                  ///< quality of service
   oc_method_t method;            ///< method used
   uint16_t mid;                  ///< CoAP message identifier

@@ -136,6 +136,20 @@ oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+bool
+oc_string_is_equal(const oc_string_t *str1, const oc_string_t *str2)
+{
+  return oc_string_is_cstr_equal(str1, oc_string(*str2), oc_string_len(*str2));
+}
+
+bool
+oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
+                        size_t str2_len)
+{
+  return oc_string_len(*str1) == str2_len &&
+         strncmp(oc_string(*str1), str2, str2_len) == 0;
+}
+
 void
 oc_copy_string(oc_string_t *dst, const oc_string_t *src)
 {

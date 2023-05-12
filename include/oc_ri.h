@@ -21,6 +21,7 @@
 #ifndef OC_RI_H
 #define OC_RI_H
 
+#include "messaging/coap/constants.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_enums.h"
@@ -491,13 +492,24 @@ void oc_ri_remove_timed_event_callback(const void *cb_data,
   OC_NONNULL(2);
 
 /**
- * @brief convert the status code to integer
+ * @brief convert the status code to CoAP status code
  *
  * @param key the application level key of the code
- * @return int the CoAP status code
+ * @return -1 on failure
+ * @return CoAP status code (coap_status_t) on success
  */
 OC_API
 int oc_status_code(oc_status_t key);
+
+/**
+ * @brief convert the CoAP status code to status code
+ *
+ * @param status CoAP status code
+ * @return -1 on failure
+ * @return status code (oc_status_t) on success
+ */
+OC_API
+int oc_coap_status_to_status(coap_status_t status);
 
 /**
  * @brief Convert the status code to string

@@ -422,7 +422,10 @@ file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/api/*.c
     ${PLGD_SRC}
 )
-set(CLIENT_SRC ${SERVER_SRC})
+file(GLOB CLIENT_SRC
+    ${SERVER_SRC}
+    ${PROJECT_SOURCE_DIR}/api/client/*.c
+)
 
 # Detect the platform and pick the right port
 if(UNIX)

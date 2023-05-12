@@ -280,7 +280,7 @@ int coap_get_header_location_query(
   const char **query); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_location_query(void *packet, const char *query);
 
-int coap_get_header_observe(void *packet, uint32_t *observe);
+int coap_get_header_observe(const void *packet, uint32_t *observe);
 int coap_set_header_observe(void *packet, uint32_t observe);
 
 int coap_get_header_block2(void *packet, uint32_t *num, uint8_t *more,

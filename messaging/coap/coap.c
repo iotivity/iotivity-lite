@@ -1808,9 +1808,9 @@ coap_set_header_location_query(void *packet, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_observe(void *packet, uint32_t *observe)
+coap_get_header_observe(const void *packet, uint32_t *observe)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
+  const coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   if (!IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE)) {
     return 0;

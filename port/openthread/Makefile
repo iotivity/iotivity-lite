@@ -24,7 +24,7 @@ endif
 SRC_COMMON =  ${SRC_UTIL} ${CBOR}
 SRC_COMMON += $(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/openthread/*.c*)
 
-SRC_CLIENT = $(SRC_COMMON) ../../apps/client_openthread.c
+SRC_CLIENT = $(SRC_COMMON) $(wildcard ../../api/client/*.c) ../../apps/client_openthread.c
 SRC_SERVER = $(SRC_COMMON) ../../apps/server_openthread.c
 
 OBJ_CLIENT = $(addprefix ${PATH_OBJ}/client/, $(addsuffix .o, $(basename $(notdir $(SRC_CLIENT)))))
@@ -36,7 +36,8 @@ CFLAGS += -I${OPENTHREAD_PATH} -I${OPENTHREAD_PATH}/output/include -I${OPENTHREA
 CFLAGS += -I${OPENTHREAD_PATH}/third_party/mbedtls/repo.patched/include
 CFLAGS += -DOPENTHREAD_FTD 
 
-VPATH=../../messaging/coap/:../../util/:../../api/:../../deps/tinycbor/src/:../../apps:
+VPATH=../../api/:../../api/client:../../apps:../../messaging/coap/:../../util/:
+VPATH+=../../deps/tinycbor/src/:
 
 LIBS = -L${OPENTHREAD_LIB_PATH} -lopenthread-ftd -lmbedcrypto \
        -lopenthread-${OPENTHREAD_BOARD} -lopenthread-diag ${BOARD_LIBS}

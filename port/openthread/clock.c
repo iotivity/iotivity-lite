@@ -46,7 +46,8 @@ oc_clock_time(void)
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
-  return -1;
+  // TODO: implement monotonic time
+  return oc_clock_time();
 }
 
 unsigned long

@@ -19,12 +19,38 @@
 #ifndef OC_HELPERS_INTERNAL_H
 #define OC_HELPERS_INTERNAL_H
 
-#include <stdint.h>
+#include "oc_helpers.h"
+#include "util/oc_compiler.h"
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Compare two oc_strings.
+ *
+ * @param str1 first oc_string (cannot be NULL)
+ * @param str2 second oc_string (cannot be NULL)
+ * @return true strings are equal
+ * @return false strings are not equal
+ */
+bool oc_string_is_equal(const oc_string_t *str1, const oc_string_t *str2)
+  OC_NONNULL();
+
+/**
+ * @brief Compare an oc_string with a C-string
+ *
+ * @param str1 oc_string (cannot be NULL)
+ * @param str2 C-string (cannot be NULL)
+ * @param str2_len length of \p str2
+ * @return true strings are equal
+ * @return false strings are not equal
+ */
+bool oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
+                             size_t str2_len) OC_NONNULL();
 
 /**
  * @brief Fill buffer with random values.
