@@ -454,7 +454,7 @@ oc_tls_remove_peer(const oc_endpoint_t *endpoint)
     oc_tls_free_peer(peer, false);
   } else {
     oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
-                    (void *)endpoint);
+                    endpoint);
   }
 }
 
@@ -2457,6 +2457,7 @@ oc_tls_init_connection(oc_message_t *message)
     return;
   }
   oc_message_t *duplicate = oc_list_head(peer->send_q);
+  bool need_tls_handshake = (duplicate == NULL);
   while (duplicate != NULL) {
     if (duplicate == message) {
       break;
@@ -2467,6 +2468,13 @@ oc_tls_init_connection(oc_message_t *message)
     oc_message_add_ref(message);
     oc_list_add(peer->send_q, message);
   }
+
+  if (!need_tls_handshake) {
+    // handshake already in progress
+    oc_message_unref(message);
+    return;
+  }
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   if ((peer->endpoint.flags & TCP) != 0) {
     int state = oc_tcp_connect(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
