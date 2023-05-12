@@ -389,7 +389,6 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   }
 #endif /* OC_TCP */
 
-
   if (!inactivity_cb) {
     oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
   }
@@ -411,7 +410,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #endif /* OC_PKI */
   mbedtls_ssl_config_free(&peer->ssl_conf);
   oc_etimer_stop(&peer->timer.fin_timer);
-  
+
   oc_endpoint_t endpoint;
   oc_endpoint_copy(&endpoint, &peer->endpoint);
   oc_memb_free(&g_tls_peers_s, peer);
