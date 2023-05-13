@@ -210,6 +210,16 @@ int oc_tls_num_peers(size_t device);
  */
 bool oc_tls_connected(const oc_endpoint_t *endpoint);
 
+/**
+ * @brief Send a message to the TLS peer. If the peer is not created or
+ * connected then the message is queued and sent when the peer is connected.
+ *
+ * @param message to send
+ *
+ * @return > 0 on success
+ * @return 0 if peer is not connected but the message was queued
+ * @return -1 on error
+ */
 size_t oc_tls_send_message(oc_message_t *message);
 bool oc_tls_uses_psk_cred(const oc_tls_peer_t *peer);
 

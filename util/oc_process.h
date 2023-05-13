@@ -370,6 +370,30 @@ int oc_process_post(struct oc_process *p, oc_process_event_t ev,
                     oc_process_data_t data);
 
 /**
+ * @brief This function is responsible for determining whether an event should
+ * be removed from the event queue of a given process.
+ *
+ * @param ev The event to be dropped.
+ * @param data The auxiliary data to be sent with the event
+ * @param user_data Data to be passed to the drop_event function.
+ * @return true Drop the event.
+ */
+typedef bool (*oc_process_drop_event_t)(oc_process_event_t ev,
+                                        oc_process_data_t data,
+                                        const void *user_data);
+
+/**
+ * @brief Drop events from a process' event queue.
+ *
+ * @param p A pointer to the process' process structure.
+ * @param drop_event function to determine if an event should be dropped.
+ * @param user_data Data to be passed to the drop_event function.
+ * @return int Number of events dropped.
+ */
+int oc_process_drop(const struct oc_process *p,
+                    oc_process_drop_event_t drop_event, const void *user_data);
+
+/**
  * Post a synchronous event to a process.
  *
  * \param p A pointer to the process' process structure.

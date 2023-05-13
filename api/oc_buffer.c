@@ -267,15 +267,7 @@ handle_outbound_network_event(oc_process_data_t data)
     oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_OSCORE_EVENT], data);
     return;
   }
-#else /* !OC_OSCORE */
-#ifdef OC_CLIENT
-    OC_DBG("Outbound network event: forwarding to TLS");
-    if (!oc_tls_connected(&message->endpoint)) {
-      OC_DBG("Posting INIT_TLS_CONN_EVENT");
-      oc_process_post(&oc_tls_handler, oc_events[INIT_TLS_CONN_EVENT], data);
-      return;
-    }
-#endif /* OC_CLIENT */
+#else  /* !OC_OSCORE */
     OC_DBG("Posting RI_TO_TLS_EVENT");
     oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], data);
     return;
