@@ -101,7 +101,7 @@ extern "C" {
 #endif
 #ifdef OC_TCP
 #ifdef OC_OSCORE
-#define OC_PDU_SIZE (oc_get_max_app_data_size() + 2 * COAP_MAX_HEADER_SIZE)
+#define OC_PDU_SIZE (oc_get_max_app_data_size() + 2L * COAP_MAX_HEADER_SIZE)
 #else /* OC_OSCORE */
 #define OC_PDU_SIZE (oc_get_max_app_data_size() + COAP_MAX_HEADER_SIZE)
 #endif /* !OC_OSCORE */

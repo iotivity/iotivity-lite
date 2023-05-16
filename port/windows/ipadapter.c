@@ -18,17 +18,6 @@
  *
  ****************************************************************************/
 
-#define WIN32_LEAN_AND_MEAN
-// clang-format off
-#include <windows.h>
-#include <WinSock2.h>
-#include <Mswsock.h>
-#include <iphlpapi.h>
-#include <ws2tcpip.h>
-// clang-format on
-#ifdef OC_DYNAMIC_ALLOCATION
-#include <malloc.h>
-#endif /* OC_DYNAMIC_ALLOCATION */
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "port/oc_assert.h"
@@ -49,6 +38,16 @@
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"
 #endif /* OC_SESSION_EVENTS */
+
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <Mswsock.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <malloc.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {

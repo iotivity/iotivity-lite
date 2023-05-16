@@ -24,6 +24,7 @@
 #include "oc_signal_event_loop.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
+#include "util/oc_macros.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_SECURITY
@@ -48,52 +49,85 @@ OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* !OC_INOUT_BUFFER_POOL */
 
+static void
+message_deallocate(oc_message_t *message, struct oc_memb *pool)
+{
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+  free(message->data);
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
+  oc_network_event_handler_mutex_lock();
+  oc_memb_free(pool, message);
+  oc_network_event_handler_mutex_unlock();
+}
+
 static oc_message_t *
-allocate_message(struct oc_memb *pool)
+message_allocate_with_size(struct oc_memb *pool, size_t size)
 {
   oc_network_event_handler_mutex_lock();
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
   oc_network_event_handler_mutex_unlock();
-  if (message) {
+  if (message == NULL) {
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
+    OC_WRN("buffer: No free TX/RX buffers!");
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+    return NULL;
+  }
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-    message->data = (uint8_t *)malloc(OC_PDU_SIZE);
-    if (!message->data) {
-      OC_ERR("Out of memory, cannot allocate message");
-      oc_network_event_handler_mutex_lock();
-      oc_memb_free(pool, message);
-      oc_network_event_handler_mutex_unlock();
-      return NULL;
-    }
-    memset(message->data, 0, OC_PDU_SIZE);
+  message->data = (uint8_t *)malloc(size);
+  if (message->data == NULL) {
+    OC_ERR("Out of memory, cannot allocate message");
+    message_deallocate(message, pool);
+    return NULL;
+  }
+  memset(message->data, 0, size);
+#else  /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+  (void)size;
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
-    message->pool = pool;
-    message->length = 0;
-    message->next = 0;
-    message->ref_count = 1;
-    message->endpoint.interface_index = -1;
+  message->pool = pool;
+  message->length = 0;
+  message->next = 0;
+  message->ref_count = 1;
+  message->endpoint.interface_index = -1;
 #ifdef OC_SECURITY
-    message->encrypted = 0;
+  message->encrypted = 0;
 #endif /* OC_SECURITY */
 #if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
-    OC_DBG("buffer: Allocated TX/RX buffer; num free: %d",
-           oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
-  }
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
-  else {
-    OC_WRN("buffer: No free TX/RX buffers!");
-  }
+  OC_DBG("buffer: Allocated TX/RX buffer; num free: %d", oc_memb_numfree(pool));
 #endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
   OC_DBG("buffer: allocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
   return message;
 }
 
+static oc_message_t *
+message_allocate(struct oc_memb *pool)
+{
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+  return message_allocate_with_size(pool, OC_PDU_SIZE);
+#else  /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+  return message_allocate_with_size(pool, 0);
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
+}
+
+size_t
+oc_message_buffer_size(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_INOUT_BUFFER_SIZE
+  return OC_ARRAY_SIZE(((oc_message_t *)(NULL))->data);
+#else
+  return OC_PDU_SIZE;
+#endif /* OC_DYNAMIC_ALLOCATION && OC_INOUT_BUFFER_SIZE */
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  return OC_ARRAY_SIZE(((oc_message_t *)(NULL))->data);
+#endif /* OC_DYNAMIC_ALLOCATION  */
+}
+
 oc_message_t *
 oc_allocate_message_from_pool(struct oc_memb *pool)
 {
   if (pool) {
-    return allocate_message(pool);
+    return message_allocate(pool);
   }
   return NULL;
 }
@@ -107,13 +141,25 @@ oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb)
 oc_message_t *
 oc_allocate_message(void)
 {
-  return allocate_message(&oc_incoming_buffers);
+  return message_allocate(&oc_incoming_buffers);
 }
 
 oc_message_t *
-oc_internal_allocate_outgoing_message(void)
+oc_message_allocate_with_size(size_t size)
 {
-  return allocate_message(&oc_outgoing_buffers);
+  return message_allocate_with_size(&oc_incoming_buffers, size);
+}
+
+oc_message_t *
+oc_message_allocate_outgoing(void)
+{
+  return message_allocate(&oc_outgoing_buffers);
+}
+
+oc_message_t *
+oc_message_allocate_outgoing_with_size(size_t size)
+{
+  return message_allocate_with_size(&oc_outgoing_buffers, size);
 }
 
 void
@@ -154,13 +200,8 @@ oc_message_unref(oc_message_t *message)
     return;
   }
 
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-  free(message->data);
-#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
   struct oc_memb *pool = message->pool;
-  oc_network_event_handler_mutex_lock();
-  oc_memb_free(pool, message);
-  oc_network_event_handler_mutex_unlock();
+  message_deallocate(message, pool);
   OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
 #if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
@@ -208,13 +249,6 @@ oc_close_all_tls_sessions_for_device(size_t device)
 {
   oc_process_post(&oc_message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
                   (oc_process_data_t)device);
-}
-
-void
-oc_close_all_tls_sessions(void)
-{
-  oc_process_poll(&oc_tls_handler);
-  _oc_signal_event_loop();
 }
 #endif /* OC_SECURITY */
 
@@ -298,7 +332,7 @@ OC_PROCESS_THREAD(oc_message_buffer_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
   OC_DBG("Started buffer handler process");
-  while (true) {
+  while (oc_process_is_running(&oc_message_buffer_handler)) {
     OC_PROCESS_YIELD();
 
     if (ev == oc_events[INBOUND_NETWORK_EVENT]) {
@@ -324,4 +358,16 @@ OC_PROCESS_THREAD(oc_message_buffer_handler, ev, data)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   }
   OC_PROCESS_END();
+}
+
+void
+oc_message_buffer_handler_start(void)
+{
+  oc_process_start(&oc_message_buffer_handler, NULL);
+}
+
+void
+oc_message_buffer_handler_stop(void)
+{
+  oc_process_exit(&oc_message_buffer_handler);
 }

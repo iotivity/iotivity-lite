@@ -18,32 +18,25 @@
 
 #pragma once
 
-#include "oc_endpoint.h"
-#include "oc_helpers.h"
+#include "oc_config.h"
+
+#ifdef OC_SECURITY
+
+#include "oc_uuid.h"
 
 #include <string>
 
-namespace oc::endpoint {
+namespace oc::tls {
 
-/** @brief Parse endpoint from a string. */
-oc_endpoint_t FromString(const std::string &ep_str);
+struct Peer
+{
+  std::string address;
+  oc_uuid_t uuid;
+  int role;
+};
 
-/**
- * @brief Parse endpoint and uri from a string.
- *
- * @param addr address to parse
- * @param[out] ep parsed endpoint (cannot be NULL)
- * @param[out] uri parsed uri
- * @return int 0 on success
- * @return int -1 on failure
- */
-int FromString(const std::string &addr, oc_endpoint_t *ep,
-               oc_string_t *uri = nullptr);
+Peer MakePeer(const std::string &addr, int role);
 
-/** @brief Convert endpoint address to an address string. */
-std::string ToAddress(const oc_endpoint_t &ep);
+} // namespace  oc::tls
 
-/** @brief Convert endpoint host to an string. */
-std::string ToHost(const oc_endpoint_t &ep);
-
-} // oc::endpoint
+#endif /* OC_SECURITY */

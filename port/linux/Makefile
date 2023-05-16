@@ -45,10 +45,13 @@ HEADER_DIR = -I$(ROOT_DIR)/include \
 SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
 MESSAGING_HEADERS = -I$(ROOT_DIR)/messaging/coap
-COMMON_TEST_DIR = $(ROOT_DIR)/tests/gtest
-COMMON_TEST_OBJ_DIR = $(COMMON_TEST_DIR)/obj
-COMMON_TEST_SRC_FILES = $(wildcard $(COMMON_TEST_DIR)/*.cpp)
-COMMON_TEST_OBJ_FILES = $(patsubst $(COMMON_TEST_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_SRC_FILES))
+COMMON_TEST_DIR := $(ROOT_DIR)/tests/gtest
+COMMON_TEST_TLS_DIR := $(COMMON_TEST_DIR)/tls
+COMMON_TEST_OBJ_DIR := $(COMMON_TEST_DIR)/obj
+COMMON_TEST_TLS_OBJ_DIR := $(COMMON_TEST_DIR)/tls/obj
+COMMON_TEST_SRC_FILES := $(wildcard $(COMMON_TEST_DIR)/*.cpp $(COMMON_TEST_TLS_DIR)/*.cpp)
+COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_SRC_FILES))
+COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_TLS_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o, $(COMMON_TEST_OBJ_FILES))
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
 API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
@@ -110,12 +113,13 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
+SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c)
 ifneq ($(MEMORY_TRACE),1)
 SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
+SRC_COMMON=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
 SRC_CLIENT=$(wildcard ../../api/client/*.c)
 SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
@@ -142,7 +146,7 @@ OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 # $(info    OBJ_PYTHON is $(OBJ_PYTHON))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
-VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../python/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../python/:../../util/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
@@ -321,6 +325,10 @@ $(GTEST):
 	$(MAKE) --directory=$(GTEST_DIR)/make
 
 $(COMMON_TEST_OBJ_DIR)/%.o: $(COMMON_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
+$(COMMON_TEST_TLS_OBJ_DIR)/%.o: $(COMMON_TEST_TLS_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
@@ -626,7 +634,7 @@ endif
 
 clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(COMMON_TEST_OBJ_FILES) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(CLOUD_TEST_STORAGE_DIR) $(RD_CLIENT_TEST_OBJ_FILES)
-	rm -rf $(COMMON_TEST_OBJ_DIR)/*.gcda  $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
+	rm -rf $(COMMON_TEST_OBJ_DIR)/*.gcda $(COMMON_TEST_TLS_OBJ_DIR)/*.gcda  $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
 	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor server_rules_IDD.cbor
 
 cleanall: clean

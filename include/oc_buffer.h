@@ -31,14 +31,14 @@ extern "C" {
 #endif
 
 /**
- * @brief function to allocate a message
+ * @brief function to allocate an incoming message
  *
  * @return oc_message_t* the allocated message
  */
 oc_message_t *oc_allocate_message(void);
 
 /**
- * @brief set callback for memory availability
+ * @brief set callback for memory availability of incoming message buffers
  *
  * @param cb the callback
  */
@@ -51,14 +51,6 @@ void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb);
  * @return oc_message_t* the message
  */
 oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool);
-
-/**
- * @brief allocate message
- * internal function
- *
- * @return oc_message_t* the CoAP message
- */
-oc_message_t *oc_internal_allocate_outgoing_message(void);
 
 /**
  * @brief add reference (for tracking in use)

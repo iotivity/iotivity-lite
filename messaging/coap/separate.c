@@ -52,8 +52,9 @@
 #ifdef OC_SERVER
 
 #include "oc_buffer.h"
-#include "separate.h"
+#include "api/oc_buffer_internal.h"
 #include "messaging/coap/coap_internal.h"
+#include "separate.h"
 #include "transactions.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
@@ -145,7 +146,7 @@ coap_separate_accept(const coap_packet_t *request,
     coap_packet_t ack[1];
     /* ACK with empty code (0) */
     coap_udp_init_message(ack, COAP_TYPE_ACK, 0, request->mid);
-    oc_message_t *message = oc_internal_allocate_outgoing_message();
+    oc_message_t *message = oc_message_allocate_outgoing();
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
       message->length = coap_serialize_message(ack, message->data);

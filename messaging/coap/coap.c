@@ -290,7 +290,7 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
         OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
       }
 
-      if (array[j] == split_char || j == length) {
+      if (array[j] == (uint8_t)split_char || j == length) {
         part_end = array + j;
         temp_length = part_end - part_start;
 

@@ -16,34 +16,36 @@
  *
  ****************************************************************************/
 
-#pragma once
+#include "oc_config.h"
 
-#include "oc_endpoint.h"
-#include "oc_helpers.h"
+#ifdef OC_SECURITY
 
-#include <string>
+#include "Peer.h"
 
-namespace oc::endpoint {
+#include "oc_uuid.h"
 
-/** @brief Parse endpoint from a string. */
-oc_endpoint_t FromString(const std::string &ep_str);
+#include <iostream>
+#include <iomanip>
 
-/**
- * @brief Parse endpoint and uri from a string.
- *
- * @param addr address to parse
- * @param[out] ep parsed endpoint (cannot be NULL)
- * @param[out] uri parsed uri
- * @return int 0 on success
- * @return int -1 on failure
- */
-int FromString(const std::string &addr, oc_endpoint_t *ep,
-               oc_string_t *uri = nullptr);
+namespace oc::tls {
 
-/** @brief Convert endpoint address to an address string. */
-std::string ToAddress(const oc_endpoint_t &ep);
+Peer
+MakePeer(const std::string &addr, int role)
+{
+  static size_t peerCount = 0;
+  std::ostringstream ostr;
+  ostr << std::setfill('0') << std::setw(12) << peerCount;
 
-/** @brief Convert endpoint host to an string. */
-std::string ToHost(const oc_endpoint_t &ep);
+  std::string uuid = "00000000-0000-0000-0000-" + ostr.str();
+  ++peerCount;
 
-} // oc::endpoint
+  Peer peer{};
+  peer.address = addr;
+  oc_str_to_uuid(uuid.c_str(), &peer.uuid);
+  peer.role = role;
+  return peer;
+}
+
+} // namespace  oc::tls
+
+#endif /* OC_SECURITY */

@@ -44,7 +44,7 @@ typedef struct
 {
   struct oc_etimer fin_timer;
   oc_clock_time_t int_ticks;
-} oc_tls_retr_timer_t;
+} oc_tls_retry_timer_t;
 
 typedef struct oc_tls_peer_t
 {
@@ -56,11 +56,11 @@ typedef struct oc_tls_peer_t
   oc_endpoint_t endpoint;
   int role; // MBEDTLS_SSL_IS_SERVER = device acts as a server
             // MBEDTLS_SSL_IS_CLIENT = device acts as a client
-  oc_tls_retr_timer_t timer;
+  oc_tls_retry_timer_t timer;
   uint8_t master_secret[48];
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
-  oc_clock_time_t timestamp;
+  oc_clock_time_t timestamp; ///< activity timestamp
   bool doc;
 #ifdef OC_PKI
   oc_string_t public_key;
@@ -169,7 +169,6 @@ void oc_tls_remove_peer(const oc_endpoint_t *endpoint);
  * @param filter Filtering function (if NULL all existing peers match)
  * @param user_data User data passed from the caller
  */
-OC_API
 void oc_tls_close_peers(oc_tls_peer_filter_t filter, void *user_data);
 
 /**
@@ -248,6 +247,11 @@ void oc_tls_use_pin_obt_psk_identity(void);
 int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len,
                   const oc_uuid_t *uuid, unsigned int c, uint8_t *key,
                   uint32_t key_len);
+
+#ifdef OC_TEST
+void oc_dtls_set_inactivity_timeout(oc_clock_time_t timeout);
+oc_clock_time_t oc_dtls_inactivity_timeout(void);
+#endif /* OC_TEST */
 
 #ifdef OC_PKI
 /**

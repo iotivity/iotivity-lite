@@ -23,6 +23,10 @@
 #include "oc_endpoint.h"
 #include <sys/socket.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Add or remove file descriptor flags.
  *
@@ -53,5 +57,9 @@ bool oc_get_socket_address(const oc_endpoint_t *endpoint,
  * @brief Get ip context for device.
  */
 ip_context_t *oc_get_ip_context_for_device(size_t device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* IPADAPTER_H */

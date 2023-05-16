@@ -368,6 +368,9 @@ endif()
 
 if(BUILD_TESTING)
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_TEST")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_TEST")
+    endif()
 endif()
 
 if(MINGW)
@@ -396,6 +399,7 @@ file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_valid.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
+    ${PROJECT_SOURCE_DIR}/port/common/*.c
     ${PROJECT_SOURCE_DIR}/util/*.c
 )
 
@@ -863,7 +867,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         list(APPEND OC_UNITTESTS ${TESTNAME})
     endmacro()
 
-    file(GLOB COMMONTEST_SRC tests/gtest/*.cpp)
+    file(GLOB COMMONTEST_SRC tests/gtest/*.cpp tests/gtest/tls/*.cpp)
 
     # Unit tests
     file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)

@@ -25,6 +25,7 @@
 #include "util/oc_mmem.h"
 #include "oc_export.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -196,7 +197,7 @@ bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
 #define oc_string_array_add_item(ocstringarray, str)                           \
   (_oc_string_array_add_item(&(ocstringarray), str))
 #define oc_string_array_get_item(ocstringarray, index)                         \
-  (oc_string(ocstringarray) + (index)*STRING_ARRAY_ITEM_MAX_LEN)
+  (oc_string(ocstringarray) + (ptrdiff_t)((index)*STRING_ARRAY_ITEM_MAX_LEN))
 #define oc_string_array_set_item(ocstringarray, str, index)                    \
   (_oc_copy_string_to_array(&(ocstringarray), str, index))
 #define oc_string_array_get_item_size(ocstringarray, index)                    \

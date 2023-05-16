@@ -25,8 +25,8 @@
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
 
-#define HMAC_SHA256_HASHLEN (32)
-#define HKDF_OUTPUT_MAXLEN (512)
+#define HMAC_SHA256_HASHLEN (32U)
+#define HKDF_OUTPUT_MAXLEN (512U)
 
 static int
 HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
@@ -117,13 +117,13 @@ HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
 
   /* Iterations T(2)...T(N) */
   for (uint8_t i = 1; i < N; i++) {
-    memcpy(iter_buffer, &okm_buffer[(i - 1) * HMAC_SHA256_HASHLEN],
+    memcpy(iter_buffer, &okm_buffer[(size_t)(i - 1) * HMAC_SHA256_HASHLEN],
            HMAC_SHA256_HASHLEN);
     memcpy(&iter_buffer[HMAC_SHA256_HASHLEN], info, info_len);
     iter_buffer[HMAC_SHA256_HASHLEN + info_len] = i + 1;
     HMAC_SHA256(prk, HMAC_SHA256_HASHLEN, iter_buffer,
                 HMAC_SHA256_HASHLEN + info_len + 1,
-                &okm_buffer[i * HMAC_SHA256_HASHLEN]);
+                &okm_buffer[(size_t)i * HMAC_SHA256_HASHLEN]);
   }
 
   memcpy(okm, okm_buffer, okm_len);

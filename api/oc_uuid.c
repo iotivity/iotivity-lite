@@ -115,12 +115,11 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
 void
 oc_gen_uuid(oc_uuid_t *uuid)
 {
-  int i;
   uint32_t r;
 
-  for (i = 0; i < 4; i++) {
+  for (unsigned i = 0; i < 4; i++) {
     r = oc_random_value();
-    memcpy((uint8_t *)&uuid->id[i * 4], (uint8_t *)&r, sizeof(r));
+    memcpy((uint8_t *)&uuid->id[i * 4UL], (uint8_t *)&r, sizeof(r));
   }
 
   /*  From RFC 4122

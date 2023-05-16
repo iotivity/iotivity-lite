@@ -495,6 +495,12 @@ oc_process_is_running(struct oc_process *p)
 
 #ifdef OC_TEST
 
+oc_process_num_events_t
+oc_process_num_events(void)
+{
+  return OC_PROCESS_NUMEVENTS;
+}
+
 void
 oc_process_suspend(struct oc_process *p)
 {

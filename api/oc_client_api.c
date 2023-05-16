@@ -20,6 +20,7 @@
 
 #ifdef OC_CLIENT
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
@@ -228,7 +229,7 @@ prepare_coap_request(oc_client_cb_t *cb)
 static void
 oc_do_multicast_update_ipv4(void)
 {
-  oc_message_t *multicast_update4 = oc_internal_allocate_outgoing_message();
+  oc_message_t *multicast_update4 = oc_message_allocate_outgoing();
   if (multicast_update4) {
     oc_make_ipv4_endpoint(mcast4, IPV4 | MULTICAST | SECURED, 5683, 0xe0, 0x00,
                           0x01, 0xbb);
@@ -289,7 +290,7 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   coap_message_type_t type = COAP_TYPE_NON;
 
-  g_multicast_update = oc_internal_allocate_outgoing_message();
+  g_multicast_update = oc_message_allocate_outgoing();
 
   if (!g_multicast_update) {
     return false;
