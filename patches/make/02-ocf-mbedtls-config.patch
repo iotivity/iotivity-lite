@@ -1,5 +1,5 @@
 diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
-index 0558ee001..2f685fc97 100644
+index 0558ee001..b18a66da0 100644
 --- a/include/mbedtls/mbedtls_config.h
 +++ b/include/mbedtls/mbedtls_config.h
 @@ -33,6 +33,17 @@
@@ -608,16 +608,19 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_NET_C
-@@ -2440,7 +2483,7 @@
+@@ -2440,7 +2483,11 @@
   *
   * This module provides networking routines.
   */
--#define MBEDTLS_NET_C
-+//#define MBEDTLS_NET_C
++#ifdef OC_TEST
++#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__) || defined(__linux) || defined(__ANDROID__)
+ #define MBEDTLS_NET_C
++#endif /* POSIX/Unix OS */
++#endif /* OC_TEST */
  
  /**
   * \def MBEDTLS_OID_C
-@@ -2463,7 +2506,9 @@
+@@ -2463,7 +2510,9 @@
   *
   * This modules translates between OIDs and internal values.
   */
@@ -627,7 +630,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PADLOCK_C
-@@ -2477,7 +2522,7 @@
+@@ -2477,7 +2526,7 @@
   *
   * This modules adds support for the VIA PadLock on x86.
   */
@@ -636,7 +639,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PEM_PARSE_C
-@@ -2495,7 +2540,9 @@
+@@ -2495,7 +2544,9 @@
   *
   * This modules adds support for decoding / parsing PEM files.
   */
@@ -646,7 +649,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PEM_WRITE_C
-@@ -2511,7 +2558,9 @@
+@@ -2511,7 +2562,9 @@
   *
   * This modules adds support for encoding / writing PEM files.
   */
@@ -656,7 +659,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PK_C
-@@ -2527,7 +2576,9 @@
+@@ -2527,7 +2580,9 @@
   *
   * Uncomment to enable generic public key wrappers.
   */
@@ -666,7 +669,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PK_PARSE_C
-@@ -2542,7 +2593,9 @@
+@@ -2542,7 +2597,9 @@
   *
   * Uncomment to enable generic public key parse functions.
   */
@@ -676,7 +679,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PK_WRITE_C
-@@ -2556,7 +2609,9 @@
+@@ -2556,7 +2613,9 @@
   *
   * Uncomment to enable generic public key write functions.
   */
@@ -686,7 +689,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PKCS5_C
-@@ -2584,7 +2639,7 @@
+@@ -2584,7 +2643,7 @@
   *
   * This module enables PKCS#12 functions.
   */
@@ -695,7 +698,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PLATFORM_C
-@@ -2614,7 +2669,7 @@
+@@ -2614,7 +2673,7 @@
   * Module:  library/poly1305.c
   * Caller:  library/chachapoly.c
   */
@@ -704,7 +707,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PSA_CRYPTO_C
-@@ -2628,7 +2683,7 @@
+@@ -2628,7 +2687,7 @@
   *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
   *
   */
@@ -713,7 +716,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PSA_CRYPTO_SE_C
-@@ -2657,7 +2712,7 @@
+@@ -2657,7 +2716,7 @@
   *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
   *           the PSA ITS interface
   */
@@ -722,7 +725,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_PSA_ITS_FILE_C
-@@ -2669,7 +2724,7 @@
+@@ -2669,7 +2728,7 @@
   *
   * Requires: MBEDTLS_FS_IO
   */
@@ -731,7 +734,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_RIPEMD160_C
-@@ -2680,7 +2735,7 @@
+@@ -2680,7 +2739,7 @@
   * Caller:  library/md.c
   *
   */
@@ -740,7 +743,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_RSA_C
-@@ -2699,7 +2754,9 @@
+@@ -2699,7 +2758,9 @@
   *
   * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
   */
@@ -750,7 +753,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_SHA1_C
-@@ -2721,7 +2778,7 @@
+@@ -2721,7 +2782,7 @@
   *            on it, and considering stronger message digests instead.
   *
   */
@@ -759,7 +762,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_SHA224_C
-@@ -2800,7 +2857,7 @@
+@@ -2800,7 +2861,7 @@
   *
   * Requires: MBEDTLS_SSL_CACHE_C
   */
@@ -768,7 +771,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_SSL_COOKIE_C
-@@ -2822,7 +2879,7 @@
+@@ -2822,7 +2883,7 @@
   *
   * Requires: MBEDTLS_CIPHER_C
   */
@@ -777,16 +780,19 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_SSL_CLI_C
-@@ -2908,7 +2965,7 @@
+@@ -2908,7 +2969,11 @@
   *
   * Module:  library/timing.c
   */
--#define MBEDTLS_TIMING_C
-+//#define MBEDTLS_TIMING_C
++#ifdef OC_TEST
++#if defined(_WIN64) || defined(_WIN32) || defined(__APPLE__) || defined(__linux) || defined(__ANDROID__)
+ #define MBEDTLS_TIMING_C
++#endif /* POSIX/Unix OS */
++#endif /* OC_TEST */
  
  /**
   * \def MBEDTLS_VERSION_C
-@@ -2919,7 +2976,7 @@
+@@ -2919,7 +2984,7 @@
   *
   * This module provides run-time version information.
   */
@@ -795,7 +801,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_USE_C
-@@ -2936,7 +2993,9 @@
+@@ -2936,7 +3001,9 @@
   *
   * This module is required for the X.509 parsing modules.
   */
@@ -805,7 +811,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CRT_PARSE_C
-@@ -2952,7 +3011,9 @@
+@@ -2952,7 +3019,9 @@
   *
   * This module is required for X.509 certificate parsing.
   */
@@ -815,7 +821,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CRL_PARSE_C
-@@ -2966,7 +3027,7 @@
+@@ -2966,7 +3035,7 @@
   *
   * This module is required for X.509 CRL parsing.
   */
@@ -824,7 +830,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CSR_PARSE_C
-@@ -2980,7 +3041,9 @@
+@@ -2980,7 +3049,9 @@
   *
   * This module is used for reading X.509 certificate request.
   */
@@ -834,7 +840,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CREATE_C
-@@ -2993,7 +3056,9 @@
+@@ -2993,7 +3064,9 @@
   *
   * This module is the basis for creating X.509 certificates and CSRs.
   */
@@ -844,7 +850,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CRT_WRITE_C
-@@ -3006,7 +3071,9 @@
+@@ -3006,7 +3079,9 @@
   *
   * This module is required for X.509 certificate creation.
   */
@@ -854,7 +860,7 @@ index 0558ee001..2f685fc97 100644
  
  /**
   * \def MBEDTLS_X509_CSR_WRITE_C
-@@ -3019,7 +3086,9 @@
+@@ -3019,7 +3094,9 @@
   *
   * This module is required for X.509 certificate request writing.
   */
@@ -864,7 +870,7 @@ index 0558ee001..2f685fc97 100644
  
  /* \} name SECTION: mbed TLS modules */
  
-@@ -3060,7 +3129,12 @@
+@@ -3060,7 +3137,12 @@
  //#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
  
  /* Entropy options */
@@ -878,7 +884,7 @@ index 0558ee001..2f685fc97 100644
  //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
  //#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
  
-@@ -3069,14 +3143,19 @@
+@@ -3069,14 +3151,19 @@
  
  /* Platform options */
  //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
@@ -903,7 +909,7 @@ index 0558ee001..2f685fc97 100644
  //#define MBEDTLS_PLATFORM_STD_EXIT_SUCCESS       0 /**< Default exit value to use, can be undefined */
  //#define MBEDTLS_PLATFORM_STD_EXIT_FAILURE       1 /**< Default exit value to use, can be undefined */
  //#define MBEDTLS_PLATFORM_STD_NV_SEED_READ   mbedtls_platform_std_nv_seed_read /**< Default nv_seed_read function to use, can be undefined */
-@@ -3171,6 +3250,9 @@
+@@ -3171,6 +3258,9 @@
   * Uncomment to set the maximum plaintext size of the incoming I/O buffer.
   */
  //#define MBEDTLS_SSL_IN_CONTENT_LEN              16384
@@ -913,7 +919,7 @@ index 0558ee001..2f685fc97 100644
  
  /** \def MBEDTLS_SSL_CID_IN_LEN_MAX
   *
-@@ -3221,6 +3303,9 @@
+@@ -3221,6 +3311,9 @@
   * Uncomment to set the maximum plaintext size of the outgoing I/O buffer.
   */
  //#define MBEDTLS_SSL_OUT_CONTENT_LEN             16384
@@ -923,7 +929,7 @@ index 0558ee001..2f685fc97 100644
  
  /** \def MBEDTLS_SSL_DTLS_MAX_BUFFERING
   *
-@@ -3240,6 +3325,7 @@
+@@ -3240,6 +3333,7 @@
  //#define MBEDTLS_SSL_DTLS_MAX_BUFFERING             32768
  
  //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */

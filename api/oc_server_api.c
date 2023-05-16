@@ -211,7 +211,7 @@ void
 oc_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
                           uint16_t seconds)
 {
-  oc_reset_delayed_callback_ms(cb_data, callback, seconds * 1000U);
+  oc_reset_delayed_callback_ms(cb_data, callback, seconds * 1000UL);
 }
 
 void

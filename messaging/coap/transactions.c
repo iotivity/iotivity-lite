@@ -48,6 +48,7 @@
  */
 
 #include "transactions.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_main.h"
 #include "observe.h"
 #include "oc_buffer.h"
@@ -88,7 +89,7 @@ coap_new_transaction(uint16_t mid, uint8_t *token, uint8_t token_len,
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t) {
-    t->message = oc_internal_allocate_outgoing_message();
+    t->message = oc_message_allocate_outgoing();
     if (t->message) {
       OC_DBG("Created new transaction %u: %p", mid, (void *)t);
       t->mid = mid;

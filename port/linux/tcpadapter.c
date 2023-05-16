@@ -109,33 +109,32 @@ initialize_tcp_context_ipv4(oc_sock_listener_t *server, bool enabled,
   return true;
 }
 
-static int
+static bool
 tcp_connectivity_ipv4_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 {
   OC_DBG("Initializing TCP adapter IPv4 for device %zd", dev->device);
 
-  if (initialize_tcp_context_ipv4(
+  if (!initialize_tcp_context_ipv4(
         &dev->tcp.server4,
         (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT) == 0,
-        ports.tcp.port4) == false) {
+        ports.tcp.port4)) {
     OC_ERR("failed to initialize TCP IPv4 server context");
-    return -1;
+    return false;
   }
 
 #ifdef OC_SECURITY
-  if (initialize_tcp_context_ipv4(
+  if (!initialize_tcp_context_ipv4(
         &dev->tcp.secure4,
         (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT) == 0,
-        ports.tcp.secure_port4) == false) {
+        ports.tcp.secure_port4)) {
     OC_ERR("failed to initialize TCP IPv4 secure server context");
-    return -1;
+    return false;
   }
 #endif /* OC_SECURITY */
 
   OC_DBG("Successfully initialized TCP adapter IPv4 for device %zd",
          dev->device);
-
-  return 0;
+  return true;
 }
 #endif /* OC_IPV4 */
 
@@ -167,31 +166,31 @@ initialize_tcp_context_ipv6(oc_sock_listener_t *server, bool enabled,
   return true;
 }
 
-int
+bool
 tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 {
   OC_DBG("Initializing TCP adapter for device %zd", dev->device);
 
-  if (initialize_tcp_context_ipv6(
+  if (!initialize_tcp_context_ipv6(
         &dev->tcp.server,
         (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT) == 0,
-        ports.tcp.port) == false) {
+        ports.tcp.port)) {
     OC_ERR("failed to initialize TCP IPv6 server context");
-    return -1;
+    return false;
   }
 
 #ifdef OC_SECURITY
-  if (initialize_tcp_context_ipv6(
+  if (!initialize_tcp_context_ipv6(
         &dev->tcp.secure,
         (ports.tcp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT) == 0,
-        ports.tcp.secure_port) == false) {
+        ports.tcp.secure_port)) {
     OC_ERR("failed to initialize TCP IPv6 secure server context");
-    return -1;
+    return false;
   }
 #endif /* OC_SECURITY */
 
 #ifdef OC_IPV4
-  if (tcp_connectivity_ipv4_init(dev, ports) != 0) {
+  if (!tcp_connectivity_ipv4_init(dev, ports)) {
     OC_ERR("Could not initialize IPv4 for TCP");
   }
 #endif /* OC_IPV4 */
@@ -203,11 +202,11 @@ tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 
   if (pipe(dev->tcp.connect_pipe) < 0) {
     OC_ERR("Could not initialize connection pipe");
-    return -1;
+    return false;
   }
   if (oc_set_fd_flags(dev->tcp.connect_pipe[0], O_NONBLOCK, 0) < 0) {
     OC_ERR("Could not set non-blocking connect_pipe[0]");
-    return -1;
+    return false;
   }
 
   OC_DBG("=======tcp port info.========");
@@ -223,7 +222,7 @@ tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 #endif /* OC_IPV4 */
 
   OC_DBG("Successfully initialized TCP adapter for device %zd", dev->device);
-  return 0;
+  return true;
 }
 
 void

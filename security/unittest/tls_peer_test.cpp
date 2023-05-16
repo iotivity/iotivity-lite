@@ -18,73 +18,80 @@
 
 #if defined(OC_SECURITY)
 
+#include "api/oc_core_res_internal.h"
+#include "api/oc_endpoint_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_uuid.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
+#include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
+#include "tests/gtest/RepPool.h"
+#include "tests/gtest/tls/DTLSClient.h"
+#include "tests/gtest/tls/Peer.h"
+#include "util/oc_macros.h"
 
-#include <gtest/gtest.h>
-#include <iostream>
-#include <iomanip>
-#include <mbedtls/x509_crt.h>
-#include <string>
-#include <vector>
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */
 
-struct Peer
-{
-  std::string address;
-  oc_uuid_t uuid;
-  int role;
-};
+#include <array>
+#include <atomic>
+#include <gtest/gtest.h>
+#include <mbedtls/build_info.h>
+#include <mbedtls/x509_crt.h>
+#include <string>
+#include <thread>
+#include <vector>
 
-static Peer
-createPeer(const std::string &addr, int role)
-{
-  static size_t peerCount = 0;
-  std::ostringstream ostr;
-  ostr << std::setfill('0') << std::setw(12) << peerCount;
-
-  std::string uuid = "00000000-0000-0000-0000-" + ostr.str();
-  ++peerCount;
-
-  Peer peer{};
-  peer.address = addr;
-  oc_str_to_uuid(uuid.c_str(), &peer.uuid);
-  peer.role = role;
-  return peer;
-}
-
+static constexpr size_t kDeviceID{ 0 };
+static const std::string kDeviceURI{ "/oic/d" };
+static const std::string kDeviceType{ "oic.d.light" };
+static const std::string kDeviceName{ "Table Lamp" };
+static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
+static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 class TestTLSPeer : public testing::Test {
-#if defined(_WIN32)
-#include <windows.h>
-  static CRITICAL_SECTION s_mutex;
-  static CONDITION_VARIABLE s_cv;
-#else
-#include <pthread.h>
-  static pthread_mutex_t s_mutex;
-  static pthread_cond_t s_cv;
-#endif
-
-protected:
+public:
   static void SetUpTestCase()
   {
 #ifdef _WIN32
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
-    InitializeCriticalSection(&s_mutex);
-    InitializeConditionVariable(&s_cv);
 #endif /* _WIN32 */
+
+    oc_network_event_handler_mutex_init();
+    oc_ri_init();
+    oc_core_init();
+    ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
+                               kDeviceName.c_str(), kOCFSpecVersion.c_str(),
+                               kOCFDataModelVersion.c_str(), nullptr, nullptr));
+    oc_sec_svr_create();
+
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+    pstat->s = OC_DOS_RFNOP;
   }
 
   static void TearDownTestCase()
   {
+    oc_sec_svr_free();
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
+    oc_connectivity_shutdown(0);
+    oc_core_shutdown();
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
+
 #ifdef _WIN32
     WSACleanup();
 #endif /* _WIN32 */
@@ -92,160 +99,57 @@ protected:
 
   void SetUp() override
   {
-    s_handler.init = &appInit;
-    s_handler.signal_event_loop = &signalEventLoop;
-    ASSERT_EQ(0, oc_main_init(&s_handler));
-    size_t deviceCount = oc_core_get_num_devices();
-    ASSERT_LT(0, deviceCount);
-    deviceId_ = deviceCount - 1;
-
-    oc_sec_pstat_t *pstat = oc_sec_get_pstat(deviceId_);
-    pstat->s = OC_DOS_RFNOP;
+    oc_tls_init_context();
   }
 
   void TearDown() override
   {
-    oc_main_shutdown();
+    oc_tls_shutdown();
   }
 
-public:
-  size_t deviceId_{ static_cast<size_t>(-1) };
-
-  static oc_handler_t s_handler;
-
-  static int appInit(void)
+  static std::vector<oc::tls::Peer> getClients()
   {
-    if (oc_init_platform("OCFCloud", nullptr, nullptr) != 0) {
-      return -1;
-    }
-    if (oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.1.0.0",
-                      "ocf.res.1.0.0", nullptr, nullptr) != 0) {
-      return -1;
-    }
-    return 0;
-  }
-
-  static void signalEventLoop(void)
-  {
-#ifdef _WIN32
-    WakeConditionVariable(&s_cv);
-#else
-    pthread_cond_signal(&s_cv);
-#endif
-  }
-
-  static oc_event_callback_retval_t quitEvent(void *data)
-  {
-    auto quit = (bool *)data;
-    *quit = true;
-    return OC_EVENT_DONE;
-  }
-
-  static void mutex_lock(void)
-  {
-#ifdef _WIN32
-    EnterCriticalSection(&s_mutex);
-#else
-    pthread_mutex_lock(&s_mutex);
-#endif
-  }
-
-  static void mutex_unlock(void)
-  {
-#ifdef _WIN32
-    LeaveCriticalSection(&s_mutex);
-#else
-    pthread_mutex_unlock(&s_mutex);
-#endif
-  }
-
-  static void cond_wait(oc_clock_time_t next_event)
-  {
-#ifdef _WIN32
-    if (next_event == 0) {
-      SleepConditionVariableCS(&s_cv, &s_mutex, INFINITE);
-    } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
-        SleepConditionVariableCS(
-          &s_cv, &s_mutex,
-          (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
-#else
-    if (next_event == 0) {
-      pthread_cond_wait(&s_cv, &s_mutex);
-    } else {
-      struct timespec ts;
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
-                                     OC_CLOCK_SECOND);
-      pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
-    }
-#endif
-  }
-
-  static void poolEvents(uint16_t seconds)
-  {
-    bool quit = false;
-    oc_set_delayed_callback(&quit, quitEvent, seconds);
-
-    while (true) {
-      mutex_lock();
-      oc_clock_time_t next_event = oc_main_poll();
-      if (quit) {
-        mutex_unlock();
-        break;
-      }
-      cond_wait(next_event);
-      mutex_unlock();
-    }
-  }
-
-  static std::vector<Peer> getClients()
-  {
-    std::vector<Peer> clients{ createPeer("coaps://[ff02::41]:1336",
-                                          MBEDTLS_SSL_IS_CLIENT) };
+    std::vector<oc::tls::Peer> clients{ oc::tls::MakePeer(
+      "coaps://[ff02::41]:1336", MBEDTLS_SSL_IS_CLIENT) };
 #ifdef OC_IPV4
     clients.emplace_back(
-      createPeer("coaps://1.3.3.6:41", MBEDTLS_SSL_IS_CLIENT));
+      oc::tls::MakePeer("coaps://1.3.3.6:41", MBEDTLS_SSL_IS_CLIENT));
 #endif /* OC_IPV4 */
 
 #ifdef OC_TCP
     clients.emplace_back(
-      createPeer("coaps+tcp://[ff02::42]:1337", MBEDTLS_SSL_IS_CLIENT));
+      oc::tls::MakePeer("coaps+tcp://[ff02::42]:1337", MBEDTLS_SSL_IS_CLIENT));
 #ifdef OC_IPV4
     clients.emplace_back(
-      createPeer("coaps+tcp://1.3.3.7:42", MBEDTLS_SSL_IS_CLIENT));
+      oc::tls::MakePeer("coaps+tcp://1.3.3.7:42", MBEDTLS_SSL_IS_CLIENT));
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
 
     return clients;
   }
 
-  static std::vector<Peer> getServers()
+  static std::vector<oc::tls::Peer> getServers()
   {
-
-    std::vector<Peer> servers{ createPeer("coaps://[ff02::43]:1338",
-                                          MBEDTLS_SSL_IS_SERVER) };
+    std::vector<oc::tls::Peer> servers{ oc::tls::MakePeer(
+      "coaps://[ff02::43]:1338", MBEDTLS_SSL_IS_SERVER) };
 #ifdef OC_IPV4
     servers.emplace_back(
-      createPeer("coaps://1.3.3.8:43", MBEDTLS_SSL_IS_SERVER));
+      oc::tls::MakePeer("coaps://1.3.3.8:43", MBEDTLS_SSL_IS_SERVER));
 #endif /* OC_IPV4 */
 
 #ifdef OC_TCP
     servers.emplace_back(
-      createPeer("coaps+tcp://[ff02::44]:1339", MBEDTLS_SSL_IS_SERVER));
+      oc::tls::MakePeer("coaps+tcp://[ff02::44]:1339", MBEDTLS_SSL_IS_SERVER));
 #ifdef OC_IPV4
     servers.emplace_back(
-      createPeer("coaps+tcp://1.3.3.9:44", MBEDTLS_SSL_IS_SERVER));
+      oc::tls::MakePeer("coaps+tcp://1.3.3.9:44", MBEDTLS_SSL_IS_SERVER));
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
 
     return servers;
   }
 
-  static void addPeers(const std::vector<Peer> &peers)
+  static void addPeers(const std::vector<oc::tls::Peer> &peers)
   {
     for (const auto &p : peers) {
       oc_endpoint_t ep = oc::endpoint::FromString(p.address);
@@ -262,18 +166,9 @@ public:
   }
 };
 
-oc_handler_t TestTLSPeer::s_handler{};
-#ifdef _WIN32
-CRITICAL_SECTION TestTLSPeer::s_mutex;
-CONDITION_VARIABLE TestTLSPeer::s_cv;
-#else
-pthread_mutex_t TestTLSPeer::s_mutex;
-pthread_cond_t TestTLSPeer::s_cv;
-#endif
-
 TEST_F(TestTLSPeer, CountPeers)
 {
-  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(0, oc_tls_num_peers(0));
 
   auto endpoints = getClients();
 #ifndef OC_DYNAMIC_ALLOCATION
@@ -283,12 +178,12 @@ TEST_F(TestTLSPeer, CountPeers)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   addPeers(endpoints);
-  ASSERT_EQ(endpoints.size(), oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(endpoints.size(), oc_tls_num_peers(kDeviceID));
 }
 
 TEST_F(TestTLSPeer, GetPeer)
 {
-  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(0, oc_tls_num_peers(kDeviceID));
   auto servers = getServers();
 #ifndef OC_DYNAMIC_ALLOCATION
   if (servers.size() > OC_MAX_TLS_PEERS) {
@@ -297,7 +192,7 @@ TEST_F(TestTLSPeer, GetPeer)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   addPeers(servers);
-  ASSERT_EQ(servers.size(), oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(servers.size(), oc_tls_num_peers(kDeviceID));
 
   auto clients = getClients();
   for (const auto &c : clients) {
@@ -337,68 +232,19 @@ TEST_F(TestTLSPeer, ClearPeers)
 
   addPeers(clients);
   addPeers(servers);
-  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(kDeviceID));
 
   oc_tls_close_peers([](const oc_tls_peer_t *peer,
                         void *) { return peer->role == MBEDTLS_SSL_IS_CLIENT; },
                      nullptr);
-  ASSERT_EQ(servers.size(), oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(servers.size(), oc_tls_num_peers(kDeviceID));
 
   oc_tls_close_peers(nullptr, nullptr);
-  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
-}
-
-TEST_F(TestTLSPeer, ResetDeviceImmediately)
-{
-  auto clients = getClients();
-  auto servers = getServers();
-
-#ifndef OC_DYNAMIC_ALLOCATION
-  size_t max_peers = OC_MAX_TLS_PEERS;
-  if (clients.size() > max_peers) {
-    clients.resize(max_peers);
-  }
-  max_peers -= clients.size();
-  if (servers.size() > max_peers) {
-    servers.resize(max_peers);
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-  addPeers(clients);
-  addPeers(servers);
-  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
-  oc_reset();
-  poolEvents(1);
-  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
-}
-
-TEST_F(TestTLSPeer, ResetDevice)
-{
-  auto clients = getClients();
-  auto servers = getServers();
-
-#ifndef OC_DYNAMIC_ALLOCATION
-  size_t max_peers = OC_MAX_TLS_PEERS;
-  if (clients.size() > max_peers) {
-    clients.resize(max_peers);
-  }
-  max_peers -= clients.size();
-  if (servers.size() > max_peers) {
-    servers.resize(max_peers);
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-  addPeers(clients);
-  addPeers(servers);
-  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
-  oc_reset_v1(false);
-  poolEvents(1);
-  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(deviceId_));
-  poolEvents(2);
-  ASSERT_EQ(0, oc_tls_num_peers(deviceId_));
+  ASSERT_EQ(0, oc_tls_num_peers(kDeviceID));
 }
 
 #ifdef OC_PKI
+
 TEST_F(TestTLSPeer, VerifyCertificate)
 {
   oc_endpoint_t ep = oc::endpoint::FromString("coaps://[ff02::43]:1338");
@@ -417,6 +263,164 @@ TEST_F(TestTLSPeer, VerifyCertificate)
   peer->verify_certificate = verify_certificate;
   ASSERT_EQ(-1, peer->ssl_conf.f_vrfy(peer, &crt, 1, nullptr));
 }
+
 #endif /* OC_PKI */
+
+class TestTLSPeerWithServer : public testing::Test {
+public:
+  static void SetUpTestCase()
+  {
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+    pstat->s = OC_DOS_RFNOP;
+  }
+
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+
+  void TearDown() override
+  {
+    oc_tls_close_peers(nullptr, nullptr);
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+    pstat->s = OC_DOS_RFNOP;
+  }
+};
+
+TEST_F(TestTLSPeerWithServer, ResetDeviceImmediately)
+{
+  auto clients = TestTLSPeer::getClients();
+  auto servers = TestTLSPeer::getServers();
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  size_t max_peers = OC_MAX_TLS_PEERS;
+  if (clients.size() > max_peers) {
+    clients.resize(max_peers);
+  }
+  max_peers -= clients.size();
+  if (servers.size() > max_peers) {
+    servers.resize(max_peers);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  TestTLSPeer::addPeers(clients);
+  TestTLSPeer::addPeers(servers);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(kDeviceID));
+  oc_reset();
+  oc::TestDevice::PoolEventsMs(200);
+  ASSERT_EQ(0, oc_tls_num_peers(kDeviceID));
+}
+
+TEST_F(TestTLSPeerWithServer, ResetDevice)
+{
+  auto clients = TestTLSPeer::getClients();
+  auto servers = TestTLSPeer::getServers();
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  size_t max_peers = OC_MAX_TLS_PEERS;
+  if (clients.size() > max_peers) {
+    clients.resize(max_peers);
+  }
+  max_peers -= clients.size();
+  if (servers.size() > max_peers) {
+    servers.resize(max_peers);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  TestTLSPeer::addPeers(clients);
+  TestTLSPeer::addPeers(servers);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(kDeviceID));
+  oc_reset_v1(false);
+  oc::TestDevice::PoolEventsMs(500);
+  ASSERT_EQ(clients.size() + servers.size(), oc_tls_num_peers(kDeviceID));
+  // TLS sessions are closed after 2 seconds
+  oc::TestDevice::PoolEvents(2);
+  ASSERT_EQ(0, oc_tls_num_peers(kDeviceID));
+}
+
+#if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
+
+// TODO: upgrade mingw, because on v10.2 std::thread doesn't work correctly
+#ifndef __MINGW32__
+
+TEST_F(TestTLSPeerWithServer, DTLSInactivityMonitor)
+{
+  oc_clock_time_t timeout_default = oc_dtls_inactivity_timeout();
+  oc_dtls_set_inactivity_timeout(2 * OC_CLOCK_SECOND);
+
+  // DTLS endpoint
+  const oc_endpoint_t *ep =
+    oc::TestDevice::GetEndpoint(/*device*/ 0, SECURED, TCP);
+  ASSERT_NE(nullptr, ep);
+
+  std::vector<uint8_t> psk = { 0xD1, 0xD0, 0xDB, 0x1F, 0x8B, 0xB2, 0x40, 0x55,
+                               0x9B, 0x07, 0xB8, 0x76, 0x50, 0x7E, 0x25, 0xCF };
+  oc_uuid_t *uuid = oc_core_get_device_id(kDeviceID);
+  std::vector<uint8_t> hint{};
+  hint.reserve(OC_ARRAY_SIZE(uuid->id));
+  std::copy(std::begin(uuid->id), std::end(uuid->id), std::back_inserter(hint));
+
+  enum class DTLS_STATUS : int {
+    INIT = 0,
+    THREAD_STARTED = 1,
+    HANDSHAKE_DONE = 2,
+
+    ERROR = -1,
+  };
+  std::atomic dtls_status{ DTLS_STATUS::INIT };
+  oc::tls::DTLSClient dtls{};
+  dtls.SetPresharedKey(psk, hint);
+  auto dtls_execute = [&dtls, &ep, &dtls_status] {
+    OC_DBG("dtls helper thread started");
+    dtls_status = DTLS_STATUS::THREAD_STARTED;
+
+    std::string host{ "::1" };
+    int port = oc_endpoint_port(ep);
+    if (port < 0) {
+      dtls_status = DTLS_STATUS::ERROR;
+      GTEST_FAIL();
+    }
+    if (int socket = dtls.Connect(host, static_cast<uint16_t>(port));
+        socket < 0) {
+      OC_ERR("DTLS connect failed with error(%d, errno=%d)", socket, errno);
+      dtls_status = DTLS_STATUS::ERROR;
+      GTEST_FAIL();
+    }
+    if (int hs = dtls.Handshake(); hs != 0) {
+      OC_ERR("DTLS handshake failed with error(%d)", hs);
+      dtls_status = DTLS_STATUS::ERROR;
+      GTEST_FAIL();
+    }
+    dtls_status = DTLS_STATUS::HANDSHAKE_DONE;
+    dtls.Run();
+  };
+
+  std::array<char, OC_UUID_LEN> uuid_str{};
+  oc_uuid_to_str(uuid, uuid_str.data(), uuid_str.size());
+  int credid = oc_sec_add_new_cred(
+    kDeviceID, false, nullptr, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
+    uuid_str.data(), OC_ENCODING_RAW, psk.size(), psk.data(),
+    OC_ENCODING_UNSUPPORTED, 0, nullptr, nullptr, nullptr, nullptr, nullptr);
+  ASSERT_NE(-1, credid);
+
+  std::thread dtls_thread{ dtls_execute };
+  while (dtls_status.load() != DTLS_STATUS::HANDSHAKE_DONE) {
+    oc::TestDevice::PoolEventsMs(200);
+  }
+
+  EXPECT_EQ(1, oc_tls_num_peers(kDeviceID));
+  uint64_t timeout_msecs =
+    (oc_dtls_inactivity_timeout() / OC_CLOCK_SECOND) * 1000;
+  oc::TestDevice::PoolEventsMs(timeout_msecs * 2);
+  EXPECT_EQ(0, oc_tls_num_peers(kDeviceID));
+
+  dtls.Stop();
+  dtls_thread.join();
+
+  /* restore defaults */
+  oc_dtls_set_inactivity_timeout(timeout_default);
+}
+
+#endif /* __MINGW32__ */
+
+#endif /* MBEDTLS_NET_C && MBEDTLS_TIMING_C */
 
 #endif /* OC_SECURITY */

@@ -115,7 +115,7 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
   OC_DBG("CoAP send empty message: mid=%u, code=%u", mid, code);
   coap_packet_t msg[1]; // empty response
   coap_udp_init_message(msg, type, code, mid);
-  oc_message_t *message = oc_internal_allocate_outgoing_message();
+  oc_message_t *message = oc_message_allocate_outgoing();
   if (message) {
     memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
     if (token && token_len > 0) {

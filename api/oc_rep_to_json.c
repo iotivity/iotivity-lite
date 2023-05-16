@@ -323,7 +323,7 @@ oc_rep_to_json_format(const oc_rep_t *rep, char *buf, size_t buf_size,
         }
         char *byte_string = oc_byte_string_array_get_item(byte_str_array, i);
         size_t byte_string_size =
-          oc_byte_string_array_get_item_size(byte_str_array, i);
+          (size_t)oc_byte_string_array_get_item_size(byte_str_array, i);
         num_char_printed = oc_rep_to_json_base64_encoded_byte_string(
           buf, buf_size, byte_string, byte_string_size);
         OC_JSON_UPDATE_BUFFER_AND_TOTAL;

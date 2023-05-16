@@ -141,12 +141,13 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
+SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c)
 ifneq ($(MEMORY_TRACE),1)
 SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
+SRC_COMMON=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
 SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
 SRC_CLIENT=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
@@ -175,7 +176,7 @@ else
 OBJ_CLOUD =
 endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
-VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../util/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -llog
 

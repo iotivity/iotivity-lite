@@ -56,6 +56,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/observe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/separate.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/transactions.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/oc_ip.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_etimer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_list.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_memb.c

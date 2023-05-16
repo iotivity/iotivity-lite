@@ -38,7 +38,8 @@
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
 #include "util/oc_process.h"
-#include <arpa/inet.h>
+
+#include <inttypes.h>
 
 // TODO: add push component to logs and use standard logging functions
 #if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
@@ -1322,7 +1323,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
     switch (rep->type) {
     case OC_REP_BOOL:
       OC_PUSH_PRINT("%s%s: %d\n", depth_prefix, oc_string(rep->name),
-                    rep->value.boolean);
+                    (int)rep->value.boolean);
       break;
 
     case OC_REP_BOOL_ARRAY:
@@ -1336,7 +1337,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
       break;
 
     case OC_REP_INT:
-      OC_PUSH_PRINT("%s%s: %ld\n", depth_prefix, oc_string(rep->name),
+      OC_PUSH_PRINT("%s%s: %" PRId64 "\n", depth_prefix, oc_string(rep->name),
                     rep->value.integer);
       break;
 
@@ -1344,7 +1345,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        OC_PUSH_PRINT("%s%s\"%ld\"\n", depth_prefix, prefix_str,
+        OC_PUSH_PRINT("%s%s\"%" PRId64 "\"\n", depth_prefix, prefix_str,
                       oc_int_array(rep->value.array)[i]);
       }
       OC_PUSH_PRINT("%s]\n", depth_prefix);
@@ -1500,7 +1501,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
       return;
     }
   } else {
-    OC_PUSH_ERR("can't find push receiver properties for (%s) in device (%ld), "
+    OC_PUSH_ERR("can't find push receiver properties for (%s) in device (%zu), "
                 "the target resource may not be a \"push receiver resource\"",
                 oc_string(request->resource->uri), request->resource->device);
     return;
@@ -1806,7 +1807,7 @@ _purge_recv_obj_list(oc_recvs_t *recvs_instance)
   oc_recv_t *recv_obj = (oc_recv_t *)oc_list_pop(recvs_instance->receivers);
 
   while (recv_obj) {
-    OC_PUSH_DBG("purge receiver obj for ( %s (device: %ld) )... ",
+    OC_PUSH_DBG("purge receiver obj for ( %s (device: %zu) )... ",
                 oc_string(recv_obj->receiveruri),
                 recvs_instance->resource->device);
 
@@ -2077,7 +2078,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
   recvs_instance = (oc_recvs_t *)oc_list_head(g_recvs_list);
   while (recvs_instance) {
     if (recvs_instance->resource == request->resource) {
-      OC_PUSH_DBG("receivers obj array instance \"%s\"@Device(%ld) is found!",
+      OC_PUSH_DBG("receivers obj array instance \"%s\"@Device(%zu) is found!",
                   oc_string(request->resource->uri), request->resource->device);
 
       if (uri_param_len != -1) {
@@ -2291,7 +2292,7 @@ oc_push_free(void)
   oc_recvs_t *recvs_instance = (oc_recvs_t *)oc_list_pop(g_recvs_list);
   while (recvs_instance) {
     _purge_recv_obj_list(recvs_instance);
-    OC_PUSH_DBG("free push receiver Resource (device: %ld)... ",
+    OC_PUSH_DBG("free push receiver Resource (device: %zu)... ",
                 recvs_instance->resource->device);
     oc_delete_resource(recvs_instance->resource);
     oc_memb_free(&g_recvs_instance_memb, recvs_instance);
@@ -2578,15 +2579,15 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
   oc_ns_t *ns_instance = (oc_ns_t *)oc_list_head(g_ns_list);
   char all_matched = 0x7;
 
-  OC_PUSH_DBG("resource \"%s\"@device(%ld) is updated!", uri, device_index);
+  OC_PUSH_DBG("resource \"%s\"@device(%zu) is updated!", uri, device_index);
 
   if (!resource) {
-    OC_PUSH_ERR("there is no resource for \"%s\"@device(%ld)", uri,
+    OC_PUSH_ERR("there is no resource for \"%s\"@device(%zu)", uri,
                 device_index);
     return;
   }
   if (!(resource->properties & OC_PUSHABLE)) {
-    OC_PUSH_ERR("resource \"%s\"@device (%ld) is not pushable!", uri,
+    OC_PUSH_ERR("resource \"%s\"@device (%zu) is not pushable!", uri,
                 device_index);
     return;
   }

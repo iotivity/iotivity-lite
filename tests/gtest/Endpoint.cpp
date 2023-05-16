@@ -18,8 +18,10 @@
 
 #include "Endpoint.h"
 
+#include "api/oc_endpoint_internal.h"
 #include "oc_helpers.h"
 
+#include <array>
 #include <gtest/gtest.h>
 
 namespace oc::endpoint {
@@ -44,6 +46,24 @@ FromString(const std::string &addr, oc_endpoint_t *ep, oc_string_t *uri)
   int ret = oc_string_to_endpoint(&s, ep, uri);
   oc_free_string(&s);
   return ret;
+}
+
+std::string
+ToAddress(const oc_endpoint_t &ep)
+{
+  oc_string_t ep_str{};
+  oc_endpoint_to_string(&ep, &ep_str);
+  std::string s(oc_string(ep_str));
+  oc_free_string(&ep_str);
+  return s;
+}
+
+std::string
+ToHost(const oc_endpoint_t &ep)
+{
+  std::array<char, 50> buffer{};
+  EXPECT_LT(0, oc_endpoint_host(&ep, buffer.data(), buffer.size()));
+  return std::string(buffer.data());
 }
 
 } // namespace oc::endpoint

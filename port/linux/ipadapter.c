@@ -20,6 +20,7 @@
 #include "api/oc_network_events_internal.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
+#include "netsocket.h"
 #include "oc_config.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -66,26 +67,6 @@
 #endif /* !IFA_FLAGS */
 
 #define OCF_PORT_UNSECURED (5683)
-static const uint8_t ALL_OCF_NODES_LL[] = {
-  0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
-};
-static const uint8_t ALL_OCF_NODES_RL[] = {
-  0xff, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
-};
-static const uint8_t ALL_OCF_NODES_SL[] = {
-  0xff, 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
-};
-
-#ifdef OC_WKCORE
-static const uint8_t ALL_COAP_NODES_LL[] = { 0xff, 0x02, 0, 0, 0, 0, 0, 0,
-                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
-static const uint8_t ALL_COAP_NODES_RL[] = { 0xff, 0x03, 0, 0, 0, 0, 0, 0,
-                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
-static const uint8_t ALL_COAP_NODES_SL[] = { 0xff, 0x05, 0, 0, 0, 0, 0, 0,
-                                             0,    0,    0, 0, 0, 0, 0, 0xFD };
-#endif /* OC_WKCORE */
-
-#define ALL_COAP_NODES_V4 0xe00001bb
 
 static pthread_mutex_t g_mutex;
 struct sockaddr_nl g_ifchange_nl;
@@ -250,181 +231,6 @@ oc_get_ip_context_for_device(size_t device)
   }
   pthread_mutex_unlock(&g_mutex);
   return dev;
-}
-
-#ifdef OC_IPV4
-static int
-add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
-                                   int interface_index)
-{
-  if (mcast_sock == -1) {
-    OC_ERR("multicast socket is disabled");
-    return -1;
-  }
-  struct ip_mreqn mreq;
-
-  memset(&mreq, 0, sizeof(mreq));
-  mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  mreq.imr_ifindex = interface_index;
-  memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
-
-  (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
-                   sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining IPv4 multicast group %d", errno);
-    return -1;
-  }
-
-  return 0;
-}
-#endif /* OC_IPV4 */
-
-static int
-add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
-{
-  if (mcast_sock == -1) {
-    OC_ERR("multicast socket is disabled");
-    return -1;
-  }
-  struct ipv6_mreq mreq;
-
-  /* Link-local scope */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_LL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-                   sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining link-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-
-  /* Realm-local scope */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_RL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-                   sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining realm-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-
-  /* Site-local scope */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_SL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
-                   sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining site-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-
-#ifdef OC_WKCORE
-
-  OC_DBG("Adding all CoAP Nodes");
-  /* Link-local scope ALL COAP NODES */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_LL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
-             sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining link-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-
-  /* Realm-local scope ALL COAP nodes  */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_RL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
-             sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining realm-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-
-  /* Site-local scope ALL COAP nodes */
-  memset(&mreq, 0, sizeof(mreq));
-  memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_COAP_NODES_SL, 16);
-  mreq.ipv6mr_interface = interface_index;
-
-  setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char *)&mreq,
-             sizeof(mreq));
-
-  if (setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq,
-                 sizeof(mreq)) == -1) {
-    OC_ERR("joining site-local IPv6 multicast group %d", errno);
-    return -1;
-  }
-#endif /* OC_WKCORE */
-
-  return 0;
-}
-
-static int
-configure_mcast_socket(int mcast_sock, int sa_family)
-{
-  if (mcast_sock == -1) {
-    OC_ERR("multicast socket is disabled");
-    return -1;
-  }
-  int ret = 0;
-  struct ifaddrs *ifs = NULL, *interface = NULL;
-  if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interface addrs");
-    return -1;
-  }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    /* Ignore interfaces that are down and the loopback interface */
-    if (!(interface->ifa_flags & IFF_UP) ||
-        (interface->ifa_flags & IFF_LOOPBACK)) {
-      continue;
-    }
-    /* Ignore interfaces not belonging to the address family under consideration
-     */
-    if (interface->ifa_addr && interface->ifa_addr->sa_family != sa_family) {
-      continue;
-    }
-    /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
-    /* Accordingly handle IPv6/IPv4 addresses */
-    if (sa_family == AF_INET6) {
-      struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
-      if (a && IN6_IS_ADDR_LINKLOCAL(&a->sin6_addr)) {
-        ret += add_mcast_sock_to_ipv6_mcast_group(mcast_sock, if_index);
-      }
-    }
-#ifdef OC_IPV4
-    else if (sa_family == AF_INET) {
-      struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
-      if (a)
-        ret += add_mcast_sock_to_ipv4_mcast_group(mcast_sock, &a->sin_addr,
-                                                  if_index);
-    }
-#endif /* OC_IPV4 */
-  }
-  freeifaddrs(ifs);
-  return ret;
 }
 
 static ssize_t
@@ -738,7 +544,7 @@ process_interface_change_event(void)
     return -1;
   }
 
-  int ret = 0;
+  bool success = true;
   size_t num_devices = oc_core_get_num_devices();
   bool if_state_changed = false;
   while (NLMSG_OK(response, response_len)) {
@@ -761,8 +567,9 @@ process_interface_change_event(void)
                 if (dev == NULL) {
                   continue;
                 }
-                ret += add_mcast_sock_to_ipv4_mcast_group(
-                  dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index);
+                success = oc_netsocket_add_sock_to_ipv4_mcast_group(
+                            dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index) &&
+                          success;
               }
             } else
 #endif /* OC_IPV4 */
@@ -773,8 +580,9 @@ process_interface_change_event(void)
                   if (dev == NULL) {
                     continue;
                   }
-                  ret += add_mcast_sock_to_ipv6_mcast_group(dev->mcast_sock,
-                                                            ifa->ifa_index);
+                  success = oc_netsocket_add_sock_to_ipv6_mcast_group(
+                              dev->mcast_sock, ifa->ifa_index) &&
+                            success;
                 }
               }
           }
@@ -814,7 +622,7 @@ process_interface_change_event(void)
     }
   }
 
-  return ret;
+  return success ? 0 : -1;
 }
 
 static int
@@ -1609,38 +1417,18 @@ initialize_ip_context_ipv4(oc_sock_listener_t *server, bool enabled,
                            uint16_t port)
 {
   if (!enabled) {
+    OC_DBG("IPv4 listening socket is disabled");
     server->sock = -1;
     return true;
   }
-  struct sockaddr_storage sockaddr;
-  memset(&sockaddr, 0, sizeof(sockaddr));
-  struct sockaddr_in *l = (struct sockaddr_in *)&sockaddr;
-  l->sin_family = AF_INET;
-  l->sin_addr.s_addr = INADDR_ANY;
-  l->sin_port = htons(port);
-  server->sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (server->sock < 0) {
-    OC_ERR("creating IPv4 server sockets");
-    return false;
-  }
 
-  int on = 1;
-  if (setsockopt(server->sock, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) == -1) {
-    OC_ERR("setting pktinfo IPv4 option %d\n", errno);
+  int sock = oc_netsocket_create_ipv4(port);
+  if (sock < 0) {
+    OC_ERR("failed creating IPv4 listening socket on port %u", (unsigned)port);
+    server->sock = -1;
     return false;
   }
-  if (bind(server->sock, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) ==
-      -1) {
-    OC_ERR("binding server4 socket %d", errno);
-    return false;
-  }
-
-  socklen_t socklen = sizeof(sockaddr);
-  if (getsockname(server->sock, (struct sockaddr *)&sockaddr, &socklen) == -1) {
-    OC_ERR("obtaining server4 socket information %d", errno);
-    return false;
-  }
-
+  server->sock = sock;
   return true;
 }
 
@@ -1649,73 +1437,50 @@ initialize_ip_context_ipv4_mcast(ip_context_t *dev, bool enabled)
 {
   if (!enabled) {
     OC_WRN("discovery via IPv4 multicast is disabled");
-    dev->mcast_sock = -1;
+    dev->mcast4_sock = -1;
     return true;
   }
-  struct sockaddr_storage mcast4;
-  memset(&mcast4, 0, sizeof(struct sockaddr_storage));
-  struct sockaddr_in *m = (struct sockaddr_in *)&mcast4;
-  m->sin_family = AF_INET;
-  m->sin_port = htons(OCF_PORT_UNSECURED);
-  m->sin_addr.s_addr = INADDR_ANY;
-  dev->mcast4_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->mcast4_sock < 0) {
-    OC_ERR("creating IPv4 server sockets");
+
+  int mcast4_sock = oc_netsocket_create_mcast_ipv4(OCF_PORT_UNSECURED);
+  if (mcast4_sock < 0) {
+    OC_ERR("failed creating IPv4 multicast socket on port %u",
+           (unsigned)OCF_PORT_UNSECURED);
+    dev->mcast4_sock = -1;
     return false;
   }
-  if (configure_mcast_socket(dev->mcast4_sock, AF_INET) < 0) {
-    return false;
-  }
-  int on = 1;
-  if (setsockopt(dev->mcast4_sock, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting pktinfo IPv4 option %d\n", errno);
-    return false;
-  }
-  if (setsockopt(dev->mcast4_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr IPv4 option %d", errno);
-    return false;
-  }
-  if (bind(dev->mcast4_sock, (struct sockaddr *)&mcast4, sizeof(mcast4)) ==
-      -1) {
-    OC_ERR("binding mcast IPv4 socket %d", errno);
-    return false;
-  }
+  dev->mcast4_sock = mcast4_sock;
   return true;
 }
 
-static int
+static bool
 connectivity_ipv4_init(ip_context_t *dev, oc_connectivity_ports_t ports)
 {
   OC_DBG("Initializing IPv4 connectivity for device %zd", dev->device);
 
-  if (initialize_ip_context_ipv4_mcast(
-        dev, (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT) == 0) ==
-      false) {
+  if (!initialize_ip_context_ipv4_mcast(
+        dev, (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT) == 0)) {
     return false;
   }
 
-  if (initialize_ip_context_ipv4(
+  if (!initialize_ip_context_ipv4(
         &dev->server4,
         (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV4_PORT) == 0,
-        ports.udp.port4) == false) {
+        ports.udp.port4)) {
     return false;
   }
 
 #ifdef OC_SECURITY
-  if (initialize_ip_context_ipv4(
+  if (!initialize_ip_context_ipv4(
         &dev->secure4,
         (ports.udp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV4_PORT) == 0,
-        ports.udp.secure_port4) == false) {
+        ports.udp.secure_port4)) {
     return false;
   }
 #endif /* OC_SECURITY */
 
   OC_DBG("Successfully initialized IPv4 connectivity for device %zd",
          dev->device);
-
-  return 0;
+  return true;
 }
 #endif /* OC_IPV4 */
 
@@ -1724,50 +1489,18 @@ initialize_ip_context_ipv6(oc_sock_listener_t *server, bool enabled,
                            uint16_t port)
 {
   if (!enabled) {
+    OC_DBG("IPv6 listening socket is disabled");
     server->sock = -1;
     return true;
   }
-  struct sockaddr_storage sockaddr;
-  memset(&sockaddr, 0, sizeof(sockaddr));
-  struct sockaddr_in6 *l = (struct sockaddr_in6 *)&sockaddr;
-  l->sin6_family = AF_INET6;
-  l->sin6_addr = in6addr_any;
-  l->sin6_port = htons(port);
-  server->sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (server->sock < 0) {
-    OC_ERR("creating IPv6 server socket %d", errno);
-    return false;
-  }
-  int on = 1;
-  if (setsockopt(server->sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting recvpktinfo option %d\n", errno);
-    return false;
-  }
-  if (setsockopt(server->sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting sock option %d", errno);
-    return false;
-  }
-#ifdef IPV6_ADDR_PREFERENCES
-  int prefer = 2;
-  if (setsockopt(server->sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
-                 sizeof(prefer)) == -1) {
-    OC_ERR("setting src addr preference %d", errno);
-    return false;
-  }
-#endif /* IPV6_ADDR_PREFERENCES */
-  socklen_t socklen = sizeof(sockaddr);
-  if (bind(server->sock, (struct sockaddr *)&sockaddr, socklen) == -1) {
-    OC_ERR("binding server socket %d", errno);
-    return false;
-  }
 
-  if (getsockname(server->sock, (struct sockaddr *)&sockaddr, &socklen) == -1) {
-    OC_ERR("obtaining server socket information %d", errno);
+  int sock = oc_netsocket_create_ipv6(port);
+  if (sock < 0) {
+    OC_ERR("failed creating IPv6 listening socket on port %u", (unsigned)port);
+    server->sock = -1;
     return false;
   }
-
+  server->sock = sock;
   return true;
 }
 
@@ -1779,48 +1512,16 @@ initialize_ip_context_ipv6_mcast(ip_context_t *dev, bool enabled)
     dev->mcast_sock = -1;
     return true;
   }
-  struct sockaddr_storage mcast;
-  memset(&mcast, 0, sizeof(struct sockaddr_storage));
-  struct sockaddr_in6 *m = (struct sockaddr_in6 *)&mcast;
-  m->sin6_family = AF_INET6;
-  m->sin6_port = htons(OCF_PORT_UNSECURED);
-  m->sin6_addr = in6addr_any;
-  dev->mcast_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-  if (dev->mcast_sock < 0) {
-    OC_ERR("creating server sockets");
+
+  int mcast_sock = oc_netsocket_create_mcast_ipv6(OCF_PORT_UNSECURED);
+  if (mcast_sock < 0) {
+    OC_ERR("failed creating IPv6 multicast socket on port %u",
+           (unsigned)OCF_PORT_UNSECURED);
+    dev->mcast_sock = -1;
     return false;
   }
-  if (configure_mcast_socket(dev->mcast_sock, AF_INET6) < 0) {
-    return false;
-  }
-  int on = 1;
-  if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on,
-                 sizeof(on)) == -1) {
-    OC_ERR("setting recvpktinfo option %d\n", errno);
-    return false;
-  }
-  if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting sock option %d", errno);
-    return false;
-  }
-  if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) ==
-      -1) {
-    OC_ERR("setting reuseaddr option %d", errno);
-    return false;
-  }
-#ifdef IPV6_ADDR_PREFERENCES
-  int prefer = 2;
-  if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_ADDR_PREFERENCES, &prefer,
-                 sizeof(prefer)) == -1) {
-    OC_ERR("setting src addr preference %d", errno);
-    return false;
-  }
-#endif /* IPV6_ADDR_PREFERENCES */
-  if (bind(dev->mcast_sock, (struct sockaddr *)&mcast, sizeof(mcast)) == -1) {
-    OC_ERR("binding mcast socket %d", errno);
-    return false;
-  }
+
+  dev->mcast_sock = mcast_sock;
   return true;
 }
 
@@ -1844,29 +1545,28 @@ initialize_ip_context(ip_context_t *dev, size_t device,
     return false;
   }
 
-  if (initialize_ip_context_ipv6_mcast(
-        dev, (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT) == 0) ==
-      false) {
+  if (!initialize_ip_context_ipv6_mcast(
+        dev, (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT) == 0)) {
     return false;
   }
 
-  if (initialize_ip_context_ipv6(
+  if (!initialize_ip_context_ipv6(
         &dev->server,
         (ports.udp.flags & OC_CONNECTIVITY_DISABLE_IPV6_PORT) == 0,
-        ports.udp.port) == false) {
+        ports.udp.port)) {
     return false;
   }
 #ifdef OC_SECURITY
-  if (initialize_ip_context_ipv6(
+  if (!initialize_ip_context_ipv6(
         &dev->secure,
         (ports.udp.flags & OC_CONNECTIVITY_DISABLE_SECURE_IPV6_PORT) == 0,
-        ports.udp.secure_port) == false) {
+        ports.udp.secure_port)) {
     return false;
   }
 #endif
 
 #ifdef OC_IPV4
-  if (connectivity_ipv4_init(dev, ports) != 0) {
+  if (!connectivity_ipv4_init(dev, ports)) {
     OC_ERR("Could not initialize IPv4");
   }
 #endif /* OC_IPV4 */
@@ -1884,7 +1584,7 @@ initialize_ip_context(ip_context_t *dev, size_t device,
 #endif /* OC_IPV4 */
 
 #ifdef OC_TCP
-  if (tcp_connectivity_init(dev, ports) != 0) {
+  if (!tcp_connectivity_init(dev, ports)) {
     OC_ERR("Could not initialize TCP adapter");
   }
 #endif /* OC_TCP */

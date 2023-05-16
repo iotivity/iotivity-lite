@@ -24,13 +24,13 @@
 #include "api/oc_tcp_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 
-#include <array>
-#include <cstdlib>
-#include <gtest/gtest.h>
-
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */
+
+#include <array>
+#include <cstdlib>
+#include <gtest/gtest.h>
 
 #ifdef OC_SECURITY
 #include <mbedtls/ssl.h>

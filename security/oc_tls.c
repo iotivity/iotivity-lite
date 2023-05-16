@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 
 #include "oc_tls_internal.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_events.h"
 #include "api/oc_main.h"
 #include "api/oc_network_events_internal.h"
@@ -44,6 +45,7 @@
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
 #include "util/oc_features.h"
+#include "util/oc_macros.h"
 
 #ifdef OC_PKI
 #include "security/oc_certs_internal.h"
@@ -85,6 +87,30 @@ static mbedtls_ssl_cookie_ctx g_cookie_ctx;
 static oc_random_pin_t g_random_pin;
 #define PIN_LEN (8)
 static unsigned char g_pin[PIN_LEN];
+#define DTLS_INACTIVITY_TIMEOUT_TICKS                                          \
+  (OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND)
+
+#ifdef OC_TEST
+#undef DTLS_INACTIVITY_TIMEOUT_TICKS
+
+static oc_clock_time_t g_dtls_inactivity_timeout =
+  OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND;
+
+void
+oc_dtls_set_inactivity_timeout(oc_clock_time_t timeout)
+{
+  g_dtls_inactivity_timeout = timeout;
+}
+
+oc_clock_time_t
+oc_dtls_inactivity_timeout(void)
+{
+  return g_dtls_inactivity_timeout;
+}
+
+#define DTLS_INACTIVITY_TIMEOUT_TICKS g_dtls_inactivity_timeout
+
+#endif /* OC_TEST */
 
 void
 oc_tls_generate_random_pin(void)
@@ -286,7 +312,7 @@ reset_in_RFOTM(void *data)
   return OC_EVENT_DONE;
 }
 
-static oc_event_callback_retval_t oc_tls_inactive(void *data);
+static oc_event_callback_retval_t oc_dtls_inactive(void *data);
 
 #ifdef OC_CLIENT
 static void
@@ -302,7 +328,7 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
     oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
   }
 
-  oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
+  oc_ri_remove_timed_event_callback(peer, oc_dtls_inactive);
 
   mbedtls_ssl_free(&peer->ssl_ctx);
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -390,7 +416,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #endif /* OC_TCP */
 
   if (!inactivity_cb) {
-    oc_ri_remove_timed_event_callback(peer, oc_tls_inactive);
+    oc_ri_remove_timed_event_callback(peer, oc_dtls_inactive);
   }
   mbedtls_ssl_free(&peer->ssl_ctx);
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -529,25 +555,26 @@ oc_tls_handler_schedule_write(oc_tls_peer_t *peer)
 #endif /* OC_CLIENT */
 
 static oc_event_callback_retval_t
-oc_tls_inactive(void *data)
+oc_dtls_inactive(void *data)
 {
   OC_DBG("oc_tls: DTLS inactivity callback");
   oc_tls_peer_t *peer = (oc_tls_peer_t *)data;
-  if (is_peer_active(peer)) {
-    oc_clock_time_t time = oc_clock_time();
-    time -= peer->timestamp;
-    if (time < (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT *
-                 (oc_clock_time_t)OC_CLOCK_SECOND) {
-      OC_DBG("oc_tls: Resetting DTLS inactivity callback");
-      return OC_EVENT_CONTINUE;
-    }
-    mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    if ((peer->endpoint.flags & TCP) == 0) {
-      mbedtls_ssl_close_notify(&peer->ssl_ctx);
-    }
-    oc_tls_free_peer(peer, true);
+  if (!is_peer_active(peer)) {
+    OC_DBG("oc_tls: Terminating DTLS inactivity callback");
+    return OC_EVENT_DONE;
   }
-  OC_DBG("oc_tls: Terminating DTLS inactivity callback");
+  oc_clock_time_t time = oc_clock_time();
+  time -= peer->timestamp;
+  if (time < DTLS_INACTIVITY_TIMEOUT_TICKS) {
+    OC_DBG("oc_tls: Resetting DTLS inactivity callback");
+    return OC_EVENT_CONTINUE;
+  }
+  mbedtls_ssl_close_notify(&peer->ssl_ctx);
+  if ((peer->endpoint.flags & TCP) == 0) {
+    mbedtls_ssl_close_notify(&peer->ssl_ctx);
+  }
+  OC_DBG("oc_tls: Removing inactive peer");
+  oc_tls_free_peer(peer, true);
   return OC_EVENT_DONE;
 }
 
@@ -585,16 +612,16 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
-  peer->timestamp = oc_clock_time();
-  oc_message_t *message = oc_allocate_message();
+  peer->timestamp = oc_clock_time(); // TODO monotonic timer
+  size_t max_len = oc_message_buffer_size();
+  size_t send_len = (len < max_len) ? len : max_len;
+  oc_message_t *message = oc_message_allocate_outgoing_with_size(send_len);
   if (message == NULL) {
     return 0;
   }
   memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
-  size_t send_len = (len < (unsigned)OC_PDU_SIZE) ? len : (unsigned)OC_PDU_SIZE;
   memcpy(message->data, buf, send_len);
   message->length = send_len;
-  // TODO: oc_message_shrink_buffer
   message->encrypted = 1;
   int ret = oc_send_buffer2(message, false);
   oc_message_unref(message);
@@ -602,7 +629,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 }
 
 static void
-check_retr_timers(void)
+check_retry_timers(void)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(g_tls_peers);
   while (peer != NULL) {
@@ -640,7 +667,7 @@ static void
 ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 {
   if (fin_ms != 0) {
-    oc_tls_retr_timer_t *timer = (oc_tls_retr_timer_t *)ctx;
+    oc_tls_retry_timer_t *timer = (oc_tls_retry_timer_t *)ctx;
     timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
     oc_etimer_stop(&timer->fin_timer);
     timer->fin_timer.timer.interval =
@@ -698,7 +725,6 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
            size_t identity_len)
 {
   (void)data;
-  (void)identity_len;
   OC_DBG("oc_tls: In PSK callback");
   oc_tls_peer_t *peer = oc_list_head(g_tls_peers);
   while (peer != NULL) {
@@ -707,58 +733,63 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     }
     peer = peer->next;
   }
-  if (peer) {
-    OC_DBG("oc_tls: Found peer object");
-    const oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
-    /* To an OBT performing the PIN OTM, a device signals its identity
-     * with the oic.sec.doxm.rdp: prefix.
-     */
-    if (ps->s == OC_DOS_RFNOP && identity_len > 16 &&
-        memcmp(identity, "oic.sec.doxm.rdp:", 17) == 0) {
-      identity += 17;
-      identity_len -= 17;
-    }
-    oc_sec_cred_t *cred =
-      oc_sec_find_cred(NULL, (oc_uuid_t *)identity, OC_CREDTYPE_PSK,
-                       OC_CREDUSAGE_NULL, peer->endpoint.device);
-    if (cred != NULL) {
-      OC_DBG("oc_tls: Found peer credential");
-      memcpy(peer->uuid.id, identity, 16);
-      OC_DBG("oc_tls: Setting the key:");
-      OC_LOGbytes(oc_string(cred->privatedata.data),
-                  oc_string_len(cred->privatedata.data));
-      if (mbedtls_ssl_set_hs_psk(ssl,
-                                 oc_cast(cred->privatedata.data, const uint8_t),
-                                 oc_string_len(cred->privatedata.data)) != 0) {
-        return -1;
-      }
-      OC_DBG("oc_tls: Set peer credential to SSL handle");
-      return 0;
-    }
-    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
-    if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
-      if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
-        OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
-        return -1;
-      }
-      OC_DBG("oc_tls: deriving PPSK for PIN OTM");
-      memcpy(peer->uuid.id, identity, 16);
-
-      uint8_t key[16];
-
-      if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000, key, 16) !=
-          0) {
-        OC_ERR("oc_tls: error deriving PPSK");
-        return -1;
-      }
-
-      if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
-        OC_ERR("oc_tls: error applying PPSK to current handshake");
-        return -1;
-      }
-      return 0;
-    }
+  if (peer == NULL) {
+    OC_ERR("oc_tls: could not peer");
+    oc_tls_audit_log("AUTH-1",
+                     "DLTS handshake error, could not find peer credential",
+                     0x08, 1, peer);
+    return -1;
   }
+  OC_DBG("oc_tls: Found peer object");
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(peer->endpoint.device);
+  /* To an OBT performing the PIN OTM, a device signals its identity
+   * with the oic.sec.doxm.rdp: prefix.
+   */
+  if (ps->s == OC_DOS_RFNOP && identity_len > 16 &&
+      memcmp(identity, "oic.sec.doxm.rdp:", 17) == 0) {
+    identity += 17;
+    identity_len -= 17;
+  }
+  oc_sec_cred_t *cred =
+    oc_sec_find_cred(NULL, (oc_uuid_t *)identity, OC_CREDTYPE_PSK,
+                     OC_CREDUSAGE_NULL, peer->endpoint.device);
+  if (cred != NULL) {
+    OC_DBG("oc_tls: Found peer credential");
+    memcpy(peer->uuid.id, identity, 16);
+    OC_DBG("oc_tls: Setting the key:");
+    OC_LOGbytes(oc_string(cred->privatedata.data),
+                oc_string_len(cred->privatedata.data));
+    if (mbedtls_ssl_set_hs_psk(ssl,
+                               oc_cast(cred->privatedata.data, const uint8_t),
+                               oc_string_len(cred->privatedata.data)) != 0) {
+      return -1;
+    }
+    OC_DBG("oc_tls: Set peer credential to SSL handle");
+    return 0;
+  }
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
+  if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
+    if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
+      OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
+      return -1;
+    }
+    OC_DBG("oc_tls: deriving PPSK for PIN OTM");
+    memcpy(peer->uuid.id, identity, 16);
+
+    uint8_t key[16];
+    if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000, key,
+                      OC_ARRAY_SIZE(key)) != 0) {
+      OC_ERR("oc_tls: error deriving PPSK");
+      return -1;
+    }
+
+    if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
+      OC_ERR("oc_tls: error applying PPSK to current handshake");
+      return -1;
+    }
+    return 0;
+  }
+
   OC_ERR("oc_tls: could not find peer credential");
   oc_tls_audit_log("AUTH-1",
                    "DLTS handshake error, could not find peer credential", 0x08,
@@ -769,7 +800,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
 static int
 ssl_get_timer(void *ctx)
 {
-  oc_tls_retr_timer_t *timer = (oc_tls_retr_timer_t *)ctx;
+  oc_tls_retry_timer_t *timer = (oc_tls_retry_timer_t *)ctx;
   if (timer->fin_timer.timer.interval == 0)
     return -1;
   if (oc_etimer_expired(&timer->fin_timer)) {
@@ -1844,7 +1875,7 @@ oc_tls_peer_allocate(const oc_endpoint_t *endpoint, int role, bool doc)
   peer->doc = doc;
   assert(role == MBEDTLS_SSL_IS_CLIENT || role == MBEDTLS_SSL_IS_SERVER);
   peer->role = role;
-  memset(&peer->timer, 0, sizeof(oc_tls_retr_timer_t));
+  memset(&peer->timer, 0, sizeof(oc_tls_retry_timer_t));
 #ifdef OC_TCP
   peer->processed_recv_message = NULL;
 #endif /* OC_TCP */
@@ -1994,8 +2025,8 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
   if ((params.endpoint->flags & TCP) == 0) {
     mbedtls_ssl_set_timer_cb(&peer->ssl_ctx, &peer->timer, ssl_set_timer,
                              ssl_get_timer);
-    oc_ri_add_timed_event_callback_seconds(
-      peer, oc_tls_inactive, (oc_clock_time_t)OC_DTLS_INACTIVITY_TIMEOUT);
+    oc_ri_add_timed_event_callback_ticks(peer, oc_dtls_inactive,
+                                         DTLS_INACTIVITY_TIMEOUT_TICKS);
   }
 
   oc_list_add(g_tls_peers, peer);
@@ -2725,7 +2756,7 @@ read_application_data(oc_tls_peer_t *peer)
       } else {
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
         char buf[256];
-        mbedtls_strerror(ret, buf, sizeof(256));
+        mbedtls_strerror(ret, buf, sizeof(buf));
         OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       }
@@ -2825,7 +2856,7 @@ oc_tls_recv_message(oc_message_t *message)
 #endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(peer->recv_q, message);
-  peer->timestamp = oc_clock_time();
+  peer->timestamp = oc_clock_time(); // TODO monotonic timer
   oc_tls_handler_schedule_read(peer);
 }
 
@@ -2871,7 +2902,7 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
       continue;
     }
     if (ev == OC_PROCESS_EVENT_TIMER) {
-      check_retr_timers();
+      check_retry_timers();
       continue;
     }
     if (ev == oc_events[TLS_READ_DECRYPTED_DATA]) {

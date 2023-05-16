@@ -18,20 +18,18 @@
  *
  ****************************************************************************/
 
-#define WIN32_LEAN_AND_MEAN
-// clang-format off
 #include "network_addresses.h"
 #include "port/oc_log_internal.h"
 
-#include <inttypes.h>
-#include <malloc.h>
-
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <WinSock2.h>
 #include <Mswsock.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
-// clang-format on
+
+#include <inttypes.h>
+#include <malloc.h>
 
 ifaddr_t *
 get_network_addresses(void)

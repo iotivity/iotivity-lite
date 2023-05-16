@@ -27,6 +27,10 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct oc_sock_listener_t
 {
   int sock;
@@ -65,5 +69,9 @@ bool oc_sock_listener_fd_isset(const oc_sock_listener_t *server,
  * @return port of socket listener
  */
 int oc_sock_listener_get_port(const oc_sock_listener_t *server) OC_NONNULL();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SOCKLISTENER_H */

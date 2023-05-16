@@ -34,6 +34,7 @@
 
 #include "oc_memb.h"
 #include "port/oc_log_internal.h"
+#include <stddef.h>
 #include <string.h>
 
 #ifdef OC_MEMORY_TRACE
@@ -64,8 +65,8 @@ _oc_memb_alloc(
 
   void *ptr = NULL;
   if (m->num > 0) {
-    int i;
-    for (i = 0; i < m->num; i++) {
+    unsigned short i = 0;
+    for (; i < m->num; i++) {
       if (m->count[i] == 0) {
         /* If this block was unused, we increase the reference count to
      indicate that it now is used and return a pointer to the
@@ -76,7 +77,7 @@ _oc_memb_alloc(
     }
 
     if (i < m->num) {
-      ptr = (void *)((char *)m->mem + (i * m->size));
+      ptr = (void *)((char *)m->mem + (ptrdiff_t)(i * m->size));
       memset(ptr, 0, m->size);
     }
   }
@@ -147,21 +148,18 @@ int
 oc_memb_inmemb(struct oc_memb *m, void *ptr)
 {
   return ((char *)ptr >= (char *)m->mem) &&
-         ((char *)ptr < ((char *)m->mem + (m->num * m->size)));
+         ((char *)ptr < ((char *)m->mem + (ptrdiff_t)(m->num * m->size)));
 }
 /*---------------------------------------------------------------------------*/
 int
 oc_memb_numfree(struct oc_memb *m)
 {
-  int i;
   int num_free = 0;
-
-  for (i = 0; i < m->num; ++i) {
+  for (unsigned short i = 0; i < m->num; ++i) {
     if (m->count[i] == 0) {
       ++num_free;
     }
   }
-
   return num_free;
 }
 /*---------------------------------------------------------------------------*/

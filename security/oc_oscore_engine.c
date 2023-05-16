@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
+#include "api/oc_buffer_internal.h"
 #include "api/oc_events.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/engine.h"
@@ -430,11 +431,11 @@ oc_oscore_send_multicast_message(oc_message_t *message)
        Outer+Inner CoAP options in the OSCORE packet.
     */
     if (coap_pkt->payload_len > 0) {
-      memmove(message->data + 2 * COAP_MAX_HEADER_SIZE, coap_pkt->payload,
+      memmove(message->data + 2UL * COAP_MAX_HEADER_SIZE, coap_pkt->payload,
               coap_pkt->payload_len);
 
       /* Store the new payload location in the CoAP packet */
-      coap_pkt->payload = message->data + 2 * COAP_MAX_HEADER_SIZE;
+      coap_pkt->payload = message->data + 2UL * COAP_MAX_HEADER_SIZE;
     }
 
     OC_DBG("### serializing OSCORE plaintext ###");
@@ -560,7 +561,7 @@ oc_oscore_send_message(oc_message_t *msg)
     uint8_t *key = oscore_ctx->sendkey;
 
     /* Clone incoming oc_message_t (*msg) from CoAP layer */
-    message = oc_internal_allocate_outgoing_message();
+    message = oc_message_allocate_outgoing();
     message->length = msg->length;
     memcpy(message->data, msg->data, msg->length);
     memcpy(&message->endpoint, &msg->endpoint, sizeof(oc_endpoint_t));
@@ -713,11 +714,11 @@ oc_oscore_send_message(oc_message_t *msg)
        Outer+Inner CoAP options in the OSCORE packet.
     */
     if (coap_pkt->payload_len > 0) {
-      memmove(message->data + 2 * COAP_MAX_HEADER_SIZE, coap_pkt->payload,
+      memmove(message->data + 2UL * COAP_MAX_HEADER_SIZE, coap_pkt->payload,
               coap_pkt->payload_len);
 
       /* Store the new payload location in the CoAP packet */
-      coap_pkt->payload = message->data + 2 * COAP_MAX_HEADER_SIZE;
+      coap_pkt->payload = message->data + 2UL * COAP_MAX_HEADER_SIZE;
     }
 
     /* Store the observe option. Retain the inner observe option value

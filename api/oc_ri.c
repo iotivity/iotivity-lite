@@ -495,7 +495,7 @@ start_processes(void)
   oc_process_start(&oc_etimer_process, NULL);
   oc_process_start(&oc_timed_callback_events, NULL);
   oc_process_start(&g_coap_engine, NULL);
-  oc_process_start(&oc_message_buffer_handler, NULL);
+  oc_message_buffer_handler_start();
 
 #ifdef OC_SECURITY
   oc_process_start(&oc_tls_handler, NULL);
@@ -517,6 +517,9 @@ start_processes(void)
 static void
 stop_processes(void)
 {
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_process_exit(&oc_push_process);
+#endif
 #ifdef OC_TCP
   oc_process_exit(&oc_session_events);
 #endif /* OC_TCP */
@@ -532,11 +535,7 @@ stop_processes(void)
   oc_process_exit(&oc_tls_handler);
 #endif /* OC_SECURITY */
 
-  oc_process_exit(&oc_message_buffer_handler);
-
-#ifdef OC_HAS_FEATURE_PUSH
-  oc_process_exit(&oc_push_process);
-#endif
+  oc_message_buffer_handler_stop();
 }
 
 #ifdef OC_SERVER

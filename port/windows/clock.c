@@ -18,11 +18,12 @@
 
 #include "port/oc_clock.h"
 
-#include <assert.h>
-#include <time.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <Profileapi.h>
+
+#include <assert.h>
+#include <time.h>
 
 static LONGLONG g_query_perm_frequency = 0;
 

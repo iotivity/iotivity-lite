@@ -43,6 +43,9 @@ void oc_process_shutdown(void);
 
 #ifdef OC_TEST
 
+/** @brief Get the maximal number of events */
+oc_process_num_events_t oc_process_num_events(void);
+
 /**
  * @brief Temporarily suspend a process.
  *

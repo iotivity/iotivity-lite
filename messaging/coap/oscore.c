@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
 
+#include "api/oc_buffer_internal.h"
 #include "oscore.h"
 #include "coap.h"
 #include "coap_signal.h"
@@ -44,7 +45,7 @@ oscore_send_error(const coap_packet_t *packet, uint8_t code,
   coap_packet_t msg;
   coap_udp_init_message(&msg, type, code, mid);
   msg.transport_type = packet->transport_type;
-  oc_message_t *message = oc_internal_allocate_outgoing_message();
+  oc_message_t *message = oc_message_allocate_outgoing();
   if (message) {
     memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
     memset(&message->endpoint.di, 0, sizeof(oc_uuid_t));

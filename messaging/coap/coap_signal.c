@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "coap_signal.h"
 #include "coap.h"
@@ -33,7 +34,7 @@ coap_make_token(coap_packet_t *packet)
 static int
 coap_send_signal_message(const oc_endpoint_t *endpoint, coap_packet_t *packet)
 {
-  oc_message_t *message = oc_internal_allocate_outgoing_message();
+  oc_message_t *message = oc_message_allocate_outgoing();
   if (!message) {
     OC_ERR("message alloc failed.");
     return 0;
