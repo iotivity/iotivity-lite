@@ -77,25 +77,6 @@ void oc_ri_shutdown(void);
  */
 void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
 
-/**
- * @brief removes the client callback. This is silent remove client without
- * trigger 'cb.handler'.
- *
- * @param cb is oc_client_cb_t* type
- * @return returns OC_EVENT_DONE
- */
-oc_event_callback_retval_t oc_ri_remove_client_cb(void *cb);
-
-/**
- * @brief removes the client callback with triggering OC_REQUEST_TIMEOUT to
- * handler.
- *
- * @param cb is oc_client_cb_t* type
- * @return returns OC_EVENT_DONE
- */
-oc_event_callback_retval_t oc_ri_remove_client_cb_with_notify_timeout_async(
-  void *cb);
-
 /** @brief The callback and data pair is currently being processed by
  * poll_event_callback_timers */
 bool oc_timed_event_callback_is_currently_processed(

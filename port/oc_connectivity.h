@@ -47,7 +47,9 @@ extern "C" {
 #define OC_MIN_APP_DATA_SIZE OC_MAX_APP_DATA_SIZE
 
 #ifdef OC_BLOCK_WISE_SET_MTU
-#define OC_BLOCK_WISE
+#ifndef OC_BLOCK_WISE
+#error "OC_BLOCK_WISE must be defined"
+#endif /* OC_BLOCK_WISE */
 #if OC_BLOCK_WISE_SET_MTU < (COAP_MAX_HEADER_SIZE + 16)
 #error "OC_BLOCK_WISE_SET_MTU must be >= (COAP_MAX_HEADER_SIZE + 2^4)"
 #endif /* OC_BLOCK_WISE_SET_MTU is too small */

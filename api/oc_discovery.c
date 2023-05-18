@@ -137,13 +137,13 @@ filter_resource(const oc_resource_t *resource, const oc_request_t *request,
 
   // rt
   oc_rep_set_array(link, rt);
-  int i;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-       i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
+       ++i) {
     size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (size > 0)
+    if (size > 0) {
       oc_rep_add_text_string(rt, t);
+    }
   }
   oc_rep_close_array(link, rt);
 
@@ -435,13 +435,13 @@ filter_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
 
   // rt
   oc_rep_set_array(res, rt);
-  int i;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-       i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
+       ++i) {
     size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (size > 0)
+    if (size > 0) {
       oc_rep_add_text_string(rt, t);
+    }
   }
   oc_rep_close_array(res, rt);
 
@@ -912,32 +912,31 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     return;
   }
 
-  const char *value = NULL;
-  size_t value_len;
-  const char *key;
-  const char *rt_request = 0;
-  int rt_len = 0;
-  const char *rt_device = 0;
-  int rt_devlen = 0;
-  size_t key_len;
-
   oc_init_query_iterator();
+  const char *key = NULL;
+  size_t key_len = 0;
+  const char *value = NULL;
+  size_t value_len = 0;
+  const char *rt_request = NULL;
+  size_t rt_len = 0;
   while (oc_iterate_query(request, &key, &key_len, &value, &value_len) > 0) {
     if (strncmp(key, "rt", key_len) == 0) {
       rt_request = value;
-      rt_len = (int)value_len;
+      rt_len = value_len;
     }
   }
 
-  if (rt_request != 0 && strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
+  if (rt_request != NULL && strncmp(rt_request, "oic.wk.res", rt_len) == 0) {
     /* request for all devices */
     matches = 1;
   }
+
+  const char *rt_device = NULL;
+  size_t rt_devlen = 0;
   size_t device = request->resource->device;
   oc_resource_t *resource = oc_core_get_resource_by_uri("oic/d", device);
-  int i;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(resource->types);
-       i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
+       ++i) {
     size_t size = oc_string_array_get_item_size(resource->types, i);
     const char *t = (const char *)oc_string_array_get_item(resource->types, i);
     if (strncmp(t, "oic.d", 5) == 0) {
@@ -1027,9 +1026,9 @@ oc_create_discovery_resource(int resource_idx, size_t device)
 
 #ifdef OC_CLIENT
 oc_discovery_flags_t
-oc_ri_process_discovery_payload(const uint8_t *payload, int len,
-                                oc_client_handler_t client_handler,
-                                const oc_endpoint_t *endpoint, void *user_data)
+oc_discovery_process_payload(const uint8_t *payload, int len,
+                             oc_client_handler_t client_handler,
+                             const oc_endpoint_t *endpoint, void *user_data)
 {
   oc_discovery_handler_t handler = client_handler.discovery;
   oc_discovery_all_handler_t all_handler = client_handler.discovery_all;

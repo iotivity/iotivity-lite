@@ -435,6 +435,8 @@ oc_swupdate_decode(const oc_rep_t *rep, size_t device)
 
   if (s->updatetime != 0 && s->swupdateaction != 0) {
     oc_clock_time_t diff = s->updatetime;
+    // TODO: because of time-adjustments add API to schedule this at an absolute
+    // time
     oc_clock_time_t now = oc_clock_time();
     if (diff > now) {
       diff -= now;

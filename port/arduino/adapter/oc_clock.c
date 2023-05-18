@@ -28,13 +28,12 @@
 void
 oc_clock_init(void)
 {
-
 #ifdef SERIAL_TIME
   setSyncProvider(requestSync); // set function to call when sync required
 #endif
   setTime(DEFAULT_TIME);
 }
-/*Wont it be better to have a millissecond based system time?*/
+/*Wont it be better to have a millisecond based system time?*/
 oc_clock_time_t
 oc_clock_time(void)
 {
@@ -45,14 +44,14 @@ oc_clock_time(void)
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
-  return -1;
+  // TODO: implement monotonic time
+  return oc_clock_time();
 }
 
 unsigned long
 oc_clock_seconds(void)
 {
-  oc_clock_time_t time = (oc_clock_time_t)secondNow();
-  return time;
+  return (unsigned long)secondNow();
 }
 
 void

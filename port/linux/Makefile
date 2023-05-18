@@ -115,9 +115,10 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON:=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
-SRC:=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
-SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
+SRC_COMMON=${SRC_UTIL} ${CBOR} ${CTIMESTAMP}
+SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
+SRC_CLIENT=$(wildcard ../../api/client/*.c)
+SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
 
 HEADERS = $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/oc_config.h
@@ -132,16 +133,16 @@ CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -I../../api -std=gnu99 -Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic #-Wl,-Map,client.map
 CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
-OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o)))
+OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_otm_streamlined_onboarding.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
-OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o)))
+OBJ_CLIENT_SERVER=$(addprefix obj/client_server/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 
 # $(info    OBJ_PYTHON is $(OBJ_PYTHON))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
-VPATH=../../api/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../python/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../python/:../../util/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
@@ -369,7 +370,7 @@ copy_idd_files:
 	@cp ../../apps/server_rules_IDD.cbor .
 	@cp ../../apps/cloud_proxy_IDD.cbor .
 
-${SRC} ${SRC_COMMON}: $(MBEDTLS_PATCH_FILE)
+${SRC} ${SRC_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
 	@mkdir -p ${@D}

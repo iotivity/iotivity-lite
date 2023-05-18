@@ -422,7 +422,10 @@ file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/api/*.c
     ${PLGD_SRC}
 )
-set(CLIENT_SRC ${SERVER_SRC})
+file(GLOB CLIENT_SRC
+    ${SERVER_SRC}
+    ${PROJECT_SOURCE_DIR}/api/client/*.c
+)
 
 # Detect the platform and pick the right port
 if(UNIX)
@@ -863,7 +866,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     file(GLOB COMMONTEST_SRC tests/gtest/*.cpp)
 
     # Unit tests
-    file(GLOB APITEST_SRC api/unittest/*.cpp)
+    file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)
     package_add_test(apitest ${COMMONTEST_SRC} ${APITEST_SRC})
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)

@@ -19,13 +19,33 @@
 #ifndef OC_DISCOVERY_INTERNAL_H
 #define OC_DISCOVERY_INTERNAL_H
 
+#include "oc_client_state.h"
+#include "oc_endpoint.h"
+#include "oc_ri.h"
+
 #include <stdbool.h>
 #include <stddef.h>
-#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief handle the discovery payload (e.g. parse the oic/res response and do
+ * the callbacks)
+ *
+ * @param payload the recieved discovery response
+ * @param len lenght of the payload
+ * @param handler handler of the discovery
+ * @param endpoint endpoint
+ * @param user_data the user data to be supplied to the handler
+ * @return oc_discovery_flags_t the discovery flags (e.g. more to come)
+ */
+oc_discovery_flags_t oc_discovery_process_payload(const uint8_t *payload,
+                                                  int len,
+                                                  oc_client_handler_t handler,
+                                                  const oc_endpoint_t *endpoint,
+                                                  void *user_data);
 
 /**
  * @brief Determine whether to filter out endpoint from the resource.

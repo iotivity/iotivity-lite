@@ -20,7 +20,7 @@
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_collection.h"
-#include "rd_client.h"
+#include "rd_client_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */

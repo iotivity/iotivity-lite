@@ -22,6 +22,7 @@
 #define OC_CLIENT_STATE_H
 
 #include "messaging/coap/constants.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
@@ -85,7 +86,6 @@ typedef oc_discovery_flags_t (*oc_discovery_all_handler_t)(
 
 /**
  * @brief discovery handler
- *
  */
 typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
   const char *, const char *, oc_string_array_t, oc_interface_mask_t,
@@ -93,13 +93,11 @@ typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
 
 /**
  * @brief client response handler
- *
  */
 typedef void (*oc_response_handler_t)(oc_client_response_t *);
 
 /**
  * @brief client handler information
- *
  */
 typedef struct oc_client_handler_t
 {
@@ -121,7 +119,7 @@ typedef struct oc_client_cb_t
   oc_client_handler_t handler;   ///< handler information
   void *user_data;               ///< user data for the callbacks
   int32_t observe_seq;           ///< observe sequence number
-  oc_clock_time_t timestamp;     ///< time stamp
+  oc_clock_time_t timestamp;     ///< creation timestamp
   oc_qos_t qos;                  ///< quality of service
   oc_method_t method;            ///< method used
   uint16_t mid;                  ///< CoAP message identifier
@@ -139,38 +137,10 @@ typedef struct oc_client_cb_t
 #endif                         /* OC_OSCORE */
 } oc_client_cb_t;
 
-#ifdef OC_BLOCK_WISE
-/**
- * @brief invoke the Client callback when a response is received
- *
- * @param response the response
- * @param response_state the state of the blockwise transfer
- * @param cb  the callback
- * @param endpoint the endpoint
- * @return true
- * @return false
- */
-bool oc_ri_invoke_client_cb(void *response,
-                            oc_blockwise_state_t **response_state,
-                            oc_client_cb_t *cb, oc_endpoint_t *endpoint);
-#else  /* OC_BLOCK_WISE */
-/**
- * @brief invoke the Client callback when a response is received
- *
- * @param response the response
- * @param cb the callback
- * @param endpoint the endpoint
- * @return true
- * @return false
- */
-bool oc_ri_invoke_client_cb(void *response, oc_client_cb_t *cb,
-                            oc_endpoint_t *endpoint);
-#endif /* !OC_BLOCK_WISE */
-
 /**
  * @brief allocate the client callback information
  *
- * @param uri the uri to be called
+ * @param uri the uri to be called (cannot be NULL)
  * @param endpoint the endpoint of the device
  * @param method method to be used
  * @param query the query params to be used
@@ -183,19 +153,19 @@ oc_client_cb_t *oc_ri_alloc_client_cb(const char *uri,
                                       const oc_endpoint_t *endpoint,
                                       oc_method_t method, const char *query,
                                       oc_client_handler_t handler, oc_qos_t qos,
-                                      void *user_data);
+                                      void *user_data) OC_NONNULL(1);
 
 /**
  * @brief retrieve the client callback information
  *
- * @param uri the uri for the callback
+ * @param uri the uri for the callback (cannot be NULL)
  * @param endpoint the endpoint for the callback
  * @param method the used method
  * @return oc_client_cb_t* the client callback info
  */
 oc_client_cb_t *oc_ri_get_client_cb(const char *uri,
                                     const oc_endpoint_t *endpoint,
-                                    oc_method_t method);
+                                    oc_method_t method) OC_NONNULL(1);
 
 /**
  * @brief is the client callback information valid
@@ -209,12 +179,12 @@ bool oc_ri_is_client_cb_valid(const oc_client_cb_t *client_cb);
 /**
  * @brief find the client callback info by token
  *
- * @param token the token
+ * @param token the token (cannot be NULL)
  * @param token_len the token lenght
  * @return oc_client_cb_t* the client callback info
  */
 oc_client_cb_t *oc_ri_find_client_cb_by_token(const uint8_t *token,
-                                              uint8_t token_len);
+                                              uint8_t token_len) OC_NONNULL(1);
 
 /**
  * @brief find the client callback info by message id (mid)
@@ -260,21 +230,6 @@ void oc_ri_free_client_cbs_by_mid_v1(uint16_t mid, oc_status_t code);
  */
 void oc_ri_free_client_cbs_by_mid(uint16_t mid)
   OC_DEPRECATED("replaced by oc_ri_free_client_cbs_by_mid_v1 in v2.2.5.4");
-
-/**
- * @brief handle the discovery payload (e.g. parse the oic/res response and do
- * the callbacks)
- *
- * @param payload the recieved discovery response
- * @param len lenght of the payload
- * @param handler handler of the discovery
- * @param endpoint endpoint
- * @param user_data the user data to be supplied to the handler
- * @return oc_discovery_flags_t the discovery flags (e.g. more to come)
- */
-oc_discovery_flags_t oc_ri_process_discovery_payload(
-  const uint8_t *payload, int len, oc_client_handler_t handler,
-  const oc_endpoint_t *endpoint, void *user_data);
 
 #ifdef __cplusplus
 }

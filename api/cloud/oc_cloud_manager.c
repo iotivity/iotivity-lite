@@ -31,7 +31,7 @@
 #include "oc_cloud_store_internal.h"
 #include "oc_endpoint.h"
 #include "port/oc_log_internal.h"
-#include "rd_client.h"
+#include "rd_client_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 

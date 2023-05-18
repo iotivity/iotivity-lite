@@ -22,11 +22,11 @@
 #ifdef OC_CLOUD
 
 #include "api/oc_core_res_internal.h"
-#include "rd_client.h"
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "port/oc_log_internal.h"
+#include "rd_client_internal.h"
 #include <inttypes.h>
 #include <stdlib.h>
 

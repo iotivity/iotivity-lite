@@ -19,7 +19,7 @@
 
 #include "oc_api.h"
 #include "oc_endpoint.h"
-#include "rd_client.h"
+#include "rd_client_internal.h"
 #include "tests/gtest/Endpoint.h"
 
 #include <gtest/gtest.h>

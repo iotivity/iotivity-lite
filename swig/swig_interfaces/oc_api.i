@@ -1923,7 +1923,6 @@ void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler
 %rename(tokenLen) oc_client_cb_t::token_len;
 %rename(stopMulticastReceive) oc_client_cb_t::stop_multicast_receive;
 %rename(refCount) oc_client_cb_t::ref_count;
-%ignore oc_ri_invoke_client_cb;
 %ignore oc_ri_alloc_client_cb;
 %ignore oc_ri_get_client_cb;
 %ignore oc_ri_find_client_cb_by_token;
@@ -1934,6 +1933,5 @@ void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler
 %ignore oc_ri_free_client_cbs_by_mid;
 %ignore oc_ri_free_client_cbs_by_endpoint_v1;
 %ignore oc_ri_free_client_cbs_by_mid_v1;
-%ignore oc_ri_process_discovery_payload;
 %include "oc_client_state.h"
 /*******************End oc_client_state.h*******************/

@@ -25,6 +25,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
 
 
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/client/oc_client_cb.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_base64.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_blockwise.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_buffer.c
