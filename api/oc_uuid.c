@@ -18,6 +18,7 @@
 
 #include "oc_uuid.h"
 #include "port/oc_random.h"
+#include "util/oc_macros.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -71,13 +72,15 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
         c |= 0x0f;
         break;
       }
-    } else
+    } else {
       c |= str[i] - 48;
+    }
     if ((j + 1) * 2 == k) {
       uuid->id[j++] = c;
       c = 0;
-    } else
+    } else {
       c = c << 4;
+    }
     k++;
   }
 }
@@ -85,19 +88,19 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
 void
 oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
 {
-  int i, j = 0;
-  if (buflen < OC_UUID_LEN || !uuid)
+  if (buflen < OC_UUID_LEN || !uuid) {
     return;
+  }
   if (uuid->id[0] == '*') {
-    uint8_t zeros[15] = { 0 };
-    if (memcmp(&uuid->id[1], zeros, 15) == 0) {
+    uint8_t zeros[OC_ARRAY_SIZE(uuid->id) - 1] = { 0 };
+    if (memcmp(&uuid->id[1], zeros, OC_ARRAY_SIZE(zeros)) == 0) {
       memset(buffer, 0, buflen);
       buffer[0] = '*';
       buffer[1] = '\0';
       return;
     }
   }
-  for (i = 0; i < 16; i++) {
+  for (size_t i = 0, j = 0; i < OC_ARRAY_SIZE(uuid->id); ++i) {
     switch (i) {
     case 4:
     case 6:
@@ -119,7 +122,7 @@ oc_gen_uuid(oc_uuid_t *uuid)
 
   for (unsigned i = 0; i < 4; i++) {
     r = oc_random_value();
-    memcpy((uint8_t *)&uuid->id[i * 4UL], (uint8_t *)&r, sizeof(r));
+    memcpy(&uuid->id[i * 4UL], (uint8_t *)&r, sizeof(r));
   }
 
   /*  From RFC 4122

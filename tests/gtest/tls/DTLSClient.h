@@ -26,6 +26,7 @@
 
 #if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
 
+#include "DTLS.h"
 #include "Service.h"
 
 #include <chrono>
@@ -55,13 +56,13 @@ public:
   mbedtls_ssl_context *GetSSLContext() override { return &ssl_; };
   mbedtls_net_context *GetNetContext() override { return &serverFd_; };
 
-  int SetPresharedKey(const std::vector<unsigned char> &key,
-                      const std::vector<unsigned char> &identityHint);
+  int SetPresharedKey(const PreSharedKey &psk, const IdentityHint &hint);
 
   int Connect(const std::string &host, uint16_t port);
   void CloseNotify();
   int Handshake();
 
+  bool ConnectWithHandshake(const std::string &host, uint16_t port);
   int Run() { return service_.Run(); }
   void Stop() { service_.Stop(); }
 
@@ -78,8 +79,8 @@ private:
   mbedtls_ssl_cookie_ctx cookieCtx_;
   mbedtls_timing_delay_context timer_;
 
-  std::vector<unsigned char> psk_{};
-  std::vector<unsigned char> identityHint_{};
+  PreSharedKey psk_{};
+  IdentityHint hint_{};
   std::vector<int> ciphers_{};
 };
 

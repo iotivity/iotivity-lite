@@ -734,7 +734,7 @@ TEST_F(TestEndpoint, ListCopy)
 TEST_F(TestEndpoint, EndpointHostInvalid)
 {
   oc_endpoint_t ep{};
-  std::array<char, OC_IPV6_ADDRSTRLEN> buffer{};
+  std::array<char, OC_IPV6_MAXADDRSTRLEN> buffer{};
   EXPECT_EQ(-1, oc_endpoint_host(&ep, buffer.data(), buffer.size()));
 }
 
@@ -771,7 +771,7 @@ TEST_F(TestEndpoint, EndpointHost)
 
   for (size_t i = 0; i < addrs.size(); ++i) {
     oc_endpoint_t ep = oc::endpoint::FromString(addrs[i]);
-    std::array<char, OC_IPV6_ADDRSTRLEN> buffer{};
+    std::array<char, OC_IPV6_MAXADDRSTRLEN> buffer{};
     EXPECT_LT(0, oc_endpoint_host(&ep, buffer.data(), buffer.size()));
     EXPECT_STREQ(expected[i].c_str(), buffer.data());
   }
@@ -792,7 +792,6 @@ TEST_F(TestEndpoint, EndpointHost)
 #ifdef OC_SECURITY
     "1.2.3.4",
 #endif /* OC_SECURITY */
-
 #ifdef OC_TCP
     "192.193.194.195",
 #endif /* OC_TCP */
@@ -801,7 +800,7 @@ TEST_F(TestEndpoint, EndpointHost)
 
   for (size_t i = 0; i < addrs.size(); ++i) {
     oc_endpoint_t ep = oc::endpoint::FromString(addrs[i]);
-    std::array<char, OC_IPV4_ADDRSTRLEN> buffer{};
+    std::array<char, OC_IPV4_MAXADDRSTRLEN> buffer{};
     EXPECT_LT(0, oc_endpoint_host(&ep, buffer.data(), buffer.size()));
     EXPECT_STREQ(expected[i].c_str(), buffer.data());
   }

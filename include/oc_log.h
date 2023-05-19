@@ -40,7 +40,7 @@ extern "C" {
 #include <stdint.h>
 
 #ifdef OC_LOG_MAXIMUM_LEVEL
-#define OC_LOG_LEVEL_IS_ENABLED(level) ((level) <= OC_LOG_MAXIMUM_LEVEL)
+#define OC_LOG_LEVEL_IS_ENABLED(level) ((level) <= (OC_LOG_MAXIMUM_LEVEL))
 #else
 #define OC_LOG_LEVEL_IS_ENABLED(level) (0)
 #endif /* OC_LOG_MAXIMUM_LEVEL */
