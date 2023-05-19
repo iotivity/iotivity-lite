@@ -33,9 +33,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/RepPool.h"
-#include "tests/gtest/tls/DTLSClient.h"
 #include "tests/gtest/tls/Peer.h"
-#include "util/oc_macros.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -46,12 +44,10 @@
 #endif /* _WIN32 */
 
 #include <array>
-#include <atomic>
 #include <gtest/gtest.h>
 #include <mbedtls/build_info.h>
 #include <mbedtls/x509_crt.h>
 #include <string>
-#include <thread>
 #include <vector>
 
 static constexpr size_t kDeviceID{ 0 };
@@ -335,92 +331,5 @@ TEST_F(TestTLSPeerWithServer, ResetDevice)
   oc::TestDevice::PoolEvents(2);
   ASSERT_EQ(0, oc_tls_num_peers(kDeviceID));
 }
-
-#if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
-
-// TODO: upgrade mingw, because on v10.2 std::thread doesn't work correctly
-#ifndef __MINGW32__
-
-TEST_F(TestTLSPeerWithServer, DTLSInactivityMonitor)
-{
-  oc_clock_time_t timeout_default = oc_dtls_inactivity_timeout();
-  oc_dtls_set_inactivity_timeout(2 * OC_CLOCK_SECOND);
-
-  // DTLS endpoint
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, SECURED, TCP);
-  ASSERT_NE(nullptr, ep);
-
-  std::vector<uint8_t> psk = { 0xD1, 0xD0, 0xDB, 0x1F, 0x8B, 0xB2, 0x40, 0x55,
-                               0x9B, 0x07, 0xB8, 0x76, 0x50, 0x7E, 0x25, 0xCF };
-  oc_uuid_t *uuid = oc_core_get_device_id(kDeviceID);
-  std::vector<uint8_t> hint{};
-  hint.reserve(OC_ARRAY_SIZE(uuid->id));
-  std::copy(std::begin(uuid->id), std::end(uuid->id), std::back_inserter(hint));
-
-  enum class DTLS_STATUS : int {
-    INIT = 0,
-    THREAD_STARTED = 1,
-    HANDSHAKE_DONE = 2,
-
-    ERROR = -1,
-  };
-  std::atomic dtls_status{ DTLS_STATUS::INIT };
-  oc::tls::DTLSClient dtls{};
-  dtls.SetPresharedKey(psk, hint);
-  auto dtls_execute = [&dtls, &ep, &dtls_status] {
-    OC_DBG("dtls helper thread started");
-    dtls_status = DTLS_STATUS::THREAD_STARTED;
-
-    std::string host{ "::1" };
-    int port = oc_endpoint_port(ep);
-    if (port < 0) {
-      dtls_status = DTLS_STATUS::ERROR;
-      GTEST_FAIL();
-    }
-    if (int socket = dtls.Connect(host, static_cast<uint16_t>(port));
-        socket < 0) {
-      OC_ERR("DTLS connect failed with error(%d, errno=%d)", socket, errno);
-      dtls_status = DTLS_STATUS::ERROR;
-      GTEST_FAIL();
-    }
-    if (int hs = dtls.Handshake(); hs != 0) {
-      OC_ERR("DTLS handshake failed with error(%d)", hs);
-      dtls_status = DTLS_STATUS::ERROR;
-      GTEST_FAIL();
-    }
-    dtls_status = DTLS_STATUS::HANDSHAKE_DONE;
-    dtls.Run();
-  };
-
-  std::array<char, OC_UUID_LEN> uuid_str{};
-  oc_uuid_to_str(uuid, uuid_str.data(), uuid_str.size());
-  int credid = oc_sec_add_new_cred(
-    kDeviceID, false, nullptr, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-    uuid_str.data(), OC_ENCODING_RAW, psk.size(), psk.data(),
-    OC_ENCODING_UNSUPPORTED, 0, nullptr, nullptr, nullptr, nullptr, nullptr);
-  ASSERT_NE(-1, credid);
-
-  std::thread dtls_thread{ dtls_execute };
-  while (dtls_status.load() != DTLS_STATUS::HANDSHAKE_DONE) {
-    oc::TestDevice::PoolEventsMs(200);
-  }
-
-  EXPECT_EQ(1, oc_tls_num_peers(kDeviceID));
-  uint64_t timeout_msecs =
-    (oc_dtls_inactivity_timeout() / OC_CLOCK_SECOND) * 1000;
-  oc::TestDevice::PoolEventsMs(timeout_msecs * 2);
-  EXPECT_EQ(0, oc_tls_num_peers(kDeviceID));
-
-  dtls.Stop();
-  dtls_thread.join();
-
-  /* restore defaults */
-  oc_dtls_set_inactivity_timeout(timeout_default);
-}
-
-#endif /* __MINGW32__ */
-
-#endif /* MBEDTLS_NET_C && MBEDTLS_TIMING_C */
 
 #endif /* OC_SECURITY */

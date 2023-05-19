@@ -20,6 +20,8 @@
 #include "api/oc_ri_internal.h"
 #include "oc_buffer.h"
 #include "oc_config.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_features.h"
 #include "util/oc_memb.h"
 #include "util/oc_process_internal.h"
 
@@ -39,7 +41,10 @@ public:
     oc_memb_init(&oc_test_messages);
     oc_set_buffers_avail_cb(onIncomingBufferAvailable);
     oc_memb_set_buffers_avail_cb(&oc_test_messages, onTestBufferAvailable);
+    oc_network_event_handler_mutex_init();
   }
+
+  static void TearDownTestCase() { oc_network_event_handler_mutex_destroy(); }
 
   void SetUp() override
   {

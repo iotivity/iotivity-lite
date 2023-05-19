@@ -693,6 +693,16 @@ TEST_F(TestServerClient, DiscoverDeviceIDWithResources)
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
+#ifdef _WIN32
+// windows implementation or github testing machine seems to be slower,
+// resulting in failures, so we use longer timeouts
+static constexpr uint16_t kTimeout = 4;
+static constexpr uint16_t kShortTimeout = 2;
+#else  /* !_WIN32 */
+static constexpr uint16_t kTimeout = 2;
+static constexpr uint16_t kShortTimeout = 1;
+#endif /* _WIN32 */
+
 static void
 failResponse(oc_client_response_t *)
 {
@@ -717,21 +727,21 @@ TEST_F(TestServerClient, GetWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onGet.response;
-  doGet(ApiHelper::s_TestResource, onGetDevice, 2);
-  ApiHelper::poolEvents(4);
+  doGet(ApiHelper::s_TestResource, onGetDevice, kTimeout);
+  ApiHelper::poolEvents(kTimeout * 2);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onGet.response = -1; // disable sending of response
   expected = OC_REQUEST_TIMEOUT;
-  doGet(ApiHelper::s_TestResource, onGetDevice, 1);
-  ApiHelper::poolEvents(2);
+  doGet(ApiHelper::s_TestResource, onGetDevice, kShortTimeout);
+  ApiHelper::poolEvents(kShortTimeout * 2);
   EXPECT_EQ(expected, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doGet(ApiHelper::s_TestResource, failResponse, 1);
+  doGet(ApiHelper::s_TestResource, failResponse, kShortTimeout);
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_GET);
-  ApiHelper::poolEvents(2); // wait for timeout
+  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -753,20 +763,20 @@ TEST_F(TestServerClient, DeleteWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onDelete.response;
-  doDelete(ApiHelper::s_TestResource, onDeleteDevice, 2);
-  ApiHelper::poolEvents(4);
+  doDelete(ApiHelper::s_TestResource, onDeleteDevice, kTimeout);
+  ApiHelper::poolEvents(kTimeout * 2);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_SwitchResource.onDelete.response = -1; // disable response
-  doDelete(ApiHelper::s_SwitchResource, onDeleteDevice, 1);
-  ApiHelper::poolEvents(2);
+  doDelete(ApiHelper::s_SwitchResource, onDeleteDevice, kShortTimeout);
+  ApiHelper::poolEvents(kShortTimeout * 2);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doDelete(ApiHelper::s_TestResource, failResponse, 1);
+  doDelete(ApiHelper::s_TestResource, failResponse, kShortTimeout);
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_DELETE);
-  ApiHelper::poolEvents(2); // wait for timeout
+  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -788,20 +798,20 @@ TEST_F(TestServerClient, PostWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onPost.response;
-  doPost(ApiHelper::s_TestResource, onPostDevice, 2);
-  ApiHelper::poolEvents(4);
+  doPost(ApiHelper::s_TestResource, onPostDevice, kTimeout);
+  ApiHelper::poolEvents(kTimeout * 2);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPost.response = -1; // disable response
-  doPost(ApiHelper::s_TestResource, onPostDevice, 1);
-  ApiHelper::poolEvents(2);
+  doPost(ApiHelper::s_TestResource, onPostDevice, kShortTimeout);
+  ApiHelper::poolEvents(kShortTimeout * 2);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doPost(ApiHelper::s_TestResource, failResponse, 1);
+  doPost(ApiHelper::s_TestResource, failResponse, kShortTimeout);
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_POST);
-  ApiHelper::poolEvents(2); // wait for timeout
+  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -823,20 +833,20 @@ TEST_F(TestServerClient, PutWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onPut.response;
-  doPut(ApiHelper::s_TestResource, onPutDevice, 2);
-  ApiHelper::poolEvents(4);
+  doPut(ApiHelper::s_TestResource, onPutDevice, kTimeout);
+  ApiHelper::poolEvents(kTimeout * 2);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPut.response = -1; // disable response
-  doPut(ApiHelper::s_TestResource, onPutDevice, 1);
-  ApiHelper::poolEvents(2);
+  doPut(ApiHelper::s_TestResource, onPutDevice, kShortTimeout);
+  ApiHelper::poolEvents(kShortTimeout * 2);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doPut(ApiHelper::s_TestResource, failResponse, 1);
+  doPut(ApiHelper::s_TestResource, failResponse, kShortTimeout);
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_PUT);
-  ApiHelper::poolEvents(2); // wait for timeout
+  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 

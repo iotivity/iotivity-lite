@@ -255,8 +255,9 @@ elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "TRACE")
 else()
     message(FATAL_ERROR "Invalid OC_LOG_MAXIMUM_LOG_LEVEL: ${OC_LOG_MAXIMUM_LOG_LEVEL}")
 endif()
-list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=${OC_LOG_MAXIMUM_LEVEL}")
-list(APPEND TEST_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=${OC_LOG_MAXIMUM_LEVEL}")
+# clang-tidy triggers bugprone-macro-parentheses if the value is not in ()
+list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
+list(APPEND TEST_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
 
 if(OC_PUSH_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PUSH")
@@ -833,13 +834,17 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
     set(OC_UNITTESTS)
     # Helper macro to build unit test
-    macro(package_add_test TESTNAME)
-        add_executable(${TESTNAME} ${ARGN})
-        target_compile_options(${TESTNAME} PRIVATE ${TEST_COMPILE_OPTIONS})
-        target_compile_features(${TESTNAME} PRIVATE cxx_nullptr)
-        target_compile_definitions(${TESTNAME} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} ${TEST_COMPILE_DEFINITIONS})
-        target_include_directories(${TESTNAME} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
-        target_include_directories(${TESTNAME} PRIVATE
+    macro(oc_package_add_test)
+        set(options)
+        set(oneValueArgs TARGET)
+        set(multiValueArgs ENVIRONMENT SOURCES)
+        cmake_parse_arguments(OC_PACKAGE_ADD_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+        add_executable(${OC_PACKAGE_ADD_TEST_TARGET} ${OC_PACKAGE_ADD_TEST_SOURCES})
+        target_compile_options(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE ${TEST_COMPILE_OPTIONS})
+        target_compile_definitions(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE ${PUBLIC_COMPILE_DEFINITIONS} ${TEST_COMPILE_DEFINITIONS})
+        target_include_directories(${OC_PACKAGE_ADD_TEST_TARGET} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/deps/gtest/include)
+        target_include_directories(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE
             ${PROJECT_SOURCE_DIR}
             ${PROJECT_SOURCE_DIR}/include
             ${PORT_INCLUDE_DIR}
@@ -847,45 +852,49 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         )
 
         if(OC_SECURITY_ENABLED)
-            target_include_directories(${TESTNAME} PRIVATE
+            target_include_directories(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE
                 ${PROJECT_SOURCE_DIR}/security
             )
         endif()
 
         if(OC_CLOUD_ENABLED)
-            target_include_directories(${TESTNAME} PRIVATE ${PROJECT_SOURCE_DIR}/api/cloud)
+            target_include_directories(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/api/cloud)
         endif()
 
-        target_link_libraries(${TESTNAME} PRIVATE ${TEST_LINK_LIBS})
+        target_link_libraries(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE ${TEST_LINK_LIBS})
         if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
-            target_link_libraries(${TESTNAME} PRIVATE "-Wl,--unresolved-symbols=ignore-in-shared-libs")
+            target_link_libraries(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE "-Wl,--unresolved-symbols=ignore-in-shared-libs")
         endif()
-        add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-        set_target_properties(${TESTNAME} PROPERTIES FOLDER unittests)
-        set_tests_properties(${TESTNAME} PROPERTIES LABELS oc-unittest)
+        add_test(NAME ${OC_PACKAGE_ADD_TEST_TARGET} COMMAND ${OC_PACKAGE_ADD_TEST_TARGET})
 
-        list(APPEND OC_UNITTESTS ${TESTNAME})
+        set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY FOLDER unittests)
+        set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY LABELS oc-unittest)
+        if (OC_PACKAGE_ADD_TEST_ENVIRONMENT)
+            set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY ENVIRONMENT "${OC_PACKAGE_ADD_TEST_ENVIRONMENT}")
+        endif()
+
+        list(APPEND OC_UNITTESTS ${OC_PACKAGE_ADD_TEST_TARGET})
     endmacro()
 
     file(GLOB COMMONTEST_SRC tests/gtest/*.cpp tests/gtest/tls/*.cpp)
 
     # Unit tests
     file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)
-    package_add_test(apitest ${COMMONTEST_SRC} ${APITEST_SRC})
+    oc_package_add_test(TARGET apitest SOURCES ${COMMONTEST_SRC} ${APITEST_SRC})
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)
-    package_add_test(timestamptest ${TIMESTAMPTEST_SRC})
+    oc_package_add_test(TARGET timestamptest SOURCES ${TIMESTAMPTEST_SRC})
 
     file(GLOB PLATFORMTEST_SRC port/unittest/*.cpp)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_test)
-    package_add_test(platformtest ${COMMONTEST_SRC} ${PLATFORMTEST_SRC})
+    oc_package_add_test(TARGET platformtest SOURCES ${COMMONTEST_SRC} ${PLATFORMTEST_SRC})
 
     file(GLOB MESSAGINGTEST_SRC messaging/coap/unittest/*.cpp)
-    package_add_test(messagingtest ${MESSAGINGTEST_SRC})
+    oc_package_add_test(TARGET messagingtest SOURCES ${MESSAGINGTEST_SRC})
 
     if(OC_SECURITY_ENABLED)
         file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)
-        package_add_test(securitytest ${COMMONTEST_SRC} ${SECURITYTEST_SRC})
+        oc_package_add_test(TARGET securitytest SOURCES ${COMMONTEST_SRC} ${SECURITYTEST_SRC})
 
         file(COPY ${PROJECT_SOURCE_DIR}/apps/pki_certs
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
@@ -896,7 +905,39 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     if(OC_CLOUD_ENABLED)
         file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_cloud)
-        package_add_test(cloudtest ${COMMONTEST_SRC} ${CLOUDTEST_SRC})
+        oc_package_add_test(TARGET cloudtest SOURCES ${COMMONTEST_SRC} ${CLOUDTEST_SRC})
+    endif()
+
+    if(UNIX)
+        # install https://github.com/wolfcw/libfaketime for this test suit to run
+        find_library(FAKETIME_LIBRARY
+            NAMES libfaketimeMT.so.1
+            PATH_SUFFIXES faketime
+        )
+        if (FAKETIME_LIBRARY)
+            file(GLOB FAKETIMETEST_SRC tests/libfaketime/unittest/*.cpp)
+            oc_package_add_test(
+                TARGET faketimetest
+                SOURCES ${COMMONTEST_SRC} ${FAKETIMETEST_SRC}
+                ENVIRONMENT "ASAN_OPTIONS=verify_asan_link_order=0"
+                            "LD_PRELOAD=/usr/local/lib/faketime/libfaketimeMT.so.1"
+                            "FAKETIME_DONT_FAKE_MONOTONIC=1"
+                            "FAKETIME_TIMESTAMP_FILE="
+                            "FAKETIME_UPDATE_TIMESTAMP_FILE="
+                            "FAKETIME_DONT_RESET="
+                            "FAKETIME_NO_CACHE="
+                            "FAKETIME_CACHE_DURATION="
+            )
+            target_link_libraries(faketimetest PRIVATE ${FAKETIME_LIBRARY})
+        endif()
+    endif()
+
+    if(OC_FAKETIMETEST_FORCED)
+        file(GLOB FAKETIMETEST_SRC tests/libfaketime/unittest/*.cpp)
+        oc_package_add_test(
+            TARGET faketimetest
+            SOURCES ${COMMONTEST_SRC} ${FAKETIMETEST_SRC}
+        )
     endif()
 
     add_custom_target(

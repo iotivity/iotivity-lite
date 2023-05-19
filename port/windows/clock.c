@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "oc_clock_internal.h"
 #include "port/oc_clock.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -23,10 +24,16 @@
 #include <Profileapi.h>
 
 #include <assert.h>
+#include <limits.h>
 #include <time.h>
 
-static LONGLONG g_query_perm_frequency = 0;
+// This magic number is the number of 100 nanosecond intervals since January 1,
+// 1601 (UTC) until 00:00:00 January 1, 1970
+#define kMILLISECOND_TO_FTIME_INTERNAL (10000ULL)
+#define kSECOND_TO_FTIME_INTERVAL (kMILLISECOND_TO_FTIME_INTERNAL * 1000ULL)
+#define kWINDOWS_EPOCH (11644473600ULL * kSECOND_TO_FTIME_INTERVAL)
 
+static LONGLONG g_query_perm_frequency = 0;
 void
 oc_clock_init(void)
 {
@@ -36,26 +43,50 @@ oc_clock_init(void)
 }
 
 oc_clock_time_t
-oc_clock_time(void)
+oc_clock_time_from_filetime(FILETIME ftime)
 {
   oc_clock_time_t time = 0;
+  time = ((uint64_t)ftime.dwLowDateTime);
+  time += ((uint64_t)ftime.dwHighDateTime) << sizeof(DWORD) * CHAR_BIT;
+  // avoid float computation if we have ticks in milliseconds
+#if (OC_CLOCK_SECOND == 1000)
+  return (oc_clock_time_t)((time - kWINDOWS_EPOCH) /
+                           kMILLISECOND_TO_FTIME_INTERNAL);
+#else
+  return (oc_clock_time_t)(((time - kWINDOWS_EPOCH) /
+                            ((double)kSECOND_TO_FTIME_INTERVAL) /
+                            OC_CLOCK_SECOND));
+#endif
+}
 
-  // This magic number is the number of 100 nanosecond intervals since January
-  // 1, 1601 (UTC)
-  // until 00:00:00 January 1, 1970
-  static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+FILETIME
+oc_clock_time_to_filetime(oc_clock_time_t time)
+{
+#if (OC_CLOCK_SECOND == 1000)
+  oc_clock_time_t time_ft = time * kMILLISECOND_TO_FTIME_INTERNAL;
+#else
+  oc_clock_time_t time_ft =
+    (time / (double)OC_CLOCK_SECOND) * kSECOND_TO_FTIME_INTERVAL;
+#endif
 
-  SYSTEMTIME system_time;
-  FILETIME file_time;
+  time_ft += kWINDOWS_EPOCH;
+  FILETIME ftime;
+  ftime.dwLowDateTime = (DWORD)time_ft;
+  ftime.dwHighDateTime = (DWORD)(time_ft >> sizeof(DWORD) * CHAR_BIT);
+  return ftime;
+}
 
-  GetSystemTime(&system_time);
-  SystemTimeToFileTime(&system_time, &file_time);
+oc_clock_time_t
+oc_clock_time(void)
+{
+  SYSTEMTIME stime;
+  GetSystemTime(&stime);
 
-  time = ((uint64_t)file_time.dwLowDateTime);
-  time += ((uint64_t)file_time.dwHighDateTime) << 32;
-  time = (oc_clock_time_t)((time - EPOCH) / 10000L);
-
-  return time;
+  FILETIME ftime;
+  if (!SystemTimeToFileTime(&stime, &ftime)) {
+    return (oc_clock_time_t)-1;
+  }
+  return oc_clock_time_from_filetime(ftime);
 }
 
 oc_clock_time_t
@@ -93,6 +124,10 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  DWORD interval = t * (OC_CLOCK_SECOND / 1000);
-  Sleep(interval);
+#if (OC_CLOCK_SECOND == 1000)
+  DWORD interval_ms = t;
+#else
+  DWORD interval_ms = (DWORD)(t * (OC_CLOCK_SECOND / (double)1000));
+#endif
+  Sleep(interval_ms);
 }

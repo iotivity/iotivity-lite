@@ -557,13 +557,13 @@ oc_tls_handler_schedule_write(oc_tls_peer_t *peer)
 static oc_event_callback_retval_t
 oc_dtls_inactive(void *data)
 {
-  OC_DBG("oc_tls: DTLS inactivity callback");
   oc_tls_peer_t *peer = (oc_tls_peer_t *)data;
+  OC_DBG("oc_tls: DTLS inactivity callback for peer(%p)", (void *)peer);
   if (!is_peer_active(peer)) {
     OC_DBG("oc_tls: Terminating DTLS inactivity callback");
     return OC_EVENT_DONE;
   }
-  oc_clock_time_t time = oc_clock_time();
+  oc_clock_time_t time = oc_clock_time_monotonic();
   time -= peer->timestamp;
   if (time < DTLS_INACTIVITY_TIMEOUT_TICKS) {
     OC_DBG("oc_tls: Resetting DTLS inactivity callback");
@@ -612,7 +612,7 @@ static int
 ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
-  peer->timestamp = oc_clock_time(); // TODO monotonic timer
+  peer->timestamp = oc_clock_time_monotonic();
   size_t max_len = oc_message_buffer_size();
   size_t send_len = (len < max_len) ? len : max_len;
   oc_message_t *message = oc_message_allocate_outgoing_with_size(send_len);
@@ -2856,7 +2856,7 @@ oc_tls_recv_message(oc_message_t *message)
 #endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(peer->recv_q, message);
-  peer->timestamp = oc_clock_time(); // TODO monotonic timer
+  peer->timestamp = oc_clock_time_monotonic();
   oc_tls_handler_schedule_read(peer);
 }
 

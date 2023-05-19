@@ -31,10 +31,10 @@
 
 #define OC_IPV6_ADDRLEN (16)
 #define OC_IPV4_ADDRLEN (4)
-// IPv6 address + 3 ('[',']' and ':') + 5 (uint16_t for port)
-#define OC_IPV6_MINSTRLEN (OC_IPV6_ADDRSTRLEN + 8)
-// IPv4 address + 1 (':') + 5 (uint16_t for port)
-#define OC_IPV4_MINSTRLEN (OC_IPV4_ADDRSTRLEN + 6)
+// Max. IPv6 address + 3 ('[',']' and ':') + 5 (uint16_t for port)
+#define OC_IPV6_MAXSTRLEN (OC_IPV6_MAXADDRSTRLEN + 8)
+// Max. IPv4 address + 1 (':') + 5 (uint16_t for port)
+#define OC_IPV4_MAXSTRLEN (OC_IPV4_MAXADDRSTRLEN + 6)
 
 OC_MEMB(oc_endpoints_s, oc_endpoint_t, OC_MAX_NUM_ENDPOINTS);
 
@@ -121,7 +121,7 @@ oc_endpoint_to_string(const oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
     return -1;
   }
 
-  char ip[OC_IPV6_MINSTRLEN] = { 0 };
+  char ip[OC_IPV6_MAXSTRLEN] = { 0 };
   if (oc_endpoint_to_cstring(endpoint, ip, OC_ARRAY_SIZE(ip)) != 0) {
     return -1;
   }

@@ -45,6 +45,9 @@ static void
 dtls_debug(void *ctx, int level, const char *file, int line, const char *str)
 {
   (void)ctx;
+  (void)file;
+  (void)line;
+  (void)str;
   if (level == 1) {
     OC_ERR("%s:%04d: %s", file, line, str);
     return;
@@ -155,13 +158,12 @@ DTLSClient::DTLSClient()
 }
 
 int
-DTLSClient::SetPresharedKey(const std::vector<unsigned char> &key,
-                            const std::vector<unsigned char> &identityHint)
+DTLSClient::SetPresharedKey(const PreSharedKey &psk, const IdentityHint &hint)
 {
-  psk_ = key;
-  identityHint_ = identityHint;
-  return mbedtls_ssl_conf_psk(&config_, psk_.data(), psk_.size(),
-                              identityHint_.data(), identityHint_.size());
+  psk_ = psk;
+  hint_ = hint;
+  return mbedtls_ssl_conf_psk(&config_, psk_.data(), psk_.size(), hint_.data(),
+                              hint_.size());
 }
 
 int
@@ -191,6 +193,20 @@ DTLSClient::Handshake()
   } while (ret == MBEDTLS_ERR_SSL_WANT_READ ||
            ret == MBEDTLS_ERR_SSL_WANT_WRITE);
   return ret;
+}
+
+bool
+DTLSClient::ConnectWithHandshake(const std::string &host, uint16_t port)
+{
+  if (int socket = Connect(host, port); socket < 0) {
+    OC_ERR("DTLS connect failed with error(%d, errno=%d)", socket, errno);
+    return false;
+  }
+  if (int hs = Handshake(); hs != 0) {
+    OC_ERR("DTLS handshake failed with error(%d)", hs);
+    return false;
+  }
+  return true;
 }
 
 DTLSClient::~DTLSClient()

@@ -23,6 +23,10 @@ on:
         type: boolean
         required: false
         default: false
+      install_faketime:
+        type: boolean
+        required: false
+        default: true
       install_mbedtls:
         type: boolean
         required: false
@@ -47,11 +51,24 @@ jobs:
         run: |
           echo compiler='-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang' >> $GITHUB_OUTPUT
 
+      - name: Checkout libfaketime
+        uses: actions/checkout@v3
+        with:
+          repository: wolfcw/libfaketime
+          path: libfaketime
+
+      - name: Install libfaketime
+        if: ${{ inputs.install_faketime }}
+        working-directory: libfaketime
+        run: |
+          make FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME"
+          sudo make install
+
       - name: Install mbedTLS
         if: ${{ inputs.install_mbedtls }}
         run: |
           mkdir build_mbedtls && cd build_mbedtls
-          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=OFF ..
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=ON ..
           OC_SECURITY_ENABLED=$(cmake -LA -N . | grep OC_SECURITY_ENABLED | cut -d "=" -f2)
           if [ "${OC_SECURITY_ENABLED}" = "ON" ]; then
             make mbedtls mbedx509 mbedcrypto

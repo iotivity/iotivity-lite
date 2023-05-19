@@ -28,8 +28,10 @@
 extern "C" {
 #endif
 
-#define OC_IPV6_ADDRSTRLEN (46)
-#define OC_IPV4_ADDRSTRLEN (16)
+// maximal length of a valid IPv6 address
+#define OC_IPV6_MAXADDRSTRLEN (46)
+// maximal length of a valid IPv4 address
+#define OC_IPV4_MAXADDRSTRLEN (16)
 
 #define OC_SCHEME_COAP "coap://"
 #define OC_SCHEME_COAPS "coaps://"
