@@ -45,7 +45,7 @@
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_PKI
 #include "security/oc_certs_internal.h"
@@ -671,16 +671,17 @@ check_retry_timers(void)
 static void
 ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 {
-  if (fin_ms != 0) {
-    oc_tls_retry_timer_t *timer = (oc_tls_retry_timer_t *)ctx;
-    timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
-    oc_etimer_stop(&timer->fin_timer);
-    timer->fin_timer.timer.interval =
-      (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
-    OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler)
-    oc_etimer_restart(&timer->fin_timer);
-    OC_PROCESS_CONTEXT_END(&oc_tls_handler)
+  if (fin_ms == 0) {
+    return;
   }
+  oc_tls_retry_timer_t *timer = (oc_tls_retry_timer_t *)ctx;
+  timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
+  oc_etimer_stop(&timer->fin_timer);
+  timer->fin_timer.timer.interval =
+    (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
+  OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler)
+  oc_etimer_restart(&timer->fin_timer);
+  OC_PROCESS_CONTEXT_END(&oc_tls_handler)
 }
 
 int
@@ -1510,13 +1511,9 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
   /* Decide between configuring the identity cert chain vs manufacturer cert
    * chain for this device based on device ownership status.
    */
-  if (doxm->owned &&
-      oc_tls_load_identity_cert_chain(conf, device, g_selected_id_cred) == 0) {
-#ifdef OC_CLIENT
-    loaded_chain = true;
-#endif /* OC_CLIENT */
-  } else if (oc_tls_load_mfg_cert_chain(conf, device, g_selected_mfg_cred) ==
-             0) {
+  if ((doxm->owned && oc_tls_load_identity_cert_chain(
+                        conf, device, g_selected_id_cred) == 0) ||
+      (oc_tls_load_mfg_cert_chain(conf, device, g_selected_mfg_cred) == 0)) {
 #ifdef OC_CLIENT
     loaded_chain = true;
 #endif /* OC_CLIENT */
@@ -2157,73 +2154,98 @@ static int
 oc_tls_prf(const uint8_t *secret, size_t secret_len, uint8_t *output,
            size_t output_len, size_t num_message_fragments, ...)
 {
-#define MBEDTLS_MD(func, ...)                                                  \
-  do {                                                                         \
-    if (func(__VA_ARGS__) != 0) {                                              \
-      gen_output = -1;                                                         \
-      goto exit_tls_prf;                                                       \
-    }                                                                          \
-  } while (0)
-  uint8_t A[MBEDTLS_MD_MAX_SIZE], buf[MBEDTLS_MD_MAX_SIZE];
-  size_t i, msg_len;
-  int gen_output = 0, copy_len,
-      hash_len =
-        mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
-  mbedtls_md_context_t hmacA, hmacA_next;
-  va_list msg_list;
-  const uint8_t *msg;
-  va_start(msg_list, num_message_fragments);
-
+  mbedtls_md_context_t hmacA;
   mbedtls_md_init(&hmacA);
+  if (mbedtls_md_setup(&hmacA, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
+                       1) != 0) {
+    goto error_tls_prf;
+  }
+
+  mbedtls_md_context_t hmacA_next;
   mbedtls_md_init(&hmacA_next);
+  if (mbedtls_md_setup(&hmacA_next,
+                       mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1) != 0) {
+    goto error_tls_prf;
+  }
 
-  MBEDTLS_MD(mbedtls_md_setup, &hmacA,
-             mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-  MBEDTLS_MD(mbedtls_md_setup, &hmacA_next,
-             mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+  if (mbedtls_md_hmac_starts(&hmacA, secret, secret_len) != 0) {
+    goto error_tls_prf;
+  }
 
-  MBEDTLS_MD(mbedtls_md_hmac_starts, &hmacA, secret, secret_len);
-  for (i = 0; i < num_message_fragments; i++) {
-    msg = va_arg(msg_list, const uint8_t *);
-    msg_len = va_arg(msg_list, size_t);
-    MBEDTLS_MD(mbedtls_md_hmac_update, &hmacA, msg, msg_len);
+  va_list msg_list;
+  va_start(msg_list, num_message_fragments);
+  for (size_t i = 0; i < num_message_fragments; i++) {
+    const uint8_t *msg = va_arg(msg_list, const uint8_t *);
+    size_t msg_len = va_arg(msg_list, size_t);
+    if (mbedtls_md_hmac_update(&hmacA, msg, msg_len) != 0) {
+      va_end(msg_list);
+      goto error_tls_prf;
+    }
   }
   va_end(msg_list);
-  MBEDTLS_MD(mbedtls_md_hmac_finish, &hmacA, A);
+  uint8_t A[MBEDTLS_MD_MAX_SIZE];
+  if (mbedtls_md_hmac_finish(&hmacA, A) != 0) {
+    goto error_tls_prf;
+  }
 
-  while (gen_output < (int)output_len) {
-    MBEDTLS_MD(mbedtls_md_hmac_reset, &hmacA);
-    MBEDTLS_MD(mbedtls_md_hmac_starts, &hmacA, secret, secret_len);
-    MBEDTLS_MD(mbedtls_md_hmac_update, &hmacA, A, hash_len);
+  uint8_t buf[MBEDTLS_MD_MAX_SIZE];
+  size_t hash_len =
+    mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
+  size_t gen_output = 0;
+  while (gen_output < output_len) {
+    if (mbedtls_md_hmac_reset(&hmacA) != 0) {
+      goto error_tls_prf;
+    }
+    if (mbedtls_md_hmac_starts(&hmacA, secret, secret_len) != 0) {
+      goto error_tls_prf;
+    }
+    if (mbedtls_md_hmac_update(&hmacA, A, hash_len) != 0) {
+      goto error_tls_prf;
+    }
     va_start(msg_list, num_message_fragments);
-    for (i = 0; i < num_message_fragments; i++) {
-      msg = va_arg(msg_list, const uint8_t *);
-      msg_len = va_arg(msg_list, size_t);
-      MBEDTLS_MD(mbedtls_md_hmac_update, &hmacA, msg, msg_len);
+    for (size_t i = 0; i < num_message_fragments; i++) {
+      const uint8_t *msg = va_arg(msg_list, const uint8_t *);
+      size_t msg_len = va_arg(msg_list, size_t);
+      if (mbedtls_md_hmac_update(&hmacA, msg, msg_len) != 0) {
+        va_end(msg_list);
+        goto error_tls_prf;
+      }
     }
     va_end(msg_list);
-    MBEDTLS_MD(mbedtls_md_hmac_finish, &hmacA, buf);
+    if (mbedtls_md_hmac_finish(&hmacA, buf) != 0) {
+      goto error_tls_prf;
+    }
 
-    copy_len = (((int)output_len - gen_output) < hash_len)
-                 ? ((int)output_len - gen_output)
-                 : hash_len;
+    size_t copy_len = ((output_len - gen_output) < hash_len)
+                        ? (output_len - gen_output)
+                        : hash_len;
     memcpy(output + gen_output, buf, copy_len);
     gen_output += copy_len;
 
     if (copy_len == hash_len) {
-      MBEDTLS_MD(mbedtls_md_hmac_reset, &hmacA_next);
-      MBEDTLS_MD(mbedtls_md_hmac_starts, &hmacA_next, secret, secret_len);
-      MBEDTLS_MD(mbedtls_md_hmac_update, &hmacA_next, A, hash_len);
-      MBEDTLS_MD(mbedtls_md_hmac_finish, &hmacA_next, A);
+      if (mbedtls_md_hmac_reset(&hmacA_next) != 0) {
+        goto error_tls_prf;
+      }
+      if (mbedtls_md_hmac_starts(&hmacA_next, secret, secret_len) != 0) {
+        goto error_tls_prf;
+      }
+      if (mbedtls_md_hmac_update(&hmacA_next, A, hash_len) != 0) {
+        goto error_tls_prf;
+      }
+      if (mbedtls_md_hmac_finish(&hmacA_next, A) != 0) {
+        goto error_tls_prf;
+      }
     }
   }
 
-exit_tls_prf:
-#undef MBEDTLS_MD
-  va_end(msg_list);
   mbedtls_md_free(&hmacA);
   mbedtls_md_free(&hmacA_next);
-  return gen_output;
+  return (int)gen_output;
+
+error_tls_prf:
+  mbedtls_md_free(&hmacA);
+  mbedtls_md_free(&hmacA_next);
+  return -1;
 }
 
 bool
@@ -2596,6 +2618,25 @@ assert_all_roles_internal(oc_client_response_t *data)
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 static void
+read_application_data_tcp_error(int err)
+{
+  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+    OC_DBG("oc_tls_tcp: Close-Notify received");
+    return;
+  }
+  if (err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
+    OC_DBG("oc_tls_tcp: Client wants to reconnect");
+    return;
+  }
+
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
+  char buf[256];
+  mbedtls_strerror(err, buf, sizeof(buf));
+  OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+}
+
+static void
 read_application_data_tcp(oc_tls_peer_t *peer)
 {
   if (peer->processed_recv_message == NULL) {
@@ -2636,19 +2677,10 @@ read_application_data_tcp(oc_tls_peer_t *peer)
           OC_DBG("oc_tls_tcp: Received WantRead/WantWrite");
           return;
         }
+        read_application_data_tcp_error(ret);
+
         oc_message_unref(peer->processed_recv_message);
         peer->processed_recv_message = NULL;
-        if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-          OC_DBG("oc_tls_tcp: Close-Notify received");
-        } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-          OC_DBG("oc_tls_tcp: Client wants to reconnect");
-        } else {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-          char buf[256];
-          mbedtls_strerror(ret, buf, sizeof(buf));
-          OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
-        }
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
             (peer->endpoint.flags & TCP) == 0) {
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
@@ -2678,6 +2710,25 @@ read_application_data_tcp(oc_tls_peer_t *peer)
   }
 }
 #endif
+
+static void
+read_application_data_error(int err)
+{
+  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+    OC_DBG("oc_tls: Close-Notify received");
+    return;
+  }
+  if (err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
+    OC_DBG("oc_tls: Client wants to reconnect");
+    return;
+  }
+
+#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
+  char buf[256];
+  mbedtls_strerror(err, buf, sizeof(256));
+  OC_ERR("oc_tls: mbedtls_error: %s", buf);
+#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+}
 
 static void
 read_application_data(oc_tls_peer_t *peer)
@@ -2754,17 +2805,7 @@ read_application_data(oc_tls_peer_t *peer)
         OC_DBG("oc_tls: Received WantRead/WantWrite");
         return;
       }
-      if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-        OC_DBG("oc_tls: Close-Notify received");
-      } else if (ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-        OC_DBG("oc_tls: Client wants to reconnect");
-      } else {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-        char buf[256];
-        mbedtls_strerror(ret, buf, sizeof(buf));
-        OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
-      }
+      read_application_data_error(ret);
       if (peer->role == MBEDTLS_SSL_IS_SERVER &&
           (peer->endpoint.flags & TCP) == 0) {
         mbedtls_ssl_close_notify(&peer->ssl_ctx);

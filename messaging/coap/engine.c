@@ -307,7 +307,7 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_BLOCK_WISE
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
-          (uint32_t)coap_get_payload(message, &incoming_block);
+          coap_get_payload(message, &incoming_block);
         if (block1) {
           OC_DBG("processing block1 option");
           request_buffer = oc_blockwise_find_request_buffer(
@@ -751,7 +751,7 @@ coap_receive(oc_message_t *msg)
 
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
-          (uint32_t)coap_get_payload(message, &incoming_block);
+          coap_get_payload(message, &incoming_block);
         if (incoming_block_len > 0 &&
             oc_blockwise_handle_block(response_buffer, block2_offset,
                                       incoming_block,

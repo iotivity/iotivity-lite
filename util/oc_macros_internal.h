@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OC_MACROS_H
-#define OC_MACROS_H
+#ifndef OC_MACROS_INTERNAL_H
+#define OC_MACROS_INTERNAL_H
 
 #define OC_TO_STR(x) #x
 
@@ -27,4 +27,27 @@
 
 #define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-#endif // OC_MACROS_H
+#if defined(__GNUC__) && !defined(__clang__)
+#define OC_DO_PRAGMA(x) _Pragma(#x)
+#define GCC_IGNORE_WARNING_START OC_DO_PRAGMA(GCC diagnostic push)
+#define GCC_IGNORE_WARNING(warning) OC_DO_PRAGMA(GCC diagnostic ignored warning)
+#define GCC_IGNORE_WARNING_END OC_DO_PRAGMA(GCC diagnostic pop)
+#else
+#define GCC_IGNORE_WARNING_START
+#define GCC_IGNORE_WARNING(warning)
+#define GCC_IGNORE_WARNING_END
+#endif /* __GNUC__ && !__clang__ */
+
+#ifdef __clang__
+#define OC_DO_PRAGMA(x) _Pragma(#x)
+#define CLANG_IGNORE_WARNING_START OC_DO_PRAGMA(clang diagnostic push)
+#define CLANG_IGNORE_WARNING(warning)                                          \
+  OC_DO_PRAGMA(clang diagnostic ignored warning)
+#define CLANG_IGNORE_WARNING_END OC_DO_PRAGMA(clang diagnostic pop)
+#else
+#define CLANG_IGNORE_WARNING_START
+#define CLANG_IGNORE_WARNING(warning)
+#define CLANG_IGNORE_WARNING_END
+#endif /* __clang__ */
+
+#endif // OC_MACROS_INTERNAL_H

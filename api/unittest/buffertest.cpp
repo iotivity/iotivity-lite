@@ -28,8 +28,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-constexpr size_t kTestMessagesPoolSize = 1;
 OC_MEMB(oc_test_messages, oc_message_t, kTestMessagesPoolSize);
+
+#ifndef OC_DYNAMIC_ALLOCATION
+constexpr size_t kTestMessagesPoolSize = 1;
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 using oc_message_unique_ptr =
   std::unique_ptr<oc_message_t, void (*)(oc_message_t *)>;

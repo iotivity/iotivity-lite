@@ -26,7 +26,7 @@
 #include "oc_core_res_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SERVER
 #include "api/oc_ri_server_internal.h"
@@ -684,9 +684,9 @@ void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
 #ifdef OC_BLOCK_WISE
-  oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_v1(handle->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
-  oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
+  oc_rep_new_v1(handle->buffer, OC_BLOCK_SIZE);
 #endif /* !OC_BLOCK_WISE */
 }
 

@@ -23,7 +23,7 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
 #include <stdio.h>
@@ -288,17 +288,12 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
     long i = (long)(addr_idx - 1);
     addr_idx = OC_IPV6_ADDRLEN - 1;
     while (i >= split) {
-#if defined(__GNUC__) && !defined(__clang__)
-// GCC thinks that addr has size=4 instead of size=16 and complains about
-// overflow
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-overflow"
-#endif // __GNUC__ && !__clang__
+      // clang-format off
+      GCC_IGNORE_WARNING_START
+      GCC_IGNORE_WARNING("-Wstringop-overflow")
       addr[addr_idx] = addr[i];
       addr[i] = 0;
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif // __GNUC__ && !__clang__
+      GCC_IGNORE_WARNING_END
       i--;
       addr_idx--;
     }

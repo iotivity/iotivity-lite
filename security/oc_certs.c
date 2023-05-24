@@ -31,7 +31,7 @@
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pki_internal.h"
 #include "security/oc_tls_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #include <mbedtls/bignum.h>
 #include <mbedtls/ctr_drbg.h>

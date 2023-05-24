@@ -42,7 +42,7 @@ extern "C" {
  * @return oc_discovery_flags_t the discovery flags (e.g. more to come)
  */
 oc_discovery_flags_t oc_discovery_process_payload(const uint8_t *payload,
-                                                  int len,
+                                                  size_t len,
                                                   oc_client_handler_t handler,
                                                   const oc_endpoint_t *endpoint,
                                                   void *user_data);

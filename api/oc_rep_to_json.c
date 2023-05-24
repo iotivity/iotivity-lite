@@ -20,6 +20,7 @@
 #include "oc_base64.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_compiler.h"
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -34,14 +35,8 @@ typedef struct
   size_t total;       // running total of characters printed to buf
 } write_buffer_t;
 
-#if defined(__clang__) || defined(__GNUC__)
-#define PRINTFLIKE(a, b) __attribute__((format(printf, a, b)))
-#else
-#define PRINTFLIKE(a, b)
-#endif
-
 static long write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
-  PRINTFLIKE(2, 3);
+  OC_PRINTF_FORMAT(2, 3);
 
 static long
 write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
@@ -55,7 +50,7 @@ write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
   }
   wb->total += num_char_printed;
   if (wb->buffer == NULL) {
-    return wb->total;
+    return (long)wb->total;
   }
   if ((size_t)num_char_printed < wb->buffer_size) {
     wb->buffer += num_char_printed;
@@ -64,7 +59,7 @@ write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
     wb->buffer += wb->buffer_size;
     wb->buffer_size = 0;
   }
-  return wb->total;
+  return (long)wb->total;
 }
 
 /*

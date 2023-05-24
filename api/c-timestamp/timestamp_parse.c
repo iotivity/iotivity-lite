@@ -151,18 +151,18 @@ parse_time(const unsigned char *str, uint16_t *hour, uint16_t *min,
 static bool
 parse_offset(const unsigned char *str, bool minus, int16_t *offset)
 {
-  uint16_t hour;
-  uint16_t min;
   if (str[2] != ':') {
     return false;
   }
 
+  uint16_t hour;
+  uint16_t min;
   if (parse_2d(str, 0, &hour) || hour > 23 || parse_2d(str, 3, &min) ||
       min > 59) {
     return false;
   }
 
-  int16_t o = hour * 60 + min;
+  int16_t o = (int16_t)(hour * 60 + min);
   if (minus) {
     o *= -1;
   }
@@ -243,8 +243,8 @@ timestamp_parse(const char *str, size_t len, timestamp_t *tsp)
     return 1;
   }
 
-  tsp->sec = ((int64_t)rdn - 719163) * 86400 + sod - offset * 60;
-  tsp->nsec = nsec;
+  tsp->sec = ((int64_t)rdn - 719163) * 86400 + sod - (offset * 60L);
+  tsp->nsec = (int32_t)nsec;
   tsp->offset = offset;
   return 0;
 }

@@ -48,7 +48,7 @@ TEST(TestRep, OCRepEncodedPayloadSizeTooSmall)
 {
   /* buffer for oc_rep_t */
   std::array<uint8_t, 10> buf{}; // Purposely small buffer
-  oc_rep_new(buf.data(), buf.size());
+  oc_rep_new_v1(buf.data(), buf.size());
 
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());

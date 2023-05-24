@@ -27,7 +27,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "timestamp.h"
+#include "util/oc_compiler.h"
 #include <assert.h>
 #include <stddef.h>
 
@@ -64,12 +66,6 @@ static const uint32_t Pow10[10] = { 1,         10,        100,     1000,
                                     10000,     100000,    1000000, 10000000,
                                     100000000, 1000000000 };
 
-#if defined(__clang__) || defined(__GNUC__)
-#define FALLTHROUGH __attribute__((fallthrough))
-#else
-#define FALLTHROUGH
-#endif
-
 static size_t
 timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
                           const int precision)
@@ -87,8 +83,8 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
     return 0;
   }
 
-  uint64_t sec = tsp->sec + tsp->offset * 60 + EPOCH;
-  uint64_t rdn = sec / 86400;
+  int64_t sec = tsp->sec + tsp->offset * 60L + EPOCH;
+  int64_t rdn = sec / 86400;
   assert(rdn < UINT32_MAX);
   uint16_t y;
   uint16_t m;
@@ -139,38 +135,38 @@ timestamp_format_internal(char *dst, size_t len, const timestamp_t *tsp,
     case 9:
       p[9] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 8:
       p[8] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 7:
       p[7] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 6:
       p[6] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 5:
       p[5] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 4:
       p[4] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 3:
       p[3] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 2:
       p[2] = '0' + (v % 10);
       v /= 10;
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     case 1:
       p[1] = '0' + (v % 10);
-      FALLTHROUGH;
+      OC_FALLTHROUGH;
     default:
       break;
     }

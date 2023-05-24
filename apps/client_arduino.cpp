@@ -193,10 +193,9 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)user_data;
   (void)interfaces;
   (void)bm;
-  int i;
-  int uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
 #ifdef OC_IPV4

@@ -18,7 +18,7 @@
 
 #include "oc_uuid.h"
 #include "port/oc_random.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>

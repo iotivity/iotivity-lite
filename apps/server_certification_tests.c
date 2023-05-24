@@ -678,7 +678,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
   bool out_of_range = false;
   double t = -1;
   units_t units = C;
-  oc_rep_t *rep = request->request_payload;
+  const oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_DOUBLE:
@@ -827,7 +827,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   bool state = false;
   bool bad_request = false;
   bool var_in_request = false;
-  oc_rep_t *rep = request->request_payload;
+  const oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_BOOL:
@@ -984,12 +984,11 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)user_data;
   bool error_state = false;
   OC_PRINTF("-- Begin post_dali:\n");
-  oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
    * all required input fields are present */
   bool var_in_request = false;
-  rep = request->request_payload;
+  const oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld) == 0) {
       var_in_request = true;
@@ -1095,7 +1094,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
-      oc_rep_t *rep = request->request_payload;
+      const oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
         OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
@@ -1322,12 +1321,11 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)user_data;
   bool error_state = false;
   OC_PRINTF("-- Begin post_config:\n");
-  oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
    * all required input fields are present */
   /* loop over the request document to check if all inputs are ok */
-  rep = request->request_payload;
+  const oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
@@ -1361,7 +1359,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
-      oc_rep_t *rep = request->request_payload;
+      const oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
         OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
@@ -1463,7 +1461,7 @@ post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   oc_switch_t *cswitch = (oc_switch_t *)user_data;
-  oc_rep_t *rep = request->request_payload;
+  const oc_rep_t *rep = request->request_payload;
   bool bad_request = false;
   while (rep) {
     switch (rep->type) {

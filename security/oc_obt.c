@@ -267,9 +267,9 @@ oc_obt_dump_state(void)
   if (!buf)
     return;
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(buf, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_start_root_object();
 #ifdef OC_PKI
@@ -2807,7 +2807,8 @@ decode_cred(oc_rep_t *rep, oc_sec_creds_t *creds)
                                   oc_string_len(data->value.string));
                   } else if (len == 9 && memcmp(oc_string(data->name),
                                                 "authority", 9) == 0) {
-                    oc_new_string(&cr->role.role, oc_string(data->value.string),
+                    oc_new_string(&cr->role.authority,
+                                  oc_string(data->value.string),
                                   oc_string_len(data->value.string));
                   }
                   data = data->next;
@@ -2854,10 +2855,9 @@ cred_rsrc(oc_client_response_t *data)
     creds = (oc_sec_creds_t *)oc_memb_alloc(&oc_creds_m);
     if (creds) {
       OC_LIST_STRUCT_INIT(creds, creds);
-      if (decode_cred(data->payload, creds)) {
-        OC_DBG("oc_obt:decoded /oic/sec/cred payload");
-      } else {
-        OC_DBG("oc_obt:error decoding /oic/sec/cred payload");
+      OC_DBG("oc_obt: decoding /oic/sec/cred payload");
+      if (!decode_cred(data->payload, creds)) {
+        OC_DBG("oc_obt: error decoding /oic/sec/cred payload");
       }
       if (oc_list_length(creds->creds) > 0) {
         ctx->cb(creds, ctx->data);
@@ -3183,10 +3183,9 @@ acl2_rsrc(oc_client_response_t *data)
   if (data->code < OC_STATUS_BAD_REQUEST) {
     acl = (oc_sec_acl_t *)oc_memb_alloc(&oc_acl_m);
     if (acl) {
-      if (decode_acl(data->payload, acl)) {
-        OC_DBG("oc_obt:decoded /oic/sec/acl2 payload");
-      } else {
-        OC_DBG("oc_obt:error decoding /oic/sec/acl2 payload");
+      OC_DBG("oc_obt: decoding /oic/sec/acl2 payload");
+      if (!decode_acl(data->payload, acl)) {
+        OC_DBG("oc_obt: error decoding /oic/sec/acl2 payload");
       }
       if (oc_list_length(acl->subjects) > 0) {
         ctx->cb(acl, ctx->data);

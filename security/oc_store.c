@@ -205,9 +205,9 @@ oc_sec_dump_ecdsa_keypair(size_t device)
     OC_ERR("cannot dump %s to store: cannot allocate buffer", "keypair");
     return;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   oc_sec_ecdsa_encode_keypair_for_device(device);
@@ -260,9 +260,9 @@ oc_sec_dump_cred(size_t device)
     OC_ERR("cannot dump %s to store: cannot allocate buffer", "cred");
     return;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   oc_sec_encode_cred(device, 0, true);
@@ -316,9 +316,9 @@ oc_sec_dump_acl(size_t device)
     OC_ERR("cannot dump %s to store: cannot allocate buffer", "acl");
     return;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   oc_sec_encode_acl(device, 0, true);
@@ -392,9 +392,9 @@ oc_sec_dump_unique_ids(size_t device)
     OC_ERR("cannot dump %s to store: cannot allocate buffer", "unique_ids");
     return;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   const oc_device_info_t *device_info = oc_core_get_device_info(device);
@@ -457,9 +457,9 @@ oc_sec_dump_ael(size_t device)
     OC_ERR("cannot dump %s to store: cannot allocate buffer", "ael");
     return;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   /* ael */

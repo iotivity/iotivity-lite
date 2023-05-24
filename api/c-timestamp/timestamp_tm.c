@@ -74,7 +74,7 @@ timestamp_to_tm(const timestamp_t *tsp, struct tm *tmp, const bool local)
 
   uint64_t sec = tsp->sec + RDN_OFFSET;
   if (local) {
-    sec += tsp->offset * 60;
+    sec += tsp->offset * 60L;
   }
   assert((sec / 86400) <= UINT32_MAX);
   uint32_t rdn = (uint32_t)(sec / 86400);

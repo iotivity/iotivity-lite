@@ -21,7 +21,7 @@
 #include "oc_cred.h"
 #include "oc_helpers.h"
 #include "security/oc_cred_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #include <gtest/gtest.h>
 

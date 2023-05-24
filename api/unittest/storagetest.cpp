@@ -25,7 +25,7 @@
 #include "oc_api.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #include <array>
 #include <filesystem>

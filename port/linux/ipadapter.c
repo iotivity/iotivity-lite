@@ -34,6 +34,7 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"
@@ -351,7 +352,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
         }
         ep.interface_index = addrmsg->ifa_index;
         include = true;
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
+        struct rtattr *attr = IFA_RTA(addrmsg);
+        CLANG_IGNORE_WARNING_END
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
           if (attr->rta_type == IFA_ADDRESS) {
@@ -370,7 +374,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
               include = false;
             }
           }
+          CLANG_IGNORE_WARNING_START
+          CLANG_IGNORE_WARNING("-Wcast-align")
           attr = RTA_NEXT(attr, att_len);
+          CLANG_IGNORE_WARNING_END
         }
       }
       if (include) {
@@ -406,7 +413,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
       }
 
     next_ifaddr:
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       response = NLMSG_NEXT(response, response_len);
+      CLANG_IGNORE_WARNING_END
     }
   }
   close(nl_sock);
@@ -557,7 +567,10 @@ process_interface_change_event(void)
           oc_network_interface_event(NETWORK_INTERFACE_UP);
         }
 #endif /* OC_NETWORK_MONITOR */
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
+        struct rtattr *attr = IFA_RTA(ifa);
+        CLANG_IGNORE_WARNING_END
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
           if (attr->rta_type == IFA_ADDRESS) {
@@ -587,7 +600,10 @@ process_interface_change_event(void)
                 }
               }
           }
+          CLANG_IGNORE_WARNING_START
+          CLANG_IGNORE_WARNING("-Wcast-align")
           attr = RTA_NEXT(attr, att_len);
+          CLANG_IGNORE_WARNING_END
         }
       }
       if_state_changed = true;
@@ -602,7 +618,10 @@ process_interface_change_event(void)
       }
       if_state_changed = true;
     }
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     response = NLMSG_NEXT(response, response_len);
+    CLANG_IGNORE_WARNING_END
   }
 
   if (if_state_changed) {
@@ -674,7 +693,10 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
       endpoint->addr.ipv6.port = ntohs(c6->sin6_port);
 
       /* Set receiving network interface index */
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       struct in6_pktinfo *pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+      CLANG_IGNORE_WARNING_END
       endpoint->interface_index = pktinfo->ipi6_ifindex;
 
       /* For a unicast receiving socket, extract the destination address
@@ -696,7 +718,10 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
         OC_ERR("anciliary data contains invalid source address");
         return -1;
       }
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       struct in_pktinfo *pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+      CLANG_IGNORE_WARNING_END
       struct sockaddr_in *c4 = (struct sockaddr_in *)&client;
       memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
              sizeof(c4->sin_addr.s_addr));
@@ -1080,7 +1105,10 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     cmsg->cmsg_type = IPV6_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+    CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in6_pktinfo));
 
     /* Get the outgoing interface index from message->endpint */
@@ -1104,7 +1132,10 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     cmsg->cmsg_type = IP_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+    CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in_pktinfo));
 
     pktinfo->ipi_ifindex = message->endpoint.interface_index;
@@ -1248,7 +1279,10 @@ send_ipv6_discovery_request(oc_message_t *message,
 #define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
   IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
   const struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
+  CLANG_IGNORE_WARNING_END
   if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
     unsigned int mif = if_nametoindex(interface->ifa_name);
     if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
@@ -1291,7 +1325,10 @@ send_ipv4_discovery_request(oc_message_t *message,
     OC_ERR("server socket for IPv4 is disabled");
     return false;
   }
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
   struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
+  CLANG_IGNORE_WARNING_END
   if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                  sizeof(addr->sin_addr)) == -1) {
     OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);

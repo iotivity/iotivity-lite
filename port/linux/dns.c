@@ -25,6 +25,7 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_connectivity.h"
 #include "util/oc_memb.h"
+#include "util/oc_macros_internal.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -111,7 +112,10 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
 
     if (ret == 0) {
       if ((flags & IPV6) != 0) {
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
         const struct sockaddr_in6 *r = (struct sockaddr_in6 *)result->ai_addr;
+        CLANG_IGNORE_WARNING_END
         memcpy(a.ipv6.address, r->sin6_addr.s6_addr,
                sizeof(r->sin6_addr.s6_addr));
         a.ipv6.port = ntohs(r->sin6_port);
@@ -119,7 +123,10 @@ oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags)
       }
 #ifdef OC_IPV4
       else {
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
         const struct sockaddr_in *r = (struct sockaddr_in *)result->ai_addr;
+        CLANG_IGNORE_WARNING_END
         memcpy(a.ipv4.address, &r->sin_addr.s_addr, sizeof(r->sin_addr.s_addr));
         a.ipv4.port = ntohs(r->sin_port);
       }

@@ -24,7 +24,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "security/oc_cred_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 namespace oc::tls {
 

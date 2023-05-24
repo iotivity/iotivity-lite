@@ -40,7 +40,7 @@
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_mmem.h"
 #include "util/oc_process.h"
 
@@ -2531,9 +2531,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
         oc_rep_end_root_object();
 
-        if (oc_do_post()) {
-          OC_PUSH_DBG("Sent POST request");
-        } else {
+        OC_PUSH_DBG("Sending POST request");
+        if (!oc_do_post()) {
           OC_PUSH_ERR("Could not send POST");
         }
       } else {

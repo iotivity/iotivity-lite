@@ -419,17 +419,17 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 #endif /* OC_OSCORE && OC_SECURITY */
 
   const uint8_t *payload = NULL;
-  int payload_len = 0;
+  size_t payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (*response_state != NULL) {
     payload = (*response_state)->buffer;
-    payload_len = (int)(*response_state)->payload_size;
+    payload_len = (*response_state)->payload_size;
   }
 #else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
   client_response._payload = payload;
-  client_response._payload_len = (size_t)payload_len;
+  client_response._payload_len = payload_len;
 
   bool separate = false;
   if (payload_len) {

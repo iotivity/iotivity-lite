@@ -88,7 +88,9 @@ update_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       break;
     default:
       code = OC_STATUS_BAD_REQUEST;
-      return;
+      break;
+    }
+    if (code == OC_STATUS_BAD_REQUEST) {
       break;
     }
     rep = rep->next;

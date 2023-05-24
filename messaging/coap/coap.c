@@ -270,7 +270,7 @@ coap_serialize_int_option(unsigned int number, unsigned int current_number,
 static size_t
 coap_serialize_array_option(unsigned int number, unsigned int current_number,
                             uint8_t *buffer, uint8_t *array, size_t length,
-                            char split_char)
+                            unsigned char split_char)
 {
   size_t i = 0;
 
@@ -1615,7 +1615,7 @@ coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len)
   return coap_pkt->etag_len;
 }
 /*---------------------------------------------------------------------------*/
-int
+size_t
 coap_get_header_proxy_uri(const void *packet, const char **uri)
 {
   const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
@@ -1626,7 +1626,7 @@ coap_get_header_proxy_uri(const void *packet, const char **uri)
   *uri = coap_pkt->proxy_uri;
   return coap_pkt->proxy_uri_len;
 }
-int
+size_t
 coap_set_header_proxy_uri(void *packet, const char *uri)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1965,7 +1965,7 @@ coap_set_header_size1(void *packet, uint32_t size)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-int
+uint32_t
 coap_get_payload(const void *packet, const uint8_t **payload)
 {
   const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
@@ -1973,24 +1973,23 @@ coap_get_payload(const void *packet, const uint8_t **payload)
   if (coap_pkt->payload) {
     *payload = coap_pkt->payload;
     return coap_pkt->payload_len;
-  } else {
-    *payload = NULL;
-    return 0;
   }
+  *payload = NULL;
+  return 0;
 }
-int
-coap_set_payload(void *packet, const void *payload, size_t length)
+uint32_t
+coap_set_payload(void *packet, const void *payload, uint32_t length)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->payload = (uint8_t *)payload;
 #ifdef OC_TCP
   if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
-    coap_pkt->payload_len = (uint32_t)length;
+    coap_pkt->payload_len = length;
   } else
 #endif /* OC_TCP */
   {
-    coap_pkt->payload_len = (uint32_t)MIN((unsigned)OC_BLOCK_SIZE, length);
+    coap_pkt->payload_len = MIN((uint32_t)OC_BLOCK_SIZE, length);
   }
 
   return coap_pkt->payload_len;

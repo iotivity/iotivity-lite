@@ -141,7 +141,7 @@ TEST_F(TestKeyPair, EncodeFail_BufferTooSmall)
 {
   /* buffer for oc_rep_t */
   std::array<uint8_t, 10> buf{}; // Purposely small buffer
-  oc_rep_new(buf.data(), buf.size());
+  oc_rep_new_v1(buf.data(), buf.size());
 
   oc_ecdsa_keypair_t kp = oc::GetOCKeyPair(MBEDTLS_ECP_DP_SECP256R1);
   EXPECT_FALSE(oc_sec_ecdsa_encode_keypair(&kp));

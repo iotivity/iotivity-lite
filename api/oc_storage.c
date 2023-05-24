@@ -155,9 +155,9 @@ oc_storage_save_resource(const char *name, size_t device,
     OC_ERR("cannot dump %s to storage: cannot allocate buffer", name);
     return -1;
   }
-  oc_rep_new_realloc(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* !OC_APP_DATA_STORAGE_BUFFER */
-  oc_rep_new(sb.buffer, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(sb.buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* OC_APP_DATA_STORAGE_BUFFER */
 
   if (encode(device, encode_data) != 0 ||

@@ -559,12 +559,12 @@ on_keepalive_response(oc_cloud_context_t *ctx, bool response_received,
   }
   if (!ok) {
     OC_ERR("[CM] keepalive failed");
-  } else {
-    OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
-           "seconds timeout",
-           (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+    return false;
   }
-  return ok;
+  OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
+         "seconds timeout",
+         (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+  return true;
 }
 
 static void

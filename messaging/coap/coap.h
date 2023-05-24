@@ -106,7 +106,7 @@ typedef struct
   uint8_t token_len;
   uint8_t token[COAP_TOKEN_LEN];
 
-  uint8_t options[COAP_OPTION_SIZE1 / OPTION_MAP_SIZE +
+  uint8_t options[COAP_OPTION_SIZE1 / (int)OPTION_MAP_SIZE +
                   1]; /* bitmap to check if option is set */
 
   uint16_t content_format; /* parse options once and store; allows setting
@@ -230,10 +230,10 @@ int coap_set_header_max_age(void *packet, uint32_t age);
 int coap_get_header_etag(const void *packet, const uint8_t **etag);
 int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len);
 
-int coap_get_header_proxy_uri(
+size_t coap_get_header_proxy_uri(
   const void *packet,
   const char **uri); /* in-place string might not be 0-terminated. */
-int coap_set_header_proxy_uri(void *packet, const char *uri);
+size_t coap_set_header_proxy_uri(void *packet, const char *uri);
 
 int coap_get_header_proxy_scheme(
   void *packet,
@@ -284,8 +284,8 @@ int coap_set_header_size2(void *packet, uint32_t size);
 int coap_get_header_size1(const void *packet, uint32_t *size);
 int coap_set_header_size1(void *packet, uint32_t size);
 
-int coap_get_payload(const void *packet, const uint8_t **payload);
-int coap_set_payload(void *packet, const void *payload, size_t length);
+uint32_t coap_get_payload(const void *packet, const uint8_t **payload);
+uint32_t coap_set_payload(void *packet, const void *payload, uint32_t length);
 
 size_t coap_set_option_header(unsigned int delta, size_t length,
                               uint8_t *buffer);

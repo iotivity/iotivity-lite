@@ -34,7 +34,7 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_SECURITY
@@ -197,7 +197,7 @@ dev_plgd_time(plgd_time_t pt)
     return -1;
   }
 
-  long elapsed = cur - pt.update_time;
+  long elapsed = (long)(cur - pt.update_time);
   assert(elapsed >= 0);
   oc_clock_time_t ptime = (pt.store.last_synced_time + elapsed);
 

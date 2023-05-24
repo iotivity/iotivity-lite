@@ -1988,7 +1988,6 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
       if (comma)
         strcat(strinterfaces, ",");
       strcat(strinterfaces, "\"oic.r.b\"");
-      comma = true;
     }
     strcat(json, strinterfaces);
     strcat(json, "]");
@@ -2037,8 +2036,6 @@ void
 py_post(const char *uri, int value)
 {
   OC_PRINTF("[C] POST_light: %s-> %d\n", uri, value);
-  // int uri_len = strlen(uri);
-
   // static oc_endpoint_t *light_server;
   /*
   if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
@@ -2052,7 +2049,7 @@ py_post(const char *uri, int value)
       OC_PRINTF("Could not send POST request\n");
   } else
     OC_PRINTF("Could not init POST request\n");
-    */
+  */
 }
 
 void
@@ -2193,10 +2190,9 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)iface_mask;
   (void)bm;
   (void)user_data;
-  int uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-
-  for (int i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 14 && strncmp(t, "oic.r.diplomat", 14) == 0) {
       oc_endpoint_list_copy(&diplomat_ep, endpoint);
@@ -2333,10 +2329,9 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   (void)user_data;
   (void)iface_mask;
   (void)bm;
-  int i;
-  int uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       oc_endpoint_list_copy(&light_server, endpoint);

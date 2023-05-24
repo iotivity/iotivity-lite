@@ -101,4 +101,5 @@ oc_uuid_t * jni_gen_uuid()
 %}
 
 #define OC_API
+#define OC_DEPRECATED(...)
 %include oc_uuid.h

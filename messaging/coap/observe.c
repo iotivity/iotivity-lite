@@ -641,10 +641,10 @@ coap_notify_collection(oc_collection_t *collection,
   request.method = OC_GET;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
+  oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                        OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+  oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   request.resource = (oc_resource_t *)collection;
@@ -725,10 +725,10 @@ coap_notify_collections(oc_resource_t *resource)
 
     request.resource = (oc_resource_t *)collection;
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                       OC_MAX_OBSERVE_SIZE);
+    oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                          OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
     if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, resource)) {
@@ -786,12 +786,12 @@ fill_response(oc_resource_t *resource, const oc_endpoint_t *endpoint,
     iface_mask = resource->default_interface;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response->response_buffer->buffer,
-                     response->response_buffer->buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
+  oc_rep_new_realloc_v1(&response->response_buffer->buffer,
+                        response->response_buffer->buffer_size,
+                        OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response->response_buffer->buffer,
-             response->response_buffer->buffer_size);
+  oc_rep_new_v1(response->response_buffer->buffer,
+                response->response_buffer->buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
   if (resource->get_handler.cb) {
     resource->get_handler.cb(&request, iface_mask,
@@ -1080,10 +1080,10 @@ process_batch_observers(void *data)
     }
 #endif /* OC_BLOCK_WISE */
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                       OC_MAX_OBSERVE_SIZE);
+    oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                          OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_rep_start_links_array();
     int size_before = oc_rep_get_encoded_payload_size();

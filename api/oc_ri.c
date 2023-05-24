@@ -36,7 +36,7 @@
 #include "util/oc_etimer_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include "util/oc_process_internal.h"
 
@@ -1279,7 +1279,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 
   /* Obtain handle to buffer containing the serialized payload */
   const uint8_t *payload = NULL;
-  int payload_len = 0;
+  size_t payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (*ctx.request_state) {
     payload = (*ctx.request_state)->buffer;
@@ -1289,7 +1289,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   payload_len = coap_get_payload(request, &payload);
 #endif /* !OC_BLOCK_WISE */
   request_obj._payload = payload;
-  request_obj._payload_len = (size_t)payload_len;
+  request_obj._payload_len = payload_len;
   request_obj.content_format = cf;
   request_obj.accept = accept;
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -1431,14 +1431,14 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
      */
 #ifdef OC_DYNAMIC_ALLOCATION
     if (response_state_allocated) {
-      oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                         OC_MAX_APP_DATA_SIZE);
+      oc_rep_new_realloc_v1(&response_buffer.buffer,
+                            response_buffer.buffer_size, OC_MAX_APP_DATA_SIZE);
       enable_realloc_rep = true;
     } else {
-      oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+      oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
     oc_status_t ret =

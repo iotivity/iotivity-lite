@@ -26,10 +26,10 @@ RepPool::RepPool(size_t size)
   : size_{ size }
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&buffer_, 0, size);
+  oc_rep_new_realloc_v1(&buffer_, 0, size);
 #else
   buffer_.resize(size);
-  oc_rep_new(buffer_.data(), buffer_.size());
+  oc_rep_new_v1(buffer_.data(), buffer_.size());
   memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
   memset(rep_objects_pool_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -46,10 +46,10 @@ void
 RepPool::Clear()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&buffer_, 0, size_);
+  oc_rep_new_realloc_v1(&buffer_, 0, size_);
 #else
   buffer_.resize(size_);
-  oc_rep_new(buffer_.data(), buffer_.size());
+  oc_rep_new_v1(buffer_.data(), buffer_.size());
   memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
   memset(rep_objects_pool_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(oc_rep_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
