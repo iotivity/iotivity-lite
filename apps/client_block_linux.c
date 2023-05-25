@@ -61,9 +61,8 @@ stop_observe(void *data)
   OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(array_1, array_server);
 
-  int i;
   if (oc_init_post(array_1, array_server, NULL, &post_array, LOW_QOS, NULL)) {
-    for (i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++) {
       large_array[i] = oc_random_value();
       OC_PRINTF("(%d %d) ", i, large_array[i]);
     }
@@ -71,12 +70,14 @@ stop_observe(void *data)
     oc_rep_start_root_object();
     oc_rep_set_int_array(root, array, large_array, 100);
     oc_rep_end_root_object();
-    if (oc_do_post())
+    if (oc_do_post()) {
       OC_PRINTF("Sent POST request\n");
-    else
+    } else {
       OC_PRINTF("Could not send POST\n");
-  } else
+    }
+  } else {
     OC_PRINTF("Could not init POST\n");
+  }
 
   return OC_EVENT_DONE;
 }

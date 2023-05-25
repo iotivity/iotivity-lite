@@ -517,7 +517,7 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
 static int
-try_connect_nonblocking(int sockfd, const struct sockaddr *r, int r_len)
+try_connect_nonblocking(int sockfd, const struct sockaddr *r, socklen_t r_len)
 {
   if (oc_set_fd_flags(sockfd, O_NONBLOCK, 0) < 0) {
     OC_ERR("cannot set non-blocking socket(%d)", sockfd);

@@ -1869,5 +1869,7 @@ char *jni_rep_to_json(oc_rep_t *rep, bool prettyPrint)
 
 #define OC_API
 #define OC_DEPRECATED(...)
+#define OC_NONNULL(...)
+#define OC_RETURNS_NONNULL
 %include "oc_rep.h"
 /*******************End oc_rep.h****************************/

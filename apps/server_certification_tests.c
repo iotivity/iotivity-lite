@@ -23,6 +23,7 @@
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
@@ -1161,9 +1162,9 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
                                    &g_dali_tbus_array_size);
             /* copy over the data of the retrieved (byte) array to the global
              * variable */
-            for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
+            for (size_t j = 0; j < g_dali_tbus_array_size; j++) {
               OC_PRINTF(" byte %d ", temp_array[j]);
-              g_dali_tbus[j] = temp_array[j];
+              g_dali_tbus[j] = (int)temp_array[j];
             }
           } else {
             int64_t *temp_integer = 0;
@@ -1171,9 +1172,9 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
                                  &g_dali_tbus_array_size);
             /* copy over the data of the retrieved (integer) array to the global
              * variable */
-            for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
+            for (size_t j = 0; j < g_dali_tbus_array_size; j++) {
               OC_PRINTF(" integer %" PRId64 " ", temp_integer[j]);
-              g_dali_tbus[j] = temp_integer[j];
+              g_dali_tbus[j] = (int)temp_integer[j];
             }
           }
         }
@@ -2011,10 +2012,10 @@ initialize_variables(void)
   oc_storage_read("g_switch_storage_status",
                   (uint8_t *)&g_switch_storage_status,
                   sizeof(g_switch_storage_status));
-  int ret_size = oc_storage_read("g_switch_value", (uint8_t *)&g_switch_value,
-                                 sizeof(g_switch_value));
+  long ret_size = oc_storage_read("g_switch_value", (uint8_t *)&g_switch_value,
+                                  sizeof(g_switch_value));
   if (ret_size != sizeof(g_switch_value)) {
-    OC_PRINTF(" could not read store g_switch_value : %d\n", ret_size);
+    OC_PRINTF(" could not read store g_switch_value : %ld\n", ret_size);
   }
 #endif /* OC_STORAGE */
 }

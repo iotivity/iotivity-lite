@@ -20,7 +20,6 @@
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_certs.h"
-#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_log.h"
 #include "oc_pki.h"

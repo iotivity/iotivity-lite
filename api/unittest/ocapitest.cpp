@@ -19,6 +19,7 @@
 #include "api/client/oc_client_cb_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "oc_uuid.h"

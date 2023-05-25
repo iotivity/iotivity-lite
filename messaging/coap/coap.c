@@ -1811,7 +1811,7 @@ coap_set_header_location_query(void *packet, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_observe(const void *packet, uint32_t *observe)
+coap_get_header_observe(const void *packet, int32_t *observe)
 {
   const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
 
@@ -1822,7 +1822,7 @@ coap_get_header_observe(const void *packet, uint32_t *observe)
   return 1;
 }
 int
-coap_set_header_observe(void *packet, uint32_t observe)
+coap_set_header_observe(void *packet, int32_t observe)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 

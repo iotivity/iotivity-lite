@@ -3596,11 +3596,11 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
           oc_rep_encode_text_string(&root_map, "", 0);
         }
       } else if (strstr(payload_types[i], "bytes") != NULL) {
-        int byte_string_len = (strlen(payload_values[i]) + 1) / 2;
+        size_t byte_string_len = (strlen(payload_values[i]) + 1) / 2;
         unsigned char payload_byte_string[10240];
 
         char *pos = payload_values[i];
-        for (int j = 0; j < byte_string_len; j++) {
+        for (size_t j = 0; j < byte_string_len; j++) {
           sscanf(pos, "%2hhx", &payload_byte_string[j]);
           pos += 2;
         }

@@ -28,11 +28,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-OC_MEMB(oc_test_messages, oc_message_t, kTestMessagesPoolSize);
-
-#ifndef OC_DYNAMIC_ALLOCATION
 constexpr size_t kTestMessagesPoolSize = 1;
-#endif /* OC_DYNAMIC_ALLOCATION */
+OC_MEMB(oc_test_messages, oc_message_t, kTestMessagesPoolSize);
 
 using oc_message_unique_ptr =
   std::unique_ptr<oc_message_t, void (*)(oc_message_t *)>;
@@ -41,6 +38,7 @@ class TestMessage : public testing::Test {
 public:
   static void SetUpTestCase()
   {
+    (void)kTestMessagesPoolSize;
     oc_memb_init(&oc_test_messages);
     oc_set_buffers_avail_cb(onIncomingBufferAvailable);
     oc_memb_set_buffers_avail_cb(&oc_test_messages, onTestBufferAvailable);

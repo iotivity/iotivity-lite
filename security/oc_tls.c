@@ -675,10 +675,11 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
     return;
   }
   oc_tls_retry_timer_t *timer = (oc_tls_retry_timer_t *)ctx;
-  timer->int_ticks = (oc_clock_time_t)((int_ms * OC_CLOCK_SECOND) / 1.e03);
+  timer->int_ticks =
+    (oc_clock_time_t)((double)int_ms * (OC_CLOCK_SECOND / 1.e03));
   oc_etimer_stop(&timer->fin_timer);
   timer->fin_timer.timer.interval =
-    (oc_clock_time_t)((fin_ms * OC_CLOCK_SECOND) / 1.e03);
+    (oc_clock_time_t)((double)fin_ms * (OC_CLOCK_SECOND / 1.e03));
   OC_PROCESS_CONTEXT_BEGIN(&oc_tls_handler)
   oc_etimer_restart(&timer->fin_timer);
   OC_PROCESS_CONTEXT_END(&oc_tls_handler)

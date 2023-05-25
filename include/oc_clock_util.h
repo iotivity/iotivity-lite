@@ -26,6 +26,7 @@
 #include "util/oc_compiler.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <time.h>
 
 #ifdef OC_HAVE_TIME_H
 #include <time.h>
@@ -120,6 +121,11 @@ bool oc_clock_monotonic_time_to_posix(oc_clock_time_t time_mt,
 #endif /* OC_HAVE_CLOCKID_T */
 
 #endif /* OC_HAVE_TIME_H */
+
+/**
+ * @brief Convert clock time into a C struct timespec
+ */
+struct timespec oc_clock_time_to_timespec(oc_clock_time_t time);
 
 #ifdef __cplusplus
 }

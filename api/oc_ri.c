@@ -1047,7 +1047,7 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
   /* If a GET request was successfully processed, then check if the resource is
    * OBSERVABLE and check its observe option.
    */
-  uint32_t observe = 2;
+  int32_t observe = 2;
   if ((resource->properties & OC_OBSERVABLE) == 0 ||
       !coap_get_header_observe(request, &observe)) {
     return 2;

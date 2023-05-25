@@ -351,7 +351,7 @@ ri_prepare_client_response(const coap_packet_t *packet,
   }
 #else  /* !OC_BLOCK_WISE */
   (void)response_state;
-  coap_get_header_observe(packet, (uint32_t *)&client_response.observe_option);
+  coap_get_header_observe(packet, &client_response.observe_option);
 #endif /* OC_BLOCK_WISE */
 
   return client_response;

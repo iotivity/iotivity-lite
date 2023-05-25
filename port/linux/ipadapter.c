@@ -515,7 +515,8 @@ oc_connectivity_get_endpoints(size_t device)
   bool swapped = false;
   int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
   while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
-    int8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    int8_t desired =
+      (int8_t)(expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
     OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
     if (swapped) {
       refresh = true;
@@ -633,7 +634,8 @@ process_interface_change_event(void)
       bool swapped = false;
       int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
       while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
-        int8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        int8_t desired =
+          (int8_t)(expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
         OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
         if (swapped) {
           break;
@@ -1073,7 +1075,7 @@ network_event_thread(void *data)
   return NULL;
 }
 
-static int
+static ssize_t
 send_msg(int sock, struct sockaddr_storage *receiver,
          const oc_message_t *message)
 {
@@ -1149,24 +1151,23 @@ send_msg(int sock, struct sockaddr_storage *receiver,
   }
 #endif /* OC_IPV4 */
 
-  int bytes_sent = 0, x;
-  while (bytes_sent < (int)message->length) {
+  size_t bytes_sent = 0;
+  while (bytes_sent < message->length) {
     iovec[0].iov_base = (void *)(message->data + bytes_sent);
-    iovec[0].iov_len = message->length - (size_t)bytes_sent;
-    x = sendmsg(sock, &msg, 0);
+    iovec[0].iov_len = message->length - bytes_sent;
+    ssize_t x = sendmsg(sock, &msg, 0);
     if (x < 0) {
       OC_WRN("sendto() returned errno %d", (int)errno);
       break;
     }
     bytes_sent += x;
   }
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_DBG("Sent %zu bytes", bytes_sent);
 
   if (bytes_sent == 0) {
     return -1;
   }
-
-  return bytes_sent;
+  return (ssize_t)bytes_sent;
 }
 
 bool
@@ -1252,7 +1253,7 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   }
 #endif /* OC_IPV4 */
 
-  return send_msg(send_sock, &receiver, message);
+  return (int)send_msg(send_sock, &receiver, message);
 }
 
 int

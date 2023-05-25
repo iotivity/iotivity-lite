@@ -24,6 +24,9 @@
 
 static constexpr size_t kDeviceID{ 0 };
 
+#include <gtest/gtest.h>
+#include <pthread.h>
+
 class TestCloud : public testing::Test {
 public:
   static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }

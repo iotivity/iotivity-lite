@@ -22,6 +22,7 @@
 #include "api/oc_ri_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME

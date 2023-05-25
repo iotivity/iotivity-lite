@@ -184,7 +184,7 @@ generate_csr_error:
  * @return false on failure
  */
 static bool
-oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
+oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, unsigned md_flags)
 {
   if (md_flags == 0) {
     OC_DBG("signature verification disabled");
@@ -219,7 +219,7 @@ oc_sec_csr_verify_signature(mbedtls_x509_csr *csr, int md_flags)
 
 bool
 oc_sec_csr_validate(mbedtls_x509_csr *csr, mbedtls_pk_type_t pk_type,
-                    int md_flags)
+                    unsigned md_flags)
 {
   assert(csr != NULL);
   mbedtls_pk_type_t pk = mbedtls_pk_get_type(&csr->pk);

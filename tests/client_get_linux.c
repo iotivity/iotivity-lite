@@ -16,6 +16,7 @@
 
 #include "test.h"
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
 

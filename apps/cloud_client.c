@@ -22,6 +22,7 @@
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "util/oc_atomic.h"
+
 #include <inttypes.h>
 #include <signal.h>
 #if defined(_WIN32)
