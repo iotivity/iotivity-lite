@@ -18,28 +18,25 @@
 
 #pragma once
 
+#include "oc_config.h"
 #include "port/oc_clock.h"
 
-#include <stdbool.h>
 #include <chrono>
 
 namespace oc {
 
-inline oc_clock_time_t testStart;
-inline oc_clock_time_t testStartMT;
+constexpr oc_clock_time_t
+DurationToTicks(std::chrono::milliseconds ms)
+{
+  if constexpr (OC_CLOCK_SECOND == 1000000) {
+    return ms.count() * 1000;
+  }
+  if constexpr (OC_CLOCK_SECOND == 1000) {
+    return ms.count();
+  }
+  return static_cast<oc_clock_time_t>(static_cast<double>(ms.count()) /
+                                      OC_CLOCK_SECOND) *
+         1000;
+}
 
-bool SetSystemTime(oc_clock_time_t now, std::chrono::milliseconds shift);
-
-#ifdef __unix__
-bool SetSystemTimeUnix(oc_clock_time_t now, std::chrono::milliseconds shift);
-#endif /* __unix__ */
-
-#ifdef _WIN32
-bool SetSystemTimeWin(oc_clock_time_t now, std::chrono::milliseconds shift);
-#endif /* _WIN32 */
-
-void SetTestStartTime();
-
-bool RestoreSystemTimeFromTestStartTime();
-
-} // namespace oc
+} // nmespace oc

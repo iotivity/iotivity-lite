@@ -901,7 +901,9 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         )
     endif()
 
-    # Currently disabled because it hangs on TestCloudManager.cloud_manager_start_initialized_f
+    file(GLOB UTILTEST_SRC util/unittest/*.cpp)
+    oc_package_add_test(TARGET utiltest SOURCES ${UTILTEST_SRC})
+
     if(OC_CLOUD_ENABLED)
         file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/storage_cloud)

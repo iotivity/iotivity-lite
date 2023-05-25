@@ -58,7 +58,8 @@ typedef enum {
   __NUM_OC_EVENT_TYPES__
 } oc_events_t;
 
-extern oc_process_event_t oc_events[];
+/** @brief Assign an oc_process_event_t for each oc_events_t */
+void oc_event_assign_oc_process_events(void);
 
 /**
  * @brief convert oc_events_t value to oc_process_event_t value

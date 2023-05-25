@@ -47,8 +47,7 @@ public:
   static void SetUpTestCase()
   {
     oc_clock_init();
-    TestDTLSWithServer::start = oc_clock_time();
-    TestDTLSWithServer::startMt = oc_clock_time_monotonic();
+    oc::SetTestStartTime();
   }
 
   static void TearDownTestCase() {}
@@ -64,22 +63,9 @@ public:
   {
     oc::TestDevice::StopServer();
 
-#if defined(__unix__) || defined(_WIN32)
-    oc_clock_time_t elapsed =
-      oc_clock_time_monotonic() - TestDTLSWithServer::startMt;
-    std::chrono::milliseconds shift{ static_cast<int64_t>((elapsed * 1.e03) /
-                                                          OC_CLOCK_SECOND) };
-    oc::SetSystemTime(TestDTLSWithServer::start, shift);
-#endif /* __unix__ || _WIN32 */
+    oc::RestoreSystemTimeFromTestStartTime();
   }
-
-private:
-  static oc_clock_time_t start;
-  static oc_clock_time_t startMt;
 };
-
-oc_clock_time_t TestDTLSWithServer::start{};
-oc_clock_time_t TestDTLSWithServer::startMt{};
 
 enum class DTLS_STATUS : int {
   DTLS_INIT = 0,

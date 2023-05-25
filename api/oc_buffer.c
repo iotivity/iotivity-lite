@@ -20,7 +20,7 @@
 #include "oc_buffer.h"
 #include "oc_buffer_internal.h"
 #include "oc_config.h"
-#include "oc_events.h"
+#include "oc_events_internal.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
@@ -213,7 +213,7 @@ void
 oc_recv_message(oc_message_t *message)
 {
   if (oc_process_post(&oc_message_buffer_handler,
-                      oc_events[INBOUND_NETWORK_EVENT],
+                      oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT),
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
   }
@@ -223,7 +223,7 @@ void
 oc_send_message(oc_message_t *message)
 {
   if (oc_process_post(&oc_message_buffer_handler,
-                      oc_events[OUTBOUND_NETWORK_EVENT],
+                      oc_event_to_oc_process_event(OUTBOUND_NETWORK_EVENT),
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
   }
@@ -235,7 +235,7 @@ void
 oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
 {
   if (oc_process_post(&oc_message_buffer_handler,
-                      oc_events[TCP_CONNECT_SESSION],
+                      oc_event_to_oc_process_event(TCP_CONNECT_SESSION),
                       event) == OC_PROCESS_ERR_FULL) {
     oc_tcp_on_connect_event_free(event);
   }
@@ -247,7 +247,8 @@ oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
 void
 oc_close_all_tls_sessions_for_device(size_t device)
 {
-  oc_process_post(&oc_message_buffer_handler, oc_events[TLS_CLOSE_ALL_SESSIONS],
+  oc_process_post(&oc_message_buffer_handler,
+                  oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS),
                   (oc_process_data_t)device);
 }
 #endif /* OC_SECURITY */
@@ -258,19 +259,22 @@ handle_inbound_network_event(oc_process_data_t data)
 #ifdef OC_SECURITY
   if (((oc_message_t *)data)->encrypted == 1) {
     OC_DBG("Inbound network event: encrypted request");
-    oc_process_post(&oc_tls_handler, oc_events[UDP_TO_TLS_EVENT], data);
+    oc_process_post(&oc_tls_handler,
+                    oc_event_to_oc_process_event(UDP_TO_TLS_EVENT), data);
     return;
   }
 #ifdef OC_OSCORE
   if (((oc_message_t *)data)->endpoint.flags & MULTICAST) {
     OC_DBG("Inbound network event: multicast request");
-    oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT], data);
+    oc_process_post(&oc_oscore_handler,
+                    oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT), data);
     return;
   }
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
   OC_DBG("Inbound network event: decrypted request");
-  oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], data);
+  oc_process_post(&g_coap_engine,
+                  oc_event_to_oc_process_event(INBOUND_RI_EVENT), data);
 }
 
 static void
@@ -288,7 +292,8 @@ handle_outbound_network_event(oc_process_data_t data)
   if ((message->endpoint.flags & MULTICAST) &&
       (message->endpoint.flags & SECURED)) {
     OC_DBG("Outbound secure multicast request: forwarding to OSCORE");
-    oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_GROUP_OSCORE_EVENT],
+    oc_process_post(&oc_oscore_handler,
+                    oc_event_to_oc_process_event(OUTBOUND_GROUP_OSCORE_EVENT),
                     data);
     return;
   }
@@ -298,12 +303,14 @@ handle_outbound_network_event(oc_process_data_t data)
   if (message->endpoint.flags & SECURED) {
 #ifdef OC_OSCORE
     OC_DBG("Outbound network event: forwarding to OSCORE");
-    oc_process_post(&oc_oscore_handler, oc_events[OUTBOUND_OSCORE_EVENT], data);
+    oc_process_post(&oc_oscore_handler,
+                    oc_event_to_oc_process_event(OUTBOUND_OSCORE_EVENT), data);
     return;
   }
 #else  /* !OC_OSCORE */
     OC_DBG("Posting RI_TO_TLS_EVENT");
-    oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], data);
+    oc_process_post(&oc_tls_handler,
+                    oc_event_to_oc_process_event(RI_TO_TLS_EVENT), data);
     return;
   }
 #endif /* OC_OSCORE */
@@ -335,23 +342,25 @@ OC_PROCESS_THREAD(oc_message_buffer_handler, ev, data)
   while (oc_process_is_running(&oc_message_buffer_handler)) {
     OC_PROCESS_YIELD();
 
-    if (ev == oc_events[INBOUND_NETWORK_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT)) {
       handle_inbound_network_event(data);
       continue;
     }
-    if (ev == oc_events[OUTBOUND_NETWORK_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(OUTBOUND_NETWORK_EVENT)) {
       handle_outbound_network_event(data);
       continue;
     }
 #ifdef OC_SECURITY
-    if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
+    if (ev == oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS)) {
       OC_DBG("Signaling to close all TLS sessions from this device");
-      oc_process_post(&oc_tls_handler, oc_events[TLS_CLOSE_ALL_SESSIONS], data);
+      oc_process_post(&oc_tls_handler,
+                      oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS),
+                      data);
       continue;
     }
 #endif /* OC_SECURITY */
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-    if (ev == oc_events[TCP_CONNECT_SESSION]) {
+    if (ev == oc_event_to_oc_process_event(TCP_CONNECT_SESSION)) {
       handle_tcp_connect_event(data);
       continue;
     }

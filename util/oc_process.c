@@ -36,17 +36,21 @@
 #include "oc_process_internal.h"
 #include "oc_buffer.h"
 #include "util/oc_atomic.h"
-#include <stdio.h>
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_SECURITY
+#include "api/oc_events_internal.h" // oc_event_to_oc_process_event
+#include "messaging/coap/coap_internal.h"
+#endif /* OC_SECURITY */
+
+#include <stdio.h>
+#ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #include <string.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
-#ifdef OC_SECURITY
-#include "api/oc_events.h" // oc_event_to_oc_process_event
-#include "messaging/coap/coap_internal.h"
-
-#endif /* OC_SECURITY */
 
 /*
  * Pointer to the currently running process structure.
@@ -54,7 +58,7 @@
 struct oc_process *oc_process_list = NULL;
 struct oc_process *oc_process_current = NULL;
 
-static oc_process_event_t lastevent;
+static oc_process_event_t oc_lastevent = OC_PROCESS_EVENT_MAX;
 
 /*
  * Structure used for keeping the queue of active events.
@@ -104,7 +108,7 @@ static void call_process(struct oc_process *p, oc_process_event_t ev,
 oc_process_event_t
 oc_process_alloc_event(void)
 {
-  return lastevent++;
+  return oc_lastevent++;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -253,7 +257,7 @@ oc_process_init(void)
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  lastevent = OC_PROCESS_EVENT_MAX;
+  oc_lastevent = OC_PROCESS_EVENT_MAX;
 
   g_nevents = g_fevent = 0;
   oc_process_current = oc_process_list = NULL;

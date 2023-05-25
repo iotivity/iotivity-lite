@@ -18,6 +18,7 @@
 
 #include "utility.h"
 
+#include "oc_config.h"
 #include "port/oc_clock.h"
 
 #ifdef __unix__
@@ -54,7 +55,8 @@ bool
 SetSystemTimeWin(oc_clock_time_t now, std::chrono::milliseconds shift)
 {
   oc_clock_time_t ct =
-    now + (oc_clock_time_t)((shift.count() / (double)1000) * OC_CLOCK_SECOND);
+    now + static_cast<oc_clock_time_t>(
+            (shift.count() / static_cast<double>(1000)) * OC_CLOCK_SECOND);
   FILETIME ftime{ oc_clock_time_to_filetime(ct) };
   SYSTEMTIME stime{};
   if (!FileTimeToSystemTime(&ftime, &stime)) {
@@ -74,6 +76,26 @@ SetSystemTime(oc_clock_time_t now, std::chrono::milliseconds shift)
   return SetSystemTimeWin(now, shift);
 #endif /* _WIN32 */
   return false;
+}
+
+void
+SetTestStartTime()
+{
+  testStart = oc_clock_time();
+  testStartMT = oc_clock_time_monotonic();
+}
+
+bool
+RestoreSystemTimeFromTestStartTime()
+{
+#if defined(__unix__) || defined(_WIN32)
+  oc_clock_time_t elapsed = oc_clock_time_monotonic() - testStartMT;
+  std::chrono::milliseconds shift{ static_cast<int64_t>((elapsed * 1.e03) /
+                                                        OC_CLOCK_SECOND) };
+  return SetSystemTime(testStart, shift);
+#else
+  return false;
+#endif /* __unix__ || _WIN32 */
 }
 
 } // namespace oc

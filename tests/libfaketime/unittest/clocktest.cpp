@@ -29,27 +29,11 @@ public:
   static void SetUpTestCase()
   {
     oc_clock_init();
-    TestClock::start = oc_clock_time();
-    TestClock::startMt = oc_clock_time_monotonic();
+    oc::SetTestStartTime();
   }
 
-  void TearDown() override
-  {
-#if defined(__unix__) || defined(_WIN32)
-    oc_clock_time_t elapsed = oc_clock_time_monotonic() - TestClock::startMt;
-    std::chrono::milliseconds shift{ static_cast<int64_t>((elapsed * 1.e03) /
-                                                          OC_CLOCK_SECOND) };
-    oc::SetSystemTime(TestClock::start, shift);
-#endif /* __unix__ || _WIN32 */
-  }
-
-private:
-  static oc_clock_time_t start;
-  static oc_clock_time_t startMt;
+  void TearDown() override { oc::RestoreSystemTimeFromTestStartTime(); }
 };
-
-oc_clock_time_t TestClock::start{};
-oc_clock_time_t TestClock::startMt{};
 
 #if defined(__unix__) || defined(_WIN32)
 

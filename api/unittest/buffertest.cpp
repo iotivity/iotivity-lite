@@ -233,7 +233,6 @@ testProcessMessagesByProcess()
   oc_ri_init();
 
   using oc_event_uptr = std::unique_ptr<Event, void (*)(Event *)>;
-
   oc_process_num_events_t size = oc_process_num_events();
   std::vector<oc_event_uptr> events{};
   for (size_t i = 0; i < size; ++i) {

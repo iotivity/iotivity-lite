@@ -18,7 +18,7 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 #include "api/oc_buffer_internal.h"
-#include "api/oc_events.h"
+#include "api/oc_events_internal.h"
 #include "messaging/coap/coap_signal.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oscore.h"
@@ -338,8 +338,9 @@ oc_oscore_recv_message(oc_message_t *message)
   OC_DBG("#################################");
 
   /* Dispatch oc_message_t to the CoAP layer */
-  if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], message) ==
-      OC_PROCESS_ERR_FULL) {
+  if (oc_process_post(&g_coap_engine,
+                      oc_event_to_oc_process_event(INBOUND_RI_EVENT),
+                      message) == OC_PROCESS_ERR_FULL) {
     goto oscore_recv_error;
   }
   return 0;
@@ -797,7 +798,8 @@ oscore_send_dispatch:
   /* Dispatch oc_message_t to the TLS layer */
   OC_DBG("Outbound network event: forwarding to TLS");
   OC_DBG("Posting RI_TO_TLS_EVENT");
-  oc_process_post(&oc_tls_handler, oc_events[RI_TO_TLS_EVENT], message);
+  oc_process_post(&oc_tls_handler,
+                  oc_event_to_oc_process_event(RI_TO_TLS_EVENT), message);
   return 0;
 
 oscore_send_error:
@@ -812,15 +814,15 @@ OC_PROCESS_THREAD(oc_oscore_handler, ev, data)
   while (1) {
     OC_PROCESS_YIELD();
 
-    if (ev == oc_events[INBOUND_OSCORE_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT)) {
       OC_DBG("Inbound OSCORE event: encrypted request");
       oc_oscore_recv_message(data);
-    } else if (ev == oc_events[OUTBOUND_OSCORE_EVENT]) {
+    } else if (ev == oc_event_to_oc_process_event(OUTBOUND_OSCORE_EVENT)) {
       OC_DBG("Outbound OSCORE event: protecting message");
       oc_oscore_send_message(data);
     }
 #ifdef OC_CLIENT
-    else if (ev == oc_events[OUTBOUND_GROUP_OSCORE_EVENT]) {
+    else if (ev == oc_event_to_oc_process_event(OUTBOUND_GROUP_OSCORE_EVENT)) {
       OC_DBG("Outbound OSCORE event: protecting multicast message");
       oc_oscore_send_multicast_message(data);
     }

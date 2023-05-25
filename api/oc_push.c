@@ -29,7 +29,7 @@
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
-#include "oc_events.h"
+#include "oc_events_internal.h"
 #include "oc_push_internal.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
@@ -2458,7 +2458,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
     OC_PROCESS_YIELD();
 
     /* send UPDATE to target server */
-    if (ev == oc_events[PUSH_RSC_STATE_CHANGED]) {
+    if (ev == oc_event_to_oc_process_event(PUSH_RSC_STATE_CHANGED)) {
       ns_instance = (oc_ns_t *)data;
       src_rsc = (oc_resource_t *)ns_instance->user_data;
 
@@ -2702,7 +2702,7 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
       }
 #if 0
       oc_process_post(&oc_push_process,
-          oc_events[PUSH_RSC_STATE_CHANGED], ns_instance);
+          oc_event_to_oc_process_event(PUSH_RSC_STATE_CHANGED), ns_instance);
 #endif
     }
     all_matched = 0x7;
