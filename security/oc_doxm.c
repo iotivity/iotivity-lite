@@ -28,6 +28,7 @@
 #include "oc_store.h"
 #include "oc_tls_internal.h"
 #include "port/oc_assert.h"
+#include "port/oc_random.h"
 
 #include <assert.h>
 #include <stdbool.h>

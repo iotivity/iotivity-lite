@@ -30,6 +30,7 @@
 #include "oc_cred_internal.h"
 #include "oc_pki.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "port/oc_random.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
 #include "tests/gtest/PKI.h"

@@ -48,10 +48,12 @@
  */
 
 #include "oc_config.h"
-#include "oc_api.h"
+
 #ifdef OC_SERVER
 
+#include "oc_api.h"
 #include "observe.h"
+#include "separate.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <string.h>
