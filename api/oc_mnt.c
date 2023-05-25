@@ -23,6 +23,7 @@
 #include "oc_mnt_internal.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
+#include "oc_ri.h"
 #include "util/oc_compiler.h"
 
 #ifdef OC_SECURITY

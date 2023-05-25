@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "port/oc_random.h"
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>

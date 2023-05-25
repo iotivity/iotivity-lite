@@ -16,12 +16,15 @@
  *
  ****************************************************************************/
 
-#include "api/oc_helpers_internal.h"
-#include "port/oc_connectivity.h"
 #include <oc_config.h>
+
 #ifdef OC_BLOCK_WISE
+
+#include "api/oc_helpers_internal.h"
+#include "messaging/coap/coap.h"
 #include "oc_blockwise.h"
 #include "oc_endpoint.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"

@@ -21,11 +21,12 @@
 #ifndef OC_BLOCKWISE_H
 #define OC_BLOCKWISE_H
 
-#include "messaging/coap/coap.h"
-#include "messaging/coap/transactions.h"
 #include "oc_helpers.h"
+#include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "port/oc_connectivity.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

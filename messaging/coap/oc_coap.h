@@ -20,8 +20,9 @@
 #define OC_COAP_H
 
 #include "oc_ri.h"
-#include "separate.h"
 #include "util/oc_list.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
