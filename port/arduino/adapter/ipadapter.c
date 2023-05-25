@@ -23,7 +23,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_network_event_handler_internal.h"
-#include "util/oc_etimer.h"
+#include "util/oc_etimer_internal.h"
 #include "util/oc_process.h"
 
 OC_PROCESS(ip_adapter_process, "IP Adapter");

@@ -34,214 +34,227 @@
  *
  */
 
-#include "oc_etimer.h"
-#include "oc_process.h"
+#include "oc_etimer_internal.h"
 
-static struct oc_etimer *timerlist;
-static oc_clock_time_t next_expiration;
+#include "oc_process.h"
+#include "port/oc_log_internal.h"
+#include "util/oc_timer_internal.h"
+
+static struct oc_etimer *g_timerlist;
+static oc_clock_time_t g_next_expiration;
 
 OC_PROCESS(oc_etimer_process, "Event timer");
-/*---------------------------------------------------------------------------*/
-static void
-update_time(void)
-{
-  oc_clock_time_t tdist;
-  oc_clock_time_t now;
-  struct oc_etimer *t;
 
-  if (timerlist == NULL) {
-    next_expiration = 0;
-  } else {
-    now = oc_clock_time();
-    t = timerlist;
-    /* Must calculate distance to next time into account due to wraps */
-    tdist = t->timer.start + t->timer.interval - now;
-    for (t = t->next; t != NULL; t = t->next) {
-      if (t->timer.start + t->timer.interval - now < tdist) {
-        tdist = t->timer.start + t->timer.interval - now;
-      }
+static void
+etimer_update_time(void)
+{
+  if (g_timerlist == NULL) {
+    OC_DBG("etimer: no expiring timers");
+    g_next_expiration = 0;
+    return;
+  }
+
+  oc_clock_time_t now = oc_clock_time();
+  struct oc_etimer *t = g_timerlist;
+  /* Must calculate distance to next time into account due to wraps */
+  oc_clock_time_t tdist = oc_timer_until(&t->timer, now);
+  for (t = t->next; t != NULL; t = t->next) {
+    oc_clock_time_t tdist2 = oc_timer_until(&t->timer, now);
+    if (tdist2 < tdist) {
+      tdist = tdist2;
     }
-    next_expiration = now + tdist;
+  }
+  g_next_expiration = now + tdist;
+  OC_DBG("etimer: next expiration=%ld", (long)g_next_expiration);
+}
+
+static bool
+etimer_process_poll(void)
+{
+  struct oc_etimer *prev = NULL;
+  for (struct oc_etimer *t = g_timerlist; t != NULL; prev = t, t = t->next) {
+    if (!oc_timer_expired(&t->timer)) {
+      continue;
+    }
+    if (oc_process_post(t->p, OC_PROCESS_EVENT_TIMER, t) != OC_PROCESS_ERR_OK) {
+      OC_DBG("cannot send timer event to process, scheduling retry by polling");
+      oc_process_poll(&oc_etimer_process);
+      continue;
+    }
+
+    /* Reset the process ID of the event timer, to signal that the
+       etimer has expired. This is later checked in the
+       oc_etimer_expired() function. */
+    t->p = OC_PROCESS_NONE;
+    if (prev != NULL) {
+      prev->next = t->next;
+    } else {
+      g_timerlist = t->next;
+    }
+    t->next = NULL;
+    etimer_update_time();
+    return true;
+  }
+  return false;
+}
+
+static void
+etimer_remove_process_pending_timers(const struct oc_process *p)
+{
+  while (g_timerlist != NULL && g_timerlist->p == p) {
+    OC_DBG("etimer(%p) removed from pending list", (void *)g_timerlist);
+    g_timerlist = g_timerlist->next;
+  }
+
+  if (g_timerlist == NULL) {
+    return;
+  }
+  struct oc_etimer *t = g_timerlist;
+  while (t->next != NULL) {
+    if (t->next->p == p) {
+      OC_DBG("etimer(%p) removed from pending list", (void *)t->next);
+      t->next = t->next->next;
+    } else
+      t = t->next;
   }
 }
-/*---------------------------------------------------------------------------*/
+
 OC_PROCESS_THREAD(oc_etimer_process, ev, data)
 {
-  struct oc_etimer *t, *u;
-
   OC_PROCESS_BEGIN();
+  g_timerlist = NULL;
 
-  timerlist = NULL;
-
-  while (1) {
+  while (oc_process_is_running(&oc_etimer_process)) {
     OC_PROCESS_YIELD();
-
     if (ev == OC_PROCESS_EVENT_EXITED) {
-      struct oc_process *p = (struct oc_process *)data;
-
-      while (timerlist != NULL && timerlist->p == p) {
-        timerlist = timerlist->next;
-      }
-
-      if (timerlist != NULL) {
-        t = timerlist;
-        while (t->next != NULL) {
-          if (t->next->p == p) {
-            t->next = t->next->next;
-          } else
-            t = t->next;
-        }
-      }
+      etimer_remove_process_pending_timers((struct oc_process *)data);
       continue;
-    } else if (ev != OC_PROCESS_EVENT_POLL) {
+    }
+    if (ev != OC_PROCESS_EVENT_POLL) {
       continue;
     }
 
-  again:
-
-    u = NULL;
-
-    for (t = timerlist; t != NULL; t = t->next) {
-      if (oc_timer_expired(&t->timer)) {
-        if (oc_process_post(t->p, OC_PROCESS_EVENT_TIMER, t) ==
-            OC_PROCESS_ERR_OK) {
-
-          /* Reset the process ID of the event timer, to signal that the
-             etimer has expired. This is later checked in the
-             oc_etimer_expired() function. */
-          t->p = OC_PROCESS_NONE;
-          if (u != NULL) {
-            u->next = t->next;
-          } else {
-            timerlist = t->next;
-          }
-          t->next = NULL;
-          update_time();
-          goto again;
-        } else {
-          oc_etimer_request_poll();
-        }
-      }
-      u = t;
+    while (etimer_process_poll()) {
+      // keep polling until all timers are updated
     }
   }
 
   OC_PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
+
 oc_clock_time_t
 oc_etimer_request_poll(void)
 {
   oc_process_poll(&oc_etimer_process);
   return oc_etimer_next_expiration_time();
 }
-/*---------------------------------------------------------------------------*/
+
 static void
-add_timer(struct oc_etimer *timer)
+etimer_add_timer(struct oc_etimer *timer)
 {
-  struct oc_etimer *t;
+  oc_process_poll(&oc_etimer_process);
 
-  oc_etimer_request_poll();
-
+  bool is_in_list = false;
   if (timer->p != OC_PROCESS_NONE) {
-    for (t = timerlist; t != NULL; t = t->next) {
+    for (const struct oc_etimer *t = g_timerlist; t != NULL; t = t->next) {
       if (t == timer) {
-        /* Timer already on list, bail out. */
-        timer->p = OC_PROCESS_CURRENT();
-        update_time();
-        return;
+        /* Timer already in list. */
+        is_in_list = true;
+        break;
       }
     }
   }
 
-  /* Timer not on list. */
+  if (!is_in_list) {
+    /* Timer not in list -> add it to front. */
+    timer->next = g_timerlist;
+    g_timerlist = timer;
+  }
   timer->p = OC_PROCESS_CURRENT();
-  timer->next = timerlist;
-  timerlist = timer;
-
-  update_time();
+  etimer_update_time();
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval)
 {
+  OC_DBG("etimer(%p) set", (void *)et);
   oc_timer_set(&et->timer, interval);
-  add_timer(et);
+  etimer_add_timer(et);
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_reset_with_new_interval(struct oc_etimer *et,
                                   oc_clock_time_t interval)
 {
   oc_timer_reset(&et->timer);
   et->timer.interval = interval;
-  add_timer(et);
+  etimer_add_timer(et);
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_reset(struct oc_etimer *et)
 {
   oc_timer_reset(&et->timer);
-  add_timer(et);
+  etimer_add_timer(et);
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_restart(struct oc_etimer *et)
 {
   oc_timer_restart(&et->timer);
-  add_timer(et);
+  etimer_add_timer(et);
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_adjust(struct oc_etimer *et, int timediff)
 {
   et->timer.start += timediff;
-  update_time();
+  etimer_update_time();
 }
-/*---------------------------------------------------------------------------*/
-int
-oc_etimer_expired(struct oc_etimer *et)
+
+bool
+oc_etimer_expired(const struct oc_etimer *et)
 {
   return et->p == OC_PROCESS_NONE;
 }
-/*---------------------------------------------------------------------------*/
+
 oc_clock_time_t
-oc_etimer_expiration_time(struct oc_etimer *et)
+oc_etimer_expiration_time(const struct oc_etimer *et)
 {
-  return et->timer.start + et->timer.interval;
+  return oc_timer_expiration_time(&et->timer);
 }
-/*---------------------------------------------------------------------------*/
+
 oc_clock_time_t
-oc_etimer_start_time(struct oc_etimer *et)
+oc_etimer_start_time(const struct oc_etimer *et)
 {
   return et->timer.start;
 }
-/*---------------------------------------------------------------------------*/
-int
+
+bool
 oc_etimer_pending(void)
 {
-  return timerlist != NULL;
+  return g_timerlist != NULL;
 }
-/*---------------------------------------------------------------------------*/
+
 oc_clock_time_t
 oc_etimer_next_expiration_time(void)
 {
-  return oc_etimer_pending() ? next_expiration : 0;
+  return oc_etimer_pending() ? g_next_expiration : 0;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_etimer_stop(struct oc_etimer *et)
 {
-  struct oc_etimer *t;
-
   /* First check if et is the first event timer on the list. */
-  if (et == timerlist) {
-    timerlist = timerlist->next;
-    update_time();
+  if (et == g_timerlist) {
+    g_timerlist = g_timerlist->next;
+
+    etimer_update_time();
   } else {
     /* Else walk through the list and try to find the item before the
        et timer. */
-    for (t = timerlist; t != NULL && t->next != et; t = t->next)
+    struct oc_etimer *t;
+    for (t = g_timerlist; t != NULL && t->next != et; t = t->next)
       ;
 
     if (t != NULL) {
@@ -250,7 +263,7 @@ oc_etimer_stop(struct oc_etimer *et)
    the removed item. */
       t->next = et->next;
 
-      update_time();
+      etimer_update_time();
     }
   }
 
@@ -259,5 +272,5 @@ oc_etimer_stop(struct oc_etimer *et)
   /* Set the timer as expired */
   et->p = OC_PROCESS_NONE;
 }
-/*---------------------------------------------------------------------------*/
+
 /** @} */

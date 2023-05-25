@@ -51,7 +51,7 @@
 #define TRANSACTIONS_H
 
 #include "coap.h"
-#include "util/oc_etimer.h"
+#include "util/oc_etimer_internal.h"
 
 #ifdef __cplusplus
 extern "C" {

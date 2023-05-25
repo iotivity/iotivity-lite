@@ -27,12 +27,12 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_discovery.h"
-#include "oc_events.h"
+#include "oc_events_internal.h"
 #include "oc_network_events_internal.h"
 #include "oc_uuid.h"
 #include "port/oc_assert.h"
 #include "port/oc_random.h"
-#include "util/oc_etimer.h"
+#include "util/oc_etimer_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
 #include "util/oc_macros.h"
@@ -88,6 +88,17 @@
 #include <strings.h>
 #endif /* WIN32 */
 
+/**
+ * @brief event callback
+ */
+typedef struct oc_event_callback_s
+{
+  struct oc_event_callback_s *next; ///< next callback
+  struct oc_etimer timer;           ///< timer
+  oc_trigger_t callback;            ///< callback to be invoked
+  void *data;                       ///< data for the callback
+} oc_event_callback_t;
+
 #ifdef OC_HAS_FEATURE_PUSH
 OC_PROCESS_NAME(oc_push_process);
 #endif /* OC_HAS_FEATURE_PUSH */
@@ -114,8 +125,6 @@ static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
 OC_PROCESS(oc_timed_callback_events, "OC timed callbacks");
 
 static unsigned int oc_coap_status_codes[__NUM_OC_STATUS_CODES__];
-
-oc_process_event_t oc_events[__NUM_OC_EVENT_TYPES__];
 
 static const char *oc_status_strs[] = {
   "OC_STATUS_OK",                       /* 0 */
@@ -477,24 +486,9 @@ oc_ri_filter_request_by_device_id(size_t device, const char *query,
 }
 
 static void
-allocate_events(void)
-{
-  for (int i = 0; i < __NUM_OC_EVENT_TYPES__; ++i) {
-    oc_events[i] = oc_process_alloc_event();
-  }
-}
-
-oc_process_event_t
-oc_event_to_oc_process_event(oc_events_t event)
-{
-  oc_assert(event < __NUM_OC_EVENT_TYPES__);
-  return oc_events[event];
-}
-
-static void
 start_processes(void)
 {
-  allocate_events();
+  oc_event_assign_oc_process_events();
   oc_process_start(&oc_etimer_process, NULL);
   oc_process_start(&oc_timed_callback_events, NULL);
   oc_process_start(&g_coap_engine, NULL);

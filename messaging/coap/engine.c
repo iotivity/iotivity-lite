@@ -51,7 +51,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
-#include "api/oc_events.h"
+#include "api/oc_events_internal.h"
 #include "api/oc_main.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
@@ -914,7 +914,7 @@ OC_PROCESS_THREAD(g_coap_engine, ev, data)
   while (1) {
     OC_PROCESS_YIELD();
 
-    if (ev == oc_events[INBOUND_RI_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(INBOUND_RI_EVENT)) {
       coap_receive(data);
 
       oc_message_unref(data);

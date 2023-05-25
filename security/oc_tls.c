@@ -20,7 +20,7 @@
 
 #include "oc_tls_internal.h"
 #include "api/oc_buffer_internal.h"
-#include "api/oc_events.h"
+#include "api/oc_events_internal.h"
 #include "api/oc_main.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
@@ -361,7 +361,8 @@ process_drop_event_for_removed_endpoint(oc_process_event_t ev,
                                         const void *user_data)
 {
   const oc_endpoint_t *endpoint = (const oc_endpoint_t *)user_data;
-  if (ev != oc_events[RI_TO_TLS_EVENT] && ev != oc_events[UDP_TO_TLS_EVENT]) {
+  if (ev != oc_event_to_oc_process_event(RI_TO_TLS_EVENT) &&
+      ev != oc_event_to_oc_process_event(UDP_TO_TLS_EVENT)) {
     return false;
   }
   oc_message_t *message = (oc_message_t *)data;
@@ -370,7 +371,8 @@ process_drop_event_for_removed_endpoint(oc_process_event_t ev,
     oc_string_t endpoint_str;
     oc_endpoint_to_string(&message->endpoint, &endpoint_str);
     OC_DBG("oc_tls: dropping %s message for removed endpoint(%s)",
-           (ev == oc_events[RI_TO_TLS_EVENT]) ? "sent" : "received",
+           (ev == oc_event_to_oc_process_event(RI_TO_TLS_EVENT)) ? "sent"
+                                                                 : "received",
            oc_string(endpoint_str));
     oc_free_string(&endpoint_str);
 #endif /* OC_DBG_IS_ENABLED */
@@ -543,14 +545,17 @@ oc_tls_is_cert_otm_supported(size_t device)
 static void
 oc_tls_handler_schedule_read(oc_tls_peer_t *peer)
 {
-  oc_process_post(&oc_tls_handler, oc_events[TLS_READ_DECRYPTED_DATA], peer);
+  oc_process_post(&oc_tls_handler,
+                  oc_event_to_oc_process_event(TLS_READ_DECRYPTED_DATA), peer);
 }
 
 #ifdef OC_CLIENT
 static void
 oc_tls_handler_schedule_write(oc_tls_peer_t *peer)
 {
-  oc_process_post(&oc_tls_handler, oc_events[TLS_WRITE_APPLICATION_DATA], peer);
+  oc_process_post(&oc_tls_handler,
+                  oc_event_to_oc_process_event(TLS_WRITE_APPLICATION_DATA),
+                  peer);
 }
 #endif /* OC_CLIENT */
 
@@ -2659,9 +2664,9 @@ read_application_data_tcp(oc_tls_peer_t *peer)
                (int)(total_length));
         peer->processed_recv_message->encrypted = 0;
         memcpy(peer->processed_recv_message->endpoint.di.id, peer->uuid.id, 16);
-        if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT],
-                            peer->processed_recv_message) ==
-            OC_PROCESS_ERR_FULL) {
+        if (oc_process_post(
+              &g_coap_engine, oc_event_to_oc_process_event(INBOUND_RI_EVENT),
+              peer->processed_recv_message) == OC_PROCESS_ERR_FULL) {
           oc_message_unref(peer->processed_recv_message);
         }
         peer->processed_recv_message = NULL;
@@ -2783,15 +2788,17 @@ read_application_data(oc_tls_peer_t *peer)
     msg->length = message->length;
     memcpy(msg->data, message->data, message->length);
 #ifdef OC_OSCORE
-    if (oc_process_post(&oc_oscore_handler, oc_events[INBOUND_OSCORE_EVENT],
+    if (oc_process_post(&oc_oscore_handler,
+                        oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT),
                         msg) == OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
       oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
     }
 #else /* OC_OSCORE */
-      if (oc_process_post(&g_coap_engine, oc_events[INBOUND_RI_EVENT], msg) ==
-          OC_PROCESS_ERR_FULL) {
+      if (oc_process_post(&g_coap_engine,
+                          oc_event_to_oc_process_event(INBOUND_RI_EVENT),
+                          msg) == OC_PROCESS_ERR_FULL) {
 #ifndef OC_INOUT_BUFFER_SIZE
         oc_message_unref(msg);
 #endif /* !OC_INOUT_BUFFER_SIZE */
@@ -2893,11 +2900,11 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
   while (true) {
     OC_PROCESS_YIELD();
 
-    if (ev == oc_events[UDP_TO_TLS_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(UDP_TO_TLS_EVENT)) {
       oc_tls_recv_message(data);
       continue;
     }
-    if (ev == oc_events[RI_TO_TLS_EVENT]) {
+    if (ev == oc_event_to_oc_process_event(RI_TO_TLS_EVENT)) {
       oc_tls_send_message(data);
       continue;
     }
@@ -2905,17 +2912,17 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
       check_retry_timers();
       continue;
     }
-    if (ev == oc_events[TLS_READ_DECRYPTED_DATA]) {
+    if (ev == oc_event_to_oc_process_event(TLS_READ_DECRYPTED_DATA)) {
       read_application_data(data);
       continue;
     }
 #ifdef OC_CLIENT
-    if (ev == oc_events[TLS_WRITE_APPLICATION_DATA]) {
+    if (ev == oc_event_to_oc_process_event(TLS_WRITE_APPLICATION_DATA)) {
       write_application_data(data);
       continue;
     }
 #endif /* OC_CLIENT */
-    if (ev == oc_events[TLS_CLOSE_ALL_SESSIONS]) {
+    if (ev == oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS)) {
       size_t device = (size_t)data;
       close_all_tls_sessions_for_device(device);
       continue;

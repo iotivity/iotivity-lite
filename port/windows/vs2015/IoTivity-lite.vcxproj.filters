@@ -535,10 +535,10 @@
     <ClInclude Include="..\..\..\include\oc_discovery.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\util\oc_etimer.h">
+    <ClInclude Include="..\..\..\util\oc_etimer_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\api\oc_events.h">
+    <ClInclude Include="..\..\..\api\oc_events_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_helpers.h">
@@ -556,7 +556,7 @@
     <ClInclude Include="..\..\..\util\oc_process.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\util\oc_timer.h">
+    <ClInclude Include="..\..\..\util\oc_timer_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\pt\pt.h">

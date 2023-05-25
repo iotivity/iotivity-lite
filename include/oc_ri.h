@@ -28,7 +28,7 @@
 #include "oc_export.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"
-#include "util/oc_etimer.h"
+#include "port/oc_clock.h"
 #include "util/oc_features.h"
 #include "util/oc_compiler.h"
 #include <stdbool.h>
@@ -375,18 +375,6 @@ typedef enum {
 } oc_event_callback_retval_t;
 
 typedef oc_event_callback_retval_t (*oc_trigger_t)(void *);
-
-/**
- * @brief event callback
- *
- */
-typedef struct oc_event_callback_s
-{
-  struct oc_event_callback_s *next; ///< next callback
-  struct oc_etimer timer;           ///< timer
-  oc_trigger_t callback;            ///< callback to be invoked
-  void *data;                       ///< data for the callback
-} oc_event_callback_t;
 
 /**
  * @brief Filtering function used to match scheduled timed events by context

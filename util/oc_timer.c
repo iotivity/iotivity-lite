@@ -32,100 +32,64 @@
  *
  */
 
-#include "oc_timer.h"
+#include "oc_timer_internal.h"
+#include "port/oc_clock.h"
 
-/*---------------------------------------------------------------------------*/
-/**
- * Set a timer.
- *
- * This function is used to set a timer for a time sometime in the
- * future. The function oc_timer_expired() will evaluate to true after
- * the timer has expired.
- *
- * \param t A pointer to the timer
- * \param interval The interval before the timer expires.
- *
- */
 void
 oc_timer_set(struct oc_timer *t, oc_clock_time_t interval)
 {
   t->interval = interval;
   t->start = oc_clock_time();
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Reset the timer with the same interval.
- *
- * This function resets the timer with the same interval that was
- * given to the oc_timer_set() function. The start point of the interval
- * is the exact time that the timer last expired. Therefore, this
- * function will cause the timer to be stable over time, unlike the
- * oc_timer_restart() function.
- *
- * \note Must not be executed before timer expired
- *
- * \param t A pointer to the timer.
- * \sa oc_timer_restart()
- */
+
 void
 oc_timer_reset(struct oc_timer *t)
 {
   t->start += t->interval;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Restart the timer from the current point in time
- *
- * This function restarts a timer with the same interval that was
- * given to the oc_timer_set() function. The timer will start at the
- * current time.
- *
- * \note A periodic timer will drift if this function is used to reset
- * it. For preioric timers, use the oc_timer_reset() function instead.
- *
- * \param t A pointer to the timer.
- *
- * \sa oc_timer_reset()
- */
+
 void
 oc_timer_restart(struct oc_timer *t)
 {
   t->start = oc_clock_time();
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Check if a timer has expired.
- *
- * This function tests if a timer has expired and returns true or
- * false depending on its status.
- *
- * \param t A pointer to the timer
- *
- * \return Non-zero if the timer has expired, zero otherwise.
- *
- */
-int
-oc_timer_expired(struct oc_timer *t)
+
+static bool
+timer_expired(const struct oc_timer *t, oc_clock_time_t now)
 {
-  /* Note: Can not return diff >= t->interval so we add 1 to diff and return
-     t->interval < diff - required to avoid an internal error in mspgcc. */
-  oc_clock_time_t diff = (oc_clock_time() - t->start) + 1;
+  if (t->start > now) {
+    return false;
+  }
+  /* Note: Cannot return diff >= t->interval so we add 1 to diff and return
+   t->interval < diff - required to avoid an internal error in mspgcc. */
+  oc_clock_time_t diff = (now - t->start) + 1;
   return t->interval < diff;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * The time until the timer expires
- *
- * This function returns the time until the timer expires.
- *
- * \param t A pointer to the timer
- *
- * \return The time until the timer expires
- *
- */
-oc_clock_time_t
-oc_timer_remaining(struct oc_timer *t)
+
+bool
+oc_timer_expired(const struct oc_timer *t)
 {
-  return t->start + t->interval - oc_clock_time();
+  return timer_expired(t, oc_clock_time());
 }
-/*---------------------------------------------------------------------------*/
+
+oc_clock_time_t
+oc_timer_until(const struct oc_timer *t, oc_clock_time_t time)
+{
+  if (timer_expired(t, time)) {
+    return 0;
+  }
+  return t->start + t->interval - time;
+}
+
+oc_clock_time_t
+oc_timer_remaining(const struct oc_timer *t)
+{
+  oc_clock_time_t now = oc_clock_time();
+  return oc_timer_until(t, now);
+}
+
+oc_clock_time_t
+oc_timer_expiration_time(const struct oc_timer *t)
+{
+  return t->start + t->interval;
+}

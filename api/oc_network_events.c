@@ -17,19 +17,19 @@
  ****************************************************************************/
 
 #include "oc_network_events_internal.h"
-#include "oc_udp_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "messaging/coap/coap.h"
+#include "oc_buffer.h"
+#include "oc_config.h"
+#include "oc_events_internal.h"
+#include "oc_signal_event_loop.h"
+#include "oc_tcp_internal.h"
+#include "oc_udp_internal.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
-#include "oc_buffer.h"
-#include "oc_config.h"
-#include "oc_events.h"
-#include "oc_signal_event_loop.h"
-#include "oc_tcp_internal.h"
 
 OC_LIST(g_network_events);
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -60,11 +60,13 @@ oc_process_network_event(void)
   }
 #ifdef OC_NETWORK_MONITOR
   if (g_interface_up) {
-    oc_process_post(&oc_network_events, oc_events[INTERFACE_UP], NULL);
+    oc_process_post(&oc_network_events,
+                    oc_event_to_oc_process_event(INTERFACE_UP), NULL);
     g_interface_up = false;
   }
   if (g_interface_down) {
-    oc_process_post(&oc_network_events, oc_events[INTERFACE_DOWN], NULL);
+    oc_process_post(&oc_network_events,
+                    oc_event_to_oc_process_event(INTERFACE_DOWN), NULL);
     g_interface_down = false;
   }
 #endif /* OC_NETWORK_MONITOR */
@@ -80,9 +82,9 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
   while (oc_process_is_running(&oc_network_events)) {
     OC_PROCESS_YIELD();
 #ifdef OC_NETWORK_MONITOR
-    if (ev == oc_events[INTERFACE_DOWN]) {
+    if (ev == oc_event_to_oc_process_event(INTERFACE_DOWN)) {
       handle_network_interface_event_callback(NETWORK_INTERFACE_DOWN);
-    } else if (ev == oc_events[INTERFACE_UP]) {
+    } else if (ev == oc_event_to_oc_process_event(INTERFACE_UP)) {
       handle_network_interface_event_callback(NETWORK_INTERFACE_UP);
     }
 #endif /* OC_NETWORK_MONITOR */

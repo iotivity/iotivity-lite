@@ -51,11 +51,14 @@
  * @{
  */
 
-#ifndef OC_ETIMER_H
-#define OC_ETIMER_H
+#ifndef OC_ETIMER_INTERNAL_H
+#define OC_ETIMER_INTERNAL_H
 
+#include "oc_config.h"
 #include "oc_process.h"
-#include "oc_timer.h"
+#include "oc_timer_internal.h"
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,7 +76,7 @@ struct oc_etimer
 {
   struct oc_timer timer;
   struct oc_etimer *next;
-  struct oc_process *p;
+  struct oc_process *p; // oc_process associated with the timer
 };
 
 /**
@@ -91,8 +94,12 @@ struct oc_etimer
  *             the event PROCESS_EVENT_TIMER will be posted to the
  *             process that called the oc_etimer_set() function.
  *
+ *             The oc_process of the event timer will be set to the value
+ *             returned by OC_PROCESS_CURRENT()
+ *
+ * \sa OC_PROCESS_CURRENT
  */
-void oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval);
+void oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval) OC_NONNULL();
 
 /**
  * \brief      Reset an event timer with the same interval as was
@@ -109,7 +116,7 @@ void oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval);
  *
  * \sa oc_etimer_restart()
  */
-void oc_etimer_reset(struct oc_etimer *et);
+void oc_etimer_reset(struct oc_etimer *et) OC_NONNULL();
 
 /**
  * \brief      Reset an event timer with a new interval.
@@ -123,7 +130,7 @@ void oc_etimer_reset(struct oc_etimer *et);
  * \sa oc_etimer_reset()
  */
 void oc_etimer_reset_with_new_interval(struct oc_etimer *et,
-                                       oc_clock_time_t interval);
+                                       oc_clock_time_t interval) OC_NONNULL();
 
 /**
  * \brief      Restart an event timer from the current point in time
@@ -140,7 +147,7 @@ void oc_etimer_reset_with_new_interval(struct oc_etimer *et,
  *
  * \sa oc_etimer_reset()
  */
-void oc_etimer_restart(struct oc_etimer *et);
+void oc_etimer_restart(struct oc_etimer *et) OC_NONNULL();
 
 /**
  * \brief      Adjust the expiration time for an event timer
@@ -162,26 +169,25 @@ void oc_etimer_restart(struct oc_etimer *et);
  * \sa oc_etimer_set()
  * \sa oc_etimer_reset()
  */
-void oc_etimer_adjust(struct oc_etimer *et, int td);
+void oc_etimer_adjust(struct oc_etimer *et, int td) OC_NONNULL();
 
 /**
  * \brief      Get the expiration time for the event timer.
- * \param et   A pointer to the event timer
- * \return     The expiration time for the event timer.
  *
- *             This function returns the expiration time for an event timer.
+ * \param et   A pointer to the event timer (cannot be NULL)
+ * \return     The expiration time for the event timer.
  */
-oc_clock_time_t oc_etimer_expiration_time(struct oc_etimer *et);
+oc_clock_time_t oc_etimer_expiration_time(const struct oc_etimer *et)
+  OC_NONNULL();
 
 /**
- * \brief      Get the start time for the event timer.
+ * \brief      Get the start time (when the timer was last set) for the event
+ * timer.
+ *
  * \param et   A pointer to the event timer
  * \return     The start time for the event timer.
- *
- *             This function returns the start time (when the timer
- *             was last set) for an event timer.
  */
-oc_clock_time_t oc_etimer_start_time(struct oc_etimer *et);
+oc_clock_time_t oc_etimer_start_time(const struct oc_etimer *et) OC_NONNULL();
 
 /**
  * \brief      Check if an event timer has expired.
@@ -191,7 +197,7 @@ oc_clock_time_t oc_etimer_start_time(struct oc_etimer *et);
  *             This function tests if an event timer has expired and
  *             returns true or false depending on its status.
  */
-int oc_etimer_expired(struct oc_etimer *et);
+bool oc_etimer_expired(const struct oc_etimer *et) OC_NONNULL();
 
 /**
  * \brief      Stop a pending event timer.
@@ -201,9 +207,8 @@ int oc_etimer_expired(struct oc_etimer *et);
  *             been set with oc_etimer_set() or oc_etimer_reset(). After
  *             this function has been called, the event timer will not
  *             emit any event when it expires.
- *
  */
-void oc_etimer_stop(struct oc_etimer *et);
+void oc_etimer_stop(struct oc_etimer *et) OC_NONNULL();
 
 /** @} */
 
@@ -219,6 +224,8 @@ void oc_etimer_stop(struct oc_etimer *et);
  *             that the system clock has been updated. Typically, this
  *             function would be called from the timer interrupt
  *             handler when the clock has ticked.
+ *
+ * \return     Absolute time
  */
 oc_clock_time_t oc_etimer_request_poll(void);
 
@@ -230,27 +237,27 @@ oc_clock_time_t oc_etimer_request_poll(void);
  *             This function checks if there are any active event
  *             timers that have not expired.
  */
-int oc_etimer_pending(void);
+bool oc_etimer_pending(void);
 
 /**
  * \brief      Get next event timer expiration time.
  * \return     Next expiration time of all pending event timers.
  *             If there are no pending event timers this function
- *	       returns 0.
+ *	           returns 0.
  *
  *             This functions returns next expiration time of all
  *             pending event timers.
  */
 oc_clock_time_t oc_etimer_next_expiration_time(void);
 
-/** @} */
-
 OC_PROCESS_NAME(oc_etimer_process);
+
+/** @} */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_ETIMER_H */
+#endif /* OC_ETIMER_INTERNAL_H  */
 
 /** @} */

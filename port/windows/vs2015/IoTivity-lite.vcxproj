@@ -215,7 +215,7 @@
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
     <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
-    <ClInclude Include="..\..\..\api\oc_events.h" />
+    <ClInclude Include="..\..\..\api\oc_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />
     <ClInclude Include="..\..\..\api\oc_mnt_internal.h" />
@@ -283,12 +283,12 @@
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr_internal.h" />
     <ClInclude Include="..\..\..\security\oc_tls_internal.h" />
-    <ClInclude Include="..\..\..\util\oc_etimer.h" />
+    <ClInclude Include="..\..\..\util\oc_etimer_internal.h" />
     <ClInclude Include="..\..\..\util\oc_list.h" />
     <ClInclude Include="..\..\..\util\oc_memb.h" />
     <ClInclude Include="..\..\..\util\oc_mmem.h" />
     <ClInclude Include="..\..\..\util\oc_process.h" />
-    <ClInclude Include="..\..\..\util\oc_timer.h" />
+    <ClInclude Include="..\..\..\util\oc_timer_internal.h" />
     <ClInclude Include="..\..\..\util\pt\lc-addrlabels.h" />
     <ClInclude Include="..\..\..\util\pt\lc-switch.h" />
     <ClInclude Include="..\..\..\util\pt\lc.h" />
