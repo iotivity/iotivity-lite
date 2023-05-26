@@ -69,7 +69,7 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 /**
  * \brief Initiate a separate response with an empty ACK
  * \param request The request to accept
- * \param separate_store A pointer to the data structure that will store the
+ * \param separate_response A pointer to the data structure that will store the
  *   relevant information for the response
  *
  * When the server does not have enough resources left to store the information

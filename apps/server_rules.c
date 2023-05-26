@@ -219,7 +219,7 @@ toggle_switch_resource(void *data)
 {
   (void)data;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
-    char c = getchar();
+    int c = getchar();
     if (OC_ATOMIC_LOAD8(quit) != 1) {
       getchar();
       if (c == 48) {

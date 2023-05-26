@@ -1302,7 +1302,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
   const oc_rep_t *rep = payload;
 
   /* check buffer overflow */
-  if ((size_t)(prefix_width * (depth + 1) + 1) > sizeof(depth_prefix)) {
+  if ((prefix_width * (depth + 1) + 1) > sizeof(depth_prefix)) {
     return;
   }
 
@@ -2031,30 +2031,29 @@ exit:
 static bool
 _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
-  bool result = false;
 
-  if (rep && (rep->type == OC_REP_OBJECT_ARRAY)) {
-    /* check if received new receiver object array is ok */
-    if (!_validate_recv_obj_list(rep->value.object_array))
-      goto exit;
-
-    /* if received new receiver object array is ok, do the job... */
-    /* remove existing receivers object array */
-    _purge_recv_obj_list(recvs_instance);
-
-    /* replace `receivers` obj array with new one */
-    for (oc_rep_t *rep_obj = rep->value.object_array; rep_obj != NULL;
-         rep_obj = rep_obj->next) {
-      _create_recv_obj(recvs_instance, rep_obj->value.object);
-    }
-
-    result = true;
-  } else {
-    OC_PUSH_ERR("something wrong, unexpected Property type: %d", rep->type);
+  if (rep == NULL || rep->type != OC_REP_OBJECT_ARRAY) {
+    OC_PUSH_ERR("something wrong, unexpected Property type: %d",
+                rep != NULL ? (int)rep->type : -1);
+    return false;
   }
 
-exit:
-  return result;
+  /* check if received new receiver object array is ok */
+  if (!_validate_recv_obj_list(rep->value.object_array)) {
+    return false;
+  }
+
+  /* if received new receiver object array is ok, do the job... */
+  /* remove existing receivers object array */
+  _purge_recv_obj_list(recvs_instance);
+
+  /* replace `receivers` obj array with new one */
+  for (oc_rep_t *rep_obj = rep->value.object_array; rep_obj != NULL;
+       rep_obj = rep_obj->next) {
+    _create_recv_obj(recvs_instance, rep_obj->value.object);
+  }
+
+  return true;
 }
 
 /**

@@ -2726,7 +2726,7 @@ read_application_data_error(int err)
 
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
   char buf[256];
-  mbedtls_strerror(err, buf, sizeof(256));
+  mbedtls_strerror(err, buf, sizeof(buf));
   OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
 }

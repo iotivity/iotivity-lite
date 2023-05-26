@@ -549,8 +549,9 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
                    "for client liveness");
             notification->type = COAP_TYPE_CON;
           }
-          coap_set_payload(notification, response->response_buffer->buffer,
-                           response->response_buffer->response_length);
+          coap_set_payload(
+            notification, response->response_buffer->buffer,
+            (uint32_t)response->response_buffer->response_length);
         } //! blockwise transfer
       }   // !is_revert
 

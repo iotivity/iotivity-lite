@@ -1007,7 +1007,7 @@ to_timeval(oc_clock_time_t ticks)
 {
   unsigned sec = (unsigned)(ticks / OC_CLOCK_SECOND);
   unsigned usec =
-    (unsigned)((ticks % OC_CLOCK_SECOND) * (1.e06 / OC_CLOCK_SECOND));
+    (unsigned)((double)(ticks % OC_CLOCK_SECOND) * (1.e06 / OC_CLOCK_SECOND));
   if (sec == 0 && usec == 0) {
     usec = 1;
   }

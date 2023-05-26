@@ -768,7 +768,7 @@ handle_separate_response_request(coap_separate_t *request,
 #endif /* OC_BLOCK_WISE */
   if (response_buffer->response_length > 0) {
     coap_set_payload(&response, response_buffer->buffer,
-                     response_buffer->response_length);
+                     (uint32_t)response_buffer->response_length);
   }
   handle_separate_response_transaction(t, &response,
                                        (uint8_t)response_buffer->code);

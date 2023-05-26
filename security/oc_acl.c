@@ -150,6 +150,40 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
   return res;
 }
 
+static bool
+acl_find_subject_has_matching_tag(const oc_sec_ace_t *ace, const char *tag,
+                                  size_t tag_len)
+{
+  if (tag == NULL) {
+    return oc_string(ace->tag) == NULL;
+  }
+  return oc_string(ace->tag) != NULL &&
+         oc_string_is_cstr_equal(&ace->tag, tag, tag_len);
+}
+
+static bool
+acl_find_subject_has_matching_subject(const oc_sec_ace_t *ace,
+                                      oc_ace_subject_type_t type,
+                                      const oc_ace_subject_t *subject)
+{
+  if (ace->subject_type != type) {
+    return false;
+  }
+  switch (type) {
+  case OC_SUBJECT_UUID:
+    return memcmp(subject->uuid.id, ace->subject.uuid.id,
+                  OC_ARRAY_SIZE(subject->uuid.id)) == 0;
+  case OC_SUBJECT_ROLE:
+    return oc_string_is_equal(&subject->role.role, &ace->subject.role.role) &&
+           (oc_string_len(ace->subject.role.authority) == 0 ||
+            oc_string_is_equal(&subject->role.authority,
+                               &ace->subject.role.authority));
+  case OC_SUBJECT_CONN:
+    return subject->conn == ace->subject.conn;
+  }
+  return false;
+}
+
 oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
                         const oc_ace_subject_t *subject, int aceid,
@@ -170,41 +204,13 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
     if (permission != 0 && ace->permission != permission) {
       goto next_ace;
     }
-    if (match_tag) {
-      if (tag == NULL) {
-        if (oc_string(ace->tag) != NULL) {
-          goto next_ace;
-        }
-      } else {
-        if (oc_string(ace->tag) == NULL || oc_string_len(ace->tag) != tag_len ||
-            memcmp(oc_string(ace->tag), tag, oc_string_len(ace->tag)) != 0) {
-          goto next_ace;
-        }
-      }
+    if (match_tag && !acl_find_subject_has_matching_tag(ace, tag, tag_len)) {
+      goto next_ace;
     }
-    if (ace->subject_type == type) {
-      switch (type) {
-      case OC_SUBJECT_UUID:
-        if (memcmp(subject->uuid.id, ace->subject.uuid.id, 16) == 0) {
-          return ace;
-        }
-        break;
-      case OC_SUBJECT_ROLE:
-        if (oc_string_is_equal(&subject->role.role, &ace->subject.role.role)) {
-          if (oc_string_len(ace->subject.role.authority) == 0 ||
-              oc_string_is_equal(&subject->role.authority,
-                                 &ace->subject.role.authority)) {
-            return ace;
-          }
-        }
-        break;
-      case OC_SUBJECT_CONN:
-        if (subject->conn == ace->subject.conn) {
-          return ace;
-        }
-        break;
-      }
+    if (acl_find_subject_has_matching_subject(ace, type, subject)) {
+      return ace;
     }
+
   next_ace:
     ace = ace->next;
   }
@@ -563,6 +569,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
   if (uuid != NULL) {
     do {
       oc_ace_subject_t subject;
+      memset(&subject, 0, sizeof(oc_ace_subject_t));
       memcpy(&subject.uuid, uuid, sizeof(*uuid));
       match = oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, &subject,
                                       /*aceid*/ -1,

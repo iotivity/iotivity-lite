@@ -893,14 +893,10 @@ simulate_tpm_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
     uint8_t identity_private_key[4096];
     int ret = fread(identity_private_key, 1, sizeof(identity_private_key), f);
     fclose(f);
-    if (ret < 0) {
-      OC_PRINTF("ERROR: simulate_tpm_mbedtls_pk_parse_key: fread failed: %s",
-                buf);
-      return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
-    }
     return mbedtls_pk_parse_key(pk, identity_private_key, ret, NULL, 0, f_rng,
                                 p_rng);
-  } else if (keylen == strlen(manufacturer_reference_private_key)) {
+  }
+  if (keylen == strlen(manufacturer_reference_private_key)) {
     return mbedtls_pk_parse_key(pk, manufacturer_private_key,
                                 strlen((const char *)manufacturer_private_key) +
                                   1,
@@ -939,7 +935,7 @@ simulate_tpm_mbedtls_pk_write_key_der(size_t device,
     return MBEDTLS_ERR_PK_BUFFER_TOO_SMALL;
   }
   memcpy(buf + size - key_size, key, key_size);
-  return key_size;
+  return (int)key_size;
 }
 
 static int
@@ -966,27 +962,25 @@ simulate_tpm_mbedtls_pk_ecp_gen_key(
                                    sizeof(identity_private_key));
     if (ret > 0) {
       char buf[256];
-      if (get_file("", identity_public_key_sha256,
-                   sizeof(identity_public_key_sha256), buf, sizeof(buf))) {
-        FILE *f = fopen(buf, "w");
-        if (f) {
-          ret =
-            fwrite(identity_private_key + sizeof(identity_private_key) - ret, 1,
-                   ret, f);
-          if (ret < 0) {
-            OC_PRINTF(
-              "ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not write "
-              "to file %s",
-              buf);
-          }
-          fclose(f);
-        } else {
-          OC_PRINTF(
-            "ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not open "
-            "file %s",
-            buf);
-        }
+      if (!get_file("", identity_public_key_sha256,
+                    sizeof(identity_public_key_sha256), buf, sizeof(buf))) {
+        return 0;
       }
+      FILE *f = fopen(buf, "w");
+      if (f == NULL) {
+        OC_PRINTF(
+          "ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not open file %s",
+          buf);
+        return 0;
+      }
+      ret = (int)fwrite(
+        identity_private_key + sizeof(identity_private_key) - ret, 1, ret, f);
+      if (ret < 0) {
+        OC_PRINTF("ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not write "
+                  "to file %s",
+                  buf);
+      }
+      fclose(f);
       ret = 0;
     }
   }

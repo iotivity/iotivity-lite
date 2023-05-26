@@ -140,8 +140,9 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
     int ret;
     const char *rt = oc_string_array_get_item(types, i);
 
-    if (!rt || strcmp(rt, "constrained.r.test"))
+    if (!rt || strcmp(rt, "constrained.r.test") != 0) {
       continue;
+    }
 
     ret =
       oc_do_get(uri, server, NULL, check_resource_cb, HIGH_QOS, &light[pos]);

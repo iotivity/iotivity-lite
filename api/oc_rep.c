@@ -28,6 +28,8 @@
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
 
+#include <assert.h>
+
 static struct oc_memb *g_rep_objects;
 CborEncoder root_map;
 CborEncoder links_array;
@@ -71,6 +73,8 @@ oc_rep_new_realloc_v1(uint8_t **payload, size_t size, size_t max_size)
 void
 oc_rep_new_realloc(uint8_t **payload, int size, int max_size)
 {
+  assert(size >= 0);
+  assert(max_size >= 0);
   oc_rep_new_realloc_v1(payload, (size_t)size, (size_t)max_size);
 }
 #endif /* OC_DYNAMIC_ALLOCATION */

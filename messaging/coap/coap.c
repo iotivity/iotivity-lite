@@ -290,7 +290,7 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
         OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
       }
 
-      if (array[j] == (uint8_t)split_char || j == length) {
+      if (array[j] == split_char || j == length) {
         part_end = array + j;
         temp_length = part_end - part_start;
 
@@ -845,7 +845,8 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
       break;
 #endif
     case COAP_OPTION_OBSERVE:
-      coap_pkt->observe = coap_parse_int_option(current_option, option_length);
+      coap_pkt->observe =
+        (int32_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Observe [%lu]", (unsigned long)coap_pkt->observe);
       break;
     case COAP_OPTION_BLOCK2:

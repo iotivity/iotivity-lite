@@ -539,7 +539,7 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
   if (kp == NULL) {
     return NULL;
   }
-  uint8_t *pk_buffer = oc_cast(*public_key, uint8_t);
+  const uint8_t *pk_buffer = oc_cast(*public_key, uint8_t);
   if (pk_buffer == NULL) {
     return NULL;
   }

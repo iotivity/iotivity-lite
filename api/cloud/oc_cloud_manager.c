@@ -197,17 +197,17 @@ refresh_token_expires_in_ms(int64_t expires_in_ms)
     return 0;
   }
 
-  if (expires_in_ms > MILLISECONDS_PER_HOUR) {
+  if (expires_in_ms > (int64_t)MILLISECONDS_PER_HOUR) {
     // if time is more than 1h then set expires to (expires_in_ms - 10min).
-    return (uint64_t)(expires_in_ms - 10 * MILLISECONDS_PER_MINUTE);
+    return (uint64_t)(expires_in_ms - (int64_t)(10 * MILLISECONDS_PER_MINUTE));
   }
-  if (expires_in_ms > 4 * MILLISECONDS_PER_MINUTE) {
+  if (expires_in_ms > (int64_t)(4 * MILLISECONDS_PER_MINUTE)) {
     // if time is more than 240sec then set expires to (expires_in_ms - 2min).
-    return (uint64_t)(expires_in_ms - 2 * MILLISECONDS_PER_MINUTE);
+    return (uint64_t)(expires_in_ms - (int64_t)(2 * MILLISECONDS_PER_MINUTE));
   }
-  if (expires_in_ms > 20 * MILLISECONDS_PER_SECOND) {
+  if (expires_in_ms > (int64_t)(20 * MILLISECONDS_PER_SECOND)) {
     // if time is more than 20sec then set expires to (expires_in_ms - 10sec).
-    return (uint64_t)(expires_in_ms - 10 * MILLISECONDS_PER_SECOND);
+    return (uint64_t)(expires_in_ms - (int64_t)(10 * MILLISECONDS_PER_SECOND));
   }
   return (uint64_t)expires_in_ms;
 }
@@ -537,10 +537,10 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
                               uint64_t *next_ping)
 {
   if (response_received) {
-    *next_ping = 20 * 1000;
+    *next_ping = 20UL * 1000UL;
     ctx->retry_count = 0;
   } else {
-    *next_ping = 4 * 1000;
+    *next_ping = 4UL * 1000UL;
     uint64_t keepalive_ping_timeout_ms =
       ((uint64_t)(ctx->keepalive.ping_timeout)) * 1000;
     // we don't want to ping more often than once per second

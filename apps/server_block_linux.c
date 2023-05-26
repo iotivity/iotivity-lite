@@ -52,7 +52,7 @@ handle_array_response(void *data)
     oc_set_separate_response_buffer(&array_response);
     OC_PRINTF("GET_array:\n");
     for (int i = 0; i < 100; i++) {
-      large_array[i] = oc_random_value();
+      large_array[i] = (int)oc_random_value();
       OC_PRINTF("(%d %d) ", i, large_array[i]);
     }
     OC_PRINTF("\n");
