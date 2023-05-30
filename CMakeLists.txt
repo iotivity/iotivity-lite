@@ -35,6 +35,7 @@ else()
 endif()
 set(OC_CLOUD_ENABLED OFF CACHE BOOL "Enable cloud communications.")
 set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages.")
+set(OC_INTROSPECTION_ENABLED ON CACHE BOOL "Enable the introspection resource.")
 set(OC_IDD_API_ENABLED ON CACHE BOOL "Enable the Introspection Device Data API.")
 set(OC_TCP_ENABLED OFF CACHE BOOL "Enable OCF communications over TCP. Necessary for Cloud communications.")
 set(OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED OFF CACHE BOOL "Enable observation over oic/res resource.")
@@ -304,8 +305,11 @@ if(OC_CLOUD_ENABLED)
     set(OC_IPV4_ENABLED ON)
 endif()
 
-if(OC_IDD_API_ENABLED)
-    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_IDD_API")
+if(OC_INTROSPECTION_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_INTROSPECTION")
+    if(OC_IDD_API_ENABLED)
+        list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_IDD_API")
+    endif()
 endif()
 
 if(OC_TCP_ENABLED)
@@ -421,9 +425,18 @@ if(PLGD_DEV_TIME_ENABLED)
     )
 endif()
 
+file(GLOB API_SRC
+    ${PROJECT_SOURCE_DIR}/api/*.c
+)
+if(NOT OC_INTROSPECTION_ENABLED)
+    list(REMOVE_ITEM API_SRC
+        ${PROJECT_SOURCE_DIR}/api/oc_introspection.c
+    )
+endif()
+
 file(GLOB SERVER_SRC
     ${PROJECT_SOURCE_DIR}/messaging/coap/*.c
-    ${PROJECT_SOURCE_DIR}/api/*.c
+    ${API_SRC}
     ${PLGD_SRC}
 )
 file(GLOB CLIENT_SRC
@@ -1048,8 +1061,20 @@ install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING
     PATTERN "*.h"
+    PATTERN "oc_introspection.h" EXCLUDE
+    PATTERN "server_introspection.dat.h" EXCLUDE
     PATTERN "plgd" EXCLUDE
 )
+
+if (OC_INTROSPECTION_ENABLED)
+    install(DIRECTORY include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        FILES_MATCHING
+        PATTERN "oc_introspection.h"
+        PATTERN "server_introspection.dat.h"
+    )
+endif()
+
 if (PLGD_DEV_TIME_ENABLED)
     install(DIRECTORY include/plgd
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev

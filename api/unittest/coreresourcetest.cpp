@@ -365,8 +365,12 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsDCR_P)
 
   // logical device resources
   auto isNotDCR = [](int type) {
-    return type == OCF_INTROSPECTION_WK || type == OCF_INTROSPECTION_DATA ||
-           type == OCF_CON;
+#ifdef OC_INTROSPECTION
+    if (type == OCF_INTROSPECTION_WK || type == OCF_INTROSPECTION_DATA) {
+      return true;
+    }
+#endif /* OC_INTROSPECTION */
+    return type == OCF_CON;
   };
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     for (int type = OCF_CON; type <= OCF_D; ++type) {

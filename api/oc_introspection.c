@@ -16,16 +16,21 @@
  *
  ****************************************************************************/
 
-#include "oc_introspection.h"
+#include "oc_config.h"
+
+#ifdef OC_INTROSPECTION
+
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
+#include "oc_introspection.h"
 #include "oc_introspection_internal.h"
 #include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
+
 #include <inttypes.h>
 #include <stdio.h>
 
@@ -122,7 +127,7 @@ oc_core_introspection_wk_handler(oc_request_t *request,
         !(eps->flags & SECURED) && (eps->flags == conn)) {
       oc_string_t ep;
       if (oc_endpoint_to_string(eps, &ep) == 0) {
-        oc_concat_strings(&uri, oc_string(ep), "/oc/introspection");
+        oc_concat_strings(&uri, oc_string(ep), OC_INTROSPECTION_DATA_URI);
         oc_free_string(&ep);
         break;
       }
@@ -167,11 +172,17 @@ oc_create_introspection_resource(size_t device)
   OC_DBG("oc_introspection: Initializing introspection resource");
 
   oc_core_populate_resource(
-    OCF_INTROSPECTION_WK, device, "oc/wk/introspection",
-    OC_IF_R | OC_IF_BASELINE, OC_IF_R, OC_SECURE | OC_DISCOVERABLE,
-    oc_core_introspection_wk_handler, 0, 0, 0, 1, "oic.wk.introspection");
-  oc_core_populate_resource(OCF_INTROSPECTION_DATA, device, "oc/introspection",
-                            OC_IF_BASELINE, OC_IF_BASELINE, 0,
-                            oc_core_introspection_data_handler, 0, 0, 0, 1,
-                            "x.org.openconnectivity.oic.introspection.data");
+    OCF_INTROSPECTION_WK, device, OC_INTROSPECTION_WK_URI,
+    OC_INTROSPECTION_WK_IF_MASK, OC_INTROSPECTION_WK_DEFAULT_IF,
+    OC_SECURE | OC_DISCOVERABLE, oc_core_introspection_wk_handler, /*put*/ NULL,
+    /*post*/ NULL,
+    /*delete*/ NULL, 1, OC_INTROSPECTION_WK_RT);
+
+  oc_core_populate_resource(
+    OCF_INTROSPECTION_DATA, device, OC_INTROSPECTION_DATA_URI, OC_IF_BASELINE,
+    OC_IF_BASELINE, /*properties*/ 0, oc_core_introspection_data_handler,
+    /*put*/ NULL,
+    /*post*/ NULL, /*delete*/ NULL, 1, OC_INTROSPECTION_DATA_RT);
 }
+
+#endif /* OC_INTROSPECTION */

@@ -107,6 +107,7 @@ export CLOUD ?= 1
 # unlike other IoTivity-lite builds Android assumes we want to build Java by
 # default. It also assumes the use of OC_IDD_API is used by default.
 JAVA ?= 1
+export INTROSPECTION ?= 1
 export IDD ?= 1
 
 ROOT_DIR = ../..
@@ -147,23 +148,29 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
-SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/android/*.c)
-SRC_CLIENT=$(wildcard ../../api/client/*.c)
+SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
+SRC_API:=$(wildcard ../../api/*.c)
+ifneq ($(INTROSPECTION),1)
+SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
+endif
+SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/android/*.c)
+SRC_CLIENT:=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
 # From API level 24 on Android supports getifaddrs itself.
 ifeq ($(shell if [ ${ANDROID_API} -gt 23 ]; then echo gt; fi),gt)
-	SRC:=$(filter-out ../../port/android/ifaddrs-android.c,${SRC})
+SRC:=$(filter-out ../../port/android/ifaddrs-android.c,${SRC})
 endif
 
-HEADERS = $(wildcard ../../include/*.h)
+HEADERS := $(wildcard ../../include/*.h)
 HEADERS += ../../port/android/oc_config.h
-
-HEADERS_COAP = $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
-HEADERS_UTIL = $(filter-out %_internal.h,$(wildcard ../../util/*.h))
-HEADERS_UTIL_PT = $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
-HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
+ifneq ($(INTROSPECTION),1)
+HEADERS:=$(filter-out %oc_introspection.h %server_introspection.dat.h,${HEADERS})
+endif
+HEADERS_COAP := $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
+HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))
+HEADERS_UTIL_PT := $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
+HEADERS_PORT := $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 
 CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
@@ -224,8 +231,11 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
-ifeq ($(IDD), 1)
+ifeq ($(INTROSPECTION),1)
+	EXTRA_CFLAGS += -DOC_INTROSPECTION
+ifeq ($(IDD),1)
 	EXTRA_CFLAGS += -DOC_IDD_API
+endif
 endif
 
 ifeq ($(SWUPDATE),1)

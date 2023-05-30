@@ -267,11 +267,13 @@ process_device_core_resources(const oc_request_t *request, const char *anchor,
     matches++;
   }
 
+#ifdef OC_INTROSPECTION
   if (filter_resource(
         oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
         request, anchor, links, device_index)) {
     matches++;
   }
+#endif /* OC_INTROSPECTION */
 
   if (oc_get_con_res_announced() &&
       filter_resource(oc_core_get_resource_by_index(OCF_CON, device_index),
@@ -615,10 +617,13 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
 #endif /* OC_PKI */
 #endif
 
+#ifdef OC_INTROSPECTION
   if (filter_oic_1_1_resource(
         oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_num),
-        request, oc_rep_array(links)))
+        request, oc_rep_array(links))) {
     matches++;
+  }
+#endif /* OC_INTROSPECTION */
 
   oc_rep_close_array(links, links);
   oc_rep_end_object(device, links);
@@ -749,10 +754,12 @@ process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
   process_batch_response(
     links_array, oc_core_get_resource_by_index(OCF_D, device_index), endpoint);
 
+#ifdef OC_INTROSPECTION
   process_batch_response(
     links_array,
     oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
     endpoint);
+#endif /* OC_INTROSPECTION */
 
   if (oc_get_con_res_announced()) {
     process_batch_response(links_array,

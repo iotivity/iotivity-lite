@@ -465,9 +465,11 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
 
 #ifdef OC_WKCORE
   oc_create_discovery_resource(WELLKNOWNCORE, device_count);
-#endif
+#endif /* OC_WKCORE */
 
+#ifdef OC_INTROSPECTION
   oc_create_introspection_resource(device_count);
+#endif /* OC_INTROSPECTION */
 
 #ifdef OC_MNT
   oc_create_maintenance_resource(device_count);
@@ -757,9 +759,13 @@ oc_core_is_DCR(const oc_resource_t *resource, size_t device)
   size_t DCRs_end = device_resources + OCF_D;
   for (size_t i = DCRs_start; i <= DCRs_end; ++i) {
     if (resource == &g_core_resources[i]) {
+#ifdef OC_INTROSPECTION
       if (i == (device_resources + OCF_INTROSPECTION_WK) ||
-          i == (device_resources + OCF_INTROSPECTION_DATA) ||
-          i == (device_resources + OCF_CON)) {
+          i == (device_resources + OCF_INTROSPECTION_DATA)) {
+        return false;
+      }
+#endif /* OC_INTROSPECTION */
+      if (i == (device_resources + OCF_CON)) {
         return false;
       }
       return true;
@@ -807,20 +813,22 @@ oc_core_get_resource_type_by_uri(const char *uri)
                            OC_CHAR_ARRAY_LEN(OC_NAME_CON_RES))) {
     return OCF_CON;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oc/wk/introspection",
-                           OC_CHAR_ARRAY_LEN("/oc/wk/introspection"))) {
+#ifdef OC_INTROSPECTION
+  if (core_is_resource_uri(uri, uri_len, OC_INTROSPECTION_WK_URI,
+                           OC_CHAR_ARRAY_LEN(OC_INTROSPECTION_WK_URI))) {
     return OCF_INTROSPECTION_WK;
   }
+  if (core_is_resource_uri(uri, uri_len, OC_INTROSPECTION_DATA_URI,
+                           OC_CHAR_ARRAY_LEN(OC_INTROSPECTION_DATA_URI))) {
+    return OCF_INTROSPECTION_DATA;
+  }
+#endif /* OC_INTROSPECTION */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   if (core_is_resource_uri(uri, uri_len, PLGD_TIME_URI,
                            OC_CHAR_ARRAY_LEN(PLGD_TIME_URI))) {
     return PLGD_TIME;
   }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
-  if (core_is_resource_uri(uri, uri_len, "/oc/introspection",
-                           OC_CHAR_ARRAY_LEN("/oc/introspection"))) {
-    return OCF_INTROSPECTION_DATA;
-  }
 #ifdef OC_WKCORE
   if (core_is_resource_uri(uri, uri_len, "/.well-known/core",
                            OC_CHAR_ARRAY_LEN("/.well-known/core"))) {

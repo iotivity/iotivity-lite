@@ -18,9 +18,7 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_introspection.h"
 #include "oc_log.h"
-#include "oc_obt.h"
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
@@ -31,6 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#ifdef OC_INTROSPECTION
+#include "oc_introspection.h"
+#endif /* OC_INTROSPECTION */
 
 static const size_t DEVICE = 0;
 

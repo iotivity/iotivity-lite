@@ -13,6 +13,7 @@ DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
 export OSCORE ?= 1
+INTROSPECTION ?= 1
 IDD ?= 1
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
@@ -119,19 +120,25 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
-SRC_COMMON=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
-SRC=$(wildcard ../../messaging/coap/*.c ../../api/*.c ../../port/linux/*.c)
-SRC_CLIENT=$(wildcard ../../api/client/*.c)
-SRC_CLOUD=$(wildcard ../../api/cloud/*.c)
+SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
+SRC_API:=$(wildcard ../../api/*.c)
+ifneq ($(INTROSPECTION),1)
+SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
+endif
+SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/linux/*.c)
+SRC_CLIENT:=$(wildcard ../../api/client/*.c)
+SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
-HEADERS = $(wildcard ../../include/*.h)
+HEADERS := $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/oc_config.h
-
-HEADERS_COAP = $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
-HEADERS_UTIL = $(filter-out %_internal.h,$(wildcard ../../util/*.h))
-HEADERS_UTIL_PT = $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
-HEADERS_PORT = $(filter-out %_internal.h,$(wildcard ../../port/*.h))
-HEADERS_TINYCBOR = $(addprefix ../../deps/tinycbor/src/,cbor.h cborjson.h tinycbor-version.h)
+ifneq ($(INTROSPECTION),1)
+HEADERS:=$(filter-out %oc_introspection.h %server_introspection.dat.h,${HEADERS})
+endif
+HEADERS_COAP := $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
+HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))
+HEADERS_UTIL_PT := $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
+HEADERS_PORT := $(filter-out %_internal.h,$(wildcard ../../port/*.h))
+HEADERS_TINYCBOR := $(addprefix ../../deps/tinycbor/src/,cbor.h cborjson.h tinycbor-version.h)
 
 CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -I../../api -std=gnu99 -Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic #-Wl,-Map,client.map
@@ -150,8 +157,9 @@ VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
-SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux introspectionclient\
-	  server_collections_linux server_block_linux client_block_linux server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 simpleserver-resourcedefaults
+SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux server_collections_linux server_block_linux client_block_linux \
+	server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests \
+	server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 simpleserver-resourcedefaults
 
 ifeq ($(V6DNS),1)
 	EXTRA_CFLAGS += -DOC_DNS_LOOKUP_IPV6
@@ -210,8 +218,12 @@ ifeq ($(DYNAMIC),1)
 	EXTRA_CFLAGS += -DOC_DYNAMIC_ALLOCATION
 endif
 
-ifeq ($(IDD), 1)
+ifeq ($(INTROSPECTION),1)
+	EXTRA_CFLAGS += -DOC_INTROSPECTION
+ifeq ($(IDD),1)
 	EXTRA_CFLAGS += -DOC_IDD_API
+endif
+	SAMPLES += introspectionclient
 endif
 
 ifeq ($(SWUPDATE),1)
@@ -400,9 +412,11 @@ obj/python/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} -DOC_CLIENT
 
+ifeq ($(INTROSPECTION),1)
 obj/server/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
+endif
 
 libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
 	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)

@@ -35,6 +35,7 @@
 #include "security/oc_svr_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -288,13 +289,9 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-    oc_resource_t *sp = oc_core_get_resource_by_index(OCF_SEC_SP, /*device*/ 0);
-    ASSERT_NE(nullptr, sp);
-    oc_resource_make_public(sp);
-    oc_resource_set_access_in_RFOTM(
-      sp, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
-                                        OC_PERM_DELETE));
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_SEC_SP, /*device*/ 0,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 

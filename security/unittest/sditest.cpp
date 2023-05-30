@@ -32,6 +32,7 @@
 #include "security/oc_sdi_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Resource.h"
 
 #include <array>
 #include <filesystem>
@@ -199,13 +200,9 @@ public:
 
     ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-    oc_resource_t *sdi =
-      oc_core_get_resource_by_index(OCF_SEC_SDI, /*device*/ 0);
-    ASSERT_NE(nullptr, sdi);
-    oc_resource_set_access_in_RFOTM(
-      sdi, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
-                                        OC_PERM_DELETE));
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_SEC_SDI, /*device*/ 0,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 

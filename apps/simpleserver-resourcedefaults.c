@@ -157,7 +157,8 @@ app_init(void)
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
 
-#if defined(OC_IDD_API)
+#ifdef OC_INTROSPECTION
+#ifdef OC_IDD_API
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
@@ -186,9 +187,10 @@ app_init(void)
   } else {
     printf("%s", introspection_error);
   }
-#else
+#else  /* !OC_IDD_API */
   printf("\t introspection via header file\n");
-#endif
+#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION */
   return ret;
 }
 
