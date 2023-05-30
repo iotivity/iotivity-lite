@@ -245,6 +245,9 @@ oc_delayed_delete_resource_cb(void *data)
 void
 oc_delayed_delete_resource(oc_resource_t *resource)
 {
+  if (!resource) {
+    return;
+  }
   OC_DBG("(re)scheduling delayed delete resource(%p)", (void *)resource);
   ri_app_resource_to_be_deleted(resource);
   oc_reset_delayed_callback(resource, oc_delayed_delete_resource_cb, 0);
