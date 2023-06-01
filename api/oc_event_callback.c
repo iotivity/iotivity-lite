@@ -31,24 +31,11 @@
 #include "messaging/coap/observe.h"
 #endif /* OC_SERVER */
 
+#include <assert.h>
 #include <stdbool.h>
 
-/**
- * @brief event callback
- */
-typedef struct oc_event_callback_s
-{
-  struct oc_event_callback_s *next; ///< next callback
-  struct oc_etimer timer;           ///< timer
-  oc_trigger_t callback;            ///< callback to be invoked
-  void *data;                       ///< data for the callback
-} oc_event_callback_t;
-
 OC_LIST(g_timed_callbacks);
-OC_MEMB(g_event_callbacks_s, oc_event_callback_t,
-        OC_NUM_CORE_PLATFORM_RESOURCES +
-          OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES +
-          OC_MAX_APP_RESOURCES + OC_MAX_NUM_CONCURRENT_REQUESTS * 2);
+OC_MEMB(g_event_callbacks_s, oc_event_callback_t, OC_MAX_EVENT_CALLBACKS);
 static oc_event_callback_t *g_currently_processed_event_cb = NULL;
 static bool g_currently_processed_event_cb_delete = false;
 static oc_ri_timed_event_on_delete_t g_currently_processed_event_on_delete =
@@ -252,29 +239,18 @@ periodic_observe_callback_handler(void *data)
   return OC_EVENT_DONE;
 }
 
-static oc_event_callback_t *
-periodic_observe_callback_get(const oc_resource_t *resource)
-{
-  for (oc_event_callback_t *event_cb =
-         (oc_event_callback_t *)oc_list_head(g_observe_callbacks);
-       event_cb != NULL; event_cb = event_cb->next) {
-    if (resource == event_cb->data) {
-      return event_cb;
-    }
-  }
-  return NULL;
-}
-
 bool
 oc_periodic_observe_callback_add(oc_resource_t *resource)
 {
-  oc_event_callback_t *event_cb = periodic_observe_callback_get(resource);
+  assert(resource != NULL);
+  oc_event_callback_t *event_cb = oc_periodic_observe_callback_get(resource);
   if (event_cb != NULL) {
     OC_DBG(
       "oc_event_callback: observe callback(%p) for resource(%s) already exists",
       (void *)event_cb, oc_string(resource->name));
     return true;
   }
+
   event_cb = (oc_event_callback_t *)oc_memb_alloc(&g_event_callbacks_s);
   if (event_cb == NULL) {
     OC_WRN("insufficient memory to add periodic observe callback");
@@ -293,17 +269,39 @@ oc_periodic_observe_callback_add(oc_resource_t *resource)
   return true;
 }
 
-void
+bool
 oc_periodic_observe_callback_remove(const oc_resource_t *resource)
 {
-  oc_event_callback_t *event_cb = periodic_observe_callback_get(resource);
-  if (event_cb != NULL) {
-    oc_etimer_stop(&event_cb->timer);
-    oc_list_remove(g_observe_callbacks, event_cb);
-    OC_DBG("oc_event_callback: observe callback(%p) for resource(%s) removed",
-           (void *)event_cb, oc_string(resource->name));
-    oc_memb_free(&g_event_callbacks_s, event_cb);
+  assert(resource != NULL);
+  oc_event_callback_t *event_cb = oc_periodic_observe_callback_get(resource);
+  if (event_cb == NULL) {
+    return false;
   }
+  oc_etimer_stop(&event_cb->timer);
+  oc_list_remove(g_observe_callbacks, event_cb);
+  OC_DBG("oc_event_callback: observe callback(%p) for resource(%s) removed",
+         (void *)event_cb, oc_string(resource->name));
+  oc_memb_free(&g_event_callbacks_s, event_cb);
+  return true;
+}
+
+oc_event_callback_t *
+oc_periodic_observe_callback_get(const oc_resource_t *resource)
+{
+  for (oc_event_callback_t *event_cb =
+         (oc_event_callback_t *)oc_list_head(g_observe_callbacks);
+       event_cb != NULL; event_cb = event_cb->next) {
+    if (resource == event_cb->data) {
+      return event_cb;
+    }
+  }
+  return NULL;
+}
+
+size_t
+oc_periodic_observe_callback_count(void)
+{
+  return (size_t)oc_list_length(g_observe_callbacks);
 }
 
 #endif /* OC_SERVER */

@@ -951,7 +951,7 @@ ri_get_ocf_version_from_header(const coap_packet_t *request)
 #ifdef OC_SERVER
 
 static bool
-ri_add_observation(const coap_packet_t *request, coap_packet_t *response,
+ri_add_observation(const coap_packet_t *request, const coap_packet_t *response,
                    oc_resource_t *resource, bool resource_is_collection,
                    uint16_t block2_size, const oc_endpoint_t *endpoint,
                    oc_interface_mask_t iface_query)
@@ -969,7 +969,7 @@ ri_add_observation(const coap_packet_t *request, coap_packet_t *response,
     }
   }
 #ifdef OC_COLLECTIONS
-  if (!resource_is_collection) {
+  if (resource_is_collection) {
     oc_collection_t *collection = (oc_collection_t *)resource;
     oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
 #ifdef OC_SECURITY
@@ -986,7 +986,7 @@ ri_add_observation(const coap_packet_t *request, coap_packet_t *response,
     if (iface_query == OC_IF_B) {
       links = (oc_link_t *)oc_list_head(collection->links);
       for (; links != NULL; links = links->next) {
-        if (links->resource == NULL &&
+        if (links->resource != NULL &&
             (links->resource->properties & OC_PERIODIC) != 0) {
           oc_periodic_observe_callback_add(links->resource);
         }
@@ -1000,9 +1000,10 @@ ri_add_observation(const coap_packet_t *request, coap_packet_t *response,
 }
 
 static void
-ri_remove_observation(const coap_packet_t *request, coap_packet_t *response,
-                      oc_resource_t *resource, bool resource_is_collection,
-                      uint16_t block2_size, const oc_endpoint_t *endpoint,
+ri_remove_observation(const coap_packet_t *request,
+                      const coap_packet_t *response, oc_resource_t *resource,
+                      bool resource_is_collection, uint16_t block2_size,
+                      const oc_endpoint_t *endpoint,
                       oc_interface_mask_t iface_query)
 {
   if (coap_observe_handler(request, response, resource, block2_size, endpoint,
