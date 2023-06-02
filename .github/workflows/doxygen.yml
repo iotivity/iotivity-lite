@@ -1,5 +1,9 @@
 name: doxygen documentation
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'master' }}
+
 on:
   push:
     branches: [master]
