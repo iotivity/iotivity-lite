@@ -1072,6 +1072,114 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
 }
 #endif /* OC_SERVER */
 
+typedef struct
+{
+  oc_response_t *response_obj;
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_state_t **response_state;
+#endif /* OC_BLOCK_WISE */
+#ifdef OC_SERVER
+  const coap_packet_t *request;
+  const oc_endpoint_t *endpoint;
+  oc_method_t method;
+  oc_interface_mask_t iface_mask;
+  int32_t observe;
+  uint16_t block2_size;
+  oc_resource_t *resource;
+#ifdef OC_COLLECTIONS
+  bool resource_is_collection;
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+} ri_invoke_coap_entity_set_response_ctx_t;
+
+static void
+ri_invoke_coap_entity_set_response(coap_packet_t *response,
+                                   ri_invoke_coap_entity_set_response_ctx_t ctx)
+{
+  oc_response_buffer_t *response_buffer = ctx.response_obj->response_buffer;
+
+#ifdef OC_SERVER
+  oc_response_t *response_obj = ctx.response_obj;
+
+  /* The presence of a separate response handle here indicates a
+   * successful handling of the request by a slow resource.
+   */
+  if (response_obj->separate_response != NULL) {
+    /* Attempt to register a client request to the separate response tracker
+     * and pass in the observe option (if present) or the value 2 as
+     * determined by the code block above. Values 0 and 1 result in their
+     * expected behaviors whereas 2 indicates an absence of an observe
+     * option and hence a one-off request.
+     * Following a successful registration, the separate response tracker
+     * is flagged as "active". In this way, the function that later executes
+     * out-of-band upon availability of the resource state knows it must
+     * send out a response with it.
+     */
+    if (coap_separate_accept(ctx.request, response_obj->separate_response,
+                             ctx.endpoint, ctx.observe, ctx.block2_size) == 1) {
+      response_obj->separate_response->active = 1;
+    }
+    return;
+  }
+#endif /* OC_SERVER */
+  if (response_buffer->code == OC_IGNORE) {
+    /* If the server-side logic chooses to reject a request, it sends
+     * below a response code of IGNORE, which results in the messaging
+     * layer freeing the CoAP transaction associated with the request.
+     */
+    coap_set_global_status_code(CLEAR_TRANSACTION);
+    return;
+  }
+#ifdef OC_SERVER
+  /* If the recently handled request was a PUT/POST, it conceivably
+   * altered the resource state, so attempt to notify all observers
+   * of that resource with the change.
+   */
+  if (
+#ifdef OC_COLLECTIONS
+    !ctx.resource_is_collection &&
+#endif /* OC_COLLECTIONS */
+    ctx.resource && (ctx.method == OC_PUT || ctx.method == OC_POST) &&
+    response_buffer->code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+    if ((ctx.iface_mask == OC_IF_STARTUP) ||
+        (ctx.iface_mask == OC_IF_STARTUP_REVERT)) {
+      oc_resource_defaults_data_t *resource_defaults_data =
+        oc_ri_alloc_resource_defaults();
+      resource_defaults_data->resource = ctx.resource;
+      resource_defaults_data->iface_mask = ctx.iface_mask;
+      oc_ri_add_timed_event_callback_ticks(
+        resource_defaults_data,
+        &oc_observe_notification_resource_defaults_delayed, 0);
+    } else {
+      oc_notify_observers_delayed(ctx.resource, 0);
+    }
+  }
+
+#endif /* OC_SERVER */
+  if (response_buffer->response_length > 0) {
+#ifdef OC_BLOCK_WISE
+    (*ctx.response_state)->payload_size =
+      (uint32_t)response_buffer->response_length;
+#else  /* OC_BLOCK_WISE */
+    coap_set_payload(response, response_buffer->buffer,
+                     response_buffer->response_length);
+#endif /* !OC_BLOCK_WISE */
+    if (response_buffer->content_format > 0) {
+      coap_set_header_content_format(response, response_buffer->content_format);
+    }
+  }
+
+  if (response_buffer->code ==
+      oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
+    coap_set_header_size1(response, OC_BLOCK_SIZE);
+  }
+
+  /* response_buffer->code at this point contains a valid CoAP status
+   *  code.
+   */
+  coap_set_status_code(response, response_buffer->code);
+}
+
 bool
 oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
                                  coap_packet_t *response,
@@ -1086,19 +1194,18 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   oc_method_t method = request->code;
 
   /* Initialize request/response objects to be sent up to the app layer. */
-  oc_request_t request_obj;
-  oc_response_buffer_t response_buffer;
-  oc_response_t response_obj;
-
   /* Postpone allocating response_state right after calling
    * oc_parse_rep()
    *  in order to reducing peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
    */
+  oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
 
+  oc_response_t response_obj;
   response_obj.separate_response = NULL;
   response_obj.response_buffer = &response_buffer;
 
+  oc_request_t request_obj;
   request_obj.response = &response_obj;
   request_obj.request_payload = NULL;
   request_obj.query = NULL;
@@ -1419,88 +1526,25 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
     response_buffer.code = OC_IGNORE;
   }
 
-#ifdef OC_SERVER
-  /* The presence of a separate response handle here indicates a
-   * successful handling of the request by a slow resource.
-   */
-  if (response_obj.separate_response != NULL) {
-/* Attempt to register a client request to the separate response tracker
- * and pass in the observe option (if present) or the value 2 as
- * determined by the code block above. Values 0 and 1 result in their
- * expected behaviors whereas 2 indicates an absence of an observe
- * option and hence a one-off request.
- * Following a successful registration, the separate response tracker
- * is flagged as "active". In this way, the function that later executes
- * out-of-band upon availability of the resource state knows it must
- * send out a response with it.
- */
+  ri_invoke_coap_entity_set_response_ctx_t resp_ctx = {
+    .response_obj = &response_obj,
 #ifdef OC_BLOCK_WISE
-    if (coap_separate_accept(request, response_obj.separate_response, endpoint,
-                             observe, ctx.block2_size) == 1)
-#else  /* OC_BLOCK_WISE */
-    if (coap_separate_accept(request, response_obj.separate_response, endpoint,
-                             observe) == 1)
-#endif /* !OC_BLOCK_WISE */
-      response_obj.separate_response->active = 1;
-  } else
-#endif /* OC_SERVER */
-    if (response_buffer.code == OC_IGNORE) {
-      /* If the server-side logic chooses to reject a request, it sends
-       * below a response code of IGNORE, which results in the messaging
-       * layer freeing the CoAP transaction associated with the request.
-       */
-      coap_set_global_status_code(CLEAR_TRANSACTION);
-    } else {
+    .response_state = ctx.response_state,
+#endif /* OC_BLOCK_WISE */
 #ifdef OC_SERVER
-      /* If the recently handled request was a PUT/POST, it conceivably
-       * altered the resource state, so attempt to notify all observers
-       * of that resource with the change.
-       */
-      if (
+    .request = request,
+    .endpoint = endpoint,
+    .method = method,
+    .iface_mask = iface_mask,
+    .observe = observe,
+    .block2_size = ctx.block2_size,
+    .resource = cur_resource,
 #ifdef OC_COLLECTIONS
-        !resource_is_collection &&
+    .resource_is_collection = resource_is_collection,
 #endif /* OC_COLLECTIONS */
-        cur_resource && (method == OC_PUT || method == OC_POST) &&
-        response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-        if ((iface_mask == OC_IF_STARTUP) ||
-            (iface_mask == OC_IF_STARTUP_REVERT)) {
-          oc_resource_defaults_data_t *resource_defaults_data =
-            oc_ri_alloc_resource_defaults();
-          resource_defaults_data->resource = cur_resource;
-          resource_defaults_data->iface_mask = iface_mask;
-          oc_ri_add_timed_event_callback_ticks(
-            resource_defaults_data,
-            &oc_observe_notification_resource_defaults_delayed, 0);
-        } else {
-          oc_notify_observers_delayed(cur_resource, 0);
-        }
-      }
-
 #endif /* OC_SERVER */
-      if (response_buffer.response_length > 0) {
-#ifdef OC_BLOCK_WISE
-        (*ctx.response_state)->payload_size =
-          (uint32_t)response_buffer.response_length;
-#else  /* OC_BLOCK_WISE */
-        coap_set_payload(response, response_buffer.buffer,
-                         response_buffer.response_length);
-#endif /* !OC_BLOCK_WISE */
-        if (response_buffer.content_format > 0) {
-          coap_set_header_content_format(response,
-                                         response_buffer.content_format);
-        }
-      }
-
-      if (response_buffer.code ==
-          oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
-        coap_set_header_size1(response, OC_BLOCK_SIZE);
-      }
-
-      /* response_buffer.code at this point contains a valid CoAP status
-       *  code.
-       */
-      coap_set_status_code(response, response_buffer.code);
-    }
+  };
+  ri_invoke_coap_entity_set_response(response, resp_ctx);
   return success;
 }
 

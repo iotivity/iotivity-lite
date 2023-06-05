@@ -446,14 +446,14 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
 
     OC_DBG("send_notification: creating separate response for "
            "notification");
+    uint16_t block2_size = 0;
 #ifdef OC_BLOCK_WISE
+    block2_size = obs->block2_size;
+#endif /* OC_BLOCK_WISE */
     if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
-                             obs->obs_counter, obs->block2_size) == 1)
-#else  /* OC_BLOCK_WISE */
-    if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
-                             obs->obs_counter) == 1)
-#endif /* !OC_BLOCK_WISE */
+                             obs->obs_counter, block2_size) == 1) {
       response->separate_response->active = 1;
+    }
   } // separate response
   else {
     OC_DBG("send_notification: notifying observer");
