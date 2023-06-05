@@ -247,7 +247,7 @@ oc_periodic_observe_callback_add(oc_resource_t *resource)
   if (event_cb != NULL) {
     OC_DBG(
       "oc_event_callback: observe callback(%p) for resource(%s) already exists",
-      (void *)event_cb, oc_string(resource->name));
+      (void *)event_cb, oc_string(resource->uri));
     return true;
   }
 
@@ -258,7 +258,7 @@ oc_periodic_observe_callback_add(oc_resource_t *resource)
   }
 
   OC_DBG("oc_event_callback: observe callback(%p) for resource(%s) added",
-         (void *)event_cb, oc_string(resource->name));
+         (void *)event_cb, oc_string(resource->uri));
   event_cb->data = resource;
   event_cb->callback = periodic_observe_callback_handler;
   OC_PROCESS_CONTEXT_BEGIN(&oc_timed_callback_events)
@@ -280,7 +280,7 @@ oc_periodic_observe_callback_remove(const oc_resource_t *resource)
   oc_etimer_stop(&event_cb->timer);
   oc_list_remove(g_observe_callbacks, event_cb);
   OC_DBG("oc_event_callback: observe callback(%p) for resource(%s) removed",
-         (void *)event_cb, oc_string(resource->name));
+         (void *)event_cb, oc_string(resource->uri));
   oc_memb_free(&g_event_callbacks_s, event_cb);
   return true;
 }

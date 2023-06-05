@@ -1504,10 +1504,6 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   return success;
 }
 
-#ifdef OC_CLIENT
-
-#endif /* OC_CLIENT */
-
 void
 oc_ri_shutdown(void)
 {

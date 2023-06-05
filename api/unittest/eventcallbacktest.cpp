@@ -19,7 +19,10 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
+#include "oc_acl.h"
 #include "oc_api.h"
+#include "oc_ri.h"
+#include "oc_collection.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
@@ -29,10 +32,16 @@
 #include "util/oc_process_internal.h"
 #include "tests/gtest/Clock.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/RepPool.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
+
+#ifdef OC_SECURITY
+#include "security/oc_pstat.h"
+#include "security/oc_security_internal.h"
+#endif /* OC_SECURITY */
 
 #include <gtest/gtest.h>
 
@@ -321,8 +330,6 @@ class TestObserveCallback : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
     oc_network_event_handler_mutex_init();
     oc_ri_init();
     oc_core_init();
@@ -406,22 +413,338 @@ TEST_F(TestObserveCallback, Get)
                        oc_core_get_resource_by_index(OCF_D, kDeviceID)));
 }
 
+struct Switches
+{
+  oc_collection_t *collection;
+  std::vector<oc_resource_t *> resources;
+};
+
 class TestObserveCallbackWithServer : public testing::Test {
 public:
-  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+  static oc_collection_t *CreateSwitchesCollection(const std::string &uri)
+  {
+    oc_collection_t *col = reinterpret_cast<oc_collection_t *>(
+      oc_new_collection(nullptr, uri.c_str(), 1, 0));
+    oc_resource_bind_resource_type(&col->res, "oic.wk.col");
+    oc_collection_add_supported_rt(&col->res, "oic.r.switch.binary");
+    oc_collection_add_mandatory_rt(&col->res, "oic.r.switch.binary");
+    oc_resource_set_discoverable(&col->res, true);
+#ifdef OC_SECURITY
+    oc_resource_make_public(&col->res);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    oc_resource_set_access_in_RFOTM(&col->res, true, OC_PERM_RETRIEVE);
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+#endif /* OC_SECURITY */
+    // TODO: should oc_add_resource work here?
+    // EXPECT_TRUE(oc_add_resource(&col->res));
+    oc_add_collection(&col->res);
+    return col;
+  }
 
-  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+  static void onGet(oc_request_t *request, oc_interface_mask_t, void *data)
+  {
+    auto *counter = static_cast<int *>(data);
+    ++(*counter);
+    OC_DBG("%s(%d)", __func__, *counter);
+    oc_send_response(request, OC_STATUS_OK);
+  }
+
+  static oc_resource_t *CreateSwitch(oc_collection_t *collection,
+                                     const std::string &uri)
+  {
+    oc_resource_t *res = oc_new_resource(nullptr, uri.c_str(), 1, 0);
+    oc_resource_bind_resource_type(res, "oic.r.switch.binary");
+    oc_resource_bind_resource_interface(
+      res, static_cast<oc_interface_mask_t>(OC_IF_BASELINE | OC_IF_R));
+    oc_resource_set_default_interface(res, OC_IF_R);
+    oc_resource_set_request_handler(res, OC_GET, onGet, res);
+#ifdef OC_SECURITY
+    oc_resource_make_public(res);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    oc_resource_set_access_in_RFOTM(res, true, OC_PERM_RETRIEVE);
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+#endif /* OC_SECURITY */
+    EXPECT_TRUE(oc_add_resource(res));
+    oc_collection_add_link(&collection->res, oc_new_link(res));
+    return res;
+  }
+#endif // OC_SERVER && OC_COLLECTIONS
+
+  static void SetUpTestCase()
+  {
+    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+    switches_.collection = CreateSwitchesCollection("/switches");
+    switches_.resources.push_back(
+      CreateSwitch(switches_.collection, "/switches/0"));
+    switches_.resources.push_back(
+      CreateSwitch(switches_.collection, "/switches/1"));
+#endif // OC_SERVER && OC_COLLECTIONS
+  }
+
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+  }
+
+  void TearDown() override
+  {
+    oc_resource_set_observable(oc_core_get_resource_by_index(OCF_P, kDeviceID),
+                               false);
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+    oc_resource_set_observable(&switches_.collection->res, false);
+    for (auto *res : switches_.resources) {
+      oc_resource_set_observable(res, false);
+    }
+#endif // OC_SERVER && OC_COLLECTIONS
+  }
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+  static Switches switches_;
+#endif // OC_SERVER && OC_COLLECTIONS
 };
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+Switches TestObserveCallbackWithServer::switches_{};
+#endif // OC_SERVER && OC_COLLECTIONS
 
 TEST_F(TestObserveCallbackWithServer, Observe)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  oc_resource_set_observable(oc_core_get_resource_by_index(OCF_P, kDeviceID),
+                             true);
+
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
-  // TODO:
-  // oc_do_observe
-  // oc_stop_observe
+  struct observe_data
+  {
+    int counter;
+    int lastObserveOption;
+  };
+  auto observe = [](oc_client_response_t *cr) {
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
+    // EXPECT_EQ(0, cr->observe_option);
+    oc::TestDevice::Terminate();
+    OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
+           oc::RepPool::GetJson(cr->payload).data());
+    auto *od = static_cast<observe_data *>(cr->user_data);
+    od->lastObserveOption = cr->observe_option;
+    ++od->counter;
+  };
+
+  observe_data od{};
+  ASSERT_TRUE(oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &od));
+  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  EXPECT_EQ(1, od.counter);
+  EXPECT_EQ(0, od.lastObserveOption);
+
+  od.counter = 0;
+  ASSERT_TRUE(oc_stop_observe("/oic/p", ep));
+  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  EXPECT_EQ(1, od.counter);
+  EXPECT_EQ(-1, od.lastObserveOption);
 }
+
+TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
+{
+  auto interval = 1s;
+  oc_resource_set_periodic_observable(
+    oc_core_get_resource_by_index(OCF_P, kDeviceID), interval.count());
+
+#ifdef OC_SECURITY
+  oc_sec_self_own(kDeviceID);
+#endif // OC_SECURITY
+
+  struct observe_data
+  {
+    int counter;
+    int lastObserveOption;
+  };
+  auto observe = [](oc_client_response_t *cr) {
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
+    OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
+           oc::RepPool::GetJson(cr->payload).data());
+    auto *od = static_cast<observe_data *>(cr->user_data);
+    od->lastObserveOption = cr->observe_option;
+    ++od->counter;
+    if (cr->observe_option == -1) {
+      oc::TestDevice::Terminate();
+    }
+  };
+
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+  observe_data od{};
+  ASSERT_TRUE(oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &od));
+  oc::TestDevice::PoolEventsMs(std::chrono::milliseconds(interval).count() *
+                               2.5f);
+  EXPECT_LE(3, od.counter);
+  EXPECT_EQ(1, oc_periodic_observe_callback_count());
+
+  od.counter = 0;
+  ASSERT_TRUE(oc_stop_observe("/oic/p", ep));
+
+  oc::TestDevice::PoolEvents(std::chrono::seconds(2).count());
+  EXPECT_EQ(-1, od.lastObserveOption);
+  EXPECT_EQ(1, od.counter);
+  EXPECT_EQ(0, oc_periodic_observe_callback_count());
+
+#ifdef OC_SECURITY
+  oc_reset_device_v1(kDeviceID, true);
+  // need to wait for closing of TLS sessions
+  oc::TestDevice::PoolEventsMs(200);
+#endif // OC_SECURITY
+}
+
+// Observing a non-observable resource gets a single GET response with the
+// resource data
+TEST_F(TestObserveCallbackWithServer, ObserveNonObservable)
+{
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto observe = [](oc_client_response_t *cr) {
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
+    EXPECT_EQ(-1, cr->observe_option);
+    oc::TestDevice::Terminate();
+    OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
+           oc::RepPool::GetJson(cr->payload).data());
+    ++(*static_cast<int *>(cr->user_data));
+  };
+
+  int counter = 0;
+  ASSERT_TRUE(
+    oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &counter));
+  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  EXPECT_EQ(1, counter);
+}
+
+#ifdef OC_COLLECTIONS
+
+#if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
+
+// Observing a collection
+TEST_F(TestObserveCallbackWithServer, ObserveCollection)
+{
+  oc_resource_set_observable(&switches_.collection->res, true);
+  oc_resource_set_observable(switches_.resources[0], true);
+
+  struct observe_data
+  {
+    int counter;
+    int lastObserveOption;
+  };
+  auto observe = [](oc_client_response_t *cr) {
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
+
+    oc::TestDevice::Terminate();
+    auto *od = static_cast<observe_data *>(cr->user_data);
+    od->lastObserveOption = cr->observe_option;
+    ++od->counter;
+
+    std::string json = oc::RepPool::GetJson(cr->payload).data();
+    OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option, json.c_str());
+    // the payload should contain all subresources of the collection
+    for (oc_link_t *link =
+           static_cast<oc_link_t *>(oc_list_head(switches_.collection->links));
+         link != nullptr; link = link->next) {
+      std::string href =
+        std::string("\"href\":\"") + oc_string(link->resource->uri) + "\"";
+      OC_DBG("find link(%s)", href.c_str());
+      EXPECT_TRUE(json.find(href) != std::string::npos);
+    }
+  };
+
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+  observe_data od{};
+  ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), ep,
+                            nullptr, observe, HIGH_QOS, &od));
+  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  EXPECT_EQ(1, od.counter);
+  EXPECT_EQ(0, od.lastObserveOption);
+
+  od.counter = 0;
+  ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri), ep));
+  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  EXPECT_EQ(1, od.counter);
+  EXPECT_EQ(-1, od.lastObserveOption);
+}
+
+// TODO fix:
+// for SECURE device
+//    a) must own -> coap_notify_observers_internal: device not in RFNOP;
+//    skipping notification b) cannot just self-own and use anon connection -
+//    oc_sec_check_acl: anon-clear access to vertical resources is prohibited
+
+#ifndef OC_SECURITY
+
+TEST_F(TestObserveCallbackWithServer, PeriodicObserveCollection)
+{
+  //   auto interval = 1s;
+  //   oc_resource_set_periodic_observable(&switches_.collection->res,
+  //                                       interval.count());
+  // #ifdef OC_SECURITY
+  //   oc_sec_self_own(kDeviceID);
+  // #endif // OC_SECURITY
+
+  //   struct observe_data
+  //   {
+  //     int counter;
+  //     int lastObserveOption;
+  //   };
+  //   auto observe = [](oc_client_response_t *cr) {
+  //     EXPECT_EQ(OC_STATUS_OK, cr->code);
+  //     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
+  //            oc::RepPool::GetJson(cr->payload).data());
+  //     auto *od = static_cast<observe_data *>(cr->user_data);
+  //     od->lastObserveOption = cr->observe_option;
+  //     ++od->counter;
+  //     if (cr->observe_option == -1) {
+  //       oc::TestDevice::Terminate();
+  //     }
+  //   };
+
+  //   const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0,
+  //   SECURED); ASSERT_NE(nullptr, ep); observe_data od{};
+  //   ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), ep,
+  //                             "if=" OC_IF_BASELINE_STR, observe, HIGH_QOS,
+  //                             &od));
+  //   oc::TestDevice::PoolEventsMs(std::chrono::milliseconds(interval).count()
+  //   *
+  //                                2.5f);
+  //   EXPECT_LE(3, od.counter);
+  //   EXPECT_EQ(1, oc_periodic_observe_callback_count());
+
+  //   od.counter = 0;
+  //   ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri),
+  //   ep));
+
+  //   oc::TestDevice::PoolEvents(std::chrono::seconds(2).count());
+
+  // #ifdef OC_SECURITY
+  //   oc_reset_device_v1(kDeviceID, true);
+  //   // need to wait for closing of TLS sessions
+  //   oc::TestDevice::PoolEventsMs(200);
+  // #endif // OC_SECURITY
+}
+
+TEST_F(TestObserveCallbackWithServer, PeriodicBatchObserveCollection)
+{
+  // TODO:
+  // add a collection with multiple subresources
+  // make it periodically observable
+  // wait for observation notifications of all subresources
+}
+
+#endif // OC_SECURITY
+
+#endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+#endif // OC_COLLECTIONS
 
 #endif // OC_SERVER
