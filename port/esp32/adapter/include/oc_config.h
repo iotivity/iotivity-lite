@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+#define OC_HAVE_TIME_H
+#define OC_HAVE_CLOCKID_T
+
 /* jitter added to response to some multicast requests */
 #define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
 

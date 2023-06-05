@@ -261,13 +261,29 @@ OC_API
 int oc_main_init(const oc_handler_t *handler);
 
 /**
- * poll to process tasks
+ * @brief Poll to process tasks
  *
- * @return
- *  - time for the next poll event
+ * @return Time for the next poll event in monotonic time
+ *
+ * @note The underlying implementation uses monotonic to keep track of time. To
+ * calculate the remaining time until the next poll event use
+ * oc_clock_time_monotonic().
+ *
+ * \see oc_clock_time_monotonic
  */
 OC_API
-oc_clock_time_t oc_main_poll(void);
+oc_clock_time_t oc_main_poll_v1(void);
+
+/**
+ * Poll to process tasks
+ *
+ * @return Time for the next poll event in absolute time
+ *
+ * @deprecated replaced by oc_main_poll_v1 in v2.2.5.6
+ */
+OC_API
+oc_clock_time_t oc_main_poll(void)
+  OC_DEPRECATED("replaced by oc_main_poll_v1 in v2.2.5.6");
 
 /**
  * Shutdown and free all stack related resources

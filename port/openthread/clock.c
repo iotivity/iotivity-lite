@@ -43,6 +43,12 @@ oc_clock_time(void)
   return (uint64_t)high_time << 32 | time;
 }
 
+bool
+oc_clock_time_has_monotonic_clock(void)
+{
+  return false;
+}
+
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {

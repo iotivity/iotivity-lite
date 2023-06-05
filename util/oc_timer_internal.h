@@ -71,6 +71,13 @@ struct oc_timer
 };
 
 /**
+ * \brief Get the current time in ticks
+ *
+ * \return The current time in ticks
+ */
+oc_clock_time_t oc_timer_now(void);
+
+/**
  * Set a timer.
  *
  * This function is used to set a timer for a time sometime in the

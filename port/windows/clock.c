@@ -89,6 +89,12 @@ oc_clock_time(void)
   return oc_clock_time_from_filetime(ftime);
 }
 
+bool
+oc_clock_time_has_monotonic_clock(void)
+{
+  return true;
+}
+
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {

@@ -31,14 +31,17 @@
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #include <errno.h>
-#include <getopt.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdarg.h>
 
+#ifndef _MSC_VER
+#include <getopt.h>
+#endif /* _MSC_VER */
+
 static int quit;
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #include <windows.h>
 
 static CONDITION_VARIABLE cv;
@@ -53,6 +56,7 @@ signal_event_loop(void)
 static void
 handle_signal(int signal)
 {
+  (void)signal;
   signal_event_loop();
   quit = 1;
 }
@@ -72,14 +76,14 @@ run(void)
 {
   while (quit != 1) {
     EnterCriticalSection(&cs);
-    oc_clock_time_t next_event = oc_main_poll();
-    if (next_event == 0) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
     } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
     LeaveCriticalSection(&cs);
@@ -87,6 +91,7 @@ run(void)
 }
 
 #elif defined(__linux__) || defined(__ANDROID_API__)
+#include <math.h>
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/types.h> // suseconds_t
@@ -122,10 +127,28 @@ init(void)
   sigaction(SIGPIPE, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
 
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
-    OC_PRINTF("ERROR: pthread_mutex_init failed!\n");
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
     return -1;
   }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    return -1;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    return -1;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    return -1;
+  }
+  (void)pthread_condattr_destroy(&attr);
   return 0;
 }
 
@@ -133,15 +156,18 @@ static void
 run(void)
 {
   while (quit != 1) {
-    oc_clock_time_t next_event = oc_main_poll();
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      struct timespec ts;
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -1113,6 +1139,13 @@ parse_port(const char *port, uint16_t *p, bool *disabled)
 static bool
 parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 {
+#ifdef _MSC_VER
+  // TODO: parse options for MSVC using shellapi.h
+  (void)parsed_options;
+  (void)printhelp;
+  (void)parse_log_level;
+  (void)parse_port;
+#else /* !_MSC_VER */
   static struct option long_options[] = {
     { OPT_HELP, no_argument, NULL, 'h' },
     { OPT_DEVICE_NAME, required_argument, NULL, 'n' },
@@ -1212,9 +1245,8 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     }
 #ifdef OC_HAS_FEATURE_PLGD_TIME
     case 't': {
-      oc_clock_time_t time =
-        oc_clock_parse_time_rfc3339(optarg, strlen(optarg));
-      if (time == 0) {
+      oc_clock_time_t time;
+      if (!oc_clock_parse_time_rfc3339_v1(optarg, strlen(optarg), &time)) {
         OC_PRINTF("invalid plgd time value(%s)\n", optarg);
         return false;
       }
@@ -1363,6 +1395,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
   for (int i = 1; i < argc; ++i, ++optind) {
     argv[i] = argv[optind];
   }
+#endif /* _MSC_VER */
   if (argc > 1) {
     device_name = argv[1];
   }

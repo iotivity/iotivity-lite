@@ -225,7 +225,9 @@ void oc_etimer_stop(struct oc_etimer *et) OC_NONNULL();
  *             function would be called from the timer interrupt
  *             handler when the clock has ticked.
  *
- * \return     Absolute time
+ * \note       Internally, monotonic clock is used for event timers.
+ *
+ * \return     Next timer expiration time.
  */
 oc_clock_time_t oc_etimer_request_poll(void);
 

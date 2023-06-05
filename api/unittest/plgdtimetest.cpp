@@ -284,15 +284,29 @@ public:
       }
       if (oc_rep_is_property(rep, PLGD_TIME_PROP_TIME,
                              OC_CHAR_ARRAY_LEN(PLGD_TIME_PROP_TIME))) {
-        pt.time = oc_clock_parse_time_rfc3339(oc_string(rep->value.string),
-                                              oc_string_len(rep->value.string));
+        oc_clock_time_t time;
+        if (!oc_clock_parse_time_rfc3339_v1(oc_string(rep->value.string),
+                                            oc_string_len(rep->value.string),
+                                            &time)) {
+          OC_ERR("cannot parse %s(%s)", oc_string(rep->name),
+                 oc_string(rep->value.string));
+          continue;
+        }
+        pt.time = time;
         continue;
       }
       if (oc_rep_is_property(
             rep, PLGD_TIME_PROP_LAST_SYNCED_TIME,
             OC_CHAR_ARRAY_LEN(PLGD_TIME_PROP_LAST_SYNCED_TIME))) {
-        pt.lst = oc_clock_parse_time_rfc3339(oc_string(rep->value.string),
-                                             oc_string_len(rep->value.string));
+        oc_clock_time_t lst;
+        if (!oc_clock_parse_time_rfc3339_v1(oc_string(rep->value.string),
+                                            oc_string_len(rep->value.string),
+                                            &lst)) {
+          OC_ERR("cannot parse %s(%s)", oc_string(rep->name),
+                 oc_string(rep->value.string));
+          continue;
+        }
+        pt.lst = lst;
         continue;
       }
       if (oc_rep_is_property(rep, PLGD_TIME_PROP_STATUS,
@@ -300,7 +314,8 @@ public:
         int status = plgd_time_status_from_str(
           oc_string(rep->value.string), oc_string_len(rep->value.string));
         if (status == -1) {
-          OC_ERR("cannot parse status(%s)", oc_string(rep->value.string));
+          OC_ERR("cannot parse %s(%s)", oc_string(rep->name),
+                 oc_string(rep->value.string));
           continue;
         }
         pt.status = status;

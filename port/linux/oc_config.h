@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+#define OC_HAVE_TIME_H
+#define OC_HAVE_CLOCKID_T
+
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
 

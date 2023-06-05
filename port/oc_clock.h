@@ -53,6 +53,8 @@
 #define OC_PORT_CLOCK_H
 
 #include "oc_clock_util.h"
+#include "oc_export.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -75,8 +77,8 @@ extern "C" {
  *
  * This function initializes the clock library and should be called
  * from the main() function of the system.
- *
  */
+OC_API
 void oc_clock_init(void);
 
 /**
@@ -86,7 +88,17 @@ void oc_clock_init(void);
  *
  * \return The current clock time, measured in system ticks.
  */
+OC_API
 oc_clock_time_t oc_clock_time(void);
+
+/**
+ * Check if the platform supports a monotonic clock.
+ *
+ * \return true if the platform supports a monotonic clock
+ * \return false otherwise
+ */
+OC_API
+bool oc_clock_time_has_monotonic_clock(void);
 
 /**
  * Get the current monotonic clock time.
@@ -96,7 +108,14 @@ oc_clock_time_t oc_clock_time(void);
  * effected by any changes in system.
  *
  * \return The current clock monotonic time, measured in system ticks.
+ *
+ * \note If the platform does not support a monotonic clock, this function
+ * returns the same value as oc_clock_time().
+ *
+ * \see oc_clock_time_has_monotonic_clock()
+ * \see oc_clock_time()
  */
+OC_API
 oc_clock_time_t oc_clock_time_monotonic(void);
 
 /**
@@ -107,13 +126,15 @@ oc_clock_time_t oc_clock_time_monotonic(void);
  *
  * \return The value.
  */
+OC_API
 unsigned long oc_clock_seconds(void);
 
 /**
  * Wait for a given number of ticks.
- * \param t   How many ticks.
  *
+ * \param t   How many ticks.
  */
+OC_API
 void oc_clock_wait(oc_clock_time_t t);
 
 #ifdef __cplusplus

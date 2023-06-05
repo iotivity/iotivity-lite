@@ -165,7 +165,6 @@ handle_signal(int signal)
 int
 main(void)
 {
-  int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
@@ -176,8 +175,6 @@ main(void)
                                         .signal_event_loop = signal_event_loop,
                                         .requests_entry = issue_requests };
 
-  oc_clock_time_t next_event;
-
 #ifdef OC_STORAGE
   oc_storage_config("./client_block_linux_creds");
 #endif /* OC_STORAGE */
@@ -185,12 +182,13 @@ main(void)
   oc_set_mtu_size(300);
   oc_set_max_app_data_size(2048);
 
-  init = oc_main_init(&handler);
-  if (init < 0)
+  int init = oc_main_init(&handler);
+  if (init < 0) {
     return init;
+  }
 
   while (quit != 1) {
-    next_event = oc_main_poll();
+    oc_clock_time_t next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);

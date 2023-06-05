@@ -41,7 +41,8 @@
 #include "util/oc_timer_internal.h"
 
 static struct oc_etimer *g_timerlist;
-static oc_clock_time_t g_next_expiration;
+static oc_clock_time_t
+  g_next_expiration; ///< next expiration time in monotonic clock ticks
 
 OC_PROCESS(oc_etimer_process, "Event timer");
 
@@ -54,7 +55,7 @@ etimer_update_time(void)
     return;
   }
 
-  oc_clock_time_t now = oc_clock_time();
+  oc_clock_time_t now = oc_timer_now();
   struct oc_etimer *t = g_timerlist;
   /* Must calculate distance to next time into account due to wraps */
   oc_clock_time_t tdist = oc_timer_until(&t->timer, now);

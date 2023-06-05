@@ -22,7 +22,14 @@
 #define OC_CLOCK_UTIL_H
 
 #include "oc_config.h"
+#include "oc_export.h"
+#include "util/oc_compiler.h"
+#include <stdbool.h>
 #include <stddef.h>
+
+#ifdef OC_HAVE_TIME_H
+#include <time.h>
+#endif /* OC_HAVE_TIME_H */
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +42,8 @@ extern "C" {
  * @param out_buf_len buffer lenght of the allocated buffer
  * @return size_t used buffer size
  */
-size_t oc_clock_time_rfc3339(char *out_buf, size_t out_buf_len);
+OC_API
+size_t oc_clock_time_rfc3339(char *out_buf, size_t out_buf_len) OC_NONNULL();
 
 /**
  * @brief encode time as rfc3339 time
@@ -45,18 +53,66 @@ size_t oc_clock_time_rfc3339(char *out_buf, size_t out_buf_len);
  * @param out_buf_len the allocated buffer size
  * @return size_t the used buffer size
  */
+OC_API
 size_t oc_clock_encode_time_rfc3339(oc_clock_time_t time, char *out_buf,
-                                    size_t out_buf_len);
+                                    size_t out_buf_len) OC_NONNULL();
 
 /**
  * @brief parse rfc3339 time into oc_clock format
  *
  * @param in_buf buffer with rfc3339 time
  * @param in_buf_len the lenght of the buffer
- * @return oc_clock_time_t the clock time
+ * @param[out] time the parsed time (cannot be NULL)
+ *
+ * @return true if parsing was successful
+ * @return false otherwise
  */
+OC_API
+bool oc_clock_parse_time_rfc3339_v1(const char *in_buf, size_t in_buf_len,
+                                    oc_clock_time_t *time) OC_NONNULL();
+
+/**
+ * @brief parse rfc3339 time into oc_clock format
+ *
+ * @warning this implementation cannot distinguish between parsing errors and
+ * the start of UNIX epoch (1970-01-01T00:00:00Z) and returns 0 in both cases.
+ *
+ * @deprecated replaced by oc_clock_parse_time_rfc3339_v1 in 2.2.5.6
+ */
+OC_API
 oc_clock_time_t oc_clock_parse_time_rfc3339(const char *in_buf,
-                                            size_t in_buf_len);
+                                            size_t in_buf_len)
+  OC_DEPRECATED("replaced by oc_clock_parse_time_rfc3339_v1 in v2.2.5.6");
+
+#ifdef OC_HAVE_TIME_H
+
+/**
+ * @brief Convert clock time into a C struct timespec.
+ */
+OC_API
+struct timespec oc_clock_time_to_timespec(oc_clock_time_t time);
+
+#ifdef OC_HAVE_CLOCKID_T
+
+/**
+ * @brief Convert monotonic oc_clock time into a clock time with an offset of
+ * the defined POSIX clock.
+ *
+ * @param time_mt clock time retrieved by oc_clock_time_monotonic()
+ * @param clock_id POSIX clock ID
+ * @param[out] time clock time with an offset of the defined POSIX clock (cannot
+ * be NULL)
+ * @return true on success
+ * @return false on failure
+ */
+OC_API
+bool oc_clock_monotonic_time_to_posix(oc_clock_time_t time_mt,
+                                      clockid_t clock_id, oc_clock_time_t *time)
+  OC_NONNULL();
+
+#endif /* OC_HAVE_CLOCKID_T */
+
+#endif /* OC_HAVE_TIME_H */
 
 #ifdef __cplusplus
 }
