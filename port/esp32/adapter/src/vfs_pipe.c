@@ -21,6 +21,7 @@
 #include "esp_vfs.h"
 #include "esp_vfs_dev.h"
 #include "port/oc_assert.h"
+#include "port/oc_log_internal.h"
 #include "sdkconfig.h"
 #include <stdarg.h>
 #include <stdbool.h>

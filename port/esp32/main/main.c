@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_esp.h"
+#include "oc_log.h"
 #include "oc_pki.h"
 #include "util/oc_features.h"
 

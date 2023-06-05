@@ -26,6 +26,7 @@
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
 #include "port/oc_assert.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
