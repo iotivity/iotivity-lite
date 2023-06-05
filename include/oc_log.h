@@ -54,7 +54,7 @@ extern "C" {
 #define OC_LOG_LEVEL_TRACE_MACRO (8)
 
 #ifdef __ANDROID__
-#include "android/oc_log_android.h"
+#include "port/android/oc_log_android.h"
 #define TAG "OC-JNI"
 #ifndef PRINT
 #define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)

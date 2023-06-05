@@ -24,7 +24,6 @@
 #include "oc_pki.h"
 #include "oc_acl.h"
 #include "oc_log.h"
-#include "oc_log.h"
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
