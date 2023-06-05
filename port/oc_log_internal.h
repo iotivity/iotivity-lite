@@ -59,14 +59,6 @@
 #endif
 #endif /* !__FILENAME__ */
 
-#ifndef SPRINTF
-#define SPRINTF(...) sprintf(__VA_ARGS__)
-#endif /* !SPRINTF */
-
-#ifndef SNPRINTF
-#define SNPRINTF(...) snprintf(__VA_ARGS__)
-#endif /* !SNPRINTF */
-
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
 
@@ -173,8 +165,9 @@
     /* without _oc_log_ret = 9 has sometimes */                                \
     uint8_t *_oc_log_data = (uint8_t *)(data);                                 \
     for (size_t i = 0; (beg <= (end - 3)) && (i < (size_t)(len)); i++) {       \
-      int _oc_log_ret = (i == 0) ? SPRINTF(beg, "%02x", _oc_log_data[i])       \
-                                 : SPRINTF(beg, ":%02x", _oc_log_data[i]);     \
+      int _oc_log_ret =                                                        \
+        (i == 0) ? SNPRINTF(beg, end - beg, "%02x", _oc_log_data[i])           \
+                 : SNPRINTF(beg, end - beg, ":%02x", _oc_log_data[i]);         \
       if (_oc_log_ret < 0) {                                                   \
         break;                                                                 \
       }                                                                        \
