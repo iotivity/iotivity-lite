@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>

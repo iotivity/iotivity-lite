@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include "util/oc_macros.h"
 #if defined(_WIN32)
 #include <windows.h>

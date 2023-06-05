@@ -28,6 +28,7 @@
 #include "oc_api.h"
 #include "oc_instance.h"
 #include "port/oc_assert.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 
 otInstance *ot_instance;
 

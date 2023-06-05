@@ -24,6 +24,7 @@
 #include "oc_pki.h"
 #include "oc_acl.h"
 #include "oc_log.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -844,14 +845,14 @@ simulate_tpm_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
     }
     FILE *f = fopen(buf, "r");
     if (!f) {
-      OC_ERR("simulate_tpm_mbedtls_pk_parse_key: fopen failed: %s", buf);
+      PRINT("ERROR: simulate_tpm_mbedtls_pk_parse_key: fopen failed: %s", buf);
       return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
     uint8_t identity_private_key[4096];
     int ret = fread(identity_private_key, 1, sizeof(identity_private_key), f);
     fclose(f);
     if (ret < 0) {
-      OC_ERR("simulate_tpm_mbedtls_pk_parse_key: fread failed: %s", buf);
+      PRINT("ERROR: simulate_tpm_mbedtls_pk_parse_key: fread failed: %s", buf);
       return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
     return mbedtls_pk_parse_key(pk, identity_private_key, ret, NULL, 0, f_rng,
@@ -930,13 +931,13 @@ simulate_tpm_mbedtls_pk_ecp_gen_key(
             fwrite(identity_private_key + sizeof(identity_private_key) - ret, 1,
                    ret, f);
           if (ret < 0) {
-            OC_ERR(
-              "simulate_tpm_mbedtls_pk_ecp_gen_key: could not write to file %s",
+            PRINT(
+              "ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not write to file %s",
               buf);
           }
           fclose(f);
         } else {
-          OC_ERR("simulate_tpm_mbedtls_pk_ecp_gen_key: could not open file %s",
+          PRINT("ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not open file %s",
                  buf);
         }
       }
@@ -952,10 +953,10 @@ simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
   (void)device;
   char buf[256];
   if (!get_file("", key, keylen, buf, sizeof(buf))) {
-    OC_ERR("simulate_tpm_pk_free_key: could not get file name");
+    PRINT("ERROR: simulate_tpm_pk_free_key: could not get file name");
   }
   if (remove(buf) != 0) {
-    OC_ERR("simulate_tpm_pk_free_key: could not remove file %s", buf);
+    PRINT("ERROR: simulate_tpm_pk_free_key: could not remove file %s", buf);
   }
   return true;
 }

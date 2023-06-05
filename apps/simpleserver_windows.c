@@ -20,6 +20,7 @@
 #include "oc_core_res.h"
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include <signal.h>
 #include <windows.h>
 

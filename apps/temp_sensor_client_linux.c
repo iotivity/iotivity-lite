@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include <inttypes.h>
 
 static int

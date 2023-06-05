@@ -23,6 +23,7 @@
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h" // TODO: need to be removed
 #include "util/oc_macros.h"
 #include <pthread.h>
 #include <signal.h>
