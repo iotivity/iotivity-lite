@@ -21,6 +21,7 @@
 #include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_csr.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_keypair_internal.h"

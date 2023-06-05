@@ -20,6 +20,7 @@
 
 #include "oc_certs.h"
 #include "oc_uuid.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_certs_validate_internal.h"

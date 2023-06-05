@@ -25,6 +25,7 @@
 #include "oc_network_monitor.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"

@@ -23,6 +23,7 @@
 #include "oc_obt.h"
 #include "oc_uuid.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
