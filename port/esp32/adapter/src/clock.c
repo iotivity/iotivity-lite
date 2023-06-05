@@ -42,10 +42,16 @@ oc_clock_time(void)
   return time;
 }
 
+bool
+oc_clock_time_has_monotonic_clock(void)
+{
+  return true;
+}
+
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
-  // return esp_timer_get_time returns microseconds from the boot time
+  // esp_timer_get_time returns microseconds from the boot time
   return (oc_clock_time_t)ceil(
     (double)(esp_timer_get_time() / (1.e06 / OC_CLOCK_SECOND)));
 }

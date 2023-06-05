@@ -467,9 +467,9 @@ plgd_time_decode(const oc_rep_t *rep, plgd_time_t *pt)
     return false;
   }
 
-  oc_clock_time_t lst = oc_clock_parse_time_rfc3339(
-    oc_string(*lst_rfc3339), oc_string_len(*lst_rfc3339));
-  if (lst == 0) {
+  oc_clock_time_t lst;
+  if (!oc_clock_parse_time_rfc3339_v1(oc_string(*lst_rfc3339),
+                                      oc_string_len(*lst_rfc3339), &lst)) {
     return false;
   }
   pt->store.last_synced_time = lst;
@@ -689,8 +689,8 @@ dev_time_parse_fetch_response(const oc_rep_t *rep, oc_clock_time_t *time)
     return false;
   }
 
-  oc_clock_time_t ct = oc_clock_parse_time_rfc3339(time_str, time_str_len);
-  if (ct == (oc_clock_time_t)-1) {
+  oc_clock_time_t ct;
+  if (!oc_clock_parse_time_rfc3339_v1(time_str, time_str_len, &ct)) {
     OC_ERR("fetch plgd-time failed: parse clock time from string(%s)",
            time_str);
     return false;

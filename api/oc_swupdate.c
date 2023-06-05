@@ -471,13 +471,14 @@ swupdate_decode_int_property(const oc_rep_t *rep, int flags,
   return false;
 }
 
-static oc_clock_time_t
-swupdate_decode_timestamp(const oc_string_t *value)
+static bool
+swupdate_decode_timestamp(const oc_string_t *value, oc_clock_time_t *time)
 {
   if (oc_string_len(*value) >= 63) {
-    return (oc_clock_time_t)-1;
+    return false;
   }
-  return oc_clock_parse_time_rfc3339(oc_string(*value), oc_string_len(*value));
+  return oc_clock_parse_time_rfc3339_v1(oc_string(*value),
+                                        oc_string_len(*value), time);
 }
 
 static bool
@@ -503,8 +504,8 @@ swupdate_decode_update_time(const oc_rep_t *rep, int flags,
       return true;
     }
   }
-  oc_clock_time_t updatetime = swupdate_decode_timestamp(&rep->value.string);
-  if (updatetime == (oc_clock_time_t)-1) {
+  oc_clock_time_t updatetime;
+  if (!swupdate_decode_timestamp(&rep->value.string, &updatetime)) {
     OC_ERR("swupdate: invalid updatetime property(%s)",
            oc_string(rep->value.string));
     return false;
@@ -576,8 +577,8 @@ swupdate_decode_string_property(const oc_rep_t *rep, int flags,
       /* Read-only property */
       return false;
     }
-    oc_clock_time_t lastupdate = swupdate_decode_timestamp(&rep->value.string);
-    if (lastupdate == (oc_clock_time_t)-1) {
+    oc_clock_time_t lastupdate;
+    if (!swupdate_decode_timestamp(&rep->value.string, &lastupdate)) {
       OC_ERR("swupdate: invalid lastupdate property(%s)",
              oc_string(rep->value.string));
       return false;

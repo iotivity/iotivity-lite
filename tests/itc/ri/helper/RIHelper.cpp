@@ -78,7 +78,7 @@ RIHelper::waitForEvent()
 {
   while (s_generalQuit != 1) {
     OC_PRINTF("waitforevent\n");
-    oc_main_poll();
+    oc_main_poll_v1();
     sleep(1);
   }
 }

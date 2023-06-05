@@ -29,10 +29,16 @@ oc_clock_time(void)
   return k_uptime_get();
 }
 
+bool
+oc_clock_time_has_monotonic_clock(void)
+{
+  return false;
+}
+
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {
-  return -1;
+  return oc_clock_time();
 }
 
 unsigned long

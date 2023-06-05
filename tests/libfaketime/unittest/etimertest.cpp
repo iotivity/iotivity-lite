@@ -98,23 +98,22 @@ OC_PROCESS_THREAD(oc_test_process, ev, data)
 // expire only after the timer interval passes
 TEST_F(TestEventTimer, ChangeSystemTimeForwards)
 {
-  // TODO
-  //   oc_etimer et{};
-  //   auto interval = oc::DurationToTicks(200ms);
-  //   OC_PROCESS_CONTEXT_BEGIN(&oc_test_process)
-  //   oc_etimer_set(&et, interval);
-  //   OC_PROCESS_CONTEXT_END(&oc_test_process)
+  oc_etimer et{};
+  auto interval = oc::DurationToTicks(200ms);
+  OC_PROCESS_CONTEXT_BEGIN(&oc_test_process)
+  oc_etimer_set(&et, interval);
+  OC_PROCESS_CONTEXT_END(&oc_test_process)
 
-  //   oc_clock_time_t start = oc_clock_time();
-  //   ASSERT_TRUE(oc::SetSystemTime(start, std::chrono::seconds{ 1 }));
-  //   OC_INFO("time change");
+  oc_clock_time_t start = oc_clock_time();
+  ASSERT_TRUE(oc::SetSystemTime(start, std::chrono::seconds{ 1 }));
+  OC_INFO("time change");
 
-  //   TestEventTimer::Poll();
-  //   EXPECT_FALSE(oc_etimer_expired(&et));
+  TestEventTimer::Poll();
+  EXPECT_FALSE(oc_etimer_expired(&et));
 
-  //   oc_clock_wait(interval + 10);
-  //   TestEventTimer::Poll();
-  //   EXPECT_TRUE(oc_etimer_expired(&et));
+  oc_clock_wait(interval + 10);
+  TestEventTimer::Poll();
+  EXPECT_TRUE(oc_etimer_expired(&et));
 }
 
 // Move the system time to the past
@@ -123,21 +122,20 @@ TEST_F(TestEventTimer, ChangeSystemTimeForwards)
 // expire after the given interval passes regardless of the absolute time
 TEST_F(TestEventTimer, ChangeSystemTimeBackwards)
 {
-  // TODO
-  //   oc_etimer et{};
-  //   auto interval = oc::DurationToTicks(200ms);
-  //   OC_PROCESS_CONTEXT_BEGIN(&oc_test_process)
-  //   oc_etimer_set(&et, interval);
-  //   OC_PROCESS_CONTEXT_END(&oc_test_process)
+  oc_etimer et{};
+  auto interval = oc::DurationToTicks(200ms);
+  OC_PROCESS_CONTEXT_BEGIN(&oc_test_process)
+  oc_etimer_set(&et, interval);
+  OC_PROCESS_CONTEXT_END(&oc_test_process)
 
-  //   oc_clock_time_t start = oc_clock_time();
-  //   ASSERT_TRUE(oc::SetSystemTime(start, std::chrono::seconds{ -1 }));
-  //   OC_INFO("time change");
+  oc_clock_time_t start = oc_clock_time();
+  ASSERT_TRUE(oc::SetSystemTime(start, std::chrono::seconds{ -1 }));
+  OC_INFO("time change");
 
-  //   TestEventTimer::Poll();
-  //   ASSERT_FALSE(oc_etimer_expired(&et));
+  TestEventTimer::Poll();
+  ASSERT_FALSE(oc_etimer_expired(&et));
 
-  //   oc_clock_wait(interval + 10);
-  //   TestEventTimer::Poll();
-  //   EXPECT_TRUE(oc_etimer_expired(&et));
+  oc_clock_wait(interval + 10);
+  TestEventTimer::Poll();
+  EXPECT_TRUE(oc_etimer_expired(&et));
 }

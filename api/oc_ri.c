@@ -1581,8 +1581,9 @@ oc_ri_shutdown(void)
   oc_blockwise_scrub_buffers(true);
 #endif /* OC_BLOCK_WISE */
 
-  while (oc_main_poll() != 0)
+  while (oc_main_poll_v1() != 0) {
     ;
+  }
 
   stop_processes();
 

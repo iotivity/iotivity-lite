@@ -117,7 +117,7 @@ TEST_F(TestEventTimer, Set)
   oc_etimer_set(&et, interval);
   OC_PROCESS_CONTEXT_END(&oc_test_process_1)
 
-  EXPECT_GE(oc_clock_time(), oc_etimer_start_time(&et));
+  EXPECT_GE(oc_timer_now(), oc_etimer_start_time(&et));
   EXPECT_EQ(oc_etimer_start_time(&et) + interval,
             oc_etimer_expiration_time(&et));
 
@@ -137,7 +137,7 @@ TEST_F(TestEventTimer, MultipleSet)
   oc_etimer_set(&et1, interval);
   OC_PROCESS_CONTEXT_END(&oc_test_process_1)
 
-  EXPECT_GE(oc_clock_time(), oc_etimer_start_time(&et1));
+  EXPECT_GE(oc_timer_now(), oc_etimer_start_time(&et1));
   EXPECT_EQ(oc_etimer_start_time(&et1) + interval,
             oc_etimer_expiration_time(&et1));
 
@@ -217,7 +217,7 @@ TEST_F(TestEventTimer, CleanUpExitedProcess)
   oc_clock_time_t next_event;
   do {
     next_event = TestEventTimer::Poll();
-    oc_clock_time_t now = oc_clock_time();
+    oc_clock_time_t now = oc_timer_now();
     oc_clock_time_t wait = 0;
     if (next_event > now) {
       wait = next_event - now;
@@ -267,7 +267,7 @@ TEST_F(TestEventTimer, TimersNextExpirationTime)
 
   oc_clock_time_t et2_exp = oc_timer_remaining(&et2.timer);
   ASSERT_NE(static_cast<oc_clock_time_t>(-1), et2_exp);
-  oc_clock_time_t now = oc_clock_time();
+  oc_clock_time_t now = oc_timer_now();
   // et2 is expiring sooner, so the next expiration time should be based on et2
   oc_clock_time_t exp1 = oc_etimer_next_expiration_time();
   EXPECT_LE(exp1, now + et2_exp);
@@ -277,7 +277,7 @@ TEST_F(TestEventTimer, TimersNextExpirationTime)
   oc_clock_time_t exp2 = oc_etimer_next_expiration_time();
   EXPECT_GT(exp2, exp1);
 
-  now = oc_clock_time();
+  now = oc_timer_now();
   ASSERT_GT(exp2, now);
   oc_clock_wait(exp2 - now + oc::DurationToTicks(2ms));
 

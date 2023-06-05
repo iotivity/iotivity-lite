@@ -41,6 +41,12 @@ oc_clock_time(void)
   return time * OC_CLOCK_SECOND;
 }
 
+bool
+oc_clock_time_has_monotonic_clock(void)
+{
+  return false;
+}
+
 oc_clock_time_t
 oc_clock_time_monotonic(void)
 {

@@ -1,5 +1,17 @@
 project(iotivity-lite-apps)
 
+
+# platform-independent applications
+if(OC_CLOUD_ENABLED)
+    add_executable(cloud_server
+        ${PROJECT_SOURCE_DIR}/cloud_server.c
+    )
+    target_compile_options(cloud_server PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+    target_link_libraries(cloud_server client-server-static)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/cloud_server_creds)
+endif()
+
+# platform-specific applications
 if(UNIX)
     add_executable(simpleserver
         ${PROJECT_SOURCE_DIR}/simpleserver.c
@@ -137,13 +149,6 @@ if(UNIX)
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/client_certification_tests_creds)
 
     if(OC_CLOUD_ENABLED)
-        add_executable(cloud_server
-            ${PROJECT_SOURCE_DIR}/cloud_server.c
-        )
-        target_compile_options(cloud_server PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-        target_link_libraries(cloud_server client-server-static)
-        file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/cloud_server_creds)
-
         add_executable(cloud_client
             ${PROJECT_SOURCE_DIR}/cloud_client.c
         )

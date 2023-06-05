@@ -393,13 +393,31 @@ err:
 }
 
 oc_clock_time_t
+oc_main_poll_v1(void)
+{
+  oc_clock_time_t next_event_mt = oc_etimer_request_poll();
+  while (oc_process_run() != 0) {
+    next_event_mt = oc_etimer_request_poll();
+  }
+  return next_event_mt;
+}
+
+oc_clock_time_t
 oc_main_poll(void)
 {
-  oc_clock_time_t ticks_until_next_event = oc_etimer_request_poll();
-  while (oc_process_run()) {
-    ticks_until_next_event = oc_etimer_request_poll();
+  oc_clock_time_t next_event_mt = oc_main_poll_v1();
+  if (next_event_mt == 0) {
+    return 0;
   }
-  return ticks_until_next_event;
+  // if the platform does not have a monotonic clock, then the ticks are already
+  // in absolute time
+  if (!oc_clock_time_has_monotonic_clock()) {
+    return next_event_mt;
+  }
+  // translate monotononic time to system time
+  oc_clock_time_t now_mt = oc_clock_time_monotonic();
+  oc_clock_time_t now = oc_clock_time();
+  return (oc_clock_time_t)((int64_t)(next_event_mt - now_mt) + (int64_t)now);
 }
 
 void
