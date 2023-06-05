@@ -26,6 +26,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
 #include "oc_buffer.h"

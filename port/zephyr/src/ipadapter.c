@@ -18,6 +18,7 @@
 
 #include "api/oc_network_events_internal.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"

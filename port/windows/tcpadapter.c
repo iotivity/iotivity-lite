@@ -21,6 +21,7 @@
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
 #include "port/oc_assert.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_memb.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap.h"
