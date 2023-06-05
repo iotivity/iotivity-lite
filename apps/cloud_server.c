@@ -930,14 +930,15 @@ simulate_tpm_mbedtls_pk_ecp_gen_key(
             fwrite(identity_private_key + sizeof(identity_private_key) - ret, 1,
                    ret, f);
           if (ret < 0) {
-            PRINT(
-              "ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not write to file %s",
-              buf);
+            PRINT("ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not write "
+                  "to file %s",
+                  buf);
           }
           fclose(f);
         } else {
-          PRINT("ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not open file %s",
-                 buf);
+          PRINT("ERROR: simulate_tpm_mbedtls_pk_ecp_gen_key: could not open "
+                "file %s",
+                buf);
         }
       }
       ret = 0;
