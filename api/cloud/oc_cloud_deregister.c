@@ -30,6 +30,8 @@
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 
+#include "port/oc_log_internal.h"
+
 #ifdef OC_SECURITY
 
 static void

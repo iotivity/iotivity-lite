@@ -104,6 +104,9 @@
     <ClCompile Include="..\..\..\messaging\coap\observe.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_assert.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_base64.c">
       <Filter>Core</Filter>
     </ClCompile>

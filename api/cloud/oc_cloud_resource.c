@@ -27,6 +27,8 @@
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 
+#include "port/oc_log_internal.h"
+
 #define OC_RSRVD_RES_TYPE_COAPCLOUDCONF "oic.r.coapcloudconf"
 #define OC_RSRVD_URI_COAPCLOUDCONF "/CoapCloudConfResURI"
 #define OC_RSRVD_ACCESSTOKEN "at"

@@ -28,6 +28,7 @@
 #include "oc_pstat.h"
 #include "oc_store.h"
 #include "port/oc_assert.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_macros.h"
 
 #include <assert.h>

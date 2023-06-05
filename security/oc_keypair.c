@@ -25,6 +25,7 @@
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_store.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pki_internal.h"
 

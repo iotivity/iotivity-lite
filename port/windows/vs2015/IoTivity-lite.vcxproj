@@ -320,6 +320,7 @@
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c" />
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c" />
     <ClCompile Include="..\..\..\api\cloud\rd_client.c" />
+    <ClCompile Include="..\..\..\api\oc_assert.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />
     <ClCompile Include="..\..\..\api\oc_blockwise.c" />
     <ClCompile Include="..\..\..\api\oc_buffer.c" />

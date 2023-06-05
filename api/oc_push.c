@@ -37,6 +37,7 @@
 #include "oc_rep_internal.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
 #include "util/oc_macros.h"

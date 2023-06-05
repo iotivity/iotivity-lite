@@ -116,4 +116,4 @@ bool oc_cloud_access_refresh_access_token(oc_cloud_access_conf_t conf,
 }
 #endif
 
-#endif /* OC_CLOUD_INTERNAL_H */
+#endif /* OC_CLOUD_ACCESS_H */

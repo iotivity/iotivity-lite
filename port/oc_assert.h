@@ -21,7 +21,6 @@
 #ifndef OC_PORT_ASSERT_H
 #define OC_PORT_ASSERT_H
 
-#include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 
 #ifdef __cplusplus
@@ -46,13 +45,7 @@ void exit_impl(int status) OC_NO_RETURN;
  *
  * @param msg the message to be printed
  */
-OC_NO_RETURN
-static inline void
-oc_abort(const char *msg)
-{
-  PRINT("\n%s\nAbort.\n", msg);
-  abort_impl();
-}
+void oc_abort(const char *msg) OC_NO_RETURN;
 
 /**
  * @brief assert the condition and if it fails abort with message (reason)

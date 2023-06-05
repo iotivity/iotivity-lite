@@ -33,6 +33,8 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
+#include "port/oc_log_internal.h"
+
 #include <assert.h>
 
 OC_LIST(g_cloud_context_list);
