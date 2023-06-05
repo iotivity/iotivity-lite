@@ -146,7 +146,7 @@
 #include "oc_csr.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "port/oc_log_internal.h" // TODO: need to be removed
+#include "oc_log.h"
 #include <signal.h>
 
 #ifdef OC_CLOUD

@@ -22,7 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
-#include "port/oc_log_internal.h" // TODO: need to be removed
+#include "oc_log.h"
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"

@@ -19,7 +19,7 @@
 #include "oc_api.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "port/oc_log_internal.h" // TODO: need to be removed
+#include "oc_log.h"
 #include "security/oc_certs_internal.h"
 #include <pthread.h>
 #include <signal.h>

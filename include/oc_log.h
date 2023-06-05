@@ -53,6 +53,88 @@ extern "C" {
 #define OC_LOG_LEVEL_DEBUG_MACRO (7)
 #define OC_LOG_LEVEL_TRACE_MACRO (8)
 
+#ifdef __ANDROID__
+#include "android/oc_log_android.h"
+#define TAG "OC-JNI"
+#ifndef PRINT
+#define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#endif /* !PRINT */
+#endif /* __ANDROID__ */
+
+#ifndef PRINT
+#include <stdio.h>
+#define PRINT(...) printf(__VA_ARGS__)
+#endif /* !PRINT */
+
+#ifndef SNPRINTF
+#include <stdio.h>
+#define SNPRINTF(...) snprintf(__VA_ARGS__)
+#endif /* !SNPRINTF */
+
+#define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6%scope]:port = 63 bytes
+#define SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)                  \
+  do {                                                                         \
+    const char *scheme = "coap";                                               \
+    if ((endpoint).flags & SECURED)                                            \
+      scheme = "coaps";                                                        \
+    if ((endpoint).flags & TCP)                                                \
+      scheme = "coap+tcp";                                                     \
+    if ((endpoint).flags & TCP && (endpoint).flags & SECURED)                  \
+      scheme = "coaps+tcp";                                                    \
+    memset(str, 0, size);                                                      \
+    if ((endpoint).flags & IPV4) {                                             \
+      SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                       \
+               ((endpoint).addr_memb.ipv4.address)[0],                         \
+               ((endpoint).addr_memb.ipv4.address)[1],                         \
+               ((endpoint).addr_memb.ipv4.address)[2],                         \
+               ((endpoint).addr_memb.ipv4.address)[3],                         \
+               (endpoint).addr_memb.ipv4.port);                                \
+    } else {                                                                   \
+      char scope[5] = { 0 };                                                   \
+      if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
+        SNPRINTF(scope, sizeof(scope), "%%%d",                                 \
+                 (int)(endpoint).addr_memb.ipv6.scope);                        \
+      }                                                                        \
+      SNPRINTF(                                                                \
+        str, size,                                                             \
+        "%s://"                                                                \
+        "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
+        "%02x%02x%s]:%d",                                                      \
+        scheme, ((endpoint).addr_memb.ipv6.address)[0],                        \
+        ((endpoint).addr_memb.ipv6.address)[1],                                \
+        ((endpoint).addr_memb.ipv6.address)[2],                                \
+        ((endpoint).addr_memb.ipv6.address)[3],                                \
+        ((endpoint).addr_memb.ipv6.address)[4],                                \
+        ((endpoint).addr_memb.ipv6.address)[5],                                \
+        ((endpoint).addr_memb.ipv6.address)[6],                                \
+        ((endpoint).addr_memb.ipv6.address)[7],                                \
+        ((endpoint).addr_memb.ipv6.address)[8],                                \
+        ((endpoint).addr_memb.ipv6.address)[9],                                \
+        ((endpoint).addr_memb.ipv6.address)[10],                               \
+        ((endpoint).addr_memb.ipv6.address)[11],                               \
+        ((endpoint).addr_memb.ipv6.address)[12],                               \
+        ((endpoint).addr_memb.ipv6.address)[13],                               \
+        ((endpoint).addr_memb.ipv6.address)[14],                               \
+        ((endpoint).addr_memb.ipv6.address)[15], scope,                        \
+        (endpoint).addr_memb.ipv6.port);                                       \
+    }                                                                          \
+  } while (0)
+
+#define SNPRINTFipaddr(str, size, endpoint)                                    \
+  SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr)
+
+#define PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                               \
+  do {                                                                         \
+    char _oc_log_ipaddr_buff[IPADDR_BUFF_SIZE];                                \
+    memset(_oc_log_ipaddr_buff, 0, IPADDR_BUFF_SIZE);                          \
+    SNPRINT_ENDPOINT_ADDR(_oc_log_ipaddr_buff, IPADDR_BUFF_SIZE, endpoint,     \
+                          addr_memb);                                          \
+    PRINT("%s", _oc_log_ipaddr_buff);                                          \
+  } while (0)
+
+#define PRINTipaddr(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr)
+#define PRINTipaddr_local(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr_local)
+
 /**
  * Log level determines the importance of the message. The levels are in order
  * of decreasing importance.

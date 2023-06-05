@@ -57,7 +57,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
-#include "port/oc_log_internal.h" // TODO: need to be removed
+#include "oc_log.h"
 #include <signal.h>
 #include <stdlib.h>
 
