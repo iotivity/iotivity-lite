@@ -19,17 +19,18 @@
  ****************************************************************************/
 
 #include "oc_api.h"
-#include "oc_pki.h"
 #include "oc_log.h"
-#include "util/oc_macros.h"
+#include "oc_pki.h"
+#include "util/oc_atomic.h"
 #include <inttypes.h>
 #include <signal.h>
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
 #include <pthread.h>
-#endif
-static int quit;
+#endif /* _WIN32 */
+
+static OC_ATOMIC_INT8_T quit = 0;
 
 static void
 display_menu(void)
@@ -96,8 +97,7 @@ static pthread_cond_t cv;
 #define otb_mutex_lock(m) pthread_mutex_lock(&(m))
 #define otb_mutex_unlock(m) pthread_mutex_unlock(&(m))
 
-static struct timespec ts;
-#endif
+#endif /* _WIN32 */
 
 static void
 signal_event_loop(void)
@@ -113,7 +113,7 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
-  quit = 1;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
 }
 
@@ -265,8 +265,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   if (l) {
     oc_endpoint_list_copy(&l->endpoint, endpoint);
     size_t uri_len = strlen(uri);
-    uri_len =
-      uri_len > OC_CHAR_ARRAY_LEN(l->uri) ? OC_CHAR_ARRAY_LEN(l->uri) : uri_len;
+    uri_len = uri_len > sizeof(l->uri) - 1 ? sizeof(l->uri) - 1 : uri_len;
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
     oc_list_add(resources, l);
@@ -360,13 +359,16 @@ factory_presets_cb(size_t device, void *data)
 }
 
 #if defined(_WIN32)
-DWORD WINAPI
+static DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
 {
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources = NULL,
-                                        .requests_entry = NULL };
+  (void)lpParam;
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = NULL,
+    .requests_entry = NULL,
+  };
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_client_creds/");
 #endif /* OC_STORAGE */
@@ -383,19 +385,19 @@ ocf_event_thread(LPVOID lpParam)
       oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
     }
   }
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
     } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -408,18 +410,21 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources = NULL,
-                                        .requests_entry = NULL };
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = NULL,
+    .requests_entry = NULL,
+  };
 #ifdef OC_STORAGE
   oc_storage_config("./cloud_client_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_max_app_data_size(16384);
   int ret = oc_main_init(&handler);
-  if (ret < 0)
+  if (ret < 0) {
     return NULL;
+  }
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
@@ -427,19 +432,23 @@ ocf_event_thread(void *data)
       oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
     }
   }
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
     otb_mutex_lock(mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     otb_mutex_unlock(mutex);
   }
@@ -447,6 +456,88 @@ ocf_event_thread(void *data)
   return NULL;
 }
 #endif
+
+static void
+deinit(void)
+{
+#if defined(__linux__)
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_sync_lock);
+#endif /* __linux__ */
+}
+
+static bool
+init(void)
+{
+#if defined(_WIN32)
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  InitializeCriticalSection(&app_sync_lock);
+#elif defined(__linux__)
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&app_sync_lock, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+#endif /* _WIN32 */
+
+#if defined(_WIN32)
+  event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
+                              NULL, 0, NULL);
+  if (NULL == event_thread) {
+    OC_PRINTF("ERROR: CreateThread failed!\n");
+    deinit();
+    return false;
+  }
+#elif defined(__linux__)
+  err = pthread_create(&event_thread, NULL, &ocf_event_thread, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_create failed (error=%d)!\n", err);
+    deinit();
+    return false;
+  }
+#endif /* _WIN32 */
+  return true;
+}
 
 int
 main(int argc, char *argv[])
@@ -484,32 +575,12 @@ main(int argc, char *argv[])
     OC_PRINTF("apn: %s\n", argv[5]);
   }
 
-#if defined(_WIN32)
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
-  InitializeCriticalSection(&app_sync_lock);
-#elif defined(__linux__)
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-#endif
-
-#if defined(_WIN32)
-  event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
-                              NULL, 0, NULL);
-  if (NULL == event_thread) {
+  if (!init()) {
     return -1;
   }
-#elif defined(__linux__)
-  if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
-    return -1;
-  }
-#endif
 
   int c;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
     SCANF("%d", &c);
     switch (c) {
@@ -536,5 +607,6 @@ main(int argc, char *argv[])
   pthread_join(event_thread, NULL);
 #endif
   free_all_resources();
+  deinit();
   return 0;
 }

@@ -18,22 +18,20 @@
 
 #include "oc_api.h"
 #include "oc_pki.h"
+#include "oc_sp.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
-#include "security/oc_certs_internal.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
 
-int quit = 0;
+static bool quit = false;
 
 static bool state = false;
-int power;
-oc_string_t name;
+static int power = 0;
+static oc_string_t name;
 
 static int
 app_init(void)
@@ -52,7 +50,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)user_data;
   ++power;
 
-  OC_PRINTF("GET_light:\n");
+  printf("GET_light:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -76,18 +74,18 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  OC_PRINTF("POST_light:\n");
+  printf("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    OC_PRINTF("key: %s ", oc_string(rep->name));
+    printf("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      OC_PRINTF("value: %d\n", state);
+      printf("value: %d\n", state);
       break;
     case OC_REP_INT:
       power = (int)rep->value.integer;
-      OC_PRINTF("value: %d\n", power);
+      printf("value: %d\n", power);
       break;
     case OC_REP_STRING:
       oc_free_string(&name);
@@ -141,8 +139,76 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
+}
+
+static bool
+init(void)
+{
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    printf("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    printf("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  oc_clock_time_t next_event_mt;
+  while (!quit) {
+    next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
 }
 
 static void
@@ -378,19 +444,15 @@ factory_presets_cb(size_t device, void *data)
 int
 main(void)
 {
-  int init;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
+  if (!init()) {
+    return -1;
+  }
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
-
-  oc_clock_time_t next_event;
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
   oc_set_con_res_announced(false);
   oc_set_mtu_size(16384);
@@ -402,24 +464,14 @@ main(void)
 
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
-  init = oc_main_init(&handler);
-  if (init < 0) {
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
-  oc_free_string(&name);
+  run_loop();
   oc_main_shutdown();
+  oc_free_string(&name);
+  deinit();
   return 0;
 }

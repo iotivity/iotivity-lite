@@ -17,8 +17,8 @@
  ******************************************************************/
 
 #include "oc_api.h"
-#include "port/oc_clock.h"
 #include "oc_log.h"
+#include "port/oc_clock.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -26,10 +26,9 @@
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
+static bool quit = false;
 static bool light_state = false;
-static int counter;
+static int counter = 0;
 
 static int
 app_init(void)
@@ -161,7 +160,7 @@ typedef struct oc_ec_t
 OC_MEMB(ec_s, oc_ec_t, 1);
 OC_LIST(ecs);
 
-bool
+static bool
 set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 {
   (void)resource;
@@ -185,7 +184,7 @@ set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
   return true;
 }
 
-void
+static void
 get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
                   void *data)
 {
@@ -205,14 +204,14 @@ get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
   oc_rep_end_root_object();
 }
 
-void
+static void
 get_ec(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   get_ec_properties(request->resource, iface_mask, user_data);
   oc_send_response(request, OC_STATUS_OK);
 }
 
-oc_resource_t *
+static oc_resource_t *
 get_ec_instance(const char *href, oc_string_array_t *types,
                 oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                 size_t device)
@@ -244,7 +243,7 @@ get_ec_instance(const char *href, oc_string_array_t *types,
   return NULL;
 }
 
-void
+static void
 free_ec_instance(oc_resource_t *resource)
 {
   oc_ec_t *ec = (oc_ec_t *)oc_list_head(ecs);
@@ -319,48 +318,102 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
 
-  oc_clock_time_t next_event;
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  oc_clock_time_t next_event_mt;
+  while (!quit) {
+    next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./server_collections_linux_creds");
 #endif /* OC_STORAGE */
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
+  run_loop();
   oc_main_shutdown();
+  deinit();
   return 0;
 }

@@ -39,8 +39,8 @@ oc_clock_encode_time_rfc3339(oc_clock_time_t time, char *out_buf,
 {
   timestamp_t now_t = { 0 };
   now_t.sec = (int64_t)(time / OC_CLOCK_SECOND);
-  now_t.nsec =
-    (int32_t)((time % OC_CLOCK_SECOND) * (OC_NSEC_PER_SEC / OC_CLOCK_SECOND));
+  now_t.nsec = (int32_t)((double)((time % OC_CLOCK_SECOND) * OC_NSEC_PER_SEC) /
+                         OC_CLOCK_SECOND);
 
   return timestamp_format(out_buf, out_buf_len, &now_t);
 }
@@ -55,6 +55,13 @@ oc_clock_parse_time_rfc3339(const char *in_buf, size_t in_buf_len)
   return ct;
 }
 
+static oc_clock_time_t
+clock_from_timespec(int64_t sec, int64_t nsec)
+{
+  return sec * OC_CLOCK_SECOND +
+         (oc_clock_time_t)((double)(nsec * OC_CLOCK_SECOND) / OC_NSEC_PER_SEC);
+}
+
 bool
 oc_clock_parse_time_rfc3339_v1(const char *in_buf, size_t in_buf_len,
                                oc_clock_time_t *time)
@@ -66,8 +73,7 @@ oc_clock_parse_time_rfc3339_v1(const char *in_buf, size_t in_buf_len,
     OC_ERR("error parsing time in RFC3339 formatted string");
     return false;
   }
-  *time = in_time.sec * OC_CLOCK_SECOND +
-          (in_time.nsec * OC_CLOCK_SECOND) / OC_NSEC_PER_SEC;
+  *time = clock_from_timespec(in_time.sec, in_time.nsec);
   return true;
 }
 
@@ -78,10 +84,16 @@ oc_clock_time_to_timespec(oc_clock_time_t time)
 {
   struct timespec ts = {
     .tv_sec = (time_t)(time / OC_CLOCK_SECOND),
-    .tv_nsec =
-      (long)((double)(time % OC_CLOCK_SECOND) * (1.e09 / OC_CLOCK_SECOND)),
+    .tv_nsec = (long)((double)((time % OC_CLOCK_SECOND) * OC_NSEC_PER_SEC) /
+                      OC_CLOCK_SECOND),
   };
   return ts;
+}
+
+oc_clock_time_t
+oc_clock_time_from_timespec(struct timespec ts)
+{
+  return clock_from_timespec(ts.tv_sec, ts.tv_nsec);
 }
 
 #ifdef OC_HAVE_CLOCKID_T
@@ -94,14 +106,11 @@ oc_clock_monotonic_time_to_posix(oc_clock_time_t time, clockid_t clock_id,
   if (clock_mt == (oc_clock_time_t)-1) {
     return false;
   }
-
   struct timespec ts;
   if (clock_gettime(clock_id, &ts) != 0) {
     return false;
   }
-  oc_clock_time_t posix_time = ts.tv_sec * OC_CLOCK_SECOND +
-                               (ts.tv_nsec * OC_CLOCK_SECOND) / OC_NSEC_PER_SEC;
-
+  oc_clock_time_t posix_time = clock_from_timespec(ts.tv_sec, ts.tv_nsec);
   *clock_time = posix_time + ((int64_t)time - clock_mt);
   return true;
 }

@@ -69,7 +69,7 @@ oc_clock_seconds(void)
 void
 oc_clock_wait(oc_clock_time_t t)
 {
-  time_t sec = t / OC_CLOCK_SECOND;
+  time_t sec = (time_t)(t / OC_CLOCK_SECOND);
   oc_clock_time_t rem_ticks = t % OC_CLOCK_SECOND;
   struct timespec time = {
     .tv_sec = sec,

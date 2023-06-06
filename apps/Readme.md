@@ -108,7 +108,7 @@ naming convention:
 - ### server_rules.c:
   Server example implementing rules.
   - runs on Linux only.
-  - uses server_certification_tests_IDD.cbor as introspection data.
+  - uses server_rules_IDD.cbor as introspection data.
 
 - ### server_zephyr.c:
   Client example on zypher.

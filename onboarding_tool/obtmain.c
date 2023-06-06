@@ -21,7 +21,8 @@
 #include "oc_log.h"
 #include "oc_obt.h"
 #include "port/oc_clock.h"
-#include "util/oc_macros.h"
+#include "util/oc_atomic.h"
+
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
@@ -69,9 +70,9 @@ static pthread_cond_t cv;
 #define otb_mutex_lock(m) pthread_mutex_lock(&(m))
 #define otb_mutex_unlock(m) pthread_mutex_unlock(&(m))
 
-static struct timespec ts;
 #endif
-static int quit;
+
+static OC_ATOMIC_INT8_T quit = 0;
 
 static void
 display_menu(void)
@@ -173,7 +174,7 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
-  quit = 1;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
 }
 
@@ -181,19 +182,20 @@ handle_signal(int signal)
 DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
 {
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  (void)lpParam;
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
     } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -207,19 +209,23 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
     otb_mutex_lock(mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     otb_mutex_unlock(mutex);
   }
@@ -261,8 +267,8 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
   size_t len = 0;
   if (device_name != NULL) {
     len = strlen(device_name);
-    len = len > OC_CHAR_ARRAY_LEN(device->device_name)
-            ? OC_CHAR_ARRAY_LEN(device->device_name)
+    len = len > sizeof(device->device_name) - 1
+            ? sizeof(device->device_name) - 1
             : len;
     memcpy(device->device_name, device_name, len);
   }
@@ -2159,26 +2165,83 @@ display_device_uuid(void)
   OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
-int
-main(void)
+static bool
+init(void)
 {
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
   InitializeCriticalSection(&app_sync_lock);
+  signal(SIGINT, handle_signal);
 #elif defined(__linux__)
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&app_sync_lock, NULL);
+  if (err != 0) {
+    printf("pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    printf("pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    printf("pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    printf("pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    printf("pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
 #endif
+  return true;
+}
 
-  int init;
+static void
+deinit(void)
+{
+#ifdef __linux__
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_sync_lock);
+#endif /* __linux__ */
+}
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .requests_entry = issue_requests,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./onboarding_tool_creds");
@@ -2186,18 +2249,23 @@ main(void)
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
+  }
 
 #if defined(_WIN32)
   event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
                               NULL, 0, NULL);
   if (NULL == event_thread) {
+    deinit();
     return -1;
   }
 #elif defined(__linux__)
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
+    deinit();
     return -1;
   }
 #endif
@@ -2205,7 +2273,7 @@ main(void)
   display_device_uuid();
 
   int c;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
     SCANF("%d", &c);
     switch (c) {
@@ -2348,6 +2416,6 @@ main(void)
     oc_memb_free(&device_handles, device);
     device = (device_handle_t *)oc_list_pop(unowned_devices);
   }
-
+  deinit();
   return 0;
 }

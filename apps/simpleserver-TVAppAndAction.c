@@ -17,20 +17,33 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_helpers.h"
+#include "oc_introspection.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
+#include "port/oc_storage.h"
+#include "util/oc_compiler.h"
 #include <signal.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef __linux__
+#include <pthread.h>
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+#endif /* __linux__ */
+
+#ifdef _WIN32
 #include <windows.h>
-
-int quit = 0;
-
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
+#endif /* _WIN32 */
 
-static bool state = false;
-int power;
-oc_string_t name;
-oc_string_array_t my_supportedactions;
+static bool quit = false;
+
+static oc_string_t name;
+static oc_string_array_t my_supportedactions;
 
 /* global property variables for path: "/binaryswitch" */
 bool g_binaryswitch_value = false;
@@ -64,13 +77,13 @@ app_init(void)
   oc_string_array_add_item(my_supportedactions, "-");
 
 #if defined(OC_IDD_API)
-  FILE *fp;
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
     "\tERROR Could not read 'server_introspection.cbor'\n"
     "\tIntrospection data not set.\n";
-  fp = fopen("c:/users/m.trayer/OCF/TVApps/server_introspection.cbor", "rb");
+  FILE *fp =
+    fopen("c:/users/m.trayer/OCF/TVApps/server_introspection.cbor", "rb");
   if (fp) {
     fseek(fp, 0, SEEK_END);
     buffer_size = ftell(fp);
@@ -82,18 +95,18 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF(
+      printf(
         "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
         (int)buffer_size);
     } else {
-      OC_PRINTF("%s", introspection_error);
+      printf("%s", introspection_error);
     }
     free(buffer);
   } else {
-    OC_PRINTF("%s", introspection_error);
+    printf("%s", introspection_error);
   }
 #else
-  OC_PRINTF("\t introspection via header file\n");
+  printf("\t introspection via header file\n");
 #endif
   return ret;
 }
@@ -106,9 +119,8 @@ verify_action_in_supported_set(oc_string_t action)
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    OC_PRINTF(
-      "Action compare. Supported action %s against received action %s \n", sv,
-      act);
+    printf("Action compare. Supported action %s against received action %s \n",
+           sv, act);
     if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
       return true;
     }
@@ -123,17 +135,17 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  OC_PRINTF("get_binaryswitch: interface %d\n", interfaces);
+  printf("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    OC_PRINTF("   Adding Baseline info\n");
+    printf("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
-    /* fall through */
+    OC_FALLTHROUGH;
   case OC_IF_A:
     /* property "value" */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
-    OC_PRINTF("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    printf("   value : %d\n", g_binaryswitch_value); /* not handled value */
     break;
   default:
     break;
@@ -158,16 +170,16 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  OC_PRINTF("post_binaryswitch:\n");
+  printf("post_binaryswitch:\n");
   oc_rep_t *rep = request->request_payload;
   /* loop over the request document to check if all inputs are ok */
   while (rep != NULL) {
-    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
+    printf("key: (check) %s \n", oc_string(rep->name));
     if (memcmp(oc_string(rep->name), "value", 5) == 0) {
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
+        printf("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
 
@@ -179,7 +191,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     /* loop over all the properties in the input document */
     oc_rep_t *rep = request->request_payload;
     while (rep != NULL) {
-      OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
+      printf("key: (assign) %s \n", oc_string(rep->name));
       /* no error: assign the variables */
       if (memcmp(oc_string(rep->name), "value", 5) == 0) {
         /* assign "value" */
@@ -188,7 +200,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
       rep = rep->next;
     }
     /* set the response */
-    OC_PRINTF("Set response \n");
+    printf("Set response \n");
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
     oc_rep_end_root_object();
@@ -211,8 +223,7 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  bool rc =
-    oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
     // An action parm was received
@@ -221,11 +232,12 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     return;
   }
 
-  OC_PRINTF("GET_remotecontrol:\n");
+  printf("GET_remotecontrol:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
+    OC_FALLTHROUGH;
   case OC_IF_A:
     oc_rep_set_key(oc_rep_object(root), "supportedactions");
     oc_rep_begin_array(oc_rep_object(root), supportedactions);
@@ -250,21 +262,18 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  OC_PRINTF("POST_remotecontrol:\n");
-  char *query = request->query;
-  int query_len = request->query_len;
+  printf("POST_remotecontrol:\n");
 
   /* Check if query string includes action selection. */
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  bool rc =
-    oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
-    OC_PRINTF("POST action length = %d \n", action_len);
-    OC_PRINTF("POST action string actual size %zu \n", strlen(action));
-    OC_PRINTF("POST action received raw = %s \n", action);
+    printf("POST action length = %d \n", action_len);
+    printf("POST action string actual size %zu \n", strlen(action));
+    printf("POST action received raw = %s \n", action);
 
     // Validate that the action requests is in the set
     //
@@ -287,7 +296,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     oc_free_string(&act);
   } else {
-    OC_PRINTF("POST no action received \n");
+    printf("POST no action received \n");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
@@ -295,7 +304,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-  OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
+  printf("Register Resource with local path \"/binaryswitch\"\n");
   oc_resource_t *res = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res, OC_IF_A);
@@ -305,7 +314,7 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_binaryswitch, NULL);
   oc_add_resource(res);
 
-  OC_PRINTF("Register Resource with local path \"/remotecontrol\"\n");
+  printf("Register Resource with local path \"/remotecontrol\"\n");
   oc_resource_t *res2 =
     oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
   oc_resource_bind_resource_type(res2, "oic.r.remotecontrol");
@@ -320,58 +329,137 @@ register_resources(void)
 static void
 signal_event_loop(void)
 {
+#ifdef _WIN32
   WakeConditionVariable(&cv);
+#else
+  pthread_cond_signal(&cv);
+#endif /* _WIN32 */
 }
 
 static void
 handle_signal(int signal)
 {
+  (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
+}
+
+static bool
+init(void)
+{
+#ifdef _WIN32
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  signal(SIGINT, handle_signal);
+#else
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    printf("pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    printf("pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    printf("pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    printf("pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+#endif /* _WIN32 */
+  return true;
+}
+
+static void
+deinit(void)
+{
+#ifndef _WIN32
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+#endif /* !_WIN32 */
+}
+
+static void
+run_loop(void)
+{
+#ifdef _WIN32
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
+#endif /* _WIN32 */
+
+#ifdef __linux__
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+#endif /* __linux__ */
 }
 
 int
 main(void)
 {
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
+  if (!init()) {
+    return -1;
+  }
 
-  int init;
-
-  signal(SIGINT, handle_signal);
-
-  /* initialize global variables for resource "/binaryswitch" */
-  g_binaryswitch_value = false;
-
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = 0 };
-
-  oc_clock_time_t next_event;
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./simpleserver_creds/");
 #endif /* OC_STORAGE */
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    if (next_event == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
-    } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
-        SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
+  run_loop();
   oc_main_shutdown();
+  deinit();
   return 0;
 }

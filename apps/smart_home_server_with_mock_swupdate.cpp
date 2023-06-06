@@ -17,12 +17,9 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
 
 #ifdef OC_SOFTWARE_UPDATE
 #include "oc_swupdate.h"
@@ -37,12 +34,23 @@ using namespace boost::network;
 #endif /* BOOST_FOR_URL_VALIDATION */
 #endif /* OC_SOFTWARE_UPDATE */
 
+#include <signal.h>
+#include <stdio.h>
+
+#ifdef __linux__
+#include <pthread.h>
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
+#endif /* __linux__ */
 
-static bool switch_state;
+#ifdef _WIN32
+#include <windows.h>
+static CONDITION_VARIABLE cv;
+static CRITICAL_SECTION cs;
+#endif /* _WIN32 */
+
+static bool quit = false;
+static bool switch_state = false;
 
 #ifdef OC_SOFTWARE_UPDATE
 
@@ -210,15 +218,19 @@ register_resources(void)
 static void
 signal_event_loop(void)
 {
+#ifdef _WIN32
+  WakeConditionVariable(&cv);
+#else
   pthread_cond_signal(&cv);
+#endif /* _WIN32 */
 }
 
 static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
 #ifdef OC_SECURITY
@@ -271,6 +283,96 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
   return 0;
 }
 #endif /* OC_SECURITY && OC_PKI */
+
+static bool
+init(void)
+{
+#ifdef _WIN32
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  signal(SIGINT, handle_signal);
+#else
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+#endif /* _WIN32 */
+  return true;
+}
+
+static void
+deinit(void)
+{
+#ifndef _WIN32
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+#endif /* !_WIN32 */
+}
+
+static void
+run_loop(void)
+{
+#ifdef _WIN32
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
+#else  /* !_WIN32 */
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+#endif /* _WIN32 */
+}
 
 static void
 factory_presets_cb(size_t device, void *data)
@@ -334,19 +436,15 @@ factory_presets_cb(size_t device, void *data)
 int
 main(void)
 {
-  int init;
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
+  if (!init()) {
+    return -1;
+  }
 
   static oc_handler_t handler;
   handler.init = app_init;
   handler.signal_event_loop = signal_event_loop;
   handler.register_resources = register_resources;
 
-  oc_clock_time_t next_event;
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
 
@@ -368,25 +466,13 @@ main(void)
   oc_swupdate_set_impl(&swupdate_impl);
 #endif /* OC_SOFTWARE_UPDATE */
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
-                                     OC_CLOCK_SECOND);
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
+  run_loop();
   oc_main_shutdown();
-
+  deinit();
   return 0;
 }

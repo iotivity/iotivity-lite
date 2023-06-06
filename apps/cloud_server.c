@@ -17,13 +17,13 @@
  *
  ****************************************************************************/
 
+#include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
-#include "oc_pki.h"
-#include "oc_acl.h"
 #include "oc_log.h"
+#include "oc_pki.h"
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -39,7 +39,7 @@
 #include <getopt.h>
 #endif /* _MSC_VER */
 
-static int quit;
+static bool quit = false;
 
 #ifdef _WIN32
 #include <windows.h>
@@ -57,8 +57,8 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
 static int
@@ -66,15 +66,20 @@ init(void)
 {
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
-
   signal(SIGINT, handle_signal);
   return 0;
 }
 
 static void
-run(void)
+deinit(void)
 {
-  while (quit != 1) {
+  // no-op
+}
+
+static void
+run_loop(void)
+{
+  while (!quit) {
     EnterCriticalSection(&cs);
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
     if (next_event_mt == 0) {
@@ -112,11 +117,11 @@ handle_signal(int signal)
   if (signal == SIGPIPE) {
     return;
   }
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
-static int
+static bool
 init(void)
 {
   struct sigaction sa;
@@ -130,32 +135,44 @@ init(void)
   int err = pthread_mutex_init(&mutex, NULL);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
-    return -1;
+    return false;
   }
   pthread_condattr_t attr;
   err = pthread_condattr_init(&attr);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
-    return -1;
+    pthread_mutex_destroy(&mutex);
+    return false;
   }
   err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
-    return -1;
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
   }
   err = pthread_cond_init(&cv, &attr);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
-    return -1;
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
   }
-  (void)pthread_condattr_destroy(&attr);
-  return 0;
+  pthread_condattr_destroy(&attr);
+  return true;
 }
 
 static void
-run(void)
+deinit(void)
 {
-  while (quit != 1) {
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  while (!quit) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
     pthread_mutex_lock(&mutex);
     if (next_event_mt == 0) {
@@ -186,7 +203,7 @@ set_system_time(oc_clock_time_t time, void *data)
 {
   (void)data;
   struct timeval now;
-  now.tv_sec = time / OC_CLOCK_SECOND;
+  now.tv_sec = (time_t)(time / OC_CLOCK_SECOND);
   oc_clock_time_t rem_ticks = time % OC_CLOCK_SECOND;
   now.tv_usec = (suseconds_t)(((double)rem_ticks * 1.e06) / OC_CLOCK_SECOND);
   return settimeofday(&now, NULL);
@@ -360,11 +377,11 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   struct light_t *light = (struct light_t *)user_data;
   (void)iface_mask;
-  printf("post_handler:\n");
+  OC_PRINTF("post_handler:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     char *key = oc_string(rep->name);
-    printf("key: %s ", key);
+    OC_PRINTF("key: %s ", key);
     if (key && !strcmp(key, "state")) {
       switch (rep->type) {
       case OC_REP_BOOL:
@@ -1260,6 +1277,9 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
         return false;
       }
       g_set_system_time = true;
+#else  /* !__linux__ && !__ANDROID_API__ */
+      // TODO: implement for WIN32
+      (void)g_set_system_time;
 #endif /* __linux__ || __ANDROID_API__ */
       break;
     }
@@ -1539,15 +1559,15 @@ main(int argc, char *argv[])
   }
 #endif /* OC_SECURITY && OC_PKI */
 
-  int ret = init();
-  if (ret < 0) {
-    return ret;
+  if (!init()) {
+    return -1;
   }
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
   oc_log_set_function(cloud_server_log);
   oc_set_send_response_callback(cloud_server_send_response_cb);
 #ifdef OC_STORAGE
@@ -1564,9 +1584,12 @@ main(int argc, char *argv[])
     MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1) |
     MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP384R1));
 #endif /* OC_SECURITY && OC_PKI */
-  ret = oc_main_init(&handler);
-  if (ret < 0)
+
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
     return ret;
+  }
 
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
@@ -1582,9 +1605,10 @@ main(int argc, char *argv[])
   }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
-  run();
+  run_loop();
 
   oc_cloud_manager_stop(ctx);
   oc_main_shutdown();
+  deinit();
   return 0;
 }

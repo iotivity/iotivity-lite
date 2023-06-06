@@ -55,7 +55,7 @@ PemData::PemData(const std::string &path)
 {
   auto pem = ReadPem(path_);
   if (pem.empty()) {
-    throw "failed to read PEM string from file " + path;
+    throw std::string("failed to read PEM string from file ") + path;
   }
   pem_ = std::move(pem);
 }

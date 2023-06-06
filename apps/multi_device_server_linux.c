@@ -17,8 +17,8 @@
  ******************************************************************/
 
 #include "oc_api.h"
-#include "port/oc_clock.h"
 #include "oc_log.h"
+#include "port/oc_clock.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -26,8 +26,7 @@
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
+static bool quit = false;
 static struct _fridge_state
 {
   int filter;
@@ -209,48 +208,101 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    pthread_mutex_destroy(&mutex);
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
 
-  oc_clock_time_t next_event;
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./multi_device_server_creds");
 #endif /* OC_STORAGE */
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
+  run_loop();
   oc_main_shutdown();
+  deinit();
   return 0;
 }

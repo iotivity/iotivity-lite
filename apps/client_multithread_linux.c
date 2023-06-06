@@ -17,8 +17,10 @@
  ****************************************************************************/
 
 #include "oc_api.h"
-#include "port/oc_clock.h"
 #include "oc_log.h"
+#include "port/oc_clock.h"
+#include "util/oc_atomic.h"
+
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
@@ -32,12 +34,10 @@ static const char *device_rt = "oic.d.phone";
 static const char *device_name = "Galaxy";
 static const char *manufacturer = "Samsung";
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
-
-pthread_mutex_t app_mutex;
-int quit = 0;
+static pthread_mutex_t app_mutex;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+static OC_ATOMIC_INT8_T quit = 0;
 
 #define MAX_URI_LENGTH (30)
 static char a_light[MAX_URI_LENGTH];
@@ -76,7 +76,7 @@ static bool
 is_resource_found(void)
 {
   if (!resource_found) {
-    printf("Please discovery resource first!\n");
+    OC_PRINTF("Please discovery resource first!\n");
     return false;
   }
 
@@ -89,9 +89,9 @@ stop_observe(void)
   if (!is_resource_found())
     return;
 
-  printf("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   if (!oc_stop_observe(a_light, &target_ep)) {
-    printf("Please observe start first!\n");
+    OC_PRINTF("Please observe start first!\n");
   }
 }
 
@@ -102,21 +102,21 @@ static void
 pong_received_handler(oc_client_response_t *data)
 {
   if (data->code == OC_PING_TIMEOUT) {
-    printf("PING timeout!\n");
+    OC_PRINTF("PING timeout!\n");
     ping_count++;
     if (ping_count > PING_RETRY_COUNT) {
-      printf("retry over. close connection.\n");
+      OC_PRINTF("retry over. close connection.\n");
       oc_connectivity_end_session(data->endpoint);
     } else {
       ping_timeout <<= 1;
-      printf("PING send again.[retry: %zd, time: %u]\n", ping_count,
-             ping_timeout);
+      OC_PRINTF("PING send again.[retry: %zd, time: %u]\n", ping_count,
+                ping_timeout);
       send_ping(ping_timeout);
     }
   } else {
-    printf("PONG received:\n");
+    OC_PRINTF("PONG received:\n");
     OC_PRINTipaddr(*data->endpoint);
-    printf("\n");
+    OC_PRINTF("\n");
     ping_count = 0;
   }
 }
@@ -133,12 +133,12 @@ send_ping(uint16_t timeout_seconds)
   if (target_ep.flags & TCP) {
     if (!oc_send_ping(0, &target_ep, timeout_seconds, pong_received_handler,
                       NULL)) {
-      printf("oc_send_ping failed\n");
+      OC_PRINTF("oc_send_ping failed\n");
     }
   } else
 #endif /* !OC_TCP */
   {
-    printf("PING message is not supported\n");
+    OC_PRINTF("PING message is not supported\n");
   }
 }
 
@@ -147,18 +147,18 @@ parse_payload(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    printf("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      printf("%d\n", rep->value.boolean);
+      OC_PRINTF("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      printf("%" PRId64 "\n", rep->value.integer);
+      OC_PRINTF("%" PRId64 "\n", rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
-      printf("%s\n", oc_string(rep->value.string));
+      OC_PRINTF("%s\n", oc_string(rep->value.string));
       oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
@@ -174,10 +174,10 @@ static void
 observe_response(oc_client_response_t *data)
 {
   if (data->observe_option == 0) {
-    printf("OBSERVE register success!\n");
+    OC_PRINTF("OBSERVE register success!\n");
   }
 
-  printf("OBSERVE_light:\n");
+  OC_PRINTF("OBSERVE_light:\n");
   parse_payload(data);
 }
 
@@ -188,19 +188,19 @@ observe_request(void)
     return;
 
   oc_do_observe(a_light, &target_ep, NULL, &observe_response, LOW_QOS, NULL);
-  printf("Sent OBSERVE request\n");
+  OC_PRINTF("Sent OBSERVE request\n");
 }
 
 static void
 post_response(oc_client_response_t *data)
 {
-  printf("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    printf("POST response: CHANGED\n");
+    OC_PRINTF("POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    printf("POST response: CREATED\n");
+    OC_PRINTF("POST response: CREATED\n");
   else
-    printf("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 }
 
 static void
@@ -215,17 +215,17 @@ post_request(void)
     oc_rep_set_int(root, power, 105);
     oc_rep_end_root_object();
     if (oc_do_post())
-      printf("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      printf("Could not send POST request\n");
+      OC_PRINTF("Could not send POST request\n");
   } else
-    printf("Could not init POST request\n");
+    OC_PRINTF("Could not init POST request\n");
 }
 
 static void
 get_response(oc_client_response_t *data)
 {
-  printf("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   parse_payload(data);
 }
 
@@ -257,12 +257,12 @@ discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
-      printf("Resource %s hosted at endpoints:\n", a_light);
+      OC_PRINTF("Resource %s hosted at endpoints:\n", a_light);
       if (user_data) {
         custom_func_s *custom = (custom_func_s *)user_data;
         custom->func(endpoint);
       } else {
-        printf("custom function is not set!");
+        OC_PRINTF("custom function is not set!");
         goto exit;
       }
 
@@ -283,7 +283,7 @@ find_first_endpoint(oc_endpoint_t *endpoint)
   resource_found = true;
   while (ep != NULL) {
     OC_PRINTipaddr(*ep);
-    printf("\n");
+    OC_PRINTF("\n");
 
     ep = ep->next;
   }
@@ -295,7 +295,7 @@ find_same_endpoint(oc_endpoint_t *endpoint)
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     OC_PRINTipaddr(*ep);
-    printf("\n");
+    OC_PRINTF("\n");
 
     if (oc_endpoint_compare(&set_ep, ep) == 0) {
       memcpy(&target_ep, ep, sizeof(oc_endpoint_t));
@@ -316,27 +316,30 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 static void *
 process_func(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     pthread_mutex_lock(&app_mutex);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     pthread_mutex_unlock(&app_mutex);
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -348,34 +351,88 @@ static void
 print_menu(void)
 {
   pthread_mutex_lock(&app_mutex);
-  printf("=====================================\n");
-  printf("1. Discovery\n");
-  printf("2. Discovery with endpoint(%s)\n", address);
-  printf("3. Get request\n");
-  printf("4. Post request\n");
-  printf("5. Observe request\n");
-  printf("6. Observe cancel request\n");
-  printf("7. Send Ping\n");
-  printf("0. Quit\n");
-  printf("=====================================\n");
+  OC_PRINTF("=====================================\n");
+  OC_PRINTF("1. Discovery\n");
+  OC_PRINTF("2. Discovery with endpoint(%s)\n", address);
+  OC_PRINTF("3. Get request\n");
+  OC_PRINTF("4. Post request\n");
+  OC_PRINTF("5. Observe request\n");
+  OC_PRINTF("6. Observe cancel request\n");
+  OC_PRINTF("7. Send Ping\n");
+  OC_PRINTF("0. Quit\n");
+  OC_PRINTF("=====================================\n");
   pthread_mutex_unlock(&app_mutex);
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init = 0;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  printf("set remote address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
+  int err = pthread_mutex_init(&app_mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_mutex);
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  OC_PRINTF("set remote address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
   if (scanf("%59s", address) > 0) {
-    printf("address: %s\n", address);
+    OC_PRINTF("address: %s\n", address);
   } else {
-    printf("error reading remote address\n");
+    OC_PRINTF("error reading remote address\n");
+    deinit();
     return -1;
   }
 
@@ -383,41 +440,32 @@ main(void)
   oc_new_string(&address_str, address, strlen(address));
 
   if (oc_string_to_endpoint(&address_str, &set_ep, NULL) < 0) {
-    printf("error parsing remote endpoint address\n");
+    OC_PRINTF("error parsing remote endpoint address\n");
+    deinit();
     return -1;
   }
   set_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop =
-                                          signal_event_loop };
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./client_multithread_linux_creds");
 #endif /* OC_STORAGE */
 
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
-    printf("pthread_mutex_init failed!\n");
-    return -1;
-  }
-
-  if (pthread_mutex_init(&app_mutex, NULL) != 0) {
-    printf("pthread_mutex_init failed!\n");
-    pthread_mutex_destroy(&mutex);
-    return -1;
-  }
-
-  init = oc_main_init(&handler);
-  if (init < 0) {
-    printf("oc_main_init failed!(%d)\n", init);
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    OC_PRINTF("oc_main_init failed!(%d)\n", ret);
     goto exit;
   }
 
   pthread_t thread;
   if (pthread_create(&thread, NULL, process_func, NULL) != 0) {
-    printf("Failed to create main thread\n");
-    init = -1;
+    OC_PRINTF("Failed to create main thread\n");
+    ret = -1;
     goto exit;
   }
 
@@ -425,12 +473,11 @@ main(void)
   custom_func_s same_func = { .func = find_same_endpoint };
 
   int key;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     print_menu();
     fflush(stdin);
     if (!scanf("%d", &key)) {
-      printf("scanf failed!!!!\n");
-      quit = 1;
+      OC_PRINTF("scanf failed!!!!\n");
       handle_signal(0);
       break;
     }
@@ -461,27 +508,24 @@ main(void)
     case 7:
       ping_count = 0;
       ping_timeout = 1;
-      printf("Send PING\n");
+      OC_PRINTF("Send PING\n");
       send_ping(ping_timeout);
       break;
     case 0:
-      quit = 1;
       handle_signal(0);
       break;
     default:
-      printf("unsupported command.\n");
+      OC_PRINTF("unsupported command.\n");
       break;
     }
     pthread_mutex_unlock(&app_mutex);
   }
 
   pthread_join(thread, NULL);
-  printf("pthread_join finish!\n");
+  OC_PRINTF("pthread_join finish!\n");
 
 exit:
   oc_main_shutdown();
-
-  pthread_mutex_destroy(&mutex);
-  pthread_mutex_destroy(&app_mutex);
-  return 0;
+  deinit();
+  return ret;
 }

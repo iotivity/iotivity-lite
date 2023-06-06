@@ -1582,7 +1582,7 @@ oc_ri_shutdown(void)
 #endif /* OC_BLOCK_WISE */
 
   while (oc_main_poll_v1() != 0) {
-    ;
+    // no-op
   }
 
   stop_processes();

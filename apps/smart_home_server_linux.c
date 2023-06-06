@@ -20,31 +20,42 @@
 #include "oc_core_res.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
+#include "util/oc_atomic.h"
+
+#ifdef OC_IDD_API
+#include "oc_introspection.h"
+#endif /* OC_IDD_API */
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(OC_IDD_API)
-#include "oc_introspection.h"
-#endif
-
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
 
-static double temp = 5.0, temp_K = (5.0 + 273.15), temp_F = (5.0 * 9 / 5 + 32),
-              min_C = 0.0, max_C = 100.0, min_K = 273.15, max_K = 373.15,
-              min_F = 32, max_F = 212;
+static OC_ATOMIC_INT8_T quit = 0;
+
+static double temp = 5.0;
+static double temp_K = (5.0 + 273.15);
+static double temp_F = (5.0 * 9 / 5 + 32);
+static double min_C = 0.0;
+static double max_C = 100.0;
+static double min_K = 273.15;
+static double max_K = 373.15;
+static double min_F = 32;
+static double max_F = 212;
 typedef enum { C = 100, F, K } units_t;
-units_t temp_units = C;
-static bool switch_state;
-const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
+static units_t temp_units = C;
+static bool switch_state = false;
+static const char *mfg_persistent_uuid = "f6e10d9c-a1c9-43ba-a800-f1b0aad2a889";
 
 static pthread_t toggle_switch_thread;
-oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
+static oc_resource_t *temp_resource = NULL;
+static oc_resource_t *bswitch = NULL;
+#ifdef OC_COLLECTIONS
+static oc_resource_t *col = NULL;
+#endif /* OC_COLLECTIONS */
 
 oc_define_interrupt_handler(toggle_switch)
 {
@@ -57,10 +68,10 @@ static void *
 toggle_switch_resource(void *data)
 {
   (void)data;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     getchar();
-    if (quit != 1) {
-      OC_PRINTF("\nSwitch toggled\n");
+    if (OC_ATOMIC_LOAD8(quit) != 1) {
+      printf("\nSwitch toggled\n");
       switch_state = !switch_state;
       oc_signal_interrupt_handler(toggle_switch);
     }
@@ -76,7 +87,7 @@ app_init(void)
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.2.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
-  OC_PRINTF("\tSwitch device added.\n");
+  printf("\tSwitch device added.\n");
 #if defined(OC_IDD_API)
   FILE *fp;
   uint8_t *buffer;
@@ -96,13 +107,13 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
+      printf("\tIntrospection data set for device.\n");
     } else {
-      OC_PRINTF("%s", introspection_error);
+      printf("%s", introspection_error);
     }
     free(buffer);
   } else {
-    OC_PRINTF("%s", introspection_error);
+    printf("%s", introspection_error);
   }
 #endif
 
@@ -118,7 +129,7 @@ static void
 get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
-  OC_PRINTF("GET_temp:\n");
+  printf("GET_temp:\n");
   bool invalid_query = false;
   const char *units;
   units_t u = temp_units;
@@ -192,7 +203,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  OC_PRINTF("POST_temp:\n");
+  printf("POST_temp:\n");
   bool out_of_range = false;
   double t = -1;
   units_t units = C;
@@ -288,7 +299,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
-  OC_PRINTF("GET_switch:\n");
+  printf("GET_switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -311,7 +322,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  OC_PRINTF("POST_switch:\n");
+  printf("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -552,7 +563,7 @@ register_resources(void)
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
   oc_add_resource(temp_resource);
-  OC_PRINTF("\tTemperature resource added.\n");
+  printf("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
@@ -565,7 +576,7 @@ register_resources(void)
   oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
-  OC_PRINTF("\tSwitch resource added.\n");
+  printf("\tSwitch resource added.\n");
 #ifdef OC_COLLECTIONS
   col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
@@ -589,7 +600,7 @@ register_resources(void)
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
   oc_add_collection(col);
-  OC_PRINTF("\tResources added to collection.\n");
+  printf("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
 }
 
@@ -603,8 +614,8 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 #ifdef OC_SECURITY
@@ -612,7 +623,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  printf("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
@@ -622,32 +633,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    OC_PRINTF("ERROR: unable to read PEM\n");
+    printf("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    OC_PRINTF("ERROR: unable to read PEM\n");
+    printf("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    OC_PRINTF("ERROR: could not obtain length of file\n");
+    printf("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len >= (long)*buffer_len) {
-    OC_PRINTF("ERROR: buffer provided too small\n");
+    printf("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    OC_PRINTF("ERROR: unable to read PEM\n");
+    printf("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    OC_PRINTF("ERROR: unable to read PEM\n");
+    printf("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -667,14 +678,14 @@ factory_presets_cb(size_t device, void *data)
   char cert[8192];
   size_t cert_len = 8192;
   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
-    OC_PRINTF("ERROR: unable to read certificates\n");
+    printf("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
-    OC_PRINTF("ERROR: unable to read private key");
+    printf("ERROR: unable to read private key");
     return;
   }
 
@@ -682,33 +693,33 @@ factory_presets_cb(size_t device, void *data)
                                       (const unsigned char *)key, key_len);
 
   if (ee_credid < 0) {
-    OC_PRINTF("ERROR installing manufacturer EE cert\n");
+    printf("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
-    OC_PRINTF("ERROR: unable to read certificates\n");
+    printf("ERROR: unable to read certificates\n");
     return;
   }
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
-    OC_PRINTF("ERROR installing intermediate CA cert\n");
+    printf("ERROR installing intermediate CA cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
-    OC_PRINTF("ERROR: unable to read certificates\n");
+    printf("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    OC_PRINTF("ERROR installing root cert\n");
+    printf("ERROR installing root cert\n");
     return;
   }
 
@@ -722,25 +733,90 @@ display_device_uuid(void)
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  OC_PRINTF("Started device with ID: %s\n", buffer);
+  printf("Started device with ID: %s\n", buffer);
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    printf("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    printf("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
 
-  oc_clock_time_t next_event;
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
+    next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
+
   oc_set_con_res_announced(false);
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
@@ -763,33 +839,23 @@ main(void)
 
   if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
                      NULL) != 0) {
+    deinit();
     return -1;
   }
 
-  OC_PRINTF("Initializing Smart Home Server.\n");
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-  display_device_uuid();
-  OC_PRINTF("Waiting for Client...\n");
-  OC_PRINTF("Hit 'Enter' at any time to toggle switch resource\n");
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  printf("Initializing Smart Home Server.\n");
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
-
+  display_device_uuid();
+  printf("Waiting for Client...\n");
+  printf("Hit 'Enter' at any time to toggle switch resource\n");
+  run_loop();
   oc_main_shutdown();
-
-  OC_PRINTF("\nPress any key to exit...\n");
+  printf("\nPress any key to exit...\n");
   pthread_join(toggle_switch_thread, NULL);
-
+  deinit();
   return 0;
 }
