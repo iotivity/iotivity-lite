@@ -140,6 +140,8 @@ bool oc_core_is_SVR(const oc_resource_t *resource, size_t device);
 /**
  * @brief determine if a resource is a vertical resource
  *
+ * @note vertical resources are mostly custom resources specific to a device
+ *
  * @param resource the resource
  * @param device the device index to which the resource belongs too
  * @return true : is vertical resource

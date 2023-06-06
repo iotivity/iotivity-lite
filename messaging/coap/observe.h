@@ -143,15 +143,10 @@ void coap_notify_collection_observers(const oc_collection_t *collection,
                                       oc_response_buffer_t *response_buf,
                                       oc_interface_mask_t iface_mask);
 
-#ifdef OC_BLOCK_WISE
-int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                         uint16_t block2_size, oc_endpoint_t *endpoint,
-                         oc_interface_mask_t iface_mask);
-#else  /* OC_BLOCK_WISE */
-int coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                         oc_endpoint_t *endpoint,
-                         oc_interface_mask_t iface_mask);
-#endif /* !OC_BLOCK_WISE */
+int coap_observe_handler(const coap_packet_t *request,
+                         const coap_packet_t *response, oc_resource_t *resource,
+                         uint16_t block2_size, const oc_endpoint_t *endpoint,
+                         oc_interface_mask_t iface_mask) OC_NONNULL();
 
 int coap_remove_observers_on_dos_change(size_t device, bool reset);
 

@@ -77,19 +77,16 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
  * this function will respond with 5.03 Service Unavailable. The client can
  * then retry later.
  */
-#ifdef OC_BLOCK_WISE
 int
 coap_separate_accept(const coap_packet_t *request,
                      oc_separate_response_t *separate_response,
                      const oc_endpoint_t *endpoint, int observe,
                      uint16_t block2_size)
-#else  /* OC_BLOCK_WISE */
-int
-coap_separate_accept(const coap_packet_t *request,
-                     oc_separate_response_t *separate_response,
-                     const oc_endpoint_t *endpoint, int observe)
-#endif /* !OC_BLOCK_WISE */
 {
+#ifndef OC_BLOCK_WISE
+  (void)block2_size;
+#endif /* !OC_BLOCK_WISE */
+
   coap_set_global_status_code(CLEAR_TRANSACTION);
 
   if (separate_response->active == 0) {

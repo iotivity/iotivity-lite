@@ -72,17 +72,10 @@ typedef struct coap_separate
   oc_string_t uri;
 } coap_separate_t;
 
-#ifdef OC_BLOCK_WISE
 int coap_separate_accept(const coap_packet_t *request,
                          oc_separate_response_t *separate_response,
                          const oc_endpoint_t *endpoint, int observe,
                          uint16_t block2_size);
-#else  /* OC_BLOCK_WISE */
-int coap_separate_accept(const coap_packet_t *request,
-                         oc_separate_response_t *separate_response,
-                         const oc_endpoint_t *endpoint, int observe);
-#endif /* OC_BLOCK_WISE */
-
 void coap_separate_resume(coap_packet_t *response,
                           coap_separate_t *separate_store, uint8_t code,
                           uint16_t mid);

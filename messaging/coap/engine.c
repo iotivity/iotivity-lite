@@ -303,6 +303,7 @@ coap_receive(oc_message_t *msg)
         coap_new_transaction(response->mid, NULL, 0, &msg->endpoint);
 
       if (transaction) {
+        oc_ri_invoke_coap_entity_handler_ctx_t handler_ctx;
 #ifdef OC_BLOCK_WISE
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
@@ -554,15 +555,14 @@ coap_receive(oc_message_t *msg)
 #endif /* !OC_BLOCK_WISE */
 #ifdef OC_BLOCK_WISE
       request_handler:
-        if (oc_ri_invoke_coap_entity_handler(message, response, &request_buffer,
-                                             &response_buffer, block2_size,
-                                             &msg->endpoint)) {
-#else  /* OC_BLOCK_WISE */
-        if (oc_ri_invoke_coap_entity_handler(message, response,
-                                             transaction->message->data +
-                                               COAP_MAX_HEADER_SIZE,
-                                             &msg->endpoint)) {
-#endif /* !OC_BLOCK_WISE */
+        handler_ctx.request_state = &request_buffer;
+        handler_ctx.response_state = &response_buffer;
+        handler_ctx.block2_size = block2_size;
+#else  /* !OC_BLOCK_WISE */
+        handler_ctx.buffer = transaction->message->data + COAP_MAX_HEADER_SIZE;
+#endif /* OC_BLOCK_WISE */
+        if (oc_ri_invoke_coap_entity_handler(message, response, &msg->endpoint,
+                                             handler_ctx)) {
 #ifdef OC_BLOCK_WISE
           uint32_t payload_size = 0;
 #ifdef OC_TCP

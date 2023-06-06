@@ -24,6 +24,7 @@
 #include "oc_client_cb_internal.h"
 
 #include "api/oc_discovery_internal.h"
+#include "api/oc_event_callback_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_client_state.h"

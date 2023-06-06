@@ -37,6 +37,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_discovery.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_endpoint.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_enums.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_event_callback.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_events.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_helpers.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_introspection.c

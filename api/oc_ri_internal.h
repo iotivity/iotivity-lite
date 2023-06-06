@@ -21,6 +21,7 @@
 
 #include "messaging/coap/coap.h"
 #include "oc_blockwise.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 
@@ -58,8 +59,6 @@ extern "C" {
 #define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
 #define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
 
-OC_PROCESS_NAME(oc_timed_callback_events);
-
 /**
  * @brief initialize the resource implementation handler
  */
@@ -77,24 +76,22 @@ void oc_ri_shutdown(void);
  */
 void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
 
-/** @brief The callback and data pair is currently being processed by
- * poll_event_callback_timers */
-bool oc_timed_event_callback_is_currently_processed(
-  const void *cb_data, oc_trigger_t event_callback);
-
-/**/
+typedef struct oc_ri_invoke_coap_entity_handler_ctx_t
+{
 #ifdef OC_BLOCK_WISE
-bool oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
-                                      coap_packet_t *response,
-                                      oc_blockwise_state_t **request_state,
-                                      oc_blockwise_state_t **response_state,
-                                      uint16_t block2_size,
-                                      oc_endpoint_t *endpoint) OC_NONNULL();
-#else  /* OC_BLOCK_WISE */
-bool oc_ri_invoke_coap_entity_handler(coap_packet_t *request,
-                                      coap_packet_t *response, uint8_t *buffer,
-                                      oc_endpoint_t *endpoint) OC_NONNULL();
-#endif /* !OC_BLOCK_WISE */
+  oc_blockwise_state_t **request_state;
+  oc_blockwise_state_t **response_state;
+  uint16_t block2_size;
+#else  /* !OC_BLOCK_WISE */
+  uint8_t *buffer;
+#endif /* OC_BLOCK_WISE */
+} oc_ri_invoke_coap_entity_handler_ctx_t;
+
+/** @brief Handle a coap request. */
+bool oc_ri_invoke_coap_entity_handler(
+  const coap_packet_t *request, coap_packet_t *response,
+  oc_endpoint_t *endpoint, oc_ri_invoke_coap_entity_handler_ctx_t ctx)
+  OC_NONNULL();
 
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);

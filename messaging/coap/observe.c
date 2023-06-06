@@ -190,15 +190,10 @@ coap_remove_observer_handle_by_uri(const oc_endpoint_t *endpoint,
 }
 /*---------------------------------------------------------------------------*/
 static int
-#ifdef OC_BLOCK_WISE
 add_observer(oc_resource_t *resource, uint16_t block2_size,
-             oc_endpoint_t *endpoint, const uint8_t *token, size_t token_len,
-             const char *uri, size_t uri_len, oc_interface_mask_t iface_mask)
-#else  /* OC_BLOCK_WISE */
-add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
-             const uint8_t *token, size_t token_len, const char *uri,
-             size_t uri_len, oc_interface_mask_t iface_mask)
-#endif /* !OC_BLOCK_WISE */
+             const oc_endpoint_t *endpoint, const uint8_t *token,
+             size_t token_len, const char *uri, size_t uri_len,
+             oc_interface_mask_t iface_mask)
 {
   /* Remove existing observe relationship, if any. */
   int dup =
@@ -217,6 +212,8 @@ add_observer(oc_resource_t *resource, oc_endpoint_t *endpoint,
     o->resource = resource;
 #ifdef OC_BLOCK_WISE
     o->block2_size = block2_size;
+#else  /* OC_BLOCK_WISE */
+    (void)block2_size;
 #endif /* OC_BLOCK_WISE */
     resource->num_observers++;
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -450,13 +447,14 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
     OC_DBG("send_notification: creating separate response for "
            "notification");
 #ifdef OC_BLOCK_WISE
+    uint16_t block2_size = obs->block2_size;
+#else  /* !OC_BLOCK_WISE */
+    uint16_t block2_size = 0;
+#endif /* OC_BLOCK_WISE */
     if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
-                             obs->obs_counter, obs->block2_size) == 1)
-#else  /* OC_BLOCK_WISE */
-    if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
-                             obs->obs_counter) == 1)
-#endif /* !OC_BLOCK_WISE */
+                             obs->obs_counter, block2_size) == 1) {
       response->separate_response->active = 1;
+    }
   } // separate response
   else {
     OC_DBG("send_notification: notifying observer");
@@ -1308,39 +1306,26 @@ coap_notify_observers(oc_resource_t *resource,
 }
 
 /*---------------------------------------------------------------------------*/
-#ifdef OC_BLOCK_WISE
 int
-coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                     uint16_t block2_size, oc_endpoint_t *endpoint,
+coap_observe_handler(const coap_packet_t *request,
+                     const coap_packet_t *response, oc_resource_t *resource,
+                     uint16_t block2_size, const oc_endpoint_t *endpoint,
                      oc_interface_mask_t iface_mask)
-#else  /* OC_BLOCK_WISE */
-int
-coap_observe_handler(void *request, void *response, oc_resource_t *resource,
-                     oc_endpoint_t *endpoint, oc_interface_mask_t iface_mask)
-#endif /* !OC_BLOCK_WISE */
 {
-  coap_packet_t *const coap_req = (coap_packet_t *)request;
-  coap_packet_t *const coap_res = (coap_packet_t *)response;
-  int dup = -1;
-  if (coap_req->code == COAP_GET && coap_res->code < 128) {
-    if (IS_OPTION(coap_req, COAP_OPTION_OBSERVE)) {
-      if (coap_req->observe == 0) {
-        dup =
-#ifdef OC_BLOCK_WISE
-          add_observer(resource, block2_size, endpoint, coap_req->token,
-                       coap_req->token_len, coap_req->uri_path,
-                       coap_req->uri_path_len, iface_mask);
-#else  /* OC_BLOCK_WISE */
-          add_observer(resource, endpoint, coap_req->token, coap_req->token_len,
-                       coap_req->uri_path, coap_req->uri_path_len, iface_mask);
-#endif /* !OC_BLOCK_WISE */
-      } else if (coap_req->observe == 1) {
-        dup = coap_remove_observer_by_token(endpoint, coap_req->token,
-                                            coap_req->token_len);
-      }
-    }
+  if (request->code != COAP_GET || response->code >= 128 ||
+      !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
+    return -1;
   }
-  return dup;
+  if (request->observe == 0) {
+    return add_observer(resource, block2_size, endpoint, request->token,
+                        request->token_len, request->uri_path,
+                        request->uri_path_len, iface_mask);
+  }
+  if (request->observe == 1) {
+    return coap_remove_observer_by_token(endpoint, request->token,
+                                         request->token_len);
+  }
+  return -1;
 }
 /*---------------------------------------------------------------------------*/
 
