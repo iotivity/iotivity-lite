@@ -123,13 +123,13 @@ void tcp_session_shutdown(const ip_context_t *dev);
  * sessions. Retry the connection process for sessions that haven't reached the
  * maximal amount of retries. Get the nearest timeout of a non-expired session.
  *
- * @param now current time
+ * @param now current monotonic time
  * @return 0 no non-expired session was found
  * @return >0 the nearest timeout of a non-expired session
  *
  * @note thread-safe
  */
-oc_clock_time_t tcp_check_expiring_sessions(oc_clock_time_t now);
+oc_clock_time_t tcp_check_expiring_sessions(oc_clock_time_t now_mt);
 
 /**
  * @brief Go through the list of TCP sessions waiting to be opened. If a session
