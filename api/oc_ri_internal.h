@@ -87,6 +87,7 @@ typedef struct oc_ri_invoke_coap_entity_handler_ctx_t
 #endif /* OC_BLOCK_WISE */
 } oc_ri_invoke_coap_entity_handler_ctx_t;
 
+/** @brief Handle a coap request. */
 bool oc_ri_invoke_coap_entity_handler(
   const coap_packet_t *request, coap_packet_t *response,
   oc_endpoint_t *endpoint, oc_ri_invoke_coap_entity_handler_ctx_t ctx)

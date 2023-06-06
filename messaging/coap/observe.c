@@ -446,9 +446,10 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
 
     OC_DBG("send_notification: creating separate response for "
            "notification");
-    uint16_t block2_size = 0;
 #ifdef OC_BLOCK_WISE
-    block2_size = obs->block2_size;
+    uint16_t block2_size = obs->block2_size;
+#else  /* !OC_BLOCK_WISE */
+    uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
     if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
                              obs->obs_counter, block2_size) == 1) {
@@ -1311,18 +1312,18 @@ coap_observe_handler(const coap_packet_t *request,
                      uint16_t block2_size, const oc_endpoint_t *endpoint,
                      oc_interface_mask_t iface_mask)
 {
-  if (request->code == COAP_GET && response->code < 128) {
-    if (IS_OPTION(request, COAP_OPTION_OBSERVE)) {
-      if (request->observe == 0) {
-        return add_observer(resource, block2_size, endpoint, request->token,
-                            request->token_len, request->uri_path,
-                            request->uri_path_len, iface_mask);
-      }
-      if (request->observe == 1) {
-        return coap_remove_observer_by_token(endpoint, request->token,
-                                             request->token_len);
-      }
-    }
+  if (request->code != COAP_GET || response->code >= 128 ||
+      !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
+    return -1;
+  }
+  if (request->observe == 0) {
+    return add_observer(resource, block2_size, endpoint, request->token,
+                        request->token_len, request->uri_path,
+                        request->uri_path_len, iface_mask);
+  }
+  if (request->observe == 1) {
+    return coap_remove_observer_by_token(endpoint, request->token,
+                                         request->token_len);
   }
   return -1;
 }

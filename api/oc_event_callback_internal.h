@@ -98,6 +98,7 @@ size_t oc_periodic_observe_callback_count(void);
 
 #endif /* OC_SERVER */
 
+/** @brief Process for timed events. */
 OC_PROCESS_NAME(oc_timed_callback_events);
 
 #ifdef __cplusplus

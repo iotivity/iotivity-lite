@@ -424,7 +424,7 @@ public:
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
   static oc_collection_t *CreateSwitchesCollection(const std::string &uri)
   {
-    oc_collection_t *col = reinterpret_cast<oc_collection_t *>(
+    auto *col = reinterpret_cast<oc_collection_t *>(
       oc_new_collection(nullptr, uri.c_str(), 1, 0));
     oc_resource_bind_resource_type(&col->res, "oic.wk.col");
     oc_collection_add_supported_rt(&col->res, "oic.r.switch.binary");
@@ -436,8 +436,6 @@ public:
     oc_resource_set_access_in_RFOTM(&col->res, true, OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 #endif /* OC_SECURITY */
-    // TODO: should oc_add_resource work here?
-    // EXPECT_TRUE(oc_add_resource(&col->res));
     oc_add_collection(&col->res);
     return col;
   }
@@ -527,7 +525,6 @@ TEST_F(TestObserveCallbackWithServer, Observe)
   };
   auto observe = [](oc_client_response_t *cr) {
     EXPECT_EQ(OC_STATUS_OK, cr->code);
-    // EXPECT_EQ(0, cr->observe_option);
     oc::TestDevice::Terminate();
     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
            oc::RepPool::GetJson(cr->payload).data());
@@ -553,7 +550,8 @@ TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
 {
   auto interval = 1s;
   oc_resource_set_periodic_observable(
-    oc_core_get_resource_by_index(OCF_P, kDeviceID), interval.count());
+    oc_core_get_resource_by_index(OCF_P, kDeviceID),
+    static_cast<uint16_t>(interval.count()));
 
 #ifdef OC_SECURITY
   oc_sec_self_own(kDeviceID);
@@ -580,8 +578,12 @@ TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
   ASSERT_NE(nullptr, ep);
   observe_data od{};
   ASSERT_TRUE(oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &od));
-  oc::TestDevice::PoolEventsMs(std::chrono::milliseconds(interval).count() *
-                               2.5f);
+  // give enough time to receive do processing and receive the initial
+  // notification (observe_option == 0)
+  uint64_t mseconds = std::chrono::milliseconds(700).count();
+  // and the 2 periodic notifications
+  mseconds += std::chrono::milliseconds(interval).count() * 2;
+  oc::TestDevice::PoolEventsMs(mseconds);
   EXPECT_LE(3, od.counter);
   EXPECT_EQ(1, oc_periodic_observe_callback_count());
 
@@ -649,11 +651,12 @@ TEST_F(TestObserveCallbackWithServer, ObserveCollection)
     std::string json = oc::RepPool::GetJson(cr->payload).data();
     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option, json.c_str());
     // the payload should contain all subresources of the collection
-    for (oc_link_t *link =
+    for (auto *link =
            static_cast<oc_link_t *>(oc_list_head(switches_.collection->links));
          link != nullptr; link = link->next) {
-      std::string href =
-        std::string("\"href\":\"") + oc_string(link->resource->uri) + "\"";
+      std::string href = R"("href":")";
+      href += oc_string(link->resource->uri);
+      href += R"(")";
       OC_DBG("find link(%s)", href.c_str());
       EXPECT_TRUE(json.find(href) != std::string::npos);
     }

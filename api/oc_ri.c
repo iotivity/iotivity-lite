@@ -735,19 +735,6 @@ oc_ri_free_resource_properties(oc_resource_t *resource)
   }
 }
 
-#ifdef OC_SERVER
-static oc_event_callback_retval_t
-oc_observe_notification_resource_defaults_delayed(void *data)
-{
-  oc_resource_defaults_data_t *resource_defaults_data =
-    (oc_resource_defaults_data_t *)data;
-  notify_resource_defaults_observer(resource_defaults_data->resource,
-                                    resource_defaults_data->iface_mask, NULL);
-  oc_ri_dealloc_resource_defaults(resource_defaults_data);
-  return OC_EVENT_DONE;
-}
-#endif /* OC_SERVER */
-
 oc_interface_mask_t
 oc_ri_get_interface_mask(const char *iface, size_t iface_len)
 {
@@ -950,6 +937,43 @@ ri_get_ocf_version_from_header(const coap_packet_t *request)
 
 #ifdef OC_SERVER
 
+#ifdef OC_COLLECTIONS
+static bool
+ri_add_collection_observation(oc_collection_t *collection,
+                              const oc_endpoint_t *endpoint, bool is_batch)
+{
+  oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
+#ifdef OC_SECURITY
+  for (; links != NULL; links = links->next) {
+    if (links->resource == NULL ||
+        (links->resource->properties & OC_OBSERVABLE) == 0 ||
+        oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
+      continue;
+    }
+    return false;
+  }
+#else  /* !OC_SECURITY */
+  (void)endpoint;
+#endif /* OC_SECURITY */
+  if (is_batch) {
+    links = (oc_link_t *)oc_list_head(collection->links);
+    for (; links != NULL; links = links->next) {
+      if (links->resource == NULL ||
+          (links->resource->properties & OC_PERIODIC) == 0) {
+        continue;
+      }
+      if (!oc_periodic_observe_callback_add(links->resource)) {
+        // TODO: shouldn't we remove the periodic observe of links added by this
+        // call?
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+#endif /* OC_COLLECTIONS */
+
 static bool
 ri_add_observation(const coap_packet_t *request, const coap_packet_t *response,
                    oc_resource_t *resource, bool resource_is_collection,
@@ -971,26 +995,10 @@ ri_add_observation(const coap_packet_t *request, const coap_packet_t *response,
 #ifdef OC_COLLECTIONS
   if (resource_is_collection) {
     oc_collection_t *collection = (oc_collection_t *)resource;
-    oc_link_t *links = (oc_link_t *)oc_list_head(collection->links);
-#ifdef OC_SECURITY
-    for (; links != NULL; links = links->next) {
-      if (links->resource == NULL ||
-          (links->resource->properties & OC_OBSERVABLE) == 0 ||
-          oc_sec_check_acl(OC_GET, links->resource, endpoint)) {
-        continue;
-      }
+    if (!ri_add_collection_observation(collection, endpoint,
+                                       iface_query == OC_IF_B)) {
       // TODO: shouldn't we remove the periodic observe callback here?
       return false;
-    }
-#endif /* OC_SECURITY */
-    if (iface_query == OC_IF_B) {
-      links = (oc_link_t *)oc_list_head(collection->links);
-      for (; links != NULL; links = links->next) {
-        if (links->resource != NULL &&
-            (links->resource->properties & OC_PERIODIC) != 0) {
-          oc_periodic_observe_callback_add(links->resource);
-        }
-      }
     }
   }
 #else  /* !OC_COLLECTIONS */
@@ -1070,6 +1078,18 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
   }
   return 2;
 }
+
+static oc_event_callback_retval_t
+oc_observe_notification_resource_defaults_delayed(void *data)
+{
+  oc_resource_defaults_data_t *resource_defaults_data =
+    (oc_resource_defaults_data_t *)data;
+  notify_resource_defaults_observer(resource_defaults_data->resource,
+                                    resource_defaults_data->iface_mask, NULL);
+  oc_ri_dealloc_resource_defaults(resource_defaults_data);
+  return OC_EVENT_DONE;
+}
+
 #endif /* OC_SERVER */
 
 typedef struct
@@ -1096,7 +1116,8 @@ static void
 ri_invoke_coap_entity_set_response(coap_packet_t *response,
                                    ri_invoke_coap_entity_set_response_ctx_t ctx)
 {
-  oc_response_buffer_t *response_buffer = ctx.response_obj->response_buffer;
+  const oc_response_buffer_t *response_buffer =
+    ctx.response_obj->response_buffer;
 
 #ifdef OC_SERVER
   oc_response_t *response_obj = ctx.response_obj;
@@ -1365,31 +1386,29 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   bool response_state_allocated = false;
   bool enable_realloc_rep = false;
 #endif /* OC_DYNAMIC_ALLOCATION */
-  if (cur_resource && !bad_request) {
-    if (!(*ctx.response_state)) {
-      OC_DBG("creating new block-wise response state");
-      *ctx.response_state = oc_blockwise_alloc_response_buffer(
-        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
-        OC_MIN_APP_DATA_SIZE);
-      if (!(*ctx.response_state)) {
-        OC_ERR("failure to alloc response state");
-        bad_request = true;
-      } else {
+  if (cur_resource && !bad_request && *ctx.response_state == NULL) {
+    OC_DBG("creating new block-wise response state");
+    *ctx.response_state = oc_blockwise_alloc_response_buffer(
+      uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
+      OC_MIN_APP_DATA_SIZE);
+    if (*ctx.response_state == NULL) {
+      OC_ERR("failure to alloc response state");
+      bad_request = true;
+    } else {
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-        if (!request_buffer->block)
+      if (!request_buffer->block)
 #endif /* OC_APP_DATA_BUFFER_POOL */
-        {
-          response_state_allocated = true;
-        }
-#endif /* OC_DYNAMIC_ALLOCATION */
-        if (uri_query_len > 0) {
-          oc_new_string(&(*ctx.response_state)->uri_query, uri_query,
-                        uri_query_len);
-        }
-        response_buffer.buffer = (*ctx.response_state)->buffer;
-        response_buffer.buffer_size = OC_MIN_APP_DATA_SIZE;
+      {
+        response_state_allocated = true;
       }
+#endif /* OC_DYNAMIC_ALLOCATION */
+      if (uri_query_len > 0) {
+        oc_new_string(&(*ctx.response_state)->uri_query, uri_query,
+                      uri_query_len);
+      }
+      response_buffer.buffer = (*ctx.response_state)->buffer;
+      response_buffer.buffer_size = OC_MIN_APP_DATA_SIZE;
     }
   }
 #else  /* OC_BLOCK_WISE */
@@ -1510,14 +1529,13 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   int32_t observe = 2;
   if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
 #ifdef OC_BLOCK_WISE
-    observe = ri_handle_observation(request, response, cur_resource,
-                                    resource_is_collection, ctx.block2_size,
-                                    endpoint, iface_query);
+    uint16_t block2_size = ctx.block2_size;
 #else  /* !OC_BLOCK_WISE */
-    observe =
-      ri_handle_observation(request, response, cur_resource,
-                            resource_is_collection, 0, endpoint, iface_query);
+    uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
+    observe = ri_handle_observation(request, response, cur_resource,
+                                    resource_is_collection, block2_size,
+                                    endpoint, iface_query);
   }
 #endif /* OC_SERVER */
 
