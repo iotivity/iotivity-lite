@@ -17,9 +17,9 @@
  ****************************************************************************/
 
 #include "oc_api.h"
-#include "port/oc_clock.h"
 #include "oc_log.h"
-#include "util/oc_macros.h"
+#include "port/oc_clock.h"
+#include "util/oc_atomic.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -30,10 +30,14 @@ static pthread_t event_thread;
 static pthread_mutex_t app_sync_lock;
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
 
-typedef enum { UNKNOWN = 0, LOCKED, UNLOCKED } lock_state;
+static OC_ATOMIC_INT8_T quit = 0;
+
+typedef enum {
+  UNKNOWN = 0,
+  LOCKED,
+  UNLOCKED,
+} lock_state;
 
 typedef struct oc_smartlock_t
 {
@@ -136,27 +140,31 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     pthread_mutex_lock(&app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     pthread_mutex_unlock(&app_sync_lock);
 
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -342,8 +350,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   if (l) {
     oc_endpoint_list_copy(&l->endpoint, endpoint);
     size_t uri_len = strlen(uri);
-    uri_len =
-      uri_len > OC_CHAR_ARRAY_LEN(l->uri) ? OC_CHAR_ARRAY_LEN(l->uri) : uri_len;
+    uri_len = uri_len > sizeof(l->uri) - 1 ? sizeof(l->uri) - 1 : uri_len;
     memcpy(l->uri, uri, uri_len);
     l->uri[uri_len] = '\0';
     oc_list_add(smartlocks, l);
@@ -402,8 +409,8 @@ random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 }
 #endif /* OC_SECURITY */
 
-int
-main(void)
+static bool
+init(void)
 {
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -411,11 +418,65 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  int init;
+  int err = pthread_mutex_init(&app_sync_lock, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_sync_lock);
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .requests_entry = issue_requests,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./smart_lock_creds");
@@ -425,16 +486,19 @@ main(void)
 #endif
 
   oc_set_con_res_announced(false);
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
+  }
 
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
+    deinit();
     return -1;
   }
 
   int c;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
     SCANF("%d", &c);
     switch (c) {
@@ -465,5 +529,6 @@ main(void)
   }
 
   pthread_join(event_thread, NULL);
+  deinit();
   return 0;
 }

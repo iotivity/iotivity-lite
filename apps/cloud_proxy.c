@@ -144,17 +144,18 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_csr.h"
+#include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
 #include <signal.h>
 
 #ifdef OC_CLOUD
 #include "oc_cloud.h"
-#endif
-#if defined(OC_IDD_API)
+#endif /* OC_CLOUD */
+
+#ifdef OC_IDD_API
 #include "oc_introspection.h"
-#endif
+#endif /* OC_IDD_API */
 
 #ifndef DOXYGEN
 // Force doxygen to document static inline
@@ -175,16 +176,15 @@
 #ifndef NO_MAIN
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
 #endif /* NO_MAIN */
-#endif
+#endif /* __linux__ */
 
 #ifdef WIN32
 /* windows specific code */
 #include <windows.h>
 static CONDITION_VARIABLE cv; /**< event loop variable */
 static CRITICAL_SECTION cs;   /**< event loop variable */
-#endif
+#endif                        /* WIN32 */
 
 #include <stdio.h> /* defines FILENAME_MAX */
 #ifdef WIN32
@@ -203,8 +203,8 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 /* Note: Magic numbers are derived from the resource definition, either from the
  * example or the definition.*/
 
-volatile int quit = 0;      /**< stop variable, used by handle_signal */
-#define MAX_URI_LENGTH (30) /**< max size strings in the payload */
+static volatile int quit = 0; /**< stop variable, used by handle_signal */
+#define MAX_URI_LENGTH (30)   /**< max size strings in the payload */
 
 #define MAX_DISCOVERED_SERVER                                                  \
   100 /**< amount of local devices that can be stored (during the program) */
@@ -276,7 +276,7 @@ print_rep(oc_rep_t *rep, bool pretty_print)
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, pretty_print);
-  printf("%s\n", json);
+  OC_PRINTF("%s\n", json);
   free(json);
 }
 
@@ -1547,8 +1547,8 @@ STATIC void
 handle_signal(int signal)
 {
   (void)signal;
-  signal_event_loop();
   quit = 1;
+  signal_event_loop();
 }
 
 #ifdef OC_CLOUD
@@ -1705,6 +1705,105 @@ display_device_uuid(void)
   OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
+static bool
+init(void)
+{
+#ifdef WIN32
+  /* windows specific */
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  /* install Ctrl-C */
+  signal(SIGINT, handle_signal);
+#endif /* WIN32 */
+#ifdef __linux__
+  /* linux specific */
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  /* install Ctrl-C */
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+#endif /* __linux__ */
+  return true;
+}
+
+static void
+deinit(void)
+{
+#ifdef __linux__
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+#endif /* __linux__ */
+}
+
+static void
+run_loop(void)
+{
+#ifdef WIN32
+  /* windows specific loop */
+  while (quit != 1) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
+#endif /* WIN32 */
+
+#ifdef __linux__
+  /* linux specific loop */
+  while (quit != 1) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+#endif /* __linux__ */
+}
+
 /**
  * main application.
  * intializes the global variables
@@ -1718,8 +1817,9 @@ display_device_uuid(void)
 int
 main(int argc, char *argv[])
 {
-  int init;
-  oc_clock_time_t next_event;
+  if (!init()) {
+    return -1;
+  }
 
   memset(&g_d2dserverlist_d2dserverlist, 0,
          sizeof(g_d2dserverlist_d2dserverlist));
@@ -1744,23 +1844,6 @@ main(int argc, char *argv[])
     apn = argv[5];
     OC_PRINTF("apn: %s\n", argv[5]);
   }
-
-#ifdef WIN32
-  /* windows specific */
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
-  /* install Ctrl-C */
-  signal(SIGINT, handle_signal);
-#endif
-#ifdef __linux__
-  /* linux specific */
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  /* install Ctrl-C */
-  sigaction(SIGINT, &sa, NULL);
-#endif
 
   char buff[FILENAME_MAX];
   char *retbuf = NULL;
@@ -1790,16 +1873,15 @@ main(int argc, char *argv[])
 #endif /* OC_SECURITY */
 
   /* initializes the handlers structure */
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources = register_resources
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
 #ifdef OC_CLIENT
 #ifdef PROXY_ALL_DISCOVERED_DEVICES
-                                        ,
-                                        .requests_entry = issue_requests_all
+    .requests_entry = issue_requests_all,
 #else
-                                        ,
-                                        .requests_entry = NULL
+    .requests_entry = NULL,
 #endif
 #endif
   };
@@ -1818,11 +1900,11 @@ main(int argc, char *argv[])
   // oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
   /* start the stack */
-  init = oc_main_init(&handler);
-
-  if (init < 0) {
-    OC_PRINTF("oc_main_init failed %d, exiting.\n", init);
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    OC_PRINTF("oc_main_init failed %d, exiting.\n", ret);
+    deinit();
+    return ret;
   }
 
 #ifdef OC_CLOUD
@@ -1868,38 +1950,7 @@ main(int argc, char *argv[])
 
   OC_PRINTF("OCF server \"%s\" running, waiting on incoming connections.\n",
             device_name);
-
-#ifdef WIN32
-  /* windows specific loop */
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    if (next_event == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
-    } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
-        SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
-  }
-#endif
-
-#ifdef __linux__
-  /* linux specific loop */
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
-#endif
+  run_loop();
 
   /* shut down the stack */
 #ifdef OC_CLOUD
@@ -1907,6 +1958,7 @@ main(int argc, char *argv[])
   oc_cloud_manager_stop(ctx);
 #endif
   oc_main_shutdown();
+  deinit();
   return 0;
 }
 #endif /* NO_MAIN */

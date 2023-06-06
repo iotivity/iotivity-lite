@@ -194,11 +194,19 @@ public:
     InitializeConditionVariable(&s_cv);
 #else
     if (pthread_mutex_init(&s_mutex, nullptr) != 0) {
-      throw std::runtime_error("cannot initialize mutex");
+      throw std::string("cannot initialize mutex");
     }
-    if (pthread_cond_init(&s_cv, nullptr) != 0) {
-      throw std::runtime_error("cannot initialize conditional variable");
+    pthread_condattr_t attr;
+    if (pthread_condattr_init(&attr) != 0) {
+      throw std::string("cannot initialize condition variable attribute");
     }
+    if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0) {
+      throw std::string("cannot set condition variable clockid");
+    }
+    if (pthread_cond_init(&s_cv, &attr) != 0) {
+      throw std::string("cannot initialize condition variable");
+    }
+    pthread_condattr_destroy(&attr);
 #endif /* _WIN32 */
   }
 
@@ -254,28 +262,30 @@ public:
     poolEventsMs(secs * 1000U);
   }
 
-  static void waitForEvent(oc_clock_time_t next_event)
+  static void waitForEvent(oc_clock_time_t next_event_mt)
   {
 #ifdef _WIN32
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       SleepConditionVariableCS(&s_cv, &s_mutex, INFINITE);
       return;
     }
-    oc_clock_time_t now = oc_clock_time();
-    if (now < next_event) {
+    oc_clock_time_t now_mt = oc_clock_time();
+    if (now_mt < next_event_mt) {
       SleepConditionVariableCS(
-        &s_cv, &s_mutex, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+        &s_cv, &s_mutex,
+        (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
     }
 #else
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&s_cv, &s_mutex);
       return;
     }
-    struct timespec ts;
-    ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-    ts.tv_nsec = static_cast<long>((next_event % OC_CLOCK_SECOND) * 1.e09 /
-                                   OC_CLOCK_SECOND);
-    pthread_cond_timedwait(&s_cv, &s_mutex, &ts);
+    struct timespec next_event = { 1, 0 };
+    if (oc_clock_time_t next_event_cv; oc_clock_monotonic_time_to_posix(
+          next_event_mt, CLOCK_MONOTONIC, &next_event_cv)) {
+      next_event = oc_clock_time_to_timespec(next_event_cv);
+    }
+    pthread_cond_timedwait(&s_cv, &s_mutex, &next_event);
 #endif
   }
 
@@ -286,7 +296,7 @@ public:
 
     while (OC_ATOMIC_LOAD8(s_terminate) == 0) {
       lock();
-      oc_clock_time_t next_event = oc_main_poll();
+      oc_clock_time_t next_event = oc_main_poll_v1();
       if (OC_ATOMIC_LOAD8(s_terminate) != 0) {
         unlock();
         break;

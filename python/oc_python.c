@@ -22,10 +22,11 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_log.h"
 #include "oc_obt.h"
 #include "oc_python.h"
 #include "port/oc_clock.h"
-#include "port/oc_log_internal.h"
+#include "util/oc_atomic.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_obt_internal.h"
@@ -47,7 +48,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
 
 #define MAX_NUM_DEVICES (50)
@@ -85,10 +85,9 @@ static pthread_cond_t cv;
 /* OS specific definition for lock/unlock */
 #define otb_mutex_lock(m) pthread_mutex_lock(&(m))
 #define otb_mutex_unlock(m) pthread_mutex_unlock(&(m))
-
-static struct timespec ts;
 #endif
-static int quit = 0;
+
+static OC_ATOMIC_INT8_T quit = 0;
 
 /**
  * structure with the callback
@@ -203,7 +202,7 @@ print_rep(const oc_rep_t *rep, bool pretty_print)
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, pretty_print);
-  printf("%s\n", json);
+  OC_PRINTF("%s\n", json);
   free(json);
 }
 
@@ -314,7 +313,7 @@ void
 python_exit(int signal)
 {
   (void)signal;
-  quit = 1;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
 }
 
@@ -327,19 +326,19 @@ static DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
 {
   (void)lpParam;
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       SleepConditionVariableCS(&cv, &cs, INFINITE);
     } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
   }
@@ -353,19 +352,23 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     otb_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     otb_mutex_unlock(app_sync_lock);
 
     otb_mutex_lock(mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     otb_mutex_unlock(mutex);
   }
@@ -2280,7 +2283,7 @@ static void
 post_light_response_cb(oc_client_response_t *data)
 {
   if (data->code > OC_STATUS_CHANGED) {
-    OC_ERR("POST returned unexpected response code %d\n", data->code);
+    OC_PRINTF("ERROR: POST returned unexpected response code %d\n", data->code);
   }
   // external_cb(&my_state);
   // my_state.error_state = false;
@@ -2453,20 +2456,77 @@ change_light(int value)
 }
 #endif /*OC Client*/
 
-int
-python_main(void)
+static bool
+init(void)
 {
 #if defined(_WIN32)
   InitializeCriticalSection(&cs);
   InitializeConditionVariable(&cv);
   InitializeCriticalSection(&app_sync_lock);
+  signal(SIGINT, python_exit);
 #elif defined(__linux__)
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = python_exit;
   sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&app_sync_lock, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_sync_lock);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
 #endif
+  return true;
+}
+
+static void
+deinit(void)
+{
+#ifdef __linux__
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_sync_lock);
+#endif /* __linux__ */
+}
+
+int
+python_main(void)
+{
+  if (!init()) {
+    return -1;
+  }
 
 #ifdef OC_SERVER
   OC_PRINTF("[C]OC_SERVER\n");
@@ -2475,15 +2535,14 @@ python_main(void)
   OC_PRINTF("[C]OC_CLIENT\n");
 #endif
 
-  int init;
-
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
 #ifdef OC_SERVER
-                                        .register_resources = NULL,
+    .register_resources = NULL,
 #endif
 #ifdef OC_CLIENT
-                                        .requests_entry = issue_requests
+    .requests_entry = issue_requests,
 #endif
   };
 
@@ -2494,9 +2553,11 @@ python_main(void)
   oc_set_con_res_announced(false);
   oc_set_max_app_data_size(16384);
 
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
+  }
 
 #if defined(_WIN32)
   event_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ocf_event_thread,
@@ -2512,7 +2573,7 @@ python_main(void)
 
   display_device_uuid();
 
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
 #if defined(_WIN32)
     Sleep(5000);
 #elif defined(__linux__)
@@ -2538,5 +2599,6 @@ python_main(void)
     device = (device_handle_t *)oc_list_pop(unowned_devices);
   }
 
+  deinit();
   return 0;
 }

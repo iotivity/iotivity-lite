@@ -18,21 +18,21 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_log.h"
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
-#include "oc_log.h"
 #include <signal.h>
 #include <windows.h>
-
-int quit = 0;
 
 static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
 
+static bool quit = false;
+
 static bool state = false;
-int power;
-oc_string_t name;
-bool g_binaryswitch_value = false;
+static int power = 0;
+static oc_string_t name;
+static bool g_binaryswitch_value = false;
 
 static int
 app_init(void)
@@ -228,54 +228,62 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
+}
+
+static void
+init(void)
+{
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  signal(SIGINT, handle_signal);
+}
+
+static void
+run_loop(void)
+{
+  oc_clock_time_t next_event_mt;
+  while (!quit) {
+    next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
 }
 
 int
 main(void)
 {
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
-
-  int init;
+  init();
 
   /* set the latency to 240 seconds*/
   /* if no latency is needed then remove the next line */
   oc_core_set_latency(240);
 
-  signal(SIGINT, handle_signal);
-
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources,
-                                        .requests_entry = 0 };
-
-  oc_clock_time_t next_event;
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+    .requests_entry = 0,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./simpleserver_creds/");
 #endif /* OC_STORAGE */
 
   oc_set_con_res_announced(true);
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
-
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    if (next_event == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
-    } else {
-      oc_clock_time_t now = oc_clock_time();
-      if (now < next_event) {
-        SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event - now) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    return ret;
   }
-
+  run_loop();
   oc_main_shutdown();
   return 0;
 }

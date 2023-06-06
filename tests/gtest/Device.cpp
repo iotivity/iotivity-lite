@@ -94,17 +94,17 @@ Device::Device()
   InitializeConditionVariable(&cv_);
 #else
   if (pthread_mutex_init(&mutex_, nullptr) != 0) {
-    throw "cannot initialize mutex";
+    throw std::string("cannot initialize mutex");
   }
   pthread_condattr_t attr;
   if (pthread_condattr_init(&attr) != 0) {
-    throw "cannot attributes of conditional variable";
+    throw std::string("cannot attributes of conditional variable");
   }
   if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0) {
-    throw "cannot configure clockid";
+    throw std::string("cannot configure clockid");
   }
   if (pthread_cond_init(&cv_, &attr) != 0) {
-    throw "cannot initialize conditional variable";
+    throw std::string("cannot initialize conditional variable");
   }
   pthread_condattr_destroy(&attr);
 #endif /* _WIN32 */
@@ -168,9 +168,8 @@ Device::WaitForEvent(oc_clock_time_t next_event_mt)
     return;
   }
   struct timespec next_event = { 1, 0 };
-  oc_clock_time_t next_event_cv;
-  if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
-                                       &next_event_cv)) {
+  if (oc_clock_time_t next_event_cv; oc_clock_monotonic_time_to_posix(
+        next_event_mt, CLOCK_MONOTONIC, &next_event_cv)) {
     next_event = oc_clock_time_to_timespec(next_event_cv);
   }
   pthread_cond_timedwait(&cv_, &mutex_, &next_event);

@@ -10,7 +10,9 @@
 extern "C" {
 #endif
 
+/** time.h is available on platform */
 #define OC_HAVE_TIME_H
+/** clockid_t is available on platform  */
 #define OC_HAVE_CLOCKID_T
 
 /* jitter added to response to some multicast requests */
@@ -18,7 +20,7 @@ extern "C" {
 
 typedef uint64_t oc_clock_time_t;
 #define OC_CLOCK_CONF_TICKS_PER_SECOND CLOCKS_PER_SEC
-//#define OC_SPEC_VER_OIC
+// #define OC_SPEC_VER_OIC
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (600)
@@ -34,23 +36,23 @@ typedef uint64_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 /* Add support for software update */
-//#define OC_SOFTWARE_UPDATE or run "make" with SWUPDATE=1
+// #define OC_SOFTWARE_UPDATE or run "make" with SWUPDATE=1
 /* Add support for the oic.if.create interface in Collections */
-//#define OC_COLLECTIONS_IF_CREATE or run "make" with CREATE=1
+// #define OC_COLLECTIONS_IF_CREATE or run "make" with CREATE=1
 /* Add support for the maintenance resource */
-//#define OC_MNT or run "make" with MNT=1
+// #define OC_MNT or run "make" with MNT=1
 /* Add batch interface support to /oic/res */
 #define OC_RES_BATCH_SUPPORT
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
 #define OC_DNS_CACHE
-//#define OC_DNS_LOOKUP_IPV6
+// #define OC_DNS_LOOKUP_IPV6
 
 /* Add support observable for oic/res */
 #define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Maximum size of uri for a collection resource */
-//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+// #define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION

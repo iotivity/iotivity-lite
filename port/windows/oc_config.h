@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+/** time.h is available on platform */
 #define OC_HAVE_TIME_H
 
 typedef uint64_t oc_clock_time_t;
@@ -32,22 +33,22 @@ typedef uint64_t oc_clock_time_t;
 
 /* Add support for dns lookup to the endpoint */
 #define OC_DNS_LOOKUP
-//#define OC_DNS_LOOKUP_IPV6
+// #define OC_DNS_LOOKUP_IPV6
 
 /* Add request history for deduplicate UDP/DTLS messages */
 #define OC_REQUEST_HISTORY
 
 // The maximum size of a response to an OBSERVE request, in bytes.
-//#define OC_MAX_OBSERVE_SIZE 512
+// #define OC_MAX_OBSERVE_SIZE 512
 
 /* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+// #define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Enable reallocation during encoding the representation to cbor */
-//#define OC_REP_ENCODING_REALLOC
+// #define OC_REP_ENCODING_REALLOC
 
 /* Maximum size of uri for a collection resource */
-//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+// #define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 #if !defined(OC_DYNAMIC_ALLOCATION)
 #error "Set preprocessor definition OC_DYNAMIC_ALLOCATION in your build"
@@ -80,7 +81,7 @@ typedef uint64_t oc_clock_time_t;
 #endif
 
 /* /.well-known/core discovery on ALL COAP nodes */
-//#define OC_WKCORE
+// #define OC_WKCORE
 
 /* Wipe device name during reset, when oic/con is enabled */
 /* Default: Wipe name */

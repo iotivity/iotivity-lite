@@ -19,25 +19,32 @@
 #include "oc_api.h"
 #include "oc_log.h"
 #include "port/oc_clock.h"
-#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
+#ifdef __linux__
+#include <pthread.h>
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
+#endif /* __linux__ */
 
-int quit = 0;
+#ifdef _WIN32
+#include <windows.h>
+static CONDITION_VARIABLE cv;
+static CRITICAL_SECTION cs;
+#endif /* _WIN32 */
+
+static bool quit = false;
 
 static int
 app_init(void)
 {
   int ret = oc_init_platform("Apple", NULL, NULL);
-  printf("\tPlatform initialized.\n");
+  OC_PRINTF("\tPlatform initialized.\n");
   ret |= oc_add_device("/oic/d", "oic.d.phone", "Kishen's IPhone", "ocf.1.0.0",
                        "ocf.res.1.0.0", NULL, NULL);
-  printf("\tDevice initialized.\n");
+  OC_PRINTF("\tDevice initialized.\n");
   return ret;
 }
 
@@ -56,28 +63,28 @@ print_rep(oc_rep_t *rep, bool pretty_print)
   json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
   json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, pretty_print);
-  printf("%s\n", json);
+  OC_PRINTF("%s\n", json);
   free(json);
 }
 
 static void
 get_introspection_data(oc_client_response_t *data)
 {
-  printf("\nInside the get_introspection_data handler:\n");
+  OC_PRINTF("\nInside the get_introspection_data handler:\n");
   if (data->code == OC_STATUS_OK) {
     oc_rep_t *rep = data->payload;
     print_rep(rep, true);
   } else {
     switch (data->code) {
     case OC_STATUS_UNAUTHORIZED:
-      printf("\tERROR Unauthorized access check permissions.\n");
+      OC_PRINTF("\tERROR Unauthorized access check permissions.\n");
       break;
     case OC_STATUS_INTERNAL_SERVER_ERROR:
-      printf("\tERROR Internal Server Error\n"
-             "\t\tcheck the max app data size of the server.\n");
+      OC_PRINTF("\tERROR Internal Server Error\n"
+                "\t\tcheck the max app data size of the server.\n");
       break;
     default:
-      printf("\tERROR status: %d\n", data->code);
+      OC_PRINTF("\tERROR status: %d\n", data->code);
     }
   }
 }
@@ -85,7 +92,7 @@ get_introspection_data(oc_client_response_t *data)
 static void
 get_wk_introspection(oc_client_response_t *data)
 {
-  printf("\nInside the get_wk_introspection handler:\n");
+  OC_PRINTF("\nInside the get_wk_introspection handler:\n");
   oc_rep_t *rep = data->payload;
 
   while (rep != NULL) {
@@ -107,7 +114,7 @@ get_wk_introspection(oc_client_response_t *data)
             strncpy(introspection_data_uri, oc_string(path), MAX_URI_LENGTH);
             introspection_data_uri[MAX_URI_LENGTH - 1] = '\0';
 
-            printf("Calling GET on %s\n", introspection_data_uri);
+            OC_PRINTF("Calling GET on %s\n", introspection_data_uri);
             oc_do_get(introspection_data_uri, &introspection_data_server, NULL,
                       &get_introspection_data, LOW_QOS, NULL);
           }
@@ -133,27 +140,27 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)user_data;
   (void)iface_mask;
   (void)bm;
-  int i;
-  int uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
-    char *t = oc_string_array_get_item(types, i);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); ++i) {
+    const char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 20 && strncmp(t, "oic.wk.introspection", 20) == 0) {
-      printf("Found oic.wk.introspection resource.\n");
+      OC_PRINTF("Found oic.wk.introspection resource.\n");
       oc_endpoint_copy(&wk_introspection_server, endpoint);
       strncpy(wk_introspection_uri, uri, uri_len);
       wk_introspection_uri[uri_len] = '\0';
 
-      printf("Resource %s hosted at endpoints:\n", wk_introspection_uri);
-      oc_endpoint_t *ep = endpoint;
+      OC_PRINTF("Resource %s hosted at endpoints:\n", wk_introspection_uri);
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        printf("\t");
+        OC_PRINTF("\t");
         OC_PRINTipaddr(*ep);
-        printf("\n");
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 
-      printf("Calling GET on oic.wk.introspection %s\n", wk_introspection_uri);
+      OC_PRINTF("Calling GET on oic.wk.introspection %s\n",
+                wk_introspection_uri);
       oc_do_get(wk_introspection_uri, &wk_introspection_server, NULL,
                 &get_wk_introspection, LOW_QOS, NULL);
       return OC_STOP_DISCOVERY;
@@ -165,7 +172,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 static void
 issue_requests(void)
 {
-  printf(
+  OC_PRINTF(
     "Making ip discovery request for OCF 'oic.wk.introspection' resource.\n");
   oc_do_ip_discovery("oic.wk.introspection", &discovery, NULL);
 }
@@ -173,55 +180,138 @@ issue_requests(void)
 static void
 signal_event_loop(void)
 {
+#ifdef _WIN32
+  WakeConditionVariable(&cv);
+#else
   pthread_cond_signal(&cv);
+#endif /* _WIN32 */
 }
 
 static void
 handle_signal(int signal)
 {
   (void)signal;
+  quit = true;
   signal_event_loop();
-  quit = 1;
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init;
+#ifdef _WIN32
+  InitializeCriticalSection(&cs);
+  InitializeConditionVariable(&cv);
+  signal(SIGINT, handle_signal);
+#else
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .requests_entry = issue_requests };
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+#endif /* _WIN32 */
+  return true;
+}
 
-  oc_clock_time_t next_event;
+static void
+deinit(void)
+{
+#ifndef _WIN32
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+#endif /* !_WIN32 */
+}
+
+static void
+run_loop(void)
+{
+#ifdef _WIN32
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (next_event_mt == 0) {
+      SleepConditionVariableCS(&cv, &cs, INFINITE);
+    } else {
+      oc_clock_time_t now_mt = oc_clock_time_monotonic();
+      if (now_mt < next_event_mt) {
+        SleepConditionVariableCS(
+          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+      }
+    }
+  }
+#else  /* !_WIN32 */
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+#endif /* _WIN32 */
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .requests_entry = issue_requests,
+  };
 
   // set at 18K may need to be increased if server contains a large IDD.
   oc_set_max_app_data_size(18432);
 #ifdef OC_STORAGE
   oc_storage_config("./introspectionclient_creds");
 #endif /* OC_STORAGE */
-  printf("Initilizing the introspection client...\n");
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
 
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
+  OC_PRINTF("Initilizing the introspection client...\n");
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
   }
+  run_loop();
   oc_main_shutdown();
+  deinit();
   return 0;
 }

@@ -18,10 +18,11 @@
 
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_log.h"
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
+#include "util/oc_atomic.h"
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
@@ -104,13 +105,23 @@ static pthread_t event_thread;
 static pthread_mutex_t cloud_sync_lock;
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
-static int quit = 0;
 
-static double temp = 5.0, temp_K = (5.0 + 273.15), temp_F = (5.0 * 9 / 5 + 32),
-              min_C = 0.0, max_C = 100.0, min_K = 273.15, max_K = 373.15,
-              min_F = 32, max_F = 212;
-typedef enum { C = 100, F, K } units_t;
+static OC_ATOMIC_INT8_T quit = 0;
+
+static double temp = 5.0;
+static double temp_K = (5.0 + 273.15);
+static double temp_F = (5.0 * 9 / 5 + 32);
+static double min_C = 0.0;
+static double max_C = 100.0;
+static double min_K = 273.15;
+static double max_K = 373.15;
+static double min_F = 32;
+static double max_F = 212;
+typedef enum {
+  C = 100,
+  F,
+  K,
+} units_t;
 units_t temp_units = C;
 
 #ifdef OC_STORAGE
@@ -485,17 +496,20 @@ static bool
 check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 {
   if (strcmp(oc_string(name), "n") == 0) {
-    error_state = true;
     OC_PRINTF("   property \"n\" is ReadOnly \n");
-  } else if (strcmp(oc_string(name), "if") == 0) {
-    error_state = true;
+    return true;
+  }
+  if (strcmp(oc_string(name), "if") == 0) {
     OC_PRINTF("   property \"if\" is ReadOnly \n");
-  } else if (strcmp(oc_string(name), "rt") == 0) {
-    error_state = true;
+    return true;
+  }
+  if (strcmp(oc_string(name), "rt") == 0) {
     OC_PRINTF("   property \"rt\" is ReadOnly \n");
-  } else if (strcmp(oc_string(name), "id") == 0) {
-    error_state = true;
+    return true;
+  }
+  if (strcmp(oc_string(name), "id") == 0) {
     OC_PRINTF("   property \"id\" is ReadOnly \n");
+    return true;
   }
   return error_state;
 }
@@ -1835,8 +1849,8 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 #ifdef OC_SECURITY
@@ -1955,19 +1969,23 @@ static void *
 ocf_event_thread(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     pthread_mutex_lock(&cloud_sync_lock);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     pthread_mutex_unlock(&cloud_sync_lock);
 
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -2002,8 +2020,9 @@ initialize_variables(void)
   }
 #endif /* OC_STORAGE */
 }
-int
-main(void)
+
+static bool
+init(void)
 {
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
@@ -2011,10 +2030,66 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources =
-                                          register_resources };
+  int err = pthread_mutex_init(&cloud_sync_lock, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&cloud_sync_lock);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&cloud_sync_lock);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&cloud_sync_lock);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&cloud_sync_lock);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&cloud_sync_lock);
+}
+
+int
+main(void)
+{
+  if (!init()) {
+    return -1;
+  }
+
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
+  };
 
   oc_set_con_res_announced(true);
   // max app data size set to 16k large enough to hold full IDD
@@ -2040,11 +2115,14 @@ main(void)
 #endif /* OC_SOFTWARE_UPDATE */
 
   OC_PRINTF("Initializing Server.\n");
-  int init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
+  }
 
   if (pthread_create(&event_thread, NULL, &ocf_event_thread, NULL) != 0) {
+    deinit();
     return -1;
   }
 
@@ -2054,7 +2132,7 @@ main(void)
   display_device_uuid();
 
   int c;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
     SCANF("%d", &c);
     switch (c) {
@@ -2095,6 +2173,6 @@ main(void)
   }
 
   pthread_join(event_thread, NULL);
-
+  deinit();
   return 0;
 }

@@ -21,9 +21,11 @@
  ****************************************************************************/
 
 #include "oc_api.h"
-#include "port/oc_clock.h"
 #include "oc_log.h"
 #include "oc_push.h"
+#include "port/oc_clock.h"
+#include "util/oc_atomic.h"
+
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
@@ -38,12 +40,11 @@ static const char *device_name = "push-configurator";
 static const char *manufacturer = "ETRI";
 static const char *recv_path = "/pushed-resource/from-complex-light";
 
-pthread_mutex_t mutex;
-pthread_cond_t cv;
-struct timespec ts;
+static pthread_mutex_t app_mutex;
+static pthread_mutex_t mutex;
+static pthread_cond_t cv;
 
-pthread_mutex_t app_mutex;
-int quit = 0;
+static OC_ATOMIC_INT8_T quit = 0;
 
 #define MAX_URI_LENGTH (30)
 static char rsc_uri[MAX_URI_LENGTH];
@@ -98,7 +99,7 @@ static bool
 is_resource_found(void)
 {
   if (!resource_found) {
-    printf("Please discovery resource first!\n");
+    OC_PRINTF("Please discovery resource first!\n");
     return false;
   }
 
@@ -111,11 +112,12 @@ cb_create_notification_selector_response(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
 
   if (!rep) {
-    printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
+    OC_PRINTF("\n   => return status: [ %s ] \n\n",
+              oc_status_to_str(data->code));
     return;
   }
 
-  printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
+  OC_PRINTF("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
   oc_print_pushd_resource(data->payload);
 
   return;
@@ -162,9 +164,9 @@ create_notification_selector(void)
 
     /* pushtarget */
     oc_endpoint_to_string(&targetserver_ep, &pushtarget_ep_str);
-    printf("target server's ep: %s \n", oc_string(pushtarget_ep_str));
+    OC_PRINTF("target server's ep: %s \n", oc_string(pushtarget_ep_str));
     oc_concat_strings(&pushtarget_str, oc_string(pushtarget_ep_str), recv_path);
-    printf("targetpath: %s \n", oc_string(pushtarget_str));
+    OC_PRINTF("targetpath: %s \n", oc_string(pushtarget_str));
     oc_rep_set_text_string(rep, pushtarget, oc_string(pushtarget_str));
 
     /* pushqif */
@@ -184,12 +186,12 @@ create_notification_selector(void)
     oc_free_string(&pushtarget_ep_str);
     oc_free_string(&pushtarget_str);
   } else {
-    printf("could not initiate oc_init_post()\n");
+    OC_PRINTF("could not initiate oc_init_post()\n");
     return;
   }
 
   if (!oc_do_post()) {
-    printf("oc_do_post() failed\n");
+    OC_PRINTF("oc_do_post() failed\n");
   }
 }
 
@@ -201,11 +203,12 @@ cb_update_push_receiver_response(oc_client_response_t *data)
   oc_rep_t *rep = data->payload;
 
   if (!rep) {
-    printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
+    OC_PRINTF("\n   => return status: [ %s ] \n\n",
+              oc_status_to_str(data->code));
     return;
   }
 
-  printf("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
+  OC_PRINTF("\n   => return status: [ %s ] \n\n", oc_status_to_str(data->code));
   oc_print_pushd_resource(data->payload);
 
   return;
@@ -230,19 +233,19 @@ update_push_receiver(void)
     oc_rep_close_array(root, rts);
     oc_rep_end_root_object();
   } else {
-    printf("could not initiate oc_init_post()\n");
+    OC_PRINTF("could not initiate oc_init_post()\n");
     return;
   }
 
   if (!oc_do_post()) {
-    printf("oc_do_post() failed\n");
+    OC_PRINTF("oc_do_post() failed\n");
   }
 }
 
 static void
 cb_retrieve_push_origin_rsc_response(oc_client_response_t *data)
 {
-  printf("RETRIEVE \"%s\":\n", resource_rt);
+  OC_PRINTF("RETRIEVE \"%s\":\n", resource_rt);
   oc_print_pushd_resource(data->payload);
 }
 
@@ -276,13 +279,13 @@ cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(rsc_uri, uri, uri_len);
       rsc_uri[uri_len] = '\0';
 
-      printf("\nResource %s hosted at endpoints:\n", rsc_uri);
+      OC_PRINTF("\nResource %s hosted at endpoints:\n", rsc_uri);
 
       if (user_data) {
         custom_func_s *custom = (custom_func_s *)user_data;
         custom->func(endpoint, rsc_uri, bm);
       } else {
-        printf("custom function is not set!");
+        OC_PRINTF("custom function is not set!");
         goto exit;
       }
     }
@@ -295,7 +298,7 @@ exit:
 static void
 cb_retrieve_pushconf_rsc_response(oc_client_response_t *data)
 {
-  printf("RETRIEVE \"%s\":\n", PUSHCONFIG_RESOURCE_TYPE);
+  OC_PRINTF("RETRIEVE \"%s\":\n", PUSHCONFIG_RESOURCE_TYPE);
   oc_print_pushd_resource(data->payload);
 }
 
@@ -311,7 +314,7 @@ retrieve_pushconf_rsc(void)
 static void
 cb_retrieve_pushreceiver_rsc_response(oc_client_response_t *data)
 {
-  printf("RETRIEVE \"%s\":\n", PUSHRECEIVERS_RESOURCE_TYPE);
+  OC_PRINTF("RETRIEVE \"%s\":\n", PUSHRECEIVERS_RESOURCE_TYPE);
   oc_print_pushd_resource(data->payload);
 }
 
@@ -328,14 +331,14 @@ find_same_endpoint(oc_endpoint_t *endpoint, char *uri,
 {
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
-    printf(" |__");
+    OC_PRINTF(" |__");
     OC_PRINTipaddr(*ep);
-    printf("\n");
+    OC_PRINTF("\n");
 
     if (oc_endpoint_compare(&originserver_ep, ep) == 0) {
-      printf("     ===> matched originserver ep is found!\n");
+      OC_PRINTF("     ===> matched originserver ep is found!\n");
       if (bm & OC_PUSHABLE) {
-        printf("     ===> Resource %s is PUSHABLE Resource!\n", uri);
+        OC_PRINTF("     ===> Resource %s is PUSHABLE Resource!\n", uri);
         strcpy(push_rsc_uri, uri);
         resource_found = true;
       }
@@ -355,27 +358,30 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 static void *
 process_func(void *data)
 {
   (void)data;
-  oc_clock_time_t next_event;
-
-  while (quit != 1) {
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     pthread_mutex_lock(&app_mutex);
-    next_event = oc_main_poll();
+    next_event_mt = oc_main_poll_v1();
     pthread_mutex_unlock(&app_mutex);
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
     pthread_mutex_unlock(&mutex);
   }
@@ -387,106 +393,153 @@ static void
 print_menu(void)
 {
   pthread_mutex_lock(&app_mutex);
-  printf("=====================================\n");
-  printf("1. Discovery\n");
-  printf("2. Create new PUSH notification selector on origin server, and add "
-         "new Receiver configuration object to target server\n");
-  printf("3. Retrieve PUSH origin Resource of origin-server\n");
-  printf("4. Retrieve PUSH configuration Resource of origin server\n");
-  printf("5. Retrieve PUSH receivers Resource of target server\n");
-  printf("0. Quit\n");
-  printf("=====================================\n");
+  OC_PRINTF("=====================================\n");
+  OC_PRINTF("1. Discovery\n");
+  OC_PRINTF(
+    "2. Create new PUSH notification selector on origin server, and add "
+    "new Receiver configuration object to target server\n");
+  OC_PRINTF("3. Retrieve PUSH origin Resource of origin-server\n");
+  OC_PRINTF("4. Retrieve PUSH configuration Resource of origin server\n");
+  OC_PRINTF("5. Retrieve PUSH receivers Resource of target server\n");
+  OC_PRINTF("0. Quit\n");
+  OC_PRINTF("=====================================\n");
   pthread_mutex_unlock(&app_mutex);
 }
 
-int
-main(void)
+static bool
+init(void)
 {
-  int init = 0;
   struct sigaction sa;
   sigfillset(&sa.sa_mask);
   sa.sa_flags = 0;
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
-  oc_string_t address_str;
 
-  /* get originserver ep */
-  printf("set originserver address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
-  if (scanf("%59s", address) > 0) {
-    printf("address: %s\n", address);
-  } else {
-    printf("error reading remote address\n");
+  int err = pthread_mutex_init(&app_mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&app_mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&app_mutex);
+}
+
+int
+main(void)
+{
+  if (!init()) {
     return -1;
   }
 
+  /* get originserver ep */
+  OC_PRINTF("set originserver address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
+  if (scanf("%59s", address) > 0) {
+    OC_PRINTF("address: %s\n", address);
+  } else {
+    OC_PRINTF("error reading remote address\n");
+    deinit();
+    return -1;
+  }
+
+  oc_string_t address_str;
   oc_new_string(&address_str, address, strlen(address));
 
   if (oc_string_to_endpoint(&address_str, &originserver_ep, NULL) < 0) {
-    printf("error parsing originserver endpoint address\n");
+    OC_PRINTF("error parsing originserver endpoint address\n");
+    deinit();
     return -1;
   }
   originserver_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
   /* get targetserver ep */
-  printf("set targetserver address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
+  OC_PRINTF("set targetserver address(ex. coap+tcp://xxx.xxx.xxx.xxx:yyyy): ");
   if (scanf("%59s", address) > 0) {
-    printf("address: %s\n", address);
+    OC_PRINTF("address: %s\n", address);
   } else {
-    printf("error reading remote address\n");
+    OC_PRINTF("error reading remote address\n");
+    deinit();
     return -1;
   }
 
   oc_new_string(&address_str, address, strlen(address));
 
   if (oc_string_to_endpoint(&address_str, &targetserver_ep, NULL) < 0) {
-    printf("error parsing originserver endpoint address\n");
+    OC_PRINTF("error parsing originserver endpoint address\n");
+    deinit();
     return -1;
   }
   originserver_ep.version = OCF_VER_1_0_0;
   oc_free_string(&address_str);
 
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop =
-                                          signal_event_loop };
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+  };
 
 #ifdef OC_STORAGE
   oc_storage_config("./push_targetserver_multithread_linux_creds");
 #endif /* OC_STORAGE */
 
-  if (pthread_mutex_init(&mutex, NULL)) {
-    printf("pthread_mutex_init failed!\n");
-    return -1;
-  }
-
-  if (pthread_mutex_init(&app_mutex, NULL)) {
-    printf("pthread_mutex_init failed!\n");
-    pthread_mutex_destroy(&mutex);
-    return -1;
-  }
-
-  init = oc_main_init(&handler);
-  if (init < 0) {
-    printf("oc_main_init failed!(%d)\n", init);
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    OC_PRINTF("oc_main_init failed!(%d)\n", ret);
     goto exit;
   }
 
   pthread_t thread;
   if (pthread_create(&thread, NULL, process_func, NULL) != 0) {
-    printf("Failed to create main thread\n");
-    init = -1;
+    OC_PRINTF("Failed to create main thread\n");
+    ret = -1;
     goto exit;
   }
 
   custom_func_s same_func = { .func = find_same_endpoint };
 
   int key;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     print_menu();
     fflush(stdin);
     if (!scanf("%d", &key)) {
-      printf("scanf failed!!!!\n");
-      quit = 1;
+      OC_PRINTF("scanf failed!!!!\n");
       handle_signal(0);
       break;
     }
@@ -519,23 +572,20 @@ main(void)
       retrieve_pushreceiver_rsc();
       break;
     case 0:
-      quit = 1;
       handle_signal(0);
       break;
     default:
-      printf("unsupported command.\n");
+      OC_PRINTF("unsupported command.\n");
       break;
     }
     pthread_mutex_unlock(&app_mutex);
   }
 
   pthread_join(thread, NULL);
-  printf("pthread_join finish!\n");
+  OC_PRINTF("pthread_join finish!\n");
 
 exit:
   oc_main_shutdown();
-
-  pthread_mutex_destroy(&mutex);
-  pthread_mutex_destroy(&app_mutex);
-  return 0;
+  deinit();
+  return ret;
 }

@@ -16,13 +16,13 @@
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 */
 
-#include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
+#include "oc_log.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
-#include "oc_log.h"
+#include "util/oc_atomic.h"
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
@@ -34,7 +34,6 @@
 #include <pthread.h>
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static struct timespec ts;
 
 #define MAX_STRING 65 /* max size of the strings. */
 
@@ -48,36 +47,39 @@ typedef struct scenemappings_t
 OC_MEMB(smap_s, scenemappings_t, 1);
 OC_LIST(smap);
 
-volatile int quit = 0; /* stop variable, used by handle_signal */
+static OC_ATOMIC_INT8_T quit = 0; /* stop variable, used by handle_signal */
 
 /* global property variables for path: "/binaryswitch" */
-bool g_binaryswitch_value = false;
+static bool g_binaryswitch_value = false;
 
 /* global property variables for path: "/audio" */
-bool g_audio_mute = false;
-int g_audio_volume = 50;
+static bool g_audio_mute = false;
+static int g_audio_volume = 50;
 
 /* global property variables for path: /ruleaction and /scenecollection */
-char lastscene[MAX_STRING];
-char ra_lastscene[MAX_STRING];
+static char lastscene[MAX_STRING];
+static char ra_lastscene[MAX_STRING];
 static oc_string_array_t scenevalues;
 
 /* global property variables for path: /ruleexpression */
-char rule[MAX_STRING];
+static char rule[MAX_STRING];
 static bool ruleresult = false;
 static bool ruleenable = false;
 static bool actionenable = false;
 
 /* Resource handles */
 /* Used as input to rule */
-oc_resource_t *res_binaryswitch;
+static oc_resource_t *res_binaryswitch;
 /* Specification of the rule */
-oc_resource_t *res_ruleexpression;
+static oc_resource_t *res_ruleexpression;
 /* Used in the rule action */
-oc_resource_t *res_audio;
+static oc_resource_t *res_audio;
+
+#ifdef OC_COLLECTIONS
 /* Collection of Scene Members. Records the "lastscene" following a rule action
  */
-oc_resource_t *res_scenecol1;
+static oc_resource_t *res_scenecol1;
+#endif /* OC_COLLECTIONS */
 
 static pthread_t toggle_switch_thread;
 
@@ -216,9 +218,9 @@ static void *
 toggle_switch_resource(void *data)
 {
   (void)data;
-  while (quit != 1) {
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
     char c = getchar();
-    if (quit != 1) {
+    if (OC_ATOMIC_LOAD8(quit) != 1) {
       getchar();
       if (c == 48) {
         g_binaryswitch_value = false;
@@ -405,6 +407,47 @@ post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
 }
 
 #ifdef OC_COLLECTIONS
+static void
+encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
+{
+  oc_rep_set_key(parent, "if");
+  oc_rep_start_array((parent), if);
+  if ((iface_mask & OC_IF_R) != 0) {
+    oc_rep_add_text_string(if, "oic.if.r");
+  }
+  if ((iface_mask & OC_IF_RW) != 0) {
+    oc_rep_add_text_string(if, "oic.if.rw");
+  }
+  if ((iface_mask & OC_IF_A) != 0) {
+    oc_rep_add_text_string(if, "oic.if.a");
+  }
+  if ((iface_mask & OC_IF_S) != 0) {
+    oc_rep_add_text_string(if, "oic.if.s");
+  }
+  if ((iface_mask & OC_IF_LL) != 0) {
+    oc_rep_add_text_string(if, "oic.if.ll");
+  }
+  if ((iface_mask & OC_IF_CREATE) != 0) {
+    oc_rep_add_text_string(if, "oic.if.create");
+  }
+  if ((iface_mask & OC_IF_B) != 0) {
+    oc_rep_add_text_string(if, "oic.if.b");
+  }
+  if ((iface_mask & OC_IF_BASELINE) != 0) {
+    oc_rep_add_text_string(if, "oic.if.baseline");
+  }
+  if ((iface_mask & OC_IF_W) != 0) {
+    oc_rep_add_text_string(if, "oic.if.w");
+  }
+  if ((iface_mask & OC_IF_STARTUP) != 0) {
+    oc_rep_add_text_string(if, "oic.if.startup");
+  }
+  if ((iface_mask & OC_IF_STARTUP_REVERT) != 0) {
+    oc_rep_add_text_string(if, "oic.if.startup.revert");
+  }
+  oc_rep_end_array(parent, if);
+}
+
 /**
  * get method for "/scenemember1" resource.
  * function is called to intialize the return values of the GET method.
@@ -431,7 +474,7 @@ get_scenemember(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_rep_set_object(root, link);
     oc_rep_set_text_string(link, href, oc_string(res_audio->uri));
     oc_rep_set_string_array(link, rt, res_audio->types);
-    oc_core_encode_interfaces_mask(oc_rep_object(link), res_audio->interfaces);
+    encode_interfaces_mask(oc_rep_object(link), res_audio->interfaces);
     oc_rep_close_object(root, link);
 
     // SceneMappings array
@@ -510,7 +553,7 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
   OC_PRINTF("post_ruleexpression:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    printf("  %s :", oc_string(rep->name));
+    OC_PRINTF("  %s :", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       if (oc_string_len(rep->name) == 10 &&
@@ -566,7 +609,6 @@ get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
                void *user_data)
 {
   (void)user_data; /* not used */
-
   OC_PRINTF("get_ruleaction: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
@@ -578,8 +620,7 @@ get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_rep_set_object(root, link);
     oc_rep_set_text_string(link, href, "/scenecollection1");
     oc_rep_set_string_array(link, rt, res_scenecol1->types);
-    oc_core_encode_interfaces_mask(oc_rep_object(link),
-                                   res_scenecol1->interfaces);
+    encode_interfaces_mask(oc_rep_object(link), res_scenecol1->interfaces);
     oc_rep_close_object(root, link);
     break;
   default:
@@ -704,7 +745,6 @@ get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-
   OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
@@ -884,8 +924,8 @@ static void
 handle_signal(int signal)
 {
   (void)signal;
+  OC_ATOMIC_STORE8(quit, 1);
   signal_event_loop();
-  quit = 1;
 }
 
 /**
@@ -900,6 +940,75 @@ display_device_uuid(void)
   OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
+static bool
+init(void)
+{
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
+}
+
+static void
+run_loop(void)
+{
+  /* linux specific loop */
+  oc_clock_time_t next_event_mt;
+  while (OC_ATOMIC_LOAD8(quit) != 1) {
+    next_event_mt = oc_main_poll_v1();
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
+      pthread_cond_wait(&cv, &mutex);
+    } else {
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
+    }
+    pthread_mutex_unlock(&mutex);
+  }
+}
+
 /**
  * main application.
  * intializes the global variables
@@ -910,31 +1019,23 @@ display_device_uuid(void)
 int
 main(void)
 {
-  int init;
+  if (!init()) {
+    return -1;
+  }
 
-  /* linux specific */
-  struct sigaction sa;
-  sigfillset(&sa.sa_mask);
-  sa.sa_flags = 0;
-  sa.sa_handler = handle_signal;
-  /* install Ctrl-C */
-  sigaction(SIGINT, &sa, NULL);
-  /* initialize global variables for resource "/binaryswitch" */
-  g_binaryswitch_value =
-    false; /* current value of property "value" The status of the switch. */
   /* set the flag for oic/con resource. */
   oc_set_con_res_announced(true);
 
   /* initializes the handlers structure */
-  static const oc_handler_t handler = { .init = app_init,
-                                        .signal_event_loop = signal_event_loop,
-                                        .register_resources = register_resources
+  static const oc_handler_t handler = {
+    .init = app_init,
+    .signal_event_loop = signal_event_loop,
+    .register_resources = register_resources,
 #ifdef OC_CLIENT
-                                        ,
-                                        .requests_entry = 0
+
+    .requests_entry = 0,
 #endif
   };
-  oc_clock_time_t next_event;
 
   OC_PRINTF("OCF Server name : \"Rules Test Server\"\n");
 
@@ -946,13 +1047,16 @@ main(void)
 
   if (pthread_create(&toggle_switch_thread, NULL, &toggle_switch_resource,
                      NULL) != 0) {
+    deinit();
     return -1;
   }
 
   /* start the stack */
-  init = oc_main_init(&handler);
-  if (init < 0)
-    return init;
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
+    return ret;
+  }
 
   oc_resource_t *con_resource = oc_core_get_resource_by_index(OCF_CON, 0);
   oc_resource_set_observable(con_resource, false);
@@ -960,20 +1064,7 @@ main(void)
   display_device_uuid();
   OC_PRINTF("OCF server \"Rules Test Server\" running, waiting on incomming "
             "connections.\n");
-
-  /* linux specific loop */
-  while (quit != 1) {
-    next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
-    } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
+  run_loop();
 
   /* free up strings and scenemappings */
   oc_free_string_array(&scenevalues);
@@ -986,6 +1077,6 @@ main(void)
   /* shut down the stack */
   oc_main_shutdown();
   pthread_join(toggle_switch_thread, NULL);
-
+  deinit();
   return 0;
 }

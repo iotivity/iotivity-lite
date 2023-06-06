@@ -15,7 +15,6 @@
  */
 
 #include "test.h"
-
 #include "oc_api.h"
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
@@ -31,9 +30,12 @@
 
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
-static bool quit, light[NUM_LIGHTS] = { true, false, true };
-static int client_status, server_status;
-static pid_t client_pid, server_pid;
+static bool quit = false;
+static bool light[NUM_LIGHTS] = { true, false, true };
+static int client_status;
+static int server_status;
+static pid_t client_pid;
+static pid_t server_pid;
 
 /*********** common ***************/
 
@@ -49,6 +51,51 @@ handle_signal(int signal)
   (void)signal;
   quit = true;
   signal_event_loop();
+}
+
+static bool
+init(void)
+{
+  struct sigaction sa;
+  sigfillset(&sa.sa_mask);
+  sa.sa_handler = handle_signal;
+  sigaction(SIGINT, &sa, NULL);
+
+  int err = pthread_mutex_init(&mutex, NULL);
+  if (err != 0) {
+    printf("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+    return false;
+  }
+  pthread_condattr_t attr;
+  err = pthread_condattr_init(&attr);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (err != 0) {
+    printf("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  err = pthread_cond_init(&cv, &attr);
+  if (err != 0) {
+    printf("ERROR: pthread_cond_init failed (error=%d)!\n", err);
+    pthread_condattr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+    return false;
+  }
+  pthread_condattr_destroy(&attr);
+  return true;
+}
+
+static void
+deinit(void)
+{
+  pthread_cond_destroy(&cv);
+  pthread_mutex_destroy(&mutex);
 }
 
 /*********** client ***************/
@@ -87,11 +134,8 @@ discovery_cb(const char *di, const char *uri, oc_string_array_t types,
   (void)iface_mask;
   (void)user_data;
 
-  int i, array_size;
   static int pos = 0;
-
-  array_size = oc_string_array_get_allocated_size(types);
-  for (i = 0; i < array_size; i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     int ret;
     const char *rt = oc_string_array_get_item(types, i);
 
@@ -129,53 +173,45 @@ app_init_client(void)
 static int
 start_client(void)
 {
-  int ret;
-  struct sigaction sa;
+  if (!init()) {
+    return -1;
+  }
+
   static const oc_handler_t handler = {
     .init = app_init_client,
     .signal_event_loop = signal_event_loop,
     .requests_entry = requests_entry,
   };
 
-  ret = oc_main_init(&handler);
-  if (ret < 0)
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
     return ret;
-
-  sigfillset(&sa.sa_mask);
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
-    return -1;
-  }
-  if (pthread_cond_init(&cv, NULL) != 0) {
-    return -1;
   }
 
-  while (quit != true) {
-    struct timespec ts;
-    oc_clock_time_t next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
-    if (quit)
+  while (!quit) {
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    if (quit) {
       break;
-
-    if (next_event == 0) {
+    }
+    pthread_mutex_lock(&mutex);
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
 
     pthread_mutex_unlock(&mutex);
   }
 
   oc_main_shutdown();
-
-  pthread_cond_destroy(&cv);
-  pthread_mutex_destroy(&mutex);
-
+  deinit();
   return 0;
 }
 
@@ -240,50 +276,42 @@ register_resources(void)
 static int
 start_server(void)
 {
-  int ret;
-  struct sigaction sa;
+  if (!init()) {
+    return -1;
+  }
+
   static const oc_handler_t handler = {
     .init = app_init,
     .signal_event_loop = signal_event_loop,
     .register_resources = register_resources,
   };
 
-  ret = oc_main_init(&handler);
-  if (ret < 0)
+  int ret = oc_main_init(&handler);
+  if (ret < 0) {
+    deinit();
     return ret;
-
-  sigfillset(&sa.sa_mask);
-  sa.sa_handler = handle_signal;
-  sigaction(SIGINT, &sa, NULL);
-
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
-    return -1;
-  }
-  if (pthread_cond_init(&cv, NULL) != 0) {
-    return -1;
   }
 
   while (quit != true) {
-    struct timespec ts;
-    oc_clock_time_t next_event;
-
-    next_event = oc_main_poll();
+    oc_clock_time_t next_event_mt = oc_main_poll_v1();
     pthread_mutex_lock(&mutex);
-    if (next_event == 0) {
+    if (next_event_mt == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      struct timespec next_event = { 1, 0 };
+      oc_clock_time_t next_event_cv;
+      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
+                                           &next_event_cv)) {
+        next_event = oc_clock_time_to_timespec(next_event_cv);
+      }
+      pthread_cond_timedwait(&cv, &mutex, &next_event);
     }
 
     pthread_mutex_unlock(&mutex);
   }
 
   oc_main_shutdown();
-  pthread_cond_destroy(&cv);
-  pthread_mutex_destroy(&mutex);
-
+  deinit();
   return 0;
 }
 
