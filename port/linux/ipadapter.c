@@ -1041,7 +1041,7 @@ network_event_thread(void *data)
     process_events(dev, &rdfds, wfds, n);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-    expires_in = tcp_check_expiring_sessions(oc_clock_time());
+    expires_in = tcp_check_expiring_sessions(oc_clock_time_monotonic());
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   }
   pthread_exit(NULL);
