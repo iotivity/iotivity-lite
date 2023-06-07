@@ -63,8 +63,8 @@ static void
 display_menu(void)
 {
   OC_PRINTF("\n\n################################################\nOCF "
-        "Cloud-connected Device Certification Test "
-        "Tool\n################################################\n");
+            "Cloud-connected Device Certification Test "
+            "Tool\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("[1] Cloud Register\n");
@@ -88,7 +88,7 @@ display_menu(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
     }                                                                          \
   } while (0)
 

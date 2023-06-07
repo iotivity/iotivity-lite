@@ -106,8 +106,9 @@ verify_action_in_supported_set(oc_string_t action)
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    OC_PRINTF("Action compare. Supported action %s against received action %s \n",
-          sv, act);
+    OC_PRINTF(
+      "Action compare. Supported action %s against received action %s \n", sv,
+      act);
     if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
       return true;
     }

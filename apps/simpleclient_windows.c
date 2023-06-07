@@ -200,7 +200,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
   OC_PRINTF("\n\nDISCOVERYCB %s %s %d\n\n", anchor, uri,
-        (int)oc_string_array_get_allocated_size(types));
+            (int)oc_string_array_get_allocated_size(types));
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     OC_PRINTF("\n\nDISCOVERED RES %s\n\n\n", t);

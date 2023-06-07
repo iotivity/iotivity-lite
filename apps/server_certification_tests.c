@@ -138,7 +138,7 @@ oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
     }                                                                          \
     do {                                                                       \
       if (sscanf(line, __VA_ARGS__) != 1) {                                    \
-        OC_PRINTF("ERROR Invalid input\n");                                        \
+        OC_PRINTF("ERROR Invalid input\n");                                    \
       }                                                                        \
     } while (0);                                                               \
   }
@@ -147,8 +147,8 @@ static void
 display_menu(void)
 {
   OC_PRINTF("\n\n################################################\nOCF "
-        "Server Certification Test "
-        "Tool\n################################################\n");
+            "Server Certification Test "
+            "Tool\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("Server\n");
@@ -847,7 +847,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
       OC_PRINTF("storage (startup)  property 'value' : %s (%ld)\n", btoa(state),
-            tmp_size);
+                tmp_size);
       oc_rep_start_root_object();
       oc_rep_set_boolean(root, value, state);
       oc_rep_end_root_object();
@@ -861,7 +861,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
       OC_PRINTF("storage (startup.revert)  property 'value' : %s (%ld)\n",
-            btoa(state), tmp_size);
+                btoa(state), tmp_size);
       g_switch_value = state;
       oc_rep_start_root_object();
       oc_rep_set_boolean(root, value, g_switch_value);
@@ -873,7 +873,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
         long tmp_size =
           oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
         OC_PRINTF("storage (startup.revert)  property 'value' : %s (%ld)\n",
-              btoa(state), tmp_size);
+                  btoa(state), tmp_size);
       }
       g_switch_value = state;
       oc_rep_start_root_object();
@@ -1020,8 +1020,9 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       if (array_size > MAX_ARRAY) {
         error_state = true;
-        OC_PRINTF("   property array 'pld' is too long: %d expected: MAX_ARRAY \n",
-              (int)array_size);
+        OC_PRINTF(
+          "   property array 'pld' is too long: %d expected: MAX_ARRAY \n",
+          (int)array_size);
       }
     }
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld_s) ==
@@ -1067,8 +1068,9 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       if (array_size > MAX_ARRAY) {
         error_state = true;
-        OC_PRINTF("   property array 'tbus' is too long: %d expected: MAX_ARRAY \n",
-              (int)array_size);
+        OC_PRINTF(
+          "   property array 'tbus' is too long: %d expected: MAX_ARRAY \n",
+          (int)array_size);
       }
     }
     rep = rep->next;
@@ -1175,14 +1177,16 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       oc_rep_close_array(root, pld);
 
-      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_pld_s, g_dali_pld_s);
+      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_pld_s,
+                g_dali_pld_s);
       oc_rep_set_int(root, pld_s, g_dali_pld_s);
-      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_prio, g_dali_prio);
+      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_prio,
+                g_dali_prio);
       oc_rep_set_int(root, prio, g_dali_prio);
       OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_src, g_dali_src);
       oc_rep_set_int(root, src, g_dali_src);
       OC_PRINTF("   %s : %s", g_dali_RESOURCE_PROPERTY_NAME_st,
-            (char *)btoa(g_dali_st));
+                (char *)btoa(g_dali_st));
       oc_rep_set_boolean(root, st, g_dali_st);
 
       oc_rep_set_array(root, tbus);
@@ -1243,25 +1247,31 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
 
     /* property (integer) 'bus' */
     oc_rep_set_int(root, bus, g_config_bus);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus,
+              g_config_bus);
     /* property (integer) 'src' */
     oc_rep_set_int(root, src, g_config_src);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src,
+              g_config_src);
     /* property (integer) 'ver' */
     oc_rep_set_int(root, ver, g_config_ver);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver,
+              g_config_ver);
     break;
   case OC_IF_RW:
 
     /* property (integer) 'bus' */
     oc_rep_set_int(root, bus, g_config_bus);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus,
+              g_config_bus);
     /* property (integer) 'src' */
     oc_rep_set_int(root, src, g_config_src);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src,
+              g_config_src);
     /* property (integer) 'ver' */
     oc_rep_set_int(root, ver, g_config_ver);
-    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver,
+              g_config_ver);
     break;
 
   default:
@@ -1360,11 +1370,14 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
       OC_PRINTF("Set response \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
-      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus,
+                g_config_bus);
       oc_rep_set_int(root, bus, g_config_bus);
-      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src,
+                g_config_src);
       oc_rep_set_int(root, src, g_config_src);
-      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver,
+                g_config_ver);
       oc_rep_set_int(root, ver, g_config_ver);
 
       oc_rep_end_root_object();
@@ -1582,8 +1595,9 @@ verify_action_in_supported_set(oc_string_t action)
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    OC_PRINTF("Action compare. Supported action %s against received action %s \n",
-          sv, act);
+    OC_PRINTF(
+      "Action compare. Supported action %s against received action %s \n", sv,
+      act);
     if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
       return true;
     }

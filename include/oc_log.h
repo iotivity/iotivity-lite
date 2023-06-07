@@ -58,7 +58,8 @@ extern "C" {
 #include "port/android/oc_log_android.h"
 #define OC_TAG "OC-JNI"
 #ifndef OC_PRINTF
-#define OC_PRINTF(...) __android_log_print(ANDROID_LOG_INFO, OC_TAG, __VA_ARGS__)
+#define OC_PRINTF(...)                                                         \
+  __android_log_print(ANDROID_LOG_INFO, OC_TAG, __VA_ARGS__)
 #endif /* !OC_PRINTF */
 #endif /* __ANDROID__ */
 
@@ -72,8 +73,9 @@ extern "C" {
 #define OC_SNPRINTF(...) snprintf(__VA_ARGS__)
 #endif /* !OC_SNPRINTF */
 
-#define OC_IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6%scope]:port = 63 bytes
-#define OC_SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)                  \
+#define OC_IPADDR_BUFF_SIZE                                                    \
+  64 // max size : scheme://[ipv6%scope]:port = 63 bytes
+#define OC_SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)               \
   do {                                                                         \
     const char *scheme = "coap";                                               \
     if ((endpoint).flags & SECURED)                                            \
@@ -84,19 +86,19 @@ extern "C" {
       scheme = "coaps+tcp";                                                    \
     memset(str, 0, size);                                                      \
     if ((endpoint).flags & IPV4) {                                             \
-      OC_SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                       \
-               ((endpoint).addr_memb.ipv4.address)[0],                         \
-               ((endpoint).addr_memb.ipv4.address)[1],                         \
-               ((endpoint).addr_memb.ipv4.address)[2],                         \
-               ((endpoint).addr_memb.ipv4.address)[3],                         \
-               (endpoint).addr_memb.ipv4.port);                                \
+      OC_SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                    \
+                  ((endpoint).addr_memb.ipv4.address)[0],                      \
+                  ((endpoint).addr_memb.ipv4.address)[1],                      \
+                  ((endpoint).addr_memb.ipv4.address)[2],                      \
+                  ((endpoint).addr_memb.ipv4.address)[3],                      \
+                  (endpoint).addr_memb.ipv4.port);                             \
     } else {                                                                   \
       char scope[5] = { 0 };                                                   \
       if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
-        OC_SNPRINTF(scope, sizeof(scope), "%%%d",                                 \
-                 (int)(endpoint).addr_memb.ipv6.scope);                        \
+        OC_SNPRINTF(scope, sizeof(scope), "%%%d",                              \
+                    (int)(endpoint).addr_memb.ipv6.scope);                     \
       }                                                                        \
-      OC_SNPRINTF(                                                                \
+      OC_SNPRINTF(                                                             \
         str, size,                                                             \
         "%s://"                                                                \
         "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
@@ -121,20 +123,21 @@ extern "C" {
     }                                                                          \
   } while (0)
 
-#define OC_SNPRINTFipaddr(str, size, endpoint)                                    \
+#define OC_SNPRINTFipaddr(str, size, endpoint)                                 \
   OC_SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr)
 
-#define OC_PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                               \
+#define OC_PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                            \
   do {                                                                         \
-    char _oc_log_ipaddr_buff[OC_IPADDR_BUFF_SIZE];                                \
-    memset(_oc_log_ipaddr_buff, 0, OC_IPADDR_BUFF_SIZE);                          \
-    OC_SNPRINT_ENDPOINT_ADDR(_oc_log_ipaddr_buff, OC_IPADDR_BUFF_SIZE, endpoint,     \
-                          addr_memb);                                          \
-    OC_PRINTF("%s", _oc_log_ipaddr_buff);                                          \
+    char _oc_log_ipaddr_buff[OC_IPADDR_BUFF_SIZE];                             \
+    memset(_oc_log_ipaddr_buff, 0, OC_IPADDR_BUFF_SIZE);                       \
+    OC_SNPRINT_ENDPOINT_ADDR(_oc_log_ipaddr_buff, OC_IPADDR_BUFF_SIZE,         \
+                             endpoint, addr_memb);                             \
+    OC_PRINTF("%s", _oc_log_ipaddr_buff);                                      \
   } while (0)
 
 #define OC_PRINTipaddr(endpoint) OC_PRINT_ENDPOINT_ADDR(endpoint, addr)
-#define OC_PRINTipaddr_local(endpoint) OC_PRINT_ENDPOINT_ADDR(endpoint, addr_local)
+#define OC_PRINTipaddr_local(endpoint)                                         \
+  OC_PRINT_ENDPOINT_ADDR(endpoint, addr_local)
 
 /**
  * Log level determines the importance of the message. The levels are in order

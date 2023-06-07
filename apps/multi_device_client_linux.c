@@ -225,7 +225,7 @@ get_platform(oc_client_response_t *data)
           (oc_string_len(rep->name) == 4 &&
            memcmp(oc_string(rep->name), "mnmn", 4) == 0)) {
         OC_PRINTF("key: %s, value: %s\n", oc_string(rep->name),
-              oc_string(rep->value.string));
+                  oc_string(rep->value.string));
       }
       break;
     default:
@@ -252,7 +252,7 @@ get_device(oc_client_response_t *data)
           (oc_string_len(rep->name) == 2 &&
            memcmp(oc_string(rep->name), "di", 2) == 0)) {
         OC_PRINTF("key: %s, value: %s\n", oc_string(rep->name),
-              oc_string(rep->value.string));
+                  oc_string(rep->value.string));
       }
       break;
     case OC_REP_STRING_ARRAY:
@@ -295,7 +295,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       oc_endpoint_list_copy(&fridge_server, endpoint);
 
       OC_PRINTF("Resource %s hosted in device %s at endpoints:\n", fridge_1,
-            anchor);
+                anchor);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
@@ -310,7 +310,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       temp_1[uri_len] = '\0';
       oc_endpoint_list_copy(&temp_server, endpoint);
 
-      OC_PRINTF("Resource %s hosted in device %s at endpoints:\n", temp_1, anchor);
+      OC_PRINTF("Resource %s hosted in device %s at endpoints:\n", temp_1,
+                anchor);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);

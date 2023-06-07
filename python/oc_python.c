@@ -631,8 +631,8 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully requested device %s to generate a Random PIN\n",
-          di);
+    OC_PRINTF(
+      "[C]\nSuccessfully requested device %s to generate a Random PIN\n", di);
     inform_python(di, "unowned", "random_pin_request");
   } else {
     OC_PRINTF("[C]\nERROR requesting device %s to generate a Random PIN\n", di);
@@ -774,7 +774,8 @@ py_otm_just_works(const char *uuid)
   int ret = oc_obt_perform_just_works_otm(&devices[c]->uuid, otm_just_works_cb,
                                           devices[c]);
   if (ret >= 0) {
-    OC_PRINTF("[C] Successfully issued request to perform ownership transfer\n");
+    OC_PRINTF(
+      "[C] Successfully issued request to perform ownership transfer\n");
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
@@ -805,7 +806,7 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
         OC_PRINTF("[C]Roleid_role: %s\n", oc_string(ac->subject.role.role));
         if (oc_string_len(ac->subject.role.authority) > 0) {
           OC_PRINTF("[C]Roleid_authority: %s\n",
-                oc_string(ac->subject.role.authority));
+                    oc_string(ac->subject.role.authority));
         }
       } else if (ac->subject_type == OC_SUBJECT_CONN) {
         OC_PRINTF("[C]connection type: ");
@@ -908,11 +909,11 @@ display_cred_rsrc(const oc_sec_creds_t *creds)
       OC_PRINTF("[C]credusage: %s\n", oc_cred_read_credusage(cr->credusage));
       if (oc_string_len(cr->publicdata.data) > 0) {
         OC_PRINTF("[C]publicdata_encoding: %s\n",
-              oc_cred_read_encoding(cr->publicdata.encoding));
+                  oc_cred_read_encoding(cr->publicdata.encoding));
       }
 #endif /* OC_PKI */
       OC_PRINTF("[C]privatedata_encoding: %s\n",
-            oc_cred_read_encoding(cr->privatedata.encoding));
+                oc_cred_read_encoding(cr->privatedata.encoding));
       if (oc_string_len(cr->role.role) > 0) {
         OC_PRINTF("[C]roleid_role: %s\n", oc_string(cr->role.role));
       }
@@ -1174,7 +1175,8 @@ py_provision_role_cert(const char *uuid, const char *role, const char *auth)
   int ret = oc_obt_provision_role_certificate(roles, &device->uuid,
                                               provision_role_cert_cb, NULL);
   if (ret >= 0) {
-    OC_PRINTF("[C]\nSuccessfully issued request to provision role certificate\n");
+    OC_PRINTF(
+      "[C]\nSuccessfully issued request to provision role certificate\n");
   } else {
     OC_PRINTF("[C]\nERROR issuing request to provision role certificate\n");
   }
@@ -1206,10 +1208,11 @@ provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully provisioned group OSCORE context to device %s\n",
-          di);
+    OC_PRINTF(
+      "[C]\nSuccessfully provisioned group OSCORE context to device %s\n", di);
   } else {
-    OC_PRINTF("[C]\nERROR provisioning group OSCORE context to device %s\n", di);
+    OC_PRINTF("[C]\nERROR provisioning group OSCORE context to device %s\n",
+              di);
   }
 }
 
@@ -1277,7 +1280,8 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
+    OC_PRINTF("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n",
+              di);
   } else {
     OC_PRINTF("[C]\nERROR provisioning ACE to device %s\n", di);
   }
@@ -1448,7 +1452,7 @@ py_provision_ace2(const char *target, const char *subject, const char *href,
     return;
   }
   OC_PRINTF("[C] py_provision_ace: name = %s  href = %s crudn=%s",
-        device->device_name, href, crudn);
+            device->device_name, href, crudn);
 
   oc_sec_ace_t *ace = NULL;
   ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
@@ -1536,7 +1540,8 @@ install_trust_anchor(void)
 {
   char cert[8192];
   size_t cert_len = 0;
-  OC_PRINTF("[C]\nPaste certificate here, then hit <ENTER> and type \"done\": ");
+  OC_PRINTF(
+    "[C]\nPaste certificate here, then hit <ENTER> and type \"done\": ");
   int c;
   while ((c = getchar()) == '\n' || c == '\r')
     ;
@@ -1645,7 +1650,8 @@ py_provision_cloud_trust_anchor(const char *uuid, const char *cloud_id,
     OC_PRINTF("[C] py_provision_cloud_trust_anchor ERROR: Invalid uuid\n");
     return;
   }
-  OC_PRINTF("[C] py_provision_cloud_trust_anchor: name = %s ", device->device_name);
+  OC_PRINTF("[C] py_provision_cloud_trust_anchor: name = %s ",
+            device->device_name);
 
   otb_mutex_lock(app_sync_lock);
   int retcode = oc_obt_provision_trust_anchor(
@@ -2117,7 +2123,7 @@ perform_streamlined_discovery(oc_so_info_t *so_info)
   if (so_info != NULL) {
     char *cred = calloc(OC_SO_MAX_CRED_LEN, 1);
     OC_PRINTF("Onboarding device with UUID %s and cred %s\n", so_info->uuid,
-          so_info->cred);
+              so_info->cred);
     memcpy(cred, so_info->cred, strlen(so_info->cred));
     OC_PRINTF("After Memcopy\n");
 
@@ -2158,7 +2164,7 @@ observe_diplomat_cb(oc_client_response_t *data)
       if (oc_rep_get_object_array(rep, "soinfo", &so_info_rep_array)) {
         oc_so_info_t *so_info = oc_so_parse_rep_array(so_info_rep_array);
         OC_PRINTF("Onboarding device with UUID %s and cred %s\n", so_info->uuid,
-              so_info->cred);
+                  so_info->cred);
         char target_uuid[OC_UUID_LEN];
         snprintf(target_uuid, sizeof(target_uuid), "%s", so_info->uuid);
         inform_diplomat_python("", "", "", "", target_uuid, "");
@@ -2195,7 +2201,7 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
       diplomat_uri[uri_len] = '\0';
 
       OC_PRINTF("Resource %s anchor: %s hosted at endpoints:\n", diplomat_uri,
-            anchor);
+                anchor);
 
       char di[OC_UUID_LEN];
       strncpy(di, anchor + 6, OC_UUID_LEN);

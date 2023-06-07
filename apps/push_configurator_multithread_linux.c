@@ -69,11 +69,12 @@ static void
 push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
   OC_PRINTF("new push arrives (path: %s, rt: ",
-        oc_string(push_payload->resource->uri));
+            oc_string(push_payload->resource->uri));
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(push_payload->resource->types);
        i++) {
-    OC_PRINTF("%s ", oc_string_array_get_item(push_payload->resource->types, i));
+    OC_PRINTF("%s ",
+              oc_string_array_get_item(push_payload->resource->types, i));
   }
   OC_PRINTF(")\n");
 

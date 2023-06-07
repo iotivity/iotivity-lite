@@ -35,8 +35,8 @@ static void
 display_menu(void)
 {
   OC_PRINTF("\n\n################################################\nOCF 2.x "
-        "Cloud-connected "
-        "Client\n################################################\n");
+            "Cloud-connected "
+            "Client\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("[1] Discover resources\n");
@@ -71,7 +71,7 @@ static const char *apn = "test";
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
@@ -274,7 +274,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
   if (!more) {
     OC_PRINTF("\nDiscovered resources on the Cloud.. You may now issue "
-          "requests...\n");
+              "requests...\n");
     display_menu();
   }
   return OC_CONTINUE_DISCOVERY;
@@ -287,8 +287,9 @@ discover_resources(void)
   free_all_resources();
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx || oc_cloud_discover_resources(ctx, discovery, NULL) != 0) {
-    OC_PRINTF("\n\nERROR: could not issue discovery request\nDevice not yet logged "
-          "into OCF Cloud\n");
+    OC_PRINTF(
+      "\n\nERROR: could not issue discovery request\nDevice not yet logged "
+      "into OCF Cloud\n");
   }
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
@@ -451,13 +452,15 @@ int
 main(int argc, char *argv[])
 {
   if (argc == 1) {
-    OC_PRINTF("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
-          "<apn>\n");
+    OC_PRINTF(
+      "./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
+      "<apn>\n");
 #ifndef OC_SECURITY
-    OC_PRINTF("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
-          "sid: %s, "
-          "apn: %s\n",
-          device_name, auth_code, cis, sid, apn);
+    OC_PRINTF(
+      "Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
+      "sid: %s, "
+      "apn: %s\n",
+      device_name, auth_code, cis, sid, apn);
 #endif /* !OC_SECURITY */
   }
   if (argc > 1) {

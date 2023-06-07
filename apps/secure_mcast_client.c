@@ -70,7 +70,7 @@ app_init(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
     }                                                                          \
   } while (0)
 
@@ -78,8 +78,8 @@ static void
 display_menu(void)
 {
   OC_PRINTF("\n\n################################################\nSecure "
-        "multicast Client for light switches"
-        "\n################################################\n");
+            "multicast Client for light switches"
+            "\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("[1] Discover light switches\n");
@@ -219,7 +219,8 @@ retrieve_light_switch(bool observe)
       }
     }
   } else {
-    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF(
+      "\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -242,7 +243,8 @@ stop_observe_light_switch(void)
       oc_stop_observe(mcast_uri, ep);
     }
   } else {
-    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF(
+      "\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -301,7 +303,8 @@ update_light_switch(bool multicast)
       }
     }
   } else {
-    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF(
+      "\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();

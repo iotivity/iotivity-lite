@@ -76,8 +76,9 @@ static int quit;
 static void
 display_menu(void)
 {
-  OC_PRINTF("\n\n################################################\nOCF 2.x "
-        "Onboarding Tool\n################################################\n");
+  OC_PRINTF(
+    "\n\n################################################\nOCF 2.x "
+    "Onboarding Tool\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("[1] Discover un-owned devices\n");
@@ -136,7 +137,7 @@ display_menu(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
@@ -439,7 +440,8 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
-    OC_PRINTF("\nSuccessfully requested device %s to generate a Random PIN\n", di);
+    OC_PRINTF("\nSuccessfully requested device %s to generate a Random PIN\n",
+              di);
   } else {
     OC_PRINTF("\nERROR requesting device %s to generate a Random PIN\n", di);
   }
@@ -628,7 +630,7 @@ retrieve_acl2_rsrc_cb(oc_sec_acl_t *acl, void *data)
         OC_PRINTF("Roleid_role: %s\n", oc_string(ac->subject.role.role));
         if (oc_string_len(ac->subject.role.authority) > 0) {
           OC_PRINTF("Roleid_authority: %s\n",
-                oc_string(ac->subject.role.authority));
+                    oc_string(ac->subject.role.authority));
         }
       } else if (ac->subject_type == OC_SUBJECT_CONN) {
         OC_PRINTF("connection type: ");
@@ -744,11 +746,11 @@ display_cred_rsrc(oc_sec_creds_t *creds)
       OC_PRINTF("credusage: %s\n", oc_cred_read_credusage(cr->credusage));
       if (oc_string_len(cr->publicdata.data) > 0) {
         OC_PRINTF("publicdata_encoding: %s\n",
-              oc_cred_read_encoding(cr->publicdata.encoding));
+                  oc_cred_read_encoding(cr->publicdata.encoding));
       }
 #endif /* OC_PKI */
       OC_PRINTF("privatedata_encoding: %s\n",
-            oc_cred_read_encoding(cr->privatedata.encoding));
+                oc_cred_read_encoding(cr->privatedata.encoding));
       if (oc_string_len(cr->role.role) > 0) {
         OC_PRINTF("roleid_role: %s\n", oc_string(cr->role.role));
       }
@@ -1051,7 +1053,8 @@ provision_id_cert(void)
   int ret = oc_obt_provision_identity_certificate(&devices[c]->uuid,
                                                   provision_id_cert_cb, NULL);
   if (ret >= 0) {
-    OC_PRINTF("\nSuccessfully issued request to provision identity certificate\n");
+    OC_PRINTF(
+      "\nSuccessfully issued request to provision identity certificate\n");
   } else {
     OC_PRINTF("\nERROR issuing request to provision identity certificate\n");
   }
@@ -1164,7 +1167,8 @@ provision_role_wildcard_ace(void)
   }
 
   if (i == 0) {
-    OC_PRINTF("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    OC_PRINTF(
+      "\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -1209,7 +1213,8 @@ provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
   oc_uuid_to_str(uuid, di, sizeof(di));
 
   if (status >= 0) {
-    OC_PRINTF("\nSuccessfully provisioned group OSCORE context to device %s\n", di);
+    OC_PRINTF("\nSuccessfully provisioned group OSCORE context to device %s\n",
+              di);
   } else {
     OC_PRINTF("\nERROR provisioning group OSCORE context to device %s\n", di);
   }
@@ -1238,7 +1243,8 @@ provision_server_group_oscore_context(void)
   }
 
   if (i == 0) {
-    OC_PRINTF("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    OC_PRINTF(
+      "\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -1263,9 +1269,10 @@ provision_server_group_oscore_context(void)
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     OC_PRINTF("\nSuccessfully issued request to provision server group OSCORE "
-          "context\n");
+              "context\n");
   } else {
-    OC_PRINTF("\nERROR issuing request to provision server group OSCORE context\n");
+    OC_PRINTF(
+      "\nERROR issuing request to provision server group OSCORE context\n");
   }
 }
 
@@ -1292,7 +1299,8 @@ provision_client_group_oscore_context(void)
   }
 
   if (i == 0) {
-    OC_PRINTF("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    OC_PRINTF(
+      "\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -1309,9 +1317,10 @@ provision_client_group_oscore_context(void)
   otb_mutex_unlock(app_sync_lock);
   if (ret >= 0) {
     OC_PRINTF("\nSuccessfully issued request to provision client group OSCORE "
-          "context\n");
+              "context\n");
   } else {
-    OC_PRINTF("\nERROR issuing request to provision client group OSCORE context\n");
+    OC_PRINTF(
+      "\nERROR issuing request to provision client group OSCORE context\n");
   }
 }
 
@@ -1465,7 +1474,8 @@ provision_authcrypt_wildcard_ace(void)
   }
 
   if (i == 0) {
-    OC_PRINTF("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    OC_PRINTF(
+      "\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -1527,7 +1537,8 @@ provision_ace2(void)
   }
 
   if (i == 0) {
-    OC_PRINTF("\nNo devices to provision.. Please Re-Discover Owned devices.\n");
+    OC_PRINTF(
+      "\nNo devices to provision.. Please Re-Discover Owned devices.\n");
     return;
   }
 
@@ -1640,9 +1651,9 @@ provision_ace2(void)
       SCANF("%d", &c);
       if (c == 1) {
         OC_PRINTF("[1]: All NCRs '*' \n"
-              "[2]: All NCRs with >=1 secured endpoint '+'\n"
-              "[3]: All NCRs with >=1 unsecured endpoint '-'\n"
-              "\nSelect wildcard resource: ");
+                  "[2]: All NCRs with >=1 secured endpoint '+'\n"
+                  "[3]: All NCRs with >=1 unsecured endpoint '-'\n"
+                  "\nSelect wildcard resource: ");
         SCANF("%d", &c);
         switch (c) {
         case 1:
@@ -1987,7 +1998,7 @@ set_cloud_trust_anchor(void)
     oc_str_to_uuid(di, &device_uuid);
     if (c1 == i) {
       OC_PRINTF("setting trust anchor on: [%d]: %s - %s\n", i, di,
-            device->device_name);
+                device->device_name);
       break;
     }
     i++;

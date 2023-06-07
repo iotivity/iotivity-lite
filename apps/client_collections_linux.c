@@ -182,7 +182,7 @@ post_lights_oic_if_b(oc_client_response_t *data)
       switch (link->type) {
       case OC_REP_STRING:
         OC_PRINTF("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value.string));
+                  oc_string(link->value.string));
         break;
       case OC_REP_OBJECT: {
         OC_PRINTF("\t\tkey: %s value: { ", oc_string(link->name));
@@ -194,7 +194,7 @@ post_lights_oic_if_b(oc_client_response_t *data)
             break;
           case OC_REP_INT:
             OC_PRINTF(" %s : %" PRId64 " ", oc_string(rep->name),
-                  rep->value.integer);
+                      rep->value.integer);
             break;
           default:
             break;
@@ -231,7 +231,7 @@ get_lights_oic_if_b(oc_client_response_t *data)
       switch (link->type) {
       case OC_REP_STRING:
         OC_PRINTF("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value.string));
+                  oc_string(link->value.string));
         break;
       case OC_REP_OBJECT: {
         OC_PRINTF("\t\tkey: %s value: { ", oc_string(link->name));
@@ -243,7 +243,7 @@ get_lights_oic_if_b(oc_client_response_t *data)
             break;
           case OC_REP_INT:
             OC_PRINTF(" %s : %" PRId64 " ", oc_string(rep->name),
-                  rep->value.integer);
+                      rep->value.integer);
             break;
           default:
             break;
@@ -264,8 +264,8 @@ get_lights_oic_if_b(oc_client_response_t *data)
     return;
 
   OC_PRINTF("\nSending POST %s?if=oic.if.b [{href: /light/1, rep: "
-        "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
-        lights);
+            "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
+            lights);
 
   if (oc_init_post(lights, lights_server, "if=oic.if.b", &post_lights_oic_if_b,
                    LOW_QOS, NULL)) {

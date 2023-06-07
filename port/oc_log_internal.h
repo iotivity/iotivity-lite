@@ -92,10 +92,11 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                          \
-          oc_log_level_to_label(log_level), __FILENAME__, __LINE__, __func__); \
-    OC_PRINTF(__VA_ARGS__);                                                        \
-    OC_PRINTF("\n");                                                               \
+    OC_PRINTF("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                      \
+              oc_log_level_to_label(log_level), __FILENAME__, __LINE__,        \
+              __func__);                                                       \
+    OC_PRINTF(__VA_ARGS__);                                                    \
+    OC_PRINTF("\n");                                                           \
     fflush(stdout);                                                            \
   } while (0)
 #endif /* !OC_LOG */
@@ -166,8 +167,8 @@
     uint8_t *_oc_log_data = (uint8_t *)(data);                                 \
     for (size_t i = 0; (beg <= (end - 3)) && (i < (size_t)(len)); i++) {       \
       int _oc_log_ret =                                                        \
-        (i == 0) ? OC_SNPRINTF(beg, end - beg, "%02x", _oc_log_data[i])           \
-                 : OC_SNPRINTF(beg, end - beg, ":%02x", _oc_log_data[i]);         \
+        (i == 0) ? OC_SNPRINTF(beg, end - beg, "%02x", _oc_log_data[i])        \
+                 : OC_SNPRINTF(beg, end - beg, ":%02x", _oc_log_data[i]);      \
       if (_oc_log_ret < 0) {                                                   \
         break;                                                                 \
       }                                                                        \
@@ -184,8 +185,9 @@
     }                                                                          \
     char _oc_log_endpoint_buf[256];                                            \
     memset(_oc_log_endpoint_buf, 0, sizeof(_oc_log_endpoint_buf));             \
-    OC_SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf, sizeof(_oc_log_endpoint_buf),  \
-                          endpoint, addr_memb);                                \
+    OC_SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf,                             \
+                             sizeof(_oc_log_endpoint_buf), endpoint,           \
+                             addr_memb);                                       \
     if (logger->fn != NULL) {                                                  \
       logger->fn(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
                  __LINE__, __func__, "%s", _oc_log_endpoint_buf);              \
@@ -193,9 +195,9 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,             \
-          oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__, __LINE__,   \
-          __func__, _oc_log_endpoint_buf);                                     \
+    OC_PRINTF("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,         \
+              oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__,         \
+              __LINE__, __func__, _oc_log_endpoint_buf);                       \
     fflush(stdout);                                                            \
   } while (0)
 #ifndef OC_LOGipaddr
@@ -243,8 +245,8 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf, __FILENAME__,   \
-          __LINE__, __func__, _oc_log_bytes_buf_ptr);                          \
+    OC_PRINTF("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf,             \
+              __FILENAME__, __LINE__, __func__, _oc_log_bytes_buf_ptr);        \
     oc_free_string(&_oc_log_bytes_buf);                                        \
     fflush(stdout);                                                            \
   } while (0)

@@ -959,7 +959,7 @@ main(void)
 
   display_device_uuid();
   OC_PRINTF("OCF server \"Rules Test Server\" running, waiting on incomming "
-        "connections.\n");
+            "connections.\n");
 
   /* linux specific loop */
   while (quit != 1) {

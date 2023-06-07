@@ -440,7 +440,7 @@ app_init(void)
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
       OC_PRINTF("\tIntrospection data set 'cloud_proxy_IDD.cbor': %d [bytes]\n",
-            (int)buffer_size);
+                (int)buffer_size);
     } else {
       OC_PRINTF("%s", introspection_error);
     }
@@ -527,7 +527,7 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 
     /* property (array of strings) 'dis' */
     OC_PRINTF("   Array of strings : '%s'\n",
-          g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
+              g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
     oc_rep_set_key(oc_rep_object(root), "dis");
     oc_rep_begin_array(oc_rep_object(root), dis);
     for (int i = 0; i < MAX_ARRAY; i++) {
@@ -542,7 +542,7 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 
     /* property (array of objects) 'd2dserverlist' */
     OC_PRINTF("   Array of strings : '%s'\n",
-          g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
+              g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
     oc_rep_set_key(oc_rep_object(root), "dis");
     oc_rep_begin_array(oc_rep_object(root), dis);
     for (int i = 0; i < MAX_ARRAY; i++) {
@@ -725,7 +725,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 
     /* property (array of objects) 'd2dserverlist' */
     OC_PRINTF("   Array of strings : '%s'\n",
-          g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
+              g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
 
     oc_rep_set_key(oc_rep_object(root), "dis");
     oc_rep_begin_array(oc_rep_object(root), dis);
@@ -827,7 +827,7 @@ register_resources(void)
     oc_new_resource(NULL, g_d2dserverlist_RESOURCE_ENDPOINT,
                     g_d2dserverlist_nr_resource_types, 0);
   OC_PRINTF("     number of Resource Types: %d\n",
-        g_d2dserverlist_nr_resource_types);
+            g_d2dserverlist_nr_resource_types);
   for (int a = 0; a < g_d2dserverlist_nr_resource_types; a++) {
     OC_PRINTF("     Resource Type: \"%s\"\n", g_d2dserverlist_RESOURCE_TYPE[a]);
     oc_resource_bind_resource_type(res_d2dserverlist,
@@ -1300,7 +1300,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 #endif
 
   OC_PRINTF("  discovery: (cb) '%s' %d (this) '%s'\n", d2d_udn,
-        is_added_current_device, this_udn);
+            is_added_current_device, this_udn);
   OC_PRINTF("     -- (a) '%s' (uri) '%s'\n", anchor, uri);
 
   size_t uri_len = strlen(uri);
@@ -1376,7 +1376,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
       if (is_added_current_device) {
         OC_PRINTF("   discovery: Register Resource with local path \"%s\"\n",
-              udn_url);
+                  udn_url);
         oc_resource_t *new_resource =
           oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
         for (int j = 0; j < nr_resource_types; j++) {
@@ -1447,7 +1447,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
         // add the resource to the cloud
         int retval = oc_cloud_add_resource(new_resource);
         OC_PRINTF("   discovery ADDED resource '%s' to cloud : %d\n",
-              (char *)btoa(add_err), retval);
+                  (char *)btoa(add_err), retval);
 
       } /* adding current device, e.g. add the resource to the cloud RD */
     }   /* is vertical */
@@ -1867,7 +1867,7 @@ main(int argc, char *argv[])
 #endif
 
   OC_PRINTF("OCF server \"%s\" running, waiting on incoming connections.\n",
-        device_name);
+            device_name);
 
 #ifdef WIN32
   /* windows specific loop */

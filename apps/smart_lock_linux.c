@@ -75,7 +75,7 @@ app_init(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
     }                                                                          \
   } while (0)
 
@@ -83,8 +83,8 @@ static void
 display_menu(void)
 {
   OC_PRINTF("\n\n################################################\nSmart Lock "
-        "Controller"
-        "\n################################################\n");
+            "Controller"
+            "\n################################################\n");
   OC_PRINTF("[0] Display this menu\n");
   OC_PRINTF("-----------------------------------------------\n");
   OC_PRINTF("[1] Discover smart locks\n");
@@ -182,7 +182,7 @@ POST_handler(oc_client_response_t *data)
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
         OC_PRINTF("\n\n%s : %s\n\n", oc_string(rep->name),
-              oc_string(rep->value.string));
+                  oc_string(rep->value.string));
         if (oc_string_len(rep->value.string) == 6 &&
             memcmp(oc_string(rep->value.string), "Locked", 6) == 0) {
           lock->state = LOCKED;
@@ -211,7 +211,7 @@ GET_handler(oc_client_response_t *data)
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
         OC_PRINTF("\n\n%s : %s\n\n", oc_string(rep->name),
-              oc_string(rep->value.string));
+                  oc_string(rep->value.string));
         if (oc_string_len(rep->value.string) == 6 &&
             memcmp(oc_string(rep->value.string), "Locked", 6) == 0) {
           lock->state = LOCKED;
@@ -296,7 +296,8 @@ post_lock_state(void)
       OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       int s;
-      OC_PRINTF("Lock states:\n[0]: Locked\n[1]: Unlocked\n\nSelect lock state: ");
+      OC_PRINTF(
+        "Lock states:\n[0]: Locked\n[1]: Unlocked\n\nSelect lock state: ");
       SCANF("%d", &s);
       if (s < 0 || s > 1) {
         OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
