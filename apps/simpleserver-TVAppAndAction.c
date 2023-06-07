@@ -82,18 +82,18 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT(
+      OC_PRINTF(
         "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
         (int)buffer_size);
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #else
-  PRINT("\t introspection via header file\n");
+  OC_PRINTF("\t introspection via header file\n");
 #endif
   return ret;
 }
@@ -106,7 +106,7 @@ verify_action_in_supported_set(oc_string_t action)
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    PRINT("Action compare. Supported action %s against received action %s \n",
+    OC_PRINTF("Action compare. Supported action %s against received action %s \n",
           sv, act);
     if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
       return true;
@@ -122,17 +122,17 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  PRINT("get_binaryswitch: interface %d\n", interfaces);
+  OC_PRINTF("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_A:
     /* property "value" */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
-    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    OC_PRINTF("   value : %d\n", g_binaryswitch_value); /* not handled value */
     break;
   default:
     break;
@@ -157,16 +157,16 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("post_binaryswitch:\n");
+  OC_PRINTF("post_binaryswitch:\n");
   oc_rep_t *rep = request->request_payload;
   /* loop over the request document to check if all inputs are ok */
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
     if (memcmp(oc_string(rep->name), "value", 5) == 0) {
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
 
@@ -178,7 +178,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     /* loop over all the properties in the input document */
     oc_rep_t *rep = request->request_payload;
     while (rep != NULL) {
-      PRINT("key: (assign) %s \n", oc_string(rep->name));
+      OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
       /* no error: assign the variables */
       if (memcmp(oc_string(rep->name), "value", 5) == 0) {
         /* assign "value" */
@@ -187,7 +187,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
       rep = rep->next;
     }
     /* set the response */
-    PRINT("Set response \n");
+    OC_PRINTF("Set response \n");
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
     oc_rep_end_root_object();
@@ -220,7 +220,7 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     return;
   }
 
-  PRINT("GET_remotecontrol:\n");
+  OC_PRINTF("GET_remotecontrol:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -249,7 +249,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_remotecontrol:\n");
+  OC_PRINTF("POST_remotecontrol:\n");
   char *query = request->query;
   int query_len = request->query_len;
 
@@ -261,9 +261,9 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
-    PRINT("POST action length = %d \n", action_len);
-    PRINT("POST action string actual size %zu \n", strlen(action));
-    PRINT("POST action received raw = %s \n", action);
+    OC_PRINTF("POST action length = %d \n", action_len);
+    OC_PRINTF("POST action string actual size %zu \n", strlen(action));
+    OC_PRINTF("POST action received raw = %s \n", action);
 
     // Validate that the action requests is in the set
     //
@@ -286,7 +286,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     oc_free_string(&act);
   } else {
-    PRINT("POST no action received \n");
+    OC_PRINTF("POST no action received \n");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
@@ -294,7 +294,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 static void
 register_resources(void)
 {
-  PRINT("Register Resource with local path \"/binaryswitch\"\n");
+  OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
   oc_resource_t *res = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res, OC_IF_A);
@@ -304,7 +304,7 @@ register_resources(void)
   oc_resource_set_request_handler(res, OC_POST, post_binaryswitch, NULL);
   oc_add_resource(res);
 
-  PRINT("Register Resource with local path \"/remotecontrol\"\n");
+  OC_PRINTF("Register Resource with local path \"/remotecontrol\"\n");
   oc_resource_t *res2 =
     oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
   oc_resource_bind_resource_type(res2, "oic.r.remotecontrol");

@@ -72,7 +72,7 @@ extern "C" {
  *
  *   printf("\nDiscovered unowned device: %s at:\n", di);
  *   while (eps != NULL) {
- *     PRINTipaddr(*eps);
+ *     OC_PRINTipaddr(*eps);
  *     printf("\n");
  *     eps = eps->next;
  *   }

@@ -60,7 +60,7 @@ toggle_switch_resource(void *data)
   while (quit != 1) {
     getchar();
     if (quit != 1) {
-      PRINT("\nSwitch toggled\n");
+      OC_PRINTF("\nSwitch toggled\n");
       switch_state = !switch_state;
       oc_signal_interrupt_handler(toggle_switch);
     }
@@ -76,7 +76,7 @@ app_init(void)
 
   err |= oc_add_device("/oic/d", "oic.d.switch", "Temp_sensor", "ocf.2.2.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
-  PRINT("\tSwitch device added.\n");
+  OC_PRINTF("\tSwitch device added.\n");
 #if defined(OC_IDD_API)
   FILE *fp;
   uint8_t *buffer;
@@ -96,13 +96,13 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT("\tIntrospection data set for device.\n");
+      OC_PRINTF("\tIntrospection data set for device.\n");
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #endif
 
@@ -118,7 +118,7 @@ static void
 get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
-  PRINT("GET_temp:\n");
+  OC_PRINTF("GET_temp:\n");
   bool invalid_query = false;
   const char *units;
   units_t u = temp_units;
@@ -192,7 +192,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_temp:\n");
+  OC_PRINTF("POST_temp:\n");
   bool out_of_range = false;
   double t = -1;
   units_t units = C;
@@ -288,7 +288,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
-  PRINT("GET_switch:\n");
+  OC_PRINTF("GET_switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -311,7 +311,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_switch:\n");
+  OC_PRINTF("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -552,7 +552,7 @@ register_resources(void)
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
   oc_add_resource(temp_resource);
-  PRINT("\tTemperature resource added.\n");
+  OC_PRINTF("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
@@ -565,7 +565,7 @@ register_resources(void)
   oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
-  PRINT("\tSwitch resource added.\n");
+  OC_PRINTF("\tSwitch resource added.\n");
 #ifdef OC_COLLECTIONS
   col = oc_new_collection(NULL, "/platform", 1, 0);
   oc_resource_bind_resource_type(col, "oic.wk.col");
@@ -589,7 +589,7 @@ register_resources(void)
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
   oc_add_collection(col);
-  PRINT("\tResources added to collection.\n");
+  OC_PRINTF("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
 }
 
@@ -612,7 +612,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
@@ -622,32 +622,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len >= (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -667,14 +667,14 @@ factory_presets_cb(size_t device, void *data)
   char cert[8192];
   size_t cert_len = 8192;
   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
-    PRINT("ERROR: unable to read private key");
+    OC_PRINTF("ERROR: unable to read private key");
     return;
   }
 
@@ -682,33 +682,33 @@ factory_presets_cb(size_t device, void *data)
                                       (const unsigned char *)key, key_len);
 
   if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
+    OC_PRINTF("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
   int subca_credid = oc_pki_add_mfg_intermediate_cert(
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
+    OC_PRINTF("ERROR installing intermediate CA cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 
@@ -722,7 +722,7 @@ display_device_uuid(void)
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  PRINT("Started device with ID: %s\n", buffer);
+  OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
 int
@@ -766,13 +766,13 @@ main(void)
     return -1;
   }
 
-  PRINT("Initializing Smart Home Server.\n");
+  OC_PRINTF("Initializing Smart Home Server.\n");
   init = oc_main_init(&handler);
   if (init < 0)
     return init;
   display_device_uuid();
-  PRINT("Waiting for Client...\n");
-  PRINT("Hit 'Enter' at any time to toggle switch resource\n");
+  OC_PRINTF("Waiting for Client...\n");
+  OC_PRINTF("Hit 'Enter' at any time to toggle switch resource\n");
   while (quit != 1) {
     next_event = oc_main_poll();
     pthread_mutex_lock(&mutex);
@@ -788,7 +788,7 @@ main(void)
 
   oc_main_shutdown();
 
-  PRINT("\nPress any key to exit...\n");
+  OC_PRINTF("\nPress any key to exit...\n");
   pthread_join(toggle_switch_thread, NULL);
 
   return 0;

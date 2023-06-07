@@ -50,7 +50,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
           void *user_data)
 {
   (void)user_data;
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -64,7 +64,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  PRINT("Light state %d\n", light_state);
+  OC_PRINTF("Light state %d\n", light_state);
 }
 
 static void
@@ -73,15 +73,15 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)user_data;
   (void)iface_mask;
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      PRINT("value: %d\n", state);
+      OC_PRINTF("value: %d\n", state);
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);

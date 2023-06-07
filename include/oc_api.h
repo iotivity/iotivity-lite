@@ -294,14 +294,14 @@ void oc_main_shutdown(void);
  *   char cert[8192];
  *   size_t cert_len = 8192;
  *   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
- *     PRINT("ERROR: unable to read certificates\n");
+ *     OC_PRINTF("ERROR: unable to read certificates\n");
  *     return;
  *   }
  *
  *   char key[4096];
  *   size_t key_len = 4096;
  *   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
- *     PRINT("ERROR: unable to read private key");
+ *     OC_PRINTF("ERROR: unable to read private key");
  *     return;
  *   }
  *
@@ -309,13 +309,13 @@ void oc_main_shutdown(void);
  * cert_len, (const unsigned char *)key, key_len);
  *
  *   if (ee_credid < 0) {
- *     PRINT("ERROR installing manufacturer EE cert\n");
+ *     OC_PRINTF("ERROR installing manufacturer EE cert\n");
  *     return;
  *   }
  *
  *   cert_len = 8192;
  *   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
- *     PRINT("ERROR: unable to read certificates\n");
+ *     OC_PRINTF("ERROR: unable to read certificates\n");
  *     return;
  *   }
  *
@@ -323,20 +323,20 @@ void oc_main_shutdown(void);
  *     0, ee_credid, (const unsigned char *)cert, cert_len);
  *
  *   if (subca_credid < 0) {
- *     PRINT("ERROR installing intermediate CA cert\n");
+ *     OC_PRINTF("ERROR installing intermediate CA cert\n");
  *     return;
  *   }
  *
  *   cert_len = 8192;
  *   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
- *     PRINT("ERROR: unable to read certificates\n");
+ *     OC_PRINTF("ERROR: unable to read certificates\n");
  *     return;
  *   }
  *
  *   int rootca_credid =
  *     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
  *   if (rootca_credid < 0) {
- *     PRINT("ERROR installing root cert\n");
+ *     OC_PRINTF("ERROR installing root cert\n");
  *     return;
  *   }
  *
@@ -605,7 +605,7 @@ int oc_init_platform(const char *mfg_name,
  * *data)
  * {
  *  (void)data;
- *  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+ *  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
  * }
  * #endif // OC_SECURITY
  *
@@ -2128,13 +2128,13 @@ bool oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler,
  * static void
  * get_light(oc_client_response_t *data)
  * {
- *   PRINT("GET_light:\n");
+ *   OC_PRINTF("GET_light:\n");
  *   oc_rep_t *rep = data->payload;
  *   while (rep != NULL) {
- *     PRINT("key %s, value ", oc_string(rep->name));
+ *     OC_PRINTF("key %s, value ", oc_string(rep->name));
  *     switch (rep->type) {
  *     case OC_REP_BOOL:
- *       PRINT("%d\n", rep->value.boolean);
+ *       OC_PRINTF("%d\n", rep->value.boolean);
  *       value = rep->value.boolean;
  *       break;
  *     default:

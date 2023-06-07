@@ -327,14 +327,14 @@ anchor_to_udn(const char *anchor, char *udn)
 STATIC int
 is_udn_listed_index(char *udn)
 {
-  PRINT("is_udn_listed_index: Finding UDN %s \n", udn);
+  OC_PRINTF("is_udn_listed_index: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strcmp(g_d2dserverlist_d2dserverlist[i].di, udn) == 0) {
       return i;
     }
   }
-  PRINT("  is_udn_listed_index: None matched\n");
+  OC_PRINTF("  is_udn_listed_index: None matched\n");
   return -1;
 }
 
@@ -344,14 +344,14 @@ is_udn_listed_index(char *udn)
 STATIC void
 list_udn(void)
 {
-  PRINT("   list_udn \n");
+  OC_PRINTF("   list_udn \n");
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strlen(g_d2dserverlist_d2dserverlist[i].di) > 0) {
-      PRINT("    %s\n", g_d2dserverlist_d2dserverlist[i].di);
+      OC_PRINTF("    %s\n", g_d2dserverlist_d2dserverlist[i].di);
     }
   }
-  PRINT("   - done list_udn \n");
+  OC_PRINTF("   - done list_udn \n");
 }
 
 /**
@@ -362,14 +362,14 @@ list_udn(void)
 STATIC int
 find_empty_slot(void)
 {
-  PRINT("  find_empty_slot: Finding empty slot \n");
+  OC_PRINTF("  find_empty_slot: Finding empty slot \n");
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     if (strcmp(g_d2dserverlist_d2dserverlist[i].di, "") == 0) {
       return i;
     }
   }
-  PRINT("  find_empty_slot: no empty slot\n");
+  OC_PRINTF("  find_empty_slot: no empty slot\n");
   return -1;
 }
 
@@ -383,24 +383,24 @@ find_empty_slot(void)
 STATIC oc_endpoint_t *
 is_udn_listed(char *udn)
 {
-  PRINT("  is_udn_listed: Finding UDN %s \n", udn);
+  OC_PRINTF("  is_udn_listed: Finding UDN %s \n", udn);
 
   for (int i = 0; i < MAX_DISCOVERED_SERVER; i++) {
     oc_endpoint_t *ep = discovered_server[i];
     while (ep != NULL) {
       char uuid[OC_UUID_LEN] = { 0 };
       oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
-      PRINT("        uuid %s\n", uuid);
-      PRINT("        udn  %s\n", udn);
-      PRINT("        endpoint ");
-      PRINTipaddr(*ep);
+      OC_PRINTF("        uuid %s\n", uuid);
+      OC_PRINTF("        udn  %s\n", udn);
+      OC_PRINTF("        endpoint ");
+      OC_PRINTipaddr(*ep);
       if (strncmp(uuid, udn, OC_UUID_LEN) == 0) {
         return ep;
       }
       ep = ep->next;
     }
   }
-  PRINT("  is_udn_listed: None matched, returning NULL endpoint\n");
+  OC_PRINTF("  is_udn_listed: None matched, returning NULL endpoint\n");
   return NULL;
 }
 
@@ -439,17 +439,17 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT("\tIntrospection data set 'cloud_proxy_IDD.cbor': %d [bytes]\n",
+      OC_PRINTF("\tIntrospection data set 'cloud_proxy_IDD.cbor': %d [bytes]\n",
             (int)buffer_size);
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #else
-  PRINT("\t introspection via header file\n");
+  OC_PRINTF("\t introspection via header file\n");
 #endif
   return ret;
 }
@@ -467,23 +467,23 @@ check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 {
   if (strcmp(oc_string(name), "n") == 0) {
     error_state = true;
-    PRINT("   property \"n\" is ReadOnly \n");
+    OC_PRINTF("   property \"n\" is ReadOnly \n");
   }
   else if (strcmp(oc_string(name), "if") == 0) {
     error_state = true;
-    PRINT("   property \"if\" is ReadOnly \n");
+    OC_PRINTF("   property \"if\" is ReadOnly \n");
   }
   else if (strcmp(oc_string(name), "rt") == 0) {
     error_state = true;
-    PRINT("   property \"rt\" is ReadOnly \n");
+    OC_PRINTF("   property \"rt\" is ReadOnly \n");
   }
   else if (strcmp(oc_string(name), "id") == 0) {
     error_state = true;
-    PRINT("   property \"id\" is ReadOnly \n");
+    OC_PRINTF("   property \"id\" is ReadOnly \n");
   }
   else if (strcmp(oc_string(name), "id") == 0) {
     error_state = true;
-    PRINT("   property \"id\" is ReadOnly \n");
+    OC_PRINTF("   property \"id\" is ReadOnly \n");
   }
   return error_state;
 }
@@ -516,17 +516,17 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
      pass CTT1.2.2 */
   bool error_state = false;
 
-  PRINT("-- Begin get_d2dserverlist: interface %d\n", interfaces);
+  OC_PRINTF("-- Begin get_d2dserverlist: interface %d\n", interfaces);
   list_udn();
 
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
 
     /* property (array of strings) 'dis' */
-    PRINT("   Array of strings : '%s'\n",
+    OC_PRINTF("   Array of strings : '%s'\n",
           g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
     oc_rep_set_key(oc_rep_object(root), "dis");
     oc_rep_begin_array(oc_rep_object(root), dis);
@@ -541,7 +541,7 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   case OC_IF_RW:
 
     /* property (array of objects) 'd2dserverlist' */
-    PRINT("   Array of strings : '%s'\n",
+    OC_PRINTF("   Array of strings : '%s'\n",
           g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
     oc_rep_set_key(oc_rep_object(root), "dis");
     oc_rep_begin_array(oc_rep_object(root), dis);
@@ -563,7 +563,7 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_d2dserverlist\n");
+  OC_PRINTF("-- End get_d2dserverlist\n");
 }
 
 /**
@@ -596,7 +596,7 @@ STATIC bool
 remove_di(const char *di, int len)
 {
   for (int i = 0; i < MAX_ARRAY; i++) {
-    PRINT("   %s %.*s ", g_d2dserverlist_d2dserverlist[i].di, len, di);
+    OC_PRINTF("   %s %.*s ", g_d2dserverlist_d2dserverlist[i].di, len, di);
     if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, len) == 0) {
       strcpy(g_d2dserverlist_d2dserverlist[i].di, "");
       return true;
@@ -669,7 +669,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = true;
-  PRINT("-- Begin post_d2dserverlist:\n");
+  OC_PRINTF("-- Begin post_d2dserverlist:\n");
   int stored_index = 0;
   // oc_rep_t* rep = request->request_payload;
 
@@ -681,7 +681,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   /* do a scan to all devices */
   int _scan_len = oc_get_query_value(request, "scan", &_scan);
   if (_scan_len > 0) {
-    PRINT("   Send multicast discovery\n");
+    OC_PRINTF("   Send multicast discovery\n");
     issue_requests_all();
     oc_send_response(request, OC_STATUS_CHANGED);
     return;
@@ -692,25 +692,25 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
     /* input check
      * ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
      */
-    PRINT("  query value 'di': %.*s\n", _di_len, _di);
+    OC_PRINTF("  query value 'di': %.*s\n", _di_len, _di);
     if (if_di_exist(_di, _di_len) == false) {
       // di value is not listed yet, so add it
       strncpy(g_d2dserverlist_di, _di, _di_len);
-      PRINT(" New di %s\n", g_d2dserverlist_di);
+      OC_PRINTF(" New di %s\n", g_d2dserverlist_di);
       error_state = false;
 
       stored_index = find_empty_slot();
       if (stored_index >= 0) {
         strncpy(g_d2dserverlist_d2dserverlist[stored_index].di, _di, _di_len);
         stored = true;
-        PRINT(" storing at %d \n", stored_index);
+        OC_PRINTF(" storing at %d \n", stored_index);
         list_udn();
       } else {
-        PRINT(" full, not stored \n");
+        OC_PRINTF(" full, not stored \n");
         list_udn();
       }
     } else {
-      PRINT(" DI exist, no error, returning existing list\n");
+      OC_PRINTF(" DI exist, no error, returning existing list\n");
       error_state = false;
       stored = true;
       list_udn();
@@ -720,11 +720,11 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
    * variables */
   if (error_state == false) {
     /* set the response */
-    PRINT("Set response \n");
+    OC_PRINTF("Set response \n");
     oc_rep_start_root_object();
 
     /* property (array of objects) 'd2dserverlist' */
-    PRINT("   Array of strings : '%s'\n",
+    OC_PRINTF("   Array of strings : '%s'\n",
           g_d2dserverlist_RESOURCE_PROPERTY_NAME_d2dserverlist);
 
     oc_rep_set_key(oc_rep_object(root), "dis");
@@ -732,7 +732,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
     for (int i = 0; i < MAX_ARRAY; i++) {
       if (strlen(g_d2dserverlist_d2dserverlist[i].di) > 0) {
         oc_rep_add_text_string(dis, g_d2dserverlist_d2dserverlist[i].di);
-        PRINT("      DI: '%s'\n", g_d2dserverlist_d2dserverlist[i].di);
+        OC_PRINTF("      DI: '%s'\n", g_d2dserverlist_d2dserverlist[i].di);
       }
     }
     oc_rep_end_array(oc_rep_object(root), dis);
@@ -743,15 +743,15 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
       /* do a new discovery so that the new device will be added */
       issue_requests(g_d2dserverlist_d2dserverlist[stored_index].di);
     } else {
-      PRINT("MAX array exceeded, not stored, returing error \n");
+      OC_PRINTF("MAX array exceeded, not stored, returing error \n");
       oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_d2dserverlist\n");
+  OC_PRINTF("-- End post_d2dserverlist\n");
 }
 
 /**
@@ -771,7 +771,7 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = true;
-  PRINT("-- Begin delete_d2dserverlist:\n");
+  OC_PRINTF("-- Begin delete_d2dserverlist:\n");
 
   list_udn();
 
@@ -784,16 +784,16 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
      */
 
     /* TODO: use the query value to tailer the response*/
-    PRINT(" query value 'di': %.*s\n", _di_len, _di);
+    OC_PRINTF(" query value 'di': %.*s\n", _di_len, _di);
     if (if_di_exist(_di, _di_len)) {
       // remove it
-      PRINT(" FOUND = TRUE \n");
+      OC_PRINTF(" FOUND = TRUE \n");
       // remove the resources that are registered..
       bool unregister = unregister_resources(_di, _di_len);
-      PRINT(" unregister resources of di: %s\n", btoa(unregister));
+      OC_PRINTF(" unregister resources of di: %s\n", btoa(unregister));
       // remove the di of the d2d server list
       bool removed = remove_di(_di, _di_len);
-      PRINT(" Removed di: %s\n", btoa(removed));
+      OC_PRINTF(" Removed di: %s\n", btoa(removed));
       error_state = false;
     }
   }
@@ -802,7 +802,7 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End delete_d2dserverlist\n");
+  OC_PRINTF("-- End delete_d2dserverlist\n");
 }
 
 /**
@@ -822,14 +822,14 @@ STATIC void
 register_resources(void)
 {
 
-  PRINT("Register Resource with local path \"d2dserverlist\"\n");
+  OC_PRINTF("Register Resource with local path \"d2dserverlist\"\n");
   oc_resource_t *res_d2dserverlist =
     oc_new_resource(NULL, g_d2dserverlist_RESOURCE_ENDPOINT,
                     g_d2dserverlist_nr_resource_types, 0);
-  PRINT("     number of Resource Types: %d\n",
+  OC_PRINTF("     number of Resource Types: %d\n",
         g_d2dserverlist_nr_resource_types);
   for (int a = 0; a < g_d2dserverlist_nr_resource_types; a++) {
-    PRINT("     Resource Type: \"%s\"\n", g_d2dserverlist_RESOURCE_TYPE[a]);
+    OC_PRINTF("     Resource Type: \"%s\"\n", g_d2dserverlist_RESOURCE_TYPE[a]);
     oc_resource_bind_resource_type(res_d2dserverlist,
                                    g_d2dserverlist_RESOURCE_TYPE[a]);
   }
@@ -839,7 +839,7 @@ register_resources(void)
   oc_resource_bind_resource_interface(res_d2dserverlist,
                                       OC_IF_RW); /* oic.if.rw */
   oc_resource_set_default_interface(res_d2dserverlist, OC_IF_RW);
-  PRINT("     Default OCF Interface: 'oic.if.rw'\n");
+  OC_PRINTF("     Default OCF Interface: 'oic.if.rw'\n");
   oc_resource_set_discoverable(res_d2dserverlist, true);
   /* periodic observable
      to be used when one wants to send an event per time slice
@@ -875,9 +875,9 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n====================\n");
-  PRINT("Random PIN: %.*s\n", (int)pin_len, pin);
-  PRINT("====================\n");
+  OC_PRINTF("\n====================\n");
+  OC_PRINTF("Random PIN: %.*s\n", (int)pin_len, pin);
+  OC_PRINTF("====================\n");
 }
 #endif /* OC_SECURITY_PIN */
 #endif /* OC_SECURITY */
@@ -898,30 +898,30 @@ factory_presets_cb(size_t device, void *data)
     oc_pki_add_mfg_cert(0, (const unsigned char *)my_cert, strlen(my_cert),
                         (const unsigned char *)my_key, strlen(my_key));
   if (credid < 0) {
-    PRINT("ERROR installing PKI certificate\n");
+    OC_PRINTF("ERROR installing PKI certificate\n");
   } else {
-    PRINT("Successfully installed PKI certificate\n");
+    OC_PRINTF("Successfully installed PKI certificate\n");
   }
 
   if (oc_pki_add_mfg_intermediate_cert(0, credid, (const unsigned char *)int_ca,
                                        strlen(int_ca)) < 0) {
-    PRINT("ERROR installing intermediate CA certificate\n");
+    OC_PRINTF("ERROR installing intermediate CA certificate\n");
   } else {
-    PRINT("Successfully installed intermediate CA certificate\n");
+    OC_PRINTF("Successfully installed intermediate CA certificate\n");
   }
 
   if (oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)root_ca,
                                   strlen(root_ca)) < 0) {
-    PRINT("ERROR installing root certificate\n");
+    OC_PRINTF("ERROR installing root certificate\n");
   } else {
-    PRINT("Successfully installed root certificate\n");
+    OC_PRINTF("Successfully installed root certificate\n");
   }
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
 #endif /* MANUFACTORER_PKI */
 
 #else
-  PRINT("No PKI certificates installed\n");
+  OC_PRINTF("No PKI certificates installed\n");
 #endif /* OC_SECURITY && OC_PKI */
 }
 
@@ -1019,8 +1019,8 @@ get_local_resource_response(oc_client_response_t *data)
 
   delay_response = data->user_data;
 
-  PRINT(" <== get_local_resource_response: \n");
-  PRINT(" RESPONSE: ");
+  OC_PRINTF(" <== get_local_resource_response: \n");
+  OC_PRINTF(" RESPONSE: ");
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
@@ -1059,22 +1059,22 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   memset(delay_response, 0, sizeof(oc_separate_response_t));
 
   strcpy(url, oc_string(request->resource->uri));
-  PRINT(" ==> get_resource %s", url);
+  OC_PRINTF(" ==> get_resource %s", url);
   url_to_udn(url, local_udn);
   local_server = is_udn_listed(local_udn);
   url_to_local_url(url, local_url);
-  PRINT("      local udn: %s\n", local_udn);
-  PRINT("      local url: %s\n", local_url);
+  OC_PRINTF("      local udn: %s\n", local_udn);
+  OC_PRINTF("      local url: %s\n", local_url);
   if (request->query_len > 0) {
     strncpy(query_as_string, request->query, request->query_len);
-    PRINT("      query    : %s\n", query_as_string);
+    OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
   oc_do_get(local_url, local_server, query_as_string,
             &get_local_resource_response, LOW_QOS, delay_response);
-  PRINT("       DISPATCHED\n");
+  OC_PRINTF("       DISPATCHED\n");
 }
 
 /**
@@ -1091,8 +1091,8 @@ post_local_resource_response(oc_client_response_t *data)
 
   delay_response = data->user_data;
 
-  PRINT(" <== post_local_resource_response: \n");
-  PRINT(" RESPONSE: ");
+  OC_PRINTF(" <== post_local_resource_response: \n");
+  OC_PRINTF(" RESPONSE: ");
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
@@ -1136,27 +1136,27 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   memset(delay_response, 0, sizeof(oc_separate_response_t));
 
   strcpy(url, oc_string(request->resource->uri));
-  PRINT(" ==> post_resource %s", url);
+  OC_PRINTF(" ==> post_resource %s", url);
   url_to_udn(url, local_udn);
   local_server = is_udn_listed(local_udn);
   url_to_local_url(url, local_url);
-  PRINT("      local udn: %s\n", local_udn);
-  PRINT("      local url: %s\n", local_url);
+  OC_PRINTF("      local udn: %s\n", local_udn);
+  OC_PRINTF("      local url: %s\n", local_url);
   if (request->query_len > 0) {
     strncpy(query_as_string, request->query, request->query_len);
-    PRINT("      query    : %s\n", query_as_string);
+    OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
   bool berr =
     oc_get_request_payload_raw(request, &payload, &len, &content_format);
-  PRINT("      raw buffer ok: %s\n", btoa(berr));
+  OC_PRINTF("      raw buffer ok: %s\n", btoa(berr));
 
   int err = oc_parse_rep(payload, (int)len, &value_list);
-  PRINT("     REQUEST data: %d %d \n", (int)len, err);
+  OC_PRINTF("     REQUEST data: %d %d \n", (int)len, err);
   print_rep(value_list, false);
   free(value_list);
 
-  PRINT("     REQUEST 2222: \n");
+  OC_PRINTF("     REQUEST 2222: \n");
   print_rep(request->request_payload, false);
 
   oc_set_separate_response_buffer(delay_response);
@@ -1167,13 +1167,13 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     // copy over the data
     oc_rep_encode_raw(payload, len);
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST request\n");
+      OC_PRINTF("Could not send POST request\n");
   } else
-    PRINT("Could not init POST request\n");
+    OC_PRINTF("Could not init POST request\n");
 
-  PRINT("       DISPATCHED\n");
+  OC_PRINTF("       DISPATCHED\n");
 
   // clean up...
   // free(payload);
@@ -1193,8 +1193,8 @@ delete_local_resource_response(oc_client_response_t *data)
 
   delay_response = data->user_data;
 
-  PRINT(" <== delete_local_resource_response: \n");
-  PRINT(" RESPONSE: ");
+  OC_PRINTF(" <== delete_local_resource_response: \n");
+  OC_PRINTF(" RESPONSE: ");
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
@@ -1236,22 +1236,22 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   memset(delay_response, 0, sizeof(oc_separate_response_t));
 
   strcpy(url, oc_string(request->resource->uri));
-  PRINT(" ==> delete_resource %s", url);
+  OC_PRINTF(" ==> delete_resource %s", url);
   url_to_udn(url, local_udn);
   local_server = is_udn_listed(local_udn);
   url_to_local_url(url, local_url);
-  PRINT("      local udn: %s\n", local_udn);
-  PRINT("      local url: %s\n", local_url);
+  OC_PRINTF("      local udn: %s\n", local_udn);
+  OC_PRINTF("      local url: %s\n", local_url);
   if (request->query_len > 0) {
     strncpy(query_as_string, request->query, request->query_len);
-    PRINT("      query    : %s\n", query_as_string);
+    OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
   oc_do_delete(local_url, local_server, query_as_string,
                &delete_local_resource_response, LOW_QOS, delay_response);
-  PRINT("       DISPATCHED\n");
+  OC_PRINTF("       DISPATCHED\n");
 }
 
 /**
@@ -1299,9 +1299,9 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   strcpy(d2d_udn, this_udn);
 #endif
 
-  PRINT("  discovery: (cb) '%s' %d (this) '%s'\n", d2d_udn,
+  OC_PRINTF("  discovery: (cb) '%s' %d (this) '%s'\n", d2d_udn,
         is_added_current_device, this_udn);
-  PRINT("     -- (a) '%s' (uri) '%s'\n", anchor, uri);
+  OC_PRINTF("     -- (a) '%s' (uri) '%s'\n", anchor, uri);
 
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
@@ -1312,17 +1312,17 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     char *t = oc_string_array_get_item(types, i);
 
     if (is_vertical(t)) {
-      PRINT("  discovery: To REGISTER resource type: %s\n", t);
-      PRINT("  discovery: Resource %s hosted at endpoints:\n", uri);
+      OC_PRINTF("  discovery: To REGISTER resource type: %s\n", t);
+      OC_PRINTF("  discovery: Resource %s hosted at endpoints:\n", uri);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         char uuid[OC_UUID_LEN] = { 0 };
         oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
 
-        PRINT("   di = %s\n", uuid);
-        PRINT("      ");
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTF("   di = %s\n", uuid);
+        OC_PRINTF("      ");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 
@@ -1332,10 +1332,10 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
         ep = ep->next;
       }
       if (ep != NULL) {
-        PRINT("  discovery secure endpoint on UDN '%s' :\n", this_udn);
-        PRINT("    secure: ");
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTF("  discovery secure endpoint on UDN '%s' :\n", this_udn);
+        OC_PRINTF("    secure: ");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         // make a copy, so that we can store it in the array to find it back
         // later.
         oc_endpoint_t *copy = (oc_endpoint_t *)malloc(sizeof(oc_endpoint_t));
@@ -1345,7 +1345,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
         int index = is_udn_listed_index(this_udn);
         if (index != -1) {
           // add new server to the list
-          PRINT("  discovery: UPDATING UDN '%s'\n", this_udn);
+          OC_PRINTF("  discovery: UPDATING UDN '%s'\n", this_udn);
           /* free existing endpoint */
           free(discovered_server[index]);
           /* add the newly copied endpoint*/
@@ -1355,11 +1355,11 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
             index = find_empty_slot();
             if (index != -1) {
               // add new server to the list
-              PRINT("  discovery: ADDING UDN '%s'\n", this_udn);
+              OC_PRINTF("  discovery: ADDING UDN '%s'\n", this_udn);
               discovered_server[index] = copy;
               strcpy(g_d2dserverlist_d2dserverlist[index].di, this_udn);
             } else {
-              PRINT("  discovery: NO SPACE TO STORE: '%s'\n", this_udn);
+              OC_PRINTF("  discovery: NO SPACE TO STORE: '%s'\n", this_udn);
             }
           }
         }
@@ -1375,7 +1375,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strcat(udn_url, url);
 
       if (is_added_current_device) {
-        PRINT("   discovery: Register Resource with local path \"%s\"\n",
+        OC_PRINTF("   discovery: Register Resource with local path \"%s\"\n",
               udn_url);
         oc_resource_t *new_resource =
           oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
@@ -1384,48 +1384,48 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
                                          oc_string_array_get_item(types, j));
         }
         if (iface_mask & OC_IF_BASELINE) {
-          PRINT("   IF BASELINE\n");
+          OC_PRINTF("   IF BASELINE\n");
           oc_resource_bind_resource_interface(
             new_resource, OC_IF_BASELINE); /* oic.if.baseline */
         }
         if (iface_mask & OC_IF_LL) {
-          PRINT("   IF LL\n");
+          OC_PRINTF("   IF LL\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_LL); /* oic.if.ll */
           oc_resource_set_default_interface(new_resource, OC_IF_LL);
         }
         if (iface_mask & OC_IF_CREATE) {
-          PRINT("   IF CREATE\n");
+          OC_PRINTF("   IF CREATE\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_CREATE); /* oic.if.create */
           // oc_resource_set_default_interface(new_resource, OC_IF_CREATE);
         }
         if (iface_mask & OC_IF_B) {
-          PRINT("   IF B\n");
+          OC_PRINTF("   IF B\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_B); /* oic.if.b */
           // oc_resource_set_default_interface(new_resource, OC_IF_B);
         }
         if (iface_mask & OC_IF_R) {
-          PRINT("   IF R\n");
+          OC_PRINTF("   IF R\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_R); /* oic.if.r */
           oc_resource_set_default_interface(new_resource, OC_IF_R);
         }
         if (iface_mask & OC_IF_RW) {
-          PRINT("   IF RW\n");
+          OC_PRINTF("   IF RW\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_RW); /* oic.if.rw */
           oc_resource_set_default_interface(new_resource, OC_IF_RW);
         }
         if (iface_mask & OC_IF_A) {
-          PRINT("   IF A\n");
+          OC_PRINTF("   IF A\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_A); /* oic.if.a */
           oc_resource_set_default_interface(new_resource, OC_IF_A);
         }
         if (iface_mask & OC_IF_S) {
-          PRINT("   IF S\n");
+          OC_PRINTF("   IF S\n");
           oc_resource_bind_resource_interface(new_resource,
                                               OC_IF_S); /* oic.if.S */
           oc_resource_set_default_interface(new_resource, OC_IF_S);
@@ -1446,7 +1446,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
         bool add_err = oc_add_resource(new_resource);
         // add the resource to the cloud
         int retval = oc_cloud_add_resource(new_resource);
-        PRINT("   discovery ADDED resource '%s' to cloud : %d\n",
+        OC_PRINTF("   discovery ADDED resource '%s' to cloud : %d\n",
               (char *)btoa(add_err), retval);
 
       } /* adding current device, e.g. add the resource to the cloud RD */
@@ -1498,7 +1498,7 @@ issue_requests(char *current_udn)
 void
 issue_requests_all(void)
 {
-  PRINT("issue_requests_all: Discovery of all devices \n");
+  OC_PRINTF("issue_requests_all: Discovery of all devices \n");
 #ifdef OC_DOXM_UUID_FILTER
   oc_do_site_local_ipv6_multicast("/oic/sec/doxm", NULL, doxm_discovery_cb,
                                   NULL);
@@ -1565,41 +1565,41 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                      void *data)
 {
   (void)data;
-  PRINT("\nCloud Manager Status:\n");
+  OC_PRINTF("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
     /* issue start up request*/
     // issue_requests_all();
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
   if (status & OC_CLOUD_REFRESHED_TOKEN) {
-    PRINT("\t\t-Refreshed Token\n");
+    OC_PRINTF("\t\t-Refreshed Token\n");
   }
 
-  PRINT("   AC   = %s\n", oc_string(ctx->store.access_token));
-  PRINT("   AP   = %s\n", oc_string(ctx->store.auth_provider));
-  PRINT("   CI   = %s\n", oc_string(ctx->store.ci_server));
+  OC_PRINTF("   AC   = %s\n", oc_string(ctx->store.access_token));
+  OC_PRINTF("   AP   = %s\n", oc_string(ctx->store.auth_provider));
+  OC_PRINTF("   CI   = %s\n", oc_string(ctx->store.ci_server));
 
-  PRINT("   UUID = %s\n", oc_string(ctx->store.uid));
+  OC_PRINTF("   UUID = %s\n", oc_string(ctx->store.uid));
 }
 #endif // OC_CLOUD
 
@@ -1610,32 +1610,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len > (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -1661,14 +1661,14 @@ minimal_factory_presets_cb(size_t device, void *data)
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 #endif /* OC_SECURITY && OC_PKI */
@@ -1692,7 +1692,7 @@ oc_ownership_status_cb(const oc_uuid_t *device_uuid, size_t device_index,
 
   char uuid[37] = { 0 };
   oc_uuid_to_str(device_uuid, uuid, OC_UUID_LEN);
-  PRINT(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
+  OC_PRINTF(" oc_ownership_status_cb: UUID: '%s'\n", uuid);
 }
 #endif /* OC_SECURITY */
 
@@ -1702,7 +1702,7 @@ display_device_uuid(void)
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  PRINT("Started device with ID: %s\n", buffer);
+  OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
 /**
@@ -1726,23 +1726,23 @@ main(int argc, char *argv[])
 
   if (argc > 1) {
     device_name = argv[1];
-    PRINT("device_name: %s\n", argv[1]);
+    OC_PRINTF("device_name: %s\n", argv[1]);
   }
   if (argc > 2) {
     auth_code = argv[2];
-    PRINT("auth_code: %s\n", argv[2]);
+    OC_PRINTF("auth_code: %s\n", argv[2]);
   }
   if (argc > 3) {
     cis = argv[3];
-    PRINT("cis : %s\n", argv[3]);
+    OC_PRINTF("cis : %s\n", argv[3]);
   }
   if (argc > 4) {
     sid = argv[4];
-    PRINT("sid: %s\n", argv[4]);
+    OC_PRINTF("sid: %s\n", argv[4]);
   }
   if (argc > 5) {
     apn = argv[5];
-    PRINT("apn: %s\n", argv[5]);
+    OC_PRINTF("apn: %s\n", argv[5]);
   }
 
 #ifdef WIN32
@@ -1766,9 +1766,9 @@ main(int argc, char *argv[])
   char *retbuf = NULL;
   retbuf = GetCurrentDir(buff, FILENAME_MAX);
   if (retbuf != NULL) {
-    PRINT("Current working dir: %s\n", buff);
+    OC_PRINTF("Current working dir: %s\n", buff);
   }
-  PRINT("OCF Server name : \"%s\"\n", device_name);
+  OC_PRINTF("OCF Server name : \"%s\"\n", device_name);
 
   /*
    The storage folder depends on the build system
@@ -1778,9 +1778,9 @@ main(int argc, char *argv[])
    fix.
   */
 #ifdef OC_SECURITY
-  PRINT("Intialize Secure Resources\n");
+  OC_PRINTF("Intialize Secure Resources\n");
 #ifdef OC_CLOUD
-  PRINT("\tstorage at './cloud_proxy_creds' \n");
+  OC_PRINTF("\tstorage at './cloud_proxy_creds' \n");
   oc_storage_config("./cloud_proxy_creds");
 #endif
 
@@ -1821,7 +1821,7 @@ main(int argc, char *argv[])
   init = oc_main_init(&handler);
 
   if (init < 0) {
-    PRINT("oc_main_init failed %d, exiting.\n", init);
+    OC_PRINTF("oc_main_init failed %d, exiting.\n", init);
     return init;
   }
 
@@ -1830,31 +1830,31 @@ main(int argc, char *argv[])
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     int retval;
-    PRINT("Start Cloud Manager\n");
+    OC_PRINTF("Start Cloud Manager\n");
     retval = oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    PRINT("   manager status %d\n", retval);
+    OC_PRINTF("   manager status %d\n", retval);
     if (cis) {
       if (argc == 6) {
         int retval;
         /* configure the */
         retval =
           oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
-        PRINT("   config status  %d\n", retval);
+        OC_PRINTF("   config status  %d\n", retval);
 
-        PRINT("Conf Cloud Manager\n");
-        PRINT("   cis       %s\n", cis);
-        PRINT("   auth_code %s\n", auth_code);
-        PRINT("   sid       %s\n", sid);
-        PRINT("   apn       %s\n", apn);
+        OC_PRINTF("Conf Cloud Manager\n");
+        OC_PRINTF("   cis       %s\n", cis);
+        OC_PRINTF("   auth_code %s\n", auth_code);
+        OC_PRINTF("   sid       %s\n", sid);
+        OC_PRINTF("   apn       %s\n", apn);
       } else {
-        PRINT("Conf Cloud Manager: waiting to be provisioned by an OBT\n");
+        OC_PRINTF("Conf Cloud Manager: waiting to be provisioned by an OBT\n");
       }
     }
   }
 #endif
 
   oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
-  PRINT(" UUID: '%s'\n", proxy_di);
+  OC_PRINTF(" UUID: '%s'\n", proxy_di);
   display_device_uuid();
 #ifdef OC_SECURITY
   oc_add_ownership_status_cb(oc_ownership_status_cb, NULL);
@@ -1862,11 +1862,11 @@ main(int argc, char *argv[])
 
 #ifdef RESET
   // reset the device, for easier debugging.
-  PRINT(" RESET DEVICE\n");
+  OC_PRINTF(" RESET DEVICE\n");
   oc_reset();
 #endif
 
-  PRINT("OCF server \"%s\" running, waiting on incoming connections.\n",
+  OC_PRINTF("OCF server \"%s\" running, waiting on incoming connections.\n",
         device_name);
 
 #ifdef WIN32
@@ -1903,7 +1903,7 @@ main(int argc, char *argv[])
 
   /* shut down the stack */
 #ifdef OC_CLOUD
-  PRINT("Stop Cloud Manager\n");
+  OC_PRINTF("Stop Cloud Manager\n");
   oc_cloud_manager_stop(ctx);
 #endif
   oc_main_shutdown();

@@ -136,8 +136,8 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
 static void
 coap_audit_log(const oc_message_t *msg)
 {
-  char ipaddr[IPADDR_BUFF_SIZE];
-  SNPRINTFipaddr(ipaddr, IPADDR_BUFF_SIZE, msg->endpoint);
+  char ipaddr[OC_IPADDR_BUFF_SIZE];
+  OC_SNPRINTFipaddr(ipaddr, OC_IPADDR_BUFF_SIZE, msg->endpoint);
   char buff1[16];
   memset(buff1, 0, sizeof(buff1));
   if (msg->length >= 4) {

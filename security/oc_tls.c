@@ -714,9 +714,9 @@ static void
 oc_tls_audit_log(const char *aeid, const char *message, uint8_t category,
                  uint8_t priority, oc_tls_peer_t *peer)
 {
-  char buff[IPADDR_BUFF_SIZE];
+  char buff[OC_IPADDR_BUFF_SIZE];
   if (peer) {
-    SNPRINTFipaddr(buff, IPADDR_BUFF_SIZE, peer->endpoint);
+    OC_SNPRINTFipaddr(buff, OC_IPADDR_BUFF_SIZE, peer->endpoint);
   } else {
     buff[0] = '\0';
   }

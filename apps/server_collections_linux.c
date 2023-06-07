@@ -45,7 +45,7 @@ get_count(oc_request_t *request, oc_interface_mask_t iface_mask,
           void *user_data)
 {
   (void)user_data;
-  PRINT("GET_count:\n");
+  OC_PRINTF("GET_count:\n");
   counter++;
   oc_rep_start_root_object();
   switch (iface_mask) {
@@ -68,14 +68,14 @@ post_count(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)interface;
   (void)user_data;
-  PRINT("POST_count:\n");
+  OC_PRINTF("POST_count:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
       counter = (int)rep->value.integer;
-      PRINT("value: %d\n", counter);
+      OC_PRINTF("value: %d\n", counter);
       break;
     default:
       break;
@@ -95,7 +95,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
           void *user_data)
 {
   (void)user_data;
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -117,14 +117,14 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       light_state = rep->value.boolean;
-      PRINT("value: %d\n", light_state);
+      OC_PRINTF("value: %d\n", light_state);
       break;
     default:
       break;

@@ -48,36 +48,36 @@ static int large_array[100];
 static void
 post_array(oc_client_response_t *data)
 {
-  PRINT("POST_array:\n");
+  OC_PRINTF("POST_array:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 }
 
 static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(array_1, array_server);
 
   int i;
   if (oc_init_post(array_1, array_server, NULL, &post_array, LOW_QOS, NULL)) {
     for (i = 0; i < 100; i++) {
       large_array[i] = oc_random_value();
-      PRINT("(%d %d) ", i, large_array[i]);
+      OC_PRINTF("(%d %d) ", i, large_array[i]);
     }
-    PRINT("\n");
+    OC_PRINTF("\n");
     oc_rep_start_root_object();
     oc_rep_set_int_array(root, array, large_array, 100);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST\n");
+      OC_PRINTF("Could not send POST\n");
   } else
-    PRINT("Could not init POST\n");
+    OC_PRINTF("Could not init POST\n");
 
   return OC_EVENT_DONE;
 }
@@ -86,17 +86,17 @@ static void
 get_array(oc_client_response_t *data)
 {
   int i;
-  PRINT("GET_array:\n");
+  OC_PRINTF("GET_array:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT_ARRAY: {
       int64_t *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        PRINT("(%d %" PRId64 ") ", i, arr[i]);
+        OC_PRINTF("(%d %" PRId64 ") ", i, arr[i]);
       }
-      PRINT("\n");
+      OC_PRINTF("\n");
     } break;
     default:
       break;
@@ -126,11 +126,11 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(array_1, uri, uri_len);
       array_1[uri_len] = '\0';
 
-      PRINT("Resource %s hosted at endpoints:\n", array_1);
+      OC_PRINTF("Resource %s hosted at endpoints:\n", array_1);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 

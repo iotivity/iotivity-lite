@@ -34,17 +34,17 @@ static int quit;
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nOCF 2.x "
+  OC_PRINTF("\n\n################################################\nOCF 2.x "
         "Cloud-connected "
         "Client\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Discover resources\n");
-  PRINT("[2] Issue GET request to resource\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[99] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Discover resources\n");
+  OC_PRINTF("[2] Issue GET request to resource\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[99] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("\nSelect option: \n");
 }
 
 // define application specific values.
@@ -71,7 +71,7 @@ static const char *apn = "test";
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                          \
       fflush(stdin);                                                           \
     }                                                                          \
   } while (0)
@@ -147,22 +147,22 @@ free_all_resources(void)
 static void
 show_discovered_resources(resource_t **res)
 {
-  PRINT("\nDiscovered resources:\n");
+  OC_PRINTF("\nDiscovered resources:\n");
   resource_t *l = (resource_t *)oc_list_head(resources);
   int i = 0;
-  PRINT("\n\n");
+  OC_PRINTF("\n\n");
   while (l != NULL) {
     if (res != NULL) {
       res[i] = l;
     }
-    PRINT("[%d]: %s", i, l->uri);
+    OC_PRINTF("[%d]: %s", i, l->uri);
     oc_endpoint_t *ep = l->endpoint;
     while (ep != NULL) {
-      PRINT("\n\t\t");
-      PRINTipaddr(*ep);
+      OC_PRINTF("\n\t\t");
+      OC_PRINTipaddr(*ep);
       ep = ep->next;
     }
-    PRINT("\n\n");
+    OC_PRINTF("\n\n");
     i++;
     l = l->next;
   }
@@ -178,8 +178,8 @@ GET_handler(oc_client_response_t *data)
   char buf[4096];
   oc_rep_to_json(data->payload, buf, 4096, true);
   oc_client_cb_t *cb = (oc_client_cb_t *)data->client_cb;
-  PRINT("uri: %s\n", oc_string(cb->uri));
-  PRINT("payload: %s\n", buf);
+  OC_PRINTF("uri: %s\n", oc_string(cb->uri));
+  OC_PRINTF("payload: %s\n", buf);
 }
 
 static void
@@ -189,19 +189,19 @@ get_resource(void)
   if (oc_list_length(resources) > 0) {
     resource_t *res[100];
     show_discovered_resources(res);
-    PRINT("\n\nSelect resource: ");
+    OC_PRINTF("\n\nSelect resource: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(resources)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       oc_endpoint_t *ep = res[c]->endpoint;
       if (!oc_do_get(res[c]->uri, ep, NULL, GET_handler, HIGH_QOS, NULL)) {
-        PRINT("\nERROR Could not issue GET request\n");
+        OC_PRINTF("\nERROR Could not issue GET request\n");
       }
     }
   } else {
-    PRINT("\nERROR: No known resources... Please try discovery...\n");
+    OC_PRINTF("\nERROR: No known resources... Please try discovery...\n");
   }
   otb_mutex_unlock(app_sync_lock);
   signal_event_loop();
@@ -212,32 +212,32 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                      void *data)
 {
   (void)data;
-  PRINT("\nCloud Manager Status:\n");
+  OC_PRINTF("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
   if (status & OC_CLOUD_REFRESHED_TOKEN) {
-    PRINT("\t\t-Refreshed Token\n");
+    OC_PRINTF("\t\t-Refreshed Token\n");
   }
 }
 
@@ -273,7 +273,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   }
 
   if (!more) {
-    PRINT("\nDiscovered resources on the Cloud.. You may now issue "
+    OC_PRINTF("\nDiscovered resources on the Cloud.. You may now issue "
           "requests...\n");
     display_menu();
   }
@@ -287,7 +287,7 @@ discover_resources(void)
   free_all_resources();
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (!ctx || oc_cloud_discover_resources(ctx, discovery, NULL) != 0) {
-    PRINT("\n\nERROR: could not issue discovery request\nDevice not yet logged "
+    OC_PRINTF("\n\nERROR: could not issue discovery request\nDevice not yet logged "
           "into OCF Cloud\n");
   }
   otb_mutex_unlock(app_sync_lock);
@@ -300,32 +300,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len > (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -345,14 +345,14 @@ factory_presets_cb(size_t device, void *data)
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
   if (read_pem("pki_certs/cloudca.pem", (char *)cloud_ca, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_trust_anchor(0, (const unsigned char *)cloud_ca, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 #endif /* OC_SECURITY && OC_PKI */
@@ -451,10 +451,10 @@ int
 main(int argc, char *argv[])
 {
   if (argc == 1) {
-    PRINT("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
+    OC_PRINTF("./cloud_client <device-name-without-spaces> <auth-code> <cis> <sid> "
           "<apn>\n");
 #ifndef OC_SECURITY
-    PRINT("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
+    OC_PRINTF("Using default parameters: device_name: %s, auth_code: %s, cis: %s, "
           "sid: %s, "
           "apn: %s\n",
           device_name, auth_code, cis, sid, apn);
@@ -462,23 +462,23 @@ main(int argc, char *argv[])
   }
   if (argc > 1) {
     device_name = argv[1];
-    PRINT("device_name: %s\n", argv[1]);
+    OC_PRINTF("device_name: %s\n", argv[1]);
   }
   if (argc > 2) {
     auth_code = argv[2];
-    PRINT("auth_code: %s\n", argv[2]);
+    OC_PRINTF("auth_code: %s\n", argv[2]);
   }
   if (argc > 3) {
     cis = argv[3];
-    PRINT("cis : %s\n", argv[3]);
+    OC_PRINTF("cis : %s\n", argv[3]);
   }
   if (argc > 4) {
     sid = argv[4];
-    PRINT("sid: %s\n", argv[4]);
+    OC_PRINTF("sid: %s\n", argv[4]);
   }
   if (argc > 5) {
     apn = argv[5];
-    PRINT("apn: %s\n", argv[5]);
+    OC_PRINTF("apn: %s\n", argv[5]);
   }
 
 #if defined(_WIN32)

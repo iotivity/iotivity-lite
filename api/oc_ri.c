@@ -832,7 +832,7 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
   char *aux[] = { aux_arr[0], aux_arr[1], aux_arr[2],
                   aux_arr[3], aux_arr[4], aux_arr[5] };
   size_t idx = 1;
-  SNPRINTFipaddr(aux[0], LINE_WIDTH, *endpoint);
+  OC_SNPRINTFipaddr(aux[0], LINE_WIDTH, *endpoint);
   const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer) {
     oc_uuid_to_str(&peer->uuid, aux[idx++], LINE_WIDTH);

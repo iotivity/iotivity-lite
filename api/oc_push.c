@@ -59,9 +59,9 @@
 
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
-#define TAG "OC-JNI"
+#define OC_TAG "OC-JNI"
 #define OC_PUSH_PRINT(...)                                                     \
-  __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+  __android_log_print(ANDROID_LOG_INFO, OC_TAG, __VA_ARGS__)
 #else /* !__ANDROID__ */
 #define OC_PUSH_PRINT(...) printf(__VA_ARGS__)
 #endif /* __ANDROID__ */

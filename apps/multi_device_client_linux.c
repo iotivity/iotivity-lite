@@ -70,7 +70,7 @@ static oc_event_callback_retval_t
 stop_client(void *data)
 {
   (void)data;
-  PRINT("Stopping client...\n");
+  OC_PRINTF("Stopping client...\n");
   handle_signal(0);
   return OC_EVENT_DONE;
 }
@@ -100,11 +100,11 @@ static void get_temp(oc_client_response_t *data);
 static void
 post_temp(oc_client_response_t *data)
 {
-  PRINT("POST_fridge:\n");
+  OC_PRINTF("POST_fridge:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 
   if (!stop_get_post) {
     oc_do_get(temp_1, temp_server, NULL, &get_temp, LOW_QOS, NULL);
@@ -114,17 +114,17 @@ post_temp(oc_client_response_t *data)
 static void
 get_temp(oc_client_response_t *data)
 {
-  PRINT("GET_temp:\n");
+  OC_PRINTF("GET_temp:\n");
   oc_rep_t *rep = data->payload;
 
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_DOUBLE:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "temperature", 11) == 0) {
         thermostat = rep->value.double_p;
-        PRINT("value: %lf\n", thermostat);
+        OC_PRINTF("value: %lf\n", thermostat);
       }
       break;
     default:
@@ -139,11 +139,11 @@ get_temp(oc_client_response_t *data)
     oc_rep_set_double(root, temperature, thermostat + 1.0);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST\n");
+      OC_PRINTF("Could not send POST\n");
   } else
-    PRINT("Could not init POST\n");
+    OC_PRINTF("Could not init POST\n");
 }
 
 static void get_fridge(oc_client_response_t *data);
@@ -151,11 +151,11 @@ static void get_fridge(oc_client_response_t *data);
 static void
 post_fridge(oc_client_response_t *data)
 {
-  PRINT("POST_fridge:\n");
+  OC_PRINTF("POST_fridge:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 
   if (!stop_get_post) {
     oc_do_get(fridge_1, fridge_server, NULL, &get_fridge, LOW_QOS, NULL);
@@ -165,16 +165,16 @@ post_fridge(oc_client_response_t *data)
 static void
 get_fridge(oc_client_response_t *data)
 {
-  PRINT("GET_fridge:\n");
+  OC_PRINTF("GET_fridge:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "filter", 6) == 0) {
         fridge_state.filter = (int)rep->value.integer;
-        PRINT("value: %d\n", fridge_state.filter);
+        OC_PRINTF("value: %d\n", fridge_state.filter);
       }
       break;
     case OC_REP_BOOL:
@@ -188,7 +188,7 @@ get_fridge(oc_client_response_t *data)
                  memcmp(oc_string(rep->name), "defrost", 7) == 0) {
         fridge_state.defrost = rep->value.boolean;
       }
-      PRINT("value: %d\n", rep->value.boolean);
+      OC_PRINTF("value: %d\n", rep->value.boolean);
       break;
     default:
       break;
@@ -205,17 +205,17 @@ get_fridge(oc_client_response_t *data)
     oc_rep_set_boolean(root, rapidCool, !fridge_state.rapid_cool);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST\n");
+      OC_PRINTF("Could not send POST\n");
   } else
-    PRINT("Could not init POST\n");
+    OC_PRINTF("Could not init POST\n");
 }
 
 static void
 get_platform(oc_client_response_t *data)
 {
-  PRINT("GET_platform:\n");
+  OC_PRINTF("GET_platform:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
@@ -224,7 +224,7 @@ get_platform(oc_client_response_t *data)
            memcmp(oc_string(rep->name), "pi", 2) == 0) ||
           (oc_string_len(rep->name) == 4 &&
            memcmp(oc_string(rep->name), "mnmn", 4) == 0)) {
-        PRINT("key: %s, value: %s\n", oc_string(rep->name),
+        OC_PRINTF("key: %s, value: %s\n", oc_string(rep->name),
               oc_string(rep->value.string));
       }
       break;
@@ -238,7 +238,7 @@ get_platform(oc_client_response_t *data)
 static void
 get_device(oc_client_response_t *data)
 {
-  PRINT("GET_device:\n");
+  OC_PRINTF("GET_device:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
     switch (rep->type) {
@@ -251,7 +251,7 @@ get_device(oc_client_response_t *data)
            memcmp(oc_string(rep->name), "icv", 3) == 0) ||
           (oc_string_len(rep->name) == 2 &&
            memcmp(oc_string(rep->name), "di", 2) == 0)) {
-        PRINT("key: %s, value: %s\n", oc_string(rep->name),
+        OC_PRINTF("key: %s, value: %s\n", oc_string(rep->name),
               oc_string(rep->value.string));
       }
       break;
@@ -260,13 +260,13 @@ get_device(oc_client_response_t *data)
           (memcmp(oc_string(rep->name), "rt", 2) == 0 ||
            memcmp(oc_string(rep->name), "if", 2) == 0)) {
         int i;
-        PRINT("key: %s, value: ", oc_string(rep->name));
+        OC_PRINTF("key: %s, value: ", oc_string(rep->name));
         for (i = 0;
              i < (int)oc_string_array_get_allocated_size(rep->value.array);
              i++) {
-          PRINT(" %s ", oc_string_array_get_item(rep->value.array, i));
+          OC_PRINTF(" %s ", oc_string_array_get_item(rep->value.array, i));
         }
-        PRINT("\n");
+        OC_PRINTF("\n");
       }
       break;
     default:
@@ -294,15 +294,15 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       fridge_1[uri_len] = '\0';
       oc_endpoint_list_copy(&fridge_server, endpoint);
 
-      PRINT("Resource %s hosted in device %s at endpoints:\n", fridge_1,
+      OC_PRINTF("Resource %s hosted in device %s at endpoints:\n", fridge_1,
             anchor);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
-      PRINT("\n\n");
+      OC_PRINTF("\n\n");
       oc_do_get(fridge_1, fridge_server, NULL, &get_fridge, LOW_QOS, NULL);
       return OC_CONTINUE_DISCOVERY;
     } else if (strlen(t) == 17 && strncmp(t, "oic.r.temperature", 17) == 0) {
@@ -310,14 +310,14 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       temp_1[uri_len] = '\0';
       oc_endpoint_list_copy(&temp_server, endpoint);
 
-      PRINT("Resource %s hosted in device %s at endpoints:\n", temp_1, anchor);
+      OC_PRINTF("Resource %s hosted in device %s at endpoints:\n", temp_1, anchor);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
-      PRINT("\n\n");
+      OC_PRINTF("\n\n");
       oc_do_get(temp_1, temp_server, NULL, &get_temp, LOW_QOS, NULL);
       return OC_CONTINUE_DISCOVERY;
     }

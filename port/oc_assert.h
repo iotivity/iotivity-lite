@@ -50,7 +50,7 @@ OC_NO_RETURN
 static inline void
 oc_abort(const char *msg)
 {
-  PRINT("\n%s\nAbort.\n", msg);
+  OC_PRINTF("\n%s\nAbort.\n", msg);
   abort_impl();
 }
 

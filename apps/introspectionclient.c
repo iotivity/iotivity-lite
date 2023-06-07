@@ -148,7 +148,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         printf("\t");
-        PRINTipaddr(*ep);
+        OC_PRINTipaddr(*ep);
         printf("\n");
         ep = ep->next;
       }

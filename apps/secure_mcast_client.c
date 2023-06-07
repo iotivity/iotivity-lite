@@ -70,50 +70,50 @@ app_init(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                          \
     }                                                                          \
   } while (0)
 
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nSecure "
+  OC_PRINTF("\n\n################################################\nSecure "
         "multicast Client for light switches"
         "\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Discover light switches\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[2] RETRIEVE switch\n");
-  PRINT("[3] Unicast UPDATE switch\n");
-  PRINT("[4] Start OBSERVE switch\n");
-  PRINT("[5] Stop OBSERVE switch\n");
-  PRINT("[6] Multicast UPDATE switches\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[99] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Discover light switches\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[2] RETRIEVE switch\n");
+  OC_PRINTF("[3] Unicast UPDATE switch\n");
+  OC_PRINTF("[4] Start OBSERVE switch\n");
+  OC_PRINTF("[5] Stop OBSERVE switch\n");
+  OC_PRINTF("[6] Multicast UPDATE switches\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[99] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("\nSelect option: \n");
 }
 
 static void
 show_discovered_light_switches(light_switch_t **res)
 {
-  PRINT("\nDiscovered light switches:\n");
+  OC_PRINTF("\nDiscovered light switches:\n");
   light_switch_t *l = (light_switch_t *)oc_list_head(light_switches);
   int i = 0;
-  PRINT("\n\n");
+  OC_PRINTF("\n\n");
   while (l != NULL) {
     if (res != NULL) {
       res[i] = l;
     }
-    PRINT("[%d]: %s", i, mcast_uri);
+    OC_PRINTF("[%d]: %s", i, mcast_uri);
     oc_endpoint_t *ep = l->endpoint;
     while (ep != NULL) {
-      PRINT("\n\t\t");
-      PRINTipaddr(*ep);
+      OC_PRINTF("\n\t\t");
+      OC_PRINTipaddr(*ep);
       ep = ep->next;
     }
-    PRINT("\n\n");
+    OC_PRINTF("\n\n");
     i++;
     l = l->next;
   }
@@ -160,36 +160,36 @@ ocf_event_thread(void *data)
 static void
 update_handler(oc_client_response_t *data)
 {
-  PRINT("UPDATE light switch:\n");
+  OC_PRINTF("UPDATE light switch:\n");
   if (data->code == OC_STATUS_CHANGED) {
-    PRINT("UPDATE response CHANGED\n");
+    OC_PRINTF("UPDATE response CHANGED\n");
   } else {
-    PRINT("UPDATE response code %d\n", data->code);
+    OC_PRINTF("UPDATE response code %d\n", data->code);
   }
 
   char buf[4096];
   oc_rep_to_json(data->payload, buf, 4096, true);
   oc_client_cb_t *cb = (oc_client_cb_t *)data->client_cb;
-  PRINT("uri: %s\n", oc_string(cb->uri));
-  PRINT("query: %s\n", oc_string(cb->query));
-  PRINT("payload: %s\n", buf);
+  OC_PRINTF("uri: %s\n", oc_string(cb->uri));
+  OC_PRINTF("query: %s\n", oc_string(cb->query));
+  OC_PRINTF("payload: %s\n", buf);
   display_menu();
 }
 
 static void
 retrieve_handler(oc_client_response_t *data)
 {
-  PRINT("RETRIEVE light switch:\n");
+  OC_PRINTF("RETRIEVE light switch:\n");
   char buf[4096];
   oc_rep_to_json(data->payload, buf, 4096, true);
   oc_client_cb_t *cb = (oc_client_cb_t *)data->client_cb;
   if (data->endpoint) {
-    PRINT("server endpoint: ");
-    PRINTipaddr(*(data->endpoint));
+    OC_PRINTF("server endpoint: ");
+    OC_PRINTipaddr(*(data->endpoint));
   }
-  PRINT("\nuri: %s\n", oc_string(cb->uri));
-  PRINT("query: %s\n", oc_string(cb->query));
-  PRINT("payload: %s\n", buf);
+  OC_PRINTF("\nuri: %s\n", oc_string(cb->uri));
+  OC_PRINTF("query: %s\n", oc_string(cb->query));
+  OC_PRINTF("payload: %s\n", buf);
   display_menu();
 }
 
@@ -200,26 +200,26 @@ retrieve_light_switch(bool observe)
   if (oc_list_length(light_switches) > 0) {
     light_switch_t *res[100];
     show_discovered_light_switches(res);
-    PRINT("\n\nSelect light switch: ");
+    OC_PRINTF("\n\nSelect light switch: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(light_switches)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       oc_endpoint_t *ep = res[c]->endpoint;
       if (observe) {
         if (!oc_do_observe(mcast_uri, ep, NULL, retrieve_handler, HIGH_QOS,
                            NULL)) {
-          PRINT("\nERROR: Could not issue Observe request\n");
+          OC_PRINTF("\nERROR: Could not issue Observe request\n");
         }
       } else {
         if (!oc_do_get(mcast_uri, ep, NULL, retrieve_handler, HIGH_QOS, NULL)) {
-          PRINT("\nERROR Could not issue RETRIEVE request\n");
+          OC_PRINTF("\nERROR Could not issue RETRIEVE request\n");
         }
       }
     }
   } else {
-    PRINT("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -232,17 +232,17 @@ stop_observe_light_switch(void)
   if (oc_list_length(light_switches) > 0) {
     light_switch_t *res[100];
     show_discovered_light_switches(res);
-    PRINT("\n\nSelect light switch: ");
+    OC_PRINTF("\n\nSelect light switch: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(light_switches)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       oc_endpoint_t *ep = res[c]->endpoint;
       oc_stop_observe(mcast_uri, ep);
     }
   } else {
-    PRINT("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -261,20 +261,20 @@ update_light_switch(bool multicast)
     oc_endpoint_t *ep = NULL;
     if (!multicast) {
       show_discovered_light_switches(res);
-      PRINT("\n\nSelect light switch: ");
+      OC_PRINTF("\n\nSelect light switch: ");
       SCANF("%d", &c);
       if (c < 0 || c > oc_list_length(light_switches)) {
-        PRINT("\nERROR: Invalid selection.. Try again..\n");
+        OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
         pthread_mutex_unlock(&app_sync_lock);
         return;
       }
       ep = res[c]->endpoint;
     }
     int s;
-    PRINT("Select siwtch value:\n[0]: true\n[1]: false\n\nSelect: ");
+    OC_PRINTF("Select siwtch value:\n[0]: true\n[1]: false\n\nSelect: ");
     SCANF("%d", &s);
     if (s < 0 || s > 1) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       if ((!multicast &&
            oc_init_post(mcast_uri, ep, NULL, &update_handler, HIGH_QOS, NULL))
@@ -294,14 +294,14 @@ update_light_switch(bool multicast)
             || (multicast && !oc_do_multicast_update())
 #endif /* OC_OSCORE */
         ) {
-          PRINT("\nERROR: Could not issue UPDATE request\n");
+          OC_PRINTF("\nERROR: Could not issue UPDATE request\n");
         }
       } else {
-        PRINT("\nERROR: Could not initialize UPDATE request\n");
+        OC_PRINTF("\nERROR: Could not initialize UPDATE request\n");
       }
     }
   } else {
-    PRINT("\nERROR: No known light switches... Please retry discovery...\n");
+    OC_PRINTF("\nERROR: No known light switches... Please retry discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -342,7 +342,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   if (supports_mcast) {
     light_switch_t *l = (light_switch_t *)oc_memb_alloc(&light_switches_m);
     if (l) {
-      PRINT("\n##Discovered light switch##\n");
+      OC_PRINTF("\n##Discovered light switch##\n");
       oc_endpoint_list_copy(&l->endpoint, endpoint);
       if (oc_list_length(light_switches) == 0) {
         size_t uri_len = strlen(uri);
@@ -364,9 +364,9 @@ discover_light_switches(void)
 {
   pthread_mutex_lock(&app_sync_lock);
   free_all_light_switches();
-  PRINT("\nDiscovering light switches...");
+  OC_PRINTF("\nDiscovering light switches...");
   if (!oc_do_ip_discovery("oic.r.switch.binary", &discovery, NULL)) {
-    PRINT("\nERROR: Could not issue discovery request\n");
+    OC_PRINTF("\nERROR: Could not issue discovery request\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();

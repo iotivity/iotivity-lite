@@ -68,14 +68,14 @@ typedef struct
 static void
 push_arrived(oc_pushd_resource_rep_t *push_payload)
 {
-  PRINT("new push arrives (path: %s, rt: ",
+  OC_PRINTF("new push arrives (path: %s, rt: ",
         oc_string(push_payload->resource->uri));
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(push_payload->resource->types);
        i++) {
-    PRINT("%s ", oc_string_array_get_item(push_payload->resource->types, i));
+    OC_PRINTF("%s ", oc_string_array_get_item(push_payload->resource->types, i));
   }
-  PRINT(")\n");
+  OC_PRINTF(")\n");
 
   oc_print_pushd_resource(push_payload->rep);
 }
@@ -328,7 +328,7 @@ find_same_endpoint(oc_endpoint_t *endpoint, char *uri,
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     printf(" |__");
-    PRINTipaddr(*ep);
+    OC_PRINTipaddr(*ep);
     printf("\n");
 
     if (oc_endpoint_compare(&originserver_ep, ep) == 0) {

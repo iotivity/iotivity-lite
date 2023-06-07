@@ -49,17 +49,17 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
                  void *user_data)
 {
   (void)user_data; /* not used */
-  PRINT("get_binaryswitch: interface %d\n", interfaces);
+  OC_PRINTF("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_A:
     /* property "value" */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
-    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    OC_PRINTF("   value : %d\n", g_binaryswitch_value); /* not handled value */
     break;
   default:
     break;
@@ -75,16 +75,16 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("post_binaryswitch:\n");
+  OC_PRINTF("post_binaryswitch:\n");
   oc_rep_t *rep = request->request_payload;
   /* loop over the request document to check if all inputs are ok */
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
     if (memcmp(oc_string(rep->name), "value", 5) == 0) {
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
 
@@ -96,7 +96,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     /* loop over all the properties in the input document */
     oc_rep_t *rep = request->request_payload;
     while (rep != NULL) {
-      PRINT("key: (assign) %s \n", oc_string(rep->name));
+      OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
       /* no error: assign the variables */
       if (memcmp(oc_string(rep->name), "value", 5) == 0) {
         /* assign "value" */
@@ -105,7 +105,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
       rep = rep->next;
     }
     /* set the response */
-    PRINT("Set response \n");
+    OC_PRINTF("Set response \n");
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
     oc_rep_end_root_object();
@@ -125,7 +125,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)user_data;
   ++power;
 
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -149,18 +149,18 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      PRINT("value: %d\n", state);
+      OC_PRINTF("value: %d\n", state);
       break;
     case OC_REP_INT:
       power = (int)rep->value.integer;
-      PRINT("value: %d\n", power);
+      OC_PRINTF("value: %d\n", power);
       break;
     case OC_REP_STRING:
       oc_free_string(&name);
@@ -220,7 +220,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 

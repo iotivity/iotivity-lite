@@ -75,51 +75,51 @@ app_init(void)
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                          \
     }                                                                          \
   } while (0)
 
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nSmart Lock "
+  OC_PRINTF("\n\n################################################\nSmart Lock "
         "Controller"
         "\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Discover smart locks\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[2] GET lock state\n");
-  PRINT("[3] POST lock state\n");
-  PRINT("[4] Start OBSERVE lock state\n");
-  PRINT("[5] Stop OBSERVE lock state\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[6] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Discover smart locks\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[2] GET lock state\n");
+  OC_PRINTF("[3] POST lock state\n");
+  OC_PRINTF("[4] Start OBSERVE lock state\n");
+  OC_PRINTF("[5] Stop OBSERVE lock state\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[6] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("\nSelect option: \n");
 }
 
 static oc_event_callback_retval_t
 show_discovered_locks(void *data)
 {
   (void)data;
-  PRINT("\nDiscovered locks with rt oic.r.lock.status:\n");
+  OC_PRINTF("\nDiscovered locks with rt oic.r.lock.status:\n");
   oc_smartlock_t **locks = (oc_smartlock_t **)data;
   oc_smartlock_t *l = (oc_smartlock_t *)oc_list_head(smartlocks);
   int i = 0;
-  PRINT("\n\n");
+  OC_PRINTF("\n\n");
   while (l != NULL) {
     if (locks != NULL) {
       locks[i] = l;
     }
-    PRINT("[%d]: %s", i, l->uri);
+    OC_PRINTF("[%d]: %s", i, l->uri);
     oc_endpoint_t *ep = l->endpoint;
     while (ep != NULL) {
-      PRINT("\n\t\t");
-      PRINTipaddr(*ep);
+      OC_PRINTF("\n\t\t");
+      OC_PRINTipaddr(*ep);
       ep = ep->next;
     }
-    PRINT("\n\n");
+    OC_PRINTF("\n\n");
     i++;
     l = l->next;
   }
@@ -167,11 +167,11 @@ ocf_event_thread(void *data)
 static void
 POST_handler(oc_client_response_t *data)
 {
-  PRINT("POST_lock_state:\n");
+  OC_PRINTF("POST_lock_state:\n");
   if (data->code == OC_STATUS_CHANGED) {
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   } else {
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
   }
 
   oc_smartlock_t *lock = (oc_smartlock_t *)data->user_data;
@@ -181,7 +181,7 @@ POST_handler(oc_client_response_t *data)
     case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
-        PRINT("\n\n%s : %s\n\n", oc_string(rep->name),
+        OC_PRINTF("\n\n%s : %s\n\n", oc_string(rep->name),
               oc_string(rep->value.string));
         if (oc_string_len(rep->value.string) == 6 &&
             memcmp(oc_string(rep->value.string), "Locked", 6) == 0) {
@@ -202,7 +202,7 @@ POST_handler(oc_client_response_t *data)
 static void
 GET_handler(oc_client_response_t *data)
 {
-  PRINT("GET_lock_state:\n");
+  OC_PRINTF("GET_lock_state:\n");
   oc_smartlock_t *lock = (oc_smartlock_t *)data->user_data;
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
@@ -210,7 +210,7 @@ GET_handler(oc_client_response_t *data)
     case OC_REP_STRING:
       if (oc_string_len(rep->name) == 9 &&
           memcmp(oc_string(rep->name), "lockState", 9) == 0) {
-        PRINT("\n\n%s : %s\n\n", oc_string(rep->name),
+        OC_PRINTF("\n\n%s : %s\n\n", oc_string(rep->name),
               oc_string(rep->value.string));
         if (oc_string_len(rep->value.string) == 6 &&
             memcmp(oc_string(rep->value.string), "Locked", 6) == 0) {
@@ -235,26 +235,26 @@ get_lock_state(bool observe)
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
     show_discovered_locks(locks);
-    PRINT("\n\nSelect lock: ");
+    OC_PRINTF("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(smartlocks)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       if (observe) {
         if (!oc_do_observe(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
                            HIGH_QOS, locks[c])) {
-          PRINT("\nERROR: Could not issue Observe request to lock\n");
+          OC_PRINTF("\nERROR: Could not issue Observe request to lock\n");
         }
       } else {
         if (!oc_do_get(locks[c]->uri, locks[c]->endpoint, NULL, GET_handler,
                        HIGH_QOS, locks[c])) {
-          PRINT("\nERROR Could not issue GET request to lock\n");
+          OC_PRINTF("\nERROR Could not issue GET request to lock\n");
         }
       }
     }
   } else {
-    PRINT("\nERROR: No known locks... Please try discovery...\n");
+    OC_PRINTF("\nERROR: No known locks... Please try discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -267,16 +267,16 @@ stop_observe_lock_state(void)
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
     show_discovered_locks(locks);
-    PRINT("\n\nSelect lock: ");
+    OC_PRINTF("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(smartlocks)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       oc_stop_observe(locks[c]->uri, locks[c]->endpoint);
     }
   } else {
-    PRINT("\nERROR: No known locks... Please try discovery...\n");
+    OC_PRINTF("\nERROR: No known locks... Please try discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -289,17 +289,17 @@ post_lock_state(void)
   if (oc_list_length(smartlocks) > 0) {
     oc_smartlock_t *locks[100];
     show_discovered_locks(locks);
-    PRINT("\n\nSelect lock: ");
+    OC_PRINTF("\n\nSelect lock: ");
     int c;
     SCANF("%d", &c);
     if (c < 0 || c > oc_list_length(smartlocks)) {
-      PRINT("\nERROR: Invalid selection.. Try again..\n");
+      OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
       int s;
-      PRINT("Lock states:\n[0]: Locked\n[1]: Unlocked\n\nSelect lock state: ");
+      OC_PRINTF("Lock states:\n[0]: Locked\n[1]: Unlocked\n\nSelect lock state: ");
       SCANF("%d", &s);
       if (s < 0 || s > 1) {
-        PRINT("\nERROR: Invalid selection.. Try again..\n");
+        OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
       } else {
         if (oc_init_post(locks[c]->uri, locks[c]->endpoint, NULL, &POST_handler,
                          HIGH_QOS, locks[c])) {
@@ -311,15 +311,15 @@ post_lock_state(void)
           }
           oc_rep_end_root_object();
           if (!oc_do_post()) {
-            PRINT("\nERROR: Could not issue POST request\n");
+            OC_PRINTF("\nERROR: Could not issue POST request\n");
           }
         } else {
-          PRINT("\nERROR: Could not initialize POST request\n");
+          OC_PRINTF("\nERROR: Could not initialize POST request\n");
         }
       }
     }
   } else {
-    PRINT("\nERROR: No known locks... Please try discovery...\n");
+    OC_PRINTF("\nERROR: No known locks... Please try discovery...\n");
   }
   pthread_mutex_unlock(&app_sync_lock);
   signal_event_loop();
@@ -347,7 +347,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
     l->uri[uri_len] = '\0';
     oc_list_add(smartlocks, l);
 
-    PRINT("\nDiscovering...\n");
+    OC_PRINTF("\nDiscovering...\n");
 
     display_menu();
 
@@ -376,7 +376,7 @@ static void
 issue_requests(void)
 {
   if (!oc_do_ip_discovery(NULL, &null_discovery, NULL)) {
-    PRINT("\nERROR: Could not issue discovery request\n");
+    OC_PRINTF("\nERROR: Could not issue discovery request\n");
   }
 }
 
@@ -397,7 +397,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 

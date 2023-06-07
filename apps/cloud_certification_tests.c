@@ -62,33 +62,33 @@ static const char *deviceid;
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nOCF "
+  OC_PRINTF("\n\n################################################\nOCF "
         "Cloud-connected Device Certification Test "
         "Tool\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Cloud Register\n");
-  PRINT("[2] Cloud Login\n");
-  PRINT("[3] Cloud Logout\n");
-  PRINT("[4] Cloud DeRegister\n");
-  PRINT("[5] Cloud Refresh Token\n");
-  PRINT("[6] Publish Resources\n");
-  PRINT("[7] Send Ping\n");
-  PRINT("[8] Unpublish switch resource\n");
-  PRINT("[9] Publish switch resource\n");
-  PRINT("[10] Create switch resource\n");
-  PRINT("[11] Delete switch resource\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[12] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Cloud Register\n");
+  OC_PRINTF("[2] Cloud Login\n");
+  OC_PRINTF("[3] Cloud Logout\n");
+  OC_PRINTF("[4] Cloud DeRegister\n");
+  OC_PRINTF("[5] Cloud Refresh Token\n");
+  OC_PRINTF("[6] Publish Resources\n");
+  OC_PRINTF("[7] Send Ping\n");
+  OC_PRINTF("[8] Unpublish switch resource\n");
+  OC_PRINTF("[9] Publish switch resource\n");
+  OC_PRINTF("[10] Create switch resource\n");
+  OC_PRINTF("[11] Delete switch resource\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[12] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("\nSelect option: \n");
 }
 
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) != 1) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                          \
     }                                                                          \
   } while (0)
 
@@ -126,32 +126,32 @@ cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                        void *data)
 {
   (void)data;
-  PRINT("\nCloud Refresh Token status flags:\n");
+  OC_PRINTF("\nCloud Refresh Token status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
   if (status & OC_CLOUD_REFRESHED_TOKEN) {
-    PRINT("\t\t-Refreshed Token\n");
+    OC_PRINTF("\t\t-Refreshed Token\n");
   }
 }
 
@@ -167,9 +167,9 @@ cloud_refresh_token(void)
   int ret = oc_cloud_refresh_token(ctx, cloud_refresh_token_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Refresh Token request\n");
+    OC_PRINTF("\nCould not issue Refresh Token request\n");
   } else {
-    PRINT("\nIssued Refresh Token request\n");
+    OC_PRINTF("\nIssued Refresh Token request\n");
   }
 }
 
@@ -178,29 +178,29 @@ cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                     void *data)
 {
   (void)data;
-  PRINT("\nCloud DeRegister status flags:\n");
+  OC_PRINTF("\nCloud DeRegister status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
 }
 
@@ -216,9 +216,9 @@ cloud_deregister(void)
   int ret = oc_cloud_deregister(ctx, cloud_deregister_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud DeRegister request\n");
+    OC_PRINTF("\nCould not issue Cloud DeRegister request\n");
   } else {
-    PRINT("\nIssued Cloud DeRegister request\n");
+    OC_PRINTF("\nIssued Cloud DeRegister request\n");
   }
 }
 
@@ -226,26 +226,26 @@ static void
 cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Logout status flags:\n");
+  OC_PRINTF("\nCloud Logout status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
 }
 
@@ -261,9 +261,9 @@ cloud_logout(void)
   int ret = oc_cloud_logout(ctx, cloud_logout_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Logout request\n");
+    OC_PRINTF("\nCould not issue Cloud Logout request\n");
   } else {
-    PRINT("\nIssued Cloud Logout request\n");
+    OC_PRINTF("\nIssued Cloud Logout request\n");
   }
 }
 
@@ -271,23 +271,23 @@ static void
 cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Login status flags:\n");
+  OC_PRINTF("\nCloud Login status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
 }
 
@@ -303,9 +303,9 @@ cloud_login(void)
   int ret = oc_cloud_login(ctx, cloud_login_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Login request\n");
+    OC_PRINTF("\nCould not issue Cloud Login request\n");
   } else {
-    PRINT("\nIssued Cloud Login request\n");
+    OC_PRINTF("\nIssued Cloud Login request\n");
   }
 }
 
@@ -313,20 +313,20 @@ static void
 cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Register status flags:\n");
+  OC_PRINTF("\nCloud Register status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
 }
 
@@ -343,9 +343,9 @@ cloud_register(void)
   int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Register request\n");
+    OC_PRINTF("\nCould not issue Cloud Register request\n");
   } else {
-    PRINT("\nIssued Cloud Register request\n");
+    OC_PRINTF("\nIssued Cloud Register request\n");
   }
 }
 
@@ -353,13 +353,13 @@ static void
 ping_handler(oc_client_response_t *data)
 {
   (void)data;
-  PRINT("\nReceived Pong\n");
+  OC_PRINTF("\nReceived Pong\n");
 }
 
 static void
 cloud_send_ping(void)
 {
-  PRINT("\nEnter receiving endpoint: ");
+  OC_PRINTF("\nEnter receiving endpoint: ");
   char addr[256];
   memset(addr, 0, sizeof(addr));
   SCANF("%255s", addr);
@@ -372,16 +372,16 @@ cloud_send_ping(void)
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);
   if (ret < 0) {
-    PRINT("\nERROR parsing endpoint string\n");
+    OC_PRINTF("\nERROR parsing endpoint string\n");
     return;
   }
 
   if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
-    PRINT("\nSuccessfully issued Ping request\n");
+    OC_PRINTF("\nSuccessfully issued Ping request\n");
     return;
   }
 
-  PRINT("\nERROR issuing Ping request\n");
+  OC_PRINTF("\nERROR issuing Ping request\n");
 }
 
 struct switch_t
@@ -396,7 +396,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   struct switch_t *state = (struct switch_t *)user_data;
-  PRINT("GET_switch:\n");
+  OC_PRINTF("GET_switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -419,7 +419,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   struct switch_t *s = (struct switch_t *)user_data;
-  PRINT("POST_switch:\n");
+  OC_PRINTF("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -517,7 +517,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
@@ -527,32 +527,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len > (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -572,14 +572,14 @@ factory_presets_cb(size_t device, void *data)
   char cert[8192];
   size_t cert_len = 8192;
   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
-    PRINT("ERROR: unable to read private key");
+    OC_PRINTF("ERROR: unable to read private key");
     return;
   }
 
@@ -587,13 +587,13 @@ factory_presets_cb(size_t device, void *data)
                                       (const unsigned char *)key, key_len);
 
   if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
+    OC_PRINTF("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
@@ -601,20 +601,20 @@ factory_presets_cb(size_t device, void *data)
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
+    OC_PRINTF("ERROR installing intermediate CA cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 
@@ -670,27 +670,27 @@ main(int argc, char *argv[])
 {
   if (argc > 1) {
     device_name = argv[1];
-    PRINT("device_name: %s\n", argv[1]);
+    OC_PRINTF("device_name: %s\n", argv[1]);
   }
   if (argc > 2) {
     auth_code = argv[2];
-    PRINT("auth_code: %s\n", argv[2]);
+    OC_PRINTF("auth_code: %s\n", argv[2]);
   }
   if (argc > 3) {
     cis = argv[3];
-    PRINT("cis : %s\n", argv[3]);
+    OC_PRINTF("cis : %s\n", argv[3]);
   }
   if (argc > 4) {
     sid = argv[4];
-    PRINT("sid: %s\n", argv[4]);
+    OC_PRINTF("sid: %s\n", argv[4]);
   }
   if (argc > 5) {
     apn = argv[5];
-    PRINT("apn: %s\n", argv[5]);
+    OC_PRINTF("apn: %s\n", argv[5]);
   }
   if (argc > 6) {
     deviceid = argv[6];
-    PRINT("deviceID: %s\n", argv[6]);
+    OC_PRINTF("deviceID: %s\n", argv[6]);
   }
 
   if (pthread_mutex_init(&mutex, NULL) != 0) {

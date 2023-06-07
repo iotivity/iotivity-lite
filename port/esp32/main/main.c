@@ -94,7 +94,7 @@ static void
 get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
 {
   (void)user_data;
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_start_root_object();
   switch (interface) {
   case OC_IF_BASELINE:
@@ -108,7 +108,7 @@ get_light(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  PRINT("Light state %d\n", light_state);
+  OC_PRINTF("Light state %d\n", light_state);
 }
 
 static void
@@ -117,15 +117,15 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
   (void)interface;
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   bool state = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      PRINT("value: %d\n", state);
+      OC_PRINTF("value: %d\n", state);
       gpio_set_level(BLINK_GPIO, state);
 
       break;
@@ -268,32 +268,32 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                      void *data)
 {
   (void)data;
-  PRINT("\nCloud Manager Status:\n");
+  OC_PRINTF("\nCloud Manager Status:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
   if (status & OC_CLOUD_REFRESHED_TOKEN) {
-    PRINT("\t\t-Refreshed Token\n");
+    OC_PRINTF("\t\t-Refreshed Token\n");
   }
 }
 #endif /* OC_CLOUD */
@@ -310,7 +310,7 @@ factory_presets_cb_new(size_t device, void *data)
   oc_new_string(&dev->name, device_name, strlen(device_name));
   (void)data;
 #if defined(OC_SECURITY) && defined(OC_PKI)
-  PRINT("factory_presets_cb: %d\n", (int)device);
+  OC_PRINTF("factory_presets_cb: %d\n", (int)device);
 
   const char *cert =
     "-----BEGIN CERTIFICATE-----\n"
@@ -386,7 +386,7 @@ factory_presets_cb_new(size_t device, void *data)
     oc_pki_add_mfg_cert(0, (const unsigned char *)cert, strlen(cert),
                         (const unsigned char *)key, strlen(key));
   if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
+    OC_PRINTF("ERROR installing manufacturer EE cert\n");
     return;
   }
 
@@ -394,14 +394,14 @@ factory_presets_cb_new(size_t device, void *data)
     0, ee_credid, (const unsigned char *)inter_ca, strlen(inter_ca));
 
   if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
+    OC_PRINTF("ERROR installing intermediate CA cert\n");
     return;
   }
 
   int rootca_credid = oc_pki_add_mfg_trust_anchor(
     0, (const unsigned char *)root_ca, strlen(root_ca));
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 
@@ -412,7 +412,7 @@ factory_presets_cb_new(size_t device, void *data)
 oc_event_callback_retval_t
 heap_dbg(void *v)
 {
-  PRINT("heap size:%" PRIu32 "\n", esp_get_free_heap_size());
+  OC_PRINTF("heap size:%" PRIu32 "\n", esp_get_free_heap_size());
   return OC_EVENT_CONTINUE;
 }
 

@@ -138,7 +138,7 @@ oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
     }                                                                          \
     do {                                                                       \
       if (sscanf(line, __VA_ARGS__) != 1) {                                    \
-        PRINT("ERROR Invalid input\n");                                        \
+        OC_PRINTF("ERROR Invalid input\n");                                        \
       }                                                                        \
     } while (0);                                                               \
   }
@@ -146,31 +146,31 @@ oc_resource_t *temp_resource = NULL, *bswitch = NULL, *col = NULL;
 static void
 display_menu(void)
 {
-  PRINT("\n\n################################################\nOCF "
+  OC_PRINTF("\n\n################################################\nOCF "
         "Server Certification Test "
         "Tool\n################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("Server\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Toggle switch resource\n");
-  PRINT("-----------------------------------------------\n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("Server\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Toggle switch resource\n");
+  OC_PRINTF("-----------------------------------------------\n");
 #ifdef OC_CLOUD
-  PRINT("Cloud\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[10] Cloud Register\n");
-  PRINT("[11] Cloud Login\n");
-  PRINT("[12] Cloud Logout\n");
-  PRINT("[13] Cloud DeRegister\n");
-  PRINT("[14] Cloud Refresh Token\n");
-  PRINT("[15] Publish Resources\n");
-  PRINT("[16] Send Ping\n");
-  PRINT("-----------------------------------------------\n");
+  OC_PRINTF("Cloud\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[10] Cloud Register\n");
+  OC_PRINTF("[11] Cloud Login\n");
+  OC_PRINTF("[12] Cloud Logout\n");
+  OC_PRINTF("[13] Cloud DeRegister\n");
+  OC_PRINTF("[14] Cloud Refresh Token\n");
+  OC_PRINTF("[15] Publish Resources\n");
+  OC_PRINTF("[16] Send Ping\n");
+  OC_PRINTF("-----------------------------------------------\n");
 #endif /* OC_CLOUD */
-  PRINT("-----------------------------------------------\n");
-  PRINT("[99] Exit\n");
-  PRINT("################################################\n");
-  PRINT("\nSelect option: \n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[99] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("\nSelect option: \n");
 }
 
 #ifdef OC_SOFTWARE_UPDATE
@@ -188,9 +188,9 @@ check_new_version(size_t device, const char *url, const char *version)
     oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
     return -1;
   }
-  PRINT("Package url %s\n", url);
+  OC_PRINTF("Package url %s\n", url);
   if (version) {
-    PRINT("Package version: %s\n", version);
+    OC_PRINTF("Package version: %s\n", version);
   }
   oc_swupdate_notify_new_version_available(device, "2.0",
                                            OC_SWUPDATE_RESULT_SUCCESS);
@@ -223,32 +223,32 @@ cloud_refresh_token_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                        void *data)
 {
   (void)data;
-  PRINT("\nCloud Refresh Token status flags:\n");
+  OC_PRINTF("\nCloud Refresh Token status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
   if (status & OC_CLOUD_REFRESHED_TOKEN) {
-    PRINT("\t\t-Refreshed Token\n");
+    OC_PRINTF("\t\t-Refreshed Token\n");
   }
 }
 
@@ -263,9 +263,9 @@ cloud_refresh_token(void)
   int ret = oc_cloud_refresh_token(ctx, cloud_refresh_token_cb, NULL);
   pthread_mutex_unlock(&cloud_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Refresh Token request\n");
+    OC_PRINTF("\nCould not issue Refresh Token request\n");
   } else {
-    PRINT("\nIssued Refresh Token request\n");
+    OC_PRINTF("\nIssued Refresh Token request\n");
   }
 }
 
@@ -274,29 +274,29 @@ cloud_deregister_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status,
                     void *data)
 {
   (void)data;
-  PRINT("\nCloud DeRegister status flags:\n");
+  OC_PRINTF("\nCloud DeRegister status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
   if (status & OC_CLOUD_DEREGISTERED) {
-    PRINT("\t\t-DeRegistered\n");
+    OC_PRINTF("\t\t-DeRegistered\n");
   }
 }
 
@@ -311,9 +311,9 @@ cloud_deregister(void)
   int ret = oc_cloud_deregister(ctx, cloud_deregister_cb, NULL);
   pthread_mutex_unlock(&cloud_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud DeRegister request\n");
+    OC_PRINTF("\nCould not issue Cloud DeRegister request\n");
   } else {
-    PRINT("\nIssued Cloud DeRegister request\n");
+    OC_PRINTF("\nIssued Cloud DeRegister request\n");
   }
 }
 
@@ -321,26 +321,26 @@ static void
 cloud_logout_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Logout status flags:\n");
+  OC_PRINTF("\nCloud Logout status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
   if (status & OC_CLOUD_LOGGED_OUT) {
-    PRINT("\t\t-Logged Out\n");
+    OC_PRINTF("\t\t-Logged Out\n");
   }
 }
 
@@ -355,9 +355,9 @@ cloud_logout(void)
   int ret = oc_cloud_logout(ctx, cloud_logout_cb, NULL);
   pthread_mutex_unlock(&cloud_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Logout request\n");
+    OC_PRINTF("\nCould not issue Cloud Logout request\n");
   } else {
-    PRINT("\nIssued Cloud Logout request\n");
+    OC_PRINTF("\nIssued Cloud Logout request\n");
   }
 }
 
@@ -365,23 +365,23 @@ static void
 cloud_login_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Login status flags:\n");
+  OC_PRINTF("\nCloud Login status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
   if (status & OC_CLOUD_LOGGED_IN) {
-    PRINT("\t\t-Logged In\n");
+    OC_PRINTF("\t\t-Logged In\n");
   }
 }
 
@@ -396,9 +396,9 @@ cloud_login(void)
   int ret = oc_cloud_login(ctx, cloud_login_cb, NULL);
   pthread_mutex_unlock(&cloud_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Login request\n");
+    OC_PRINTF("\nCould not issue Cloud Login request\n");
   } else {
-    PRINT("\nIssued Cloud Login request\n");
+    OC_PRINTF("\nIssued Cloud Login request\n");
   }
 }
 
@@ -406,20 +406,20 @@ static void
 cloud_register_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void *data)
 {
   (void)data;
-  PRINT("\nCloud Register status flags:\n");
+  OC_PRINTF("\nCloud Register status flags:\n");
   if (status & OC_CLOUD_REGISTERED) {
-    PRINT("\t\t-Registered\n");
+    OC_PRINTF("\t\t-Registered\n");
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
-    PRINT("\t\t-Token Expiry: ");
+    OC_PRINTF("\t\t-Token Expiry: ");
     if (ctx) {
-      PRINT("%d\n", oc_cloud_get_token_expiry(ctx));
+      OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
-      PRINT("\n");
+      OC_PRINTF("\n");
     }
   }
   if (status & OC_CLOUD_FAILURE) {
-    PRINT("\t\t-Failure\n");
+    OC_PRINTF("\t\t-Failure\n");
   }
 }
 
@@ -434,9 +434,9 @@ cloud_register(void)
   int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&cloud_sync_lock);
   if (ret < 0) {
-    PRINT("\nCould not issue Cloud Register request\n");
+    OC_PRINTF("\nCould not issue Cloud Register request\n");
   } else {
-    PRINT("\nIssued Cloud Register request\n");
+    OC_PRINTF("\nIssued Cloud Register request\n");
   }
 }
 
@@ -444,13 +444,13 @@ static void
 ping_handler(oc_client_response_t *data)
 {
   (void)data;
-  PRINT("\nReceived Pong\n");
+  OC_PRINTF("\nReceived Pong\n");
 }
 
 static void
 cloud_send_ping(void)
 {
-  PRINT("\nEnter receiving endpoint: ");
+  OC_PRINTF("\nEnter receiving endpoint: ");
   char addr[256];
   SCANF("%255s", addr);
   char endpoint_string[267];
@@ -461,16 +461,16 @@ cloud_send_ping(void)
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);
   if (ret < 0) {
-    PRINT("\nERROR parsing endpoint string\n");
+    OC_PRINTF("\nERROR parsing endpoint string\n");
     return;
   }
 
   if (oc_send_ping(false, &endpoint, 10, ping_handler, NULL)) {
-    PRINT("\nSuccessfully issued Ping request\n");
+    OC_PRINTF("\nSuccessfully issued Ping request\n");
     return;
   }
 
-  PRINT("\nERROR issuing Ping request\n");
+  OC_PRINTF("\nERROR issuing Ping request\n");
 }
 #endif /* OC_CLOUD */
 
@@ -486,16 +486,16 @@ check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 {
   if (strcmp(oc_string(name), "n") == 0) {
     error_state = true;
-    PRINT("   property \"n\" is ReadOnly \n");
+    OC_PRINTF("   property \"n\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "if") == 0) {
     error_state = true;
-    PRINT("   property \"if\" is ReadOnly \n");
+    OC_PRINTF("   property \"if\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "rt") == 0) {
     error_state = true;
-    PRINT("   property \"rt\" is ReadOnly \n");
+    OC_PRINTF("   property \"rt\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "id") == 0) {
     error_state = true;
-    PRINT("   property \"id\" is ReadOnly \n");
+    OC_PRINTF("   property \"id\" is ReadOnly \n");
   }
   return error_state;
 }
@@ -510,7 +510,7 @@ oc_define_interrupt_handler(toggle_switch)
 static void
 toggle_switch_resource(void)
 {
-  PRINT("\nSwitch toggled\n");
+  OC_PRINTF("\nSwitch toggled\n");
   g_switch_value = !g_switch_value;
   oc_signal_interrupt_handler(toggle_switch);
 }
@@ -523,7 +523,7 @@ app_init(void)
 
   err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
-  PRINT("\tSwitch device added.\n");
+  OC_PRINTF("\tSwitch device added.\n");
 
   oc_new_string_array(&my_supportedactions, (size_t)19);
   oc_string_array_add_item(my_supportedactions, "arrowup");
@@ -564,13 +564,13 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT("\tIntrospection data set for device.\n");
+      OC_PRINTF("\tIntrospection data set for device.\n");
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #endif
 
@@ -586,7 +586,7 @@ static void
 get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
-  PRINT("GET_temp:\n");
+  OC_PRINTF("GET_temp:\n");
   bool invalid_query = false;
   const char *units;
   units_t u = temp_units;
@@ -660,7 +660,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_temp:\n");
+  OC_PRINTF("POST_temp:\n");
   bool out_of_range = false;
   double t = -1;
   units_t units = C;
@@ -756,7 +756,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
-  PRINT("GET_switch:\n");
+  OC_PRINTF("GET_switch:\n");
   int oc_status_code = OC_STATUS_OK;
 
   oc_rep_start_root_object();
@@ -809,7 +809,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   int oc_status_code = OC_STATUS_CHANGED;
 
-  PRINT("POST_switch:\n");
+  OC_PRINTF("POST_switch:\n");
   bool state = false;
   bool bad_request = false;
   bool var_in_request = false;
@@ -846,7 +846,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
                        sizeof(g_switch_storage_status));
       long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
-      PRINT("storage (startup)  property 'value' : %s (%ld)\n", btoa(state),
+      OC_PRINTF("storage (startup)  property 'value' : %s (%ld)\n", btoa(state),
             tmp_size);
       oc_rep_start_root_object();
       oc_rep_set_boolean(root, value, state);
@@ -860,7 +860,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
                        sizeof(g_switch_storage_status));
       long tmp_size =
         oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
-      PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n",
+      OC_PRINTF("storage (startup.revert)  property 'value' : %s (%ld)\n",
             btoa(state), tmp_size);
       g_switch_value = state;
       oc_rep_start_root_object();
@@ -872,7 +872,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
       if (g_switch_storage_status == 2) {
         long tmp_size =
           oc_storage_write("g_switch_value", (uint8_t *)&state, sizeof(state));
-        PRINT("storage (startup.revert)  property 'value' : %s (%ld)\n",
+        OC_PRINTF("storage (startup.revert)  property 'value' : %s (%ld)\n",
               btoa(state), tmp_size);
       }
       g_switch_value = state;
@@ -925,11 +925,11 @@ get_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
      pass CTT1.2.2 */
   bool error_state = false;
 
-  PRINT("-- Begin get_dali: interface %d\n", interfaces);
+  OC_PRINTF("-- Begin get_dali: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     break;
   case OC_IF_W:
@@ -945,7 +945,7 @@ get_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_dali %s\n", btoa(error_state));
+  OC_PRINTF("-- End get_dali %s\n", btoa(error_state));
 }
 
 /**
@@ -969,7 +969,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("-- Begin post_dali:\n");
+  OC_PRINTF("-- Begin post_dali:\n");
   oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
@@ -984,7 +984,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   if (var_in_request == false) {
     error_state = true;
-    PRINT(" required property: 'pld' not in request\n");
+    OC_PRINTF(" required property: 'pld' not in request\n");
   }
   var_in_request = false;
   rep = request->request_payload;
@@ -997,12 +997,12 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   if (var_in_request == false) {
     error_state = true;
-    PRINT(" required property: 'pld_s' not in request\n");
+    OC_PRINTF(" required property: 'pld_s' not in request\n");
   }
   /* loop over the request document to check if all inputs are ok */
   rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
     error_state =
       check_on_readonly_common_resource_properties(rep->name, error_state);
@@ -1020,7 +1020,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       if (array_size > MAX_ARRAY) {
         error_state = true;
-        PRINT("   property array 'pld' is too long: %d expected: MAX_ARRAY \n",
+        OC_PRINTF("   property array 'pld' is too long: %d expected: MAX_ARRAY \n",
               (int)array_size);
       }
     }
@@ -1029,28 +1029,28 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "pld_s" of type integer exist in payload */
       if (rep->type != OC_REP_INT) {
         error_state = true;
-        PRINT("   property 'pld_s' is not of type int %d \n", rep->type);
+        OC_PRINTF("   property 'pld_s' is not of type int %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_prio) == 0) {
       /* property "prio" of type integer exist in payload */
       if (rep->type != OC_REP_INT) {
         error_state = true;
-        PRINT("   property 'prio' is not of type int %d \n", rep->type);
+        OC_PRINTF("   property 'prio' is not of type int %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_src) == 0) {
       /* property "src" of type integer exist in payload */
       if (rep->type != OC_REP_INT) {
         error_state = true;
-        PRINT("   property 'src' is not of type int %d \n", rep->type);
+        OC_PRINTF("   property 'src' is not of type int %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_st) == 0) {
       /* property "st" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'st' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'st' is not of type bool %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_tbus) == 0) {
@@ -1067,7 +1067,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       if (array_size > MAX_ARRAY) {
         error_state = true;
-        PRINT("   property array 'tbus' is too long: %d expected: MAX_ARRAY \n",
+        OC_PRINTF("   property array 'tbus' is too long: %d expected: MAX_ARRAY \n",
               (int)array_size);
       }
     }
@@ -1081,7 +1081,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld) ==
@@ -1096,7 +1096,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (byte) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_pld_array_size; j++) {
-              PRINT(" byte %d ", temp_array[j]);
+              OC_PRINTF(" byte %d ", temp_array[j]);
               g_dali_pld[j] = temp_array[j];
             }
           } else {
@@ -1106,7 +1106,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (integer) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_pld_array_size; j++) {
-              PRINT(" integer %" PRId64 " ", temp_integer[j]);
+              OC_PRINTF(" integer %" PRId64 " ", temp_integer[j]);
               g_dali_pld[j] = (uint8_t)temp_integer[j];
             }
           }
@@ -1114,25 +1114,25 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_pld_s) ==
             0) {
           /* assign "pld_s" */
-          PRINT("  property 'pld_s' : %d\n", (int)rep->value.integer);
+          OC_PRINTF("  property 'pld_s' : %d\n", (int)rep->value.integer);
           g_dali_pld_s = (int)rep->value.integer;
         }
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_prio) ==
             0) {
           /* assign "prio" */
-          PRINT("  property 'prio' : %d\n", (int)rep->value.integer);
+          OC_PRINTF("  property 'prio' : %d\n", (int)rep->value.integer);
           g_dali_prio = (int)rep->value.integer;
         }
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_src) ==
             0) {
           /* assign "src" */
-          PRINT("  property 'src' : %d\n", (int)rep->value.integer);
+          OC_PRINTF("  property 'src' : %d\n", (int)rep->value.integer);
           g_dali_src = (int)rep->value.integer;
         }
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_st) ==
             0) {
           /* assign "st" */
-          PRINT("  property 'st' : %s\n", (char *)btoa(rep->value.boolean));
+          OC_PRINTF("  property 'st' : %s\n", (char *)btoa(rep->value.boolean));
           g_dali_st = rep->value.boolean;
         }
         if (strcmp(oc_string(rep->name), g_dali_RESOURCE_PROPERTY_NAME_tbus) ==
@@ -1147,7 +1147,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (byte) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
-              PRINT(" byte %d ", temp_array[j]);
+              OC_PRINTF(" byte %d ", temp_array[j]);
               g_dali_tbus[j] = temp_array[j];
             }
           } else {
@@ -1157,7 +1157,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
             /* copy over the data of the retrieved (integer) array to the global
              * variable */
             for (int j = 0; j < (int)g_dali_tbus_array_size; j++) {
-              PRINT(" integer %" PRId64 " ", temp_integer[j]);
+              OC_PRINTF(" integer %" PRId64 " ", temp_integer[j]);
               g_dali_tbus[j] = temp_integer[j];
             }
           }
@@ -1165,7 +1165,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response \n");
+      OC_PRINTF("Set response \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
 
@@ -1175,13 +1175,13 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
       }
       oc_rep_close_array(root, pld);
 
-      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_pld_s, g_dali_pld_s);
+      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_pld_s, g_dali_pld_s);
       oc_rep_set_int(root, pld_s, g_dali_pld_s);
-      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_prio, g_dali_prio);
+      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_prio, g_dali_prio);
       oc_rep_set_int(root, prio, g_dali_prio);
-      PRINT("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_src, g_dali_src);
+      OC_PRINTF("   %s : %d\n", g_dali_RESOURCE_PROPERTY_NAME_src, g_dali_src);
       oc_rep_set_int(root, src, g_dali_src);
-      PRINT("   %s : %s", g_dali_RESOURCE_PROPERTY_NAME_st,
+      OC_PRINTF("   %s : %s", g_dali_RESOURCE_PROPERTY_NAME_st,
             (char *)btoa(g_dali_st));
       oc_rep_set_boolean(root, st, g_dali_st);
 
@@ -1199,12 +1199,12 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
     }
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_dali\n");
+  OC_PRINTF("-- End post_dali\n");
 }
 
 /**
@@ -1234,34 +1234,34 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
      pass CTT1.2.2 */
   bool error_state = false;
 
-  PRINT("-- Begin get_config: interface %d\n", interfaces);
+  OC_PRINTF("-- Begin get_config: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
 
     /* property (integer) 'bus' */
     oc_rep_set_int(root, bus, g_config_bus);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
     /* property (integer) 'src' */
     oc_rep_set_int(root, src, g_config_src);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
     /* property (integer) 'ver' */
     oc_rep_set_int(root, ver, g_config_ver);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
     break;
   case OC_IF_RW:
 
     /* property (integer) 'bus' */
     oc_rep_set_int(root, bus, g_config_bus);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
     /* property (integer) 'src' */
     oc_rep_set_int(root, src, g_config_src);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
     /* property (integer) 'ver' */
     oc_rep_set_int(root, ver, g_config_ver);
-    PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+    OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
     break;
 
   default:
@@ -1273,7 +1273,7 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_config\n");
+  OC_PRINTF("-- End get_config\n");
 }
 
 /**
@@ -1297,7 +1297,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("-- Begin post_config:\n");
+  OC_PRINTF("-- Begin post_config:\n");
   oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
@@ -1305,7 +1305,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   /* loop over the request document to check if all inputs are ok */
   rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
     error_state =
       check_on_readonly_common_resource_properties(rep->name, error_state);
@@ -1314,7 +1314,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "bus" of type integer exist in payload */
       if (rep->type != OC_REP_INT) {
         error_state = true;
-        PRINT("   property 'bus' is not of type int %d \n", rep->type);
+        OC_PRINTF("   property 'bus' is not of type int %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_src) ==
@@ -1322,12 +1322,12 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "src" of type integer exist in payload */
       if (rep->type != OC_REP_INT) {
         error_state = true;
-        PRINT("   property 'src' is not of type int %d \n", rep->type);
+        OC_PRINTF("   property 'src' is not of type int %d \n", rep->type);
       }
     }
     if (strcmp(oc_string(rep->name), "ver") == 0) {
       error_state = true;
-      PRINT("   property 'ver' is not allowed \n");
+      OC_PRINTF("   property 'ver' is not allowed \n");
     }
     rep = rep->next;
   }
@@ -1339,32 +1339,32 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_bus) ==
             0) {
           /* assign "bus" */
-          PRINT("  property 'bus' : %d\n", (int)rep->value.integer);
+          OC_PRINTF("  property 'bus' : %d\n", (int)rep->value.integer);
           g_config_bus = (int)rep->value.integer;
         }
         if (strcmp(oc_string(rep->name), g_config_RESOURCE_PROPERTY_NAME_src) ==
             0) {
           /* assign "src" */
-          PRINT("  property 'src' : %d\n", (int)rep->value.integer);
+          OC_PRINTF("  property 'src' : %d\n", (int)rep->value.integer);
           g_config_src = (int)rep->value.integer;
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response \n");
+      OC_PRINTF("Set response \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
-      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_bus, g_config_bus);
       oc_rep_set_int(root, bus, g_config_bus);
-      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_src, g_config_src);
       oc_rep_set_int(root, src, g_config_src);
-      PRINT("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
+      OC_PRINTF("   %s : %d\n", g_config_RESOURCE_PROPERTY_NAME_ver, g_config_ver);
       oc_rep_set_int(root, ver, g_config_ver);
 
       oc_rep_end_root_object();
@@ -1375,12 +1375,12 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
     }
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_config\n");
+  OC_PRINTF("-- End post_config\n");
 }
 
 #ifdef OC_COLLECTIONS
@@ -1582,7 +1582,7 @@ verify_action_in_supported_set(oc_string_t action)
   for (size_t i = 0;
        i < oc_string_array_get_allocated_size(my_supportedactions); i++) {
     const char *sv = oc_string_array_get_item(my_supportedactions, i);
-    PRINT("Action compare. Supported action %s against received action %s \n",
+    OC_PRINTF("Action compare. Supported action %s against received action %s \n",
           sv, act);
     if (strlen(sv) == act_len && memcmp(sv, act, act_len) == 0) {
       return true;
@@ -1612,7 +1612,7 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     return;
   }
 
-  PRINT("GET_remotecontrol:\n");
+  OC_PRINTF("GET_remotecontrol:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -1642,7 +1642,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_remotecontrol:\n");
+  OC_PRINTF("POST_remotecontrol:\n");
 
   /* Check if query string includes action selection. */
   const char *action = NULL;
@@ -1651,9 +1651,9 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_iterate_query_get_values(request, "action", &action, &action_len);
 
   if (action_len > 0) {
-    PRINT("POST action length = %d \n", action_len);
-    PRINT("POST action string actual size %zu \n", strlen(action));
-    PRINT("POST action received raw = %s \n", action);
+    OC_PRINTF("POST action length = %d \n", action_len);
+    OC_PRINTF("POST action string actual size %zu \n", strlen(action));
+    OC_PRINTF("POST action received raw = %s \n", action);
 
     // Validate that the action requests is in the set
     //
@@ -1676,7 +1676,7 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
     oc_free_string(&act);
   } else {
-    PRINT("POST no action received \n");
+    OC_PRINTF("POST no action received \n");
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
 }
@@ -1699,7 +1699,7 @@ register_resources(void)
   oc_resource_set_secure_mcast(temp_resource, true);
 #endif /* OC_OSCORE */
   oc_add_resource(temp_resource);
-  PRINT("\tTemperature resource added.\n");
+  OC_PRINTF("\tTemperature resource added.\n");
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
@@ -1717,7 +1717,7 @@ register_resources(void)
   oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
   oc_add_resource(bswitch);
-  PRINT("\tSwitch resource added.\n");
+  OC_PRINTF("\tSwitch resource added.\n");
 
   oc_resource_t *remotecontrol =
     oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
@@ -1730,7 +1730,7 @@ register_resources(void)
   oc_resource_set_request_handler(remotecontrol, OC_POST, post_remotecontrol,
                                   NULL);
   oc_add_resource(remotecontrol);
-  PRINT("\t Remotecontrol resource added\n");
+  OC_PRINTF("\t Remotecontrol resource added\n");
 
   oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
   oc_resource_bind_resource_type(res_dali, "oic.r.dali");
@@ -1749,7 +1749,7 @@ register_resources(void)
   oc_cloud_add_resource(res_dali);
 #endif
   oc_add_resource(res_dali);
-  PRINT("\tDali resource added.\n");
+  OC_PRINTF("\tDali resource added.\n");
 
   oc_resource_t *dali_config = oc_new_resource(NULL, "/dali_conf", 1, 0);
   oc_resource_bind_resource_type(dali_config, "oic.r.dali.conf");
@@ -1800,7 +1800,7 @@ register_resources(void)
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
   oc_add_collection(col);
-  PRINT("\tResources added to collection.\n");
+  OC_PRINTF("\tResources added to collection.\n");
 #endif /* OC_COLLECTIONS */
 
   oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);
@@ -1830,7 +1830,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
@@ -1840,32 +1840,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len >= (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -1885,14 +1885,14 @@ factory_presets_cb(size_t device, void *data)
   char cert[8192];
   size_t cert_len = 8192;
   if (read_pem(ee_certificate, cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
   if (read_pem(key_certificate, key, &key_len) < 0) {
-    PRINT("ERROR: unable to read private key");
+    OC_PRINTF("ERROR: unable to read private key");
     return;
   }
 
@@ -1900,13 +1900,13 @@ factory_presets_cb(size_t device, void *data)
                                       (const unsigned char *)key, key_len);
 
   if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
+    OC_PRINTF("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem(subca_certificate, cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
@@ -1914,20 +1914,20 @@ factory_presets_cb(size_t device, void *data)
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
+    OC_PRINTF("ERROR installing intermediate CA cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem(rootca_certificate, cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 
@@ -1967,7 +1967,7 @@ display_device_uuid(void)
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  PRINT("Started device with ID: %s\n", buffer);
+  OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
 static void
@@ -1984,7 +1984,7 @@ initialize_variables(void)
   int ret_size = oc_storage_read("g_switch_value", (uint8_t *)&g_switch_value,
                                  sizeof(g_switch_value));
   if (ret_size != sizeof(g_switch_value)) {
-    PRINT(" could not read store g_switch_value : %d\n", ret_size);
+    OC_PRINTF(" could not read store g_switch_value : %d\n", ret_size);
   }
 #endif /* OC_STORAGE */
 }
@@ -2025,7 +2025,7 @@ main(void)
   oc_swupdate_set_impl(&swupdate_impl);
 #endif /* OC_SOFTWARE_UPDATE */
 
-  PRINT("Initializing Server.\n");
+  OC_PRINTF("Initializing Server.\n");
   int init = oc_main_init(&handler);
   if (init < 0)
     return init;
